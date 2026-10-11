@@ -41,7 +41,7 @@ import { driveMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import type { ChangeNotification, Color, Point } from "./types.ts";
-import { WIN_FLASH_S } from "./win-wave.ts";
+import { WIN_FLASH_S, WIN_NONE } from "./win-wave.ts";
 
 function recordingDrawing() {
   const dr = new RecordingDrawing(fakeGame.colors(DEFAULT_BACKGROUND));
@@ -268,7 +268,7 @@ describe("Midend completion: the status is the position's, the history is the en
       ...extra,
       redraw: (_dr, _ds, _prev, _s, _dir, _ui, _animTime, flash) => {
         frames.push({
-          lit: [0, 1, 2, 3, 4].map((p) => flash.win(p)),
+          lit: [0, 1, 2, 3, 4].map((p) => flash.win(p) !== WIN_NONE),
           time: flash.time,
         });
       },

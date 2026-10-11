@@ -23,6 +23,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { WinTone } from "../../engine/win-wave.ts";
 
 /**
  * A point as the rational `(x/d, y/d)`. **Invariant: `x`, `y`, `d` are
@@ -112,8 +113,8 @@ export interface UntangleUi {
 export interface UntangleDrawState {
   started: boolean;
   tileSize: number;
-  /** Whether the win flash was on each vertex as last drawn (length n). */
-  lit: boolean[];
+  /** The win flash's tone on each vertex as last drawn (length n). */
+  lit: WinTone[];
   /** Last drag / cursor vertex drawn. */
   dragPoint: number;
   cursorPoint: number;

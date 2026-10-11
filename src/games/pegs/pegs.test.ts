@@ -13,7 +13,7 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { type PegsMove, type PegsParams, pegsGame } from "./index.ts";
-import { COL_FLASH } from "./render.ts";
+import { COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
 
 const G = pegsGame;
 
@@ -274,6 +274,10 @@ describe("Pegs win flash", () => {
       return dr.ops;
     };
     // The cells whose ground is the flash color, each as its index.
+    // Lit is either tone of the highlight, and the flash shows both.
+    const tones = new Set<number>();
+    const isLit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color).size > 0;
     const run = winFlashRun(paint, (ops) => {
       const clips = opsOfKind(ops, "clip");
       const left = Math.min(...clips.map((o) => o.x));
@@ -284,11 +288,12 @@ describe("Pegs win flash", () => {
       let cell = -1;
       for (const o of ops) {
         if (o.op === "clip") cell = ((o.y - top) / TS) * 3 + (o.x - left) / TS;
-        else if (o.op === "rect" && o.color === COL_FLASH) cells.push(cell);
+        else if (o.op === "rect" && isLit(o.color)) cells.push(cell);
       }
       return cells;
     });
     expectWinFlashTravels(run, 7, (i) => sweepStep(i % 3, Math.floor(i / 3)));
+    expect(tones.size).toBe(2);
   });
 });
 

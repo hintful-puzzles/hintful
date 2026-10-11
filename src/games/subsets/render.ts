@@ -31,6 +31,7 @@ import {
   clueDoneColor,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -50,7 +51,7 @@ import {
 } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { candidateCells, candidateSets, subsetsValidate } from "./solver.ts";
 import {
@@ -97,6 +98,8 @@ export const COL_HINT_PLACED = 12;
 export const COL_RULED_OUT = 13;
 /** The ground of every slot of a cell the win flash is on. */
 export const COL_FLASH = 14;
+/** The same, under the win flash's leading edge. */
+export const COL_FLASH_LEAD = 15;
 
 /** Sidecar bit: a cell a spotlit set can still be placed in. */
 const HINT_SPOT = 4;
@@ -126,6 +129,7 @@ export function colors(background: Color): Color[] {
   out[COL_DONE] = clueDoneColor(background);
   out[COL_RULED_OUT] = RULED_OUT;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_FIXED] = INK;
   out[COL_GUESS] = playerEntryColor(background);
   out[COL_ERROR] = ERROR;
@@ -339,8 +343,8 @@ export function redraw(
       const packed =
         (state.known[i] & abits) |
         ((state.mask[i] & abits) << n) |
-        (lit ? 1 << (2 * n) : 0) |
-        ((slot + 1) << (2 * n + 1));
+        (lit << (2 * n)) |
+        ((slot + 1) << (2 * n + 2));
       if (
         !firstDraw &&
         ds.cellCache[i] === packed &&
@@ -373,7 +377,11 @@ export function redraw(
           // holds: a letter, the cross, or nothing yet.
           dr.drawRect(
             box,
-            lit ? COL_FLASH : state.immutable[i] & bit ? COL_GIVEN : COL_CELL,
+            lit
+              ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD)
+              : state.immutable[i] & bit
+                ? COL_GIVEN
+                : COL_CELL,
           );
           // The cell the hint's sentence names, under its letters.
           ds.hint.drawHatch(

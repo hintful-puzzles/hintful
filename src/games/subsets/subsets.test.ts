@@ -48,6 +48,7 @@ import {
   COL_CELL,
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_RULED_OUT,
   newDrawState,
@@ -717,7 +718,10 @@ describe("subsets rendering (tier 2.5)", () => {
     const plain = new Set(slots(paint(NO_FLASH), COL_CELL));
     const given = new Set(slots(paint(NO_FLASH), COL_GIVEN));
     /** The slots a frame fills with the flash color. */
-    const lit = (ops: ReturnType<typeof paint>): string[] => slots(ops, COL_FLASH);
+    const lit = (ops: ReturnType<typeof paint>): string[] => [
+      ...slots(ops, COL_FLASH),
+      ...slots(ops, COL_FLASH_LEAD),
+    ];
     const run = winFlashRun(paint, lit);
     const step = (key: string): number => {
       const [x, y] = key.split(",").map(Number);
@@ -729,6 +733,19 @@ describe("subsets rendering (tier 2.5)", () => {
       expect(given.size).toBeGreaterThan(0);
       expect(plain.size + given.size).toBe(PARAMS.w * PARAMS.h * PARAMS.n);
       expectWinFlashTravels(run, plain.size + given.size, step);
+    });
+
+    it("paints the leading edge in one flash color and the body in the other", () => {
+      const slots = new Set(
+        winFlashRun(paint, (ops) =>
+          ops.flatMap((op) =>
+            op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+              ? [op.color]
+              : [],
+          ),
+        ).frames.flat(),
+      );
+      expect(slots).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
     });
 
     it("fills a cell's slots together, and each has its own surface back after", () => {

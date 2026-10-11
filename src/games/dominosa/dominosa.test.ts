@@ -29,7 +29,7 @@ import { dominosaGame } from "./index.ts";
 // A set up to 1 above Easy and a set up to 2 above Normal.
 describeAbsentTiers(dominosaGame, ["1db", "1dh", "1de", "2dh", "2de"]);
 
-import { COL_DOMINOCLASH, COL_FLASH, COL_REFERENCE } from "./render.ts";
+import { COL_DOMINOCLASH, COL_FLASH, COL_FLASH_LEAD, COL_REFERENCE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {
   DCOUNT,
@@ -468,8 +468,14 @@ describe("dominosa render", () => {
     const solved = dominosaGame.executeMove(state, r.move);
     const { w, h, grid } = solved;
     const palette = dominosaGame.colors([0.9, 0.9, 0.9]);
-    // The squares whose domino is drawn in its number's color, by index: a
-    // tile is drawn under its own clip, in row order on a fresh draw state.
+    // The squares whose domino's ground is either tone of the flash, by index:
+    // a tile is drawn under its own clip, in row order on a fresh draw state.
+    const tones = new Set<number>();
+    const isLit = (color: number): boolean => {
+      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+      tones.add(color);
+      return true;
+    };
     const paint = (flash: Flash): number[] => {
       const dr = new RecordingDrawing(palette);
       const ds = preferredDrawState(dominosaGame, solved);
@@ -487,7 +493,7 @@ describe("dominosa render", () => {
       let tile = -1;
       for (const op of dr.ops) {
         if (op.op === "clip") tile++;
-        else if (op.op === "rect" && op.color === COL_FLASH) lit.add(tile);
+        else if (op.op === "rect" && isLit(op.color)) lit.add(tile);
       }
       expect(tile).toBe(w * h - 1);
       return [...lit];
@@ -501,5 +507,6 @@ describe("dominosa render", () => {
     const step = (i: number): number =>
       ((i % w) + (grid[i] % w) - Math.floor(i / w) - Math.floor(grid[i] / w)) / 2;
     expectWinFlashTravels(run, w * h, step);
+    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });

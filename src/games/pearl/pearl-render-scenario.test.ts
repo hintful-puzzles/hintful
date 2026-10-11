@@ -10,10 +10,7 @@ import { describe, expect, it } from "vitest";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
-import {
-  paintsWith,
-  RecordingDrawing,
-} from "../../engine/testing/recording-drawing.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
@@ -27,6 +24,7 @@ import { pearlGame } from "./index.ts";
 import {
   COL_BLACK,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
@@ -208,7 +206,7 @@ describe("pearl win flash", () => {
     let clip = -1;
     for (const op of dr.ops) {
       if (op.op === "clip") clip = fromCoord(op.y, m) * w + fromCoord(op.x, m);
-      else if (paintsWith(op, COL_FLASH)) cells.add(clip);
+      else if (litSlot("color" in op ? op.color : -1)) cells.add(clip);
     }
     return [...cells];
   };
@@ -240,5 +238,15 @@ describe("pearl win flash", () => {
     expect(step.size).toBe(loop.length);
     const run = winFlashRun(paint, lit, 80);
     expectWinFlashTravels(run, loop.length, (i) => step.get(i) ?? -1);
+    expect(slotsSeen).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });
+
+/** The flash's slots the frames read so far were painted with: a lit element
+ * is one painted in either, the highlight's body or its leading edge. */
+const slotsSeen = new Set<number>();
+function litSlot(color: number): boolean {
+  if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+  slotsSeen.add(color);
+  return true;
+}

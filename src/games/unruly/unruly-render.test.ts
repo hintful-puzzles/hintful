@@ -29,6 +29,7 @@ import {
   COL_ERROR,
   COL_ERROR_TEXT,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_HINT,
   COL_HINT_REF,
@@ -296,7 +297,9 @@ describe("Unruly: the win flash sweeps the cells", () => {
   };
   /** The cells a frame fills with the flash color, as the `x,y` drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] =>
-    bodies(ops).flatMap((op) => (op.color === COL_FLASH ? [`${op.x},${op.y}`] : []));
+    bodies(ops).flatMap((op) =>
+      op.color === COL_FLASH || op.color === COL_FLASH_LEAD ? [`${op.x},${op.y}`] : [],
+    );
   const step = (key: string): number => {
     const [x, y] = key.split(",").map(Number);
     return x - y;
@@ -308,6 +311,19 @@ describe("Unruly: the win flash sweeps the cells", () => {
 
   it("travels every cell, from the bottom left to the top right", () => {
     expectWinFlashTravels(winFlashRun(paint, lit), cells, step);
+  });
+
+  it("paints the leading edge in one flash color and the body in the other", () => {
+    const slots = new Set(
+      winFlashRun(paint, (ops) =>
+        ops.flatMap((op) =>
+          op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+            ? [op.color]
+            : [],
+        ),
+      ).frames.flat(),
+    );
+    expect(slots).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 
   it("fills a given as it fills any other cell, and keeps its piece", () => {
@@ -322,7 +338,7 @@ describe("Unruly: the win flash sweeps the cells", () => {
     };
     expect(surfaceAt(paintGiven(NO_FLASH))).toBe(COL_GIVEN);
     const surfaces = winFlashRun(paintGiven, (ops) => [surfaceAt(ops)]).frames.flat();
-    expect(new Set(surfaces)).toEqual(new Set([COL_GIVEN, COL_FLASH]));
+    expect(new Set(surfaces)).toEqual(new Set([COL_GIVEN, COL_FLASH, COL_FLASH_LEAD]));
     const pieces = (ops: readonly DrawOp[]) =>
       opsOfKind(ops, "polygon").filter((o) => o.fill === COL_0 || o.fill === COL_1)
         .length;

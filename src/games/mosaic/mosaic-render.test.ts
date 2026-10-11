@@ -19,6 +19,7 @@ import {
   COL_ERROR,
   COL_ERROR_TEXT,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GRID,
   COL_SHADED,
   COL_TEXT,
@@ -229,18 +230,23 @@ describe("Mosaic redraw", () => {
       return ops;
     };
     // The cells whose ground is the flash color, each as its index.
+    // Lit is either tone of the highlight, and the flash shows both.
+    const tones = new Set<number>();
+    const isLit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color).size > 0;
     const run = winFlashRun(paint, (ops) => {
       // A lit cell keeps what it holds: only the surface under it changes.
       expect(pieces(ops).length).toBe(8);
       expect(crossStrokes(ops).length).toBe(0);
       return ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_FLASH && o.w === TS - 1
+        o.op === "rect" && isLit(o.color) && o.w === TS - 1
           ? [((o.y - TS / 2) / TS) * 3 + (o.x - TS / 2) / TS]
           : [],
       );
     });
     // The blank cell in the middle lights too, in place of its own surface.
     expectWinFlashTravels(run, 9, (i) => sweepStep(i % 3, Math.floor(i / 3)));
+    expect(tones.size).toBe(2);
     expect(clearSurfaces(paint(NO_FLASH)).length).toBe(1);
   });
 

@@ -31,7 +31,14 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
-import { border, COL_FLASH, COL_ISLAND, COL_MARK, newDrawState } from "./render.ts";
+import {
+  border,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_ISLAND,
+  COL_MARK,
+  newDrawState,
+} from "./render.ts";
 import { solveFromScratch } from "./solver.ts";
 import {
   BRIDGES_PRESETS,
@@ -624,6 +631,13 @@ describe("bridges render smoke (tier 2.5)", () => {
     // wherever its circle is drawn from, and a square of a bridge by the bars
     // its own tile draws.
     const cell = (px: number) => Math.floor((px - border(24)) / 24);
+    // Lit is either tone of the flash.
+    const tones = new Set<number>();
+    const isLit = (color: number): boolean => {
+      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+      tones.add(color);
+      return true;
+    };
     const isIsland = (i: number) =>
       (solved.gridAt(i % p.w, Math.floor(i / p.w)) & G_ISLAND) !== 0;
     const lit = (ops: ReturnType<typeof paint>): number[] => {
@@ -632,14 +646,9 @@ describe("bridges render smoke (tier 2.5)", () => {
       for (const o of ops) {
         if (o.op === "clip")
           tile = o.w === 24 && o.h === 24 ? cell(o.y) * p.w + cell(o.x) : -1;
-        else if (o.op === "circle" && o.fill === COL_FLASH)
+        else if (o.op === "circle" && isLit(o.fill))
           squares.add(cell(o.cy) * p.w + cell(o.cx));
-        else if (
-          o.op === "rect" &&
-          o.color === COL_FLASH &&
-          tile >= 0 &&
-          !isIsland(tile)
-        )
+        else if (o.op === "rect" && tile >= 0 && !isIsland(tile) && isLit(o.color))
           squares.add(tile);
       }
       return [...squares];
@@ -655,6 +664,7 @@ describe("bridges render smoke (tier 2.5)", () => {
     expect(run.frames.flat().some((i) => !isIsland(i))).toBe(true);
     // A square's place in the sweep is its x less its y.
     expectWinFlashTravels(run, elements, (i) => (i % p.w) - Math.floor(i / p.w));
+    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });
 

@@ -3,7 +3,7 @@
 ### Requirement: The completion flash lights the grid's squares
 
 The completion flash SHALL sweep the grid's squares, and SHALL fill a lit
-square with the flash color under its diagonal and its clue discs. The margin
+square with a flash color under its diagonal and its clue discs. The margin
 round the grid, where the outer clues are drawn, SHALL never be lit.
 
 #### Scenario: A square the highlight has not reached

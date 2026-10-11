@@ -32,6 +32,7 @@ import {
   COL_CURSOR,
   COL_ERRORBG,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GOAL,
   COL_GOALBG,
   computeSize,
@@ -347,14 +348,19 @@ describe("completion flash", () => {
     const state = board(3, 3, `${ALL_WALLS_3},i`);
     const cell = (px: number) => Math.floor((px - origin(TS)) / TS);
     // The squares filled in the flash color, each as its index.
+    // Lit is either tone of the highlight, and the flash shows both.
+    const tones = new Set<number>();
+    const isLit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color).size > 0;
     const run = winFlashRun(
       (flash) => frame(state, newUi(), flash).dr,
       (dr) =>
         dr.ops.flatMap((o) =>
-          o.op === "rect" && o.color === COL_FLASH ? [cell(o.y) * 3 + cell(o.x)] : [],
+          o.op === "rect" && isLit(o.color) ? [cell(o.y) * 3 + cell(o.x)] : [],
         ),
     );
     expectWinFlashTravels(run, 9, (i) => sweepStep(i % 3, Math.floor(i / 3)));
+    expect(tones.size).toBe(2);
   });
 
   it("hides the keyboard cursor while the board celebrates", () => {

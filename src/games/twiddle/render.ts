@@ -9,6 +9,7 @@ import {
   CURSOR,
   cellSurface,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   INK,
 } from "../../engine/color/palette.ts";
@@ -20,7 +21,7 @@ import { drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import type { TwiddleState, TwiddleUi } from "./state.ts";
 
 // --- constants --------------------------------------------------------
@@ -47,7 +48,9 @@ export const COL_TILE = 8;
 export const COL_WELL = 9;
 /** The face of a tile the win flash is on. */
 export const COL_FLASH = 10;
-export const NCOLORS = 11;
+/** The face of a tile the win flash's leading edge is on. */
+export const COL_FLASH_LEAD = 11;
+export const NCOLORS = 12;
 
 // --- cursor edge flags ------------------------------------------------
 
@@ -84,8 +87,8 @@ export function animLength(n: number): number {
 
 export interface TwiddleDrawState {
   started: boolean;
-  /** Per-cell cache of the packed `number*4 + orient` and, above them,
-   * whether the win flash is on the tile; `-1` forces a redraw (unknown, or
+  /** Per-cell cache of the win flash's tone on the tile and, above its two
+   * bits, the packed `number*4 + orient`; `-1` forces a redraw (unknown, or
    * inside the animating block). */
   cache: Int32Array;
   tileSize: number;
@@ -343,9 +346,7 @@ export function redraw(
     const inBlock =
       rot !== null && tx >= lastx && tx < lastx + n && ty >= lasty && ty < lasty + n;
     const lit = flash.win(sweepStep(tx, ty));
-    const t = inBlock
-      ? -1
-      : ((state.numbers[i] * 4 + state.orient[i]) << 1) | (lit ? 1 : 0);
+    const t = inBlock ? -1 : ((state.numbers[i] * 4 + state.orient[i]) << 2) | lit;
 
     let cc = false;
     if (cmoved) {
@@ -377,7 +378,7 @@ export function redraw(
         y,
         state.numbers[i],
         state.orient[i],
-        lit ? COL_FLASH : COL_TILE,
+        lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_TILE,
         // A tile outside the turning block draws unrotated, even mid-turn
         // (the win flash can repaint it while a new move animates).
         inBlock ? rot : null,
@@ -420,5 +421,6 @@ export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
   out[COL_TILE] = givenSurface(bg);
   out[COL_WELL] = cellSurface(bg);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }

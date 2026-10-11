@@ -18,6 +18,7 @@ import {
   COL_CELL,
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_GRID,
   COL_HINT,
@@ -172,12 +173,17 @@ describe("pieces on a quiet surface", () => {
       return rec;
     };
     // The cells whose ground is the flash color, each as its index.
+    // Lit is either tone of the highlight, and the flash shows both.
+    const tones = new Set<number>();
+    const isLit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color).size > 0;
     const run = winFlashRun(paint, (rec) => {
       // A lit cell keeps its piece.
       expect(rec.ops.filter((o) => o.op === "polygon")).toHaveLength(2);
-      return surfaces(rec).flatMap((color, i) => (color === COL_FLASH ? [i] : []));
+      return surfaces(rec).flatMap((color, i) => (isLit(color) ? [i] : []));
     });
     expectWinFlashTravels(run, 9, (i) => sweepStep(i % 3, Math.floor(i / 3)));
+    expect(tones.size).toBe(2);
   });
 
   it("keeps a shaded piece its color under an error, and frames the cell", () => {

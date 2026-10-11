@@ -24,7 +24,7 @@ import {
   drawBorderTile,
   F_CLUE_ERROR,
   F_CORRECT,
-  F_FLASH,
+  flashFlag,
   hintTileBits,
   invalidateDanglingRegions,
   mistakeEdgeBits,
@@ -34,6 +34,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -70,6 +71,9 @@ export const COL_CORRECT = 6; // a completed, correct region
 export const COL_HINT = 7; // the edges a hint step sets, and its hatched region
 export const COL_HINT_CELL = 8; // the outline on a square a hint step cites
 export const COL_CELL = 9; // the surface of every cell
+/** The body of a cell under the win flash's leading edge, where `COL_FLASH` is
+ * under its body. */
+export const COL_FLASH_LEAD = 10;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -77,6 +81,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = background;
   out[COL_CELL] = cellSurface(background);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = INK;
   out[COL_ERROR] = ERROR;
   out[COL_HINT] = HINT_ACTION;
@@ -92,6 +97,7 @@ export function colors(defaultBackground: Color): Color[] {
 const PALETTE: BorderGridColors = {
   background: COL_CELL,
   flash: COL_FLASH,
+  flashLead: COL_FLASH_LEAD,
   correct: COL_CORRECT,
   grid: COL_GRID,
   lineNo: COL_LINE_NO,
@@ -182,7 +188,7 @@ export function redraw(
       const i = r * w + c;
       let flags = borders[i] | mistakeMask[i] | hintMask[i];
 
-      if (flash.win(sweepStep(c, r))) flags |= F_FLASH;
+      flags |= flashFlag(flash.win(sweepStep(c, r)));
 
       const root = blackDsf.canonify(i);
       const counts = regionCounts.get(root);

@@ -30,6 +30,7 @@ import {
   ERROR,
   ERROR_TEXT,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -43,7 +44,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { BricksHint } from "./index.ts";
 import { bricksValidate } from "./solver.ts";
 import {
@@ -90,8 +91,9 @@ export const COL_CLEAR_MARK = 10;
 export const COL_ERROR_TEXT = 11;
 /** The surface of a cell the player has made clear. */
 export const COL_CLEAR = 12;
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 13;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -108,6 +110,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CLEAR_MARK] = CLEAR_MARK;
   out[COL_CLEAR] = CLEAR;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
   return out;
 }
@@ -206,8 +209,8 @@ function drawErrGravity(dr: GameDrawing, ts: number, x: number, y: number): void
 // bits (num/bound/color + FE_* error/cursor flags all fit under 0x2000).
 const HINT_TARGET = 1 << 13; // the forced cell — painted COL_HINT
 const HINT_EVID = 1 << 14; // a deduction-evidence cell — inset COL_HINT_CELL ring
-/** The win flash is on this cell. */
-const LIT = 1 << 15;
+/** The win flash's tone on this cell: two bits. */
+const K_LIT = 15;
 
 // --- one tile ---------------------------------------------------------------
 
@@ -228,16 +231,17 @@ function drawTile(
   // A cell the answer contradicts is drawn in the error color itself: it need
   // break no rule, so no bar or diamond is there to point at it.
   const wrong = (n & FE_WRONG) !== 0;
-  const lit = (n & LIT) !== 0;
+  const tone = ((n >> K_LIT) & 3) as WinTone;
+  const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : -1;
   if (color === F_UNSHADE) {
     drawClearSquare(
       dr,
       inner,
-      lit ? COL_FLASH : COL_CLEAR,
+      lit >= 0 ? lit : COL_CLEAR,
       wrong ? COL_ERROR : COL_CLEAR_MARK,
     );
   } else {
-    dr.drawRect(inner, lit ? COL_FLASH : color ? COL_EMPTY : COL_GIVEN);
+    dr.drawRect(inner, lit >= 0 ? lit : color ? COL_EMPTY : COL_GIVEN);
     if (color === F_SHADE)
       drawPiece(dr, inner, SHADED_SHAPE, wrong ? COL_ERROR : COL_SHADE);
   }
@@ -374,7 +378,7 @@ export function redraw(
     // The win flash sweeps the cells as drawn: a row sits half a cell right
     // of the one above, so a cell's place is its pixel origin's.
     const { x: tx, y: ty } = tileOrigin(x, y, h, ts);
-    if (flash.win(sweepStep(tx, ty))) n |= LIT;
+    n |= flash.win(sweepStep(tx, ty)) << K_LIT;
     if (errorFlags) n |= errorFlags[i];
     if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) n |= FE_CURSOR;
     if (hintTargets.has(i)) n |= HINT_TARGET;

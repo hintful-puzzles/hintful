@@ -20,6 +20,7 @@ import {
   COL_KNOWN,
   COL_SETTLED,
   COL_WIN,
+  COL_WIN_LEAD,
   redraw,
 } from "./render.ts";
 import {
@@ -144,17 +145,21 @@ describe("Black Box redraw", () => {
     s = blackboxGame.executeMove(s, { type: "reveal" });
     expect(blackboxGame.status(s)).toBe("solved");
 
-    // The squares filled in the flash's color, as their faces' origins, and
-    // the balls drawn.
+    // The squares filled in either tone of the flash, as their faces'
+    // origins, and the balls drawn.
+    const tones = new Set<number>();
+    const isLit = (color: number): boolean => {
+      if (color !== COL_WIN && color !== COL_WIN_LEAD) return false;
+      tones.add(color);
+      return true;
+    };
     const paint = (flash: Flash) => {
       const { dr, ops } = recordingDrawing();
       redraw(dr, freshDs(s), null, s, 1, freshUi(s), 0, flash);
       return ops;
     };
     const squares = (ops: ReturnType<typeof paint>): string[] =>
-      ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_WIN ? [`${o.x},${o.y}`] : [],
-      );
+      ops.flatMap((o) => (o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : []));
     const discs = (ops: ReturnType<typeof paint>): number =>
       ops.filter((o) => o.op === "circle" && o.fill === COL_BALL).length;
     const settled = paint(NO_FLASH);
@@ -170,5 +175,6 @@ describe("Black Box redraw", () => {
       5 * 5,
       (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
     );
+    expect(tones).toEqual(new Set([COL_WIN, COL_WIN_LEAD]));
   });
 });

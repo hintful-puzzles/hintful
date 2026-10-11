@@ -14,6 +14,7 @@ import {
   COL_BORDER,
   COL_CELL,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GRID,
   COL_PAINT,
   COL_SOLID,
@@ -116,14 +117,20 @@ describe("Cube rendering", () => {
     const p: CubeParams = { solid, d1, d2 };
     const area = gridArea(p.d1, p.d2, SOLIDS[p.solid].order);
     const state = newState(p, `${"0".repeat(Math.floor((area + 3) / 4))},0`);
-    // The squares of the arena filled in the flash's color, by index.
+    // The squares of the arena filled in either tone of the flash, by index.
+    const tones = new Set<number>();
+    const isLit = (color: number): boolean => {
+      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+      tones.add(color);
+      return true;
+    };
     const paint = (flash: Flash): number[] => {
       const { dr, ops } = recordingDrawing();
       const ds = newDrawState(state, cubeGame.preferredTileSize ?? 48);
       redraw(dr, ds, null, state, 1, {}, 0, flash);
       return opsOfKind(ops, "polygon")
         .slice(0, state.grid.length)
-        .flatMap((o, i) => (o.fill === COL_FLASH ? [i] : []));
+        .flatMap((o, i) => (isLit(o.fill) ? [i] : []));
     };
     expect(paint(NO_FLASH)).toEqual([]);
     // A square's place in the sweep: its center's x less its y.
@@ -138,5 +145,7 @@ describe("Cube rendering", () => {
       state.grid.length,
       step,
     );
+    // The guard cannot win a Cube board, so both slots are held here.
+    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });

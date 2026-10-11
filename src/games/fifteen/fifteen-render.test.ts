@@ -13,7 +13,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { TILE } from "./hint-text.ts";
 import { executeMove, fifteenGame } from "./index.ts";
-import { COL_FLASH } from "./render.ts";
+import { COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
 import { type FifteenState, newState } from "./state.ts";
 
 const PALETTE = fifteenGame.colors(DEFAULT_BACKGROUND);
@@ -90,9 +90,12 @@ describe("Fifteen rendering", () => {
 
   it("the win flash sweeps the tiles from the bottom left to the top right", () => {
     const state = solved(4, 4);
-    /** The tiles whose face, inside its bevel, is the flash color, as
-     * `column,row`. */
+    /** The tiles whose face, inside its bevel, is one of the flash's two
+     * colors, as `column,row`. */
     const cell = (v: number) => Math.floor((v - TS / 2) / TS);
+    const tones = new Set<number>();
+    const lit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color) !== null;
     const run = winFlashRun(
       (flash: Flash) => {
         const { dr } = recordingDrawing();
@@ -101,13 +104,12 @@ describe("Fifteen rendering", () => {
       },
       (dr) =>
         dr.ops.flatMap((op) =>
-          op.op === "rect" && op.color === COL_FLASH
-            ? [`${cell(op.x)},${cell(op.y)}`]
-            : [],
+          op.op === "rect" && lit(op.color) ? [`${cell(op.x)},${cell(op.y)}`] : [],
         ),
     );
     // Every tile, and never the gap in the bottom right corner.
     expectWinFlashTravels(run, 15, sweepOf);
+    expect([...tones].sort()).toEqual([COL_FLASH, COL_FLASH_LEAD]);
     expect(run.frames[0]).toEqual(["0,3"]);
     expect(run.frames.flat()).not.toContain("3,3");
   });

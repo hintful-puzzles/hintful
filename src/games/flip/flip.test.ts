@@ -18,7 +18,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { PuzzleButton } from "../../engine/types.ts";
 import { NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { type FlipParams, type FlipState, flipGame } from "./index.ts";
-import { border, COL_FLASH } from "./render.ts";
+import { border, COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
 
 function recordingDrawing() {
   const dr = new RecordingDrawing(flipGame.colors(DEFAULT_BACKGROUND));
@@ -399,7 +399,7 @@ describe("Flip win flash", () => {
   /** The squares whose ground a frame's ops fill in the flash color, by cell. */
   const lit = (ops: RecordingDrawing["ops"]): number[] =>
     opsOfKind(ops, "rect")
-      .filter((o) => o.color === COL_FLASH)
+      .filter((o) => litSlot(o.color))
       .map(
         (o) =>
           Math.floor((o.y - border(TILE)) / TILE) * params.w +
@@ -428,6 +428,7 @@ describe("Flip win flash", () => {
     expectWinFlashTravels(run, params.w * params.h, (i) =>
       sweepStep(i % params.w, Math.floor(i / params.w)),
     );
+    expect(slotsSeen).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
     expect(run.frames[0]).toEqual([(params.h - 1) * params.w]);
   });
 
@@ -543,3 +544,12 @@ describe("Flip through the midend", () => {
     expect(me2.formatAsText()).toContain("+");
   });
 });
+
+/** The flash's slots the frames read so far were painted with: a lit element
+ * is one painted in either, the highlight's body or its leading edge. */
+const slotsSeen = new Set<number>();
+function litSlot(color: number): boolean {
+  if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+  slotsSeen.add(color);
+  return true;
+}

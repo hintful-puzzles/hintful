@@ -73,6 +73,7 @@ import {
   border,
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_PENCIL_BODY,
   type KeenDrawState,
   type KeenHint,
@@ -453,6 +454,9 @@ describe("keen render", () => {
     /** The cells filled with the flash color, as `column,row`. A cage's edge
      * moves a cell's fill by the edge's width, so by the cell it falls in. */
     const cell = (v: number) => Math.floor((v - border(ts)) / ts);
+    const tones = new Set<number>();
+    const lit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color) !== null;
     const run = winFlashRun(
       (flash: Flash) => {
         const dr = new RecordingDrawing(keenGame.colors(DEFAULT_BACKGROUND));
@@ -461,9 +465,10 @@ describe("keen render", () => {
       },
       (dr) =>
         dr.ops.flatMap((o) =>
-          o.op === "rect" && o.color === COL_FLASH ? [`${cell(o.x)},${cell(o.y)}`] : [],
+          o.op === "rect" && lit(o.color) ? [`${cell(o.x)},${cell(o.y)}`] : [],
         ),
     );
+    expect([...tones].sort()).toEqual([COL_FLASH, COL_FLASH_LEAD]);
     expectWinFlashTravels(run, 16, (key) => {
       const [x, y] = key.split(",").map(Number);
       return sweepStep(x, y);

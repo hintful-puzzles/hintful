@@ -12,6 +12,7 @@ import {
   CURSOR,
   cellSurface,
   FLASH,
+  FLASH_LEAD,
   GRID_DARK,
   HINT_ACTION,
   INK,
@@ -23,7 +24,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import type { Flash } from "../../engine/win-wave.ts";
+import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { wireDistance } from "../../engine/wires.ts";
 import type { NetslideHint } from "./hint.ts";
 import { SQUARE, TILE } from "./hint-text.ts";
@@ -78,6 +79,8 @@ export const COL_HINT = 9;
  * powered-wire color. */
 export const COL_CURSOR = 10;
 export const COL_CELL = 11; // a tile's face
+/** A tile's face under the win flash's leading edge. */
+export const COL_FLASHING_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -88,6 +91,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_FLASHING] = FLASH;
+  out[COL_FLASHING_LEAD] = FLASH_LEAD;
   out[COL_BORDER] = surfaceGrid(defaultBackground);
   out[COL_WIRE] = INK;
   out[COL_ENDPOINT] = TWO[0];
@@ -120,6 +124,8 @@ const HINT_LANDING = 0x80;
 const HINT_HOME = 0x100;
 /** On the line the sentence names as never sliding — hatched. */
 const HINT_LINE = 0x200;
+/** With `FLASHING`: the highlight on this tile is its leading edge. */
+const FLASHING_LEAD = 0x400;
 
 /** Takes anything carrying the grid dimensions, so `redraw` can size the
  * background from the state without conjuring a params object. */
@@ -236,7 +242,11 @@ function drawTile(
   // tile border. The tile the hint is placing takes no fill — it is
   // **double-ringed** at the end of this function instead, so the wires that say
   // *which piece* this is keep their own color rather than sitting on blue.
-  const background = tile & FLASHING ? COL_FLASHING : COL_CELL;
+  const background = !(tile & FLASHING)
+    ? COL_CELL
+    : tile & FLASHING_LEAD
+      ? COL_FLASHING_LEAD
+      : COL_FLASHING;
   dr.drawRect({ x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER }, COL_BORDER);
   const face = {
     x: bx + TILE_BORDER,
@@ -748,7 +758,10 @@ export function redraw(
         c |= plan && i === plan.destination && plan.belongs ? HINT_HOME : HINT_LANDING;
       if (hintLine.has(i)) c |= HINT_LINE;
 
-      if (reach !== null && reach[i] >= 0 && flash.win(reach[i])) c |= FLASHING;
+      if (reach !== null && reach[i] >= 0) {
+        const tone = flash.win(reach[i]);
+        if (tone) c |= tone === WIN_LEAD ? FLASHING | FLASHING_LEAD : FLASHING;
+      }
 
       // A tile on the line that last moved is repainted every frame: while the
       // animation runs, where it is drawn does not follow from its value.

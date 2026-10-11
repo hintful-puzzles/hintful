@@ -26,6 +26,7 @@ import {
   COL_BARRIER,
   COL_BORDER,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_LOCKED,
   COL_POWERED,
   COL_WIRE,
@@ -126,7 +127,7 @@ describe("Net: the win flash spreads from the source along the wires", () => {
     const dr = new RecordingDrawing(netGame.colors(DEFAULT_BACKGROUND));
     netGame.redraw(dr, ds, null, solved, 1, ui, 0, flash);
     return opsOfKind(dr.ops, "rect")
-      .filter((o) => o.color === COL_FLASH)
+      .filter((o) => litSlot(o.color))
       .map(
         (o) =>
           Math.floor((o.y - m) / ds.tileSize) * w + Math.floor((o.x - m) / ds.tileSize),
@@ -158,6 +159,16 @@ describe("Net: the win flash spreads from the source along the wires", () => {
     }
     const run = winFlashRun(lit, (frame) => frame, 150);
     expectWinFlashTravels(run, w * h, (i) => distance.get(i) ?? -1);
+    expect(slotsSeen).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
     expect(run.frames[0]).toEqual([source]);
   });
 });
+
+/** The flash's slots the frames read so far were painted with: a lit element
+ * is one painted in either, the highlight's body or its leading edge. */
+const slotsSeen = new Set<number>();
+function litSlot(color: number): boolean {
+  if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+  slotsSeen.add(color);
+  return true;
+}

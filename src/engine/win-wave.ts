@@ -24,18 +24,45 @@ export interface Flash {
   /** Whether a win flash is running, for a game that works its route out
    * (walks its loop, measures from its source) only when one is. */
   readonly winning: boolean;
-  /** Whether the win's highlight is on the element at `position`. Ask for
-   * every element that can light, on every frame, and for no other: the range
-   * of positions asked about is the route the highlight travels. */
-  win(position: number): boolean;
+  /** Which part of the win's highlight is on the element at `position`, and
+   * {@link WIN_NONE} when none is. Ask for every element that can light, on
+   * every frame, and for no other: the range of positions asked about is the
+   * route the highlight travels. */
+  win(position: number): WinTone;
+}
+
+/** The highlight is not on the element. Falsy, so `if (flash.win(p))` asks
+ * whether an element is lit at all. */
+export const WIN_NONE = 0;
+/** The body of the highlight is on the element: the `FLASH` role. */
+export const WIN_BODY = 1;
+/** The leading edge of the highlight is on the element: the `FLASH_LEAD`
+ * role. */
+export const WIN_LEAD = 2;
+/**
+ * What the highlight shows on an element. Two tones and not one, because no
+ * one color reads on every board: the body's yellow is lost on a yellow
+ * field, the lead's white on a white cell, and each shows where the other
+ * cannot. Two bits in a tile's cache key.
+ */
+export type WinTone = typeof WIN_NONE | typeof WIN_BODY | typeof WIN_LEAD;
+
+/** The palette index a lit element is painted with: the slot the game gave
+ * the `FLASH` role for the body, the slot it gave `FLASH_LEAD` for the lead. */
+export function winSlot(
+  tone: typeof WIN_BODY | typeof WIN_LEAD,
+  body: number,
+  lead: number,
+): number {
+  return tone === WIN_LEAD ? lead : body;
 }
 
 /** No flash of either kind: what a settled frame is drawn with. */
-export const NO_FLASH: Flash = { time: 0, winning: false, win: () => false };
+export const NO_FLASH: Flash = { time: 0, winning: false, win: () => WIN_NONE };
 
 /** A flash of the game's own, `time` seconds in. */
 export function ownFlash(time: number): Flash {
-  return { time, winning: false, win: () => false };
+  return { time, winning: false, win: () => WIN_NONE };
 }
 
 /** How long the win flash lasts, on every board of every game. */
@@ -47,6 +74,10 @@ export const WIN_STILL_S = 0.6;
  * one length for every board, a band a few squares long would light each
  * square of a long track for a few hundredths of a second. */
 const WIN_BAND = 0.15;
+/** The share of the band, from its leading edge back, that is the lead. An
+ * element is in the lead as the highlight reaches it and in the body after,
+ * so on the shortest route it still shows both. */
+const WIN_LEAD_SHARE = 1 / 3;
 
 /** The position of an element centered at `(x, y)` in a diagonal sweep from
  * the bottom left to the top right. Any coordinates with y downward serve, a
@@ -148,20 +179,23 @@ export class WinWave implements Flash {
    * at once in place of a highlight that travels. */
   constructor(private readonly still: boolean) {}
 
-  win(position: number): boolean {
+  win(position: number): WinTone {
     if (position < this.low) this.low = position;
     if (position > this.high) this.high = position;
     // Past its length nothing is lit, said outright: the sums below would put
     // the last element a rounding error inside the band.
-    if (Number.isNaN(this.from) || this.done) return false;
-    if (this.still) return true;
+    if (Number.isNaN(this.from) || this.done) return WIN_NONE;
+    // Still, the board shows the two tones one after the other.
+    if (this.still)
+      return this.elapsed < WIN_STILL_S * WIN_LEAD_SHARE ? WIN_LEAD : WIN_BODY;
     // Never under a step, so a board a few steps across has no moment with
     // nothing lit between one step and the next.
     const band = Math.max(1, (this.to - this.from) * WIN_BAND);
     // The head ends a band past the last element, which so goes dark too.
     const head =
       this.from + ((this.to - this.from + band) * this.elapsed) / WIN_FLASH_S;
-    return position <= head && position > head - band;
+    if (position > head || position <= head - band) return WIN_NONE;
+    return position > head - band * WIN_LEAD_SHARE ? WIN_LEAD : WIN_BODY;
   }
 
   /** Put the clock at `seconds` since the highlight set off. */

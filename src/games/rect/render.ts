@@ -23,6 +23,7 @@ import {
   DRAG_REMOVE,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -43,7 +44,7 @@ import {
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { RectHint } from "./hint.ts";
 import { LINE, RECTANGLE } from "./hint-marks.ts";
 import { gridDrawRect, hrange, vrange } from "./moves.ts";
@@ -73,8 +74,10 @@ export const COL_HINT = 9;
 export const COL_HINT_CELL = 10;
 export const COL_CELL = 11; // the surface of a square with no number
 export const COL_GIVEN = 12; // the lifted surface under a number
-/** The ground of a square the win flash is on. */
+/** The ground of a square the win flash is on: its body, and its leading
+ * edge. */
 export const COL_FLASH = 13;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -84,6 +87,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_DRAG] = DRAG_ADD;
   out[COL_DRAGERASE] = DRAG_REMOVE;
   out[COL_CORRECT] = REGION_DONE;
@@ -108,9 +112,6 @@ const M_RIGHT = 1 << 21;
 const RING_SHIFT = 22;
 const OUTLINE_SHIFT = 26;
 const F_STRIPES = 1 << 30;
-/** The win flash is on the cell. The word's last bit, which makes a lit
- * cell's word negative and never -1, the cache's "not drawn". */
-const F_LIT = 1 << 31;
 
 const coord = (n: number, tile: number) => n * tile + BORDER;
 const colorOf = (k: number) =>
@@ -127,6 +128,7 @@ export function newDrawState(state: RectState, tileSize: number): RectDrawState 
     w: state.w,
     h: state.h,
     visible: new Int32Array(state.w * state.h).fill(-1),
+    tone: new Uint8Array(state.w * state.h),
   };
 }
 
@@ -141,6 +143,7 @@ function drawTile(
   corners: Uint8Array,
   bgflags: number,
   mistake: number,
+  tone: WinTone,
 ): void {
   const { w, h } = state;
   const cx = coord(x, tile);
@@ -158,8 +161,8 @@ function drawTile(
     cy + 1,
     tile - 1,
     tile - 1,
-    bgflags & F_LIT
-      ? COL_FLASH
+    tone
+      ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
       : bgflags & F_CORRECT
         ? COL_CORRECT
         : num
@@ -414,7 +417,7 @@ export function redraw(
       if (y + 1 < h) c |= corners[(y + 1) * w + x] << 12;
       if (x + 1 < w && y + 1 < h) c |= corners[(y + 1) * w + (x + 1)] << 14;
       if (state.correct[y * w + x]) c |= F_CORRECT;
-      if (flash.win(sweepStep(x, y))) c |= F_LIT;
+      const tone = flash.win(sweepStep(x, y));
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) c |= F_CURSOR;
 
       let mistake = 0;
@@ -425,9 +428,10 @@ export function redraw(
       c |= mistake;
       c |= hintBits[y * w + x];
 
-      if (ds.visible[y * w + x] !== c) {
-        drawTile(dr, tile, state, x, y, hedge, vedge, corners, c, mistake);
+      if (ds.visible[y * w + x] !== c || ds.tone[y * w + x] !== tone) {
+        drawTile(dr, tile, state, x, y, hedge, vedge, corners, c, mistake, tone);
         ds.visible[y * w + x] = c;
+        ds.tone[y * w + x] = tone;
       }
     }
 }

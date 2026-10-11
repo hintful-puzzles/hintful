@@ -47,6 +47,7 @@ import {
   COL_CELL,
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_LINE,
   newDrawState,
   redraw,
@@ -633,7 +634,9 @@ describe("sticks: the win flash sweeps the open cells", () => {
   /** The cells a frame fills with the flash color, as the `x,y` drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] =>
     ops.flatMap((op) =>
-      op.op === "rect" && op.color === COL_FLASH ? [`${op.x},${op.y}`] : [],
+      op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+        ? [`${op.x},${op.y}`]
+        : [],
     );
   const step = (key: string): number => {
     const [x, y] = key.split(",").map(Number);
@@ -642,6 +645,19 @@ describe("sticks: the win flash sweeps the open cells", () => {
 
   it("travels every open cell and no block, from the bottom left to the top right", () => {
     expectWinFlashTravels(winFlashRun(paint, lit), open, step);
+  });
+
+  it("paints the leading edge in one flash color and the body in the other", () => {
+    const slots = new Set(
+      winFlashRun(paint, (ops) =>
+        ops.flatMap((op) =>
+          op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+            ? [op.color]
+            : [],
+        ),
+      ).frames.flat(),
+    );
+    expect(slots).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 
   it("keeps a lit cell's line, and repaints the cell when the flash leaves it", () => {

@@ -10,7 +10,7 @@
 A move SHALL animate each square it flips as the old piece shrinking away and
 the new one growing in its place, never both at once. The win flash SHALL
 sweep the squares along the diagonal, and a lit square's ground SHALL be
-filled with the flash color, with its piece and the diagram on it unchanged.
+filled with a flash color, with its piece and the diagram on it unchanged.
 
 #### Scenario: Halfway through a flip
 
@@ -22,4 +22,4 @@ filled with the flash color, with its piece and the diagram on it unchanged.
 #### Scenario: A move that does not solve the board
 
 - **WHEN** a press flips squares and leaves a light on
-- **THEN** no square's ground is the flash color in any frame of the flip
+- **THEN** no square's ground is a flash color in any frame of the flip

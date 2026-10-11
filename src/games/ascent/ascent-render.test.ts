@@ -31,6 +31,7 @@ import {
   COL_ARROW,
   COL_CELL,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_GRID,
   COL_HINT,
@@ -374,10 +375,20 @@ describe("ascent win flash", () => {
       paint,
       (rects) =>
         rects
-          .filter((o) => o.color === COL_FLASH)
+          .filter((o) => litSlot(o.color))
           .map((o) => ys.indexOf(o.y) * state.w + xs.indexOf(o.x)),
       60,
     );
     expectWinFlashTravels(run, state.w * state.h, (i) => state.grid[i]);
+    expect(slotsSeen).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });
+
+/** The flash's slots the frames read so far were painted with: a lit element
+ * is one painted in either, the highlight's body or its leading edge. */
+const slotsSeen = new Set<number>();
+function litSlot(color: number): boolean {
+  if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+  slotsSeen.add(color);
+  return true;
+}

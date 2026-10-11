@@ -43,6 +43,7 @@ import {
   COL_AIM,
   COL_BARREL,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_FLOOR,
   COL_PLAYER,
   COL_WALL,
@@ -692,7 +693,9 @@ describe("Sokoban: the win flash", () => {
   /** Where each square painted in the flash color is drawn, as `x,y`. */
   const run = winFlashRun(paint, (dr) =>
     dr.ops.flatMap((o) =>
-      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+      o.op === "rect" && (o.color === COL_FLASH || o.color === COL_FLASH_LEAD)
+        ? [`${o.x},${o.y}`]
+        : [],
     ),
   );
   /** The sweep's diagonal through a square drawn at `at`. */
@@ -703,5 +706,14 @@ describe("Sokoban: the win flash", () => {
 
   it("lights the floor of every square but a wall's, from the bottom left to the top right", () => {
     expectWinFlashTravels(run, state.w * state.h - walls, diagonal);
+  });
+
+  it("leads in the flash's lead color, with its body color behind", () => {
+    const paints = (slot: number) =>
+      winFlashRun(paint, (dr) =>
+        dr.ops.filter((o) => o.op === "rect" && o.color === slot),
+      ).frames.some((frame) => frame.length > 0);
+    expect(paints(COL_FLASH_LEAD)).toBe(true);
+    expect(paints(COL_FLASH)).toBe(true);
   });
 });

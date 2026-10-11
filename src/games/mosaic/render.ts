@@ -18,6 +18,7 @@ import {
   ERROR,
   ERROR_TEXT,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -35,7 +36,7 @@ import {
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
 import {
@@ -75,8 +76,10 @@ export const COL_ERROR_TEXT = 10;
 export const COL_CURSOR = 11;
 export const COL_HINT = 12;
 export const COL_HINT_EVIDENCE = 13;
-/** The ground of a cell the win flash is on, whatever it holds. */
+/** The ground of a cell the win flash is on, whatever it holds: its body, and
+ * its leading edge. */
 export const COL_FLASH = 14;
+export const COL_FLASH_LEAD = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -98,6 +101,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -123,12 +127,13 @@ const DRAWFLAG_CURSOR_UL = 0x800;
 const DRAWFLAG_MARGIN_R = 0x1000;
 const DRAWFLAG_MARGIN_D = 0x2000;
 const DRAWFLAG_MISTAKE = 0x4000;
-const DRAWFLAG_LIT = 0x8000;
 /** A hint mark's sides (`MarkOutlines.packed`) sit above every flag, so the
  * cache repaints a square whose mark moved. */
 const HINT_SIDES_SHIFT = 16;
 /** The number a hint step names, circled. Above the sides' eight bits. */
 const DRAWFLAG_HINT_NUMBER = 1 << 24;
+/** The win flash's tone on the cell, in two bits above the hint's. */
+const WIN_SHIFT = 25;
 
 export interface MosaicDrawState {
   tileSize: number;
@@ -186,18 +191,19 @@ function drawCell(
     const box = { x: startX, y: startY, w: ts - 1, h: ts - 1 };
     const shaded = (cell & STATE_MARKED) !== 0;
     const clear = !shaded && (cell & STATE_BLANK) !== 0;
-    const lit = (cell & DRAWFLAG_LIT) !== 0;
+    const tone = ((cell >> WIN_SHIFT) & 3) as WinTone;
+    const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : null;
     if (clear) {
       // No cross where the cell has a number, which takes the middle.
       drawClearSquare(
         dr,
         box,
-        lit ? COL_FLASH : COL_CLEAR,
+        lit ?? COL_CLEAR,
         COL_CLEAR_MARK,
         clueVal >= 0 ? null : box,
       );
     } else {
-      dr.drawRect(box, lit ? COL_FLASH : COL_CELL);
+      dr.drawRect(box, lit ?? COL_CELL);
       if (shaded) drawPiece(dr, box, SHADED_SHAPE, COL_SHADED);
     }
 
@@ -303,7 +309,7 @@ export function redraw(
       let cell = inBounds ? cells[y * width + x] : 0;
       if (x === width) cell |= DRAWFLAG_MARGIN_R;
       if (y === height) cell |= DRAWFLAG_MARGIN_D;
-      if (inBounds && flash.win(sweepStep(x, y))) cell |= DRAWFLAG_LIT;
+      if (inBounds) cell |= flash.win(sweepStep(x, y)) << WIN_SHIFT;
       if (ui.cursor.visible) {
         if (ui.cursor.x === x && ui.cursor.y === y) cell |= DRAWFLAG_CURSOR;
         if (ui.cursor.x === x - 1 && ui.cursor.y === y) cell |= DRAWFLAG_CURSOR_L;

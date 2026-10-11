@@ -18,7 +18,15 @@ import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { TE } from "./map-data.ts";
-import { COL_0, COL_3, COL_ERROR, COL_FLASH, COL_GRID, fromCoord } from "./render.ts";
+import {
+  COL_0,
+  COL_3,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_GRID,
+  fromCoord,
+} from "./render.ts";
 import type { MapMove, MapParams, MapState } from "./state.ts";
 
 const P: MapParams = { w: 12, h: 10, n: 12, diff: 1 };
@@ -88,7 +96,7 @@ describe("map win flash", () => {
   /** The cells whose square a frame fills in the flash color. */
   const blank = (dr: RecordingDrawing): number[] =>
     opsOfKind(dr.ops, "rect")
-      .filter((o) => o.w === TS && o.h === TS && o.color === COL_FLASH)
+      .filter((o) => o.w === TS && o.h === TS && litSlot(o.color))
       .map((o) => fromCoord(o.y, TS) * P.w + fromCoord(o.x, TS));
 
   it("sweeps the regions from the bottom left, each lit whole", () => {
@@ -111,5 +119,15 @@ describe("map win flash", () => {
       cellsOf.size,
       (r) => sweepStep(map.regionx[r], map.regiony[r]),
     );
+    expect(slotsSeen).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });
+
+/** The flash's slots the frames read so far were painted with: a lit element
+ * is one painted in either, the highlight's body or its leading edge. */
+const slotsSeen = new Set<number>();
+function litSlot(color: number): boolean {
+  if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+  slotsSeen.add(color);
+  return true;
+}

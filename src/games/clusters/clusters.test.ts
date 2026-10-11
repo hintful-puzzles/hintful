@@ -34,7 +34,13 @@ import type { Point } from "../../engine/types.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newClustersDesc } from "./generator.ts";
 import { clustersGame } from "./index.ts";
-import { COL_ERROR, COL_FLASH, COL_WRONG, PREFERRED_TILE_SIZE } from "./render.ts";
+import {
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_WRONG,
+  PREFERRED_TILE_SIZE,
+} from "./render.ts";
 import {
   COMPLETE,
   clustersStatus,
@@ -376,14 +382,20 @@ describe("executeMove + completion", () => {
     ]);
     expect(clustersGame.status(won)).toBe("solved");
     // The cells filled in the flash's color, as their origins: a given lights
-    // like any other.
+    // like any other. Lit is either tone of the flash.
+    const tones = new Set<number>();
+    const isLit = (color: number): boolean => {
+      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+      tones.add(color);
+      return true;
+    };
     const palette = clustersGame.colors([0.9, 0.9, 0.9]);
     const frame = (flash: Flash): string[] => {
       const dr = new RecordingDrawing(palette);
       const ds = clustersGame.newDrawState(won, PREFERRED_TILE_SIZE);
       clustersGame.redraw(dr, ds, null, won, 1, newUi(), 0, flash);
       return dr.ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+        o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : [],
       );
     };
     expect(frame(NO_FLASH)).toEqual([]);
@@ -393,6 +405,7 @@ describe("executeMove + completion", () => {
       6,
       (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
     );
+    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });
 

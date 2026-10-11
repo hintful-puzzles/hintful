@@ -47,14 +47,14 @@ SHALL take the same surface.
 The completion flash SHALL sweep the map by region: the regions SHALL light in
 the order of the points their numbers are drawn at along the diagonal, one
 place apart however far apart the points are, and the whole of a lit region
-SHALL be filled with the flash color and keep its border and its number.
+SHALL be filled with a flash color and keep its border and its number.
 The selected region's band SHALL be hidden while the flash plays.
 
 #### Scenario: A region that spans the sweep
 
 - **WHEN** a region reaches from one side of the map to the other and the
   highlight is on it
-- **THEN** every cell of it is the flash color in that frame, a split cell's
+- **THEN** every cell of it is one flash color in that frame, a split cell's
   triangle included, and none of it is in a frame where the highlight is not
 
 ## REMOVED Requirements

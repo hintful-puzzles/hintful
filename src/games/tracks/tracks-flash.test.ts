@@ -9,7 +9,7 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { tracksGame } from "./index.ts";
-import { COL_FLASH, PREFERRED_TILE_SIZE } from "./render.ts";
+import { COL_FLASH, COL_FLASH_LEAD, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   blankBoard,
   D,
@@ -35,8 +35,13 @@ function solved(): TracksState {
 }
 
 /** A win flash on `state`, each lit square as its index, row by row: the
- * squares whose tile draws something in the flash's color. */
-function flashOn(state: TracksState, frames: number) {
+ * squares whose tile draws something in one of `slots`, the flash's two
+ * colors unless a test asks about one. */
+function flashOn(
+  state: TracksState,
+  frames: number,
+  slots: readonly number[] = [COL_FLASH, COL_FLASH_LEAD],
+) {
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(tracksGame.colors(DEFAULT_BACKGROUND));
     const ds = tracksGame.newDrawState(state, PREFERRED_TILE_SIZE);
@@ -56,7 +61,7 @@ function flashOn(state: TracksState, frames: number) {
       let square = -1;
       for (const op of dr.ops) {
         if (op.op === "clip") square = index(op.x, op.y);
-        else if ("color" in op && op.color === COL_FLASH) squares.add(square);
+        else if ("color" in op && slots.includes(op.color)) squares.add(square);
       }
       return [...squares];
     },
@@ -133,5 +138,19 @@ describe("Tracks: the win flash runs the track from A to B", () => {
   it("starts at the entrance on the left edge", () => {
     for (const square of run.frames[0]) expect(along(state)(square)).toBeLessThan(4);
     expect(run.frames[0].some((square) => square % P.w === 0)).toBe(true);
+  });
+
+  it("leads in one color and follows in the other", () => {
+    const lead = flashOn(state, 30, [COL_FLASH_LEAD]).frames;
+    const body = flashOn(state, 30, [COL_FLASH]).frames;
+    const place = along(state);
+    expect(lead.some((frame) => frame.length > 0)).toBe(true);
+    expect(body.some((frame) => frame.length > 0)).toBe(true);
+    lead.forEach((front, i) => {
+      // Whatever is in the lead is further along the track than the body.
+      for (const square of front)
+        for (const behind of body[i])
+          expect(place(square)).toBeGreaterThan(place(behind));
+    });
   });
 });

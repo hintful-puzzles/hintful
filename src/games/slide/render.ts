@@ -45,7 +45,7 @@ import {
   mkhighlightSpecific,
 } from "../../engine/color/color-mkhighlight.ts";
 import { RED } from "../../engine/color/colors.ts";
-import { FLASH } from "../../engine/color/palette.ts";
+import { FLASH, FLASH_LEAD } from "../../engine/color/palette.ts";
 import {
   slideBlockBase,
   slideMainBlockBase,
@@ -57,7 +57,12 @@ import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import { coord as gridCoord } from "../../engine/geometry.ts";
 import type { Color, PaletteScheme, Point, Rect, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_LEAD,
+  type WinTone,
+} from "../../engine/win-wave.ts";
 import { movePiece } from "./moves.ts";
 import {
   cursorPos,
@@ -109,7 +114,9 @@ export const paletteScheme: Partial<PaletteScheme> = {
 /** The floor, or a block's face inside its bevel, where the win flash is on
  * it. Flat as the cursor is. */
 export const COL_FLASH = 22;
-export const NCOLORS = 23;
+/** The same, under the flash's leading edge. */
+export const COL_FLASH_LEAD = 23;
+export const NCOLORS = 24;
 
 /** Upstream `raise_colour`: two parts `src` to one part `limit`. */
 function raise(src: Color, limit: Color): Color {
@@ -181,6 +188,7 @@ export function colors(defaultBackground: Color): Color[] {
   // `findMistakes` hook, because every reachable position is legal.
   out[COL_CURSOR] = RED;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
 
   return out;
 }
@@ -205,17 +213,24 @@ export function computeSize(p: { w: number; h: number }, ts: number): Size {
  * The keyboard cursor is on this square. It takes bit 0, which upstream spent
  * on a write-only `BG_NORMAL`.
  *
- * Bit 3 is the one spare flag (bit 31 is the `Int32Array`'s sign), so the
- * overlay after the next has to widen the diff key. Widening is cheap — it is
- * a repaint cache, not a wire format — but must be deliberate, because an
- * overlay that does not fit in the word silently fails to repaint
+ * Bits 0–30 are all in use (bit 31 is the `Int32Array`'s sign), so the next
+ * overlay has to widen the diff key rather than find a spare flag. Widening is
+ * cheap — it is a repaint cache, not a wire format — but must be deliberate,
+ * because an overlay that does not fit in the word silently fails to repaint
  * (docs/games/rendering.md § "A packed diff key runs out of bits, and dead flags are where the next one comes from").
  */
 const FG_CURSOR = 0x00000001;
 const BG_TARGET = 0x00000002;
 const BG_FORCEFIELD = 0x00000004;
-/** The win's highlight is on this square's block, or on its floor. */
+/** The win flash is on this square's block, or on its floor: its leading
+ * edge, and its body. */
+const LIT_LEAD = 0x00000008;
 const LIT = 0x00000010;
+/** The flash color a lit square's ground takes, or -1 for one that is not lit. */
+const litColor = (val: number): number =>
+  val & LIT_LEAD ? COL_FLASH_LEAD : val & LIT ? COL_FLASH : -1;
+const litFlag = (tone: WinTone): number =>
+  tone === WIN_LEAD ? LIT_LEAD : tone ? LIT : 0;
 const FG_WALL = 0x00000020;
 const FG_MAIN = 0x00000040;
 const FG_NORMAL = 0x00000080;
@@ -583,7 +598,8 @@ function drawTile(
   let cc = val & BG_TARGET ? COL_TARGET : COL_BACKGROUND;
   let ch = cc + 1;
   let cl = cc + 2;
-  if (val & LIT) cc = COL_FLASH;
+  const lit = litColor(val);
+  if (lit >= 0) cc = lit;
 
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, cc);
   if (val & BG_FORCEFIELD) drawGate(dr, ts, tx, ty, val);
@@ -601,7 +617,7 @@ function drawTile(
     ch = cc + 1;
     cl = cc + 2;
     // A lit block keeps its bevel round a face in the flash color.
-    if (val & LIT) cc = COL_FLASH;
+    if (lit >= 0) cc = lit;
 
     drawPiecepart(dr, ts, tx, ty, (val >> FG_MAINPIECESH) & PIECE_MASK, cl, cc, ch);
   }
@@ -715,7 +731,7 @@ export function redraw(
 
   // The win's highlight takes a block whole, when it reaches the block's
   // middle, and the floor a square at a time. It leaves the wall alone.
-  const litBlocks = new Set<number>();
+  const litBlocks = new Map<number, number>();
   if (flash.winning) {
     const middles = new Map<number, { x: number; y: number; n: number }>();
     for (let i = 0; i < wh; i++) {
@@ -728,7 +744,7 @@ export function redraw(
       middles.set(canon, m);
     }
     for (const [canon, m] of middles)
-      if (flash.win(sweepStep(m.x / m.n, m.y / m.n))) litBlocks.add(canon);
+      litBlocks.set(canon, litFlag(flash.win(sweepStep(m.x / m.n, m.y / m.n))));
   }
 
   for (let y = 0; y < h; y++)
@@ -755,14 +771,14 @@ export function redraw(
       }
 
       if (board[i] === EMPTY) {
-        if (flash.win(sweepStep(x, y))) val |= LIT;
+        val |= litFlag(flash.win(sweepStep(x, y)));
       } else {
         const canon = dsf.canonify(i);
 
         if (board[i] === WALL) val |= FG_WALL;
         else if (canon === mainpos) val |= FG_MAIN;
         else val |= FG_NORMAL;
-        if (litBlocks.has(canon)) val |= LIT;
+        val |= litBlocks.get(canon) ?? 0;
         if (canon === grabpos) val |= FG_GRABBED;
 
         val |= findPiecepart(w, h, dsf, x, y) << FG_MAINPIECESH;

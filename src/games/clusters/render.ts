@@ -20,6 +20,7 @@ import {
   ERROR,
   ERROR_WASH,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -33,7 +34,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { ClustersHintHighlights, ClustersMistake } from "./index.ts";
 import { findErrors } from "./solver.ts";
 import {
@@ -77,8 +78,9 @@ export const COL_CELL = 11;
 export const COL_GIVEN = 12;
 /** The surface under a tile Check & Save found wrong. */
 export const COL_WRONG = 13;
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 14;
+export const COL_FLASH_LEAD = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -96,6 +98,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_WRONG] = ERROR_WASH;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   // The chain is outlined rather than washed, so it takes the mark form of the
@@ -123,7 +126,7 @@ export function computeSize(p: ClustersParams, ts: number): Size {
 const F_ERR = 1 << 8;
 const F_CUR = 1 << 9;
 const F_WRONG = 1 << 10;
-const F_LIT = 1 << 11; // the win flash is on this cell
+const K_LIT = 11; // bits 11-12: the win flash's tone on this cell
 
 // Hint-overlay bits, packed per cell into the OverlaySidecar, which is part of
 // the diff key (docs/games/rendering.md § "Overlay sidecars").
@@ -197,7 +200,7 @@ function drawTile(
   tile: number,
   error: boolean,
   wrong: boolean,
-  lit: boolean,
+  tone: WinTone,
   cursor: boolean,
   hintBits: number,
   hintOrder: number,
@@ -224,7 +227,13 @@ function drawTile(
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
   dr.drawRect(
     surface,
-    wrong ? COL_WRONG : lit ? COL_FLASH : tile & F_SINGLE ? COL_GIVEN : COL_CELL,
+    wrong
+      ? COL_WRONG
+      : tone
+        ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
+        : tile & F_SINGLE
+          ? COL_GIVEN
+          : COL_CELL,
   );
   if (tile & COLMASK) piece(tile, 1);
 
@@ -366,14 +375,14 @@ export function redraw(
       const cursor = ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y;
 
       const wrong = wrongTiles.has(i);
-      const lit = flash.win(sweepStep(x, y));
+      const tone = flash.win(sweepStep(x, y));
 
       const packed =
         (tile & 0x7) |
         (error ? F_ERR : 0) |
         (cursor ? F_CUR : 0) |
         (wrong ? F_WRONG : 0) |
-        (lit ? F_LIT : 0);
+        (tone << K_LIT);
       if (ds.cache[i] !== packed || ds.hint.stale(i)) {
         drawTile(
           dr,
@@ -383,7 +392,7 @@ export function redraw(
           tile,
           error,
           wrong,
-          lit,
+          tone,
           cursor,
           ds.hint.packed[i],
           ds.hint.order[i],

@@ -132,6 +132,27 @@ each element alone and requires more of that color in the frame than the
 settled board has. `drawCellBackground` takes the slot and a `HIGHLIGHT_WIN`,
 so the games that share that painter write one expression.
 
+### Two tones, because no one color reads on every board
+
+Yellow alone was deployed, and a Flood board won in yellow showed nothing but
+a line round the lit band. The census above had said why: every color is some
+board's. The owner proposed a second color, white, and chose a white leading
+edge ahead of a yellow body over the two alternating (2026-10-12): alternating
+in time strobes and still blinks out on a yellow field, and alternating by
+position checkers a diagonal.
+
+`flash.win` answers a tone, `WIN_LEAD` or `WIN_BODY`, and `WIN_NONE` (falsy)
+for an element that is not lit. The lead is the front third of the band, by
+position, so an element is white as the highlight reaches it and yellow
+after: every element shows both, on a route of any length, and the tone is
+two bits of a tile's key. The still flash for reduced motion shows the two
+one after the other.
+
+The guard cannot ask that each tone be seen on each element, since an element
+may rest in one of them, which is the case the second tone is for. It asks
+that a tone which changes the frame paint more of its own color, and that the
+two tones paint differently.
+
 ### What the conversion found, and what was done about it
 
 - **A given did not light.** Lifting a lit cell to the given's surface shows

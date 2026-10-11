@@ -22,6 +22,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -43,8 +44,8 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_WIN,
   highlightFill,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -79,7 +80,8 @@ export const PREFERRED_TILE_SIZE = 40;
 // --- palette ---------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-/** The ground of a square the win flash is on. */
+/** The ground of a square the win flash is on: its body, and its leading
+ * edge ({@link COL_FLASH_LEAD}). */
 export const COL_FLASH = 1;
 export const COL_GIVEN = 2; // the lifted surface of a square the puzzle filled
 export const COL_BORDER = 3;
@@ -111,12 +113,14 @@ export const COL_HINT_CELL = 20;
  * lowlight, a tint of the board. */
 export const COL_CURSOR = 21;
 export const COL_CELL = 22; // the surface of a square the player fills
+export const COL_FLASH_LEAD = 23;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = mkhighlightBackground(defaultBackground);
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_BORDER] = surfaceGrid(background);
   out[COL_BORDERCLUE] = INK;
   out[COL_PENCIL] = pencilColor(background);
@@ -367,7 +371,13 @@ function drawBall(
     bg = s.gridclues[i] ? COL_I_BALLBG : COL_G_BALLBG;
   } else {
     // Letters mode draws the ball "transparent" over whatever is behind it.
-    bg = highlightFill(highlight, COL_CURSOR, surfaceOf(s, i), COL_FLASH);
+    bg = highlightFill(
+      highlight,
+      COL_CURSOR,
+      surfaceOf(s, i),
+      COL_FLASH,
+      COL_FLASH_LEAD,
+    );
   }
   const color = s.gridclues[i] ? COL_I_BALL : COL_G_BALL;
 
@@ -554,14 +564,13 @@ export function redraw(
   for (let y = 0; y < o; y++) {
     for (let x = 0; x < o; x++) {
       const i = y * o + x;
-      const lit = flash.win(sweepStep(x, y));
-      const highlight = lit ? HIGHLIGHT_WIN : highlightOf(flags[i]);
-      // Packed key: flags (5) | symbol (4) | marks (nums+1 ≤ 10) | lit (1).
+      const tone = flash.win(sweepStep(x, y));
+      const highlight = winHighlight(tone) ?? highlightOf(flags[i]);
+      // Packed key: flags (5) | symbol (4) | marks (nums+1 ≤ 10) | tone (2).
       // Every overlay is in here or in a sidecar (docs/games/rendering.md
       // § "Overlay sidecars"), so nothing can change on screen without the cell
       // missing the cache.
-      const key =
-        flags[i] | (s.grid[i] << 5) | (s.pencil[i] << 9) | (lit ? 1 << 19 : 0);
+      const key = flags[i] | (s.grid[i] << 5) | (s.pencil[i] << 9) | (tone << 19);
       if (ds.drawn[i] === key && !ds.wrong.stale(i) && !ds.hint.stale(i)) continue;
       ds.drawn[i] = key;
 
@@ -582,6 +591,7 @@ export function redraw(
         COL_CURSOR,
         surfaceOf(s, i),
         COL_FLASH,
+        COL_FLASH_LEAD,
       );
       ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
 

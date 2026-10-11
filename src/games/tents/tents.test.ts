@@ -41,6 +41,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_MISTAKE,
   COL_TENT,
   COL_TREELEAF,
@@ -574,7 +575,9 @@ describe("tents: the win flash sweeps the squares", () => {
   /** The squares a frame fills with the flash color, as the `x,y` drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] =>
     ops.flatMap((op) =>
-      op.op === "rect" && op.color === COL_FLASH ? [`${op.x},${op.y}`] : [],
+      op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+        ? [`${op.x},${op.y}`]
+        : [],
     );
   const step = (key: string): number => {
     const [x, y] = key.split(",").map(Number);
@@ -587,6 +590,19 @@ describe("tents: the win flash sweeps the squares", () => {
 
   it("travels every square, from the bottom left to the top right", () => {
     expectWinFlashTravels(winFlashRun(paint, lit), squares, step);
+  });
+
+  it("paints the leading edge in one flash color and the body in the other", () => {
+    const slots = new Set(
+      winFlashRun(paint, (ops) =>
+        ops.flatMap((op) =>
+          op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+            ? [op.color]
+            : [],
+        ),
+      ).frames.flat(),
+    );
+    expect(slots).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 
   it("keeps the trees and the tents on the lit squares", () => {

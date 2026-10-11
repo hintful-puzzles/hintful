@@ -31,6 +31,7 @@ import {
   COL_AIM,
   COL_DEAD_PLAYER,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GEM,
   COL_HINT,
   COL_MINE,
@@ -655,12 +656,12 @@ describe("inertia rendering", () => {
 
   /** The squares whose floor is `color`, as the pixel each starts at. By its
    * size: a stop's ring is cut with narrower bands of the same color. */
-  const floors = (s: InertiaState, flash: Flash, color: number): string[] => {
+  const floors = (s: InertiaState, flash: Flash, ...colors: number[]): string[] => {
     const dr = new RecordingDrawing(inertiaGame.colors([1, 1, 1]));
     const ds = inertiaGame.newDrawState(s, 32);
     inertiaGame.redraw(dr, ds, null, s, 1, inertiaGame.newUi(s), 0, flash);
     return dr.ops.flatMap((o) =>
-      o.op === "rect" && o.color === color && o.w === 31 && o.h === 31
+      o.op === "rect" && colors.includes(o.color) && o.w === 31 && o.h === 31
         ? [`${o.x},${o.y}`]
         : [],
     );
@@ -673,10 +674,18 @@ describe("inertia rendering", () => {
     if (!result?.ok) throw new Error("the fixture does not solve");
     const won = inertiaGame.executeMove(s0, result.move);
     expect(inertiaGame.status(won)).toBe("solved");
+    // Lit in either of the flash's two colors, and some frame shows each.
+    const tones = { body: 0, lead: 0 };
     const run = winFlashRun(
-      (flash: Flash) => floors(won, flash, COL_FLASH),
+      (flash: Flash) => {
+        tones.body += floors(won, flash, COL_FLASH).length;
+        tones.lead += floors(won, flash, COL_FLASH_LEAD).length;
+        return floors(won, flash, COL_FLASH, COL_FLASH_LEAD);
+      },
       (lit) => lit,
     );
+    expect(tones.body).toBeGreaterThan(0);
+    expect(tones.lead).toBeGreaterThan(0);
     // Every square but the two walls, whose blocks cover their tiles.
     expectWinFlashTravels(run, 14, (key) => {
       const [x, y] = key.split(",").map(Number);
@@ -692,7 +701,7 @@ describe("inertia rendering", () => {
     expect(floors(dead, ownFlash(0.05), COL_DEAD_PLAYER).length).toBe(4);
     expect(floors(dead, ownFlash(0.15), COL_DEAD_PLAYER)).toEqual([]);
     expect(floors(dead, ownFlash(0.25), COL_DEAD_PLAYER).length).toBe(4);
-    expect(floors(dead, ownFlash(0.05), COL_FLASH)).toEqual([]);
+    expect(floors(dead, ownFlash(0.05), COL_FLASH, COL_FLASH_LEAD)).toEqual([]);
   });
 
   it("draws the aim arrow, in its own color, while a swipe is held", () => {

@@ -15,6 +15,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -32,7 +33,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { BUTTON, LASER } from "./hint-text.ts";
 import {
   BALL_GUESS,
@@ -70,9 +71,11 @@ export const COL_BUTTON = 9;
 const COL_CURSOR = 10;
 export const COL_HINT = 11;
 export const COL_HINT_EVIDENCE = 12;
-/** The ground of a square of the box the win flash is on. */
+/** The ground of a square of the box the win flash is on: its body, and its
+ * leading edge. */
 export const COL_WIN = 13;
-const NCOLORS = 14;
+export const COL_WIN_LEAD = 14;
+const NCOLORS = 15;
 
 /** A ball is the pair's disc, in a color no mark drawn round it has spent. */
 const PAIR_DISC = 1;
@@ -85,8 +88,8 @@ const HINT_OUTLINE = 1 << 18;
  * midend refuses a hint while the check finds anything, so its frame never
  * shares a square with a hint's mark. */
 const MISTAKE = 1 << 19;
-/** A square of the box the win flash is on, in the same word. */
-const LIT = 1 << 20;
+/** The win flash's tone on a square of the box, in the same word: two bits. */
+const K_LIT = 20;
 
 export const PREFERRED_TILE_SIZE = 32;
 const CUR_ANIM = 0.2;
@@ -154,6 +157,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
   ret[COL_WIN] = FLASH;
+  ret[COL_WIN_LEAD] = FLASH_LEAD;
   return ret;
 }
 
@@ -264,13 +268,18 @@ function drawArenaTile(
 
   if (gsTile !== dsTile || gs.reveal !== ds.reveal || force) {
     const known = (gsTile & BALL_LOCK) !== 0;
+    const tone = ((gsTile >> K_LIT) & 3) as WinTone;
     dr.clip(rect(dx, dy, ts + 1, ts + 1));
     drawSurface(
       dr,
       ds,
       dx,
       dy,
-      gsTile & LIT ? COL_WIN : gs.reveal || known ? COL_SETTLED : COL_CELL,
+      tone
+        ? winSlot(tone, COL_WIN, COL_WIN_LEAD)
+        : gs.reveal || known
+          ? COL_SETTLED
+          : COL_CELL,
     );
 
     // A reveal shows guesses that are the real balls, so only guesses are
@@ -402,7 +411,7 @@ export function redraw(
 
   for (let x = 0; x < state.w; x++)
     for (let y = 0; y < state.h; y++) {
-      const lit = flash.win(sweepStep(x, y)) ? LIT : 0;
+      const lit = flash.win(sweepStep(x, y)) << K_LIT;
       drawArenaTile(dr, state, ds, ui, x, y, force, flagsAt(x + 1, y + 1) | lit);
     }
 

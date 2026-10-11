@@ -20,6 +20,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
@@ -43,7 +44,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
 import {
@@ -74,8 +75,10 @@ export const COL_PENCIL = 10; // the player's same-slant marks
 export const COL_PENCIL_BODY = 11; // the notes-mode indicator's pencil
 /** The lifted disc under a clue. */
 export const COL_GIVEN = 12;
-/** The ground of a square the win flash is on. */
+/** The ground of a square the win flash is on: its body, and its leading
+ * edge. */
 export const COL_FLASH = 13;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -91,6 +94,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GROUNDED] = slantGrounded(background);
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -133,6 +137,8 @@ const HINT_TL = 0x01000000;
 const HINT_TR = 0x02000000;
 const HINT_BL = 0x04000000;
 const HINT_BR = 0x08000000;
+/** The leading edge of the win flash is on the square, where `LIT` is its body. */
+const LIT_LEAD = 0x10000000;
 
 // The marks key, per tile: a 3-bit code for each side (left, right, top,
 // bottom), and the notes-mode pin.
@@ -243,13 +249,15 @@ function drawTile(
   // a blue square would read as a slash already placed.
   dr.drawRect(
     { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
-    v & LIT
-      ? COL_FLASH
-      : v & CURSOR
-        ? COL_CURSOR
-        : x >= 0 && x < w && y >= 0 && y < h
-          ? COL_CELL
-          : COL_BACKGROUND,
+    v & LIT_LEAD
+      ? COL_FLASH_LEAD
+      : v & LIT
+        ? COL_FLASH
+        : v & CURSOR
+          ? COL_CURSOR
+          : x >= 0 && x < w && y >= 0 && y < h
+            ? COL_CELL
+            : COL_BACKGROUND,
   );
 
   // Grid lines.
@@ -511,7 +519,8 @@ export function redraw(
   for (let y = -1; y <= h; y++) {
     for (let x = -1; x <= w; x++) {
       const square = x >= 0 && x < w && y >= 0 && y < h;
-      todraw[ti(x, y)] = square && flash.win(sweepStep(x, y)) ? LIT : 0;
+      const tone = square ? flash.win(sweepStep(x, y)) : WIN_NONE;
+      todraw[ti(x, y)] = tone === WIN_LEAD ? LIT_LEAD : tone ? LIT : 0;
     }
   }
 

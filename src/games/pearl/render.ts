@@ -21,6 +21,7 @@ import {
   DRAG_REMOVE,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -33,7 +34,7 @@ import { fromCoord as cellAt } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { type Flash, loopSteps, walkLoop } from "../../engine/win-wave.ts";
+import { type Flash, loopSteps, WIN_LEAD, walkLoop } from "../../engine/win-wave.ts";
 import type { PearlHint } from "./hint.ts";
 import { EDGE, SQUARE } from "./hint-text.ts";
 import { interpretUiDrag } from "./moves.ts";
@@ -84,6 +85,8 @@ export const COL_CELL = 15; // the surface of a square
  * loop is read against the surface, so it inverts with the scheme, and a
  * pinned black sank into a dark board. */
 export const COL_LINE = 16;
+/** The loop under the win flash's leading edge; {@link COL_FLASH} under its body. */
+export const COL_FLASH_LEAD = 17;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -98,6 +101,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(background);
   out[COL_ERROR] = ERROR;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_DRAGON] = DRAG_ADD;
   out[COL_DRAGOFF] = DRAG_REMOVE;
   out[COL_MISTAKE] = ERROR;
@@ -122,6 +126,8 @@ const DS_ERROR_CLUE = 1 << 20;
 const DS_FLASH = 1 << 21;
 const DS_CURSOR = 1 << 22;
 const DS_WSHIFT = 23; // R/U/L/D shift, findMistakes wrong-cross overlay
+/** With {@link DS_FLASH}: the highlight on this square is its leading edge. */
+const DS_FLASH_LEAD = 1 << 27;
 
 // --- hint draw flags ------------------------------------------------------
 //
@@ -316,7 +322,12 @@ function drawSquare(
       );
 
   // Laid lines. Order matters for the exposed end-cap colors.
-  drawLinesSpecific(dr, m, x, y, lflags, 0, lflags & DS_FLASH ? COL_FLASH : COL_LINE);
+  const line = !(lflags & DS_FLASH)
+    ? COL_LINE
+    : lflags & DS_FLASH_LEAD
+      ? COL_FLASH_LEAD
+      : COL_FLASH;
+  drawLinesSpecific(dr, m, x, y, lflags, 0, line);
   drawLinesSpecific(dr, m, x, y, lflags, DS_ESHIFT, COL_ERROR);
   drawLinesSpecific(dr, m, x, y, lflags, DS_XSHIFT, COL_MISTAKE);
   drawLinesSpecific(dr, m, x, y, lflags, DS_DSHIFT, COL_DRAGOFF);
@@ -430,7 +441,10 @@ export function redraw(
       f |= wrong[i] << DS_XSHIFT;
       f |= wrongCross[i] << DS_WSHIFT;
       if (state.errors[i] & ERROR_CLUE) f |= DS_ERROR_CLUE;
-      if (around !== null && around[i] >= 0 && flash.win(around[i])) f |= DS_FLASH;
+      if (around !== null && around[i] >= 0) {
+        const tone = flash.win(around[i]);
+        if (tone) f |= tone === WIN_LEAD ? DS_FLASH | DS_FLASH_LEAD : DS_FLASH;
+      }
       if (ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y) f |= DS_CURSOR;
 
       if (f !== ds.lflags[i] || hintWords[i] !== ds.hint[i] || force) {

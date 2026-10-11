@@ -3,7 +3,7 @@
 ### Requirement: The Twiddle completion flash lights each tile's face
 
 The completion flash SHALL sweep the tiles diagonally, a tile's position being
-its place in the grid. A lit tile's face SHALL be filled with the flash color
+its place in the grid. A lit tile's face SHALL be filled with a flash color
 inside its bevel, and SHALL keep its number and its orientation mark.
 
 #### Scenario: The flash leaves a tile

@@ -27,6 +27,7 @@ import {
   ERROR,
   ERROR_WASH,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -47,7 +48,7 @@ import {
   cellHighlight,
   drawCellBackground,
   HIGHLIGHT_NONE,
-  HIGHLIGHT_WIN,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -98,8 +99,9 @@ export const COL_ERRORBG = 7;
 /** Fork addition, appended past the upstream enum: the pencil-mode indicator's
  * body. */
 export const COL_PENCIL_BODY = 8;
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 9;
+export const COL_FLASH_LEAD = 14;
 export const COL_CURSOR = 10;
 /** The hint's two marks (docs/games/hints.md § "The element-type color
  * legend"): a ring around the cell the deduction acts on, and an outline around
@@ -118,6 +120,7 @@ export function colors(background: Color): Color[] {
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   // A fill *under* the digits, and green is spent on the player's own entries,
   // so the cursor is the Latin family's "you are here" wash (Solo, Keen, Towers).
   out[COL_CURSOR] = highlightWash(background);
@@ -151,7 +154,7 @@ export interface MathraxHint {
 
 // --- draw-only flags (upstream FD_*) ---------------------------------------
 
-/** Bits 9–10: the cell's `CellHighlight`. */
+/** Bits 9–11: the cell's `CellHighlight`. */
 const FD_HIGHLIGHT_SHIFT = 9;
 
 // --- geometry --------------------------------------------------------------
@@ -290,10 +293,11 @@ function drawTile(
   drawCellBackground(
     dr,
     cell,
-    ((fs >> FD_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
+    ((fs >> FD_HIGHLIGHT_SHIFT) & 7) as CellHighlight,
     COL_CURSOR,
     fs & F_IMMUTABLE ? COL_GIVEN : COL_CELL,
     COL_FLASH,
+    COL_FLASH_LEAD,
   );
   ds.hint.drawHatch(dr, i, cell, COL_HINT, ts);
 
@@ -458,11 +462,9 @@ export function redraw(
       let fs = state.flags[i];
 
       // The selection is not drawn while the board is won.
-      const highlight = flash.win(sweepStep(x, y))
-        ? HIGHLIGHT_WIN
-        : flash.winning
-          ? HIGHLIGHT_NONE
-          : cellHighlight(ui, x, y);
+      const highlight =
+        winHighlight(flash.win(sweepStep(x, y))) ??
+        (flash.winning ? HIGHLIGHT_NONE : cellHighlight(ui, x, y));
       fs |= highlight << FD_HIGHLIGHT_SHIFT;
 
       const tile = state.grid[i] | (state.pencil[i] << 4) | (fs << 14);

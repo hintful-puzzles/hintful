@@ -31,7 +31,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import type { Flash } from "../../engine/win-wave.ts";
@@ -42,6 +42,7 @@ import {
   COL_BARRIER,
   COL_BORDER,
   COL_FLASHING,
+  COL_FLASHING_LEAD,
   COL_POWERED,
   COL_WIRE,
   PREFERRED_TILE_SIZE,
@@ -669,8 +670,8 @@ describe("netslide rendering", () => {
     };
     /** The tiles whose face a frame fills in the flash color, by cell. */
     const lit = (rec: RecordingDrawing): number[] =>
-      rec.ops
-        .flatMap((o) => (o.op === "rect" && o.color === COL_FLASHING ? [o] : []))
+      opsOfKind(rec.ops, "rect")
+        .filter((o) => litSlot(o.color))
         .map(
           (o) =>
             Math.floor((o.y - b) / PREFERRED_TILE_SIZE) * w +
@@ -698,6 +699,16 @@ describe("netslide rendering", () => {
     }
     const run = winFlashRun(paint, lit, 120);
     expectWinFlashTravels(run, w * h, (i) => distance.get(i) ?? -1);
+    expect(slotsSeen).toEqual(new Set([COL_FLASHING, COL_FLASHING_LEAD]));
     expect(run.frames[0]).toEqual([source]);
   });
 });
+
+/** The flash's slots the frames read so far were painted with: a lit element
+ * is one painted in either, the highlight's body or its leading edge. */
+const slotsSeen = new Set<number>();
+function litSlot(color: number): boolean {
+  if (color !== COL_FLASHING && color !== COL_FLASHING_LEAD) return false;
+  slotsSeen.add(color);
+  return true;
+}

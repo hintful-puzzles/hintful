@@ -40,10 +40,12 @@ fixed time, along the path or the loop where the game has one.
 - Black Box's blink on a reveal was its win flash, a reveal being the one
   move that solves its board, so it takes the sweep. The Solve command now
   reveals with no flash, as it does in every other game.
-- What a lit element looks like is one color in every game, the theme's
-  yellow, which the owner chose on seeing the first deploy (2026-10-11):
-  a cell's or a tile's ground is filled with it and keeps what it holds, and
-  a line is drawn in it. The first deploy kept each game's own lit look.
+- What a lit element looks like is the same in every game, the owner's
+  choices on seeing the deploys (2026-10-11 and 12): the highlight leads in
+  white and follows in the theme's yellow. A cell's or a tile's ground is
+  filled with the color and keeps what it holds, and a line is drawn in it.
+  The first deploy kept each game's own lit look; the second was yellow
+  alone, which a Flood board won in yellow hid.
 - The "Solved!" dialog still waits for the animation, so it opens up to about
   1.9s later than today in the games that blinked.
 

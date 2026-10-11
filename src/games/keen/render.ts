@@ -20,6 +20,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -39,7 +40,7 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_WIN,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -90,8 +91,9 @@ export const COL_CELL = 9; // the surface of a cell the player fills
 /** The thin line between two cells of one cage. A cage's own edge is content
  * and stays `COL_GRID`. */
 export const COL_LINE = 10;
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 11;
+export const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -101,6 +103,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_USER] = playerEntryColor(bg);
   out[COL_HIGHLIGHT] = highlightWash(bg);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
@@ -143,8 +146,8 @@ const OP_SYMBOL: Record<number, string> = {
 const DF_PENCIL_SHIFT = 16;
 const DF_ERR_LATIN = 0x8000;
 const DF_ERR_CLUE = 0x4000;
-/** Bits 12–13: the cell's `CellHighlight`. */
-const DF_HIGHLIGHT_SHIFT = 12;
+/** Bits 4–6: the cell's `CellHighlight`. */
+const DF_HIGHLIGHT_SHIFT = 4;
 const DF_DIGIT_MASK = 0x000f;
 
 // --- geometry --------------------------------------------------------------
@@ -266,10 +269,11 @@ function drawTile(
   drawCellBackground(
     dr,
     { x: cx, y: cy, w: cw, h: ch },
-    ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
+    ((tile >> DF_HIGHLIGHT_SHIFT) & 7) as CellHighlight,
     COL_HIGHLIGHT,
     COL_CELL,
     COL_FLASH,
+    COL_FLASH_LEAD,
   );
   ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
@@ -512,7 +516,7 @@ export function redraw(
       const i = y * w + x;
       let tile = state.grid[i] || state.pencil[i] << DF_PENCIL_SHIFT;
       tile |=
-        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_WIN : cellHighlight(ui, x, y)) <<
+        (winHighlight(flash.win(sweepStep(x, y))) ?? cellHighlight(ui, x, y)) <<
         DF_HIGHLIGHT_SHIFT;
       if (ds.errors[i] & ERR_LATIN) tile |= DF_ERR_LATIN;
       if (ds.errors[i] & ERR_CLUE) tile |= DF_ERR_CLUE;

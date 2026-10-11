@@ -28,6 +28,7 @@ import {
   clueDoneColor,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -47,7 +48,14 @@ import {
   pencilIndicatorReach,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, loopSteps, walkLoop } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  loopSteps,
+  WIN_NONE,
+  type WinTone,
+  walkLoop,
+  winSlot,
+} from "../../engine/win-wave.ts";
 import type { LoopyCursor } from "./cursor.ts";
 import { CORNER, DOT, EDGE, FACE, PAIR } from "./hint-text.ts";
 import type { LoopyMove, LoopyNoteDrag } from "./index.ts";
@@ -84,6 +92,8 @@ export const COL_HINT_CELL = 9;
 export const COL_PENCIL = 10;
 /** The notes-mode indicator's pencil body. */
 export const COL_PENCIL_BODY = 11;
+/** The leading edge of the win flash, on an edge of the loop. */
+export const COL_HIGHLIGHT_LEAD = 12;
 
 /**
  * The subset of the game UI the renderer reads. The full `LoopyUi` lives in
@@ -202,6 +212,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FOREGROUND] = INK;
   out[COL_LINEUNKNOWN] = lineMaybeColor(defaultBackground);
   out[COL_HIGHLIGHT] = FLASH;
+  out[COL_HIGHLIGHT_LEAD] = FLASH_LEAD;
   out[COL_MISTAKE] = ERROR;
   // A deliberate, player-visible aid: upstream drew a satisfied clue in the
   // same black as an open one. Graying it retires the clue the way Magnets and
@@ -247,6 +258,7 @@ const PHASES = [
   COL_LINEUNKNOWN,
   COL_FOREGROUND,
   COL_HIGHLIGHT,
+  COL_HIGHLIGHT_LEAD,
   COL_MISTAKE,
 ] as const;
 
@@ -277,14 +289,16 @@ function loopOrder(s: LoopyState): Int32Array {
 function lineColor(
   s: LoopyState,
   i: number,
-  flashing: boolean,
+  tone: WinTone,
   mistaken: Uint8Array,
 ): number {
   if (s.lineErrors[i]) return COL_MISTAKE;
   if (s.lines[i] === LINE_UNKNOWN) return COL_LINEUNKNOWN;
   if (s.lines[i] === LINE_NO) return COL_FAINT;
   if (mistaken[i]) return COL_MISTAKE;
-  return flashing ? COL_HIGHLIGHT : COL_FOREGROUND;
+  return tone === WIN_NONE
+    ? COL_FOREGROUND
+    : winSlot(tone, COL_HIGHLIGHT, COL_HIGHLIGHT_LEAD);
 }
 
 // --- notes, hint and mistake marks -------------------------------------------
@@ -582,7 +596,8 @@ export function redraw(
   // Bucket the edges by color once, rather than upstream's scan-per-phase.
   const buckets = new Map<number, number[]>(PHASES.map((c) => [c, []]));
   for (let i = 0; i < g.numEdges; i++) {
-    const flashing = around !== null && around[i] >= 0 && flash.win(around[i]);
+    const flashing =
+      around !== null && around[i] >= 0 ? flash.win(around[i]) : WIN_NONE;
     buckets.get(lineColor(s, i, flashing, mistaken))?.push(i);
   }
 
@@ -682,7 +697,7 @@ export function redraw(
     const thickness =
       color === COL_FAINT
         ? faintLineThickness(ts)
-        : color === COL_HIGHLIGHT
+        : color === COL_HIGHLIGHT || color === COL_HIGHLIGHT_LEAD
           ? 2 * lineThickness(ts)
           : lineThickness(ts);
     for (const i of buckets.get(color) ?? []) {

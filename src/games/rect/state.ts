@@ -97,6 +97,9 @@ export interface RectDrawState {
   h: number;
   /** Per-cell packed cache word (see render.ts). `-1` = force repaint. */
   visible: Int32Array;
+  /** Per-cell tone of the win flash last drawn, beside the word, which is
+   * full. */
+  tone: Uint8Array;
 }
 
 /** A flagged edge that the unique solution does not contain. */

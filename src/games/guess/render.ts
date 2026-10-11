@@ -18,6 +18,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -35,7 +36,14 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  NO_FLASH,
+  sweepStep,
+  WIN_NONE,
+  type WinTone,
+  winSlot,
+} from "../../engine/win-wave.ts";
 import { COLOR, ROW, SLOT } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTCOLOR,
@@ -71,17 +79,21 @@ export const COL_WRONG = 21;
 /** The rim of an empty hole, which with {@link COL_EMPTY} inside it is a cell
  * of the collection's quiet surface, drawn round. */
 export const COL_HOLE_RIM = 22;
-/** The box of a peg or a hole the win flash is on. */
+/** The box of a peg or a hole the win flash is on: under the highlight's
+ * body, and under its leading edge. */
 export const COL_LIT = 23;
-export const NCOLORS = 24;
+export const COL_LIT_LEAD = 24;
+export const NCOLORS = 25;
 
 // --- peg overlay flags (upstream PEG_*) -------------------------------
 
 const PEG_CURSOR = 0x1000;
 const PEG_HOLD = 0x2000;
 const PEG_LABELED = 0x4000;
-const PEG_LIT = 0x8000;
-const PEG_FLAGS = PEG_CURSOR | PEG_HOLD | PEG_LABELED | PEG_LIT;
+/** Bits 15–16: the tone of the win flash on the position. */
+const PEG_WIN_SHIFT = 15;
+const PEG_WIN = 3 << PEG_WIN_SHIFT;
+const PEG_FLAGS = PEG_CURSOR | PEG_HOLD | PEG_LABELED | PEG_WIN;
 
 // --- size constants ---------------------------------------------------
 
@@ -465,7 +477,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_FRAME] = INK;
   // Not `CURSOR`: the cursor rings pegs of all ten hues, green among them.
   ret[COL_CURSOR] = INK;
-  // The win flash is `COL_LIT`; upstream's `COL_FLASH` slot lights the feedback
+  // The win flash is `COL_LIT` and `COL_LIT_LEAD`; upstream's `COL_FLASH` slot lights the feedback
   // holes of a row that is ready to mark. It and the held-peg slot are washes,
   // not pegs (so not `HELD`, whose green is one of the ten): they sit *behind*
   // a peg and must not be mistaken for one.
@@ -480,6 +492,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_EMPTY] = cellSurface(board);
   ret[COL_HOLE_RIM] = surfaceGrid(board);
   ret[COL_LIT] = FLASH;
+  ret[COL_LIT_LEAD] = FLASH_LEAD;
   ret[COL_WELL] = guessAnswerWell(defaultBackground);
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -509,16 +522,17 @@ function drawPeg(
   labeled: boolean,
   col: number,
   hatched = false,
-  lit = false,
+  tone: WinTone = WIN_NONE,
 ): void {
   const ts = ds.tileSize;
   const cg = cgap(ds);
   const box = rect(cx - cg, cy - cg, ts + cg * 2, ts + cg * 2);
-  // Lit, the whole box is the flash color and an empty hole with it: a peg
+  // Lit, the whole box is a flash color and an empty hole with it: a peg
   // fills all of its box but the corners, and keeps its own color.
-  dr.drawRect(box, lit ? COL_LIT : COL_BACKGROUND);
+  const lit = tone !== WIN_NONE ? winSlot(tone, COL_LIT, COL_LIT_LEAD) : null;
+  dr.drawRect(box, lit ?? COL_BACKGROUND);
   if (hatched) dr.drawHatch(box, COL_HINT, hatchPeriod(ts));
-  const fill = col ? COL_EMPTY + col : lit ? COL_LIT : COL_EMPTY;
+  const fill = col ? COL_EMPTY + col : (lit ?? COL_EMPTY);
   if (ds.pegrad > 0) {
     dr.drawCircle(
       pt(cx + ds.pegrad, cy + ds.pegrad),
@@ -589,7 +603,8 @@ function guessRedraw(
     // last guess. An empty hole lights too: a quick win leaves the winning
     // row and the answer a board apart, with nothing between them to carry
     // the highlight across.
-    if (flash.win(sweepStep(i, guess === -1 ? ds.nguesses : guess))) scol |= PEG_LIT;
+    scol |=
+      flash.win(sweepStep(i, guess === -1 ? ds.nguesses : guess)) << PEG_WIN_SHIFT;
     if (dest.pegs[i] !== scol || force) {
       drawPeg(
         dr,
@@ -599,7 +614,7 @@ function guessRedraw(
         labeled,
         scol & ~PEG_FLAGS,
         hatched,
-        (scol & PEG_LIT) !== 0,
+        ((scol & PEG_WIN) >> PEG_WIN_SHIFT) as WinTone,
       );
       if (scol & PEG_CURSOR) drawCursor(dr, ds, rowx + pegOff(ds) * i, rowy);
       if (scol & PEG_HOLD) {

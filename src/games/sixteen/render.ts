@@ -11,6 +11,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   CURSOR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   INK,
@@ -25,7 +26,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { SQUARE, TILE } from "./hint-text.ts";
 import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./state.ts";
 
@@ -53,8 +54,10 @@ const COL_TILE = 5;
 export const COL_ARROW = 6;
 /** The arrow the keyboard cursor is on. */
 const COL_CURSOR = 7;
-/** The face of a tile the win flash is on, inside its bevel. */
+/** The face of a tile the win flash is on, inside its bevel: its body, and
+ * its leading edge. */
 export const COL_FLASH = 8;
+export const COL_FLASH_LEAD = 9;
 
 // --- hint highlights --------------------------------------------------
 
@@ -94,7 +97,7 @@ export interface SixteenDrawState {
   w: number;
   h: number;
   tiles: Int32Array;
-  /** Whether each cell's tile was last drawn lit by the win flash. */
+  /** The win flash's tone each cell's tile was last drawn in. */
   lit: Uint8Array;
   tileSize: number;
   curX: number;
@@ -144,6 +147,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ARROW] = lowlight;
   out[COL_CURSOR] = CURSOR;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -290,8 +294,8 @@ export function redraw(
     else t = state.tiles[i];
 
     const t0 = t;
-    const lit = flash.win(sweepStep(i % state.w, Math.floor(i / state.w))) ? 1 : 0;
-    const bgcolor = lit ? COL_FLASH : COL_TILE;
+    const lit = flash.win(sweepStep(i % state.w, Math.floor(i / state.w)));
+    const bgcolor = lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_TILE;
 
     const isDraggedNow = !!(
       ui.dragging &&

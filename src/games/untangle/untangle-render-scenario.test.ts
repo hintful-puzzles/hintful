@@ -34,6 +34,7 @@ import {
   COL_CROSSEDLINE,
   COL_DRAGPOINT,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_HINT,
   COL_LINE,
   COL_OUTLINE,
@@ -232,11 +233,17 @@ describe("Untangle: the win flash sweeps the points", () => {
     untangleGame.redraw(dr, ds, null, state, 1, untangleGame.newUi(state), 0, flash);
     return dr.ops;
   };
-  /** The points a frame draws a disc of the flash color under, as the `x,y`
+  const flashLine = (op: DrawOp): op is DrawOp & { op: "line" } =>
+    op.op === "line" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD);
+  /** The points a frame draws in a flash color, ring and all, as the `x,y`
    * drawn at. */
   const points = (ops: readonly DrawOp[]): string[] =>
     ops.flatMap((op) =>
-      op.op === "circle" && op.fill === COL_FLASH ? [`${op.cx},${op.cy}`] : [],
+      op.op === "circle" &&
+      op.outline === op.fill &&
+      (op.fill === COL_FLASH || op.fill === COL_FLASH_LEAD)
+        ? [`${op.cx},${op.cy}`]
+        : [],
     );
 
   const step = (key: string): number => {
@@ -252,18 +259,21 @@ describe("Untangle: the win flash sweeps the points", () => {
     expectWinFlashTravels(winFlashRun(paint, points), n, step);
   });
 
-  it("lights a line with the first of its ends the highlight reaches", () => {
-    let seen = 0;
-    for (const ops of winFlashRun(paint, (frame) => frame).frames) {
+  it("draws a lit line three pixels wide, in the lead's color and the body's", () => {
+    const frames = winFlashRun(paint, (frame) => frame).frames;
+    for (const ops of frames) {
+      // Each lit line has a lit point at the first of its ends.
       const on = new Set(points(ops));
-      for (const op of ops) {
-        if (op.op !== "line" || op.color !== COL_FLASH) continue;
-        seen++;
+      for (const op of ops.filter(flashLine)) {
         const a = `${op.x1},${op.y1}`;
         const b = `${op.x2},${op.y2}`;
         expect(on.has(step(a) <= step(b) ? a : b)).toBe(true);
       }
     }
-    expect(seen).toBeGreaterThan(0);
+    const lines = frames.flatMap((ops) => ops.filter(flashLine));
+    expect(new Set(lines.map((op) => op.thickness))).toEqual(new Set([3]));
+    expect(new Set(lines.map((op) => op.color))).toEqual(
+      new Set([COL_FLASH, COL_FLASH_LEAD]),
+    );
   });
 });

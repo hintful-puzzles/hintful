@@ -33,6 +33,7 @@ import {
   COL_BANG,
   COL_COVERED,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_OPEN,
   FLASH_FRAME,
 } from "./render.ts";
@@ -827,11 +828,16 @@ describe("mines render", () => {
 
   it("sweeps the win flash from the bottom left to the top right", () => {
     const solved = minesGame.executeMove(tiny(), { type: "solve" });
+    // Lit is either tone of the highlight, and the flash shows both.
+    const tones = new Set<number>();
     const run = winFlashRun(
       (flash) => flashed(solved, flash),
       (faces) => {
-        // A lit square's face is the flash color, the flagged mine's too.
-        for (const fill of faces.values()) expect(fill).toBe(COL_FLASH);
+        // A lit square's face is a flash color, the flagged mine's too.
+        for (const fill of faces.values()) {
+          expect([COL_FLASH, COL_FLASH_LEAD]).toContain(fill);
+          tones.add(fill);
+        }
         return [...faces.keys()];
       },
     );
@@ -839,6 +845,7 @@ describe("mines render", () => {
       const [x, y] = cell.split(",").map(Number);
       return sweepStep(x, y);
     });
+    expect(tones.size).toBe(2);
   });
 
   it("fills every square in the error color on a death flash's lit beat", () => {

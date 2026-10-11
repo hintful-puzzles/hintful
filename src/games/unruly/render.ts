@@ -16,6 +16,7 @@ import {
   ERROR,
   ERROR_TEXT,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   surfaceGrid,
@@ -27,7 +28,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
 import {
@@ -72,6 +73,8 @@ export const COL_HINT = 9;
 export const COL_HINT_REF = 10;
 /** The ground of a cell the win flash is on. */
 export const COL_FLASH = 11;
+/** The ground of a cell the win flash's leading edge is on. */
+export const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -92,6 +95,7 @@ export function colors(defaultBackground: Color): Color[] {
   // move and of both pieces.
   out[COL_HINT_REF] = ORANGE;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -100,7 +104,8 @@ const FE_COUNT = 0x10;
 const FF_ONE = 0x80;
 const FF_ZERO = 0x100;
 const FF_CURSOR = 0x200;
-const FF_FLASH = 0x400;
+// The win flash's tone on the cell: two bits, 0x400 and 0x800.
+const FF_FLASH_SHIFT = 10;
 const FF_IMMUTABLE = 0x1000;
 // Our mistake-overlay bit (no upstream analog), folded into the cache key.
 const FF_MISTAKE = 0x2000;
@@ -183,7 +188,11 @@ function drawTile(
   const inner = { x: px, y: py, w: ts - 1, h: ts - 1 };
   const value: Cell = tile & FF_ZERO ? ZERO : tile & FF_ONE ? ONE : EMPTY;
   const lifted = value !== EMPTY && tile & FF_IMMUTABLE;
-  dr.drawRect(inner, tile & FF_FLASH ? COL_FLASH : lifted ? COL_GIVEN : COL_EMPTY);
+  const tone = ((tile >> FF_FLASH_SHIFT) & 3) as WinTone;
+  dr.drawRect(
+    inner,
+    tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : lifted ? COL_GIVEN : COL_EMPTY,
+  );
   // The hatch goes under the piece: it marks the line, and the piece is what
   // the line holds.
   if (tile & FF_HINT_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
@@ -370,7 +379,7 @@ export function redraw(
         tile |= FF_ZERO;
         if (rowfs[h2 + y] || rowfs[2 * h2 + w2 + x]) tile |= FE_COUNT;
       }
-      if (flash.win(sweepStep(x, y))) tile |= FF_FLASH;
+      tile |= flash.win(sweepStep(x, y)) << FF_FLASH_SHIFT;
       if (immutable[i]) tile |= FF_IMMUTABLE;
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y)
         tile |= FF_CURSOR;

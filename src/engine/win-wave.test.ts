@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { winFlashAt } from "./testing/win-flash.ts";
 import {
+  type Flash,
   loopSteps,
   NO_FLASH,
   ownFlash,
   sweepRanks,
   sweepStep,
+  WIN_BODY,
   WIN_FLASH_S,
+  WIN_LEAD,
+  WIN_NONE,
   WIN_STILL_S,
+  type WinTone,
   WinWave,
   walkLoop,
 } from "./win-wave.ts";
@@ -15,11 +20,16 @@ import {
 /** Which of the positions `0..n-1` are lit at each of `frames` instants spread
  * over the flash, its two ends excluded. */
 function run(n: number, frames: number, still = false): boolean[][] {
+  return tones(n, frames, still).map((frame) => frame.map((t) => t !== WIN_NONE));
+}
+
+/** The same run, as which tone each position shows. */
+function tones(n: number, frames: number, still = false): WinTone[][] {
   const positions = Array.from({ length: n }, (_, i) => i);
-  const ask = (flash: { win(p: number): boolean }) =>
-    positions.map((p) => flash.win(p));
+  const ask = (flash: Flash) => positions.map((p) => flash.win(p));
+  const length = still ? WIN_STILL_S : WIN_FLASH_S;
   return Array.from({ length: frames }, (_, f) =>
-    ask(winFlashAt((WIN_FLASH_S * (f + 1)) / (frames + 1), ask, still)),
+    ask(winFlashAt((length * (f + 1)) / (frames + 1), ask, still)),
   );
 }
 
@@ -49,11 +59,36 @@ describe("the win wave travels its route once", () => {
   });
 
   it("starts at the lowest position and ends dark", () => {
-    const ask = (flash: { win(p: number): boolean }) => [flash.win(7), flash.win(-3)];
-    expect(winFlashAt(0.01, ask).win(-3)).toBe(true);
-    expect(winFlashAt(0.01, ask).win(7)).toBe(false);
+    const ask = (flash: Flash) => [flash.win(7), flash.win(-3)];
+    expect(winFlashAt(0.01, ask).win(-3)).toBe(WIN_LEAD);
+    expect(winFlashAt(0.01, ask).win(7)).toBe(WIN_NONE);
     const end = winFlashAt(WIN_FLASH_S, ask);
-    expect([end.win(-3), end.win(7)]).toEqual([false, false]);
+    expect([end.win(-3), end.win(7)]).toEqual([WIN_NONE, WIN_NONE]);
+  });
+});
+
+describe("the win wave's two tones", () => {
+  it("leads in one tone and follows in the other", () => {
+    for (const frame of tones(60, 40).slice(5, 35)) {
+      const lit = frame.flatMap((tone, p) => (tone === WIN_NONE ? [] : [{ tone, p }]));
+      const lead = lit.filter((e) => e.tone === WIN_LEAD).map((e) => e.p);
+      const body = lit.filter((e) => e.tone === WIN_BODY).map((e) => e.p);
+      // Both are there, the lead is the front of the band, and the smaller part.
+      expect(lead.length).toBeGreaterThan(0);
+      expect(body.length).toBeGreaterThan(lead.length);
+      expect(Math.min(...lead)).toBeGreaterThan(Math.max(...body));
+    }
+  });
+
+  it.each([1, 2, 3, 9])("shows every element of a %i-step route both", (n) => {
+    const frames = tones(n, 300);
+    for (let p = 0; p < n; p++) {
+      const seen = frames.map((frame) => frame[p]).filter((t) => t !== WIN_NONE);
+      // The lead first, as the highlight reaches it, and then the body.
+      expect(seen[0]).toBe(WIN_LEAD);
+      expect(seen[seen.length - 1]).toBe(WIN_BODY);
+      expect(seen.lastIndexOf(WIN_LEAD)).toBeLessThan(seen.indexOf(WIN_BODY));
+    }
   });
 });
 
@@ -61,7 +96,7 @@ describe("a frame of the win wave", () => {
   it("lights nothing until a frame has measured the route", () => {
     const wave = new WinWave(false);
     wave.seek(1);
-    expect(wave.win(0)).toBe(false);
+    expect(wave.win(0)).toBe(WIN_NONE);
     expect(wave.done).toBe(false);
   });
 
@@ -93,7 +128,11 @@ describe("a frame of the win wave", () => {
 
 describe("the still flash, for reduced motion", () => {
   it("lights everything at once and does not travel", () => {
-    for (const frame of run(9, 20, true)) expect(new Set(frame).size).toBe(1);
+    const frames = tones(9, 20, true);
+    for (const frame of frames) expect(new Set(frame).size).toBe(1);
+    // The two tones one after the other, since they cannot be side by side.
+    expect(frames[0][0]).toBe(WIN_LEAD);
+    expect(frames[frames.length - 1][0]).toBe(WIN_BODY);
   });
 
   it("is shorter than the traveling one", () => {
@@ -106,8 +145,8 @@ describe("the still flash, for reduced motion", () => {
 
 describe("a flash that is not a win", () => {
   it("lights nothing", () => {
-    expect(NO_FLASH.win(0)).toBe(false);
-    expect(ownFlash(0.2).win(0)).toBe(false);
+    expect(NO_FLASH.win(0)).toBe(WIN_NONE);
+    expect(ownFlash(0.2).win(0)).toBe(WIN_NONE);
     expect(ownFlash(0.2).time).toBe(0.2);
     expect(ownFlash(0.2).winning).toBe(false);
   });

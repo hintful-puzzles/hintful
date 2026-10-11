@@ -41,6 +41,7 @@ import {
   COL_CORRECT,
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_INK,
 } from "./render.ts";
@@ -352,7 +353,11 @@ describe("filling win flash", () => {
     const start = newState(size(3, 2), "333a22");
     const state = executeMove(start, { type: "set", cells: [3], value: 1 });
     expect(fillingGame.status(state)).toBe("solved");
-    /** The cells filled with the flash color, as the pixel each starts at. */
+    /** The cells filled with one of the flash's two colors, as the pixel each
+     * starts at. */
+    const tones = new Set<number>();
+    const lit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color) !== null;
     const run = winFlashRun(
       (flash: Flash) => {
         const dr = new RecordingDrawing(fillingGame.colors(DEFAULT_BACKGROUND));
@@ -362,13 +367,14 @@ describe("filling win flash", () => {
       },
       (dr) =>
         dr.ops.flatMap((o) =>
-          o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+          o.op === "rect" && lit(o.color) ? [`${o.x},${o.y}`] : [],
         ),
     );
     expectWinFlashTravels(run, 6, (key) => {
       const [x, y] = key.split(",").map(Number);
       return sweepStep(x, y);
     });
+    expect([...tones].sort()).toEqual([COL_FLASH, COL_FLASH_LEAD]);
   });
 });
 

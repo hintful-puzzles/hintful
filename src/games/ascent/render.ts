@@ -14,6 +14,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   GOAL_WASH,
   GRID_DARK,
   givenSurface,
@@ -30,7 +31,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Rect } from "../../engine/types.ts";
-import type { Flash } from "../../engine/win-wave.ts";
+import { type Flash, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-text.ts";
 import {
@@ -112,7 +113,9 @@ export const COL_TARGET = 15;
 export const COL_OFFERED = 16;
 /** The ground of a square the win flash is on. */
 export const COL_FLASH = 17;
-export const NCOLORS = 18;
+/** And under the flash's leading edge. */
+export const COL_FLASH_LEAD = 18;
+export const NCOLORS = 19;
 
 /** A cell's part in the displayed hint, one bit per mark: its diff key. */
 const HINT_TARGET = 1;
@@ -346,6 +349,7 @@ export function ascentColors(defaultBackground: Color): Color[] {
   ret[COL_GIVEN] = givenSurface(background);
   ret[COL_GRID] = surfaceGrid(background);
   ret[COL_FLASH] = FLASH;
+  ret[COL_FLASH_LEAD] = FLASH_LEAD;
   return ret;
 }
 
@@ -702,11 +706,12 @@ export function redrawAscent(
     if (sn === NUMBER_BOUND) continue;
 
     // The win flash runs the number path: a square's position is its number.
+    const tone = sn >= 0 ? flash.win(sn) : WIN_NONE;
     const color =
       sn === NUMBER_WALL
         ? COL_BORDER
-        : sn >= 0 && flash.win(sn)
-          ? COL_FLASH
+        : tone !== WIN_NONE
+          ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
           : ui.dragColumn === i % w || ui.dragRow === Math.trunc(i / w)
             ? COL_TARGET
             : ui.held === i ||

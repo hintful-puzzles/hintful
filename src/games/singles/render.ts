@@ -15,6 +15,7 @@ import {
   ERROR,
   ERROR_TEXT,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_EVIDENCE,
@@ -31,7 +32,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
 import type { SinglesHint } from "./index.ts";
 import {
   F_BLACK,
@@ -73,6 +74,9 @@ export const COL_HINT_STRAND = 13; // the corner a corner-deduction protects
 // ring is the cue that is not a color.
 export const COL_HINT_BLACKREF = 14;
 export const COL_HINT_WHITEREF = 15;
+/** The ground of a cell under the win flash's leading edge, where `COL_FLASH`
+ * is under its body. */
+export const COL_FLASH_LEAD = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -80,6 +84,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_EMPTY] = cellSurface(defaultBackground);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_TEXT] = INK;
   out[COL_SHADED] = SHADED;
   out[COL_SHADED_NUM] = WHITE;
@@ -126,6 +131,7 @@ const DS_CURSOR = 0x4;
 const DS_BLACK_NUM = 0x8;
 const DS_ERROR = 0x10;
 const DS_FLASH = 0x20;
+const DS_FLASH_LEAD = 0x40;
 const DS_MISTAKE = 0x80;
 // Hint overlay: a forced cell, an evidence cell (outlined, in a color of its
 // kind when it is a decided premise, whose state is then the reason), and a
@@ -182,7 +188,10 @@ function tileRedraw(
   dr.drawRect({ x, y, w: ts, h: ts }, COL_GRID);
   const inner = { x, y, w: ts - 1, h: ts - 1 };
   const c = { x: x + inner.w / 2, y: y + inner.h / 2 };
-  dr.drawRect(inner, f & DS_FLASH ? COL_FLASH : COL_EMPTY);
+  dr.drawRect(
+    inner,
+    f & DS_FLASH_LEAD ? COL_FLASH_LEAD : f & DS_FLASH ? COL_FLASH : COL_EMPTY,
+  );
   // The hatch goes under the piece: it marks the line, and the piece is what
   // the line holds.
   if (f & DS_HINT_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
@@ -304,7 +313,8 @@ export function redraw(
         f |= DS_BLACK;
         if (ui.showBlackNums) f |= DS_BLACK_NUM;
       }
-      if (flash.win(sweepStep(x, y))) f |= DS_FLASH;
+      const tone = flash.win(sweepStep(x, y));
+      if (tone) f |= tone === WIN_LEAD ? DS_FLASH_LEAD : DS_FLASH;
       if (state.flags[i] & F_CIRCLE) f |= DS_CIRCLE;
       if (state.flags[i] & F_ERROR) f |= DS_ERROR;
       if (mistakeSet.has(i)) f |= DS_MISTAKE;

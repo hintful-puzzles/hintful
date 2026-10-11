@@ -18,6 +18,7 @@ import {
   DRAG_ADD,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   GOAL,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -30,7 +31,13 @@ import { coord as coordE } from "../../engine/geometry.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_NONE,
+  type WinTone,
+  winSlot,
+} from "../../engine/win-wave.ts";
 import { ARROW, GEM as GEM_MARK } from "./hint-text.ts";
 import {
   BLANK,
@@ -70,10 +77,12 @@ export const COL_AIM = 10;
  * direction is the hint's *arrow* in its action color, the subgoal gem a
  * *ring* in its evidence color. */
 export const COL_HINT_GOAL = 11;
-/** Appended: the solved flash's tile fill. */
+/** Appended: the solved flash's tile fill, under the highlight's body. */
 export const COL_FLASH = 12;
 /** A floor square. */
 export const COL_FLOOR = 13;
+/** The solved flash's tile fill under the highlight's leading edge. */
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const ret: Color[] = new Array(14);
@@ -97,6 +106,7 @@ export function colors(defaultBackground: Color): Color[] {
   // the color an outline has in every game.
   ret[COL_HINT_GOAL] = HINT_EVIDENCE;
   ret[COL_FLASH] = FLASH;
+  ret[COL_FLASH_LEAD] = FLASH_LEAD;
 
   return ret;
 }
@@ -119,7 +129,9 @@ export function computeSize(p: InertiaParams, ts: number): Size {
 /** Flash bits OR'd into a cached tile value, so a flash repaints the board
  * through the ordinary per-tile diff. */
 const FLASH_DEAD = 0x100;
-const FLASH_WIN = 0x200;
+/** Bits 11–12: the tone of the win flash on the square. */
+const WIN_SHIFT = 11;
+const WIN_MASK = 3 << WIN_SHIFT;
 /** Likewise the hint's ring. Unlike the arrow — which rides the ball sprite and
  * so is repainted every frame — the ring is drawn *on a tile*, so it has to be
  * part of that tile's diff key or it would never be painted, and never erased
@@ -173,8 +185,14 @@ function drawTile(
 ): void {
   const tx = coord(x, ts);
   const ty = coord(y, ts);
-  const bg = v & FLASH_DEAD ? COL_DEAD_PLAYER : v & FLASH_WIN ? COL_FLASH : COL_FLOOR;
-  const cell = v & ~(FLASH_DEAD | FLASH_WIN | HINT_GOAL);
+  const tone = ((v & WIN_MASK) >> WIN_SHIFT) as WinTone;
+  const bg =
+    v & FLASH_DEAD
+      ? COL_DEAD_PLAYER
+      : tone !== WIN_NONE
+        ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
+        : COL_FLOOR;
+  const cell = v & ~(FLASH_DEAD | WIN_MASK | HINT_GOAL);
 
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
   dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, bg);
@@ -421,7 +439,7 @@ export function redraw(
       if (dying) v |= FLASH_DEAD;
       // The win lights the squares the ball can be on: a wall's block covers
       // its tile.
-      else if (s.board.at(x, y) !== WALL && flash.win(sweepStep(x, y))) v |= FLASH_WIN;
+      else if (s.board.at(x, y) !== WALL) v |= flash.win(sweepStep(x, y)) << WIN_SHIFT;
 
       if (ds.grid[y * w + x] !== v) {
         const wall = s.board.at(x, y) === WALL;

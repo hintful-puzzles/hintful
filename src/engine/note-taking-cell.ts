@@ -50,6 +50,7 @@ import {
   RIGHT_RELEASE,
 } from "./pointer.ts";
 import type { Point, Rect } from "./types.ts";
+import { WIN_LEAD, WIN_NONE, type WinTone } from "./win-wave.ts";
 
 /**
  * The three `Ui` fields the mechanic owns. A game's `Ui` structurally satisfies
@@ -426,42 +427,54 @@ export const HIGHLIGHT_NONE = 0;
 export const HIGHLIGHT_ENTRY = 1;
 /** The highlight is on this cell, and typing enters a note. */
 export const HIGHLIGHT_NOTES = 2;
-/** The win flash is on this cell: `flash.win` said so. It takes the place of
- * the player's highlight, which a won board has no use for. */
+/** The body of the win flash's highlight is on this cell. The flash takes the
+ * place of the player's highlight, which a won board has no use for. */
 export const HIGHLIGHT_WIN = 3;
-/** Two bits, so a game packs it into its tile key: the tile must repaint when
- * the highlight arrives, changes mode or leaves, and the key is what says so. */
+/** The leading edge of the win flash's highlight is on this cell. */
+export const HIGHLIGHT_WIN_LEAD = 4;
+/** Three bits, so a game packs it into its tile key: the tile must repaint
+ * when the highlight arrives, changes or leaves, and the key is what says so. */
 export type CellHighlight =
   | typeof HIGHLIGHT_NONE
   | typeof HIGHLIGHT_ENTRY
   | typeof HIGHLIGHT_NOTES
-  | typeof HIGHLIGHT_WIN;
+  | typeof HIGHLIGHT_WIN
+  | typeof HIGHLIGHT_WIN_LEAD;
 
 /** What the highlight shows on cell `(x, y)` right now. A game that hides it
  * for its own reasons passes `HIGHLIGHT_NONE` instead, and one whose win flash
- * is on the cell passes {@link HIGHLIGHT_WIN}. */
+ * is on the cell passes {@link winHighlight} of what `flash.win` said. */
 export function cellHighlight(ui: NoteTakingUi, x: number, y: number): CellHighlight {
   if (!highlightIsOn(ui, x, y)) return HIGHLIGHT_NONE;
   return ui.pencilMode ? HIGHLIGHT_NOTES : HIGHLIGHT_ENTRY;
 }
 
+/** The highlight of a cell the win flash is on, and `null` for one it is not:
+ * `winHighlight(flash.win(p)) ?? cellHighlight(ui, x, y)`. */
+export function winHighlight(tone: WinTone): CellHighlight | null {
+  if (tone === WIN_NONE) return null;
+  return tone === WIN_LEAD ? HIGHLIGHT_WIN_LEAD : HIGHLIGHT_WIN;
+}
+
 /** The color a cell's background is filled with: the wash under an entry
- * highlight, the flash color under the win flash, the game's own background
- * otherwise. `flash` is the palette index the game gave the `FLASH` role.
- * Exported for the game that paints more of the cell than its rect (Towers'
- * 3D faces). */
+ * highlight, a flash color under the win flash, the game's own background
+ * otherwise. `flash` and `flashLead` are the palette indices the game gave
+ * the `FLASH` and `FLASH_LEAD` roles. Exported for the game that paints more
+ * of the cell than its rect (Towers' 3D faces). */
 export function highlightFill(
   highlight: CellHighlight,
   wash: number,
   background: number,
   flash: number,
+  flashLead: number,
 ): number {
   if (highlight === HIGHLIGHT_WIN) return flash;
+  if (highlight === HIGHLIGHT_WIN_LEAD) return flashLead;
   return highlight === HIGHLIGHT_ENTRY ? wash : background;
 }
 
 /**
- * Paint a cell's background with its highlight: `rect` in the wash, in the
+ * Paint a cell's background with its highlight: `rect` in the wash, in a
  * flash color or in `background`, then, for a note highlight, the corner
  * triangle over it.
  *
@@ -478,8 +491,9 @@ export function drawCellBackground(
   wash: number,
   background: number,
   flash: number,
+  flashLead: number,
 ): void {
-  dr.drawRect(rect, highlightFill(highlight, wash, background, flash));
+  dr.drawRect(rect, highlightFill(highlight, wash, background, flash, flashLead));
   if (highlight !== HIGHLIGHT_NOTES) return;
   const { x, y } = rect;
   dr.drawPolygon(

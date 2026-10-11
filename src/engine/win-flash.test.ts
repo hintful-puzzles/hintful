@@ -9,14 +9,23 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
-import { FLASH } from "./color/palette.ts";
+import { FLASH, FLASH_LEAD } from "./color/palette.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { type AnyGame, probeBoard } from "./testing/input-probe.ts";
 import { RecordingDrawing, rgbLabel } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { winFlashAt } from "./testing/win-flash.ts";
-import { type Flash, NO_FLASH, WIN_FLASH_S, WIN_STILL_S } from "./win-wave.ts";
+import type { Color } from "./types.ts";
+import {
+  type Flash,
+  NO_FLASH,
+  WIN_BODY,
+  WIN_FLASH_S,
+  WIN_LEAD,
+  WIN_NONE,
+  WIN_STILL_S,
+} from "./win-wave.ts";
 
 registerAllGames();
 
@@ -82,27 +91,43 @@ describe("the win flash, in every game", () => {
 
     // The band test above passes a game whose highlight shows on some
     // elements and is invisible on others, and one that lights in a color of
-    // its own. So each element is lit alone, and must then paint something
-    // more in the one highlight color than the settled board does. A game
+    // its own. So each element is lit alone, in each tone. A tone that
+    // changes the frame at all must paint more of its own color than the
+    // settled board has; the two tones must paint differently, which is what
+    // shows an element where one of them is the color it rests in. A game
     // asks once per element, in one order every frame, which makes the nth
     // question of a frame the nth element.
-    it("lights every element it asks about in the one highlight color", () => {
-      const inFlash = (frame: string) => frame.split(rgbLabel(FLASH)).length;
+    it("lights every element it asks about in the flash's two colors", () => {
+      const count = (color: Color) => (frame: string) =>
+        frame.split(rgbLabel(color)).length;
+      const tones = [
+        { tone: WIN_BODY, inColor: count(FLASH) },
+        { tone: WIN_LEAD, inColor: count(FLASH_LEAD) },
+      ] as const;
       let asked = 0;
       paint({
         time: 0,
         winning: true,
         win: () => {
           asked++;
-          return false;
+          return WIN_NONE;
         },
       });
       expect(asked).toBeGreaterThan(0);
-      const unseen: number[] = [];
+      const unseen: string[] = [];
       for (let only = 0; only < asked; only++) {
-        let n = 0;
-        const lit = paint({ time: 0, winning: true, win: () => n++ === only });
-        if (inFlash(lit) <= inFlash(settled)) unseen.push(only);
+        const [body, lead] = tones.map(({ tone, inColor }) => {
+          let n = 0;
+          const lit = paint({
+            time: 0,
+            winning: true,
+            win: () => (n++ === only ? tone : WIN_NONE),
+          });
+          if (lit !== settled && inColor(lit) <= inColor(settled))
+            unseen.push(`${only}: tone ${tone} paints another color`);
+          return lit;
+        });
+        if (body === lead) unseen.push(`${only}: the two tones paint alike`);
       }
       expect(unseen).toEqual([]);
     });
@@ -112,15 +137,18 @@ describe("the win flash, in every game", () => {
     });
 
     it("paints nothing of a win during a flash that is not one", () => {
-      expect(paint({ time: 0, winning: false, win: () => false }) === settled).toBe(
+      expect(paint({ time: 0, winning: false, win: () => WIN_NONE }) === settled).toBe(
         true,
       );
     });
 
     it("holds still for a player who asked for reduced motion", () => {
-      const lit = at(WIN_STILL_S / 4, true);
-      expect(lit === settled).toBe(false);
-      expect(at(WIN_STILL_S / 2, true) === lit).toBe(true);
+      // The lead's tone, then the body's, each over the whole board at once.
+      const lead = at(WIN_STILL_S * 0.1, true);
+      const body = at(WIN_STILL_S * 0.5, true);
+      expect(lead === body).toBe(false);
+      expect(at(WIN_STILL_S * 0.8, true) === body).toBe(true);
+      expect(lead === settled && body === settled).toBe(false);
     });
   });
 });

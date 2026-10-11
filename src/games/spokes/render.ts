@@ -26,6 +26,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   GRID_DARK,
   givenSurface,
   HELD,
@@ -38,7 +39,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { HUB, SPOKE } from "./hint-text.ts";
 import type { SpokesHint } from "./index.ts";
 import { SpokesScratch, spokesFindIsolated, spokesSolverRecount } from "./solver.ts";
@@ -100,6 +101,8 @@ export const COL_HINT = 9;
 export const COL_HINT_CELL = 10;
 /** The face of a hub that still has spokes to take: the quiet surface. */
 export const COL_HUB = 11;
+/** The face of a hub the leading edge of the win flash is on. */
+export const COL_DONE_LEAD = 12;
 
 /**
  * Upstream takes the frontend background as-is (no `game_mkhighlight`) and
@@ -118,6 +121,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_LINE] = INK;
   out[COL_MARK] = BLUE;
   out[COL_DONE] = FLASH;
+  out[COL_DONE_LEAD] = FLASH_LEAD;
   out[COL_ERROR] = ERROR;
   // Purple, because Spokes has spent the usual two: green is a held hub and
   // blue a ruled-out spoke.
@@ -351,8 +355,9 @@ export function redraw(
       const ty = toCoord(y, ts);
       const lines = ds.scratch.lines[i];
 
-      const fill = flash.win(sweepStep(x, y))
-        ? COL_DONE
+      const tone = flash.win(sweepStep(x, y));
+      const fill = tone
+        ? winSlot(tone, COL_DONE, COL_DONE_LEAD)
         : ui.markSatisfied && lines === state.numbers[i]
           ? COL_SATISFIED
           : COL_HUB;

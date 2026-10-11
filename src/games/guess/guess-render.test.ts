@@ -18,6 +18,7 @@ import {
   COL_CURSOR,
   COL_HOLD,
   COL_LIT,
+  COL_LIT_LEAD,
   COL_WRONG,
   type GuessDrawState,
   pegOff,
@@ -114,8 +115,11 @@ describe("Guess redraw", () => {
     });
     expect(guessGame.status(won)).toBe("solved");
     const ds = freshDs();
-    /** The pegs and holes whose box is the flash color, as `column,row`, the answer the
-     * row under the last guess. */
+    /** The pegs and holes whose box is one of the flash's two colors, as
+     * `column,row`, the answer the row under the last guess. */
+    const tones = new Set<number>();
+    const lit = (color: number) =>
+      (color === COL_LIT || color === COL_LIT_LEAD) && tones.add(color) !== null;
     const run = winFlashRun(
       (flash: Flash) => {
         const { dr } = recordingDrawing();
@@ -124,7 +128,7 @@ describe("Guess redraw", () => {
       },
       (dr) =>
         opsOfKind(dr.ops, "rect").flatMap((o) =>
-          o.color === COL_LIT
+          lit(o.color)
             ? [
                 `${Math.round((o.x - ds.guessx) / pegOff(ds))},${Math.min(
                   params.nguesses,
@@ -141,6 +145,7 @@ describe("Guess redraw", () => {
       const [x, y] = key.split(",").map(Number);
       return sweepStep(x, y);
     });
+    expect([...tones].sort()).toEqual([COL_LIT, COL_LIT_LEAD]);
     // From the answer's first peg to the end of the first guess.
     expect(run.frames[0]).toEqual([`0,${params.nguesses}`]);
     expect(run.frames.at(-1)).toEqual([`${params.npegs - 1},0`]);

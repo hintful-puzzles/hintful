@@ -17,6 +17,7 @@ import {
   CURSOR,
   cellSurface,
   FLASH,
+  FLASH_LEAD,
   GRID_DARK,
   HELD,
   HINT_ACTION,
@@ -31,7 +32,7 @@ import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { MOVE, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import {
   GRID_HOLE,
@@ -59,8 +60,9 @@ const GRID_HINT_OUTLINE = 80;
 const COL_BACKGROUND = 0; // the board around the cells
 const COL_GRID = 1; // the line between two cells, and round the board
 const COL_CELL = 2; // the surface of a cell
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 3;
+export const COL_FLASH_LEAD = 10;
 const COL_HOLE = 4; // the ring that marks an empty hole
 const COL_PEG = 5;
 const COL_CURSOR = 6;
@@ -80,7 +82,7 @@ export interface PegsDrawState {
   dragX: number;
   dragY: number;
   /** Per-tile cache of what each square last showed: its value with the
-   * cursor and hint flags, whether the win flash lit it, then the hint jumps
+   * cursor and hint flags, the win flash's tone on it, then the hint jumps
    * drawn across it. */
   tiles: string[];
   started: boolean;
@@ -112,6 +114,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   // Strong enough to be a mark on the cell and not a step of its gray.
   out[COL_HOLE] = GRID_DARK;
   out[COL_PEG] = TWO[PAIR_DISC];
@@ -327,10 +330,11 @@ export function redraw(
       if (v === GRID_OBST) continue;
       const i = y * w + x;
       const arrows = arrowsAt.get(i) ?? [];
-      const lit = flash.win(sweepStep(x, y));
-      const key = `${v}${striped.has(i) ? "s" : ""}${lit ? "l" : ""}:${arrows.map(JUMP.key).join(",")}`;
+      const tone = flash.win(sweepStep(x, y));
+      const ground = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_CELL;
+      const key = `${v}${striped.has(i) ? "s" : ""}w${tone}:${arrows.map(JUMP.key).join(",")}`;
       if (key !== ds.tiles[i]) {
-        drawTile(dr, ds, coord(x, ts), coord(y, ts), v, lit ? COL_FLASH : COL_CELL, {
+        drawTile(dr, ds, coord(x, ts), coord(y, ts), v, ground, {
           striped: striped.has(i),
           arrows: arrows.map((j) => [center(j.from), center(j.to)] as const),
         });

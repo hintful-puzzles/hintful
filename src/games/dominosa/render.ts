@@ -14,6 +14,7 @@ import { GREEN, RED, WHITE } from "../../engine/color/colors.ts";
 import {
   ERROR,
   FLASH,
+  FLASH_LEAD,
   GOAL,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -32,7 +33,7 @@ import {
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
 import { SPOT } from "./hint-text.ts";
 import type { DominosaHint } from "./index.ts";
 import {
@@ -69,7 +70,8 @@ export const COL_HINT_CELL = 10; // the evidence squares' outline
 // places the domino the player is after could go, so the goal's color, which
 // no domino, mistake, hint or value highlight takes.
 export const COL_REFERENCE = 11;
-export const COL_FLASH = 12; // the ground of a domino the win flash is on
+export const COL_FLASH = 12; // the ground of a domino the win flash's body is on
+export const COL_FLASH_LEAD = 13; // and of one its leading edge is on
 
 export function colors(defaultBackground: Color): Color[] {
   const { background } = mkhighlight(defaultBackground);
@@ -94,6 +96,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   out[COL_REFERENCE] = GOAL;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -128,6 +131,9 @@ const DF_HINT_EDGE_B = 0x4000000;
 // Fork reference-panel spotlight bit: this square is a candidate placement for
 // the selected domino (boxed in COL_REFERENCE).
 const DF_REF = 0x8000000;
+// With `DF_FLASH`: the win flash's leading edge, and not its body, is on the
+// domino.
+const DF_FLASH_LEAD = 0x10000000;
 
 // --- geometry ---------------------------------------------------------------
 const gutter = (ts: number) => Math.floor(ts / 16);
@@ -234,7 +240,7 @@ function drawTile(
   if (type !== TYPE_BLANK) {
     let bg = flags & DF_CLASH ? COL_DOMINOCLASH : COL_DOMINO;
     nc = COL_DOMINOTEXT;
-    if (flags & DF_FLASH) bg = COL_FLASH;
+    if (flags & DF_FLASH) bg = flags & DF_FLASH_LEAD ? COL_FLASH_LEAD : COL_FLASH;
 
     // Rounded corners: filled circles at the domino's outer corners.
     if (type === TYPE_L || type === TYPE_T)
@@ -436,7 +442,8 @@ export function redraw(
         const j = grid[i];
         const mx = (x + (j % w)) / 2;
         const my = (y + ((j / w) | 0)) / 2;
-        if (flash.win(sweepStep(mx, my))) c |= DF_FLASH;
+        const tone = flash.win(sweepStep(mx, my));
+        if (tone) c |= tone === WIN_LEAD ? DF_FLASH | DF_FLASH_LEAD : DF_FLASH;
       }
 
       if (ui.cursor.visible) {

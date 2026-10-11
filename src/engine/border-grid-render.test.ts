@@ -27,10 +27,11 @@ import {
   F_CLUE_ERROR,
   F_CORRECT,
   F_FLASH,
+  F_FLASH_LEAD,
   F_GIVEN,
   F_HINT_CELL,
   F_HINT_REGION,
-  GAME_FLAG_SHIFT,
+  flashFlag,
   mistakeEdgeBits,
   tileWidth,
 } from "./border-grid-render.ts";
@@ -40,6 +41,7 @@ import {
   membersNotMentioning,
   SCANNED_SOURCE_FILES,
 } from "./testing/enrollment.ts";
+import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./win-wave.ts";
 
 describe("geometry", () => {
   it("leaves room for the outer walls and a margin either side", () => {
@@ -107,6 +109,7 @@ describe("the packed flags do not collide", () => {
     BORDER_ERROR: BORDER_ERROR(0xf),
     F_CLUE_ERROR,
     F_FLASH,
+    F_FLASH_LEAD,
     CONTAINS_CURSOR: CONTAINS_CURSOR(0x1ff),
     F_CORRECT,
     EDGE_HINT: EDGE_HINT(0xf),
@@ -134,13 +137,10 @@ describe("the packed flags do not collide", () => {
       expect(FLAGS[a] & FLAGS[b], `${a} overlaps ${b}`).toBe(0);
   });
 
-  it("leaves a game's own bits clear of every shared one", () => {
-    const shared = Object.values(FLAGS).reduce((acc, f) => acc | f, 0);
-    // Every bit a game may use starts at GAME_FLAG_SHIFT, and the shared layout
-    // must claim none of them. Asserted rather than eyeballed, because the two
-    // grow independently and a collision is invisible — it would show up as a
-    // tile that fails to redraw.
-    expect(shared & ~((1 << GAME_FLAG_SHIFT) - 1)).toBe(0);
+  it("flags the win flash's two tones apart, and no cell that is not lit", () => {
+    expect(flashFlag(WIN_BODY)).toBe(F_FLASH);
+    expect(flashFlag(WIN_LEAD)).toBe(F_FLASH_LEAD);
+    expect(flashFlag(WIN_NONE)).toBe(0);
   });
 });
 

@@ -12,7 +12,13 @@ import {
   type HintStep,
 } from "../../engine/index.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_NONE,
+  type WinTone,
+  winSlot,
+} from "../../engine/win-wave.ts";
 import type { GalaxiesHint } from "./hint.ts";
 import { DOT, WALL } from "./hint-marks.ts";
 import type { GalaxiesMistake, GalaxiesMove, GalaxiesUi } from "./index.ts";
@@ -59,9 +65,11 @@ export const COL_CELL = 13;
 /** The line round a dot: ink, so a white dot is closed on a light surface and
  * a black one on a dark surface. */
 export const COL_DOT_RIM = 14;
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: under the highlight's body, and
+ * under its leading edge. */
 export const COL_FLASH = 15;
-export const NCOLORS = 16;
+export const COL_FLASH_LEAD = 16;
+export const NCOLORS = 17;
 
 // --- DrawState ------------------------------------------------------
 
@@ -76,6 +84,9 @@ export interface GalaxiesDrawState {
   cache: Int32Array;
   dx: Int16Array;
   dy: Int16Array;
+  /** Per tile: the tone of the win flash on it at the last paint. Its own
+   * array, since the Int32 key is full. */
+  tone: Uint8Array;
   /** Everything the *transient* UI paints on a tile, in one sidecar word: the
    * drag preview (bits 0-1, {@link PREVIEW_GHOST} / {@link PREVIEW_TARGET}),
    * the half-grid keyboard cursor (bits 2-10, {@link cursorBit}) and a
@@ -109,6 +120,7 @@ export function newDrawState(s: GalaxiesState, tileSize: number): GalaxiesDrawSt
     cache: new Int32Array(n).fill(-1),
     dx: new Int16Array(n),
     dy: new Int16Array(n),
+    tone: new Uint8Array(n),
     overlay: new OverlaySidecar(n),
     hint: new OverlaySidecar(n),
     wrongEdges: new OverlaySidecar(n),
@@ -135,12 +147,6 @@ const DRAW_CORNER_DL = 1 << 6;
 const DRAW_CORNER_DR = 1 << 7;
 const DRAW_WHITE = 1 << 8;
 const DRAW_BLACK = 1 << 9;
-/** The win flash is on the cell. Both region bits at once, which no region
- * sets, since the key has no bit to spare. */
-const DRAW_LIT = DRAW_WHITE | DRAW_BLACK;
-/** The fill bits of a cell in a finished region of `color` (1 white, 2 black). */
-const regionFill = (color: number, lit: boolean): number =>
-  lit ? DRAW_LIT : color === 2 ? DRAW_BLACK : DRAW_WHITE;
 const DRAW_ARROW = 1 << 10;
 const DRAW_CURSOR = 1 << 11;
 // Mistake highlight (a wrong association). Bit 30 — above the dot bits
@@ -339,6 +345,7 @@ function drawSquare(
   wrongEdges: number,
   overlay: number,
   hint: number,
+  tone: WinTone,
 ): void {
   const preview = overlay & PREVIEW_MASK;
   const lx = x * tileSize + border;
@@ -354,9 +361,9 @@ function drawSquare(
   // once the region is closed and symmetric, the plain surface until then,
   // whatever the cell's arrow says. That is what a hint reasons toward, so no
   // hint role fills; its marks are the stripes here and inset rings, below.
-  const lit = (flags & DRAW_LIT) === DRAW_LIT;
+  const lit = tone !== WIN_NONE;
   const bg = lit
-    ? COL_FLASH
+    ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
     : flags & DRAW_WHITE
       ? COL_WHITEBG
       : flags & DRAW_BLACK
@@ -801,7 +808,12 @@ export function redraw(
       // Region color.
       const ti = idx(s, gx, gy);
       const sFlags = s.flags[ti];
-      if (cols?.[cacheI]) flags |= regionFill(cols[cacheI], flash.win(sweepStep(x, y)));
+      // Only a cell of a finished region lights, which on a won board is all.
+      let tone: WinTone = WIN_NONE;
+      if (cols?.[cacheI]) {
+        flags |= cols[cacheI] === 2 ? DRAW_BLACK : DRAW_WHITE;
+        tone = flash.win(sweepStep(x, y));
+      }
 
       // Arrow (association indicator), hidden while a drag has lifted it.
       if (sFlags & F_TILE_ASSOC && cols && !cols[cacheI]) {
@@ -890,6 +902,7 @@ export function redraw(
         ds.cache[cacheI] !== key ||
         ds.dx[cacheI] !== ddx ||
         ds.dy[cacheI] !== ddy ||
+        ds.tone[cacheI] !== tone ||
         ds.overlay.stale(cacheI) ||
         ds.hint.stale(cacheI) ||
         ds.wrongEdges.stale(cacheI)
@@ -907,8 +920,10 @@ export function redraw(
           ds.wrongEdges.packed[cacheI],
           ds.overlay.packed[cacheI],
           ds.hint.packed[cacheI],
+          tone,
         );
         ds.cache[cacheI] = key;
+        ds.tone[cacheI] = tone;
         ds.dx[cacheI] = ddx;
         ds.dy[cacheI] = ddy;
         ds.overlay.commit(cacheI);

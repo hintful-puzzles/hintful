@@ -20,6 +20,7 @@ import {
   clueDoneColor,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -41,8 +42,8 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_WIN,
   highlightFill,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -91,6 +92,8 @@ export const COL_GIVEN = 11; // the lifted surface of a given tower
 export const COL_LINE = 12;
 /** The ground of a square the win flash is on. */
 export const COL_FLASH = 13;
+/** The ground of a square the win flash's leading edge is on. */
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -113,6 +116,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_LINE] = surfaceGrid(bg);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -122,7 +126,7 @@ const DF_PENCIL_SHIFT = 16;
 const DF_CLUE_DONE = 0x10000;
 const DF_ERROR = 0x8000;
 /** Bits 13–14: the cell's `CellHighlight`. */
-const DF_HIGHLIGHT_SHIFT = 13;
+const DF_HIGHLIGHT_SHIFT = 27;
 const DF_IMMUTABLE = 0x1000;
 const DF_PLAYAREA = 0x0800;
 const DF_DIGIT_MASK = 0x00ff;
@@ -252,11 +256,17 @@ function drawTile(
   const digit = tile & DF_DIGIT_MASK;
   // `redraw` draws the hint's target ring and evidence outline once per frame;
   // a tile draws only `struck`, the candidate heights this firing rules out.
-  const highlight = ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight;
+  const highlight = ((tile >> DF_HIGHLIGHT_SHIFT) & 7) as CellHighlight;
   // The faces take the top's fill, so a raised tower reads as one selected cell.
   const surface =
     tile & DF_IMMUTABLE ? COL_GIVEN : tile & DF_PLAYAREA ? COL_CELL : COL_BACKGROUND;
-  const bg = highlightFill(highlight, COL_HIGHLIGHT, surface, COL_FLASH);
+  const bg = highlightFill(
+    highlight,
+    COL_HIGHLIGHT,
+    surface,
+    COL_FLASH,
+    COL_FLASH_LEAD,
+  );
   const tower = threeD && (tile & DF_PLAYAREA) !== 0 && digit !== 0;
 
   // 3D tower: left + bottom faces, then offset to the top face.
@@ -296,6 +306,7 @@ function drawTile(
     COL_HIGHLIGHT,
     surface,
     COL_FLASH,
+    COL_FLASH_LEAD,
   );
   // On a raised tower's top face, so the line reads at the height the tower is.
   if (hatched) dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
@@ -485,7 +496,7 @@ export function redraw(
       if (state.grid[y * w + x]) tile |= state.grid[y * w + x];
       else tile |= state.pencil[y * w + x] << DF_PENCIL_SHIFT;
       tile |=
-        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_WIN : cellHighlight(ui, x, y)) <<
+        (winHighlight(flash.win(sweepStep(x, y))) ?? cellHighlight(ui, x, y)) <<
         DF_HIGHLIGHT_SHIFT;
       if (state.immutable[y * w + x]) tile |= DF_IMMUTABLE;
       if (ds.errtmp[(y + 1) * W + (x + 1)]) tile |= DF_ERROR;

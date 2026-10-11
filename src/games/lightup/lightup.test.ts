@@ -47,6 +47,7 @@ import {
   COL_ERROR,
   COL_ERROR_TEXT,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_LIGHT,
   COL_LIT,
   COL_RULED_OUT,
@@ -554,7 +555,11 @@ describe("lightup rendering", () => {
     if (!res?.ok) throw new Error("the fixture does not solve");
     const won = lightupGame.executeMove(orig, res.move);
     expect(lightupGame.status(won)).toBe("solved");
-    /** The squares filled with the flash color, as the pixel each starts at. */
+    /** The squares filled with one of the flash's two colors, as the pixel
+     * each starts at. */
+    const tones = new Set<number>();
+    const lit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color) !== null;
     const run = winFlashRun(
       (flash: Flash) => {
         const dr = new RecordingDrawing(lightupGame.colors(DEFAULT_BACKGROUND));
@@ -564,9 +569,10 @@ describe("lightup rendering", () => {
       },
       (dr) =>
         dr.ops.flatMap((o) =>
-          o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+          o.op === "rect" && lit(o.color) ? [`${o.x},${o.y}`] : [],
         ),
     );
+    expect([...tones].sort()).toEqual([COL_FLASH, COL_FLASH_LEAD]);
     // Every open square, and no wall.
     const open = won.flags.filter((f) => !(f & F_BLACK)).length;
     expect(open).toBeLessThan(won.flags.length);

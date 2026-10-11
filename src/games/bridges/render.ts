@@ -16,6 +16,7 @@ import {
   cellSurface,
   ERROR_WASH,
   FLASH,
+  FLASH_LEAD,
   GRID_MID,
   givenSurface,
   HELD,
@@ -28,7 +29,7 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { PIECE, SPAN } from "./hint-text.ts";
 import { dragReleaseOps, executeMove } from "./moves.ts";
@@ -91,6 +92,21 @@ export const COL_HINT_CELL = 11;
 /** The face of an island that still has bridges to take: the quiet surface,
  * a step off the board, so a settled island's lift reads against it. */
 export const COL_ISLAND = 12;
+/** What the leading edge of the win flash is on. */
+export const COL_FLASH_LEAD = 13;
+
+// A tile's lead word: whether the win flash's leading edge, and not its body,
+// is on the square itself and on each of its four neighbors. A tile draws
+// parts of its neighbors (an island's circle spills over, a bridge's bars run
+// into the island), and the draw word has one "lit" value and no bit to spare.
+const LEAD_SELF = 1;
+const LEAD_L = 2;
+const LEAD_R = 4;
+const LEAD_U = 8;
+const LEAD_D = 16;
+/** The flash slot for the part of a tile drawn from the square `bit` names. */
+const flashSlot = (lead: number, bit: number): number =>
+  lead & bit ? COL_FLASH_LEAD : COL_FLASH;
 
 // --- Packed draw-word fields (bridges.c lines 2262-2297) ---
 // Line data (6 bits per direction).
@@ -188,6 +204,10 @@ export interface BridgesDrawState {
   newgrid: Int32Array;
   /** Per-cell hint word from the last paint; part of the diff key. */
   hint: Int32Array;
+  /** Per-cell lead word from the last paint; part of the diff key. */
+  lead: Uint8Array;
+  /** Scratch for the current frame: whether the flash's lead is on each cell. */
+  newlead: Uint8Array;
 }
 
 export function newDrawState(state: BridgesState, tileSize: number): BridgesDrawState {
@@ -197,6 +217,8 @@ export function newDrawState(state: BridgesState, tileSize: number): BridgesDraw
     grid: new Int32Array(n).fill(-1),
     newgrid: new Int32Array(n),
     hint: new Int32Array(n).fill(-1),
+    lead: new Uint8Array(n),
+    newlead: new Uint8Array(n),
   };
 }
 
@@ -227,6 +249,7 @@ export function colors(defaultBackground: Color): Color[] {
     HINT_ACTION, // COL_HINT
     HINT_EVIDENCE, // COL_HINT_CELL
     cellSurface(background), // COL_ISLAND
+    FLASH_LEAD, // COL_FLASH_LEAD
   ];
 }
 
@@ -337,12 +360,12 @@ function drawLimit(
 }
 
 /** The color a span's own marks take: the same choice the bars make. */
-function lineColor(ldata: number): number {
+function lineColor(ldata: number, flashCol: number): number {
   switch (ldata & DL_COLMASK) {
     case DL_COL_SELECTED:
       return COL_SELECTED;
     case DL_COL_FLASH:
-      return COL_FLASH;
+      return flashCol;
     case DL_COL_WARNING:
       return COL_WARNING;
     default:
@@ -376,7 +399,8 @@ function drawGeneralLine(
   len: number,
   ldata: number,
   which: number,
-  hdata = 0,
+  hdata: number,
+  flashCol: number,
 ): void {
   const raw = ldata & DL_COUNTMASK;
   // A cross and a "possible bridge" bevel are both drawn *instead of* bridges,
@@ -394,7 +418,7 @@ function drawGeneralLine(
         : (ldata & DL_COLMASK) === DL_COL_SELECTED
           ? COL_SELECTED
           : (ldata & DL_COLMASK) === DL_COL_FLASH
-            ? COL_FLASH
+            ? flashCol
             : (ldata & DL_COLMASK) === DL_COL_WARNING
               ? COL_WARNING
               : COL_FOREGROUND;
@@ -484,9 +508,10 @@ function drawHline(
   w: number,
   vdata: number,
   which: number,
-  hint = 0,
+  hint: number,
+  flashCol: number,
 ): void {
-  drawGeneralLine(dr, ts, ox, oy, 1, 0, 0, 1, w, vdata, which, hint);
+  drawGeneralLine(dr, ts, ox, oy, 1, 0, 0, 1, w, vdata, which, hint, flashCol);
 }
 
 function drawVline(
@@ -497,9 +522,10 @@ function drawVline(
   h: number,
   vdata: number,
   which: number,
-  hint = 0,
+  hint: number,
+  flashCol: number,
 ): void {
-  drawGeneralLine(dr, ts, ox, oy, 0, 1, 1, 0, h, vdata, which, hint);
+  drawGeneralLine(dr, ts, ox, oy, 0, 1, 1, 0, h, vdata, which, hint, flashCol);
 }
 
 /**
@@ -520,7 +546,8 @@ function drawIsland(
   oy: number,
   clue: number,
   idata: number,
-  ihint = 0,
+  ihint: number,
+  flashCol: number,
 ): void {
   if ((idata & DI_BGMASK) === DI_BG_NO_ISLAND) return;
   const half = div(ts, 2);
@@ -539,7 +566,7 @@ function drawIsland(
   // The win flash fills the island's face, under its rim and its count.
   const bg =
     (idata & DI_COLMASK) === DI_COL_FLASH
-      ? COL_FLASH
+      ? flashCol
       : (idata & DI_BGMASK) === DI_BG_CURSOR
         ? COL_CURSOR
         : (idata & DI_BGMASK) === DI_BG_MARK
@@ -569,6 +596,7 @@ function drawIslandTile(
   clue: number,
   data: number,
   hint: number,
+  lead: number,
 ): void {
   const ox = toCoord(x, ts, b);
   const oy = toCoord(y, ts, b);
@@ -585,6 +613,7 @@ function drawIslandTile(
       (data >> D_I_LINE_SHIFT_L) & DL_MASK,
       which,
       (hint >> H_I_LINE_SHIFT_L) & HL_MASK,
+      flashSlot(lead, LEAD_L),
     );
     drawHline(
       dr,
@@ -595,6 +624,7 @@ function drawIslandTile(
       (data >> D_I_LINE_SHIFT_R) & DL_MASK,
       which,
       (hint >> H_I_LINE_SHIFT_R) & HL_MASK,
+      flashSlot(lead, LEAD_R),
     );
     drawVline(
       dr,
@@ -605,6 +635,7 @@ function drawIslandTile(
       (data >> D_I_LINE_SHIFT_U) & DL_MASK,
       which,
       (hint >> H_I_LINE_SHIFT_U) & HL_MASK,
+      flashSlot(lead, LEAD_U),
     );
     drawVline(
       dr,
@@ -615,6 +646,7 @@ function drawIslandTile(
       (data >> D_I_LINE_SHIFT_D) & DL_MASK,
       which,
       (hint >> H_I_LINE_SHIFT_D) & HL_MASK,
+      flashSlot(lead, LEAD_D),
     );
   }
   drawIsland(
@@ -625,6 +657,7 @@ function drawIslandTile(
     clue,
     (data >> D_I_ISLAND_SHIFT) & DI_MASK,
     (hint >> H_I_ISLAND_SHIFT) & HI_MASK,
+    flashSlot(lead, LEAD_SELF),
   );
   dr.unclip();
   dr.drawUpdate({ x: ox, y: oy, w: ts, h: ts });
@@ -638,9 +671,11 @@ function drawLineTile(
   y: number,
   data: number,
   hint: number,
+  lead: number,
 ): void {
   const ox = toCoord(x, ts, b);
   const oy = toCoord(y, ts, b);
+  const own = flashSlot(lead, LEAD_SELF);
   dr.clip({ x: ox, y: oy, w: ts, h: ts });
   dr.drawRect({ x: ox, y: oy, w: ts, h: ts }, COL_BACKGROUND);
   const hdata = (data >> D_L_LINE_SHIFT_H) & DL_MASK;
@@ -651,11 +686,11 @@ function drawLineTile(
   // straight compare of the count fields gives that order (DL_COUNTMASK
   // enumeration).
   if ((hdata & DL_COUNTMASK) > (vdata & DL_COUNTMASK)) {
-    drawHline(dr, ts, ox, oy, ts, hdata, 3, hhint);
-    drawVline(dr, ts, ox, oy, ts, vdata, 3, vhint);
+    drawHline(dr, ts, ox, oy, ts, hdata, 3, hhint, own);
+    drawVline(dr, ts, ox, oy, ts, vdata, 3, vhint, own);
   } else {
-    drawVline(dr, ts, ox, oy, ts, vdata, 3, vhint);
-    drawHline(dr, ts, ox, oy, ts, hdata, 3, hhint);
+    drawVline(dr, ts, ox, oy, ts, vdata, 3, vhint, own);
+    drawHline(dr, ts, ox, oy, ts, hdata, 3, hhint, own);
   }
   // Islands intruding from the four sides (no clue numbers).
   const ihint = (side: number): number => (hint >> side) & HI_MASK;
@@ -667,6 +702,7 @@ function drawLineTile(
     -1,
     (data >> D_L_ISLAND_SHIFT_L) & DI_MASK,
     ihint(H_L_ISLAND_SHIFT_L),
+    flashSlot(lead, LEAD_L),
   );
   drawIsland(
     dr,
@@ -676,6 +712,7 @@ function drawLineTile(
     -1,
     (data >> D_L_ISLAND_SHIFT_R) & DI_MASK,
     ihint(H_L_ISLAND_SHIFT_R),
+    flashSlot(lead, LEAD_R),
   );
   drawIsland(
     dr,
@@ -685,6 +722,7 @@ function drawLineTile(
     -1,
     (data >> D_L_ISLAND_SHIFT_U) & DI_MASK,
     ihint(H_L_ISLAND_SHIFT_U),
+    flashSlot(lead, LEAD_U),
   );
   drawIsland(
     dr,
@@ -694,6 +732,7 @@ function drawLineTile(
     -1,
     (data >> D_L_ISLAND_SHIFT_D) & DI_MASK,
     ihint(H_L_ISLAND_SHIFT_D),
+    flashSlot(lead, LEAD_D),
   );
   // Last, so neither an island's rim nor a bridge bar covers it. A square in
   // the middle of both a limited row and a limited column is rare, and there
@@ -705,11 +744,11 @@ function drawLineTile(
   const apart = hlim && vlim ? div(ts, 4) : 0;
   const half = div(ts, 2);
   if (hlim) {
-    const col = hlimHint ? COL_HINT : lineColor(hdata);
+    const col = hlimHint ? COL_HINT : lineColor(hdata, own);
     drawLimit(dr, ts, ox + half, oy + half - apart, hlim, col);
   }
   if (vlim) {
-    const col = vlimHint ? COL_HINT : lineColor(vdata);
+    const col = vlimHint ? COL_HINT : lineColor(vdata, own);
     drawLimit(dr, ts, ox + half - apart, oy + half + apart, vlim, col);
   }
   dr.unclip();
@@ -726,6 +765,7 @@ function drawEdgeTile(
   dy: number,
   data: number,
   hint: number,
+  lead: number,
 ): void {
   const ox = toCoord(x, ts, b);
   const oy = toCoord(y, ts, b);
@@ -751,6 +791,7 @@ function drawEdgeTile(
     -1,
     (data >> D_I_ISLAND_SHIFT) & DI_MASK,
     (hint >> H_I_ISLAND_SHIFT) & HI_MASK,
+    flashSlot(lead, LEAD_SELF),
   );
   dr.unclip();
   dr.drawUpdate({ x: cx, y: cy, w: cw, h: ch });
@@ -922,6 +963,8 @@ export function redrawBridges(
   const mistakeMask = buildMistakeMask(s, mistakes);
   const newgrid = ds.newgrid;
   newgrid.fill(0);
+  const newlead = ds.newlead;
+  newlead.fill(0);
   const newhint = hintWords(s, hint);
 
   for (let x = 0; x < w; x++) {
@@ -933,7 +976,9 @@ export function redrawBridges(
         const is = s.islandAt(x, y);
         if (!is) continue;
         let idata = 0;
-        if (flash.win(sweepStep(x, y))) idata |= DI_COL_FLASH;
+        const tone = flash.win(sweepStep(x, y));
+        if (tone === WIN_LEAD) newlead[c] = 1;
+        if (tone) idata |= DI_COL_FLASH;
         else if (
           dragSrc &&
           ((is.x === dragSrc.x && is.y === dragSrc.y) ||
@@ -1002,7 +1047,9 @@ export function redrawBridges(
         const wrong = mistakeMask?.[c];
         // The win flash lights a bridge square by square as it crosses, and a
         // square with no bridge has nothing to light.
-        const lit = (dv & (G_LINEH | G_LINEV)) !== 0 && flash.win(sweepStep(x, y));
+        const tone = dv & (G_LINEH | G_LINEV) ? flash.win(sweepStep(x, y)) : WIN_NONE;
+        const lit = tone !== WIN_NONE;
+        if (tone === WIN_LEAD) newlead[c] = 1;
         hdata |= lit
           ? DL_COL_FLASH
           : v & G_WARN || wrong
@@ -1062,22 +1109,31 @@ export function redrawBridges(
       const c = s.idx(x, y);
       const newval = newgrid[c];
       const newhintval = newhint[c];
+      const lead =
+        (newlead[c] ? LEAD_SELF : 0) |
+        (x > 0 && newlead[s.idx(x - 1, y)] ? LEAD_L : 0) |
+        (x + 1 < w && newlead[s.idx(x + 1, y)] ? LEAD_R : 0) |
+        (y > 0 && newlead[s.idx(x, y - 1)] ? LEAD_U : 0) |
+        (y + 1 < h && newlead[s.idx(x, y + 1)] ? LEAD_D : 0);
       // The hint word is part of the diff key, not a second overlay pass: a
       // frame whose board is unchanged and whose hint is not must still
       // repaint (`hint-overlay.test.ts`).
-      if (ds.grid[c] === newval && ds.hint[c] === newhintval) continue;
+      if (ds.grid[c] === newval && ds.hint[c] === newhintval && ds.lead[c] === lead)
+        continue;
       const v = s.gridAt(x, y);
       if (v & G_ISLAND) {
         const is = s.islandAt(x, y);
-        drawIslandTile(dr, ts, b, x, y, is ? is.count : 0, newval, newhintval);
-        if (x === 0) drawEdgeTile(dr, ts, b, x - 1, y, 1, 0, newval, newhintval);
-        if (y === 0) drawEdgeTile(dr, ts, b, x, y - 1, 0, 1, newval, newhintval);
-        if (x === w - 1) drawEdgeTile(dr, ts, b, x + 1, y, -1, 0, newval, newhintval);
-        if (y === h - 1) drawEdgeTile(dr, ts, b, x, y + 1, 0, -1, newval, newhintval);
+        const hv = newhintval;
+        drawIslandTile(dr, ts, b, x, y, is ? is.count : 0, newval, hv, lead);
+        if (x === 0) drawEdgeTile(dr, ts, b, x - 1, y, 1, 0, newval, hv, lead);
+        if (y === 0) drawEdgeTile(dr, ts, b, x, y - 1, 0, 1, newval, hv, lead);
+        if (x === w - 1) drawEdgeTile(dr, ts, b, x + 1, y, -1, 0, newval, hv, lead);
+        if (y === h - 1) drawEdgeTile(dr, ts, b, x, y + 1, 0, -1, newval, hv, lead);
       } else {
-        drawLineTile(dr, ts, b, x, y, newval, newhintval);
+        drawLineTile(dr, ts, b, x, y, newval, newhintval, lead);
       }
       ds.grid[c] = newval;
+      ds.lead[c] = lead;
       ds.hint[c] = newhintval;
     }
   }

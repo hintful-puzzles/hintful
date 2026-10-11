@@ -21,6 +21,7 @@ import {
   clueDoneColor,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -38,7 +39,13 @@ import {
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_NONE,
+  type WinTone,
+  winSlot,
+} from "../../engine/win-wave.ts";
 import type { MagnetsHighlights } from "./hint.ts";
 import { CLUE, LINE, SQUARE } from "./hint-text.ts";
 import {
@@ -85,6 +92,9 @@ export const COL_MISTAKE = 11;
 export const COL_HINT = 12;
 /** The hint's evidence outline. */
 export const COL_HINT_CELL = 13;
+/** The ground of a domino under the win flash's leading edge. Under its body
+ * the ground is {@link COL_HIGHLIGHT}. */
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -92,6 +102,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = background;
   // The slot's only use is the solved flash's tile fill; nothing bevels with it.
   out[COL_HIGHLIGHT] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_CELL] = cellSurface(background);
   out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
@@ -120,7 +131,6 @@ const DS_SET = 0x40;
 const DS_NOTPOS = 0x80;
 const DS_NOTNEG = 0x100;
 const DS_NOTNEU = 0x200;
-const DS_FLASH = 0x400;
 const DS_MISTAKE = 0x800; // fork overlay
 // The hint's marks, as the sides of this square each role draws
 // (`MarkOutlines.packed`, a byte): part of the diff key, so a square whose
@@ -129,6 +139,8 @@ const DS_MISTAKE = 0x800; // fork overlay
 const DS_HINT_SIDES_SHIFT = 12;
 /** The square is on the line the hint's sentence calls "this row/column". */
 const DS_HINT_LINE = 1 << 20;
+/** Bits 21–22: the tone of the win flash on the square's domino. */
+const DS_WIN_SHIFT = 21;
 
 // --- geometry ---------------------------------------------------------------
 /** The board's pixel origin: the clue row and column take one whole tile.
@@ -322,7 +334,8 @@ function drawTile(
     fg = flags & DS_ERROR ? COL_ERROR : flags & DS_CURSOR ? COL_TEXT : COL_BACKGROUND;
   }
 
-  if (flags & DS_FLASH) bg = COL_HIGHLIGHT;
+  const tone = ((flags >> DS_WIN_SHIFT) & 3) as WinTone;
+  if (tone !== WIN_NONE) bg = winSlot(tone, COL_HIGHLIGHT, COL_FLASH_LEAD);
   drawTileCol(dr, ds, dominoes, x, y, which, bg, fg, perc, !!(flags & DS_HINT_LINE));
 
   // Fork findMistakes overlay: an inset red outline (distinct from symbol red).
@@ -507,7 +520,7 @@ export function redraw(
       // square with no partner draws no tile to light.
       const other = dominoes[idx];
       const mid = sweepStep((x + (other % w)) / 2, (y + Math.floor(other / w)) / 2);
-      if (other !== idx && flash.win(mid)) c |= DS_FLASH;
+      if (other !== idx) c |= flash.win(mid) << DS_WIN_SHIFT;
       if (flags[idx] & GS_NOTPOSITIVE) c |= DS_NOTPOS;
       if (flags[idx] & GS_NOTNEGATIVE) c |= DS_NOTNEG;
       if (flags[idx] & GS_NOTNEUTRAL) c |= DS_NOTNEU;

@@ -46,6 +46,7 @@ import {
   COL_CELL,
   COL_CURSOR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_GRID,
   COL_NUM_ERROR,
@@ -1184,17 +1185,21 @@ describe("seismic rendering", () => {
       redraw(dr, newDrawState(state, TILE), null, state, 1, newUi(state), 0, flash);
       return dr;
     };
-    /** The cells painted in the flash color, givens among them, as `x,y`. */
-    const run = winFlashRun(paint, (dr) =>
-      dr.ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_FLASH
-          ? [`${fromCoord(o.x, TILE)},${fromCoord(o.y, TILE)}`]
-          : [],
-      ),
-    );
-    expectWinFlashTravels(run, SMALL.w * SMALL.h, (at) => {
+    /** The cells painted in one of `slots`, givens among them, as `x,y`. */
+    const run = (...slots: number[]) =>
+      winFlashRun(paint, (dr) =>
+        dr.ops.flatMap((o) =>
+          o.op === "rect" && slots.includes(o.color)
+            ? [`${fromCoord(o.x, TILE)},${fromCoord(o.y, TILE)}`]
+            : [],
+        ),
+      );
+    expectWinFlashTravels(run(COL_FLASH, COL_FLASH_LEAD), SMALL.w * SMALL.h, (at) => {
       const [x, y] = at.split(",").map(Number);
       return sweepStep(x, y);
     });
+    // The highlight's two tones: a lead, and a body behind it.
+    for (const slot of [COL_FLASH_LEAD, COL_FLASH])
+      expect(run(slot).frames.some((frame) => frame.length > 0)).toBe(true);
   });
 });

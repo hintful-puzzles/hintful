@@ -27,7 +27,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { separateGame } from "./index.ts";
-import { COL_CORRECT, COL_ERROR, COL_FLASH } from "./render.ts";
+import { COL_CORRECT, COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
 import { solve, solveToBorders } from "./solver.ts";
 import {
   decodeParams,
@@ -347,7 +347,9 @@ describe("separate: the win flash", () => {
   /** Where each square painted in the flash color is drawn, as `x,y`. */
   const run = winFlashRun(paint, (dr) =>
     dr.ops.flatMap((o) =>
-      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+      o.op === "rect" && (o.color === COL_FLASH || o.color === COL_FLASH_LEAD)
+        ? [`${o.x},${o.y}`]
+        : [],
     ),
   );
   /** The sweep's diagonal through a square drawn at `at`. */
@@ -356,7 +358,16 @@ describe("separate: the win flash", () => {
     return sweepStep(x, y);
   };
 
-  it("lifts every cell in turn, from the bottom left to the top right", () => {
+  it("fills every cell in turn, from the bottom left to the top right", () => {
     expectWinFlashTravels(run, P5.w * P5.h, diagonal);
+  });
+
+  it("leads in the flash's lead color, with its body color behind", () => {
+    const paints = (slot: number) =>
+      winFlashRun(paint, (dr) =>
+        dr.ops.filter((o) => o.op === "rect" && o.color === slot),
+      ).frames.some((frame) => frame.length > 0);
+    expect(paints(COL_FLASH_LEAD)).toBe(true);
+    expect(paints(COL_FLASH)).toBe(true);
   });
 });

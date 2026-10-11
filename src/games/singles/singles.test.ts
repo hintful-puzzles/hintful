@@ -34,7 +34,7 @@ describeAbsentTiers(singlesGame, ["2x2dk", "2x3dk", "3x2dk", "3x3dk"]);
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
-import { COL_ERROR, COL_FLASH, COL_GRID } from "./render.ts";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD, COL_GRID } from "./render.ts";
 import { solveSpecific } from "./solver.ts";
 import {
   cloneState,
@@ -242,7 +242,9 @@ describe("singles: the win flash", () => {
   /** Where each square painted in the flash color is drawn, as `x,y`. */
   const run = winFlashRun(paint, (dr) =>
     dr.ops.flatMap((o) =>
-      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+      o.op === "rect" && (o.color === COL_FLASH || o.color === COL_FLASH_LEAD)
+        ? [`${o.x},${o.y}`]
+        : [],
     ),
   );
   /** The sweep's diagonal through a square drawn at `at`. */
@@ -253,5 +255,14 @@ describe("singles: the win flash", () => {
 
   it("fills the ground of every cell, the blackened one's too, from the bottom left to the top right", () => {
     expectWinFlashTravels(run, state.n, diagonal);
+  });
+
+  it("leads in the flash's lead color, with its body color behind", () => {
+    const paints = (slot: number) =>
+      winFlashRun(paint, (dr) =>
+        dr.ops.filter((o) => o.op === "rect" && o.color === slot),
+      ).frames.some((frame) => frame.length > 0);
+    expect(paints(COL_FLASH_LEAD)).toBe(true);
+    expect(paints(COL_FLASH)).toBe(true);
   });
 });

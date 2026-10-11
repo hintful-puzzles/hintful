@@ -15,6 +15,7 @@ import {
   cellSurface,
   DRAG_ADD,
   FLASH,
+  FLASH_LEAD,
   GOAL as GOAL_COLOR,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -32,7 +33,7 @@ import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
 import { BARREL, GOAL, PUSH } from "./hint-text.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";
@@ -69,13 +70,16 @@ const COL_GRID = 7;
 const COL_OUTLINE = 8;
 export const COL_WALL = 9;
 export const COL_FLASH = 10;
+/** The floor under the win flash's leading edge, where `COL_FLASH` is under
+ * its body. */
+export const COL_FLASH_LEAD = 15;
 export const COL_HINT = 11;
 export const COL_HINT_EVIDENCE = 12;
 /** A drag's aimed push, as Inertia's aimed slide. */
 export const COL_AIM = 13;
 /** A floor square. */
 export const COL_FLOOR = 14;
-const NCOLORS = 15;
+const NCOLORS = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = new Array<Color>(NCOLORS);
@@ -95,6 +99,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_WALL] = wallFill(defaultBackground);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
   out[COL_AIM] = DRAG_ADD;
@@ -180,7 +185,7 @@ function drawTile(
   x: number,
   y: number,
   v: number,
-  flash: boolean,
+  floor: number,
   marks: TileMarks,
   sprites: readonly Sprite[] = [],
   join: WallJoin = NO_JOIN,
@@ -204,10 +209,7 @@ function drawTile(
   });
 
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
-  dr.drawRect(
-    { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-    flash ? COL_FLASH : COL_FLOOR,
-  );
+  dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, floor);
   if (marks.striped)
     dr.drawHatch(
       { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
@@ -226,7 +228,7 @@ function drawTile(
     // A ring the width a barrel leaves round itself, so an empty target and a
     // filled one are the same ring with and without the barrel in it.
     disc(floorDisc, COL_TARGET);
-    disc(pieceDisc, flash ? COL_FLASH : COL_FLOOR);
+    disc(pieceDisc, floor);
   }
   // The player or a barrel standing here, then any crossing it in motion,
   // each painted under this tile's clip.
@@ -400,10 +402,10 @@ export function redraw(
             }
           : NO_MARKS;
       // The win's highlight is on the floor, which a wall covers.
-      const lit = v !== WALL && flash.win(sweepStep(x, y));
+      const tone = v === WALL ? WIN_NONE : flash.win(sweepStep(x, y));
       const key = [
         v,
-        lit ? "f" : "",
+        tone,
         tile.ringed ? "r" : "",
         tile.outlined ? "o" : "",
         tile.striped ? "s" : "",
@@ -415,7 +417,8 @@ export function redraw(
         const left = v === WALL && x > 0 && isWall(i - 1);
         const up = v === WALL && y > 0 && isWall(i - w);
         const join = { left, up, corner: left && up && isWall(i - w - 1) };
-        drawTile(dr, ds, x, y, v, lit, tile, here, join);
+        const floor = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_FLOOR;
+        drawTile(dr, ds, x, y, v, floor, tile, here, join);
         ds.tiles[i] = key;
       }
     }

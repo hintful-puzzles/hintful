@@ -4,7 +4,7 @@
 
 The win flash SHALL sweep every peg position of the board diagonally: each
 guess row's, played or not, and the answer's, counted as the row under the
-last guess. A lit position's box SHALL be filled with the flash color, an empty
+last guess. A lit position's box SHALL be filled with a flash color, an empty
 hole with it and a peg keeping its color. Empty holes light because a quick win
 leaves the winning row and the answer a board apart. The feedback pegs SHALL
 not be lit.

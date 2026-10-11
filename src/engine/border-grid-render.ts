@@ -33,6 +33,7 @@ import { drawMarkSides, MARK_ALL } from "./hint-mark.ts";
 import { CELL, type StepMarks } from "./hint-words.ts";
 import type { GridCursor } from "./pointer.ts";
 import type { Rect, Size } from "./types.ts";
+import { WIN_BODY, WIN_LEAD, type WinTone } from "./win-wave.ts";
 
 // --- geometry ---------------------------------------------------------------
 
@@ -65,7 +66,7 @@ export function borderGridSize(w: number, h: number, ts: number): Size {
 export const BORDER_ERROR = (border: number): number => border << 8;
 /** The game's own clue on this cell contradicts the board. */
 export const F_CLUE_ERROR = 1 << 12;
-/** The win flash's highlight is on this cell. */
+/** The body of the win flash's highlight is on this cell. */
 export const F_FLASH = 1 << 13;
 /**
  * Which of the nine half-grid positions in this tile the cursor is on, if any.
@@ -88,9 +89,14 @@ export const F_HINT_REGION = 1 << 29;
 /** The puzzle put this cell's content here, so it sits on the lifted surface
  * of a given. */
 export const F_GIVEN = 1 << 30;
-/** The first bit a game may use for something of its own. Kept as a named
- * floor so a new flag here and a new flag in a game cannot silently collide. */
-export const GAME_FLAG_SHIFT = 31;
+/** The leading edge of the win flash's highlight is on this cell. The word's
+ * last bit: a game with a flag of its own keeps it beside the word. */
+export const F_FLASH_LEAD = 1 << 31;
+
+/** The flag for what `flash.win` said of a cell, and 0 for a cell not lit. */
+export function flashFlag(tone: WinTone): number {
+  return tone === WIN_LEAD ? F_FLASH_LEAD : tone === WIN_BODY ? F_FLASH : 0;
+}
 
 /** Colors the shared parts draw with, by each game's own palette index. */
 export interface BorderGridColors {
@@ -99,7 +105,10 @@ export interface BorderGridColors {
   /** The lifted surface under a cell flagged {@link F_GIVEN}; omit in a game
    * that flags none. */
   given?: number;
+  /** The ground of a cell under the win flash's body, and under its leading
+   * edge. */
   flash: number;
+  flashLead: number;
   correct: number;
   /** A wall, and the grid's ink generally. */
   grid: number;
@@ -310,13 +319,15 @@ export function drawBorderTile(
   const body = { x: x + w, y: y + w, w: ts - w, h: ts - w };
   dr.drawRect(
     body,
-    flags & F_FLASH
-      ? colors.flash
-      : flags & F_CORRECT
-        ? colors.correct
-        : colors.given !== undefined && flags & F_GIVEN
-          ? colors.given
-          : colors.background,
+    flags & F_FLASH_LEAD
+      ? colors.flashLead
+      : flags & F_FLASH
+        ? colors.flash
+        : flags & F_CORRECT
+          ? colors.correct
+          : colors.given !== undefined && flags & F_GIVEN
+            ? colors.given
+            : colors.background,
   );
 
   // The hint's evidence sits under the game's content: a region is hatched, a

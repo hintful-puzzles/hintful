@@ -33,6 +33,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -52,7 +53,7 @@ import {
   cellHighlight,
   drawCellBackground,
   HIGHLIGHT_NONE,
-  HIGHLIGHT_WIN,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -111,8 +112,9 @@ export const COL_HINT = 10;
 export const COL_HINT_CELL = 11;
 /** The highlight's wash, in both its full-cell and its corner form. */
 export const COL_CURSOR = 12;
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 13;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(background: Color): Color[] {
   const out: Color[] = [];
@@ -121,6 +123,7 @@ export function colors(background: Color): Color[] {
   out[COL_GIVEN] = givenSurface(background);
   out[COL_GRID] = surfaceGrid(background);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_BORDER] = INK;
   out[COL_NUM_FIXED] = INK;
   out[COL_NUM_GUESS] = playerEntryColor(background);
@@ -327,6 +330,7 @@ function drawTile(
     COL_CURSOR,
     color,
     COL_FLASH,
+    COL_FLASH_LEAD,
   );
   ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
@@ -435,11 +439,9 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       // The cursor is hidden while the win flash plays.
-      const highlight = flash.win(sweepStep(x, y))
-        ? HIGHLIGHT_WIN
-        : flash.winning
-          ? HIGHLIGHT_NONE
-          : cellHighlight(ui, x, y);
+      const highlight =
+        winHighlight(flash.win(sweepStep(x, y))) ??
+        (flash.winning ? HIGHLIGHT_NONE : cellHighlight(ui, x, y));
       const color = state.flags[i] & FM_FIXED ? COL_GIVEN : COL_CELL;
 
       const tile =

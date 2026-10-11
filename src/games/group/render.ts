@@ -15,6 +15,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -37,7 +38,7 @@ import {
   drawCellBackground,
   HIGHLIGHT_ENTRY,
   HIGHLIGHT_NONE,
-  HIGHLIGHT_WIN,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -95,8 +96,9 @@ export const COL_GIVEN = 12; // the lifted surface under a given element
 /** The line between two cells, and the frame. A subgroup divider is the
  * player's own mark and stays `COL_GRID`. */
 export const COL_LINE = 13;
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 14;
+export const COL_FLASH_LEAD = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -106,6 +108,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_USER] = playerEntryColor(bg);
   out[COL_HIGHLIGHT] = highlightWash(bg);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_DIAGONAL] = surfaceGrid(bg);
@@ -141,7 +144,7 @@ const DF_DIVIDER_TOP = 0x1000;
 const DF_DIVIDER_BOT = 0x2000;
 const DF_DIVIDER_LEFT = 0x4000;
 const DF_DIVIDER_RIGHT = 0x8000;
-/** Bits 9–10: the cell's `CellHighlight`. */
+/** Bits 9–11: the cell's `CellHighlight`. */
 const DF_HIGHLIGHT_SHIFT = 9;
 const DF_IMMUTABLE = 0x0100;
 const DF_LEGEND = 0x0080;
@@ -329,10 +332,11 @@ function drawTile(
   drawCellBackground(
     dr,
     { x: cx, y: cy, w: cw, h: ch },
-    ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
+    ((tile >> DF_HIGHLIGHT_SHIFT) & 7) as CellHighlight,
     COL_HIGHLIGHT,
     surface,
     COL_FLASH,
+    COL_FLASH_LEAD,
   );
   if (x === y)
     dr.drawLine({ x: cx, y: cy }, { x: cx + cw - 1, y: cy + ch - 1 }, COL_DIAGONAL, 1);
@@ -544,8 +548,9 @@ export function redraw(
       let highlight: CellHighlight = cellHighlight(ui, sx, sy);
       // The win flash sweeps the table as drawn, whatever order its elements
       // are dragged into.
-      if (flash.win(sweepStep(x, y))) {
-        highlight = HIGHLIGHT_WIN;
+      const won = winHighlight(flash.win(sweepStep(x, y)));
+      if (won !== null) {
+        highlight = won;
       } else if (
         (ui.drag === 5 && ui.dragnum === sy) ||
         (ui.drag === 6 && ui.dragnum === sx)

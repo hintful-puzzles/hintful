@@ -18,6 +18,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   GRID_MID,
   givenSurface,
   HINT_ACTION,
@@ -39,7 +40,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import {
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_WIN,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -55,7 +56,7 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone } from "../../engine/win-wave.ts";
 import type { UnequalMove } from "./state.ts";
 import {
   checkComplete,
@@ -106,6 +107,8 @@ export const COL_GIVEN = 14; // the lifted surface of a box holding a given
 /** A box's own outline. The adjacency bars between boxes are clues and stay
  * `COL_GRID`. */
 export const COL_LINE = 15;
+/** The ground of a cell the win flash's leading edge is on. */
+export const COL_FLASH_LEAD = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background: bg, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -119,6 +122,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   // The cursor is a wash under the cell's digit and pencil marks, not a mark
   // beside them, so it takes the "you are here" wash the Latin family shares
   // (Solo, Keen, Towers, Undead) rather than the green line cursor: green is
@@ -200,7 +204,7 @@ export interface UnequalDrawState {
   errFlags: Int32Array;
   cursor: GridCursor;
   pencilMode: boolean;
-  /** `order²`: whether the win flash was on the cell as last drawn. */
+  /** `order²`: the win flash's tone on the cell as last drawn. */
   lit: Uint8Array;
   /** Whether the pencil-mode indicator was on last frame (fork addition). */
   pencilModeShown: boolean | null;
@@ -445,7 +449,7 @@ function drawCell(
   flags: number,
   pencil: number,
   wrong: boolean,
-  hflash: boolean,
+  hflash: WinTone,
   struck: number,
   hintOrder: number,
   hatched: boolean,
@@ -463,10 +467,11 @@ function drawCell(
   drawCellBackground(
     dr,
     { x: ox, y: oy, w: ts, h: ts },
-    hflash ? HIGHLIGHT_WIN : cellHighlight(ui, x, y),
+    winHighlight(hflash) ?? cellHighlight(ui, x, y),
     COL_CURSOR,
     flags & DF_IMMUTABLE ? COL_GIVEN : COL_CELL,
     COL_FLASH,
+    COL_FLASH_LEAD,
   );
   if (hatched) dr.drawHatch({ x: ox, y: oy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
 
@@ -637,7 +642,7 @@ export function redraw(
       const pencil = num === 0 ? state.pencil[i] : 0;
 
       const hflash = flash.win(sweepStep(x, y));
-      let stale = !ds.started || hflash !== (ds.lit[i] !== 0) || underErased[i] === 1;
+      let stale = !ds.started || hflash !== ds.lit[i] || underErased[i] === 1;
       if (
         hchanged &&
         ((x === ui.cursor.x && y === ui.cursor.y) ||
@@ -673,7 +678,7 @@ export function redraw(
         );
         ds.nums[i] = num;
         ds.flags[i] = flags;
-        ds.lit[i] = hflash ? 1 : 0;
+        ds.lit[i] = hflash;
         ds.hint.commit(i);
         ds.wrong.commit(i);
         for (let n = 0; n < o; n++) ds.hints[i * o + n] = (pencil >> (n + 1)) & 1;

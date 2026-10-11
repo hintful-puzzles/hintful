@@ -31,6 +31,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -52,7 +53,7 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_WIN,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -101,8 +102,9 @@ export const COL_GIVEN = 13; // the lifted surface under a given digit
 /** The thin line between two cells of one block. A block's own edge is
  * content and stays `COL_GRID`. */
 export const COL_LINE = 14;
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 15;
+export const COL_FLASH_LEAD = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -114,6 +116,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_USER] = playerEntryColor(bg);
   out[COL_HIGHLIGHT] = highlightWash(bg);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_KILLER] = soloKiller(bg);
@@ -323,6 +326,7 @@ function drawNumber(
     COL_HIGHLIGHT,
     state.immutable[cell] ? COL_GIVEN : COL_CELL,
     COL_FLASH,
+    COL_FLASH_LEAD,
   );
   // The X variant's diagonals, as a stroke between the cell's grid corners
   // under its content: a mark, since a shade of the surface would be a step of
@@ -663,9 +667,8 @@ export function redraw(
     for (let x = 0; x < cr; x++) {
       const cell = y * cr + x;
       const d = state.grid[cell];
-      let hl: number = flash.win(sweepStep(x, y))
-        ? HIGHLIGHT_WIN
-        : cellHighlight(ui, x, y);
+      let hl: number =
+        winHighlight(flash.win(sweepStep(x, y))) ?? cellHighlight(ui, x, y);
 
       if (d) {
         if (

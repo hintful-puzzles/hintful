@@ -557,11 +557,11 @@ game calls `drawCellBackground` from
 used to paint its cell's background rect, and hands it that same rect.
 
 - **It draws inside the tile repaint, so it rides the tile key.** Pack
-  `cellHighlight(ui, x, y)` — two bits — into the key, or the old cell never
+  `cellHighlight(ui, x, y)` — three bits — into the key, or the old cell never
   repaints when the highlight leaves (§ "A cursor is usually a cache key, not a
   blitter"). A game that hides the highlight for its own reasons passes
   `HIGHLIGHT_NONE` rather than skipping the call, and a cell the win flash is
-  on passes `HIGHLIGHT_WIN`, which fills it with the flash color.
+  on passes `winHighlight` of its tone, which fills it with that tone's color.
 - **The triangle is background.** It is drawn with the rect, before any content,
   so a clue in the same corner (Keen's cage label, a pencil mark in the top-left
   slot) sits on top of it, and so do Group's dividers, which the triangle used
@@ -728,10 +728,10 @@ has no hook for any of it. In the loop where `redraw` builds an element's
 flags, it asks:
 
 ```ts
-if (flash.win(sweepStep(x, y))) flags |= DS_FLASH;
+const tone = flash.win(sweepStep(x, y));
 ```
 
-and paints the element lit when the answer is true. The number it passes is
+and paints the element lit when the answer is not `WIN_NONE`. The number it passes is
 the element's **position**, in steps, and which number it passes is the route:
 
 | The board holds | Position | Exemplar |
@@ -759,22 +759,33 @@ Four rules, each of which a game can break without a type error:
 
 `engine/win-flash.test.ts` paints every game's solved board through a flash
 and fails a game that lights nothing, lights the whole board at once, is
-still lit at the end, or lights an element in anything but the one highlight
-color. A game's own test pins its route: `winFlashRun` paints the flash and
+still lit at the end, or lights an element in anything but the flash's two
+colors. A game's own test pins its route: `winFlashRun` paints the flash and
 `expectWinFlashTravels` asserts it lit every element once, in the order of
 the positions the game hands over (`engine/testing/win-flash.ts`; exemplar
 `tracks-flash.test.ts`).
 
-**What "lit" looks like is the engine's too: the `FLASH` role, one color in
-every game** (`engine-colors` § "A solved flash drawn as a color takes a
-shared color"). An element with a ground (a cell, a tile's face, a region, a
-hub) has it filled with `FLASH` and keeps what it holds, drawn on top as on
-any other frame; a line is drawn in `FLASH`. Nothing else: no lifted or
-swapped surface, no wash, no hidden or recolored content. A game gives the
-role a palette slot and paints with it, and the guard lights each element
-alone and fails one that does not then paint more in that color. A game that
-paints its cell through `drawCellBackground` passes `HIGHLIGHT_WIN` and the
-slot (`engine/note-taking-cell.ts`).
+**What "lit" looks like is the engine's too: two colors, the same in every
+game** (`engine-colors` § "A solved flash drawn as a color takes a shared
+color"). `flash.win` answers with a tone: `WIN_LEAD` for the front of the
+highlight, which is `FLASH_LEAD`, white, and `WIN_BODY` for the rest, which
+is `FLASH`, the theme's yellow. Two and not one because no color reads on
+every board: yellow is lost on a yellow field and white on a white cell, and
+each shows where the other cannot.
+
+An element with a ground (a cell, a tile's face, a region, a hub) has it
+filled with the tone's color and keeps what it holds, drawn on top as on any
+other frame; a line is drawn in it, and a thin one wider than at rest (Loopy,
+Untangle). Nothing else: no lifted or swapped surface, no wash, no hidden or
+recolored content. A game gives each role a palette slot and paints with
+`winSlot(tone, body, lead)`, and **the tone, not a lit bit, goes in the
+tile's diff key**. A game that paints its cell through `drawCellBackground`
+passes `winHighlight(tone) ?? cellHighlight(ui, x, y)` and the two slots
+(`engine/note-taking-cell.ts`); that highlight is three bits in a key.
+
+The guard lights each element alone in each tone: a tone that changes the
+frame must paint more of its own color than the settled board has, and the
+two tones must paint differently.
 
 **What is suppressed is the Solve *command*, not a cheated *board*.** A player
 who uses Solve, unmakes part of it and then finishes by hand has won, and gets
@@ -864,8 +875,8 @@ decision:
   done"** is `clueDoneColor` for retired *text* and `REGION_DONE` for
   a completed *fill* — five games once encoded it five ways, from `INK` (Loopy,
   which made the distinction invisible) to a bespoke `bg × 0.85`. **The solved
-  flash** lights every element in `FLASH`, the theme's yellow, in every game
-  (§ "Animation and flash").
+  flash** lights every element in two roles, `FLASH_LEAD` (white) ahead of
+  `FLASH` (the theme's yellow), in every game (§ "Animation and flash").
 - [`engine/color/colors.ts`](../../src/engine/color/colors.ts) — **the
   palette itself**: twelve names, most at three intensities (base, `_WASH`,
   `_BOLD`), plus the distinguishability sets (`TEN`, `TEN_NAMES`,

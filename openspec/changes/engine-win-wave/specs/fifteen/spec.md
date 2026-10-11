@@ -9,7 +9,7 @@
 
 A genuine completion's flash SHALL sweep the tiles diagonally, a tile's
 position being its cell's place in the grid. A lit tile's face SHALL be filled
-with the flash color inside its bevel, and SHALL keep its bevel and its
+with a flash color inside its bevel, and SHALL keep its bevel and its
 number. The gap SHALL never be lit.
 
 #### Scenario: The last slide flashes

@@ -40,6 +40,7 @@ import {
   ERROR,
   ERROR_TEXT,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -55,7 +56,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { BoatsHint } from "./index.ts";
 import type { BoatsMistake } from "./solver.ts";
 import {
@@ -112,7 +113,8 @@ export const COL_CELL = 14; // the surface of an undecided square
 export const COL_GIVEN = 15; // the lifted surface under a segment the puzzle gave
 /** The waves on a given water square and the edge of a collision diamond. */
 export const COL_INK = 16;
-export const COL_FLASH = 17; // the ground of a square the win flash is on
+export const COL_FLASH = 17; // the ground of a square the win flash's body is on
+export const COL_FLASH_LEAD = 18; // and of one its leading edge is on
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -122,6 +124,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GIVEN] = givenSurface(defaultBackground);
   out[COL_INK] = INK;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_CURSOR] = CURSOR;
   out[COL_WATER] = BLUE_WASH;
   // A segment the puzzle gave is the same piece: its lifted cell tells it.
@@ -265,8 +268,8 @@ export interface BoatsDrawState {
   h: number;
   fleet: number;
   /** Per-tile last-drawn contents (−1 = never drawn): the segment shape in bits
-   * 0–3, the live error/cursor flags in bits 4–7, the win flash in bit 8, and
-   * the displayed hint step's role for this square in bits 9–11. */
+   * 0–3, the live error/cursor flags in bits 4–7, the displayed hint step's role
+   * for this square in bits 9–12, and the win flash's tone in bits 13–14. */
   tiles: Int32Array;
   /** Last-drawn `STATUS_*` for each of the `w + h` border numbers. */
   border: Int32Array;
@@ -465,8 +468,8 @@ const HINT_LINE = 1 << 12; // a square of the line the sentence names (hatched)
 const BORDER_HATCHED = 0x100;
 
 /** Pack a cell's drawn appearance into the per-tile cache word. */
-function tileKey(ship: number, flags: number, lit: boolean, hint: number): number {
-  return ship | (flags << 4) | ((lit ? 1 : 0) << 8) | hint;
+function tileKey(ship: number, flags: number, tone: WinTone, hint: number): number {
+  return ship | (flags << 4) | hint | (tone << 13);
 }
 
 /** The per-cell hint bits for the displayed step. */
@@ -634,16 +637,16 @@ export function redraw(
       }
 
       const hintBit = hints ? hints[i] : 0;
-      const lit = flash.win(sweepStep(x, y));
-      const key = tileKey(ship, cellFlags[i], lit, hintBit);
+      const tone = flash.win(sweepStep(x, y));
+      const key = tileKey(ship, cellFlags[i], tone, hintBit);
       if (ds.tiles[i] === key && !ds.wrong.stale(i)) continue;
       ds.tiles[i] = key;
 
       dr.drawUpdate({ x: tx, y: ty, w: ts + 1, h: ts + 1 });
       // A segment the puzzle gave is told by the lifted cell under it; given
       // water keeps its blue and is told by its waves.
-      const surface = lit
-        ? COL_FLASH
+      const surface = tone
+        ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
         : ship === EMPTY
           ? COL_CELL
           : isShip(state.gridClues[i])

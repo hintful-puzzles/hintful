@@ -36,7 +36,13 @@ import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };
 import { newDesc, slantGenerate } from "./generator.ts";
 import { slantGame } from "./index.ts";
-import { border, COL_ERROR, COL_FLASH, COL_GROUNDED } from "./render.ts";
+import {
+  border,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_GROUNDED,
+} from "./render.ts";
 import { SOLVE_UNIQUE, SolverScratch, slantSolve } from "./solver.ts";
 import {
   computeErrors,
@@ -446,7 +452,9 @@ describe("slant: the win flash", () => {
   /** Where each square painted in the flash color is drawn, as `x,y`. */
   const run = winFlashRun(paint, (dr) =>
     dr.ops.flatMap((o) =>
-      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+      o.op === "rect" && (o.color === COL_FLASH || o.color === COL_FLASH_LEAD)
+        ? [`${o.x},${o.y}`]
+        : [],
     ),
   );
   /** The sweep's diagonal through a square drawn at `at`. */
@@ -455,7 +463,16 @@ describe("slant: the win flash", () => {
     return sweepStep(x, y);
   };
 
-  it("lifts every square in turn, and nothing off the grid, from the bottom left to the top right", () => {
+  it("fills every square in turn, and nothing off the grid, from the bottom left to the top right", () => {
     expectWinFlashTravels(run, p.w * p.h, diagonal);
+  });
+
+  it("leads in the flash's lead color, with its body color behind", () => {
+    const paints = (slot: number) =>
+      winFlashRun(paint, (dr) =>
+        dr.ops.filter((o) => o.op === "rect" && o.color === slot),
+      ).frames.some((frame) => frame.length > 0);
+    expect(paints(COL_FLASH_LEAD)).toBe(true);
+    expect(paints(COL_FLASH)).toBe(true);
   });
 });

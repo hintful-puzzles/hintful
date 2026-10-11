@@ -3,7 +3,7 @@
 ### Requirement: Singles completion flash
 
 The completion flash SHALL sweep every cell of the board. A lit cell's ground
-SHALL be filled with the flash color, and what the cell holds, its number, a
+SHALL be filled with a flash color, and what the cell holds, its number, a
 kept cell's ring and a blackened cell's piece, SHALL be drawn over it as on
 any other frame.
 

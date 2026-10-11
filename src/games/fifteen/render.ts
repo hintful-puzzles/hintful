@@ -10,6 +10,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   cellSurface,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   INK,
@@ -24,7 +25,13 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, PaletteScheme, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_NONE,
+  type WinTone,
+  winSlot,
+} from "../../engine/win-wave.ts";
 import { TILE } from "./hint-text.ts";
 import type { FifteenMove, FifteenParams, FifteenState, FifteenUi } from "./state.ts";
 
@@ -48,8 +55,10 @@ const COL_HINT = 4;
 const COL_TILE = 5;
 /** The well: the gap, and whatever a sliding tile uncovers. */
 const COL_WELL = 6;
-/** The face of a tile the win flash is on, inside its bevel. */
+/** The face of a tile the win flash is on, inside its bevel: under the
+ * highlight's body, and under its leading edge. */
 export const COL_FLASH = 7;
+export const COL_FLASH_LEAD = 8;
 
 // --- coordinate helpers -----------------------------------------------
 
@@ -74,7 +83,7 @@ export function cellCenter(pos: number, ts: number): number {
 
 export interface FifteenDrawState {
   started: boolean;
-  /** Per cell: whether the win flash's highlight was on the tile last drawn. */
+  /** Per cell: the tone of the win flash's highlight on the tile last drawn. */
   lit: Uint8Array;
   /** Per-cell cache of the last-drawn tile value; `-1` forces a redraw
    * (unknown, or animating). */
@@ -110,6 +119,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TILE] = givenSurface(background);
   out[COL_WELL] = cellSurface(background);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -187,8 +197,10 @@ export function redraw(
 
   // Which tiles the win flash is on, asked once a tile before the two passes
   // below. The gap is no tile, and never lights.
-  const lights = state.tiles.map((t, i) =>
-    t !== 0 && flash.win(sweepStep(i % w, Math.floor(i / w))) ? 1 : 0,
+  const lights = Array.from(
+    state.tiles,
+    (t, i): WinTone =>
+      t !== 0 ? flash.win(sweepStep(i % w, Math.floor(i / w))) : WIN_NONE,
   );
 
   // Two passes so a whole sliding line animates cleanly: pass 0 blanks
@@ -240,7 +252,7 @@ export function redraw(
           y = coord(Math.floor(i / w), ts);
         }
 
-        const face = lit ? COL_FLASH : COL_TILE;
+        const face = lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_TILE;
         drawTile(dr, ts, x, y, t, t !== 0 && t === hintTile ? COL_HINT : face);
       }
       ds.lit[i] = lit;

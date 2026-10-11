@@ -20,6 +20,7 @@ import {
   clueDoneColor,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -40,7 +41,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import {
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_WIN,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -55,7 +56,7 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import {
   CELL_MIRROR_L,
   COUNT_STYLE_PLACED_TOTAL,
@@ -109,6 +110,9 @@ export const COL_HINT_CELL = 12; // the driving sightline's bounce path (evidenc
 export const COL_CELL = 13; // the surface of a cell the player fills
 /** The lifted surface of what the puzzle fixed: a mirror, or a given monster. */
 export const COL_GIVEN = 14;
+/** The ground of a cell, a clue or a count the win flash's leading edge is
+ * on; its body is {@link COL_FLASH}. */
+export const COL_FLASH_LEAD = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -121,6 +125,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_HIGHLIGHT] = highlightWash(bg);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GHOST] = undeadGhost(bg);
   out[COL_ZOMBIE] = undeadZombie(bg);
   out[COL_VAMPIRE] = undeadVampire(bg);
@@ -174,7 +179,7 @@ export interface UndeadDrawState {
   countPlaced: Int32Array;
   cursor: GridCursor;
   pencilMode: boolean;
-  /** Whether the win flash was on each cell and edge clue as last drawn,
+  /** The win flash's tone on each cell and edge clue as last drawn,
    * indexed as the grid is, and on each of the three counts. */
   lit: Uint8Array;
   countLit: Uint8Array;
@@ -594,7 +599,7 @@ function drawMonsterCount(
   ds: UndeadDrawState,
   state: UndeadState,
   c: number,
-  hflash: boolean,
+  hflash: WinTone,
 ): void {
   const ts = ds.tileSize;
   const dx = countX(ds, c);
@@ -626,7 +631,7 @@ function drawMonsterCount(
 
   dr.drawRect(
     { x: dx, y: dy, w: dw + ds.countGap, h: dh },
-    hflash ? COL_FLASH : COL_BACKGROUND,
+    hflash ? winSlot(hflash, COL_FLASH, COL_FLASH_LEAD) : COL_BACKGROUND,
   );
   if (!ds.ascii) {
     drawMonster(dr, dx + f(msize / 2), dy + f(dh / 2), msize, 1 << c);
@@ -666,13 +671,13 @@ function drawClue(
   y: number,
   color: number,
   clue: number,
-  lit: boolean,
+  lit: WinTone,
 ): void {
   const ts = ds.tileSize;
   const dx = border(ts) + x * ts;
   const dy = border(ts) + y * ts + ts;
   const box = { x: dx + 2, y: dy + 2, w: ts - 3, h: ts - 3 };
-  dr.drawRect(box, lit ? COL_FLASH : COL_BACKGROUND);
+  dr.drawRect(box, lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_BACKGROUND);
   dr.drawText(
     { x: dx + f(ts / 2), y: dy + f(ts / 2) },
     glyphFont(idiv(ts, 2)),
@@ -732,13 +737,13 @@ export function redraw(
   const h = ds.h;
   const stride = common.w + 2;
   const b = border(ts);
-  // Whether the win flash is on the cell or edge clue at grid `(x, y)`, and
+  // The win flash's tone on the cell or edge clue at grid `(x, y)`, and
   // whether that differs from the frame last drawn.
-  const light = (x: number, y: number): { lit: boolean; changed: boolean } => {
+  const light = (x: number, y: number): { lit: WinTone; changed: boolean } => {
     const xy = x + y * stride;
     const lit = flash.win(sweepStep(x, y));
-    const changed = (ds.lit[xy] !== 0) !== lit;
-    ds.lit[xy] = lit ? 1 : 0;
+    const changed = ds.lit[xy] !== lit;
+    ds.lit[xy] = lit;
     return { lit, changed };
   };
 
@@ -775,11 +780,8 @@ export function redraw(
     const column = (countX(ds, i) + ds.countW / 2 - b) / ts - 0.5;
     const hflash = flash.win(sweepStep(column, -1));
     let stale =
-      !ds.started ||
-      (ds.countLit[i] !== 0) !== hflash ||
-      changedAscii ||
-      changedCountStyle;
-    ds.countLit[i] = hflash ? 1 : 0;
+      !ds.started || ds.countLit[i] !== hflash || changedAscii || changedCountStyle;
+    ds.countLit[i] = hflash;
     if (ds.countErrors[i] !== state.countErrors[i]) {
       stale = true;
       ds.countErrors[i] = state.countErrors[i];
@@ -888,10 +890,11 @@ export function redraw(
         drawCellBackground(
           dr,
           cell,
-          hflash ? HIGHLIGHT_WIN : cellHighlight(ui, x, y),
+          winHighlight(hflash) ?? cellHighlight(ui, x, y),
           COL_HIGHLIGHT,
           given ? COL_GIVEN : COL_CELL,
           COL_FLASH,
+          COL_FLASH_LEAD,
         );
         dr.drawUpdate(cell);
         if (xi < 0) {

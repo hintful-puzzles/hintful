@@ -2,6 +2,7 @@ import { BLACK, TEN, WHITE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   INK,
   surfaceGrid,
@@ -9,7 +10,7 @@ import {
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import type { SamegameState, SamegameUi } from "./state.ts";
 
 // --- tile-size metrics ------------------------------------------------
@@ -33,7 +34,8 @@ const TILE_JOINDOWN = 0x0400;
 const TILE_JOINDIAG = 0x0800;
 const TILE_HASSEL = 0x1000;
 const TILE_IMPOSSIBLE = 0x2000;
-const TILE_LIT = 0x4000;
+/** The win flash's tone on the cell, two bits. */
+const TILE_TONE_SHIFT = 14;
 
 // --- color palette indices -------------------------------------------
 
@@ -52,9 +54,10 @@ export const COL_LIFTED = 13;
 const COL_GRID = 14;
 /** The cursor on a tile. */
 const COL_ON_TILE = 15;
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 16;
-const NCOLORS = 17;
+export const COL_FLASH_LEAD = 17;
+const NCOLORS = 18;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = new Array<Color>(NCOLORS);
@@ -69,6 +72,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_LIFTED] = givenSurface(defaultBackground);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   return out;
 }
@@ -262,11 +266,12 @@ export function redraw(
         !state.impossible
       )
         tile |= TILE_HASSEL;
-      if (flash.win(sweepStep(x, y))) tile |= TILE_LIT;
+      const tone = flash.win(sweepStep(x, y));
+      tile |= tone << TILE_TONE_SHIFT;
 
       // The margin's repaint covers the field, so every tile follows it.
       if (ds.grid[i] !== tile || marginChanged) {
-        const bgcolor = tile & TILE_LIT ? COL_FLASH : margin;
+        const bgcolor = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : margin;
         tileRedraw(dr, ds, x, y, dright, dbelow, tile, bgcolor);
         ds.grid[i] = tile;
       }

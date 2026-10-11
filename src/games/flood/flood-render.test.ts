@@ -11,7 +11,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { NO_FLASH, ownFlash } from "../../engine/win-wave.ts";
 import { say } from "./hint-text.ts";
 import { floodGame } from "./index.ts";
-import { COL_LIT, type FloodDrawState, redraw } from "./render.ts";
+import { COL_LIT, COL_LIT_LEAD, type FloodDrawState, redraw } from "./render.ts";
 import { type FloodMove, type FloodState, newState } from "./state.ts";
 
 const PALETTE = floodGame.colors(DEFAULT_BACKGROUND);
@@ -115,12 +115,13 @@ describe("Flood redraw", () => {
       // wide. The tiles filled in the flash color, by cell.
       (ops) =>
         opsOfKind(ops, "rect")
-          .filter((o) => o.w === TS && o.h === TS && o.color === COL_LIT)
+          .filter((o) => o.w === TS && o.h === TS && litSlot(o.color))
           .map((o) => Math.floor(o.y / TS - 0.5) * W + Math.floor(o.x / TS - 0.5)),
       40,
     );
     // A tile's distance from the corner the fill starts in.
     expectWinFlashTravels(run, W * 4, (i) => (i % W) + Math.floor(i / W));
+    expect(slotsSeen).toEqual(new Set([COL_LIT, COL_LIT_LEAD]));
     expect(run.frames[0]).toEqual([0]);
   });
 
@@ -138,3 +139,12 @@ describe("Flood redraw", () => {
     expect(tiles.every((o) => o.color === 1)).toBe(true);
   });
 });
+
+/** The flash's slots the frames read so far were painted with: a lit element
+ * is one painted in either, the highlight's body or its leading edge. */
+const slotsSeen = new Set<number>();
+function litSlot(color: number): boolean {
+  if (color !== COL_LIT && color !== COL_LIT_LEAD) return false;
+  slotsSeen.add(color);
+  return true;
+}

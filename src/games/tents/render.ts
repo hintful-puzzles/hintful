@@ -29,6 +29,7 @@ import {
   ERROR,
   ERROR_TEXT,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -48,7 +49,7 @@ import {
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { LINK, NUMBER } from "./hint-marks.ts";
 import {
   BLANK,
@@ -102,6 +103,8 @@ export const COL_INK = 13;
 export const COL_LINK = COL_INK;
 /** The ground of a square the win flash is on. */
 export const COL_FLASH = 14;
+/** The ground of a square the win flash's leading edge is on. */
+export const COL_FLASH_LEAD = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -109,6 +112,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_INK] = INK;
   out[COL_GRASS] = GREEN_WASH;
   out[COL_TREETRUNK] = BROWN;
@@ -136,7 +140,6 @@ const ERR_ADJ_BOT = 1 << 10;
 const ERR_ADJ_BOTRIGHT = 1 << 11;
 const ERR_OVERCOMMITTED = 1 << 12;
 const CURSOR_BIT = 1 << 13;
-const FLASH_BIT = 1 << 14;
 const MISTAKE_BIT = 1 << 15;
 /** The direction of the square's link, `N` for none. */
 const LINK_SHIFT = 16;
@@ -145,6 +148,8 @@ const LINK_MASK = 7 << LINK_SHIFT;
 const LINK_MISTAKE_BIT = 1 << 19;
 /** The keyboard has armed a link from this square (the cursor's). */
 const ARMED_BIT = 1 << 20;
+/** The win flash's tone on the square, two bits. */
+const FLASH_SHIFT = 21;
 
 // --- the hint's word, a second cache key per tile ---------------------------
 // The ring and outline sides (`MarkOutlines.packed`) in the low byte.
@@ -417,12 +422,18 @@ function drawTile(
   const cx = tx + Math.floor(ts / 2);
   const cy = ty + Math.floor(ts / 2);
 
+  const tone = ((packed >> FLASH_SHIFT) & 3) as WinTone;
+
   dr.clip({ x: tx, y: ty, w: ts, h: ts });
 
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, COL_GRID);
   dr.drawRect(
     { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-    packed & FLASH_BIT ? COL_FLASH : v === BLANK ? COL_CELL : COL_GRASS,
+    tone
+      ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
+      : v === BLANK
+        ? COL_CELL
+        : COL_GRASS,
   );
   // The line the hint's sentence names, under the content so it stays whole.
   if (hintWord & HINT_LINE_BIT) {
@@ -629,7 +640,7 @@ export function redraw(
       const isCur = x === cx && y === cy;
       if (isCur) packed |= CURSOR_BIT;
       if (isCur && ui.linkArmed) packed |= ARMED_BIT;
-      if (flash.win(sweepStep(x, y))) packed |= FLASH_BIT;
+      packed |= flash.win(sweepStep(x, y)) << FLASH_SHIFT;
       if (mistakeSet.has(i)) packed |= MISTAKE_BIT;
       packed |= links[i] << LINK_SHIFT;
       if (badLinkSet.has(i)) packed |= LINK_MISTAKE_BIT;

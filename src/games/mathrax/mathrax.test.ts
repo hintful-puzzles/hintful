@@ -41,6 +41,7 @@ import { mathraxGame } from "./index.ts";
 import {
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   computeSize,
   origin,
   PREFERRED_TILE_SIZE,
@@ -711,14 +712,19 @@ describe("mathrax moves", () => {
       return dr;
     };
     // The cells filled in the flash color, each as its index.
+    // Lit is either tone of the highlight, and the flash shows both.
+    const tones = new Set<number>();
+    const isLit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color).size > 0;
     const run = winFlashRun(paint, (dr) =>
       dr.ops.flatMap((op) =>
-        op.op === "rect" && op.color === COL_FLASH
+        op.op === "rect" && isLit(op.color)
           ? [((op.y - origin(TS)) / TS) * o + (op.x - origin(TS)) / TS]
           : [],
       ),
     );
     expectWinFlashTravels(run, o * o, (i) => sweepStep(i % o, Math.floor(i / o)));
+    expect(tones.size).toBe(2);
   });
 
   it("Solve fills the board and reports solved-with-help", () => {

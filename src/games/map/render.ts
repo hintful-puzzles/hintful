@@ -13,6 +13,7 @@ import {
   ERROR,
   ERROR_TEXT,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -35,7 +36,7 @@ import {
   CURSOR_UP,
 } from "../../engine/pointer.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepRanks } from "../../engine/win-wave.ts";
+import { type Flash, sweepRanks, WIN_LEAD } from "../../engine/win-wave.ts";
 import { REGION } from "./hint-text.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
 import type { MapMistake, MapMove, MapParams, MapState, MapUi } from "./state.ts";
@@ -63,6 +64,8 @@ export const COL_HINT_CELL = 11;
 export const COL_UNCOLORED = 12;
 /** The ground of a region the win flash is on. */
 export const COL_FLASH = 13;
+/** And under the flash's leading edge. */
+export const COL_FLASH_LEAD = 14;
 
 const FOUR = 4;
 const FIVE = 5;
@@ -83,6 +86,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
   ret[COL_FLASH] = FLASH;
+  ret[COL_FLASH_LEAD] = FLASH_LEAD;
   return ret;
 }
 
@@ -96,6 +100,9 @@ const SEL_NOTES = 0x100; // bit 8 — this cell carries the notes triangle
 const SEL_MASK = SEL_TOP | SEL_BOTTOM | SEL_NOTES;
 const LIT_TOP = 0x200; // bit 9 — the win flash is on the top piece's region
 const LIT_BOTTOM = 0x400; // bit 10 — and on the bottom piece's
+const LEAD_TOP = 0x800; // bit 11 — with LIT_TOP: it is the flash's leading edge
+const LEAD_BOTTOM = 0x1000; // bit 12 — with LIT_BOTTOM, the same
+const LIT_MASK = LIT_TOP | LIT_BOTTOM | LEAD_TOP | LEAD_BOTTOM;
 const SHOW_NUMBERS = 0x00004000;
 const PENCIL_T_BASE = 0x00080000;
 const PENCIL_B_BASE = 0x00008000;
@@ -723,16 +730,7 @@ function drawSquare(
   const showNumbers = vIn & SHOW_NUMBERS;
   const mistake = vIn & MISTAKE;
   const v =
-    vIn &
-    ~(
-      ERR_MASK |
-      PENCIL_MASK |
-      SHOW_NUMBERS |
-      MISTAKE |
-      SEL_MASK |
-      LIT_TOP |
-      LIT_BOTTOM
-    );
+    vIn & ~(ERR_MASK | PENCIL_MASK | SHOW_NUMBERS | MISTAKE | SEL_MASK | LIT_MASK);
   const tv = Math.floor(v / FIVE);
   const bv = v % FIVE;
 
@@ -743,7 +741,13 @@ function drawSquare(
   // Base (top) region color.
   dr.drawRect(
     { x: cx, y: cy, w: ts, h: ts },
-    vIn & LIT_TOP ? COL_FLASH : tv === FOUR ? COL_UNCOLORED : COL_0 + tv,
+    vIn & LIT_TOP
+      ? vIn & LEAD_TOP
+        ? COL_FLASH_LEAD
+        : COL_FLASH
+      : tv === FOUR
+        ? COL_UNCOLORED
+        : COL_0 + tv,
   );
 
   // Second region color if this is a diagonally-divided square.
@@ -758,7 +762,13 @@ function drawSquare(
         { x: p2x, y: coord(y, ts) - 1 },
         { x: coord(x + 1, ts) + 1, y: coord(y + 1, ts) + 1 },
       ],
-      vIn & LIT_BOTTOM ? COL_FLASH : bv === FOUR ? COL_UNCOLORED : COL_0 + bv,
+      vIn & LIT_BOTTOM
+        ? vIn & LEAD_BOTTOM
+          ? COL_FLASH_LEAD
+          : COL_FLASH
+        : bv === FOUR
+          ? COL_UNCOLORED
+          : COL_0 + bv,
       COL_GRID,
     );
   }
@@ -901,7 +911,7 @@ export function redraw(
     const ranks = sweepRanks(
       Array.from({ length: n }, (_, r) => ({ x: map.regionx[r], y: map.regiony[r] })),
     );
-    for (let r = 0; r < n; r++) if (flash.win(ranks[r])) lit[r] = 1;
+    for (let r = 0; r < n; r++) lit[r] = flash.win(ranks[r]);
   }
 
   const mistakeSet = new Set<number>();
@@ -951,8 +961,9 @@ export function redraw(
       }
 
       if (ui.showNumbers && !chainShown) v |= SHOW_NUMBERS;
-      if (lit[tRegion]) v |= LIT_TOP;
-      if (lit[bRegion]) v |= LIT_BOTTOM;
+      if (lit[tRegion]) v |= lit[tRegion] === WIN_LEAD ? LIT_TOP | LEAD_TOP : LIT_TOP;
+      if (lit[bRegion])
+        v |= lit[bRegion] === WIN_LEAD ? LIT_BOTTOM | LEAD_BOTTOM : LIT_BOTTOM;
       if (tRegion === selected) v |= SEL_TOP;
       if (bRegion === selected) v |= SEL_BOTTOM;
       if (y * w + x === notesCell) v |= SEL_NOTES;

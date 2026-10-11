@@ -17,6 +17,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   GRID_DARK,
   givenSurface,
   HINT_ACTION,
@@ -38,7 +39,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import type { Flash } from "../../engine/win-wave.ts";
+import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import {
   anticlockwise,
   clockwise,
@@ -96,6 +97,8 @@ export const COL_HINT_CELL = 12;
 export const COL_CELL = 13; // the surface of a tile the player may still turn
 /** The ground of a tile the win flash is on. */
 export const COL_FLASH = 14;
+/** And under the flash's leading edge. */
+export const COL_FLASH_LEAD = 15;
 
 const INDICATOR: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
@@ -115,6 +118,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_LOCKED] = givenSurface(defaultBackground);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_CURSOR] = CURSOR;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
@@ -133,6 +137,8 @@ const TILE_WIRE_ON_EDGE_SHIFT = 19; // 8 bits, same encoding as TILE_WIRE_SHIFT
 const TILE_ROTATING = 1 << 27;
 const TILE_LOCKED = 1 << 28;
 const TILE_FLASH = 1 << 29;
+/** With `TILE_FLASH`: the highlight on this tile is its leading edge. */
+const TILE_FLASH_LEAD = 1 << 30;
 
 export const lineThick = (ts: number): number => Math.floor((ts + 47) / 48);
 
@@ -301,7 +307,9 @@ function drawTile(
   const bg = !onBoard
     ? COL_BACKGROUND
     : tile & TILE_FLASH
-      ? COL_FLASH
+      ? tile & TILE_FLASH_LEAD
+        ? COL_FLASH_LEAD
+        : COL_FLASH
       : tile & TILE_LOCKED
         ? COL_LOCKED
         : COL_CELL;
@@ -717,8 +725,11 @@ export function redraw(
 
       if (t & LOCKED) td[here] |= TILE_LOCKED;
 
-      if (reach !== null && reach[gi] >= 0 && flash.win(reach[gi]))
-        td[here] |= TILE_FLASH;
+      if (reach !== null && reach[gi] >= 0) {
+        const tone = flash.win(reach[gi]);
+        if (tone)
+          td[here] |= tone === WIN_LEAD ? TILE_FLASH | TILE_FLASH_LEAD : TILE_FLASH;
+      }
     }
   }
 

@@ -51,6 +51,7 @@ import { newSpokesDesc } from "./generator.ts";
 import { spokesGame } from "./index.ts";
 import {
   COL_DONE,
+  COL_DONE_LEAD,
   COL_ERROR,
   COL_HOLDING,
   COL_HUB,
@@ -748,7 +749,7 @@ describe("spokes: the win flash sweeps the hubs", () => {
   /** The hubs whose face a frame fills with the flash color, as grid `x,y`. */
   const lit = (ops: ReturnType<typeof paint>): string[] => {
     const keys = ops.flatMap((op) =>
-      op.op === "circle" && op.fill === COL_DONE
+      op.op === "circle" && (op.fill === COL_DONE || op.fill === COL_DONE_LEAD)
         ? [`${Math.floor(op.cx / TS)},${Math.floor(op.cy / TS)}`]
         : [],
     );
@@ -765,5 +766,18 @@ describe("spokes: the win flash sweeps the hubs", () => {
 
   it("travels every hub, from the bottom left to the top right", () => {
     expectWinFlashTravels(winFlashRun(paint, lit), hubs, step);
+  });
+
+  it("paints the leading edge in one flash color and the body in the other", () => {
+    const slots = new Set(
+      winFlashRun(paint, (ops) =>
+        ops.flatMap((op) =>
+          op.op === "circle" && (op.fill === COL_DONE || op.fill === COL_DONE_LEAD)
+            ? [op.fill]
+            : [],
+        ),
+      ).frames.flat(),
+    );
+    expect(slots).toEqual(new Set([COL_DONE, COL_DONE_LEAD]));
   });
 });

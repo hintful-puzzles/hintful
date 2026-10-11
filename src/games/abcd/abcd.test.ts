@@ -35,6 +35,7 @@ import {
   COL_CURSOR,
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_PENCIL_BODY,
   newDrawState,
   redraw,
@@ -644,8 +645,14 @@ describe("abcd render", () => {
           letter: sol[y * w + x] - 1,
         });
     expect(abcdGame.status(s)).toBe("solved");
-    // The lifted cells, as their origins: a cell's place in the sweep is its
-    // x less its y.
+    // The cells filled in either tone of the flash, as their origins: a
+    // cell's place in the sweep is its x less its y.
+    const tones = new Set<number>();
+    const isLit = (color: number): boolean => {
+      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+      tones.add(color);
+      return true;
+    };
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
     const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(palette);
@@ -655,7 +662,7 @@ describe("abcd render", () => {
     };
     const run = winFlashRun(paint, (dr) =>
       dr.ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+        o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : [],
       ),
     );
     expectWinFlashTravels(
@@ -663,6 +670,7 @@ describe("abcd render", () => {
       w * h,
       (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
     );
+    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 
   it("Check & Save highlights a mistake even when the cell was already drawn", () => {

@@ -17,6 +17,7 @@ import {
   cellSurface,
   ERROR_WASH,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -32,7 +33,13 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_NONE,
+  type WinTone,
+  winSlot,
+} from "../../engine/win-wave.ts";
 import type { FillingHint } from "./index.ts";
 import {
   DX,
@@ -58,7 +65,8 @@ export const COL_HINT_CELL = 8; // the deduction's evidence cells — outlined
 export const COL_INK = 9; // a clue's digit, and a region's border
 export const COL_CELL = 10; // the surface of a cell the player fills
 export const COL_GIVEN = 11; // the lifted surface under a clue
-export const COL_FLASH = 12; // the ground of a cell the win flash is on
+export const COL_FLASH = 12; // the ground of a cell under the win flash's body
+export const COL_FLASH_LEAD = 13; // and under its leading edge
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -69,6 +77,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_HIGHLIGHT] = highlightWash(bg);
   out[COL_CORRECT] = REGION_DONE;
   out[COL_ERROR] = ERROR_WASH;
@@ -107,7 +116,7 @@ const FF_MISTAKE = 0x20000; // fork's Check & Save overlay (no upstream analog)
 const HINT_TARGET = 0x40000; // a cell the displayed hint points at
 const HINT_AREA = 0x80000; // one of the hint's evidence cells
 const HINT_LINE = 0x100000; // in the region the sentence names (hatched)
-const FLASH_BG = 0x200000; // the win flash's highlight is on the cell
+const WIN_SHIFT = 21; // two bits: the tone of the win flash on the cell
 
 // --- geometry (upstream BORDER = TILE_SIZE/2, BORDER_WIDTH = max(TS/32,1)) -
 export const border = (ts: number) => Math.floor(ts / 2);
@@ -186,9 +195,10 @@ function drawSquare(
   // paints over the digits it is reasoning about. `HINT_TARGET`/`HINT_AREA`
   // stay in the cache word regardless — they are what makes a cell repaint when
   // the mark leaves it, which is also what erases the mark.
+  const tone = ((flags >> WIN_SHIFT) & 3) as WinTone;
   const bg =
-    flags & FLASH_BG
-      ? COL_FLASH
+    tone !== WIN_NONE
+      ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
       : flags & HIGH_BG
         ? COL_HIGHLIGHT
         : flags & ERROR_BG
@@ -360,8 +370,9 @@ export function redrawFilling(
       const v = board[i];
       let flags = 0;
 
-      if (flash.win(sweepStep(x, y))) {
-        flags |= FLASH_BG;
+      const tone = flash.win(sweepStep(x, y));
+      if (tone !== WIN_NONE) {
+        flags |= tone << WIN_SHIFT;
       } else if (ui.sel?.has(i)) {
         flags |= HIGH_BG;
       } else if (v) {

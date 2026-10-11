@@ -12,6 +12,7 @@
 import {
   cellSurface,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   INK,
   MOVED,
@@ -19,7 +20,7 @@ import {
 } from "../../engine/color/palette.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { type Bbox, enumGridSquares, findBbox } from "./grid.ts";
 import { SOLIDS, transformPoly } from "./solids.ts";
 import type { CubeParams, CubeState, KeyPair } from "./state.ts";
@@ -35,7 +36,8 @@ export const COL_CELL = 4; // a plain square
 /** A plain face of the solid, lifted: the one thing on the board that stands
  * above it. */
 export const COL_SOLID = 5;
-export const COL_FLASH = 6; // a square of the arena the win flash is on
+export const COL_FLASH = 6; // a square of the arena the win flash's body is on
+export const COL_FLASH_LEAD = 7; // and one its leading edge is on
 
 export interface CubeDrawState {
   tileSize: number;
@@ -58,6 +60,7 @@ export function colors(defaultBackground: Color): Color[] {
   // paint is the only hue on the solid.
   ret[COL_SOLID] = givenSurface(defaultBackground);
   ret[COL_FLASH] = FLASH;
+  ret[COL_FLASH_LEAD] = FLASH_LEAD;
   return ret;
 }
 
@@ -148,10 +151,14 @@ export function redraw(
     }
     // The win flash sweeps the arena: a square's place is its center's,
     // whatever shape the grid gives it.
-    const lit = flash.win(sweepStep(cx, cy));
+    const tone = flash.win(sweepStep(cx, cy));
     dr.drawPolygon(
       coords,
-      st.blue[i] ? COL_PAINT : lit ? COL_FLASH : COL_CELL,
+      st.blue[i]
+        ? COL_PAINT
+        : tone
+          ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
+          : COL_CELL,
       COL_GRID,
     );
   }

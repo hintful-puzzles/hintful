@@ -20,6 +20,7 @@ import {
   COL_CURSOR,
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
@@ -122,6 +123,10 @@ describe("Palisade redraw", () => {
       return ops;
     };
     // The cells whose ground is the flash color, each as its index.
+    // Lit is either tone of the highlight, and the flash shows both.
+    const tones = new Set<number>();
+    const isLit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color).size > 0;
     const run = winFlashRun(paint, (ops) => {
       const clips = opsOfKind(ops, "clip");
       const left = Math.min(...clips.map((o) => o.x));
@@ -130,13 +135,14 @@ describe("Palisade redraw", () => {
       let cell = -1;
       for (const o of ops) {
         if (o.op === "clip") cell = ((o.y - top) / TS) * P.w + (o.x - left) / TS;
-        else if (o.op === "rect" && o.color === COL_FLASH) cells.push(cell);
+        else if (o.op === "rect" && isLit(o.color)) cells.push(cell);
       }
       return cells;
     });
     expectWinFlashTravels(run, P.w * P.h, (i) =>
       sweepStep(i % P.w, Math.floor(i / P.w)),
     );
+    expect(tones.size).toBe(2);
   });
 
   it("reddens a findMistakes overlay edge", () => {

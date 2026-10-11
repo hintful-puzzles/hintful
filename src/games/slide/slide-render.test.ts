@@ -36,6 +36,7 @@ import {
   COL_BLOCK,
   COL_CURSOR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GRABBED,
   COL_MAIN,
   COL_MAIN_GRABBED,
@@ -473,13 +474,14 @@ describe("slide win flash", () => {
   const frames = Array.from({ length: 40 }, (_, i) =>
     lit((WIN_FLASH_S * (i + 1)) / 41),
   );
+  const TONES: number[] = [COL_FLASH, COL_FLASH_LEAD];
   // The won board: the key block one square right, `A` nudged to (4,1).
   const main = ["2,1", "3,1", "2,2", "3,2"];
 
-  it("starts on the floor at the bottom left, in the flash color", () => {
+  it("starts on the floor at the bottom left, in a flash color", () => {
     expect(frames[0]).toEqual(["1,3"]);
     const floor = rectsInTile(flashAt(WIN_FLASH_S / 41), 1, 3).find((o) => o.w === TS);
-    expect(floor?.color).toBe(COL_FLASH);
+    expect(TONES).toContain(floor?.color ?? -1);
   });
 
   it("travels the floor squares and the blocks in the sweep's order, never the wall", () => {
@@ -525,12 +527,22 @@ describe("slide win flash", () => {
     expect(lit(WIN_FLASH_S)).toEqual([]);
   });
 
-  it("lights a block whole, its face in the flash color", () => {
+  it("lights a block whole, its face in a flash color", () => {
     for (const f of frames)
       expect(main.filter((sq) => f.includes(sq)).length % 4).toBe(0);
     const t = (WIN_FLASH_S * (frames.findIndex((f) => f.includes(main[0])) + 1)) / 41;
     const ops = flashAt(t);
-    expect(pieceFillColor(ops, 2, 1)).toBe(COL_FLASH);
+    expect(TONES).toContain(pieceFillColor(ops, 2, 1) ?? -1);
+  });
+
+  it("leads in the flash's lead color, with its body color behind", () => {
+    const floors = Array.from({ length: 40 }, (_, i) =>
+      flashAt((WIN_FLASH_S * (i + 1)) / 41)
+        .filter((o): o is RectOp => o.op === "rect" && o.w === TS && o.h === TS)
+        .map((o) => o.color),
+    ).flat();
+    expect(floors).toContain(COL_FLASH_LEAD);
+    expect(floors).toContain(COL_FLASH);
   });
 
   it("returns to the ordinary palette once the flash has run out", () => {

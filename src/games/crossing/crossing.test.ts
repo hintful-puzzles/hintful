@@ -48,6 +48,7 @@ import {
   COL_DOWNFIT,
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GHOST,
   COL_HELD,
   COL_OUTERBG,
@@ -1492,13 +1493,19 @@ describe("crossing rendering", () => {
       newState(P5, FIX.desc),
     );
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
-    // The squares filled in the flash's color, as their bodies' origins.
+    // The squares filled in either tone of the flash, as their bodies' origins.
+    const tones = new Set<number>();
+    const isLit = (color: number): boolean => {
+      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+      tones.add(color);
+      return true;
+    };
     const paint = (flash: Flash): string[] => {
       const ds = newDrawState(solved, TS);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, solved, 1, newUi(), 0, flash);
       return dr.ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+        o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : [],
       );
     };
     // A settled board paints no square in the flash color.
@@ -1518,6 +1525,7 @@ describe("crossing rendering", () => {
       open.length,
       (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
     );
+    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 
   it("paints entered digits on one neutral tile, not nine colors", () => {

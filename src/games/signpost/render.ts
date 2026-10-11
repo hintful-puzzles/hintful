@@ -13,6 +13,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HELD,
   HINT_ACTION,
@@ -35,7 +36,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point } from "../../engine/types.ts";
-import type { Flash } from "../../engine/win-wave.ts";
+import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import type { SignpostHint } from "./hint.ts";
 import { ARROW } from "./hint-marks.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
@@ -78,6 +79,8 @@ export const COL_HINT = COL_X0 + NBACKGROUNDS;
 export const COL_HINT_CELL = COL_HINT + 1;
 /** The ground of a square the win flash is on. */
 export const COL_FLASH = COL_HINT_CELL + 1;
+/** And under the flash's leading edge. */
+export const COL_FLASH_LEAD = COL_FLASH + 1;
 
 /** The board's pixel origin (NARROW_BORDERS). Exported so `interpretMove` and
  * `computeSize` read the same number the painter does — one function, both
@@ -108,6 +111,8 @@ const F_HINT_OUTLINE = 0x400;
 const F_MISTAKE = 0x800;
 /** The win flash's highlight is on this square. */
 const F_FLASH = 0x1000;
+/** With {@link F_FLASH}: the highlight on this square is its leading edge. */
+const F_FLASH_LEAD = 0x2000;
 
 // --- palette ----------------------------------------------------------
 
@@ -117,7 +122,7 @@ const F_FLASH = 0x1000;
  * in `palette-games.ts`); what is left here is which slot each one occupies.
  */
 export function buildPalette(background: Color): Color[] {
-  const ret: Color[] = new Array(COL_FLASH + 1);
+  const ret: Color[] = new Array(COL_FLASH_LEAD + 1);
 
   ret[COL_BACKGROUND] = background;
   ret[COL_CELL] = cellSurface(background);
@@ -140,6 +145,7 @@ export function buildPalette(background: Color): Color[] {
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
   ret[COL_FLASH] = FLASH;
+  ret[COL_FLASH_LEAD] = FLASH_LEAD;
 
   for (let c = 0; c < NBACKGROUNDS; c++) {
     ret[COL_B0 + c] = SIGNPOST_REGION_BACKGROUNDS[c];
@@ -285,7 +291,9 @@ function tileRedraw(
   dr.drawRect(
     { x: tx, y: ty, w: ts, h: ts },
     f & F_FLASH
-      ? COL_FLASH
+      ? f & F_FLASH_LEAD
+        ? COL_FLASH_LEAD
+        : COL_FLASH
       : empty || !(f & (F_IMMUTABLE | F_DIM))
         ? setcol
         : f & F_IMMUTABLE
@@ -484,7 +492,10 @@ export function redrawSignpost(
       if (mistakeSet?.has(i)) f |= F_MISTAKE;
       if (renderState.flags[i] & FLAG_IMMUTABLE) f |= F_IMMUTABLE;
       // The win flash runs the number path: a square's position is its number.
-      if (renderState.nums[i] > 0 && flash.win(renderState.nums[i])) f |= F_FLASH;
+      if (renderState.nums[i] > 0) {
+        const tone = flash.win(renderState.nums[i]);
+        if (tone) f |= tone === WIN_LEAD ? F_FLASH | F_FLASH_LEAD : F_FLASH;
+      }
       f |= hintFlags.get(i) ?? 0;
       if (renderState.next[i] !== -1) f |= F_ARROW_POINT;
       if (renderState.prev[i] !== -1) {

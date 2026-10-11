@@ -35,6 +35,7 @@ import {
   clueDoneColor,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   highlightWash,
   INK,
@@ -64,9 +65,9 @@ import {
   cellHighlight,
   drawCellBackground,
   HIGHLIGHT_NOTES,
-  HIGHLIGHT_WIN,
   highlightFill,
   highlightIsOn,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -104,7 +105,8 @@ export const COL_OUTERBG = 0; // the board around the grid, and the clue list's
 export const COL_DONE = 1;
 /** The surface of an empty square. */
 export const COL_CELL = 2;
-/** The ground of a square the win flash is on. */
+/** The ground of a square the win flash is on: its body, and
+ * (`COL_FLASH_LEAD`) its leading edge. */
 export const COL_FLASH = 3;
 export const COL_GRID = 4; // the line between two squares, and the frame
 export const COL_ERROR = 5;
@@ -171,7 +173,8 @@ export const COL_SELECTED = 20;
 /** The cursor's corners on a wall: paper, which reads on the wall's strong
  * fill in both schemes. */
 export const COL_WALLCURSOR = 21;
-export const NCOLORS = 22;
+export const COL_FLASH_LEAD = 22;
+export const NCOLORS = 23;
 
 export function colors(background: Color): Color[] {
   const out: Color[] = new Array(NCOLORS);
@@ -181,6 +184,7 @@ export function colors(background: Color): Color[] {
   out[COL_GRID] = surfaceGrid(background);
   out[COL_DONE] = clueDoneColor(background);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
   out[COL_WALL] = wallFill(background);
@@ -272,8 +276,8 @@ const FE_MID = FE_TOP | FE_BOT;
 // Cache-key bit layout for a cell's packed tile value.
 const K_DIGIT = 0; // bits 0-3: the entered digit (0 = empty)
 const K_ERR = 4; // bits 4-7: the FE_* flags
-const K_HIGHLIGHT = 8; // bits 8-9: the square's `CellHighlight`, the win flash's included
-const DF_KEYCUR = 1 << 10; // the keyboard cursor on a wall (corner brackets)
+const K_HIGHLIGHT = 8; // bits 8-10: the square's `CellHighlight`, the win flash's included
+const DF_KEYCUR = 1 << 11; // the keyboard cursor on a wall (corner brackets)
 const DF_ACROSS = 1 << 13; // marked as part of a horizontal run in play
 const DF_DOWN = 1 << 14; // marked as part of a vertical run in play
 const K_MARKS = 15; // bits 15-23: the nine pencil-mark bits
@@ -486,7 +490,7 @@ function drawCell(
   const tx = tileOrigin(x, ts);
   const ty = tileOrigin(y, ts);
   const digit = state.grid[i];
-  const highlight = ((flags >> K_HIGHLIGHT) & 3) as CellHighlight;
+  const highlight = ((flags >> K_HIGHLIGHT) & 7) as CellHighlight;
   // The ring is drawn in `redraw` on the square's own border, and the run the
   // sentence names is hatched translucently here, so a hint never takes the
   // background from the run wash or from the penciled candidates it is ruling
@@ -509,6 +513,7 @@ function drawCell(
       COL_SELECTED,
       surface,
       COL_FLASH,
+      COL_FLASH_LEAD,
     );
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
   }
@@ -525,8 +530,22 @@ function drawCell(
     //
     // The win flash fills the square it is on. A selected square takes its
     // highlight, as an empty square does.
-    const mid = highlightFill(highlight, COL_SELECTED, surface, COL_FLASH);
-    drawCellBackground(dr, body, highlight, COL_SELECTED, surface, COL_FLASH);
+    const mid = highlightFill(
+      highlight,
+      COL_SELECTED,
+      surface,
+      COL_FLASH,
+      COL_FLASH_LEAD,
+    );
+    drawCellBackground(
+      dr,
+      body,
+      highlight,
+      COL_SELECTED,
+      surface,
+      COL_FLASH,
+      COL_FLASH_LEAD,
+    );
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
     dr.drawText(
       { x: tileCenter(x, ts), y: tileCenter(y, ts) },
@@ -571,7 +590,8 @@ function drawCell(
       ty,
       (flags >> K_MARKS) & 0x1ff,
       struck,
-      highlightFill(highlight, COL_SELECTED, surface, COL_FLASH) === runWash
+      highlightFill(highlight, COL_SELECTED, surface, COL_FLASH, COL_FLASH_LEAD) ===
+        runWash
         ? COL_RUNTEXT
         : COL_PENCIL,
     );
@@ -919,8 +939,8 @@ export function redraw(
       else if (downWash[i]) flags |= DF_DOWN;
       // The win flash sweeps the squares holding digits; a wall has none. The
       // selection is hidden while it runs, so the two never share the bits.
-      if (state.grid[i] && flash.win(sweepStep(x, y)))
-        flags |= HIGHLIGHT_WIN << K_HIGHLIGHT;
+      if (state.grid[i])
+        flags |= (winHighlight(flash.win(sweepStep(x, y))) ?? 0) << K_HIGHLIGHT;
 
       const tile = (state.grid[i] << K_DIGIT) | (errFlags[i] << K_ERR) | flags;
 

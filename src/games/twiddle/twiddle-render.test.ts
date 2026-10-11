@@ -17,6 +17,7 @@ import { executeMove, twiddleGame } from "./index.ts";
 import {
   animLength,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_HIGHCURSOR,
   COL_HIGHLIGHT,
   COL_LOWCURSOR,
@@ -141,7 +142,9 @@ describe("Twiddle: the win flash sweeps the tiles", () => {
    * the face is drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] =>
     ops.flatMap((op) =>
-      op.op === "rect" && op.color === COL_FLASH && op.w === op.h
+      op.op === "rect" &&
+      (op.color === COL_FLASH || op.color === COL_FLASH_LEAD) &&
+      op.w === op.h
         ? [`${op.x},${op.y}`]
         : [],
     );
@@ -156,6 +159,19 @@ describe("Twiddle: the win flash sweeps the tiles", () => {
 
   it("travels every tile, from the bottom left to the top right", () => {
     expectWinFlashTravels(winFlashRun(paint, lit), tiles, step);
+  });
+
+  it("paints the leading edge in one flash color and the body in the other", () => {
+    const slots = new Set(
+      winFlashRun(paint, (ops) =>
+        ops.flatMap((op) =>
+          op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+            ? [op.color]
+            : [],
+        ),
+      ).frames.flat(),
+    );
+    expect(slots).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 
   it("repaints a tile's own face when the flash leaves it", () => {

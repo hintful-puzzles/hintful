@@ -32,6 +32,7 @@ import { magnetsGame } from "./index.ts";
 import {
   COL_CURSOR,
   COL_DONE,
+  COL_FLASH_LEAD,
   COL_HIGHLIGHT,
   COL_HINT,
   COL_HINT_CELL,
@@ -236,7 +237,9 @@ describe("magnets render scenarios", () => {
     const state = magnetsGame.executeMove(start, res.move);
     expect(magnetsGame.status(state)).toBe("solved");
     const ts = PREFERRED_TILE_SIZE;
-    /** The squares whose ground is the flash color, as their indices. */
+    /** The squares whose ground is one of the flash's two colors, as their
+     * indices. */
+    const tones = new Set<number>();
     const run = winFlashRun(
       (flash: Flash) => {
         const dr = new RecordingDrawing(colors(DEFAULT_BACKGROUND));
@@ -247,12 +250,15 @@ describe("magnets render scenarios", () => {
       (dr) => {
         const squares = new Set<number>();
         for (const o of dr.ops) {
-          if (o.op !== "rect" || o.color !== COL_HIGHLIGHT) continue;
+          if (o.op !== "rect") continue;
+          if (o.color !== COL_HIGHLIGHT && o.color !== COL_FLASH_LEAD) continue;
+          tones.add(o.color);
           squares.add((Math.floor(o.y / ts) - 1) * state.w + Math.floor(o.x / ts) - 1);
         }
         return [...squares];
       },
     );
+    expect([...tones].sort()).toEqual([COL_HIGHLIGHT, COL_FLASH_LEAD]);
     const { dominoes } = state.common;
     // A square's position is the middle of its domino.
     expectWinFlashTravels(run, state.wh, (i) => {

@@ -13,6 +13,7 @@ import {
   CURSOR,
   cellSurface,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   surfaceGrid,
@@ -24,7 +25,7 @@ import { drawMarkSides, type MarkBand, MarkOutlines } from "../../engine/hint-ma
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Rect, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { FlipMove, FlipParams, FlipState, FlipUi } from "./state.ts";
 
 export interface FlipDrawState {
@@ -32,7 +33,7 @@ export interface FlipDrawState {
   tileSize: number;
   /** Per-cell render cache: the bits `drawTile` last drew (the grid's, plus 4
    * for the cursor, the hint marks' sides from {@link MARK_SHIFT} up,
-   * {@link STRIPED} and {@link FLASHING}); -1 = never drawn,
+   * {@link STRIPED} and the flash's tone from {@link FLASH_SHIFT}); -1 = never drawn,
    * {@link ANIMATING} mid-flip. */
   tiles: Int32Array;
 }
@@ -44,8 +45,8 @@ const ANIMATING = 255;
 const MARK_SHIFT = 8;
 /** A square the hint's words stripe, above the byte of mark sides. */
 const STRIPED = 1 << 16;
-/** A square the win flash's highlight is on. */
-const FLASHING = 1 << 17;
+/** Where the tone of the win flash on a square sits: two bits. */
+const FLASH_SHIFT = 17;
 
 // Color palette indices.
 const COL_BACKGROUND = 0;
@@ -62,7 +63,9 @@ const COL_LIT_DIAG = 8;
 const COL_SURFACE = 9;
 /** The ground of a square the win flash is on. */
 export const COL_FLASH = 10;
-const NCOLORS = 11;
+/** And under the flash's leading edge. */
+export const COL_FLASH_LEAD = 11;
+const NCOLORS = 12;
 
 /** Which member of the two-state pair a square holds: the first while it is
  * still to be lit, the second once it is. */
@@ -91,6 +94,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_BACKGROUND] = bg;
   ret[COL_SURFACE] = cellSurface(bg);
   ret[COL_FLASH] = FLASH;
+  ret[COL_FLASH_LEAD] = FLASH_LEAD;
   ret[COL_GRID] = surfaceGrid(bg);
   ret[COL_UNLIT] = TWO[pairIndex(true)];
   ret[COL_LIT] = TWO[pairIndex(false)];
@@ -162,18 +166,18 @@ export function redraw(
     const x = i % w;
     const y = (i / w) | 0;
     let v = s.grid[i];
-    const flashing = flash.win(sweepStep(x, y));
+    const tone = flash.win(sweepStep(x, y));
     if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) v |= 4;
 
     const flipping = animating && prev !== null && s.grid[i] !== prev.grid[i];
     const stripes = striped.has(i);
     const drawn =
       (stripes ? STRIPED : 0) |
-      (flashing ? FLASHING : 0) |
+      (tone << FLASH_SHIFT) |
       (marks.packed(x, y) << MARK_SHIFT) |
       (flipping ? ANIMATING : v);
     if (flipping || ds.tiles[i] !== drawn) {
-      drawTile(dr, ds, s, x, y, v, flipping, progress, marks, stripes, flashing);
+      drawTile(dr, ds, s, x, y, v, flipping, progress, marks, stripes, tone);
       ds.tiles[i] = drawn;
     }
   }
@@ -190,7 +194,7 @@ function drawTile(
   progress: number,
   marks: MarkOutlines,
   stripes: boolean,
-  flashing: boolean,
+  tone: WinTone,
 ): void {
   const { w, h } = s;
   const wh = w * h;
@@ -201,7 +205,7 @@ function drawTile(
   const unlit = (v & 1) !== 0;
 
   dr.clip(inner);
-  dr.drawRect(inner, flashing ? COL_FLASH : COL_SURFACE);
+  dr.drawRect(inner, tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_SURFACE);
 
   // Under the piece: the bands mark the square, and the piece is what it holds.
   if (stripes) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));

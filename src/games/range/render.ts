@@ -15,6 +15,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
@@ -36,7 +37,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { CLUE } from "./hint-text.ts";
 import type { RangeHint } from "./index.ts";
 import { findErrors } from "./solver.ts";
@@ -68,8 +69,9 @@ export const COL_CURSOR = 8;
 export const COL_HINT = 9; // the cell the displayed hint forces — ringed
 export const COL_HINT_CELL = 10; // the deduction's premise/area cells — outlined
 export const COL_HINT_SHADEDREF = 11; // a cited shaded premise (doubled outline)
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 12;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -78,6 +80,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_SHADED] = SHADED;
   out[COL_RULED_OUT] = RULED_OUT;
   // Ink, which inverts: the number is read against a surface, never
@@ -110,9 +113,10 @@ export function computeSize(p: RangeParams, ts: number): Size {
 // can reach ~w + h − 1).
 const F_ERROR = 1 << 16;
 const F_CURSOR = 1 << 17;
-const F_FLASH = 1 << 18;
 const F_MISTAKE = 1 << 19;
 const F_HINT_CLUE = 1 << 21; // the clue driving the deduction — digit in COL_HINT
+/** The win flash's tone on the cell, in two bits above the hint's. */
+const WIN_SHIFT = 25;
 const F_HINT_HATCH = 1 << 24; // on the run the sentence names — hatched
 
 /** A cell's role in the displayed hint, with its cache flag. The `target` is
@@ -149,7 +153,7 @@ function drawCell(
   value: number,
   error: boolean,
   cursor: boolean,
-  flash: boolean,
+  tone: WinTone,
   hintKind: HintKind,
   /** This clue drives the displayed deduction, so its digit draws `COL_HINT`
    * (see `RangeHint.clue`). The clue is *inside* the outlined area or striped
@@ -169,7 +173,11 @@ function drawCell(
   // is in: lifted under a clue, plain everywhere else. The cursor is corner brackets and no hint role is a
   // fill: a Range premise area runs along a clue's arms and takes in the clue
   // cell itself, whose digit the deduction counts.
-  const surface = flash ? COL_FLASH : value > 0 ? COL_GIVEN : COL_CELL;
+  const surface = tone
+    ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
+    : value > 0
+      ? COL_GIVEN
+      : COL_CELL;
 
   drawRectOutline(dr, x, y, ts + 1, ts + 1, COL_GRID);
   dr.drawRect(box, surface);
@@ -261,12 +269,12 @@ export function redraw(
       const clueRef = hintClue.has(i);
       const hatched = hintHatch.has(i);
 
-      const lit = flash.win(sweepStep(c, r));
+      const tone = flash.win(sweepStep(c, r));
 
       let packed = (value + 2) | HINT_FLAG[hintKind];
       if (error) packed |= F_ERROR;
       if (cursor) packed |= F_CURSOR;
-      if (lit) packed |= F_FLASH;
+      packed |= tone << WIN_SHIFT;
       if (mistake) packed |= F_MISTAKE;
       if (clueRef) packed |= F_HINT_CLUE;
       if (hatched) packed |= F_HINT_HATCH;
@@ -280,7 +288,7 @@ export function redraw(
           value,
           error || mistake,
           cursor,
-          lit,
+          tone,
           hintKind,
           clueRef,
           hatched,

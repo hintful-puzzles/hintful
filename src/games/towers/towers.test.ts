@@ -32,6 +32,7 @@ import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_PENCIL_BODY,
   coord,
   newDrawState,
@@ -701,7 +702,9 @@ describe("towers: the win flash sweeps the squares", () => {
   /** The squares a frame fills with the flash color, as the `x,y` drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] => {
     const keys = ops.flatMap((op) =>
-      op.op === "rect" && op.color === COL_FLASH ? [`${op.x},${op.y}`] : [],
+      op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+        ? [`${op.x},${op.y}`]
+        : [],
     );
     return [...new Set(keys)];
   };
@@ -716,5 +719,18 @@ describe("towers: the win flash sweeps the squares", () => {
 
   it("travels every square, from the bottom left to the top right", () => {
     expectWinFlashTravels(winFlashRun(paint, lit), squares, step);
+  });
+
+  it("paints the leading edge in one flash color and the body in the other", () => {
+    const slots = new Set(
+      winFlashRun(paint, (ops) =>
+        ops.flatMap((op) =>
+          op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+            ? [op.color]
+            : [],
+        ),
+      ).frames.flat(),
+    );
+    expect(slots).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });

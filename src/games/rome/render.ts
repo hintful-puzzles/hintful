@@ -36,6 +36,7 @@ import {
   ERROR,
   ERROR_WASH,
   FLASH,
+  FLASH_LEAD,
   GOAL,
   GOAL_WASH,
   givenSurface,
@@ -58,7 +59,7 @@ import {
   drawCellBackground,
   HIGHLIGHT_NONE,
   HIGHLIGHT_NOTES,
-  HIGHLIGHT_WIN,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -148,8 +149,10 @@ export const COL_HINT_CELL = 13;
 export const COL_CURSOR = 14;
 /** The thin line between two squares of one region. */
 export const COL_GRID = 15;
-/** The ground of a square the win flash is on. */
+/** The ground of a square the win flash is on: its body, and its leading
+ * edge. */
 export const COL_FLASH = 16;
+export const COL_FLASH_LEAD = 17;
 
 export function colors(background: Color): Color[] {
   const out: Color[] = [];
@@ -158,6 +161,7 @@ export function colors(background: Color): Color[] {
   out[COL_GIVEN] = givenSurface(background);
   out[COL_GRID] = surfaceGrid(background);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_BORDER] = INK;
   out[COL_ARROW_FIXED] = INK;
   out[COL_ARROW_GUESS] = playerEntryColor(background);
@@ -399,13 +403,13 @@ export function redraw(
       if (highlight !== HIGHLIGHT_NONE && ui.kmode === KEYMODE_PENCIL)
         highlight = HIGHLIGHT_NOTES;
       const armed = highlight !== HIGHLIGHT_NONE && ui.kmode !== KEYMODE_MOVE;
-      if (flash.win(sweepStep(x, y))) highlight = HIGHLIGHT_WIN;
+      highlight = winHighlight(flash.win(sweepStep(x, y))) ?? highlight;
 
       const key =
         (c & 0x7fff) |
         (((p >> 2) & 0xf) << 15) |
         ((p & FD_ENTRY ? 1 : 0) << 19) |
-        (highlight << 22) |
+        (highlight << 20) |
         ((armed ? 1 : 0) << 24);
       if (ds.cache[i1] === key && !ds.mistakes.stale(i1) && !ds.hint.stale(i1))
         continue;
@@ -465,6 +469,7 @@ export function redraw(
         COL_CURSOR,
         color,
         COL_FLASH,
+        COL_FLASH_LEAD,
       );
       ds.hint.drawHatch(dr, i1, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 

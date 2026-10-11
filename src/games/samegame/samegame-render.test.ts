@@ -12,6 +12,7 @@ import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave
 import { samegameGame } from "./index.ts";
 import {
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_LIFTED,
   FLASH_FRAME,
   newDrawState,
@@ -121,7 +122,9 @@ describe("Same Game: the win flash on a cleared board", () => {
   /** Where each square painted in the flash color is drawn, as `x,y`. */
   const run = winFlashRun(paint, (dr) =>
     dr.ops.flatMap((o) =>
-      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+      o.op === "rect" && (o.color === COL_FLASH || o.color === COL_FLASH_LEAD)
+        ? [`${o.x},${o.y}`]
+        : [],
     ),
   );
   /** The sweep's diagonal through a square drawn at `at`. */
@@ -132,6 +135,15 @@ describe("Same Game: the win flash on a cleared board", () => {
 
   it("lights every cell of the field, and never its margin, from the bottom left to the top right", () => {
     expectWinFlashTravels(run, state.w * state.h, diagonal);
+  });
+
+  it("leads in the flash's lead color, with its body color behind", () => {
+    const paints = (slot: number) =>
+      winFlashRun(paint, (dr) =>
+        dr.ops.filter((o) => o.op === "rect" && o.color === slot),
+      ).frames.some((frame) => frame.length > 0);
+    expect(paints(COL_FLASH_LEAD)).toBe(true);
+    expect(paints(COL_FLASH)).toBe(true);
   });
 });
 

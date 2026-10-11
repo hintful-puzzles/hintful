@@ -23,8 +23,8 @@ import {
   drawBorderTile,
   F_CLUE_ERROR,
   F_CORRECT,
-  F_FLASH,
   F_GIVEN,
+  flashFlag,
   hintTileBits,
   invalidateDanglingRegions,
   mistakeEdgeBits,
@@ -35,6 +35,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -76,8 +77,9 @@ export const COL_CORRECT = 8; // a completed, correct region
 /** The keyboard cursor's box, which upstream drew in the grid's own ink. */
 export const COL_CURSOR = 9;
 export const COL_CELL = 10; // the surface of a cell with no clue
-/** The ground of a cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 11;
+export const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -86,6 +88,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = INK;
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
@@ -102,6 +105,7 @@ const PALETTE: BorderGridColors = {
   background: COL_CELL,
   given: COL_GIVEN,
   flash: COL_FLASH,
+  flashLead: COL_FLASH_LEAD,
   correct: COL_CORRECT,
   grid: COL_GRID,
   lineNo: COL_LINE_NO,
@@ -183,7 +187,7 @@ export function redraw(
 
       if (validRoot.get(blackDsf.canonify(i))) flags |= F_CORRECT;
       if (clue !== EMPTY) flags |= F_GIVEN;
-      if (flash.win(sweepStep(c, r))) flags |= F_FLASH;
+      flags |= flashFlag(flash.win(sweepStep(c, r)));
 
       const on = bitcount(borders[i]);
       const off = bitcount((borders[i] >> 4) & BORDER_MASK);

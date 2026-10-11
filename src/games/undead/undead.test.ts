@@ -30,7 +30,14 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { undeadGame } from "./index.ts";
-import { border, COL_FLASH, countBlockAt, newDrawState, redraw } from "./render.ts";
+import {
+  border,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  countBlockAt,
+  newDrawState,
+  redraw,
+} from "./render.ts";
 import {
   findUndeadSolution,
   isUniquelySolvable,
@@ -374,7 +381,9 @@ describe("undead: the win flash sweeps the cells, the clues and the counts", () 
       return `${Math.floor((px - border(TS)) / TS)},${Math.floor((py - border(TS)) / TS) - 1}`;
     };
     return ops.flatMap((op) =>
-      op.op === "rect" && op.color === COL_FLASH ? [at(op.x + 1, op.y + 1)] : [],
+      op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+        ? [at(op.x + 1, op.y + 1)]
+        : [],
     );
   };
   const step = (key: string): number => {
@@ -388,6 +397,19 @@ describe("undead: the win flash sweeps the cells, the clues and the counts", () 
 
   it("travels every cell, edge clue and count, from the bottom left to the top right", () => {
     expectWinFlashTravels(winFlashRun(paint, lit), elements, step);
+  });
+
+  it("paints the leading edge in one flash color and the body in the other", () => {
+    const slots = new Set(
+      winFlashRun(paint, (ops) =>
+        ops.flatMap((op) =>
+          op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
+            ? [op.color]
+            : [],
+        ),
+      ).frames.flat(),
+    );
+    expect(slots).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 
   it("keeps every monster, mirror, clue and count in its own ink", () => {

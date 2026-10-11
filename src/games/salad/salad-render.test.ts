@@ -27,6 +27,7 @@ import {
   COL_BORDERCLUE,
   COL_CURSOR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_G_HOLE,
   COL_HINT,
   COL_HINT_CELL,
@@ -377,17 +378,21 @@ describe("salad Ui-driven frames", () => {
   ])("sweeps the win flash over every square of a %s board, from the bottom left", (_mode, p, desc) => {
     const s = newState(p, desc);
     const ui = newUi(s);
-    /** Where each square painted in the flash color is drawn, as `x,y`. */
-    const run = winFlashRun(
-      (flash) => paint(s, ui, flash),
-      (rec) =>
-        rec.ops.flatMap((o) =>
-          o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
-        ),
-    );
-    expectWinFlashTravels(run, p.order * p.order, (at) => {
+    /** Where each square painted in one of `slots` is drawn, as `x,y`. */
+    const run = (...slots: number[]) =>
+      winFlashRun(
+        (flash) => paint(s, ui, flash),
+        (rec) =>
+          rec.ops.flatMap((o) =>
+            o.op === "rect" && slots.includes(o.color) ? [`${o.x},${o.y}`] : [],
+          ),
+      );
+    expectWinFlashTravels(run(COL_FLASH, COL_FLASH_LEAD), p.order * p.order, (at) => {
       const [x, y] = at.split(",").map(Number);
       return sweepStep(x, y);
     });
+    // The highlight's two tones: a lead, and a body behind it.
+    for (const slot of [COL_FLASH_LEAD, COL_FLASH])
+      expect(run(slot).frames.some((frame) => frame.length > 0)).toBe(true);
   });
 });

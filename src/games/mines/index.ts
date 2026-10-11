@@ -25,6 +25,7 @@ import {
   ERROR,
   ERROR_WASH,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -88,6 +89,7 @@ import {
   COL_FLAG,
   COL_FLAGBASE,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GRID,
   COL_HINT,
   COL_HINT_EVIDENCE,
@@ -611,6 +613,7 @@ export const minesGame: Game<
     ret[COL_MINE_GLINT] = WHITE;
     ret[COL_BANG] = ERROR;
     ret[COL_FLASH] = FLASH;
+    ret[COL_FLASH_LEAD] = FLASH_LEAD;
     // Red because a flag is yours and deliberate, not because anything is
     // wrong — but the same red, which is what the collection has one of.
     ret[COL_FLAG] = RED;

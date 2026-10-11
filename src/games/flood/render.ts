@@ -1,10 +1,10 @@
 import { BLACK, TEN, TEN_NAMES } from "../../engine/color/colors.ts";
-import { FLASH, surfaceGrid } from "../../engine/color/palette.ts";
+import { FLASH, FLASH_LEAD, surfaceGrid } from "../../engine/color/palette.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import type { Flash } from "../../engine/win-wave.ts";
+import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { completed, fill } from "./solver.ts";
 import {
   FILLX,
@@ -38,6 +38,8 @@ const COL_1 = 2; // COL_1..COL_10 are 2..11
 const COL_GRID = 12;
 /** A tile the win flash is on. */
 export const COL_LIT = 13;
+/** A tile the flash's leading edge is on. */
+export const COL_LIT_LEAD = 14;
 
 /**
  * The ten tiles, as the hint says them: *"Fill with orange"*. Re-exported from
@@ -56,6 +58,7 @@ export function colors(defaultBackground: Color): Color[] {
   for (let i = 0; i < 10; i++) out[COL_1 + i] = TEN[i];
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_LIT] = FLASH;
+  out[COL_LIT_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -78,7 +81,9 @@ const CURSOR = 0x100;
 const BADFLASH = 0x200;
 const SOLNNEXT = 0x400;
 const LIT = 0x800;
-const COLOR_SHIFT = 12;
+/** With {@link LIT}: the highlight on this tile is its leading edge. */
+const LIT_LEAD = 0x1000;
+const COLOR_SHIFT = 13;
 
 export interface FloodDrawState {
   started: boolean;
@@ -107,7 +112,13 @@ function drawTile(
   const sep = sepWidth(ts);
 
   const color =
-    tile & BADFLASH ? COL_MARK : tile & LIT ? COL_LIT : (tile >> COLOR_SHIFT) + COL_1;
+    tile & BADFLASH
+      ? COL_MARK
+      : tile & LIT
+        ? tile & LIT_LEAD
+          ? COL_LIT_LEAD
+          : COL_LIT
+        : (tile >> COLOR_SHIFT) + COL_1;
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, color);
 
   if (sep > 0) {
@@ -223,25 +234,13 @@ export function redraw(
       grid[p.y * w + p.x] = ncolors;
   }
 
-  // The win flash spreads from the corner the fill starts in. A won board is
-  // one region, so a tile's distance through it is the count of squares
-  // across and down. The lit tiles are a region of their own in the display
-  // grid, so the line between two regions runs round them: on a field won in
-  // the flash's own color, that line is what shows the highlight pass.
-  const lit = ncolors + 1;
-  for (let x = 0; x < w; x++)
-    for (let y = 0; y < h; y++)
-      if (flash.win(Math.abs(x - FILLX) + Math.abs(y - FILLY))) grid[y * w + x] = lit;
-
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const pos = y * w + x;
       let tile =
         grid[pos] === ncolors
           ? (hintColor << COLOR_SHIFT) | SOLNNEXT
-          : grid[pos] === lit
-            ? (state.grid[pos] << COLOR_SHIFT) | LIT
-            : grid[pos] << COLOR_SHIFT;
+          : grid[pos] << COLOR_SHIFT;
       if (x === 0 || grid[pos - 1] !== grid[pos]) tile |= BORDER_L;
       if (x === w - 1 || grid[pos + 1] !== grid[pos]) tile |= BORDER_R;
       if (y === 0 || grid[pos - w] !== grid[pos]) tile |= BORDER_U;
@@ -253,6 +252,11 @@ export function redraw(
         tile |= CORNER_DR;
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) tile |= CURSOR;
       if (blink) tile |= BADFLASH;
+      // The win flash spreads from the corner the fill starts in. A won board
+      // is one region, so a tile's distance through it is the count of
+      // squares across and down.
+      const tone = flash.win(Math.abs(x - FILLX) + Math.abs(y - FILLY));
+      if (tone) tile |= tone === WIN_LEAD ? LIT | LIT_LEAD : LIT;
 
       if (ds.grid[pos] !== tile) {
         drawTile(dr, ts, x, y, tile);

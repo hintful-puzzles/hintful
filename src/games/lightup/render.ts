@@ -15,6 +15,7 @@ import {
   ERROR,
   ERROR_TEXT,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_EVIDENCE,
@@ -30,7 +31,13 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_NONE,
+  type WinTone,
+  winSlot,
+} from "../../engine/win-wave.ts";
 import type { LightupHint, LightupMistake } from "./index.ts";
 import {
   F_BLACK,
@@ -63,7 +70,8 @@ export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (pi
 /** The player's "no light here" cross. */
 export const COL_RULED_OUT = 11;
 export const COL_CELL = 12; // the surface of an open square no bulb lights
-/** The ground of an open square the completion flash is on. */
+/** The ground of an open square under the completion flash's body. The slot
+ * for its leading edge is {@link COL_FLASH_LEAD}. */
 export const COL_FLASH = 13;
 /** The line round a bulb. */
 export const COL_BULB_RIM = 14;
@@ -71,6 +79,8 @@ export const COL_BULB_RIM = 14;
 export const COL_HINT_CLUE = 15;
 /** A wrong clue's digit, on its badge. */
 export const COL_ERROR_TEXT = 16;
+/** The ground of an open square under the completion flash's leading edge. */
+export const COL_FLASH_LEAD = 17;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -78,6 +88,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_WALL] = wallFill(defaultBackground);
   // Pinned: a bulb *is* white with a black rim, in either scheme, and a clue
   // is that white on its wall.
@@ -122,7 +133,8 @@ const DF_LIGHT = 8;
 const DF_OVERLAP = 16;
 const DF_CURSOR = 32;
 const DF_NUMBERWRONG = 64;
-const DF_FLASH = 128;
+/** Bits 15–16: the tone of the completion flash on the square. */
+const DF_WIN_SHIFT = 15;
 const DF_IMPOSSIBLE = 256;
 /** Fork addition: this cell contradicts the unique solution (Check & Save). */
 const DF_WRONG = 512;
@@ -174,7 +186,7 @@ function tileFlags(
     }
   } else {
     // Only an open square: a wall never lights.
-    if (flash.win(sweepStep(x, y))) ret |= DF_FLASH;
+    ret |= flash.win(sweepStep(x, y)) << DF_WIN_SHIFT;
     if (lights > 0) ret |= DF_LIT;
     if (flags & F_LIGHT) {
       ret |= DF_LIGHT;
@@ -252,9 +264,10 @@ function tileRedraw(
     // COL_HINT_CELL, which keeps its premise (not lit: the shade is not
     // yellow); a *lit* one's premise is the yellow itself, so it keeps its
     // fill and takes a ring instead.
+    const tone = ((dsFlags >> DF_WIN_SHIFT) & 3) as WinTone;
     const fill =
-      dsFlags & DF_FLASH
-        ? COL_FLASH
+      tone !== WIN_NONE
+        ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
         : dsFlags & DF_HINT_AREA && !(dsFlags & DF_LIT)
           ? COL_HINT_CELL
           : dsFlags & DF_LIT

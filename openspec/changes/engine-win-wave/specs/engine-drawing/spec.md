@@ -24,15 +24,16 @@ synchronous paint that would race the timer.
 
 `Game.redraw` SHALL take a `Flash`. Its `time` SHALL be the seconds into a
 flash the game's `flashLength` asked for, and 0 otherwise, a win included. Its
-`win(position)` SHALL be true only during a win flash. Within one frame the
+`win(position)` SHALL answer with a tone, the highlight's leading edge or its
+body, only during a win flash, and with none otherwise. Within one frame the
 same position SHALL get the same answer however often it is asked, so a frame
 painted through a warm draw state equals the frame painted through a fresh one.
 
 #### Scenario: A death in a game that also has a win
 
 - **WHEN** a move that loses the game is drawn
-- **THEN** `time` advances through the game's own flash and `win` is false for
-  every position
+- **THEN** `time` advances through the game's own flash and `win` answers no
+  tone for every position
 
 #### Scenario: A game that lights nothing
 

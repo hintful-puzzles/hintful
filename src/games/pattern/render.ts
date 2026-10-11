@@ -15,6 +15,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_WHITEREF,
@@ -30,7 +31,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
 import type { PatternHint } from "./index.ts";
 import { lineHasError } from "./solver.ts";
@@ -68,8 +69,10 @@ export const COL_HINT_BLACKREF = 10;
 export const COL_HINT_WHITEREF = 11;
 /** The faint cross on a cell known to be empty. */
 export const COL_CLEAR_MARK = 12;
-/** The ground of a cell the win flash is on, whatever it holds. */
+/** The ground of a cell the win flash is on, whatever it holds: its body, and
+ * its leading edge. */
 export const COL_FLASH = 13;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -89,6 +92,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT_BLACKREF] = HINT_BLACKREF;
   out[COL_HINT_WHITEREF] = HINT_WHITEREF;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -151,7 +155,7 @@ const K_HINT_TARGET = 1 << 4; // a forced cell (COL_HINT highlight)
 const K_HINT_LINE = 1 << 5; // a cell of the reasoned line (hatched)
 const K_HINT_BLACKREF = 1 << 6; // a cited full cell (COL_HINT_BLACKREF outline)
 const K_HINT_WHITEREF = 1 << 7; // a cited empty cell (COL_HINT_WHITEREF outline)
-const K_LIT = 1 << 8; // the win flash's highlight is on the cell
+const K_WIN_SHIFT = 8; // the win flash's tone on the cell, in two bits
 
 function gridSquare(
   dr: GameDrawing,
@@ -162,7 +166,7 @@ function gridSquare(
   cur: boolean,
   mistake: boolean,
   hintBits: number,
-  lit: boolean,
+  tone: WinTone,
 ): void {
   const ts = ds.tileSize;
   const { w, h } = ds;
@@ -194,9 +198,10 @@ function gridSquare(
   // its surface and under its piece, so the line reads as one strip. A cited
   // cell keeps its own content (the premise) and gets an outline below,
   // beside the piece.
+  const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : null;
   if (val === GRID_EMPTY)
-    drawClearSquare(dr, surface, lit ? COL_FLASH : COL_CLEAR, COL_CLEAR_MARK, content);
-  else dr.drawRect(surface, lit ? COL_FLASH : COL_CELL);
+    drawClearSquare(dr, surface, lit ?? COL_CLEAR, COL_CLEAR_MARK, content);
+  else dr.drawRect(surface, lit ?? COL_CELL);
   if (hintBits & K_HINT_LINE) dr.drawHatch(surface, COL_HINT, hatchPeriod(ts));
   if (val === GRID_FULL) drawPiece(dr, content, SHADED_SHAPE, COL_FULL);
 
@@ -399,7 +404,7 @@ export function redraw(
       } else {
         val = grid[i];
       }
-      const lit = flash.win(sweepStep(x, y));
+      const tone = flash.win(sweepStep(x, y));
       const cur = x === cx && y === cy;
       const mistake = mistakeSet?.has(i) ?? false;
       let hintBits = 0;
@@ -412,10 +417,10 @@ export function redraw(
         (cur ? K_CURSOR : 0) |
         (mistake ? K_MISTAKE : 0) |
         hintBits |
-        (lit ? K_LIT : 0);
+        (tone << K_WIN_SHIFT);
       if (ds.visible[i] !== key) {
         ds.visible[i] = key;
-        gridSquare(dr, ds, y, x, val, cur, mistake, hintBits, lit);
+        gridSquare(dr, ds, y, x, val, cur, mistake, hintBits, tone);
       }
     }
   }

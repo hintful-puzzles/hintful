@@ -23,6 +23,7 @@ import {
   BORDER,
   COL_CORRECT,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_MISTAKE,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
@@ -73,9 +74,13 @@ describe("rect render scenarios", () => {
       return dr.ops;
     };
     // The cells whose ground is the flash color, each as its index.
+    // Lit is either tone of the highlight, and the flash shows both.
+    const tones = new Set<number>();
+    const isLit = (color: number) =>
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color).size > 0;
     const run = winFlashRun(paint, (ops) =>
       ops.flatMap((o) =>
-        o.op === "rect" && o.w === TS - 1 && o.h === TS - 1 && o.color === COL_FLASH
+        o.op === "rect" && o.w === TS - 1 && o.h === TS - 1 && isLit(o.color)
           ? [((o.y - 1 - BORDER) / TS) * P.w + (o.x - 1 - BORDER) / TS]
           : [],
       ),
@@ -83,6 +88,7 @@ describe("rect render scenarios", () => {
     expectWinFlashTravels(run, P.w * P.h, (i) =>
       sweepStep(i % P.w, Math.floor(i / P.w)),
     );
+    expect(tones.size).toBe(2);
   });
 
   it("mistake frame: a wrong wall shows the red overlay", () => {

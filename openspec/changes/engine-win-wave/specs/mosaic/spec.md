@@ -16,14 +16,14 @@ cell of its neighborhood unmarked.
 ### Requirement: Mosaic's win flash fills the ground of a cell
 
 The win flash SHALL sweep the board's cells from the bottom left to the top
-right. A lit cell's ground SHALL be filled with the flash color in place of
+right. A lit cell's ground SHALL be filled with a flash color in place of
 its own surface, a blank cell's clear surface included, and SHALL keep what it
 holds: its piece, its cross and its number.
 
 #### Scenario: A lit blank cell
 
 - **WHEN** the win flash's highlight is on a blank cell with no number
-- **THEN** the cell is filled with the flash color and still carries its
+- **THEN** the cell is filled with a flash color and still carries its
   faint cross
 
 ### Requirement: Mosaic draws a marked cell as a piece and a blank cell as the clear square

@@ -22,6 +22,7 @@ import {
   ERROR,
   ERROR_TEXT,
   FLASH,
+  FLASH_LEAD,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -35,7 +36,13 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_NONE,
+  type WinTone,
+  winSlot,
+} from "../../engine/win-wave.ts";
 import { findLiveErrors } from "./solver.ts";
 import {
   F_BLOCK,
@@ -70,6 +77,8 @@ export const COL_TEXT = 10; // a clue's number on an open cell
 export const COL_ERROR_TEXT = 11;
 /** The ground of an open cell the win flash is on. */
 export const COL_FLASH = 12;
+/** The ground of an open cell the win flash's leading edge is on. */
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -77,6 +86,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_TEXT] = INK;
   // A placed stick is a bar filling a fifth of its cell — a piece, not a glyph,
   // so the piece's color rather than the entry green a digit takes.
@@ -107,12 +117,13 @@ export function computeSize(p: SticksParams, ts: number): Size {
 // Cache flags above the tile bits (0..2: F_HOR | F_VER | F_BLOCK).
 const F_ERR = 1 << 8;
 const F_CUR = 1 << 9;
-const F_FLASH = 1 << 10;
 // The hint overlay is part of the diff key, or an otherwise-unchanged frame
 // never repaints when a hint is shown or dismissed (docs/games/rendering.md § "Overlay sidecars").
 const F_HINT_HOR = 1 << 11;
 const F_HINT_VER = 1 << 12;
 const F_HINT_EVID = 1 << 13;
+// The win flash's tone on the cell, two bits.
+const F_FLASH_SHIFT = 14;
 
 export interface SticksDrawState {
   started: boolean;
@@ -137,8 +148,8 @@ interface TileVisual {
   clue: number;
   error: boolean;
   cursor: boolean;
-  /** The win flash is on this square. */
-  lit: boolean;
+  /** The win flash's tone on this square. */
+  lit: WinTone;
   mistake: boolean;
   /** The hint's forced orientation for this square (`F_HOR`/`F_VER`/0). */
   hintLine: number;
@@ -169,7 +180,10 @@ function drawTile(
   // mark (`hint-mark.ts`). A white evidence square is not empty either: it
   // carries the clue the deduction counts with, and often a line.
   if (!black) {
-    dr.drawRect({ x: px, y: py, w: ts - 1, h: ts - 1 }, lit ? COL_FLASH : COL_CELL);
+    dr.drawRect(
+      { x: px, y: py, w: ts - 1, h: ts - 1 },
+      lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_CELL,
+    );
   }
 
   const bar = (bits: number, color: number): void => {
@@ -298,7 +312,7 @@ export function redraw(
       if (preview !== undefined) tile = preview;
 
       // A block is a wall, and the flash runs over the cells that hold lines.
-      const lit = !(tile & F_BLOCK) && flash.win(sweepStep(x, y));
+      const lit = tile & F_BLOCK ? WIN_NONE : flash.win(sweepStep(x, y));
       const cursor = ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y;
       // A previewed (uncommitted) cell suppresses its error highlight — the
       // committed grid is what the error check ran on.
@@ -310,7 +324,7 @@ export function redraw(
         (tile & 0x7) |
         (error ? F_ERR : 0) |
         (cursor ? F_CUR : 0) |
-        (lit ? F_FLASH : 0) |
+        (lit << F_FLASH_SHIFT) |
         (hintLine & F_HOR ? F_HINT_HOR : 0) |
         (hintLine & F_VER ? F_HINT_VER : 0) |
         (evidence ? F_HINT_EVID : 0);

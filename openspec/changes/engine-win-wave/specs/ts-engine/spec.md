@@ -45,10 +45,28 @@ animation has ended.
 - **WHEN** the winning move animates
 - **THEN** no element is lit until the tile has come to rest
 
+### Requirement: The highlight leads in one color and follows in another
+
+The highlight SHALL have two tones that travel together: a leading edge, a
+fixed and smaller share of it, and a body behind. An element SHALL show the
+lead as the highlight reaches it and the body after, on a route of any length.
+The lead SHALL be the `FLASH_LEAD` role and the body the `FLASH` role, so that
+an element resting in one of the two colors is seen under the other.
+
+#### Scenario: A field of the body's color
+
+- **WHEN** a board whose every element rests in the body's color is won
+- **THEN** the leading edge is seen crossing it
+
+#### Scenario: A route one step long
+
+- **WHEN** a board with a single element is won
+- **THEN** that element shows the lead's color and then the body's
+
 ### Requirement: A game gives each element a position, and the route is which position it gives
 
 A game SHALL ask `Flash.win(position)` for each element it can light and paint
-the element as lit on a true answer. The position SHALL be its step from the
+the element in the tone it answers. The position SHALL be its step from the
 start where the board holds a path, its step clockwise from the bottom-left
 corner where it holds a loop (`loopSteps`), its distance from the source where
 it holds a network fed from one, and `sweepStep` of its center otherwise: a
@@ -73,4 +91,5 @@ every element at once for a shorter time and SHALL NOT travel.
 #### Scenario: The same win under reduced motion
 
 - **WHEN** a board is won with reduced motion requested
-- **THEN** every frame of the flash lights either every element or none
+- **THEN** every frame of the flash lights either every element or none, the
+  whole board in the lead's color and then in the body's

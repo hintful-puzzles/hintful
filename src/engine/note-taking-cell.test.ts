@@ -42,11 +42,13 @@ import {
   HIGHLIGHT_NONE,
   HIGHLIGHT_NOTES,
   HIGHLIGHT_WIN,
+  HIGHLIGHT_WIN_LEAD,
   highlightFill,
   type NoteTakingUi,
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  winHighlight,
 } from "./note-taking-cell.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, newCursor, RIGHT_BUTTON } from "./pointer.ts";
 import {
@@ -57,6 +59,7 @@ import {
 } from "./testing/enrollment.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import type { Rect } from "./types.ts";
+import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./win-wave.ts";
 
 beforeAll(registerAllGames);
 
@@ -269,13 +272,15 @@ describe("the picture", () => {
   const WASH = 1;
   const BG = 0;
   const FLASH = 2;
+  const LEAD = 3;
   const paint = (rect: Rect, highlight: CellHighlight) => {
     const rec = new RecordingDrawing([
       [1, 1, 1],
       [0.5, 0.5, 0.5],
       [1, 1, 0],
+      [1, 1, 1],
     ]);
-    drawCellBackground(rec, rect, highlight, WASH, BG, FLASH);
+    drawCellBackground(rec, rect, highlight, WASH, BG, FLASH, LEAD);
     return rec.ops;
   };
 
@@ -319,10 +324,17 @@ describe("the picture", () => {
   });
 
   it("fills for entry and for the win, for the game that paints more than the rect", () => {
-    expect(highlightFill(HIGHLIGHT_ENTRY, WASH, BG, FLASH)).toBe(WASH);
-    expect(highlightFill(HIGHLIGHT_NOTES, WASH, BG, FLASH)).toBe(BG);
-    expect(highlightFill(HIGHLIGHT_NONE, WASH, BG, FLASH)).toBe(BG);
-    expect(highlightFill(HIGHLIGHT_WIN, WASH, BG, FLASH)).toBe(FLASH);
+    expect(highlightFill(HIGHLIGHT_ENTRY, WASH, BG, FLASH, LEAD)).toBe(WASH);
+    expect(highlightFill(HIGHLIGHT_NOTES, WASH, BG, FLASH, LEAD)).toBe(BG);
+    expect(highlightFill(HIGHLIGHT_NONE, WASH, BG, FLASH, LEAD)).toBe(BG);
+    expect(highlightFill(HIGHLIGHT_WIN, WASH, BG, FLASH, LEAD)).toBe(FLASH);
+    expect(highlightFill(HIGHLIGHT_WIN_LEAD, WASH, BG, FLASH, LEAD)).toBe(LEAD);
+  });
+
+  it("turns what the flash said of a cell into its highlight", () => {
+    expect(winHighlight(WIN_NONE)).toBeNull();
+    expect(winHighlight(WIN_BODY)).toBe(HIGHLIGHT_WIN);
+    expect(winHighlight(WIN_LEAD)).toBe(HIGHLIGHT_WIN_LEAD);
   });
 
   it("paints a cell under the win flash in the flash color, and no triangle", () => {

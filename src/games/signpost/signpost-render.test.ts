@@ -19,7 +19,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { signpostGame } from "./index.ts";
-import { BORDER, COL_FLASH } from "./render.ts";
+import { BORDER, COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
 import { solveState } from "./solver.ts";
 import {
   cloneState,
@@ -140,12 +140,22 @@ describe("Signpost win flash", () => {
   }
   /** The cells a frame fills in the flash color. */
   const lit = (frame: number[]): number[] =>
-    frame.flatMap((color, i) => (color === COL_FLASH ? [i] : []));
+    frame.flatMap((color, i) => (litSlot(color) ? [i] : []));
 
   it("lights the squares in the order of their numbers, givens among them", () => {
     expect(lit(surfaces(NO_FLASH))).toEqual([]);
     expect(state.flags.some((f) => f & FLAG_IMMUTABLE)).toBe(true);
     const run = winFlashRun(surfaces, lit, 60);
     expectWinFlashTravels(run, state.n, (i) => state.nums[i]);
+    expect(slotsSeen).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });
+
+/** The flash's slots the frames read so far were painted with: a lit element
+ * is one painted in either, the highlight's body or its leading edge. */
+const slotsSeen = new Set<number>();
+function litSlot(color: number): boolean {
+  if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+  slotsSeen.add(color);
+  return true;
+}

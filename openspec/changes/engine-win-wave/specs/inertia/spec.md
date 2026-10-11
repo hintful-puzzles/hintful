@@ -6,7 +6,7 @@ A move SHALL animate the ball sliding along its path, in a time proportional to
 the square root of the distance traveled, with each gem disappearing as the ball
 reaches it. Death SHALL blink the whole board red, a flash of the game's own
 through `flashLength`. The win flash SHALL sweep the squares diagonally, a lit
-square's floor filled with the flash color and keeping what it holds, and
+square's floor filled with a flash color and keeping what it holds, and
 SHALL never light a wall.
 
 #### Scenario: A gem stays until the ball reaches it
@@ -18,5 +18,5 @@ SHALL never light a wall.
 #### Scenario: A death paints nothing of a win
 
 - **WHEN** the ball lands on a mine and frames of the flash are drawn
-- **THEN** every square's floor blinks red together, and none takes the win's
-  flash color
+- **THEN** every square's floor blinks red together, and none takes either of
+  the win's flash colors

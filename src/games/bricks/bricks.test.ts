@@ -52,6 +52,7 @@ import {
   COL_CLEAR_MARK,
   COL_ERROR,
   COL_FLASH,
+  COL_FLASH_LEAD,
   offsets,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
@@ -403,14 +404,20 @@ describe("bricks completion and solve (through a real Midend)", () => {
     expect(bricksGame.status(done)).toBe("solved");
 
     // The cells filled in the flash's color, as their origins: a clue's cell
-    // lights like any other.
+    // lights like any other. Lit is either tone of the flash.
+    const tones = new Set<number>();
+    const isLit = (color: number): boolean => {
+      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+      tones.add(color);
+      return true;
+    };
     const palette = bricksGame.colors([0.9, 0.9, 0.9]);
     const paint = (flash: Flash): string[] => {
       const dr = new RecordingDrawing(palette);
       const ds = bricksGame.newDrawState(done, PREFERRED_TILE_SIZE);
       bricksGame.redraw(dr, ds, null, done, 1, bricksGame.newUi(done), 0, flash);
       return dr.ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+        o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : [],
       );
     };
     expect(paint(NO_FLASH)).toEqual([]);
@@ -424,6 +431,7 @@ describe("bricks completion and solve (through a real Midend)", () => {
       cells.length + clues,
       (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
     );
+    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 
   it("saveGame -> loadGame restores an equivalent game", () => {

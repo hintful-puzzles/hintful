@@ -56,6 +56,7 @@ import {
   COL_COLLISION_ERROR,
   COL_COLLISION_TEXT,
   COL_FLASH,
+  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_SHIP,
   COL_SHIP_ERROR,
@@ -910,7 +911,14 @@ describe("boats rendering", () => {
     expect(boatsGame.status(won)).toBe("solved");
 
     // The squares filled in the flash's color, as their origins, and the
-    // boats drawn. A given segment's square lights like any other.
+    // boats drawn. A given segment's square lights like any other. Lit is
+    // either tone of the flash.
+    const tones = new Set<number>();
+    const isLit = (color: number): boolean => {
+      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
+      tones.add(color);
+      return true;
+    };
     const palette = boatsGame.colors([1, 1, 1]);
     const paint = (flash: Flash) => {
       const rec = new RecordingDrawing(palette);
@@ -919,9 +927,7 @@ describe("boats rendering", () => {
       return rec.ops;
     };
     const lit = (ops: ReturnType<typeof paint>): string[] =>
-      ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
-      );
+      ops.flatMap((o) => (o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : []));
     const boats = (ops: ReturnType<typeof paint>): number =>
       ops.filter((o) => o.op === "circle" && o.fill === COL_SHIP).length;
     const settled = paint(NO_FLASH);
@@ -937,6 +943,7 @@ describe("boats rendering", () => {
       p.w * p.h,
       (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
     );
+    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
   it("highlights a mistake on a board that was already drawn", () => {
     // The paint-twice test (docs/games/rendering.md § "Prove the overlay

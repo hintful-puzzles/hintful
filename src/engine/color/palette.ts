@@ -51,6 +51,7 @@ import {
   TEAL_WASH_QUIET,
   TWO,
   TWO_WASH,
+  WHITE,
   YELLOW,
   YELLOW_FIELD,
   YELLOW_FIELD_MARK,
@@ -441,15 +442,25 @@ export function surfaceGrid(background: Color): Color {
 // --- the solved flash ---------------------------------------------------
 
 /**
- * **Solved** — the one color the win flash lights an element in, in every
+ * **Solved** — the color of the body of the win flash's highlight, in every
  * game: the ground of a cell, a tile, a region or a hub is filled with it and
  * keeps what it holds, and a line is drawn in it.
  *
- * The theme's yellow, which reads on ink and on every surface in both
- * schemes. A game has no lit look of its own: `engine/win-flash.test.ts` holds
- * every element a game lights to this color.
+ * The theme's yellow, which reads on ink and on nearly every surface in both
+ * schemes. Where it does not (a field of that yellow), {@link FLASH_LEAD}
+ * does. A game has no lit look of its own: `engine/win-flash.test.ts` holds
+ * every element a game lights to these two.
  */
 export const FLASH: Color = GOAL;
+
+/**
+ * **Solved, the leading edge** — the color of the front of the highlight, a
+ * glint running ahead of the yellow.
+ *
+ * White in both schemes, pinned: it is the one color the yellow is never
+ * mistaken for, so an element lost under one tone shows under the other.
+ */
+export const FLASH_LEAD: Color = WHITE;
 
 /**
  * **This clue is used up** — a row count, column count or clue number the board

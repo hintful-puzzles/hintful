@@ -23,6 +23,7 @@ import {
   DRAG_REMOVE,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -40,7 +41,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import type { Flash } from "../../engine/win-wave.ts";
+import { type Flash, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import { pieceOfOp } from "./hint.ts";
 import { LINE, PIECE, type Piece } from "./hint-text.ts";
 import { copyAndApplyDrag } from "./moves.ts";
@@ -111,6 +112,7 @@ export const COL_HINT_CELL = 14;
 export const COL_NOTRACK = 15;
 /** The bed under a square that carries track, whole piece or not. */
 export const COL_TRACK_BACKGROUND = 16;
+export const COL_FLASH_LEAD = 17;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -135,6 +137,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_DRAGON] = DRAG_ADD;
   out[COL_DRAGOFF] = DRAG_REMOVE;
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   out[COL_NOTRACK] = RULED_OUT;
@@ -148,6 +151,8 @@ const DS_NOTRACK = 1 << 10;
 const DS_FLASH = 1 << 11;
 const DS_CURSOR = 1 << 12;
 const DS_TRACK = 1 << 13;
+/** With {@link DS_FLASH}: the flash on this square is its leading edge. */
+const DS_FLASH_LEAD = 1 << 14;
 const DS_NSHIFT = 16; // R/U/L/D shift for no-track edge flags
 const DS_CSHIFT = 20; // R/U/L/D shift for cursor-on-edge
 
@@ -614,7 +619,14 @@ function drawSquare(
   }
 
   // Tracks.
-  const c = flags & DS_ERROR ? COL_ERROR : flags & DS_FLASH ? COL_FLASH : COL_TRACK;
+  const c =
+    flags & DS_ERROR
+      ? COL_ERROR
+      : flags & DS_FLASH
+        ? flags & DS_FLASH_LEAD
+          ? COL_FLASH_LEAD
+          : COL_FLASH
+        : COL_TRACK;
   const track = bestBits(flags, flagsDrag, c);
   drawTracksSpecific(dr, m, x, y, track.bits, track.col, COL_SLEEPER);
 
@@ -813,8 +825,9 @@ export function redraw(
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const i = y * w + x;
+      const tone = along !== null && along[i] >= 0 ? flash.win(along[i]) : WIN_NONE;
       const flashing =
-        along !== null && along[i] >= 0 && flash.win(along[i]) ? DS_FLASH : 0;
+        tone === WIN_NONE ? 0 : tone === WIN_LEAD ? DS_FLASH | DS_FLASH_LEAD : DS_FLASH;
       const f = s2dFlags(board, x, y, ui) | flashing;
       const fD = dragBoard ? s2dFlags(dragBoard, x, y, ui) : f;
       const hf = hintMarks[i];

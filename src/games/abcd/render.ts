@@ -23,6 +23,7 @@ import {
   cellSurface,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   GRID_MID,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -44,7 +45,7 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_WIN,
+  winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -85,7 +86,8 @@ export const COL_TEXT = 4;
 export const COL_GUESS = 5;
 export const COL_ERROR = 6;
 export const COL_PENCIL = 7;
-/** A cell the win flash is on. */
+/** The ground of a cell the win flash is on: its body, and (`COL_FLASH_LEAD`)
+ * its leading edge. */
 export const COL_FLASH = 8;
 /** The line between two cells, and the frame. The diagonal-mode corner crosses
  * are a rule and stay `COL_GRID`. */
@@ -102,6 +104,7 @@ export const COL_HINT = 12;
 /** The hint's evidence color: the outline of the squares a reason rests on. */
 export const COL_HINT_CELL = 13;
 export const COL_CELL = 14; // the surface of a cell the player fills
+export const COL_FLASH_LEAD = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const outer = defaultBackground;
@@ -116,6 +119,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(inner);
   out[COL_FLASH] = FLASH;
+  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   // A fill under the letter and its notes: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
@@ -153,9 +157,9 @@ export function computeSize(p: { w: number; h: number; n: number }, ts: number):
 
 // Cache-key bit layout for a cell's packed tile value.
 const K_LETTER = 0; // bits 0-3: letter + 1 (0 = empty)
-const K_HIGHLIGHT = 4; // bits 4-5: the cell's `CellHighlight`, the win flash's included
-const DF_ERR = 1 << 6; // this letter breaks an adjacency rule
-const K_PENCIL = 7; // bits 7+: the n-bit pencil-mark mask
+const K_HIGHLIGHT = 4; // bits 4-6: the cell's `CellHighlight`, the win flash's included
+const DF_ERR = 1 << 7; // this letter breaks an adjacency rule
+const K_PENCIL = 8; // bits 8+: the n-bit pencil-mark mask
 
 export interface AbcdDrawState {
   started: boolean;
@@ -366,10 +370,11 @@ function drawTile(
   drawCellBackground(
     dr,
     box,
-    ((fs >> K_HIGHLIGHT) & 3) as CellHighlight,
+    ((fs >> K_HIGHLIGHT) & 7) as CellHighlight,
     COL_CURSOR,
     COL_CELL,
     COL_FLASH,
+    COL_FLASH_LEAD,
   );
   ds.hint.drawHatch(dr, i, box, COL_HINT, ts);
 
@@ -542,7 +547,7 @@ export function redraw(
       const i = y * w + x;
       let fs = 0;
       fs |=
-        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_WIN : cellHighlight(ui, x, y)) <<
+        (winHighlight(flash.win(sweepStep(x, y))) ?? cellHighlight(ui, x, y)) <<
         K_HIGHLIGHT;
       if (adjErr[i]) fs |= DF_ERR;
 

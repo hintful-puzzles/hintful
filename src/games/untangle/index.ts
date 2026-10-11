@@ -26,6 +26,7 @@ import {
   CURSOR,
   ERROR,
   FLASH,
+  FLASH_LEAD,
   HELD,
   HINT_ACTION,
   INK,
@@ -57,6 +58,7 @@ import {
 } from "../../engine/pointer.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { WIN_NONE, type WinTone } from "../../engine/win-wave.ts";
 import { newUntangleDesc } from "./generator.ts";
 import {
   deduceUntangleHintPlan,
@@ -480,8 +482,8 @@ export const untangleGame: Game<
   colors: (defaultBackground: Color): Color[] => {
     const { background, lowlight } = mkhighlight(defaultBackground);
     // Index-for-index with the upstream COL_* enum (untangle.c:57) up to the
-    // flash, whose two colors (a gray and a white) fold into one: the color
-    // under a point, and of a line, the win flash is on.
+    // flash, whose two colors (a gray and a white) are the highlight's body:
+    // the fill of a point, and the color of a line, the win flash is on.
     return [
       lowlight, // 0 COL_SYSBACKGROUND (dead space, darker)
       background, // 1 COL_BACKGROUND (play area)
@@ -499,6 +501,7 @@ export const untangleGame: Game<
       TWO[0],
       FLASH, // 9 COL_FLASH
       HINT_ACTION, // 10 COL_HINT
+      FLASH_LEAD, // 11 COL_FLASH_LEAD
     ];
   },
   computeSize: (p: UntangleParams, tileSize: number): Size => {
@@ -508,7 +511,7 @@ export const untangleGame: Game<
   newDrawState: (s, tileSize): UntangleDrawState => ({
     started: false,
     tileSize,
-    lit: new Array<boolean>(s.n).fill(false),
+    lit: new Array<WinTone>(s.n).fill(WIN_NONE),
     dragPoint: -1,
     cursorPoint: -1,
     hintVertex: -1,
