@@ -8,6 +8,7 @@
  * states are the engine's, so a sentence says the color the piece is drawn in.
  */
 
+import { apartByPosition } from "../../engine/apart-by-position.ts";
 import {
   CELL,
   mark,
@@ -22,9 +23,7 @@ import { BLOCK } from "./hint-marks.ts";
 
 /** What a step marks: the number it reasons from, its value, and the squares
  * it decides. */
-export interface Marked {
-  clue: Point;
-  n: number;
+export interface Marked extends Numbered {
   cells: readonly Point[];
 }
 
@@ -32,22 +31,34 @@ export interface Marked {
  * the shaded squares the first still needs, and by how many that is more than
  * the other needs. */
 export interface Compared extends Marked {
-  other: { clue: Point; n: number };
+  other: Numbered;
   need: number;
   by: number;
 }
 
-const thisNumber = (m: Marked): Narration =>
+interface Numbered {
+  clue: Point;
+  n: number;
+}
+
+const thisNumber = (m: Numbered): Narration =>
   mark.this("outline", BLOCK, [m.clue], String(m.n));
-/** The second number of a pair. A value names it apart from the first, and
- * where the two are the same number it is "the other". */
-const otherNumber = (m: Compared): Narration =>
-  m.other.n === m.n
-    ? mark.as("outline", BLOCK, [m.other.clue], `the other ${m.n}`)
-    : mark.this("outline", BLOCK, [m.other.clue], String(m.other.n));
-/** The second number said again, in plain words. */
-const otherAgain = (m: Compared): string =>
-  m.other.n === m.n ? "the other" : `the ${m.other.n}`;
+
+/** A pair's two numbers, and the second said again in plain words. A value
+ * names each apart from the other, and two of one value are named by where
+ * they sit: "the upper 7" and "the lower 7". */
+function pairOf(m: Compared): { first: Narration; other: Narration; again: string } {
+  const name = apartByPosition<Numbered>(
+    [m, m.other],
+    (c) => c.clue,
+    (c) => String(c.n),
+  );
+  const ref = (c: Numbered): Narration =>
+    m.other.n === m.n
+      ? mark.as("outline", BLOCK, [c.clue], `the ${name(c)}`)
+      : thisNumber(c);
+  return { first: ref(m), other: ref(m.other), again: `the ${name(m.other)}` };
+}
 const theseSquares = (m: Marked): Narration =>
   mark.this("ring", CELL, m.cells, ["square", "squares"]);
 const shadeds = (n: number): string =>
@@ -79,8 +90,9 @@ export const say = {
    * of its empty squares are not the other's too, so each of them is shaded. */
   needsMore: (m: Compared): Sentence => {
     const fresh = m.need === m.n && m.need - m.by === m.other.n;
+    const { first, other, again } = pairOf(m);
     return so({
-      look: phrase`${thisNumber(m)} ${fresh ? "" : "still "}needs ${m.by} more ${shadeds(m.by).slice(2)} than ${otherNumber(m)}, and only ${m.by} of its empty squares ${m.by === 1 ? "is" : "are"} outside ${otherAgain(m)}'s block`,
+      look: phrase`${first} ${fresh ? "" : "still "}needs ${m.by} more ${shadeds(m.by).slice(2)} than ${other}, and only ${m.by} of its empty squares ${m.by === 1 ? "is" : "are"} outside ${again}'s block`,
       move: phrase`${theseSquares(m)} must be ${SHADED_NAME}`,
     });
   },
@@ -90,9 +102,10 @@ export const say = {
    * from those and the rest of its block is clear. */
   sameNeed: (m: Compared): Sentence => {
     const fresh = m.need === m.n && m.need === m.other.n;
+    const { first, other, again } = pairOf(m);
     return so({
-      look: phrase`${thisNumber(m)}'s empty squares are all in ${otherNumber(m)}'s block, and both ${fresh ? "" : "still "}need ${shadeds(m.need)}`,
-      follows: phrase`${otherAgain(m)} gets its ${m.need} there`,
+      look: phrase`${first}'s empty squares are all in ${other}'s block, and both ${fresh ? "" : "still "}need ${shadeds(m.need)}`,
+      follows: phrase`${again} gets its ${m.need} there`,
       move: phrase`${theseSquares(m)} must be ${UNSHADED_NAME}`,
     });
   },

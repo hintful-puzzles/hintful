@@ -51,6 +51,9 @@ differ only by the squares one of them counts and the other does not:
   the second's other squares clear: the second gets all it needs from
   the squares they share.
 
+Where the two are the same number, the hint names each by where it
+sits: the upper 7 and the lower 7, or the left 7 and the right 7.
+
 An Easy puzzle as the game deals it is finished one number at a time,
 and never needs a comparison. A Normal one needs comparisons, and they
 finish it. On an Unreasonable board there comes a point where comparing

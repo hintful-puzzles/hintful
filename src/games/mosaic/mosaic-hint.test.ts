@@ -9,6 +9,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type MosaicHint, mosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
@@ -51,6 +52,18 @@ const pinned = describeHintPins({
   },
 });
 
+/** The values of the numbers a frame circles, one per circle: a circle is
+ * round a number when the number's text is drawn at its center. */
+function circledNumbers(ops: readonly DrawOp[]): string[] {
+  const centers = new Set<string>();
+  for (const o of ops)
+    if (o.op === "circle" && o.fill === -1) centers.add(`${o.cx},${o.cy}`);
+  return [...centers].map((c) => {
+    const text = ops.find((o) => o.op === "text" && `${o.x},${o.y}` === c);
+    return text?.op === "text" ? text.text : "none";
+  });
+}
+
 describe("Mosaic's hint", () => {
   it("plans the whole board, every step agreeing with the solution", () => {
     const state = newState(P, desc);
@@ -88,6 +101,10 @@ describe("Mosaic's hint", () => {
       (o) => o.op === "rect" && o.color === COL_HINT_EVIDENCE,
     );
     expect(sides).toHaveLength(2 * (across + down));
+    // The number the sentence names is circled, so it is found without
+    // taking the middle of its block.
+    const said = /^This (\d)/.exec(hint?.explanation ?? "")?.[1];
+    expect(circledNumbers(recording.ops)).toEqual([said]);
     expect(recording.ops).toMatchSnapshot();
   });
 
@@ -147,7 +164,56 @@ describe("Mosaic's hint", () => {
       (o) => o.op === "rect" && o.color === COL_HINT_EVIDENCE,
     );
     expect(sides).toHaveLength(perimeter.size);
+    // Both numbers are circled, each the value the sentence gives it.
+    const said = [...(hint?.explanation ?? "").matchAll(/[Tt]h(?:is|e \w+) (\d)\b/g)];
+    expect(circledNumbers(recording.ops).sort()).toEqual(
+      said
+        .slice(0, 2)
+        .map((m) => m[1])
+        .sort(),
+    );
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("names two compared numbers of one value by where each sits", () => {
+    // "This 7" and "the other 7" over two circled 7s says which is which
+    // nowhere, so the pair is the upper and the lower, or the left and the
+    // right, and each word is true of the square it names.
+    let twins = 0;
+    const seen = new Set<string>();
+    for (let seed = 0; seed < 40; seed++) {
+      const state = newState(U, newDesc(U, randomNew(`mosaic-hint-${seed}`)).desc);
+      const res = mosaicHint(state);
+      if (!res.ok) throw new Error("no plan");
+      for (const step of res.steps) {
+        const numbers = stepMarks(step).of("outline", BLOCK);
+        const [first, other] = numbers;
+        if (!first || !other) continue;
+        const at = (p: { x: number; y: number }) =>
+          state.board.clues[p.y * U.width + p.x];
+        if (at(first) !== at(other)) {
+          expect(step.explanation).toMatch(/^This \d/);
+          continue;
+        }
+        twins++;
+        const [a, b] =
+          first.y !== other.y
+            ? first.y < other.y
+              ? ["upper", "lower"]
+              : ["lower", "upper"]
+            : first.x < other.x
+              ? ["left", "right"]
+              : ["right", "left"];
+        seen.add(a as string);
+        expect(step.explanation).toMatch(
+          new RegExp(`^The ${a} ${at(first)}\\b.* the ${b} ${at(other)}\\b`),
+        );
+        expect(step.explanation).not.toContain("other");
+      }
+    }
+    // Vacuity: the walk met twins, lying both ways.
+    expect(twins).toBeGreaterThan(5);
+    expect(seen.size).toBeGreaterThan(1);
   });
 
   it("on a Normal board plans the whole board, comparing numbers on the way", () => {

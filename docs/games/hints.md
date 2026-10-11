@@ -587,6 +587,52 @@ The same lesson, learned the hard way on the multi-link deductions:
   add concrete values, re-check every spatial word against the *general*
   firing — read the solver's loop bounds, don't assume locality.
 
+**Two squares of one value are named by where they sit.** A value is a name
+only while it is the one of its kind in the sentence. A step that reasons from
+two 7s and says "this 7" and "the other 7" has told the player nothing about
+which is which, however they are marked. `apartByPosition`
+([`engine/apart-by-position.ts`](../../src/engine/apart-by-position.ts)) gives
+each its words, "the upper 7" and "the lower 7", built over every number the
+one sentence names. Take the games that use it with
+`npm run refs -- src/engine/apart-by-position.ts apartByPosition`.
+
+#### A clue named with its area is marked on its own square
+
+**Where a sentence names a clue and the frame shows the clue's area, the
+clue's own square carries a mark too.** "This 4", over an outline round the
+nine squares the 4 counts, leaves the player to find the 4 by taking the
+outline's middle, and the same digit elsewhere inside the outline is as good a
+reading. Mosaic did this (seen in the app, 2026-10-11), and a step comparing
+two numbers made it worse: two blocks that overlap, with the ring taking the
+border they share, are not two shapes with two middles.
+
+The roles already say what each mark is. The clue is what the step reasons
+from, so it is an outline reference; the glyph is the game's
+(§ "Bind the words to the marks"). What the rule adds is where the glyph goes:
+
+- **On the clue's square, and inside it.** A clue's square can also be one the
+  step decides, and a ring owns the border. Mosaic circles the number, which
+  shows inside a ring and reads as "the number" where one more square outline
+  among the blocks' would read as "a square". Range redraws the digit in the
+  action color for the same reason, with its line of sight striped apart.
+- **Legible on every surface the clue is drawn on.** Mosaic's number can sit
+  on the shaded piece, where the evidence color differs in hue and hardly in
+  lightness, so the circle there takes the number's own ink. The shape is the
+  mark and the color is not.
+- **One reference, both glyphs.** The block and the circle are the one
+  reference to the number (`mosaic/hint-marks.ts`'s `BLOCK`), so the binding
+  check holds them together and no word has to name them apart.
+
+**Which references have the shape is read off the frame, since what a
+reference paints is its renderer's business.**
+`scripts/checks/hint-area-names.test.ts` (advisory, `npm run diff`, writes
+`metrics/hint-area-names.md`) narrows each one-unit outline or stripes
+reference out of its step and measures the paint that goes with it. Most rows
+name the area itself ("this row", "this cage") and are right as they stand.
+Read the rows whose words name a clue, a number or a square. It cannot tell a
+reference that paints the area and the square from one that paints the area
+alone, so a game that follows this rule stays a row.
+
 Two drafting gotchas from interpolating values: (a) **dodge the a/an trap** —
 `a ${n}` becomes "a 8"; write articleless ("one of the 6s", "two of the Ns")
 or branch on the digit. (b) **guard the equal-value branch** — when two groups

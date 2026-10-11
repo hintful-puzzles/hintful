@@ -25,6 +25,7 @@ export default defineConfig({
       "scripts/checks/color-collide.test.ts",
       "scripts/checks/contact-sheet.test.ts",
       "scripts/checks/hint-deixis.test.ts",
+      "scripts/checks/hint-area-names.test.ts",
       "scripts/checks/tier-walk.test.ts",
       "scripts/checks/deal-walk.test.ts",
     ],

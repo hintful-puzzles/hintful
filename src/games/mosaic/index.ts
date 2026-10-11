@@ -183,7 +183,7 @@ export const mosaicGame: Game<
     roles: {
       ring: `the squares the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
       outline:
-        "each number the step reasons from and its block: the number's own square and the eight around it.",
+        "the block of each number the step reasons from: the number's own square and the eight around it. The number itself is circled.",
     },
   },
 

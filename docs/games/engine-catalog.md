@@ -620,6 +620,17 @@ sending the gesture through `interpretMove` and judging what it made with
 one. A `key` must be one the game's keypad offers, the Marks key, or mark-all
 (`markAllPress`). See [`hints.md`](./hints.md) § "Every step is a gesture".
 
+### `apart-by-position.ts` — two things of one name, told apart
+
+`apartByPosition(things, at, name)`: how a sentence names each of the things
+it points at, when two would get the same words. A number is named by its
+value, so a step that reasons from two 3s gets "the upper 3" and "the lower
+3", or left and right where they are level, and an order from the top or the
+left for three or more. A thing whose name is its own keeps it. Build it over
+every such thing the one sentence names. Take the population with
+`npm run refs -- src/engine/apart-by-position.ts apartByPosition`. See
+[`hints.md`](./hints.md) § "Name a square by its value".
+
 ### `rival-judging.ts` — what a searched move's rivals let it say
 
 `judgeRivals(rivals, allowance, judge)`: the game judges each rival of the

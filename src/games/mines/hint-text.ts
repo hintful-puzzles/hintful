@@ -17,6 +17,7 @@
  * of one value by where they sit, so "the outlined 1" always means one square.
  */
 
+import { apartByPosition } from "../../engine/apart-by-position.ts";
 import {
   CELL,
   mark,
@@ -33,59 +34,20 @@ export interface Clue {
   readonly value: number;
 }
 
-const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
-
-/** The words that tell apart outlined numbers of one value: upper and lower,
- * or left and right, for two; their order from the top or the left for more. */
-function qualifiers(clues: readonly Clue[]): Map<string, string> {
-  const key = (c: Clue): string => `${c.at.x},${c.at.y}`;
-  const out = new Map<string, string>();
-  const byValue = new Map<number, Clue[]>();
-  for (const c of clues) {
-    const same = byValue.get(c.value) ?? [];
-    if (!same.some((s) => key(s) === key(c))) same.push(c);
-    byValue.set(c.value, same);
-  }
-  for (const same of byValue.values()) {
-    if (same.length < 2) continue;
-    const vertical = new Set(same.map((c) => c.at.y)).size === same.length;
-    const sorted = [...same].sort((p, q) =>
-      vertical ? p.at.y - q.at.y : p.at.x - q.at.x || p.at.y - q.at.y,
-    );
-    sorted.forEach((c, i) => {
-      if (same.length === 2)
-        out.set(
-          key(c),
-          vertical ? (i === 0 ? "upper" : "lower") : i === 0 ? "left" : "right",
-        );
-      else
-        out.set(
-          key(c),
-          `${ORDINALS[i] ?? `${i + 1}th`} from the ${vertical ? "top" : "left"}`,
-        );
-    });
-  }
-  return out;
-}
-
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
 const minesWord = (n: number): string => `${n} ${plural(n, "mine", "mines")}`;
 
 /** The references one step's sentence makes, built over every number it names
  * so that two of one value are told apart. */
 export class Words {
-  private readonly names: Map<string, string>;
+  private readonly label: (c: Clue) => string;
 
   constructor(clues: readonly Clue[]) {
-    this.names = qualifiers(clues);
-  }
-
-  private label(c: Clue): string {
-    const q = this.names.get(`${c.at.x},${c.at.y}`);
-    if (q === undefined) return `outlined ${c.value}`;
-    return q.includes(" from ")
-      ? `outlined ${c.value} ${q}`
-      : `${q} outlined ${c.value}`;
+    this.label = apartByPosition(
+      clues,
+      (c) => c.at,
+      (c) => `outlined ${c.value}`,
+    );
   }
 
   /** "the outlined 3", "the upper outlined 1". */

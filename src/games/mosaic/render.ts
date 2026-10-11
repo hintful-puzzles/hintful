@@ -121,6 +121,8 @@ const DRAWFLAG_MISTAKE = 0x4000;
 /** A hint mark's sides (`MarkOutlines.packed`) sit above every flag, so the
  * cache repaints a square whose mark moved. */
 const HINT_SIDES_SHIFT = 16;
+/** The number a hint step names, circled. Above the sides' eight bits. */
+const DRAWFLAG_HINT_NUMBER = 1 << 24;
 
 export interface MosaicDrawState {
   tileSize: number;
@@ -230,6 +232,20 @@ function drawCell(
     };
     drawMarkSides(dr, band, (sides >> 4) & MARK_ALL, COL_HINT_EVIDENCE);
     drawMarkSides(dr, band, sides & MARK_ALL, COL_HINT);
+    // The number a step names is circled, inside the square and clear of its
+    // edge, so it shows on a square the step also rings. On the piece the
+    // circle takes the number's own ink: the evidence color against the piece
+    // is a difference of hue with little of lightness.
+    if (cell & DRAWFLAG_HINT_NUMBER) {
+      const center = { x: startX + (ts >> 1) - 1, y: startY + (ts >> 1) - 1 };
+      for (let i = 0; i < band.inner; i++)
+        dr.drawCircle(
+          center,
+          ts * 0.33 - i,
+          -1,
+          shaded ? COL_TEXT_ON_PIECE : COL_HINT_EVIDENCE,
+        );
+    }
   }
 
   dr.unclip();
@@ -262,6 +278,7 @@ export function redraw(
   const rings = new MarkOutlines(marks.of("ring", CELL), [], {});
   const hintSides = (x: number, y: number): number =>
     blocks.reduce((sides, block) => sides | block.packed(x, y), rings.packed(x, y));
+  const named = new Set(marks.of("outline", BLOCK).map((c) => c.y * width + c.x));
 
   // The flash inverts marked/blank during its first and last thirds.
   const flashing =
@@ -284,6 +301,7 @@ export function redraw(
       }
       if (inBounds && mistakeSet.has(y * width + x)) cell |= DRAWFLAG_MISTAKE;
       if (inBounds) cell |= hintSides(x, y) << HINT_SIDES_SHIFT;
+      if (inBounds && named.has(y * width + x)) cell |= DRAWFLAG_HINT_NUMBER;
 
       const clueVal = inBounds ? board.clues[y * width + x] : -1;
 
