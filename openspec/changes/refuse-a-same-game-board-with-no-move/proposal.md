@@ -1,9 +1,18 @@
 # refuse-a-same-game-board-with-no-move
 
-**Status: a question for the owner, filed 2026-10-10 by the session that
-archived `prove-no-solution-cheaply-in-the-games-that-search`. What it says of
-the code was true that day; re-check before relying on it. A draft: it has no
-`tasks.md` until the owner answers.**
+**Status: answered by the owner 2026-10-11, and ready to start. Filed
+2026-10-10 by the session that archived
+`prove-no-solution-cheaply-in-the-games-that-search`. What it says of the code
+was true that day; re-check before relying on it. It has no `tasks.md` yet:
+the session that takes it up writes one.**
+
+## The owner's answer (2026-10-11)
+
+**Refuse the board, if there really is nothing that can be done on it.** The
+compatibility break is accepted on that condition, so the session that takes
+this up first confirms the condition in the code and the running app: that on
+such a board no input makes a move at all, in every ruleset the params allow.
+A board on which something can still be done keeps loading.
 
 ## Why
 
