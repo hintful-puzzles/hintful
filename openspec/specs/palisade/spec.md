@@ -607,13 +607,12 @@ it allows no walls.
 
 ### Requirement: Palisade regions are all one size, in the hint as on the board
 
-An undecided edge between two regions that together hold more squares than
-the region size SHALL be a wall; the step SHALL outline both regions and say
-the size they would make. A region short of that size with one undecided
-edge left SHALL grow through it; the step SHALL ring the edge as open, stripe
-the region and say how many of its squares it has. A region here is the
-squares the board's no-wall marks join, one square included, and a size a
-step says SHALL be one the board shows.
+An undecided edge between two regions too big to join SHALL be a wall; the
+step SHALL outline both and say the size they would make. A region short of
+its size whose undecided edges all lead into one other region SHALL grow
+through each; the step SHALL ring them as open, stripe the region and say how
+many squares it has. A region is the squares the board's no-wall marks join,
+one square included, and a size a step says SHALL be one the board shows.
 
 #### Scenario: Two regions too big to join
 
@@ -628,6 +627,21 @@ step says SHALL be one the board shows.
   marks, with one undecided edge between them and the rest of the board
 - **THEN** the step says "This region has 3 of its 5 cells and just one way
   left to grow, so this edge can't be a wall."
+
+#### Scenario: A region with several edges into one other
+
+- **WHEN** a region short of its size has several undecided edges and all of
+  them lead into the same other region
+- **THEN** one step rings them all and says the region has "only one region
+  left to grow into, so these edges can't be walls", and a leg follows for
+  each further edge
+
+#### Scenario: A region a later step speaks of
+
+- **WHEN** a plan is followed on a dealt board and a step stripes a region or
+  outlines two
+- **THEN** each is a whole region of the board's no-wall marks as they stand
+  when the step is reached
 
 ### Requirement: A Palisade wall does not stop at a corner
 

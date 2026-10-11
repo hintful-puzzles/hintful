@@ -51,7 +51,7 @@
 
 - [x] 4.1 The spec deltas, `docs/games/hints.md` § "A plan's copy is the
   board, no further on and no further back", validate.
-- [ ] 4.2 The gate, commit, push, archive.
+- [x] 4.2 The gate, commit, push, archive.
 
 ## For the owner
 
