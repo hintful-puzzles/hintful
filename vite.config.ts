@@ -27,6 +27,7 @@ import {
 } from "./vite-plugins/extra-pages.ts";
 import { withHintMarks } from "./vite-plugins/hint-marks.ts";
 import { withNotApplicable } from "./vite-plugins/not-applicable.ts";
+import { withNoteControls } from "./vite-plugins/note-controls.ts";
 import { withPair } from "./vite-plugins/pair.ts";
 import { withParameters } from "./vite-plugins/parameters.ts";
 import { precacheCoverage } from "./vite-plugins/precache-coverage.ts";
@@ -569,6 +570,7 @@ export default defineConfig(async ({ command, mode }) => {
             transforms: [
               (data) => ({ ...commonTemplateData, ...data }),
               withControls,
+              withNoteControls,
               withHintMarks,
               withParameters,
               withPair,

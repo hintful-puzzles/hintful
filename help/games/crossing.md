@@ -6,9 +6,9 @@ You're given a grid with several blocked squares, and a list of numbers. Your ob
 
 Crossing uses the same control scheme as Solo.
 
-Left-click to select a cell, then type a number on your keyboard to enter it. Press Backspace or Space to clear a cell.
+Left-click to select a cell, then type a number on your keyboard to enter it. Press Backspace, Space or 0 to clear a cell.
 
-Right-click a cell, then type a number to add a pencil mark. A cell's pencil marks are the digits it can still take, so **Check & save** flags a set of marks that leaves out the cell's answer, and the hint reads them the same way. A preference makes right-click switch on a *sticky* pencil mode instead, which stays on until you right-click again.
+Right-click a cell, then type a number to add a pencil mark. A cell's pencil marks are the digits it can still take, so **Check & save** flags a set of marks that leaves out the cell's answer, and the hint reads them the same way. {{sticky-pencil}}
 
 You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering numbers and entering pencil marks.
 

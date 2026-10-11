@@ -59,6 +59,20 @@ word.
   pair writes `{{pair:0}}` and `{{pair:1}}`, and the build says the palette's
   word (`TWO_NAMES`). Say the shape too ("a {{pair:0}} square"): a shape is
   what a player who cannot tell the hues goes by.
+- **A sentence several pages would each write is the engine's.** The Mark-all
+  press is `{{mark-all}}` and sticky pencil mode is `{{sticky-pencil}}`
+  (`vite-plugins/note-controls.ts`); the page adds after it only what is the
+  game's own, such as what a second press crosses out. Before writing a
+  sentence about a key, a preference's default or a shared control on a second
+  page, ask what declaration it could be rendered from: ten pages called
+  sticky pencil mode something "a preference switches on" after every game
+  had come to start with it on.
+- **Hand-written Controls prose is read against `interpretMove`, key by key**,
+  when the game's input changes. Nothing else holds it: a page can name a key
+  the game does not answer, and leave out one it does.
+- **A link to a site-level help page is its bare name** (`features#mark-all`),
+  and `../x` is the game `x`: every page is served from `/help/`, so a link
+  written to the source tree's shape renders and leads nowhere.
 - **The Hints section is checked for presence, not content.** It says what
   the hint's marks mean in that game, which are the player's own notation,
   and the words its sentences use for them

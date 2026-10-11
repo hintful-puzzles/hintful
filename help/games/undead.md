@@ -19,8 +19,9 @@ press Backspace.
 
 Right-click in a square and then type a letter to add or remove the
 monster as a pencil mark, indicating monsters that you think
-*might* go in that square. Press M to pencil in all three monsters on
-every empty square that has no marks yet, and A to switch between
+*might* go in that square. {{mark-all}} Here every pencil mark is all
+three monsters, and once every empty square has marks the press does
+nothing more. Press A to switch between
 pictures and letters (also a preference). A square's pencil marks are
 the monsters it can still hold, so **Check & save** flags a set of marks
 that leaves out the square's real monster.
@@ -32,9 +33,7 @@ same to each one you pass over.
 With the keyboard, the arrow keys move the selection around the grid.
 The keys 1, 2 and 3 work like G, V and Z, and E, 0, Space, Backspace and
 Delete all clear the square. Press Enter to switch between placing
-monsters and adding pencil marks. A preference makes right-click switch
-on a *sticky* pencil mode instead, which stays on until you right-click
-again.
+monsters and adding pencil marks. {{sticky-pencil}}
 
 ## Hints
 
@@ -61,7 +60,7 @@ monster left to place.
 Every hint is a deduction you could have made from what is on the board.
 On an **Unreasonable** board there may come a point where no deduction is
 left and the only way on is to try something and see whether it works —
-that is what [the difficulty name means](../features#difficulty). The hint
+that is what [the difficulty name means](features#difficulty). The hint
 says so rather than guessing for you: save your position, try it, and
 undo if it breaks.
 

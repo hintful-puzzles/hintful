@@ -15,11 +15,11 @@ ABCD uses the same control scheme as Solo, but with letters instead of numbers.
 
 Left-click to select a cell, then type a letter on your keyboard to enter it. Press Backspace or Space to clear a cell.
 
-Right-click a cell, then type a letter to add a pencil mark. Pencil marks can be used for any purpose. A preference makes right-click switch on a *sticky* pencil mode instead, which stays on until you right-click again.
+Right-click a cell, then type a letter to add a pencil mark. Pencil marks can be used for any purpose. {{sticky-pencil}}
 
 You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering letters and entering pencil marks.
 
-Press the 'M' key to fill every empty cell with all possible pencil marks.
+{{mark-all}} Once every empty cell has marks, the press crosses out a letter where a neighboring cell already holds it, and where its row or column already has as many as its clue asks for.
 
 ## Where the puzzle comes from
 

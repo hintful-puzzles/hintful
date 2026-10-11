@@ -67,11 +67,15 @@ export function candidateReadingPref<
   };
 }
 
+const STICKY_PENCIL_KW = "sticky-pencil-mode";
+const STICKY_PENCIL_NAME =
+  "Right-click toggles a sticky pencil mode (stays on until right-clicked again)";
+
 /** Right-click latches pencil mode instead of applying to one cell. */
 export function stickyPencilPref<Ui extends { pencilSticky: boolean }>(): GamePref<Ui> {
   return {
-    kw: "sticky-pencil-mode",
-    name: "Right-click toggles a sticky pencil mode (stays on until right-clicked again)",
+    kw: STICKY_PENCIL_KW,
+    name: STICKY_PENCIL_NAME,
     type: "boolean",
     get: (ui) => ui.pencilSticky,
     set: (ui, v) => {
@@ -79,6 +83,31 @@ export function stickyPencilPref<Ui extends { pencilSticky: boolean }>(): GamePr
     },
   };
 }
+
+/** Whether `game` offers the sticky pencil preference. */
+export function offersStickyPencil(game: {
+  readonly prefs?: readonly { readonly kw: string }[];
+}): boolean {
+  return game.prefs?.some((p) => p.kw === STICKY_PENCIL_KW) ?? false;
+}
+
+/** Where the help page of a game offering the preference writes
+ * {@link STICKY_PENCIL_HELP}. */
+export const STICKY_PENCIL_PLACEHOLDER = "{{sticky-pencil}}";
+
+/**
+ * What a help page says of the preference, in the one place it is said: a
+ * page that words it for itself can call the mode something "a preference
+ * switches on" while its game starts with it on.
+ *
+ * It says the preference is on to begin with, which is each game's `newUi`
+ * and not a fact of this file; `pencil-prefs.test.ts` holds every game
+ * offering the preference to it.
+ */
+export const STICKY_PENCIL_HELP =
+  "Pencil mode is *sticky*: once a right-click switches it on, it stays on " +
+  "wherever you click, until you right-click again. To have it last only until " +
+  `your next click, turn off **${STICKY_PENCIL_NAME}** in the preferences.`;
 
 /** Keep the mouse highlight on the cell after a pencil mark changes. */
 export function pencilKeepHighlightPref<

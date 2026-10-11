@@ -14,14 +14,14 @@ and then press Backspace.
 
 Right-click in a square and then type a number to add or remove the
 number as a pencil mark, indicating numbers that you think
-*might* go in that square. A preference makes right-click switch on a
-*sticky* pencil mode instead, which stays on until you right-click
-again.
+*might* go in that square. {{sticky-pencil}}
 
 You can also use the arrow keys to move the selected square around.
 Press Enter to toggle between entering numbers and entering pencil
-marks, and Backspace or Space to clear a square. Press the 'M' key to
-fill every empty square with all possible pencil marks.
+marks, and Backspace or Space to clear a square.
+
+{{mark-all}} Once every empty square has marks, the press crosses out
+of each the numbers already placed in its row and column.
 
 ## Hints
 

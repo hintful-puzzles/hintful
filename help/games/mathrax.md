@@ -13,13 +13,13 @@ The following clues can appear:
 
 Mathrax uses the same control scheme as Solo.
 
-Left-click to select a cell, then type a number on your keyboard to enter it. Press Backspace or Space to clear a cell.
+Left-click to select a cell, then type a number on your keyboard to enter it. Press Backspace, Space or 0 to clear a cell.
 
-Right-click a cell, then type a number to add a pencil mark. Pencil marks can be used for any purpose. A preference makes right-click switch on a *sticky* pencil mode instead, which stays on until you right-click again.
+Right-click a cell, then type a number to add a pencil mark. Pencil marks can be used for any purpose. {{sticky-pencil}}
 
 You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering numbers and entering pencil marks.
 
-Press the 'M' key to fill every empty cell with all possible pencil marks.
+{{mark-all}} Once every empty cell has marks, the press crosses out of each the numbers already placed in its row and column.
 
 ## Where the puzzle comes from
 

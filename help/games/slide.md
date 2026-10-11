@@ -14,7 +14,7 @@ You can also play entirely from the keyboard. The arrow keys move a red
 cursor around the board. Press Enter or Space on a block to pick it up: it
 lights up, and the arrow keys then walk it one square at a time through the
 spaces it can reach, refusing any step it cannot make. Press Enter or Space
-again to put it down, or Escape to hand it back to where you found it.
+again to put it down, or Escape, Backspace or Delete to hand it back to where you found it.
 
 However far a block travels in one journey, by drag or by keyboard, it
 counts as a single move — and sliding it straight back where it came from

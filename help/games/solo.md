@@ -18,16 +18,18 @@ and then press Backspace.
 
 Right-click in a square and then type a number to add or remove the
 number as a pencil mark, indicating numbers that you think
-*might* go in that square. A preference makes right-click switch on a
-*sticky* pencil mode instead, which stays on until you right-click
-again.
+*might* go in that square. {{sticky-pencil}}
 
 You can also use the arrow keys to move the selected square around.
 Press Enter to toggle between entering numbers and entering pencil
 marks, and Backspace or Space to clear a square. On grids of more than
-9 numbers, the numbers past 9 are typed as letters. Press the 'M' key
-to fill every empty square with all possible pencil marks (except on a
-grid large enough to use M as a number).
+9 numbers, the numbers past 9 are typed as letters.
+
+{{mark-all}} Once every empty square has marks, the press crosses out
+of each the numbers already placed in its row, column and block, and in
+its diagonal or cage where the board has them. On a grid of 22 numbers
+or more, M is also the letter for 22: it types that number while a
+square is selected, and fills the marks while none is.
 
 ## Hints
 

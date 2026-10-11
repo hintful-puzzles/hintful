@@ -46,7 +46,9 @@ solution marks the game as auto-solved.
 The hint refuses when there is nothing it can do from here: if the ball
 is dead, or has already left a gem where it can never be reached, it
 asks you to undo back to a position where it can, and circles the gems
-it can no longer reach.
+it can no longer reach. When every gem can still be reached but no route
+collects them all, it says that no solution can be found from this
+position, and circles nothing.
 
 **Check & save** asks the hint the same thing, and won't save a position
 it would ask you to undo from.

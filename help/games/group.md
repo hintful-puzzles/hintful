@@ -55,9 +55,12 @@ cosets).
 
 You can also use the arrow keys to move the selected square around.
 Press Enter to toggle between entering letters and entering pencil
-marks, and Backspace or Space to clear a square. Press Shift+M to fill
-every empty square with all possible pencil marks (a lowercase 'm' is a
-letter like any other, on grids large enough to use it).
+marks, and Backspace or Space to clear a square.
+
+{{mark-all}} In Group the key is a capital M, typed with Shift, because
+a small m is a letter like any other on grids large enough to use it.
+Once every empty square has marks, the press crosses out of each the
+letters already placed in its row and column.
 
 From the keyboard, Shift and Left or Right moves the selected square's
 column one place along the order, and Shift and Up or Down moves its row;

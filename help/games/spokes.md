@@ -50,7 +50,7 @@ outlined hubs to cross, or strand the outlined hubs in a group of their own.
 Every hint is a deduction you could have made from what is on the board.
 On an **Unreasonable** board there may come a point where no deduction is
 left and the only way on is to try something and see whether it works —
-that is what [the difficulty name means](../features#difficulty). The hint
+that is what [the difficulty name means](features#difficulty). The hint
 says so rather than guessing for you: save your position, try it, and
 undo if it breaks.
 

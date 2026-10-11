@@ -24,15 +24,16 @@ Left-click on a clue to mark it as done (gray it out). To unmark a
 clue as done, left-click on it again. Drag along the clues to do the
 same to each one you pass over.
 
-A preference makes right-click switch on a *sticky* pencil mode
-instead, which stays on until you right-click again.
+{{sticky-pencil}}
 
 You can also use the arrow keys to move the selected square around.
 Press Enter to toggle between entering heights and entering pencil
 marks, and Backspace or Space to clear a square. Shift or Ctrl with an
 arrow key marks the clue at that end of the selected square's row or
-column as done. Press the 'M' key to fill every empty square with all
-possible pencil marks.
+column as done.
+
+{{mark-all}} Once every empty square has marks, the press crosses out
+of each the heights already standing in its row and column.
 
 ## Hints
 

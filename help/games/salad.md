@@ -12,13 +12,13 @@ Salad uses a control scheme similar to Solo, but with the ability to mark empty 
 
 Left-click to select a cell, then type a letter or number on your keyboard to enter it. Press Backspace or Space to clear a cell.
 
-Press 'X' to mark a cell as empty, or press 'O' to mark a cell as "definitely not empty".
+Press 'X' to mark a cell as empty, or press 'O' to mark a cell as "definitely not empty"; '-' and '_' do what 'X' does, and '+' and '=' what 'O' does. 0 clears a cell as well. A letter and its number are the same key to the game, whichever the board shows: A is 1, B is 2, and so on.
 
-Right-click a cell, then type a letter or number to add a pencil mark. Pencil marks can be used for any purpose. The letter 'X' can also be used to indicate a cell that might be empty. A preference makes right-click switch on a *sticky* pencil mode instead, which stays on until you right-click again.
+Right-click a cell, then type a letter or number to add a pencil mark. Pencil marks can be used for any purpose. The letter 'X' can also be used to indicate a cell that might be empty. {{sticky-pencil}}
 
 You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering letters/numbers and entering pencil marks.
 
-Press the 'M' key to fill every empty cell with all possible pencil marks.
+{{mark-all}} Once every empty cell has marks, the press crosses out of each what is already placed in its row and column.
 
 ## Where the puzzles come from
 

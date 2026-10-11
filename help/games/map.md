@@ -25,12 +25,11 @@ below the grid makes ordinary drags — and the color buttons — leave
 those dots instead of coloring, until you press it again. A
 right-click without a drag does the same as the Marks button and
 selects the region, as it does in the other note-taking puzzles.
+{{sticky-pencil}}
 
-**Fill all pencil marks** (the M key, or **Fill marks** on a phone)
-dots all four colors into every blank region that has no dots yet.
-Pressed again, it removes from each blank region the dots of colors
-its neighbors already show. Regions you have dotted yourself are
-never refilled.
+{{mark-all}} Here that dots all four colors into every blank region
+that has no dots yet. Once every blank region has dots, the press
+removes from each the dots of colors its neighbors already show.
 
 A region's dots are the colors it might still be, so Check treats a
 set of dots that leaves out the region's real color as a mistake,
@@ -45,7 +44,7 @@ The keyboard can also be used. Move the cursor with the arrow keys,
 then press a color's digit to fill the region the cursor is on, or
 Backspace to empty it. Enter picks up the color under the cursor and
 a second Enter drops it where you have moved to; pressing Enter twice
-without moving erases instead. Space drops what you are carrying as a
+without moving erases instead, on a region you have colored. Space drops what you are carrying as a
 dot rather than as a color.
 
 ## Hints
@@ -82,7 +81,7 @@ The ideas it teaches, from the plainest up:
 Every hint is a deduction you could have made from what is on the board.
 On an **Unreasonable** board there may come a point where no deduction is
 left and the only way on is to try something and see whether it works —
-that is what [the difficulty name means](../features#difficulty). The
+that is what [the difficulty name means](features#difficulty). The
 hint says so rather than guessing for you: save your position, try it,
 and undo if it breaks.
 

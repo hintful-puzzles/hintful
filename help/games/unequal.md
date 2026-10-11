@@ -20,19 +20,20 @@ Right-click in a square and then type a number to add or remove the
 number as a pencil mark, indicating numbers that you think
 *might* go in that square.
 
-Left-click on a clue to mark it as done (gray it out). To unmark a
-clue as done, left-click on it again. Drag on through other clues to do
+Click on a clue, with either button, to mark it as done (gray it out).
+To unmark a clue as done, click on it again. Drag on through other clues to do
 the same to each one you pass over.
 
-A preference makes right-click switch on a *sticky* pencil mode
-instead, which stays on until you right-click again.
+{{sticky-pencil}}
 
 You can also use the arrow keys to move the selected square around.
 Press Enter to toggle between entering numbers and entering pencil
 marks, and Backspace or Space to clear a square. Shift or Ctrl with an
 arrow key marks the clue between the selected square and its neighbor
-that way as done. Press the 'M' key to fill every empty square with all
-possible pencil marks.
+that way as done.
+
+{{mark-all}} Once every empty square has marks, the press crosses out
+of each the numbers already placed in its row and column.
 
 ## Hints
 

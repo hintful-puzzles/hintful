@@ -723,6 +723,22 @@ export function adaptiveMarkAll<M, Mk>(
     : ({ type: "pencilStrike", marks } as unknown as M);
 }
 
+/** Where the help page of a game with `canMarkAll` writes
+ * {@link MARK_ALL_HELP}. */
+export const MARK_ALL_PLACEHOLDER = "{{mark-all}}";
+
+/**
+ * What a help page says of the Mark-all press: the additive rule above and no
+ * more, because that is all `mark-all.test.ts` holds every game to. What a
+ * second press crosses out is the game's own, and the section it links says
+ * that not every game crosses anything out.
+ */
+export const MARK_ALL_HELP =
+  "Press M, or **Fill marks** among the puzzle's controls, to write in every " +
+  "pencil mark wherever nothing is placed and no mark is written yet. Marks " +
+  "you have narrowed are left alone, and pressing again never starts over: " +
+  "see [Filling in all the pencil marks](features#mark-all).";
+
 /** The fill-all move in a game's own dialect. The default is the canonical
  * `{ type: "pencilAll" }` the Latin family's `Move` unions carry verbatim. */
 function populateMove<M>(adapter?: CandidateMoveAdapter<M>): M {

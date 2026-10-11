@@ -6,10 +6,14 @@ import { registerAllGames } from "../games/index.ts";
 import type { GamePref } from "./game.ts";
 import {
   autoPencilPref,
+  offersStickyPencil,
   pencilKeepHighlightPref,
+  STICKY_PENCIL_HELP,
   stickyPencilPref,
 } from "./pencil-prefs.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { dealt } from "./testing/dealt.ts";
+import type { AnyGame } from "./testing/hint-games.ts";
 
 beforeAll(registerAllGames);
 
@@ -76,5 +80,29 @@ describe("Every game offering a shared pencil preference uses the shared wording
     // the shared prefs are actually reached.
     expect(seen.get("sticky-pencil-mode") ?? 0).toBeGreaterThanOrEqual(10);
     expect(seen.get("pencil-keep-highlight") ?? 0).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe("Every game offering sticky pencil mode starts with it on", () => {
+  // `STICKY_PENCIL_HELP` tells the reader of every such game's help page to
+  // turn the preference off, so a game starting with it off makes its own
+  // page wrong.
+  const offering = registeredGameIds()
+    .sort()
+    .filter((id) => offersStickyPencil(getTsGame(id) ?? {}));
+
+  it("found the games that offer it", () => {
+    expect(offering.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it.each(offering)("%s", (id) => {
+    const game = getTsGame(id) as AnyGame;
+    const params = game.defaultParams();
+    const state = game.newState(params, dealt(game, params).desc);
+    const pref = (game.prefs as GamePref<unknown>[]).find(
+      (p) => p.kw === "sticky-pencil-mode",
+    );
+    expect(pref?.get(game.newUi(state))).toBe(true);
+    expect(STICKY_PENCIL_HELP).toContain(`turn off **${pref?.name}**`);
   });
 });

@@ -21,7 +21,7 @@ The reference panel lists every domino in the set, marking the ones you have pla
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it. It reasons from the dominoes you have placed and the lines you have drawn between numbers, so it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. A *spot*, in its words, is a pair of neighboring squares a domino could cover.
+**Hint** explains the next step rather than simply making it. It reasons from the dominoes you have placed, so it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. It does not rely on the lines you have drawn between numbers: it works each one out for itself, and leaves out a step whose line is already on the board. A *spot*, in its words, is a pair of neighboring squares a domino could cover.
 
 {{hint-marks}}
 
@@ -32,7 +32,7 @@ A few ideas are worth learning by name:
 * **A square with one neighbor left** must pair with it.
 * **A domino with one spot left** must go there.
 * **Each domino is used once.** A domino here that would force a second copy of itself somewhere else can't go here.
-* **Every remaining spot overlaps.** If every spot left for some domino covers the same square, that square is taken, and no other domino can go there.
+* **Every remaining spot overlaps.** If another domino's spot overlaps every spot left for some domino, putting a domino there would leave that one nowhere to go, so the spot is ruled out. The spots left need not share a square for one spot to overlap them all.
 * On harder boards, **odd regions**: a domino that would cut the empty squares into regions with an odd number of squares can't go there, because dominoes can't fill them.
 
 On an Unreasonable board the hint may stop and say that nothing further follows by deduction.

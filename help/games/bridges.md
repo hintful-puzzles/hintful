@@ -33,7 +33,7 @@ board that allows more than two bridges, the first drag marks the most less
 one, and each drag after lowers it by one more. A line that already carries
 bridges can be limited down to the number it has, but no further.
 
-To play with a keyboard, the arrow keys move the cursor to the nearest island in that direction, and typing an island's number jumps to the nearest island showing it (A to F for 10 to 15, and 0 for 16). Press Enter on an island and then an arrow key to draw a bridge that way; press Space to mark the island completed. Holding Control while pressing an arrow draws a bridge from the island under the cursor in one go, and holding Shift writes the at-most mark instead, just as the right mouse button does.
+To play with a keyboard, the arrow keys move the cursor to the nearest island in that direction, and typing an island's number jumps to the nearest island showing it (A to F for 10 to 15, and 0 for 16). Press Enter on an island and then an arrow key to draw a bridge that way; press Space to mark the island completed. Holding Control while pressing an arrow draws a bridge from the island under the cursor in one go, and holding Shift writes the at-most mark instead, just as the right mouse button does. Press G to show or hide where a bridge could still go, as the **Show possible bridge locations** preference does.
 
 ## Hints
 

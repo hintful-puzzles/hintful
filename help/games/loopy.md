@@ -70,8 +70,9 @@ From the keyboard, in notes mode:
 - **Enter** notes the corner next to the edge your cursor has chosen, which is
   outlined in green so you can see which one, and **Backspace** clears it.
 - **Space** pins the chosen edge; walk to another edge and press **Space**
-  again to note the pair, and keep pressing on a pair to cycle it.
-- **Escape** lets go of a pinned edge.
+  again to note the pair. That lets go of the pin, so to cycle the pair
+  on, pin one of its edges and press **Space** on the other again.
+- **Escape** lets go of a pinned edge, and so does **Space** on it.
 
 ## Checking your lines
 

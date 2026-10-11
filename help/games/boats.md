@@ -14,7 +14,7 @@ At the bottom of the puzzle is a list of every boat that must be placed in the g
 
 Unknown boat segments are represented by a small rectangle, and will automatically change into the correct shape when the surrounding cells are filled in.
 
-Drag along a row or column to fill every square it passes over the way the first one changed. Hold Ctrl while moving the cursor to place boat segments on the empty squares it passes over, Shift to place water, or both to empty them.
+Drag along a row or column to fill every square it passes over the way the first one changed. A drag that turns its first square to water does so to every square it passes that is not given, whatever each one held. Hold Ctrl while moving the cursor to place boat segments on the empty squares it passes over, Shift to place water, or both to empty them.
 
 ## Where the puzzle comes from
 

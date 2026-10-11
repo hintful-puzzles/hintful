@@ -17,7 +17,7 @@ and drag to cross every unmarked edge you pass over.
 
 The keyboard can also be used. The arrow keys move a cursor. Press
 Enter to start drawing, move the cursor along the path you want, and
-press Enter again to draw or undraw it; Space or Escape abandons the
+press Enter again to draw or undraw it; Space, Escape, Backspace or Delete abandons the
 path instead. Holding Ctrl while pressing an arrow key draws or
 undraws the line in that direction and moves along it, and holding
 Shift marks or unmarks a cross on that edge.

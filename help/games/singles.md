@@ -12,6 +12,9 @@ Cover some of the squares with a {{pair:0}} square, in such a way that:
 
 {{controls}}
 
+The cursor wraps: an arrow key pressed at an edge of the grid carries it
+to the opposite edge.
+
 Either button, or either key, clears a square that is already covered
 or circled.
 

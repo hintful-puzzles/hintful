@@ -36,6 +36,7 @@ A few ideas are worth learning by name:
   always covers the cells in the middle of its range, so they must be
   {{pair:0}}. A run with nowhere to slide covers all of them.
 * **Out of reach.** A cell no run can reach in its line must be clear.
+  A line with no clues has no runs, so all of it is clear.
 * **Every fit agrees.** Try every way a line's runs can fit around what
   is already marked: a cell that comes out the same in all of them is
   settled.

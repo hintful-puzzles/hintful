@@ -18,11 +18,16 @@
 
 import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
+import { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "./engine/candidate-hint.ts";
 import { TWO_NAMES } from "./engine/color/colors.ts";
 import { difficultyChoiceItem, difficultyTiers } from "./engine/difficulty.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
 import { MODIFIERS_PLACEHOLDER, modifiersOf } from "./engine/modifier.ts";
 import { expandChoices, PARAMETERS_PLACEHOLDER } from "./engine/param-help.ts";
+import {
+  offersStickyPencil,
+  STICKY_PENCIL_PLACEHOLDER,
+} from "./engine/pencil-prefs.ts";
 import { expandPair } from "./engine/piece.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
 import { RULESETS_PLACEHOLDER, rulesetField } from "./engine/ruleset.ts";
@@ -200,6 +205,18 @@ describe("every game's page has the one skeleton", () => {
     expect(pairPages).toBeGreaterThanOrEqual(1);
   });
 
+  // Every page is served from `/help/`, whatever directory its source is in,
+  // so from a game's page `../x` is the game `x` and a site-level help page is
+  // its bare name. A link written to the source tree's shape (`../features`)
+  // renders and leads nowhere.
+  const linked = [MARK_ALL_HELP];
+  it.each(puzzleIds)("%s: a link out of the help names a game", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    for (const source of [page, ...linked])
+      for (const [, target] of source.matchAll(/\]\(\.\.\/([^)#]*)/g))
+        expect(puzzleIds, `help/games/${id}.md links ../${target}`).toContain(target);
+  });
+
   // A game declaring `targetVerbs` has its Controls paragraph generated
   // (`vite-plugins/controls.ts`), inside its Controls section, and no other page
   // carries the placeholder. The build refuses both mismatches too.
@@ -211,6 +228,35 @@ describe("every game's page has the one skeleton", () => {
       declares,
     );
     expect(page.split(CONTROLS_PLACEHOLDER).length - 1).toBe(declares ? 1 : 0);
+  });
+
+  // The Mark-all press and the sticky pencil preference are each described by
+  // one generated sentence (`vite-plugins/note-controls.ts`), in the Controls
+  // section of a game that has the thing and on no other page.
+  const noteSentences = [
+    {
+      placeholder: MARK_ALL_PLACEHOLDER,
+      owed: (id: string) => getTsGame(id)?.canMarkAll === true,
+    },
+    {
+      placeholder: STICKY_PENCIL_PLACEHOLDER,
+      owed: (id: string) => offersStickyPencil(getTsGame(id) ?? {}),
+    },
+  ];
+  let noteSentencePages = 0;
+  it.each(puzzleIds)("%s: carries each note-taking sentence iff it is owed", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const controls = sectionBody(page, "Controls");
+    for (const { placeholder, owed } of noteSentences) {
+      const where = `help/games/${id}.md, ${placeholder}`;
+      expect(controls.includes(placeholder), where).toBe(owed(id));
+      expect(page.split(placeholder).length - 1, where).toBe(owed(id) ? 1 : 0);
+      if (owed(id)) noteSentencePages++;
+    }
+  });
+
+  itOverWholeSweep("is not vacuous — some page owes a note-taking sentence", () => {
+    expect(noteSentencePages).toBeGreaterThanOrEqual(2);
   });
 
   // The build refuses a page without it too; this says so before a ten-minute
