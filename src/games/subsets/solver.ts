@@ -423,21 +423,26 @@ export function subsetsSolveGame(
  * highlights — every set-value fully placed in more than one cell (each
  * offending cell flagged), and every edge whose horseshoe or
  * missing-horseshoe relation two decided cells violate — a rule-based check
- * matching the C's live `COL_ERROR` verdicts — and every rule-out of the set
- * the solution puts in that cell, which only the solution can judge. The hint
- * reads the rule-outs as facts, so this is what makes that sound.
+ * matching the C's live `COL_ERROR` verdicts — and what only the solution
+ * can judge: every letter marked or crossed out against it, and every
+ * rule-out of the set it puts in that cell. A wrong letter need break no
+ * rule, and the hint reads letters and rule-outs alike as facts, so this is
+ * what makes that sound.
  */
 export function findMistakes(state: SubsetsState): readonly SubsetsMistake[] {
-  const { w, h } = state;
+  const { w, h, n } = state;
   const mistakes: SubsetsMistake[] = [];
-  if (state.ruledOut.some((r) => r !== 0)) {
-    const { solved, result } = solveCopy(state);
-    if (result === "complete") {
-      for (let i = 0; i < w * h; i++) {
-        const value = solved.known[i];
-        if (state.ruledOut[i] & (1 << value))
-          mistakes.push({ kind: "ruled", pos: i, value });
-      }
+  // The solver resets what the player marked and derives it again.
+  const { solved, result } = solveCopy(state);
+  if (result === "complete") {
+    for (let i = 0; i < w * h; i++) {
+      const value = solved.known[i];
+      const decided = state.known[i] | (ALL_BITS(n) & ~state.mask[i]);
+      const wrong = (state.known[i] ^ value) & decided;
+      for (let bit = 0; bit < n; bit++)
+        if (wrong & (1 << bit)) mistakes.push({ kind: "letter", pos: i, bit });
+      if (state.ruledOut[i] & (1 << value))
+        mistakes.push({ kind: "ruled", pos: i, value });
     }
   }
 

@@ -82,7 +82,6 @@ import {
   subsetsValidate,
 } from "./solver.ts";
 import {
-  ALL_BITS,
   CELL_HEIGHT,
   CELL_WIDTH,
   cloneState,
@@ -596,20 +595,6 @@ function stepsForFiring(board: SubsetsState, d: SubsetsDeduction): Step[] {
 }
 
 function hint(state: SubsetsState): HintResult<SubsetsMove, unknown, SubsetsRung> {
-  // A mark can be wrong without yet breaking a local rule (a letter the unique
-  // solution excludes). The solution is derivable from the givens, so compare
-  // and refuse honestly rather than hint on into a doomed position.
-  const { solved, result } = solveCopy(state);
-  if (result === "complete") {
-    for (let i = 0; i < state.w * state.h; i++) {
-      // `solved` reset non-givens and re-derived them; every letter the player
-      // has decided (marked or cleared) must agree with the solution.
-      const decided = state.known[i] | (ALL_BITS(state.n) & ~state.mask[i]);
-      if ((state.known[i] ^ solved.known[i]) & decided)
-        return { ok: false, error: CONTRADICTION_UNLOCALIZED };
-    }
-  }
-
   const plan = deduceHintPlan(state);
   if (plan.status === "invalid") return { ok: false, error: CONTRADICTION_UNLOCALIZED };
   if (plan.deductions.length === 0) {

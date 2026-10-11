@@ -382,6 +382,39 @@ describe("Mines hint: a board that needs a guess", () => {
   });
 });
 
+describe("Mines hint: a board its first square wins", () => {
+  // One mine on a 9x9, which the Custom dialog allows: the flood from most
+  // first squares opens everything but the mine.
+  const won = () => {
+    for (let k = 0; k < 20; k++) {
+      const seed = `one-mine-${k}`;
+      const state = begun(fresh(9, 9, 1, seed), 4, 4);
+      if (minesGame.status(state) === "solved") return dealt(9, 9, 1, seed, 4, 4);
+    }
+    throw new Error("no board of twenty was won by its first square");
+  };
+
+  it("opens again from its game ID", () => {
+    const { desc } = decodeSave(won().saveGame());
+    const state = minesGame.newState(params(9, 9, 1), desc);
+    expect(minesGame.status(state)).toBe("solved");
+    expect(minesGame.finishesByDeduction?.(state)).toBe(true);
+    expect(new Midend(minesGame).newGameFromId(`9x9n1:${desc}`)).toBeNull();
+  });
+
+  it("is restored from its save", () => {
+    const back = new Midend(minesGame);
+    expect(back.loadGame(won().saveGame())).toBeNull();
+    expect(back.formatAsText()).not.toContain("?");
+  });
+
+  it("opens from a layout typed by hand", () => {
+    expect(
+      new Midend(minesGame).newGameFromId("9x9n10:8,8,u800000000000000000000"),
+    ).toBeNull();
+  });
+});
+
 describe("Mines hint: render (tier 2.5)", () => {
   it("rings what a two-number step decides, outlines the numbers and stripes the shared squares", () => {
     const found = renderPinnedHint(minesGame, pinned("twoNumbers"));

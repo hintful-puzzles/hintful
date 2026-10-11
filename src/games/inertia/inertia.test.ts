@@ -15,6 +15,7 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
@@ -32,7 +33,7 @@ import {
   COL_MINE,
   COL_PLAYER,
 } from "./render.ts";
-import { findGemCandidates, solveRoute } from "./solver.ts";
+import { findGemCandidates, solveRoute, unreachableGems } from "./solver.ts";
 import {
   BLANK,
   type Board,
@@ -546,6 +547,38 @@ describe("inertia generator", () => {
       expect(state.dead).toBe(false);
       expect(inertiaGame.status(state)).toBe("solved");
     }
+  });
+
+  // The game ends on the last gem, so the route need not come home from it.
+  it("ends the route on a gem there is no way back from", () => {
+    const boards: [{ w: number; h: number }, string][] = [
+      [{ w: 4, h: 3 }, "bmbmSbbbbbwg"], // one gem, in a pocket
+      [{ w: 4, h: 4 }, "bmbmSbbbbbwgbbwg"], // two, one slide taking both
+    ];
+    for (const [p, desc] of boards) {
+      let state: InertiaState = newState(p, desc);
+      const result = solveRoute(state);
+      expect(result.ok, desc).toBe(true);
+      if (!result.ok) continue;
+      for (const dir of result.route) state = play(state, dir);
+      expect(state.dead, desc).toBe(false);
+      expect(inertiaGame.status(state), desc).toBe("solved");
+    }
+  });
+
+  it("finds no route for a dead ball, whose square has slides out of it", () => {
+    // North of the start is a mine, and south of it a gem.
+    const state = play(newState({ w: 1, h: 3 }, "mSg"), 0);
+    expect(state.dead).toBe(true);
+    expect(solveRoute(state)).toEqual({ ok: false, error: NO_SOLUTION_FROM_HERE });
+  });
+
+  it("still refuses two gems in pockets of their own", () => {
+    // One in each bottom corner, and the only slide out of either corner runs
+    // onto a mine.
+    const state = newState({ w: 7, h: 3 }, "mbmbmbmbbbSbbbgwbbbwg");
+    expect(unreachableGems(state)).toEqual([]);
+    expect(solveRoute(state)).toEqual({ ok: false, error: NO_SOLUTION_FROM_HERE });
   });
 
   it("places every gem on a square that is on some round trip from the start", () => {

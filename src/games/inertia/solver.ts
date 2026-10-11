@@ -256,6 +256,18 @@ class MoveGraph {
     return this.board.cell(this.squareOf(v)) === GEM;
   }
 
+  /** The vertices from `v` to where the ball next stops, `v` left out: empty
+   * for a vertex at rest, and null where the slide through `v` ends on a mine. */
+  slideOut(v: number): number[] | null {
+    const path: number[] = [];
+    while (!this.isAtRest(v)) {
+      if (this.out[v].length === 0) return null;
+      [v] = this.out[v];
+      path.push(v);
+    }
+    return path;
+  }
+
   /** Distance from the nearest seed to every vertex; -1 where unreachable. */
   distancesFrom(seeds: Iterable<number>): Int32Array {
     return this.search(seeds, this.out);
@@ -350,6 +362,9 @@ export function solveRoute(state: InertiaState): RouteResult {
   const { board } = state;
   const gems = board.gemSquares();
   if (gems.length === 0) return { ok: false, error: ALREADY_SOLVED };
+  // A dead ball makes no move, and the square it lies on has slides out of
+  // it like any other.
+  if (state.dead) return { ok: false, error: NO_SOLUTION_FROM_HERE };
 
   const graph = new MoveGraph(board, state.px, state.py);
   let best: number[] | null = null;
@@ -402,7 +417,8 @@ type Reach = (typeof REACH_ORDERS)[number];
  * A walk from the ball's position passing over every gem, grown one gem at a
  * time: take the gem the tour can most cheaply reach and get back from (or the
  * one it can least cheaply, per `reach`), and splice a detour to it into the
- * tour. Null if some gem cannot be worked in at all.
+ * tour. The gems with no way back are left for a last leg that ends on them
+ * (`endOnTheRest`). Null if some gem cannot be worked in at all.
  */
 function growTour(
   g: MoveGraph,
@@ -432,16 +448,54 @@ function growTour(
         target = v;
       }
     }
-    if (target < 0) return null; // a gem no move can reach, or come back from
+    // What is left is a gem no move can reach, or one there is no way back from.
+    if (target < 0) break;
 
     const grown = spliceDetour(g, tour, target);
-    if (!grown) return null;
+    if (!grown) break;
     tour = grown;
 
     for (const v of tour) uncollected.delete(g.squareOf(v));
   }
 
-  return tour;
+  return uncollected.size === 0 ? tour : endOnTheRest(g, tour, uncollected);
+}
+
+/**
+ * The tour with a last leg that does not come home, passing over every gem
+ * still `uncollected`; null if no such leg is found.
+ *
+ * The game ends on the last gem, so a gem with no way back can still be the
+ * one the route ends on: one in a pocket the ball cannot leave, or the far end
+ * of a slide that picks up others on its way. The tour comes home before the
+ * leg sets off, which `shortenTour` then cuts to the shortest way there.
+ */
+function endOnTheRest(
+  g: MoveGraph,
+  tour: number[],
+  uncollected: Set<number>,
+): number[] | null {
+  const walk = [...tour];
+  while (uncollected.size > 0) {
+    const fromEnd = g.distancesFrom([walk[walk.length - 1]]);
+    // The nearest of them the ball can pass over and come to rest after: a
+    // slide that takes the last gem and runs on to a mine loses the game.
+    let target = -1;
+    let rest: number[] = [];
+    for (let v = 0; v < g.size; v++) {
+      if (!uncollected.has(g.squareOf(v)) || fromEnd[v] < 0) continue;
+      if (target >= 0 && fromEnd[v] >= fromEnd[target]) continue;
+      const out = g.slideOut(v);
+      if (out === null) continue;
+      target = v;
+      rest = out;
+    }
+    if (target < 0) return null;
+    const leg = [...g.pathTo(target, fromEnd).slice(1), ...rest];
+    walk.push(...leg);
+    for (const v of leg) uncollected.delete(g.squareOf(v));
+  }
+  return walk;
 }
 
 /**

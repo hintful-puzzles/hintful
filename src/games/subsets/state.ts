@@ -141,10 +141,12 @@ export interface SubsetsUi {
 /** A Check & Save mistake: a set-value placed in more than one decided cell,
  * an edge whose horseshoe / missing-horseshoe relation two decided cells
  * violate (`dir` indexes {@link ADJTHAN} on the cell `pos` it was flagged on),
- * or a set-value ruled out of the cell the solution puts it in. */
+ * a letter slot marked or crossed out against the solution, or a set-value
+ * ruled out of the cell the solution puts it in. */
 export type SubsetsMistake =
   | { kind: "cell"; pos: number }
   | { kind: "edge"; pos: number; dir: number }
+  | { kind: "letter"; pos: number; bit: number }
   | { kind: "ruled"; pos: number; value: number };
 
 // --- params -----------------------------------------------------------------

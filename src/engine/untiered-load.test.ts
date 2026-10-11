@@ -18,11 +18,13 @@ import { hintFinishes, nothingToDeduce } from "./hint-finishes.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
 import { _resetRegistry, registerGame } from "./registry.ts";
 import { stripComments } from "./testing/code-lines.ts";
+import { dealt } from "./testing/dealt.ts";
 import {
   membersNotMentioning,
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,
 } from "./testing/enrollment.ts";
+import { gatePresets } from "./testing/hint-games.ts";
 
 const UNTIERED = REGISTERED_GAMES.filter(([, game]) => game.difficulty === undefined);
 
@@ -102,6 +104,26 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
       expect(loadVerdict(game, params, desc), `${id} refuses ${gameId}`).toBe(
         DESC_NOT_DEDUCIBLE,
       );
+    }
+  });
+
+  // A hint has no step to give on a won board, and a test of a game's own
+  // that reads that as deduction run out refuses a board with nothing left
+  // to do: its game ID would not open again, nor its save.
+  it("says yes of a board already won", () => {
+    const deducing = UNTIERED.filter(
+      ([, game]) => game.finishesByDeduction !== nothingToDeduce,
+    );
+    expect(deducing.length).toBeGreaterThanOrEqual(1);
+    for (const [id, game] of deducing) {
+      const params = gatePresets(id, game)[0].params;
+      let board = game.newState(params, dealt(game, params).desc);
+      while (game.status(board) !== "solved") {
+        const plan = game.hint?.(board);
+        if (!plan?.ok) throw new Error(`${id}: its hint did not finish a dealt board`);
+        for (const step of plan.steps) board = game.executeMove(board, step.move);
+      }
+      expect(game.finishesByDeduction?.(board), id).toBe(true);
     }
   });
 

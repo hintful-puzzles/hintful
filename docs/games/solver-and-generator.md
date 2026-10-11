@@ -398,7 +398,11 @@ game's code: it is given exactly by the games whose hint cannot end in
 `DEDUCTION_EXHAUSTED`. Where the game deduces and still has no tiers, a test
 of its own, and Mines is the one such game: its answer is hidden, so a board
 its deductions do not finish has several layouts that fit what is showing and
-no search proves it has one. Every other deductive game has tiers, at the
+no search proves it has one. **That test is `hintFinishes`, never a walk of
+the game's own**: a hint has no step to give on a won board, and a walk that
+reads its refusal there as deduction run out refuses the game ID and the save
+of a board with nothing left to do (Mines did, on a board its first click
+won). Every other deductive game has tiers, at the
 least Easy and Unreasonable (§ "Giving a deductive game an Unreasonable
 tier").
 
@@ -2132,14 +2136,18 @@ Exemplar: [`boats/render.ts`](../../src/games/boats/render.ts).
 
 **Some games' violations are intrinsic to the current grid: there
 `findMistakes` runs the same validity pass that decides won/ongoing and
-returns the offending cells, rather than re-solving.** This is weaker than a
-re-solve — a wrong-but-not-yet-rule-breaking cell won't be caught — but it is
-the right choice when the game already displays those same marks live, so
-Check & Save flags exactly what the board shows and both share one validity
-function. Exemplars: [`bricks/solver.ts`](../../src/games/bricks/solver.ts)
-`findMistakes` + [`bricks/render.ts`](../../src/games/bricks/render.ts),
-[`subsets/index.ts`](../../src/games/subsets/index.ts). Contrast Galaxies,
-whose mistakes are only meaningful against a re-solve.
+returns the offending cells. That pass is one layer and never the whole
+check.** A wrong entry that breaks no rule yet passes it, Check & Save then
+has nothing to point at, and the player is told "these entries contradict
+each other" by a hint that compared the board with the answer and kept the
+cell to itself. Check & Save is an answer check in every game (owner,
+2026-10-02), so a game that holds the answer adds the comparison beside its
+rule pass, with a mark for an entry that is wrong and breaks nothing.
+Exemplar: [`subsets/solver.ts`](../../src/games/subsets/solver.ts)
+`findMistakes`, whose `letter` mistake is that comparison and whose `cell`
+and `edge` mistakes are the rule pass. **The shape to look for** is a hint
+that opens by re-solving and answers `CONTRADICTION_UNLOCALIZED`: what it
+found there belongs in `findMistakes`.
 
 ## The Latin family
 

@@ -438,6 +438,10 @@ const WRONG_REGIONS = puzzleDescError(
   "This game ID divides its board into the wrong number or sizes of blocks or cages.",
 );
 
+const WRONG_SUMS = puzzleDescError(
+  "This game ID does not give each of its cages exactly one sum.",
+);
+
 /**
  * Read a block-structure section as {@link encodeBlockStructureDesc} writes it
  * (`_` = 0 and `a`..`y` = 1..25 non-edges before an edge, `z` = 25 with no edge
@@ -562,6 +566,11 @@ function parseDesc(p: SoloParams, desc: string): DescParse<SoloDesc> {
       const kgrid = new Int32Array(area);
       // A cage holds at most `cr` different digits, so its sum is at most 1 + … + cr.
       readGrid(r, area, (cr * (cr + 1)) / 2, kgrid);
+      // solo.c compute_kclues:3536 and `computeKclues` here write one sum a
+      // cage, so no written ID is refused.
+      const sums = new Uint8Array(kblocks.nrBlocks);
+      for (let i = 0; i < area; i++) if (kgrid[i] !== 0) sums[kblocks.whichblock[i]]++;
+      if (sums.some((n) => n !== 1)) r.fail(WRONG_SUMS);
       killerData = { kblocks, kgrid };
     }
     r.end();

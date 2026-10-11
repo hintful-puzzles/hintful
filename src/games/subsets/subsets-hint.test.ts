@@ -11,7 +11,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { CURSOR_DOWN, LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
@@ -40,7 +39,13 @@ import {
   subsetsValidate,
   whyCantPlace,
 } from "./solver.ts";
-import { cloneState, DIFF_EASY, newState, type SubsetsState } from "./state.ts";
+import {
+  ALL_BITS,
+  cloneState,
+  DIFF_EASY,
+  newState,
+  type SubsetsState,
+} from "./state.ts";
 
 const P = { w: 4, h: 4, n: 4, diff: DIFF_EASY };
 
@@ -405,39 +410,39 @@ describe("hint", () => {
     expect(findMistakes(dup).length).toBeGreaterThan(0);
   });
 
-  it("refuses honestly on a wrong-but-locally-clean mark", () => {
+  it("flags a letter that breaks no rule and is not the solution's, marked or crossed out", () => {
     const state = gen("refuse-clean");
     const { solved } = solveCopy(state);
-    // Set one letter of a blank cell to the opposite of the solution, leaving
-    // the cell otherwise undecided — no local rule breaks, findMistakes empty.
-    let wrong: SubsetsState | null = null;
-    for (let i = 0; i < P.w * P.h && !wrong; i++) {
+    let asked = 0;
+    for (let i = 0; i < P.w * P.h; i++) {
       if (state.immutable[i]) continue;
       for (let b = 0; b < P.n; b++) {
         const bit = 1 << b;
-        const w2 = cloneState(state);
-        if (solved.known[i] & bit) {
-          // solution has it → clear it (wrong)
-          w2.known[i] &= ~bit;
-          w2.mask[i] &= ~bit;
-        } else {
-          // solution lacks it → mark known (wrong)
-          w2.known[i] |= bit;
-          w2.mask[i] |= bit;
-        }
-        // Cell must stay undecided so no local rule fires.
-        if (w2.known[i] !== w2.mask[i] && findMistakes(w2).length === 0) {
-          wrong = w2;
-          break;
-        }
+        // The opposite of the solution in one slot, the cell left undecided.
+        const wrong = cloneState(state);
+        wrong.known[i] = solved.known[i] & bit ? 0 : bit;
+        wrong.mask[i] = ALL_BITS(P.n) & ~(solved.known[i] & bit);
+        if (subsetsValidate(wrong, null, new Int32Array(P.w * P.h)) === "invalid")
+          continue;
+        asked++;
+        expect(findMistakes(wrong)).toEqual([{ kind: "letter", pos: i, bit: b }]);
+        // The same slot decided the solution's way is no mistake.
+        const right = cloneState(state);
+        right.known[i] = solved.known[i] & bit;
+        right.mask[i] = ALL_BITS(P.n) & ~(~solved.known[i] & bit);
+        expect(findMistakes(right)).toEqual([]);
       }
     }
-    expect(wrong).not.toBeNull();
-    if (!wrong) return;
-    const res = subsetsGame.hint?.(wrong);
-    expect(res?.ok).toBe(false);
-    if (res?.ok !== false) return;
-    expect(res.error).toBe(CONTRADICTION_UNLOCALIZED);
+    expect(asked).toBeGreaterThanOrEqual(20);
+  });
+
+  it("is refused by Check & Save with the wrong letter counted, not as a dead end", () => {
+    // The board the census met it on: {D} belongs in the second cell.
+    const id = "4x4n4:13RD,_,6R,_,_,_,_D,_UL,_R,12D,_,_DL,_UR,_,3U,10";
+    const me = new Midend(subsetsGame);
+    expect(me.newGameFromId(id)).toBeNull();
+    me.playMoves([{ kind: "set", type: "known", pos: 1, bit: 1 }]);
+    expect(me.check()).toEqual({ kind: "mistakes", count: 1 });
   });
 });
 

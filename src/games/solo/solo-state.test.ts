@@ -14,6 +14,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
+import { randomNew } from "../../engine/random/index.ts";
 import { soloGame } from "./index.ts";
 import {
   checkValid,
@@ -215,6 +216,27 @@ describe("solo grid codec", () => {
     expect(validateDesc(soloGame, STANDARD, `${blanks}a1_10`)).toBe(DESC_OUT_OF_RANGE);
     expect(validateDesc(soloGame, STANDARD, `${blanks}a1`)).toBe(DESC_TOO_SHORT);
     expect(validateDesc(soloGame, STANDARD, `${blanks}d`)).toBe(DESC_TOO_LONG);
+  });
+
+  it("refuses a killer cage with no sum, or with two", () => {
+    const p = decodeParams("3x3ka");
+    const cages =
+      "zzzc,___a__a__a_________________aaa_a__aa__________a____aaaaaba_aba__aaa_" +
+      "aa_a__a_aaaba_a_aa_a__a_a___aaa__,";
+    const sums =
+      "15_14_8_8a5_12_11d19c5_10_7_11_8_12a14_11f10c" +
+      "12_4a15b9a12a6_17a17a9_10a13a14a12e14a8a6_10a11f11a15a";
+    expect(validateDesc(soloGame, p, cages + sums)).toBeNull();
+    // A sum written on the second square of the cage that already has an 8.
+    const two = validateDesc(soloGame, p, cages + sums.replace("8_8a5", "8_8_8_5"));
+    expect(two).toMatch(/each of its cages exactly one sum/);
+    // The first cage's sum left out.
+    expect(validateDesc(soloGame, p, cages + sums.replace("15_14", "a14"))).toBe(two);
+    // Every board the generator deals reads.
+    for (let k = 0; k < 3; k++) {
+      const { desc } = soloGame.newDesc(p, randomNew(`one-sum-${k}`));
+      expect(validateDesc(soloGame, p, desc), desc).toBeNull();
+    }
   });
 });
 

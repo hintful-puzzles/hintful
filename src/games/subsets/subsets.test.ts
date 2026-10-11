@@ -641,6 +641,30 @@ describe("subsets rendering (tier 2.5)", () => {
     expect(result.recording.ops).toMatchSnapshot();
   });
 
+  it("a letter the solution does not hold is drawn in the error color, and so is a wrong cross", () => {
+    const solution = fixtureSolution();
+    const blank = newState(PARAMS, FIX.desc).immutable.indexOf(0);
+    const absent = [0, 1, 2, 3].find((b) => !(solution.known[blank] & (1 << b)));
+    const present = [0, 1, 2, 3].find((b) => solution.known[blank] & (1 << b));
+    if (absent === undefined || present === undefined)
+      throw new Error("the fixture's first blank holds every letter or none");
+    const errorOps = (type: "known" | "cleared", bit: number) => {
+      const result = renderScenario({
+        game: subsetsGame,
+        id: FIX_ID,
+        moves: [{ kind: "set", type, pos: blank, bit }],
+        showMistakes: true,
+      });
+      expect(result.mistakeCount).toBe(1);
+      return result.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR);
+    };
+    const letter = errorOps("known", absent);
+    expect(letter.map((o) => o.op)).toEqual(["text"]);
+    expect(letter[0]).toMatchObject({ text: String.fromCharCode(65 + absent) });
+    // A cross is two strokes, and nothing else on the board is red.
+    expect(errorOps("cleared", present).map((o) => o.op)).toEqual(["line", "line"]);
+  });
+
   it("mistake frame: a duplicated placement draws in the error color", () => {
     const solution = fixtureSolution();
     const start = newState(PARAMS, FIX.desc);

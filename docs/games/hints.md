@@ -1450,8 +1450,12 @@ draws it. That is why `FIX_MISTAKES_FIRST` is not a `HintRefusal`.
 **What a game still answers for itself is about the puzzle:**
 
 - **A board `findMistakes` passes that is still doomed.** Bricks, Bridges,
-  Clusters, Subsets and Loopy check further and say `CONTRADICTION_UNLOCALIZED`
-  when the board is inconsistent with no entry provably wrong.
+  Clusters and Loopy check further and say `CONTRADICTION_UNLOCALIZED`
+  when the board is inconsistent with no entry provably wrong. Where the game
+  holds the answer this is a shortfall of its `findMistakes`, never a design:
+  the player is told something is wrong and not what
+  ([solver-and-generator.md](./solver-and-generator.md) § "Self-validating
+  games run their rule checker").
 - **A lost board.** The midend does not refuse on `"lost"`, because a lost board
   is not always over: Flood plays on past its move limit and its hint still
   leads home. Guess's revealed answer and Flood's board flooded past the limit

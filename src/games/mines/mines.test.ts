@@ -161,12 +161,12 @@ describe("mines desc", () => {
   });
 
   it("reads a layout with its first square, and one without as an older save's", () => {
-    const p = decodeParams("3x3n1");
-    // 3x3, one mine at index 0. Unmasked nibbles ((9+3)/4 = 3): bit MSB-first
+    const p = decodeParams("3x4n1");
+    // 3x4, one mine at index 0. Unmasked nibbles (12/4 = 3): bit MSB-first
     // in byte 0 (0x80 -> nibble "8"), rest 0 -> "800".
-    const pub = decodeDesc(p, "1,1,u800");
-    expect(pub.openXY).toEqual({ x: 1, y: 1 });
-    expect(Array.from(pub.mines ?? [])).toEqual([1, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const pub = decodeDesc(p, "1,2,u800");
+    expect(pub.openXY).toEqual({ x: 1, y: 2 });
+    expect(Array.from(pub.mines ?? [])).toEqual([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     expect(pub.n).toBe(1);
     // The layout alone is not a board laid out: it waits for the open that an
     // older save's move log replays, with a seed for any other square.
@@ -178,6 +178,29 @@ describe("mines desc", () => {
     expect(bare.n).toBe(1);
   });
 
+  it("refuses a first square that is a mine or has one beside it", () => {
+    const p = decodeParams("9x9n10");
+    const layout = "u800000000000000000000"; // one mine, at (0,0)
+    const refusal = validateDesc(minesGame, p, `0,0,${layout}`);
+    expect(refusal).toMatch(/first square is a mine or has one beside it/);
+    expect(validateDesc(minesGame, p, `1,0,${layout}`)).toBe(refusal);
+    expect(validateDesc(minesGame, p, `1,1,${layout}`)).toBe(refusal);
+    expect(validateDesc(minesGame, p, `2,0,${layout}`)).toBeNull();
+    // Every layout the generator writes keeps clear of its first square.
+    for (let k = 0; k < 20; k++) {
+      const s = minesGame.newState(
+        p,
+        minesGame.newDesc(p, randomNew(`clear-${k}`)).desc,
+      );
+      const begun = minesGame.executeMove(
+        s,
+        firstOpen(s, { x: k % 9, y: (k * 4) % 9 }),
+      );
+      const desc = minesGame.supersededDesc?.(begun) ?? "";
+      expect(validateDesc(minesGame, p, desc), desc).toBeNull();
+    }
+  });
+
   it("rejects a wrong-length desc", () => {
     const p = decodeParams("9x9n10");
     expect(validateDesc(minesGame, p, "4,4,mtooshort")).toBe(descBadCharacter("t"));
@@ -187,7 +210,7 @@ describe("mines desc", () => {
 
   it("reads the layout exactly as the encoder writes it", () => {
     const p = decodeParams("3x3n1");
-    expect(validateDesc(minesGame, p, "1,1,u800")).toBeNull();
+    expect(validateDesc(minesGame, p, "1,1,u000")).toBeNull();
     // The ninth bit is the last nibble's high bit; the other three are padding.
     expect(validateDesc(minesGame, p, "u801")).toBe(descBadCharacter("1"));
     expect(validateDesc(minesGame, p, "uA00")).toBe(descBadCharacter("A"));
@@ -472,7 +495,7 @@ describe("mines supersede + midend", () => {
     // board is neither won nor blank. A left press + release on the mine cell
     // must emit an open and bump ui.deaths.
     const p = decodeParams("3x3n1");
-    const { mines } = decodeDesc(p, "1,1,u800"); // mine at (0,0)
+    const mines = decodeDesc(p, "u800").orphan; // mine at (0,0)
     const grid = new Int8Array(9).fill(COVERED);
     grid[4] = 1; // (1,1) opened, showing 1 — leaves the board ongoing
     const s: MinesState = {
@@ -506,7 +529,7 @@ describe("mines supersede + midend", () => {
     // an open of *only* the true mine (0,0), not the whole neighborhood, and
     // bump the death counter.
     const p = decodeParams("3x3n1");
-    const { mines } = decodeDesc(p, "1,1,u800"); // mine at (0,0)
+    const mines = decodeDesc(p, "u800").orphan; // mine at (0,0)
     const grid = new Int8Array(9).fill(COVERED);
     grid[4] = 1; // (1,1) open, showing 1 neighboring mine
     grid[1] = -1; // (1,0) wrongly flagged
@@ -543,9 +566,10 @@ describe("mines supersede + midend", () => {
 
   it("Solve on an alive board reveals the full solution", () => {
     const p = decodeParams("3x3n1");
-    const s = minesGame.newState(p, "1,1,u800"); // opens (1,1); wins on this tiny board
-    // Rebuild an explicitly-ongoing board so Solve fills the whole grid.
-    const alive: MinesState = { ...s, grid: new Int8Array(9).fill(COVERED) };
+    // A layout without its first square waits to be laid out, so lay it out
+    // here with every square covered and Solve fills the whole grid.
+    const s = minesGame.newState(p, "u800"); // mine at (0,0)
+    const alive: MinesState = { ...s, mines: s.orphan, orphan: null, seed: null };
     expect(minesGame.status(alive)).toBe("ongoing");
     const solved = minesGame.executeMove(alive, { type: "solve" });
     expect(minesGame.status(solved)).toBe("solved");
@@ -556,7 +580,7 @@ describe("mines supersede + midend", () => {
 
   it("Solve after death shows the finished board", () => {
     const p = decodeParams("3x3n1");
-    const { mines } = decodeDesc(p, "1,1,u800"); // mine at (0,0)
+    const mines = decodeDesc(p, "u800").orphan; // mine at (0,0)
     const grid = new Int8Array(9).fill(COVERED);
     grid[0] = 65; // trodden on the mine
     grid[1] = -1; // (1,0) wrongly flagged (no mine there)
@@ -603,7 +627,7 @@ describe("mines chord preview", () => {
     at: (x: number, y: number) => { x: number; y: number };
   } {
     const p = decodeParams("3x3n1");
-    const { mines } = decodeDesc(p, "1,1,u800"); // mine at (0,0)
+    const mines = decodeDesc(p, "u800").orphan; // mine at (0,0)
     const grid = new Int8Array(9).fill(COVERED);
     grid[1 * 3 + 1] = 1; // (1,1) open, showing 1
     grid[0] = -1; // (0,0) flagged (the mine)

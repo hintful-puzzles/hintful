@@ -32,6 +32,7 @@ import {
 } from "../../engine/color/palette.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   type Game,
   registerGame,
@@ -637,14 +638,7 @@ export const minesGame: Game<
   // The hint's own plan, played to its end. A board not laid out yet will be
   // laid out to finish from whichever square is opened first.
   finishesByDeduction(s: MinesState): boolean {
-    if (!s.mines) return true;
-    const plan = minesHint(s, minesGame.executeMove);
-    if (!plan.ok) return false;
-    const end = plan.steps.reduce(
-      (board, step) => minesGame.executeMove(board, step.move),
-      s,
-    );
-    return isWon(end);
+    return !s.mines || hintFinishes(minesGame, s);
   },
   hint: (s) => minesHint(s, minesGame.executeMove),
   hintRungs: MINES_RUNGS,

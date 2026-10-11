@@ -23,7 +23,7 @@ Some deductions are about whole sets rather than letters: "{A,C} can't go in thi
 
 With a keyboard, move the cursor down past the bottom row of the grid into the tally, keeping the cell you were on in focus. The arrow keys move between sets, Enter or Space rules one out, Backspace takes a rule-out back, and moving up from the tally's top row returns to the grid.
 
-Check & Save treats a set ruled out of the cell it belongs in as a mistake.
+Check & Save treats a letter marked or crossed out against the solution as a mistake, and draws it in red. It treats a set ruled out of the cell it belongs in the same way.
 
 ## Where the puzzle comes from
 
@@ -31,7 +31,7 @@ This puzzle type was invented by Inaba Naoki under the name *サブセットリ�
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it, one letter or one ruled-out set at a time. It reasons only from the horseshoes, the given sets and your own letters and rule-outs, so it carries on from wherever you are, as long as none of those is wrong. If one breaks a rule, it asks you to fix the highlighted mistakes first; if one is wrong without breaking any rule yet, it says your entries contradict each other, and you can undo or clear the ones you are unsure of.
+**Hint** explains the next step rather than simply making it, one letter or one ruled-out set at a time. It reasons only from the horseshoes, the given sets and your own letters and rule-outs, so it carries on from wherever you are, as long as none of those is wrong. If one is, whether or not it breaks a rule yet, it asks you to fix the highlighted mistakes first.
 
 In its words, to *mark* a letter *present* is to add it (left-click its position, or Enter), and to *clear* a letter is to rule it out (right-click, or Space).
 

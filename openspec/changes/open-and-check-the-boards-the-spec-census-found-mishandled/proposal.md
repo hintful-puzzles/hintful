@@ -49,12 +49,54 @@ loads a killer cage with two sums; Fifteen loads the solved arrangement.
   cross-game guard that would hold every game with a stored answer to it is
   worth writing only if a sweep finds a second.
 
-## A question for the owner, which blocks only its own task
+## A question for the owner, moved to a change of its own
 
-Should a game ID whose board is already solved open? Today Fifteen opens it
-finished; refusing it refuses a description upstream reads. Recommendation:
-open it, as today, and state that in `ts-engine`; a solved board harms
-nobody and a shared link to one is a thing a player might send.
+Should a game ID whose board is already solved open? It is asked, with its
+recommendation, in `decide-whether-a-solved-game-id-opens`, so that this
+change does not wait on it. Nothing here changes what Fifteen does.
+
+## What the work found (2026-10-11)
+
+- **The engine's walk already answers a won board, and Mines had a walk of
+  its own.** `hintFinishes` asks whether the board is solved before it asks
+  the hint; Mines' `finishesByDeduction` asked the hint first. A sweep dealt
+  the first gate preset of each of the 53 games with a hint (12 of them
+  untiered), played the hint to the end, and asked of the won board and the
+  one a move before it: `finishesByDeduction`, `hintFinishes`, a save
+  restored, and the board's game ID opened. Nothing failed with Mines mended;
+  with the old Mines planted back the sweep named it. So Mines now calls
+  `hintFinishes`, and `untiered-load.test.ts` asks a won board of every
+  untiered game that answers with a test of its own.
+- **Subsets is not the one game.** A second sweep took the 43 games with
+  `findMistakes`, `solve` and a hint, made 300 random single inputs on a dealt
+  board of each, and kept the 3,084 that left an entry the answer contradicts
+  (the same moves played on the solved board leave it unsolved). Where
+  `findMistakes` returned nothing and the hint could not then finish the
+  board: Subsets before its fix (37 of 37, the instrument's known positive),
+  **Bricks** (71 of 102) and **Clusters** (88 of 97), each answering Check &
+  save with "These entries contradict each other". No other game. The sweep
+  made no wrong entry in Ascent, Boats, Bridges, Guess or Signpost, and Mines'
+  hidden answer is not asked this way, so it says nothing of those six.
+  Bricks and Clusters, and the guard, are
+  `check-a-wrong-entry-against-the-answer-in-every-game`.
+- **Subsets' hint compared the board with the answer and kept the cell to
+  itself.** That comparison is `findMistakes`' now, as a `letter` mistake for
+  a slot marked or crossed out against the answer, and the hint's copy is
+  gone: the midend asks `findMistakes` first.
+- **The second Inertia board `found.md` gives, `7x3:mbmbmbmbbbSbbbgwbbbwg`,
+  has no solution**: each gem ends a slide the ball cannot leave. Its refusal
+  is right and it is the test's still-refused case. A route may end on
+  several gems one slide takes, and never on a slide that runs on to a mine.
+  A dead ball used to get no route only because nothing comes home to a
+  mine's square; the route solver now refuses it by name
+  (`solve-finishes.test.ts` caught the first cut playing a route with one).
+- **No generator writes what the two parsers now refuse.** Mines:
+  `mines.c:1885` lays no mine in the first square's 3×3 block and `:1512`
+  perturbs none into it. Solo: `solo.c:3536` (`compute_kclues`) writes one
+  sum a cage, at its first cell. Ours do the same.
+- **The refused-ID dialog does not wrap a long ID**: a Solo killer ID runs
+  out of the box's right edge. Filed as
+  `wrap-a-long-game-id-in-the-refusal-dialog`.
 
 ## What Changes
 

@@ -109,6 +109,10 @@ const HINT_INSPECTED = 16;
 /** Bit offset of the target slot index in the hint sidecar's packed word,
  * above the five flag bits. Everything above it is the slot. */
 const HINT_SLOT_SHIFT = 5;
+/** Mistake sidecar bit: the cell block takes the inset frame. */
+const MISTAKE_FRAME = 1;
+/** Mistake sidecar bit of letter slot 0; slot `k` is this shifted left `k`. */
+const MISTAKE_SLOT = 2;
 
 const CODE_A = "A".charCodeAt(0);
 
@@ -235,11 +239,12 @@ export function redraw(
   subsetsValidate(state, flags, counts);
 
   // Check & Save overlay: duplicated placements, and cells holding a wrong
-  // rule-out, get an inset red frame.
+  // rule-out, get an inset red frame; a wrong letter slot is drawn red itself.
   ds.mistakes.clear();
   const wrongRuled = new Set<number>();
   for (const m of mistakes ?? []) {
-    if (m.kind === "cell" || m.kind === "ruled") ds.mistakes.add(m.pos, 1);
+    if (m.kind === "cell" || m.kind === "ruled") ds.mistakes.add(m.pos, MISTAKE_FRAME);
+    if (m.kind === "letter") ds.mistakes.add(m.pos, MISTAKE_SLOT << m.bit);
     if (m.kind === "ruled") wrongRuled.add(m.pos * (w * h) + m.value);
   }
 
@@ -374,15 +379,16 @@ export function redraw(
             ts,
           );
 
+          const wrong = (ds.mistakes.packed[i] & (MISTAKE_SLOT << cn)) !== 0;
           if (state.known[i] & bit) {
             dr.drawText(
               { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) },
               glyphFont(fontsize),
-              state.immutable[i] & bit ? COL_FIXED : COL_GUESS,
+              wrong ? COL_ERROR : state.immutable[i] & bit ? COL_FIXED : COL_GUESS,
               String.fromCharCode(CODE_A + cn),
             );
           } else if (!unknown) {
-            drawRuledOutCross(dr, box, COL_RULED_OUT);
+            drawRuledOutCross(dr, box, wrong ? COL_ERROR : COL_RULED_OUT);
           }
 
           if (slot === cn) {
@@ -428,7 +434,7 @@ export function redraw(
       );
 
       // Duplicated placement (Check & Save): inset red frame on the block.
-      if (ds.mistakes.packed[i])
+      if (ds.mistakes.packed[i] & MISTAKE_FRAME)
         drawThickRectOutline(dr, bx, by, bw, bw, Math.floor(ts / 8), COL_ERROR);
 
       const hintBits = ds.hint.packed[i];

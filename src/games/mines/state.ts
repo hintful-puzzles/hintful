@@ -297,7 +297,18 @@ function parseDesc(p: MinesParams, desc: string): DescParse<DecodedDesc> {
     const mines = readLayout(r, wh, masked);
     r.end();
     const n = mines.reduce((sum, v) => sum + v, 0);
-    if (openXY) return { n, mines, openXY, seed: null, orphan: null };
+    if (openXY) {
+      // mines.c minegen:1885 and mineperturb:1512 keep the first square's 3×3
+      // block clear, as `firstOpen` does here, so no written ID is refused.
+      if (around(p.w, p.h, openXY.x, openXY.y).some((q) => mines[q.y * p.w + q.x])) {
+        r.fail(
+          puzzleDescError(
+            "This game ID's first square is a mine or has one beside it, and a board is never laid out that way.",
+          ),
+        );
+      }
+      return { n, mines, openXY, seed: null, orphan: null };
+    }
     // No seed came with the layout, so the layout stands in for one.
     return { n, mines: null, openXY: null, seed: randomNew(desc), orphan: mines };
   });
