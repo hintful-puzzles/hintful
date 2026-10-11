@@ -124,7 +124,6 @@ preset:Crossing/9x9 Unreasonable  full=9x9du  brief=9x9
 preset:Crossing/11x11 Easy  full=11x11de  brief=11x11
 preset:Crossing/11x11 Unreasonable  full=11x11du  brief=11x11
 preset:Crossing/13x13 Easy  full=13x13de  brief=13x13
-preset:Crossing/13x13 Unreasonable  full=13x13du  brief=13x13
 preset:Crossing/9x9 symmetric Easy  full=9x9Sde  brief=9x9
 preset:Crossing/15x15 symmetric Easy  full=15x15Sde  brief=15x15
 bump:w  full=6x5de  brief=6x5

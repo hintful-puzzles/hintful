@@ -104,7 +104,7 @@ describe("crossing hint — soundness", () => {
       expect(answer.status).toBe("valid");
       let checked = 0;
       walk(state, (f) => {
-        if (f.technique === "onlyNumber") {
+        if (f.technique === "onlyNumber" || f.technique === "onlyRun") {
           const cells = state.puzzle.runs[f.run].cells;
           const num = state.puzzle.numbers[f.number];
           for (let k = 0; k < cells.length; k++) {
@@ -171,14 +171,14 @@ const pinned = describeHintPins({
     becauseUsed: opensBecause("used"),
   },
   pins: {
-    /** Held on 40 of 991 positions walked. */
+    /** Held on 40 of 984 positions walked. */
     becauseLength: "5x5:5a1b1a2a1a1a1a5,32,96,235,25979,79525,92612",
-    /** Held on 783 of 991 positions walked. */
+    /** Held on 766 of 984 positions walked. */
     becauseDigits: {
       id: "5x5:5a1b1a2a1a1a1a5,32,96,235,25979,79525,92612",
       moves: [{ kind: "place", run: 5, number: 2 }],
     },
-    /** Held on 42 of 991 positions walked. */
+    /** Held on 45 of 984 positions walked. */
     becauseUsed: {
       id: "5x5:2a3b1a5a1a1a5,25,76,218,496,56426,79132,84915",
       moves: [
@@ -186,22 +186,29 @@ const pinned = describeHintPins({
         { kind: "place", run: 0, number: 0 },
       ],
     },
-    /** Held on 991 of 991 positions walked. */
+    /** Held on 984 of 984 positions walked. */
     onlyNumber: "5x5:5a1b1a2a1a1a1a5,32,96,235,25979,79525,92612",
-    /** Held on 331 of 991 positions walked. */
+    /** Held on 260 of 984 positions walked. Kept by hand on the smallest
+     * board that needs it: with 414 across the top, each run still fits two
+     * numbers or three, and 26 fits one run only. */
+    onlyRun: {
+      id: "4x2:a5a1,26,41,46,414",
+      moves: [{ kind: "place", run: 0, number: 3 }],
+    },
+    /** Held on 321 of 984 positions walked. */
     sharedDigit: "5x5:a1a2a2a3a3c6,14,23,27,53,257,265,43339,53639",
-    /** Held on 497 of 991 positions walked. */
+    /** Held on 467 of 984 positions walked. */
     crossRuns: "5x5:2a3b1a5a1a1a5,25,76,218,496,56426,79132,84915",
-    /** Held on 42 of 991 positions walked. */
+    /** Held on 74 of 984 positions walked. */
     noteDigits: {
       id: "13x13:4a4a4b3b3a3a1a1a2a4a6a2a4b1a3a3a1a3b3a2a2a4a2a2a2a1b1a1a1a2a5a4a1a1a1a4a2a5a1a2a2a1b3a1a2a5a2,15,18,22,23,27,31,35,37,48,52,61,67,71,78,86,87,99,119,123,151,235,277,382,444,491,565,617,645,732,747,758,761,762,799,851,853,926,1278,1492,2688,2724,3885,4566,5137,6582,6984,8382,51251,65827,73855,75454,85229,88142,147571,496585,6231712",
       moves:
         '[{"kind":"place","run":33,"number":55},{"x":2,"y":0,"kind":"set","digit":8},{"x":5,"y":3,"kind":"set","digit":5},{"x":3,"y":3,"kind":"set","digit":4},{"kind":"place","run":8,"number":53},{"kind":"place","run":41,"number":54},{"kind":"place","run":1,"number":42},{"x":3,"y":0,"kind":"set","digit":2},{"kind":"place","run":0,"number":44},{"kind":"place","run":38,"number":40},{"kind":"place","run":3,"number":33}]',
     },
-    /** Held on 0 of 991 positions walked: a strike needs a note that no number
-     * still fitting supports, and the plan never writes one, so only a note of
-     * the player's own is struck. By hand, the board of "ruling a candidate
-     * out" below: a 9 penciled where either number has a 1 or a 5. */
+    /** Held on 33 of 984 positions walked, each a note of the plan's own that
+     * a later step narrows. Kept by hand on the board of "ruling a candidate
+     * out" below, where the note struck is the player's: a 9 penciled where
+     * either number has a 1 or a 5. */
     noteStrike: {
       id: "4x3:4d4,1234,5678",
       moves: [
@@ -370,6 +377,13 @@ const NOTE_JOURNEY = {
     "34325,73179,93446,319913,347579,528899,742755",
 } as const;
 
+// A board the solver's first two deductions stop on, where the number with
+// one run left shows it only once other squares are narrowed.
+const ONE_RUN_NOTES = {
+  params: { w: 4, h: 3, sym: false, diff: DIFF_EASY },
+  desc: "1a4a1a3,22,35,63,76,225,535",
+} as const;
+
 /** The numbers that fit run `r` as the board shows it — its length, not used
  * elsewhere, and agreeing with every entered digit and every square's notes —
  * computed from the state's own rules rather than the hint's tables. */
@@ -407,6 +421,18 @@ describe("crossing hint — every premise is on the board", () => {
       case "onlyNumber":
         expect(fitsOnBoard(s, f.run)).toEqual([f.number]);
         break;
+      case "onlyRun": {
+        const homes = s.puzzle.runs.flatMap((_, r) =>
+          fitsOnBoard(s, r).includes(f.number) ? [r] : [],
+        );
+        expect(homes).toEqual([f.run]);
+        // Each outlined square holds a digit or notes the number disagrees
+        // with, in a run of its length that is not full.
+        expect(f.against.length).toBeGreaterThanOrEqual(f.others);
+        for (const cell of f.against)
+          expect(s.grid[cell] !== 0 || s.pencil[cell] !== 0).toBe(true);
+        break;
+      }
       case "sharedDigit":
         expect(digitsOnBoard(s, f.run, f.cell)).toEqual([f.digit]);
         break;
@@ -436,17 +462,36 @@ describe("crossing hint — every premise is on the board", () => {
       ),
       newState(NEEDS_NOTES.params, NEEDS_NOTES.desc),
       newState(NOTE_JOURNEY.params, NOTE_JOURNEY.desc),
+      newState(ONE_RUN_NOTES.params, ONE_RUN_NOTES.desc),
+      pinned("onlyRun").state,
     ];
     let notes = 0;
+    let oneRun = 0;
     for (const state of boards) {
       walk(state, (f, before) => {
         premiseHolds(f, before);
         if (f.technique === "noteDigits") notes++;
+        if (f.technique === "onlyRun") oneRun++;
       });
     }
     // The pinned boards write three notes between them; with none, the guard
-    // above would never have met the note steps it exists for.
+    // above would never have met the note steps it exists for. Likewise a
+    // number's one run, which two of the boards need.
     expect(notes).toBeGreaterThanOrEqual(3);
+    expect(oneRun).toBeGreaterThanOrEqual(2);
+  });
+
+  it("writes the notes a number's one run rests on, then gives it the run", () => {
+    // No run is down to one number here and no square to one digit, and on
+    // the board as dealt every two-digit number fits several runs. The notes
+    // are what show one of them a single run.
+    const order: string[] = [];
+    walk(newState(ONE_RUN_NOTES.params, ONE_RUN_NOTES.desc), (f) => {
+      order.push(f.technique);
+    });
+    const at = order.indexOf("onlyRun");
+    expect(at).toBeGreaterThan(0);
+    expect(order.slice(0, at)).toContain("noteDigits");
   });
 
   it("writes the notes a placement rests on before making it", () => {

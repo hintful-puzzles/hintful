@@ -1,9 +1,9 @@
 /**
  * The Crossing deductive solver — `crossing_solve_game` and its two techniques
- * from `unreleased/crossing.c`.
+ * from `unreleased/crossing.c`, and a third of the fork's.
  *
  * The solver keeps a per-cell candidate bitmask (bit `n-1` = digit `n`) and runs
- * two deductions to a fixpoint:
+ * three deductions to a fixpoint:
  *
  * 1. **positional narrowing** (`crossing_solver_marks`) — for each run, take
  *    every not-yet-placed number of the run's length that still fits the current
@@ -12,12 +12,15 @@
  *    only hold a digit that *some* still-fitting number puts there.
  * 2. **naked single** (`crossing_solver_confirm`) — a cell whose candidates
  *    collapse to one digit is placed.
+ * 3. **only run** ({@link solverOnlyRun}) — the first asks which numbers fit a
+ *    run, and this asks which runs fit a number: one that fits a single run
+ *    is that run's, whatever else the run could take. It is tried where the
+ *    other two have nothing left.
  *
- * Upstream has exactly this one technique tier (`// TODO harder techniques?`)
- * and no difficulty parameter, so there is no grading. Since the generator
- * accepts a board only when this solver reaches `"valid"`, the solver's exact
- * strength is baked into which puzzles exist — the byte-match differential
- * covers it end to end.
+ * Upstream has the first two (`// TODO harder techniques?`) and no difficulty
+ * parameter. The generator accepts an Easy board only when this solver reaches
+ * `"valid"`, and an Unreasonable one only when it does not, so the solver's
+ * exact strength is baked into which puzzles exist at each tier.
  */
 
 import {
@@ -28,6 +31,7 @@ import {
 } from "../../engine/answer-search.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
+  type CrossingNumber,
   type CrossingPuzzle,
   type CrossingState,
   type SolveStatus,
@@ -115,6 +119,55 @@ function solverConfirm(grid: Uint8Array, cand: Int32Array): number {
   return changed;
 }
 
+/** Whether `num` agrees with what every square of `cells` can still hold. */
+function fitsRun(
+  cand: Int32Array,
+  cells: readonly number[],
+  num: CrossingNumber,
+): boolean {
+  if (num.length !== cells.length) return false;
+  for (let k = 0; k < cells.length; k++) {
+    if (!(cand[cells[k]] & bit(num[k]))) return false;
+  }
+  return true;
+}
+
+/**
+ * A listed number that still fits one run only is that run's number, whatever
+ * else the run could take. Returns the number of squares it narrowed.
+ *
+ * Narrowing the run's squares to the number's digits is the whole of it: every
+ * other number differs from this one somewhere, so none fits the run after.
+ * A fork addition, upstream's solver asking only which numbers fit a run.
+ */
+function solverOnlyRun(
+  puzzle: CrossingPuzzle,
+  cand: Int32Array,
+  done: Int32Array,
+): number {
+  const { numbers, runs } = puzzle;
+  let changed = 0;
+  for (let l = 0; l < numbers.length; l++) {
+    if (done[l]) continue;
+    const num = numbers[l];
+    let home = -1;
+    let homes = 0;
+    for (let r = 0; r < runs.length && homes < 2; r++) {
+      if (!fitsRun(cand, runs[r].cells, num)) continue;
+      home = r;
+      homes++;
+    }
+    if (homes !== 1) continue;
+    const cells = runs[home].cells;
+    for (let k = 0; k < cells.length; k++) {
+      if (cand[cells[k]] === bit(num[k])) continue;
+      cand[cells[k]] = bit(num[k]);
+      changed++;
+    }
+  }
+  return changed;
+}
+
 /** The solver's working board: the digits placed, and each cell's candidates.
  * A placed cell's candidates are its digit alone, which is how
  * {@link solverMarks} reads what a run already holds. */
@@ -132,7 +185,7 @@ function newSolverBoard(puzzle: CrossingPuzzle): SolverBoard {
 }
 
 /**
- * Run the two deductions on `b` to a fixpoint and say where that leaves it.
+ * Run the three deductions on `b` to a fixpoint and say where that leaves it.
  * `"solved"` is every run full and every number used exactly once.
  *
  * An empty cell with no candidate left is a contradiction, and is said here:
@@ -153,8 +206,10 @@ function settle(puzzle: CrossingPuzzle, b: SolverBoard): Deduced {
     // A wall's mask is zero as well, and a wall is not a cell left without.
     for (let i = 0; i < grid.length; i++)
       if (!grid[i] && !cand[i] && !puzzle.walls[i]) return "contradiction";
-    // Stuck: no harder techniques exist upstream.
-    if (narrowed + solverConfirm(grid, cand) === 0) return "stuck";
+    if (narrowed + solverConfirm(grid, cand) > 0) continue;
+    // The scan of the list, once the runs have no more to say: `done` is
+    // still the board's, nothing having been placed since it was read.
+    if (solverOnlyRun(puzzle, cand, done) === 0) return "stuck";
   }
 }
 
@@ -182,15 +237,16 @@ export type CrossingAnswer = Answer<Uint8Array>;
 
 /**
  * The positions a search may try before it gives up, each one a digit assumed
- * in a cell and the two deductions run from it.
+ * in a cell and the three deductions run from it.
  *
  * It decides which Unreasonable boards exist: a puzzle that needs more is
  * thrown away when dealing and refused when pasted. Lowering it refuses boards
- * already dealt, which are in saved games. Measured 2026-10-10 over sixty
- * dealt boards at each of twelve sizes from 4×2 to 13×13: a median of 3 to 5,
- * which is one square of two digits tried each way, and 129 for the hardest.
- * A board that runs it out is not one that needed more: none of the eight
- * that did, tried again with 20,000, had one answer.
+ * already dealt, which are in saved games. Measured 2026-10-11 over the
+ * boards twenty seconds of draws found at each of twenty shapes from 4×2 to
+ * 12×12 and 3×48: a median of 3 to 7, which is one square of two or three
+ * digits tried each way, and 155 for the hardest. A board that runs it out
+ * is not one that needed more: under the first two deductions alone, none of
+ * the eight that did, tried again with 20,000, had one answer.
  */
 const SEARCH_BUDGET = 2_000;
 

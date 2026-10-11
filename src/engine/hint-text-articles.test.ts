@@ -53,6 +53,7 @@ describe("a number after an article gets the article it is pronounced with", () 
       fitting: [1, 2],
       otherFitting: [],
       number: null,
+      against: [],
     });
     const shared = (digit: number) =>
       crossing.sharedDigit(

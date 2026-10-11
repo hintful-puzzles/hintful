@@ -1,5 +1,5 @@
 /**
- * Crossing's two tiers: Easy, which the solver's two deductions finish, and
+ * Crossing's two tiers: Easy, which the solver's three deductions finish, and
  * Unreasonable, a board with one answer that they do not reach.
  *
  * The answer counts here come from {@link countFills}, which writes a whole
@@ -229,7 +229,7 @@ describe("an Unreasonable Crossing board", () => {
   // The smallest boards there are carry the tier.
   describeDealtTiers(crossingGame, ["4x2du", "2x4du", "4x3du", "4x4Sdu"]);
   // The largest the bound admits, wide and thin.
-  describeDealtTiers(crossingGame, ["13x13du", "12x15du", "4x45du", "2x40du"], {
+  describeDealtTiers(crossingGame, ["12x12du", "8x18du", "4x36du", "2x40du"], {
     seldom: true,
   });
 
@@ -237,24 +237,31 @@ describe("an Unreasonable Crossing board", () => {
     paramsError(crossingGame, crossingGame.decodeParams(id), true);
 
   it.each([
-    "13x13du",
-    "13x14du",
-    "10x18Sdu",
-    "3x60du",
+    "12x12du",
+    "11x13du",
+    "8x18Sdu",
+    "3x48du",
     "2x40du",
   ])("%s is inside the bound on Unreasonable boards", (id) => {
     expect(refusal(id)).toBeNull();
   });
 
   it.each([
-    // Each is dealt at Easy, and takes over a second here or is never found.
-    "14x14du",
-    "15x15Sdu",
-    "9x25du",
-    "5x40du",
+    // Each is dealt at Easy, and takes a second or more to find here.
+    "13x13du",
+    "13x13Sdu",
+    "10x15du",
+    "5x30du",
   ])("%s is refused at Unreasonable and dealt at Easy", (id) => {
-    expect(refusal(id)).toMatch(/at most 182 for an Unreasonable puzzle/);
+    expect(refusal(id)).toMatch(/at most 144 for an Unreasonable puzzle/);
     expect(refusal(id.replace("du", "de"))).toBeNull();
+  });
+
+  it("is on the menu at every size inside the bound, and at none past it", () => {
+    const offered = (crossingGame.presets().submenu ?? []).flatMap(({ params }) =>
+      params?.diff === DIFF_UNREASONABLE ? [`${params.w}x${params.h}`] : [],
+    );
+    expect(offered).toEqual(["5x5", "7x7", "9x9", "11x11"]);
   });
 
   it("a thin board is refused at either tier where none is dealt", () => {

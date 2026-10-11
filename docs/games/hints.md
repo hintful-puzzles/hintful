@@ -3060,6 +3060,12 @@ the board.
   went first. The narrowing that removed it rests on every number of its run
   carrying that digit there having died earlier, and so on down. The board's own
   rule-outs rest on nothing.
+- **A second kind of narrowing has a second kind of support.** The solver also
+  gives a number the one run it still fits. In the fixpoint that narrows the
+  run's squares to the number's digits, and it rests on something else: the
+  number having died in every other run. A narrowing records which kind it
+  is, and the trace follows that. Such a narrowing is never the oldest, since
+  one resting on the board alone is a placement the board already shows.
 - **Emit the oldest narrowing in the support, then recompute.** The oldest rests
   only on the board, so its sentence is checkable as it stands. Every note step
   narrows some square, so the recomputed walk ends at the placement read off the

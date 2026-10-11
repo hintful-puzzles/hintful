@@ -594,14 +594,31 @@ What Crossing, the third, added:
   digits, tried each way. A search that shallow is a rule the solver lacks.
   A second implementation with one rule added (a number that still fits only
   one run goes there) finished 247 of 300 such boards at 5x5 and 208 of 248 at
-  11x11. The tier is still dealt, the help says what to look for before
-  trying a digit, and the rung is its own change. Run the second
-  implementation without the rule first: it has to finish exactly the boards
-  the solver does, or the count is of the instrument.
+  11x11. Run the second implementation without the rule first: it has to
+  finish exactly the boards the solver does, or the count is of the
+  instrument. The rule is the solver's and the hint's now
+  (`give-crossing-the-deduction-its-unreasonable-boards-lack`), and what it
+  finishes is dealt as Easy.
+- **A deduction that empties most of the tier moves its bound and its menu.**
+  With the rule an Unreasonable board is five to seven times rarer again: one
+  draw in 240 at 5x5 and one in 8,500 at 13x13, which is two seconds a deal.
+  The bound fell from 182 squares to 144 and the largest menu size is offered
+  at Easy alone. Measure the deal again at every shape the old bound was
+  taken from before trusting it.
+- **Ask what the new rule costs the hint, on the boards it adds.** A number's
+  one run usually shows only once squares elsewhere are narrowed, so the hint
+  writes those notes first: twice as many boards need notes as before (12 of
+  300 at 5x5 against 6), and one 5x5 board, a staircase of two-square runs,
+  took seventeen note steps before the placement.
+- **Count what the next rule would finish before writing it.** Two numbers
+  that fit only the same two runs, either way round, finished about one in
+  seven of what the rule leaves (551 of 3,570 at 5x5, 59 of 506 at 9x9), and
+  what is left still takes a median of three to five positions. It is not
+  written.
 - **The tier is rarer than Easy by a steady factor, so it takes the Easy
-  bound's shape and a smaller number.** An Unreasonable Crossing board is
-  about five times rarer than an Easy one at every shape measured, since a
-  draw has to survive the same rejections first.
+  bound's shape and a smaller number.** Before the rule an Unreasonable
+  Crossing board was about five times rarer than an Easy one at every shape
+  measured, since a draw has to survive the same rejections first.
 - **Measuring the new bound re-measures the old one, on shapes the old one
   never tried.** Crossing's Easy bound was an area, taken from near-square
   boards. Thin boards inside it never dealt (2x60, 3x75, 4x56), and its

@@ -10,7 +10,8 @@
  * Every word that points at the board is a reference to the mark it points at
  * (`engine/hint-words.ts`): the squares the step writes, the notes it rules out
  * and the listed number it writes in are the ring; the listed numbers that
- * still fit are outlined in the list; the run the sentence names is striped.
+ * still fit are outlined in the list, and so are the squares that rule a
+ * number out of a run; the run the sentence names is striped.
  */
 
 import { indefinite, joinOr } from "../../engine/hint-text.ts";
@@ -52,6 +53,8 @@ export interface Marked {
   otherFitting: readonly number[];
   /** The listed number a whole-run placement writes in, or null. */
   number: number | null;
+  /** The squares that rule that number out of other runs. */
+  against: readonly Point[];
 }
 
 /** Whether a crossing's sentence leads with the across run: the tighter of
@@ -111,6 +114,20 @@ export const say = {
     return so({
       look: phrase`Only one ${len}-digit number left matches the digits already in ${thisRun(m, "this run")}`,
       move,
+    });
+  },
+
+  /** `num` still fits one run only. The squares it disagrees with elsewhere
+   * are the evidence, so the sentence names no cause: a digit and a note
+   * both show in the square. */
+  onlyRun: (f: Firing<"onlyRun">, num: string, m: Marked): Sentence => {
+    const ruledOut = mark.as("outline", CELL, m.against, (els) =>
+      els.length === 1 ? "the outlined square rules" : "the outlined squares rule",
+    );
+    const listed = mark.as("ring", LISTED, m.number === null ? [] : [m.number], num);
+    return so({
+      look: phrase`${listed} still fits only ${thisRun(m, "this run")}: ${ruledOut} it out of the other unfilled ${f.others === 1 ? "run" : "runs"}`,
+      move: phrase`it must go ${mark.as("ring", CELL, m.targets, "here")}`,
     });
   },
 

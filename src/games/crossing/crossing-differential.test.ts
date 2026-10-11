@@ -7,18 +7,22 @@
  * solver finishes it uniquely — including the boards with an isolated open
  * cell, which the generator no longer makes but a shared game ID can still name.
  *
- * **The boards with no isolated cell are reproduced byte-for-byte.** Rejecting
- * an isolated-cell board is the generator's only departure from upstream's, and
- * it can only turn an accepted attempt into a retry: a recorded board with no
- * isolated cell was reached by attempts none of which that rule rejects, so the
- * same seed reaches it again. One desc comparison then pins the wall growth
- * (including `checkPool`'s mutating test), the digit fill, the run collection
- * order, every deduction and the codec together.
+ * **The boards the generator's two departures leave alone are reproduced
+ * byte-for-byte.** Rejecting an isolated-cell board can only turn an accepted
+ * attempt into a retry: a recorded board with no isolated cell was reached by
+ * attempts none of which that rule rejects. The solver's third deduction can
+ * only turn a retry into an accepted attempt: a seed reaches its recorded
+ * board unless a draw before it is one the third deduction finishes, and
+ * {@link WIDER_EASY} names the seeds where one is. One desc comparison then
+ * pins the wall growth (including `checkPool`'s mutating test), the digit
+ * fill, the run collection order, upstream's two deductions and the codec
+ * together.
  */
 
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
+import { randomNew } from "../../engine/random/index.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { newCrossingDesc } from "./generator.ts";
@@ -56,11 +60,28 @@ function hasIsolatedCell(f: Fixture): boolean {
   return false;
 }
 
-const reproducible = data.fixtures.filter((f) => !hasIsolatedCell(f));
+/** The seeds that deal an earlier draw than upstream's: a board the solver's
+ * third deduction finishes, which upstream's two threw away. */
+const WIDER_EASY: ReadonlySet<string> = new Set(["crossing-7x10-1"]);
+
+const reproducible = data.fixtures.filter(
+  (f) => !hasIsolatedCell(f) && !WIDER_EASY.has(f.seed),
+);
 
 describe("crossing frozen boards", () => {
   it("include boards to reproduce", () => {
     expect(reproducible.length).toBeGreaterThan(0);
+  });
+
+  it("a seed set aside deals another board, which is solved and is not upstream's", () => {
+    const aside = data.fixtures.filter((f) => WIDER_EASY.has(f.seed));
+    expect(aside).toHaveLength(WIDER_EASY.size);
+    for (const f of aside) {
+      const p = params(f);
+      const { desc } = newCrossingDesc(p, randomNew(f.seed));
+      expect(desc, label(f)).not.toBe(f.desc);
+      expect(solveCrossing(newState(p, desc).puzzle).status, label(f)).toBe("valid");
+    }
   });
 
   for (const f of data.fixtures) {

@@ -1,7 +1,7 @@
 /**
  * Behavioral tests for the Crossing port: the params and desc codecs
  * (including upstream's exact validation messages and its deliberate
- * leniency), run collection, the two-technique solver, the
+ * leniency), run collection, the three-technique solver, the
  * solver-gated generator's tier-1 properties, Solo-style input with the sticky
  * pencil mode, `executeMove` through to completion via a real `Midend`, Solve,
  * `findMistakes` (wrong digits *and* notes that rule the answer out), the text
@@ -73,7 +73,6 @@ import {
   EASY_PRESETS,
   encodeDesc,
   encodeParams,
-  makePuzzle,
   newState,
   numberAvailableTo,
   numberFitsRun,
@@ -321,15 +320,24 @@ describe("crossing solver", () => {
   });
 
   it("reports progress on a board its techniques cannot finish", () => {
-    // A single 2-cell run with two candidate numbers sharing no digit position
-    // is genuinely ambiguous, so the solver stops without a contradiction. No
-    // desc says this — it lists a number per run — so the puzzle is built.
-    const walls = Uint8Array.of(0, 0, 1, 1, 1, 1, 1, 1);
-    const puzzle = makePuzzle(4, 2, walls, [
-      [1, 2],
-      [3, 4],
-    ]);
+    // Two four-square runs a wall apart, and two numbers either could hold:
+    // each run fits both numbers and each number both runs, so the solver
+    // stops without a contradiction.
+    const { puzzle } = newState({ ...P5, w: 4, h: 3 }, "4d4,1234,5678");
     expect(solveCrossing(puzzle).status).toBe("progress");
+  });
+
+  it("gives a number the one run it still fits, where every run fits several", () => {
+    // #...   414 is the one number three squares long, so both down runs start
+    // ..#.   with a 4, and 41 and 46 fit either. The two-square across run
+    // ends where the first of them does, in a 1 or a 6, which 26, 41 and 46
+    // all do. No run is down to one number, which is where upstream's two
+    // deductions stop. But 26 fits no run that starts with a 4: it has the
+    // across run left, and the down runs are then 46 and 41.
+    const { puzzle } = newState({ ...P5, w: 4, h: 2 }, "a5a1,26,41,46,414");
+    const solved = solveCrossing(puzzle);
+    expect(solved.status).toBe("valid");
+    expect(Array.from(solved.grid)).toEqual([0, 4, 1, 4, 2, 6, 0, 1]);
   });
 
   it("reports invalid when a full run matches no listed number", () => {

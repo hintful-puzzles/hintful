@@ -17,12 +17,14 @@
  *
  * 1. **`onlyNumber`** — one listed number is all that still fits a run, so the
  *    whole run is that number. One deduction, one whole-run move.
- * 2. **`sharedDigit`** — every number that still fits a run carries the same
+ * 2. **`onlyRun`** — the same question asked of a number: one run is all it
+ *    still fits, so it goes there, whatever else that run could take.
+ * 3. **`sharedDigit`** — every number that still fits a run carries the same
  *    digit at one position, so that square is pinned.
- * 3. **`crossRuns`** — the signature deduction of a number crossword: the
+ * 4. **`crossRuns`** — the signature deduction of a number crossword: the
  *    across number allows one set of digits in this square, the down number
  *    another, and they agree on exactly one.
- * 4. **`noteDigits`** / **`noteStrike`** — the digits a run's still-fitting
+ * 5. **`noteDigits`** / **`noteStrike`** — the digits a run's still-fitting
  *    numbers leave in one of its squares, written as notes into a square that
  *    has none, or struck from the notes of one that has.
  *
@@ -33,7 +35,7 @@
  * flags a note that has ruled a square's answer out, and the hint refuses on a
  * flagged board.
  *
- * Rungs 1–3 read that way can stall where the solver does not: a number can
+ * Rungs 1–4 read that way can stall where the solver does not: a number can
  * die three implications away, because some crossing run ruled a digit out of
  * one of its squares. The solver's narrowing fixpoint ({@link fixpoint}) finds
  * such a placement, and the hint then does **not** assert it (a hint relies
@@ -44,13 +46,14 @@
  * placement read off the notes.
  *
  * The order is goal-first: fill a whole run, else pin a square, else write the
- * notes a placement needs. Rung 4 also closes a board where deduction is
+ * notes a placement needs. Rung 5 also closes a board where deduction is
  * exhausted (a hand-authored, non-uniquely-solvable id reaches it, and that is
  * how `crossing-hint.test.ts` tests it) by ruling out a note no still-fitting
  * number supports.
  *
- * The fixpoint is {@link solveCrossing}'s `solverMarks` loop and rungs 2+3 are
- * its `solverConfirm`, so a plan always reaches the solution.
+ * The fixpoint is {@link solveCrossing}'s `solverMarks` and `solverOnlyRun`
+ * loop and rungs 3+4 are its `solverConfirm`, so a plan reaches the solution
+ * wherever the solver does.
  */
 
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
@@ -174,13 +177,17 @@ function analyze(board: CrossingHintBoard): Analysis {
   return { placed, fitting, acc };
 }
 
-/** One square narrowed by one run's still-fitting numbers. */
+/** One square of a run narrowed: by the run's still-fitting numbers, or to
+ * the digit of a number that fits no other run. */
 interface Narrowing {
   cell: number;
   run: number;
   /** How many narrowings were recorded before the run's numbers were judged —
    * the only ones this one can rest on. */
   before: number;
+  /** The number this is the only run left for, where that is what narrowed
+   * the square. It rests on that number having died in every other run. */
+  only: number | null;
 }
 
 /** `removedBy` value for a digit the fixpoint never rules out. */
@@ -195,10 +202,12 @@ interface Fixpoint extends Tables {
 }
 
 /**
- * `solverMarks`' narrowing, run to a fixpoint from the board, recording which
- * narrowing ruled out each digit. Every pass narrows **in place as it goes**, so
- * the vertical runs already see what the horizontal ones ruled out — that
- * ordering is where much of the solver's strength lives.
+ * The solver's two narrowings, run to a fixpoint from the board, recording
+ * which narrowing ruled out each digit. Every pass of `solverMarks`' narrows
+ * **in place as it goes**, so the vertical runs already see what the
+ * horizontal ones ruled out — that ordering is where much of the solver's
+ * strength lives. Where a pass changes nothing, `solverOnlyRun`'s gives each
+ * number with one run left that run's squares.
  */
 function fixpoint(board: CrossingHintBoard, placed: Int32Array): Fixpoint {
   const { puzzle, grid } = board;
@@ -238,9 +247,27 @@ function fixpoint(board: CrossingHintBoard, placed: Int32Array): Fixpoint {
         const removed = cand[i] & ~a[k];
         if (!removed) continue;
         for (const d of digitsOf(removed)) removedBy[i * 9 + d - 1] = narrowings.length;
-        narrowings.push({ cell: i, run: r, before });
+        narrowings.push({ cell: i, run: r, before, only: null });
         cand[i] &= a[k];
         changed = true;
+      }
+    }
+    if (!changed) {
+      // Every number is judged against the tables of the pass above, so each
+      // rests on what came before this step and on no other number's run.
+      const before = narrowings.length;
+      for (const { run, number } of onlyRuns(puzzle, placed, fitting)) {
+        const cells = runs[run].cells;
+        for (let k = 0; k < cells.length; k++) {
+          const i = cells[k];
+          const removed = cand[i] & ~digitBit(numbers[number][k]);
+          if (grid[i] || !removed) continue;
+          for (const d of digitsOf(removed))
+            removedBy[i * 9 + d - 1] = narrowings.length;
+          narrowings.push({ cell: i, run, before, only: number });
+          cand[i] &= ~removed;
+          changed = true;
+        }
       }
     }
     // A pass that changed nothing leaves `fitting`/`acc` agreeing with `cand`.
@@ -249,14 +276,32 @@ function fixpoint(board: CrossingHintBoard, placed: Int32Array): Fixpoint {
   }
 }
 
+/** The numbers not yet written in that still fit one run only, each with that
+ * run, read off a table of which numbers fit which run. */
+function onlyRuns(
+  puzzle: CrossingPuzzle,
+  placed: Int32Array,
+  fitting: readonly (readonly number[])[],
+): { run: number; number: number }[] {
+  const homes = puzzle.numbers.map((): number[] => []);
+  fitting.forEach((fits, r) => {
+    for (const l of fits) homes[l].push(r);
+  });
+  return homes.flatMap((rs, l) =>
+    rs.length === 1 && placed[l] < 0 ? [{ run: rs[0], number: l }] : [],
+  );
+}
+
 /**
  * The narrowings that killing every number in `kills` rests on, oldest first.
  *
  * A number died at the square of its run where one of its digits was ruled out
  * first. That narrowing rests on every number of its run carrying that digit
- * there having died before the run was judged, and so on down; a digit the
- * board already rules out rests on nothing. So the oldest narrowing in the
- * result rests only on the board, and is directly checkable.
+ * there having died before the run was judged, or, where the run went to a
+ * number with no other left, on that number having died in every other run;
+ * and so on down. A digit the board already rules out rests on nothing. So the
+ * oldest narrowing in the result rests only on the board, and is directly
+ * checkable.
  */
 function support(
   puzzle: CrossingPuzzle,
@@ -293,7 +338,13 @@ function support(
     visited.add(key);
     const e = fp.removedBy[key];
     need.add(e);
-    const { cell, run, before } = fp.narrowings[e];
+    const { cell, run, before, only } = fp.narrowings[e];
+    if (only !== null) {
+      for (let r = 0; r < runs.length; r++) {
+        if (r !== run && mayTake(puzzle, placed, r, only)) kill(r, only, before);
+      }
+      return;
+    }
     const pos = posInRun(puzzle, run, cell);
     const digit = (key % 9) + 1;
     for (let l = 0; l < numbers.length; l++) {
@@ -333,6 +384,24 @@ export type CrossingFiring =
        * written in elsewhere; `"digits"` — the digits already in this run
        * contradict them; `"notes"` — the notes in the run's squares do. */
       because: "length" | "used" | "digits" | "notes";
+    }
+  | {
+      technique: "onlyRun";
+      /** The listed number, and the one run it still fits. */
+      number: number;
+      run: number;
+      /** The run's still-empty cells, as `onlyNumber`'s. */
+      fill: number[];
+      /** The squares that rule the number out of the other runs of its length
+       * with a square still empty: the ones whose digit or notes it disagrees
+       * with. A full run needs no ruling out. */
+      against: number[];
+      /** How many such runs there are. Never none on a board without an
+       * error: with every other run full, the numbers they hold are used and
+       * `onlyNumber` reads this one. */
+      others: number;
+      /** The premise's listed numbers: `number` alone. */
+      fitting: number[];
     }
   | {
       technique: "sharedDigit";
@@ -377,8 +446,8 @@ function posInRun(puzzle: CrossingPuzzle, r: number, i: number): number {
 }
 
 /**
- * The next forced deduction, in **goal-first** order: fill a whole run, else
- * pin one square, else pin one square from its two crossing numbers, else write
+ * The next forced deduction, in **goal-first** order: fill a whole run, as
+ * the one number it can take or as a number's one run, else pin one square, else pin one square from its two crossing numbers, else write
  * the notes the next placement rests on, else rule a refuted note out. Leading
  * with the whole-run placement is both the strongest teaching and the most
  * satisfying move.
@@ -392,7 +461,9 @@ function nextCrossingFiring(board: CrossingHintBoard): CrossingFiring | null {
   const hidden = placementFiring(board, fp, a);
   if (!hidden) return noteStrikeFiring(board, a);
   const [first] = support(board.puzzle, a.placed, fp, kills(board, a, fp, hidden));
-  if (first === undefined) {
+  // The oldest narrowing rests on the board alone. Were it a number's one
+  // run, the board would show that number fitting no other.
+  if (first === undefined || fp.narrowings[first].only !== null) {
     throw new Error("crossing hint: a placement the board shows was passed over");
   }
   const { cell, run } = fp.narrowings[first];
@@ -400,7 +471,7 @@ function nextCrossingFiring(board: CrossingHintBoard): CrossingFiring | null {
 }
 
 /**
- * The three placement techniques, in goal-first order, read off whichever
+ * The four placement techniques, in goal-first order, read off whichever
  * tables `t` it is given. `shown` is always the board's own reading: it decides
  * how a whole-run placement is narrated.
  */
@@ -441,7 +512,15 @@ function placementFiring(
     };
   }
 
-  // 2 — a position every still-fitting number of one run agrees on.
+  // 2 — a number only one run can still take. Asked of the board's own
+  // reading alone: the fixpoint has given such a run to its number, which 1
+  // reads off its tables.
+  if (t === shown) {
+    const only = onlyRunFiring(board, shown);
+    if (only) return only;
+  }
+
+  // 3 — a position every still-fitting number of one run agrees on.
   for (let r = 0; r < runs.length; r++) {
     const cells = runs[r].cells;
     for (let k = 0; k < cells.length; k++) {
@@ -460,7 +539,7 @@ function placementFiring(
     }
   }
 
-  // 3 — the two numbers crossing in a square agree on exactly one digit.
+  // 4 — the two numbers crossing in a square agree on exactly one digit.
   for (let i = 0; i < w * h; i++) {
     if (walls[i] || grid[i]) continue;
     const across = puzzle.acrossRun[i];
@@ -484,6 +563,40 @@ function placementFiring(
     };
   }
 
+  return null;
+}
+
+/** A number the board shows fitting one run only, where that run has a square
+ * to write in. */
+function onlyRunFiring(
+  board: CrossingHintBoard,
+  shown: Analysis,
+): CrossingFiring | null {
+  const { puzzle, grid } = board;
+  const { runs, numbers } = puzzle;
+  const cand = boardCandidates(board);
+  for (const { run, number } of onlyRuns(puzzle, shown.placed, shown.fitting)) {
+    const fill = runs[run].cells.filter((i) => grid[i] === 0);
+    if (fill.length === 0) continue;
+    const num = numbers[number];
+    const against: number[] = [];
+    let others = 0;
+    runs.forEach(({ cells }, r) => {
+      if (r === run || cells.length !== num.length) return;
+      if (cells.every((i) => grid[i] !== 0)) return;
+      others++;
+      against.push(...cells.filter((i, k) => !(cand[i] & digitBit(num[k]))));
+    });
+    return {
+      technique: "onlyRun",
+      run,
+      number,
+      fill,
+      against,
+      others,
+      fitting: [number],
+    };
+  }
   return null;
 }
 
@@ -527,6 +640,8 @@ function kills(
       }
       return out;
     }
+    case "onlyRun":
+      throw new Error("crossing hint: a number's one run is read off the board");
     case "noteDigits":
     case "noteStrike":
       throw new Error("crossing hint: a note step is not a placement");
@@ -597,7 +712,8 @@ export function applyCrossingFiring(
 ): void {
   const { puzzle, grid, marks } = board;
   switch (firing.technique) {
-    case "onlyNumber": {
+    case "onlyNumber":
+    case "onlyRun": {
       const cells = puzzle.runs[firing.run].cells;
       const num = puzzle.numbers[firing.number];
       for (let k = 0; k < cells.length; k++) grid[cells[k]] = num[k];
@@ -667,6 +783,8 @@ export function narrateCrossing(
         m,
       );
     }
+    case "onlyRun":
+      return say.onlyRun(firing, puzzle.numbers[firing.number].join(""), m);
     case "sharedDigit":
       return say.sharedDigit(firing, puzzle.runs[firing.run].horizontal, m);
     case "crossRuns":
@@ -683,7 +801,13 @@ export function narrateCrossing(
 function markedOf(puzzle: CrossingPuzzle, f: CrossingFiring): Marked {
   const at = (i: number): Point => ({ x: i % puzzle.w, y: Math.floor(i / puzzle.w) });
   const runCells = (r: number): Point[] => puzzle.runs[r].cells.map(at);
-  const none = { notes: [], otherRun: [], otherFitting: [], number: null };
+  const none = {
+    notes: [],
+    otherRun: [],
+    otherFitting: [],
+    number: null,
+    against: [],
+  };
   switch (f.technique) {
     case "onlyNumber":
       return {
@@ -692,6 +816,15 @@ function markedOf(puzzle: CrossingPuzzle, f: CrossingFiring): Marked {
         run: runCells(f.run),
         fitting: f.fitting.filter((l) => l !== f.number),
         number: f.number,
+      };
+    case "onlyRun":
+      return {
+        ...none,
+        targets: f.fill.map(at),
+        run: runCells(f.run),
+        fitting: [],
+        number: f.number,
+        against: f.against.map(at),
       };
     case "crossRuns": {
       const leadAcross = leadsAcross(f);

@@ -208,8 +208,10 @@ function drawPuzzle(p: CrossingParams, rng: RandomState): CrossingPuzzle | null 
 const deduced = (puzzle: CrossingPuzzle): boolean =>
   solveCrossing(puzzle).status === "valid";
 
-/** An Easy board, upstream's only kind (`crossing_generate`): pure deduction
- * solves the puzzle, uniquely. */
+/** An Easy board (`crossing_generate`): pure deduction solves the puzzle,
+ * uniquely. Upstream's are the ones the solver's first two deductions finish,
+ * and about one in thirty of these at 5×5, one in six at 13×13, needs the
+ * third. */
 function easyPuzzle(p: CrossingParams, rng: RandomState): CrossingPuzzle {
   const attempt = retryLimit("crossing: generation");
   for (;;) {
@@ -222,7 +224,7 @@ function easyPuzzle(p: CrossingParams, rng: RandomState): CrossingPuzzle {
 /**
  * Most draws of a large board die on two runs reading the same number. The
  * rarest board `validateParams` admits is an Easy 7×32, accepted once in
- * about 14,000 draws; the rarest Unreasonable one, 3×60, is one in 4,600.
+ * about 14,000 draws; the rarest Unreasonable one, 4×36, is one in 7,700.
  */
 export function newCrossingDesc(p: CrossingParams, rng: RandomState): { desc: string } {
   const puzzle =

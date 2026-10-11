@@ -362,7 +362,7 @@ function solve(orig: CrossingState): SolveResult<CrossingMove> {
   }));
 }
 
-/** Easy is what the solver's two deductions finish and the hint, which walks
+/** Easy is what the solver's three deductions finish and the hint, which walks
  * the same deductions from the player's marks, finishes too. */
 const difficulty = searchTierContract<CrossingParams, CrossingState>({
   newState,
@@ -405,6 +405,7 @@ const sameMark = (a: Mark, b: Mark): boolean =>
 /** Every rung a Crossing step can be: a firing's `technique`. */
 const CROSSING_RUNGS = [
   "onlyNumber",
+  "onlyRun",
   "sharedDigit",
   "crossRuns",
   "noteDigits",
@@ -417,6 +418,7 @@ type CrossingRung = (typeof CROSSING_RUNGS)[number];
 function hintMove(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingMove {
   switch (f.technique) {
     case "onlyNumber":
+    case "onlyRun":
       return { kind: "place", run: f.run, number: f.number };
     case "sharedDigit":
     case "crossRuns":
@@ -452,6 +454,17 @@ function hintHighlights(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingHint
         // filled are the premise, and stay part of the hatched run.
         targets: f.fill.map(at),
         ...common,
+        numberTarget: f.number,
+      };
+    case "onlyRun":
+      // The number's own run is the conclusion; what it rests on is the
+      // squares that keep it out of the others, and no other listed number.
+      return {
+        hatch: runCells(f.run),
+        targets: f.fill.map(at),
+        ...common,
+        area: f.against.map(at),
+        numbers: [],
         numberTarget: f.number,
       };
     case "sharedDigit":
@@ -734,7 +747,8 @@ export const crossingGame: Game<
   hintMarks: {
     roles: {
       ring: "what the step decides, in green: the square it fills, or every square of a run it fills with a whole number, and then the number in the list it writes in, boxed; or a line through a pencil mark, a digit it rules out of that square.",
-      outline: "the numbers in the list that still fit the run, boxed.",
+      outline:
+        "what the step reasons from: the numbers in the list that still fit the run, boxed, or the squares that rule a number out of a run.",
       stripes:
         "the run the sentence names: “this across run”, “this down run”. When a step uses both runs through a square, both are striped.",
     },

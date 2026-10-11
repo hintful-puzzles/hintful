@@ -47,15 +47,14 @@ When the hint needs to narrow a square down before it can say more, it writes th
 A few ideas are worth learning by name:
 
 * **Only one number fits.** A run whose length only one listed number shares, or whose other numbers of that length are all used, must be that number.
+* **Only one run fits.** The same question asked of a number: where can it still go? If every other run of its length is full, or holds a digit or pencil marks it disagrees with, it goes in the one run left, even when that run could take other numbers too. The hint outlines the squares that rule it out elsewhere.
 * **Every fitting number agrees.** If every number that still fits a run has the same digit in one of its squares, that square is that digit.
 * **Crossing runs.** The across number allows some digits in a square and the down number allows others; when they share just one, that is the square's digit.
 
 On an Unreasonable board there comes a point where none of these settles
 another square, and the hint says that nothing further follows by deduction
-instead of choosing for you. Look first for a number that only one run can
-still take, which the hint does not do. Failing that, save your position and
-try a digit in a square with few left. The hint carries on from whatever you
-enter.
+instead of choosing for you. Save your position and try a digit in a square
+with few left. The hint carries on from whatever you enter.
 
 ## Crossing parameters
 

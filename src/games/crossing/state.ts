@@ -47,7 +47,7 @@ export interface CrossingParams {
   h: number;
   /** Grow the walls 180°-rotationally symmetrically. */
   sym: boolean;
-  /** `DIFF_EASY`, a board the solver's two deductions finish, or
+  /** `DIFF_EASY`, a board the solver's three deductions finish, or
    * `DIFF_UNREASONABLE`, one with a single answer that they do not reach.
    * Generation-time only, as `sym` is. */
   diff: number;
@@ -61,10 +61,11 @@ const board = (side: number, sym = false): CrossingParams => ({
 });
 
 /**
- * The sizes the menu offers at both tiers. Upstream ships the first three. The
- * rest are a fork addition: the solving aids make a small board quick work, so
- * the ladder runs up to 13×13, the largest an Unreasonable board is dealt at
- * in well under a second (350 ms; an Easy one takes 75 ms).
+ * The sizes the menu offers. Upstream ships the first three. The rest are a
+ * fork addition: the solving aids make a small board quick work, so the
+ * ladder runs up to 13×13. That one is offered at Easy alone, being past
+ * {@link MAX_UNREASONABLE_AREA}; the largest below it deals an Unreasonable
+ * board in 0.2 s.
  */
 const BOARDS: CrossingParams[] = [5, 7, 9, 11, 13].map((side) => board(side));
 
@@ -97,7 +98,7 @@ export const paramConfig: ParamConfigItem<CrossingParams>[] = [
   }),
   searchTierItem(
     "diff",
-    "An Easy puzzle can be finished one run at a time: there is always a run whose remaining numbers agree on a digit, or a square with one digit left. An Unreasonable one has a single solution that no run on its own leads to, so somewhere you have to look further: for a number only one run can still take, or by trying a digit and seeing what follows. The Hint button stops where the runs do.",
+    "An Easy puzzle can be finished one step at a time: there is always a run whose remaining numbers agree on a digit, a square with one digit left, or a number that only one run can still take. An Unreasonable one has a single solution that none of these leads to, so somewhere you have to try a digit and see what follows. The Hint button stops where they do.",
   ),
   {
     kw: "symmetric-walls",
@@ -115,7 +116,11 @@ export const paramConfig: ParamConfigItem<CrossingParams>[] = [
 export function presets(): PresetMenu<CrossingParams> {
   return {
     title: "Crossing",
-    ...presetGrid(paramConfig, BOARDS, { variants: VARIANTS }),
+    ...presetGrid(paramConfig, BOARDS, {
+      // An Unreasonable board past the bound takes seconds to find.
+      tiers: (b) => (b.w * b.h > MAX_UNREASONABLE_AREA ? [DIFF_EASY, DIFF_EASY] : null),
+      variants: VARIANTS,
+    }),
   };
 }
 
@@ -170,16 +175,21 @@ const MAX_THIN_AREA = new Map<number, number>([
 
 /**
  * The largest area an Unreasonable board is dealt at. Its own bound, since
- * such a board is about five times rarer than an Easy one at every shape: a
- * draw has first to survive the same rejections, and then be one the solver
- * stops short on that still has one answer.
+ * such a board is far rarer than an Easy one at every shape: a draw has first
+ * to survive the same rejections, and then be one the solver stops short on
+ * that still has one answer. The solver's third deduction finishes five in
+ * six of the boards its first two stop on, so the bound fell from 182 with
+ * it.
  *
- * Measured 2026-10-10, mean time for a board at the bound | past it: 13×14
- * 0.6 s, 12×15 0.5 s, 10×18 0.5 s, 6×30 1.0 s, 4×45 1.0 s, 3×60 1.3 s |
- * 14×14 1.2 s, 12×17 1.7 s, 8×25 1.3 s, 5×40 2.5 s, 15×15 none in 19,000
- * draws. Symmetric walls halve these and are held to the same bound.
+ * Measured 2026-10-11, one draw in so many kept and the mean time for a
+ * board, at the bound | past it: 12×12 one in 2,900 (0.6 s), 8×18 one in
+ * 2,200 (0.4 s), 6×24 one in 3,600 (0.7 s), 3×48 one in 2,800 (0.6 s), 4×36
+ * one in 7,700 (1.4 s) | 12×13 one in 4,300 (0.9 s), 10×15 one in 5,200
+ * (1.1 s), 5×30 one in 4,400 (1.0 s), 13×13 one in 8,500 (2 s), 3×60 one in
+ * 9,300 (2.9 s). Symmetric walls halve the time (13×13 1.1 s) and are held to
+ * the same bound.
  */
-const MAX_UNREASONABLE_AREA = 182;
+const MAX_UNREASONABLE_AREA = 144;
 
 /** What upstream's `validate_params` checks beyond each dimension's own bound:
  * at least one of them ≥ 4 (a 3×3 board has no room for crossing runs) — plus

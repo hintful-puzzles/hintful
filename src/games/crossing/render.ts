@@ -283,8 +283,9 @@ const K_GHOST = 24; // bits 24-27: previewed digit of a held clue number (0 = no
  * "which listed numbers still fit this run", so a grid-only highlight would
  * point at something the player cannot see. */
 export interface CrossingHint {
-  /** Particular squares a reason rests on, outlined; every technique's reason
-   * is a whole run, so this stays empty. */
+  /** Particular squares a reason rests on, outlined: the ones that rule a
+   * number out of every run but one. Every other technique's reason is a
+   * whole run, and leaves this empty. */
   area: Point[];
   /** The run(s) the sentence names, hatched (docs/games/hints.md § "Hatch the
    * line the sentence names"). */

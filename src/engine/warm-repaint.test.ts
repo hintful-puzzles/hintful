@@ -106,12 +106,7 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
  * reason. A pair whose role the legend does not list needs no entry: no step
  * may name it (`testing/hint-binding.ts`).
  */
-const UNREACHED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
-  crossing: {
-    "outline|cell":
-      "the shared HintSidecar reads outlined cells, and Crossing's hint outlines only listed numbers",
-  },
-};
+const UNREACHED: Readonly<Record<string, Readonly<Record<string, string>>>> = {};
 
 describe("a warm frame matches a fresh one", () => {
   it("is not vacuous — the registry offered every game", () => {
