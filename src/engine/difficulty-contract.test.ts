@@ -23,7 +23,6 @@
 import { describe, expect, it, vi } from "vitest";
 import "../games/index.ts";
 import * as answerSearch from "./answer-search.ts";
-import { DIFF_UNREASONABLE } from "./answer-search.ts";
 import {
   cappedSolveFor,
   type DifficultyContract,
@@ -420,26 +419,28 @@ for (const { id, game, contract, tiers } of tiered) {
 /** How many boards the tier-binding check actually graded, across every game —
  * the sweep-wide half of the vacuity guard. Accumulated by the per-game test
  * above and asserted below, which runs last because it is registered last. */
-describe("a game with the search's two tiers deals its Unreasonable boards through the engine", () => {
+describe("a game with the search's tiers deals its Unreasonable boards through the engine", () => {
   // The loop, its bound and the test that keeps a board are
   // `dealUnreasonable`'s, and a game with a loop of its own has a second copy
-  // of all three. The games are the ones whose contract `searchTierContract`
-  // made, which is narrower than the tiers' names: Bricks and Galaxies name
-  // theirs the same and grade them by a solver of their own.
+  // of all three. The games are the ones whose contract `searchTiers` made,
+  // which is narrower than the tiers' names: Bricks and Galaxies name theirs
+  // the same and grade them by a solver of their own.
   const searchTiered = tiered.filter(({ contract }) =>
     answerSearch.isSearchTierContract(contract),
   );
 
-  it("found the games with the two tiers", () => {
+  it("found the games with the search's tiers, named as it names them", () => {
     // A floor and not a count: it fails only where the filter matches nothing.
     expect(searchTiered.length).toBeGreaterThan(5);
     for (const { id, tiers } of searchTiered)
-      expect(tiers, id).toEqual(answerSearch.SEARCH_TIER_NAMES);
+      expect(tiers, id).toEqual(answerSearch.searchTiers(tiers.length - 1).names);
+    // One of them has a second deduction, or the count is not exercised.
+    expect(searchTiered.some(({ tiers }) => tiers.length > 2)).toBe(true);
   });
 
   for (const t of searchTiered) {
     it(`${t.id}: deals an Unreasonable board by dealUnreasonable`, () => {
-      const params = paramsForTier(t, DIFF_UNREASONABLE);
+      const params = paramsForTier(t, t.tiers.length - 1);
       expect(params, `${t.id}: no preset is valid at Unreasonable`).not.toBeNull();
       const deal = vi.spyOn(answerSearch, "dealUnreasonable");
       try {

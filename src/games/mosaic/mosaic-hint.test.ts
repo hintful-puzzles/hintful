@@ -4,7 +4,7 @@
  * careless `vitest -u` cannot erase them.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -15,7 +15,13 @@ import { BLOCK, blockOf } from "./hint-marks.ts";
 import { mosaicGame } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf, newDesc, solveGameActual } from "./solver.ts";
-import { newState, STATE_BLANK, STATE_MARKED } from "./state.ts";
+import {
+  DIFF_NORMAL,
+  DIFF_UNREASONABLE,
+  newState,
+  STATE_BLANK,
+  STATE_MARKED,
+} from "./state.ts";
 
 const P = { width: 10, height: 10, aggressive: true, diff: DIFF_EASY };
 const desc = newDesc(P, randomNew("mosaic-hint")).desc;
@@ -142,6 +148,28 @@ describe("Mosaic's hint", () => {
     );
     expect(sides).toHaveLength(perimeter.size);
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("on a Normal board plans the whole board, comparing numbers on the way", () => {
+    const N = { ...P, diff: DIFF_NORMAL };
+    for (let seed = 0; seed < 6; seed++) {
+      const state = newState(N, newDesc(N, randomNew(`mosaic-hint-${seed}`)).desc);
+      const solution = solveGameActual(state.board);
+      const res = mosaicHint(state);
+      if (!res.ok || !solution) throw new Error("no plan");
+      const decided = new Set<number>();
+      let comparing = 0;
+      for (const step of res.steps) {
+        const { cells, mark } = step.highlights as MosaicHint;
+        if (step.rung === "needsMore" || step.rung === "sameNeed") comparing++;
+        for (const c of cells) {
+          expect(solution[c], `seed ${seed}, square ${c}`).toBe(mark);
+          decided.add(c);
+        }
+      }
+      expect(decided.size, `seed ${seed}`).toBe(N.width * N.height);
+      expect(comparing, `seed ${seed}`).toBeGreaterThan(0);
+    }
   });
 
   it("on an Unreasonable board plans only what the answer has, and stops short", () => {

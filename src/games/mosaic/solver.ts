@@ -24,6 +24,7 @@ import { shuffle } from "../../engine/shuffle.ts";
 import { deduce } from "./deduce.ts";
 import {
   countAround,
+  DIFF_NORMAL,
   encodeBoard,
   type MosaicBoard,
   type MosaicMistake,
@@ -230,6 +231,25 @@ export function solveCheck(
 export function solveGameActual(board: MosaicBoard): Uint8Array | null {
   const cells = new Uint8Array(board.width * board.height);
   return deduce(board, cells) === "solved" ? cells : null;
+}
+
+/**
+ * The lowest tier whose deduction finishes `board`: {@link DIFF_EASY} where
+ * one number at a time does, {@link DIFF_NORMAL} where two had to be compared,
+ * and `null` where the deduction stops short. The deduction compares only
+ * where no number decides anything alone, so a comparison made is one needed.
+ */
+export function deductionTier(board: MosaicBoard): number | null {
+  let compared = false;
+  const finished = deduce(
+    board,
+    new Uint8Array(board.width * board.height),
+    (firing) => {
+      if ("other" in firing) compared = true;
+    },
+  );
+  if (finished !== "solved") return null;
+  return compared ? DIFF_NORMAL : DIFF_EASY;
 }
 
 // --- the search for a board's answers ---------------------------------------
@@ -498,8 +518,56 @@ function unreasonableClues(p: MosaicParams, rng: RandomState): Int8Array {
   }).clues;
 }
 
+/**
+ * A Normal board's clues: an Easy board's with more hidden while the whole
+ * deduction still finishes, kept where one number at a time no longer does.
+ * With aggressive generation every clue is tried, as an Easy board's are by
+ * upstream's rule. Without it only as many are tried as the board's shorter
+ * side, so the board keeps most of its numbers and a large one is dealt in
+ * the time a few deductions take.
+ *
+ * Hiding a clue never makes a board easier, so a comparison needed once is
+ * needed on the board that is kept.
+ *
+ * Measured 2026-10-11, a deal and the steps that compare two numbers on the
+ * board dealt, median: 1 ms and 1 at 3×3, 5 ms and 7 at 10×10, 0.4 s and 74
+ * at 25×25, 0.9 s at 30×30 and 2.2 s at 35×35; without aggressive generation
+ * 1.4 ms and 7 at 10×10, 0.16 s and 161 at 50×50, 1.3 s and 466 at 100×100.
+ * Stopping at the first clue whose loss asks for a comparison, as the
+ * Unreasonable deal stops at its first, left a 50×50 board one number short
+ * of an Easy one.
+ */
+function normalClues(p: MosaicParams, rng: RandomState): Int8Array {
+  const { width, height, aggressive } = p;
+  const attempt = retryLimit(`mosaic: Normal generation (${width}x${height})`);
+  for (;;) {
+    attempt();
+    const board: MosaicBoard = { width, height, clues: easyClues(p, rng) };
+    const { clues } = board;
+    const shown: number[] = [];
+    clues.forEach((clue, pos) => {
+      if (clue >= 0) shown.push(pos);
+    });
+    shuffle(shown, rng);
+    let compares = false;
+    for (const pos of aggressive ? shown : shown.slice(0, Math.min(width, height))) {
+      const clue = clues[pos] as number;
+      clues[pos] = -1;
+      const tier = deductionTier(board);
+      if (tier === null) clues[pos] = clue;
+      else if (tier === DIFF_NORMAL) compares = true;
+    }
+    if (compares) return clues;
+  }
+}
+
 export function newDesc(p: MosaicParams, rng: RandomState): { desc: string } {
-  const clues = p.diff === DIFF_EASY ? easyClues(p, rng) : unreasonableClues(p, rng);
+  const clues =
+    p.diff === DIFF_EASY
+      ? easyClues(p, rng)
+      : p.diff === DIFF_NORMAL
+        ? normalClues(p, rng)
+        : unreasonableClues(p, rng);
   return { desc: encodeBoard({ width: p.width, height: p.height, clues }) };
 }
 

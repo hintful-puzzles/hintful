@@ -6,7 +6,7 @@
  * result to every cell it passes that held what the pressed one held.
  */
 
-import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
+import { solveFromAnswer } from "../../engine/answer-search.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
@@ -32,10 +32,10 @@ import {
 } from "./render.ts";
 import {
   answerOf,
+  deductionTier,
   encodeSolution,
   findMistakes,
   newDesc,
-  solveGameActual,
 } from "./solver.ts";
 import {
   decodeParams,
@@ -53,6 +53,7 @@ import {
   STATE_MARK_MASK,
   status,
   statusbarText,
+  TIERS,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -147,11 +148,15 @@ export const mosaicGame: Game<
       type: "solve",
       solution: encodeSolution(cells),
     })),
-  // Easy is what the deduction finishes. The hint is the same deduction read
-  // off the player's marks (`deduce.ts`), so it is not asked as well.
-  difficulty: searchTierContract<MosaicParams, MosaicState>({
+  // A tier below Unreasonable is what its part of the deduction finishes.
+  // The hint is the same deduction read off the player's marks (`deduce.ts`),
+  // so it is not asked as well.
+  difficulty: TIERS.contract<MosaicParams, MosaicState>({
     newState,
-    deductionFinishes: (state) => solveGameActual(state.board) !== null,
+    deductionFinishes(state, cap) {
+      const tier = deductionTier(state.board);
+      return tier !== null && tier <= cap;
+    },
     answerOf,
   }),
 

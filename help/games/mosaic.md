@@ -52,10 +52,10 @@ differ only by the squares one of them counts and the other does not:
   the squares they share.
 
 An Easy puzzle as the game deals it is finished one number at a time,
-and never needs a comparison. On an Unreasonable board there comes a
-point where comparing numbers settles no square either, and the hint
-says that nothing further follows by deduction instead of choosing for
-you. Save your position and try a square beside a number with few
+and never needs a comparison. A Normal one needs comparisons, and they
+finish it. On an Unreasonable board there comes a point where comparing
+numbers settles no square either, and the hint says that nothing further
+follows by deduction instead of choosing for you. Save your position and try a square beside a number with few
 squares left. The hint carries on from whatever you mark.
 
 ## Mosaic parameters

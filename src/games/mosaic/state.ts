@@ -6,10 +6,8 @@
 
 import {
   DIFF_EASY,
-  DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
-  searchTierItem,
   searchTierSegment,
+  searchTiers,
 } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import { digitValue } from "../../engine/decimal.ts";
@@ -46,6 +44,16 @@ const MAX_TILES = 10000;
 const DEFAULT_SIZE = 10;
 const DEFAULT_AGGRESSIVENESS = true;
 
+// --- difficulty -----------------------------------------------------------
+
+/** A tier for each of the deduction's two ideas (`deduce.ts`), and the
+ * search's above them. */
+export const TIERS = searchTiers(2);
+/** A board two numbers compared finish and one number at a time does not. */
+export const DIFF_NORMAL = 1;
+/** A board with a single answer that the deduction does not reach. */
+export const DIFF_UNREASONABLE = TIERS.unreasonable;
+
 // --- types --------------------------------------------------------------
 
 export interface MosaicParams {
@@ -53,9 +61,8 @@ export interface MosaicParams {
   height: number;
   /** Hide every clue that can be hidden (slower generation, harder board). */
   aggressive: boolean;
-  /** `DIFF_EASY`, a board one number at a time finishes, or
-   * `DIFF_UNREASONABLE`, one with a single answer that the deduction
-   * (`deduce.ts`) does not reach. Generation-time only, as `aggressive` is. */
+  /** `DIFF_EASY`, a board one number at a time finishes, {@link DIFF_NORMAL}
+   * or {@link DIFF_UNREASONABLE}. Generation-time only, as `aggressive` is. */
   diff: number;
 }
 
@@ -114,8 +121,19 @@ function board(side: number): MosaicParams {
   return { width: side, height: side, aggressive: side < 50, diff: DIFF_EASY };
 }
 
-/** Upstream's six sizes. The menu offers each at both tiers. */
+/** Upstream's six sizes. */
 const BOARDS: readonly MosaicParams[] = [3, 5, 10, 15, 25, 50].map(board);
+
+/**
+ * The sizes the menu offers at every tier; the others are on it at Easy
+ * alone, since six sizes at three tiers are more lines than a section holds.
+ * A Normal board of the two smallest has a comparison or two in it, against
+ * seven at 10×10, and at Unreasonable the hint has nothing to say from the
+ * start on most 3×3 boards and one 5×5 board in four.
+ * The largest is the one size dealt without aggressive generation. Each is
+ * dealt at any tier from the Custom dialog.
+ */
+const EVERY_TIER = { from: 10, to: 25 };
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<MosaicParams>[] = [
@@ -124,9 +142,9 @@ export const paramConfig: ParamConfigItem<MosaicParams>[] = [
     doc: `Size of the grid in squares. The grid may hold at most ${MAX_TILES} squares. A grid fewer than 20 squares across is refused past a length that depends on its width, because a long thin puzzle cannot be generated.`,
     bounds: { min: 3 },
   }),
-  searchTierItem(
+  TIERS.item(
     "diff",
-    "An Easy puzzle can be finished one number at a time: there is always a number that already has its shaded squares, or that needs every square it has left. An Unreasonable one has a single solution that neither those two steps nor comparing two numbers whose blocks overlap will reach, so somewhere you have to try a square and see what follows. The Hint button stops where the comparing does.",
+    "An Easy puzzle can be finished one number at a time: there is always a number that already has its shaded squares, or that needs every square it has left. A Normal one stops giving such a number somewhere, and there you compare two numbers whose blocks overlap. An Unreasonable one has a single solution that neither of those will reach, so somewhere you have to try a square and see what follows. The Hint button stops where the comparing does.",
   ),
   {
     kw: "aggressive-generation",
@@ -149,7 +167,15 @@ export const paramConfig: ParamConfigItem<MosaicParams>[] = [
 ];
 
 export function presets(): PresetMenu<MosaicParams> {
-  return { title: "Size", ...presetGrid(paramConfig, BOARDS) };
+  return {
+    title: "Size",
+    ...presetGrid(paramConfig, BOARDS, {
+      tiers: (b) =>
+        b.width >= EVERY_TIER.from && b.width <= EVERY_TIER.to
+          ? null
+          : [DIFF_EASY, DIFF_EASY],
+    }),
+  };
 }
 
 /** `WxH[h<0|1>][d<tier>]`, a bare `W` being square. The aggressiveness and
@@ -202,13 +228,14 @@ function maxLongSide(short: number): number {
 }
 
 /**
- * The largest Unreasonable board dealt with aggressive generation, in
- * squares. Hiding asks the search about every clue: 0.65 s at 25×25, 1.4 s at
- * 30×30 and 2.5 s at 35×35 (measured 2026-10-11). Without aggressive
- * generation hiding stops at the first clue that matters, and a 50×50 board
- * takes 0.7 s and a 100×100 one 1 to 3 s.
+ * The largest board above Easy dealt with aggressive generation, in squares.
+ * Hiding asks the deduction, and at Unreasonable the search, about every
+ * clue. Measured 2026-10-11 at 25×25, 30×30 and 35×35: 0.4 s, 0.9 s and 2.2 s
+ * at Normal, 0.65 s, 1.4 s and 2.5 s at Unreasonable. Without aggressive
+ * generation few clues are asked about, and a 50×50 board takes 0.2 s at
+ * Normal and 0.7 s at Unreasonable, a 100×100 one 1 to 3 s at either.
  */
-const MAX_AGGRESSIVE_UNREASONABLE = 900;
+const MAX_AGGRESSIVE_ABOVE_EASY = 900;
 
 export function validateParams(p: MosaicParams, full: boolean): string | null {
   if (p.height > MAX_TILES / p.width)
@@ -221,11 +248,13 @@ export function validateParams(p: MosaicParams, full: boolean): string | null {
   if (Math.max(p.width, p.height) > long)
     return `A board ${short} squares across can be at most ${long} long; a longer one cannot be generated.`;
   if (
-    p.diff === DIFF_UNREASONABLE &&
+    p.diff !== DIFF_EASY &&
     p.aggressive &&
-    p.width * p.height > MAX_AGGRESSIVE_UNREASONABLE
-  )
-    return `With aggressive generation an ${SEARCH_TIER_NAMES[DIFF_UNREASONABLE]} puzzle can have at most ${MAX_AGGRESSIVE_UNREASONABLE} squares; turn aggressive generation off for a larger one.`;
+    p.width * p.height > MAX_AGGRESSIVE_ABOVE_EASY
+  ) {
+    const tier = TIERS.names[p.diff] as string;
+    return `With aggressive generation ${/^[AEIOU]/.test(tier) ? "an" : "a"} ${tier} puzzle can have at most ${MAX_AGGRESSIVE_ABOVE_EASY} squares; turn aggressive generation off for a larger one.`;
+  }
   return null;
 }
 

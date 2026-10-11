@@ -1,20 +1,23 @@
 /**
- * A deductive game's second tier: a board with exactly one answer that the
+ * A deductive game's top tier: a board with exactly one answer that the
  * game's deductions do not reach, and the search that proves it has one.
  *
- * Such a game has two tiers. Easy is what its deductions and its hint finish.
- * Unreasonable is a board a search by trial and error over those deductions
- * proves has one answer. The deduction, and what to assume where it stops, are
- * the game's. What is the same in every such game is here:
+ * Such a game has two tiers, as a rule. Easy is what its deductions and its
+ * hint finish. Unreasonable is a board a search by trial and error over those
+ * deductions proves has one answer. A game with a deduction that is a step of
+ * its own has a tier for it between the two ({@link searchTiers}). The
+ * deduction, and what to assume where it stops, are the game's. What is the
+ * same in every such game is here:
  *
  * - the four things a search can establish ({@link Answer}), and the loop that
  *   establishes them ({@link searchAnswers});
  * - the answer kept for each board ({@link answerCache}), since Solve and the
  *   mistake check both go by it at either tier;
  * - what Solve says of each ({@link solveFromAnswer});
- * - the difficulty contract ({@link searchTierContract});
- * - the two tiers, their params field and its codec segment
- *   ({@link searchTierItem}, {@link searchTierSegment});
+ * - the tiers, their params field, its codec segment and the difficulty
+ *   contract ({@link searchTiers}, {@link searchTierSegment}), and the same
+ *   for the two tiers most such games have ({@link searchTierItem},
+ *   {@link searchTierContract});
  * - the deal of an Unreasonable board ({@link dealUnreasonable}): the loop,
  *   its bound, and the test that keeps a board.
  *
@@ -25,6 +28,7 @@
 import {
   type DifficultyContract,
   difficultyItem,
+  difficultyTiers,
   type TierField,
   tierNames,
 } from "./difficulty.ts";
@@ -34,14 +38,79 @@ import { choice, type ParamsSegment } from "./params-codec.ts";
 import { retryLimit } from "./retry-limit.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "./solve-failure.ts";
 
+/** A game's side of {@link SearchTiers.contract}. */
+interface SearchTierGame<Params, State> {
+  newState(p: Params, desc: string): State;
+  /** Whether the deduction a player has at tier `cap` finishes the board,
+   * which a game with one deduction need not read. */
+  deductionFinishes(state: State, cap: number): boolean;
+  answerOf(state: State): Answer<unknown>;
+}
+
+/** The tiers of a game that searches: one for each deduction a player is
+ * asked for, easiest first, and Unreasonable above them. */
+export interface SearchTiers {
+  /** The tiers' names, indexed by tier. */
+  readonly names: readonly string[];
+  /** The tier of a board with one answer that no deduction reaches. */
+  readonly unreasonable: number;
+  /** The Custom dialog's difficulty field. `doc` says what each tier asks of
+   * a player in this game. */
+  item<P>(field: TierField<P>, doc: string): ParamConfigItem<P>;
+  /**
+   * The tiers' contract. Below {@link unreasonable} a board is solved at a
+   * tier where `deductionFinishes` says so of it, which is what the game
+   * answered `finishesByDeduction` with before it had tiers, less its Solve:
+   * the deduction and the hint (`hintFinishes`), since the hint is what a
+   * player is left with where it stops. At {@link unreasonable} it is solved
+   * where the search says one answer.
+   */
+  contract<Params, State>(
+    game: SearchTierGame<Params, State>,
+  ): DifficultyContract<Params>;
+}
+
+/**
+ * The tiers of a game with `deductions` tiers its deduction finishes, in the
+ * collection's names: `Easy · Unreasonable` at one, `Easy · Normal ·
+ * Unreasonable` at two. A game takes a second where it has a deduction that
+ * is its own step for a player and deals boards that need it.
+ */
+export function searchTiers(deductions: number): SearchTiers {
+  const names = tierNames(deductions + 1, { search: true });
+  const unreasonable = deductions;
+  return {
+    names,
+    unreasonable,
+    item: (field, doc) => difficultyItem(names, field, { doc }),
+    contract<Params, State>(game: SearchTierGame<Params, State>) {
+      const contract: DifficultyContract<Params> = {
+        solveAtCap(p, desc, cap) {
+          const state = game.newState(p, desc);
+          if (cap < unreasonable)
+            return game.deductionFinishes(state, cap) ? "solved" : "unsolved";
+          const answer = game.answerOf(state);
+          if (answer.kind === "one") return "solved";
+          return answer.kind === "none" ? "impossible" : "unsolved";
+        },
+      };
+      searchTierContracts.add(contract);
+      return contract;
+    },
+  };
+}
+
+const TWO_TIERS = searchTiers(1);
+
 /** A board the game's deductions, and its hint, finish. */
 export const DIFF_EASY = 0;
-/** A board with one answer that the deductions do not reach. */
-export const DIFF_UNREASONABLE = 1;
+/** A board with one answer that the deductions do not reach, in a game with
+ * two tiers. A game with more reads {@link SearchTiers.unreasonable}. */
+export const DIFF_UNREASONABLE = TWO_TIERS.unreasonable;
 
 /** The two tiers' names, indexed by {@link DIFF_EASY} and
  * {@link DIFF_UNREASONABLE}. */
-export const SEARCH_TIER_NAMES: readonly string[] = tierNames(2, { search: true });
+export const SEARCH_TIER_NAMES = TWO_TIERS.names;
 
 /** The Custom dialog's difficulty field for the two tiers. `doc` says what
  * each asks of a player in this game. */
@@ -49,19 +118,24 @@ export function searchTierItem<P>(
   field: TierField<P>,
   doc: string,
 ): ParamConfigItem<P> {
-  return difficultyItem(SEARCH_TIER_NAMES, field, { doc });
+  return TWO_TIERS.item(field, doc);
 }
 
 /**
- * The tier in a params string: `de` or `du`, written in the full form only.
- * A board's ID leaves it out, since a board is graded as it loads, and a
- * string from before the game had tiers has no `d` and reads as the default,
- * which is to be {@link DIFF_EASY}.
+ * The tier in a params string, `d` and the first letter of its name (`de` or
+ * `du`, and `dn` in a game with a Normal), written in the full form only. A
+ * board's ID leaves it out, since a board is graded as it loads, and a string
+ * from before the game had tiers has no `d` and reads as the default, which
+ * is to be {@link DIFF_EASY}. The tiers are the ones `config` declares.
  */
 export function searchTierSegment<P>(
   config: readonly ParamConfigItem<P>[],
 ): ParamsSegment<P> {
-  return choice(config, "d", "difficulty", "eu", { full: true });
+  const tiers = difficultyTiers({ paramConfig: config }) ?? [];
+  const letters = tiers.map((name) => name.charAt(0).toLowerCase()).join("");
+  if (new Set(letters).size !== tiers.length)
+    throw new Error(`searchTierSegment: two tiers of ${tiers} share a letter`);
+  return choice(config, "d", "difficulty", letters, { full: true });
 }
 
 /** What a search for a board's answers established: its one answer, a proof
@@ -263,37 +337,21 @@ export function solveFromAnswer<Solution, Move>(
   }
 }
 
-/**
- * The two tiers' contract. At {@link DIFF_EASY} a board is solved where
- * `deductionFinishes` says so, which is what the game answered
- * `finishesByDeduction` with before it had tiers, less its Solve: the
- * deduction and the hint (`hintFinishes`), since the hint is what a player is
- * left with where it stops. At {@link DIFF_UNREASONABLE} it is solved where
- * the search says one answer.
- */
+/** The two tiers' contract ({@link SearchTiers.contract}): solved at
+ * {@link DIFF_EASY} where `deductionFinishes` says so, and at
+ * {@link DIFF_UNREASONABLE} where the search says one answer. */
 export function searchTierContract<Params, State>(game: {
   newState(p: Params, desc: string): State;
   deductionFinishes(state: State): boolean;
   answerOf(state: State): Answer<unknown>;
 }): DifficultyContract<Params> {
-  const contract: DifficultyContract<Params> = {
-    solveAtCap(p, desc, cap) {
-      const state = game.newState(p, desc);
-      if (cap === DIFF_EASY)
-        return game.deductionFinishes(state) ? "solved" : "unsolved";
-      const answer = game.answerOf(state);
-      if (answer.kind === "one") return "solved";
-      return answer.kind === "none" ? "impossible" : "unsolved";
-    },
-  };
-  searchTierContracts.add(contract);
-  return contract;
+  return TWO_TIERS.contract(game);
 }
 
 const searchTierContracts = new WeakSet<object>();
 
 /**
- * Whether `contract` is one {@link searchTierContract} made: the games whose
+ * Whether `contract` is one {@link searchTiers} made: the games whose
  * Unreasonable tier is this module's, apart from a game that names its tiers
  * the same and grades them by a solver of its own (Bricks, Galaxies).
  */

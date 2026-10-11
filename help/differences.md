@@ -73,10 +73,12 @@ work, but they are likely to change in a future update, and might be removed.
   squares is not dealt: the original goes on trying to build one and, past
   about 25 by 25, never finishes.
 
-* **Mosaic**: there is a difficulty, *Easy* or *Unreasonable*, which the
-  original does not have. An Unreasonable board has one solution that no
-  number on its own leads to, so somewhere you have to compare two numbers
-  or try a square. The original's boards are this app's *Easy* ones. A long
+* **Mosaic**: there is a difficulty, *Easy*, *Normal* or *Unreasonable*,
+  which the original does not have. A Normal board is not finished one
+  number at a time: somewhere you have to compare two numbers whose blocks
+  overlap. An Unreasonable board has one solution that comparing does not
+  lead to either, so somewhere you have to try a square. The original's
+  boards are this app's *Easy* ones. A long
   thin board is not dealt past a length that depends on its width (20 squares
   at 3 or 4 across, 100 at 10 across): the original goes on trying to build
   one and never finishes.

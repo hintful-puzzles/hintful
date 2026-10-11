@@ -1,6 +1,7 @@
 /**
- * Mosaic's two tiers: Easy, which the deduction finishes, and Unreasonable, a
- * board with one answer that it does not reach.
+ * Mosaic's three tiers: Easy, which one number at a time finishes, Normal,
+ * which two numbers compared finish, and Unreasonable, a board with one
+ * answer that the deduction does not reach.
  *
  * The answer counts here come from {@link countAnswers}, which shades or
  * clears one square after another in reading order and backs out where a
@@ -10,16 +11,19 @@
  * one answer.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { DESC_CONTRADICTORY, DESC_NOT_UNIQUE } from "../../engine/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
+import { deduce } from "./deduce.ts";
 import { mosaicGame } from "./index.ts";
-import { answerOf, searchAnswers, solveGameActual } from "./solver.ts";
+import { answerOf, deductionTier, searchAnswers, solveGameActual } from "./solver.ts";
 import {
+  DIFF_NORMAL,
+  DIFF_UNREASONABLE,
   type MosaicBoard,
   type MosaicMove,
   type MosaicParams,
@@ -195,6 +199,60 @@ describe("mosaic's search for a board's answers", () => {
   });
 });
 
+describe("a Normal Mosaic board", () => {
+  /** How many of the deduction's steps on `board` compare two numbers. */
+  const comparisons = (board: MosaicBoard): number => {
+    let count = 0;
+    deduce(board, new Uint8Array(board.width * board.height), (firing) => {
+      if ("other" in firing) count++;
+    });
+    return count;
+  };
+
+  it.each([
+    sized(3, 3, DIFF_NORMAL),
+    sized(5, 5, DIFF_NORMAL),
+    sized(10, 10, DIFF_NORMAL),
+    sized(4, 6, DIFF_NORMAL, false),
+    sized(10, 10, DIFF_NORMAL, false),
+  ])("%o is dealt needing a comparison and no search", (p) => {
+    for (let seed = 0; seed < 4; seed++) {
+      const { desc } = mosaicGame.newDesc(p, randomNew(`normal-${seed}`));
+      const { board } = newState(p, desc);
+      // The whole deduction finishes it, and compared numbers on the way.
+      expect(solveGameActual(board), desc).not.toBeNull();
+      expect(comparisons(board), desc).toBeGreaterThan(0);
+      expect(deductionTier(board), desc).toBe(DIFF_NORMAL);
+      expect(countAnswers(board), desc).toBe(1);
+    }
+  });
+
+  it("is graded Easy where no number had to be compared", () => {
+    expect(deductionTier(boardOf(3, 3, RULE_FINISHES))).toBe(DIFF_EASY);
+    expect(deductionTier(boardOf(5, 5, NEEDS_COMPARING))).toBe(DIFF_NORMAL);
+    expect(deductionTier(boardOf(5, 5, NEEDS_SEARCH))).toBeNull();
+  });
+
+  it("shows fewer numbers than an Easy one, and more where generation is not aggressive", () => {
+    const shown = (diff: number, aggressive: boolean): number => {
+      let total = 0;
+      for (let seed = 0; seed < 5; seed++) {
+        const p = sized(10, 10, diff, aggressive);
+        const { desc } = mosaicGame.newDesc(p, randomNew(`shown-${seed}`));
+        total += newState(p, desc).board.clues.filter((c) => c >= 0).length;
+      }
+      return total;
+    };
+    expect(shown(DIFF_NORMAL, true)).toBeLessThan(shown(DIFF_EASY, true));
+    expect(shown(DIFF_NORMAL, false)).toBeGreaterThan(shown(DIFF_NORMAL, true));
+  });
+
+  // The smallest board, the thinnest, and one without aggressive generation.
+  describeDealtTiers(mosaicGame, ["3x3dn", "3x20dn", "10x10dn", "10x10h0dn"]);
+  // The largest aggressive board and the largest board.
+  describeDealtTiers(mosaicGame, ["30x30dn", "100x100h0dn"], { seldom: true });
+});
+
 describe("an Unreasonable Mosaic board", () => {
   it.each([
     sized(3, 3, DIFF_UNREASONABLE),
@@ -263,12 +321,14 @@ describe("the shape of a Mosaic board", () => {
   });
 
   it.each([
-    "31x30du",
-    "50x50du",
-  ])("%s is refused at Unreasonable with aggressive generation only", (id) => {
-    expect(refusal(id)).toMatch(/at most 900 squares/);
-    expect(refusal(id.replace("du", "de"))).toBeNull();
-    expect(refusal(id.replace("du", "h0du"))).toBeNull();
+    ["31x30du", /an Unreasonable puzzle can have at most 900 squares/],
+    ["50x50du", /an Unreasonable puzzle can have at most 900 squares/],
+    ["31x30dn", /a Normal puzzle can have at most 900 squares/],
+  ] as const)("%s is refused above Easy with aggressive generation only", (id, why) => {
+    const tier = id.slice(-2);
+    expect(refusal(id)).toMatch(why);
+    expect(refusal(id.replace(tier, "de"))).toBeNull();
+    expect(refusal(id.replace(tier, `h0${tier}`))).toBeNull();
   });
 
   it("a board that arrives with its description is not held to them", () => {
@@ -295,10 +355,17 @@ describe("a pasted Mosaic board", () => {
     expect(load(`3x3de:${RULE_FINISHES}`)).toBe("3x3de");
   });
 
-  it("that two numbers compared finish opens as Easy, and keeps a tier it was saved at", () => {
-    expect(load(`5x5:${NEEDS_COMPARING}`)).toBe("5x5de");
+  it("that two numbers compared finish opens as Normal, and keeps a higher tier it was saved at", () => {
+    expect(load(`5x5:${NEEDS_COMPARING}`)).toBe("5x5dn");
+    expect(load(`5x5dn:${NEEDS_COMPARING}`)).toBe("5x5dn");
+    // Opened as Easy while the comparison was Easy's.
+    expect(load(`5x5de:${NEEDS_COMPARING}`)).toBe("5x5dn");
     // Dealt as Unreasonable before the deduction compared numbers.
     expect(load(`5x5du:${NEEDS_COMPARING}`)).toBe("5x5du");
+  });
+
+  it("keeps a Normal pin on a board one number at a time finishes", () => {
+    expect(load(`3x3dn:${RULE_FINISHES}`)).toBe("3x3dn");
   });
 
   it("with several answers, or none, is refused", () => {

@@ -2,7 +2,7 @@
 // paint semantics, solve bitmap), clue SOLVED/ERROR flagging, completion
 // counting, status / status bar, text format, and input mapping.
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -26,6 +26,8 @@ import {
 import { mosaicGame } from "./index.ts";
 import {
   cluesLeft,
+  DIFF_NORMAL,
+  DIFF_UNREASONABLE,
   decodeParams,
   encodeBoard,
   encodeParams,
@@ -73,6 +75,10 @@ describe("Mosaic params", () => {
       diff: DIFF_UNREASONABLE,
     });
     expect(decodeParams("10x8du").aggressive).toBe(true);
+    expect(
+      encodeParams({ width: 10, height: 8, aggressive: true, diff: DIFF_NORMAL }, true),
+    ).toBe("10x8dn");
+    expect(decodeParams("10x8dn").diff).toBe(DIFF_NORMAL);
     // Short (non-full) encoding never carries the suffix.
     expect(
       encodeParams(
@@ -157,12 +163,18 @@ describe("Mosaic params", () => {
 
   it("names the generation mode only where it is not the size's default", () => {
     const titles = (presetMenu(mosaicGame).submenu ?? []).map((m) => m.title);
-    expect(titles).toEqual(
-      ["3x3", "5x5", "10x10", "15x15", "25x25", "50x50"].flatMap((size) => [
-        `${size} Easy`,
-        `${size} Unreasonable`,
-      ]),
-    );
+    // The middle sizes at every tier, and the others at Easy alone.
+    const everyTier = (size: string) => [
+      `${size} Easy`,
+      `${size} Normal`,
+      `${size} Unreasonable`,
+    ];
+    expect(titles).toEqual([
+      "3x3 Easy",
+      "5x5 Easy",
+      ...["10x10", "15x15", "25x25"].flatMap(everyTier),
+      "50x50 Easy",
+    ]);
     expect(
       describeParams(mosaicGame, {
         width: 50,

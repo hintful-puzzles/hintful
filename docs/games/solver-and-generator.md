@@ -680,15 +680,15 @@ What Mosaic, the fifth, added:
   tier.** Without aggressive generation Mosaic hides until the first clue
   whose loss stops the deduction, so the board keeps its numbers. With it,
   the tier has an area bound of its own and the refusal names the option.
-- **Where a generator strips to its solver's limit, a new deduction grades
-  and does not deal.** Mosaic's Unreasonable boards mostly needed one
-  comparison of two numbers
-  (`give-mosaic-the-deduction-its-unreasonable-boards-lack`). Crossing dealt
-  what its new rule finishes as Easy, and it was 3 to 15 boards in 100.
-  Mosaic hides every clue the solver can spare, so with the comparison in the
-  Easy deal 98 boards in 100 needed it. Easy is dealt by upstream's rule as
-  before and graded by the whole deduction, and the boards between are not
-  dealt. Count the share before widening a tier.
+- **Where a generator strips to its solver's limit, a new deduction does not
+  widen Easy.** Mosaic's Unreasonable boards mostly needed one comparison of
+  two numbers (`give-mosaic-the-deduction-its-unreasonable-boards-lack`).
+  Crossing dealt what its new rule finishes as Easy, and it was 3 to 15
+  boards in 100. Mosaic hides every clue the solver can spare, so with the
+  comparison in the Easy deal 98 boards in 100 needed it. Easy is dealt by
+  upstream's rule as before, and the boards between are a tier of their own
+  ("What Mosaic's middle tier added", below). Count the share before
+  widening a tier.
 - **A stronger deduction makes the early stop rarer, so time the largest
   board again.** The first clue whose loss stops both ideas is far down the
   list: 100x100 went from a third of a second to ten. Hiding a run of clues
@@ -891,6 +891,31 @@ What Net's fourth reason added
   none was dealt under five squares wide without wrapping. The menu offers
   5x5 at Easy alone and the refusal says too rare, since nothing proves there
   is none. Wrapping boards kept the tier at every size.
+
+What Mosaic's middle tier added
+(`a-middle-tier-for-the-games-that-search`):
+
+- **A deduction that is its own step for a player can have its own tier.**
+  `searchTiers(2)` is `Easy · Normal · Unreasonable`, and the two-tier names
+  are `searchTiers(1)`. The contract asks `deductionFinishes(state, cap)`
+  below Unreasonable, and the game grades a rung a tier there, by § "A tier
+  means exactly its rung".
+- **Grade by one run where the deduction keeps its stronger idea for last.**
+  Mosaic compares two numbers only where no number decides anything alone,
+  so a comparison made is one needed, and the tier is read off the firings.
+- **The middle deal is the Easy strip asked a second question.** An Easy
+  board's clues are tried again while the whole deduction finishes, and the
+  board is kept where the weaker idea stops short. Hiding never makes a board
+  easier, so the strip needs no check at its end.
+- **An early stop that suits Unreasonable does not suit a tier a player is
+  to practice on.** Stopping at the first clue whose loss asks for a
+  comparison left a 50x50 board one number short of Easy. Without aggressive
+  generation the strip tries as many clues as the shorter side is long.
+- **Three tiers at every size is a menu too long.** The middle sizes carry
+  all three and the ends are on the menu at Easy alone.
+- **Count the tier's share before adding it.** In Crossing the boards of this
+  kind are 3 to 15 in 100 and stayed in Easy. In Mosaic every board from
+  15x15 up is one once the strip asks for it.
 
 What Range, the eleventh, added:
 

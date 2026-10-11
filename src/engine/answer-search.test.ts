@@ -11,11 +11,13 @@ import {
   DIFF_EASY,
   DIFF_UNREASONABLE,
   dealUnreasonable,
+  isSearchTierContract,
   SEARCH_TIER_NAMES,
   searchAnswers,
   searchTierContract,
   searchTierItem,
   searchTierSegment,
+  searchTiers,
   solvedPositions,
   solveFromAnswer,
 } from "./answer-search.ts";
@@ -314,5 +316,53 @@ describe("the two tiers", () => {
     expect(verdicts(false, "several")).toEqual(["unsolved", "unsolved"]);
     expect(verdicts(false, "out-of-reach")).toEqual(["unsolved", "unsolved"]);
     expect(verdicts(false, "none")).toEqual(["unsolved", "impossible"]);
+  });
+});
+
+describe("a game with a second deduction", () => {
+  interface P {
+    diff: number;
+  }
+  const tiers = searchTiers(2);
+  const config = [tiers.item<P>("diff", "What each asks.")];
+  const codec = paramsCodec<P>(
+    () => ({ diff: DIFF_EASY }),
+    [searchTierSegment(config)],
+  );
+
+  it("has Normal between Easy and Unreasonable", () => {
+    expect(tiers.names).toEqual(["Easy", "Normal", "Unreasonable"]);
+    expect(tiers.unreasonable).toBe(2);
+    expect(searchTiers(1).names).toEqual(SEARCH_TIER_NAMES);
+  });
+
+  it("writes each tier by its first letter, and Unreasonable as it was", () => {
+    expect([0, 1, 2].map((diff) => codec.encodeParams({ diff }, true))).toEqual([
+      "de",
+      "dn",
+      "du",
+    ]);
+    expect(codec.decodeParams("dn")).toEqual({ diff: 1 });
+    expect(codec.decodeParams("du")).toEqual({ diff: tiers.unreasonable });
+    expect(codec.decodeParams("")).toEqual({ diff: DIFF_EASY });
+  });
+
+  it("solves below Unreasonable at the tier its deduction says, and there by the search", () => {
+    /** The verdicts at the three caps for a board deduction finishes from
+     * tier `from` up, or never, and whose search says `kind`. */
+    const verdicts = (from: number | null, kind: Answer<null>["kind"]) => {
+      const contract = tiers.contract<P, string>({
+        newState: (_p, desc) => desc,
+        deductionFinishes: (_state, cap) => from !== null && cap >= from,
+        answerOf: () => (kind === "one" ? { kind, solution: null } : { kind }),
+      });
+      expect(isSearchTierContract(contract)).toBe(true);
+      return [0, 1, 2].map((cap) => contract.solveAtCap({ diff: 0 }, "", cap));
+    };
+    expect(verdicts(0, "one")).toEqual(["solved", "solved", "solved"]);
+    expect(verdicts(1, "one")).toEqual(["unsolved", "solved", "solved"]);
+    expect(verdicts(null, "one")).toEqual(["unsolved", "unsolved", "solved"]);
+    expect(verdicts(null, "several")).toEqual(["unsolved", "unsolved", "unsolved"]);
+    expect(verdicts(null, "none")).toEqual(["unsolved", "unsolved", "impossible"]);
   });
 });
