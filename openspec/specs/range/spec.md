@@ -369,17 +369,6 @@ piece SHALL keep its own color.
 - **THEN** each holds a piece in the shaded color
 - **AND** each cell is framed in the error color
 
-### Requirement: The Range completion flash lifts every cell
-
-The completion flash SHALL lift every cell to the given's surface on its lit
-beats and SHALL leave the pieces standing.
-
-#### Scenario: A flashing board keeps its pieces
-
-- **WHEN** a solved board is drawn on a lit beat of its flash
-- **THEN** every cell is the given's surface
-- **AND** every shaded cell still holds its piece
-
 ### Requirement: Range's cursor sits at the cell's corners
 
 The keyboard cursor SHALL be drawn out at the cell's corners, beside the

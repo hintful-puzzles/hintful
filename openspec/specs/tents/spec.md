@@ -242,16 +242,6 @@ border at the top and left, and room for the numbers at the bottom and right.
 - **THEN** its grid lines, its trees and its edge numbers below and to the
   right of the grid are painted
 
-### Requirement: Tents flashes on completion in three phases
-
-`redraw` SHALL render a three-phase completion flash, with the trees and the
-tents blanked on the flashed phases.
-
-#### Scenario: A flashed phase hides a tree
-
-- **WHEN** the completion flash is in a flashed phase
-- **THEN** a tree's square is drawn as grass, without its tree
-
 ### Requirement: Tents' solver is a certified deduction ladder
 
 Tents' solver SHALL run its deductions as a `runDeductionFixpoint` ladder,
@@ -487,3 +477,15 @@ SHALL NOT stop at the board's tier.
 - **AND** the second marks as grass the open squares of the row whose number is
   0, and a step about the squares round a tent comes only once a later count
   has placed one
+
+### Requirement: The Tents completion flash fills each square and keeps its pieces
+
+The completion flash SHALL sweep the squares diagonally, a square's position
+being its place in the grid. A lit square SHALL be filled with a flash color
+in place of its grass or its plain surface, and SHALL keep its tree or tent
+and its link.
+
+#### Scenario: The flash is on a tree
+
+- **WHEN** the completion flash is on a tree's square
+- **THEN** the square is filled with a flash color, with its tree drawn on it

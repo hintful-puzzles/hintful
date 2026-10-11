@@ -382,13 +382,21 @@ each replace the square's surface.
 
 ### Requirement: Rome's completion flash sweeps the board
 
-The completion flash SHALL sweep a bright beat and a dim beat across the board
-over each square's own surface, in colors that read in both schemes.
+The win flash SHALL sweep the board's squares from the bottom left to the top
+right, and a lit square SHALL be filled with a flash color in place of its
+surface and keep what it holds. The selected square's
+highlight SHALL not be drawn while the win flash runs.
 
 #### Scenario: The flash moves
 
-- **WHEN** the completion flash is drawn at two different beats
-- **THEN** the frames differ, and a frame shows both the bright and the dim beat
+- **WHEN** the win flash is drawn early and late
+- **THEN** the early frame lights the bottom-left square and the late one the
+  top-right square
+
+#### Scenario: The selection through the flash
+
+- **WHEN** a square is selected for notes and the board is won
+- **THEN** no frame of the flash shows the selection's wash or its `?`
 
 ### Requirement: A Rome press on a fixed clue or outside the grid grabs nothing
 

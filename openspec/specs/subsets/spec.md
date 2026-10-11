@@ -489,17 +489,6 @@ slot holds nothing. No state SHALL be told by a step of gray.
 - **THEN** each letter absent from a given set holds the ruled-out cross, and no
   unknown slot holds one
 
-### Requirement: The completion flash lifts every slot
-
-On a lit beat of the completion flash every slot SHALL take the lifted surface
-and keep its letter or cross.
-
-#### Scenario: The flash lifts every slot
-
-- **WHEN** a solved board is drawn on a lit beat of the flash
-- **THEN** no slot is the plain cell surface
-- **AND** on the next unlit beat the player's slots are the plain surface again
-
 ### Requirement: A used-up entry takes the used-up clue color
 
 A tally entry placed once and the idle inspect badge SHALL be drawn in the
@@ -604,3 +593,18 @@ entries contradict each other.
   B, and a hint is asked for
 - **THEN** the hint is refused: "These entries contradict each other, so one
   of them must be wrong. Undo, or clear the ones you are unsure of."
+
+### Requirement: The Subsets completion flash fills a cell's slots together
+
+The completion flash SHALL sweep the cells diagonally, a cell's position being
+its place in the grid. Every slot of a lit cell SHALL be filled with a flash
+color and keep its letter or cross, so that a cell lights as one piece,
+whether the player filled it or the puzzle gave it.
+
+#### Scenario: The flash is on a cell
+
+- **WHEN** a solved board is drawn while the flash is on a cell
+- **THEN** every slot of that cell is the same flash color, with its letter or
+  cross
+- **AND** once the flash has left the cell each slot is on its own surface
+  again, plain or lifted

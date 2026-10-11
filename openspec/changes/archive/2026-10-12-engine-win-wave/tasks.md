@@ -52,4 +52,4 @@
 - [x] 8.3 Every game stores the tone in its tile key and paints with the tone's slot; the workarounds for an unseen yellow go (Flood's outline, Untangle's disc)
 - [x] 8.4 Deltas and guide restated for two tones
 - [x] 8.5 Every game seen in Chrome, light and dark; gate, commit, push. Not seen in either scheme: Cube, Mines and Same Game, as before. A white number or symbol on a lit element is lost under the lead for the tenth of a second it is there (Dominosa, Magnets).
-- [ ] 8.6 Archive: the owner accepted the change (2026-10-12)
+- [x] 8.6 Archive: the owner accepted the change (2026-10-12)

@@ -88,16 +88,6 @@ one over the roll duration.
   previous and current squares, settling exactly on the destination square at
   animation end
 
-### Requirement: Cube has no win flash
-
-Cube SHALL have no win flash: completion SHALL be reported only in the status
-bar.
-
-#### Scenario: Completing the board flashes nothing
-
-- **WHEN** the last face is painted
-- **THEN** the flash length is zero and the status bar reports the completion
-
 ### Requirement: Cube draws its arena as a quiet surface under a lifted solid
 
 `redraw` SHALL draw a plain square of the arena as the collection's cell
@@ -261,3 +251,17 @@ position on display.
 
 - **WHEN** three rolls are made and the last is undone
 - **THEN** the status bar reads `Moves: 2`
+
+### Requirement: Cube's win flash sweeps the squares of the arena
+
+The win flash SHALL sweep the arena diagonally: a square's position SHALL be
+that of its center, on the square grid and on the triangular one alike, and a
+lit square SHALL be filled with a flash color. The solid SHALL be drawn over
+the arena as on any other frame.
+
+#### Scenario: A triangular arena
+
+- **WHEN** a board of a solid with triangular faces is won and frames of its
+  flash are drawn from start to end
+- **THEN** the first triangle lit is the one whose center is furthest to the
+  bottom left, and every triangle of the arena is lit at some frame

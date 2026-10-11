@@ -204,16 +204,6 @@ the edge of the peg that jumps, across the peg it jumps, toward the hole.
 - **THEN** the arrow's line is drawn after the jumped peg and over it, and the
   peg keeps its color on either side of the line
 
-### Requirement: The completion flash lifts every cell
-
-The completion flash SHALL lift every cell to the lifted surface on its lit
-beats.
-
-#### Scenario: A lit beat
-
-- **WHEN** the board is drawn on a lit beat of the completion flash
-- **THEN** every playable cell is the lifted surface, pegs and holes drawn on it as usual
-
 ### Requirement: Pegs descriptions are one letter for each cell
 
 A Pegs description SHALL hold one letter for each cell of the `w` × `h` grid in
@@ -327,3 +317,14 @@ whose peg starts nearest the offered jump's.
   three jumps that clear a row and leave every other peg where it began
 - **THEN** the hint is one step that stripes the other jump and outlines the
   peg, and not a journey of three
+
+### Requirement: The Pegs win flash lights a playable cell
+
+The win flash SHALL sweep the board's playable cells from the bottom left to
+the top right, and a lit cell SHALL be filled with a flash color. A square
+that is off the board SHALL never be lit.
+
+#### Scenario: A lit cell
+
+- **WHEN** the win flash's highlight is on a playable cell
+- **THEN** the cell is a flash color, its peg or hole drawn on it as usual

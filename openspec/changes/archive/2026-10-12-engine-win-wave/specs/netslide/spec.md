@@ -20,13 +20,13 @@ wrapping board and never through a barrier.
 - **THEN** it lights when the highlight has traveled the wires that do reach
   it, later than the tiles the source is wired to
 
+## REMOVED Requirements
+
 ### Requirement: The completion flash lifts the tiles
 
-The completion flash SHALL fill a tile's face with a flash color while the
-highlight is on it, and the tile SHALL keep its wires.
+**Reason**: What a lit element looks like is one rule for every game
+(`engine-colors`, "A solved flash drawn as a color takes a shared color"): a
+lit tile's face is filled with a flash color and keeps its wires. Netslide
+adds nothing of its own to it.
 
-#### Scenario: The flash lifts the tiles
-
-- **WHEN** a frame of the completion flash is drawn
-- **THEN** the tiles the highlight is on have a face in a flash color, and
-  every other tile the cell surface
+**Migration**: None. Nothing a player holds refers to the flash.

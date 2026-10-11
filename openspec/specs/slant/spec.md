@@ -367,16 +367,6 @@ in error.
 - **THEN** each diagonal on the loop, with its corner dots, is drawn in the
   error color
 
-### Requirement: The completion flash lifts the squares in three phases
-
-The completion flash SHALL run in three phases, lit on the first and the last.
-On its lit beats it SHALL lift the squares to the given's surface.
-
-#### Scenario: The middle phase is unlit
-
-- **WHEN** the flash is in its middle third
-- **THEN** the squares are drawn on the cell surface
-
 ### Requirement: Slant notes mode marks squares that slant alike
 
 The game SHALL offer a same-slant mark between any two squares that share a
@@ -526,3 +516,14 @@ whatever the board's difficulty.
   drawn one
 - **THEN** the reading of the squares that follows gives it the drawn
   square's slant, citing the mark
+
+### Requirement: The completion flash lights the grid's squares
+
+The completion flash SHALL sweep the grid's squares, and SHALL fill a lit
+square with a flash color under its diagonal and its clue discs. The margin
+round the grid, where the outer clues are drawn, SHALL never be lit.
+
+#### Scenario: A square the highlight has not reached
+
+- **WHEN** the flash is drawn before its highlight reaches a square
+- **THEN** that square is drawn on the cell surface

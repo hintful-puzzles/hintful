@@ -197,15 +197,6 @@ its old position toward the gap, over the animation duration.
   old and new cells, settling exactly on their destination cells at animation
   end
 
-### Requirement: A genuine Fifteen completion flashes for two frames
-
-A genuine completion SHALL flash the tiles' faces for two frames.
-
-#### Scenario: The last slide flashes
-
-- **WHEN** the player's slide puts the last tile in order
-- **THEN** the tiles' faces flash for two frames
-
 ### Requirement: Fifteen's status bar shows the move count
 
 The status bar SHALL show the move count after the engine's completion words.
@@ -257,3 +248,17 @@ in order, so its description does not load.
   is opened for `3x3`
 - **THEN** it reads as a description and is refused as a puzzle with no
   solution
+
+### Requirement: A genuine Fifteen completion sweeps the tiles
+
+A genuine completion's flash SHALL sweep the tiles diagonally, a tile's
+position being its cell's place in the grid. A lit tile's face SHALL be filled
+with a flash color inside its bevel, and SHALL keep its bevel and its
+number. The gap SHALL never be lit.
+
+#### Scenario: The last slide flashes
+
+- **WHEN** the player's slide puts the last tile in order and frames of the
+  flash are drawn from start to end
+- **THEN** the first tile lit is the bottom-left one, every tile is lit at some
+  frame, and the gap in the bottom-right corner stays the well

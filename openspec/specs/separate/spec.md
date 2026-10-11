@@ -294,15 +294,6 @@ a wall in ink, an edge ruled out and an edge undecided each in its own color.
 - **WHEN** an untouched board is drawn
 - **THEN** every cell's body is the plain cell surface
 
-### Requirement: The solved flash lifts every cell
-
-The solved flash SHALL lift every cell to the given's surface on its lit beats.
-
-#### Scenario: The flash lifts the cells
-
-- **WHEN** the solved flash is on a lit beat
-- **THEN** every cell's body is the lifted surface
-
 ### Requirement: Separate counts a board's answers by a bounded search
 
 The game SHALL count a board's partitions up to two by trial and error over

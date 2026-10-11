@@ -151,19 +151,6 @@ which is what `findMistakes` reports.
   solution and causes no loop and no clash of numbers
 - **THEN** the live overlay shows no error, and Check & Save flags the link
 
-### Requirement: Signpost exposes the victory-flash preference
-
-`signpost` SHALL expose one preference, `flash-type`, a choice of
-"unidirectional" or "meshing gears" victory rotation. The win flash SHALL spin
-the arrows: every arrow one way when unidirectional, and alternate squares in
-opposite ways when meshing gears.
-
-#### Scenario: The flash preference is offered and applied
-
-- **WHEN** the player opens Preferences for signpost
-- **THEN** a victory-rotation-effect choice is shown, and selecting "meshing
-  gears" makes alternate cells spin in opposite directions on the next win
-
 ### Requirement: Signpost solves by forced-link deduction
 
 The solver SHALL iterate the renumbering and a single forced-link deduction to
@@ -587,3 +574,22 @@ point at the ringed square.
 - **WHEN** a step's arrow points at a single square
 - **THEN** that square is ringed, the arrow is in the hint color, and no
   square is striped
+
+### Requirement: The Signpost completion flash runs the chain from 1 to the last number
+
+The completion flash SHALL run the finished chain: a square's position SHALL
+be its number, and the arrows SHALL stay still. A lit square SHALL be filled
+with a flash color and SHALL keep its arrow and its number, a given as any
+other square.
+
+#### Scenario: The flash follows the numbers, not the grid
+
+- **WHEN** a board is won and frames of its flash are drawn from start to end
+- **THEN** the squares first light in the order of their numbers, wherever on
+  the grid the chain goes
+
+#### Scenario: A lit given
+
+- **WHEN** the highlight is on a given
+- **THEN** the given is filled with a flash color as the squares beside it
+  are, and returns to its lifted surface as the highlight leaves it

@@ -152,17 +152,6 @@ SHALL draw normally.
   about the block center (and settle on their final cells at animation end),
   while tiles outside the block are drawn unrotated
 
-### Requirement: Only a genuine completion flashes the background
-
-A completion reached by the player's own rotation SHALL flash the background.
-A completion reached by a solve SHALL NOT.
-
-#### Scenario: Completion flashes only on a genuine win
-
-- **WHEN** the board reaches the solved arrangement by a player rotation
-- **THEN** the redraw flashes the background for the flash duration
-- **AND** when the board is solved via the solve move, no flash occurs
-
 ### Requirement: The Twiddle status bar shows a move count that never resets
 
 The status bar SHALL show the move count, which never freezes and never resets,
@@ -329,3 +318,14 @@ these SHALL be labeled by its size alone.
 
 - **WHEN** the params `3x3n3m20` are labeled
 - **THEN** the label reads "3x3, rotating 3x3 blocks, 20 shuffles"
+
+### Requirement: The Twiddle completion flash lights each tile's face
+
+The completion flash SHALL sweep the tiles diagonally, a tile's position being
+its place in the grid. A lit tile's face SHALL be filled with a flash color
+inside its bevel, and SHALL keep its number and its orientation mark.
+
+#### Scenario: The flash leaves a tile
+
+- **WHEN** the flash has passed a tile
+- **THEN** that tile alone is repainted, with its own face

@@ -222,16 +222,17 @@ identical full rows or columns.
 
 ### Requirement: Unruly draws a cursor outline and a completion flash
 
-A keyboard cursor SHALL be drawn as an outline on the focused cell. On
-completion a flash SHALL play, lifting every cell's surface on its first and
-last frames.
+A keyboard cursor SHALL be drawn as an outline on the focused cell. The
+completion flash SHALL sweep the cells diagonally, a cell's position being its
+place in the grid, and a lit cell SHALL be filled with a flash color and
+keep its piece, a given as any other cell.
 
 #### Scenario: The completion flash plays once
 
-- **WHEN** a player move transitions the board from unsolved to solved (not the
-  Solve command)
-- **THEN** a flash of positive duration plays and `redraw` lifts every cell's
-  surface during its lit frames
+- **WHEN** the completion flash is on a cell
+- **THEN** `redraw` fills that cell with a flash color, under its piece
+- **AND** once the flash has left it the cell is on its own surface again, and
+  is not lit a second time
 
 ### Requirement: Unruly checks player marks against the unique solution
 

@@ -347,45 +347,22 @@ the cursor highlight, and the completion flash.
 
 ### Requirement: The Tracks completion flash runs the track from A to B
 
-The completion flash SHALL be a highlight a few squares long that runs the
-finished track from the entrance to the exit: at any moment only those few
-squares' rails are drawn in the flash color, every square of the track is lit
-once and in order, and the last goes dark before the flash ends. The game
-SHALL declare it through `solvedFlash`, so that it is suppressed after Solve.
+The completion flash SHALL run the finished track from the entrance to the
+exit: a square's position SHALL be its place along the track, counted from the
+entrance, and a lit square's rails SHALL be drawn in a flash color. A square
+off the track SHALL never be lit. The color SHALL read against the rails and
+the track bed in both color schemes.
 
 #### Scenario: The flash runs from A to B
 
 - **WHEN** a board is won and frames of its flash are drawn from start to end
-- **THEN** no frame lights more than a few squares, the first lit square is
-  the entrance's, and every square of the track is lit for one stretch of
-  frames
-
-### Requirement: The Tracks completion flash keeps one pace
-
-The completion flash SHALL run at one pace on every board whose track takes a
-second or more at that pace, so a longer track takes longer, whatever its
-length. On a shorter track the flash SHALL last one second, the highlight
-slowing to fill it. Its color SHALL read against the rails and the track bed
-in both color schemes.
+- **THEN** the first lit square is the entrance's, the last is the exit's, and
+  every square of the track is lit for one stretch of frames
 
 #### Scenario: A track of several hundred squares
 
 - **WHEN** a board whose track covers more than 256 squares is won
-- **THEN** the highlight runs every square of it in turn, at the pace of any
-  other long track
-
-#### Scenario: A longer track flashes for longer
-
-- **WHEN** two boards are won, one with a longer track than the other
-- **THEN** the longer track's flash runs at least as long as the shorter's,
-  and neither runs under a second
-
-#### Scenario: Two short tracks flash for the same time
-
-- **WHEN** two boards are won whose tracks are both too short to take a second
-  at the common pace, one longer than the other
-- **THEN** both flashes last one second, and the shorter track's highlight
-  moves the slower of the two
+- **THEN** the highlight runs every square of it in turn
 
 ### Requirement: Tracks computes live errors on every move
 

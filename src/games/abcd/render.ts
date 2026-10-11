@@ -7,7 +7,7 @@
  * and a `w × h` block of cells: each holds an entered letter (red on an
  * adjacency violation, else the guess color) or, when empty, its pencil marks.
  * Under diagonal mode each interior corner carries a small cross as the
- * no-diagonal-touch cue. A solved board's win flash lifts its cells. The
+ * no-diagonal-touch cue. A solved board's win flash crosses its cells. The
  * geometry is upstream's `NARROW_BORDERS` arm, which has no border.
  *
  * A cell's pixels depend only on its own letter, pencil marks and a small flag

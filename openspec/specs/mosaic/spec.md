@@ -171,13 +171,12 @@ marks. Once the board is complete, the game SHALL accept only cursor movement.
 
 A clue SHALL count the marked cells of its 3×3 neighborhood, itself included.
 The board SHALL be complete exactly when every shown clue is satisfied with no
-cell of its neighborhood unmarked, and completing it SHALL play a 0.5s flash.
+cell of its neighborhood unmarked.
 
 #### Scenario: Completing every clue solves the game
 
 - **WHEN** the last clue becomes satisfied
-- **THEN** no clue is left, `status` returns `"solved"`, and a 0.5s flash
-  plays
+- **THEN** no clue is left and `status` returns `"solved"`
 
 ### Requirement: Mosaic's Solve applies the deduced solution
 
@@ -546,27 +545,6 @@ each other.
 - **THEN** the first two open as Normal, and the third keeps the difficulty
   it was saved at
 
-### Requirement: Mosaic draws a marked cell as a piece and a blank one as the clear square
-
-`redraw` SHALL draw a marked cell as the collection's shaded piece, inset on
-the plain cell surface, a blank cell as the collection's clear square, a
-surface of its own over the whole cell with no piece, and an unmarked cell as
-plain surface holding nothing. The line between cells SHALL be the
-collection's thin surface grid.
-
-#### Scenario: The three marks are a piece, a surface of its own and nothing
-
-- **WHEN** a board holding a marked cell, a blank cell and an unmarked cell is
-  drawn
-- **THEN** the marked cell holds the shaded piece on the plain surface, the
-  blank cell is filled with the clear square's color and holds no piece, and
-  the unmarked cell is plain surface and holds nothing
-
-#### Scenario: The completion flash swaps the two
-
-- **WHEN** a finished board is drawn in the first third of its flash
-- **THEN** every marked cell is drawn as the clear square and holds no piece
-
 ### Requirement: A blank Mosaic cell's number has the clear square to itself
 
 A blank cell that has no number SHALL carry the clear square's faint cross in
@@ -583,3 +561,32 @@ its middle. A blank cell that has a number SHALL carry no cross.
 - **WHEN** a blank cell that has no number is drawn
 - **THEN** a cross in the clear square's faint color is drawn about the
   middle of the cell
+
+### Requirement: Mosaic's win flash fills the ground of a cell
+
+The win flash SHALL sweep the board's cells from the bottom left to the top
+right. A lit cell's ground SHALL be filled with a flash color in place of
+its own surface, a blank cell's clear surface included, and SHALL keep what it
+holds: its piece, its cross and its number.
+
+#### Scenario: A lit blank cell
+
+- **WHEN** the win flash's highlight is on a blank cell with no number
+- **THEN** the cell is filled with a flash color and still carries its
+  faint cross
+
+### Requirement: Mosaic draws a marked cell as a piece and a blank cell as the clear square
+
+`redraw` SHALL draw a marked cell as the collection's shaded piece, inset on
+the plain cell surface, a blank cell as the collection's clear square, a
+surface of its own over the whole cell with no piece, and an unmarked cell as
+plain surface holding nothing. The line between cells SHALL be the
+collection's thin surface grid.
+
+#### Scenario: The three marks are a piece, a surface of its own and nothing
+
+- **WHEN** a board holding a marked cell, a blank cell and an unmarked cell is
+  drawn
+- **THEN** the marked cell holds the shaded piece on the plain surface, the
+  blank cell is filled with the clear square's color and holds no piece, and
+  the unmarked cell is plain surface and holds nothing

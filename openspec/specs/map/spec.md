@@ -185,10 +185,9 @@ diagonally-split cell that the pointer uses.
 
 ### Requirement: Map's preferences
 
-The three preferences victory-flash effect, number-regions and stipple display
-style SHALL be exposed through the `prefs` hook under the keywords
-`flash-type`, `show-numbers` and `stipple-style`. The `l`/`L` key SHALL toggle
-region numbers in play.
+The two preferences number-regions and stipple display style SHALL be exposed
+through the `prefs` hook under the keywords `show-numbers` and
+`stipple-style`. The `l`/`L` key SHALL toggle region numbers in play.
 
 #### Scenario: A key shows and hides the region numbers
 
@@ -201,7 +200,7 @@ region numbers in play.
 split cell, pencil-mark stipples, grid lines on region boundaries, the red
 adjacency error diamonds, optional region numbers, the flagged-mistake region
 outline, the selected region's band, the floating drag blob while a color or
-its marks are carried, and the selected completion-flash style.
+its marks are carried, and the completion flash.
 
 #### Scenario: A split cell shows both of its regions
 
@@ -568,7 +567,7 @@ step.
 surface, so the map reads as a field apart from the board round it and the
 four fills are all the color on it. The four fills and the ink region borders
 are the game and SHALL stay as they are. The drag blob that carries "no color"
-and a region blanked by the completion flash SHALL take the same surface.
+SHALL take the same surface.
 
 #### Scenario: An uncolored region is the cell surface
 
@@ -708,22 +707,6 @@ whatever the notes mode.
   moved to a blank region and the secondary select key is pressed
 - **THEN** that region gains a dot of the color and stays blank
 
-### Requirement: The flash-type preference chooses how a solved map flashes
-
-The `flash-type` preference SHALL choose the completion flash. Under "Cyclic",
-the default, every colored region SHALL step through the other three colors
-in turn and end on its own. Under "Each to white" the four colors SHALL go
-blank one after another, in the colors' order, each returning as the next
-goes. Under "All to white" the whole map SHALL go blank, show its colors, and
-go blank again. "Each to white" SHALL run 0.5 seconds and the others 0.3.
-
-#### Scenario: Each to white blanks one color at a time
-
-- **WHEN** a map is solved under "Each to white" and a frame of the first
-  quarter of the flash is drawn
-- **THEN** the red regions are drawn blank and the other three colors keep
-  their fills
-
 ### Requirement: The stipple-style preference sizes the dots
 
 The `stipple-style` preference SHALL choose the radius of a pencil-mark dot:
@@ -734,3 +717,18 @@ a seventh of a tile under "Small", the default, and a quarter of a tile under
 
 - **WHEN** a dotted region is drawn under "Small" and again under "Large"
 - **THEN** the dots have the same centers and colors, and the larger radius
+
+### Requirement: The Map completion flash sweeps the regions
+
+The completion flash SHALL sweep the map by region: the regions SHALL light in
+the order of the points their numbers are drawn at along the diagonal, one
+place apart however far apart the points are, and the whole of a lit region
+SHALL be filled with a flash color and keep its border and its number.
+The selected region's band SHALL be hidden while the flash plays.
+
+#### Scenario: A region that spans the sweep
+
+- **WHEN** a region reaches from one side of the map to the other and the
+  highlight is on it
+- **THEN** every cell of it is one flash color in that frame, a split cell's
+  triangle included, and none of it is in a frame where the highlight is not

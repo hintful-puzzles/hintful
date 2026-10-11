@@ -345,17 +345,6 @@ SHALL meet in a solid corner.
 - **THEN** the line between two cells of that region is the surface's grid line
 - **AND** the line between two regions is ink
 
-### Requirement: The completion flash sweeps two beats over each cell's surface
-
-The completion flash SHALL sweep a bright beat and a dim beat across the board
-over each cell's own surface, in colors that read in both schemes.
-
-#### Scenario: The flash moves
-
-- **WHEN** the completion flash is drawn at three successive beats
-- **THEN** the three frames differ, and each shows both the bright and the dim
-  beat
-
 ### Requirement: A Seismic digit above its region's size, or on a fixed clue, is refused
 
 A digit SHALL be entered only when it does not exceed the selected cell's
@@ -478,3 +467,16 @@ cell's last note, and SHALL make no move when nothing is left to strike.
 - **THEN** each note struck is a number placed in the cell's area or within
   that number of cells along its row or column
 - **AND** a third press makes no move
+
+### Requirement: The completion flash lights each cell's surface
+
+The completion flash SHALL sweep the board's cells. A lit cell's surface SHALL
+be filled with a flash color inside its region's walls, a given's cell as a
+player's, and SHALL keep its digit and its notes. The cursor's highlight SHALL
+be hidden while the flash plays.
+
+#### Scenario: The flash moves
+
+- **WHEN** a board is won and frames of its flash are drawn from start to end
+- **THEN** the first lit cell is the bottom-left one, and every cell, given or
+  not, is lit on some frame
