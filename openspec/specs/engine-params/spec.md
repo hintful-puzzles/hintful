@@ -1224,3 +1224,17 @@ refuse a hint and a check with that dead end and SHALL NOT ask the game's
 - **WHEN** a Flood player has made a fill after which the limit cannot be met,
   and asks for a hint
 - **THEN** the game's `hint` is asked, and names a fill
+
+### Requirement: A grid too large for a game is refused in one sentence
+
+A game whose `validateParams` refuses a grid because its width times its
+height is more than the game can hold SHALL return the engine's
+`AREA_TOO_LARGE`, "Width times height must not be unreasonably large.", and no
+sentence of its own. Where the ceiling sits SHALL stay the game's own.
+
+#### Scenario: Two games with different ceilings
+
+- **WHEN** Net is asked for `1001x1000` and Mines for `16385x16384n10`
+- **THEN** each refuses with "Width times height must not be unreasonably
+  large.", Net because the grid is past a million squares and Mines because it
+  is past 2²⁸
