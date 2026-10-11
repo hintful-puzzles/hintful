@@ -1,7 +1,7 @@
 /**
  * The two Controls sentences every note-taking game's page shares, each
  * generated where the game has what it describes: `{{mark-all}}` for a game
- * with `canMarkAll`, and `{{sticky-pencil}}` for one offering the sticky
+ * with `markAll`, and `{{sticky-pencil}}` for one offering the sticky
  * pencil preference. The help build replaces each before the markdown is
  * rendered.
  *
@@ -51,8 +51,8 @@ export const withNoteControls: Transform = (data) => {
     String(data.source ?? ""),
     MARK_ALL_PLACEHOLDER,
     MARK_ALL_HELP,
-    game?.canMarkAll === true,
-    "declares canMarkAll",
+    game?.markAll !== undefined,
+    "has a markAll",
   );
   const source = expand(
     id,

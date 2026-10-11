@@ -25,7 +25,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { key, MARK_ALL_CODE, type PointerAction } from "../../engine/hint-gesture.ts";
+import { markAllPress, type PointerAction } from "../../engine/hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, NOTE, type Sentence } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
@@ -133,8 +133,6 @@ const KEY_E = 69;
 const KEY_e = 101;
 const KEY_A = 65;
 const KEY_a = 97;
-const KEY_M = 77;
-const KEY_m = 109;
 
 function presets(): PresetMenu<UndeadParams> {
   return {
@@ -192,13 +190,6 @@ function interpretMove(
   if (button === KEY_A || button === KEY_a) {
     ui.ascii = !ui.ascii;
     return UI_UPDATE;
-  }
-
-  // Fill all pencil marks — additively, and only when some undecided cell has
-  // none, so a press on an already-noted board is a true no-op rather than an
-  // undo entry that changes nothing.
-  if (button === KEY_M || button === KEY_m) {
-    return anyEmptyLacksNotes(state.guess, state.pencil) ? { type: "markAll" } : null;
   }
 
   // Real-entry mode: highlight shown, not penciling.
@@ -865,7 +856,7 @@ function hintGesture(
   ds: UndeadDrawState,
   move: UndeadMove,
 ): PointerAction[] {
-  if (move.type === "markAll") return [key(MARK_ALL_CODE)];
+  if (move.type === "markAll") return [markAllPress];
   const ts = ds.tileSize;
   const b = border(ts);
   const half = (ts / 2) | 0;
@@ -926,7 +917,11 @@ export const undeadGame: Game<
   UndeadRung
 > = {
   id: "undead",
-  canMarkAll: true,
+  // Fill only, and only when some undecided cell has no marks, so a press on
+  // an already-noted board is no move. There is no second half: a monster in
+  // one square rules nothing out of another, so no mark is ever obvious.
+  markAll: (state) =>
+    anyEmptyLacksNotes(state.guess, state.pencil) ? { type: "markAll" } : null,
 
   defaultParams,
   presets,

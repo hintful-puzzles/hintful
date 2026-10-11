@@ -743,30 +743,28 @@ describe("seismic input", () => {
     expect(ui.pencilMode).toBe(false);
   });
 
-  it("offers mark-all only while some cell's notes are incomplete", () => {
+  it("fills with mark-all, then strikes what a placed number rules out, then stops", () => {
     const state = stateOf(SMALL);
-    const ui = newUi(state);
-    expect(
-      seismicGame.interpretMove(
-        state,
-        ui,
-        preferredDrawState(seismicGame, state),
-        { x: 0, y: 0 },
-        0x4d,
-      ),
-    ).toEqual({
-      type: "pencilAll",
-    });
+    expect(seismicGame.markAll?.(state)).toEqual({ type: "pencilAll" });
     const filled = seismicGame.executeMove(state, { type: "pencilAll" });
-    expect(
-      seismicGame.interpretMove(
-        filled,
-        ui,
-        preferredDrawState(seismicGame, filled),
-        { x: 0, y: 0 },
-        0x6d,
-      ),
-    ).toBeNull();
+    // Every note struck is one a placed number of the same value reaches: in
+    // its area, or within that many cells along its row or column.
+    const strike = seismicGame.markAll?.(filled);
+    if (strike?.type !== "pencilStrike") throw new Error("expected a strike");
+    expect(strike.marks.length).toBeGreaterThan(0);
+    for (const { x, y, n } of strike.marks) {
+      const i = y * filled.w + x;
+      const reached = [...filled.grid.keys()].some((j) => {
+        if (filled.grid[j] !== n) return false;
+        if (filled.dsf.equivalent(i, j)) return true;
+        const dx = Math.abs((j % filled.w) - x);
+        const dy = Math.abs(Math.floor(j / filled.w) - y);
+        return (dx === 0 && dy <= n) || (dy === 0 && dx <= n);
+      });
+      expect(reached, `${n} at ${x},${y}`).toBe(true);
+    }
+    const cleaned = seismicGame.executeMove(filled, strike);
+    expect(seismicGame.markAll?.(cleaned)).toBeNull();
     for (let i = 0; i < filled.w * filled.h; i++) {
       if (filled.grid[i] === 0) {
         expect(filled.pencil[i]).toBe(areaBits(filled.dsf.size(i)));

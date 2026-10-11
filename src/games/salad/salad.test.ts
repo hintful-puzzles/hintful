@@ -780,15 +780,7 @@ describe("salad input", () => {
     // never reset a square the player has narrowed, as upstream's `M`
     // (`markAll`, replay-only) does.
     const s = newState(NUMBERS.p, NUMBERS.desc);
-    const ui = newUi(s);
-    const press = (st: typeof s) =>
-      saladGame.interpretMove(
-        st,
-        ui,
-        preferredDrawState(saladGame, st),
-        { x: 0, y: 0 },
-        109,
-      );
+    const press = (st: typeof s) => saladGame.markAll?.(st) ?? null;
 
     // 1. Fill.
     expect(press(s)).toEqual({ type: "pencilAll" });

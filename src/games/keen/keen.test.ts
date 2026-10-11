@@ -24,7 +24,6 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
-import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -520,14 +519,7 @@ describe("keen render", () => {
 
 describe("adaptive mark-all ('M')", () => {
   const W = 4;
-  const press = (st: KeenState) =>
-    keenGame.interpretMove(
-      st,
-      newUi(st),
-      preferredDrawState(keenGame, st),
-      { x: 0, y: 0 },
-      77,
-    );
+  const press = (st: KeenState) => keenGame.markAll?.(st) ?? null;
 
   it("fills note-less cells on the first press, then cleans obvious dups, then no-ops", () => {
     // First press on a fresh board: empty cells are note-less → fill all.

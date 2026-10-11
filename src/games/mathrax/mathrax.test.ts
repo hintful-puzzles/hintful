@@ -612,12 +612,11 @@ describe("mathrax input", () => {
 
   it("fills all notes on the first M, then strikes the obvious ones on the next", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const ui = newUi(st);
-    const first = press(st, ui, "M".charCodeAt(0));
+    const first = mathraxGame.markAll?.(st);
     expect(first).toEqual({ type: "pencilAll" });
 
     const noted = mathraxGame.executeMove(st, first as MathraxMove);
-    const second = press(noted, ui, "m".charCodeAt(0));
+    const second = mathraxGame.markAll?.(noted);
     // Every empty cell now carries every candidate, so the adaptive second press
     // strikes the values already placed in that cell's row or column.
     expect(second).toMatchObject({ type: "pencilStrike" });

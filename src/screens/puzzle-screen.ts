@@ -6,7 +6,7 @@ import { styleMap } from "lit/directives/style-map.js";
 import { showAlert } from "../dialogs/alert-dialog.ts";
 import { showToast } from "../dialogs/toast.ts";
 import { assertNever } from "../engine/assert-never.ts";
-import { PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
+import { MARK_ALL_BUTTON, PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
 import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
 import { MIN_BAR_LENGTH } from "../puzzle/command-list.ts";
 import type { PuzzleBarFitEvent, SwapButtonsEvent } from "../puzzle/components/bar.ts";
@@ -916,12 +916,11 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     }
   }
 
-  /** Inject the 'M' key (ASCII 77): the game's adaptive Mark-all press — fill
-   * every cell that has no pencil marks yet, else clear the candidates already
-   * ruled out by a placed value. Only games with `canMarkAll` show the
-   * control. */
+  /** Send the Mark-all press: fill every cell that has no pencil marks yet,
+   * else clear the candidates already ruled out by a placed value. Its own
+   * code and not the letter M, which is a value on some boards. */
   private async handleMarkAll() {
-    await this.puzzle?.processKey(77);
+    await this.puzzle?.processKey(MARK_ALL_BUTTON);
   }
 
   /** The bare P shortcut: send the Marks key's code, which toggles pencil mode in

@@ -14,6 +14,7 @@
  * only a key the game's keypad offers, or the app's mark-all control.
  */
 
+import { MARK_ALL_BUTTON } from "./pointer.ts";
 import type { Point } from "./types.ts";
 
 /** A pointer button, by the verb slot it applies. */
@@ -59,16 +60,5 @@ export function key(code: number): PointerAction {
   return { kind: "key", code };
 }
 
-/** The mark-all control's code: the app's toolbar sends `M`. */
-export const MARK_ALL_CODE = "M".charCodeAt(0);
-
-/** What the mark-all control would make on this board now, asked of the game's
- * own `interpretMove` on a copy of the `Ui` so the question changes nothing. */
-export function markAllNow<S, U, D, R>(
-  interpretMove: (s: S, ui: U, ds: D, p: Point, button: number) => R,
-  state: S,
-  ui: U,
-  ds: D,
-): R {
-  return interpretMove(state, structuredClone(ui), ds, { x: 0, y: 0 }, MARK_ALL_CODE);
-}
+/** A press of the mark-all control. */
+export const markAllPress: PointerAction = { kind: "key", code: MARK_ALL_BUTTON };

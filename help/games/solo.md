@@ -28,8 +28,8 @@ marks, and Backspace or Space to clear a square. On grids of more than
 {{mark-all}} Once every empty square has marks, the press crosses out
 of each the numbers already placed in its row, column and block, and in
 its diagonal or cage where the board has them. On a grid of 22 numbers
-or more, M is also the letter for 22: it types that number while a
-square is selected, and fills the marks while none is.
+or more, M is the letter for 22, so there only the button fills the
+marks.
 
 ## Hints
 

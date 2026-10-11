@@ -35,7 +35,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { markAllNow } from "../../engine/hint-gesture.ts";
 import type { Premise } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
@@ -281,14 +280,16 @@ function interpretMove(
         };
   }
 
-  // 'M' / 'm': fill all pencil marks, then (on a fully-noted board) clean the
-  // obvious row/column candidates — the basic-region opening, in one press.
-  if (button === 77 || button === 109)
-    return adaptiveMarkAllMove<TowersMove>(state.grid, state.pencil, w, (x, y) =>
-      rowColRegions(x, y, w),
-    );
-
   return null;
+}
+
+/** Fill all pencil marks, then (on a fully-noted board) clean the obvious
+ * row/column candidates — the basic-region opening, in one press. */
+function markAll(state: TowersState): TowersMove | null {
+  const w = state.w;
+  return adaptiveMarkAllMove<TowersMove>(state.grid, state.pencil, w, (x, y) =>
+    rowColRegions(x, y, w),
+  );
 }
 
 function executeMove(state: TowersState, move: TowersMove): TowersState {
@@ -603,7 +604,7 @@ export const towersGame: Game<
   TowersRung
 > = {
   id: "towers",
-  canMarkAll: true, // handles 'M' (pencilAll) in interpretMove
+  markAll,
 
   defaultParams,
   presets,
@@ -648,7 +649,7 @@ export const towersGame: Game<
       (x, y) => ({ x: mid(x), y: mid(y) }),
       digitKeyCode,
       undefined,
-      markAllNow(interpretMove, s, ui, ds),
+      markAll(s),
     );
   },
   refreshHintStep: (step, state) =>

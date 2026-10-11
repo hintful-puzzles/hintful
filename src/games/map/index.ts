@@ -19,7 +19,7 @@ import { type DifficultyContract, difficultyItem } from "../../engine/difficulty
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { key, MARK_ALL_CODE, type PointerAction } from "../../engine/hint-gesture.ts";
+import { markAllPress, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
@@ -199,7 +199,7 @@ function hintGesture(
 ): PointerAction[] {
   const press = markAll(state);
   if (press !== null && sameOps(regionsMove(state.pencil, press.regions).ops, move.ops))
-    return [key(MARK_ALL_CODE)];
+    return [markAllPress];
   const selected = ui.cursor.visible ? regionFromUiCursor(state.map, ui) : -1;
   const byRegion: NoteTakingUi = {
     ...ui,
@@ -253,13 +253,6 @@ function interpretMove(
   if (button === PENCIL_MODE_BUTTON) {
     ui.pencilMode = !ui.pencilMode;
     return UI_UPDATE;
-  }
-
-  // Mark-all: dot every color into each blank region with no dots, and once
-  // none is left, remove the dots its neighbors' colors rule out.
-  if (button === 77 || button === 109) {
-    const press = markAll(state);
-    return press ? regionsMove(state.pencil, press.regions) : null;
   }
 
   if (isCursorMove(button)) {
@@ -519,7 +512,12 @@ export const mapGame: Game<
   MapRung
 > = {
   id: "map",
-  canMarkAll: true,
+  // Dot every color into each blank region with no dots, and once none is
+  // left, remove the dots its neighbors' colors rule out.
+  markAll: (state) => {
+    const press = markAll(state);
+    return press ? regionsMove(state.pencil, press.regions) : null;
+  },
 
   defaultParams,
   presets,

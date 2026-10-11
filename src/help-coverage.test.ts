@@ -236,7 +236,7 @@ describe("every game's page has the one skeleton", () => {
   const noteSentences = [
     {
       placeholder: MARK_ALL_PLACEHOLDER,
-      owed: (id: string) => getTsGame(id)?.canMarkAll === true,
+      owed: (id: string) => getTsGame(id)?.markAll !== undefined,
     },
     {
       placeholder: STICKY_PENCIL_PLACEHOLDER,
@@ -526,7 +526,7 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     anchor: "difficulty",
     why: "the same promise for a game with no tiers: every board is finished by reasoning",
   },
-  canMarkAll: {
+  markAll: {
     kind: "features",
     anchor: "mark-all",
     why: "a toolbar button with no keyboard equivalent a touch player can reach",

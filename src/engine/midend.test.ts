@@ -26,6 +26,7 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MARK_ALL_BUTTON,
   MOD_CTRL,
   MOD_SHFT,
   newCursor,
@@ -1481,10 +1482,62 @@ describe("Midend hint plan lifecycle", () => {
     expect(none.wantsStatusbar).toBe(false);
   });
 
-  it("canMarkAll reflects the game flag (default false, opt-in true)", () => {
-    expect(new Midend(fakeGame).getStaticProperties().canMarkAll).toBe(false);
-    const marking = { ...fakeGame, canMarkAll: true } as typeof fakeGame;
-    expect(new Midend(marking).getStaticProperties().canMarkAll).toBe(true);
+  describe("the Mark-all press", () => {
+    const LOWER_M = "m".charCodeAt(0);
+    const UPPER_M = "M".charCodeAt(0);
+
+    /** A game with the hook that also answers every letter M it is offered,
+     * as a game where M is a value does: `seen` is what reached it. */
+    function marking(keypadHasM: boolean) {
+      const seen: number[] = [];
+      const game: typeof fakeGame = {
+        ...fakeGame,
+        markAll: () => "inc",
+        requestKeys: () => (keypadHasM ? [{ button: LOWER_M, label: "m" }] : []),
+        interpretMove: (_s, _ui, _ds, _p, button) => {
+          seen.push(button);
+          return button === LOWER_M || button === UPPER_M ? "inc" : null;
+        },
+      };
+      const h = harness(game);
+      h.m.newGame();
+      return { h, seen };
+    }
+
+    it("is a control exactly when the game has the hook", () => {
+      expect(new Midend(fakeGame).getStaticProperties().canMarkAll).toBe(false);
+      expect(marking(false).h.m.getStaticProperties().canMarkAll).toBe(true);
+    });
+
+    it("makes the hook's move for its button, and never asks the game", () => {
+      for (const keypadHasM of [false, true]) {
+        const { h, seen } = marking(keypadHasM);
+        expect(h.m.processInput(0, 0, MARK_ALL_BUTTON)).toBe(true);
+        expect(h.m.formatAsText()).toBe("count=1");
+        expect(seen).toEqual([]);
+      }
+    });
+
+    it("makes it for the letter where the keypad has no M", () => {
+      for (const letter of [LOWER_M, UPPER_M, UPPER_M | MOD_SHFT]) {
+        const { h, seen } = marking(false);
+        expect(h.m.processInput(0, 0, letter)).toBe(true);
+        expect(h.m.formatAsText()).toBe("count=1");
+        expect(seen, `key ${letter}`).toEqual([]);
+      }
+    });
+
+    it("hands the letter to a game whose keypad has an M", () => {
+      const { h, seen } = marking(true);
+      expect(h.m.processInput(0, 0, LOWER_M)).toBe(true);
+      expect(seen).toEqual([LOWER_M]);
+    });
+
+    it("declines the button for a game without the hook", () => {
+      const h = harness(fakeGame);
+      h.m.newGame();
+      expect(h.m.processInput(0, 0, MARK_ALL_BUTTON)).toBe(false);
+    });
   });
 
   it("hasReference reflects the reference hook; getReference returns its model", () => {

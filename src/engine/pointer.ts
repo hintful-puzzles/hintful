@@ -27,6 +27,18 @@ export const CURSOR_SELECT2 = 0x020e;
  * `pencilModeKey`) and by the app's bare P shortcut, so the mode is reached the
  * same way however a game uses its buttons. */
 export const PENCIL_MODE_BUTTON = 0x0216;
+/** Not upstream's: the Mark-all press, which upstream made the letter `M`. A
+ * code of its own because a letter is a value in some games (Solo's 22,
+ * Group's thirteenth element), and the control must never type one. The
+ * midend answers it from `Game.markAll`; no game's `interpretMove` is asked. */
+export const MARK_ALL_BUTTON = 0x0217;
+
+/** Is `button` the letter upstream gave the Mark-all press, in either case?
+ * The midend makes the press for it on a board whose keypad has no such
+ * letter. Takes a modifier-stripped button. */
+export function isMarkAllLetter(button: number): boolean {
+  return button === 0x4d || button === 0x6d;
+}
 
 // --- mouse button class predicates (upstream IS_MOUSE_* macros) ----
 

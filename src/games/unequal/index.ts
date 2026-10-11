@@ -39,7 +39,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { markAllNow } from "../../engine/hint-gesture.ts";
 import {
   latinPremise,
   narrateLatinReason,
@@ -288,13 +287,6 @@ function interpretMove(
   const toggled = toggleNoteTakingMode(ui, button);
   if (toggled) return toggled;
 
-  // 'M' / 'm': fill all pencil marks, then (on a fully-noted board) clean the
-  // obvious row/column candidates — the basic-region opening, in one press.
-  if (button === 77 || button === 109)
-    return adaptiveMarkAllMove<UnequalMove>(state.grid, state.pencil, o, (x, y) =>
-      rowColRegions(x, y, o),
-    );
-
   const n = charValue(button, o);
   if (ui.cursor.visible && n >= 0 && n <= o) {
     const i = ui.cursor.y * o + ui.cursor.x;
@@ -320,6 +312,15 @@ function interpretMove(
   }
 
   return null;
+}
+
+/** Fill all pencil marks, then (on a fully-noted board) clean the obvious
+ * row/column candidates — the basic-region opening, in one press. */
+function markAll(state: UnequalState): UnequalMove | null {
+  const o = state.order;
+  return adaptiveMarkAllMove<UnequalMove>(state.grid, state.pencil, o, (x, y) =>
+    rowColRegions(x, y, o),
+  );
 }
 
 function executeMove(state: UnequalState, move: UnequalMove): UnequalState {
@@ -581,7 +582,7 @@ export const unequalGame: Game<
   UnequalRung
 > = {
   id: "unequal",
-  canMarkAll: true,
+  markAll,
 
   defaultParams,
   presets,
@@ -645,7 +646,7 @@ export const unequalGame: Game<
       (x, y) => ({ x: mid(x), y: mid(y) }),
       (n) => keys[n - 1].button,
       undefined,
-      markAllNow(interpretMove, s, ui, ds),
+      markAll(s),
     );
   },
   refreshHintStep,

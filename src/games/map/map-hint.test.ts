@@ -9,7 +9,6 @@ import { HINT_EVIDENCE } from "../../engine/color/palette.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
 import { hintKeepTrack, refreshHintStep } from "./hint.ts";
@@ -651,13 +650,7 @@ describe("map hint rendering", () => {
 
 describe("map's Mark-all press and the populate reading", () => {
   const mPress = (s: MapState): MapMove | null => {
-    const m = mapGame.interpretMove(
-      s,
-      mapGame.newUi(s),
-      preferredDrawState(mapGame, s),
-      { x: 0, y: 0 },
-      77, // 'M', as the toolbar button sends it
-    );
+    const m = mapGame.markAll?.(s) ?? null;
     return m && typeof m === "object" && "ops" in m ? m : null;
   };
 

@@ -14,7 +14,7 @@ Right-click a cell, then type a number to add a pencil mark. Pencil marks can be
 
 You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering numbers and entering pencil marks.
 
-{{mark-all}} A cell's marks are the numbers from 1 to the size of its area. Once every empty cell has marks, the press does nothing more.
+{{mark-all}} A cell's marks are the numbers from 1 to the size of its area. Once every empty cell has marks, the press crosses out of each the numbers already placed in its area, and the ones a placed number is too near for.
 
 ## Where the puzzles come from
 

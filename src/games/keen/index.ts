@@ -37,7 +37,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { markAllNow } from "../../engine/hint-gesture.ts";
 import {
   latinPremise,
   narrateLatinReason,
@@ -207,15 +206,17 @@ function interpretMove(
         };
   }
 
-  // 'M' / 'm': fill all pencil marks, then (on a fully-noted board) clean the
-  // obvious row/column candidates. Keen cages are arithmetic, NOT uniqueness
-  // regions, so a legal cage duplicate is never struck.
-  if (button === 77 || button === 109)
-    return adaptiveMarkAllMove<KeenMove>(state.grid, state.pencil, w, (x, y) =>
-      rowColRegions(x, y, w),
-    );
-
   return null;
+}
+
+/** Fill all pencil marks, then (on a fully-noted board) clean the obvious
+ * row/column candidates. Keen cages are arithmetic, NOT uniqueness regions, so
+ * a legal cage duplicate is never struck. */
+function markAll(state: KeenState): KeenMove | null {
+  const w = state.params.w;
+  return adaptiveMarkAllMove<KeenMove>(state.grid, state.pencil, w, (x, y) =>
+    rowColRegions(x, y, w),
+  );
 }
 
 function executeMove(state: KeenState, move: KeenMove): KeenState {
@@ -410,7 +411,7 @@ export const keenGame: Game<
   KeenRung
 > = {
   id: "keen",
-  canMarkAll: true,
+  markAll,
 
   defaultParams,
   presets,
@@ -482,7 +483,7 @@ export const keenGame: Game<
       (x, y) => ({ x: mid(x), y: mid(y) }),
       digitKeyCode,
       undefined,
-      markAllNow(interpretMove, s, ui, ds),
+      markAll(s),
     );
   },
   refreshHintStep: (step, state) =>

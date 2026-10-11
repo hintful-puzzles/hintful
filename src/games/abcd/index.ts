@@ -24,7 +24,6 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { markAllNow } from "../../engine/hint-gesture.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
@@ -93,9 +92,6 @@ import {
 /** A player entry that contradicts the puzzle's unique solution, or marks that
  * have crossed it out. */
 export type AbcdMistake = Point & { kind: EntryMistakeKind };
-
-const KEY_M = 77;
-const KEY_m = 109;
 
 function inGrid(p: AbcdParams, x: number, y: number): boolean {
   return x >= 0 && x < p.w && y >= 0 && y < p.h;
@@ -196,17 +192,17 @@ function interpretMove(
     return move;
   }
 
-  // Adaptive mark-all (M): fill while some empty cell has no notes, then only
-  // strike the obvious eliminations, never re-fill
-  // (docs/games/mechanics.md § "Pencil marks: the full note-taking UX").
-  if (button === KEY_M || button === KEY_m) {
-    const needsFill = state.grid.some((c, i) => c === EMPTY && state.pencil[i] === 0);
-    return adaptiveMarkAll<AbcdMove, AbcdMark>(needsFill, () =>
-      abcdObviousMarks(p, state.grid, state.pencil, state.numbers),
-    );
-  }
-
   return null;
+}
+
+/** The adaptive mark-all: fill while some empty cell has no notes, then only
+ * strike the obvious eliminations, never re-fill
+ * (docs/games/mechanics.md § "Pencil marks: the full note-taking UX"). */
+function markAll(state: AbcdState): AbcdMove | null {
+  const needsFill = state.grid.some((c, i) => c === EMPTY && state.pencil[i] === 0);
+  return adaptiveMarkAll<AbcdMove, AbcdMark>(needsFill, () =>
+    abcdObviousMarks(state.params, state.grid, state.pencil, state.numbers),
+  );
 }
 
 function executeMove(state: AbcdState, move: AbcdMove): AbcdState {
@@ -327,7 +323,7 @@ export const abcdGame: Game<
 > = {
   id: "abcd",
   // `textFormat` still declines a board whose clues could be two digits.
-  canMarkAll: true,
+  markAll,
 
   defaultParams,
   presets,
@@ -369,7 +365,7 @@ export const abcdGame: Game<
       (x, y) => ({ x: mid(x), y: mid(y) }),
       (n) => keys[n - 1].button,
       m,
-      markAllNow(interpretMove, s, ui, ds),
+      markAll(s),
     );
   },
   refreshHintStep,

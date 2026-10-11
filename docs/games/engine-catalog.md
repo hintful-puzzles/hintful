@@ -618,7 +618,7 @@ See [`hints.md`](./hints.md) § "Group one firing into one step".
 sending the gesture through `interpretMove` and judging what it made with
 `hintKeepTrack`, never by applying the step's move, so every hinted game writes
 one. A `key` must be one the game's keypad offers, the Marks key, or mark-all
-(`MARK_ALL_CODE`). See [`hints.md`](./hints.md) § "Every step is a gesture".
+(`markAllPress`). See [`hints.md`](./hints.md) § "Every step is a gesture".
 
 ### `rival-judging.ts` — what a searched move's rivals let it say
 

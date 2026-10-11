@@ -27,7 +27,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { markAllNow } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
@@ -231,23 +230,24 @@ function interpretMove(
     }
   }
 
-  // 'M' / 'm' (and the toolbar's pencil-marks button): the collection's adaptive
-  // Mark-all press — fill the squares that have no marks yet, else clear the
-  // candidates a placed symbol already rules out of its row or column. It only
-  // ever adds or removes, never resets, so it can't undo the player's notes.
-  if (button === 77 || button === 109) {
-    return adaptiveMarkAll<SaladMove, SaladMark>(needsPencilFill(state), () =>
-      obviousCandidateMarks(
-        state.grid,
-        state.pencil,
-        o,
-        regionReach(o, saladRegions(o)),
-        saladNotes(nums),
-      ),
-    );
-  }
-
   return null;
+}
+
+/** The collection's adaptive Mark-all press: fill the squares that have no
+ * marks yet, else clear the candidates a placed symbol already rules out of
+ * its row or column. It only ever adds or removes, never resets, so it can't
+ * undo the player's notes. */
+function markAll(state: SaladState): SaladMove | null {
+  const o = state.order;
+  return adaptiveMarkAll<SaladMove, SaladMark>(needsPencilFill(state), () =>
+    obviousCandidateMarks(
+      state.grid,
+      state.pencil,
+      o,
+      regionReach(o, saladRegions(o)),
+      saladNotes(state.nums),
+    ),
+  );
 }
 
 function executeMove(state: SaladState, move: SaladMove): SaladState {
@@ -356,7 +356,7 @@ export const saladGame: Game<
 > = {
   id: "salad",
   // The symbol range, as upstream shows it in its non-stylus builds.
-  canMarkAll: true, // the adaptive 'M' press in interpretMove
+  markAll,
 
   defaultParams,
   presets,
@@ -397,7 +397,7 @@ export const saladGame: Game<
       (x, y) => ({ x: mid(x), y: mid(y) }),
       (n) => symbolChar(s.mode, n).charCodeAt(0),
       m,
-      markAllNow(interpretMove, s, ui, ds),
+      markAll(s),
     );
   },
   refreshHintStep,

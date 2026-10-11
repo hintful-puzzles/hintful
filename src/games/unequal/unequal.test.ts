@@ -380,14 +380,7 @@ describe("unequal interpretMove", () => {
 
   it("maps 'M' to a fill-all-pencil-marks move", () => {
     const { st } = gen(5, "unequal", "easy", "mk-1");
-    const ui = newUi(st);
-    const move = unequalGame.interpretMove?.(
-      st,
-      ui,
-      preferredDrawState(unequalGame, st),
-      { x: 0, y: 0 },
-      109,
-    ); // 'm'
+    const move = unequalGame.markAll?.(st);
     expect(move).toEqual({ type: "pencilAll" });
   });
 });

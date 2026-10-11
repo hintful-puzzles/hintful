@@ -316,12 +316,18 @@ export interface Game<
 > {
   /** Catalog puzzleId; the registry key. */
   readonly id: string;
-  /** The game supports the "fill every empty cell with all candidate pencil
-   * marks" action (upstream's `M`/`m` key). A game that sets this MUST handle
-   * the `M`/`m` key in `interpretMove`; the app shell shows a Mark-all button
-   * in the Game controls (gated on this) that injects that key. Defaults to
-   * false (no button). */
-  readonly canMarkAll?: boolean;
+  /**
+   * The move the Mark-all press makes on `state`, or `null` where it would
+   * change nothing: fill every empty cell that has no notes, and once none is
+   * left, strike what the board already rules out (`adaptiveMarkAll`, which
+   * states the additive rule). Having the hook is having the control: the app
+   * shows Fill marks for it.
+   *
+   * The midend calls it for `MARK_ALL_BUTTON`, and for the letter `M` on a
+   * board whose keypad has no such letter. `interpretMove` is never asked
+   * about the press, so a game does not read `M` for it.
+   */
+  markAll?(state: State): Move | null;
   /**
    * The game has **no meaning for the secondary button at all**, so the
    * frontend must not manufacture one: `view-interactive.ts` skips

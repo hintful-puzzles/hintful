@@ -824,7 +824,7 @@ export function hintGesture(
   at: (x: number, y: number) => Point,
   code: (n: number) => number,
   move: SaladMove,
-  markAll: unknown,
+  markAll: SaladMove | null,
 ): PointerAction[] {
   const marker = markerMove(move);
   if (marker) {

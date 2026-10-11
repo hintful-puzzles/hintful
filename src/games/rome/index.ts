@@ -36,7 +36,7 @@ import {
   drag,
   type GestureButton,
   key,
-  MARK_ALL_CODE,
+  markAllPress,
   type PointerAction,
 } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
@@ -264,6 +264,29 @@ function typedEntry(
   return { kind: pencil ? "pencil" : "place", x, y, dir };
 }
 
+/**
+ * Fill every blank square's marks, then — on an already-filled board — strike
+ * the arrows each square's own outlined region already holds. That second
+ * press is `solverDoubles` by hand, which is why the hint's opening clean and
+ * this press agree without either citing the other: both read `romeRegions`.
+ */
+function markAll(state: RomeState): RomeMove | null {
+  const { w, h } = state;
+  const values = placedValues(state);
+  return adaptiveMarkAll<RomeMove, Mark>(
+    anyEmptyLacksNotes(values, state.pencil),
+    () =>
+      obviousCandidateMarks(
+        values,
+        state.pencil,
+        w,
+        regionReach(w, romeRegions(state)),
+        romeNotes(w, h),
+      ),
+    romeCandidateMoves,
+  );
+}
+
 function interpretMove(
   state: RomeState,
   ui: RomeUi,
@@ -283,27 +306,6 @@ function interpretMove(
   const here = grid[y * w + x];
 
   if (ui.mmode === MOUSEMODE_OFF) {
-    // 'M' / 'm': fill every blank square's marks, then — on an already-filled
-    // board — strike the arrows each square's own outlined region already
-    // holds. That second press is `solverDoubles` by hand, which is why the
-    // hint's opening clean and this press agree without either citing the
-    // other: both read `romeRegions`.
-    if (button === 77 || button === 109) {
-      const values = placedValues(state);
-      return adaptiveMarkAll<RomeMove, Mark>(
-        anyEmptyLacksNotes(values, state.pencil),
-        () =>
-          obviousCandidateMarks(
-            values,
-            state.pencil,
-            w,
-            regionReach(w, romeRegions(state)),
-            romeNotes(w, h),
-          ),
-        romeCandidateMoves,
-      );
-    }
-
     // The Marks key (and the app's bare P). The engine puts it on every
     // note-taking game's keypad, so this is the one control a touch player has
     // for marks: Rome's other two ways in are a right-drag and a keyboard arm.
@@ -482,7 +484,7 @@ function hintGesture(
 ): PointerAction[] {
   const cm = romeCandidateMoves.read(move);
   if (cm === null) throw new Error(`rome: no hint gesture for ${move.kind}`);
-  if (cm.type === "pencilAll") return [key(MARK_ALL_CODE)];
+  if (cm.type === "pencilAll") return [markAllPress];
   const ts = ds.tileSize;
   const mid = (v: number) => origin(ts) + v * ts + ((ts / 2) | 0);
   const arrow = (x: number, y: number, n: number, button: GestureButton) => {
@@ -676,7 +678,7 @@ export const romeGame: Game<
   RomeRung
 > = {
   id: "rome",
-  canMarkAll: true,
+  markAll,
 
   defaultParams,
   presets,

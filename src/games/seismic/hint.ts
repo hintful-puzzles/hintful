@@ -24,12 +24,17 @@
  */
 
 import {
+  adaptiveMarkAll,
+  anyEmptyLacksNotes,
   type CandidateHighlights,
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
   candidateGesture,
   keepCandidateHintTrack,
+  type Mark,
   type NoteEncoding,
+  obviousCandidateMarks,
+  type Reach,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import {
@@ -127,6 +132,40 @@ function clashes(b: NotesView, i: number, j: number, n: number): boolean {
   return b.mode === MODE_TECTONIC
     ? dx <= 1 && dy <= 1
     : (dx === 0 && dy <= n) || (dy === 0 && dx <= n);
+}
+
+/** What an `n` at `i` rules out, `clashes` asked of every cell once. */
+function seismicReach(b: NotesView): Reach {
+  const reached = new Map<number, number[]>();
+  return (i, n) => {
+    const key = i * 16 + n;
+    let cells = reached.get(key);
+    if (!cells) {
+      cells = [];
+      for (let j = 0; j < b.grid.length; j++) if (clashes(b, i, j, n)) cells.push(j);
+      reached.set(key, cells);
+    }
+    return cells;
+  };
+}
+
+/**
+ * The Mark-all press: fill every empty cell that has no notes with the
+ * numbers its area's size allows, and once none is left, strike each note a
+ * placed number rules out, by the reach the hint's own opening clean reads.
+ */
+export function markAll(state: SeismicState): SeismicMove | null {
+  const { grid, pencil, w, dsf } = state;
+  return adaptiveMarkAll<SeismicMove, Mark>(
+    anyEmptyLacksNotes(grid, pencil),
+    () =>
+      obviousCandidateMarks(grid, pencil, w, seismicReach(state), {
+        bit: numBit,
+        values: 9,
+        all: (i) => areaBits(dsf.size(i)),
+      }),
+    seismicCandidateMoves,
+  );
 }
 
 /**
@@ -233,18 +272,7 @@ export function buildSteps(
   for (const area of areas) for (const i of area) areaOf[i] = area;
   const view = (shown: ArrayLike<number>): NotesView => ({ ...board, pencil: shown });
 
-  // What an `n` at `i` rules out, `clashes` asked of every cell once.
-  const reached = new Map<number, number[]>();
-  const reach = (i: number, n: number): number[] => {
-    const key = i * 16 + n;
-    let cells = reached.get(key);
-    if (!cells) {
-      cells = [];
-      for (let j = 0; j < grid.length; j++) if (clashes(board, i, j, n)) cells.push(j);
-      reached.set(key, cells);
-    }
-    return cells;
-  };
+  const reach = seismicReach(board);
   const enc: NoteEncoding = {
     bit: numBit,
     values: 9,
@@ -369,7 +397,7 @@ export function hintGesture(
   ui: NoteTakingUi,
   at: (x: number, y: number) => Point,
   move: SeismicMove,
-  markAll: unknown,
+  markAll: SeismicMove | null,
 ): PointerAction[] {
   return candidateGesture(move, ui, at, digitKeyCode, seismicCandidateMoves, markAll);
 }

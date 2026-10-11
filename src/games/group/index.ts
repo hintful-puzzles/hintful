@@ -40,7 +40,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { click, markAllNow, type PointerAction } from "../../engine/hint-gesture.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   latinPremise,
   narrateLatinReason,
@@ -305,16 +305,6 @@ function interpretMove(
   const toggled = toggleNoteTakingMode(ui, button);
   if (toggled) return toggled;
 
-  // Uppercase 'M' (the Mark-all toolbar button, ASCII 77): fill every empty cell
-  // with all candidate marks, then clean the obvious row/column culls — the
-  // populate step the hint teaches. Only *uppercase* M is intercepted, because
-  // Group's elements are the letters a–z, so lowercase 'm' (109) is element 13
-  // for w ≥ 13 and must still enter that value.
-  if (button === 77)
-    return adaptiveMarkAllMove<GroupMove>(state.grid, state.pencil, w, (x, y) =>
-      rowColRegions(x, y, w),
-    );
-
   if (
     ui.cursor.visible &&
     ((isChar(button) && fromChar(button, state.id) <= w) ||
@@ -346,6 +336,15 @@ function interpretMove(
   }
 
   return null;
+}
+
+/** Fill every empty cell with all candidate marks, then clean the obvious
+ * row/column culls: the populate step the hint teaches. */
+function markAll(state: GroupState): GroupMove | null {
+  const w = state.w;
+  return adaptiveMarkAllMove<GroupMove>(state.grid, state.pencil, w, (x, y) =>
+    rowColRegions(x, y, w),
+  );
 }
 
 // --- move execution (execute_move) -----------------------------------------
@@ -705,9 +704,9 @@ function hintGesture(
   const mid = (el: number) => coord(state.sequence.indexOf(el), ts) + ((ts / 2) | 0);
   const at = (x: number, y: number): Point => ({ x: mid(x), y: mid(y) });
   const code = (n: number) => toChar(n, state.id).charCodeAt(0);
-  const markAll = markAllNow(interpretMove, state, ui, ds);
+  const press = markAll(state);
   if (!ui.cursor.visible || ui.odn === 1 || move.type === "pencilAll") {
-    return candidateGesture(move, ui, at, code, groupCandidateMoves, markAll);
+    return candidateGesture(move, ui, at, code, groupCandidateMoves, press);
   }
   // A diagonal run is selected, so a key would fill all of it: a tap on the
   // highlight ends the run, and what it leaves is read off the game's own
@@ -718,7 +717,7 @@ function hintGesture(
   interpretMove(state, after, ds, tap, LEFT_RELEASE);
   return [
     click(tap),
-    ...candidateGesture(move, after, at, code, groupCandidateMoves, markAll),
+    ...candidateGesture(move, after, at, code, groupCandidateMoves, press),
   ];
 }
 
@@ -758,7 +757,7 @@ export const groupGame: Game<
   GroupRung
 > = {
   id: "group",
-  canMarkAll: true,
+  markAll,
 
   defaultParams,
   presets,

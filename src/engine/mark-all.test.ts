@@ -14,21 +14,20 @@
  *
  * The properties pinned here are deliberately representation-agnostic, and a new
  * game with a Mark-all press joins by **shipping the press** — the roster is
- * derived from `canMarkAll` and the notes are read through the one field name
+ * derived from `markAll` and the notes are read through the one field name
  * every note-taking game uses. Each game used to write a row here saying where
  * its notes lived, because the collection spelled that field three ways; that
  * ended with `unify-the-note-taking-vocabulary`.
  */
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
-import { UI_UPDATE } from "./game.ts";
+import { CURSOR_RIGHT, MARK_ALL_BUTTON } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { dealt } from "./testing/dealt.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
-import { preferredDrawState } from "./testing/preferred-draw-state.ts";
-import { inSweep, itOverWholeSweep } from "./testing/slow.ts";
+import { itOverWholeSweep } from "./testing/slow.ts";
 
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
 // reset the shared registry under `isolate: false`.
@@ -40,7 +39,7 @@ interface Row {
 }
 
 /**
- * Every game answering `canMarkAll` — **derived, not written down**.
+ * Every game with a `markAll` — **derived, not written down**.
  *
  * This was ten hand-written rows, each naming the game *and* the field its notes
  * lived in, because the collection spelled that field three ways (`pencil`,
@@ -55,7 +54,7 @@ interface Row {
  */
 const MARK_ALL_GAMES: Row[] = registeredGameIds()
   .sort()
-  .filter((id) => getTsGame(id)?.canMarkAll === true)
+  .filter((id) => getTsGame(id)?.markAll !== undefined)
   .map((id) => ({ name: id, game: getTsGame(id) as AnyGame }));
 
 /** Every note-taking game keeps its candidates in `pencil`, one bitmask per
@@ -83,137 +82,98 @@ it("drew a populated roster, and every member keeps its notes in `pencil`", () =
   }
 });
 
-describe("every game declaring the press answers it, and no other game does", () => {
+describe("the press is the engine's, whatever a game types with M", () => {
   /*
-   * **The declaration held to the behavior**, which the check above does not do:
-   * it compares the roster with the flag, so a flag that lies agrees with a
-   * roster that repeats the lie. `canMarkAll` decides whether the Game controls
-   * show a Mark-all button (`puzzle/components/game-controls.ts`), so a game
-   * declaring it without
-   * answering `M` ships a dead button, and a game answering `M` without
-   * declaring it hides a press it handles.
+   * **The control is the hook.** `Game.markAll` decides whether the Game
+   * controls show Fill marks, and the midend calls it, so a game cannot have
+   * the button and not answer it. What is left to hold is the midend's half:
+   * that the button makes the hook's move on every board and types nothing,
+   * and that the letter does the same exactly where the board's keypad has no
+   * such letter.
    *
-   * This is `Game.ignoresSecondaryButton`'s pattern — derive the fact, hold the
-   * declaration to it (`input-parity.test.ts`) — applied to the last of the
-   * contract's three boolean declarations.
+   * Written for two defects the letter had while each game read it for itself
+   * (`own-the-mark-all-press-in-the-engine`): the button entered 22 in the
+   * selected square of a Solo grid of 22 numbers, where M is that number, and
+   * Group answered a capital M only, on boards with no element m at all.
    *
-   * Probed through `interpretMove` rather than the midend, and that distinction
-   * is load-bearing: `Midend.processInput` reports a bare `UI_UPDATE` as
-   * consumed, and Ascent returns one for *any* button landing inside its grid,
-   * so the midend route names eleven games where ten offer the press.
-   *
-   * **It is the expensive half of this file and the cost is generation**, not
-   * the press: 0.2 s → 19.8 s of the file's 26.2 s when the walk went from one
-   * board per registered game to the gate slice's 227 (measured 2026-09-20,
-   * load 5.7, the box 18.4 GB into swap — an upper bound). Nearly all of it is
-   * one largest board per game, and about half is three games' generators.
-   * Paid rather than sliced further, because a press that is dead on a large
-   * board is exactly the defect a small one cannot see, and because a
-   * per-guard variant of the slice is the thing `gatePresets` exists to stop.
-   * The file is not near the gate's critical path.
+   * Every board the gate slice offers. The cost is generation, which `dealt`
+   * shares with every other sweep.
    *
    * One case per game, so a commit touching one game walks only that game's
    * boards (`GATE_GAME_SCOPE` in `testing/game-scope.ts`).
    */
-  const ids = registeredGameIds().sort();
-  const declared = ids.filter((id) => getTsGame(id)?.canMarkAll === true);
-  const answers: string[] = [];
   let boards = 0;
 
-  it("drew its population from a populated registry", () => {
-    expect(ids.length, "an empty registry would agree with anything").toBeGreaterThan(
-      50,
-    );
-  });
+  /** A midend on the dealt board of `params`, its cursor shown by an arrow so
+   * a key that types has somewhere to type. */
+  const onBoard = (row: Row, params: unknown) => {
+    const m = driveMidend(row.game).midend;
+    const id = `${row.game.encodeParams(params, true)}:${dealt(row.game, params).desc}`;
+    expect(m.newGameFromId(id), id).toBeNull();
+    m.processInput(0, 0, CURSOR_RIGHT);
+    return m;
+  };
+  /** Everything a save holds: the moves made, and the `Ui` they left. */
+  const saved = (m: { saveGame(): Uint8Array }) =>
+    new TextDecoder().decode(m.saveGame());
 
-  for (const id of ids) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game) continue;
-    it(`${id}: answers 'M' on every sliced preset iff it declares canMarkAll`, () => {
-      // **Every board the gate slice offers, not the easiest one.** The flag is
-      // per game but the answer need not be: a game whose `interpretMove` reads
-      // the press behind a size or mode test would ship a button that works on
-      // some presets and is dead on the others, and one board could not tell.
-      // Group is the near miss that makes the point — it intercepts *uppercase*
-      // 'M' ahead of its value keys precisely because lowercase 'm' is its
-      // element 13 once `w >= 13`, which is a preset, not a hypothesis.
-      const answeredOn: string[] = [];
-      const presets = gatePresets(id, game);
-      for (const { title, params } of presets) {
-        const { desc } = dealt(game, params);
-        const state = game.newState(params, desc);
+  for (const row of MARK_ALL_GAMES) {
+    it(`${row.name}: the button fills, and M does exactly where no key is M`, () => {
+      for (const { title, params } of gatePresets(row.name, row.game)) {
+        const at = `${row.name}/${title}`;
         boards++;
-        const move = game.interpretMove(
-          state,
-          game.newUi(state),
-          preferredDrawState(game, state),
-          { x: 0, y: 0 },
-          77, // 'M', exactly what the toolbar button injects.
+        const fresh = row.game.newState(params, dealt(row.game, params).desc);
+        const hooked = onBoard(row, params);
+        hooked.playMoves([row.game.markAll?.(fresh)]);
+
+        const button = onBoard(row, params);
+        expect(button.processInput(0, 0, MARK_ALL_BUTTON), `${at}: the button`).toBe(
+          true,
         );
-        if (move !== null && move !== UI_UPDATE) answeredOn.push(title);
+        expect(saved(button), `${at}: the button made another move`).toBe(
+          saved(hooked),
+        );
+
+        const keys = row.game.requestKeys?.(params) ?? [];
+        const typesM = keys.some((k) => k.button === 77 || k.button === 109);
+        for (const letter of [77, 109]) {
+          const m = onBoard(row, params);
+          m.processInput(0, 0, letter);
+          if (typesM) {
+            expect(
+              saved(m),
+              `${at}: key ${letter} filled, where M is a value`,
+            ).not.toBe(saved(hooked));
+          } else {
+            expect(saved(m), `${at}: key ${letter} did not fill`).toBe(saved(hooked));
+          }
+        }
       }
-      // All or none: a game that answers on some presets and not others is the
-      // dead-button case above.
-      expect(
-        answeredOn.length === 0 || answeredOn.length === presets.length,
-        `${id} answers 'M' on ${answeredOn.length} of its ${presets.length} sliced presets (${answeredOn.join(", ")}) — the toolbar button is dead on the rest`,
-      ).toBe(true);
-      if (answeredOn.length > 0) answers.push(id);
-      expect(
-        answeredOn.length > 0,
-        "canMarkAll disagrees with what the game does with an 'M' press — a " +
-          "declared game with no answer ships a dead toolbar button, and an " +
-          "undeclared one hides a press it handles",
-      ).toBe(game.canMarkAll === true);
     });
   }
 
-  it("found the games that declare it, and only those", () => {
-    expect(answers).toEqual(declared.filter(inSweep));
-  });
-
-  itOverWholeSweep("found enough games and boards to mean something", () => {
-    expect(
-      answers.length,
-      "no game answered M — the probe found nothing",
-    ).toBeGreaterThan(5);
-    // The "how many did I look at?" guard, now that the count is a slice rather
-    // than one board per game: a `gatePresets` that flattened to nothing would
-    // leave the comparison above agreeing about two empty lists.
-    expect(boards, "the slice yielded almost no boards").toBeGreaterThan(150);
+  // No board of the gate's slice has M on its keypad (Solo needs 22 numbers and
+  // Group 13 elements), so the arm above for one is reached only by the slow
+  // tier. `midend.test.ts`, "the Mark-all press", holds that arm on a game
+  // made for it.
+  itOverWholeSweep("walked enough boards to mean something", () => {
+    expect(boards, "the slice yielded almost no boards").toBeGreaterThan(40);
   });
 });
 
-/** Press `M` — ASCII **77**, exactly what the Mark-all button injects
- * (`screens/puzzle-screen.ts` `handleMarkAll`) — and apply whatever it asks for. Returns
- * the new state, or `null` when the press is a true no-op.
- *
- * Uppercase matters: Group intercepts only `'M'`, because lowercase `'m'` is its
- * element 13 for `w >= 13`. Probing with 109 there enters a value instead. */
-function press(
-  row: Row,
-  // biome-ignore lint/suspicious/noExplicitAny: game-agnostic probe.
-  state: any,
-  // biome-ignore lint/suspicious/noExplicitAny: game-agnostic probe.
-  ui: any,
-  // biome-ignore lint/suspicious/noExplicitAny: game-agnostic probe.
-): any | null {
-  const move = row.game.interpretMove(
-    state,
-    ui,
-    preferredDrawState(row.game, state),
-    { x: 0, y: 0 },
-    77,
-  );
-  if (move === null || move === UI_UPDATE) return null;
-  return row.game.executeMove(state, move);
+/** Make the Mark-all press on `state`: the move the game's hook gives, applied.
+ * Returns the new state, or `null` when the press is a true no-op. */
+// biome-ignore lint/suspicious/noExplicitAny: game-agnostic probe.
+function press(row: Row, state: any): any | null {
+  const move = row.game.markAll?.(state) ?? null;
+  return move === null ? null : row.game.executeMove(state, move);
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: game-agnostic probe.
-function board(row: Row, params: any, seed: string): { state: any; ui: any } {
+function board(row: Row, params: any, seed: string): { state: any } {
   const { desc } = row.game.newDesc(params, randomNew(seed));
   const state = row.game.newState(params, desc);
-  return { state, ui: row.game.newUi(state) };
+  return { state };
 }
 
 describe("the chrome can tell a bare board from a marked one", () => {
@@ -233,8 +193,10 @@ describe("the chrome can tell a bare board from a marked one", () => {
       m.newGame();
       expect(marked(), `${row.name}: a fresh board has no pencil marks`).toBe(false);
 
-      // 'M' (77) is the Mark-all press the chrome injects.
-      expect(m.processInput(0, 0, 77), `${row.name}: the press did nothing`).toBe(true);
+      expect(
+        m.processInput(0, 0, MARK_ALL_BUTTON),
+        `${row.name}: the press did nothing`,
+      ).toBe(true);
       expect(
         marked(),
         `${row.name}: pencil marks were written but the board still reports none`,
@@ -255,16 +217,16 @@ describe("the Mark-all press converges", () => {
       // columns and blocks, and no board this walked before had either.
       for (const { title, params } of gatePresets(row.name, row.game)) {
         const at = `${row.name}/${title}`;
-        const { state, ui } = board(row, params, `markall-${at}`);
+        const { state } = board(row, params, `markall-${at}`);
         let cur = state;
         let presses = 0;
         for (; presses < 6; presses++) {
-          const next = press(row, cur, ui);
+          const next = press(row, cur);
           if (next === null) break;
           cur = next;
         }
         expect(presses, `${at}: did not converge`).toBeLessThan(6);
-        expect(press(row, cur, ui), `${at}: a further press is not a no-op`).toBeNull();
+        expect(press(row, cur), `${at}: a further press is not a no-op`).toBeNull();
       }
     });
   }
@@ -289,16 +251,16 @@ describe("the Mark-all press never resets a note the player narrowed", () => {
           // Run the press to convergence, so every fillable cell carries notes.
           let filled = dealt.state;
           for (let i = 0; i < 6; i++) {
-            const next = press(row, filled, dealt.ui);
+            const next = press(row, filled);
             if (next === null) break;
             filled = next;
           }
-          return { cur: filled, ui: dealt.ui };
+          return { cur: filled };
         };
-        let { cur, ui } = filledBoard(0);
+        let { cur } = filledBoard(0);
         for (let deal = 1; deal < 8; deal++) {
           if (Array.from(notesOf(cur)).some(twoCandidates)) break;
-          ({ cur, ui } = filledBoard(deal));
+          ({ cur } = filledBoard(deal));
         }
 
         // Reproduce the reported board: one cell **narrowed** by hand, a *different*
@@ -325,7 +287,7 @@ describe("the Mark-all press never resets a note the player narrowed", () => {
         notes[blank] = 0;
         const before = Array.from(notes);
 
-        const after = press(row, cur, ui);
+        const after = press(row, cur);
         expect(after, `${at}: the press did not refill the blank cell`).not.toBeNull();
         const filled = Array.from(notesOf(after));
 

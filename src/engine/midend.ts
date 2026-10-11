@@ -34,8 +34,8 @@ import {
   type HintResult,
   type HintStep,
   UI_UPDATE,
+  type UiUpdate,
 } from "./game.ts";
-import { MARK_ALL_CODE } from "./hint-gesture.ts";
 import {
   ALREADY_SOLVED,
   DEDUCTION_EXHAUSTED,
@@ -51,12 +51,14 @@ import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label
 import { paramsError } from "./params.ts";
 import {
   cancelDrags,
+  isMarkAllLetter,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MARK_ALL_BUTTON,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
@@ -450,7 +452,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       canHint: this.game.hint !== undefined,
       canCheck: this.game.findMistakes !== undefined || this.game.hint !== undefined,
       hasReference: this.game.reference !== undefined,
-      canMarkAll: this.game.canMarkAll ?? false,
+      canMarkAll: this.game.markAll !== undefined,
       ignoresSecondaryButton: this.game.ignoresSecondaryButton ?? false,
       wantsStatusbar: this.game.statusbarText !== undefined,
       paletteScheme: paletteSchemeOf(this.game),
@@ -916,6 +918,25 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return true;
   }
 
+  /**
+   * The game's answer to one input, with the Mark-all press answered here
+   * from `Game.markAll`: for its own button always, and for the letter `M`
+   * on a board whose keypad has no such letter. Where the keypad has one the
+   * letter is a value, and it goes to the game like any other.
+   */
+  private ask(ds: DrawState, p: Point, button: number): Move | UiUpdate | null {
+    const markAll = this.game.markAll;
+    if (button === MARK_ALL_BUTTON) return markAll?.(this.state) ?? null;
+    if (markAll && isMarkAllLetter(stripModifiers(button)) && !this.keypadHasM())
+      return markAll(this.state);
+    return this.game.interpretMove(this.state, this.ui, ds, p, button);
+  }
+
+  private keypadHasM(): boolean {
+    const keys = this.game.requestKeys?.(this.boardParams) ?? [];
+    return keys.some((k) => isMarkAllLetter(k.button));
+  }
+
   /** Hand one input to the game and act on its answer. */
   private interpret(x: number, y: number, button: number): boolean {
     const drawState = this.drawState;
@@ -930,8 +951,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
 
     const uiBefore = copyUi(this.ui);
-    const offer = (b: number) =>
-      this.game.interpretMove(this.state, this.ui, drawState, { x, y }, b);
+    const offer = (b: number) => this.ask(drawState, { x, y }, b);
     // A game that reads Shift on a key answers the first offer. One that does
     // not declines it, and is asked about the key alone.
     const bare = withoutShift(button);
@@ -1496,14 +1516,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (gesture.length === 0) fail("is empty");
 
     const onScreen = new Set(this.requestKeys().map((k) => k.button));
-    if (this.game.canMarkAll) onScreen.add(MARK_ALL_CODE);
+    if (this.game.markAll) onScreen.add(MARK_ALL_BUTTON);
     let completed = false;
     let repaint = false;
 
     /** Send one input; `false` when the game declined it. */
     const send = (p: Point, button: number): boolean => {
       const uiBefore = copyUi(this.ui);
-      const made = this.game.interpretMove(this.state, this.ui, ds, p, button);
+      const made = this.ask(ds, p, button);
       if (made === null && !this.changedWhatShows(uiBefore)) return false;
       if (made === null || made === UI_UPDATE) {
         repaint = true;
@@ -2349,7 +2369,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * Does any cell carry a pencil mark? Read **generically, off the state's
    * `pencil` field**, the one spelling every note-taking game uses, rather than
    * having each game re-answer a question none could answer differently.
-   * `mark-all.test.ts` holds every `canMarkAll` game to exposing a readable
+   * `mark-all.test.ts` holds every game with `markAll` to exposing a readable
    * `pencil`, so this cannot quietly answer `false` for a game that drifted.
    *
    * The predicate is "any marks at all", not "the next press will narrow rather
@@ -2358,7 +2378,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * finer question needs each game's own idea of an empty cell.
    */
   private hasPencilMarks(): boolean {
-    if (!this.game.canMarkAll) return false;
+    if (!this.game.markAll) return false;
     const pencil = (this.state as { pencil?: ArrayLike<number> }).pencil;
     if (!pencil) return false;
     for (let i = 0; i < pencil.length; i++) {

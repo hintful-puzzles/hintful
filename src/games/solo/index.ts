@@ -37,7 +37,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { markAllNow } from "../../engine/hint-gesture.ts";
 import type { Premise } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
@@ -245,15 +244,16 @@ function interpretMove(
         };
   }
 
-  // 'M' / 'm': fill all pencil marks, then (on a fully-noted board) clean the
-  // obvious candidates already placed in one of the cell's `regionsOf` regions
-  // — the basic-region opening, in one press.
-  if (button === 77 || button === 109)
-    return adaptiveMarkAllMove<SoloMove>(state.grid, state.pencil, cr, (x, y) =>
-      regionsOf(state, x, y),
-    );
-
   return null;
+}
+
+/** Fill all pencil marks, then (on a fully-noted board) clean the obvious
+ * candidates already placed in one of the cell's `regionsOf` regions — the
+ * basic-region opening, in one press. */
+function markAll(state: SoloState): SoloMove | null {
+  return adaptiveMarkAllMove<SoloMove>(state.grid, state.pencil, state.cr, (x, y) =>
+    regionsOf(state, x, y),
+  );
 }
 
 /** Strike digit `n` from the pencil marks of every cell sharing one of
@@ -662,7 +662,7 @@ export const soloGame: Game<
   SoloRung
 > = {
   id: "solo",
-  canMarkAll: true,
+  markAll,
 
   defaultParams,
   presets,
@@ -787,7 +787,7 @@ export const soloGame: Game<
       (x, y) => ({ x: mid(x), y: mid(y) }),
       digitKeyCode,
       undefined,
-      markAllNow(interpretMove, s, ui, ds),
+      markAll(s),
     );
   },
   refreshHintStep,

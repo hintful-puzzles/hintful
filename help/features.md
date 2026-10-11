@@ -304,7 +304,9 @@ presses narrow rather than reset.
 
 It is ::mark-all:: **Fill marks** (or **Update marks** once there are some to
 narrow), with the puzzle's own controls beside its number keys. On a keyboard
-it is also the <kbd>M</kbd> key.
+it is also the <kbd>M</kbd> key, on any board where M is not something you
+type: on a Solo grid of 22 numbers or a Group of 13 letters it is a value, and
+the button is the way to fill.
 
 It's a move like any other, so ::undo:: undoes it.
 

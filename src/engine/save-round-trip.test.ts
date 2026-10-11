@@ -30,6 +30,7 @@ import {
   CURSOR_UP,
   LEFT_BUTTON,
   LEFT_RELEASE,
+  MARK_ALL_BUTTON,
   RIGHT_BUTTON,
 } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
@@ -39,8 +40,6 @@ import { observeMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
-
-const KEY_M = 77; // adaptive mark-all, for the games that offer it
 
 function midendFor(game: AnyGame): Midend<unknown, unknown, unknown, unknown, unknown> {
   return new Midend(game);
@@ -83,7 +82,7 @@ function play(
     CURSOR_LEFT,
     CURSOR_UP,
   ];
-  if (game.canMarkAll) keys.push(KEY_M, KEY_M); // fill, then strike
+  if (game.markAll) keys.push(MARK_ALL_BUTTON, MARK_ALL_BUTTON); // fill, then strike
   for (const k of game.requestKeys?.(params) ?? []) keys.push(k.button);
   for (const button of keys) {
     if (m.processInput(0, 0, button)) consumed++;

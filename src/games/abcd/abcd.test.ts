@@ -349,12 +349,8 @@ describe("abcd moves through a Midend", () => {
 
   it("adaptive mark-all: first M fills empty cells; repeat M only strikes, never resets", () => {
     const p = P(5, 5, 4);
-    const ts = abcdGame.preferredTileSize ?? 36;
     const st = newState(p, newAbcdDesc(p, randomNew("m-1")).desc);
-    const ui = newUi(st);
-    const ds = newDrawState(st, ts);
     const { n } = p;
-    const KEY_M = 77;
 
     // Put an ink letter down so we can confirm the fill skips filled cells.
     const withLetter = abcdGame.executeMove(st, {
@@ -365,7 +361,7 @@ describe("abcd moves through a Midend", () => {
     });
 
     // First M press → pencilAll.
-    const m1 = abcdGame.interpretMove(withLetter, ui, ds, { x: 0, y: 0 }, KEY_M);
+    const m1 = abcdGame.markAll?.(withLetter) ?? null;
     expect(m1).toEqual({ type: "pencilAll" });
     const filled = abcdGame.executeMove(withLetter, m1 as AbcdMove);
     // Every empty cell has all n candidates; the filled cell has none.
@@ -384,7 +380,7 @@ describe("abcd moves through a Midend", () => {
     expect(noted(erased, 0, 0, 1)).toBe(false);
 
     // A repeat M press must NEVER re-fill: it is either a strike or a no-op.
-    const m2 = abcdGame.interpretMove(erased, ui, ds, { x: 0, y: 0 }, KEY_M);
+    const m2 = abcdGame.markAll?.(erased) ?? null;
     expect(m2 === null || (m2 as { type: string }).type === "pencilStrike").toBe(true);
     if (m2 !== null) {
       const after = abcdGame.executeMove(erased, m2 as AbcdMove);
@@ -397,16 +393,13 @@ describe("abcd moves through a Midend", () => {
     // Place a letter, fill notes, then M must strike that letter from the
     // orthogonally-adjacent empty cells (the no-touch rule — an obvious removal).
     const p = P(5, 5, 4);
-    const ts = abcdGame.preferredTileSize ?? 36;
     const st = newState(p, newAbcdDesc(p, randomNew("m-2")).desc);
-    const ui = newUi(st);
-    const ds = newDrawState(st, ts);
     let s = abcdGame.executeMove(st, { type: "enter", x: 1, y: 1, letter: 0 });
     s = abcdGame.executeMove(s, { type: "pencilAll" });
     // A-candidate is still noted in the neighbor (1,0) right after the fill.
     expect(noted(s, 1, 0, 0)).toBe(true);
 
-    const m = abcdGame.interpretMove(s, ui, ds, { x: 0, y: 0 }, 77);
+    const m = abcdGame.markAll?.(s);
     expect((m as { type: string }).type).toBe("pencilStrike");
     const after = abcdGame.executeMove(s, m as AbcdMove);
     // The neighbor can no longer be 'A' (adjacent to the placed A).

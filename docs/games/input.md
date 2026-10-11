@@ -411,7 +411,7 @@ in the right one.
 - **Game controls**: what the game in play brings, in
   [`components/game-controls.ts`](../../src/puzzle/components/game-controls.ts).
   Its keys come from `requestKeys`, its note toggle from the key whose code is
-  `PENCIL_MODE_BUTTON`, mark-all from `canMarkAll`, and Reference from a
+  `PENCIL_MODE_BUTTON`, mark-all from a `markAll` hook, and Reference from a
   `reference` hook. A game that brings none of them has no panel.
   Nothing a single game has belongs in the Menu: a player does not know to
   look there for it.

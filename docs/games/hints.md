@@ -983,7 +983,7 @@ hidden; `tracks-hint.test.ts` then asserts every such firing is evident by the
 legality test, judged on the board *before* it landed (after, the op's own flag
 makes the contrary look illegal and everything reads as evident), and that the
 production predicate and the legality test agree on every firing in the corpus.
-That is the `canMarkAll` shape from [`testing.md`](./testing.md) § "How a
+That is the `ignoresSecondaryButton` shape from [`testing.md`](./testing.md) § "How a
 cross-game guard finds its population": a flag the code needs synchronously,
 kept honest by a derivation it cannot drift from.
 
@@ -1142,7 +1142,7 @@ Writing one:
   off, so the player's mode is as they left it. A keypad digit follows the tap
   that selects its cell. The shared shapes do this for you: `verbClicks`,
   `verbGesture` and `routeGesture` for target-verb games (border grids included,
-  whose step names its edge with `borderStepEdge`), `candidateGesture` (with `markAllNow`, so a strike the mark-all control makes
+  whose step names its edge with `borderStepEdge`), `candidateGesture` (with the game's `markAll` move, so a strike the mark-all control makes
   whole is one press of it) for candidate games.
 - **A gesture that depends on the `Ui` asks the game.** Where the right taps
   depend on a selection or a held piece (Crossing, Group, Ascent), rehearse

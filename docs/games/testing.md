@@ -976,8 +976,9 @@ is the `ts-engine` spec, "A shared mechanic is joined by having it".
    boolean declarations, and each is asserted equal to a derivation rather
    than trusted: `ignoresSecondaryButton` iff the secondary button means nothing
    the player can perceive (`input-parity.test.ts`; consuming `RIGHT_BUTTON`
-   with a bare repaint is not a meaning), `canMarkAll` iff its `interpretMove` answers `M`
-   (`mark-all.test.ts`). A flag that only turns a
+   with a bare repaint is not a meaning). Better still is no flag: Mark-all
+   was a `canMarkAll` held to "answers `M`" by a probe, and is a `markAll`
+   hook the engine calls, which cannot disagree with itself. A flag that only turns a
    guard *off* is the one that most needs this — nothing else notices when it
    lies.
 5. **Scan code, not text.** `membersNotMentioning` strips comments first,

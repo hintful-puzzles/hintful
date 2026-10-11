@@ -386,7 +386,7 @@ export function hintGesture(
   at: (x: number, y: number) => Point,
   code: (n: number) => number,
   move: AbcdMove,
-  markAll: unknown,
+  markAll: AbcdMove | null,
 ): PointerAction[] {
   return candidateGesture(move, ui, at, code, abcdCandidateMoves, markAll);
 }

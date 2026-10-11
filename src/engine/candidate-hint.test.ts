@@ -25,7 +25,7 @@ import {
   regionReach,
 } from "./candidate-hint.ts";
 import type { HintStep } from "./game.ts";
-import { click, MARK_ALL_CODE, key as press } from "./hint-gesture.ts";
+import { click, markAllPress, key as press } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
 import {
@@ -1147,9 +1147,9 @@ describe("candidateGesture", () => {
   const strike: CandidateMove = { type: "pencilStrike", marks };
 
   it("presses mark-all when that control makes the step whole", () => {
-    const same = { type: "pencilStrike", marks: [...marks].reverse() };
+    const same: CandidateMove = { type: "pencilStrike", marks: [...marks].reverse() };
     expect(candidateGesture(strike, ui, at, code, undefined, same)).toEqual([
-      press(MARK_ALL_CODE),
+      markAllPress,
     ]);
   });
 

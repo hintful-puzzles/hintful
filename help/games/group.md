@@ -57,8 +57,8 @@ You can also use the arrow keys to move the selected square around.
 Press Enter to toggle between entering letters and entering pencil
 marks, and Backspace or Space to clear a square.
 
-{{mark-all}} In Group the key is a capital M, typed with Shift, because
-a small m is a letter like any other on grids large enough to use it.
+{{mark-all}} In Group, M is a letter you type on a grid of 13 letters
+or more, so there only the button fills the marks.
 Once every empty square has marks, the press crosses out of each the
 letters already placed in its row and column.
 

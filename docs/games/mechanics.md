@@ -827,7 +827,6 @@ read off a method:
 
 | Flag | Means | Trap |
 | --- | --- | --- |
-| `canMarkAll` | game handles the `M`/`m` key; shell shows the button | see "Pencil marks" |
 | `ignoresSecondaryButton` | the secondary button means nothing in this game | a touch hold then stays a left press — [input](./input.md) § "A touch hold arrives as the right button" |
 
 **A param-dependent capability the static flag can't express: widen the
@@ -1013,7 +1012,7 @@ through `Midend.getStaticProperties`.
 | Explained hints | `hint` (+ plan hooks) | [hints](./hints.md) — **every game is expected to ship one** (coverage incomplete; see that guide's opening) |
 | Mistake checking | `findMistakes` | computing: [solver & generator](./solver-and-generator.md); rendering: [rendering](./rendering.md) § "Overlay sidecars" |
 | Check & save / Check without saving | free once `findMistakes` exists | shell-owned |
-| Pencil marks | `canMarkAll` + moves + prefs | below |
+| Pencil marks | `markAll` + moves + prefs | below |
 | Reference aid | `reference`/`selectReference` | below |
 
 **A deduction's notation is an affordance, and a hint may use only what the
@@ -1068,11 +1067,15 @@ layout across games". *What the disagreement cost while it lasted*: `mark-all.te
 a hand-written row per game whose whole job was to say where that game's notes
 were — the last per-game roster in the cross-game guards.
 
-- **Mark-all — `canMarkAll: true`.** The game handles `M`/`m` in
-  `interpretMove`; the flag surfaces the *Fill all pencil marks* row that
-  injects it.
+- **Mark-all — the `markAll(state)` hook.** It returns the press's move, and
+  having it is having the *Fill marks* control. **A game never reads a key for
+  the press.** The midend makes the hook's move for `MARK_ALL_BUTTON`, which
+  the control and a hint's `markAllPress` send, and for the letter `M` on a
+  board whose keypad (`requestKeys`) has no such letter. While each game read
+  `M` for itself the control typed 22 into a Solo square, where M is that
+  number, and Group refused small `m` on every board.
   A *candidate-elimination* game (one with a `regionsOf` — see
-  [hints](./hints.md) § "Candidate-elimination games") routes `M` through
+  [hints](./hints.md) § "Candidate-elimination games") builds the move with
   `adaptiveMarkAllMove`
   ([`engine/candidate-hint.ts`](../../src/engine/candidate-hint.ts)): fill
   note-less empty cells, or — on an already-fully-noted board — strike each
@@ -1192,7 +1195,7 @@ seam is generic (Dominosa implements it today):
   spotlights by mutating `Ui` and reports whether anything changed (false
   skips the repaint). It is the first clean app→`Ui` push channel — shaped
   like a `UI_UPDATE`, no move, no history, not serialized.
-- **Presence flows the `canMarkAll` chain** (`hasReference` →
+- **Presence flows the chain Mark-all's does** (`hasReference` →
   `PuzzleStaticAttributes` → a *Reference* control in the Game controls
   panel). The panel is the generic
   [`components/reference-panel.ts`](../../src/components/reference-panel.ts),

@@ -17,7 +17,7 @@
 import { valueBit, valuesOneTo } from "./candidate-bits.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
-import { key, MARK_ALL_CODE, type PointerAction } from "./hint-gesture.ts";
+import { markAllPress, type PointerAction } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { CELL, Narration, NOTE, type Sentence, unshaped } from "./hint-words.ts";
 import type { CellRegion } from "./latin-hint.ts";
@@ -708,8 +708,8 @@ export function lazyPopulate<M, H>(
  * by hole type for Salad. A shared loop over those needs three callbacks and is longer at each call site
  * than the four lines it would replace.
  *
- * **What enforces it:** `mark-all.test.ts`, over every game whose `canMarkAll`
- * is true — a new game with the press joins by shipping the press. */
+ * **What enforces it:** `mark-all.test.ts`, over every game with a `markAll`
+ * — a new game with the press joins by shipping the press. */
 export function adaptiveMarkAll<M, Mk>(
   needsFill: boolean,
   computeMarks: () => readonly Mk[],
@@ -723,7 +723,7 @@ export function adaptiveMarkAll<M, Mk>(
     : ({ type: "pencilStrike", marks } as unknown as M);
 }
 
-/** Where the help page of a game with `canMarkAll` writes
+/** Where the help page of a game with `markAll` writes
  * {@link MARK_ALL_HELP}. */
 export const MARK_ALL_PLACEHOLDER = "{{mark-all}}";
 
@@ -734,8 +734,9 @@ export const MARK_ALL_PLACEHOLDER = "{{mark-all}}";
  * that not every game crosses anything out.
  */
 export const MARK_ALL_HELP =
-  "Press M, or **Fill marks** among the puzzle's controls, to write in every " +
-  "pencil mark wherever nothing is placed and no mark is written yet. Marks " +
+  "Press **Fill marks** among the puzzle's controls to write in every pencil " +
+  "mark wherever nothing is placed and no mark is written yet. The M key does " +
+  "the same, on any board where M is not something you type. Marks " +
   "you have narrowed are left alone, and pressing again never starts over: " +
   "see [Filling in all the pencil marks](features#mark-all).";
 
@@ -833,9 +834,9 @@ function adapterOf<M>(adapter?: CandidateMoveAdapter<M>): CandidateMoveAdapter<M
  * keypad key that types value `n`.
  *
  * `markAll`, for a game with the mark-all control, is the move that control
- * makes on this board right now: a strike it makes whole (the obvious-clean
- * step) is one press of it, as a player would clear them, rather than a tap per
- * note.
+ * makes on this board right now (its `Game.markAll`): a strike it makes whole
+ * (the obvious-clean step) is one press of it, as a player would clear them,
+ * rather than a tap per note.
  */
 export function candidateGesture<M>(
   move: M,
@@ -843,16 +844,16 @@ export function candidateGesture<M>(
   at: (x: number, y: number) => Point,
   code: (n: number) => number,
   adapter?: CandidateMoveAdapter<M>,
-  markAll?: unknown,
+  markAll?: M | null,
 ): PointerAction[] {
   const dialect = adapterOf(adapter);
   const cm = dialect.read(move);
   if (cm === null) throw new Error(`no candidate gesture for ${JSON.stringify(move)}`);
-  if (cm.type === "pencilAll") return [key(MARK_ALL_CODE)];
+  if (cm.type === "pencilAll") return [markAllPress];
   if (cm.type === "pencilStrike" && markAll !== undefined && markAll !== null) {
-    const made = typeof markAll === "object" ? dialect.read(markAll as M) : null;
+    const made = dialect.read(markAll);
     if (made?.type === "pencilStrike" && sameMarks(made.marks, cm.marks))
-      return [key(MARK_ALL_CODE)];
+      return [markAllPress];
   }
   if (cm.type === "set") {
     return noteEntryGesture(ui, at, [

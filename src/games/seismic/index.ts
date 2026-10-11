@@ -14,7 +14,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { anyEmptyLacksNotes, candidateHint } from "../../engine/candidate-hint.ts";
+import { candidateHint } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
@@ -24,7 +24,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { markAllNow } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import {
@@ -54,6 +53,7 @@ import {
   buildSteps,
   hintGesture,
   hintKeepTrack,
+  markAll,
   refreshHintStep,
   SEISMIC_RUNGS,
   type SeismicHint,
@@ -177,17 +177,6 @@ function interpretMove(
     return { type: "set", x: ui.cursor.x, y: ui.cursor.y, n, pencil: ui.pencilMode };
   }
 
-  // 'M' / 'm': fill every empty cell's notes with its region's candidates.
-  // Fill-only, like upstream's `M`, not the adaptive fill-then-clean the square
-  // Latin games use: `adaptiveMarkAllMove` assumes a square board with
-  // candidates capped at `w`, while Seismic's candidates are per region.
-  // The fill is additive, so the gate is "some empty cell has *no* notes" — not
-  // "some cell differs from its region's full set", which would keep emitting a
-  // move that changes nothing (an undo entry per press).
-  if ((button === 0x4d || button === 0x6d) && anyEmptyLacksNotes(grid, pencil)) {
-    return { type: "pencilAll" };
-  }
-
   return null;
 }
 
@@ -305,7 +294,7 @@ export const seismicGame: Game<
   SeismicRung
 > = {
   id: "seismic",
-  canMarkAll: true,
+  markAll,
 
   defaultParams,
   presets,
@@ -346,12 +335,7 @@ export const seismicGame: Game<
   hintGesture: (s, ui, ds, m) => {
     const ts = ds.tileSize;
     const mid = (v: number) => origin(ts) + v * ts + ((ts / 2) | 0);
-    return hintGesture(
-      ui,
-      (x, y) => ({ x: mid(x), y: mid(y) }),
-      m,
-      markAllNow(interpretMove, s, ui, ds),
-    );
+    return hintGesture(ui, (x, y) => ({ x: mid(x), y: mid(y) }), m, markAll(s));
   },
   refreshHintStep,
   // Sized to the regions the generator *makes*, not the nine the format admits:

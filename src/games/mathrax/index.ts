@@ -43,7 +43,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { markAllNow } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   latinPremise,
@@ -241,17 +240,18 @@ function interpretMove(
         };
   }
 
-  // 'M' / 'm': adaptive mark-all
-  // (docs/games/mechanics.md § "Pencil marks: the full note-taking UX").
-  // Mathrax's uniqueness regions are exactly the row and the column; a clue is
-  // *not* one.
-  if (button === 77 || button === 109) {
-    return adaptiveMarkAllMove<MathraxMove>(state.grid, state.pencil, o, (x, y) =>
-      rowColRegions(x, y, o),
-    );
-  }
-
   return null;
+}
+
+/** The adaptive mark-all
+ * (docs/games/mechanics.md § "Pencil marks: the full note-taking UX").
+ * Mathrax's uniqueness regions are exactly the row and the column; a clue is
+ * *not* one. */
+function markAll(state: MathraxState): MathraxMove | null {
+  const o = state.params.o;
+  return adaptiveMarkAllMove<MathraxMove>(state.grid, state.pencil, o, (x, y) =>
+    rowColRegions(x, y, o),
+  );
 }
 
 // --- moves -----------------------------------------------------------------
@@ -550,7 +550,7 @@ export const mathraxGame: Game<
   MathraxRung
 > = {
   id: "mathrax",
-  canMarkAll: true,
+  markAll,
 
   defaultParams,
   presets,
@@ -625,7 +625,7 @@ export const mathraxGame: Game<
       (x, y) => ({ x: mid(x), y: mid(y) }),
       digitKeyCode,
       undefined,
-      markAllNow(interpretMove, s, ui, ds),
+      markAll(s),
     );
   },
   refreshHintStep,
