@@ -93,9 +93,10 @@ it.
   shared layer. The session that fixed the first holds everything the second
   needs, and a fresh session would rebuild it. File a change of its own, after
   the first is archived, and do it without asking.
-- **One game's issue is taken on only under one of four heads** (owner,
-  2026-10-11), and otherwise gets a line in the session's report and nothing
-  more: no fix, no change, no draft.
+- **A new change is filed for one game's issue only under one of four
+  heads** (owner, 2026-10-11). The rule is about new work items, which
+  sessions had been opening by the dozen, one game at a time. It never stops
+  a fix: see "A quick, low-risk fix is always made in passing", below.
   1. The owner asked for it by name.
   2. It is a significant bug on a typical board: the game crashes, or a
      player cannot finish or enjoy it. A bug only a pathologically large
@@ -124,12 +125,17 @@ it.
   grew, nearly all of it in one game at a time. A board dealt already solved
   was found in Rectangles, and the fix was one loop in the engine's deal,
   which mended Netslide unasked.
+- **A quick, low-risk fix is always made in passing**, whichever game it is
+  in and whatever the session came for: a help page that says what the game
+  does not do, a wrong label, a stale comment. It goes in with the work in
+  hand, or as a commit of its own, and needs no change. What is not quick or
+  not low-risk, and comes under none of the four heads, gets a line in the
+  session's report and no change.
 - **An improvement to one game is not filed, as a draft or otherwise**: a
   new deduction, a faster generator, a refusal for a corner of the Custom
-  dialog. It is a line in the report unless one of the four heads takes it.
-- **What your own change touches is still yours to leave right.** The four
-  heads decide which work is taken on, never how well work in hand is done:
-  a shortfall in the game-facing work of your own change is fixed there.
+  dialog.
+- **What your own change touches is still yours to leave right**: a
+  shortfall in the game-facing work of your own change is fixed there.
 - **A change that was filed by a change files nothing of its own kind.** If
   its work finds the same thing again, the finding is the engine's, and the
   session says so to the owner and does not scaffold a third.

@@ -53,16 +53,17 @@ incident only what a later session acts on: the rule, and the shape to look for.
   anything they asked for by name, and a compatibility break (asked before).
 - **A decision is persisted by a commit, or it did not happen.** Never cite an
   agent-private note to the owner.
-- **One game's issue is not our concern, with four exceptions.** Take it on
-  only when: the owner asked for it by name; it is a significant bug on a
-  typical board, one that crashes a player's game or keeps them from finishing
-  or enjoying it (a bug only a pathologically large board reaches does not
-  count for now); the game is inconsistent with the engine and with how other
-  games use it, and the change makes it consistent, so it stops being a
-  per-game concern; or it is one face of an engine defect or lack, fixed in
-  the engine for many games. Anything else gets a line in your report and is
-  not fixed, filed or drafted. What qualifies is filed first as the engine's
-  (`docs/work-management.md` § "The backlog is being drained").
+- **Do not file a new change for one game's issue, with four exceptions**:
+  the owner asked for it by name; it is a significant bug on a typical board,
+  one that crashes a player's game or keeps them from finishing or enjoying it
+  (a bug only a pathologically large board reaches does not count for now);
+  the game is inconsistent with the engine and with how other games use it,
+  and the change makes it consistent, so it stops being a per-game concern;
+  or it is one face of an engine defect or lack, fixed in the engine for many
+  games. What qualifies is filed first as the engine's. **A quick, low-risk
+  fix is always made in passing**, an inaccurate help page for one: the rule
+  stops new work items, never a fix (`docs/work-management.md` § "The backlog
+  is being drained").
 - **Bring a question with everything you could find out.** Run the app,
   measure, read the code first. Never report to the owner that you did not
   look at something you could have.
