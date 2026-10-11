@@ -1,9 +1,10 @@
 # read-an-unknown-params-letter-one-way
 
-**Status: a question for the owner, filed 2026-10-11 by the session that
+**Status: answered by the owner, 2026-10-11: refuse, in every game, with
+the compatibility cost stated under "The question" accepted. To be taken up:
+the session that does writes `tasks.md`. Filed that day by the session that
 archived `state-what-a-games-spec-never-did`, whose census found these. What
-it says of the code was true that day; re-check before relying on it. A
-draft: it has no `tasks.md` until the owner answers.**
+it says of the code was true that day; re-check before relying on it.**
 
 ## Why
 
