@@ -67,7 +67,7 @@ export function drawRuledOutCross(dr: GameDrawing, cell: Rect, color: number): v
  * its middle, a number for one, which then has the square to itself.
  *
  * For a game whose two states say as much as each other and whose work is
- * coloring the whole board in one or the other (Mosaic, Pattern). A game where
+ * coloring the whole board in one or the other (Mosaic, Pattern, Bricks). A game where
  * a few squares are the answer and the rest is a note calls
  * {@link drawRuledOutCross} on the plain surface.
  */

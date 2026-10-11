@@ -10,8 +10,8 @@
  * one pixel for the right/bottom edges.
  *
  * The board is pieces on a quiet surface (`engine/piece.ts`): a shaded brick
- * is the collection's shaded piece inset on its cell, a ruled-out one carries
- * a cross, a clue sits on a lifted cell, and every mark drawn at a cell's edge
+ * is the collection's shaded piece inset on its cell, a ruled-out one is the
+ * clear square, a clue sits on a lifted cell, and every mark drawn at a cell's edge
  * lands beside the piece. A cell is a square whatever the row's offset, so the
  * piece is the square one.
  *
@@ -23,6 +23,8 @@
  */
 
 import {
+  CLEAR,
+  CLEAR_MARK,
   CURSOR,
   cellSurface,
   ERROR,
@@ -31,7 +33,6 @@ import {
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
-  RULED_OUT,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -39,7 +40,7 @@ import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
+import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { BricksHint } from "./index.ts";
 import { bricksValidate } from "./solver.ts";
@@ -84,10 +85,12 @@ export const COL_HINT = 7; // the forced cell — ringed on its own border
 export const COL_HINT_CELL = 8; // the deduction's evidence — a ring inside it
 /** The digit on a clue's lifted cell. */
 export const COL_NUMBER = 9;
-/** The cross in a cell the player has ruled out. */
-export const COL_RULED_OUT = 10;
+/** The faint cross in a cell the player has made clear. */
+export const COL_CLEAR_MARK = 10;
 /** The `!` on a gravity diamond, and the diamond's rim. */
 export const COL_ERROR_TEXT = 11;
+/** The surface of a cell the player has made clear. */
+export const COL_CLEAR = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -101,7 +104,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   out[COL_NUMBER] = INK;
-  out[COL_RULED_OUT] = RULED_OUT;
+  out[COL_CLEAR_MARK] = CLEAR_MARK;
+  out[COL_CLEAR] = CLEAR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
   return out;
 }
@@ -217,14 +221,16 @@ function drawTile(
   const color = n & COL_MASK;
   // A cell with no play color is a clue, which the puzzle gave.
   const inner = { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 };
-  dr.drawRect(inner, color ? COL_EMPTY : COL_GIVEN);
   // A cell the answer contradicts is drawn in the error color itself: it need
   // break no rule, so no bar or diamond is there to point at it.
   const wrong = (n & FE_WRONG) !== 0;
-  if (color === F_SHADE)
-    drawPiece(dr, inner, SHADED_SHAPE, wrong ? COL_ERROR : COL_SHADE);
-  else if (color === F_UNSHADE)
-    drawRuledOutCross(dr, inner, wrong ? COL_ERROR : COL_RULED_OUT);
+  if (color === F_UNSHADE) {
+    drawClearSquare(dr, inner, COL_CLEAR, wrong ? COL_ERROR : COL_CLEAR_MARK);
+  } else {
+    dr.drawRect(inner, color ? COL_EMPTY : COL_GIVEN);
+    if (color === F_SHADE)
+      drawPiece(dr, inner, SHADED_SHAPE, wrong ? COL_ERROR : COL_SHADE);
+  }
 
   // Square border.
   dr.drawPolygon(

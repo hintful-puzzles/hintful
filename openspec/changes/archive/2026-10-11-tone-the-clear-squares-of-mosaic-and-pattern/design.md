@@ -90,15 +90,13 @@ Each caller of `drawRuledOutCross`, 2026-10-11:
 | Range | Every square is decided in the end, but shaded squares may not touch and are the few; clear is the bulk of the board and the note. Keeps it. |
 | Bricks | **Fits.** Every cell is shaded or clear, the two in like number, and the work is deciding each. |
 
-## A question for the owner
+## Bricks takes it too
 
-**Should Bricks take the clear square too?** `bricks-clear-square.png` in
-this directory is Bricks with it, twenty hint steps into the default board,
-light and dark (a temporary switch, not committed). The recommendation is
-yes: it is the same kind of board, and its numbers sit on cells of their own,
-so no clear square there ever holds a number. The cost is one more game whose
-look changes; nothing a player saved is touched. It is not done here because
-the design says to ask.
+Put to the owner with a drawing of Bricks in both schemes, and answered yes
+(2026-10-11). It is the same kind of board, and its numbers sit on cells of
+their own, so no clear square there ever holds a number. A cross the answer
+contradicts stays red, on the clear square; it was looked at in both schemes
+and reads beside the faint ones.
 
 ## The rule for the engine
 

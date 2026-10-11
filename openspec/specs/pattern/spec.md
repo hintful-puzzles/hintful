@@ -335,22 +335,6 @@ cell holds.
   cell in the white-reference color, each leaving the cell's own content
   visible
 
-### Requirement: Pattern draws its picture as shaded pieces and crosses on a quiet surface
-
-`redraw` SHALL draw the board as pieces on a quiet surface. A `Full` cell SHALL
-hold the collection's shaded piece, inset on its cell. A cell marked `Empty`
-SHALL be plain surface holding the ruled-out cross, with no fill of its own,
-and an `Unknown` cell SHALL be plain surface holding nothing. The three states
-SHALL NOT be told apart by a step of gray.
-
-#### Scenario: The three states are a piece, a cross and nothing
-
-- **WHEN** a board holding a `Full` cell, an `Empty` cell and an `Unknown` cell
-  is drawn
-- **THEN** all three cells are filled with the one surface color
-- **AND** the `Full` cell holds the shaded piece, the `Empty` cell a cross, and
-  the `Unknown` cell nothing
-
 ### Requirement: Pattern's grid lines are the surface's quiet grid color
 
 The lines between cells and the frame round the grid SHALL be the surface's
@@ -486,3 +470,20 @@ every step.
 - **THEN** its first step is the first column's, "This column's run of 8 can
   slide only 2 cells, so these cells must be purple.", its second the second
   column's run of 6, and its next seven the third column's
+
+### Requirement: Pattern draws a full cell as a piece and an empty one as the clear square
+
+`redraw` SHALL draw a `Full` cell as the collection's shaded piece, inset on
+the plain cell surface, a cell marked `Empty` as the collection's clear
+square with its faint cross, and an `Unknown` cell as plain surface holding
+nothing. A hint's line hatch SHALL be drawn over a cell's surface, the clear
+square's included.
+
+#### Scenario: The three states are a piece, a clear square and nothing
+
+- **WHEN** a board holding a `Full` cell, an `Empty` cell and an `Unknown` cell
+  is drawn
+- **THEN** the `Full` cell holds the shaded piece on the plain surface, the
+  `Empty` cell is filled with the clear square's color and holds a cross in
+  the square's faint color about its middle, and the `Unknown` cell is plain
+  surface and holds nothing

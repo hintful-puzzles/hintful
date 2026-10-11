@@ -45,7 +45,7 @@ import type { Point } from "../../engine/types.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { newBricksDesc } from "./generator.ts";
 import { bricksGame } from "./index.ts";
-import { COL_ERROR, offsets } from "./render.ts";
+import { COL_CLEAR, COL_CLEAR_MARK, COL_ERROR, offsets } from "./render.ts";
 import { bricksValidate, findMistakes, solveGame } from "./solver.ts";
 import {
   applyBounds,
@@ -572,6 +572,21 @@ describe("bricks rendering (tier 2.5)", () => {
     expect(
       result.recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR),
     ).toBe(true);
+  });
+
+  it("draws a cell made clear as the clear square, a faint cross on a surface of its own", () => {
+    const st = newState(FIX_PARAMS, FIX.desc);
+    const cell = st.grid.findIndex((c) => (c & COL_MASK) === F_EMPTY);
+    const { recording } = renderScenario({
+      game: bricksGame,
+      id: FIX_ID,
+      moves: [{ kind: "paint", cells: [{ index: cell, to: "unshade" }] }],
+    });
+    const { ops } = recording;
+    expect(ops.filter((o) => o.op === "rect" && o.color === COL_CLEAR)).toHaveLength(1);
+    expect(
+      ops.filter((o) => o.op === "line" && o.color === COL_CLEAR_MARK),
+    ).toHaveLength(2);
   });
 
   it("draws a brick and a cross the answer contradicts in the error color, on a board already drawn", () => {

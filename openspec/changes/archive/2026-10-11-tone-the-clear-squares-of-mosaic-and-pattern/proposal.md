@@ -33,6 +33,8 @@ two games the owner draws on for it (Nonograms Katana, Picross) keep crosses.
 - **The engine draws it**, as one helper two games call, beside
   `drawRuledOutCross`, and says in its guide which games take it: the ones
   whose board is colored half and half.
+- **Bricks takes the same look**, on the owner's yes to a drawing of it
+  (2026-10-11): it is the one other game that fits the rule.
 - The other games that draw the ruled-out cross keep it as it is.
 - The help pages and legends that describe a clear square follow.
 
@@ -48,6 +50,7 @@ hint's word for the state stays "clear".
   surface", and "A blank Mosaic cell carries a cross that leaves its number
   the middle".
 - `pattern`: how a cell known to be empty is drawn.
+- `bricks`: how a ruled-out cell is drawn.
 - `engine-colors`: the clear square of a half-and-half board, and which
   games take it.
 

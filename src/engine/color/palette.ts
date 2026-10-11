@@ -379,7 +379,7 @@ export const SHADED: Color = TWO[0];
 
 /**
  * **Clear**: the whole cell of a square the player has said is not shaded, in
- * a game whose board is colored half and half (Mosaic, Pattern), where the
+ * a game whose board is colored half and half (Mosaic, Pattern, Bricks), where the
  * state that is not shaded says as much as the shaded one. A surface of its
  * own in the hue of the pair's second member, so a part-solved board is two
  * colors on the undecided gray. `drawClearSquare` (`piece.ts`) draws it. A

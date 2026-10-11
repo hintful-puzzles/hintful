@@ -22,8 +22,8 @@
 - [x] 2.2 In the running app, both schemes, Pattern: part solved, finished,
   with a hint's hatched line over clear squares, and a drag that clears.
 - [x] 2.3 Read the other games that draw the cross against the rule
-  (`design.md`, "The other games, read against the rule"). Bricks fits and is
-  put to the owner there with a drawing.
+  (`design.md`, "The other games, read against the rule"). Bricks fits and
+  was put to the owner with a drawing.
 
 ## 3. Words
 
@@ -36,7 +36,9 @@
 
 - [x] 4.1 Spec deltas for `mosaic`, `pattern` and `engine-colors`, read
   against the code.
-- [ ] 4.2 Gate, commit, push. The owner accepts by eye on the deployed app;
-  archive on their word.
-- [ ] 4.3 The owner's answer on Bricks (`design.md`, "A question for the
-  owner").
+- [x] 4.2 Gate, commit, push.
+- [x] 4.3 The owner's answer on Bricks was yes: Bricks draws the clear square
+  through the same helper, with its test, help page and spec delta
+  (`design.md`, "Bricks takes it too").
+- [x] 4.4 Archive on the owner's word (2026-10-11, with the answer on
+  Bricks).

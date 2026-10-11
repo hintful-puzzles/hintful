@@ -907,7 +907,7 @@ The owner's decisions (2026-10-07, from the mock-ups in the archived change
   (owner, 2026-10-11, narrowing the line above). In some games a few squares
   are the answer and the rest is crossed out as a note (Tracks, Range). In
   others each state says as much as the other and the work is coloring the
-  whole board one way or the other (Mosaic, Pattern): there a board half
+  whole board one way or the other (Mosaic, Pattern, Bricks): there a board half
   cleared was a scatter of thin crosses, and a clear square is
   `drawClearSquare`, the whole cell in `CLEAR` with the cross faint on it in
   `CLEAR_MARK`, and no cross where the square's middle holds a number. The
