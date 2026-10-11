@@ -285,28 +285,6 @@ pass no first-frame flag for it.
   as it was
 - **THEN** the indicator's box is painted on the first frame
 
-### Requirement: The Mark-all action is the M key
-
-The action SHALL reuse the keyboard input path rather than a new engine method:
-a game that sets `canMarkAll` SHALL handle the `M`/`m` key in `interpretMove`
-and return its mark-all move, and a game SHALL NOT answer that key without
-setting the flag. The app shell SHALL show the control only when `canMarkAll`
-is true, and on activation it SHALL inject the `M` key via the surface's
-`processKey`.
-
-#### Scenario: A flag that disagrees with the game
-
-- **WHEN** a game sets `canMarkAll` and does not answer the `M` key, or answers
-  it without setting the flag
-- **THEN** the cross-game guard fails, naming that game
-
-#### Scenario: A pencil-mark game shows the control and fills candidates
-
-- **WHEN** the active game reports `canMarkAll` true and the player activates
-  the control
-- **THEN** the `M` key is injected via `processKey`, the game fills every empty
-  cell with all candidate pencil marks, and the board repaints
-
 ### Requirement: Mark-all is adaptive in a game with an obvious-candidate rule
 
 For a game with an obvious-candidate rule (a region provider, or a rule of its
@@ -735,3 +713,37 @@ fills. The element type SHALL stay the game's own.
   Map
 - **THEN** its `pencil` array holds one bitmask per region, and it conforms as
   a game keeping one bitmask per cell does
+
+### Requirement: The Mark-all press is the engine's, from the game's hook
+
+A game with the action SHALL give its move as a `markAll` hook, and SHALL NOT
+read a key for it. The engine SHALL make that move for the control's own
+button code, which is no letter, and the app shell SHALL show the control
+exactly when the game has the hook and send that code.
+
+#### Scenario: The control is pressed with a cell selected
+
+- **WHEN** a cell is selected on a board where `M` is a value, and the player
+  activates the control
+- **THEN** the game's mark-all move is made, and nothing is entered in the cell
+
+#### Scenario: A game without the hook
+
+- **WHEN** the control's code reaches a game with no `markAll`
+- **THEN** it is declined, and the game's `interpretMove` is not asked
+
+### Requirement: The letter M is Mark-all where the board has no M key
+
+The engine SHALL make the game's mark-all move for `M` or `m` on a board whose
+keypad has no key for that letter. Where the keypad has one, the letter SHALL
+go to the game as any other key does, and the control alone marks all.
+
+#### Scenario: A small m on a board without one
+
+- **WHEN** `m` is pressed on a Group board of six elements
+- **THEN** every empty cell with no notes is filled with its candidates
+
+#### Scenario: M on a board that types with it
+
+- **WHEN** `M` is pressed on a board whose keypad has an M key
+- **THEN** the game is offered the key, and no mark-all move is made for it

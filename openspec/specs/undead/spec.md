@@ -177,8 +177,9 @@ the cursor pencil toggle) it SHALL toggle a pencil note.
 
 ### Requirement: Undead's Mark-all fills the cells that have no notes
 
-A mark-all action (`M`/`m`) SHALL fill every undecided cell that carries no
-notes with all three candidate notes.
+Mark-all SHALL fill every undecided cell that carries no notes with all three
+candidate notes, and SHALL make no move once none is left: a monster placed in
+one cell rules nothing out of another, so there is no note to strike.
 
 #### Scenario: Mark-all fills candidate notes
 

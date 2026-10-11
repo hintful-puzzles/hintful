@@ -665,15 +665,14 @@ carry the killer-cage difficulty: `encodeParams` writes none, and
 
 On a grid of more than 9 numbers the keys `a`, `b` and so on, in either
 case, SHALL enter 10, 11 and so on, up to the grid's size. On a grid of 22
-numbers or more `M` SHALL enter 22 in a highlighted cell, and SHALL be
-Mark-all only while no cell is highlighted.
+numbers or more `M` SHALL enter 22 in a highlighted cell and SHALL never be
+Mark-all, which is then the control's alone.
 
 #### Scenario: Twelve on a 12 by 12 grid
 
 - **WHEN** an empty cell of a `3x4` board is highlighted and `c` or `C` is
   pressed
 - **THEN** 12 is entered in it
-- **AND** `M` fills in the pencil marks, 22 being past the grid's size
 
 ### Requirement: Solo's hint uses no technique above the board's tier
 

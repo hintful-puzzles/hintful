@@ -423,25 +423,6 @@ in the alphabet. A letter the player types SHALL be read back the same way.
 - **WHEN** a 3×3 board that shows its identity is opened
 - **THEN** its three elements are lettered `e`, `a` and `b`
 
-### Requirement: A letter key enters its element, and only a capital M marks all
-
-A letter key, capital or small, SHALL enter the element it letters in the
-selected cells, or toggle that element's pencil mark in pencil mode; a letter
-no element of the board has SHALL be declined. Capital `M` SHALL be Mark-all
-and never an element, and small `m` SHALL never be Mark-all, since it is the
-thirteenth element on a board large enough. The keypad SHALL offer a key for
-each element, in the order of their numbers, then Clear.
-
-#### Scenario: The keypad of a board that shows its identity
-
-- **WHEN** the keypad is asked for under `6dt`
-- **THEN** its keys are `e`, `a`, `b`, `c`, `d`, `f` and Clear
-
-#### Scenario: A small m on a small board
-
-- **WHEN** `m` is pressed with a cell selected on a 6×6 board
-- **THEN** no move is made, and no pencil marks are filled in
-
 ### Requirement: Backspace, Space and Clear empty the selected Group cells
 
 Backspace, Space and the keypad's Clear SHALL empty the selected cells of
@@ -452,3 +433,20 @@ leave a cell that holds a letter as it is, and in either mode a given.
 
 - **WHEN** an empty cell with pencil marks is selected and Space is pressed
 - **THEN** the cell's marks are gone, and one undo brings them back
+
+### Requirement: A letter key enters its element
+
+A letter key, capital or small, SHALL enter the element it letters in the
+selected cells, or toggle that element's pencil mark in pencil mode; a letter
+no element of the board has SHALL be declined. The keypad SHALL offer a key
+for each element, in the order of their numbers, then Clear.
+
+#### Scenario: The keypad of a board that shows its identity
+
+- **WHEN** the keypad is asked for under `6dt`
+- **THEN** its keys are `e`, `a`, `b`, `c`, `d`, `f` and Clear
+
+#### Scenario: A letter the board has no element for
+
+- **WHEN** `k` is pressed with a cell selected on a 6×6 board
+- **THEN** no move is made
