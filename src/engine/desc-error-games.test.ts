@@ -8,9 +8,15 @@
 import { describe, expect, it } from "vitest";
 import { loadVerdict, validateDesc } from "./desc-error.ts";
 import { Midend } from "./midend.ts";
+import { randomNew } from "./random/index.ts";
 import { dealt } from "./testing/dealt.ts";
 import { descAlphabet, descMutants } from "./testing/desc-mutants.ts";
-import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
+import { driveMidend } from "./testing/drive-midend.ts";
+import {
+  type AnyGame,
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+} from "./testing/enrollment.ts";
 import { dealtBoards } from "./testing/presets.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
@@ -44,6 +50,62 @@ describe("a malformed game ID", () => {
     }
     expect(threw).toEqual([]);
     expect(acceptsAll).toEqual([]);
+  });
+});
+
+const gameById = new Map(REGISTERED_GAMES);
+
+function registered(id: string): AnyGame {
+  const game = gameById.get(id);
+  if (game === undefined) throw new Error(`${id} is not registered`);
+  return game;
+}
+
+/** The status the board has once `gameId` is opened, or the refusal. */
+function statusOnOpening(game: AnyGame, gameId: string): string | null {
+  const { midend, last } = driveMidend(game);
+  return midend.newGameFromId(gameId) ?? last("game-state-change")?.status ?? null;
+}
+
+/*
+ * A board that is solved as described is opened, and reads solved before a
+ * move. Dealing passes such a board over (`generate`); loading does not, since
+ * the generators themselves write them and their IDs have been handed out.
+ */
+describe("a game ID whose board is already solved", () => {
+  // Written by hand: a game whose description is the position itself.
+  const TYPED: readonly [string, string][] = [
+    ["fifteen", "3x3:1,2,3,4,5,6,7,8,0"],
+    ["sixteen", "3x3:1,2,3,4,5,6,7,8,9"],
+    ["twiddle", "3x3n2:1,2,3,4,5,6,7,8,9"],
+    ["flip", "3x3c:000000000000000000000,000"],
+    ["flood", "3x3c3m5:000000000,5"],
+  ];
+
+  it.each(TYPED)("%s: opens, solved at move 0", (id, gameId) => {
+    expect(statusOnOpening(registered(id), gameId)).toBe("solved");
+  });
+
+  // The params at which a generator was measured writing solved boards
+  // (`MAX_DEALT_SOLVED`), asked directly so that nothing deals again.
+  const WRITTEN: readonly [string, string][] = [
+    ["rect", "3x3"],
+    ["netslide", "3x3m1"],
+  ];
+
+  it.each(
+    WRITTEN,
+  )("%s at %s: opens every solved board its generator writes", (id, type) => {
+    const game = registered(id);
+    const params = game.decodeParams(type);
+    const solved: string[] = [];
+    for (let seed = 0; seed < 100; seed++) {
+      const { desc } = game.newDesc(params, randomNew(`solved-${seed}`));
+      if (game.status(game.newState(params, desc)) === "solved") solved.push(desc);
+    }
+    expect(solved.length).toBeGreaterThan(0);
+    const statuses = solved.map((desc) => statusOnOpening(game, `${type}:${desc}`));
+    expect(new Set(statuses)).toEqual(new Set(["solved"]));
   });
 });
 

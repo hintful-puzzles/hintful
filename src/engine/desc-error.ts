@@ -203,6 +203,9 @@ export function readBoard<P, S>(
  * game that deduces has to answer. A tier named
  * Unreasonable is a cap like any other, so a board that needs trial and error
  * loads exactly where the game has such a tier.
+ *
+ * **A board that is already solved loads.** Generators write such boards at
+ * small sizes, so refusing one would refuse an ID that has been handed out.
  */
 export function loadDesc<P, S>(game: Loadable<P, S>, p: P, desc: string): DescParse<S> {
   const read = readBoard(game, p, desc);

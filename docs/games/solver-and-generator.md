@@ -1572,7 +1572,11 @@ says what ends it. So a new generator meets three cases:
   loops (Fifteen, Flood, Flip, Twiddle) take one like any other. A new
   generator needs no such loop for a board that comes solved: the engine's
   deal ([`generate`](../../src/engine/deal.ts)) asks the game for the board's
-  status and deals again, for every game.
+  status and deals again, for every game. **That is a rule about dealing
+  only: a game ID whose board is already solved opens** (`ts-engine` § "A game
+  ID whose board is already solved opens"; owner, 2026-10-11). Generators
+  write such boards, so their IDs exist, and refusing one would be a
+  compatibility break. Do not add the refusal to `newState` or `loadDesc`.
 - **It uses something up each pass** (a frontier, a counter, free cells) ⇒ a
   ledger line naming what.
 - **It is rejection sampling for one item** (a free square, an unused color)
