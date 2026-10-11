@@ -110,11 +110,14 @@ against when changing it. It holds what a session could not get right from the
 code alone, because the code says what happens and not what was meant:
 
 - the rules of the puzzle and what counts as solved;
-- the description and params encodings, and anything else a save or a shared
-  link depends on;
-- what each control does;
-- what the hint does and says: its techniques and their order, its wording
-  rules, its marks, when it refuses;
+- the description and params encodings as the parser reads them, what each
+  refuses, each preference of the game's own by its key, and anything else a
+  save or a shared link depends on;
+- what each control does: every button, drag, key and keypad key;
+- what the hint does and says: each technique by what it concludes and from
+  what, the order they are tried in, its wording rules, its marks, when it
+  refuses;
+- the words of its status bar, and what a preset title of its own means;
 - what each difficulty tier means, and what the generator promises of a board;
 - a decision about how the game looks that is the game's own, and a
   deliberate difference from upstream.
@@ -130,6 +133,13 @@ no account of how it was decided. The gate holds those; the rest is in
 `openspec/config.yaml`, which the tool shows whoever writes a delta. A change
 to something the spec already covers modifies that requirement, so the spec
 keeps reading as the game and not as its history.
+
+Writing a requirement from the code finds the code's bugs, and a requirement
+never states one as the rule: it states what the help page and the rest of the
+spec intend, its scenarios keep off the broken case, and the bug is filed. Run
+every string and sentence a scenario quotes through the game. A scenario that
+says what a hint's first step is names the board it was seen on, because an
+earlier line firing first makes the general claim false.
 
 ## File anatomy
 
