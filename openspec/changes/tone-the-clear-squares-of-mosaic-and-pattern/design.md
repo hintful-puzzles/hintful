@@ -18,7 +18,7 @@ The ids are the ones the owner and the session used.
 | C | a yellow square, the purple's shape | set aside |
 | D | a pale yellow square, full cell, no piece | **chosen for both games** |
 | E | flat full-cell tiles for both states, as Proverbs draws them | set aside |
-| F | D with a faint cross where the square has no number | **to build**: the owner asked whether D could carry a faint cross, and the session recommends this form |
+| F | D with a faint cross where the square has no number | **chosen, to build** |
 | G | D with a faint cross in every clear square, behind a number too | rejected on sight: the cross strikes the number through |
 
 Why D over B, as the session put it to the owner: on D every number keeps its
@@ -28,9 +28,9 @@ the disc's edge. Why the cross in F: the pale square differs from an undecided
 one by a modest step of lightness and a hue, and a cross is a cue that needs
 neither. It is also the collection's mark for "ruled out", kept.
 
-**F is the session's recommendation and the owner had not yet answered it**
-when this was filed. The owner raised the faint cross, so build F; if the
-owner prefers D bare, it is the cross call removed.
+**The owner chose F for both games** on seeing it drawn (2026-10-11: "I love
+it, with the faint cross"), and asked for more contrast in the dark scheme,
+which is the first item below.
 
 ## What the drawing found that the build has to settle
 
