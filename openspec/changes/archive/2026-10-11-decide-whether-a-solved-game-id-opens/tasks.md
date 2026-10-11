@@ -6,4 +6,4 @@
   Twiddle, Flip, Flood), and written by a generator (Rectangles, Netslide).
 - [x] 3. See the test fail against a refusal planted in `loadDesc`.
 - [x] 4. The guide and `loadDesc`'s comment say the rule is dealing's alone.
-- [ ] 5. Validate, the gate, commit, push, archive.
+- [x] 5. Validate, the gate, commit, push, archive.
