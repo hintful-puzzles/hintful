@@ -29,4 +29,4 @@
 ## 4. Conclude
 
 - [x] 4.1 Spec deltas for `engine-hints` and `mosaic`, read against the code.
-- [ ] 4.2 Gate, commit, push, archive.
+- [x] 4.2 Gate, commit, push, archive.
