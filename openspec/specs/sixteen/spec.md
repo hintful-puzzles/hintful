@@ -377,6 +377,19 @@ either SHALL do nothing.
 - **THEN** the row slides one square left and the cursor is on the third
   square, where its tile came round to
 
+#### Scenario: Right from the last column
+
+- **WHEN** the cursor is on the last square of a row reading 4 1 3, and
+  Ctrl+Right or Shift+Right is pressed
+- **THEN** the row reads 3 4 1
+- **AND** under Ctrl the cursor is on the first square, with the 3 it was on
+
+#### Scenario: Down from the last row
+
+- **WHEN** the cursor is on the last square of a column reading 4 2 5 from the
+  top, and Ctrl+Down or Shift+Down is pressed
+- **THEN** the column reads 5 4 2
+
 ### Requirement: Enter or Space on a Sixteen square locks the arrow keys to sliding
 
 With the cursor showing on a square, Enter SHALL lock the plain arrow keys to

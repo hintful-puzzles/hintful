@@ -503,9 +503,9 @@ enters.
 With the cursor shown, Enter SHALL start a keyboard drag and add the cursor's
 square to the selection, and while the drag lasts every square an arrow moves
 the cursor onto SHALL join the selection. A second Enter SHALL end the drag
-and keep the selection, and Space, Escape and a key that fills or erases
-SHALL end it too; a digit too large for the board SHALL NOT. A clue SHALL NOT
-join the selection. With the cursor hidden, Enter SHALL only
+and keep the selection, and Space, Escape, a pointer press and a key that
+fills or erases SHALL end it too; a digit too large for the board SHALL NOT.
+A clue SHALL NOT join the selection. With the cursor hidden, Enter SHALL only
 show it.
 
 #### Scenario: Three squares filled from the keyboard
@@ -520,3 +520,10 @@ show it.
   square beyond it
 - **THEN** the squares on either side of the clue are selected and the clue is
   not
+
+#### Scenario: A press ends the drag
+
+- **WHEN** a keyboard drag is on, the player clicks a square, and then presses
+  an arrow
+- **THEN** the clicked square alone is selected, and the square the cursor
+  moved onto is not

@@ -714,3 +714,17 @@ and the dot.
   earlier deduction applies, a square only one dot can own among them
 - **THEN** the step says no other galaxy reaches this cell, so it and its
   partner must join the ringed dot, whose reach the stripes show
+
+### Requirement: The keyboard picks up a Galaxies dot wherever it sits
+
+With the cursor on a dot, Enter or Space SHALL begin the association drag
+from that dot, whether the dot sits inside a square, on an edge between two
+or on a corner between four. An edge that holds a dot takes no line, so the
+key SHALL NOT be read there as a click on the edge.
+
+#### Scenario: A dot on an edge
+
+- **WHEN** the cursor is on a dot that sits on the edge between two squares,
+  and Enter is pressed
+- **THEN** a drag from that dot begins, the arrows steer its free end, and a
+  second Enter on a square the dot could own associates the square
