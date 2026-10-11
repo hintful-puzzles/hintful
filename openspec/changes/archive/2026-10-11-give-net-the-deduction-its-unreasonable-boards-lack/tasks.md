@@ -35,4 +35,4 @@
   "Giving a deductive game an Unreasonable tier" says of Net, once it is no
   longer true, and `help/games/net.md`, which tells the player to look for
   the rule by hand.
-- [ ] 3.3 Commit, push, archive.
+- [x] 3.3 Commit, push, archive.

@@ -156,11 +156,10 @@ for at Easy.
 A way of turning a tile SHALL count as sealing a group off when each of its
 wires stops within a bounded run of tiles and together they reach fewer tiles
 than the grid holds. The run past a side SHALL be bounded over every way the
-tiles it enters can turn, among the ways that contradict no known side and
-close no loop through wires already known. A side whose wire could lead on, or
-come back round, SHALL bound nothing. Where no step follows from the facts as
-recorded, the run SHALL be bounded again with the tile held as turned, its
-sides and wires among the known.
+tiles it enters can turn, among the ways that fit the known sides and close
+no loop through known wires. A side whose wire could lead on, or come back
+round, SHALL bound nothing. Where no step follows, it SHALL be bounded again
+with the tile held as turned.
 
 #### Scenario: Two dead ends and two straights in one column
 
