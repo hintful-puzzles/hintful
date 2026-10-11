@@ -48,8 +48,8 @@ hint's word for the state stays "clear".
   surface", and "A blank Mosaic cell carries a cross that leaves its number
   the middle".
 - `pattern`: how a cell known to be empty is drawn.
-- `engine-drawing` or `engine-colors`: the clear square of a half-and-half
-  board, and which games take it.
+- `engine-colors`: the clear square of a half-and-half board, and which
+  games take it.
 
 ## Impact
 

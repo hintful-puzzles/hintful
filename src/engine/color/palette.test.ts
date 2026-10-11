@@ -283,6 +283,36 @@ describe("the shared color vocabulary", () => {
       });
   });
 
+  it("keeps the clear square in the pair's second hue, and its mark faint but seen", () => {
+    // A help page says a clear square turns `{{pair:1}}`, so the surface owes
+    // that member its hue. The mark on it is the cross and a used-up number:
+    // far enough from the surface to be read (the gray first drawn there sat
+    // 0.04 from it in the dark scheme and was lost), and on the surface's side
+    // of the scheme's ink, which is what makes it the faint one.
+    const schemes: [string, (c: Color) => OKLCH, number][] = [
+      ["light", colorToOKLCH, 0],
+      [
+        "dark",
+        (c) => {
+          const d = darkValue(c);
+          if (!d) throw new Error("no dark value");
+          return colorToOKLCH(d);
+        },
+        1,
+      ],
+    ];
+    for (const [scheme, resolve, inkLightness] of schemes) {
+      const surface = resolve(roles.CLEAR);
+      const mark = resolve(roles.CLEAR_MARK);
+      expect(surface[2], `hue in ${scheme}`).toBeCloseTo(resolve(colors.TWO[1])[2], 0);
+      const step = Math.abs(mark[0] - surface[0]);
+      expect(step, `mark against surface in ${scheme}`).toBeGreaterThan(0.2);
+      expect(step, `mark against ink in ${scheme}`).toBeLessThan(
+        Math.abs(inkLightness - surface[0]) - 0.15,
+      );
+    }
+  });
+
   it("keeps every derived role visible against both host backgrounds", () => {
     // The app hands games pure white in dark mode, so a derived role that only
     // separates from a light background is the Spokes COL_DONE bug waiting to

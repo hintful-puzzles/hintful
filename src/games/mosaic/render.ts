@@ -5,21 +5,21 @@
  * flash inverts marked/blank in its first and last thirds.
  *
  * The board is pieces on a quiet surface (`engine/piece.ts`): a marked cell
- * holds the shaded piece, a blank one the ruled-out cross, and a cell's number
- * is drawn over whichever it holds.
+ * holds the shaded piece, a blank one is the clear square, and a cell's number
+ * is drawn over whichever it is.
  */
 
 import { GRAY_WASH, WHITE } from "../../engine/color/colors.ts";
 import {
+  CLEAR,
+  CLEAR_MARK,
   CURSOR,
   cellSurface,
-  clueDoneColor,
   ERROR,
   ERROR_TEXT,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
-  RULED_OUT,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -32,7 +32,7 @@ import {
   MarkOutlines,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
+import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
@@ -59,12 +59,14 @@ export const COL_CELL = 1;
 export const COL_GRID = 2;
 /** The piece in a marked cell. */
 export const COL_SHADED = 3;
-/** The cross in a blank cell. */
-export const COL_RULED_OUT = 4;
-/** A number on bare surface, and one the board has satisfied. */
+/** The surface of a blank cell. */
+export const COL_CLEAR = 4;
+/** A number the board has not satisfied, off the piece. */
 export const COL_TEXT = 5;
-export const COL_TEXT_SOLVED = 6;
-/** The same two on the shaded piece. */
+/** What is faint on a blank cell: its cross, or a number the board has
+ * satisfied. */
+export const COL_CLEAR_MARK = 6;
+/** A number on the shaded piece, and one there that the board has satisfied. */
 export const COL_TEXT_ON_PIECE = 7;
 export const COL_TEXT_SOLVED_ON_PIECE = 8;
 export const COL_ERROR = 9;
@@ -79,14 +81,13 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_SHADED] = SHADED;
-  out[COL_RULED_OUT] = RULED_OUT;
+  out[COL_CLEAR] = CLEAR;
+  out[COL_CLEAR_MARK] = CLEAR_MARK;
   out[COL_TEXT] = INK;
-  out[COL_TEXT_SOLVED] = clueDoneColor(defaultBackground);
   // Pinned and not ink: it is read against the piece, whose own lightness
   // barely moves between the schemes.
   out[COL_TEXT_ON_PIECE] = WHITE;
-  // A gray between the piece and its white number in both schemes, which
-  // `clueDoneColor` is not: in the light scheme it is the piece's lightness.
+  // A gray between the piece and its white number in both schemes.
   out[COL_TEXT_SOLVED_ON_PIECE] = GRAY_WASH;
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
@@ -179,15 +180,13 @@ function drawCell(
   if (!(cell & (DRAWFLAG_MARGIN_R | DRAWFLAG_MARGIN_D))) {
     const box = { x: startX, y: startY, w: ts - 1, h: ts - 1 };
     const shaded = (cell & STATE_MARKED) !== 0;
-    dr.drawRect(box, COL_CELL);
-    if (shaded) {
-      drawPiece(dr, box, SHADED_SHAPE, COL_SHADED);
-    } else if (cell & STATE_BLANK) {
-      // Small and in the corner where the cell has a number, which takes the
-      // middle.
-      const side = Math.round(box.w * 0.4);
-      const corner = { x: box.x + box.w - side, y: box.y, w: side, h: side };
-      drawRuledOutCross(dr, clueVal >= 0 ? corner : box, COL_RULED_OUT);
+    const clear = !shaded && (cell & STATE_BLANK) !== 0;
+    if (clear) {
+      // No cross where the cell has a number, which takes the middle.
+      drawClearSquare(dr, box, COL_CLEAR, COL_CLEAR_MARK, clueVal >= 0 ? null : box);
+    } else {
+      dr.drawRect(box, COL_CELL);
+      if (shaded) drawPiece(dr, box, SHADED_SHAPE, COL_SHADED);
     }
 
     if (cell & DRAWFLAG_MISTAKE) {
@@ -210,12 +209,16 @@ function drawCell(
       };
       let textColor: number;
       if (cell & STATE_ERROR) {
-        // On the piece a contradicted number is a badge: red ink on the piece
-        // is a difference of hue with none of lightness.
-        if (shaded) dr.drawCircle(at, ts * 0.32, COL_ERROR, COL_ERROR);
-        textColor = shaded ? COL_ERROR_TEXT : COL_ERROR;
+        // On the piece and on the clear square a contradicted number is a
+        // badge: red ink on either is a difference of hue with little of
+        // lightness in the dark scheme.
+        const badged = shaded || clear;
+        if (badged) dr.drawCircle(at, ts * 0.32, COL_ERROR, COL_ERROR);
+        textColor = badged ? COL_ERROR_TEXT : COL_ERROR;
       } else if (cell & STATE_SOLVED) {
-        textColor = shaded ? COL_TEXT_SOLVED_ON_PIECE : COL_TEXT_SOLVED;
+        // A satisfied number's own square is decided, as every square round
+        // it is, so it sits on the piece or on the clear square.
+        textColor = shaded ? COL_TEXT_SOLVED_ON_PIECE : COL_CLEAR_MARK;
       } else {
         textColor = shaded ? COL_TEXT_ON_PIECE : COL_TEXT;
       }

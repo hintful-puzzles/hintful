@@ -1,14 +1,16 @@
 /**
  * Pattern rendering, after `game_redraw` / `grid_square` / `draw_numbers` in
  * pattern.c. The board is pieces on a quiet surface (`engine/piece.ts`): a
- * full cell holds the shaded piece, a cell known to be empty holds the
- * ruled-out cross, and an undecided cell is plain surface. A per-cell cache
+ * full cell holds the shaded piece, a cell known to be empty is the clear
+ * square, and an undecided cell is plain surface. A per-cell cache
  * keyed on the displayed value (drag- and flash-adjusted) plus overlay bits,
  * and a per-line cache of the clue color, which turns red when a completed
  * line contradicts its clue (`check_errors`).
  */
 
 import {
+  CLEAR,
+  CLEAR_MARK,
   CURSOR,
   cellSurface,
   ERROR,
@@ -16,7 +18,6 @@ import {
   HINT_BLACKREF,
   HINT_WHITEREF,
   INK,
-  RULED_OUT,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -26,7 +27,7 @@ import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
+import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
 import type { PatternHint } from "./index.ts";
@@ -47,8 +48,8 @@ export const FLASH_TIME = 0.13;
 
 // --- palette -------------------------------------------------------------
 export const COL_BACKGROUND = 0;
-/** The cross in a cell known to be empty. */
-export const COL_RULED_OUT = 1;
+/** The surface of a cell known to be empty. */
+export const COL_CLEAR = 1;
 /** The piece in a full cell. */
 export const COL_FULL = 2;
 export const COL_TEXT = 3;
@@ -64,6 +65,8 @@ export const COL_CURSOR_GUIDE = 8;
 export const COL_HINT = 9;
 export const COL_HINT_BLACKREF = 10;
 export const COL_HINT_WHITEREF = 11;
+/** The faint cross on a cell known to be empty. */
+export const COL_CLEAR_MARK = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -72,7 +75,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_TEXT] = INK;
   out[COL_FULL] = SHADED;
-  out[COL_RULED_OUT] = RULED_OUT;
+  out[COL_CLEAR] = CLEAR;
+  out[COL_CLEAR_MARK] = CLEAR_MARK;
   // The clue numbers of the cursor's own row and column: the cursor, projected
   // into the margin, so it takes the cursor's color rather than a gray of its own.
   out[COL_CURSOR_GUIDE] = CURSOR;
@@ -173,20 +177,22 @@ function gridSquare(
   const dw = ts - xl - xr - 1;
   const dh = ts - yt - yb - 1;
 
-  // A hint target is ringed below, never filled: where the move is exactly
-  // "shade this square, or rule it out", a piece would state the answer the
-  // narration is proposing. Every cell of the reasoned line is hatched, under
-  // whatever it holds, so the line reads as one strip. A cited cell keeps its
-  // own content (the premise) and gets an outline below, beside the piece.
-  dr.drawRect({ x: dx, y: dy, w: dw, h: dh }, COL_CELL);
-  if (hintBits & K_HINT_LINE) {
-    dr.drawHatch({ x: dx, y: dy, w: dw, h: dh }, COL_HINT, hatchPeriod(ts));
-  }
+  const surface = { x: dx, y: dy, w: dw, h: dh };
   // One box for every cell's content, the size of a cell beside a doubled
   // line, so the pieces of a picture are all one size.
   const content = { x: dx, y: dy, w: ts - 2, h: ts - 2 };
+
+  // A hint target is ringed below, never filled: where the move is exactly
+  // "shade this square, or rule it out", a piece would state the answer the
+  // narration is proposing. Every cell of the reasoned line is hatched, over
+  // its surface and under its piece, so the line reads as one strip. A cited
+  // cell keeps its own content (the premise) and gets an outline below,
+  // beside the piece.
+  if (val === GRID_EMPTY)
+    drawClearSquare(dr, surface, COL_CLEAR, COL_CLEAR_MARK, content);
+  else dr.drawRect(surface, COL_CELL);
+  if (hintBits & K_HINT_LINE) dr.drawHatch(surface, COL_HINT, hatchPeriod(ts));
   if (val === GRID_FULL) drawPiece(dr, content, SHADED_SHAPE, COL_FULL);
-  else if (val === GRID_EMPTY) drawRuledOutCross(dr, content, COL_RULED_OUT);
 
   if (hintBits & K_HINT_TARGET) {
     drawMarkSides(

@@ -1,6 +1,6 @@
 // Tier-2 render-ops: drive Mosaic's `redraw` against the engine's shared
-// `RecordingDrawing` — the piece or cross each mark state draws on the cell's
-// surface, clue text and its state-dependent color, cursor edge recolor, margin closing lines,
+// `RecordingDrawing` — the piece on the cell's surface or the clear square
+// each mark state draws, clue text and its state-dependent color, cursor edge recolor, margin closing lines,
 // the completion-flash inversion, the mistake outline, and the cache
 // suppressing unchanged tiles.
 import { describe, expect, it } from "vitest";
@@ -11,15 +11,15 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { mosaicGame } from "./index.ts";
 import {
   COL_CELL,
+  COL_CLEAR,
+  COL_CLEAR_MARK,
   COL_CURSOR,
   COL_ERROR,
   COL_ERROR_TEXT,
   COL_GRID,
-  COL_RULED_OUT,
   COL_SHADED,
   COL_TEXT,
   COL_TEXT_ON_PIECE,
-  COL_TEXT_SOLVED,
   COL_TEXT_SOLVED_ON_PIECE,
   type MosaicDrawState,
   newDrawState,
@@ -53,12 +53,14 @@ type Ops = RecordingDrawing["ops"];
 /** The shaded pieces drawn. */
 const pieces = (ops: Ops) =>
   ops.filter((o) => o.op === "polygon" && o.fill === COL_SHADED);
-/** The strokes of the ruled-out crosses drawn, two to a cross. */
-const crossStrokes = (ops: Ops) =>
-  ops.filter((o) => o.op === "line" && o.color === COL_RULED_OUT);
-/** The cell surfaces drawn. */
+/** The strokes of the clear squares' crosses drawn, two to a cross. */
+const crossStrokes = (ops: Ops) => ops.filter((o) => o.op === "line");
+/** The plain cell surfaces drawn. */
 const surfaces = (ops: Ops) =>
   ops.filter((o) => o.op === "rect" && o.color === COL_CELL && o.w === TS - 1);
+/** The clear squares' surfaces drawn. */
+const clearSurfaces = (ops: Ops) =>
+  ops.filter((o) => o.op === "rect" && o.color === COL_CLEAR && o.w === TS - 1);
 
 describe("Mosaic redraw", () => {
   it("paints unmarked tiles and clue text on first draw", () => {
@@ -99,7 +101,7 @@ describe("Mosaic redraw", () => {
     ).toBe(true);
   });
 
-  it("draws a marked cell as a piece and a blank one as a cross, on the same surface", () => {
+  it("draws a marked cell as a piece on the surface and a blank one as the clear square", () => {
     let state = newState(P3, "000000000");
     // Marking (1,1) contradicts every zero clue around it.
     state = executeMove(state, { type: "toggle", x: 1, y: 1, double: false });
@@ -107,32 +109,48 @@ describe("Mosaic redraw", () => {
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
-    expect(surfaces(ops).length).toBe(9);
+    expect(surfaces(ops).length).toBe(8);
+    expect(clearSurfaces(ops).length).toBe(1);
     expect(pieces(ops).length).toBe(1);
-    expect(crossStrokes(ops).length).toBe(2);
     // Every clue is contradicted: red text on bare surface, and on the piece
-    // a red badge under text in the badge's own text color.
+    // and the clear square a red badge under text in the badge's own color.
     const texts = ops.filter((o) => o.op === "text");
-    expect(texts.filter((o) => o.color === COL_ERROR).length).toBe(8);
-    expect(texts.filter((o) => o.color === COL_ERROR_TEXT).length).toBe(1);
-    expect(ops.filter((o) => o.op === "circle" && o.fill === COL_ERROR).length).toBe(1);
+    expect(texts.filter((o) => o.color === COL_ERROR).length).toBe(7);
+    expect(texts.filter((o) => o.color === COL_ERROR_TEXT).length).toBe(2);
+    expect(ops.filter((o) => o.op === "circle" && o.fill === COL_ERROR).length).toBe(2);
   });
 
-  it("keeps a blank cell's cross off the middle, where its number is", () => {
+  it("gives a blank cell's number the square to itself, with no cross", () => {
     let state = newState(P3, ALL_BLACK_DESC);
     state = executeMove(state, { type: "toggle", x: 1, y: 1, double: true });
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, 0);
+    expect(clearSurfaces(ops).length).toBe(1);
+    expect(crossStrokes(ops).length).toBe(0);
+  });
+
+  it("draws a faint cross in the middle of a blank cell that has no number", () => {
+    // "9" hides nothing at this size, so the cell with no number is made by
+    // hand: clue -1 is how the board holds a hidden one.
+    const dealt = newState(P3, ALL_BLACK_DESC);
+    const clues = Int8Array.from(dealt.board.clues);
+    clues[4] = -1;
+    let state: MosaicState = { ...dealt, board: { ...dealt.board, clues } };
+    state = executeMove(state, { type: "toggle", x: 1, y: 1, double: true });
+    const { dr, ops } = recordingDrawing();
+    redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, 0);
+    const surface = clearSurfaces(ops)[0];
     const strokes = crossStrokes(ops);
-    const text = ops.find((o) => o.op === "text" && o.text === "9");
-    if (strokes.length !== 2 || text?.op !== "text") throw new Error("not drawn");
-    // Every stroke end is right of the number's middle and above it, by more
-    // than a digit's half width at this tile size.
-    const clear = TS / 8;
+    if (surface?.op !== "rect" || strokes.length !== 2) throw new Error("not drawn");
     for (const s of strokes) {
       if (s.op !== "line") throw new Error("not a line");
-      expect(Math.min(s.x1, s.x2) - text.x).toBeGreaterThan(clear);
-      expect(text.y - Math.max(s.y1, s.y2)).toBeGreaterThan(clear);
+      expect(s.color).toBe(COL_CLEAR_MARK);
+      // Within the pixel the cross's whole-pixel middle is rounded by.
+      const off = Math.hypot(
+        (s.x1 + s.x2) / 2 - (surface.x + surface.w / 2),
+        (s.y1 + s.y2) / 2 - (surface.y + surface.h / 2),
+      );
+      expect(off).toBeLessThan(1);
     }
   });
 
@@ -164,7 +182,7 @@ describe("Mosaic redraw", () => {
     expect(texts.every((o) => o.color === COL_TEXT_SOLVED_ON_PIECE)).toBe(true);
   });
 
-  it("grays out a solved clue's text on bare surface", () => {
+  it("draws a solved clue's text faint on the clear square", () => {
     let state = newState(P3, "000000000");
     for (let y = 0; y < 3; y++) {
       for (let x = 0; x < 3; x++) {
@@ -175,7 +193,7 @@ describe("Mosaic redraw", () => {
     redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, 0);
     const texts = ops.filter((o) => o.op === "text");
     expect(texts.length).toBe(9);
-    expect(texts.every((o) => o.color === COL_TEXT_SOLVED)).toBe(true);
+    expect(texts.every((o) => o.color === COL_CLEAR_MARK)).toBe(true);
   });
 
   it("draws cursor edges in the cursor color", () => {
@@ -205,7 +223,7 @@ describe("Mosaic redraw", () => {
     const { dr, ops } = recordingDrawing();
     // flashTime 0.1 ≤ FLASH_TIME/3 → inverted: every marked cell draws blank.
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0.1);
-    expect(crossStrokes(ops).length).toBe(18);
+    expect(clearSurfaces(ops).length).toBe(9);
     expect(pieces(ops).length).toBe(0);
     // Mid-flash (middle third) the board draws normally again.
     const second = recordingDrawing();

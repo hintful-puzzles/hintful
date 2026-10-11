@@ -5,9 +5,9 @@ Each number indicates how many {{pair:0}} squares are in the 3×3 square
 surrounding the number – *including* the clue square
 itself.
 
-A square you have made clear carries a cross, which tells it from a
-square you have not decided yet; the cross is small and in the corner
-where the square has a number. A number is drawn on top
+A square you have made clear turns {{pair:1}}, which tells it from a
+square you have not decided yet. It carries a faint cross too, unless it
+has a number, which then has the square to itself. A number is drawn on top
 of whatever its square holds, and fades once its 3×3 square is fully
 decided and agrees with it.
 

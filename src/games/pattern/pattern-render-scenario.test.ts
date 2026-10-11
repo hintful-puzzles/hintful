@@ -15,8 +15,15 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { cellAt, LINE } from "./hint-marks.ts";
 import { type PatternHint, patternGame } from "./index.ts";
-import { COL_GRID, COL_HINT, COL_HINT_BLACKREF } from "./render.ts";
+import {
+  COL_CLEAR,
+  COL_CLEAR_MARK,
+  COL_GRID,
+  COL_HINT,
+  COL_HINT_BLACKREF,
+} from "./render.ts";
 import { deduceHintPlan } from "./solver.ts";
+import { GRID_EMPTY, GRID_FULL } from "./state.ts";
 
 const P = patternGame.decodeParams("10x10");
 
@@ -76,6 +83,34 @@ describe("Pattern hint render scenarios", () => {
     expect(size.w).toBeGreaterThan(0);
 
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("a cell known to be empty is the clear square, a faint cross in its middle", () => {
+    const { recording } = renderScenario({
+      game: patternGame,
+      id: "10x10:1.3/2.3/7/7.2/7.2/1.1.1.2/1.1.1.1/1/1.1/4/6/4/5/3/5/5/5.1.2/2.1/7/3.1",
+      moves: [
+        { type: "fillCells", value: GRID_EMPTY, cells: [11] },
+        { type: "fillCells", value: GRID_FULL, cells: [12] },
+      ],
+    });
+    const surfaces = recording.ops.filter(
+      (o) => o.op === "rect" && o.color === COL_CLEAR,
+    );
+    expect(surfaces).toHaveLength(1);
+    const [surface] = surfaces;
+    const strokes = opsOfKind(recording.ops, "line");
+    expect(strokes).toHaveLength(2);
+    if (surface.op !== "rect") throw new Error("not a rect");
+    for (const s of strokes) {
+      expect(s.color).toBe(COL_CLEAR_MARK);
+      // Within the pixel the cross's whole-pixel middle is rounded by.
+      const off = Math.hypot(
+        (s.x1 + s.x2) / 2 - (surface.x + surface.w / 2),
+        (s.y1 + s.y2) / 2 - (surface.y + surface.h / 2),
+      );
+      expect(off).toBeLessThan(1);
+    }
   });
 
   it("ringed-premise frame: a cited black mark rings COL_HINT_BLACKREF", () => {

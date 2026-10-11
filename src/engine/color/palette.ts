@@ -52,6 +52,8 @@ import {
   TWO,
   TWO_WASH,
   YELLOW,
+  YELLOW_FIELD,
+  YELLOW_FIELD_MARK,
 } from "./colors.ts";
 
 // --- ink and paper ----------------------------------------------------
@@ -374,6 +376,24 @@ export function givenSurface(background: Color): Color {
  * has its shape and its word.
  */
 export const SHADED: Color = TWO[0];
+
+/**
+ * **Clear**: the whole cell of a square the player has said is not shaded, in
+ * a game whose board is colored half and half (Mosaic, Pattern), where the
+ * state that is not shaded says as much as the shaded one. A surface of its
+ * own in the hue of the pair's second member, so a part-solved board is two
+ * colors on the undecided gray. `drawClearSquare` (`piece.ts`) draws it. A
+ * game where a few squares are the answer and the rest is a note keeps the
+ * bare cross ({@link RULED_OUT}).
+ */
+export const CLEAR: Color = YELLOW_FIELD;
+
+/**
+ * **What is drawn faint on a {@link CLEAR} square**: its cross, and a number
+ * there that the board has satisfied. `clueDoneColor` cannot be the second: in
+ * the dark scheme it sits at the square's own lightness.
+ */
+export const CLEAR_MARK: Color = YELLOW_FIELD_MARK;
 
 /**
  * **A thing the player pushes or carries** to where it belongs: Sokoban's

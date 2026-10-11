@@ -8,8 +8,9 @@ A shaded square holds a {{pair:0}} square.
 
 {{controls}}
 
-A square you know is not shaded can be marked clear, with a cross; a
-square with nothing in it is one you have not decided yet.
+A square you know is not shaded can be marked clear: it turns
+{{pair:1}}, with a faint cross. A gray square with nothing in it is one
+you have not decided yet.
 
 Drag along a row or column to give every undecided square on it what
 the first square turned into. A drag whose first square turns back to

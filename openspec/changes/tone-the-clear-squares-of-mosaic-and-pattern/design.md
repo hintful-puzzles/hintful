@@ -48,6 +48,58 @@ which is the first item below.
 - **Pattern's part-solved board in D still reads as a picture in one color**,
   which B did not: there the picture became a field of dots.
 
+## What was built
+
+Built 2026-10-11 and looked at in the running app in both schemes, on the
+Mosaic board above and a 15x15 Pattern board.
+
+- **The surface is `CLEAR`, the named color `YELLOW_FIELD`.** In the light
+  scheme it is the value the owner chose from the drawing (`YELLOW_WASH`'s).
+  In the dark scheme it is lightness 0.52 at chroma 0.10, a gold, where
+  `YELLOW_WASH` is 0.48 at 0.08. A dark yellow is an olive whatever is done,
+  so the gain in the surface is modest and comes from chroma. 0.46 was tried
+  and read muddier. It was not taken lighter because the dark piece is at
+  0.60: the square stands 0.08 under the piece and about 0.25 over the
+  undecided cell, and the two are told apart by hue and by the piece's shape.
+  **This is the value to judge by eye.**
+- **The faint cross is `CLEAR_MARK`, the named color `YELLOW_FIELD_MARK`**: the
+  surface's hue a step toward the ink of each scheme, darker than the surface
+  in the light scheme and lighter in the dark. This is most of the contrast
+  the owner asked for: the gray of the drawing sat 0.04 from the dark surface.
+- **A satisfied number on a clear square takes the same color.** Its gray
+  vanished on the dark surface too. A satisfied number's own square is always
+  decided, so Mosaic's slot for one on bare surface had no use and is gone.
+- **A contradicted number on a clear square is a badge**, the red disc it
+  already was on the piece. Red ink on the dark gold differed in hue and
+  hardly in lightness.
+- **Pattern's hint hatch is drawn over the clear square**, cross included, and
+  reads as one strip.
+- **Mosaic's flash** swaps the two states square for square and leaves
+  nothing behind.
+
+## The other games, read against the rule
+
+Each caller of `drawRuledOutCross`, 2026-10-11:
+
+| Game | Reading |
+| --- | --- |
+| Black Box | A few balls are the answer; a cross is a note. Keeps the cross. |
+| Light Up | A few bulbs are the answer; a cross is "no bulb here". Keeps it. |
+| Tracks | The track is the answer; the owner's own example of the first kind. |
+| Subsets | A cross strikes a letter from a set; no board is colored. Keeps it. |
+| Range | Every square is decided in the end, but shaded squares may not touch and are the few; clear is the bulk of the board and the note. Keeps it. |
+| Bricks | **Fits.** Every cell is shaded or clear, the two in like number, and the work is deciding each. |
+
+## A question for the owner
+
+**Should Bricks take the clear square too?** `bricks-clear-square.png` in
+this directory is Bricks with it, twenty hint steps into the default board,
+light and dark (a temporary switch, not committed). The recommendation is
+yes: it is the same kind of board, and its numbers sit on cells of their own,
+so no clear square there ever holds a number. The cost is one more game whose
+look changes; nothing a player saved is touched. It is not done here because
+the design says to ask.
+
 ## The rule for the engine
 
 A game whose board is colored half and half draws the state that is not

@@ -96,7 +96,14 @@ function oklch(l: number, c: number, hDegrees: number): Color {
 type Step = readonly [l: number, c: number];
 
 /** A color's intensities under one scheme; every step but `base` is optional. */
-type Steps = { base: Step; wash?: Step; washQuiet?: Step; bold?: Step };
+type Steps = {
+  base: Step;
+  wash?: Step;
+  washQuiet?: Step;
+  field?: Step;
+  fieldMark?: Step;
+  bold?: Step;
+};
 
 /**
  * **The palette.** Hue per name, then lightness and chroma per intensity per
@@ -156,8 +163,18 @@ const DESIGN: Record<string, { h: number; light: Steps; dark: Steps }> = {
   },
   YELLOW: {
     h: 100,
-    light: { base: [0.86, 0.168], wash: [0.91, 0.07] },
-    dark: { base: [0.8, 0.156], wash: [0.48, 0.08] },
+    light: {
+      base: [0.86, 0.168],
+      wash: [0.91, 0.07],
+      field: [0.91, 0.07],
+      fieldMark: [0.62, 0.05],
+    },
+    dark: {
+      base: [0.8, 0.156],
+      wash: [0.48, 0.08],
+      field: [0.52, 0.1],
+      fieldMark: [0.74, 0.1],
+    },
   },
   GREEN: {
     h: 148,
@@ -240,6 +257,27 @@ export const ORANGE_BOLD: Color = of("ORANGE", "bold");
 export const YELLOW: Color = of("YELLOW", "base");
 /** @see YELLOW */
 export const YELLOW_WASH: Color = of("YELLOW", "wash");
+/**
+ * @see YELLOW — the **field**: a fill that covers about half of a board, the
+ * state that is not the shaded one. Its consumer is `CLEAR`.
+ *
+ * A step of its own rather than {@link YELLOW_WASH}, for the reason
+ * {@link TEAL_WASH_QUIET} is one: that wash's dark lightness is an output of
+ * the search behind {@link EIGHT_FILLS} and {@link FOUR_FILLS}. In the light
+ * scheme the two are one value. In the dark scheme the wash is a muddy olive
+ * as a field (owner, 2026-10-11, asking for more contrast), so the field is
+ * lighter and carries the most chroma yellow has at that lightness, which
+ * reads as gold. It stays under the dark {@link PURPLE} of the piece beside
+ * it, and white ink still reads on it.
+ */
+export const YELLOW_FIELD: Color = of("YELLOW", "field");
+/**
+ * @see YELLOW_FIELD — what is drawn **faint** on the field: a cross, a number
+ * that is used up. The field's hue a step toward the ink of each scheme, so it
+ * is seen on the field and stays behind the ink beside it. A gray could not be
+ * it in the dark scheme, where the grays sit at the field's own lightness.
+ */
+export const YELLOW_FIELD_MARK: Color = of("YELLOW", "fieldMark");
 
 /** Green. */
 export const GREEN: Color = of("GREEN", "base");

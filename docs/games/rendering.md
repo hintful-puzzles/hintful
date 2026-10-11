@@ -804,7 +804,7 @@ decision:
   meanings**, and your default: `ERROR`, `ERROR_TEXT`, `ERROR_WASH`,
   `HINT_ACTION`, `HINT_EVIDENCE`, `HINT_EVIDENCE_WASH`,
   `HINT_BLACKREF`/`HINT_WHITEREF`, `CURSOR`, `HELD`, `DRAG_ADD`/`DRAG_REMOVE`,
-  `FLASH`, `RULED_OUT`, `GRID_MID`, `GRID_DARK`, `PENCIL_BODY`,
+  `FLASH`, `RULED_OUT`, `CLEAR`/`CLEAR_MARK`, `GRID_MID`, `GRID_DARK`, `PENCIL_BODY`,
   `INK`, `PAPER`, plus the background-derived functions (`pencilColor`, `playerEntryColor`,
   `highlightWash`, `lineMaybeColor`, `lineNoColor`, `clueDoneColor`, and the
   surfaces `cellSurface`, `surfaceGrid` and `givenSurface`, and `wallFill`),
@@ -899,10 +899,28 @@ The owner's decisions (2026-10-07, from the mock-ups in the archived change
   finished picture still reads as a picture. **Ruled out is a cross in every
   game** (owner, 2026-10-08, replacing the dot of the day before): a cell, a
   slot or a square the player has said holds nothing takes `drawRuledOutCross`
-  and never a mark of the game's own, so the mark is learned once. A cell
-  that also holds a number passes a corner box (Mosaic). The words are `SHADED_NAME` and
-  `UNSHADED_NAME`, never "black" and "white". Flip is not one of these: lit
+  and never a mark of the game's own, so the mark is learned once. The words
+  are `SHADED_NAME` and `UNSHADED_NAME`, never "black" and "white". Flip is
+  not one of these: lit
   and unlit are both states the player makes, and it takes the pair.
+- **Where the board is colored half and half, the cross gets a surface**
+  (owner, 2026-10-11, narrowing the line above). In some games a few squares
+  are the answer and the rest is crossed out as a note (Tracks, Range). In
+  others each state says as much as the other and the work is coloring the
+  whole board one way or the other (Mosaic, Pattern): there a board half
+  cleared was a scatter of thin crosses, and a clear square is
+  `drawClearSquare`, the whole cell in `CLEAR` with the cross faint on it in
+  `CLEAR_MARK`, and no cross where the square's middle holds a number. The
+  shaded piece is unchanged, so a finished picture is still one color of
+  piece. The games that take it are the callers
+  (`git grep -l drawClearSquare -- src/games`); a game that draws the bare
+  cross (`git grep -l drawRuledOutCross -- src/games`) and fits the first
+  description is put to the owner with a drawing, not changed. Three things
+  the first two found: a retired number on the square takes `CLEAR_MARK`,
+  since `clueDoneColor` sits at the square's lightness in the dark scheme; a
+  contradicted number is a badge there, as on a piece; and the dark `CLEAR`
+  is a gold a step under the piece, because a dark yellow is olive and the
+  square has to stand off the undecided cell.
 - **The pair's hues are the board's content beyond two states** (owner,
   2026-10-07: more of the theme where a board is mostly gray or carries a hue
   with no reason). A thing the player pushes or carries is `MOVED` (Sokoban's
