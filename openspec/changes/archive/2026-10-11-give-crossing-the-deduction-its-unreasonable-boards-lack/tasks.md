@@ -31,4 +31,4 @@
 - [x] 3.2 `docs/games/solver-and-generator.md`: what the measurement in § "Giving
   a deductive game an Unreasonable tier" says of Crossing, once it is no
   longer true.
-- [ ] 3.3 Commit, push, archive.
+- [x] 3.3 Commit, push, archive.

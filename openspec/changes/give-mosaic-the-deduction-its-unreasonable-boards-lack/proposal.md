@@ -61,6 +61,12 @@ the hint never had is a missing rung.
 
 ## What to settle first
 
+- **What Crossing chose, 2026-10-11.** A wider Easy, with its reasons and
+  what it cost the hint, in the archived
+  `give-crossing-the-deduction-its-unreasonable-boards-lack` (`design.md`,
+  D1). A middle tier would be the engine's to add: `answer-search.ts` knows
+  two tiers by constant. The owner may yet turn Crossing's choice round, so
+  read whether they did.
 - **Where the boards the comparison finishes go.** Easy is today exactly what
   upstream deals. (a) A middle tier, Easy unchanged: a board dealt as
   Unreasonable today opens as the middle tier once this lands, since a board

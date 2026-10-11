@@ -69,6 +69,12 @@ followed through the solver (59 of 60 at 5x5, 52 of 60 at 11x13, 48 of 60 at
 
 ## What to settle first
 
+- **What Crossing chose, 2026-10-11.** A wider Easy, with its reasons and
+  what it cost the hint, in the archived
+  `give-crossing-the-deduction-its-unreasonable-boards-lack` (`design.md`,
+  D1). A middle tier would be the engine's to add: `answer-search.ts` knows
+  two tiers by constant. The owner may yet turn Crossing's choice round, so
+  read whether they did.
 - **Where the boards the new rule finishes go.** Easy is today exactly what
   upstream deals with its checks on, draw for draw, which the differential
   holds. Two shapes: (a) a middle tier, Easy below it unchanged, so that a
