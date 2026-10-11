@@ -16,6 +16,7 @@ import {
   CURSOR,
   cellSurface,
   ERROR,
+  FLASH,
   GRID_DARK,
   givenSurface,
   HINT_ACTION,
@@ -72,7 +73,7 @@ export const ROTATE_TIME = 0.13;
 
 export const COL_BACKGROUND = 0; // the board around the grid
 /** The surface under a locked tile, lifted: the player has fixed it, as the
- * puzzle fixes a given. The win flash swaps a lit tile's surface with it. */
+ * puzzle fixes a given. */
 export const COL_LOCKED = 1;
 export const COL_BORDER = 2; // the line between two tiles, and the frame
 export const COL_WIRE = 3;
@@ -93,6 +94,8 @@ export const COL_HINT = 11;
 /** A hint's outlines: what the step reasons from. */
 export const COL_HINT_CELL = 12;
 export const COL_CELL = 13; // the surface of a tile the player may still turn
+/** The ground of a tile the win flash is on. */
+export const COL_FLASH = 14;
 
 const INDICATOR: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
@@ -111,6 +114,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BORDER] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_LOCKED] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   out[COL_CURSOR] = CURSOR;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
@@ -128,6 +132,7 @@ const TILE_ENDPOINT_SHIFT = 17; // 2 bits: 0 none,1 unpowered,2 powered,3 source
 const TILE_WIRE_ON_EDGE_SHIFT = 19; // 8 bits, same encoding as TILE_WIRE_SHIFT
 const TILE_ROTATING = 1 << 27;
 const TILE_LOCKED = 1 << 28;
+const TILE_FLASH = 1 << 29;
 
 export const lineThick = (ts: number): number => Math.floor((ts + 47) / 48);
 
@@ -293,7 +298,13 @@ function drawTile(
 
   // The ring outside the grid is board: only a barrier's outline lands on it.
   const onBoard = x >= 0 && x < ds.w && y >= 0 && y < ds.h;
-  const bg = !onBoard ? COL_BACKGROUND : tile & TILE_LOCKED ? COL_LOCKED : COL_CELL;
+  const bg = !onBoard
+    ? COL_BACKGROUND
+    : tile & TILE_FLASH
+      ? COL_FLASH
+      : tile & TILE_LOCKED
+        ? COL_LOCKED
+        : COL_CELL;
   dr.drawRect({ x: clipx, y: clipy, w: clipw, h: cliph }, bg);
 
   // Grid lines.
@@ -706,10 +717,8 @@ export function redraw(
 
       if (t & LOCKED) td[here] |= TILE_LOCKED;
 
-      // A lit tile swaps surfaces, so the highlight shows on a locked tile,
-      // lifted already, as on any other.
       if (reach !== null && reach[gi] >= 0 && flash.win(reach[gi]))
-        td[here] ^= TILE_LOCKED;
+        td[here] |= TILE_FLASH;
     }
   }
 

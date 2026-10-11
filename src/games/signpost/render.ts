@@ -12,6 +12,7 @@ import { BLUE_BOLD, PURPLE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   ERROR,
+  FLASH,
   givenSurface,
   HELD,
   HINT_ACTION,
@@ -75,6 +76,8 @@ const COL_X0 = COL_B0 + 3 * NBACKGROUNDS;
 export const COL_HINT = COL_X0 + NBACKGROUNDS;
 /** The outline on a square the hint reasons from. */
 export const COL_HINT_CELL = COL_HINT + 1;
+/** The ground of a square the win flash is on. */
+export const COL_FLASH = COL_HINT_CELL + 1;
 
 /** The board's pixel origin (NARROW_BORDERS). Exported so `interpretMove` and
  * `computeSize` read the same number the painter does — one function, both
@@ -114,7 +117,7 @@ const F_FLASH = 0x1000;
  * in `palette-games.ts`); what is left here is which slot each one occupies.
  */
 export function buildPalette(background: Color): Color[] {
-  const ret: Color[] = new Array(COL_HINT_CELL + 1);
+  const ret: Color[] = new Array(COL_FLASH + 1);
 
   ret[COL_BACKGROUND] = background;
   ret[COL_CELL] = cellSurface(background);
@@ -136,6 +139,7 @@ export function buildPalette(background: Color): Color[] {
   ret[COL_ARROW_BG_DIM] = signpostArrowDim(cellSurface(background));
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
+  ret[COL_FLASH] = FLASH;
 
   for (let c = 0; c < NBACKGROUNDS; c++) {
     ret[COL_B0 + c] = SIGNPOST_REGION_BACKGROUNDS[c];
@@ -278,12 +282,15 @@ function tileRedraw(
 
   // The square's surface. A given keeps its lift while a drag dims the rest,
   // since who put the number there does not change with the player's focus.
-  // The win flash swaps the two surfaces, so its highlight shows on a given,
-  // lifted already, as on any other square.
-  const lifted = !empty && !(f & F_IMMUTABLE) !== !(f & F_FLASH);
   dr.drawRect(
     { x: tx, y: ty, w: ts, h: ts },
-    lifted ? COL_GIVEN : f & F_DIM && !empty ? dimbg(setcol) : setcol,
+    f & F_FLASH
+      ? COL_FLASH
+      : empty || !(f & (F_IMMUTABLE | F_DIM))
+        ? setcol
+        : f & F_IMMUTABLE
+          ? COL_GIVEN
+          : dimbg(setcol),
   );
   // The grid line this square shares with its upper and left neighbors; the
   // frame closes the first row and column.

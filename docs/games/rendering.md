@@ -559,8 +559,9 @@ used to paint its cell's background rect, and hands it that same rect.
 - **It draws inside the tile repaint, so it rides the tile key.** Pack
   `cellHighlight(ui, x, y)` — two bits — into the key, or the old cell never
   repaints when the highlight leaves (§ "A cursor is usually a cache key, not a
-  blitter"). A game that hides the highlight for its own reasons, a completion
-  flash, passes `HIGHLIGHT_NONE` rather than skipping the call.
+  blitter"). A game that hides the highlight for its own reasons passes
+  `HIGHLIGHT_NONE` rather than skipping the call, and a cell the win flash is
+  on passes `HIGHLIGHT_WIN`, which fills it with the flash color.
 - **The triangle is background.** It is drawn with the rect, before any content,
   so a clue in the same corner (Keen's cage label, a pencil mark in the top-left
   slot) sits on top of it, and so do Group's dividers, which the triangle used
@@ -758,18 +759,22 @@ Four rules, each of which a game can break without a type error:
 
 `engine/win-flash.test.ts` paints every game's solved board through a flash
 and fails a game that lights nothing, lights the whole board at once, is
-still lit at the end, or asks about an element that looks the same lit as
-not. A game's own test pins its route: `winFlashRun` paints the flash and
+still lit at the end, or lights an element in anything but the one highlight
+color. A game's own test pins its route: `winFlashRun` paints the flash and
 `expectWinFlashTravels` asserts it lit every element once, in the order of
 the positions the game hands over (`engine/testing/win-flash.ts`; exemplar
 `tracks-flash.test.ts`).
 
-**What "lit" looks like is the game's**, from the shared palette: a cell
-lifted to the given's surface, a line in `FLASH`
-(`engine-colors` § "A solved flash drawn as a color takes a shared color").
-**Every element asked about must look different lit.** A given that already
-rests on the lifted surface drops to the plain one when lit, so a lit cell
-swaps its surface whichever it wears (Net, Signpost).
+**What "lit" looks like is the engine's too: the `FLASH` role, one color in
+every game** (`engine-colors` § "A solved flash drawn as a color takes a
+shared color"). An element with a ground (a cell, a tile's face, a region, a
+hub) has it filled with `FLASH` and keeps what it holds, drawn on top as on
+any other frame; a line is drawn in `FLASH`. Nothing else: no lifted or
+swapped surface, no wash, no hidden or recolored content. A game gives the
+role a palette slot and paints with it, and the guard lights each element
+alone and fails one that does not then paint more in that color. A game that
+paints its cell through `drawCellBackground` passes `HIGHLIGHT_WIN` and the
+slot (`engine/note-taking-cell.ts`).
 
 **What is suppressed is the Solve *command*, not a cheated *board*.** A player
 who uses Solve, unmakes part of it and then finishes by hand has won, and gets
@@ -859,8 +864,7 @@ decision:
   done"** is `clueDoneColor` for retired *text* and `REGION_DONE` for
   a completed *fill* — five games once encoded it five ways, from `INK` (Loopy,
   which made the distinction invisible) to a bespoke `bg × 0.85`. **The solved
-  flash** lights an element with the lifted surface (a cell) or `FLASH` (a
-  line); which elements are lit, and when, is the engine's
+  flash** lights every element in `FLASH`, the theme's yellow, in every game
   (§ "Animation and flash").
 - [`engine/color/colors.ts`](../../src/engine/color/colors.ts) — **the
   palette itself**: twelve names, most at three intensities (base, `_WASH`,

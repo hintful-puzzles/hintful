@@ -8,7 +8,13 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { CURSOR, givenSurface, HINT_ACTION, INK } from "../../engine/color/palette.ts";
+import {
+  CURSOR,
+  FLASH,
+  givenSurface,
+  HINT_ACTION,
+  INK,
+} from "../../engine/color/palette.ts";
 import {
   drawRecessedBorder as drawBevel,
   drawRaisedTile,
@@ -30,7 +36,7 @@ export const ANIM_TIME = 0.4;
 
 // --- color indices ---------------------------------------------------
 
-export const COL_BACKGROUND = 0;
+const COL_BACKGROUND = 0;
 const COL_TEXT = 1;
 const COL_HIGHLIGHT = 2;
 const COL_LOWLIGHT = 3;
@@ -47,6 +53,8 @@ const COL_TILE = 5;
 export const COL_ARROW = 6;
 /** The arrow the keyboard cursor is on. */
 const COL_CURSOR = 7;
+/** The face of a tile the win flash is on, inside its bevel. */
+export const COL_FLASH = 8;
 
 // --- hint highlights --------------------------------------------------
 
@@ -135,6 +143,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TILE] = givenSurface(background);
   out[COL_ARROW] = lowlight;
   out[COL_CURSOR] = CURSOR;
+  out[COL_FLASH] = FLASH;
   return out;
 }
 
@@ -282,10 +291,7 @@ export function redraw(
 
     const t0 = t;
     const lit = flash.win(sweepStep(i % state.w, Math.floor(i / state.w))) ? 1 : 0;
-    // A lit tile's face drops to the board inside its bevel. A tile is the
-    // lifted surface already, and neither bevel color stands off it in both
-    // schemes.
-    const bgcolor = lit ? COL_BACKGROUND : COL_TILE;
+    const bgcolor = lit ? COL_FLASH : COL_TILE;
 
     const isDraggedNow = !!(
       ui.dragging &&

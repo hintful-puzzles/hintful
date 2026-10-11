@@ -41,6 +41,7 @@ import {
   HIGHLIGHT_ENTRY,
   HIGHLIGHT_NONE,
   HIGHLIGHT_NOTES,
+  HIGHLIGHT_WIN,
   highlightFill,
   type NoteTakingUi,
   noOpEntryResult,
@@ -267,12 +268,14 @@ describe("what a symbol entry does to the highlight", () => {
 describe("the picture", () => {
   const WASH = 1;
   const BG = 0;
+  const FLASH = 2;
   const paint = (rect: Rect, highlight: CellHighlight) => {
     const rec = new RecordingDrawing([
       [1, 1, 1],
       [0.5, 0.5, 0.5],
+      [1, 1, 0],
     ]);
-    drawCellBackground(rec, rect, highlight, WASH, BG);
+    drawCellBackground(rec, rect, highlight, WASH, BG, FLASH);
     return rec.ops;
   };
 
@@ -315,10 +318,17 @@ describe("the picture", () => {
     ]);
   });
 
-  it("fills only for entry, for the game that paints more than the rect", () => {
-    expect(highlightFill(HIGHLIGHT_ENTRY, WASH, BG)).toBe(WASH);
-    expect(highlightFill(HIGHLIGHT_NOTES, WASH, BG)).toBe(BG);
-    expect(highlightFill(HIGHLIGHT_NONE, WASH, BG)).toBe(BG);
+  it("fills for entry and for the win, for the game that paints more than the rect", () => {
+    expect(highlightFill(HIGHLIGHT_ENTRY, WASH, BG, FLASH)).toBe(WASH);
+    expect(highlightFill(HIGHLIGHT_NOTES, WASH, BG, FLASH)).toBe(BG);
+    expect(highlightFill(HIGHLIGHT_NONE, WASH, BG, FLASH)).toBe(BG);
+    expect(highlightFill(HIGHLIGHT_WIN, WASH, BG, FLASH)).toBe(FLASH);
+  });
+
+  it("paints a cell under the win flash in the flash color, and no triangle", () => {
+    const ops = paint({ x: 0, y: 0, w: 10, h: 10 }, HIGHLIGHT_WIN);
+    expect(ops).toHaveLength(1);
+    expect(ops[0]).toMatchObject({ op: "rect", color: FLASH });
   });
 });
 

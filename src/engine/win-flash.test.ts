@@ -9,10 +9,11 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
+import { FLASH } from "./color/palette.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { type AnyGame, probeBoard } from "./testing/input-probe.ts";
-import { RecordingDrawing } from "./testing/recording-drawing.ts";
+import { RecordingDrawing, rgbLabel } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { winFlashAt } from "./testing/win-flash.ts";
 import { type Flash, NO_FLASH, WIN_FLASH_S, WIN_STILL_S } from "./win-wave.ts";
@@ -80,11 +81,13 @@ describe("the win flash, in every game", () => {
     });
 
     // The band test above passes a game whose highlight shows on some
-    // elements and is invisible on others: a given that already wears the
-    // color a lit cell takes. So each element is lit alone. A game asks once
-    // per element, in one order every frame, which makes the nth question of
-    // a frame the nth element.
-    it("shows the highlight on every element it asks about", () => {
+    // elements and is invisible on others, and one that lights in a color of
+    // its own. So each element is lit alone, and must then paint something
+    // more in the one highlight color than the settled board does. A game
+    // asks once per element, in one order every frame, which makes the nth
+    // question of a frame the nth element.
+    it("lights every element it asks about in the one highlight color", () => {
+      const inFlash = (frame: string) => frame.split(rgbLabel(FLASH)).length;
       let asked = 0;
       paint({
         time: 0,
@@ -98,8 +101,8 @@ describe("the win flash, in every game", () => {
       const unseen: number[] = [];
       for (let only = 0; only < asked; only++) {
         let n = 0;
-        if (paint({ time: 0, winning: true, win: () => n++ === only }) === settled)
-          unseen.push(only);
+        const lit = paint({ time: 0, winning: true, win: () => n++ === only });
+        if (inFlash(lit) <= inFlash(settled)) unseen.push(only);
       }
       expect(unseen).toEqual([]);
     });

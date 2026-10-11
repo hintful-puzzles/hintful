@@ -1,7 +1,7 @@
 // Tier-2 render-ops: drive Mosaic's `redraw` against the engine's shared
 // `RecordingDrawing` — the piece on the cell's surface or the clear square
 // each mark state draws, clue text and its state-dependent color, cursor edge recolor, margin closing lines,
-// the win flash's lifted cells, the mistake outline, and the cache
+// the win flash's lit cells, the mistake outline, and the cache
 // suppressing unchanged tiles.
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
@@ -18,8 +18,8 @@ import {
   COL_CURSOR,
   COL_ERROR,
   COL_ERROR_TEXT,
+  COL_FLASH,
   COL_GRID,
-  COL_LIT,
   COL_SHADED,
   COL_TEXT,
   COL_TEXT_ON_PIECE,
@@ -228,13 +228,13 @@ describe("Mosaic redraw", () => {
       redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, flash);
       return ops;
     };
-    // The cells drawn on the lifted surface, each as its index.
+    // The cells whose ground is the flash color, each as its index.
     const run = winFlashRun(paint, (ops) => {
       // A lit cell keeps what it holds: only the surface under it changes.
       expect(pieces(ops).length).toBe(8);
       expect(crossStrokes(ops).length).toBe(0);
       return ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_LIT && o.w === TS - 1
+        o.op === "rect" && o.color === COL_FLASH && o.w === TS - 1
           ? [((o.y - TS / 2) / TS) * 3 + (o.x - TS / 2) / TS]
           : [],
       );

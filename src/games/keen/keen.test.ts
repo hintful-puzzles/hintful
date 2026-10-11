@@ -72,7 +72,7 @@ import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import {
   border,
   COL_ERROR,
-  COL_HIGHLIGHT,
+  COL_FLASH,
   COL_PENCIL_BODY,
   type KeenDrawState,
   type KeenHint,
@@ -450,7 +450,7 @@ describe("keen render", () => {
     if (!r?.ok) throw new Error("the fixture does not solve");
     const st = keenGame.executeMove(start, r.move);
     const ts = keenGame.preferredTileSize ?? 48;
-    /** The cells washed with the highlight, as `column,row`. A cage's edge
+    /** The cells filled with the flash color, as `column,row`. A cage's edge
      * moves a cell's fill by the edge's width, so by the cell it falls in. */
     const cell = (v: number) => Math.floor((v - border(ts)) / ts);
     const run = winFlashRun(
@@ -461,9 +461,7 @@ describe("keen render", () => {
       },
       (dr) =>
         dr.ops.flatMap((o) =>
-          o.op === "rect" && o.color === COL_HIGHLIGHT
-            ? [`${cell(o.x)},${cell(o.y)}`]
-            : [],
+          o.op === "rect" && o.color === COL_FLASH ? [`${cell(o.x)},${cell(o.y)}`] : [],
         ),
     );
     expectWinFlashTravels(run, 16, (key) => {

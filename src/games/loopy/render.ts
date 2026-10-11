@@ -677,7 +677,14 @@ export function redraw(
   for (const color of PHASES) {
     // Faint lines are the NO marks, which some players prefer not to see.
     if (color === COL_FAINT && !ui.drawFaintLines) continue;
-    const thickness = color === COL_FAINT ? faintLineThickness(ts) : lineThickness(ts);
+    // A lit edge is drawn wider than a set one: at a set line's width the
+    // flash color is a hairline against the board, and does not read as lit.
+    const thickness =
+      color === COL_FAINT
+        ? faintLineThickness(ts)
+        : color === COL_HIGHLIGHT
+          ? 2 * lineThickness(ts)
+          : lineThickness(ts);
     for (const i of buckets.get(color) ?? []) {
       const [a, b] = edgeEnds(g, ts, i);
       dr.drawLine(a, b, color, thickness);

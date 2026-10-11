@@ -13,7 +13,7 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { type PegsMove, type PegsParams, pegsGame } from "./index.ts";
-import { COL_LIT } from "./render.ts";
+import { COL_FLASH } from "./render.ts";
 
 const G = pegsGame;
 
@@ -273,7 +273,7 @@ describe("Pegs win flash", () => {
       G.redraw(dr, ds, null, state, 1, G.newUi(state), 0, flash);
       return dr.ops;
     };
-    // The cells drawn on the lifted surface, each as its index.
+    // The cells whose ground is the flash color, each as its index.
     const run = winFlashRun(paint, (ops) => {
       const clips = opsOfKind(ops, "clip");
       const left = Math.min(...clips.map((o) => o.x));
@@ -284,7 +284,7 @@ describe("Pegs win flash", () => {
       let cell = -1;
       for (const o of ops) {
         if (o.op === "clip") cell = ((o.y - top) / TS) * 3 + (o.x - left) / TS;
-        else if (o.op === "rect" && o.color === COL_LIT) cells.push(cell);
+        else if (o.op === "rect" && o.color === COL_FLASH) cells.push(cell);
       }
       return cells;
     });

@@ -24,6 +24,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_WASH,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -86,6 +87,7 @@ import {
   COL_CURSOR,
   COL_FLAG,
   COL_FLAGBASE,
+  COL_FLASH,
   COL_GRID,
   COL_HINT,
   COL_HINT_EVIDENCE,
@@ -608,6 +610,7 @@ export const minesGame: Game<
     ret[COL_MINE] = BLACK;
     ret[COL_MINE_GLINT] = WHITE;
     ret[COL_BANG] = ERROR;
+    ret[COL_FLASH] = FLASH;
     // Red because a flag is yours and deliberate, not because anything is
     // wrong — but the same red, which is what the collection has one of.
     ret[COL_FLAG] = RED;

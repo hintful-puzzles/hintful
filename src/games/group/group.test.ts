@@ -28,7 +28,7 @@ import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
 import {
-  COL_HIGHLIGHT,
+  COL_FLASH,
   colors,
   coord,
   newDrawState,
@@ -401,7 +401,8 @@ describe("rendering smoke", () => {
     // shares `COL_HINT_CELL`: a number saying where a cell falls in the chain is
     // an index into the evidence, not a hint role of its own. Then the three
     // surfaces: the cell, a given's lifted cell and the line between cells.
-    expect(pal).toHaveLength(14);
+    // And the win flash's color.
+    expect(pal).toHaveLength(15);
 
     const ds = newDrawState(state, 48);
     const dr = new RecordingDrawing(pal);
@@ -418,7 +419,7 @@ describe("rendering smoke", () => {
     const res = solve(start, start, aux);
     if (!res.ok) throw new Error("the fixture does not solve");
     const state = groupGame.executeMove(start, res.move);
-    /** The cells washed with the highlight, as the pixel each starts at. */
+    /** The cells filled with the flash color, as the pixel each starts at. */
     const run = winFlashRun(
       (flash: Flash) => {
         const dr = new RecordingDrawing(colors([0.9, 0.9, 0.9]));
@@ -428,7 +429,7 @@ describe("rendering smoke", () => {
       },
       (dr) =>
         dr.ops.flatMap((o) =>
-          o.op === "rect" && o.color === COL_HIGHLIGHT ? [`${o.x},${o.y}`] : [],
+          o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
         ),
     );
     // Every cell of the table, and nothing of the legend round it.

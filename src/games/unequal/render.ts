@@ -36,7 +36,11 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import { cellHighlight, drawCellBackground } from "../../engine/note-taking-cell.ts";
+import {
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_WIN,
+} from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -92,7 +96,7 @@ export const COL_HINT = 9; // the acted-on cell's ring (drawn in redraw's last b
 /** The driving clue's cells, outlined (same block), **and** a forcing chain's
  * ordinal — one index, because the number indexes the evidence. */
 export const COL_HINT_CELL = 10;
-/** The solved flash — upstream flashed to the bevel highlight. */
+/** The ground of a cell the win flash is on. */
 export const COL_FLASH = 11;
 /** The keyboard cursor: the cell's fill (or its pencil-mode corner triangle).
  * Upstream drew it in the bevel highlight. */
@@ -459,9 +463,10 @@ function drawCell(
   drawCellBackground(
     dr,
     { x: ox, y: oy, w: ts, h: ts },
-    cellHighlight(ui, x, y),
+    hflash ? HIGHLIGHT_WIN : cellHighlight(ui, x, y),
     COL_CURSOR,
-    hflash ? COL_FLASH : flags & DF_IMMUTABLE ? COL_GIVEN : COL_CELL,
+    flags & DF_IMMUTABLE ? COL_GIVEN : COL_CELL,
+    COL_FLASH,
   );
   if (hatched) dr.drawHatch({ x: ox, y: oy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
 

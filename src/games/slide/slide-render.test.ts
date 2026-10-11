@@ -35,11 +35,10 @@ import {
   COL_BACKGROUND,
   COL_BLOCK,
   COL_CURSOR,
+  COL_FLASH,
   COL_GRABBED,
-  COL_HIGHLIGHT,
   COL_MAIN,
   COL_MAIN_GRABBED,
-  COL_MAIN_HIGHLIGHT,
   COL_TARGET,
   COL_WALL,
   COL_WALL_HIGHLIGHT,
@@ -477,10 +476,10 @@ describe("slide win flash", () => {
   // The won board: the key block one square right, `A` nudged to (4,1).
   const main = ["2,1", "3,1", "2,2", "3,2"];
 
-  it("starts on the floor at the bottom left, in the floor's highlight shade", () => {
+  it("starts on the floor at the bottom left, in the flash color", () => {
     expect(frames[0]).toEqual(["1,3"]);
     const floor = rectsInTile(flashAt(WIN_FLASH_S / 41), 1, 3).find((o) => o.w === TS);
-    expect(floor?.color).toBe(COL_HIGHLIGHT);
+    expect(floor?.color).toBe(COL_FLASH);
   });
 
   it("travels the floor squares and the blocks in the sweep's order, never the wall", () => {
@@ -526,12 +525,12 @@ describe("slide win flash", () => {
     expect(lit(WIN_FLASH_S)).toEqual([]);
   });
 
-  it("lights a block whole, in its own highlight shade", () => {
+  it("lights a block whole, its face in the flash color", () => {
     for (const f of frames)
       expect(main.filter((sq) => f.includes(sq)).length % 4).toBe(0);
     const t = (WIN_FLASH_S * (frames.findIndex((f) => f.includes(main[0])) + 1)) / 41;
     const ops = flashAt(t);
-    expect(pieceFillColor(ops, 2, 1)).toBe(COL_MAIN_HIGHLIGHT);
+    expect(pieceFillColor(ops, 2, 1)).toBe(COL_FLASH);
   });
 
   it("returns to the ordinary palette once the flash has run out", () => {

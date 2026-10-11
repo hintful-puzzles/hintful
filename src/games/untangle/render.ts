@@ -9,8 +9,8 @@
  * cache.
  *
  * The win flash runs over the points in the order a diagonal sweep meets them
- * where they are drawn: a lit point is the flash color, and so is a line while
- * the first of its ends is lit.
+ * where they are drawn: a lit point sits on a disc of the flash color, and a
+ * line is drawn in the flash color while the first of its ends is lit.
  */
 
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
@@ -144,6 +144,14 @@ export function redrawUntangle(
     COL_OUTLINE,
   );
 
+  // The ground of a lit point: a disc of the flash color under it and under
+  // its lines, the size of the area a press picks the point up from. A point
+  // rests in the pair's yellow, where the flash color would not show.
+  for (let i = 0; i < n; i++) {
+    if (!ds.lit[i]) continue;
+    dr.drawCircle({ x: ds.x[i], y: ds.y[i] }, DRAG_THRESHOLD, COL_FLASH, COL_FLASH);
+  }
+
   // Edges. Show crossed edges red when the preference is on; during an
   // animation the crossings reflect the from-state, matching upstream.
   const crossSource = prev ?? s;
@@ -151,32 +159,27 @@ export function redrawUntangle(
     const e = s.edges[i];
     // The end the highlight reaches first is the one the line lights with.
     const first = rank[e.a] <= rank[e.b] ? e.a : e.b;
-    const color = ds.lit[first]
+    const lit = ds.lit[first];
+    const color = lit
       ? COL_FLASH
       : ui.showCrossedEdges && crossSource.crosses[i]
         ? COL_CROSSEDLINE
         : COL_LINE;
+    // A lit line is wider: one pixel of the flash color is lost on the board.
     dr.drawLine(
       { x: ds.x[e.a], y: ds.y[e.a] },
       { x: ds.x[e.b], y: ds.y[e.b] },
       color,
-      1,
+      lit ? 3 : 1,
     );
   }
 
   // Vertices, in a fixed z-order so the drag/cursor point sits on top.
-  const drawOrder = [
-    COL_POINT,
-    COL_NEIGHBOR,
-    COL_CURSORPOINT,
-    COL_DRAGPOINT,
-    COL_FLASH,
-  ];
+  const drawOrder = [COL_POINT, COL_NEIGHBOR, COL_CURSORPOINT, COL_DRAGPOINT];
   for (const thisColor of drawOrder) {
     for (let i = 0; i < n; i++) {
       let c: number;
-      if (ds.lit[i]) c = COL_FLASH;
-      else if (ui.dragPoint === i) c = COL_DRAGPOINT;
+      if (ui.dragPoint === i) c = COL_DRAGPOINT;
       else if (ui.cursorPoint === i) c = COL_CURSORPOINT;
       else if (ui.dragPoint >= 0 && s.edgeSet.has(packEdge(ui.dragPoint, i, n)))
         c = COL_NEIGHBOR;
@@ -184,17 +187,15 @@ export function redrawUntangle(
       if (c !== thisColor) continue;
 
       if (ui.vertexNumbers) {
-        // Blank the blob area, then draw the index number in `c`.
-        dr.drawCircle(
-          { x: ds.x[i], y: ds.y[i] },
-          DRAG_THRESHOLD,
-          COL_BACKGROUND,
-          COL_BACKGROUND,
-        );
+        // Blank the blob area, to the flash color under a lit point, then
+        // draw the index number in `c`. A lit number is in the lines' ink: a
+        // point's own yellow would vanish on the flash color.
+        const ground = ds.lit[i] ? COL_FLASH : COL_BACKGROUND;
+        dr.drawCircle({ x: ds.x[i], y: ds.y[i] }, DRAG_THRESHOLD, ground, ground);
         dr.drawText(
           { x: ds.x[i], y: ds.y[i] },
           glyphFont(Math.trunc((DRAG_THRESHOLD * 3) / 2)),
-          c,
+          ds.lit[i] ? COL_LINE : c,
           String(i),
         );
       } else {

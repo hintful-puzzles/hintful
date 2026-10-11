@@ -4,8 +4,8 @@
 
 A completed correct region SHALL fill whole, its clue cells included, with the
 shared finished-region role. The win flash SHALL sweep the board's cells from
-the bottom left to the top right, and a lit cell SHALL be lifted to the
-given's surface in place of its region's fill.
+the bottom left to the top right, and a lit cell SHALL be filled with the
+flash color in place of its region's fill and keep what it holds.
 
 #### Scenario: A clue cell in a finished region takes the region's fill
 

@@ -13,17 +13,17 @@ cell of its neighborhood unmarked.
 
 ## ADDED Requirements
 
-### Requirement: Mosaic's win flash lifts the surface of a cell
+### Requirement: Mosaic's win flash fills the ground of a cell
 
 The win flash SHALL sweep the board's cells from the bottom left to the top
-right. A lit cell SHALL be drawn on the collection's lifted surface in place
-of its own, a blank cell's clear surface included, and SHALL keep what it
+right. A lit cell's ground SHALL be filled with the flash color in place of
+its own surface, a blank cell's clear surface included, and SHALL keep what it
 holds: its piece, its cross and its number.
 
 #### Scenario: A lit blank cell
 
 - **WHEN** the win flash's highlight is on a blank cell with no number
-- **THEN** the cell is filled with the lifted surface and still carries its
+- **THEN** the cell is filled with the flash color and still carries its
   faint cross
 
 ### Requirement: Mosaic draws a marked cell as a piece and a blank cell as the clear square

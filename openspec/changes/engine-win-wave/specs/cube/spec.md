@@ -4,8 +4,8 @@
 
 The win flash SHALL sweep the arena diagonally: a square's position SHALL be
 that of its center, on the square grid and on the triangular one alike, and a
-lit square SHALL be drawn on the lifted surface the solid's plain faces have.
-The solid SHALL be drawn over the arena as on any other frame.
+lit square SHALL be filled with the flash color. The solid SHALL be drawn over
+the arena as on any other frame.
 
 #### Scenario: A triangular arena
 

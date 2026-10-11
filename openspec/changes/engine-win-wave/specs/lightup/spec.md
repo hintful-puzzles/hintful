@@ -4,7 +4,7 @@
 
 The keyboard cursor SHALL be brackets at the corners of its square, clear of a
 bulb. The completion flash SHALL sweep the open squares diagonally, a lit
-square taking the lifted surface in place of its yellow and keeping its bulb.
+square filled with the flash color in place of its yellow and keeping its bulb.
 A wall SHALL never be lit.
 
 #### Scenario: The cursor on a bulb

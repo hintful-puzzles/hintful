@@ -296,7 +296,7 @@ function drawTile(
   const cy = coord(y, ts);
   let which = packed & DS_WHICH_MASK;
   const flags = packed & ~DS_WHICH_MASK;
-  let perc = 100;
+  const perc = 100;
 
   dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, COL_BACKGROUND);
 
@@ -322,10 +322,7 @@ function drawTile(
     fg = flags & DS_ERROR ? COL_ERROR : flags & DS_CURSOR ? COL_TEXT : COL_BACKGROUND;
   }
 
-  if (flags & DS_FLASH) {
-    drawTileCol(dr, ds, dominoes, x, y, which, COL_HIGHLIGHT, -1, perc, false);
-    perc = Math.floor((3 * perc) / 4);
-  }
+  if (flags & DS_FLASH) bg = COL_HIGHLIGHT;
   drawTileCol(dr, ds, dominoes, x, y, which, bg, fg, perc, !!(flags & DS_HINT_LINE));
 
   // Fork findMistakes overlay: an inset red outline (distinct from symbol red).

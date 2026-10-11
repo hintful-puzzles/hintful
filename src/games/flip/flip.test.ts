@@ -396,8 +396,8 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
 describe("Flip win flash", () => {
   const params: FlipParams = { w: 4, h: 3, matrixType: "crosses" };
   const TILE = flipGame.preferredTileSize ?? 32;
-  /** The squares a frame's ops put on the lifted surface, by cell. */
-  const lifted = (ops: RecordingDrawing["ops"]): number[] =>
+  /** The squares whose ground a frame's ops fill in the flash color, by cell. */
+  const lit = (ops: RecordingDrawing["ops"]): number[] =>
     opsOfKind(ops, "rect")
       .filter((o) => o.color === COL_FLASH)
       .map(
@@ -422,7 +422,7 @@ describe("Flip win flash", () => {
         flipGame.redraw(dr, preferredDrawState(flipGame, s), null, s, 1, ui, 0, flash);
         return ops;
       },
-      lifted,
+      lit,
       40,
     );
     expectWinFlashTravels(run, params.w * params.h, (i) =>
@@ -453,7 +453,7 @@ describe("Flip win flash", () => {
         Math.floor(cell / params.w) * TILE + border(TILE) + 1,
         PuzzleButton.LEFT_BUTTON,
       );
-    /** Run the clock for `seconds`, and say which squares were lifted in
+    /** Run the clock for `seconds`, and say which squares were lit in
      * any frame of it. */
     const play = (seconds: number): number[] => {
       const seen: number[] = [];
@@ -461,7 +461,7 @@ describe("Flip win flash", () => {
         me.timer(0.02);
         const { dr, ops } = recordingDrawing();
         me.redraw(dr);
-        seen.push(...lifted(ops));
+        seen.push(...lit(ops));
       }
       return seen;
     };

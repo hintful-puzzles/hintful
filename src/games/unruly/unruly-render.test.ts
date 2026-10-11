@@ -6,7 +6,11 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  type DrawOp,
+  opsOfKind,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import {
   expectWinFlashTravels,
@@ -24,6 +28,7 @@ import {
   COL_EMPTY,
   COL_ERROR,
   COL_ERROR_TEXT,
+  COL_FLASH,
   COL_GIVEN,
   COL_HINT,
   COL_HINT_REF,
@@ -274,8 +279,7 @@ describe("Unruly redraw", () => {
 });
 
 describe("Unruly: the win flash sweeps the cells", () => {
-  // A board with no given, so a lifted surface is the flash's alone. Rows
-  // alternate between one pattern and its inverse.
+  // A solved board: rows alternate between one pattern and its inverse.
   const row = [1, 1, 0, 0, 1, 0];
   let state = blank();
   for (let y = 0; y < P.h2; y++) {
@@ -290,9 +294,9 @@ describe("Unruly: the win flash sweeps the cells", () => {
     redraw(dr, ds, null, state, 1, freshUi(), 0, flash);
     return ops;
   };
-  /** The cells a frame draws on the lifted surface, as the `x,y` drawn at. */
+  /** The cells a frame fills with the flash color, as the `x,y` drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] =>
-    bodies(ops).flatMap((op) => (op.color === COL_GIVEN ? [`${op.x},${op.y}`] : []));
+    bodies(ops).flatMap((op) => (op.color === COL_FLASH ? [`${op.x},${op.y}`] : []));
   const step = (key: string): number => {
     const [x, y] = key.split(",").map(Number);
     return x - y;
@@ -306,7 +310,7 @@ describe("Unruly: the win flash sweeps the cells", () => {
     expectWinFlashTravels(winFlashRun(paint, lit), cells, step);
   });
 
-  it("drops a given to the plain surface while the flash is on it", () => {
+  it("fills a given as it fills any other cell, and keeps its piece", () => {
     // The same board with its top-left cell a given, which rests lifted.
     const given = withClue(state.grid[0] as Cell);
     const surfaceAt = (ops: RecordingDrawing["ops"]) =>
@@ -318,7 +322,13 @@ describe("Unruly: the win flash sweeps the cells", () => {
     };
     expect(surfaceAt(paintGiven(NO_FLASH))).toBe(COL_GIVEN);
     const surfaces = winFlashRun(paintGiven, (ops) => [surfaceAt(ops)]).frames.flat();
-    expect(new Set(surfaces)).toEqual(new Set([COL_GIVEN, COL_EMPTY]));
+    expect(new Set(surfaces)).toEqual(new Set([COL_GIVEN, COL_FLASH]));
+    const pieces = (ops: readonly DrawOp[]) =>
+      opsOfKind(ops, "polygon").filter((o) => o.fill === COL_0 || o.fill === COL_1)
+        .length;
+    for (const ops of winFlashRun(paintGiven, (frame) => frame, 5).frames) {
+      expect(pieces(ops)).toBe(1);
+    }
   });
 
   it("lowers a cell to its own surface when the flash leaves it", () => {

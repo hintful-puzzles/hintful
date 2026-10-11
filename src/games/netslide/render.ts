@@ -11,8 +11,8 @@ import { TWO } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
+  FLASH,
   GRID_DARK,
-  givenSurface,
   HINT_ACTION,
   INK,
   surfaceGrid,
@@ -62,8 +62,7 @@ export function border(tileSize: number): number {
 
 // --- palette ---------------------------------------------------------------
 export const COL_BACKGROUND = 0; // the board around the grid, where the arrows are
-/** A tile's face under the win flash's highlight: the lifted surface, as Net
- * lifts its tiles. */
+/** A tile's face while the win flash is on it. */
 export const COL_FLASHING = 1;
 export const COL_BORDER = 2; // the line between two tiles, and the frame
 export const COL_WIRE = 3;
@@ -88,7 +87,7 @@ export function colors(defaultBackground: Color): Color[] {
   // a distinction a port gets to keep).
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_FLASHING] = givenSurface(defaultBackground);
+  out[COL_FLASHING] = FLASH;
   out[COL_BORDER] = surfaceGrid(defaultBackground);
   out[COL_WIRE] = INK;
   out[COL_ENDPOINT] = TWO[0];

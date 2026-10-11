@@ -14,7 +14,7 @@ import {
   CURSOR,
   cellSurface,
   ERROR,
-  givenSurface,
+  FLASH,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_WHITEREF,
@@ -68,8 +68,8 @@ export const COL_HINT_BLACKREF = 10;
 export const COL_HINT_WHITEREF = 11;
 /** The faint cross on a cell known to be empty. */
 export const COL_CLEAR_MARK = 12;
-/** The surface of a cell the win flash's highlight is on, whatever it holds. */
-export const COL_LIT = 13;
+/** The ground of a cell the win flash is on, whatever it holds. */
+export const COL_FLASH = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -88,7 +88,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_BLACKREF] = HINT_BLACKREF;
   out[COL_HINT_WHITEREF] = HINT_WHITEREF;
-  out[COL_LIT] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   return out;
 }
 
@@ -195,8 +195,8 @@ function gridSquare(
   // cell keeps its own content (the premise) and gets an outline below,
   // beside the piece.
   if (val === GRID_EMPTY)
-    drawClearSquare(dr, surface, lit ? COL_LIT : COL_CLEAR, COL_CLEAR_MARK, content);
-  else dr.drawRect(surface, lit ? COL_LIT : COL_CELL);
+    drawClearSquare(dr, surface, lit ? COL_FLASH : COL_CLEAR, COL_CLEAR_MARK, content);
+  else dr.drawRect(surface, lit ? COL_FLASH : COL_CELL);
   if (hintBits & K_HINT_LINE) dr.drawHatch(surface, COL_HINT, hatchPeriod(ts));
   if (val === GRID_FULL) drawPiece(dr, content, SHADED_SHAPE, COL_FULL);
 

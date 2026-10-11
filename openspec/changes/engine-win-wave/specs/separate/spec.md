@@ -1,12 +1,10 @@
-## MODIFIED Requirements
+## REMOVED Requirements
 
 ### Requirement: The solved flash lifts every cell
 
-The completion flash SHALL sweep the board's cells, and a lit cell's body SHALL
-be drawn in the given's surface, over the finished-region color it rests in.
+**Reason**: What a lit element looks like is one rule for every game
+(`engine-colors`, "A solved flash drawn as a color takes a shared color"): a
+lit cell's body is filled with the flash color and keeps its letter and walls.
+Separate adds nothing of its own to it.
 
-#### Scenario: The flash lifts the cells
-
-- **WHEN** a board is won and frames of its flash are drawn from start to end
-- **THEN** every cell's body is the lifted surface on some frame, and the walls
-  and letters are drawn as on any other frame
+**Migration**: None. Nothing a player holds refers to the flash.

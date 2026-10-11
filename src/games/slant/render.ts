@@ -19,6 +19,7 @@
 import {
   cellSurface,
   ERROR,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
@@ -71,8 +72,10 @@ export const COL_HINT_CELL = 8; // evidence area, outlined
 export const COL_HINT_REF = 9; // a cited filled anchor (a doubled ring)
 export const COL_PENCIL = 10; // the player's same-slant marks
 export const COL_PENCIL_BODY = 11; // the notes-mode indicator's pencil
-/** The lifted disc under a clue, and a square the win's highlight is on. */
+/** The lifted disc under a clue. */
 export const COL_GIVEN = 12;
+/** The ground of a square the win flash is on. */
+export const COL_FLASH = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -87,6 +90,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = highlightWash(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
+  out[COL_FLASH] = FLASH;
   out[COL_GROUNDED] = slantGrounded(background);
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -109,7 +113,7 @@ const T_R = 0x00000100;
 const ERR_T_R = 0x00000200;
 const C_TL = 0x00000400;
 const ERR_C_TL = 0x00000800;
-const FLASH = 0x00001000;
+const LIT = 0x00001000;
 const ERRSLASH = 0x00002000;
 const ERR_TL = 0x00004000;
 const ERR_TR = 0x00008000;
@@ -239,8 +243,8 @@ function drawTile(
   // a blue square would read as a slash already placed.
   dr.drawRect(
     { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
-    v & FLASH
-      ? COL_GIVEN
+    v & LIT
+      ? COL_FLASH
       : v & CURSOR
         ? COL_CURSOR
         : x >= 0 && x < w && y >= 0 && y < h
@@ -507,7 +511,7 @@ export function redraw(
   for (let y = -1; y <= h; y++) {
     for (let x = -1; x <= w; x++) {
       const square = x >= 0 && x < w && y >= 0 && y < h;
-      todraw[ti(x, y)] = square && flash.win(sweepStep(x, y)) ? FLASH : 0;
+      todraw[ti(x, y)] = square && flash.win(sweepStep(x, y)) ? LIT : 0;
     }
   }
 

@@ -481,7 +481,7 @@ export const untangleGame: Game<
     const { background, lowlight } = mkhighlight(defaultBackground);
     // Index-for-index with the upstream COL_* enum (untangle.c:57) up to the
     // flash, whose two colors (a gray and a white) fold into one: the color
-    // of a point and a line the win flash is on.
+    // under a point, and of a line, the win flash is on.
     return [
       lowlight, // 0 COL_SYSBACKGROUND (dead space, darker)
       background, // 1 COL_BACKGROUND (play area)

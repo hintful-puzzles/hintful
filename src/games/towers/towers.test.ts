@@ -31,7 +31,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
   COL_ERROR,
-  COL_HIGHLIGHT,
+  COL_FLASH,
   COL_PENCIL_BODY,
   coord,
   newDrawState,
@@ -698,10 +698,10 @@ describe("towers: the win flash sweeps the squares", () => {
     redraw(dr, newDrawState(state, TS), null, state, 1, ui, 0, flash);
     return dr.ops;
   };
-  /** The squares a frame washes, as the `x,y` drawn at. */
+  /** The squares a frame fills with the flash color, as the `x,y` drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] => {
     const keys = ops.flatMap((op) =>
-      op.op === "rect" && op.color === COL_HIGHLIGHT ? [`${op.x},${op.y}`] : [],
+      op.op === "rect" && op.color === COL_FLASH ? [`${op.x},${op.y}`] : [],
     );
     return [...new Set(keys)];
   };

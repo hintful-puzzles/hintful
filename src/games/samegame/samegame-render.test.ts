@@ -12,6 +12,7 @@ import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave
 import { samegameGame } from "./index.ts";
 import {
   COL_FLASH,
+  COL_LIFTED,
   FLASH_FRAME,
   newDrawState,
   redraw,
@@ -140,7 +141,7 @@ describe("Same Game: the flash of a board with no move left", () => {
   const marginLit = (time: number): boolean => {
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, ownFlash(time));
-    return ops.some((o) => o.op === "rect" && o.color === COL_FLASH && o.w > TS);
+    return ops.some((o) => o.op === "rect" && o.color === COL_LIFTED && o.w > TS);
   };
 
   it("lifts the whole field on its first beat and rests it on its second", () => {

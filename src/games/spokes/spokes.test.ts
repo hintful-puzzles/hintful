@@ -745,10 +745,10 @@ describe("spokes: the win flash sweeps the hubs", () => {
     redraw(dr, newDrawState(state, TS), null, state, 1, newUi(), 0, flash);
     return dr.ops;
   };
-  /** The hubs a frame rims in the flash color, as grid `x,y`. */
+  /** The hubs whose face a frame fills with the flash color, as grid `x,y`. */
   const lit = (ops: ReturnType<typeof paint>): string[] => {
     const keys = ops.flatMap((op) =>
-      op.op === "circle" && op.outline === COL_DONE
+      op.op === "circle" && op.fill === COL_DONE
         ? [`${Math.floor(op.cx / TS)},${Math.floor(op.cy / TS)}`]
         : [],
     );

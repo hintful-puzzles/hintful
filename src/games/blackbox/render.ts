@@ -70,8 +70,7 @@ export const COL_BUTTON = 9;
 const COL_CURSOR = 10;
 export const COL_HINT = 11;
 export const COL_HINT_EVIDENCE = 12;
-/** A square of the box the win flash is on. Not the lifted surface, which
- * every square of a revealed box already has. */
+/** The ground of a square of the box the win flash is on. */
 export const COL_WIN = 13;
 const NCOLORS = 14;
 

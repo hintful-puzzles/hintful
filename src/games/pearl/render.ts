@@ -324,7 +324,7 @@ function drawSquare(
 
   // Clue.
   if (clue !== NOCLUE) {
-    const c = lflags & DS_FLASH ? COL_FLASH : clue === STRAIGHT ? COL_WHITE : COL_BLACK;
+    const c = clue === STRAIGHT ? COL_WHITE : COL_BLACK;
     if (lflags & DS_ERROR_CLUE)
       dr.drawCircle({ x: cx, y: cy }, ((m.tile * 3) / 8) | 0, COL_ERROR, COL_ERROR);
     // A white pearl is parted from the loop by a black rim. A black pearl's

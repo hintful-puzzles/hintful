@@ -36,7 +36,14 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newFillingDesc } from "./generator.ts";
 import { fillingGame } from "./index.ts";
-import { COL_CELL, COL_CORRECT, COL_ERROR, COL_GIVEN, COL_INK } from "./render.ts";
+import {
+  COL_CELL,
+  COL_CORRECT,
+  COL_ERROR,
+  COL_FLASH,
+  COL_GIVEN,
+  COL_INK,
+} from "./render.ts";
 import { solveFilling } from "./solver.ts";
 import {
   decodeParams,
@@ -345,8 +352,7 @@ describe("filling win flash", () => {
     const start = newState(size(3, 2), "333a22");
     const state = executeMove(start, { type: "set", cells: [3], value: 1 });
     expect(fillingGame.status(state)).toBe("solved");
-    /** The cells lifted to a clue's surface, the player's among them, as the
-     * pixel each starts at. */
+    /** The cells filled with the flash color, as the pixel each starts at. */
     const run = winFlashRun(
       (flash: Flash) => {
         const dr = new RecordingDrawing(fillingGame.colors(DEFAULT_BACKGROUND));
@@ -356,10 +362,9 @@ describe("filling win flash", () => {
       },
       (dr) =>
         dr.ops.flatMap((o) =>
-          o.op === "rect" && o.color === COL_GIVEN ? [`${o.x},${o.y}`] : [],
+          o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
         ),
     );
-    // A solved board is all finished regions, so no cell is lifted at rest.
     expectWinFlashTravels(run, 6, (key) => {
       const [x, y] = key.split(",").map(Number);
       return sweepStep(x, y);

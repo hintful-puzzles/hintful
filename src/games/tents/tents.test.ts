@@ -40,7 +40,7 @@ describeAbsentTiers(tentsGame, ["4x4dt"]);
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
-  COL_LIT,
+  COL_FLASH,
   COL_MISTAKE,
   COL_TENT,
   COL_TREELEAF,
@@ -571,10 +571,10 @@ describe("tents: the win flash sweeps the squares", () => {
     );
     return dr.ops;
   };
-  /** The squares a frame draws on the lifted surface, as the `x,y` drawn at. */
+  /** The squares a frame fills with the flash color, as the `x,y` drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] =>
     ops.flatMap((op) =>
-      op.op === "rect" && op.color === COL_LIT ? [`${op.x},${op.y}`] : [],
+      op.op === "rect" && op.color === COL_FLASH ? [`${op.x},${op.y}`] : [],
     );
   const step = (key: string): number => {
     const [x, y] = key.split(",").map(Number);

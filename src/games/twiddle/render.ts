@@ -5,7 +5,13 @@
  * `draw_tile` / `rotate` / `highlight_colour`.
  */
 
-import { CURSOR, cellSurface, givenSurface, INK } from "../../engine/color/palette.ts";
+import {
+  CURSOR,
+  cellSurface,
+  FLASH,
+  givenSurface,
+  INK,
+} from "../../engine/color/palette.ts";
 import {
   twiddleGentleHighlight,
   twiddleGentleLowlight,
@@ -39,7 +45,9 @@ export const COL_LOWCURSOR = 7;
 export const COL_TILE = 8;
 /** The well: what a turning block uncovers. */
 export const COL_WELL = 9;
-export const NCOLORS = 10;
+/** The face of a tile the win flash is on. */
+export const COL_FLASH = 10;
+export const NCOLORS = 11;
 
 // --- cursor edge flags ------------------------------------------------
 
@@ -334,9 +342,6 @@ export function redraw(
     // -1 ("always redraw") for cells inside the animating block.
     const inBlock =
       rot !== null && tx >= lastx && tx < lastx + n && ty >= lasty && ty < lasty + n;
-    // A lit tile's face drops to the well's surface inside its bevel: the
-    // face is the lifted surface already, and neither bevel color stands off
-    // it in both schemes.
     const lit = flash.win(sweepStep(tx, ty));
     const t = inBlock
       ? -1
@@ -372,7 +377,7 @@ export function redraw(
         y,
         state.numbers[i],
         state.orient[i],
-        lit ? COL_WELL : COL_TILE,
+        lit ? COL_FLASH : COL_TILE,
         // A tile outside the turning block draws unrotated, even mid-turn
         // (the win flash can repaint it while a new move animates).
         inBlock ? rot : null,
@@ -414,5 +419,6 @@ export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
   out[COL_LOWCURSOR] = CURSOR;
   out[COL_TILE] = givenSurface(bg);
   out[COL_WELL] = cellSurface(bg);
+  out[COL_FLASH] = FLASH;
   return out;
 }

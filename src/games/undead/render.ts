@@ -37,7 +37,11 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import { cellHighlight, drawCellBackground } from "../../engine/note-taking-cell.ts";
+import {
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_WIN,
+} from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -312,10 +316,9 @@ function drawMonster(
   x: number,
   y: number,
   ts: number,
-  hflash: boolean,
   monster: number,
 ): void {
-  const black = hflash ? COL_FLASH : COL_TEXT;
+  const black = COL_TEXT;
   const m25 = idiv(2 * ts, 5);
 
   if (monster === MON_GHOST) {
@@ -479,7 +482,6 @@ function drawMirror(
   ds: UndeadDrawState,
   x: number,
   y: number,
-  hflash: boolean,
   mirror: number,
 ): void {
   const ts = ds.tileSize;
@@ -490,7 +492,7 @@ function drawMirror(
   dr.drawLine(
     { x: dx - d, y: dy - fall },
     { x: dx + d, y: dy + fall },
-    hflash ? COL_FLASH : COL_TEXT,
+    COL_TEXT,
     f(ts / 16),
   );
   dr.drawUpdate(cellRect(ds, x, y));
@@ -501,7 +503,6 @@ function drawBigMonster(
   ds: UndeadDrawState,
   x: number,
   y: number,
-  hflash: boolean,
   monster: number,
   ascii: boolean,
 ): void {
@@ -516,12 +517,7 @@ function drawBigMonster(
           : monster === MON_ZOMBIE
             ? "Z"
             : " ";
-    dr.drawText(
-      { x: dx, y: dy },
-      glyphFont(f(ts / 2)),
-      hflash ? COL_FLASH : COL_TEXT,
-      buf,
-    );
+    dr.drawText({ x: dx, y: dy }, glyphFont(f(ts / 2)), COL_TEXT, buf);
     dr.drawUpdate({
       x: dx - f(ts / 2) + 2,
       y: dy - f(ts / 2) + 2,
@@ -529,7 +525,7 @@ function drawBigMonster(
       h: ts - 3,
     });
   } else {
-    drawMonster(dr, dx, dy, idiv(3 * ts, 4), hflash, monster);
+    drawMonster(dr, dx, dy, idiv(3 * ts, 4), monster);
     dr.drawUpdate({
       x: dx - f(ts / 2) + 2,
       y: dy - f(ts / 2) + 2,
@@ -559,7 +555,7 @@ function drawPencils(
     const cy = dy + f(ts / 2) * Math.floor(slot / 2);
     slot++;
     if (!ascii) {
-      drawMonster(dr, cx, cy, f(ts / 2), false, m);
+      drawMonster(dr, cx, cy, f(ts / 2), m);
     } else {
       const buf = m === MON_GHOST ? "G" : m === MON_VAMPIRE ? "V" : "Z";
       dr.drawText({ x: cx, y: cy }, glyphFont(f(ts / 4)), COL_TEXT, buf);
@@ -628,25 +624,26 @@ function drawMonsterCount(
     buf = String(total);
   }
 
-  dr.drawRect({ x: dx, y: dy, w: dw + ds.countGap, h: dh }, COL_BACKGROUND);
+  dr.drawRect(
+    { x: dx, y: dy, w: dw + ds.countGap, h: dh },
+    hflash ? COL_FLASH : COL_BACKGROUND,
+  );
   if (!ds.ascii) {
-    drawMonster(dr, dx + f(msize / 2), dy + f(dh / 2), msize, hflash, 1 << c);
+    drawMonster(dr, dx + f(msize / 2), dy + f(dh / 2), msize, 1 << c);
   } else {
     dr.drawText(
       { x: dx + f(msize / 2), y: dy + f(dh / 2) },
       glyphFont(idiv(ts, 2)),
-      hflash ? COL_FLASH : COL_TEXT,
+      COL_TEXT,
       bufm,
     );
   }
   const color =
     state.countErrors[c] || placed > total
       ? COL_ERROR
-      : hflash
-        ? COL_FLASH
-        : placed === total
-          ? COL_DONE
-          : COL_TEXT;
+      : placed === total
+        ? COL_DONE
+        : COL_TEXT;
   dr.drawText(
     { x: dx + msize + ds.countPadding, y: dy + f(dh / 2) },
     {
@@ -669,12 +666,13 @@ function drawClue(
   y: number,
   color: number,
   clue: number,
+  lit: boolean,
 ): void {
   const ts = ds.tileSize;
   const dx = border(ts) + x * ts;
   const dy = border(ts) + y * ts + ts;
   const box = { x: dx + 2, y: dy + 2, w: ts - 3, h: ts - 3 };
-  dr.drawRect(box, COL_BACKGROUND);
+  dr.drawRect(box, lit ? COL_FLASH : COL_BACKGROUND);
   dr.drawText(
     { x: dx + f(ts / 2), y: dy + f(ts / 2) },
     glyphFont(idiv(ts, 2)),
@@ -807,9 +805,8 @@ export function redraw(
     }
     return ret;
   };
-  const clueColor = (index: number, lit: boolean): number => {
+  const clueColor = (index: number): number => {
     if (state.hintErrors[index]) return COL_ERROR;
-    if (lit) return COL_FLASH;
     if (state.hintsDone[index]) return COL_DONE;
     return COL_TEXT;
   };
@@ -817,7 +814,7 @@ export function redraw(
     const g = range2grid(index, common.w, common.h);
     const { lit, changed } = light(g.x, g.y);
     if (!isClueStale(index, changed)) return;
-    drawClue(dr, ds, g.x, g.y, clueColor(index, lit), clue);
+    drawClue(dr, ds, g.x, g.y, clueColor(index), clue, lit);
   };
   for (const path of common.paths) {
     drawClueAt(path.gridStart, path.sightingsStart);
@@ -891,15 +888,16 @@ export function redraw(
         drawCellBackground(
           dr,
           cell,
-          cellHighlight(ui, x, y),
+          hflash ? HIGHLIGHT_WIN : cellHighlight(ui, x, y),
           COL_HIGHLIGHT,
           given ? COL_GIVEN : COL_CELL,
+          COL_FLASH,
         );
         dr.drawUpdate(cell);
         if (xi < 0) {
-          drawMirror(dr, ds, x, y, hflash, c);
+          drawMirror(dr, ds, x, y, c);
         } else if (isSingleton(state.guess[xi])) {
-          drawBigMonster(dr, ds, x, y, hflash, state.guess[xi], ui.ascii);
+          drawBigMonster(dr, ds, x, y, state.guess[xi], ui.ascii);
         } else {
           drawPencils(dr, ds, x, y, state.pencil[xi], ui.ascii, struck);
         }

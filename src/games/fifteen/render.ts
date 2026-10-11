@@ -9,6 +9,7 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   cellSurface,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   INK,
@@ -47,6 +48,8 @@ const COL_HINT = 4;
 const COL_TILE = 5;
 /** The well: the gap, and whatever a sliding tile uncovers. */
 const COL_WELL = 6;
+/** The face of a tile the win flash is on, inside its bevel. */
+export const COL_FLASH = 7;
 
 // --- coordinate helpers -----------------------------------------------
 
@@ -106,6 +109,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT] = HINT_ACTION;
   out[COL_TILE] = givenSurface(background);
   out[COL_WELL] = cellSurface(background);
+  out[COL_FLASH] = FLASH;
   return out;
 }
 
@@ -236,10 +240,7 @@ export function redraw(
           y = coord(Math.floor(i / w), ts);
         }
 
-        // A lit tile's face drops to the well's surface inside its bevel. A
-        // tile is the lifted surface already, and neither bevel color stands
-        // off it in both schemes.
-        const face = lit ? COL_WELL : COL_TILE;
+        const face = lit ? COL_FLASH : COL_TILE;
         drawTile(dr, ts, x, y, t, t !== 0 && t === hintTile ? COL_HINT : face);
       }
       ds.lit[i] = lit;

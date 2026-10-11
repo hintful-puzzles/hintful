@@ -5,7 +5,7 @@
  * center bar in the piece's color for a placed line, the clue number as text (white on a
  * block, ink on an open cell, red when its constraint is currently violated),
  * and the cursor's frame under the keyboard cursor. The in-flight drag previews its accreted cells; the win flash
- * lifts each open cell's surface as it passes. `findMistakes` cells get
+ * fills each open cell it passes with the flash color, under its line. `findMistakes` cells get
  * an inset red frame via an `OverlaySidecar` (docs/games/rendering.md § "Overlay sidecars" — the overlay is
  * part of the diff key so Check & Save repaints an otherwise-unchanged
  * frame).
@@ -21,7 +21,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
-  givenSurface,
+  FLASH,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -68,15 +68,15 @@ export const COL_CELL = 9; // the surface of a white cell
 export const COL_TEXT = 10; // a clue's number on an open cell
 /** A violated clue's digit on a block, on its badge. */
 export const COL_ERROR_TEXT = 11;
-/** The surface of an open cell the win flash is on: the lifted surface. */
-export const COL_LIT = 12;
+/** The ground of an open cell the win flash is on. */
+export const COL_FLASH = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_LIT] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   out[COL_TEXT] = INK;
   // A placed stick is a bar filling a fifth of its cell — a piece, not a glyph,
   // so the piece's color rather than the entry green a digit takes.
@@ -169,7 +169,7 @@ function drawTile(
   // mark (`hint-mark.ts`). A white evidence square is not empty either: it
   // carries the clue the deduction counts with, and often a line.
   if (!black) {
-    dr.drawRect({ x: px, y: py, w: ts - 1, h: ts - 1 }, lit ? COL_LIT : COL_CELL);
+    dr.drawRect({ x: px, y: py, w: ts - 1, h: ts - 1 }, lit ? COL_FLASH : COL_CELL);
   }
 
   const bar = (bits: number, color: number): void => {

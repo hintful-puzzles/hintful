@@ -441,16 +441,15 @@ export function surfaceGrid(background: Color): Color {
 // --- the solved flash ---------------------------------------------------
 
 /**
- * **Solved** — the fill or line color a board flashes to when the player
- * completes it. A solved board lights up rather than dims.
+ * **Solved** — the one color the win flash lights an element in, in every
+ * game: the ground of a cell, a tile, a region or a hub is filled with it and
+ * keeps what it holds, and a line is drawn in it.
  *
- * {@link PAPER} rather than {@link WHITE}: the flash is *maximum contrast
- * against the surface*, so it inverts with the scheme and stays a visible step
- * off the board. A game whose flash is an animation rather than a color — a
- * bevel wave, a state swap, a color cycle — does not use this; a game whose
- * flash is a wash under text (Solo's family) uses {@link highlightWash}.
+ * The theme's yellow, which reads on ink and on every surface in both
+ * schemes. A game has no lit look of its own: `engine/win-flash.test.ts` holds
+ * every element a game lights to this color.
  */
-export const FLASH: Color = PAPER;
+export const FLASH: Color = GOAL;
 
 /**
  * **This clue is used up** — a row count, column count or clue number the board

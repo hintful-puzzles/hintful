@@ -43,6 +43,7 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
+  HIGHLIGHT_WIN,
   highlightFill,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -78,7 +79,7 @@ export const PREFERRED_TILE_SIZE = 40;
 // --- palette ---------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-/** A square the win's highlight is on. */
+/** The ground of a square the win flash is on. */
 export const COL_FLASH = 1;
 export const COL_GIVEN = 2; // the lifted surface of a square the puzzle filled
 export const COL_BORDER = 3;
@@ -353,7 +354,7 @@ function drawBall(
   s: SaladState,
   x: number,
   y: number,
-  flags: number,
+  highlight: CellHighlight,
 ): void {
   const i = x + y * s.order;
   if (s.mode === GAMEMODE_LETTERS && s.grid[i] !== 0) return;
@@ -366,7 +367,7 @@ function drawBall(
     bg = s.gridclues[i] ? COL_I_BALLBG : COL_G_BALLBG;
   } else {
     // Letters mode draws the ball "transparent" over whatever is behind it.
-    bg = highlightFill(highlightOf(flags), COL_CURSOR, surfaceOf(s, i));
+    bg = highlightFill(highlight, COL_CURSOR, surfaceOf(s, i), COL_FLASH);
   }
   const color = s.gridclues[i] ? COL_I_BALL : COL_G_BALL;
 
@@ -554,6 +555,7 @@ export function redraw(
     for (let x = 0; x < o; x++) {
       const i = y * o + x;
       const lit = flash.win(sweepStep(x, y));
+      const highlight = lit ? HIGHLIGHT_WIN : highlightOf(flags[i]);
       // Packed key: flags (5) | symbol (4) | marks (nums+1 ≤ 10) | lit (1).
       // Every overlay is in here or in a sidecar (docs/games/rendering.md
       // § "Overlay sidecars"), so nothing can change on screen without the cell
@@ -576,9 +578,10 @@ export function redraw(
       drawCellBackground(
         dr,
         { x: tx, y: ty, w: ts, h: ts },
-        highlightOf(flags[i]),
+        highlight,
         COL_CURSOR,
-        lit ? COL_FLASH : surfaceOf(s, i),
+        surfaceOf(s, i),
+        COL_FLASH,
       );
       ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
 
@@ -593,7 +596,7 @@ export function redraw(
         COL_BORDER,
       );
 
-      if (flags[i] & FD_CIRCLE) drawBall(dr, ts, s, x, y, flags[i]);
+      if (flags[i] & FD_CIRCLE) drawBall(dr, ts, s, x, y, highlight);
       else if (flags[i] & FD_CROSS) drawCross(dr, ts, s, x, y, flags[i], thick);
 
       if (s.grid[i] === 0 && s.holes[i] !== CROSS) {

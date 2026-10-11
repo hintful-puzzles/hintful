@@ -46,6 +46,8 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
+  HIGHLIGHT_NONE,
+  HIGHLIGHT_WIN,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -96,8 +98,7 @@ export const COL_ERRORBG = 7;
 /** Fork addition, appended past the upstream enum: the pencil-mode indicator's
  * body. */
 export const COL_PENCIL_BODY = 8;
-/** The solved flash's cell fill and the highlight's wash, in both its
- * full-cell and its corner form. */
+/** The ground of a cell the win flash is on. */
 export const COL_FLASH = 9;
 export const COL_CURSOR = 10;
 /** The hint's two marks (docs/games/hints.md § "The element-type color
@@ -150,7 +151,6 @@ export interface MathraxHint {
 
 // --- draw-only flags (upstream FD_*) ---------------------------------------
 
-const FD_FLASH = 0x100;
 /** Bits 9–10: the cell's `CellHighlight`. */
 const FD_HIGHLIGHT_SHIFT = 9;
 
@@ -292,7 +292,8 @@ function drawTile(
     cell,
     ((fs >> FD_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
     COL_CURSOR,
-    fs & FD_FLASH ? COL_FLASH : fs & F_IMMUTABLE ? COL_GIVEN : COL_CELL,
+    fs & F_IMMUTABLE ? COL_GIVEN : COL_CELL,
+    COL_FLASH,
   );
   ds.hint.drawHatch(dr, i, cell, COL_HINT, ts);
 
@@ -456,8 +457,13 @@ export function redraw(
       const i = y * o + x;
       let fs = state.flags[i];
 
-      if (flash.win(sweepStep(x, y))) fs |= FD_FLASH;
-      if (!flash.winning) fs |= cellHighlight(ui, x, y) << FD_HIGHLIGHT_SHIFT;
+      // The selection is not drawn while the board is won.
+      const highlight = flash.win(sweepStep(x, y))
+        ? HIGHLIGHT_WIN
+        : flash.winning
+          ? HIGHLIGHT_NONE
+          : cellHighlight(ui, x, y);
+      fs |= highlight << FD_HIGHLIGHT_SHIFT;
 
       const tile = state.grid[i] | (state.pencil[i] << 4) | (fs << 14);
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {

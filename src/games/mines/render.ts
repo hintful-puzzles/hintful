@@ -58,7 +58,9 @@ export const COL_CURSOR = 19;
 export const COL_HINT = 20;
 /** What a hint step reasons from: the outline on its border. */
 export const COL_HINT_EVIDENCE = 21;
-export const NCOLORS = 22;
+/** The ground of a square the win flash is on. */
+export const COL_FLASH = 22;
+export const NCOLORS = 23;
 
 export const PREFERRED_TILE_SIZE = 20;
 export const FLASH_FRAME = 0.13;
@@ -106,9 +108,6 @@ export function computeSize(
 
 /** No flash is filling the square this frame. */
 const NO_WASH = -1;
-/** The win flash's highlight is on the square: no color, a swap of the two
- * surfaces, so a square shows it whichever one it rests on. */
-const WIN_WASH = NCOLORS;
 
 /** The square's surface, inside the grid line along its top and left. */
 const face = (ts: number, x: number, y: number) => ({
@@ -195,16 +194,7 @@ function drawTile(
   // closes the other two sides.
   dr.drawRect({ x, y, w: ts, h: ts }, COL_GRID);
   const fill = (surface: number): void =>
-    dr.drawRect(
-      face(ts, x, y),
-      wash === NO_WASH
-        ? surface
-        : wash !== WIN_WASH
-          ? wash
-          : surface === COL_COVERED
-            ? COL_OPEN
-            : COL_COVERED,
-    );
+    dr.drawRect(face(ts, x, y), wash === NO_WASH ? surface : wash);
 
   if (v < 0) {
     const coords: number[] = [];
@@ -374,7 +364,7 @@ export function redraw(
         (outline.has(key) ? MARK_OUTLINE : 0) |
         (stripes.has(key) ? MARK_STRIPES : 0) |
         (wrong.has(key) ? MARK_MISTAKE : 0);
-      const wash = dead ? COL_BANG : flash.win(sweepStep(x, y)) ? WIN_WASH : NO_WASH;
+      const wash = dead ? COL_BANG : flash.win(sweepStep(x, y)) ? COL_FLASH : NO_WASH;
       const packed = packTile(v, marks, wash);
       if (ds.grid[y * ds.w + x] !== packed || cc) {
         drawTile(

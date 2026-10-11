@@ -28,7 +28,14 @@ import type { Point } from "../../engine/types.ts";
 import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave.ts";
 import { firstOpen, minegen } from "./generator.ts";
 import { minesGame } from "./index.ts";
-import { borderFor, COL_BANG, COL_COVERED, COL_OPEN, FLASH_FRAME } from "./render.ts";
+import {
+  borderFor,
+  COL_BANG,
+  COL_COVERED,
+  COL_FLASH,
+  COL_OPEN,
+  FLASH_FRAME,
+} from "./render.ts";
 import { minesolve } from "./solver.ts";
 import {
   COVERED,
@@ -823,10 +830,8 @@ describe("mines render", () => {
     const run = winFlashRun(
       (flash) => flashed(solved, flash),
       (faces) => {
-        // A lit square swaps surfaces: the flagged mine at the top left
-        // drops to the opened one, and every opened square lifts.
-        for (const [cell, fill] of faces)
-          expect(fill).toBe(cell === "0,0" ? COL_OPEN : COL_COVERED);
+        // A lit square's face is the flash color, the flagged mine's too.
+        for (const fill of faces.values()) expect(fill).toBe(COL_FLASH);
         return [...faces.keys()];
       },
     );

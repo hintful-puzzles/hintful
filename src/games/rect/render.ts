@@ -22,6 +22,7 @@ import {
   DRAG_ADD,
   DRAG_REMOVE,
   ERROR,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -72,6 +73,8 @@ export const COL_HINT = 9;
 export const COL_HINT_CELL = 10;
 export const COL_CELL = 11; // the surface of a square with no number
 export const COL_GIVEN = 12; // the lifted surface under a number
+/** The ground of a square the win flash is on. */
+export const COL_FLASH = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -80,6 +83,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(bg);
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
+  out[COL_FLASH] = FLASH;
   out[COL_DRAG] = DRAG_ADD;
   out[COL_DRAGERASE] = DRAG_REMOVE;
   out[COL_CORRECT] = REGION_DONE;
@@ -104,6 +108,9 @@ const M_RIGHT = 1 << 21;
 const RING_SHIFT = 22;
 const OUTLINE_SHIFT = 26;
 const F_STRIPES = 1 << 30;
+/** The win flash is on the cell. The word's last bit, which makes a lit
+ * cell's word negative and never -1, the cache's "not drawn". */
+const F_LIT = 1 << 31;
 
 const coord = (n: number, tile: number) => n * tile + BORDER;
 const colorOf = (k: number) =>
@@ -151,7 +158,13 @@ function drawTile(
     cy + 1,
     tile - 1,
     tile - 1,
-    bgflags & F_CORRECT ? COL_CORRECT : num ? COL_GIVEN : COL_CELL,
+    bgflags & F_LIT
+      ? COL_FLASH
+      : bgflags & F_CORRECT
+        ? COL_CORRECT
+        : num
+          ? COL_GIVEN
+          : COL_CELL,
   );
   // The line or area the hint's sentence names, under the clue.
   if (bgflags & F_STRIPES)
@@ -400,10 +413,8 @@ export function redraw(
       if (x + 1 < w) c |= corners[y * w + (x + 1)] << 10;
       if (y + 1 < h) c |= corners[(y + 1) * w + x] << 12;
       if (x + 1 < w && y + 1 < h) c |= corners[(y + 1) * w + (x + 1)] << 14;
-      // The win flash's highlight takes a cell's finished fill away, down to
-      // the surface under it.
-      const lit = flash.win(sweepStep(x, y));
-      if (state.correct[y * w + x] && !lit) c |= F_CORRECT;
+      if (state.correct[y * w + x]) c |= F_CORRECT;
+      if (flash.win(sweepStep(x, y))) c |= F_LIT;
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) c |= F_CURSOR;
 
       let mistake = 0;

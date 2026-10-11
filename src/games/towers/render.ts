@@ -19,6 +19,7 @@ import {
   cellSurface,
   clueDoneColor,
   ERROR,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -40,7 +41,7 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_ENTRY,
+  HIGHLIGHT_WIN,
   highlightFill,
 } from "../../engine/note-taking-cell.ts";
 import {
@@ -88,6 +89,8 @@ export const COL_GIVEN = 11; // the lifted surface of a given tower
 /** The line between two play cells. A tower's own edges are content and stay
  * `COL_GRID`. */
 export const COL_LINE = 12;
+/** The ground of a square the win flash is on. */
+export const COL_FLASH = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -109,6 +112,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_LINE] = surfaceGrid(bg);
+  out[COL_FLASH] = FLASH;
   return out;
 }
 
@@ -252,7 +256,7 @@ function drawTile(
   // The faces take the top's fill, so a raised tower reads as one selected cell.
   const surface =
     tile & DF_IMMUTABLE ? COL_GIVEN : tile & DF_PLAYAREA ? COL_CELL : COL_BACKGROUND;
-  const bg = highlightFill(highlight, COL_HIGHLIGHT, surface);
+  const bg = highlightFill(highlight, COL_HIGHLIGHT, surface, COL_FLASH);
   const tower = threeD && (tile & DF_PLAYAREA) !== 0 && digit !== 0;
 
   // 3D tower: left + bottom faces, then offset to the top face.
@@ -291,6 +295,7 @@ function drawTile(
     highlight,
     COL_HIGHLIGHT,
     surface,
+    COL_FLASH,
   );
   // On a raised tower's top face, so the line reads at the height the tower is.
   if (hatched) dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
@@ -480,7 +485,7 @@ export function redraw(
       if (state.grid[y * w + x]) tile |= state.grid[y * w + x];
       else tile |= state.pencil[y * w + x] << DF_PENCIL_SHIFT;
       tile |=
-        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_ENTRY : cellHighlight(ui, x, y)) <<
+        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_WIN : cellHighlight(ui, x, y)) <<
         DF_HIGHLIGHT_SHIFT;
       if (state.immutable[y * w + x]) tile |= DF_IMMUTABLE;
       if (ds.errtmp[(y + 1) * W + (x + 1)]) tile |= DF_ERROR;

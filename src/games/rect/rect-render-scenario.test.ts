@@ -19,7 +19,13 @@ import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { rectGame } from "./index.ts";
 import { newState } from "./moves.ts";
-import { BORDER, COL_CORRECT, COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
+import {
+  BORDER,
+  COL_CORRECT,
+  COL_FLASH,
+  COL_MISTAKE,
+  PREFERRED_TILE_SIZE,
+} from "./render.ts";
 import type { RectMove, RectParams } from "./state.ts";
 
 const P: RectParams = { w: 7, h: 7, expandfactor: 0, diff: DIFF_EASY };
@@ -53,7 +59,7 @@ describe("rect render scenarios", () => {
     );
   });
 
-  it("win flash: the finished fill leaves each cell in turn, bottom left to top right", () => {
+  it("win flash: lights each cell's ground in turn, bottom left to top right", () => {
     const { desc } = newDesc(P, randomNew("rect-scenario"));
     const st = newState(P, desc);
     const solveMove = rectGame.solve?.(st, st, undefined);
@@ -66,10 +72,10 @@ describe("rect render scenarios", () => {
       rectGame.redraw(dr, ds, null, solved, 1, rectGame.newUi(solved), 0, flash);
       return dr.ops;
     };
-    // The cells whose surface is not the finished fill, each as its index.
+    // The cells whose ground is the flash color, each as its index.
     const run = winFlashRun(paint, (ops) =>
       ops.flatMap((o) =>
-        o.op === "rect" && o.w === TS - 1 && o.h === TS - 1 && o.color !== COL_CORRECT
+        o.op === "rect" && o.w === TS - 1 && o.h === TS - 1 && o.color === COL_FLASH
           ? [((o.y - 1 - BORDER) / TS) * P.w + (o.x - 1 - BORDER) / TS]
           : [],
       ),

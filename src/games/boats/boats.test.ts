@@ -55,6 +55,7 @@ import {
   type BoatsDrawState,
   COL_COLLISION_ERROR,
   COL_COLLISION_TEXT,
+  COL_FLASH,
   COL_GIVEN,
   COL_SHIP,
   COL_SHIP_ERROR,
@@ -908,7 +909,8 @@ describe("boats rendering", () => {
     const won = moves.reduce((s, m) => boatsGame.executeMove(s, m), state);
     expect(boatsGame.status(won)).toBe("solved");
 
-    // The squares on the lifted surface, as their origins, and the boats drawn.
+    // The squares filled in the flash's color, as their origins, and the
+    // boats drawn. A given segment's square lights like any other.
     const palette = boatsGame.colors([1, 1, 1]);
     const paint = (flash: Flash) => {
       const rec = new RecordingDrawing(palette);
@@ -916,26 +918,18 @@ describe("boats rendering", () => {
       boatsGame.redraw(rec, ds, null, won, 1, boatsGame.newUi(won), 0, flash);
       return rec.ops;
     };
-    const lifted = (ops: ReturnType<typeof paint>): string[] =>
+    const lit = (ops: ReturnType<typeof paint>): string[] =>
       ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_GIVEN ? [`${o.x},${o.y}`] : [],
+        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
       );
     const boats = (ops: ReturnType<typeof paint>): number =>
       ops.filter((o) => o.op === "circle" && o.fill === COL_SHIP).length;
-    // A segment the puzzle gave rests on the lifted surface. The flash swaps
-    // a square's surface, so a lit square is one that has it where a settled
-    // frame has not, or a given's that has lost it.
     const settled = paint(NO_FLASH);
-    const given = new Set(lifted(settled));
-    expect(given.size).toBeGreaterThan(0);
+    expect(lit(settled)).toEqual([]);
     const run = winFlashRun(paint, (ops) => {
       // The pieces are drawn on a lit square as on any other frame.
       expect(boats(ops)).toBe(boats(settled));
-      const now = lifted(ops);
-      return [
-        ...now.filter((c) => !given.has(c)),
-        ...[...given].filter((c) => !now.includes(c)),
-      ];
+      return lit(ops);
     });
     // A square's place in the sweep is its x less its y.
     expectWinFlashTravels(

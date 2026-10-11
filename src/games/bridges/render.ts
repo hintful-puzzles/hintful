@@ -15,6 +15,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   cellSurface,
   ERROR_WASH,
+  FLASH,
   GRID_MID,
   givenSurface,
   HELD,
@@ -59,7 +60,8 @@ export function border(tileSize: number): number {
 // --- Colors ---
 export const COL_BACKGROUND = 0;
 export const COL_FOREGROUND = 1;
-export const COL_HIGHLIGHT = 2;
+/** What the win flash is on: an island's face, and a bridge's bars. */
+export const COL_FLASH = 2;
 export const COL_LOWLIGHT = 3;
 export const COL_SELECTED = 4;
 /** **Settled**: the face of an island marked completed, or whose count is
@@ -207,11 +209,11 @@ export function computeSize(
 }
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
+  const { background, lowlight } = mkhighlight(defaultBackground);
   return [
     background, // COL_BACKGROUND
     INK, // COL_FOREGROUND
-    highlight, // COL_HIGHLIGHT
+    FLASH, // COL_FLASH
     lowlight, // COL_LOWLIGHT
     HELD, // COL_SELECTED
     givenSurface(background), // COL_MARK
@@ -340,7 +342,7 @@ function lineColor(ldata: number): number {
     case DL_COL_SELECTED:
       return COL_SELECTED;
     case DL_COL_FLASH:
-      return COL_HIGHLIGHT;
+      return COL_FLASH;
     case DL_COL_WARNING:
       return COL_WARNING;
     default:
@@ -392,7 +394,7 @@ function drawGeneralLine(
         : (ldata & DL_COLMASK) === DL_COL_SELECTED
           ? COL_SELECTED
           : (ldata & DL_COLMASK) === DL_COL_FLASH
-            ? COL_HIGHLIGHT
+            ? COL_FLASH
             : (ldata & DL_COLMASK) === DL_COL_WARNING
               ? COL_WARNING
               : COL_FOREGROUND;
@@ -533,15 +535,16 @@ function drawIsland(
           ? COL_SELECTED
           : (idata & DI_COLMASK) === DI_COL_WARNING
             ? COL_WARNING
-            : (idata & DI_COLMASK) === DI_COL_FLASH
-              ? COL_HIGHLIGHT
-              : COL_FOREGROUND;
+            : COL_FOREGROUND;
+  // The win flash fills the island's face, under its rim and its count.
   const bg =
-    (idata & DI_BGMASK) === DI_BG_CURSOR
-      ? COL_CURSOR
-      : (idata & DI_BGMASK) === DI_BG_MARK
-        ? COL_MARK
-        : COL_ISLAND;
+    (idata & DI_COLMASK) === DI_COL_FLASH
+      ? COL_FLASH
+      : (idata & DI_BGMASK) === DI_BG_CURSOR
+        ? COL_CURSOR
+        : (idata & DI_BGMASK) === DI_BG_MARK
+          ? COL_MARK
+          : COL_ISLAND;
 
   dr.drawCircle({ x: ox + half, y: oy + half }, orad, fg, fg);
   dr.drawCircle({ x: ox + half, y: oy + half }, irad, bg, bg);

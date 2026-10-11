@@ -78,8 +78,8 @@ export const COL_BORDER = 1;
 export const COL_HOLDING = 2;
 export const COL_LINE = 3;
 export const COL_MARK = 4;
-/** The completion-flash rim. Upstream's white, which also filled a finished
- * hub; see {@link COL_SATISFIED} for that fill here. */
+/** The face of a hub the win flash is on. Upstream's white, which also
+ * filled a finished hub; see {@link COL_SATISFIED} for that fill here. */
 export const COL_DONE = 5;
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
@@ -351,11 +351,13 @@ export function redraw(
       const ty = toCoord(y, ts);
       const lines = ds.scratch.lines[i];
 
-      const fill =
-        ui.markSatisfied && lines === state.numbers[i] ? COL_SATISFIED : COL_HUB;
-      const border = flash.win(sweepStep(x, y))
+      const fill = flash.win(sweepStep(x, y))
         ? COL_DONE
-        : i === ui.dragStart || i === ui.dragEnd
+        : ui.markSatisfied && lines === state.numbers[i]
+          ? COL_SATISFIED
+          : COL_HUB;
+      const border =
+        i === ui.dragStart || i === ui.dragEnd
           ? COL_HOLDING
           : !connected && !ds.scratch.open[ds.scratch.dsf.canonify(i)]
             ? COL_ERROR

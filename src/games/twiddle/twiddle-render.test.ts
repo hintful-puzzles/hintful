@@ -16,12 +16,12 @@ import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import { executeMove, twiddleGame } from "./index.ts";
 import {
   animLength,
+  COL_FLASH,
   COL_HIGHCURSOR,
   COL_HIGHLIGHT,
   COL_LOWCURSOR,
   COL_LOWLIGHT,
   COL_TILE,
-  COL_WELL,
 } from "./render.ts";
 import { newState, type TwiddleParams, type TwiddleState } from "./state.ts";
 
@@ -137,11 +137,11 @@ describe("Twiddle: the win flash sweeps the tiles", () => {
     redraw(dr, ds, null, state, 0, UI, 0, flash);
     return ops;
   };
-  /** The tiles whose face a frame draws on the well's surface, as the `x,y`
+  /** The tiles whose face a frame fills with the flash color, as the `x,y`
    * the face is drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] =>
     ops.flatMap((op) =>
-      op.op === "rect" && op.color === COL_WELL && op.w === op.h
+      op.op === "rect" && op.color === COL_FLASH && op.w === op.h
         ? [`${op.x},${op.y}`]
         : [],
     );

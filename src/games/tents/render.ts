@@ -28,7 +28,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
-  givenSurface,
+  FLASH,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -100,15 +100,15 @@ export const COL_INK = 13;
 /** A link between a tent and its tree: the ink of the clues, the color of the
  * player's own notation. */
 export const COL_LINK = COL_INK;
-/** The surface of a square the win flash is on: the lifted surface. */
-export const COL_LIT = 14;
+/** The ground of a square the win flash is on. */
+export const COL_FLASH = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_LIT] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   out[COL_INK] = INK;
   out[COL_GRASS] = GREEN_WASH;
   out[COL_TREETRUNK] = BROWN;
@@ -422,7 +422,7 @@ function drawTile(
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, COL_GRID);
   dr.drawRect(
     { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-    packed & FLASH_BIT ? COL_LIT : v === BLANK ? COL_CELL : COL_GRASS,
+    packed & FLASH_BIT ? COL_FLASH : v === BLANK ? COL_CELL : COL_GRASS,
   );
   // The line the hint's sentence names, under the content so it stays whole.
   if (hintWord & HINT_LINE_BIT) {

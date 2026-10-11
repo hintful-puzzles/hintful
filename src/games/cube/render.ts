@@ -11,6 +11,7 @@
 
 import {
   cellSurface,
+  FLASH,
   givenSurface,
   INK,
   MOVED,
@@ -31,9 +32,10 @@ export const COL_BORDER = 1; // the solid's edges
 export const COL_PAINT = 2; // a painted square, and a face that has picked one up
 export const COL_GRID = 3; // the line between two squares of the arena
 export const COL_CELL = 4; // a plain square
-/** A plain face of the solid, lifted: the one thing on a settled board that
- * stands above it. The win flash lifts a square of the arena to it too. */
+/** A plain face of the solid, lifted: the one thing on the board that stands
+ * above it. */
 export const COL_SOLID = 5;
+export const COL_FLASH = 6; // a square of the arena the win flash is on
 
 export interface CubeDrawState {
   tileSize: number;
@@ -55,6 +57,7 @@ export function colors(defaultBackground: Color): Color[] {
   // shows whether it carries paint, so a plain face is a surface and the
   // paint is the only hue on the solid.
   ret[COL_SOLID] = givenSurface(defaultBackground);
+  ret[COL_FLASH] = FLASH;
   return ret;
 }
 
@@ -143,12 +146,12 @@ export function redraw(
         y: Math.trunc(sq.points[2 * j + 1] * gs) + ds.oy,
       });
     }
-    // The win flash sweeps the arena, lifting each square as it passes: a
-    // square's place is its center's, whatever shape the grid gives it.
+    // The win flash sweeps the arena: a square's place is its center's,
+    // whatever shape the grid gives it.
     const lit = flash.win(sweepStep(cx, cy));
     dr.drawPolygon(
       coords,
-      st.blue[i] ? COL_PAINT : lit ? COL_SOLID : COL_CELL,
+      st.blue[i] ? COL_PAINT : lit ? COL_FLASH : COL_CELL,
       COL_GRID,
     );
   }

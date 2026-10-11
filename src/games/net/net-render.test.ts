@@ -25,6 +25,7 @@ import {
   boardMargin,
   COL_BARRIER,
   COL_BORDER,
+  COL_FLASH,
   COL_LOCKED,
   COL_POWERED,
   COL_WIRE,
@@ -109,7 +110,7 @@ describe("Net: the win flash spreads from the source along the wires", () => {
   const WRAPPED: NetParams = { ...P5B, w: 6, h: 6, wrapping: true };
   const { state, solveMove } = board(WRAPPED, "render-flash");
   // Solve locks every tile; the top row is unlocked again, so the board
-  // has tiles on both surfaces.
+  // has tiles on both surfaces, and both light alike.
   const solved = Array.from({ length: state.w }, (_, x) => x).reduce(
     (s, x) => netGame.executeMove(s, { type: "lock", x, y: 0 }),
     netGame.executeMove(state, solveMove),
@@ -117,23 +118,20 @@ describe("Net: the win flash spreads from the source along the wires", () => {
   const { w, h } = solved;
   const ui = newUi(solved);
 
-  /** The tiles on the lifted surface in a frame drawn from nothing, by cell. */
-  function lifted(flash: Flash): Set<number> {
+  /** The tiles whose ground a frame drawn from nothing fills in the flash
+   * color, by cell. */
+  function lit(flash: Flash): number[] {
     const ds = preferredDrawState(netGame, solved);
     const m = boardMargin(ds.tileSize);
     const dr = new RecordingDrawing(netGame.colors(DEFAULT_BACKGROUND));
     netGame.redraw(dr, ds, null, solved, 1, ui, 0, flash);
-    return new Set(
-      opsOfKind(dr.ops, "rect")
-        .filter((o) => o.color === COL_LOCKED)
-        .map(
-          (o) =>
-            Math.floor((o.y - m) / ds.tileSize) * w +
-            Math.floor((o.x - m) / ds.tileSize),
-        ),
-    );
+    return opsOfKind(dr.ops, "rect")
+      .filter((o) => o.color === COL_FLASH)
+      .map(
+        (o) =>
+          Math.floor((o.y - m) / ds.tileSize) * w + Math.floor((o.x - m) / ds.tileSize),
+      );
   }
-  const settled = lifted(NO_FLASH);
   /** Whether a wire runs from tile `a` into a neighbor in `among`. */
   function wired(a: number, among: ReadonlySet<number>): boolean {
     return DIRECTIONS.some((d) => {
@@ -146,7 +144,7 @@ describe("Net: the win flash spreads from the source along the wires", () => {
 
   it("lights the source first, then each tile after one its wire comes from", () => {
     expect(netGame.status(solved)).toBe("solved");
-    expect(settled.size).toBe(w * (h - 1));
+    expect(lit(NO_FLASH)).toEqual([]);
     const source = ui.cy * w + ui.cx;
     // Each tile's distance from the source, a ring of wired tiles at a time.
     const distance = new Map([[source, 0]]);
@@ -158,12 +156,7 @@ describe("Net: the win flash spreads from the source along the wires", () => {
       expect(ring.length).toBeGreaterThan(0);
       for (const i of ring) distance.set(i, d);
     }
-    const run = winFlashRun(
-      lifted,
-      (frame) =>
-        [...solved.tiles.keys()].filter((i) => frame.has(i) !== settled.has(i)),
-      150,
-    );
+    const run = winFlashRun(lit, (frame) => frame, 150);
     expectWinFlashTravels(run, w * h, (i) => distance.get(i) ?? -1);
     expect(run.frames[0]).toEqual([source]);
   });

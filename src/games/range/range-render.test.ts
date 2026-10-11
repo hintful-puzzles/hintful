@@ -17,6 +17,7 @@ import { type RangeHint, rangeGame } from "./index.ts";
 import {
   COL_CELL,
   COL_ERROR,
+  COL_FLASH,
   COL_GIVEN,
   COL_GRID,
   COL_HINT,
@@ -153,8 +154,7 @@ describe("pieces on a quiet surface", () => {
   });
 
   it("sweeps the win flash from the bottom left to the top right", () => {
-    // A clue in the middle, whose cell is lifted already and so drops to the
-    // plain surface when lit, where every other cell lifts.
+    // A clue in the middle, which lights like any other cell.
     const state = makeState(3, 3, [
       BLACK,
       WHITE,
@@ -171,13 +171,11 @@ describe("pieces on a quiet surface", () => {
       redraw(rec, newDrawState(state, 32), null, state, 1, noCursor, 0, flash);
       return rec;
     };
-    // The cells on the lifted surface, each as its index.
+    // The cells whose ground is the flash color, each as its index.
     const run = winFlashRun(paint, (rec) => {
       // A lit cell keeps its piece.
       expect(rec.ops.filter((o) => o.op === "polygon")).toHaveLength(2);
-      return surfaces(rec).flatMap((color, i) =>
-        (color === COL_GIVEN) !== (i === 4) ? [i] : [],
-      );
+      return surfaces(rec).flatMap((color, i) => (color === COL_FLASH ? [i] : []));
     });
     expectWinFlashTravels(run, 9, (i) => sweepStep(i % 3, Math.floor(i / 3)));
   });

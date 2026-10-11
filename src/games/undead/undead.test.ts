@@ -18,7 +18,10 @@ import {
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  type DrawOp,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
@@ -344,7 +347,7 @@ describe("undead: the win flash sweeps the cells, the clues and the counts", () 
   const { w, h } = state.common;
   // Every cell, a clue at each end of every row and column, and three counts.
   const elements = w * h + 2 * (w + h) + 3;
-  // Letters for monsters, so each element is one piece of text or one line.
+  // Letters for monsters, so what a cell holds is one piece of text.
   const ui = { ...newUi(state), ascii: true };
 
   const paint = (flash: Flash, ds = newDrawState(state, TS)) => {
@@ -362,21 +365,17 @@ describe("undead: the win flash sweeps the cells, the clues and the counts", () 
     );
     return ((xs[0] + xs[xs.length - 1] + 1) / 2 - border(TS)) / TS - 0.5;
   });
-  /** What a frame inks in the flash color, as grid `x,y`: the clue ring is row
-   * and column 0 and one past the board, and a count is in row -1. */
+  /** What a frame fills with the flash color, as grid `x,y`: the clue ring is
+   * row and column 0 and one past the board, and a count is in row -1. */
   const lit = (ops: ReturnType<typeof paint>): string[] => {
     const at = (px: number, py: number): string => {
       const count = countBlockAt(laid, px, py);
       if (count >= 0) return `${countColumn[count]},-1`;
       return `${Math.floor((px - border(TS)) / TS)},${Math.floor((py - border(TS)) / TS) - 1}`;
     };
-    const keys = ops.flatMap((op) => {
-      if (op.op === "text" && op.color === COL_FLASH) return [at(op.x, op.y)];
-      if (op.op === "line" && op.color === COL_FLASH)
-        return [at((op.x1 + op.x2) / 2, (op.y1 + op.y2) / 2)];
-      return [];
-    });
-    return [...new Set(keys)];
+    return ops.flatMap((op) =>
+      op.op === "rect" && op.color === COL_FLASH ? [at(op.x + 1, op.y + 1)] : [],
+    );
   };
   const step = (key: string): number => {
     const [x, y] = key.split(",").map(Number);
@@ -389,5 +388,15 @@ describe("undead: the win flash sweeps the cells, the clues and the counts", () 
 
   it("travels every cell, edge clue and count, from the bottom left to the top right", () => {
     expectWinFlashTravels(winFlashRun(paint, lit), elements, step);
+  });
+
+  it("keeps every monster, mirror, clue and count in its own ink", () => {
+    const ink = (ops: readonly DrawOp[]) =>
+      ops.flatMap((op) => (op.op === "text" || op.op === "line" ? [op.color] : []));
+    const settled = ink(paint(NO_FLASH));
+    expect(settled.length).toBeGreaterThan(elements);
+    for (const ops of winFlashRun(paint, (frame) => frame, 5).frames) {
+      expect(ink(ops)).toEqual(settled);
+    }
   });
 });

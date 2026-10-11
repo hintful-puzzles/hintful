@@ -29,7 +29,7 @@ import { dominosaGame } from "./index.ts";
 // A set up to 1 above Easy and a set up to 2 above Normal.
 describeAbsentTiers(dominosaGame, ["1db", "1dh", "1de", "2dh", "2de"]);
 
-import { COL_DOMINOCLASH, COL_DOMINOTEXT, COL_REFERENCE } from "./render.ts";
+import { COL_DOMINOCLASH, COL_FLASH, COL_REFERENCE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {
   DCOUNT,
@@ -487,7 +487,7 @@ describe("dominosa render", () => {
       let tile = -1;
       for (const op of dr.ops) {
         if (op.op === "clip") tile++;
-        else if (op.op === "rect" && op.color === COL_DOMINOTEXT) lit.add(tile);
+        else if (op.op === "rect" && op.color === COL_FLASH) lit.add(tile);
       }
       expect(tile).toBe(w * h - 1);
       return [...lit];

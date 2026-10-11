@@ -12,7 +12,7 @@ import { BLACK, TWO, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
-  givenSurface,
+  FLASH,
   HINT_ACTION,
   HINT_EVIDENCE,
   surfaceGrid,
@@ -60,7 +60,7 @@ export const COL_HINT_CELL = 7; // the unlit squares the press is for: outlined
 const COL_LIT_DIAG = 8;
 /** The surface of a square, which the piece sits inset on. */
 const COL_SURFACE = 9;
-/** The surface of a square under the win flash's highlight: lifted. */
+/** The ground of a square the win flash is on. */
 export const COL_FLASH = 10;
 const NCOLORS = 11;
 
@@ -90,7 +90,7 @@ export function colors(defaultBackground: Color): Color[] {
   const ret: Color[] = new Array(NCOLORS);
   ret[COL_BACKGROUND] = bg;
   ret[COL_SURFACE] = cellSurface(bg);
-  ret[COL_FLASH] = givenSurface(bg);
+  ret[COL_FLASH] = FLASH;
   ret[COL_GRID] = surfaceGrid(bg);
   ret[COL_UNLIT] = TWO[pairIndex(true)];
   ret[COL_LIT] = TWO[pairIndex(false)];

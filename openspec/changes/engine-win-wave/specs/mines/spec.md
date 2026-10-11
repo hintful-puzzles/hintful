@@ -3,8 +3,8 @@
 ### Requirement: Mines' flashes fill every square on their lit beats
 
 The win flash SHALL sweep the board's squares from the bottom left to the top
-right, and a lit square SHALL swap surfaces: an opened one lifts to the
-covered surface and a covered one drops to the opened surface.
+right, and a lit square's face SHALL be filled with the flash color and keep
+what it holds.
 The flash on a death SHALL be the game's own: it SHALL fill every square in
 the error color on its lit beats. The mine the player trod on SHALL keep the
 error color throughout.
@@ -19,5 +19,5 @@ error color throughout.
 #### Scenario: A flagged mine under the win's highlight
 
 - **WHEN** the win flash's highlight is on a flagged mine
-- **THEN** the square is filled with the opened surface, its flag drawn on it
-  as usual
+- **THEN** the square is filled with the flash color, its flag drawn on it as
+  usual

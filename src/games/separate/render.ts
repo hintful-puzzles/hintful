@@ -33,7 +33,7 @@ import {
 import {
   cellSurface,
   ERROR,
-  givenSurface,
+  FLASH,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -76,8 +76,7 @@ export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
   out[COL_CELL] = cellSurface(background);
-  // The win's highlight lifts a cell, a step that reads in both schemes.
-  out[COL_FLASH] = givenSurface(background);
+  out[COL_FLASH] = FLASH;
   out[COL_GRID] = INK;
   out[COL_ERROR] = ERROR;
   out[COL_HINT] = HINT_ACTION;

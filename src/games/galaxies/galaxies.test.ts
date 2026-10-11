@@ -35,7 +35,7 @@ import {
   galaxiesGame,
 } from "./index.ts";
 import { legalDotsFor, okToAddAssocWithOpposite, reachableFromDot } from "./moves.ts";
-import { COL_CELL, COL_CURSOR, COL_DRAG, COL_EDGE, COL_MISTAKE } from "./render.ts";
+import { COL_CURSOR, COL_DRAG, COL_EDGE, COL_FLASH, COL_MISTAKE } from "./render.ts";
 import { clearForSolve, solverState } from "./solver.ts";
 import {
   addAssoc,
@@ -279,8 +279,7 @@ describe("Galaxies rendering", () => {
     if (!result?.ok) throw new Error("the fixture does not solve");
     const s = galaxiesGame.executeMove(init, result.move);
     expect(galaxiesGame.status(s)).toBe("solved");
-    /** The cells whose region's fill is dropped to the plain surface, as the
-     * pixel each starts at. */
+    /** The cells filled with the flash color, as the pixel each starts at. */
     const run = winFlashRun(
       (flash: Flash) => {
         const { dr } = recordingDrawing();
@@ -290,10 +289,9 @@ describe("Galaxies rendering", () => {
       },
       (dr) =>
         dr.ops.flatMap((o) =>
-          o.op === "rect" && o.color === COL_CELL ? [`${o.x},${o.y}`] : [],
+          o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
         ),
     );
-    // Every cell of a solved board is in a finished region, and filled at rest.
     expectWinFlashTravels(run, 9, (key) => {
       const [x, y] = key.split(",").map(Number);
       return sweepStep(x, y);

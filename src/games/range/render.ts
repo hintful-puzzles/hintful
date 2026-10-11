@@ -1,7 +1,7 @@
 /**
  * Range rendering: a per-cell diffed loop over pieces on a quiet surface
  * (`engine/piece.ts`). A cell is a grid-outlined surface, lifted under a clue
- * (the win flash's highlight swaps the two surfaces); a shaded
+ * and filled in the flash color where the win flash is on it; a shaded
  * cell holds the shaded piece, a cell marked clear holds the ruled-out cross,
  * and a clue holds its number. The keyboard cursor is corner brackets, out at
  * the cell's corners. Rule violations are
@@ -14,6 +14,7 @@ import {
   CURSOR,
   cellSurface,
   ERROR,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
@@ -57,8 +58,7 @@ export const PREFERRED_TILE_SIZE = 32;
 export const COL_BACKGROUND = 0; // the board around the grid
 export const COL_GRID = 1; // the line between two cells, and the frame
 export const COL_CELL = 2; // the surface of a cell the puzzle left open
-/** The surface under a clue, and under any other cell the win flash's
- * highlight is on. */
+/** The surface under a clue. */
 export const COL_GIVEN = 3;
 export const COL_SHADED = 4; // the piece in a shaded cell
 export const COL_RULED_OUT = 5; // the cross in a cell marked clear
@@ -68,6 +68,8 @@ export const COL_CURSOR = 8;
 export const COL_HINT = 9; // the cell the displayed hint forces — ringed
 export const COL_HINT_CELL = 10; // the deduction's premise/area cells — outlined
 export const COL_HINT_SHADEDREF = 11; // a cited shaded premise (doubled outline)
+/** The ground of a cell the win flash is on. */
+export const COL_FLASH = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -75,6 +77,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   out[COL_SHADED] = SHADED;
   out[COL_RULED_OUT] = RULED_OUT;
   // Ink, which inverts: the number is read against a surface, never
@@ -163,12 +166,10 @@ function drawCell(
   const box = { x: x + 1, y: y + 1, w: ts - 1, h: ts - 1 };
 
   // The surface says who put the cell's content there and never what state it
-  // is in: lifted under a clue, plain everywhere else. The win flash's
-  // highlight swaps the two, so a clue's cell shows it too, in a step that
-  // reads in both schemes. The cursor is corner brackets and no hint role is a
+  // is in: lifted under a clue, plain everywhere else. The cursor is corner brackets and no hint role is a
   // fill: a Range premise area runs along a clue's arms and takes in the clue
   // cell itself, whose digit the deduction counts.
-  const surface = value > 0 !== flash ? COL_GIVEN : COL_CELL;
+  const surface = flash ? COL_FLASH : value > 0 ? COL_GIVEN : COL_CELL;
 
   drawRectOutline(dr, x, y, ts + 1, ts + 1, COL_GRID);
   dr.drawRect(box, surface);

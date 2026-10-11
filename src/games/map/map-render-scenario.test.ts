@@ -18,14 +18,7 @@ import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { TE } from "./map-data.ts";
-import {
-  COL_0,
-  COL_3,
-  COL_ERROR,
-  COL_GRID,
-  COL_UNCOLORED,
-  fromCoord,
-} from "./render.ts";
+import { COL_0, COL_3, COL_ERROR, COL_FLASH, COL_GRID, fromCoord } from "./render.ts";
 import type { MapMove, MapParams, MapState } from "./state.ts";
 
 const P: MapParams = { w: 12, h: 10, n: 12, diff: 1 };
@@ -92,10 +85,10 @@ describe("map win flash", () => {
     mapGame.redraw(dr, ds, null, state, 1, mapGame.newUi(state), 0, flash);
     return dr;
   };
-  /** The cells whose square a frame draws blank. */
+  /** The cells whose square a frame fills in the flash color. */
   const blank = (dr: RecordingDrawing): number[] =>
     opsOfKind(dr.ops, "rect")
-      .filter((o) => o.w === TS && o.h === TS && o.color === COL_UNCOLORED)
+      .filter((o) => o.w === TS && o.h === TS && o.color === COL_FLASH)
       .map((o) => fromCoord(o.y, TS) * P.w + fromCoord(o.x, TS));
 
   it("sweeps the regions from the bottom left, each lit whole", () => {
@@ -105,7 +98,7 @@ describe("map win flash", () => {
       cellsOf.set(regionOf(cell), (cellsOf.get(regionOf(cell)) ?? 0) + 1);
 
     const cells = winFlashRun(paint, blank, 60);
-    // Never part of a region: every lit region has all its cells blank.
+    // Never part of a region: every lit region has all its cells lit.
     for (const frame of cells.frames) {
       const lit = new Map<number, number>();
       for (const cell of frame)

@@ -35,7 +35,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newPatternDesc } from "./generator.ts";
 import { patternGame } from "./index.ts";
-import { COL_CELL, COL_CLEAR, COL_FULL, COL_LIT, fromCoord } from "./render.ts";
+import { COL_CELL, COL_CLEAR, COL_FLASH, COL_FULL, fromCoord } from "./render.ts";
 import { findMistakes, solveState } from "./solver.ts";
 import {
   computeRuns,
@@ -511,7 +511,7 @@ describe("pattern render", () => {
       patternGame.redraw(dr, ds, null, solved, 1, patternGame.newUi(solved), 0, flash);
       return dr.ops;
     };
-    // The cells drawn on the lifted surface, each as its index.
+    // The cells whose ground is the flash color, each as its index.
     const run = winFlashRun(paint, (ops) => {
       const ts = patternGame.preferredTileSize ?? 0;
       const cells: number[] = [];
@@ -519,7 +519,7 @@ describe("pattern render", () => {
       for (const o of ops) {
         if (o.op !== "rect") continue;
         if (o.color === COL_CLEAR) clear++;
-        if (o.color === COL_LIT)
+        if (o.color === COL_FLASH)
           cells.push(fromCoord(ts, 5, o.y) * 5 + fromCoord(ts, 5, o.x));
       }
       // A lit cell keeps what it holds: only the surface under it changes,

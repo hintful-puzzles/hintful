@@ -22,8 +22,8 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   cellSurface,
   ERROR,
+  FLASH,
   GRID_MID,
-  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -44,7 +44,7 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_NONE,
+  HIGHLIGHT_WIN,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -85,7 +85,7 @@ export const COL_TEXT = 4;
 export const COL_GUESS = 5;
 export const COL_ERROR = 6;
 export const COL_PENCIL = 7;
-/** A cell the win flash is on: the lifted surface. */
+/** A cell the win flash is on. */
 export const COL_FLASH = 8;
 /** The line between two cells, and the frame. The diagonal-mode corner crosses
  * are a rule and stay `COL_GRID`. */
@@ -115,7 +115,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GUESS] = playerEntryColor(inner);
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(inner);
-  out[COL_FLASH] = givenSurface(outer);
+  out[COL_FLASH] = FLASH;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   // A fill under the letter and its notes: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
@@ -153,10 +153,9 @@ export function computeSize(p: { w: number; h: number; n: number }, ts: number):
 
 // Cache-key bit layout for a cell's packed tile value.
 const K_LETTER = 0; // bits 0-3: letter + 1 (0 = empty)
-const K_HIGHLIGHT = 4; // bits 4-5: the cell's `CellHighlight`
+const K_HIGHLIGHT = 4; // bits 4-5: the cell's `CellHighlight`, the win flash's included
 const DF_ERR = 1 << 6; // this letter breaks an adjacency rule
-const DF_FLASH = 1 << 7; // the win flash is on this cell
-const K_PENCIL = 8; // bits 8+: the n-bit pencil-mark mask
+const K_PENCIL = 7; // bits 7+: the n-bit pencil-mark mask
 
 export interface AbcdDrawState {
   started: boolean;
@@ -360,18 +359,17 @@ function drawTile(
   const { w, n, diag } = state.params;
   const tx = innerCoord(x, ts, n);
   const ty = innerCoord(y, ts, n);
-  const lit = (fs & DF_FLASH) !== 0;
   const i = y * w + x;
   const letter = state.grid[i];
   const box = cellBox(x, y, ts, n);
 
-  // Background: lifted while the win flash is on the cell, else its highlight.
   drawCellBackground(
     dr,
     box,
-    lit ? HIGHLIGHT_NONE : (((fs >> K_HIGHLIGHT) & 3) as CellHighlight),
+    ((fs >> K_HIGHLIGHT) & 3) as CellHighlight,
     COL_CURSOR,
-    lit ? COL_FLASH : COL_CELL,
+    COL_CELL,
+    COL_FLASH,
   );
   ds.hint.drawHatch(dr, i, box, COL_HINT, ts);
 
@@ -543,9 +541,10 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       let fs = 0;
-      fs |= cellHighlight(ui, x, y) << K_HIGHLIGHT;
+      fs |=
+        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_WIN : cellHighlight(ui, x, y)) <<
+        K_HIGHLIGHT;
       if (adjErr[i]) fs |= DF_ERR;
-      if (flash.win(sweepStep(x, y))) fs |= DF_FLASH;
 
       const letter = state.grid[i];
       const pencilMask = letter === EMPTY ? state.pencil[i] : 0;

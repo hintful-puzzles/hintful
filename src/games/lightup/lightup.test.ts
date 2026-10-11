@@ -554,7 +554,7 @@ describe("lightup rendering", () => {
     if (!res?.ok) throw new Error("the fixture does not solve");
     const won = lightupGame.executeMove(orig, res.move);
     expect(lightupGame.status(won)).toBe("solved");
-    /** The squares lifted off the yellow, as the pixel each starts at. */
+    /** The squares filled with the flash color, as the pixel each starts at. */
     const run = winFlashRun(
       (flash: Flash) => {
         const dr = new RecordingDrawing(lightupGame.colors(DEFAULT_BACKGROUND));

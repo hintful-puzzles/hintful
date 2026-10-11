@@ -25,6 +25,21 @@ its marks are carried, and the completion flash.
   region is drawn
 - **THEN** each triangle of the cell takes its own region's fill
 
+### Requirement: Map draws an uncolored region on the collection's quiet surface
+
+`redraw` SHALL fill a region that has no color with the collection's cell
+surface, so the map reads as a field apart from the board round it and the
+four fills are all the color on it. The four fills and the ink region borders
+are the game and SHALL stay as they are. The drag blob that carries "no color"
+SHALL take the same surface.
+
+#### Scenario: An uncolored region is the cell surface
+
+- **WHEN** a board with an uncolored region is drawn
+- **THEN** that region is filled with the cell surface
+- **AND** a colored region beside it keeps its fill, with the ink border
+  between them
+
 ## ADDED Requirements
 
 ### Requirement: The Map completion flash sweeps the regions
@@ -32,15 +47,15 @@ its marks are carried, and the completion flash.
 The completion flash SHALL sweep the map by region: the regions SHALL light in
 the order of the points their numbers are drawn at along the diagonal, one
 place apart however far apart the points are, and the whole of a lit region
-SHALL be drawn blank, on the surface of an uncolored region.
+SHALL be filled with the flash color and keep its border and its number.
 The selected region's band SHALL be hidden while the flash plays.
 
 #### Scenario: A region that spans the sweep
 
 - **WHEN** a region reaches from one side of the map to the other and the
   highlight is on it
-- **THEN** every cell of it is blank in that frame, a split cell's triangle
-  included, and none of it is blank in a frame where the highlight is not
+- **THEN** every cell of it is the flash color in that frame, a split cell's
+  triangle included, and none of it is in a frame where the highlight is not
 
 ## REMOVED Requirements
 

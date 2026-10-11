@@ -13,6 +13,7 @@ import {
   CURSOR,
   cellSurface,
   ERROR,
+  FLASH,
   GOAL_WASH,
   GRID_DARK,
   givenSurface,
@@ -109,7 +110,9 @@ export const COL_TARGET = 15;
  * every other entry game's sense, and legible on a dark cell where the bevel's
  * gray was not. */
 export const COL_OFFERED = 16;
-export const NCOLORS = 17;
+/** The ground of a square the win flash is on. */
+export const COL_FLASH = 17;
+export const NCOLORS = 18;
 
 /** A cell's part in the displayed hint, one bit per mark: its diff key. */
 const HINT_TARGET = 1;
@@ -342,6 +345,7 @@ export function ascentColors(defaultBackground: Color): Color[] {
   ret[COL_CELL] = cellSurface(background);
   ret[COL_GIVEN] = givenSurface(background);
   ret[COL_GRID] = surfaceGrid(background);
+  ret[COL_FLASH] = FLASH;
   return ret;
 }
 
@@ -702,7 +706,7 @@ export function redrawAscent(
       sn === NUMBER_WALL
         ? COL_BORDER
         : sn >= 0 && flash.win(sn)
-          ? COL_LOWLIGHT
+          ? COL_FLASH
           : ui.dragColumn === i % w || ui.dragRow === Math.trunc(i / w)
             ? COL_TARGET
             : ui.held === i ||

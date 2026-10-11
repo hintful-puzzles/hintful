@@ -1,6 +1,7 @@
 import { BLACK, TEN, WHITE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
+  FLASH,
   givenSurface,
   INK,
   surfaceGrid,
@@ -45,13 +46,15 @@ const COL_INK = 10;
 const COL_SEL = 11;
 /** The field: an emptied cell, and the gap between two tiles. */
 const COL_CELL = 12;
-/** The field where a flash lights it. */
-export const COL_FLASH = 13;
+/** The field on the lit beats of a stuck board's flash. */
+export const COL_LIFTED = 13;
 /** The frame round the field. */
 const COL_GRID = 14;
 /** The cursor on a tile. */
 const COL_ON_TILE = 15;
-const NCOLORS = 16;
+/** The ground of a cell the win flash is on. */
+export const COL_FLASH = 16;
+const NCOLORS = 17;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = new Array<Color>(NCOLORS);
@@ -64,7 +67,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_SEL] = WHITE;
   out[COL_ON_TILE] = BLACK;
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_FLASH] = givenSurface(defaultBackground);
+  out[COL_LIFTED] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   return out;
 }
@@ -224,9 +228,10 @@ export function redraw(
   const { w, h } = state;
 
   // A stuck board's flash lifts the whole field on its even beats and rests it
-  // on its odd ones. A win's highlight crosses the cells and leaves the margin.
+  // on its odd ones. A win's flash fills the cells it is on and leaves the
+  // margin.
   const stuckLit = flash.time > 0 && Math.floor(flash.time / FLASH_FRAME) % 2 === 0;
-  const margin = stuckLit ? COL_FLASH : COL_CELL;
+  const margin = stuckLit ? COL_LIFTED : COL_CELL;
   const marginChanged = ds.margin !== margin;
   if (marginChanged) drawFrame(dr, w, h, ts, margin);
 
@@ -257,11 +262,11 @@ export function redraw(
         !state.impossible
       )
         tile |= TILE_HASSEL;
-      if (stuckLit || flash.win(sweepStep(x, y))) tile |= TILE_LIT;
+      if (flash.win(sweepStep(x, y))) tile |= TILE_LIT;
 
       // The margin's repaint covers the field, so every tile follows it.
       if (ds.grid[i] !== tile || marginChanged) {
-        const bgcolor = tile & TILE_LIT ? COL_FLASH : COL_CELL;
+        const bgcolor = tile & TILE_LIT ? COL_FLASH : margin;
         tileRedraw(dr, ds, x, y, dright, dbelow, tile, bgcolor);
         ds.grid[i] = tile;
       }

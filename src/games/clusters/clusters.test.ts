@@ -34,7 +34,7 @@ import type { Point } from "../../engine/types.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newClustersDesc } from "./generator.ts";
 import { clustersGame } from "./index.ts";
-import { COL_ERROR, COL_GIVEN, COL_WRONG, PREFERRED_TILE_SIZE } from "./render.ts";
+import { COL_ERROR, COL_FLASH, COL_WRONG, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   COMPLETE,
   clustersStatus,
@@ -375,26 +375,21 @@ describe("executeMove + completion", () => {
       B | F_SINGLE,
     ]);
     expect(clustersGame.status(won)).toBe("solved");
-    // The cells on the lifted surface, as their origins. The flash swaps a
-    // cell's surface, so a lit cell is one that has it where a settled frame
-    // has not, or a given's that has lost it.
+    // The cells filled in the flash's color, as their origins: a given lights
+    // like any other.
     const palette = clustersGame.colors([0.9, 0.9, 0.9]);
     const frame = (flash: Flash): string[] => {
       const dr = new RecordingDrawing(palette);
       const ds = clustersGame.newDrawState(won, PREFERRED_TILE_SIZE);
       clustersGame.redraw(dr, ds, null, won, 1, newUi(), 0, flash);
       return dr.ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_GIVEN ? [`${o.x},${o.y}`] : [],
+        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
       );
     };
-    const givens = new Set(frame(NO_FLASH));
-    expect(givens.size).toBe(4);
+    expect(frame(NO_FLASH)).toEqual([]);
     // A cell's place in the sweep is its x less its y.
     expectWinFlashTravels(
-      winFlashRun(frame, (cells) => [
-        ...cells.filter((c) => !givens.has(c)),
-        ...[...givens].filter((c) => !cells.includes(c)),
-      ]),
+      winFlashRun(frame, (cells) => cells),
       6,
       (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
     );

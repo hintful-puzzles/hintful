@@ -1,10 +1,10 @@
 ## ADDED Requirements
 
-### Requirement: The completion flash lifts the squares
+### Requirement: The completion flash lights the grid's squares
 
-The completion flash SHALL sweep the grid's squares, and SHALL lift a lit
-square to the given's surface under its diagonal. The margin round the grid,
-where the outer clues are drawn, SHALL never be lit.
+The completion flash SHALL sweep the grid's squares, and SHALL fill a lit
+square with the flash color under its diagonal and its clue discs. The margin
+round the grid, where the outer clues are drawn, SHALL never be lit.
 
 #### Scenario: A square the highlight has not reached
 
@@ -16,8 +16,8 @@ where the outer clues are drawn, SHALL never be lit.
 ### Requirement: The completion flash lifts the squares in three phases
 
 **Reason**: The win flash's rhythm is the engine's (`ts-engine`, "The win flash
-is one traveling highlight in every game"), so no game has phases of its own.
-What is Slant's, the lifted square, is "The completion flash lifts the
-squares".
+is one traveling highlight in every game"), and so is its color, so no game
+has phases or a lifted surface of its own. What is Slant's, which squares
+light, is "The completion flash lights the grid's squares".
 
 **Migration**: None. Nothing a player holds refers to the flash.

@@ -16,8 +16,8 @@ import { TWO } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
+  FLASH,
   GRID_DARK,
-  givenSurface,
   HELD,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -59,8 +59,8 @@ const GRID_HINT_OUTLINE = 80;
 const COL_BACKGROUND = 0; // the board around the cells
 const COL_GRID = 1; // the line between two cells, and round the board
 const COL_CELL = 2; // the surface of a cell
-/** The surface of a cell the win flash's highlight is on. */
-export const COL_LIT = 3;
+/** The ground of a cell the win flash is on. */
+export const COL_FLASH = 3;
 const COL_HOLE = 4; // the ring that marks an empty hole
 const COL_PEG = 5;
 const COL_CURSOR = 6;
@@ -111,7 +111,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_LIT] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   // Strong enough to be a mark on the cell and not a step of its gray.
   out[COL_HOLE] = GRID_DARK;
   out[COL_PEG] = TWO[PAIR_DISC];
@@ -327,12 +327,10 @@ export function redraw(
       if (v === GRID_OBST) continue;
       const i = y * w + x;
       const arrows = arrowsAt.get(i) ?? [];
-      // The win flash lifts the cell its highlight is on, a step that reads in
-      // both schemes.
       const lit = flash.win(sweepStep(x, y));
       const key = `${v}${striped.has(i) ? "s" : ""}${lit ? "l" : ""}:${arrows.map(JUMP.key).join(",")}`;
       if (key !== ds.tiles[i]) {
-        drawTile(dr, ds, coord(x, ts), coord(y, ts), v, lit ? COL_LIT : COL_CELL, {
+        drawTile(dr, ds, coord(x, ts), coord(y, ts), v, lit ? COL_FLASH : COL_CELL, {
           striped: striped.has(i),
           arrows: arrows.map((j) => [center(j.from), center(j.to)] as const),
         });

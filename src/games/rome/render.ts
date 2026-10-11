@@ -58,6 +58,7 @@ import {
   drawCellBackground,
   HIGHLIGHT_NONE,
   HIGHLIGHT_NOTES,
+  HIGHLIGHT_WIN,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -147,7 +148,7 @@ export const COL_HINT_CELL = 13;
 export const COL_CURSOR = 14;
 /** The thin line between two squares of one region. */
 export const COL_GRID = 15;
-/** The fill of a square the win flash's highlight is on. */
+/** The ground of a square the win flash is on. */
 export const COL_FLASH = 16;
 
 export function colors(background: Color): Color[] {
@@ -197,8 +198,7 @@ const HB_MISTAKE = 1;
 export interface RomeDrawState {
   started: boolean;
   tileSize: number;
-  /** Packed `(effective cell, effective marks, lit by the win flash)` per
-   * square. */
+  /** Packed `(effective cell, effective marks, highlight)` per square. */
   cache: Int32Array;
   mistakes: OverlaySidecar;
   /** Hint overlay (fork addition): bit 0 = the square acted on, bit 1 =
@@ -399,13 +399,12 @@ export function redraw(
       if (highlight !== HIGHLIGHT_NONE && ui.kmode === KEYMODE_PENCIL)
         highlight = HIGHLIGHT_NOTES;
       const armed = highlight !== HIGHLIGHT_NONE && ui.kmode !== KEYMODE_MOVE;
-      const lit = flash.win(sweepStep(x, y));
+      if (flash.win(sweepStep(x, y))) highlight = HIGHLIGHT_WIN;
 
       const key =
         (c & 0x7fff) |
         (((p >> 2) & 0xf) << 15) |
         ((p & FD_ENTRY ? 1 : 0) << 19) |
-        ((lit ? 1 : 0) << 20) |
         (highlight << 22) |
         ((armed ? 1 : 0) << 24);
       if (ds.cache[i1] === key && !ds.mistakes.stale(i1) && !ds.hint.stale(i1))
@@ -422,9 +421,8 @@ export function redraw(
 
       // A given is told by the square under it.
       const surface = grid[i1] & FM_FIXED ? COL_GIVEN : COL_CELL;
-      const color = lit
-        ? COL_FLASH
-        : ui.sloops && grid[i1] & FE_LOOP
+      const color =
+        ui.sloops && grid[i1] & FE_LOOP
           ? COL_ERRORBG
           : ui.sgoals && grid[i1] & FD_TOGOAL
             ? COL_GOALBG
@@ -466,6 +464,7 @@ export function redraw(
         highlight,
         COL_CURSOR,
         color,
+        COL_FLASH,
       );
       ds.hint.drawHatch(dr, i1, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 

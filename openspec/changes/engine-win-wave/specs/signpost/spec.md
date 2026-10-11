@@ -3,10 +3,9 @@
 ### Requirement: The Signpost completion flash runs the chain from 1 to the last number
 
 The completion flash SHALL run the finished chain: a square's position SHALL
-be its number, and the arrows SHALL stay still. A lit square SHALL swap
-surfaces, a given dropping to the surface of a square the player numbered and
-any other square lifting to a given's, so the highlight shows on a given as on
-the rest.
+be its number, and the arrows SHALL stay still. A lit square SHALL be filled
+with the flash color and SHALL keep its arrow and its number, a given as any
+other square.
 
 #### Scenario: The flash follows the numbers, not the grid
 
@@ -17,8 +16,8 @@ the rest.
 #### Scenario: A lit given
 
 - **WHEN** the highlight is on a given
-- **THEN** the given is drawn on the surface of a square the player numbered,
-  and returns to its lifted surface as the highlight leaves it
+- **THEN** the given is filled with the flash color as the squares beside it
+  are, and returns to its lifted surface as the highlight leaves it
 
 ## REMOVED Requirements
 

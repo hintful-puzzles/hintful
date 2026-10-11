@@ -22,11 +22,11 @@ wrapping board and never through a barrier.
 
 ### Requirement: The completion flash lifts the tiles
 
-The completion flash SHALL lift a tile to the collection's lifted surface
-while the highlight is on it, the surface Net lifts its tiles to.
+The completion flash SHALL fill a tile's face with the flash color while the
+highlight is on it, and the tile SHALL keep its wires.
 
 #### Scenario: The flash lifts the tiles
 
 - **WHEN** a frame of the completion flash is drawn
-- **THEN** the tiles the highlight is on are drawn on the lifted surface, and
-  every other tile on the cell surface
+- **THEN** the tiles the highlight is on have a face in the flash color, and
+  every other tile the cell surface

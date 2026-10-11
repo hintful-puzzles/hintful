@@ -19,6 +19,7 @@ import { valueBit } from "../../engine/candidate-bits.ts";
 import {
   cellSurface,
   ERROR,
+  FLASH,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -38,7 +39,7 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_ENTRY,
+  HIGHLIGHT_WIN,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -89,6 +90,8 @@ export const COL_CELL = 9; // the surface of a cell the player fills
 /** The thin line between two cells of one cage. A cage's own edge is content
  * and stays `COL_GRID`. */
 export const COL_LINE = 10;
+/** The ground of a cell the win flash is on. */
+export const COL_FLASH = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -97,6 +100,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = INK;
   out[COL_USER] = playerEntryColor(bg);
   out[COL_HIGHLIGHT] = highlightWash(bg);
+  out[COL_FLASH] = FLASH;
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
@@ -265,6 +269,7 @@ function drawTile(
     ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
     COL_HIGHLIGHT,
     COL_CELL,
+    COL_FLASH,
   );
   ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
@@ -507,7 +512,7 @@ export function redraw(
       const i = y * w + x;
       let tile = state.grid[i] || state.pencil[i] << DF_PENCIL_SHIFT;
       tile |=
-        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_ENTRY : cellHighlight(ui, x, y)) <<
+        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_WIN : cellHighlight(ui, x, y)) <<
         DF_HIGHLIGHT_SHIFT;
       if (ds.errors[i] & ERR_LATIN) tile |= DF_ERR_LATIN;
       if (ds.errors[i] & ERR_CLUE) tile |= DF_ERR_CLUE;

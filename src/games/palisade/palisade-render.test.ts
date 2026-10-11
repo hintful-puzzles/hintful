@@ -19,7 +19,7 @@ import {
   COL_CORRECT,
   COL_CURSOR,
   COL_ERROR,
-  COL_GIVEN,
+  COL_FLASH,
   COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
@@ -121,8 +121,7 @@ describe("Palisade redraw", () => {
       redraw(dr, freshDs(solved), null, solved, 1, freshUi(), 0, flash);
       return ops;
     };
-    // The cells on the lifted surface, each as its index. Every region of a
-    // solved board is finished, so no clue's cell is on it for its own sake.
+    // The cells whose ground is the flash color, each as its index.
     const run = winFlashRun(paint, (ops) => {
       const clips = opsOfKind(ops, "clip");
       const left = Math.min(...clips.map((o) => o.x));
@@ -131,7 +130,7 @@ describe("Palisade redraw", () => {
       let cell = -1;
       for (const o of ops) {
         if (o.op === "clip") cell = ((o.y - top) / TS) * P.w + (o.x - left) / TS;
-        else if (o.op === "rect" && o.color === COL_GIVEN) cells.push(cell);
+        else if (o.op === "rect" && o.color === COL_FLASH) cells.push(cell);
       }
       return cells;
     });

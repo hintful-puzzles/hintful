@@ -112,7 +112,7 @@ describe("Flood redraw", () => {
         return ops;
       },
       // Whole-tile rects only: a separator strip along a tile's edge is TS
-      // wide. The tiles on the lifted surface, by cell.
+      // wide. The tiles filled in the flash color, by cell.
       (ops) =>
         opsOfKind(ops, "rect")
           .filter((o) => o.w === TS && o.h === TS && o.color === COL_LIT)

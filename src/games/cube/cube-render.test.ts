@@ -13,6 +13,7 @@ import {
   COL_BACKGROUND,
   COL_BORDER,
   COL_CELL,
+  COL_FLASH,
   COL_GRID,
   COL_PAINT,
   COL_SOLID,
@@ -115,14 +116,14 @@ describe("Cube rendering", () => {
     const p: CubeParams = { solid, d1, d2 };
     const area = gridArea(p.d1, p.d2, SOLIDS[p.solid].order);
     const state = newState(p, `${"0".repeat(Math.floor((area + 3) / 4))},0`);
-    // The squares of the arena on the lifted surface, by index.
+    // The squares of the arena filled in the flash's color, by index.
     const paint = (flash: Flash): number[] => {
       const { dr, ops } = recordingDrawing();
       const ds = newDrawState(state, cubeGame.preferredTileSize ?? 48);
       redraw(dr, ds, null, state, 1, {}, 0, flash);
       return opsOfKind(ops, "polygon")
         .slice(0, state.grid.length)
-        .flatMap((o, i) => (o.fill === COL_SOLID ? [i] : []));
+        .flatMap((o, i) => (o.fill === COL_FLASH ? [i] : []));
     };
     expect(paint(NO_FLASH)).toEqual([]);
     // A square's place in the sweep: its center's x less its y.

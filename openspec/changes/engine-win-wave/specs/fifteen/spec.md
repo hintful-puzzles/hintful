@@ -8,10 +8,9 @@
 ### Requirement: A genuine Fifteen completion sweeps the tiles
 
 A genuine completion's flash SHALL sweep the tiles diagonally, a tile's
-position being its cell's place in the grid. A lit tile's face SHALL drop to
-the well's surface, with its bevel and its number drawn as on any other frame:
-a tile is the lifted surface already, and neither bevel color stands off it in
-both color schemes. The gap SHALL never be lit.
+position being its cell's place in the grid. A lit tile's face SHALL be filled
+with the flash color inside its bevel, and SHALL keep its bevel and its
+number. The gap SHALL never be lit.
 
 #### Scenario: The last slide flashes
 

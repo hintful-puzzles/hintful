@@ -22,7 +22,7 @@ import {
   DRAG_ADD,
   DRAG_REMOVE,
   ERROR,
-  GOAL,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -134,10 +134,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_DRAGON] = DRAG_ADD;
   out[COL_DRAGOFF] = DRAG_REMOVE;
-  // The theme's yellow and not FLASH: the highlight runs along ink rails over
-  // the purple bed, and FLASH is the paper's tone, which is the rails' own
-  // opposite in one scheme and nearly the bed's in the other.
-  out[COL_FLASH] = GOAL;
+  out[COL_FLASH] = FLASH;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   out[COL_NOTRACK] = RULED_OUT;

@@ -23,7 +23,6 @@ length, about 2 seconds, on every board; Map's and Signpost's own styles go.
 
 **Non-Goals:**
 
-- One lit look for every game. What "lit" paints stays the game's (below).
 - A flash that is not a win. `flashLength` and its games are untouched.
 - An engine that knows a game's geometry.
 
@@ -112,22 +111,33 @@ In `src/engine/win-wave.ts`:
 - A path and a spread need none: the game already has the order (Tracks'
   `trackOrder`, a number in Ascent and Signpost) or a breadth-first distance.
 
-### What "lit" paints stays the game's
+### What "lit" paints is one color, the `FLASH` role
 
-Each game's flash has a lit beat today: the cell lifted to a surface, a line
-in `FLASH`, Tracks' rails in the theme's yellow. Those looks were each chosen
-against that game's palette (`engine-colors`, "A solved flash drawn as a color
-takes a shared color"). The change keeps the look and moves the *when* to the
-engine. A game whose flash was not a color (Signpost's spin, Tents' and
-Galaxies' blanking, Mosaic's swap) takes the shared color the requirement
-names.
+The first deploy kept each game's own lit look: a cell lifted to a surface, a
+line in the paper's tone, Tracks' rails in yellow. The owner saw it and chose
+one highlight color for every game (2026-10-11). `FLASH` was already the one
+role every line-lighting game assigned, so the role itself becomes the
+theme's yellow, and a cell's ground is filled with it where it was lifted.
+
+A census of the resolved palettes (2026-10-11) found no color that no game
+draws with: yellow is in 29 games' palettes, and every other hue in some. So
+the rule is about the ground, not about a free color: the lit element's
+*ground* is yellow and what it holds is drawn on top. A yellow piece on a lit
+cell merges with it for the third of a second the highlight is there, which
+reads as the cell lighting.
+
+The color has no hook and no engine-drawn overlay: a game gives the role a
+palette slot and paints its ground with it, and the cross-game guard lights
+each element alone and requires more of that color in the frame than the
+settled board has. `drawCellBackground` takes the slot and a `HIGHLIGHT_WIN`,
+so the games that share that painter write one expression.
 
 ### What the conversion found, and what was done about it
 
 - **A given did not light.** Lifting a lit cell to the given's surface shows
   nothing on a cell that already rests there, and eight games had such cells.
-  A lit cell swaps its surface whichever it wears, as Net's locked tiles
-  already did. The cross-game guard lights each element alone to hold it.
+  The cross-game guard lights each element alone to catch it. The one
+  highlight color ended it: yellow is no cell's resting surface.
 - **Scattered elements left the board dark.** Untangle's points and Map's
   regions, swept by where they are drawn, have stretches of the diagonal with
   nothing on them. Both rank their elements along it (`sweepRanks`).

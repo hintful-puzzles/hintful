@@ -29,6 +29,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -89,6 +90,8 @@ export const COL_CLEAR_MARK = 10;
 export const COL_ERROR_TEXT = 11;
 /** The surface of a cell the player has made clear. */
 export const COL_CLEAR = 12;
+/** The ground of a cell the win flash is on. */
+export const COL_FLASH = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -104,6 +107,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_NUMBER] = INK;
   out[COL_CLEAR_MARK] = CLEAR_MARK;
   out[COL_CLEAR] = CLEAR;
+  out[COL_FLASH] = FLASH;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
   return out;
 }
@@ -202,8 +206,7 @@ function drawErrGravity(dr: GameDrawing, ts: number, x: number, y: number): void
 // bits (num/bound/color + FE_* error/cursor flags all fit under 0x2000).
 const HINT_TARGET = 1 << 13; // the forced cell — painted COL_HINT
 const HINT_EVID = 1 << 14; // a deduction-evidence cell — inset COL_HINT_CELL ring
-/** The win flash is on this cell, which swaps its surface: a cell lifts, and
- * a clue's lifted cell drops to the plain one. */
+/** The win flash is on this cell. */
 const LIT = 1 << 15;
 
 // --- one tile ---------------------------------------------------------------
@@ -230,11 +233,11 @@ function drawTile(
     drawClearSquare(
       dr,
       inner,
-      lit ? COL_GIVEN : COL_CLEAR,
+      lit ? COL_FLASH : COL_CLEAR,
       wrong ? COL_ERROR : COL_CLEAR_MARK,
     );
   } else {
-    dr.drawRect(inner, (color !== 0) !== lit ? COL_EMPTY : COL_GIVEN);
+    dr.drawRect(inner, lit ? COL_FLASH : color ? COL_EMPTY : COL_GIVEN);
     if (color === F_SHADE)
       drawPiece(dr, inner, SHADED_SHAPE, wrong ? COL_ERROR : COL_SHADE);
   }

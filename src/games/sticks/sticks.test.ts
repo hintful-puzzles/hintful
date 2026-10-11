@@ -46,8 +46,8 @@ import { sticksGame } from "./index.ts";
 import {
   COL_CELL,
   COL_ERROR,
+  COL_FLASH,
   COL_LINE,
-  COL_LIT,
   newDrawState,
   redraw,
 } from "./render.ts";
@@ -630,10 +630,10 @@ describe("sticks: the win flash sweeps the open cells", () => {
     redraw(dr, ds, null, state, 1, newUi(), 0, flash);
     return dr.ops;
   };
-  /** The cells a frame draws on the lifted surface, as the `x,y` drawn at. */
+  /** The cells a frame fills with the flash color, as the `x,y` drawn at. */
   const lit = (ops: ReturnType<typeof paint>): string[] =>
     ops.flatMap((op) =>
-      op.op === "rect" && op.color === COL_LIT ? [`${op.x},${op.y}`] : [],
+      op.op === "rect" && op.color === COL_FLASH ? [`${op.x},${op.y}`] : [],
     );
   const step = (key: string): number => {
     const [x, y] = key.split(",").map(Number);
@@ -656,6 +656,6 @@ describe("sticks: the win flash sweeps the open cells", () => {
     // The same draw state, settled: the cells that were lit are drawn again.
     const after = paint(NO_FLASH, ds);
     expect(after.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
-    expect(after.some((o) => o.op === "rect" && o.color === COL_LIT)).toBe(false);
+    expect(after.some((o) => o.op === "rect" && o.color === COL_FLASH)).toBe(false);
   });
 });

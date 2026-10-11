@@ -14,7 +14,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
-  givenSurface,
+  FLASH,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_EVIDENCE,
@@ -50,8 +50,7 @@ export const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
 /** The surface of a cell, which is all an undecided cell is. */
 export const COL_EMPTY = 2;
-/** The surface under a cell that holds no piece while the win's highlight is
- * on it. */
+/** The ground of a cell the win flash is on, under its piece or its ring. */
 export const COL_FLASH = 3;
 /** The number of a cell that holds no piece. */
 export const COL_TEXT = 4;
@@ -80,7 +79,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_EMPTY] = cellSurface(defaultBackground);
-  out[COL_FLASH] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   out[COL_TEXT] = INK;
   out[COL_SHADED] = SHADED;
   out[COL_SHADED_NUM] = WHITE;
@@ -304,7 +303,8 @@ export function redraw(
       if (state.flags[i] & F_BLACK) {
         f |= DS_BLACK;
         if (ui.showBlackNums) f |= DS_BLACK_NUM;
-      } else if (flash.win(sweepStep(x, y))) f |= DS_FLASH;
+      }
+      if (flash.win(sweepStep(x, y))) f |= DS_FLASH;
       if (state.flags[i] & F_CIRCLE) f |= DS_CIRCLE;
       if (state.flags[i] & F_ERROR) f |= DS_ERROR;
       if (mistakeSet.has(i)) f |= DS_MISTAKE;

@@ -34,4 +34,13 @@
 
 ## 6. The owner's eye
 
-- [ ] 6.1 The owner looks at the deploy. Two things to judge there: whether 2 seconds and the width of the highlight feel right, and whether each game lighting in its own color (Tracks yellow, Solo's entry wash, Loopy's white line, a lifted cell elsewhere) should become one highlight color for every game.
+- [x] 6.1 The owner looked at the first deploy and asked for one highlight color in every game, managed by the engine.
+
+## 7. One highlight color
+
+- [x] 7.1 `FLASH` is the theme's yellow, and the one color a lit element takes; `drawCellBackground` and `highlightFill` take its slot and a `HIGHLIGHT_WIN`
+- [x] 7.2 The cross-game guard requires each element, lit alone, to paint more in that color than the settled board
+- [x] 7.3 Every game lights its elements' ground, or its lines, in `FLASH`; the surface swaps and each game's own lit look go
+- [x] 7.4 Deltas and guide restated for the one color
+- [x] 7.5 Every game seen in Chrome, light and dark; gate, commit, push. Not seen in either scheme: Cube, Mines and Same Game, which Solve-then-redo does not reach. Loopy's lit edges were a hairline of yellow and are drawn at twice a set line's width; Untangle's at three pixels, with a lit point on a disc of the color, since its points rest in that yellow. A Flood board won in yellow shows only the line round the lit band.
+- [ ] 7.6 The owner looks at the deploy: the color, and whether 2 seconds and the width of the highlight feel right

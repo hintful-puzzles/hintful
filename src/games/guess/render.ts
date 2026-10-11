@@ -17,7 +17,7 @@ import { BLACK, PINK_WASH, TEAL_WASH, TEN, WHITE } from "../../engine/color/colo
 import {
   cellSurface,
   ERROR,
-  givenSurface,
+  FLASH,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -71,7 +71,7 @@ export const COL_WRONG = 21;
 /** The rim of an empty hole, which with {@link COL_EMPTY} inside it is a cell
  * of the collection's quiet surface, drawn round. */
 export const COL_HOLE_RIM = 22;
-/** The box of a peg or a hole the win flash is on: the lifted surface. */
+/** The box of a peg or a hole the win flash is on. */
 export const COL_LIT = 23;
 export const NCOLORS = 24;
 
@@ -479,7 +479,7 @@ export function colors(defaultBackground: Color): Color[] {
   // quiet surface inside its thin line and the pegs are the color on the board.
   ret[COL_EMPTY] = cellSurface(board);
   ret[COL_HOLE_RIM] = surfaceGrid(board);
-  ret[COL_LIT] = givenSurface(board);
+  ret[COL_LIT] = FLASH;
   ret[COL_WELL] = guessAnswerWell(defaultBackground);
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -514,8 +514,8 @@ function drawPeg(
   const ts = ds.tileSize;
   const cg = cgap(ds);
   const box = rect(cx - cg, cy - cg, ts + cg * 2, ts + cg * 2);
-  // Lit, the whole box lifts and an empty hole with it: a peg fills all of
-  // its box but the corners, and its color is the board's information.
+  // Lit, the whole box is the flash color and an empty hole with it: a peg
+  // fills all of its box but the corners, and keeps its own color.
   dr.drawRect(box, lit ? COL_LIT : COL_BACKGROUND);
   if (hatched) dr.drawHatch(box, COL_HINT, hatchPeriod(ts));
   const fill = col ? COL_EMPTY + col : lit ? COL_LIT : COL_EMPTY;

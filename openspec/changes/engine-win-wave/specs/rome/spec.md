@@ -3,8 +3,8 @@
 ### Requirement: Rome's completion flash sweeps the board
 
 The win flash SHALL sweep the board's squares from the bottom left to the top
-right, and a lit square SHALL be filled with the shared flash color in place
-of its surface, a color that reads in both schemes. The selected square's
+right, and a lit square SHALL be filled with the flash color in place of its
+surface and keep what it holds. The selected square's
 highlight SHALL not be drawn while the win flash runs.
 
 #### Scenario: The flash moves

@@ -13,6 +13,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { GREEN, RED, WHITE } from "../../engine/color/colors.ts";
 import {
   ERROR,
+  FLASH,
   GOAL,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -68,6 +69,7 @@ export const COL_HINT_CELL = 10; // the evidence squares' outline
 // places the domino the player is after could go, so the goal's color, which
 // no domino, mistake, hint or value highlight takes.
 export const COL_REFERENCE = 11;
+export const COL_FLASH = 12; // the ground of a domino the win flash is on
 
 export function colors(defaultBackground: Color): Color[] {
   const { background } = mkhighlight(defaultBackground);
@@ -91,6 +93,7 @@ export function colors(defaultBackground: Color): Color[] {
   // is exactly what has no working value.
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   out[COL_REFERENCE] = GOAL;
+  out[COL_FLASH] = FLASH;
   return out;
 }
 
@@ -231,11 +234,7 @@ function drawTile(
   if (type !== TYPE_BLANK) {
     let bg = flags & DF_CLASH ? COL_DOMINOCLASH : COL_DOMINO;
     nc = COL_DOMINOTEXT;
-    if (flags & DF_FLASH) {
-      const tmp = nc;
-      nc = bg;
-      bg = tmp;
-    }
+    if (flags & DF_FLASH) bg = COL_FLASH;
 
     // Rounded corners: filled circles at the domino's outer corners.
     if (type === TYPE_L || type === TYPE_T)

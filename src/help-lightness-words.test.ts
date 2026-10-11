@@ -21,7 +21,7 @@ import { describe, expect, it } from "vitest";
 import "./games/index.ts";
 import { mkhighlightBackground } from "./engine/color/color-mkhighlight.ts";
 import { darkValue } from "./engine/color/color-token.ts";
-import { SHADED } from "./engine/color/palette.ts";
+import { FLASH, SHADED } from "./engine/color/palette.ts";
 import { getTsGame } from "./engine/registry.ts";
 import { colorToOKLCH } from "./engine/testing/oklch.ts";
 import type { Color } from "./engine/types.ts";
@@ -60,9 +60,14 @@ function holdsPinned(palette: readonly Color[], kind: Kind): boolean {
     const l = colorToOKLCH(c)[0];
     return kind === "dark" ? l < 0.45 : l > 0.8;
   };
-  return palette.some((c) => {
-    const dark = c && darkValue(c);
-    return dark !== null && dark !== undefined && is(c) && is(dark);
+  // The win flash's yellow is light in both schemes and in every palette, and
+  // is no piece a page describes: counted, it would answer for every game. So
+  // one slot holding it is set aside, the flash's own. A game whose piece is
+  // that yellow too (Net's powered wire) holds it in another.
+  const flashSlot = palette.indexOf(FLASH);
+  return palette.some((c, i) => {
+    const dark = c && i !== flashSlot && darkValue(c);
+    return dark !== null && dark !== undefined && dark !== false && is(c) && is(dark);
   });
 }
 

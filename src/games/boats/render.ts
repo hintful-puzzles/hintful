@@ -39,6 +39,7 @@ import {
   clueDoneColor,
   ERROR,
   ERROR_TEXT,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -111,6 +112,7 @@ export const COL_CELL = 14; // the surface of an undecided square
 export const COL_GIVEN = 15; // the lifted surface under a segment the puzzle gave
 /** The waves on a given water square and the edge of a collision diamond. */
 export const COL_INK = 16;
+export const COL_FLASH = 17; // the ground of a square the win flash is on
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -119,6 +121,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
   out[COL_INK] = INK;
+  out[COL_FLASH] = FLASH;
   out[COL_CURSOR] = CURSOR;
   out[COL_WATER] = BLUE_WASH;
   // A segment the puzzle gave is the same piece: its lifted cell tells it.
@@ -638,17 +641,12 @@ export function redraw(
 
       dr.drawUpdate({ x: tx, y: ty, w: ts + 1, h: ts + 1 });
       // A segment the puzzle gave is told by the lifted cell under it; given
-      // water keeps its blue and is told by its waves. The win flash swaps the
-      // surface of the square it is on: a square lifts, and a given segment's
-      // lifted square drops to the plain one.
-      const lifted = isShip(state.gridClues[i]);
+      // water keeps its blue and is told by its waves.
       const surface = lit
-        ? lifted
-          ? COL_CELL
-          : COL_GIVEN
+        ? COL_FLASH
         : ship === EMPTY
           ? COL_CELL
-          : lifted
+          : isShip(state.gridClues[i])
             ? COL_GIVEN
             : COL_WATER;
       dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, surface);

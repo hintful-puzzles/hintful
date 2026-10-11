@@ -14,8 +14,8 @@
  *  - the target area is tinted green wherever the main block would land;
  *  - the exit gate is outlined, so it reads that nothing but the main block may
  *    cross it;
- *  - the win's highlight brightens each block whole, and the floor a square
- *    at a time.
+ *  - the win flash fills each block's face whole, and the floor a square at
+ *    a time.
  *
  * ## The palette
  *
@@ -45,6 +45,7 @@ import {
   mkhighlightSpecific,
 } from "../../engine/color/color-mkhighlight.ts";
 import { RED } from "../../engine/color/colors.ts";
+import { FLASH } from "../../engine/color/palette.ts";
 import {
   slideBlockBase,
   slideMainBlockBase,
@@ -105,7 +106,10 @@ export const paletteScheme: Partial<PaletteScheme> = {
     [COL_BLOCK_HIGHLIGHT, COL_BLOCK_LOWLIGHT],
   ],
 };
-export const NCOLORS = 22;
+/** The floor, or a block's face inside its bevel, where the win flash is on
+ * it. Flat as the cursor is. */
+export const COL_FLASH = 22;
+export const NCOLORS = 23;
 
 /** Upstream `raise_colour`: two parts `src` to one part `limit`. */
 function raise(src: Color, limit: Color): Color {
@@ -176,6 +180,7 @@ export function colors(defaultBackground: Color): Color[] {
   // Red carries no "mistake" meaning to steal here: Slide declares no
   // `findMistakes` hook, because every reachable position is legal.
   out[COL_CURSOR] = RED;
+  out[COL_FLASH] = FLASH;
 
   return out;
 }
@@ -575,11 +580,10 @@ function drawTile(
   const ty = gridCoord(gy, ts, BORDER);
 
   // Background: the floor, or the target area's green.
-  // A lit square's body, floor or block, is its material's highlight shade.
   let cc = val & BG_TARGET ? COL_TARGET : COL_BACKGROUND;
   let ch = cc + 1;
   let cl = cc + 2;
-  if (val & LIT) cc = ch;
+  if (val & LIT) cc = COL_FLASH;
 
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, cc);
   if (val & BG_FORCEFIELD) drawGate(dr, ts, tx, ty, val);
@@ -596,7 +600,8 @@ function drawTile(
     else cc = val & FG_MAIN ? COL_MAIN : COL_BLOCK;
     ch = cc + 1;
     cl = cc + 2;
-    if (val & LIT) cc = ch;
+    // A lit block keeps its bevel round a face in the flash color.
+    if (val & LIT) cc = COL_FLASH;
 
     drawPiecepart(dr, ts, tx, ty, (val >> FG_MAINPIECESH) & PIECE_MASK, cl, cc, ch);
   }

@@ -220,7 +220,7 @@ describe("singles render", () => {
 });
 
 describe("singles: the win flash", () => {
-  // Any numbers serve: one blackened cell in the middle, off both corners.
+  // Any numbers serve. The blackened cell's ground lights under its piece.
   const state = makeState(3, 3, Int8Array.from([1, 2, 3, 2, 3, 1, 3, 1, 2]));
   state.flags[4] |= F_BLACK;
   const ui = singlesGame.newUi(state);
@@ -251,7 +251,7 @@ describe("singles: the win flash", () => {
     return sweepStep(x, y);
   };
 
-  it("lifts every cell that holds no piece, and never the blackened one, from the bottom left to the top right", () => {
-    expectWinFlashTravels(run, state.n - 1, diagonal);
+  it("fills the ground of every cell, the blackened one's too, from the bottom left to the top right", () => {
+    expectWinFlashTravels(run, state.n, diagonal);
   });
 });

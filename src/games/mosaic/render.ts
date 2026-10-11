@@ -1,8 +1,8 @@
 /**
  * Mosaic rendering (upstream's `draw_cell` / `game_redraw`): a
  * (width+1)×(height+1) per-cell diffed loop, whose extra margin row and
- * column draw the closing grid lines and cursor edges. The win flash lifts
- * the surface of each cell its highlight is on.
+ * column draw the closing grid lines and cursor edges. The win flash
+ * fills the ground of each cell it is on.
  *
  * The board is pieces on a quiet surface (`engine/piece.ts`): a marked cell
  * holds the shaded piece, a blank one is the clear square, and a cell's number
@@ -17,7 +17,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
-  givenSurface,
+  FLASH,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -75,8 +75,8 @@ export const COL_ERROR_TEXT = 10;
 export const COL_CURSOR = 11;
 export const COL_HINT = 12;
 export const COL_HINT_EVIDENCE = 13;
-/** The surface of a cell the win flash's highlight is on, whatever it holds. */
-export const COL_LIT = 14;
+/** The ground of a cell the win flash is on, whatever it holds. */
+export const COL_FLASH = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -97,7 +97,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
-  out[COL_LIT] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   return out;
 }
 
@@ -192,12 +192,12 @@ function drawCell(
       drawClearSquare(
         dr,
         box,
-        lit ? COL_LIT : COL_CLEAR,
+        lit ? COL_FLASH : COL_CLEAR,
         COL_CLEAR_MARK,
         clueVal >= 0 ? null : box,
       );
     } else {
-      dr.drawRect(box, lit ? COL_LIT : COL_CELL);
+      dr.drawRect(box, lit ? COL_FLASH : COL_CELL);
       if (shaded) drawPiece(dr, box, SHADED_SHAPE, COL_SHADED);
     }
 

@@ -143,11 +143,16 @@ describe("a departure from a shared role is stated at the assignment", () => {
       .map(([name]) => name);
     // Vacuity: the pair's own two names are among them.
     expect(pairHued.length).toBeGreaterThanOrEqual(colors.TWO.length);
+    // `FLASH` is the pair's yellow and every game takes it, but it is on the
+    // board only while the win flash crosses a solved one, where no mark is
+    // waiting to be told from it. Counting it would put every game under
+    // this rule for a color it shows for a third of a second.
     const overPair = Object.entries(palette)
       .filter(([, value]) =>
         [...colors.TWO, ...colors.TWO_WASH].some((member) => member === value),
       )
-      .map(([name]) => name);
+      .map(([name]) => name)
+      .filter((name) => name !== "FLASH");
     expect(overPair).toContain("REGION_DONE");
     const takesPair = new RegExp(
       `\\b(${["TWO", "TWO_WASH", ...overPair].join("|")})\\b`,

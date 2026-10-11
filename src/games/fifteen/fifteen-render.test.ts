@@ -13,6 +13,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { TILE } from "./hint-text.ts";
 import { executeMove, fifteenGame } from "./index.ts";
+import { COL_FLASH } from "./render.ts";
 import { type FifteenState, newState } from "./state.ts";
 
 const PALETTE = fifteenGame.colors(DEFAULT_BACKGROUND);
@@ -89,8 +90,8 @@ describe("Fifteen rendering", () => {
 
   it("the win flash sweeps the tiles from the bottom left to the top right", () => {
     const state = solved(4, 4);
-    /** The tiles whose face, inside its bevel, is the well's surface (6), as
-     * `column,row`. The gap is the same color and a whole cell wide. */
+    /** The tiles whose face, inside its bevel, is the flash color, as
+     * `column,row`. */
     const cell = (v: number) => Math.floor((v - TS / 2) / TS);
     const run = winFlashRun(
       (flash: Flash) => {
@@ -100,7 +101,7 @@ describe("Fifteen rendering", () => {
       },
       (dr) =>
         dr.ops.flatMap((op) =>
-          op.op === "rect" && op.color === 6 && op.w !== TS
+          op.op === "rect" && op.color === COL_FLASH
             ? [`${cell(op.x)},${cell(op.y)}`]
             : [],
         ),

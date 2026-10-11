@@ -12,6 +12,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
+  FLASH,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -60,6 +61,8 @@ export const COL_HINT = 10;
 export const COL_HINT_CELL = 11;
 /** A region with no color yet: the quiet cell surface. */
 export const COL_UNCOLORED = 12;
+/** The ground of a region the win flash is on. */
+export const COL_FLASH = 13;
 
 const FOUR = 4;
 const FIVE = 5;
@@ -79,6 +82,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_CURSOR] = CURSOR;
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
+  ret[COL_FLASH] = FLASH;
   return ret;
 }
 
@@ -90,6 +94,8 @@ const SEL_TOP = 0x40; // bit 6 — the top piece is in the selected region
 const SEL_BOTTOM = 0x80; // bit 7 — the bottom piece is
 const SEL_NOTES = 0x100; // bit 8 — this cell carries the notes triangle
 const SEL_MASK = SEL_TOP | SEL_BOTTOM | SEL_NOTES;
+const LIT_TOP = 0x200; // bit 9 — the win flash is on the top piece's region
+const LIT_BOTTOM = 0x400; // bit 10 — and on the bottom piece's
 const SHOW_NUMBERS = 0x00004000;
 const PENCIL_T_BASE = 0x00080000;
 const PENCIL_B_BASE = 0x00008000;
@@ -716,7 +722,17 @@ function drawSquare(
   const pencil = vIn & PENCIL_MASK;
   const showNumbers = vIn & SHOW_NUMBERS;
   const mistake = vIn & MISTAKE;
-  const v = vIn & ~(ERR_MASK | PENCIL_MASK | SHOW_NUMBERS | MISTAKE | SEL_MASK);
+  const v =
+    vIn &
+    ~(
+      ERR_MASK |
+      PENCIL_MASK |
+      SHOW_NUMBERS |
+      MISTAKE |
+      SEL_MASK |
+      LIT_TOP |
+      LIT_BOTTOM
+    );
   const tv = Math.floor(v / FIVE);
   const bv = v % FIVE;
 
@@ -725,7 +741,10 @@ function drawSquare(
   dr.clip({ x: cx, y: cy, w: ts, h: ts });
 
   // Base (top) region color.
-  dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, tv === FOUR ? COL_UNCOLORED : COL_0 + tv);
+  dr.drawRect(
+    { x: cx, y: cy, w: ts, h: ts },
+    vIn & LIT_TOP ? COL_FLASH : tv === FOUR ? COL_UNCOLORED : COL_0 + tv,
+  );
 
   // Second region color if this is a diagonally-divided square.
   if (M[TE * wh + y * w + x] !== M[BE * wh + y * w + x]) {
@@ -739,7 +758,7 @@ function drawSquare(
         { x: p2x, y: coord(y, ts) - 1 },
         { x: coord(x + 1, ts) + 1, y: coord(y + 1, ts) + 1 },
       ],
-      bv === FOUR ? COL_UNCOLORED : COL_0 + bv,
+      vIn & LIT_BOTTOM ? COL_FLASH : bv === FOUR ? COL_UNCOLORED : COL_0 + bv,
       COL_GRID,
     );
   }
@@ -922,10 +941,6 @@ export function redraw(
       if (tv < 0) tv = FOUR;
       if (bv < 0) bv = FOUR;
 
-      // A lit region is drawn blank.
-      if (lit[tRegion]) tv = FOUR;
-      if (lit[bRegion]) bv = FOUR;
-
       let v = tv * FIVE + bv;
 
       for (let i = 0; i < FOUR; i++) {
@@ -936,6 +951,8 @@ export function redraw(
       }
 
       if (ui.showNumbers && !chainShown) v |= SHOW_NUMBERS;
+      if (lit[tRegion]) v |= LIT_TOP;
+      if (lit[bRegion]) v |= LIT_BOTTOM;
       if (tRegion === selected) v |= SEL_TOP;
       if (bRegion === selected) v |= SEL_BOTTOM;
       if (y * w + x === notesCell) v |= SEL_NOTES;

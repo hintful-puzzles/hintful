@@ -8,9 +8,9 @@
 ### Requirement: The completion flash lights each cell's surface
 
 The completion flash SHALL sweep the board's cells. A lit cell's surface SHALL
-be drawn in the shared flash color, a given's cell as a player's, so the
-highlight reads in both schemes. The cursor's highlight SHALL be hidden while
-the flash plays.
+be filled with the flash color inside its region's walls, a given's cell as a
+player's, and SHALL keep its digit and its notes. The cursor's highlight SHALL
+be hidden while the flash plays.
 
 #### Scenario: The flash moves
 

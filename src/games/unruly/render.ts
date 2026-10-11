@@ -2,7 +2,7 @@
  * Unruly rendering. A per-tile cache keyed on a packed flag word (upstream's
  * `tile` int); error overlays (3-in-a-row bars, the count `!`, unique-match
  * bars) recomputed each frame from the validators; the win flash, which
- * swaps the plain and the lifted surface under each cell it passes.
+ * fills each cell it passes with the flash color, under its piece.
  *
  * The board is pieces on a quiet surface (`engine/piece.ts`): the two states
  * are the collection's two-state pair, a given sits on a lifted cell, and
@@ -15,6 +15,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   surfaceGrid,
@@ -58,7 +59,7 @@ export const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
 /** The surface of a cell, which is all an undecided cell is. */
 export const COL_EMPTY = 2;
-/** The surface under a given, and under any other cell the win flash is on. */
+/** The surface under a given. */
 export const COL_GIVEN = 3;
 export const COL_0 = 4;
 export const COL_1 = 5;
@@ -69,6 +70,8 @@ export const COL_ERROR_TEXT = 8;
 // it, and the cited premise cells ring COL_HINT_REF, distinct from the move.
 export const COL_HINT = 9;
 export const COL_HINT_REF = 10;
+/** The ground of a cell the win flash is on. */
+export const COL_FLASH = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -88,6 +91,7 @@ export function colors(defaultBackground: Color): Color[] {
   // state-derived color is ill-defined. Orange keeps it clear of the blue
   // move and of both pieces.
   out[COL_HINT_REF] = ORANGE;
+  out[COL_FLASH] = FLASH;
   return out;
 }
 
@@ -174,13 +178,12 @@ function drawTile(
   // Grid edge first, so the cell can overwrite it.
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
 
-  // The cell's surface, lifted under a given. The win flash swaps the two
-  // surfaces, so a given, lifted already, shows the highlight as well.
+  // The cell's surface, lifted under a given, and the flash color where the
+  // win flash is.
   const inner = { x: px, y: py, w: ts - 1, h: ts - 1 };
   const value: Cell = tile & FF_ZERO ? ZERO : tile & FF_ONE ? ONE : EMPTY;
-  const given = value !== EMPTY && (tile & FF_IMMUTABLE) !== 0;
-  const lifted = given !== ((tile & FF_FLASH) !== 0);
-  dr.drawRect(inner, lifted ? COL_GIVEN : COL_EMPTY);
+  const lifted = value !== EMPTY && tile & FF_IMMUTABLE;
+  dr.drawRect(inner, tile & FF_FLASH ? COL_FLASH : lifted ? COL_GIVEN : COL_EMPTY);
   // The hatch goes under the piece: it marks the line, and the piece is what
   // the line holds.
   if (tile & FF_HINT_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));

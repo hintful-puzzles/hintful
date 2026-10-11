@@ -57,6 +57,7 @@ import {
   COL_SELECTED,
   COL_TEXT,
   COL_WALL,
+  COL_WALLCURSOR,
   layoutNumbers,
   NCOLORS,
   newDrawState,
@@ -1437,9 +1438,7 @@ describe("crossing rendering", () => {
       ...newUi(),
       cursor: newCursor(open % 5, Math.floor(open / 5), true),
     };
-    // Its own color, NOT the flash's near-white, which the dark-mode pass
-    // inverts, so the one square that should be the most inviting on the board
-    // would come out pure black.
+    // Its own color, and not the win flash's.
     expect(
       paint(selected).ops.filter((o) => o.op === "rect" && o.color === COL_SELECTED)
         .length,
@@ -1454,7 +1453,7 @@ describe("crossing rendering", () => {
       keyedOps.filter((o) => o.op === "rect" && o.color === COL_SELECTED),
     ).toHaveLength(1);
     const brackets = (ops: typeof keyedOps) =>
-      ops.filter((o) => o.op === "line" && o.color === COL_FLASH);
+      ops.filter((o) => o.op === "line" && o.color === COL_WALLCURSOR);
     expect(brackets(keyedOps)).toHaveLength(0);
 
     // On a wall, which only the arrow keys reach, it is the corner brackets: a

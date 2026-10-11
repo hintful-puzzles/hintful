@@ -31,7 +31,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
-import { border, COL_HIGHLIGHT, COL_ISLAND, COL_MARK, newDrawState } from "./render.ts";
+import { border, COL_FLASH, COL_ISLAND, COL_MARK, newDrawState } from "./render.ts";
 import { solveFromScratch } from "./solver.ts";
 import {
   BRIDGES_PRESETS,
@@ -632,11 +632,11 @@ describe("bridges render smoke (tier 2.5)", () => {
       for (const o of ops) {
         if (o.op === "clip")
           tile = o.w === 24 && o.h === 24 ? cell(o.y) * p.w + cell(o.x) : -1;
-        else if (o.op === "circle" && o.fill === COL_HIGHLIGHT)
+        else if (o.op === "circle" && o.fill === COL_FLASH)
           squares.add(cell(o.cy) * p.w + cell(o.cx));
         else if (
           o.op === "rect" &&
-          o.color === COL_HIGHLIGHT &&
+          o.color === COL_FLASH &&
           tile >= 0 &&
           !isIsland(tile)
         )

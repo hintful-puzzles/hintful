@@ -667,7 +667,7 @@ describe("netslide rendering", () => {
       netslideGame.redraw(rec, ds, null, won, 1, newUi(won), 0, flash);
       return rec;
     };
-    /** The tiles a frame draws on the lifted surface, by cell. */
+    /** The tiles whose face a frame fills in the flash color, by cell. */
     const lit = (rec: RecordingDrawing): number[] =>
       rec.ops
         .flatMap((o) => (o.op === "rect" && o.color === COL_FLASHING ? [o] : []))

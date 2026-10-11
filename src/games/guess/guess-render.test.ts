@@ -114,7 +114,7 @@ describe("Guess redraw", () => {
     });
     expect(guessGame.status(won)).toBe("solved");
     const ds = freshDs();
-    /** The pegs and holes whose box is lifted, as `column,row`, the answer the
+    /** The pegs and holes whose box is the flash color, as `column,row`, the answer the
      * row under the last guess. */
     const run = winFlashRun(
       (flash: Flash) => {

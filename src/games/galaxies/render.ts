@@ -59,7 +59,9 @@ export const COL_CELL = 13;
 /** The line round a dot: ink, so a white dot is closed on a light surface and
  * a black one on a dark surface. */
 export const COL_DOT_RIM = 14;
-export const NCOLORS = 15;
+/** The ground of a cell the win flash is on. */
+export const COL_FLASH = 15;
+export const NCOLORS = 16;
 
 // --- DrawState ------------------------------------------------------
 
@@ -133,6 +135,12 @@ const DRAW_CORNER_DL = 1 << 6;
 const DRAW_CORNER_DR = 1 << 7;
 const DRAW_WHITE = 1 << 8;
 const DRAW_BLACK = 1 << 9;
+/** The win flash is on the cell. Both region bits at once, which no region
+ * sets, since the key has no bit to spare. */
+const DRAW_LIT = DRAW_WHITE | DRAW_BLACK;
+/** The fill bits of a cell in a finished region of `color` (1 white, 2 black). */
+const regionFill = (color: number, lit: boolean): number =>
+  lit ? DRAW_LIT : color === 2 ? DRAW_BLACK : DRAW_WHITE;
 const DRAW_ARROW = 1 << 10;
 const DRAW_CURSOR = 1 << 11;
 // Mistake highlight (a wrong association). Bit 30 — above the dot bits
@@ -346,8 +354,14 @@ function drawSquare(
   // once the region is closed and symmetric, the plain surface until then,
   // whatever the cell's arrow says. That is what a hint reasons toward, so no
   // hint role fills; its marks are the stripes here and inset rings, below.
-  const bg =
-    flags & DRAW_WHITE ? COL_WHITEBG : flags & DRAW_BLACK ? COL_BLACKBG : COL_CELL;
+  const lit = (flags & DRAW_LIT) === DRAW_LIT;
+  const bg = lit
+    ? COL_FLASH
+    : flags & DRAW_WHITE
+      ? COL_WHITEBG
+      : flags & DRAW_BLACK
+        ? COL_BLACKBG
+        : COL_CELL;
   dr.drawRect({ x: lx, y: ly, w: tileSize, h: tileSize }, bg);
   if (hint & HINT_REGION_CELL)
     dr.drawHatch(
@@ -358,7 +372,7 @@ function drawSquare(
 
   // Grid lines (top-left only — neighbors will draw their own)
   // Ink inside a black dot's region, whose fill the surface grid sinks into.
-  const gridCol = flags & DRAW_BLACK ? COL_EDGE : COL_GRID;
+  const gridCol = flags & DRAW_BLACK && !lit ? COL_EDGE : COL_GRID;
   dr.drawRect({ x: lx, y: ly, w: 1, h: tileSize }, gridCol);
   dr.drawRect({ x: lx, y: ly, w: tileSize, h: 1 }, gridCol);
 
@@ -787,12 +801,7 @@ export function redraw(
       // Region color.
       const ti = idx(s, gx, gy);
       const sFlags = s.flags[ti];
-      // A cell the win flash is on drops its region's fill to the plain
-      // surface. The lifted surface is a white region's own fill, so lifting
-      // the cell would show nothing on a board of white dots.
-      if (cols?.[cacheI] && !flash.win(sweepStep(x, y))) {
-        flags |= cols[cacheI] === 2 ? DRAW_BLACK : DRAW_WHITE;
-      }
+      if (cols?.[cacheI]) flags |= regionFill(cols[cacheI], flash.win(sweepStep(x, y)));
 
       // Arrow (association indicator), hidden while a drag has lifted it.
       if (sFlags & F_TILE_ASSOC && cols && !cols[cacheI]) {

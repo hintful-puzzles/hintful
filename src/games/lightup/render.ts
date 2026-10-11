@@ -4,8 +4,8 @@
  * the collection's quiet surface. A wall is a solid block (`wallFill`) with its clue
  * (red when provably wrong); an open square is the cell surface, washed yellow
  * when lit; a bulb is a white disc (red when lit by another bulb); the
- * impossible-mark is the ruled-out cross; and the completion flash lifts the
- * lit squares it is on to the lifted surface.
+ * impossible-mark is the ruled-out cross; and the completion flash fills the
+ * open squares it is on with the flash color.
  */
 
 import { BLACK, WHITE, YELLOW_WASH } from "../../engine/color/colors.ts";
@@ -14,7 +14,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
-  givenSurface,
+  FLASH,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_EVIDENCE,
@@ -63,8 +63,7 @@ export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (pi
 /** The player's "no light here" cross. */
 export const COL_RULED_OUT = 11;
 export const COL_CELL = 12; // the surface of an open square no bulb lights
-/** What a lit square turns under the completion flash: a lifted surface,
- * which is a step off the yellow in both schemes. */
+/** The ground of an open square the completion flash is on. */
 export const COL_FLASH = 13;
 /** The line round a bulb. */
 export const COL_BULB_RIM = 14;
@@ -78,7 +77,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_FLASH] = givenSurface(defaultBackground);
+  out[COL_FLASH] = FLASH;
   out[COL_WALL] = wallFill(defaultBackground);
   // Pinned: a bulb *is* white with a black rim, in either scheme, and a clue
   // is that white on its wall.
@@ -198,7 +197,6 @@ function tileRedraw(
   const dsFlags = ds.cache[idx(x, y, state.w)];
   const dx = coord(x, ts);
   const dy = coord(y, ts);
-  const lit = dsFlags & DF_FLASH ? COL_FLASH : COL_LIT;
   // An open square's surface, inside the grid line on its top and left. The
   // lines on its other two sides are its neighbors', or the frame's.
   const box = { x: dx + 1, y: dy + 1, w: ts - 1, h: ts - 1 };
@@ -255,11 +253,13 @@ function tileRedraw(
     // yellow); a *lit* one's premise is the yellow itself, so it keeps its
     // fill and takes a ring instead.
     const fill =
-      dsFlags & DF_HINT_AREA && !(dsFlags & DF_LIT)
-        ? COL_HINT_CELL
-        : dsFlags & DF_LIT
-          ? lit
-          : COL_CELL;
+      dsFlags & DF_FLASH
+        ? COL_FLASH
+        : dsFlags & DF_HINT_AREA && !(dsFlags & DF_LIT)
+          ? COL_HINT_CELL
+          : dsFlags & DF_LIT
+            ? COL_LIT
+            : COL_CELL;
     dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, COL_GRID);
     dr.drawRect(box, fill);
     if (dsFlags & DF_HINT_TARGET) {

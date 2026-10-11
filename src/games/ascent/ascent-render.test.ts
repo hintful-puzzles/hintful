@@ -30,6 +30,7 @@ import { ascentGame } from "./index.ts";
 import {
   COL_ARROW,
   COL_CELL,
+  COL_FLASH,
   COL_GIVEN,
   COL_GRID,
   COL_HINT,
@@ -373,7 +374,7 @@ describe("ascent win flash", () => {
       paint,
       (rects) =>
         rects
-          .filter((o) => o.color === COL_LOWLIGHT)
+          .filter((o) => o.color === COL_FLASH)
           .map((o) => ys.indexOf(o.y) * state.w + xs.indexOf(o.x)),
       60,
     );

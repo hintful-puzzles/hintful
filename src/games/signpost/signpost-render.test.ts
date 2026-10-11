@@ -15,15 +15,11 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import {
-  expectWinFlashTravels,
-  winFlashAt,
-  winFlashRun,
-} from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { signpostGame } from "./index.ts";
-import { BORDER, COL_GIVEN } from "./render.ts";
+import { BORDER, COL_FLASH } from "./render.ts";
 import { solveState } from "./solver.ts";
 import {
   cloneState,
@@ -142,23 +138,14 @@ describe("Signpost win flash", () => {
     }
     return out;
   }
-  const settled = surfaces(NO_FLASH);
-  /** The cells whose surface a frame has swapped. */
-  const swapped = (frame: number[]): number[] =>
-    frame.flatMap((color, i) => (color === settled[i] ? [] : [i]));
+  /** The cells a frame fills in the flash color. */
+  const lit = (frame: number[]): number[] =>
+    frame.flatMap((color, i) => (color === COL_FLASH ? [i] : []));
 
-  it("lights the squares in the order of their numbers", () => {
-    const run = winFlashRun(surfaces, swapped, 60);
+  it("lights the squares in the order of their numbers, givens among them", () => {
+    expect(lit(surfaces(NO_FLASH))).toEqual([]);
+    expect(state.flags.some((f) => f & FLAG_IMMUTABLE)).toBe(true);
+    const run = winFlashRun(surfaces, lit, 60);
     expectWinFlashTravels(run, state.n, (i) => state.nums[i]);
-  });
-
-  it("a lit square swaps surfaces: a given drops, any other lifts", () => {
-    const frame = surfaces(winFlashAt(WIN_FLASH_S / 2, surfaces));
-    expect(swapped(frame).length).toBeGreaterThan(0);
-    for (let i = 0; i < state.n; i++) {
-      const given = (state.flags[i] & FLAG_IMMUTABLE) !== 0;
-      expect(settled[i] === COL_GIVEN).toBe(given);
-      if (swapped(frame).includes(i)) expect(frame[i] === COL_GIVEN).toBe(!given);
-    }
   });
 });

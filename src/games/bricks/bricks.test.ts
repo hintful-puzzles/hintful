@@ -51,7 +51,7 @@ import {
   COL_CLEAR,
   COL_CLEAR_MARK,
   COL_ERROR,
-  COL_GIVEN,
+  COL_FLASH,
   offsets,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
@@ -402,29 +402,26 @@ describe("bricks completion and solve (through a real Midend)", () => {
     expect(bricksGame.status(st)).toBe("ongoing");
     expect(bricksGame.status(done)).toBe("solved");
 
-    // The cells on the lifted surface, as their origins. The flash swaps a
-    // cell's surface, so a lit cell is one that has it where a settled frame
-    // has not, or a clue's that has lost it.
+    // The cells filled in the flash's color, as their origins: a clue's cell
+    // lights like any other.
     const palette = bricksGame.colors([0.9, 0.9, 0.9]);
     const paint = (flash: Flash): string[] => {
       const dr = new RecordingDrawing(palette);
       const ds = bricksGame.newDrawState(done, PREFERRED_TILE_SIZE);
       bricksGame.redraw(dr, ds, null, done, 1, bricksGame.newUi(done), 0, flash);
       return dr.ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_GIVEN ? [`${o.x},${o.y}`] : [],
+        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
       );
     };
-    const clues = new Set(paint(NO_FLASH));
-    const run = winFlashRun(paint, (lifted) => [
-      ...lifted.filter((c) => !clues.has(c)),
-      ...[...clues].filter((c) => !lifted.includes(c)),
-    ]);
+    expect(paint(NO_FLASH)).toEqual([]);
+    const clues = done.grid.filter((c) => !(c & (COL_MASK | F_BOUND))).length;
+    expect(clues).toBeGreaterThan(0);
+    const run = winFlashRun(paint, (lit) => lit);
     // A cell's place in the sweep is its drawn origin's, x less y: the rows
     // are sheared, so it is not the grid's.
-    expect(clues.size).toBeGreaterThan(0);
     expectWinFlashTravels(
       run,
-      cells.length + clues.size,
+      cells.length + clues,
       (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
     );
   });

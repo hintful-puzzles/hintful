@@ -47,6 +47,7 @@ import { subsetsGame } from "./index.ts";
 import {
   COL_CELL,
   COL_ERROR,
+  COL_FLASH,
   COL_GIVEN,
   COL_RULED_OUT,
   newDrawState,
@@ -715,12 +716,8 @@ describe("subsets rendering (tier 2.5)", () => {
     // A settled frame: the player's slots plain, the puzzle's lifted.
     const plain = new Set(slots(paint(NO_FLASH), COL_CELL));
     const given = new Set(slots(paint(NO_FLASH), COL_GIVEN));
-    /** The slots a frame draws on the other surface: a plain one lifted, a
-     * lifted one plain. */
-    const lit = (ops: ReturnType<typeof paint>): string[] => [
-      ...slots(ops, COL_GIVEN).filter((key) => plain.has(key)),
-      ...slots(ops, COL_CELL).filter((key) => given.has(key)),
-    ];
+    /** The slots a frame fills with the flash color. */
+    const lit = (ops: ReturnType<typeof paint>): string[] => slots(ops, COL_FLASH);
     const run = winFlashRun(paint, lit);
     const step = (key: string): number => {
       const [x, y] = key.split(",").map(Number);
@@ -734,7 +731,7 @@ describe("subsets rendering (tier 2.5)", () => {
       expectWinFlashTravels(run, plain.size + given.size, step);
     });
 
-    it("swaps a cell's slots together, and back when the flash leaves", () => {
+    it("fills a cell's slots together, and each has its own surface back after", () => {
       // Every slot of one cell is lit in the same frames: the element is the cell.
       const cellOf = (key: string): string =>
         key

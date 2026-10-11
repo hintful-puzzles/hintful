@@ -1,15 +1,15 @@
 ## ADDED Requirements
 
-### Requirement: The Pegs win flash lifts a playable cell
+### Requirement: The Pegs win flash lights a playable cell
 
 The win flash SHALL sweep the board's playable cells from the bottom left to
-the top right, and a lit cell SHALL be drawn on the lifted surface. A square
+the top right, and a lit cell SHALL be filled with the flash color. A square
 that is off the board SHALL never be lit.
 
 #### Scenario: A lit cell
 
 - **WHEN** the win flash's highlight is on a playable cell
-- **THEN** the cell is the lifted surface, its peg or hole drawn on it as usual
+- **THEN** the cell is the flash color, its peg or hole drawn on it as usual
 
 ## REMOVED Requirements
 

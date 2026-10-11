@@ -36,7 +36,7 @@ import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };
 import { newDesc, slantGenerate } from "./generator.ts";
 import { slantGame } from "./index.ts";
-import { border, COL_ERROR, COL_GIVEN, COL_GROUNDED } from "./render.ts";
+import { border, COL_ERROR, COL_FLASH, COL_GROUNDED } from "./render.ts";
 import { SOLVE_UNIQUE, SolverScratch, slantSolve } from "./solver.ts";
 import {
   computeErrors,
@@ -446,7 +446,7 @@ describe("slant: the win flash", () => {
   /** Where each square painted in the flash color is drawn, as `x,y`. */
   const run = winFlashRun(paint, (dr) =>
     dr.ops.flatMap((o) =>
-      o.op === "rect" && o.color === COL_GIVEN ? [`${o.x},${o.y}`] : [],
+      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
     ),
   );
   /** The sweep's diagonal through a square drawn at `at`. */

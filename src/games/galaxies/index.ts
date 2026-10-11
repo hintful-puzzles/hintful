@@ -10,6 +10,7 @@ import {
   cellSurface,
   DRAG_ADD,
   ERROR,
+  FLASH,
   givenSurface,
   HINT_EVIDENCE,
   INK,
@@ -98,6 +99,7 @@ import {
   COL_DOT_RIM,
   COL_DRAG,
   COL_EDGE,
+  COL_FLASH,
   COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
@@ -1267,6 +1269,7 @@ export const galaxiesGame: Game<
     ret[COL_WHITEDOT] = WHITE;
     ret[COL_BLACKDOT] = BLACK;
     ret[COL_DOT_RIM] = INK;
+    ret[COL_FLASH] = FLASH;
     ret[COL_GRID] = surfaceGrid(bg);
     ret[COL_CELL] = cellSurface(bg);
     ret[COL_EDGE] = INK;

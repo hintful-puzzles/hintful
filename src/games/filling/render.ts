@@ -16,6 +16,7 @@ import {
   CURSOR,
   cellSurface,
   ERROR_WASH,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -57,6 +58,7 @@ export const COL_HINT_CELL = 8; // the deduction's evidence cells — outlined
 export const COL_INK = 9; // a clue's digit, and a region's border
 export const COL_CELL = 10; // the surface of a cell the player fills
 export const COL_GIVEN = 11; // the lifted surface under a clue
+export const COL_FLASH = 12; // the ground of a cell the win flash is on
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -66,6 +68,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_INK] = INK;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
+  out[COL_FLASH] = FLASH;
   out[COL_HIGHLIGHT] = highlightWash(bg);
   out[COL_CORRECT] = REGION_DONE;
   out[COL_ERROR] = ERROR_WASH;
@@ -183,11 +186,9 @@ function drawSquare(
   // paints over the digits it is reasoning about. `HINT_TARGET`/`HINT_AREA`
   // stay in the cache word regardless — they are what makes a cell repaint when
   // the mark leaves it, which is also what erases the mark.
-  // A cell the win flash is on lifts to the surface under a clue, whichever
-  // surface is its own.
   const bg =
     flags & FLASH_BG
-      ? COL_GIVEN
+      ? COL_FLASH
       : flags & HIGH_BG
         ? COL_HIGHLIGHT
         : flags & ERROR_BG

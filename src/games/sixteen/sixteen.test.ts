@@ -28,7 +28,7 @@ import { netslideGame } from "../netslide/index.ts";
 import { COL_LOWLIGHT } from "../netslide/render.ts";
 import { say } from "./hint-text.ts";
 import { executeMove, sixteenGame } from "./index.ts";
-import { COL_ARROW, COL_BACKGROUND, type SixteenHintHighlights } from "./render.ts";
+import { COL_ARROW, COL_FLASH, type SixteenHintHighlights } from "./render.ts";
 import {
   decodeParams,
   defaultParams,
@@ -358,10 +358,10 @@ describe("Sixteen move execution", () => {
 // --- colors ----------------------------------------------------------
 
 describe("Sixteen colors", () => {
-  it("returns 8 colors from the game (the hint, the tile face and the arrows included)", () => {
+  it("returns 9 colors from the game (the hint, the tile face, the arrows and the flash included)", () => {
     const bg: [number, number, number] = [0.9, 0.9, 0.9];
     const palette = sixteenGame.colors(bg);
-    expect(palette).toHaveLength(8);
+    expect(palette).toHaveLength(9);
   });
 
   it("fills a slide arrow as Netslide fills its own, clear of the bevel's swap", () => {
@@ -1393,13 +1393,10 @@ describe("Sixteen: the win flash", () => {
     );
     return dr;
   };
-  /** Where each tile whose face is the board's color, inside its bevel, is
-   * drawn, as `x,y`. */
+  /** Where each tile whose face is the flash color is drawn, as `x,y`. */
   const run = winFlashRun(paint, (dr) =>
     dr.ops.flatMap((o) =>
-      o.op === "rect" && o.color === COL_BACKGROUND && o.w === o.h && o.w < 32
-        ? [`${o.x},${o.y}`]
-        : [],
+      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
     ),
   );
   /** The sweep's diagonal through a square drawn at `at`. */
@@ -1408,7 +1405,7 @@ describe("Sixteen: the win flash", () => {
     return sweepStep(x, y);
   };
 
-  it("drops the face of every tile to the board in turn, from the bottom left to the top right", () => {
+  it("fills the face of every tile in turn, from the bottom left to the top right", () => {
     expectWinFlashTravels(run, state.n, diagonal);
   });
 });

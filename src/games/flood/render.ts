@@ -1,5 +1,5 @@
 import { BLACK, TEN, TEN_NAMES } from "../../engine/color/colors.ts";
-import { givenSurface, surfaceGrid } from "../../engine/color/palette.ts";
+import { FLASH, surfaceGrid } from "../../engine/color/palette.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -36,7 +36,7 @@ const COL_MARK = 1;
 const COL_1 = 2; // COL_1..COL_10 are 2..11
 /** The line between two regions, and the frame round the field. */
 const COL_GRID = 12;
-/** A tile under the win flash's highlight: the lifted surface. */
+/** A tile the win flash is on. */
 export const COL_LIT = 13;
 
 /**
@@ -55,7 +55,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_MARK] = BLACK;
   for (let i = 0; i < 10; i++) out[COL_1 + i] = TEN[i];
   out[COL_GRID] = surfaceGrid(defaultBackground);
-  out[COL_LIT] = givenSurface(defaultBackground);
+  out[COL_LIT] = FLASH;
   return out;
 }
 
@@ -223,13 +223,25 @@ export function redraw(
       grid[p.y * w + p.x] = ncolors;
   }
 
+  // The win flash spreads from the corner the fill starts in. A won board is
+  // one region, so a tile's distance through it is the count of squares
+  // across and down. The lit tiles are a region of their own in the display
+  // grid, so the line between two regions runs round them: on a field won in
+  // the flash's own color, that line is what shows the highlight pass.
+  const lit = ncolors + 1;
+  for (let x = 0; x < w; x++)
+    for (let y = 0; y < h; y++)
+      if (flash.win(Math.abs(x - FILLX) + Math.abs(y - FILLY))) grid[y * w + x] = lit;
+
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const pos = y * w + x;
       let tile =
         grid[pos] === ncolors
           ? (hintColor << COLOR_SHIFT) | SOLNNEXT
-          : grid[pos] << COLOR_SHIFT;
+          : grid[pos] === lit
+            ? (state.grid[pos] << COLOR_SHIFT) | LIT
+            : grid[pos] << COLOR_SHIFT;
       if (x === 0 || grid[pos - 1] !== grid[pos]) tile |= BORDER_L;
       if (x === w - 1 || grid[pos + 1] !== grid[pos]) tile |= BORDER_R;
       if (y === 0 || grid[pos - w] !== grid[pos]) tile |= BORDER_U;
@@ -241,10 +253,6 @@ export function redraw(
         tile |= CORNER_DR;
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) tile |= CURSOR;
       if (blink) tile |= BADFLASH;
-      // The win flash spreads from the corner the fill starts in. A won board
-      // is one region, so a tile's distance through it is the count of
-      // squares across and down.
-      if (flash.win(Math.abs(x - FILLX) + Math.abs(y - FILLY))) tile |= LIT;
 
       if (ds.grid[pos] !== tile) {
         drawTile(dr, ts, x, y, tile);

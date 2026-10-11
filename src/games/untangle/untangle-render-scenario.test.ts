@@ -232,7 +232,8 @@ describe("Untangle: the win flash sweeps the points", () => {
     untangleGame.redraw(dr, ds, null, state, 1, untangleGame.newUi(state), 0, flash);
     return dr.ops;
   };
-  /** The points a frame draws in the flash color, as the `x,y` drawn at. */
+  /** The points a frame draws a disc of the flash color under, as the `x,y`
+   * drawn at. */
   const points = (ops: readonly DrawOp[]): string[] =>
     ops.flatMap((op) =>
       op.op === "circle" && op.fill === COL_FLASH ? [`${op.cx},${op.cy}`] : [],

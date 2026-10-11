@@ -426,34 +426,44 @@ export const HIGHLIGHT_NONE = 0;
 export const HIGHLIGHT_ENTRY = 1;
 /** The highlight is on this cell, and typing enters a note. */
 export const HIGHLIGHT_NOTES = 2;
+/** The win flash is on this cell: `flash.win` said so. It takes the place of
+ * the player's highlight, which a won board has no use for. */
+export const HIGHLIGHT_WIN = 3;
 /** Two bits, so a game packs it into its tile key: the tile must repaint when
  * the highlight arrives, changes mode or leaves, and the key is what says so. */
 export type CellHighlight =
   | typeof HIGHLIGHT_NONE
   | typeof HIGHLIGHT_ENTRY
-  | typeof HIGHLIGHT_NOTES;
+  | typeof HIGHLIGHT_NOTES
+  | typeof HIGHLIGHT_WIN;
 
 /** What the highlight shows on cell `(x, y)` right now. A game that hides it
- * for its own reasons — a completion flash — passes `HIGHLIGHT_NONE` instead. */
+ * for its own reasons passes `HIGHLIGHT_NONE` instead, and one whose win flash
+ * is on the cell passes {@link HIGHLIGHT_WIN}. */
 export function cellHighlight(ui: NoteTakingUi, x: number, y: number): CellHighlight {
   if (!highlightIsOn(ui, x, y)) return HIGHLIGHT_NONE;
   return ui.pencilMode ? HIGHLIGHT_NOTES : HIGHLIGHT_ENTRY;
 }
 
 /** The color a cell's background is filled with: the wash under an entry
- * highlight, the game's own background otherwise. Exported for the game that
- * paints more of the cell than its rect (Towers' 3D faces). */
+ * highlight, the flash color under the win flash, the game's own background
+ * otherwise. `flash` is the palette index the game gave the `FLASH` role.
+ * Exported for the game that paints more of the cell than its rect (Towers'
+ * 3D faces). */
 export function highlightFill(
   highlight: CellHighlight,
   wash: number,
   background: number,
+  flash: number,
 ): number {
+  if (highlight === HIGHLIGHT_WIN) return flash;
   return highlight === HIGHLIGHT_ENTRY ? wash : background;
 }
 
 /**
- * Paint a cell's background with its highlight: `rect` in the wash or in
- * `background`, then, for a note highlight, the corner triangle over it.
+ * Paint a cell's background with its highlight: `rect` in the wash, in the
+ * flash color or in `background`, then, for a note highlight, the corner
+ * triangle over it.
  *
  * The triangle's legs are half of `rect`, from `rect`'s own corner, so a game
  * whose cell reaches into the gutter it shares with a neighbor (Solo's blocks,
@@ -467,8 +477,9 @@ export function drawCellBackground(
   highlight: CellHighlight,
   wash: number,
   background: number,
+  flash: number,
 ): void {
-  dr.drawRect(rect, highlightFill(highlight, wash, background));
+  dr.drawRect(rect, highlightFill(highlight, wash, background, flash));
   if (highlight !== HIGHLIGHT_NOTES) return;
   const { x, y } = rect;
   dr.drawPolygon(

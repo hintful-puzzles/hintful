@@ -236,7 +236,7 @@ describe("magnets render scenarios", () => {
     const state = magnetsGame.executeMove(start, res.move);
     expect(magnetsGame.status(state)).toBe("solved");
     const ts = PREFERRED_TILE_SIZE;
-    /** The squares framed in the flash color, as their indices. */
+    /** The squares whose ground is the flash color, as their indices. */
     const run = winFlashRun(
       (flash: Flash) => {
         const dr = new RecordingDrawing(colors(DEFAULT_BACKGROUND));

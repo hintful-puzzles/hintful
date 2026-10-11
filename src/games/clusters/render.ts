@@ -6,8 +6,7 @@
  * for a rule violation, and a green frame under the keyboard cursor. Rule
  * violations are recomputed every frame from the current grid and shown live
  * (upstream behavior); the in-flight paint drag previews its cells in the
- * drag color. The win flash swaps the surface of the cell it is on: a cell
- * lifts, and a given's lifted cell drops to the plain one.
+ * drag color. The win flash fills the ground of the cell it is on.
  *
  * The geometry is upstream's `NARROW_BORDERS` build, the one its web frontend
  * used: `BORDER = tileSize / 10` — a thin grid margin, not the desktop
@@ -20,6 +19,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_WASH,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -77,6 +77,8 @@ export const COL_CELL = 11;
 export const COL_GIVEN = 12;
 /** The surface under a tile Check & Save found wrong. */
 export const COL_WRONG = 13;
+/** The ground of a cell the win flash is on. */
+export const COL_FLASH = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -93,6 +95,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_1_DOT] = WHITE;
   out[COL_ERROR] = ERROR;
   out[COL_WRONG] = ERROR_WASH;
+  out[COL_FLASH] = FLASH;
   out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   // The chain is outlined rather than washed, so it takes the mark form of the
@@ -221,7 +224,7 @@ function drawTile(
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
   dr.drawRect(
     surface,
-    wrong ? COL_WRONG : lit !== ((tile & F_SINGLE) !== 0) ? COL_GIVEN : COL_CELL,
+    wrong ? COL_WRONG : lit ? COL_FLASH : tile & F_SINGLE ? COL_GIVEN : COL_CELL,
   );
   if (tile & COLMASK) piece(tile, 1);
 

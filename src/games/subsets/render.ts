@@ -12,8 +12,8 @@
  * count (red = duplicated, grayed back = placed once, ink = unplaced), and a
  * set ruled out of the cell in focus struck through in the player's ink. All
  * error verdicts are live (recomputed from the committed state each frame,
- * as upstream). The win flash swaps the plain and the lifted surface under
- * every slot of each cell it passes; there is no move animation.
+ * as upstream). The win flash fills every slot of each cell it passes with
+ * the flash color; there is no move animation.
  *
  * Divergence from the C: the keyboard cursor's corner marks are drawn
  * through the per-cell diff (the cursor slot is part of the cache key)
@@ -30,6 +30,7 @@ import {
   cellSurface,
   clueDoneColor,
   ERROR,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -74,8 +75,7 @@ export const COL_OUTERBG = 0; // the board around and between the cell blocks
 /** The surface of a letter slot in a cell the player fills. */
 export const COL_CELL = 1;
 export const COL_GRID = 2; // the line between two slots of a cell
-/** The lifted slot surface of a cell whose set the puzzle gave, and of every
- * slot of any other cell the win flash is on. */
+/** The lifted slot surface of a cell whose set the puzzle gave. */
 export const COL_GIVEN = 3;
 /** A tally entry placed once, and the idle inspect badge's ring. */
 export const COL_DONE = 4;
@@ -95,6 +95,8 @@ export const COL_HINT_SPOT = 11;
 export const COL_HINT_PLACED = 12;
 /** The cross in a slot whose letter is cleared. */
 export const COL_RULED_OUT = 13;
+/** The ground of every slot of a cell the win flash is on. */
+export const COL_FLASH = 14;
 
 /** Sidecar bit: a cell a spotlit set can still be placed in. */
 const HINT_SPOT = 4;
@@ -123,6 +125,7 @@ export function colors(background: Color): Color[] {
   out[COL_GIVEN] = givenSurface(background);
   out[COL_DONE] = clueDoneColor(background);
   out[COL_RULED_OUT] = RULED_OUT;
+  out[COL_FLASH] = FLASH;
   out[COL_FIXED] = INK;
   out[COL_GUESS] = playerEntryColor(background);
   out[COL_ERROR] = ERROR;
@@ -367,10 +370,11 @@ export function redraw(
           const box = { x: tx, y: ty, w: ts - 1, h: ts - 1 };
 
           // The surface says who decided the cell and never what a slot
-          // holds: a letter, the cross, or nothing yet. The win flash swaps
-          // the two surfaces, so a given cell shows the highlight as well.
-          const given = (state.immutable[i] & bit) !== 0;
-          dr.drawRect(box, given !== lit ? COL_GIVEN : COL_CELL);
+          // holds: a letter, the cross, or nothing yet.
+          dr.drawRect(
+            box,
+            lit ? COL_FLASH : state.immutable[i] & bit ? COL_GIVEN : COL_CELL,
+          );
           // The cell the hint's sentence names, under its letters.
           ds.hint.drawHatch(
             dr,

@@ -52,6 +52,7 @@ import {
   cellHighlight,
   drawCellBackground,
   HIGHLIGHT_NONE,
+  HIGHLIGHT_WIN,
 } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -110,7 +111,7 @@ export const COL_HINT = 10;
 export const COL_HINT_CELL = 11;
 /** The highlight's wash, in both its full-cell and its corner form. */
 export const COL_CURSOR = 12;
-/** A cell the win's highlight is on. */
+/** The ground of a cell the win flash is on. */
 export const COL_FLASH = 13;
 
 export function colors(background: Color): Color[] {
@@ -319,7 +320,14 @@ function drawTile(
     dr.drawRect({ x: tx + ts - 1, y: cy, w: 1, h: sameBelow ? ch + 1 : ch }, COL_GRID);
   if (sameBelow) dr.drawRect({ x: cx, y: ty + ts - 1, w: cw, h: 1 }, COL_GRID);
 
-  drawCellBackground(dr, { x: cx, y: cy, w: cw, h: ch }, highlight, COL_CURSOR, color);
+  drawCellBackground(
+    dr,
+    { x: cx, y: cy, w: cw, h: ch },
+    highlight,
+    COL_CURSOR,
+    color,
+    COL_FLASH,
+  );
   ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
   // A cell whose *diagonal* neighbor is in another region owes that corner the
@@ -427,15 +435,17 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       // The cursor is hidden while the win flash plays.
-      const highlight = flash.winning ? HIGHLIGHT_NONE : cellHighlight(ui, x, y);
-      const lit = flash.win(sweepStep(x, y));
-      const color = lit ? COL_FLASH : state.flags[i] & FM_FIXED ? COL_GIVEN : COL_CELL;
+      const highlight = flash.win(sweepStep(x, y))
+        ? HIGHLIGHT_WIN
+        : flash.winning
+          ? HIGHLIGHT_NONE
+          : cellHighlight(ui, x, y);
+      const color = state.flags[i] & FM_FIXED ? COL_GIVEN : COL_CELL;
 
       const tile =
         state.grid[i] |
         (state.pencil[i] << 4) |
         (state.flags[i] << 13) |
-        (lit ? 1 << 16 : 0) |
         (highlight << 18);
 
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
