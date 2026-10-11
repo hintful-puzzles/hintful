@@ -473,13 +473,16 @@ export function isStuck(state: SamegameState): boolean {
 }
 
 /**
- * Whether the board can never be cleared, by a tile that is the only one of
- * its color: a removal takes two or more of one color, and no tile changes
- * color. Upstream's two generators both deal at least two of every color, so
- * this refuses no board either of them writes. A board with no move at all is
- * not claimed here: upstream's scattered-colors generator can deal one.
+ * Whether the board can never be cleared: it is stuck, or a tile is the only
+ * one of its color, since a removal takes two or more of one color and no
+ * tile changes color. Upstream's soluble generator deals neither. Its
+ * scattered-colors one, which the params here cannot ask for, deals two of
+ * every color and so can deal a board with no move; refusing that one is a
+ * compatibility break the owner accepted (2026-10-11), no input being a move
+ * on it.
  */
 export function hasNoSolution(state: SamegameState): boolean {
+  if (isStuck(state)) return true;
   const count = new Array<number>(state.ncols + 1).fill(0);
   for (const c of state.tiles) count[c]++;
   return count.some((n, c) => c > 0 && n === 1);

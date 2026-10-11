@@ -39,6 +39,23 @@ describe("Same Game midend lifecycle", () => {
     expect(h.statusBar()).toBe("Score: 0");
   });
 
+  it("opens the save of a game played until it is stuck", () => {
+    const h = harness();
+    // row0: 1 1 3 / row1: 2 3 2. Removing the 1s leaves the 3s corner to
+    // corner and the 2s apart: no move.
+    expect(h.m.newGameFromId("3x2c3s2:1,1,3,2,3,2")).toBeNull();
+    h.m.processInput(at(0, 0).x, at(0, 0).y, LEFT_BUTTON);
+    h.m.processInput(at(0, 0).x, at(0, 0).y, LEFT_BUTTON);
+    expect(h.statusBar()).toBe("Cannot move! Score: 0");
+    // Loading refuses a dealt board with no move; this one was dealt a move.
+    const save = h.m.saveGame();
+    const again = harness();
+    expect(again.m.loadGame(save)).toBeNull();
+    expect(again.statusBar()).toBe("Cannot move! Score: 0");
+    again.m.undo();
+    expect(again.statusBar()).toBe("Score: 0");
+  });
+
   it("reports solved when the board is cleared", () => {
     const h = harness();
     h.m.newGameFromId("2x1c3s2:1,1");

@@ -1,11 +1,21 @@
 // Tier-1 logic tests for the Same Game port: params, scoring, desc,
 // gravity/completion, the two-click selection, and move execution.
 import { describe, expect, it } from "vitest";
-import { DESC_OUT_OF_RANGE, validateDesc } from "../../engine/desc-error.ts";
+import {
+  DESC_NO_SOLUTION,
+  DESC_OUT_OF_RANGE,
+  loadVerdict,
+  validateDesc,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
+import {
+  CURSOR_SELECT,
+  CURSOR_SELECT2,
+  LEFT_BUTTON,
+  RIGHT_BUTTON,
+} from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { executeMove, samegameGame } from "./index.ts";
@@ -168,14 +178,48 @@ describe("Same Game gravity + completion", () => {
   it("proves a board with a lone tile of a color can never be cleared", () => {
     expect(hasNoSolution(state3x3("1,1,1,2,2,2,2,2,3"))).toBe(true);
     expect(hasNoSolution(state3x3("1,1,1,2,2,2,2,3,3"))).toBe(false);
-    // Two of every color and no move at all: upstream's scattered-colors
-    // generator can deal this, so it is not refused.
-    expect(hasNoSolution(state3x3("1,2,1,2,3,2,3,1,3"))).toBe(false);
-    expect(check([1, 2, 1, 2, 3, 2, 3, 1, 3], 3, 3).impossible).toBe(true);
     // And a cleared board has no tile left to be alone.
     expect(hasNoSolution({ ...state3x3("1,1,1,2,2,2,2,3,3"), tiles: [0, 0, 0] })).toBe(
       false,
     );
+  });
+
+  it("refuses a board with no move, and opens one with a single move", () => {
+    const verdict = (id: string) => {
+      const [params, desc] = id.split(":") as [string, string];
+      return loadVerdict(samegameGame, decodeParams(params), desc);
+    };
+    // Three of every color, so the lone-tile count passes each of these, and
+    // no two alike touch. In both scoring systems: neither adds a move.
+    expect(verdict("3x3c3s2:1,2,1,2,3,2,3,1,3")).toBe(DESC_NO_SOLUTION);
+    expect(verdict("3x3c3s1:1,2,1,2,3,2,3,1,3")).toBe(DESC_NO_SOLUTION);
+    // The same count of each color with one pair touching: a board with a
+    // move loads, whether or not it can be cleared.
+    expect(verdict("3x3c3s2:1,1,2,2,3,2,3,1,3")).toBeNull();
+  });
+
+  it("makes no move on a board with no move, whatever is pressed", () => {
+    // What the refusal rests on: a removal needs a selection, and a selection
+    // needs two touching tiles of one color.
+    const state = state3x3("1,2,1,2,3,2,3,1,3");
+    const ui = samegameGame.newUi(state);
+    const ds = preferredDrawState(samegameGame, state);
+    for (let pass = 0; pass < 2; pass++)
+      for (let y = 0; y < 3; y++)
+        for (let x = 0; x < 3; x++) {
+          ui.cursor.x = x;
+          ui.cursor.y = y;
+          for (const button of [
+            LEFT_BUTTON,
+            RIGHT_BUTTON,
+            CURSOR_SELECT,
+            CURSOR_SELECT2,
+          ]) {
+            const out = samegameGame.interpretMove(state, ui, ds, at(x, y), button);
+            expect(out === null || out === UI_UPDATE, `${x},${y} ${button}`).toBe(true);
+            expect(ui.nselected).toBe(0);
+          }
+        }
   });
 });
 

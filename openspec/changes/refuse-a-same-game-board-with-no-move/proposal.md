@@ -1,10 +1,9 @@
 # refuse-a-same-game-board-with-no-move
 
-**Status: answered by the owner 2026-10-11, and ready to start. Filed
-2026-10-10 by the session that archived
-`prove-no-solution-cheaply-in-the-games-that-search`. What it says of the code
-was true that day; re-check before relying on it. It has no `tasks.md` yet:
-the session that takes it up writes one.**
+**Status: answered by the owner 2026-10-11, the condition confirmed and the
+board refused the same day (`tasks.md`). Filed 2026-10-10 by the session that
+archived `prove-no-solution-cheaply-in-the-games-that-search`; what the
+sections below say of the code was true that day, before this change.**
 
 ## The owner's answer (2026-10-11)
 
@@ -13,6 +12,12 @@ compatibility break is accepted on that condition, so the session that takes
 this up first confirms the condition in the code and the running app: that on
 such a board no input makes a move at all, in every ruleset the params allow.
 A board on which something can still be done keeps loading.
+
+**The condition holds** (2026-10-11, `tasks.md` § 1). A removal is the only
+move, it is made only from a selection, and a selection is kept only for two
+or more touching tiles of one color. The color count and the scoring system
+are the whole ruleset, and neither gives such a board a move. So the board is
+refused, and a board with even one move loads as before.
 
 ## Why
 
