@@ -62,13 +62,32 @@ export function pieceName(wires: number): string {
   return wires === (R | L) || wires === (U | D) ? "straight" : "corner";
 }
 
-/** The reasons one step rests on, gathered for its sentence. */
-export interface Premises {
-  /** How many wall sides it cites. */
+/** The known sides a tile's turnings are held to. */
+export interface Fit {
+  /** How many wall sides are cited. */
   readonly walls: number;
   readonly notes: readonly SideMark[];
-  /** The locked tiles it cites. */
+  /** The locked tiles cited. */
   readonly locks: readonly Point[];
+}
+
+/** A square beside the step's tile that one turning of the tile would leave
+ * no way to turn: what it would still have to fit besides the tile, and the
+ * loops, through the striped squares, that its ways that fit would close. */
+export interface Stranded extends Fit {
+  readonly at: Point;
+  /** Its wires, which name the piece. */
+  readonly wires: number;
+  /** How many of its ways would close a loop. */
+  readonly loops: number;
+  /** Whether it is beside the tile only across the edge of a wrapping grid. */
+  readonly acrossEdge: boolean;
+}
+
+/** The reasons one step rests on, gathered for its sentence. */
+export interface Premises extends Fit {
+  /** The squares some turning would leave with no way to turn. */
+  readonly stranded: readonly Stranded[];
   /** Whether some turning would close a loop, and whether some would seal a
    * group off, through or around the striped tiles. */
   readonly loop: boolean;
@@ -117,8 +136,8 @@ function joined(parts: readonly (string | Narration)[]): Narration {
   return Narration.join(pieces);
 }
 
-/** "the wall, the outlined notes and locks". */
-function fitted(p: Premises): Narration | null {
+/** "the wall", "the outlined notes and locks": each kind of side cited. */
+function fittedThings(p: Fit): (string | Narration)[] {
   const things: (string | Narration)[] = [];
   if (p.walls > 0) things.push(p.walls > 1 ? "the walls" : "the wall");
   const locks = (n: number) => (n > 1 ? "locks" : "lock");
@@ -131,7 +150,36 @@ function fitted(p: Premises): Narration | null {
     things.push(
       mark.as("outline", CELL, p.locks, (els) => `the outlined ${locks(els.length)}`),
     );
+  return things;
+}
+
+/** "the wall, the outlined notes and locks". */
+function fitted(p: Fit): Narration | null {
+  const things = fittedThings(p);
   return things.length === 0 ? null : joined(things);
+}
+
+const someStriped = (els: readonly Point[]) =>
+  els.length > 1 ? "some of the striped squares" : "the striped square";
+
+/** What a turning that strands the one square beside it would do: "would
+ * leave the outlined T no way to fit it and the wall without closing a loop
+ * through the striped squares". `piece` names the step's own tile where it is
+ * outlined too, so that a neighbor of the same piece is "the other". */
+function stranding(p: Premises, s: Stranded, piece: string | null): Narration {
+  const name = pieceName(s.wires);
+  const square = mark.the(
+    "outline",
+    CELL,
+    [s.at],
+    name,
+    name === piece ? "the other" : "the",
+  );
+  const through =
+    s.loops > 1
+      ? mark.as("stripes", CELL, p.striped, someStriped)
+      : mark.the("stripes", CELL, p.striped, "square");
+  return phrase`would leave ${square}${s.acrossEdge ? " (across the wrapped edge)" : ""} no way to fit ${joined(["it", ...fittedThings(s)])} without closing a loop through ${through}`;
 }
 
 /**
@@ -155,7 +203,7 @@ export interface Which {
  * from the rest"; or, when the group is one its wire only runs into, "would
  * lead only into the striped squares, where its wire must stop however they
  * turn, sealing them off from the rest". */
-function trapped(p: Premises): Narration {
+function trapped(p: Premises, piece: string | null): Narration {
   const wraps = p.acrossEdge
     ? p.striped.length > 1
       ? " (one across the wrapped edge)"
@@ -170,10 +218,20 @@ function trapped(p: Premises): Narration {
         : p.loop
           ? "close a loop through"
           : "seal off";
-    const some = (els: readonly Point[]) =>
-      els.length > 1 ? "some of the striped squares" : "the striped square";
-    return phrase`would ${verb} ${mark.as("stripes", CELL, p.striped, some)}${wraps}`;
+    const striped = mark.as("stripes", CELL, p.striped, someStriped);
+    if (p.stranded.length === 0) return phrase`would ${verb} ${striped}${wraps}`;
+    const left = mark.as(
+      "outline",
+      CELL,
+      p.stranded.map((s) => s.at),
+      (els) => (els.length > 1 ? "one of the outlined squares" : "the outlined square"),
+    );
+    return p.loop || p.seal
+      ? phrase`would ${verb} ${striped}${wraps}, or leave ${left} no way to turn without closing a loop`
+      : phrase`would leave ${left} no way to turn without closing a loop through ${striped}`;
   }
+  const [stranded] = p.stranded;
+  if (stranded) return stranding(p, stranded, piece);
   if (p.seal && !p.loop && p.deadEnds) {
     const n = p.striped.length;
     const all = n + 1;
@@ -196,10 +254,16 @@ function trapped(p: Premises): Narration {
  * The turning that loops or seals comes first ("Lying across, this straight
  * would …"), so it cannot be read as describing the striped squares after it.
  */
-function look(subject: Narration, p: Premises, which: Which): Narration {
+function look(
+  subject: Narration,
+  p: Premises,
+  which: Which,
+  piece: string | null = null,
+): Narration {
   const fit = fitted(p);
-  if (!p.loop && !p.seal) return phrase`${subject} must fit ${fit ?? ""}`;
-  const trap = trapped(p);
+  if (!p.loop && !p.seal && p.stranded.length === 0)
+    return phrase`${subject} must fit ${fit ?? ""}`;
+  const trap = trapped(p, piece);
   if (fit === null) {
     const lead = p.only !== null ? lying(p.only) : `pointing ${which.pointing}`;
     return phrase`${lead}, ${subject} ${trap}`;
@@ -250,20 +314,25 @@ export const say = {
     const subject = mark.the("outline", CELL, [tile], pieceName(wires));
     const where = mark.this("ring", SIDE, [side], "side");
     const d = dirWords(facing);
+    const piece = pieceName(wires);
     return side.note === NOTE_WIRE
       ? so({
-          look: look(subject, p, {
-            pointing: `any way but ${d}`,
-            fitting: `any way that fits but ${d}`,
-          }),
+          look: look(
+            subject,
+            p,
+            { pointing: `any way but ${d}`, fitting: `any way that fits but ${d}` },
+            piece,
+          ),
           follows: phrase`it must point ${d}`,
           move: phrase`note a wire across ${where}`,
         })
       : so({
-          look: look(subject, p, {
-            pointing: d,
-            fitting: `any way that fits and points ${d}`,
-          }),
+          look: look(
+            subject,
+            p,
+            { pointing: d, fitting: `any way that fits and points ${d}` },
+            piece,
+          ),
           follows: phrase`it can never point ${d}`,
           move: phrase`note no wire across ${where}`,
         });

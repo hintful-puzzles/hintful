@@ -91,7 +91,7 @@ import {
   ROTATE_TIME,
   redraw,
 } from "./render.ts";
-import { answerOf, type NetAnswer, solverFinishes } from "./solver.ts";
+import { answerOf, type NetAnswer } from "./solver.ts";
 import {
   computeActive,
   decodeParams,
@@ -116,8 +116,9 @@ import {
 } from "./state.ts";
 
 /* ----------------------------------------------------------------------
- * Presets: upstream's five sizes at both tiers, and one wrapping board. The
- * other sizes wrap, and wrap at Unreasonable, from the Custom dialog.
+ * Presets: upstream's five sizes, at both tiers from 7x7 up, and one wrapping
+ * board. The other sizes wrap, and wrap at Unreasonable, from the Custom
+ * dialog.
  */
 const board = (w: number, h: number, wrapping = false): NetParams => ({
   w,
@@ -784,7 +785,12 @@ export const netGame: Game<
   defaultParams,
   presets: () => ({
     title: "Net",
-    ...presetGrid(netGame.paramConfig ?? [], BOARDS, { variants: VARIANTS }),
+    ...presetGrid(netGame.paramConfig ?? [], BOARDS, {
+      // The hint finishes nearly every 5x5 board the solver stops on, so an
+      // Unreasonable one is too rare to deal (`unreasonableRefusal`).
+      tiers: (b) => (b.w === 5 && b.h === 5 ? [DIFF_EASY, DIFF_EASY] : null),
+      variants: VARIANTS,
+    }),
   }),
   encodeParams,
   decodeParams,
@@ -848,11 +854,12 @@ export const netGame: Game<
 
   solve,
   findMistakes,
-  // Easy is the solver's verdict, and the hint's: what the generator asks of
-  // an Easy board it deals.
+  // Easy is what the hint finishes, whether or not the solver does: a board
+  // it finishes by looking at a tile as turned is one the generator deals at
+  // neither tier, and it needs no trial and error.
   difficulty: searchTierContract<NetParams, NetState>({
     newState,
-    deductionFinishes: (s) => solverFinishes(s) && finishes(s),
+    deductionFinishes: finishes,
     answerOf,
   }),
   hint: (s, _aux, ui) => netHint(s, targetVerbs, ui ?? newUi(s)),
@@ -861,7 +868,7 @@ export const netGame: Game<
     roles: {
       ring: "what the step decides: the square to turn and lock, or the side to note, drawn as the note the step places.",
       outline:
-        "what the step reasons from: the notes and locks a way of turning would contradict, or the square whose every way of turning agrees about the ringed side.",
+        "what the step reasons from: the notes and locks a way of turning would contradict, the square whose every way of turning agrees about the ringed side, or a square beside it that a way of turning would leave with no way to turn.",
       stripes:
         "the squares a way of turning would close a loop through, or seal off from the rest.",
     },

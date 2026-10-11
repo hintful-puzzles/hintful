@@ -73,20 +73,23 @@ The ideas it teaches:
   unless the group is the whole grid: two dead ends facing each other are
   the smallest case. The wire need not be drawn yet. A way of turning
   that leads only into squares where the wire must stop, however they turn
-  without closing a loop, seals them off just the same.
+  without closing a loop, seals them off just the same. Picture the square
+  turned that way while you follow its wire: the squares the wire runs into
+  have to fit it, and a loop through it is still a loop.
+* **No square left stuck.** A way of turning that would leave the square
+  beside it no way to turn cannot be right. Every way the square beside it
+  has either fails to fit, or closes a loop through the squares the hint
+  stripes. The hint looks for this only where nothing simpler is left.
 
 When a square has to turn before it can be locked, the hint turns it and
 then locks it, as one step.
 
-On an Unreasonable board there comes a point where no square is down to
-one way of turning and no side is agreed on by every way left. The hint
-then says that nothing further follows by deduction instead of choosing
-for you. Look first at a square with two ways left, and at the squares
-beside it: often one of the two leaves a neighbor no way to turn at all,
-and on a board without wrapping that settles most of these puzzles. When
-it does not, save your position, lock a square one way and carry on: if it
-was wrong, some square a few steps later has no way left. The hint carries
-on from whatever you lock.
+On an Unreasonable board there comes a point where none of this settles a
+square or a side. The hint then says that nothing further follows by
+deduction instead of choosing for you. Save your position, lock a square
+with two ways left one way, and carry on: if it was wrong, some square a
+few steps later has no way left. The hint carries on from whatever you
+lock.
 
 ## Net parameters
 

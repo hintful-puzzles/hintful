@@ -26,8 +26,14 @@ no middle to put them in:
   which one number at a time does not finish and which need no trial and
   error, are graded Easy when pasted and never dealt. They are the standard
   difficulty of the puzzle (Fill-a-Pix).
-- **Net** has the same choice open
-  (`give-net-the-deduction-its-unreasonable-boards-lack`).
+- **Net** chose as Mosaic did, 2026-10-11 (its archived change,
+  `design.md` D4). Its Easy is upstream's deal, which stops at the first
+  network upstream's solver settles, and its hint now finishes boards that
+  solver stops on, by looking at a square as turned one way. Those are graded
+  Easy when pasted and never dealt. Without wrapping they were most of what
+  Unreasonable dealt: of 150 boards a size, all at 5x5, 102 at 9x9 and 95 at
+  11x13, and 46 and 65 at 7x7 and 11x11 wrapping. Unreasonable is no longer
+  offered at 5x5.
 
 ## What Changes
 
@@ -40,6 +46,11 @@ no middle to put them in:
   2026-10-11, that hiding takes 3 ms a board at 10x10, 32 ms at 15x15 and
   half a second at 25x25, and every board it leaves needs the comparison
   from 15x15 up.
+- Net deals the middle tier from its Unreasonable deal, which passes these
+  boards on its way: a network the solver stops on with one answer, kept
+  where the hint finishes it. Measured 2026-10-11, that is one such network
+  in 1.5 to 3 at 7x7 and up and nearly every one at 5x5, at 20 to 40 ms a
+  network.
 - Crossing's choice is the owner's to turn round or keep.
 
 ## What to settle first
@@ -60,10 +71,12 @@ no middle to put them in:
 
 - `engine-difficulty`: the tiers of a game that searches.
 - `mosaic`: a third tier and what it deals.
+- `net`: a third tier and what it deals.
 
 ## Impact
 
 - `src/engine/answer-search.ts`, the eleven games that take two tiers from
-  it, `src/games/mosaic/solver.ts` and `state.ts`, the params snapshot, and
+  it, `src/games/mosaic/solver.ts` and `state.ts`, `src/games/net/generator.ts`
+  and `state.ts`, the params snapshot, and
   `docs/games/solver-and-generator.md` § "Giving a deductive game an
   Unreasonable tier".

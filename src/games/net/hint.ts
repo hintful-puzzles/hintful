@@ -26,8 +26,14 @@ import {
   U,
   wireCount,
 } from "../../engine/wires.ts";
-import { Facts, nextStep, record, type Step } from "./deduce.ts";
-import { type Premises, type SideMark, say } from "./hint-text.ts";
+import { Facts, nextStep, record, type Side, type Step } from "./deduce.ts";
+import {
+  type Fit,
+  type Premises,
+  type SideMark,
+  type Stranded,
+  say,
+} from "./hint-text.ts";
 import type { NetDrawState } from "./render.ts";
 import {
   LOCKED,
@@ -39,12 +45,18 @@ import {
 
 /** What a step rests on: the hardest reason it cites for ruling a turning
  * out, by `Why`'s kinds. A turn and the lock after it are one firing. */
-export const NET_RUNGS = ["side", "loop", "sealed"] as const;
+export const NET_RUNGS = ["side", "loop", "sealed", "neighbor"] as const;
 export type NetRung = (typeof NET_RUNGS)[number];
 
 function rungOf(step: Step): NetRung {
   const cited = (kind: NetRung) => step.because.some((b) => b.why.kind === kind);
-  return cited("sealed") ? "sealed" : cited("loop") ? "loop" : "side";
+  return cited("neighbor")
+    ? "neighbor"
+    : cited("sealed")
+      ? "sealed"
+      : cited("loop")
+        ? "loop"
+        : "side";
 }
 
 /** What keep-track compares a move against. The marks are the step's words'. */
@@ -66,12 +78,38 @@ const pointOf = (f: Facts, i: number): Point => ({
   y: Math.floor(i / f.w),
 });
 
+/** The known sides some turnings contradict, by where each is known from. */
+class Cited {
+  private readonly walls = new Set<string>();
+  private readonly notes = new Map<string, SideMark>();
+  private readonly locks = new Map<number, Point>();
+
+  constructor(private readonly f: Facts) {}
+
+  cite(s: Side): void {
+    const f = this.f;
+    const src = f.from(s.at, s.dir);
+    const side = sideOf(f, s.at, s.dir, f.get(s.at, s.dir) as SideNote);
+    const key = `${side.x},${side.y},${side.dir}`;
+    if (src.kind === "wall") this.walls.add(key);
+    else if (src.kind === "note") this.notes.set(key, side);
+    else this.locks.set(src.at, pointOf(f, src.at));
+  }
+
+  fit(): Fit {
+    return {
+      walls: this.walls.size,
+      notes: [...this.notes.values()],
+      locks: [...this.locks.values()],
+    };
+  }
+}
+
 /** The reasons `step` cites, as its sentence names them. Read before the step
  * is recorded, so each side's source is the one the board shows now. */
 function premisesOf(f: Facts, step: Step): Premises {
-  const walls = new Set<string>();
-  const notes = new Map<string, SideMark>();
-  const locks = new Map<number, Point>();
+  const own = new Cited(f);
+  const stranded: Stranded[] = [];
   const trapping: number[] = [];
   let loop = false;
   let seal = false;
@@ -81,22 +119,45 @@ function premisesOf(f: Facts, step: Step): Premises {
   const stripe = (t: number) => {
     if (t !== step.at) striped.set(t, pointOf(f, t));
   };
+  // A square across the edge of a wrapping grid from the step's tile.
+  const x = step.at % f.w;
+  const y = Math.floor(step.at / f.w);
+  const overEdge = (t: number) =>
+    f.s.wrapping &&
+    [R, U, L, D].some((d) => {
+      const nx = x + dirX(d);
+      const ny = y + dirY(d);
+      const off = nx < 0 || ny < 0 || nx >= f.w || ny >= f.h;
+      return off && f.neighbor(step.at, d) === t;
+    });
   for (const { wires, why } of step.because) {
     if (why.kind === "side") {
-      for (const s of why.sides) {
-        const src = f.from(s.at, s.dir);
-        const side = sideOf(f, s.at, s.dir, f.get(s.at, s.dir) as SideNote);
-        const key = `${side.x},${side.y},${side.dir}`;
-        if (src.kind === "wall") walls.add(key);
-        else if (src.kind === "note") notes.set(key, side);
-        else locks.set(src.at, pointOf(f, src.at));
-      }
+      for (const s of why.sides) own.cite(s);
       continue;
     }
     trapping.push(wires);
     if (why.kind === "loop") {
       loop = true;
       for (const t of why.path) stripe(t);
+    } else if (why.kind === "neighbor") {
+      // The sides it shares with the step's tile are the sentence's "it".
+      const fit = new Cited(f);
+      let loops = 0;
+      for (const way of why.ways) {
+        if (way.why.kind === "loop") {
+          loops++;
+          for (const t of way.why.path) if (t !== why.at) stripe(t);
+        } else
+          for (const s of way.why.sides)
+            if (f.neighbor(s.at, s.dir) !== step.at) fit.cite(s);
+      }
+      stranded.push({
+        at: pointOf(f, why.at),
+        wires: f.wires[why.at],
+        ...fit.fit(),
+        loops,
+        acrossEdge: overEdge(why.at),
+      });
     } else {
       seal = true;
       if (why.runsOn) runsOn = true;
@@ -104,27 +165,16 @@ function premisesOf(f: Facts, step: Step): Premises {
       for (const t of why.group) stripe(t);
     }
   }
-  // A striped neighbor reached by stepping off one edge and on at the other.
-  const x = step.at % f.w;
-  const y = Math.floor(step.at / f.w);
-  const acrossEdge =
-    f.s.wrapping &&
-    [R, U, L, D].some((d) => {
-      const nx = x + dirX(d);
-      const ny = y + dirY(d);
-      const off = nx < 0 || ny < 0 || nx >= f.w || ny >= f.h;
-      return off && striped.has(f.neighbor(step.at, d));
-    });
   return {
-    walls: walls.size,
-    notes: [...notes.values()],
-    locks: [...locks.values()],
+    ...own.fit(),
+    stranded,
     loop,
     seal,
     striped: [...striped.values()],
     deadEnds:
       striped.size > 0 && [...striped.keys()].every((t) => wireCount(f.wires[t]) === 1),
-    acrossEdge,
+    // A striped neighbor reached by stepping off one edge and on at the other.
+    acrossEdge: [...striped.keys()].some(overEdge),
     runsOn: runsOn || barLoops,
     barLoops,
     only: trapping.length === 1 ? trapping[0] : null,

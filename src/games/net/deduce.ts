@@ -17,7 +17,14 @@
  *   join, which would close a loop;
  * - **sealed**: it closes a group off from the rest of the grid. Each of its
  *   wires runs out after some tiles, whichever way the tiles it passes can
- *   still turn (`Reach`), and together they reach fewer tiles than there are.
+ *   still turn (`Reach`), and together they reach fewer tiles than there are;
+ * - **neighbor**: it leaves a tile beside it no way to turn that fits the
+ *   known sides and closes no loop.
+ *
+ * The first three are read off the recorded facts. Where they decide nothing,
+ * a tile is looked at as turned one way (`ruledOutInPlace`): that is the only
+ * way to see the fourth, and it shows more sealed groups, since the tiles a
+ * wire runs into must then fit this one and close no loop through it.
  *
  * `add-net-hint`'s design measures what these reach. The hint projects this
  * engine one step at a time, simplest first; the generator projects it whole,
@@ -115,6 +122,21 @@ export class Facts {
       if (this.get(i, d) === NOTE_UNKNOWN)
         this.put(i, d, wires & d ? NOTE_WIRE : NOTE_NONE, { kind: "lock", at: i });
   }
+  /** What `look` reads with tile `i` locked showing `wires`. The lock is
+   * taken back after. */
+  assuming<T>(i: number, wires: number, look: () => T): T {
+    const was = this.wires[i];
+    const open = DIRECTIONS.filter((d) => this.get(i, d) === NOTE_UNKNOWN);
+    this.lock(i, wires);
+    const seen = look();
+    for (const d of open) {
+      this.known[i * 16 + d] = NOTE_UNKNOWN;
+      this.known[this.neighbor(i, d) * 16 + opposite(d)] = NOTE_UNKNOWN;
+    }
+    this.locked[i] = 0;
+    this.wires[i] = was;
+    return seen;
+  }
   get done(): boolean {
     return this.locked.every((l) => l === 1);
   }
@@ -127,17 +149,25 @@ function turnings(wires: number): number[] {
   return out;
 }
 
+/** A way of turning contradicts known sides; `sides` are all of them, from
+ * the tile. */
+interface Clash {
+  readonly kind: "side";
+  readonly sides: readonly Side[];
+}
+
+/** A way of turning joins, by its new wires in `dirs`, tiles the known wires
+ * already join; `path` is the known-wire route between them. */
+interface Loop {
+  readonly kind: "loop";
+  readonly dirs: readonly number[];
+  readonly path: readonly number[];
+}
+
 /** Why one way of turning a tile is ruled out. */
 export type Why =
-  /** It contradicts known sides; `sides` are all of them, from the tile. */
-  | { readonly kind: "side"; readonly sides: readonly Side[] }
-  /** Its new wires in `dirs` join tiles the known wires already join; `path`
-   * is the known-wire route between them. */
-  | {
-      readonly kind: "loop";
-      readonly dirs: readonly number[];
-      readonly path: readonly number[];
-    }
+  | Clash
+  | Loop
   /** It would close `group` off from the rest of the grid. `runsOn` when its
    * wires get there through tiles whose turning is still open; `barLoops`
    * when one of those could lead on only by closing a loop. */
@@ -146,6 +176,14 @@ export type Why =
       readonly group: readonly number[];
       readonly runsOn: boolean;
       readonly barLoops: boolean;
+    }
+  /** It leaves tile `at`, beside it, no way to turn: `ways` are all of that
+   * tile's, each with why it cannot be once this one is turned so. A side
+   * the two tiles share is known there only while this one is turned so. */
+  | {
+      readonly kind: "neighbor";
+      readonly at: number;
+      readonly ways: readonly { readonly wires: number; readonly why: Clash | Loop }[];
     };
 
 interface Survey {
@@ -288,42 +326,40 @@ function sealedBy(f: Facts, i: number, wires: number, reach: Reach): Sealed | nu
   return sealed;
 }
 
+/** The known side turning `i` to `w` contradicts, or the loop it closes. */
+function clashOrLoop(f: Facts, i: number, w: number, comps: Dsf): Clash | Loop | null {
+  const clash = DIRECTIONS.filter((d) => {
+    const k = f.get(i, d);
+    return k !== NOTE_UNKNOWN && (k === NOTE_WIRE) !== ((w & d) !== 0);
+  });
+  if (clash.length > 0)
+    return { kind: "side", sides: clash.map((dir) => ({ at: i, dir })) };
+  const joined: { d: number; t: number }[] = [];
+  for (const d of DIRECTIONS) {
+    if (!(w & d) || f.get(i, d) !== NOTE_UNKNOWN) continue;
+    const t = f.neighbor(i, d);
+    const twin = comps.equivalent(t, i)
+      ? { d: 0, t: i }
+      : joined.find((j) => comps.equivalent(j.t, t));
+    if (twin)
+      return {
+        kind: "loop",
+        dirs: twin.d ? [twin.d, d] : [d],
+        path: wiredPath(f, twin.t, t),
+      };
+    joined.push({ d, t });
+  }
+  return null;
+}
+
 /** Every way tile `i` could turn, and why each ruled-out one is. */
 function survey(f: Facts, i: number, comps: Dsf, reach: Reach): Survey {
   const alive: number[] = [];
   const ruledOut: { wires: number; why: Why }[] = [];
   for (const w of turnings(f.wires[i])) {
-    const clash = DIRECTIONS.filter((d) => {
-      const k = f.get(i, d);
-      return k !== NOTE_UNKNOWN && (k === NOTE_WIRE) !== ((w & d) !== 0);
-    });
-    if (clash.length > 0) {
-      ruledOut.push({
-        wires: w,
-        why: { kind: "side", sides: clash.map((dir) => ({ at: i, dir })) },
-      });
-      continue;
-    }
-    const joined: { d: number; t: number }[] = [];
-    let loop: Why | null = null;
-    for (const d of DIRECTIONS) {
-      if (!(w & d) || f.get(i, d) !== NOTE_UNKNOWN) continue;
-      const t = f.neighbor(i, d);
-      const twin = comps.equivalent(t, i)
-        ? { d: 0, t: i }
-        : joined.find((j) => comps.equivalent(j.t, t));
-      if (twin) {
-        loop = {
-          kind: "loop",
-          dirs: twin.d ? [twin.d, d] : [d],
-          path: wiredPath(f, twin.t, t),
-        };
-        break;
-      }
-      joined.push({ d, t });
-    }
-    if (loop) {
-      ruledOut.push({ wires: w, why: loop });
+    const why = clashOrLoop(f, i, w, comps);
+    if (why) {
+      ruledOut.push({ wires: w, why });
       continue;
     }
     const sealed = sealedBy(f, i, w, reach);
@@ -337,13 +373,46 @@ function survey(f: Facts, i: number, comps: Dsf, reach: Reach): Survey {
   return { alive, ruledOut };
 }
 
+/**
+ * Why turning `i` to `wires`, a way that survives the facts as recorded, is
+ * ruled out once the tile is looked at turned so: its own wires then count
+ * among the known ones, for the tiles its wires run into and for the tiles
+ * beside it. It seals a group off, or it leaves a tile beside it no way to
+ * turn that fits the known sides and closes no loop.
+ *
+ * The tile beside it is not asked whether its ways seal a group off. That
+ * would be one tile assumed inside another, which is a search.
+ */
+function ruledOutInPlace(f: Facts, i: number, wires: number): Why | null {
+  return f.assuming(i, wires, () => {
+    const comps = wiredComponents(f);
+    const sealed = sealedBy(f, i, wires, new Reach(f, comps));
+    if (sealed) return { kind: "sealed", ...sealed, group: [...sealed.group] };
+    for (const d of DIRECTIONS) {
+      const j = f.neighbor(i, d);
+      if (j === i || f.locked[j]) continue;
+      const ways: { wires: number; why: Clash | Loop }[] = [];
+      for (const w of turnings(f.wires[j])) {
+        const why = clashOrLoop(f, j, w, comps);
+        if (why === null) break;
+        ways.push({ wires: w, why });
+      }
+      if (ways.length === turnings(f.wires[j]).length)
+        return { kind: "neighbor", at: j, ways };
+    }
+    return null;
+  });
+}
+
 /** How hard a step is to see, by the hardest reason it cites: walls alone,
  * then notes and locks, then a loop, then a sealed group, then one a wire
- * reaches only through tiles still open. */
+ * reaches only through tiles still open, then a tile beside it left with no
+ * way to turn. */
 function difficulty(whys: readonly Why[], f: Facts): number {
   let d = 0;
   for (const why of whys) {
-    if (why.kind === "loop") d = Math.max(d, 2);
+    if (why.kind === "neighbor") d = Math.max(d, 5);
+    else if (why.kind === "loop") d = Math.max(d, 2);
     else if (why.kind === "sealed") d = Math.max(d, why.runsOn || why.barLoops ? 4 : 3);
     else if (why.sides.some((s) => f.from(s.at, s.dir).kind !== "wall"))
       d = Math.max(d, 1);
@@ -386,9 +455,7 @@ export function nextStep(f: Facts): Step | null {
       bestRank = rank;
     }
   };
-  for (let i = 0; i < n; i++) {
-    if (f.locked[i]) continue;
-    const r = survey(f, i, comps, reach);
+  const offer = (i: number, r: Survey) => {
     if (r.alive.length === 1) {
       const because = r.ruledOut;
       consider(
@@ -401,7 +468,7 @@ export function nextStep(f: Facts): Step | null {
           n +
           i,
       );
-      continue;
+      return;
     }
     for (const d of DIRECTIONS) {
       if (f.get(i, d) !== NOTE_UNKNOWN) continue;
@@ -428,6 +495,28 @@ export function nextStep(f: Facts): Step | null {
           i,
       );
     }
+  };
+  const surveys: (Survey | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    surveys.push(f.locked[i] ? null : survey(f, i, comps, reach));
+    const r = surveys[i];
+    if (r) offer(i, r);
+  }
+  // Only where the facts as recorded decide nothing is a tile looked at as
+  // turned, so a board they finish is finished by the same steps.
+  if (best !== null) return best;
+  for (let i = 0; i < n; i++) {
+    const r = surveys[i];
+    if (!r || r.alive.length < 2) continue;
+    const alive: number[] = [];
+    const ruledOut = [...r.ruledOut];
+    for (const w of r.alive) {
+      const why = ruledOutInPlace(f, i, w);
+      if (why) ruledOut.push({ wires: w, why });
+      else alive.push(w);
+    }
+    if (alive.length > 0 && alive.length < r.alive.length)
+      offer(i, { alive, ruledOut });
   }
   return best;
 }

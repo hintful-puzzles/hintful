@@ -11,6 +11,7 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -21,7 +22,7 @@ import { newDesc } from "./generator.ts";
 import type { NetHint, NetRung } from "./hint.ts";
 import { netGame } from "./index.ts";
 import { COL_HINT } from "./render.ts";
-import { netSolver, SOLVER_UNIQUE } from "./solver.ts";
+import { answerOf, netSolver, SOLVER_UNIQUE, solverFinishes } from "./solver.ts";
 import {
   LOCKED,
   type NetMove,
@@ -57,6 +58,13 @@ const W5: NetParams = {
   barrierProbability: 0,
   diff: DIFF_EASY,
 };
+
+/** Two boards the solver stops on and the hint finishes. On the first a T,
+ * turned one way, leaves the straight beside it no way to turn. On the second
+ * no turning does that, and a T is settled by the group it would seal off
+ * once its own wires are counted. */
+const STRANDS = "5x5:81924a3be3be5731bb848cca2";
+const SEALS_IN_PLACE = "5x5:64432a4be63e6364eb7815332";
 
 /** The steps the tests below read, each pinned on a position whose hint opens
  * with one. */
@@ -95,6 +103,14 @@ const pinned = describeHintPins({
     },
     /** Held on 607 of 3618 positions walked. */
     sealed: "5x5w:3325223c386e7a755e354585a",
+    /** Kept by hand, where the step opens the plan. The scan deals no board
+     * like it: the hint finishes this one and the solver does not, so it is
+     * neither an Easy deal nor an Unreasonable one. */
+    neighbor: {
+      id: STRANDS,
+      moves:
+        '[{"type":"lock","x":0,"y":1},{"type":"rotate","op":"A","x":3,"y":4},{"type":"lock","x":3,"y":4},{"type":"note","x":2,"y":0,"dir":8,"note":1},{"type":"note","x":3,"y":1,"dir":1,"note":1},{"type":"note","x":3,"y":2,"dir":1,"note":1},{"type":"note","x":1,"y":3,"dir":8,"note":1},{"type":"lock","x":0,"y":0},{"type":"lock","x":0,"y":2},{"type":"rotate","op":"A","x":0,"y":3},{"type":"lock","x":0,"y":3},{"type":"lock","x":1,"y":3},{"type":"rotate","op":"A","x":0,"y":4},{"type":"lock","x":0,"y":4},{"type":"rotate","op":"C","x":1,"y":4},{"type":"lock","x":1,"y":4},{"type":"rotate","op":"F","x":2,"y":4},{"type":"lock","x":2,"y":4},{"type":"rotate","op":"A","x":4,"y":4},{"type":"lock","x":4,"y":4},{"type":"note","x":1,"y":1,"dir":1,"note":1},{"type":"rotate","op":"A","x":4,"y":0},{"type":"lock","x":4,"y":0},{"type":"rotate","op":"A","x":4,"y":1},{"type":"lock","x":4,"y":1},{"type":"rotate","op":"F","x":4,"y":2},{"type":"lock","x":4,"y":2},{"type":"rotate","op":"C","x":4,"y":3},{"type":"lock","x":4,"y":3}]',
+    },
   },
 });
 
@@ -165,6 +181,62 @@ describe("boards the solver settles", () => {
     expect(
       said.some((t) => t.includes("however they turn without closing a loop")),
     ).toBe(true);
+  });
+});
+
+describe("a square looked at as turned", () => {
+  /** The rungs of the plan on a pasted board, each step checked against the
+   * answer the search finds, and whether the plan finishes the board. */
+  function follow(id: string) {
+    const colon = id.indexOf(":");
+    const p = netGame.decodeParams(id.slice(0, colon));
+    const state = newState(p, id.slice(colon + 1));
+    const answer = answerOf(state);
+    if (answer.kind !== "one") throw new Error(`${id}: no one answer`);
+    const { solution } = answer;
+    let s = state;
+    const rungs = new Set<NetRung>();
+    for (const step of plan(state)) {
+      const m = step.move;
+      if (step.rung) rungs.add(step.rung);
+      if (m.type === "note")
+        expect((solution[m.y * p.w + m.x] & m.dir) !== 0).toBe(m.note === NOTE_WIRE);
+      s = netGame.executeMove(s, m);
+      if (m.type === "lock")
+        expect(s.tiles[m.y * p.w + m.x] & 0xf).toBe(solution[m.y * p.w + m.x]);
+    }
+    return { state, rungs, solved: netGame.status(s) === "solved" };
+  }
+
+  it("rules out a turning that leaves the square beside it no way to turn", () => {
+    const { state, step } = pinned("neighbor");
+    // The T at 1,2, pointing up, down and left, has no wire for the straight
+    // at 2,2 to lie across to; upright, the straight joins 2,1 to 2,3, which
+    // the T then joins already, by way of 1,1 and 1,3.
+    const next = nextStep(new Facts(state));
+    const cited = next?.because.map((b) => b.why).find((w) => w.kind === "neighbor");
+    if (next?.kind !== "lock" || cited?.kind !== "neighbor")
+      throw new Error("the plan does not open with a lock that cites a neighbor");
+    expect([next.at, cited.at]).toEqual([2 * 5 + 1, 2 * 5 + 2]);
+    expect(cited.ways.map((w) => w.why.kind).sort()).toEqual(["loop", "side"]);
+
+    const marks = stepMarks(step);
+    const keys = (points: readonly { x: number; y: number }[]) =>
+      points.map((p) => `${p.x},${p.y}`).sort();
+    expect(keys(marks.of("ring", CELL))).toEqual(["1,2"]);
+    expect(keys(marks.of("outline", CELL))).toContain("2,2");
+    expect(keys(marks.of("stripes", CELL))).toEqual(["1,1", "1,3", "2,1", "2,3"]);
+  });
+
+  it("finishes a board the solver stops on", () => {
+    for (const id of [STRANDS, SEALS_IN_PLACE]) {
+      const { state, rungs, solved } = follow(id);
+      expect(solverFinishes(state), id).toBe(false);
+      expect(solved, id).toBe(true);
+      // The second board has no step of the first's kind, so what finishes
+      // it is the sealed group.
+      expect(rungs.has("neighbor"), id).toBe(id === STRANDS);
+    }
   });
 });
 

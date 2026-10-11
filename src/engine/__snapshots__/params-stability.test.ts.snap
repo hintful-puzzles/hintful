@@ -376,7 +376,6 @@ flip:aggressive  full=10x10h0de  brief=10x10"
 
 exports[`encoded params are byte-stable > net 1`] = `
 "default  full=5x5de  brief=5x5
-preset:Net/5x5 Unreasonable  full=5x5du  brief=5x5
 preset:Net/7x7 Easy  full=7x7de  brief=7x7
 preset:Net/7x7 Unreasonable  full=7x7du  brief=7x7
 preset:Net/9x9 Easy  full=9x9de  brief=9x9
@@ -386,6 +385,7 @@ preset:Net/11x11 Unreasonable  full=11x11du  brief=11x11
 preset:Net/11x13 Easy  full=11x13de  brief=11x13
 preset:Net/11x13 Unreasonable  full=11x13du  brief=11x13
 preset:Net/7x7 wrapping Easy  full=7x7wde  brief=7x7w
+tier:1  full=5x5du  brief=5x5
 bump:w  full=6x5de  brief=6x5
 bump:h  full=5x6de  brief=5x6
 flip:wrapping  full=5x5wde  brief=5x5w

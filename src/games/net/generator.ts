@@ -8,7 +8,8 @@
  *   2. Run the solver + `perturb` until the grid is uniquely solvable
  *      (regenerating from scratch if perturbation stalls). An Unreasonable
  *      board stops this short, at the first grid the solver cannot settle
- *      that a search proves has one answer.
+ *      that a search proves has one answer, and is kept where the hint's
+ *      engine cannot finish it either.
  *   3. Collect the barrier candidates (edges the solution leaves unwired) and
  *      save the solved grid as `aux`.
  *   4. Shuffle: rotate every tile a random amount, reshuffle out of any loop,
@@ -54,7 +55,7 @@ import {
 } from "../../engine/wires.ts";
 import { finishes } from "./deduce.ts";
 import { computeLoops } from "./loops.ts";
-import { netSolver, SOLVER_UNIQUE, searchAnswers, solverFinishes } from "./solver.ts";
+import { netSolver, SOLVER_UNIQUE, searchAnswers } from "./solver.ts";
 import { LOCKED, type NetParams, newState } from "./state.ts";
 
 /**
@@ -88,11 +89,12 @@ function easyBoard(p: NetParams, rs: RandomState): { desc: string; aux: string }
 /**
  * An Unreasonable board: a network caught on its way to an Easy one, where
  * the solver still stops short and the search proves the network is the only
- * answer. Walls can only tell the solver more, so the board is asked again
- * with them, as every candidate is.
+ * answer, kept where the hint stops short as well. Walls can only tell them
+ * more, so the board is asked again with them, as every candidate is.
  *
- * Measured 2026-10-10: a 5×5 board, the rarest on the menu, takes a mean of
- * 860 draws of a network, and a 2×100 board was never dealt.
+ * Measured 2026-10-11: of the networks the solver stops on, the hint stops on
+ * one in 5 at 7×7, one in 2.5 to 3 from 9×9 to 11×13, and one in 96 at 5×5,
+ * where each takes a mean of 860 draws.
  */
 function unreasonableBoard(
   p: NetParams,
@@ -104,7 +106,15 @@ function unreasonableBoard(
       const board = shuffled(p, rs, network(p, rs, true));
       return { ...board, state: newState(p, board.desc) };
     },
-    deduced: ({ state }) => solverFinishes(state),
+    deduced: ({ state }) => {
+      // The hint is asked from where the solver stops, its settled tiles
+      // locked: a tile settled is a true fact, and more facts only ever rule
+      // more out, so a board the hint stops on from there is one it stops on
+      // from the start. From the start it costs the square of the board.
+      const tiles = Uint8Array.from(state.tiles, (t) => t & 0xf);
+      const settled = netSolver(p.w, p.h, tiles, state.barriers, p.wrapping);
+      return settled === SOLVER_UNIQUE || finishes({ ...state, tiles });
+    },
     answer: ({ state }, budget) => searchAnswers(state, budget),
   });
   return { desc, aux };

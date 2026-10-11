@@ -435,11 +435,13 @@ its seal rule followed a wire through tiles not settled yet. Rectangles' left
 20 of 2,260 and now leaves 3, once a line recorded a placement that is ruled
 out; the three need placements ruled out that no line can record. That
 recording also took Rectangles' hint past its solver: it finishes boards the
-solver stops on. So Net's Easy is the solver's verdict and the hint's, and
-Rectangles' is the hint's with one answer proved by the search. A board with
-one answer that the hint does not finish opens as Unreasonable in both: about
-one Rectangles ID in 750 that upstream's generator writes, and no Net ID
-found.
+solver stops on. Net's hint has since gone past its solver as well
+(`give-net-the-deduction-its-unreasonable-boards-lack`). So the Easy of both
+is the hint's verdict, with one answer proved by the search, and Net's Easy
+*deal* is still upstream's: a network its solver settles, kept where the hint
+finishes it. A board with one answer that the hint does not finish opens as
+Unreasonable in both: about one Rectangles ID in 750 that upstream's
+generator writes, and no Net ID found.
 
 **Find the gap by tracing, and size the sample before calling it closed.** Log
 every elimination the solver makes, then ask the hint's engine, at the state
@@ -851,6 +853,40 @@ What Net, the tenth, added:
   long and six wide past 80, where three, five and seven wide deal in
   milliseconds. A sweep of the shorter side that skipped every other width
   would have read one of two wrong bounds.
+
+What Net's fourth reason added
+(`give-net-the-deduction-its-unreasonable-boards-lack`):
+
+- **Take the counted rule apart before wording it.** The count was of "a
+  turning that leaves some tile no way to turn", and its picture was a glance
+  at the tile beside it. Run through the engine and split by why that tile had
+  no way: by its sides alone the rule finished none of 300 boards, since a
+  side every way agrees on is noted first; most of the count was the engine's
+  own sealed-group reason, which had been reading the tiles past a tile
+  without that tile's wires; a part was a loop through the turned tile, which
+  is the glance and became the rung; and the rest was one tile assumed inside
+  another, which is a search and was left. An instrument that asks the whole
+  deduction "does anything break" counts all four as one rule.
+- **A reason that asks "whichever way the others turn" should hold the tile
+  it asks about.** Net's bound on a wire let a tile past it lead on by
+  closing a loop through the very tile being turned. Holding that tile as
+  turned finished 145 of 150 5x5 boards the solver stops on, with no new
+  sentence and no new mark.
+- **Keep the stronger look for where the weaker one is silent.** The held
+  tile is tried only where the recorded facts give no step, so every board
+  the hint finished before is finished by the same steps: no Easy deal moved
+  on 280 seeds, and no snapshot.
+- **A deal that asks the hint asks it from where the solver stopped.** From
+  the opening position the hint's engine costs the square of the board: a
+  30x30 Unreasonable deal went from 0.45 s to 3.3 s and 3x300 was not dealt.
+  With the tiles the solver settled locked first it is 0.6 s. That is sound
+  one way only, the way a deal needs: more facts never rule out less, so a
+  board the hint stops on from there it stops on from the start.
+- **A tier can leave the small boards.** With the two reasons an Unreasonable
+  5x5 is one in 96 of the networks the solver stops on, 2.3 s a deal, and
+  none was dealt under five squares wide without wrapping. The menu offers
+  5x5 at Easy alone and the refusal says too rare, since nothing proves there
+  is none. Wrapping boards kept the tier at every size.
 
 What Range, the eleventh, added:
 

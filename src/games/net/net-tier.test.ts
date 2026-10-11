@@ -1,6 +1,6 @@
 /**
- * Net's two tiers: Easy, which the solver and the hint finish, and
- * Unreasonable, a board with one answer that the solver does not reach.
+ * Net's two tiers: Easy, which the hint finishes, and Unreasonable, a board
+ * with one answer that neither the solver nor the hint reaches.
  *
  * The answer counts here come from {@link countNetworks}, which turns the
  * tiles one at a time in reading order, keeping a turning only where it meets
@@ -14,6 +14,7 @@ import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { DESC_CONTRADICTORY, DESC_NOT_UNIQUE } from "../../engine/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
+import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
@@ -22,6 +23,7 @@ import {
 } from "../../engine/testing/absent-tiers.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
 import { encodeWireDesc, growSpanningTree } from "../../engine/wires.ts";
+import { finishes } from "./deduce.ts";
 import { netGame } from "./index.ts";
 import { answerOf, searchAnswers, solverFinishes } from "./solver.ts";
 import {
@@ -126,8 +128,11 @@ const sized = (
 
 /** A 3x4 wrapping board for each thing a board can be. */
 const WRAP = sized(3, 4, DIFF_EASY, true);
-/** One answer, which the solver stops short of. */
+/** One answer, which the solver stops short of. The hint finishes it, by a
+ * group a square seals off once its own wires are counted. */
 const NEEDS_SEARCH = "8cec738e1432";
+/** One answer, which the solver and the hint both stop short of. */
+const HINT_STOPS = "227c42ec934d";
 /** One answer, which the solver reaches. */
 const SOLVER_FINISHES = "1771e84628b5";
 /** A network as it was first drawn, which other turnings join up as well. */
@@ -252,17 +257,20 @@ describe("net's search for a board's answers", () => {
     for (const [w, h, wrapping, walls] of [
       [3, 4, true, 0],
       [4, 4, true, 0],
-      [4, 4, true, 0.3],
+      [4, 4, true, 0.2],
+      [5, 5, true, 0],
       [5, 5, false, 0],
       [5, 5, false, 0.3],
       [4, 6, false, 0],
     ] as const) {
       for (let seed = 0; seed < 12; seed++) {
         const rng = randomNew(`agree-${w}x${h}-${wrapping}-${walls}-${seed}`);
+        // Without wrapping a board this small is Unreasonable too seldom to
+        // deal, so those are Easy, and the swaps below are what vary them.
         const p = sized(
           w,
           h,
-          seed % 2 === 0 ? DIFF_EASY : DIFF_UNREASONABLE,
+          seed % 2 === 0 || !wrapping ? DIFF_EASY : DIFF_UNREASONABLE,
           wrapping,
           walls,
         );
@@ -383,15 +391,15 @@ describe("an Unreasonable Net board", () => {
   it.each([
     sized(3, 4, DIFF_UNREASONABLE, true),
     sized(4, 4, DIFF_UNREASONABLE, true),
-    sized(5, 5, DIFF_UNREASONABLE),
-    sized(4, 6, DIFF_UNREASONABLE),
-    sized(5, 5, DIFF_UNREASONABLE, false, 0.3),
-    sized(5, 5, DIFF_UNREASONABLE, true, 0.3),
-  ])("%o is dealt with one answer that the solver does not reach", (p) => {
+    sized(5, 6, DIFF_UNREASONABLE),
+    sized(6, 6, DIFF_UNREASONABLE),
+    sized(5, 5, DIFF_UNREASONABLE, true, 0.2),
+  ])("%o is dealt with one answer that the hint does not reach", (p) => {
     for (let seed = 0; seed < 3; seed++) {
       const { desc, aux } = netGame.newDesc(p, randomNew(`unreasonable-${seed}`));
       const state = newState(p, desc);
       expect(solverFinishes(state), desc).toBe(false);
+      expect(finishes(state), desc).toBe(false);
       expect(countNetworks(state), desc).toBe(1);
       // The answer Solve and the mistake check go by is that network, and it
       // is the one the board was drawn as.
@@ -407,9 +415,9 @@ describe("an Unreasonable Net board", () => {
   });
 
   // The smallest boards the generator deals at the tier.
-  describeDealtTiers(netGame, ["3x4wdu", "4x4wdu", "5x5du", "4x6du"]);
-  // The largest preset, and the most walls.
-  describeDealtTiers(netGame, ["11x13du", "11x13b0.3du"], { seldom: true });
+  describeDealtTiers(netGame, ["3x4wdu", "4x4wdu", "6x6du"]);
+  // The smallest without wrapping, the largest preset, and the most walls.
+  describeDealtTiers(netGame, ["5x6du", "11x13du", "11x13b0.2du"], { seldom: true });
 
   /** How many boards of the shape the solver leaves unsettled with exactly
    * one answer, and how many it settles. */
@@ -483,14 +491,27 @@ describe("a pasted Net board", () => {
   };
 
   it("with one answer that needs search opens as Unreasonable, whatever its ID says", () => {
-    expect(load(`3x4w:${NEEDS_SEARCH}`)).toBe("3x4wdu");
-    expect(load(`3x4wde:${NEEDS_SEARCH}`)).toBe("3x4wdu");
-    expect(load(`3x4wdu:${NEEDS_SEARCH}`)).toBe("3x4wdu");
+    expect(load(`3x4w:${HINT_STOPS}`)).toBe("3x4wdu");
+    expect(load(`3x4wde:${HINT_STOPS}`)).toBe("3x4wdu");
+    expect(load(`3x4wdu:${HINT_STOPS}`)).toBe("3x4wdu");
+  });
+
+  it("that the solver stops short of and the hint finishes opens as Easy", () => {
+    expect(load(`3x4w:${NEEDS_SEARCH}`)).toBe("3x4wde");
   });
 
   it("that the solver finishes opens as Easy", () => {
     expect(load(`3x4w:${SOLVER_FINISHES}`)).toBe("3x4wde");
     expect(load(`3x4wde:${SOLVER_FINISHES}`)).toBe("3x4wde");
+  });
+
+  it("that the hint finishes and the solver does not opens as Easy", () => {
+    // Neither tier deals this board: the hint settles a T by the straight
+    // beside it, which one way of turning the T would leave no way to turn.
+    const desc = "81924a3be3be5731bb848cca2";
+    expect(solverFinishes(newState(sized(5, 5, DIFF_EASY), desc))).toBe(false);
+    expect(load(`5x5:${desc}`)).toBe("5x5de");
+    expect(load(`5x5du:${desc}`)).toBe("5x5du");
   });
 
   it("with several answers, or none, is refused", () => {
@@ -506,11 +527,11 @@ describe("a pasted Net board", () => {
 });
 
 describe("the hint on an Unreasonable Net board", () => {
-  it("stops where the solver does, and goes on from a square locked rightly", () => {
+  it("stops where its reasons do, and goes on from a square locked rightly", () => {
     const p = sized(3, 4, DIFF_UNREASONABLE, true);
     const me = new Midend(netGame);
-    expect(me.newGameFromId(`3x4wdu:${NEEDS_SEARCH}`)).toBeNull();
-    let state = newState(p, NEEDS_SEARCH);
+    expect(me.newGameFromId(`3x4wdu:${HINT_STOPS}`)).toBeNull();
+    let state = newState(p, HINT_STOPS);
     const answer = answerOf(state);
     if (answer.kind !== "one") throw new Error("no answer found");
 
@@ -582,11 +603,18 @@ describe("the tier in Net's params", () => {
     expect(netGame.decodeParams("7x9wadu")).toEqual({ ...p, barrierProbability: 0 });
   });
 
-  it("is refused only where no board has it", () => {
-    expect(refusal("5x5du")).toBeNull();
-    expect(refusal("4x4du")).toBeNull();
-    expect(refusal("3x5du")).toBeNull();
-    expect(refusal("2x7du")).toBeNull();
+  it("is refused where no board has it, or too few to deal", () => {
+    const rare = (what: string) => `Unreasonable ${what} are too rare to deal.`;
+    expect(refusal("5x6du")).toBeNull();
+    expect(refusal("7x7du")).toBeNull();
+    expect(refusal("5x5du")).toBe(rare("5x5 puzzles without wrapping"));
+    expect(refusal("5x5de")).toBeNull();
+    expect(refusal("5x5wdu")).toBeNull();
+    const narrow = rare("puzzles without wrapping under 5 squares wide");
+    expect(refusal("4x30du")).toBe(narrow);
+    expect(refusal("3x5du")).toBe(narrow);
+    expect(refusal("2x7du")).toBe(narrow);
+    expect(refusal("4x4wdu")).toBeNull();
     expect(refusal("3x3wdu")).toBeNull();
     expect(refusal("2x6de")).toBeNull();
     expect(refusal("2x6du")).toBe("No 2x6 puzzle without wrapping is Unreasonable.");
@@ -599,7 +627,12 @@ describe("the tier in Net's params", () => {
   it("bounds an Unreasonable board by its area, and a wrapping one by its length", () => {
     const area = /at most 900 squares/;
     expect(refusal("30x30du")).toBeNull();
-    expect(refusal("3x300du")).toBeNull();
+    expect(refusal("7x128du")).toBeNull();
+    expect(refusal("6x40du")).toBeNull();
+    expect(refusal("6x41du")).toMatch(
+      /without wrapping under 7 squares wide must be at most 40 squares long/,
+    );
+    expect(refusal("6x41de")).toBeNull();
     expect(refusal("31x30du")).toMatch(area);
     expect(refusal("31x30de")).toBeNull();
     expect(refusal("10x80wdu")).toBeNull();
@@ -616,10 +649,29 @@ describe("the tier in Net's params", () => {
     expect(paramsError(netGame, sized(40, 40, DIFF_UNREASONABLE), false)).toBeNull();
   });
 
+  it("is on the menu from 7x7 up, and every board on the menu is dealt", () => {
+    const menu = (presetMenu(netGame).submenu ?? []).map((item) =>
+      netGame.encodeParams(item.params as NetParams, true),
+    );
+    expect(menu).toEqual([
+      "5x5de",
+      "7x7de",
+      "7x7du",
+      "9x9de",
+      "9x9du",
+      "11x11de",
+      "11x11du",
+      "11x13de",
+      "11x13du",
+      "7x7wde",
+    ]);
+    for (const id of menu) expect(refusal(id), id).toBeNull();
+  });
+
   it("bounds an Unreasonable board's walls", () => {
-    expect(refusal("5x5b0.3du")).toBeNull();
-    expect(refusal("5x5b0.31du")).toBe(
-      "Unreasonable puzzles with a barrier probability over 0.3 are too rare to deal.",
+    expect(refusal("7x7b0.2du")).toBeNull();
+    expect(refusal("7x7b0.21du")).toBe(
+      "Unreasonable puzzles with a barrier probability over 0.2 are too rare to deal.",
     );
     expect(refusal("5x5b1de")).toBeNull();
   });
