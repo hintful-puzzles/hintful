@@ -93,13 +93,29 @@ it.
   shared layer. The session that fixed the first holds everything the second
   needs, and a fresh session would rebuild it. File a change of its own, after
   the first is archived, and do it without asking.
-- **A bug the work found is filed, unasked, and handed on** (owner,
-  2026-10-09): one a player can meet, where you can say what to do about it.
-  Scaffold its change with its `tasks.md`, after your own is archived, and
-  hand it to a fresh session. The proposal carries what an informed reader
-  needs: the defect seen in the running app, how it is reached, what the fix
-  would touch. A finding you would not spend a session on is not filed; say
-  that you looked.
+- **One game's issue is taken on only under one of four heads** (owner,
+  2026-10-11), and otherwise gets a line in the session's report and nothing
+  more: no fix, no change, no draft.
+  1. The owner asked for it by name.
+  2. It is a significant bug on a typical board: the game crashes, or a
+     player cannot finish or enjoy it. A bug only a pathologically large
+     board reaches does not count for now.
+  3. The game is inconsistent with the engine and with how other games use
+     it, and the change makes it consistent, so that it stops being a
+     per-game concern.
+  4. It is one face of an engine defect or lack, which the engine can mend
+     for many games.
+
+  Ask the third and fourth before deciding a finding is only the game's.
+  Seismic's Mark-all stopping at the fill and Group's refusing a small `m`
+  were first set aside as two improvements to two games. They were one
+  defect, each game reading a letter for a control, and mending it in the
+  engine also found the control typing 22 into a Solo square.
+- **A finding that qualifies is filed, unasked, and handed on** (owner,
+  2026-10-09). Scaffold its change with its `tasks.md`, after your own is
+  archived, and hand it to a fresh session. The proposal carries what an
+  informed reader needs: the defect seen in the running app, how it is
+  reached, what the fix would touch.
 - **Before filing, ask what the engine could do so that no game has the
   finding** (owner, 2026-10-10), and file that. A finding with the same shape
   in two games is one change to the shared layer, never a change a game.
@@ -108,9 +124,12 @@ it.
   grew, nearly all of it in one game at a time. A board dealt already solved
   was found in Rectangles, and the fix was one loop in the engine's deal,
   which mended Netslide unasked.
-- **An improvement to one game that is not a bug is a draft for the owner to
-  pick**: a new deduction, a faster generator, a refusal for a corner of the
-  Custom dialog. It is filed without `tasks.md` (below), or not at all.
+- **An improvement to one game is not filed, as a draft or otherwise**: a
+  new deduction, a faster generator, a refusal for a corner of the Custom
+  dialog. It is a line in the report unless one of the four heads takes it.
+- **What your own change touches is still yours to leave right.** The four
+  heads decide which work is taken on, never how well work in hand is done:
+  a shortfall in the game-facing work of your own change is fixed there.
 - **A change that was filed by a change files nothing of its own kind.** If
   its work finds the same thing again, the finding is the engine's, and the
   session says so to the owner and does not scaffold a third.

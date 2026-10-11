@@ -53,11 +53,16 @@ incident only what a later session acts on: the rule, and the shape to look for.
   anything they asked for by name, and a compatibility break (asked before).
 - **A decision is persisted by a commit, or it did not happen.** Never cite an
   agent-private note to the owner.
-- **A bug your change turned up is yours to file, unasked, and first as the
-  engine's.** Ask what the shared layer could do so that no game has it, and
-  file that: the same finding in two games is one engine change, never one a
-  game. An improvement to one game that is not a bug is a draft for the owner
-  to pick (`docs/work-management.md` § "The backlog is being drained").
+- **One game's issue is not our concern, with four exceptions.** Take it on
+  only when: the owner asked for it by name; it is a significant bug on a
+  typical board, one that crashes a player's game or keeps them from finishing
+  or enjoying it (a bug only a pathologically large board reaches does not
+  count for now); the game is inconsistent with the engine and with how other
+  games use it, and the change makes it consistent, so it stops being a
+  per-game concern; or it is one face of an engine defect or lack, fixed in
+  the engine for many games. Anything else gets a line in your report and is
+  not fixed, filed or drafted. What qualifies is filed first as the engine's
+  (`docs/work-management.md` § "The backlog is being drained").
 - **Bring a question with everything you could find out.** Run the app,
   measure, read the code first. Never report to the owner that you did not
   look at something you could have.
