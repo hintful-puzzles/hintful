@@ -160,12 +160,6 @@ describe("subsets params", () => {
     expect(ids.size).toBe(DIFF_NAMES.length);
   });
 
-  it("rejects an unrecognized difficulty char rather than silently downgrading", () => {
-    expect(paramsError(subsetsGame, decodeParams("4x4n4dz"), true)).toBe(
-      `Difficulty must be one of ${DIFF_NAMES.join(", ")}.`,
-    );
-  });
-
   it("decode is lenient (bare width, missing n)", () => {
     expect(decodeParams("4")).toEqual({ w: 4, h: 4, n: 4, diff: DIFF_EASY });
     expect(decodeParams("5x6")).toEqual({ w: 5, h: 6, n: 4, diff: DIFF_EASY });

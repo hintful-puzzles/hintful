@@ -30,6 +30,7 @@ import {
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 
@@ -194,7 +195,7 @@ export function encodeParams(p: SoloParams, full: boolean): string {
   return str;
 }
 
-/** Faithful to `decode_params` — lenient (eats unknown chars). */
+/** Upstream's `decode_params`: the size, then its flags in any order. */
 export function decodeParams(s: string): SoloParams {
   const ret = defaultParams();
   let i = 0;
@@ -238,14 +239,10 @@ export function decodeParams(s: string): SoloParams {
       if (sc === "r" && sn === 2) ret.symm = SYMM_ROT2;
       if (sc === "a") ret.symm = SYMM_NONE;
     } else if (ch === "d") {
-      i++;
-      const diff = DIFF_CHARS.indexOf(s[i]);
-      if (diff >= 0) {
-        i++;
-        ret.diff = diff;
-      }
+      ret.diff = paramsLetter(s, i + 1, DIFF_CHARS);
+      i += 2;
     } else {
-      i++; // eat unknown character
+      unreadParams(s, i);
     }
   }
   return ret;

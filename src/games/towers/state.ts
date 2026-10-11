@@ -82,8 +82,7 @@ export function validateParams(p: TowersParams, full: boolean): string | null {
   return null;
 }
 
-/** The order, plus the generator-only difficulty letter. An unknown letter
- * leaves the default tier. */
+/** The order, plus the generator-only difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   size(paramConfig, "grid-size"),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),

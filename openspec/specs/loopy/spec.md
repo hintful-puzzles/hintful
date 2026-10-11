@@ -819,9 +819,9 @@ game IDs carry descriptions.
 `encodeParams` SHALL write the width, `x`, the height, `t` and the tiling's
 index in `LOOPY_GRIDS`, then in the full form `d` and the tier's letter: `e`
 Easy, `n` Normal, `t` Tricky, `h` Hard. The short form SHALL leave the tier
-out. `decodeParams` SHALL read a lone size as both sides, and SHALL keep
-Squares where `t` is absent and Easy where `d` is absent or its letter is none
-of the four.
+out. `decodeParams` SHALL read a lone size as both sides, SHALL keep Squares
+where `t` is absent and Easy where `d` is absent, and SHALL refuse a `d` whose
+letter is none of the four.
 
 #### Scenario: The Hats preset
 

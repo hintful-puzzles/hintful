@@ -20,6 +20,7 @@ import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
+import { endParams, paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { newCursor, newDrag } from "../../engine/pointer.ts";
 
@@ -76,9 +77,7 @@ export interface BoatsParams {
   /** `fleetData[k]` = how many boats of size `k + 1` the fleet holds. Always
    * exactly {@link BoatsParams.fleet} entries long. */
   fleetData: number[];
-  /** `DIFF_EASY` … `DIFF_HARD`; `DIFFCOUNT + 1` when a game ID named a
-   * difficulty letter this build doesn't know (rejected by `paramsError`, as
-   * upstream rejects it). */
+  /** `DIFF_EASY` … `DIFF_HARD`. */
   diff: number;
   /** "Remove numbers": hide some border clues to raise the difficulty. */
   strip: boolean;
@@ -152,11 +151,10 @@ export function encodeParams(p: BoatsParams, full: boolean): string {
 }
 
 /**
- * Upstream `decode_params`, read leniently: an unknown difficulty letter sets
- * an out-of-range `diff` that `paramsError` then rejects, rather than
- * throwing here. Fields the string doesn't mention keep their default-params
- * value, matching the C (which decodes onto a `dup_params` of the current
- * params) — except `fleet` and `strip`, which upstream resets unconditionally.
+ * Upstream `decode_params`. Fields the string doesn't mention keep their
+ * default-params value, matching the C (which decodes onto a `dup_params` of
+ * the current params) — except `fleet` and `strip`, which upstream resets
+ * unconditionally.
  */
 export function decodeParams(s: string): BoatsParams {
   const p = defaultParams();
@@ -181,13 +179,8 @@ export function decodeParams(s: string): BoatsParams {
   }
 
   if (s[i] === "d") {
-    i++;
-    p.diff = DIFFCOUNT + 1; // ...which is invalid
-    if (i < s.length) {
-      const found = DIFF_CHARS.indexOf(s[i]);
-      if (found >= 0) p.diff = found;
-      i++;
-    }
+    p.diff = paramsLetter(s, i + 1, DIFF_CHARS);
+    i += 2;
   }
 
   if (s[i] === "S") {
@@ -195,6 +188,10 @@ export function decodeParams(s: string): BoatsParams {
     i++;
   }
 
+  // What is left is the fleet's sizes, each after a comma, or nothing.
+  if (s[i] !== ",") endParams(s, i);
+  for (let j = i; j < s.length; j++)
+    if (s[j] !== "," && !isDigit(s[j])) unreadParams(s, j);
   p.fleetData = s[i] === "," ? decodeFleet(s.slice(i), p.fleet) : defaultFleet(p.fleet);
 
   return p;

@@ -21,6 +21,7 @@ import {
   NO_MOVE_WORTH_MAKING,
 } from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
+import { endParams } from "./params.ts";
 import {
   CURSOR_UP,
   LEFT_BUTTON,
@@ -561,6 +562,20 @@ describe("Midend params + presets", () => {
     expect(m.getParams()).toBe("t5");
     expect(m.setParams("garbage")).toMatch(/can't be read/);
     expect(m.setParams("t0")).toBe("Target must be positive.");
+  });
+
+  it("shows the engine's refusal of a params string as it comes", () => {
+    const m = new Midend({
+      ...fakeGame,
+      decodeParams: (s) => {
+        endParams(s, 2);
+        return fakeGame.decodeParams(s);
+      },
+    });
+    const sentence = 'The parameters t5q have a "q" where this puzzle reads none.';
+    expect(m.setParams("t5q")).toBe(sentence);
+    expect(m.newGameFromId("t5q#1")).toBe(sentence);
+    expect(m.newGameFromId("t5q:x")).toBe(sentence);
   });
 
   it("newGameFromId rebuilds from a descriptive id", () => {

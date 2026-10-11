@@ -56,7 +56,7 @@
 
 import { parseLeadingInt } from "./decimal.ts";
 import type { ParamConfigItem } from "./game.ts";
-import { parseDimensions } from "./params.ts";
+import { endParams, paramsLetter, parseDimensions } from "./params.ts";
 
 /** One piece of an encoded params string. Built by the factories below. */
 export interface ParamsSegment<P> {
@@ -239,22 +239,16 @@ export function letters<P>(
  * A tagged single letter drawn from a table — in practice always a difficulty,
  * `d` + one of `DIFF_CHARS`.
  *
- * **Leniency is upstream's and is preserved exactly.** An unrecognized letter
- * does not throw: it leaves the field at its default, or — when the game passes
- * `invalid` — at an out-of-range value that its own `validateParams` rejects
- * with a real message. Both behaviors exist in the collection today and the
- * difference is deliberate, so it is declared rather than chosen here.
+ * The tag with a letter outside the table, or with nothing after it, is
+ * refused: the string named a choice the game does not have, and no default
+ * is the one its sender meant.
  */
 export function choice<P>(
   config: Config<P>,
   tag: string,
   kw: string,
   chars: string,
-  opts: SegmentOptions & {
-    /** Value to write when the tag is present but the letter is missing or
-     * unrecognized. Omit to leave the default in place. */
-    invalid?: number;
-  } = {},
+  opts: SegmentOptions = {},
 ): ParamsSegment<P> {
   const field = item(config, kw, "choices");
   return {
@@ -264,14 +258,9 @@ export function choice<P>(
     },
     decode: (s, i, p) => {
       if (s[i] !== tag) return i;
-      let next = i + tag.length;
-      if (opts.invalid !== undefined) field.set(p, opts.invalid);
-      if (next < s.length) {
-        const found = chars.indexOf(s[next]);
-        if (found >= 0) field.set(p, found);
-        next++;
-      }
-      return next;
+      const at = i + tag.length;
+      field.set(p, paramsLetter(s, at, chars));
+      return at + 1;
     },
   };
 }
@@ -310,12 +299,25 @@ export function flag<P>(
 }
 
 /**
+ * A bare letter upstream's encoder writes for a setting this app has no field
+ * for: Pearl's `n` and Same Game's `r` each ask for a board nothing has
+ * checked, and every board dealt here is checked. It is read, so a game ID
+ * upstream wrote still opens, and it changes nothing and is never written.
+ */
+export function unusedLetter<P>(letter: string): ParamsSegment<P> {
+  return {
+    encode: () => "",
+    decode: (s, i) => (s[i] === letter ? i + letter.length : i),
+  };
+}
+
+/**
  * Build a game's `encodeParams` / `decodeParams` pair from an ordered segment
  * list.
  *
- * Decoding walks the segments in order, each consuming its piece or declining;
- * anything left over is ignored, which is upstream's leniency and what lets an
- * old or hand-typed game ID still resolve.
+ * Decoding walks the segments in order, each consuming its piece or declining,
+ * and refuses a string with anything left over: a letter no segment reads, or
+ * one written out of the order the segments stand in.
  */
 export function paramsCodec<P>(
   defaults: () => P,
@@ -330,6 +332,7 @@ export function paramsCodec<P>(
       const p = defaults();
       let i = 0;
       for (const seg of segments) i = seg.decode(s, i, p);
+      endParams(s, i);
       return p;
     },
   };

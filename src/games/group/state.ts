@@ -27,6 +27,7 @@ import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-erro
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
+import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
@@ -41,7 +42,6 @@ export const DIFF_NORMAL = 1;
 export const DIFF_HARD = 2;
 export const DIFF_EXTREME = 3;
 export const DIFF_UNREASONABLE = 4;
-const DIFF_COUNT = 5;
 
 /** `group_diffchars` — the per-level encode character. */
 const DIFF_CHARS = "tnhxu";
@@ -135,17 +135,13 @@ export function decodeParams(s: string): GroupParams {
   };
   while (i < s.length) {
     if (s[i] === "d") {
-      i++;
-      p.diff = DIFF_COUNT + 1; // ...which is invalid, until a known char is seen
-      if (i < s.length) {
-        for (let d = 0; d < DIFF_COUNT; d++) if (s[i] === DIFF_CHARS[d]) p.diff = d;
-        i++;
-      }
+      p.diff = paramsLetter(s, i + 1, DIFF_CHARS);
+      i += 2;
     } else if (s[i] === "i") {
       p.id = false;
       i++;
     } else {
-      i++; // unrecognized character
+      unreadParams(s, i);
     }
   }
   return p;

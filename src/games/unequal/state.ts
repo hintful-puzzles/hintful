@@ -22,6 +22,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { endParams, paramsLetter } from "../../engine/params.ts";
 import {
   digitOf,
   type GridCursor,
@@ -165,10 +166,10 @@ export function decodeParams(s: string): UnequalParams {
   }
 
   if (s[i] === "d") {
-    i++;
-    const idx = DIFF_CHARS.indexOf(s[i] ?? "");
-    p.diff = idx >= 0 ? diffFromLevel(idx) : "easy";
+    p.diff = diffFromLevel(paramsLetter(s, i + 1, DIFF_CHARS));
+    i += 2;
   }
+  endParams(s, i);
   return p;
 }
 

@@ -240,8 +240,8 @@ a sentence of the game's own.
 
 Params SHALL encode as `{w}x{h}` followed, in the full form only, by the board
 type as a lowercase word: `cross`, `octagon` or `random`. Decoding SHALL read a
-string with no such word, or with any other text after the size, as a Cross
-board.
+string with nothing after the size as a Cross board, and SHALL refuse any
+other text there.
 
 #### Scenario: The three words
 

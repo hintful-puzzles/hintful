@@ -168,14 +168,10 @@ export function validateParams(p: SpokesParams, full: boolean): string | null {
   return null;
 }
 
-/** `WxH`, plus the generator-only difficulty letter. A missing or unknown
- * letter leaves the difficulty invalid (see `diffFromLevel`). */
+/** `WxH`, plus the generator-only difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
-  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
-    full: true,
-    invalid: DIFFCOUNT,
-  }),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
 // --- boards -----------------------------------------------------------------

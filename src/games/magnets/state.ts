@@ -175,8 +175,7 @@ export const paramConfig: ParamConfigItem<MagnetsParams>[] = [
   },
 ];
 
-/** `WxH`, plus the generator-only difficulty letter and strip-clues flag. An
- * unknown difficulty letter leaves the default. */
+/** `WxH`, plus the generator-only difficulty letter and strip-clues flag. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),

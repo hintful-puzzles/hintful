@@ -147,8 +147,7 @@ export const paramConfig: ParamConfigItem<TentsParams>[] = [
   difficultyItem(DIFF_NAMES, "diff"),
 ];
 
-/** `WxH`, plus the generator-only difficulty letter. An unrecognized letter
- * leaves the default, which is upstream's leniency. */
+/** `WxH`, plus the generator-only difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),

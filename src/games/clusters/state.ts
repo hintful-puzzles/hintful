@@ -25,7 +25,6 @@ export const DIFF_EASY = 0;
 /** Needs the one-level hypothetical: assume a color, follow the forced
  * consequences, and find the contradiction there. */
 export const DIFF_TRICKY = 1;
-const DIFFCOUNT = 2;
 
 export const DIFF_NAMES: readonly string[] = tierNames(2);
 
@@ -123,20 +122,14 @@ export const paramConfig: ParamConfigItem<ClustersParams>[] = [
 ];
 
 /**
- * Lenient, matching upstream `decode_params`: a leading integer is the width
- * (and default height); an `x<int>` overrides the height; an optional
- * `d<char>` selects the tier. A game ID from before the tiers existed has no
- * `d`, so it lands on the default — see `defaultParams`.
- *
- * An unrecognized char leaves the tier out of range so `paramsError`
- * rejects it, rather than silently playing some other difficulty.
+ * A leading integer is the width (and default height); an `x<int>` overrides
+ * the height; an optional `d<char>` selects the tier. A game ID from before
+ * the tiers existed has no `d`, so it lands on the default — see
+ * `defaultParams`.
  */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
-  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
-    full: true,
-    invalid: DIFFCOUNT,
-  }),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
 /**

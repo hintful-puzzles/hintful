@@ -22,7 +22,7 @@ form.
   are encoded in full
 - **THEN** the result is `10x10b20s2d1` and decoding it round-trips the params
 
-### Requirement: Light Up decodes params leniently
+### Requirement: Light Up reads a params string with no symmetry, and the legacy r
 
 Decoding SHALL accept two forms beyond the full encoding. A params string that
 names no symmetry SHALL demote a default of 4-way rotational symmetry to 2-way

@@ -21,7 +21,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
-import { AREA_TOO_LARGE } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, endParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import {
@@ -143,6 +143,7 @@ export function decodeParams(s: string): LightupParams {
     i++;
   }
   if (s[i] === "d") p.difficulty = eatNum(i + 1);
+  endParams(s, i);
   return p;
 }
 

@@ -186,7 +186,7 @@ export const paramConfig: ParamConfigItem<LoopyParams>[] = [
 
 /** `<w>x<h>t<type>`, plus the generator-only `d<diffchar>`. Every part after
  * the width is optional: a missing height copies the width, and a missing type
- * or an unknown difficulty letter keeps its {@link defaultParams} value. The
+ * or difficulty keeps its {@link defaultParams} value. The
  * type is its {@link LOOPY_GRIDS} index, which is the wire format. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),

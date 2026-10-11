@@ -32,6 +32,45 @@ export function parseDimensions(
 }
 
 /**
+ * A params string a game cannot read whole. Its message is the sentence a
+ * player is shown, so the midend passes it on as it comes.
+ */
+export class UnreadableParams extends Error {}
+
+/**
+ * Refuse the params string `s` for the character at `i`, which no piece of the
+ * game's grammar reads there; `i` at the end of the string means a tag was
+ * written with nothing after it.
+ *
+ * A params string is read whole or refused, and this is the one refusal: a
+ * letter read as a default opens a board the sender did not send, under a
+ * label that hides it.
+ */
+export function unreadParams(s: string, i: number): never {
+  throw new UnreadableParams(
+    i < s.length
+      ? `The parameters ${s} have a "${s[i]}" where this puzzle reads none.`
+      : `The parameters ${s} stop where this puzzle reads another character.`,
+  );
+}
+
+/**
+ * The letter a tag asks for, as its index into the tag's `letters`: the
+ * character of `s` at `i`, the one after the tag. A letter the tag does not
+ * list, and a string that ends at the tag, are refused.
+ */
+export function paramsLetter(s: string, i: number, letters: string): number {
+  const found = i < s.length ? letters.indexOf(s[i]) : -1;
+  if (found < 0) unreadParams(s, i);
+  return found;
+}
+
+/** Refuse `s` unless a decoder that has read up to `i` has read all of it. */
+export function endParams(s: string, i: number): void {
+  if (i < s.length) unreadParams(s, i);
+}
+
+/**
  * Parse a custom-params **text field** to an integer with `atoi`
  * semantics: the leading digit run, with an empty or non-numeric field
  * becoming 0. This is the right coercion for a `paramConfig` `set` on a
@@ -50,6 +89,20 @@ export function parseConfigInt(v: string): number {
 export function atof(s: string): number {
   const value = Number.parseFloat(s);
   return Number.isNaN(value) ? 0 : value;
+}
+
+/**
+ * Read the float a `%g` wrote, from `start`: digits, a point, and the exponent
+ * `%g` turns to below 1e-4 (`1e-05`), with {@link atof}'s value and the index
+ * of the first character after it. A reader that stops at the `e` takes
+ * `1e-05` for 1.
+ */
+export function parseLeadingFloat(
+  s: string,
+  start: number,
+): { value: number; next: number } {
+  const run = /^[0-9]*\.?[0-9]*(?:e[+-]?[0-9]+)?/.exec(s.slice(start))?.[0] ?? "";
+  return { value: atof(run), next: start + run.length };
 }
 
 /**

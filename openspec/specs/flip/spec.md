@@ -13,7 +13,7 @@ each press.
 ### Requirement: Flip's params encoding
 
 The params encoding SHALL be the width and height, followed in the full form
-by `c` for Crosses or `r` for Random. Decoding SHALL accept the lenient forms:
+by `c` for Crosses or `r` for Random. Decoding SHALL accept these shorter forms:
 `"5"` is 5×5, `"5x4"` names both dimensions, and the trailing letter is
 optional, a string without one decoding as Crosses.
 

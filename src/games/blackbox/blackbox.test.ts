@@ -292,15 +292,6 @@ describe("Black Box — params", () => {
     expect(decodeParams("w8h8m3M6")).toEqual(p);
   });
 
-  it("ignores unknown letters on decode", () => {
-    expect(decodeParams("w5zzh5m3M3")).toEqual({
-      w: 5,
-      h: 5,
-      minballs: 3,
-      maxballs: 3,
-    });
-  });
-
   it("rejects invalid params", () => {
     const refusal = (p: BlackboxParams) => paramsError(blackboxGame, p, true);
     expect(refusal({ w: 1, h: 5, minballs: 1, maxballs: 1 })).toBe(

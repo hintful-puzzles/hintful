@@ -19,7 +19,6 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyTiers } from "../../engine/difficulty.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import { Midend } from "../../engine/midend.ts";
@@ -138,12 +137,6 @@ describe("params", () => {
     // A bare width is a square board (upstream's `h = w` fallback).
     expect(decodeParams("7")).toEqual({ w: 7, h: 7, diff: DIFF_EASY });
     expect(decodeParams("8x8dn").diff).toBe(DIFF_NORMAL);
-  });
-
-  it("leaves the difficulty out of range for an unknown letter", () => {
-    const unknown = `Difficulty must be one of ${difficultyTiers(romeGame)?.join(", ")}.`;
-    expect(paramsError(romeGame, decodeParams("6x6dq"), true)).toBe(unknown);
-    expect(paramsError(romeGame, decodeParams("6x6d"), true)).toBe(unknown);
   });
 
   it("rejects boards below 3x3, in upstream's order", () => {

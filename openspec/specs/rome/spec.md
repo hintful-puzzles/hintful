@@ -435,8 +435,7 @@ refused.
 ### Requirement: A Rome params string with no difficulty letter is Easy
 
 Decoding a string with no `d` SHALL give Easy. A `d` followed by anything but
-`e`, `n` or `t` SHALL decode to a difficulty out of range, which validation
-refuses in a sentence that names the three difficulties.
+`e`, `n` or `t` SHALL be refused.
 
 #### Scenario: A string with no letter
 
@@ -446,8 +445,8 @@ refuses in a sentence that names the three difficulties.
 #### Scenario: A letter that is no difficulty
 
 - **WHEN** the `n` of `4x4dn` is changed to `z`
-- **THEN** the params are refused with "Difficulty must be one of Easy,
-  Normal, Tricky."
+- **THEN** the params are refused:
+  `The parameters 4x4dz have a "z" where this puzzle reads none.`
 
 ### Requirement: Rome's Enter and Space arm the cursor for one arrow key
 

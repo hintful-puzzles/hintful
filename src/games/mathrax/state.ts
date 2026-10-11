@@ -29,6 +29,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
+import { endParams, paramsLetter } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
 
@@ -213,22 +214,18 @@ export function decodeParams(s: string): MathraxParams {
   p.o = o.value;
   let i = o.next;
   if (s[i] === "d") {
-    i++;
-    // An unrecognized (or missing) letter leaves the difficulty invalid, which
-    // the difficulty item then refuses (`diffLevel`) — faithful to
-    // `decode_params`.
-    const idx = i < s.length ? DIFF_CHARS.indexOf(s[i]) : -1;
-    p.diff = idx >= 0 ? diffFromLevel(idx) : ("invalid" as MathraxDiff);
-    if (i < s.length) i++;
+    p.diff = diffFromLevel(paramsLetter(s, i + 1, DIFF_CHARS));
+    i += 2;
   }
-  // Each letter is tested once, in order — so they must appear in `A S M D E O`
-  // order to all be read (upstream's six sequential `if`s).
+  // Each letter is tested once, in order, so they are read only in `A S M D E
+  // O` order (upstream's six sequential `if`s).
   for (const { bit, letter } of OPTION_LETTERS) {
     if (s[i] === letter) {
       p.options |= bit;
       i++;
     }
   }
+  endParams(s, i);
   if (!p.options) p.options = OPTIONSMASK;
   return p;
 }

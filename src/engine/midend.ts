@@ -48,7 +48,7 @@ import {
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { configNarrowing, onlyError } from "./only.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
-import { paramsError } from "./params.ts";
+import { paramsError, UnreadableParams } from "./params.ts";
 import {
   cancelDrags,
   isMarkAllLetter,
@@ -569,8 +569,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     let params: Params;
     try {
       params = this.game.decodeParams(paramsStr);
-    } catch {
-      return "This game ID starts with parameters this puzzle can't read.";
+    } catch (e) {
+      return e instanceof UnreadableParams
+        ? e.message
+        : "This game ID starts with parameters this puzzle can't read.";
     }
     // `full` means "these params are about to generate a board". A `#seed` id
     // regenerates and so is bound by whatever generation cannot do; a `:desc`
@@ -1757,7 +1759,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     try {
       decoded = this.game.decodeParams(params);
     } catch (e) {
-      return `These parameters can't be read (${(e as Error).message}).`;
+      return e instanceof UnreadableParams
+        ? e.message
+        : `These parameters can't be read (${(e as Error).message}).`;
     }
     const err = paramsError(this.game, decoded, true);
     if (err) return err;

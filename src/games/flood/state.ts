@@ -6,7 +6,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import { parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -86,7 +86,7 @@ export function decodeParams(s: string): FloodParams {
       ret.leniency = r.value;
       i = r.next;
     } else {
-      i++;
+      unreadParams(s, i);
     }
   }
   return ret;

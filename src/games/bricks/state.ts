@@ -61,7 +61,6 @@ export const BRICKS_STEPS: ReadonlyArray<readonly [number, number]> = [
 export const DIFF_EASY = 0;
 export const DIFF_NORMAL = 1;
 export const DIFF_TRICKY = 2;
-const DIFFCOUNT = 3;
 
 /** Difficulty encode chars (upstream `bricks_diffchars`), index = tier. */
 const DIFF_CHARS = "ent";
@@ -223,15 +222,10 @@ export const paramConfig: ParamConfigItem<BricksParams>[] = [
   }),
 ];
 
-/** `WxH`, plus the generator-only difficulty letter. Upstream leaves the
- * difficulty out of range when the letter is absent or unrecognized, so
- * `paramsError` rejects the id rather than quietly playing another tier. */
+/** `WxH`, plus the generator-only difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
-  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
-    full: true,
-    invalid: DIFFCOUNT + 1,
-  }),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
 export function validateParams(p: BricksParams, full: boolean): string | null {

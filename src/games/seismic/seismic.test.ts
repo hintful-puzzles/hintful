@@ -180,12 +180,6 @@ describe("seismic params", () => {
     });
   });
 
-  it("rejects an unknown difficulty letter rather than defaulting it", () => {
-    expect(paramsError(seismicGame, decodeParams("6x6dq"), true)).toBe(
-      `Difficulty must be one of ${DIFF_NAMES.join(", ")}.`,
-    );
-  });
-
   it("rejects boards below the minimum size", () => {
     expect(
       paramsError(

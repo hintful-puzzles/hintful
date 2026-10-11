@@ -27,8 +27,8 @@ when full (`c` = `e` for Easy, `k` for Normal) and `{w}x{h}` otherwise.
 
 Params SHALL be refused unless `w ≥ 2`, `h ≥ 2` and both are `≤ 61`: 61 is the
 largest number the desc alphabet writes, and a cell holds a number up to
-`max(w, h)`. A difficulty letter the encoding does not know SHALL decode as
-the default tier and SHALL NOT be refused.
+`max(w, h)`. A difficulty letter the encoding does not know SHALL be
+refused.
 
 #### Scenario: Invalid params are rejected
 

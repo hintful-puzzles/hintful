@@ -21,11 +21,11 @@ Normal, Tricky, Unreasonable), encoded `{w}x{h}n{n}` with a full-form
 - **WHEN** params `{ w: 20, h: 15, n: 30, diff: Normal }` are encoded in full
 - **THEN** the result is `20x15n30dn` and decoding it round-trips the params
 
-### Requirement: Map decodes params leniently
+### Requirement: Map reads a params string with its height, region count or difficulty left out
 
-`decodeParams` SHALL be lenient: an omitted `xH` defaults height to width, an
-omitted `nN` defaults `n` to `w*h/8`, a `.` in the region count is tolerated
-(truncated), and an unknown difficulty char is ignored.
+`decodeParams` SHALL default an omitted `xH` to the width and an omitted `nN`
+to `w*h/8`, SHALL read a `.` and the digits after it in the region count and
+drop them, and SHALL refuse a difficulty char that is none of the four.
 
 #### Scenario: Lenient decode
 

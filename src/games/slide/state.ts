@@ -39,7 +39,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { PresetMenu } from "../../engine/game.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import { endParams, parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -109,11 +109,16 @@ export function decodeParams(s: string): SlideParams {
   const { w, h, next } = parseDimensions(s);
   p.w = w;
   p.h = h;
-  if (s[next] === "m") {
-    p.maxmoves = parseLeadingInt(s, next + 1).value;
-  } else if (s[next] === "u") {
+  let i = next;
+  if (s[i] === "m") {
+    const limit = parseLeadingInt(s, i + 1);
+    p.maxmoves = limit.value;
+    i = limit.next;
+  } else if (s[i] === "u") {
     p.maxmoves = -1;
+    i++;
   }
+  endParams(s, i);
   return p;
 }
 

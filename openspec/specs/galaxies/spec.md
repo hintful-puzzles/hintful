@@ -11,7 +11,7 @@ and `engine-hints`, and is not restated here.
 
 ## Requirements
 
-### Requirement: Galaxies parameter strings decode leniently and round-trip
+### Requirement: Galaxies parameter strings round-trip, and a bare size is a square board
 
 Galaxies' parameters SHALL be a width, a height, and a difficulty of `Easy` or
 `Unreasonable`. Parameter decoding SHALL accept a bare size as a square board

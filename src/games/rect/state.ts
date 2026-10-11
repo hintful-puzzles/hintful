@@ -19,11 +19,16 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tooRareToDeal } from "../../engine/difficulty.ts";
-import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
+import {
+  AREA_TOO_LARGE,
+  endParams,
+  formatG,
+  parseLeadingFloat,
+} from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 
 export interface RectParams {
@@ -146,16 +151,15 @@ export function decodeParams(s: string): RectParams {
     i = h.next;
   }
   if (s[i] === "e") {
-    i++;
-    const start = i;
-    while (i < s.length && (s[i] === "." || isDigit(s[i]))) i++;
+    const factor = parseLeadingFloat(s, i + 1);
     // Stored as a C `float`, so round to single precision.
-    p.expandfactor = Math.fround(atof(s.slice(start, i)));
+    p.expandfactor = Math.fround(factor.value);
+    i = factor.next;
   }
   // Upstream's trailing `a` asks for a board with no promised single answer.
   // Every board dealt here has one, so the letter is read past.
   if (s[i] === "a") i++;
-  tierSegment.decode(s, i, p);
+  endParams(s, tierSegment.decode(s, i, p));
   return p;
 }
 

@@ -6,7 +6,7 @@ import {
   dimensionParamConfig,
   numberItem,
 } from "../../engine/params.ts";
-import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
+import { dims, num, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -97,7 +97,7 @@ export const paramConfig: ParamConfigItem<SamegameParams>[] = [
 /** Upstream's `W[xH][cN][sS][r]`. The scoring system is written as `scoresub`
  * itself, not as its choice index. Upstream's `r` asks for colors scattered at
  * random, with no promise the grid can be cleared; every board dealt here can
- * be, so the codec leaves the letter unread. */
+ * be, so the letter is read and sets nothing. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   num(paramConfig, "c", "no-of-colors"),
@@ -107,6 +107,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
       p.scoresub = v;
     },
   }),
+  unusedLetter("r"),
 ]);
 
 export function validateParams(p: SamegameParams, _full: boolean): string | null {

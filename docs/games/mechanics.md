@@ -138,8 +138,22 @@ downgrade to a plain `Array` to get one; just don't write to it. Exemplar:
 `encodeParams(p, full)` / `decodeParams(s)` / `validateParams(p, full)` are the
 game-ID surface: `params:desc` and `params#seed` ids are built from them, so an
 encoding is **frozen into shared ids** — changing one changes which boards
-every existing link names. Decode leniently (garbage in a param string is user
-input), validate with a human-readable reason (`null` = valid).
+every existing link names. Validate with a human-readable reason (`null` =
+valid).
+
+**A params string is read whole or refused** (`engine-params`, "A params
+string is read whole or refused"). A piece left out takes its default; a
+letter the game does not read where it stands is never a default and never
+passed over, because either opens a board the sender did not send under a
+label that hides it. The refusal is the engine's, from
+[`engine/params.ts`](../../src/engine/params.ts), and `decodeParams` throws
+it: `paramsLetter(s, i, letters)` for the letter after a tag, `unreadParams(s,
+i)` in the last arm of a scanning loop, `endParams(s, i)` before a decoder
+that reads in order returns. A declared codec does all three by itself.
+**A letter upstream's encoder writes for a setting we have no field for is
+read by name**, by `unusedLetter` or an arm of its own, and
+`params-read-whole.test.ts` records upstream's strings per game: add a new
+port's there from its `encode_params`.
 
 **Declare the codec, don't write it twice.** Both halves are derived from one
 ordered segment list in
@@ -155,14 +169,13 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 ```
 
-Six segment kinds cover the grammar the collection actually uses: `dims`
+The segment kinds cover the grammar the collection actually uses: `dims`
 (`WxH`, with upstream's square fallback), `size` (one untagged leading
 integer, for square-board games), `num` (`n12`), `letters` (one bare, untagged
 letter per choice, where a choice may write nothing), `choice` (`d` + a letter
-from a table), and `flag` (a bare boolean letter). `full: true` marks a
-generator-only field the brief encoding omits; `invalid` declares the
-out-of-range value an unrecognized difficulty letter should leave behind;
-`means: false` says the letter is written when the field is *off*; `omitWhen`
+from a table), `flag` (a bare boolean letter), and `unusedLetter` (a letter
+upstream writes that sets nothing here). `full: true` marks a
+generator-only field the brief encoding omits; `means: false` says the letter is written when the field is *off*; `omitWhen`
 and `whenAbsent` cover a field written only when non-zero and a default
 computed from other params.
 

@@ -374,8 +374,7 @@ the tier below it.
 `encodeParams` SHALL write `{w}x{h}` and, in the full form only, `d` and `e`
 for Easy, `t` for Normal or `h` for `Unreasonable`. `decodeParams` SHALL read
 a bare number as a square board and a string with no `d` as Easy. A `d`
-followed by any other letter, or by nothing, SHALL name no tier, and such
-params SHALL be refused.
+followed by any other letter, or by nothing, SHALL be refused.
 
 #### Scenario: A Normal preset and its short form
 
@@ -386,8 +385,8 @@ params SHALL be refused.
 #### Scenario: A letter that names no tier
 
 - **WHEN** `4x4dt` is entered with its `t` written `z`
-- **THEN** the params are refused with "Difficulty must be one of Easy,
-  Normal, Unreasonable."
+- **THEN** the params are refused:
+  `The parameters 4x4dz have a "z" where this puzzle reads none.`
 
 ### Requirement: An X hole also blocks the diagonals that pass its corners
 

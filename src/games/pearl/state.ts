@@ -16,7 +16,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
+import { choice, dims, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 
@@ -123,12 +123,13 @@ export const paramConfig: ParamConfigItem<PearlParams>[] = [
 /** `WxH`, then the generator-only difficulty letter. A string without a
  * difficulty letter is Easy, as upstream reads it, rather than the default
  * preset's tier. Upstream's trailing `n` asks for a board nothing has checked;
- * every board dealt here is checked, so the codec leaves the letter unread. */
+ * every board dealt here is checked, so the letter is read and sets nothing. */
 export const { encodeParams, decodeParams } = paramsCodec(
   () => ({ ...defaultParams(), difficulty: DIFF_EASY }),
   [
     dims(paramConfig),
     choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
+    unusedLetter("n"),
   ],
 );
 

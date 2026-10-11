@@ -13,9 +13,9 @@ the status bar's words, and how the board is drawn.
 ### Requirement: Same Game's params are a size, a color count and a scoring system
 
 Params SHALL be `w`, `h`, `ncols` and `scoresub` (1 or 2), encoded
-`{w}x{h}c{ncols}s{scoresub}` with lenient decode. Decoding SHALL leave a
-trailing `r` unread, the letter that asks for colors scattered at random with
-no promise the grid can be cleared, and encoding SHALL never write it.
+`{w}x{h}c{ncols}s{scoresub}`. Decoding SHALL read a trailing `r`, the letter
+that asks for colors scattered at random with no promise the grid can be
+cleared, and SHALL change nothing for it; encoding SHALL never write it.
 
 #### Scenario: Params round-trip and lenient decode
 

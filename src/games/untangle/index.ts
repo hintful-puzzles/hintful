@@ -40,7 +40,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { numberItem } from "../../engine/params.ts";
+import { endParams, numberItem } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -175,9 +175,13 @@ export const untangleGame: Game<
     submenu: [6, 10, 15, 20, 25].map((n) => ({ params: { n } })),
   }),
   encodeParams: (p) => `${p.n}`,
-  // Lenient, as every game's is: a string with no number reads as 0, and the
-  // bounds refuse it in the dialog's words rather than a thrown message's.
-  decodeParams: (s) => ({ n: parseLeadingInt(s, 0).value }),
+  // A string with no number reads as 0, and the bounds refuse it in the
+  // dialog's words.
+  decodeParams: (s) => {
+    const points = parseLeadingInt(s, 0);
+    endParams(s, points.next);
+    return { n: points.value };
+  },
 
   // --- generation ----------------------------------------------------
   newDesc: newUntangleDesc,

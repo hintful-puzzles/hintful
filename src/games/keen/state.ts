@@ -27,6 +27,7 @@ import {
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 
@@ -125,13 +126,14 @@ export function decodeParams(s: string): KeenParams {
   let i = size.next;
   if (i > 0) p.w = size.value;
   if (s[i] === "d") {
-    const level = DIFF_CHARS.indexOf(s[++i] ?? "");
-    if (level >= 0) {
-      p.diff = diffFromLevel(level);
-      i++;
-    }
+    p.diff = diffFromLevel(paramsLetter(s, i + 1, DIFF_CHARS));
+    i += 2;
   }
-  if (s[i] === "m") p.multiplicationOnly = true;
+  if (s[i] === "m") {
+    p.multiplicationOnly = true;
+    i++;
+  }
+  endParams(s, i);
   return p;
 }
 

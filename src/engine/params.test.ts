@@ -6,6 +6,7 @@ import {
   formatG,
   paramsError,
   parseDimensions,
+  parseLeadingFloat,
 } from "./params.ts";
 
 describe("parseDimensions", () => {
@@ -27,6 +28,19 @@ describe("parseDimensions", () => {
   it("honors a non-zero start offset", () => {
     // e.g. a game that consumed a leading kind-letter first.
     expect(parseDimensions("c3x3", 1)).toEqual({ w: 3, h: 3, next: 4 });
+  });
+});
+
+describe("parseLeadingFloat", () => {
+  it.each([
+    ["b0.25m3", 1, 0.25, 5],
+    ["b1e-05m5", 1, 0.00001, 6],
+    ["b1e+06", 1, 1000000, 6],
+    // An `e` with no digits after it is the next piece's letter.
+    ["7x7e1e", 4, 1, 5],
+    ["bw", 1, 0, 1],
+  ])("%s from %i", (s, start, value, next) => {
+    expect(parseLeadingFloat(s, start)).toEqual({ value, next });
   });
 });
 

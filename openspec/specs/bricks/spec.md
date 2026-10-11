@@ -397,8 +397,8 @@ counts nothing, drawn as `?`.
 
 The full encoding SHALL be `WxH` then `d` and the difficulty letter, and the
 shared encoding `WxH` alone. `decodeParams` SHALL read a string with no `d` as
-Easy, and one whose letter after `d` is none of the three as a difficulty the
-engine refuses whether or not a description comes with it.
+Easy, and SHALL refuse one whose letter after `d` is none of the three,
+whether or not a description comes with it.
 
 #### Scenario: The Unreasonable preset
 

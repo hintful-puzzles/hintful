@@ -170,12 +170,6 @@ describe("salad params codec", () => {
       paramsError(saladGame, { order: 11, nums: 10, mode: 0, diff: 0 }, true),
     ).toBe("Symbols must be at most 9.");
   });
-
-  it("parks an unknown difficulty letter out of range so validation rejects it", () => {
-    expect(paramsError(saladGame, decodeParams("5n3Ldq"), true)).toBe(
-      "Difficulty must be one of Easy, Normal.",
-    );
-  });
 });
 
 // --- tier 1: desc codec ----------------------------------------------------

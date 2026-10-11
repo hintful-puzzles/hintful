@@ -17,6 +17,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
+import { unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -163,8 +164,8 @@ export function encodeParams(p: GuessParams, _full: boolean): string {
 }
 
 export function decodeParams(s: string): GuessParams {
-  // Lenient, like upstream `decode_params`: scan letter-prefixed fields,
-  // ignore anything unrecognized.
+  // Letter-prefixed fields in any order, as upstream's `decode_params` reads
+  // them.
   const p = defaultParams();
   let i = 0;
   const readInt = (): number => {
@@ -179,6 +180,7 @@ export function decodeParams(s: string): GuessParams {
     else if (ch === "g") p.nguesses = readInt();
     else if (ch === "b" || ch === "B") p.allowBlank = ch === "b";
     else if (ch === "m" || ch === "M") p.allowMultiple = ch === "m";
+    else unreadParams(s, i - 1);
   }
   return p;
 }

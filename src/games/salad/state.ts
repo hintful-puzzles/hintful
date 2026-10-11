@@ -49,7 +49,6 @@ import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 export const DIFF_EASY = 0;
 /** Upstream `DIFF_HARD`, shown as **Normal**. */
 export const DIFF_HARD = 1;
-const DIFFCOUNT = 2;
 
 const DIFF_NAMES: readonly string[] = tierNames(2);
 /** The difficulty letters `encodeParams` writes and `decodeParams` reads. */
@@ -155,17 +154,12 @@ export const paramConfig: ParamConfigItem<SaladParams>[] = [
 ];
 
 /** Order, `n` and the symbol count, `L` or `B` for the mode, then the
- * generator-only difficulty letter. Upstream parks an unknown difficulty letter
- * out of range so that it is refused with a reason rather than silently
- * defaulted. */
+ * generator-only difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   size(paramConfig, "size"),
   num(paramConfig, "n", "symbols"),
   letters(paramConfig, RULESET_KW, ["L", "B"]),
-  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
-    full: true,
-    invalid: DIFFCOUNT + 1,
-  }),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
 /** Below this size a {@link GAMEMODE_LETTERS} board is dealt with clues on its

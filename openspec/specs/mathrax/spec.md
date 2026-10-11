@@ -400,8 +400,8 @@ The params string SHALL be the size in decimal, then `d` and one of `e`, `n`,
 type in the order `A` (addition), `S` (subtraction), `M` (multiplication),
 `D` (division), `E` (equality), `O` (even/odd), and no letter when all six
 are enabled. The short form SHALL be the size alone and SHALL decode to Easy
-with every clue type. `decodeParams` SHALL read each clue letter once, in
-that order.
+with every clue type. `decodeParams` SHALL read each clue letter once and
+refuse one out of that order.
 
 #### Scenario: A restricted clue set
 
@@ -412,8 +412,7 @@ that order.
 #### Scenario: Clue letters out of order
 
 - **WHEN** `6dnDS` is decoded
-- **THEN** only division is enabled, because `S` is looked for before `D`,
-  and the params encode as `6dnD`
+- **THEN** it is refused for its `S`, because `S` is looked for before `D`
 
 #### Scenario: The short form
 

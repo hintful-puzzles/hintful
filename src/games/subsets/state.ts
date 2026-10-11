@@ -29,6 +29,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
+import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 
 // --- difficulty --------------------------------------------------------------
@@ -40,7 +41,6 @@ export const DIFF_EASY = 0;
  * upstream wrote, commented out under `// TODO repair this`, and never
  * compiled. */
 export const DIFF_NORMAL = 1;
-const DIFFCOUNT = 2;
 
 /** The collection's two-tier names; upstream offers no difficulty here. */
 export const DIFF_NAMES: readonly string[] = tierNames(2);
@@ -175,8 +175,8 @@ export function encodeParams(p: SubsetsParams, full: boolean): string {
 }
 
 export function decodeParams(s: string): SubsetsParams {
-  // Lenient, matching upstream decode_params (which mutates a copy of the
-  // current params; a fresh decode starts from the default).
+  // Upstream's decode_params mutates a copy of the current params; a fresh
+  // decode starts from the default.
   const p = defaultParams();
   let r = parseLeadingInt(s, 0);
   p.w = r.value;
@@ -192,13 +192,12 @@ export function decodeParams(s: string): SubsetsParams {
     p.n = r.value;
     pos = r.next;
   }
-  // An ID with no `d` keeps the default tier (see `defaultParams`); an
-  // unrecognized char lands out of range so `paramsError` rejects it rather
-  // than silently playing some other difficulty.
-  if (s[pos] === "d" && pos + 1 < s.length) {
-    const idx = DIFF_CHARS.indexOf(s[pos + 1]);
-    p.diff = idx === -1 ? DIFFCOUNT : idx;
+  // An ID with no `d` keeps the default tier (see `defaultParams`).
+  if (s[pos] === "d") {
+    p.diff = paramsLetter(s, pos + 1, DIFF_CHARS);
+    pos += 2;
   }
+  endParams(s, pos);
   return p;
 }
 

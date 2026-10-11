@@ -25,8 +25,8 @@ when the tiles read `1..n-1` in row-major order with the gap last.
 
 ### Requirement: Fifteen's params are a width and a height
 
-Params SHALL be `w` and `h`, encoded `WxH` with lenient decode: a bare `W`
-yields a square `W×W` board. Params with `w < 2` or `h < 2` SHALL be refused.
+Params SHALL be `w` and `h`, encoded `WxH`. A bare `W` SHALL decode as a
+square `W×W` board. Params with `w < 2` or `h < 2` SHALL be refused.
 
 #### Scenario: Params round-trip and lenient decode
 

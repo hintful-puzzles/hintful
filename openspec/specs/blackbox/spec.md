@@ -11,8 +11,9 @@ guess rests on its deterministic laser tracing.
 ### Requirement: Black Box params are a size and a ball range
 
 Params SHALL be `w`, `h`, `minballs` and `maxballs`, encoded
-`w{w}h{h}m{minballs}M{maxballs}`. The decode SHALL be lenient: a letter it does
-not know is ignored.
+`w{w}h{h}m{minballs}M{maxballs}`. Decoding SHALL read the four letters in any
+order, a letter left out keeping its default, and SHALL refuse any other
+character.
 
 #### Scenario: Params round-trip and lenient decode
 

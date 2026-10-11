@@ -361,15 +361,10 @@ export const paramConfig: ParamConfigItem<RomeParams>[] = [
   difficultyItem(DIFF_NAMES, "diff"),
 ];
 
-/** `WxH`, plus the generator-only difficulty letter. Upstream: a `d` with an
- * absent or unrecognized char leaves the difficulty out of range, so
- * `paramsError` rejects it. */
+/** `WxH`, plus the generator-only difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
-  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
-    full: true,
-    invalid: DIFFCOUNT + 1,
-  }),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
 // --- board helpers ----------------------------------------------------------

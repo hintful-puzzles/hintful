@@ -142,15 +142,11 @@ export const paramConfig: ParamConfigItem<SeismicParams>[] = [
 ];
 
 /** `WxH`, a `T` for Tectonic (Seismic writes nothing), then the generator-only
- * difficulty letter. Upstream deliberately parks an unknown letter out of range
- * so that it is refused with a reason rather than silently defaulted. */
+ * difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   letters(paramConfig, RULESET_KW, ["", "T"]),
-  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
-    full: true,
-    invalid: DIFFCOUNT + 1,
-  }),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
 /**

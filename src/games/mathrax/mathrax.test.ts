@@ -15,7 +15,7 @@ import {
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
+import { paramsError, UnreadableParams } from "../../engine/params.ts";
 import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import {
   CURSOR_DOWN,
@@ -161,19 +161,15 @@ describe("mathrax params", () => {
   it("reads the clue letters only in upstream's fixed A S M D E O order", () => {
     // 'D' comes after 'S', so "SD" reads both...
     expect(decodeParams("6dnSD").options).toBe(OPTION_SUB | OPTION_DIV);
-    // ...but out of order, the later letter is simply never reached, and an
-    // empty resulting set falls back to "all" (upstream's six sequential ifs).
-    expect(decodeParams("6dnDS").options).toBe(OPTION_DIV);
-    expect(decodeParams("6dnOA").options).toBe(OPTION_ODD);
+    // ...but out of order, the later letter is one nothing reads.
+    expect(() => decodeParams("6dnDS")).toThrow(UnreadableParams);
+    expect(() => decodeParams("6dnOA")).toThrow(UnreadableParams);
   });
 
-  it("rejects out-of-range sizes, unknown difficulties and an empty clue set", () => {
+  it("rejects out-of-range sizes and an empty clue set", () => {
     const error = (p: MathraxParams, full = true) => paramsError(mathraxGame, p, full);
     expect(error(decodeParams("2dn"))).toBe("Size must be at least 3.");
     expect(error(decodeParams("10dn"))).toBe("Size must be at most 9.");
-    expect(error(decodeParams("6dq"))).toBe(
-      "Difficulty must be one of Easy, Normal, Tricky, Unreasonable.",
-    );
     expect(error({ o: 6, diff: "normal", options: 0 })).toMatch(
       /at least one clue type/i,
     );

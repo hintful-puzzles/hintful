@@ -21,7 +21,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { obfuscateBitmap } from "../../engine/obfuscate.ts";
-import { AREA_TOO_LARGE } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import {
   type RandomState,
@@ -153,8 +153,11 @@ export function decodeParams(s: string): MinesParams {
       const y = parseLeadingInt(s, i);
       p.firstClickY = y.value;
       i = y.next;
+    } else if (c !== "a") {
+      // Upstream's `a` asks for a board that may need a guess. Every board
+      // dealt here needs none, so the letter is read and changes nothing.
+      unreadParams(s, i - 1);
     }
-    // anything else is gunk, skipped
   }
   return p;
 }

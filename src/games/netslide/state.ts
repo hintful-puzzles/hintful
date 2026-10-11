@@ -10,7 +10,12 @@
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { descValue } from "../../engine/desc-error.ts";
-import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
+import {
+  AREA_TOO_LARGE,
+  endParams,
+  formatG,
+  parseLeadingFloat,
+} from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -112,6 +117,7 @@ export function decodeParams(s: string): NetslideParams {
     // A bare `{n}` is a square grid and — faithful to upstream — carries no
     // wrapping/barrier/movetarget suffixes at all.
     p.h = p.w;
+    endParams(s, i);
     return p;
   }
 
@@ -124,14 +130,16 @@ export function decodeParams(s: string): NetslideParams {
     i++;
   }
   if (s[i] === "b") {
-    i++;
-    const start = i;
-    while (i < s.length && (/[0-9]/.test(s[i]) || s[i] === ".")) i++;
-    p.barrierProbability = atof(s.slice(start, i));
+    const probability = parseLeadingFloat(s, i + 1);
+    p.barrierProbability = probability.value;
+    i = probability.next;
   }
   if (s[i] === "m") {
-    p.movetarget = parseLeadingInt(s, i + 1).value;
+    const target = parseLeadingInt(s, i + 1);
+    p.movetarget = target.value;
+    i = target.next;
   }
+  endParams(s, i);
   return p;
 }
 

@@ -90,8 +90,8 @@ const paramConfig: ParamConfigItem<FlipParams>[] = [
   ),
 ];
 
-/** `WxH`, plus the generator-only shape letter. A missing or unknown letter
- * leaves the default, Crosses. */
+/** `WxH`, plus the generator-only shape letter. A missing letter leaves the
+ * default, Crosses. */
 const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   letters(paramConfig, RULESET_KW, ["c", "r"], { full: true }),

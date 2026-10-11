@@ -40,8 +40,8 @@ Easy, Normal, Tricky, Hard or Unreasonable, held as the keys `"easy"`,
 
 Params SHALL be encoded `{w}` without `full` and `{w}d{c}{m?}` with `full`,
 where `c` is `e`, `n`, `h`, `x` or `u` for the five tiers in order and a
-trailing `m` marks a multiplication-only puzzle. A difficulty letter the
-encoding does not know SHALL decode as the default tier.
+trailing `m` marks a multiplication-only puzzle. A `d` followed by a letter
+that is none of the five, or by nothing, SHALL be refused.
 
 #### Scenario: Params round-trip
 
@@ -55,8 +55,9 @@ encoding does not know SHALL decode as the default tier.
 #### Scenario: A difficulty letter that names no tier
 
 - **WHEN** the params string `6dq` is decoded
-- **THEN** the grid size is 6 and the difficulty is the default tier, Normal
-- **AND** the params are not refused
+- **THEN** it is refused:
+  `The parameters 6dq have a "q" where this puzzle reads none.`
+- **AND** `6d`, which stops at its `d`, is refused too
 
 ### Requirement: A 3×3 Keen is not dealt above Normal
 

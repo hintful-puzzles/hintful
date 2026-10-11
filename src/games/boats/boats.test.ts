@@ -20,7 +20,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/midend.ts";
-import { paramsError } from "../../engine/params.ts";
+import { paramsError, UnreadableParams } from "../../engine/params.ts";
 import {
   BACKSPACE,
   CURSOR_DOWN,
@@ -147,13 +147,10 @@ describe("boats params", () => {
     expect([p.w, p.h, p.fleet]).toEqual([7, 7, 2]);
   });
 
-  it("rejects an unknown difficulty letter, which only a full encoding carries", () => {
-    const p = decodeParams("6x6f3dz,3,2,1");
-    expect(refusal(p, true)).toBe(
-      "Difficulty must be one of Easy, Normal, Tricky, Hard.",
-    );
-    // A `params:desc` id carries no difficulty, so it has none to get wrong.
-    expect(refusal(decodeParams("6x6f3,3,2,1"), false)).toBeNull();
+  it("refuses a character in the fleet that is not a size or a comma", () => {
+    expect(() => decodeParams("6x6f3de,3,x,1")).toThrow(UnreadableParams);
+    expect(() => decodeParams("6x6f3de3,2,1")).toThrow(UnreadableParams);
+    expect(decodeParams("6x6f3de,3,2,1").fleetData).toEqual([3, 2, 1]);
   });
 
   it("names the field a refusal is about", () => {

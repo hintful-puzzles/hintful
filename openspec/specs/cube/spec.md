@@ -24,9 +24,9 @@ with no face painted.
 ### Requirement: Cube params are a solid and two dimensions
 
 Params SHALL be `solid` (one of tetrahedron, cube, octahedron, icosahedron),
-`d1` and `d2`, encoded `<t|c|o|i><d1>x<d2>`. Decoding SHALL be lenient: a
-missing leading solid letter and a missing `x<d2>` SHALL both be tolerated, and
-where `x<d2>` is missing `d2` SHALL default to `d1`.
+`d1` and `d2`, encoded `<t|c|o|i><d1>x<d2>`. Decoding SHALL accept a string
+with no leading solid letter, which keeps the default solid, and one with no
+`x<d2>`, where `d2` SHALL default to `d1`.
 
 #### Scenario: Params round-trip and lenient decode
 

@@ -176,8 +176,8 @@ export const paramConfig: ParamConfigItem<SticksParams>[] = [
   ),
 ];
 
-/** `WxH`, then the generator-only black percentage and symmetry. Lenient like
- * upstream `decode_params`: a missing field keeps the default preset's value.
+/** `WxH`, then the generator-only black percentage and symmetry. As in
+ * upstream `decode_params`, a missing field keeps the default preset's value.
  * The symmetry is written as its `SYMM_*` number, a whole digit run rather than
  * `choice`'s one letter, so an out-of-range one decodes for `paramsError` to
  * refuse. */

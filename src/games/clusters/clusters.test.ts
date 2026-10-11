@@ -122,14 +122,10 @@ describe("params", () => {
     expect(decodeParams("8de")).toEqual({ w: 8, h: 8, diff: DIFF_EASY });
   });
 
-  it("reads a pre-tier game ID as Easy, and rejects an unknown tier letter", () => {
+  it("reads a pre-tier game ID as Easy", () => {
     // Every ID shared before the difficulty existed carries no `d` at all.
     expect(decodeParams("9x7")).toEqual({ w: 9, h: 7, diff: DIFF_EASY });
     expect(decodeParams("8")).toEqual({ w: 8, h: 8, diff: DIFF_EASY });
-    // An unrecognized letter must not silently play some other difficulty.
-    expect(check(decodeParams("9x7dq"), true)).toBe(
-      `Difficulty must be one of ${DIFF_NAMES.join(", ")}.`,
-    );
   });
 
   it("rejects too-large then too-small (upstream order)", () => {

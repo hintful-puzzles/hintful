@@ -21,6 +21,8 @@ import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { clearKey, numberKeys } from "../../engine/key-labels.ts";
 import {
   dimensionParamConfig,
+  endParams,
+  paramsLetter,
   parseDimensions,
   transposeDimensions,
 } from "../../engine/params.ts";
@@ -75,7 +77,6 @@ import {
   MODE_HONEYCOMB,
   MODE_ORTHOGONAL,
   MODE_RECT,
-  MODECOUNT,
   NUMBER_BOUND,
   NUMBER_EMPTY,
   NUMBER_WALL,
@@ -309,6 +310,11 @@ function encodeParams(p: AscentParams, full: boolean): string {
   return out;
 }
 
+/** What a save holds for its mode where its board was entered, before this
+ * decoder refused one, from an ID with a mode letter the game does not have.
+ * That board was played as Classic, so its save opens as Classic. */
+const UNKNOWN_MODE = "mundefined";
+
 function decodeParams(s: string): AscentParams {
   const p = { ...UNSAID };
   const dims = parseDimensions(s);
@@ -316,30 +322,26 @@ function decodeParams(s: string): AscentParams {
   p.h = dims.h;
   let i = dims.next;
 
-  if (s[i] === "m") {
-    i++;
-    p.mode = MODECOUNT + 1; /* invalid until matched */
-    if (i < s.length) {
-      for (let m = 0; m < MODECOUNT; m++) if (s[i] === ASCENT_MODECHARS[m]) p.mode = m;
-      i++;
-    }
+  if (s.startsWith(UNKNOWN_MODE, i)) {
+    p.mode = MODE_RECT;
+    i += UNKNOWN_MODE.length;
+  } else if (s[i] === "m") {
+    p.mode = paramsLetter(s, i + 1, ASCENT_MODECHARS);
+    i += 2;
   }
   if (s[i] === "E") {
     p.removeends = true;
     i++;
   }
   if (s[i] === "d") {
-    i++;
-    p.diff = DIFFCOUNT + 1; /* invalid until matched */
-    if (i < s.length) {
-      for (let d = 0; d < DIFFCOUNT; d++) if (s[i] === ASCENT_DIFFCHARS[d]) p.diff = d;
-      i++;
-    }
+    p.diff = paramsLetter(s, i + 1, ASCENT_DIFFCHARS);
+    i += 2;
   } else if (p.mode === MODE_EDGES) {
     p.diff = Math.max(p.diff, DIFF_NORMAL);
   }
 
   p.symmetrical = s[i] === "S";
+  endParams(s, p.symmetrical ? i + 1 : i);
   return p;
 }
 

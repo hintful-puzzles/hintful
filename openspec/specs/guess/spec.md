@@ -12,8 +12,8 @@ those marks, and the hint that fills the row and suggests a guess.
 ### Requirement: Guess's parameters
 
 Params SHALL be `ncolors`, `npegs`, `nguesses`, `allowBlank` and
-`allowMultiple`, encoded `c{ncolors}p{npegs}g{nguesses}{b|B}{m|M}`, with a
-lenient decode that ignores unknown letters.
+`allowMultiple`, encoded `c{ncolors}p{npegs}g{nguesses}{b|B}{m|M}`. Decoding
+SHALL read the fields in any order and SHALL refuse any other character.
 
 #### Scenario: Params round-trip and lenient decode
 

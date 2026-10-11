@@ -2,7 +2,7 @@
 
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import { endParams, parseDimensions } from "../../engine/params.ts";
 import { enumGridSquares, type GridSquare, gridArea } from "./grid.ts";
 import { alignPolyKeys, SOLIDS, SolidType } from "./solids.ts";
 
@@ -93,6 +93,7 @@ export function encodeParams(p: CubeParams, _full: boolean): string {
 export function decodeParams(s: string): CubeParams {
   const letter = SOLID_LETTERS.indexOf(s[0]);
   const dims = parseDimensions(s, letter >= 0 ? 1 : 0);
+  endParams(s, dims.next);
   return {
     solid: letter >= 0 ? letter : defaultParams().solid,
     d1: dims.w,

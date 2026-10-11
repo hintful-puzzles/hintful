@@ -1,8 +1,8 @@
 # read-an-unknown-params-letter-one-way
 
 **Status: answered by the owner, 2026-10-11: refuse, in every game, with
-the compatibility cost stated under "The question" accepted. To be taken up:
-the session that does writes `tasks.md`. Filed that day by the session that
+the compatibility cost stated under "The question" accepted, and built that
+day ("What the answer became", below). Filed that day by the session that
 archived `state-what-a-games-spec-never-did`, whose census found these. What
 it says of the code was true that day; re-check before relying on it.**
 
@@ -56,3 +56,28 @@ at the default, or be refused?**
 
 The owner's answer picks one, and the change is then the engine's codec and
 no game's.
+
+## What the answer became
+
+**A params string is read whole or refused**, by one refusal the engine
+makes (`unreadParams`, `paramsLetter` and `endParams` in
+`src/engine/params.ts`). The declared codec refuses a letter its tag does not
+list and any remainder; each hand-written decoder refuses through the same
+three functions where it skipped, defaulted or stopped reading. A piece left
+out still takes its default.
+
+Two things the question did not state, found while building it:
+
+- **A string upstream's encoder writes must still open**, so every game's C
+  `encode_params` was read (2026-10-11) and its strings are held in
+  `src/engine/params-read-whole.test.ts`. Four letters were being read only
+  by a skip and are now read by name: Pearl's `n`, Same Game's `r`, Mines'
+  and Net's `a`. A `%g` exponent (`b1e-05`, which upstream writes for a
+  probability below 1e-4) was read as 1 with the rest skipped, in Net,
+  Netslide and Rectangles; it is now read as the number it is.
+- **One save would have stopped opening, and does not.** An Ascent game
+  entered from an ID with an unknown mode letter (`6x7mXde`) played as
+  Classic and was saved with the params `6x7mundefinedde`. The cost the
+  owner accepted named IDs with an unknown difficulty letter, not a save, so
+  Ascent's decoder reads the word `mundefined` as Classic, the board that
+  save was played on. Nothing writes the word any more.

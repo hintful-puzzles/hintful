@@ -156,9 +156,9 @@ Upstream's in-place autosolve move SHALL still replay from a saved game.
 ### Requirement: Pearl's parameters
 
 Params SHALL be `w`, `h` and `difficulty` (Easy or Normal), encoded `{w}x{h}`
-with a full-form `d{char}` difficulty suffix. Decoding SHALL leave upstream's
-trailing `n` unread, which asks for a board nothing has checked, and encoding
-SHALL never write it.
+with a full-form `d{char}` difficulty suffix. Decoding SHALL read upstream's
+trailing `n`, which asks for a board nothing has checked, and SHALL change
+nothing for it; encoding SHALL never write it.
 
 #### Scenario: Params round-trip
 
@@ -381,9 +381,9 @@ description covers the grid exactly.
 ### Requirement: Pearl's difficulty letters are e and t
 
 The letter after `d` SHALL be `e` for Easy and `t` for Normal, and the short
-form SHALL leave both out. Decoding a string with no difficulty letter, or
-with a letter that is neither, SHALL give Easy, whatever the default preset's
-difficulty.
+form SHALL leave both out. Decoding a string with no difficulty letter SHALL
+give Easy, whatever the default preset's difficulty, and a `d` followed by a
+letter that is neither SHALL be refused.
 
 #### Scenario: A string with no letter
 

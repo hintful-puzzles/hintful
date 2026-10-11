@@ -408,8 +408,7 @@ Params SHALL encode as `{order}n{nums}`, then `L` for ABC End View or `B` for
 Number Ball, then, in the full form only, `d` and the difficulty's letter: `e`
 for Easy or `x` for Normal. A string with no mode letter SHALL decode as ABC
 End View, and one with no `d` as Easy. A `d`
-followed by any other letter SHALL decode to a difficulty out of range, which
-validation refuses.
+followed by any other letter SHALL be refused.
 
 #### Scenario: A Number Ball preset
 
@@ -426,8 +425,8 @@ validation refuses.
 #### Scenario: A letter that is no difficulty
 
 - **WHEN** the `x` of `5n4Bdx` is changed to `z`
-- **THEN** the params are refused with "Difficulty must be one of Easy,
-  Normal."
+- **THEN** the params are refused:
+  `The parameters 5n4Bdz have a "z" where this puzzle reads none.`
 
 ### Requirement: Salad refuses two symbols at Normal where no board has it
 

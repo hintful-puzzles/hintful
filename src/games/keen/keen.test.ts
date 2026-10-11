@@ -18,7 +18,7 @@ import {
 } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
-import { paramsError } from "../../engine/params.ts";
+import { paramsError, UnreadableParams } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,
@@ -137,10 +137,9 @@ describe("keen params codec", () => {
     });
   });
 
-  it("reads a difficulty letter it does not know as the default tier", () => {
-    const p = decodeParams("6dq");
-    expect(p).toEqual({ ...keenGame.defaultParams(), w: 6 });
-    expect(paramsError(keenGame, p, true)).toBeNull();
+  it("reads the multiplication letter only after the difficulty", () => {
+    expect(decodeParams("6dnm").multiplicationOnly).toBe(true);
+    expect(() => decodeParams("6mdn")).toThrow(UnreadableParams);
   });
 
   it("rejects invalid params", () => {

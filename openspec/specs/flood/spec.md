@@ -13,8 +13,8 @@ status bar, the solver's hint plan, and how the board is drawn.
 
 Params SHALL be `w`, `h`, `colors` and `leniency`, the leniency being the
 moves allowed beyond the solver's own count. They SHALL be encoded `WxH`, with
-`c{colors}m{leniency}` appended when `full`. Decoding SHALL be lenient: a bare
-`W` yields a square `W×W` board.
+`c{colors}m{leniency}` appended when `full`. A bare `W` SHALL decode as a
+square `W×W` board.
 
 #### Scenario: Params round-trip and lenient decode
 

@@ -29,8 +29,8 @@ rotations, and SHALL NOT itself be solved. The game SHALL provide
 Twiddle's params SHALL be `w`, `h`, `n` (the rotating block's size),
 `rowsonly`, `orientable` and `movetarget`. They SHALL be encoded as `WxHnN`
 followed by `r` when `rowsonly`, `o` when `orientable`, and `mK` when a shuffle
-target `K` is set. Decoding SHALL be lenient: a bare `W` yields a square `W×W`
-board, and a missing `nN` yields `n = 2`.
+target `K` is set. A bare `W` SHALL decode as a square `W×W` board, and a
+missing `nN` as `n = 2`.
 
 #### Scenario: Params round-trip and lenient decode
 
@@ -264,8 +264,8 @@ parity. A board that passes may still be out of reach.
 `encodeParams` SHALL write the same string with and without `full`, the shuffle
 target included, because the status bar reports progress against it.
 `decodeParams` SHALL read `nN` only directly after the size, and `r`, `o` and
-`mK` in any order after that. It SHALL skip a character it does not know, and
-SHALL read `n0` as a block of 2.
+`mK` in any order after that. It SHALL refuse a character it does not know,
+and SHALL read `n0` as a block of 2.
 
 #### Scenario: A shuffle target survives the short form
 

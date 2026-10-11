@@ -46,8 +46,7 @@ lower tiers SHALL be plain deduction.
 
 Width and height SHALL each declare a minimum of 3 in `paramConfig`, which the
 engine's params check refuses below, and `validateParams` SHALL refuse
-`w·h > 54`. A difficulty letter the encoding does not know SHALL decode as the
-default tier.
+`w·h > 54`. A difficulty letter the encoding does not know SHALL be refused.
 
 #### Scenario: Invalid params are rejected
 

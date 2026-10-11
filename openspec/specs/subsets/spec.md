@@ -43,7 +43,7 @@ SHALL NOT be played at another tier in its place.
 #### Scenario: An unrecognized difficulty character is rejected
 
 - **WHEN** a game ID carries a difficulty character naming no tier
-- **THEN** validation rejects it, rather than falling back to another tier
+- **THEN** decoding refuses it, rather than falling back to another tier
 
 ### Requirement: The Custom dialog offers the tier alone
 

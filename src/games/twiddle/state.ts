@@ -2,7 +2,7 @@ import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
-import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -74,7 +74,7 @@ export function encodeParams(p: TwiddleParams, _full: boolean): string {
 
 export function decodeParams(s: string): TwiddleParams {
   // Upstream `decode_params`: `W` or `WxH`, an optional `nN` (default 2), then
-  // `r`, `o` and `mK` in any order, skipping anything unrecognized.
+  // `r`, `o` and `mK` in any order.
   const { w, h, next } = parseDimensions(s);
   let i = next;
   let n = 2;
@@ -94,7 +94,7 @@ export function decodeParams(s: string): TwiddleParams {
       const run = parseLeadingInt(s, i);
       movetarget = run.value;
       i = run.next;
-    }
+    } else unreadParams(s, i - 1);
   }
   return { w, h, n, rowsonly, orientable, movetarget };
 }

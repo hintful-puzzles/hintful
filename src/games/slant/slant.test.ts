@@ -111,10 +111,8 @@ describe("slant params", () => {
     expect(encodeParams({ w: 12, h: 10, diff: DIFF_HARD }, false)).toBe("12x10");
   });
 
-  it("decodes leniently", () => {
+  it("decodes a bare size as an Easy square", () => {
     expect(decodeParams("7")).toEqual({ w: 7, h: 7, diff: DIFF_EASY });
-    // An unknown difficulty char keeps the default.
-    expect(decodeParams("6x6dq").diff).toBe(DIFF_EASY);
   });
 
   it("rejects invalid params", () => {

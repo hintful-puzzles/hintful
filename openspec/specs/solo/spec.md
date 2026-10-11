@@ -54,14 +54,14 @@ with `dt`, the default `DIFF_BLOCK`, omitted).
 - **THEN** each decodes back to the original params
 - **AND** the non-full encoding omits the symmetry and difficulty suffixes
 
-### Requirement: Solo decodes its parameters leniently
+### Requirement: Solo reads the legacy jigsaw form and a single leading number
 
-`decodeParams` SHALL be lenient, ignoring unknown characters. It SHALL accept
-the legacy `"{c}x{r}j"` form, in which a `j` after a seen `r` collapses the
-rectangle to a jigsaw of edge `c·r`, and SHALL round-trip the preset list. A
-leading number with no `x` after it SHALL be read as both `c` and `r`. A `d`
-followed by no tier letter SHALL leave the difficulty at Easy, and `r2` SHALL
-be read as the default symmetry.
+`decodeParams` SHALL accept the legacy `"{c}x{r}j"` form, in which a `j` after
+a seen `r` collapses the rectangle to a jigsaw of edge `c·r`, and SHALL
+round-trip the preset list. A leading number with no `x` after it SHALL be
+read as both `c` and `r`, and `r2` SHALL be read as the default symmetry. A
+`d` followed by no tier letter, and a character the encoding does not use,
+SHALL be refused.
 
 #### Scenario: The legacy jigsaw form is read
 

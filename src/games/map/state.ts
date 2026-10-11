@@ -16,7 +16,7 @@ import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { PresetMenu } from "../../engine/game.ts";
-import { AREA_TOO_LARGE } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { MapData } from "./map-data.ts";
@@ -74,7 +74,7 @@ export function encodeParams(p: MapParams, full: boolean): string {
 }
 
 /**
- * Upstream `decode_params`, faithfully lenient: `w`, optional `xH` (else
+ * Upstream `decode_params`: `w`, optional `xH` (else
  * `h = w`), optional `nN` (tolerating a `.` in the count for old float-`n`
  * IDs — `atoi`-truncated), optional `dX` difficulty char. An absent `n`
  * defaults to `w*h/8`.
@@ -106,12 +106,11 @@ export function decodeParams(s: string): MapParams {
   }
 
   if (s[i] === "d") {
-    i++;
-    const idx = DIFF_CHARS.indexOf(s[i] ?? "");
-    if (idx >= 0) p.diff = idx;
-    if (i < s.length) i++;
+    p.diff = paramsLetter(s, i + 1, DIFF_CHARS);
+    i += 2;
   }
 
+  endParams(s, i);
   return p;
 }
 

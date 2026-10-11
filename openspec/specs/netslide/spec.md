@@ -501,8 +501,8 @@ tile, and a powered wire SHALL be a core of the powered color inside the ink.
 
 Decoding SHALL read a string with no `b` as a barrier probability of 0,
 though the default params have 1. The letters SHALL be read once each in the
-order `w`, `b`, `m`, one out of that order being ignored, and a bare `{n}`
-SHALL be a square grid that takes none of them.
+order `w`, `b`, `m`, one out of that order being refused, and a bare `{n}`
+SHALL be a square grid, after which each of them is refused.
 
 #### Scenario: The default and the preset beside it
 

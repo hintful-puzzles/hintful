@@ -6,7 +6,7 @@
 import { rejectMove } from "../../engine/assert-never.ts";
 import { type DescParse, descValue, puzzleDescError } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
@@ -98,8 +98,10 @@ export function encodeParams(p: PegsParams, full: boolean): string {
 export function decodeParams(s: string): PegsParams {
   // `next` indexes the board-type word after the dimensions.
   const { w, h, next } = parseDimensions(s, 0);
+  if (next === s.length) return { w, h, type: TYPE_CROSS };
   const type = BOARD_TYPE_LOWER.indexOf(s.slice(next));
-  return { w, h, type: type < 0 ? TYPE_CROSS : type };
+  if (type < 0) unreadParams(s, next);
+  return { w, h, type };
 }
 
 export function validateParams(p: PegsParams, full: boolean): string | null {

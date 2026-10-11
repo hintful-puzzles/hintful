@@ -21,7 +21,6 @@ import type { GameStatus } from "../../engine/types.ts";
 import {
   type Cell,
   DIFF_CHARS,
-  DIFF_COUNT,
   DIFF_EASY,
   DIFF_NAMES,
   DIFF_TRIVIAL,
@@ -119,15 +118,11 @@ export const paramConfig: ParamConfigItem<UnrulyParams>[] = [
   }),
 ];
 
-/** `WxH`, the unique-rows letter, then the generator-only difficulty letter. A
- * missing or unknown difficulty letter leaves one `paramsError` rejects. */
+/** `WxH`, the unique-rows letter, then the generator-only difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   flag(paramConfig, "u", "unique-rows-and-columns"),
-  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
-    full: true,
-    invalid: DIFF_COUNT + 1,
-  }),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
 // The nth element gives the count of distinct valid Unruly rows of length

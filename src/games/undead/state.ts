@@ -125,8 +125,7 @@ export const paramConfig: ParamConfigItem<UndeadParams>[] = [
   }),
 ];
 
-/** `WxH`, plus the generator-only difficulty letter. An unknown letter leaves
- * the default tier. */
+/** `WxH`, plus the generator-only difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),

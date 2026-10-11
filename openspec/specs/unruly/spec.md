@@ -394,8 +394,7 @@ color is ill-defined.
 
 The difficulty char SHALL be `t` for Easy, `e` for Normal and `n` for Tricky.
 A params string with no `d` SHALL decode as Easy. One whose `d` is followed by
-any other character, or by nothing, SHALL decode to a difficulty that names no
-tier, which the engine's params check refuses.
+any other character, or by nothing, SHALL be refused.
 
 #### Scenario: The unique board of the Type menu
 
@@ -406,9 +405,9 @@ tier, which the engine's params check refuses.
 #### Scenario: A letter that names no tier
 
 - **WHEN** `8x8dn`, an 8×8 board at Tricky, has its last letter changed to
-  `z` and goes through the engine's params check
-- **THEN** it is refused with "Difficulty must be one of Easy, Normal,
-  Tricky."
+  `z` and is decoded
+- **THEN** it is refused:
+  `The parameters 8x8dz have a "z" where this puzzle reads none.`
 
 ### Requirement: Unruly's hint tries the simplest technique first
 

@@ -137,8 +137,7 @@ export const paramConfig: ParamConfigItem<SlantParams>[] = [
   difficultyItem(DIFF_NAMES, "diff"),
 ];
 
-/** `WxH`, plus the generator-only difficulty letter. Upstream leniency: an
- * unknown difficulty char leaves the default. */
+/** `WxH`, plus the generator-only difficulty letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),

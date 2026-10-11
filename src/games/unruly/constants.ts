@@ -26,6 +26,6 @@ export const pairIndex = (filled: number): 0 | 1 => (filled === ONE ? 0 : 1);
 export const DIFF_TRIVIAL = 0;
 export const DIFF_EASY = 1;
 export const DIFF_NORMAL = 2;
-export const DIFF_COUNT = 3;
+const DIFF_COUNT = 3;
 export const DIFF_NAMES: readonly string[] = tierNames(DIFF_COUNT);
 export const DIFF_CHARS = "ten"; // ENCODE chars, indexed by difficulty

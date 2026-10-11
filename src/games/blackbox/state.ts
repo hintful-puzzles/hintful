@@ -23,6 +23,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
+import { unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
@@ -177,9 +178,8 @@ export function decodeParams(s: string): BlackboxParams {
   const p = defaultParams();
   let i = 0;
   while (i < s.length) {
-    const field = PARAM_LETTERS[s[i++]];
-    if (!field) continue;
-    const r = parseLeadingInt(s, i);
+    const field = PARAM_LETTERS[s[i]] ?? unreadParams(s, i);
+    const r = parseLeadingInt(s, i + 1);
     p[field] = r.value;
     i = r.next;
   }

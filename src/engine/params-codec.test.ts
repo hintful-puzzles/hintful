@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { ParamConfigItem } from "./game.ts";
-import { dimensionParamConfig } from "./params.ts";
-import { dims, letters, num, paramsCodec } from "./params-codec.ts";
+import { dimensionParamConfig, UnreadableParams } from "./params.ts";
+import {
+  choice,
+  dims,
+  letters,
+  num,
+  paramsCodec,
+  unusedLetter,
+} from "./params-codec.ts";
 
 interface P {
   w: number;
@@ -68,5 +75,40 @@ describe("letters", () => {
     ]);
     expect(codec.decodeParams("5x5").mode).toBe(1);
     expect(codec.decodeParams("5x5P").mode).toBe(0);
+  });
+});
+
+describe("a string the segments do not read whole", () => {
+  const codec = paramsCodec(defaults, [
+    dims(config),
+    choice(config, "m", "mode", "ptw"),
+    unusedLetter("n"),
+  ]);
+
+  it("refuses a letter the tag does not list, quoting it", () => {
+    expect(() => codec.decodeParams("5x5mq")).toThrow(
+      new UnreadableParams(
+        'The parameters 5x5mq have a "q" where this puzzle reads none.',
+      ),
+    );
+  });
+
+  it("refuses a tag with nothing after it", () => {
+    expect(() => codec.decodeParams("5x5m")).toThrow(
+      new UnreadableParams(
+        "The parameters 5x5m stop where this puzzle reads another character.",
+      ),
+    );
+  });
+
+  it("refuses a remainder, and a letter out of the declared order", () => {
+    expect(() => codec.decodeParams("5x5mtz")).toThrow(UnreadableParams);
+    expect(() => codec.decodeParams("5x5nmt")).toThrow(UnreadableParams);
+  });
+
+  it("reads an unused letter, and never writes it", () => {
+    const p = codec.decodeParams("5x5mwn");
+    expect(p.mode).toBe(2);
+    expect(codec.encodeParams(p, true)).toBe("5x5mw");
   });
 });

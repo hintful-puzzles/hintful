@@ -23,6 +23,7 @@ import {
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
+import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 
 // --- combinatorial helpers (upstream TRI / DCOUNT / DINDEX macros) ----------
@@ -129,16 +130,12 @@ export function decodeParams(str: string): DominosaParams {
       tall = true;
     } else if (c === "d") {
       // Upstream's `da` asks for a board not checked for a unique solution,
-      // as its older bare `a` does, which this loop passes over like any
-      // letter it does not know. Every board dealt here is checked, so `da`
-      // names no tier and the default stands.
-      const named = str[i] !== "a";
-      if (named) diff = DIFFCOUNT + 1; // ...which is invalid, unless a known char follows
-      if (i < str.length) {
-        const idx = DIFF_CHARS.indexOf(str[i]);
-        if (idx >= 0) diff = idx;
-        i++;
-      }
+      // as its older bare `a` does. Every board dealt here is checked, so
+      // `da` names no tier and the default stands.
+      if (str[i] !== "a") diff = paramsLetter(str, i, DIFF_CHARS);
+      i++;
+    } else if (c !== "a") {
+      unreadParams(str, i - 1);
     }
   }
   return { n, diff, tall };

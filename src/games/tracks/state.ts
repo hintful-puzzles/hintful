@@ -307,8 +307,7 @@ export const paramConfig: ParamConfigItem<TracksParams>[] = [
   },
 ];
 
-/** `WxH`, plus the generator-only difficulty letter. Upstream leniency: an
- * unknown difficulty char leaves the default tier. The `o` letter is written
+/** `WxH`, plus the generator-only difficulty letter. The `o` letter is written
  * when consecutive 1 clues are *allowed*, so its absence means "disallow". */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),

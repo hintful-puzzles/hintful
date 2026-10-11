@@ -396,7 +396,7 @@ After `{w}x{h}` the params SHALL write `T` in Tectonic mode and nothing in
 Seismic mode, and then the difficulty, `de` for Easy or `dh` for Normal, in the
 full encoding only. A string with no `T` SHALL decode as Seismic mode, and one
 with no `d` as Easy. A `d` followed by any other letter, or by none, SHALL be
-refused with "Difficulty must be one of Easy, Normal."
+refused.
 
 #### Scenario: A Tectonic preset
 
@@ -412,8 +412,8 @@ refused with "Difficulty must be one of Easy, Normal."
 #### Scenario: A letter that names no difficulty
 
 - **WHEN** the `h` of `4x4dh` is changed to `x`
-- **THEN** the params are refused with "Difficulty must be one of Easy,
-  Normal."
+- **THEN** the params are refused:
+  `The parameters 4x4dx have a "x" where this puzzle reads none.`
 
 ### Requirement: A Seismic digit enters or pencils, and Backspace, Space or 0 clears
 

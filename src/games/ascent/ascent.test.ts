@@ -182,6 +182,11 @@ describe("ascent's dialog asks for the ruleset and the board's shape separately"
     expect(ascentGame.defaultParams().mode).toBe(MODE_ORTHOGONAL);
   });
 
+  it("opens the save an unknown mode letter left, as the Classic board it was", () => {
+    const saved = ascentGame.decodeParams("6x7mundefinedde");
+    expect(ascentGame.encodeParams(saved, true)).toBe("6x7mRde");
+  });
+
   it("refuses a game ID asking Edges for what it does not offer", () => {
     const easy = mk(5, 5, 0, MODE_EDGES, true);
     expect(paramsError(ascentGame, easy, true)).toBe(

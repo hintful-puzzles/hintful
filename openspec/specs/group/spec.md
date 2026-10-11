@@ -384,9 +384,8 @@ The params encoding SHALL be the size in decimal, then in the full form `d`
 and the tier's letter (`t` Easy, `n` Normal, `h` Tricky, `x` Hard, `u`
 Unreasonable), then `i` when the identity is hidden. The short form SHALL
 leave out the tier and keep the `i`. Decoding SHALL read a string with no `d`
-as Normal and one with no `i` as showing the identity, SHALL pass over a
-character it does not know, and SHALL give a `d` followed by no tier letter a
-tier that the engine refuses.
+as Normal and one with no `i` as showing the identity, and SHALL refuse a
+character it does not know and a `d` followed by no tier letter.
 
 #### Scenario: A preset that hides its identity
 
@@ -402,7 +401,8 @@ tier that the engine refuses.
 #### Scenario: A letter that is no tier
 
 - **WHEN** the `h` of `8dh` is changed to `q`
-- **THEN** the params are refused, the refusal listing the five tiers
+- **THEN** the params are refused:
+  `The parameters 8dq have a "q" where this puzzle reads none.`
 
 ### Requirement: With the identity shown, number 1 is lettered e
 

@@ -124,13 +124,6 @@ describe("bricks params", () => {
     expect(decodeParams("9")).toMatchObject({ w: 9, h: 9 });
   });
 
-  it("rejects an unknown difficulty char", () => {
-    const p = decodeParams("7x6dx");
-    expect(paramsError(bricksGame, p, true)).toBe(
-      "Difficulty must be one of Easy, Unreasonable.",
-    );
-  });
-
   describeAbsentTiers(bricksGame, ["2x2dn"]);
 
   // Boards of six squares, which the tier gate once skipped.

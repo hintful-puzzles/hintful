@@ -72,7 +72,6 @@ export const MODE_RECT = 1;
 export const MODE_HEXAGON = 2;
 export const MODE_HONEYCOMB = 3;
 export const MODE_EDGES = 4;
-export const MODECOUNT = 5;
 /** The shapes a board comes in, as the dialog offers them. Every mode but the
  * two hexagonal ones is played on the Rectangle. */
 export const SHAPE_RECTANGLE = 0;

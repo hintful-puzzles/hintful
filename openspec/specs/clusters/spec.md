@@ -35,7 +35,7 @@ Parameters SHALL be a width, a height and a difficulty. A game ID SHALL encode
 the width and height (a bare single number read as a square board) and, in its
 full form, the difficulty, and SHALL round-trip through decode. An ID that
 carries no difficulty SHALL decode to Easy. A tier letter the game does not
-know SHALL be rejected when the parameters are validated, and SHALL NOT be
+know SHALL be refused when the parameters are decoded, and SHALL NOT be
 silently played as some other tier.
 
 #### Scenario: A game ID round-trips through the parameters

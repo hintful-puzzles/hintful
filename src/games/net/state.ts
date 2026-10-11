@@ -10,7 +10,12 @@ import {
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { noSuchTier, tooRareToDeal } from "../../engine/difficulty.ts";
-import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
+import {
+  AREA_TOO_LARGE,
+  formatG,
+  parseLeadingFloat,
+  unreadParams,
+} from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
@@ -99,18 +104,18 @@ export function decodeParams(s: string): NetParams {
       p.wrapping = true;
       i++;
     } else if (s[i] === "b") {
-      i++;
-      const start = i;
-      while (i < s.length && (/[0-9]/.test(s[i]) || s[i] === ".")) i++;
+      const probability = parseLeadingFloat(s, i + 1);
       // The C stores this as a `float`, so round to single precision now.
-      p.barrierProbability = Math.fround(atof(s.slice(start, i)));
+      p.barrierProbability = Math.fround(probability.value);
+      i = probability.next;
     } else if (s[i] === "d") {
       i = tierSegment.decode(s, i, p);
-    } else {
-      // Any other gunk is skipped, as upstream. That takes in upstream's `a`,
-      // which asks for a board with no promised single answer: every board
-      // dealt here has one.
+    } else if (s[i] === "a") {
+      // Upstream's `a` asks for a board with no promised single answer. Every
+      // board dealt here has one, so the letter is read and changes nothing.
       i++;
+    } else {
+      unreadParams(s, i);
     }
   }
   return p;
