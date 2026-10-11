@@ -4121,6 +4121,44 @@ state and the frame, Latin naked-single honesty),
 length, show-something). A per-game "plan solves from empty" test is *not* a
 substitute.
 
+### A hint carries on from an entry the player made first
+
+**The walk above reaches only positions the hint's own order makes.** It plays
+`steps[0]` and asks again, so every board it asks from is one the plan passes
+through. A player enters things in their own order, and a board that holds one
+right entry the plan would have reached later is a board no walk visits.
+
+Range's hint ran out on such a board, and on an Easy tier the midend throws
+there, which the player sees as the crash dialog. Its run-length rule, a
+faithful port, bounded how far a clue can see along an arm by the first gap
+alone: a run cannot fill a gap where that joins the white cells past it and
+overshoots the clue. One white mark inside a long gap leaves a first gap that
+fits, the bound goes, and the rule concludes **less from a board that says
+more**. A board certified from empty says nothing about that.
+
+**The property to hold is that a rule concludes no less as cells are
+decided.** Then whatever the rules reach from the opening they reach from any
+board with right entries added, in any order. The shape to look for is a bound
+taken from the nearest undecided thing (the first gap, the next empty cell,
+the first candidate) where the true bound reads the whole line. Ask the real
+question of the line: Range's rule now asks where an arm can *end* (before any
+cell not already white, within the clue), and that only tightens.
+
+**A rule that leans on another to stay monotone is fine, and say so.**
+Range's connectedness rule loses a cut vertex when the cell it cut off is
+shaded, and the adjacency rule then clears the same cell.
+
+[`wrong-entry-check.test.ts`](../../src/engine/wrong-entry-check.test.ts) asks
+it of every game with `findMistakes`, `solve` and a hint: from a position with
+nothing wrong on it, the hint finishes. The positions are a blind gesture's,
+and steps of the opening plan played out of their order, each alone and a
+sample of pairs. Its header holds what each found with Range's rule put back,
+and why larger subsets of the plan were dropped: the steps around the one
+played early make up for it, so **the sharp probe is one entry on an
+otherwise untouched board**. A game's own exhaustive form is cheap where a
+move sets a cell: every cell marked alone as the answer has it
+(`range-solver.test.ts`, "a board that says more").
+
 ### The step budget
 
 The resume test catches a hint that *gives up* or whose move-walk *loops*.

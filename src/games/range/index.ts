@@ -216,7 +216,7 @@ export interface RangeHint {
 }
 
 /** A cell already known to be white: the player's white mark, or a clue
- * (clues are implicitly white). Mirrors the solver's RUN_WHITE mask. */
+ * (clues are implicitly white). The solver's `MASK_KNOWN_WHITE`. */
 function knownWhite(v: number): boolean {
   return v === WHITE || v > 0;
 }

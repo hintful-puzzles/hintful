@@ -9,7 +9,9 @@
  * position checked by `findErrors`) counts a board's answers to two. It serves
  * the Solve command and `findMistakes`, and deals the Unreasonable tier. An
  * Easy board is kept only if uniquely solvable by the three rules without any
- * guessing, exactly as upstream.
+ * guessing, as upstream. The run-length rule bounds a run more tightly than
+ * upstream's ({@link ruleNotTooBig} says why), so the rules finish every board
+ * upstream's do and some they do not.
  */
 
 import {
@@ -56,6 +58,8 @@ export const DC = [0, 1, 0, -1];
 const MASK_BLACK = 1; // 1 << (BLACK + 2)
 const MASK_EMPTY = 4; // 1 << (EMPTY + 2)
 const HIGH = ~(MASK_BLACK | (1 << (WHITE + 2)) | MASK_EMPTY); // ~7
+/** The cells known to be white: a white mark, or a clue. */
+const MASK_KNOWN_WHITE = ~(MASK_BLACK | MASK_EMPTY);
 
 /** Length of the run of cells from (r,c) along (dr,dc) whose state
  * matches `mask`; a clue cell matches iff `mask` carries a high bit. */
@@ -160,21 +164,36 @@ function ruleAdjacency(grid: Int8Array, w: number, h: number, rec?: Recorder): n
   return made;
 }
 
-// RUN_WHITE / RUN_EMPTY / RUN_BEYOND / RUN_SPACE masks (upstream order).
-const RUNMASKS = [
-  ~(MASK_BLACK | MASK_EMPTY),
-  MASK_EMPTY,
-  ~(MASK_BLACK | MASK_EMPTY),
-  ~MASK_BLACK,
-];
-const RUN_WHITE = 0;
-const RUN_EMPTY = 1;
-const RUN_BEYOND = 2;
-const RUN_SPACE = 3;
+/** Whether a clue's run can end just before this cell: it is off the board,
+ * shaded or undecided. A run that reaches a cell known to be white goes on
+ * through it. */
+function canEndBefore(
+  grid: Int8Array,
+  w: number,
+  h: number,
+  r: number,
+  c: number,
+): boolean {
+  if (outOfBounds(r, c, w, h)) return true;
+  const v = grid[idx(r, c, w)];
+  return v === EMPTY || v === BLACK;
+}
 
-/** A clue's run-length arithmetic: place forced blacks where the clue is
- * already satisfied or would be overrun, and forced whites the clue must
- * still reach. Faithful port of `solver_reasoning_not_too_big`. */
+/**
+ * A clue's run-length arithmetic. In each direction the clue's run is at
+ * least the white cells it already sees and at most the furthest place it
+ * can end with the other three no longer than they already are. Where the
+ * most is what it sees, the next cell is shaded; and the cells the run needs
+ * with the other three at their most are white.
+ *
+ * Upstream's `solver_reasoning_not_too_big` bounds the most by the first gap
+ * alone: a run cannot fill it where that joins the white cells beyond and
+ * passes the clue. A white cell marked inside a gap that long leaves a first
+ * gap that fits, and the bound goes: the rule concluded less from a board
+ * that says more. This bound is never above upstream's, so every board
+ * upstream's rules finish these do, and it only falls as cells are decided,
+ * which is what lets a hint carry on from an entry the player made first.
+ */
 function ruleNotTooBig(
   grid: Int8Array,
   w: number,
@@ -183,64 +202,66 @@ function ruleNotTooBig(
   rec?: Recorder,
 ): number {
   let made = 0;
-  // runlengths[k][j]: run of kind k in direction j.
-  const rl: number[][] = [
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-  ];
+  const least = [0, 0, 0, 0];
+  const most = [0, 0, 0, 0];
 
   for (const clueCell of clues) {
     const { r: row, c: col } = clueCell;
     const clue = grid[idx(row, col, w)];
 
-    for (let j = 0; j < 4; j++) {
-      let r = row + DR[j];
-      let c = col + DC[j];
-      rl[RUN_SPACE][j] = 0;
-      for (let k = 0; k <= RUN_SPACE; k++) {
-        const l = runLength(grid, w, h, r, c, DR[j], DC[j], RUNMASKS[k]);
-        if (k < RUN_SPACE) {
-          rl[k][j] = l;
-          r += DR[j] * l;
-          c += DC[j] * l;
-        }
-        rl[RUN_SPACE][j] += l;
-      }
-    }
-
     let whites = 1;
-    for (let j = 0; j < 4; j++) whites += rl[RUN_WHITE][j];
-
     for (let j = 0; j < 4; j++) {
-      const delta = 1 + rl[RUN_WHITE][j];
-      const r = row + delta * DR[j];
-      const c = col + delta * DC[j];
-
-      if (whites === clue) {
-        if (makeMove(grid, w, h, r, c, BLACK)) {
-          made++;
-          rec?.(r, c, BLACK, { kind: "satisfied", clue: clueCell, n: clue });
-        }
-      } else if (whites + rl[RUN_EMPTY][j] + rl[RUN_BEYOND][j] > clue) {
-        if (rl[RUN_EMPTY][j] === 1) {
-          if (makeMove(grid, w, h, r, c, BLACK)) {
-            made++;
-            rec?.(r, c, BLACK, { kind: "overrun", clue: clueCell, n: clue });
-          }
-        } else {
-          rl[RUN_SPACE][j] = rl[RUN_WHITE][j] + rl[RUN_EMPTY][j] - 1;
-        }
-      }
+      least[j] = runLength(
+        grid,
+        w,
+        h,
+        row + DR[j],
+        col + DC[j],
+        DR[j],
+        DC[j],
+        MASK_KNOWN_WHITE,
+      );
+      whites += least[j];
     }
 
     let space = 1;
-    for (let j = 0; j < 4; j++) space += rl[RUN_SPACE][j];
     for (let j = 0; j < 4; j++) {
+      const room = clue - whites + least[j];
+      let far = least[j];
+      let r = row + (far + 1) * DR[j];
+      let c = col + (far + 1) * DC[j];
+      for (
+        let length = far + 1;
+        length <= room && !outOfBounds(r, c, w, h) && grid[idx(r, c, w)] !== BLACK;
+        length++
+      ) {
+        r += DR[j];
+        c += DC[j];
+        if (canEndBefore(grid, w, h, r, c)) far = length;
+      }
+      most[j] = far;
+      space += far;
+    }
+
+    for (let j = 0; j < 4; j++) {
+      if (most[j] !== least[j]) continue;
+      const r = row + (least[j] + 1) * DR[j];
+      const c = col + (least[j] + 1) * DC[j];
+      if (makeMove(grid, w, h, r, c, BLACK)) {
+        made++;
+        rec?.(r, c, BLACK, {
+          kind: whites === clue ? "satisfied" : "overrun",
+          clue: clueCell,
+          n: clue,
+        });
+      }
+    }
+
+    for (let j = 0; j < 4; j++) {
+      const needed = clue - space + most[j];
       let r = row + DR[j];
       let c = col + DC[j];
-      for (let k = space - rl[RUN_SPACE][j]; k < clue; k++, r += DR[j], c += DC[j]) {
+      for (let k = 0; k < needed; k++, r += DR[j], c += DC[j]) {
         if (makeMove(grid, w, h, r, c, WHITE)) {
           made++;
           rec?.(r, c, WHITE, { kind: "reach", clue: clueCell, n: clue });
@@ -428,10 +449,7 @@ export function findErrors(
         const seen = seenFrom(grid, w, h, r, c, ~MASK_BLACK);
         if (!report) {
           if (seen !== v) return true;
-        } else if (
-          seen < v ||
-          seenFrom(grid, w, h, r, c, ~(MASK_BLACK | MASK_EMPTY)) > v
-        ) {
+        } else if (seen < v || seenFrom(grid, w, h, r, c, MASK_KNOWN_WHITE) > v) {
           report[i] = true;
         }
       }

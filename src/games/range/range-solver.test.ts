@@ -8,7 +8,7 @@ import {
   generateGrid,
   searchAnswers,
 } from "./solver.ts";
-import { BLACK, EMPTY, idx, type RangeParams, WHITE } from "./state.ts";
+import { BLACK, EMPTY, idx, newState, type RangeParams, WHITE } from "./state.ts";
 
 const PRESETS: RangeParams[] = [
   { w: 9, h: 6, diff: DIFF_EASY },
@@ -65,6 +65,62 @@ describe("deductive rules", () => {
     // is 4,096 squares deep at its end.
     const grid = new Int8Array(64 * 64);
     expect(applyRules(grid, 64, 64, [])).toBe(0);
+  });
+});
+
+describe("a board that says more", () => {
+  /** How many of a board's cells, each marked alone as the answer has it,
+   * leave a board the rules do not finish, with how many were asked. */
+  function unfinishedAfterOneMark(
+    clues: Int8Array,
+    w: number,
+    h: number,
+  ): { asked: number; unfinished: string[] } {
+    const answer = clues.slice();
+    applyRules(answer, w, h, findClues(answer, w, h));
+    expect(answer.includes(EMPTY)).toBe(false);
+    const unfinished: string[] = [];
+    let asked = 0;
+    for (let cell = 0; cell < w * h; cell++) {
+      if (clues[cell] > 0) continue;
+      asked++;
+      const marked = clues.slice();
+      marked[cell] = answer[cell];
+      applyRules(marked, w, h, findClues(marked, w, h));
+      if (!marked.every((v, i) => v === answer[i]))
+        unfinished.push(`${Math.floor(cell / w)},${cell % w}`);
+    }
+    return { asked, unfinished };
+  }
+
+  it("is finished from a white mark inside a clue's gap", () => {
+    // The 7 in the corner sees up a column whose gap of five ends at a 5:
+    // filling the gap passes 7, so the 7 has to see along the bottom row.
+    // With row 5 of that column marked white first the gap is one cell that
+    // fits, and a bound that looks no further than the first gap is gone.
+    const { w, h, clues } = newState(
+      { w: 6, h: 9, diff: DIFF_EASY },
+      "4j5a9b7b11a7j12a11b9b6a4j7",
+    );
+    const marked = clues.slice();
+    marked[idx(5, 5, w)] = WHITE;
+    applyRules(marked, w, h, findClues(marked, w, h));
+    expect(marked[idx(8, 4, w)]).toBe(WHITE);
+    expect(marked.includes(EMPTY)).toBe(false);
+    expect(unfinishedAfterOneMark(clues, w, h)).toEqual({ asked: 42, unfinished: [] });
+  });
+
+  it("is finished from any one right mark on a dealt board", () => {
+    const rng = randomNew("range-one-mark");
+    let asked = 0;
+    for (const p of PRESETS) {
+      for (let iter = 0; iter < 4; iter++) {
+        const result = unfinishedAfterOneMark(generateGrid(p, rng), p.w, p.h);
+        expect(result.unfinished).toEqual([]);
+        asked += result.asked;
+      }
+    }
+    expect(asked).toBeGreaterThan(1000);
   });
 });
 

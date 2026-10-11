@@ -11,8 +11,8 @@
  * **Every Range step shows a second mark**, so the sentence also ties the
  * ringed cell to it by the relation the rule guarantees, never a color name:
  *
- * - `satisfied` / `overrun` place the target at `1 + rl[RUN_WHITE][j]` steps
- *   from the clue — that is, the **first cell past the outlined run** in one of
+ * - `satisfied` / `overrun` place the target one step past the white cells the
+ *   clue already sees — that is, the **first cell past the outlined run** in one of
  *   the clue's four directions (past the clue itself where the run is empty).
  * - `reach` stripes the whole path behind the target, so the target is the
  *   run's **far end**.
