@@ -29,5 +29,9 @@
 ## 5. In the app
 
 - [x] 5.1 Tune `WIN_BAND` by eye on Tracks, a sweep game and a loop
-- [ ] 5.2 Win a board of every game in Chrome, light and dark; reduced motion on one
-- [ ] 5.3 Gate, commit, push; the owner looks at the deploy
+- [x] 5.2 Win a board of every game in Chrome, light and dark; reduced motion on one. Seen in at least one scheme: every game but Cube, Mines and Same Game, which Solve-then-redo does not reach and whose flash is pinned by their own tests. Reduced motion seen on Solo.
+- [x] 5.3 Gate, commit, push
+
+## 6. The owner's eye
+
+- [ ] 6.1 The owner looks at the deploy. Two things to judge there: whether 2 seconds and the width of the highlight feel right, and whether each game lighting in its own color (Tracks yellow, Solo's entry wash, Loopy's white line, a lifted cell elsewhere) should become one highlight color for every game.
