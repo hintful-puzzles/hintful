@@ -8,10 +8,13 @@ measured that day; the query is given where there is one.
 - **The order is done and held.** Every requirement of the 57 game specs has
   its subject in its title, the specs are sorted into one order, and the gate
   refuses a spec that is not (`scripts/checks/spec-subjects.mjs`).
-- **The cut is decided and not yet made.** The owner chose option C on
-  2026-10-12, amended: § "The owner's answer" below is what task 3 follows.
-  § "The question for the owner" is kept as what was asked, and its
-  recommendation of A is superseded.
+- **The cut is made** (2026-10-12), by the owner's choice of option C,
+  amended: § "The owner's answer" is the rule it followed and § "What the
+  cut measured" is what it came to. § "The question for the owner" is kept
+  as what was asked, and its recommendation of A is superseded.
+- **What is left** is in `tasks.md`: the findings the readers made (3.4a),
+  a last whole read of the specs the guide names as the ones to copy, and
+  the archive.
 
 ## The order
 
@@ -327,6 +330,67 @@ validator's reading of a delta:
 what it concludes and from what; the order techniques are tried in where a
 loop and not `hintRungs` fixes it; a promise a save or a shared link depends
 on that a declaration does not make (what a missing field decodes to).
+
+## What the cut measured
+
+Measured 2026-10-12 against `c86372f4`, the specs as the reorder left them
+(`tools/cut-check.mjs` with no argument; by subject, `parseSpec` over each
+spec before and after).
+
+**The 57 specs lost 10%, not the 25% to 30% the question to the owner
+estimated**: 1,412,226 to 1,265,023 bytes, 1,948 to 1,793 requirements, 2,654
+to 2,370 scenarios. 1,245 requirements are untouched, 324 are changed under
+the title they had, and 379 are removed or retitled. The engine capabilities
+gained 47 requirements and 54,533 bytes to state once what the games had each
+stated, so the specs as a whole are 92 KB smaller.
+
+| Subject | Requirements | Bytes | After | Bytes | |
+| --- | --- | --- | --- | --- | --- |
+| Rules | 206 | 132,597 | 202 | 121,973 | −8% |
+| Params | 238 | 165,996 | 196 | 130,765 | −21% |
+| Description | 141 | 110,717 | 135 | 106,286 | −4% |
+| Generation | 143 | 102,613 | 131 | 86,074 | −16% |
+| Solver | 92 | 73,401 | 91 | 65,299 | −11% |
+| Controls | 271 | 197,250 | 265 | 191,640 | −3% |
+| Preferences | 33 | 21,959 | 29 | 18,426 | −16% |
+| Hint | 540 | 400,511 | 467 | 345,230 | −14% |
+| Status bar | 24 | 13,441 | 23 | 13,057 | −3% |
+| Look | 260 | 164,157 | 254 | 155,805 | −5% |
+
+By game the cut runs from Palisade's 29% and Clusters' 28% to a hundred
+bytes either way in Cube, Flood and Black Box; the median is 9%.
+
+**Why the estimate was high.** It came from two specs written to the deepest
+cut with deletion only, and both were of the kind that shares most with the
+engine. Three things the rules then kept:
+
+- **A hand-written function is not a declaration**, and 23 games write their
+  params codec by hand, 30 their input. Most of `Controls`, the largest
+  subject after `Hint`, states what `interpretMove` does.
+- **Rule 2 gives back some of what rule 1 takes.** A subject emptied of
+  copies keeps a pointer requirement.
+- **A promise to a player's data stays.** What a string that leaves a field
+  out decodes to, and a preference's key where no test pins it, are declared
+  and are kept, because a link or a stored preference depends on them.
+
+**What was learned in the making**, each now in `brief.md` or the guide:
+
+- **A copy swapped for a citation is still the copy.** The first batches
+  replaced a restated rule by a sentence saying the rule is the collection's
+  and where. A spec cut that way lost nothing (Light Up and Magnets came
+  back at 0%, Pegs grew). A pointer is for an owed subject that would
+  otherwise say nothing of its ordinary case, and for that only. The 27
+  specs reviewed before this was written had a second pass for it.
+- **The sample specs carried the fault and the writers copied it.** Clusters
+  and Palisade stood at 20% and 21% as first accepted and at 28% and 29%
+  after the second and third passes.
+- **Most of what several games each said of themselves had no engine home.**
+  Three engine rounds added 47 requirements: `ledger/_engine.md`, each round
+  with its review. The reviews corrected 23 of them against the code, and
+  found seven requests that are the games' own, with no shared code or guard
+  behind them, which stay in the games.
+- **The readers found the code's bugs and the specs' falsehoods**, as the
+  guide says a requirement written from the code does: tasks 3.4a.
 
 ## Found by the readers, and fixed at the owner's word
 

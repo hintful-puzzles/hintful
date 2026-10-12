@@ -1,9 +1,13 @@
 # Tasks
 
-**Where this stands (2026-10-12): the order is done, held by the gate and
-pushed. The owner answered the question of the cut: option C, amended
-(`design.md` § "The owner's answer: C, amended"). Task 3 is that cut, and it
-is the next session's, starting at 3.1.**
+**Where this stands (2026-10-12, evening): the cut is made and committed.
+All 57 game specs are cut in place, reviewed, and passed over twice more
+(`design.md` § "What the cut measured": 10% of their bytes, 155 requirements,
+284 scenarios), and the engine capabilities state what the games repeated
+(`ledger/_engine.md`). What is left, for the next session, in this order:
+3.4a (what the readers found: code fixes, each run in the app, and the
+questions for the owner), 3.8 (the whole read of the four specs to copy),
+then 4.3 (delete `tools/`, archive, `spec-subjects.mjs --fix`, push).**
 
 ## 1. Decide, on a sample
 
@@ -65,7 +69,9 @@ is the next session's, starting at 3.1.**
       "Third round: the rest" and "Third round: hints and colors", with what
       was deliberately not written (the games' own, no shared code or guard
       behind it) and why.
-- [ ] 3.2b **Remove from the games what the third round now states.** Each
+- [x] 3.2b (done: `brief-third-pass.md` is what each agent was given, and
+      every ledger has a `## Third pass` section) **Remove from the games
+      what the third round now states.** Each
       third-round table's last column names the games that keep the sentence
       and the requirement in each that holds it, as corrected by that
       round's review section. For each game: cut the sentence (keeping any
@@ -74,7 +80,8 @@ is the next session's, starting at 3.1.**
       `cut-check`, the validator, `spec-subjects.mjs` and `spec-form.mjs`.
       Read what is left of each touched subject alone: the cut must not
       leave it hollow (`brief.md`, rule 2).
-- [ ] 3.2c **One rule for the Generation pointer, across all 57.** The second
+- [x] 3.2c (done with 3.2b, by the same brief) **One rule for the
+      Generation pointer, across all 57.** The second
       pass removed "what a dealt board promises is the collection's … with
       no departure" from some specs and kept it in others
       (`git grep -n 'no departure\|departs from n' -- openspec/specs`). Where
@@ -144,18 +151,35 @@ is the next session's, starting at 3.1.**
         `src/games/flip/hint.ts:41` and `src/games/slant/render.ts`
         ("teal"); `docs/` names a `"broken"` status of `deduceHintPlan` that
         does not exist.
-- [ ] 3.5 Where a removed requirement held the only statement of a promise
+- [x] 3.5 Where a removed requirement held the only statement of a promise
       to a player (a save or link format), the ledger names the test that
-      holds the promise now, or the requirement stays.
-- [ ] 3.6 `repo-layout` gains the rule as a requirement ("A game's spec does
+      holds the promise now, or the requirement stays. What a params string
+      that leaves a field out decodes to stays in every game; a preference's
+      key and choice order stay unless the ledger names the test that pins
+      them (restored in Singles, Net, Ascent, Pearl, Spokes, Slant and
+      Loopy; Untangle's and Rome's are pinned, and their rows name the
+      tests).
+- [x] 3.6 `repo-layout` gains the rule as a requirement ("A game's spec does
       not restate what its game declares or what the collection states"),
-      with the hollow-subject rule; `docs/new-game.md` § "What a game's spec
-      holds" gains the hollow-subject rule and names one spec of each kind
-      as the example to copy.
-- [ ] 3.7 Measure: bytes, requirements and scenarios of the 57 before and
-      after, by subject; `sample/` deleted; `spec-subjects.mjs`, the
-      validator and `spec-form.mjs` green; `spec-subjects.mjs --fix` after
-      the archive.
+      with the hollow-subject rule ("A subject a game owes says what the
+      game does there or where it is said"); `docs/new-game.md` § "What a
+      game's spec holds" gains the hollow-subject rule and names four specs
+      to copy.
+- [x] 3.7 Measure: bytes, requirements and scenarios of the 57 before and
+      after, by subject: `design.md` § "What the cut measured". `sample/` is
+      deleted; `spec-subjects.mjs`, the validator and `spec-form.mjs` are
+      green.
+- [ ] 3.8 **Read whole, as a session that has never seen the game, the four
+      specs the guide names as the ones to copy**: `clusters`, `palisade`,
+      `keen`, `inertia`. Three passes by different agents went over each, and
+      Clusters and Palisade are a quarter shorter than when they were last
+      read whole. Each subject says what the game does there or where to
+      look; no fragment; every cited title exists
+      (`node scripts/checks/spec-citations.mjs` does not read `openspec/`,
+      so check a game spec's citations by grep). Mend with a ledger row.
+      Palisade's spec was reported changed on disk by an editor that was not
+      its assigned agent during the third pass, so read its whole diff
+      against `c86372f4` beside its ledger.
 
 ## 4. Hold it
 
@@ -165,5 +189,7 @@ is the next session's, starting at 3.1.**
       planted failures are in `design.md`.
 - [x] 4.2 `docs/new-game.md` § "What a game's spec holds" states the
       rule and the order.
-- [ ] 4.3 Gate, commit, archive, push. Tasks 1, 2 and 4 are committed and
-      pushed; the archive follows task 3.
+- [ ] 4.3 Gate, commit, archive, push. Before the archive: delete `tools/`
+      (its import path breaks when the directory moves) and re-read the
+      `repo-layout` delta against the specs as they stand. After it:
+      `node scripts/checks/spec-subjects.mjs --fix`.
