@@ -107,9 +107,8 @@ new game to say what to build. The fifth is the measurement.
    `docs/games/README.md` § "What a game's spec holds" become the order of
    every game spec; the 57 are reordered without changing a word; and the
    census becomes a gate check that derives what a spec owes from the `Game`
-   object. Open with the owner: whether a spec should go on restating what
-   the game declares (params letters, preference keys, rung order), or state
-   only what the code cannot.
+   object. A spec stops restating what the game declares (params letters,
+   preference keys, rung order) and states what the code cannot.
 5. **Then a game, written whole in one session, with a log.** The session
    records every question it had to answer that was not about the puzzle,
    and its token count by phase. That log orders the engine work after it:
@@ -117,18 +116,23 @@ new game to say what to build. The fifth is the measurement.
    hand, and the input of a game with a drag or with notes are the
    candidates, and a game says which costs most.
 
-## Questions for the owner
+## The owner's answers (2026-10-12)
 
-- **Which game is the measurement.** None of what is held out is a clean
-  one. Path needs a solver nobody has written and may end at its spike.
-  Numgame's fit in the collection is undecided. The four hintless games
-  (Cube, Same Game, Slide, Twiddle) measure the hint alone, and all four
-  are search games. A well-understood deduction puzzle that is not in the
-  collection would measure the whole.
-- **Whether the backlog drain is over.** The open changes are the two ports,
-  the reserve and one investigation, all of which
-  `docs/work-management.md` § "The backlog is being drained" excludes. The
-  section says to retire it on the owner's word.
+- **The order is accepted**, and the five pieces are filed as changes of
+  their own, to be taken in this order: `hold-the-game-skeleton-to-the-compiler`,
+  `make-the-guides-a-lookup`, `give-a-game-its-verdict-in-one-command`,
+  `order-and-shrink-the-game-specs`, `add-starbattle`. This change is the
+  record of why, and is archived with the last of them.
+- **The measurement is Star Battle**, a game the owner wants in the
+  collection, with its one-star form (known as Queens) as a parameter.
+- **On a spec restating what the game declares: "if we can simplify it, we
+  should."** So a spec states what the code cannot.
+- **The guides were never meant to be read through.** They are a wiki a
+  session looks things up in, and how they are organized for that, and how a
+  session is told to use them, is this work's to decide.
+  `make-the-guides-a-lookup` holds the decision.
+- **The engine refactoring that was open is done**, so the rule that ports
+  and hints wait is gone from `docs/work-management.md`.
 
 ## Capabilities
 

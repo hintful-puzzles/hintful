@@ -77,11 +77,10 @@ nothing. The next session starts from the repo.
 - If it is not worth a commit, say plainly that you looked and found nothing.
 - Never cite an agent-private note to the owner. They cannot read it.
 
-## The backlog is being drained
+## What a session files
 
-The owner's decision (2026-10-07): the open changes are worked down to none
-before new product work starts, and a session adds to them only what its own
-work found. A well-scoped change goes stale when the code moves under it.
+The open changes are kept few, because a well-scoped change goes stale when
+the code moves under it: a session adds to them only what its own work found.
 What is open is `openspec list`.
 
 - **A session ends by handing a change to a fresh session**, once its own is
@@ -146,16 +145,12 @@ What is open is `openspec list`.
   unasked.
 - **A change does not grow to hold what would have been filed.** It absorbs
   what its goal requires and no more.
-- **Game ports and hints wait.** `add-*-ts-port`, a game's hint and
-  `hintless-games-in-reserve` are not part of the drain, and a session picking
-  its next change passes over them.
 - **A change filed for later is a draft: it has no `tasks.md`.** The tool
   reports it apart from the changes in progress (`openspec view`, and
   `no-tasks` in `openspec list --json`), and a session picking its next change
   passes over it. Its plan is in its `design.md`, and writing `tasks.md` from
   that is how a session takes it up, on the owner's word.
 
-Retire this section when the owner says the drain is over.
 
 ## New work is the engine's
 

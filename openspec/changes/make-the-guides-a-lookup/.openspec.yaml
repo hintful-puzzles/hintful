@@ -1,0 +1,5 @@
+# No delta at filing: task 1.3 reads `repo-layout` for what it requires of the
+# guides, and writes the delta and removes this line if a requirement moves.
+schema: spec-driven
+created: 2026-10-12
+skip_specs: true

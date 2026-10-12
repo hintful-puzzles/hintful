@@ -3,7 +3,7 @@
 **Status: scaffolded, not started (2026-10-08). For down the line.** Filed on
 the owner's word the same day, as a long-term effort. It waits for the owner
 to say when, and a session choosing its next change passes over it
-(`docs/work-management.md` § "The backlog is being drained").
+(`docs/work-management.md` § "What a session files").
 
 This is an investigation. It ends with a report and a recommendation, and
 builds nothing the app runs.

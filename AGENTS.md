@@ -65,8 +65,8 @@ incident only what a later session acts on: the rule, and the shape to look for.
   or it is one face of an engine defect or lack, fixed in the engine for many
   games. What qualifies is filed first as the engine's. **A quick, low-risk
   fix is always made in passing**, an inaccurate help page for one: the rule
-  stops new work items, never a fix (`docs/work-management.md` § "The backlog
-  is being drained").
+  stops new work items, never a fix (`docs/work-management.md` § "What a
+  session files").
 - **Bring a question with everything you could find out.** Run the app,
   measure, read the code first. Never report to the owner that you did not
   look at something you could have.
@@ -169,11 +169,11 @@ The long form, with the shapes to search for, is `docs/method.md`.
 | A help page | `docs/help-pages.md` |
 | A framework or cross-game design decision | `docs/doctrine.md` |
 
-Then read the spec the guide names at its top, and for a game
-`openspec/specs/<game>/spec.md`: the rules a change is checked against.
-
-Work is tracked with openspec, through the skills it installs; one change per
-coherent unit of work.
+**A guide is looked up, never read through.** Read its opening and headings,
+then the section the work needs and the requirement it names. Send a subagent
+with a question that spans sections. One session writes a game: its concerns
+share one state, so the writing is not split among agents. Work is tracked
+with openspec, through its skills; one change per coherent unit of work.
 
 ## Specific to a coding agent
 

@@ -164,7 +164,7 @@ shape `docs/doctrine.md` § "One source of truth" warns about.
 ## The order of work
 
 The change has no `tasks.md` while it waits, which is what makes it a draft
-(`docs/work-management.md` § "The backlog is being drained"). The session that
+(`docs/work-management.md` § "What a session files"). The session that
 takes it up writes `tasks.md` from this list.
 
 **1. Read the prior art in full**
