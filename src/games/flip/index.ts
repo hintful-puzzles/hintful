@@ -201,7 +201,7 @@ export const flipGame: Game<
     }
     const wh = p.w * p.h;
     if (wh > (INT_MAX - 3) / wh) {
-      return "Width times height is too large.";
+      return AREA_TOO_LARGE;
     }
     return null;
   },
