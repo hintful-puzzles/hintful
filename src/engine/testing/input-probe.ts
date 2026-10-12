@@ -145,6 +145,23 @@ export function probeBoard(
   let unchanged = 0;
   let redraws = 0;
   let answers = 0;
+  // What the game says of a board as dealt, asked once a board. The midend
+  // holds every board it loads to the game's solver (`loadDesc`, and the tier
+  // it then labels the board with), and `reset` loads the one board again for
+  // every probe point: unremembered, a walk solved Pattern's board some
+  // thirty thousand times, and a reset cost a hundred times a click. A fresh
+  // state is known by the params and desc it was built from; a state a move
+  // made is not one, and is always asked afresh.
+  const dealtAs = new WeakMap<object, string>();
+  const verdicts = new Map<string, unknown>();
+  const asDealt = <T>(question: string, state: unknown, ask: () => T): T => {
+    const board = typeof state === "object" && state ? dealtAs.get(state) : undefined;
+    if (board === undefined) return ask();
+    const key = `${question}|${board}`;
+    if (!verdicts.has(key)) verdicts.set(key, ask());
+    return verdicts.get(key) as T;
+  };
+  const { difficulty, solve, finishesByDeduction, hasNoSolution } = game;
   const spy: AnyGame = {
     ...game,
     interpretMove: (...args) => {
@@ -152,10 +169,34 @@ export function probeBoard(
       if (answer !== null) answers++;
       return answer;
     },
-    newState: (...args) => {
-      current = game.newState(...args);
+    newState: (p, desc) => {
+      current = game.newState(p, desc);
+      if (typeof current === "object" && current)
+        dealtAs.set(current, `${game.encodeParams(p, true)}:${desc}`);
       return current;
     },
+    ...(difficulty && {
+      difficulty: {
+        solveAtCap: (p, desc, cap) => {
+          const key = `cap ${cap}|${game.encodeParams(p, true)}:${desc}`;
+          if (!verdicts.has(key))
+            verdicts.set(key, difficulty.solveAtCap(p, desc, cap));
+          return verdicts.get(key) as ReturnType<typeof difficulty.solveAtCap>;
+        },
+      },
+    }),
+    ...(solve && {
+      solve: (orig, curr, aux) =>
+        orig === curr && aux === undefined
+          ? asDealt("solve", orig, () => solve(orig, curr, aux))
+          : solve(orig, curr, aux),
+    }),
+    ...(finishesByDeduction && {
+      finishesByDeduction: (s) => asDealt("finishes", s, () => finishesByDeduction(s)),
+    }),
+    ...(hasNoSolution && {
+      hasNoSolution: (s) => asDealt("no solution", s, () => hasNoSolution(s)),
+    }),
     newUi: (...args) => {
       liveUi = game.newUi(...args);
       return liveUi;

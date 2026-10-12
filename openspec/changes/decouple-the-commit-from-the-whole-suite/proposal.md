@@ -99,6 +99,68 @@ leaves that to a run that is canceled a third of the time.
 Separately, and small: a commit that changes only comments in a file should
 not get the plan `ALL`.
 
+## The owner's answers (2026-10-12)
+
+- **The optimization round comes first**, in the session that filed this.
+- **Leaning to the whole suite only in CI**, together with removing or
+  shortening the particularly heavy tests, "so that the suite is more
+  cost-effective". The change is still to explore every option.
+- **B is not to be judged on today's habit of pushing each commit.** If the
+  whole suite moves to a pre-push hook, the rule that goes with it is that a
+  session pushes at its end, or when the owner asks for an early push. So B
+  is "one whole run a session, before its push", and its cost is that a
+  deploy, which is how the owner sees work, waits for the session's end.
+
+## The first round (2026-10-12)
+
+**What had grown the input guards was one cause.** `probeBoard`'s `reset`
+loads the same board again for every probe point, and since 2026-10-04 to
+2026-10-10 the midend holds every board it loads to the game's solver:
+`loadDesc` asks `solve` and the difficulty contract, and the tier label asks
+the contract again. A reset cost 4.6 ms on Pattern and 10.8 ms on Filling
+against 0.01 to 0.07 ms for the click it was resetting for, and the verbs
+guard reset Pattern's board for each of 7,744 points, several times over.
+
+The probe's game now remembers what the real game says of a board as dealt
+(`src/engine/testing/input-probe.ts`), keyed on the params and desc a state
+was built from. A reset is 0.02 ms. A state a move made is never
+remembered. Planted: an erase key that marks two squares is still refused by
+`target-verb.test.ts`.
+
+| | Before | After |
+| --- | --- | --- |
+| The 19 files that use the probe | 742 s | 190 s |
+| `target-verb.test.ts` | 353 s | 34 to 40 s |
+| `input-parity.test.ts` | 169 s | 20 to 34 s |
+| `canceled-press.test.ts` | 44 s | 12 to 15 s |
+
+**The stale-step walk keyed every board twice**, and now once
+(`hint-resume.test.ts`): Loopy's case 39.6 s to 26.0 s, both at a load near
+10.
+
+**The whole selection after the first of those**, same command:
+
+| | Test time | Wall | CPU | Load |
+| --- | --- | --- | --- | --- |
+| Before | 1,657 s | 901 s | 1,845 s | 6 to 9 |
+| After | 1,107 s | 626 s | 1,297 s | 6 to 13 |
+
+That is a third off, and still well above 2026-10-08's 714 s of test time.
+Neither pair was taken on a quiet machine.
+
+**What is left is three walks, and none of it is waste of that kind.**
+`hint-resume` (158 s), `hint-quality` (150 s) and `warm-repaint` (108 s) are
+38% of what remains. Loopy alone is about 110 s of the first two, and Solo,
+Mosaic, Pearl, Pegs and Group most of the rest. The resume walk asks the
+mistake check and a whole new plan after every single move, which is what
+it is for: shortening it is a trade in what it catches, and belongs with the
+options above.
+
+**Found on the way, not mended**: `target-verb.test.ts` compares the set of
+boards a key reaches with the set its pointer route reaches, over all
+squares together. A planted erase key that acted on the square beside the
+cursor passed, because that board is one a click elsewhere also reaches.
+
 ## Capabilities
 
 None at filing; the change sets `skip_specs`. A, B and C each move a

@@ -322,13 +322,17 @@ describe("a kept hint plan never contains a step that does nothing", () => {
           let state = game.newState(params, desc);
           const res = game.hint?.(state, aux);
           if (!res?.ok) continue; // a refusal has no steps to check
+          // Each board is keyed once and its key carried to the next step:
+          // writing a state out is this walk's whole cost on Loopy's grid.
+          let key = stateKey(state);
           res.steps.forEach((step, i) => {
-            const after = game.executeMove(state, step.move);
+            state = game.executeMove(state, step.move);
+            const after = stateKey(state);
             expect(
-              stateKey(after) !== stateKey(state),
+              after !== key,
               `${at}: plan step ${i} is a no-op when reached (stale step)`,
             ).toBe(true);
-            state = after;
+            key = after;
           });
         }
       }
