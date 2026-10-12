@@ -32,6 +32,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { fold, namedCitations } from "./guide-citations.ts";
 
 /** The opening of a guide, in bytes: its paragraph, its how-to and its table. */
 const OPENING_BYTES = 12_000;
@@ -178,15 +179,6 @@ if (tabled === 0)
 const RECORD = /^openspec\/(changes\/archive|postmortems)\//;
 const TEXT = /\.(md|ts|mts|mjs|js|sh|json|yaml|yml|css|html)$/;
 
-/**
- * A citation runs across a comment's line break, so a break is folded with
- * the comment leader or quote marker that follows it.
- */
-function fold(text) {
-  return text.replace(/[ \t]*\n[ \t]*(?:\*(?!\/)|\/\/[/!]?|#|>)?[ \t]*/g, " ");
-}
-
-const NAMED = /([a-z][a-z0-9-]*\.md)(?:`|\]|\)|\([^)\s]*\))*,?\s+§\s*"([^"]+)"/g;
 const BARE = /§\s*"([^"]+)"/g;
 
 let citations = 0;
@@ -202,14 +194,14 @@ for (const file of tracked) {
   if (!text.includes("§")) continue;
   cited++;
   const named = new Set();
-  for (const match of text.matchAll(NAMED)) {
-    const guide = guides.get(match[1]);
+  for (const cite of namedCitations(text)) {
+    const guide = guides.get(cite.guide);
     if (!guide) continue;
-    named.add(match.index + match[0].lastIndexOf("§"));
+    named.add(cite.mark);
     citations++;
-    if (!guide.titles.has(match[2])) {
+    if (!guide.titles.has(cite.heading)) {
       failures.push(
-        `${file}: ${match[1]} § "${match[2]}" names no section of ${guide.file}`,
+        `${file}: ${cite.guide} § "${cite.heading}" names no section of ${guide.file}`,
       );
     }
   }

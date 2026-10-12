@@ -28,7 +28,9 @@ state and one set of marks, so the writing is not divided among agents.
    that plays, on the shared way for every concern that has one, and § "File
    anatomy" says what each of its files holds.
 4. **Replace the skeleton's puzzle with yours, a concern at a time**, keeping
-   its tests green: the board and the moves (`state.ts`), the rules
+   `npm run game -- <gameId>` green once the game is registered, and its own
+   tests before that ([`testing.md`](./testing.md) § "A game's verdict in one
+   command"): the board and the moves (`state.ts`), the rules
    (`solver.ts`), the generator, the picture, the hint's sentences. Before
    each concern, read the opening of its guide and the sections the route
    names. Where your puzzle fits the shared way, change the puzzle's part and
@@ -108,8 +110,8 @@ guides is for a game that is not yours.
   `hints-marks.md` § "Shade vs ring", without its parts; `hints-marks.md` §
   "Show the evidence as an area", without its parts.
 - [`testing.md`](./testing.md) § "What a new game ships"; `testing.md` §
-  "Pinning a hint's positions"; `testing.md` § "Running the cross-game guards
-  for one game"; `testing.md` § "What a game owes the cross-game guards",
+  "Pinning a hint's positions"; `testing.md` § "A game's verdict in one
+  command"; `testing.md` § "What a game owes the cross-game guards",
   without its parts, which are for the author of a guard.
 - [`engine-catalog.md`](./engine-catalog.md): its table, before writing any
   helper of your own.
@@ -200,6 +202,7 @@ reproduces is the one outcome to avoid.
 | "Did this move change anything?" by comparing states | The engine's: the midend keeps a move that left the board as it was out of the history. Write no comparison of your own: [`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE". |
 | Editor-only move letters (upstream `#ifdef EDITOR`) | Do not map them, and say so in `design.md`. |
 | "Print this puzzle" | No printing exists. Do not promise it. |
+| A params string upstream's encoder writes (a game ported from upstream) | Record every form the C `encode_params` writes in `UPSTREAM` in [`params-read-whole.test.ts`](../src/engine/params-read-whole.test.ts), so each still decodes. Nothing fails for a port that leaves it out; a game written here has no entry. |
 
 ## File anatomy
 
@@ -338,6 +341,10 @@ uniquely solvable at exactly its stated difficulty" as a property test
 
 A game, or a change to one, is done when all of these hold:
 
+- [ ] `npm run game -- <gameId>` is green: the typecheck, the game's own
+      tests and every cross-game guard's cases for it
+      ([`testing.md`](./testing.md) § "A game's verdict in one command"). It
+      says what it leaves to the push and to the app.
 - [ ] The interface risks were checked before starting (§ "Before you start").
 - [ ] Idiomatic TypeScript, not a transliteration
       ([`mechanics.md`](./mechanics.md) § "Idiomatic state, not a C transliteration").

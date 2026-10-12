@@ -24,8 +24,9 @@ import {
   PENCIL_MODE_BUTTON,
   startDrag,
 } from "./pointer.ts";
-import { builtGames } from "./testing/enrollment.ts";
+import { builtGames, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { changedUnder, probeBoard, probePoints } from "./testing/input-probe.ts";
+import { itOverWholeSweep } from "./testing/slow.ts";
 import type { Point } from "./types.ts";
 
 beforeAll(registerAllGames);
@@ -66,35 +67,30 @@ describe("a gesture does not survive the board changing under it", () => {
   // game is asked for anything, so the population is every game. A preview
   // needs no knowledge of where a game paints one: the `Ui` is compared with
   // one that never met the gesture, and a preview is a difference between them.
-  it("in every game, held and dragged, with both buttons, under an Undo and a Redo", () => {
-    const carriedOn: string[] = [];
-    const painted: string[] = [];
-    const left: string[] = [];
-    const power: string[] = [];
-    const untried: string[] = [];
-    const moved: string[] = [];
-    const name = (to: string[], id: string, found: readonly string[]) => {
-      for (const f of found.slice(0, 2)) to.push(`${id}: ${f}`);
-      if (found.length > 2) to.push(`${id}: and ${found.length - 2} more`);
-    };
-    for (const { id, game } of builtGames()) {
+  //
+  // One case per game, so a run scoped to one game walks only that game's
+  // board (`testing/game-scope.ts`).
+  const moved: string[] = [];
+  for (const [id, game] of REGISTERED_GAMES) {
+    it(`${id}: held and dragged, with both buttons, under an Undo and a Redo`, () => {
       const r = changedUnder(game, id);
-      name(carriedOn, id, r.carriedOn);
-      name(painted, id, r.painted);
-      name(left, id, r.left);
-      power.push(`${id} ${r.gestures}`);
-      if (r.dragged === 0) untried.push(id);
+      const said = `of ${r.gestures} gestures the board changed under`;
+      expect(r.carriedOn, said).toEqual([]);
+      expect(r.painted, said).toEqual([]);
+      expect(r.left, said).toEqual([]);
+      expect(r.dragged, "no drag had the board changed under it").toBeGreaterThan(0);
       if (r.moved > 0) moved.push(id);
-    }
-    const said = `gestures the board changed under, per game: ${power.join(", ")}`;
-    expect(carriedOn, said).toEqual([]);
-    expect(painted, said).toEqual([]);
-    expect(left, said).toEqual([]);
-    expect(untried, "no drag had the board changed under it").toEqual([]);
-    // A press that already made its move is a gesture too, and most click
-    // games act on the press: a handful would mean a broken probe.
-    expect(moved.length).toBeGreaterThanOrEqual(20);
-  });
+    });
+  }
+
+  // A press that already made its move is a gesture too, and most click
+  // games act on the press: a handful would mean a broken probe.
+  itOverWholeSweep(
+    "changed the board under a press that had moved, in most games",
+    () => {
+      expect(moved.length).toBeGreaterThanOrEqual(20);
+    },
+  );
 
   it("a move made by a key with the pointer down is typed where the press pointed", () => {
     // The one board change that does not end the gesture: a press selects a

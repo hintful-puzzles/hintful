@@ -64,13 +64,16 @@ const MARK_ALL_GAMES: Row[] = registeredGameIds()
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
 const notesOf = (state: any): Int32Array | Uint8Array | Uint16Array => state.pencil;
 
-it("drew a populated roster, and every member keeps its notes in `pencil`", () => {
+it("drew a populated roster", () => {
   // Vacuity: an empty registry yields an empty roster, and every `it()` built
   // from it below simply never runs — which `--passWithNoTests` reports green.
   expect(MARK_ALL_GAMES.length).toBeGreaterThan(5);
-  // Every enrolled game really does keep its notes under the shared noun — on
-  // every board the gate slice offers.
-  for (const row of MARK_ALL_GAMES) {
+});
+
+// Every enrolled game really does keep its notes under the shared noun — on
+// every board the gate slice offers.
+for (const row of MARK_ALL_GAMES) {
+  it(`${row.name}: keeps its notes in \`pencil\``, () => {
     for (const { title, params } of gatePresets(row.name, row.game)) {
       const { desc } = dealt(row.game, params);
       const notes = notesOf(row.game.newState(params, desc));
@@ -79,8 +82,8 @@ it("drew a populated roster, and every member keeps its notes in `pencil`", () =
         `${row.name}/${title} offers Mark-all but has no \`pencil\` notes array`,
       ).toBe(true);
     }
-  }
-});
+  });
+}
 
 describe("the press is the engine's, whatever a game types with M", () => {
   /*

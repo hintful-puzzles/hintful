@@ -1,7 +1,9 @@
 # give-a-game-its-verdict-in-one-command
 
-**Status: scaffolded 2026-10-12, not started.** Third of the five pieces of
-`fit-a-new-game-in-one-session`, whose proposal holds the measurements.
+**Status: built 2026-10-12.** Third of the pieces of
+`fit-a-new-game-in-one-session`, whose proposal holds the measurements. The
+command is `npm run game -- <id>`; `design.md` says how it narrows, what it
+costs and what it found.
 
 ## Why
 
@@ -59,7 +61,7 @@ builds should at least name all five on a game's first run.
 
 ## Capabilities
 
-None at filing; see `.openspec.yaml`.
+`testing` gains three requirements for the command.
 
 ## Impact
 

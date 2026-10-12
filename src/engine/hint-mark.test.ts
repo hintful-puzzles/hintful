@@ -62,6 +62,18 @@ function solidFills(ops: readonly Op[], color: number, cell: number): Op[] {
   });
 }
 
+/**
+ * The hint games whose renderer exports no `COL_HINT`, each with what its hint
+ * marks in place of a cell. This sweep says nothing about them, so the set is
+ * asserted exact: a game that stops exporting the color fails here, and a new
+ * game that exports it is swept with no entry anywhere.
+ */
+const MARKS_NO_CELL: Record<string, string> = {
+  fifteen: "the tile to slide, and its color is the renderer's own",
+  flood: "the squares the next fill joins, each with a dot of that fill's color",
+  sixteen: "the arrow to press and the tiles it moves, in the renderer's own color",
+};
+
 /** Every `render.ts` in the games tree, by puzzle id. */
 function renderersById(): Map<string, Record<string, unknown>> {
   const byId = new Map<string, Record<string, unknown>>();
@@ -140,8 +152,12 @@ describe("a hint marks beside the content, never behind it", () => {
     // renderer shows up here.
     expect(HINT_GAMES.filter(([id]) => !byId.has(id)).map(([id]) => id)).toEqual([]);
     // …and the sweep itself cannot quietly shrink: a game whose `COL_HINT`
-    // export is renamed away drops out of `CHECKED` in silence otherwise.
-    expect(CHECKED.length).toBe(50);
+    // export is renamed away drops out of `CHECKED` in silence otherwise. So
+    // the games left out are named, and a game that exports one is in.
+    const checked = new Set(CHECKED.map(([id]) => id));
+    expect(HINT_GAMES.map(([id]) => id).filter((id) => !checked.has(id))).toEqual(
+      Object.keys(MARKS_NO_CELL).sort(),
+    );
     // And the wash list names real games, so a rename cannot leave a dead
     // exemption behind that silently stops guarding anything.
     for (const id of EVIDENCE_WASH_GAMES)

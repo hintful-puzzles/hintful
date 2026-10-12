@@ -12,8 +12,9 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "./pointer.ts";
-import { builtGames } from "./testing/enrollment.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { canceledPresses, probeBoard, probePoints } from "./testing/input-probe.ts";
+import { inSweep, itOverWholeSweep } from "./testing/slow.ts";
 import type { Point } from "./types.ts";
 
 beforeAll(registerAllGames);
@@ -25,52 +26,52 @@ beforeAll(registerAllGames);
  */
 const NO_MOVED_PRESS: Record<string, string> = {};
 
+/** A point where this game makes a move on the press itself, found by
+ * trying: a table of which games act on the press would be a manifest. */
+function pressThatMoves(b: ReturnType<typeof probeBoard>): Point | null {
+  for (const p of probePoints(b.size)) {
+    b.reset();
+    const before = b.moves();
+    const claimed = b.m.processInput(p.x, p.y, LEFT_BUTTON);
+    const moved = b.moves() !== before;
+    b.m.processInput(p.x, p.y, LEFT_RELEASE);
+    if (claimed && moved) return p;
+  }
+  return null;
+}
+
 describe("a canceled press leaves a game as it was before the press", () => {
   it("sweeps a non-trivial population", () => {
-    expect(builtGames().length).toBeGreaterThanOrEqual(57);
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
   });
 
-  it("in every game, with both buttons, moved and unmoved", () => {
-    const left: string[] = [];
-    const unmovedOnly: string[] = [];
-    const power: string[] = [];
-    for (const { id, game } of builtGames()) {
+  // One case per game, so a run scoped to one game walks only that game's
+  // board (`testing/game-scope.ts`); what reads across them follows the loop.
+  const unmovedOnly: string[] = [];
+  let actOnThePress = 0;
+
+  for (const [id, game] of REGISTERED_GAMES) {
+    it(`${id}: with both buttons, moved and unmoved, and with no press open`, () => {
       const r = canceledPresses(game, id);
-      // Named first, so the failure says which games and how many presses.
-      for (const l of r.left.slice(0, 3)) left.push(`${id}: ${l}`);
-      if (r.left.length > 3) left.push(`${id}: and ${r.left.length - 3} more`);
-      expect(
-        r.canceled,
-        `${id}: no press was claimed, so none was canceled`,
-      ).toBeGreaterThan(0);
+      expect(r.canceled, "no press was claimed, so none was canceled").toBeGreaterThan(
+        0,
+      );
+      expect(r.left, `of ${r.canceled} presses canceled`).toEqual([]);
       if (r.moved === 0) unmovedOnly.push(id);
-      power.push(`${id} ${r.canceled}`);
-    }
-    expect(left, `presses canceled per game: ${power.join(", ")}`).toEqual([]);
-    expect(unmovedOnly.sort()).toEqual(Object.keys(NO_MOVED_PRESS).sort());
-  });
 
-  /** A point where this game makes a move on the press itself, found by
-   * trying: a table of which games act on the press would be a manifest. */
-  function pressThatMoves(b: ReturnType<typeof probeBoard>): Point | null {
-    for (const p of probePoints(b.size)) {
-      b.reset();
-      const before = b.moves();
-      const claimed = b.m.processInput(p.x, p.y, LEFT_BUTTON);
-      const moved = b.moves() !== before;
-      b.m.processInput(p.x, p.y, LEFT_RELEASE);
-      if (claimed && moved) return p;
-    }
-    return null;
-  }
-
-  it("takes back a move the press made, and keeps the moves ahead for Redo", () => {
-    let exercised = 0;
-    for (const { id, game } of builtGames()) {
       const b = probeBoard(game, id);
+      expect(b.m.cancelPress(), "nothing was pressed").toBe(false);
+      for (const p of probePoints(b.size).slice(0, 12)) {
+        b.m.processInput(p.x, p.y, LEFT_BUTTON);
+        b.m.processInput(p.x, p.y, LEFT_RELEASE);
+        const released = b.held();
+        expect(b.m.cancelPress(), "the press was released").toBe(false);
+        expect(b.held()).toBe(released);
+      }
+
       const p = pressThatMoves(b);
-      if (p === null) continue;
-      exercised++;
+      if (p === null) return;
+      actOnThePress++;
 
       // One move made and undone: it is what Redo holds.
       b.reset();
@@ -80,51 +81,37 @@ describe("a canceled press leaves a game as it was before the press", () => {
       b.m.undo();
       const undone = b.held();
 
-      // A press there makes a move, which drops what was ahead of it.
+      // A press there makes a move, which drops what was ahead of it, and a
+      // cancel takes the move back and keeps the moves ahead for Redo.
       b.m.processInput(p.x, p.y, LEFT_BUTTON);
-      expect(b.moves(), `${id}: the press made its move`).toBe(1);
-      expect(b.m.cancelPress(), `${id}: a press was open`).toBe(true);
-      expect(b.held(), `${id}: the canceled press's move stayed`).toBe(undone);
+      expect(b.moves(), "the press made its move").toBe(1);
+      expect(b.m.cancelPress(), "a press was open").toBe(true);
+      expect(b.held(), "the canceled press's move stayed").toBe(undone);
       expect(b.moves()).toBe(0);
-
       b.m.redo();
-      expect(b.held(), `${id}: Redo lost the move ahead of the press`).toBe(played);
-    }
-    // Most click games act on the press; a handful would mean a broken probe.
-    expect(exercised).toBeGreaterThanOrEqual(10);
-  });
+      expect(b.held(), "Redo lost the move ahead of the press").toBe(played);
 
-  it("changes nothing once the board has changed under the press", () => {
-    let exercised = 0;
-    for (const { id, game } of builtGames()) {
-      const b = probeBoard(game, id);
-      const p = pressThatMoves(b);
-      if (p === null) continue;
-      exercised++;
+      // Once the board has changed under the press, a cancel changes nothing:
+      // the gesture's own move, then an Undo from outside it.
       b.reset();
       b.m.processInput(p.x, p.y, LEFT_BUTTON);
       b.m.processInput(p.x, p.y, LEFT_RELEASE);
       b.m.processInput(p.x, p.y, LEFT_BUTTON);
-      // The gesture's own move, then an Undo from outside it.
       b.m.undo();
       const after = b.held();
-      expect(b.m.cancelPress(), `${id}: the press outlived an Undo`).toBe(false);
+      expect(b.m.cancelPress(), "the press outlived an Undo").toBe(false);
       expect(b.held()).toBe(after);
-    }
-    expect(exercised).toBeGreaterThanOrEqual(10);
+    });
+  }
+
+  it("canceled a press that had moved in every game but the ones it names", () => {
+    expect(unmovedOnly.sort()).toEqual(
+      Object.keys(NO_MOVED_PRESS).filter(inSweep).sort(),
+    );
   });
 
-  it("changes nothing with no press open", () => {
-    for (const { id, game } of builtGames()) {
-      const b = probeBoard(game, id);
-      expect(b.m.cancelPress(), `${id}: nothing was pressed`).toBe(false);
-      for (const p of probePoints(b.size).slice(0, 12)) {
-        b.m.processInput(p.x, p.y, LEFT_BUTTON);
-        b.m.processInput(p.x, p.y, LEFT_RELEASE);
-        const released = b.held();
-        expect(b.m.cancelPress(), `${id}: the press was released`).toBe(false);
-        expect(b.held()).toBe(released);
-      }
-    }
+  // Most click games act on the press; a handful would mean a broken probe.
+  itOverWholeSweep("found a press that makes a move in most click games", () => {
+    expect(actOnThePress).toBeGreaterThanOrEqual(10);
   });
 });

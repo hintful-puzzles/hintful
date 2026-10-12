@@ -115,12 +115,11 @@ What is left to do, and the copy does none of it:
        - import ${GAME_OBJECT} in src/games/index.ts and register it there
        - add its entry to src/puzzle/catalog-data.ts, with its family
      Until then no cross-game guard reads the game. Once it is registered,
-     four records kept by hand refuse it until each has it (found by
-     registering a copy on 2026-10-12; a guard added since may ask more):
+     run the game's whole verdict, here and after every concern you change:
+       npm run game -- ${GAME}
+     It names every guard that refuses the game, with the guide section the
+     guard cites. Two records kept by hand refuse a game on its first run:
        - help/puzzles.md: its row (help-coverage.test.ts)
-       - src/engine/params-read-whole.test.ts: its params strings, under its
-         id in UPSTREAM
-       - src/engine/hint-mark.test.ts: the count of renderers looked at
        - the snapshots of capability-surface.test.ts and
          params-stability.test.ts (run each with --update and read the diff)
   3. Pin the hint again once the rungs are this puzzle's:

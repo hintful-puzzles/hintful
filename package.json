@@ -26,6 +26,7 @@
     "probe": "node scripts/feedback-probe.mjs",
     "refs": "node scripts/refs.mjs",
     "agent-diagnostics": "sh scripts/agent-diagnostics.sh",
+    "game": "node scripts/game.ts",
     "hint-scan": "node scripts/hint-scan.ts",
     "deal-walk": "node scripts/deal-walk.ts",
     "dead-exports": "node scripts/checks/unused-exports.mjs",

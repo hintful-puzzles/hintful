@@ -326,6 +326,39 @@ function pushLines(change: Change, graph: Graph): string[] {
   return leavesOut(commitLines(change, graph), push) ? push : ["NOTHING"];
 }
 
+/** The paths that are one game's, tracked or not: its directory, its help
+ * page and its icons. */
+function gamePaths(id: string): string[] {
+  return git([
+    "ls-files",
+    "--cached",
+    "--others",
+    "--exclude-standard",
+    "--",
+    `src/games/${id}/`,
+    `help/games/${id}.md`,
+    `src/assets/icons/${id}-*`,
+  ])
+    .split("\n")
+    .filter(Boolean);
+}
+
+/**
+ * The test files that hold one game's verdict, for `scripts/game.ts`: every
+ * file that reaches a path of the game, less the other games' own. Another
+ * game's tests reach this one only through the registry they both sit in, and
+ * a failure there is that game's.
+ *
+ * Every file here is run with the scope set to the game, a file that reads the
+ * game's help page itself included: a push runs such a file whole because the
+ * change might have broken another game's case, and a verdict on one game asks
+ * only for its own.
+ */
+export function gameTestFiles(id: string): string[] {
+  const change: Change = { paths: gamePaths(id), prose: new Set() };
+  return selected(change, NO_GRAPH).filter((f) => (gameOf(f) ?? id) === id);
+}
+
 /**
  * Known positives on the real tree, each one a way this script has been, or
  * could be, blind: a walk that finds nothing reports a narrow plan and looks
@@ -463,6 +496,20 @@ function verify(): void {
       `a push of ${paths.join()} alone repeats nothing its commit ran`,
     );
   }
+
+  // One game's verdict: its own tests, the guards that reach it through the
+  // registry or read its help page and icons, and no other game's tests.
+  const verdict = gameTestFiles("pearl");
+  expect(
+    [
+      "src/games/pearl/pearl.test.ts",
+      "src/engine/hint-resume.test.ts",
+      "src/help-coverage.test.ts",
+      "src/asset-integrity.test.ts",
+    ].every((f) => verdict.includes(f)) &&
+      !verdict.some((f) => (gameOf(f) ?? "pearl") !== "pearl"),
+    "Pearl's verdict runs its tests, the registry's guards and its help page's, and no other game's",
+  );
 
   // Comments alone: the parser's tokens, and the readers of the text.
   expect(

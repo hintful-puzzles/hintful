@@ -93,7 +93,8 @@ describe("a character no game's grammar reads", () => {
  * optional piece and every letter the C encoder can emit appears, with the
  * legacy forms its `decode_params` still reads. Read from the C on 2026-10-11
  * (`../puzzles/*.c`, and `puzzles-web`'s `unreleased/` for the games that are
- * not Simon Tatham's).
+ * not Simon Tatham's). A game ported from upstream adds its own; nothing asks
+ * for one, since nothing a game declares says it has an upstream.
  */
 const UPSTREAM: Record<string, string[]> = {
   abcd: ["4x4n4", "4x4n4D", "4x4n4R", "5x5n4DR"],
@@ -194,16 +195,21 @@ const UPSTREAM: Record<string, string[]> = {
 };
 
 describe("a params string upstream's encoder writes", () => {
-  it("is recorded for every registered game", () => {
-    expect(
-      REGISTERED_GAMES.map(([id]) => id).filter((id) => !(id in UPSTREAM)),
-    ).toEqual([]);
+  // A game written for this collection has no upstream encoder and no entry,
+  // and is asked nothing here. So what is held is the record itself: it names
+  // only games there are, and it has not emptied.
+  const registered = new Map(REGISTERED_GAMES);
+
+  it("is recorded only for games there are, and for the ported collection", () => {
+    expect(Object.keys(UPSTREAM).filter((id) => !registered.has(id))).toEqual([]);
+    expect(Object.keys(UPSTREAM).length).toBeGreaterThanOrEqual(57);
   });
 
-  for (const [id, game] of REGISTERED_GAMES) {
-    it(`is read: ${id}`, () => {
-      for (const s of UPSTREAM[id] ?? []) {
-        expect(() => game.decodeParams(s), `${id} ${s}`).not.toThrow();
+  for (const [id, strings] of Object.entries(UPSTREAM)) {
+    it(`${id}: is read`, () => {
+      expect(strings.length).toBeGreaterThan(0);
+      for (const s of strings) {
+        expect(() => registered.get(id)?.decodeParams(s), `${id} ${s}`).not.toThrow();
       }
     });
   }

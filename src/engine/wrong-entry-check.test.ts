@@ -69,6 +69,7 @@ import {
 } from "./testing/enrollment.ts";
 import { gatePresets } from "./testing/hint-games.ts";
 import { GESTURE_KINDS, randomGesture } from "./testing/input-probe.ts";
+import { inSweep, itOverWholeSweep } from "./testing/slow.ts";
 
 const GESTURES = 180;
 const PAIRS = 60;
@@ -259,16 +260,27 @@ describe("Check & save names a wrong entry", () => {
     });
   }
 
+  // What reads across the games is asked of the games whose cases ran, so a
+  // run scoped to one game sweeps that game alone (`testing/game-scope.ts`).
+  const ran = CHECKED.filter(([id]) => inSweep(id));
+
   it("made a wrong entry in every game but the ones it says it cannot", () => {
-    const none = CHECKED.filter(([id, game]) => sweep(id, game).wrongEntries === 0);
-    expect(none.map(([id]) => id)).toEqual(Object.keys(UNREACHED).sort());
+    const none = ran.filter(([id, game]) => sweep(id, game).wrongEntries === 0);
+    expect(none.map(([id]) => id)).toEqual(
+      Object.keys(UNREACHED).filter(inSweep).sort(),
+    );
   });
 
   it("played a step of the plan out of its order in every game that deduces", () => {
-    const results = CHECKED.map(([id, game]) => [id, sweep(id, game)] as const);
-    const none = results.filter(([, r]) => r.deduced && r.outOfOrder === 0);
+    const none = ran.filter(([id, game]) => {
+      const r = sweep(id, game);
+      return r.deduced && r.outOfOrder === 0;
+    });
     expect(none.map(([id]) => id)).toEqual([]);
-    const reached = results.filter(([, r]) => r.outOfOrder >= 20);
+  });
+
+  itOverWholeSweep("played twenty steps out of their order in most games", () => {
+    const reached = CHECKED.filter(([id, game]) => sweep(id, game).outOfOrder >= 20);
     expect(reached.length).toBeGreaterThanOrEqual(35);
   });
 });

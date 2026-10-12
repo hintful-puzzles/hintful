@@ -39,8 +39,9 @@ runs, and what a commit may leave to the push and to CI).
    clock-gated".
 6. Break the line each new test is for, see it fail, and put it back. See
    "Break the code under a new test".
-7. Run the game's directory, then the cross-game guards' cases for the game.
-   See "Running the cross-game guards for one game".
+7. Run `npm run game -- <id>` after each concern you change: the game's own
+   tests and every cross-game guard's cases for it. See "A game's verdict in
+   one command".
 8. Run the app, commit, and push once when the session's work is done. See
    "What runs when".
 
@@ -54,7 +55,7 @@ runs, and what a commit may leave to the push and to CI).
 | Pinning a hint's positions | your game gains a hint rung, or a hint test needs the board a sentence fires on |
 | – A rung the scan finds no position for | `npm run hint-scan` exits 1, or you are about to list a rung in `unreached` |
 | – A kind a rung id does not say | a test needs a case of a rung, a step's shape, a later leg, or a position off the hint's own line |
-| Running the cross-game guards for one game | your game's own tests pass and you want what the commit hook will run |
+| A game's verdict in one command | you are writing or changing a game and want everything the collection asks of it, in a minute |
 | Render scenarios | your game draws a highlight, an overlay, a cursor or an animation frame |
 | – A frame that needs the browser | a check has to be made in the running app and the frame is deep in a game |
 | – A snapshot cannot see a hole | a change moves the canvas geometry: a margin, an origin, `computeSize` |
@@ -248,26 +249,34 @@ under another `ui`) takes `describeHintKindPins`. Its kinds are rung ids or
 predicates, the same command writes its pins, and a file may hold several
 blocks at any indent.
 
-## Running the cross-game guards for one game
+## A game's verdict in one command
+
+Run `npm run game -- <id>` while you write a game, after each concern you
+change. It is about a minute, and it is what a commit staging the game would
+run: the typecheck, biome over the game's directory, the game's own tests,
+and every cross-game guard that reaches the game, with the other games' cases
+skipped ([`scripts/game.ts`](../scripts/game.ts)).
 
 Do not take a green `vitest run src/games/<game>` as the game's coverage. Its
 input paths, save round-trip, params codec and its source text (color
 literals, hint wording, note vocabulary) are checked by guards outside
-`src/games/`, and two guards read the whole tree
-(§ "What a game owes the cross-game guards").
+`src/games/` (§ "What a game owes the cross-game guards").
 
-- `node scripts/checks/select-tests.ts` prints the commit hook's plan for
-  what is staged: each test file on a line of its own after `whole` or
-  `narrow`.
-- The guards title a game's cases `<id>: …`, so run those files with
-  `-t <game>` and check the count of tests run is not zero.
-- Pass the file list through `xargs`. zsh does not word-split an unquoted
-  `$VAR`, and `vitest run $LIST` then finds no tests.
-- Do not pick tests with `vitest related` or `--changed` alone. The guards
-  read game source as text through `import.meta.glob(…, "?raw")`, which forms
-  no import edge.
-- To see what the hook would reject, run a guard with
-  `GATE_PRECOMMIT=1 GATE_GAME_SCOPE=<game>`.
+- **It names every refusal at once**, each with the guide sections the
+  refusing guard cites. A guard that cites none says what it asks in its
+  header.
+- **A game it has never seen is refused by two records kept by hand**: its
+  row in `help/puzzles.md`, and the snapshots of `capability-surface.test.ts`
+  and `params-stability.test.ts`, which you write again with
+  `npx vitest run <file> -u` after reading the diff.
+- **Green here is a commit's verdict and not the gate's.** It ends by saying
+  what it did not run: the other games' cases, the floors over the whole
+  collection, the later boards of each kind that CI walks, the gate's checks
+  that read no game, and the app.
+- **It does not narrow by `-t <game>`**, and neither should you: a name
+  filter alone runs a floor over the collection against one game. The scope
+  travels as the commit hook's does (§ "A cross-game guard the hooks can
+  narrow").
 
 ## Render scenarios
 
@@ -719,8 +728,7 @@ reads; no list is edited. What each asks of the game's author:
   `.ts` file under `src/` for it.
 
 The last two take their population from the whole tree, so an edit inside one
-game's directory can move them (§ "Running the cross-game guards for one
-game").
+game's directory can move them (§ "A game's verdict in one command").
 
 ### How a cross-game guard finds its population
 
@@ -879,6 +887,11 @@ games it stages and skips the rest by title, so:
   helper's glob is paid for by every file that imports it, and one cheap
   `describe` reading the engine makes every sweep in its file run whole on an
   engine commit.
+- **A sweep that walks every game inside one test, or in a `beforeAll`, is
+  not narrowed at all**, and a run for one game pays for all of them. Give
+  each game a case, and let what reads across the cases compute a game's
+  answer on first asking, so it does not depend on which cases ran
+  (`input-answers.test.ts`).
 - **Check a new guard with `GATE_PRECOMMIT=1 GATE_GAME_SCOPE=<one game>`**;
   what fails there is what the hook would reject. If
   `node scripts/checks/select-tests.ts --verify` goes red on a heavy hint

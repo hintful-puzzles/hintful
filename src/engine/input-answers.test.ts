@@ -17,8 +17,9 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
-import { builtGames } from "./testing/enrollment.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { type InputAnswers, inputAnswers } from "./testing/input-probe.ts";
+import { inSweep } from "./testing/slow.ts";
 
 beforeAll(registerAllGames);
 
@@ -56,53 +57,61 @@ const ANSWERS_NOTHING_AND_CHANGES_THE_FRAME: Record<string, string> = {
 };
 
 describe("what an input's answer leaves behind", () => {
-  const answers = new Map<string, InputAnswers>();
-  beforeAll(() => {
-    for (const { id, game } of builtGames()) answers.set(id, inputAnswers(game, id));
-  });
-  const named = (pick: (r: InputAnswers) => readonly string[]) =>
-    [...answers].flatMap(([id, r]) =>
-      pick(r)
-        .slice(0, 3)
-        .map((how) => `${id}: ${how}`),
-    );
-  const reach = () =>
-    [...answers].map(([id, r]) => `${id} ${r.recorded}/${r.inputs}`).join(", ");
+  // Swept a game at a time and on first asking, so a run scoped to one game
+  // sweeps that game alone (`testing/game-scope.ts`).
+  const games = new Map(REGISTERED_GAMES);
+  const swept = new Map<string, InputAnswers>();
+  const answers = (id: string): InputAnswers => {
+    const game = games.get(id);
+    if (game === undefined) throw new Error(`${id} is not a registered game`);
+    const known = swept.get(id) ?? inputAnswers(game, id);
+    swept.set(id, known);
+    return known;
+  };
 
-  it("sweeps a non-trivial population, and makes a move in every game", () => {
-    expect(answers.size).toBeGreaterThanOrEqual(57);
-    const still = [...answers].filter(([, r]) => r.recorded === 0).map(([id]) => id);
-    expect(still, `moves recorded of inputs sent: ${reach()}`).toEqual([]);
+  it("sweeps a non-trivial population", () => {
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
   });
 
-  it("no move that left the board as it was is a step of the history", () => {
-    expect(named((r) => r.recordedUnchanged)).toEqual([]);
-  });
-
-  it("no move that changed the board is left out of the history", () => {
-    expect(named((r) => r.droppedChanged)).toEqual([]);
-  });
+  for (const [id] of REGISTERED_GAMES) {
+    it(`${id}: a move is a step exactly when it changed the board, and a changed frame is claimed`, () => {
+      const r = answers(id);
+      expect(r.recorded, `moves recorded of ${r.inputs} inputs sent`).toBeGreaterThan(
+        0,
+      );
+      expect(
+        r.recordedUnchanged.slice(0, 3),
+        "a move that left the board as it was is a step of the history",
+      ).toEqual([]);
+      expect(
+        r.droppedChanged.slice(0, 3),
+        "a move that changed the board is left out of the history",
+      ).toEqual([]);
+      expect(
+        r.unpainted.slice(0, 3),
+        "a Ui the game changed while answering nothing is left unpainted",
+      ).toEqual([]);
+      expect(
+        r.silent.slice(0, 3),
+        "an input that changed the frame is left unclaimed",
+      ).toEqual([]);
+    });
+  }
 
   it("still sees the moves the midend keeps out", () => {
-    const makes = [...answers].filter(([, r]) => r.unchanged > 0).map(([id]) => id);
     expect(MAKES_AN_UNCHANGED_MOVE.length).toBeGreaterThan(0);
-    expect(makes).toEqual(expect.arrayContaining(MAKES_AN_UNCHANGED_MOVE));
-  });
-
-  it("no Ui a game changed while answering nothing is left unpainted", () => {
-    expect(named((r) => r.unpainted)).toEqual([]);
-  });
-
-  it("no input that changed the frame is left unclaimed", () => {
-    expect(named((r) => r.silent)).toEqual([]);
+    expect(
+      MAKES_AN_UNCHANGED_MOVE.filter(inSweep).filter(
+        (id) => answers(id).unchanged === 0,
+      ),
+    ).toEqual([]);
   });
 
   it("still sees the inputs the midend claims for a game", () => {
-    const claimed = [...answers]
-      .filter(([, r]) => r.claimedForGame > 0)
-      .map(([id]) => id);
     const positives = Object.keys(ANSWERS_NOTHING_AND_CHANGES_THE_FRAME);
     expect(positives.length).toBeGreaterThan(0);
-    expect(claimed).toEqual(expect.arrayContaining(positives));
+    expect(
+      positives.filter(inSweep).filter((id) => answers(id).claimedForGame === 0),
+    ).toEqual([]);
   });
 });
