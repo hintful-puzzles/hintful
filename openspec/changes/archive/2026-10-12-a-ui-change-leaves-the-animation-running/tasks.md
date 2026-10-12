@@ -21,4 +21,4 @@
 
 ## 5. Acceptance
 
-- [ ] 5.1 The owner reported the missing win animation by name, and it is theirs to accept in the deployed app
+- [x] 5.1 The owner reported the missing win animation by name, and it is theirs to accept in the deployed app: accepted, 2026-10-12

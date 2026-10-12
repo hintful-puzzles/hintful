@@ -96,13 +96,12 @@ tile in that direction.
 
 ### Requirement: Fifteen offers a greedy full-solution hint plan
 
-`hint()` SHALL return the whole greedy solution as a multi-step plan, so the
-hint stays displayed while it is followed. Each step SHALL be the next
-single-cell gap slide the greedy solver chooses, highlighting the tile it
-slides. The solver SHALL fill the shorter of the top row and the left column
-tile by tile, moving the next tile toward its home, with a fixed
-shortest-move table for the end-of-line corner. Following the plan from any
-solvable board SHALL reach the solved state.
+`hint()` SHALL return the whole greedy solution as a multi-step plan. Each
+step SHALL be the next single-cell gap slide the greedy solver chooses,
+highlighting the tile it slides. The solver SHALL fill the shorter of the top
+row and the left column tile by tile, moving the next tile toward its home,
+with a fixed shortest-move table for the end-of-line corner. Following the
+plan from any solvable board SHALL reach the solved state.
 
 #### Scenario: Hint plan solves a solvable board
 

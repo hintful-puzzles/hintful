@@ -86,10 +86,11 @@ the auto-play preview.
 
 While a plan is active, displayed or not, the `Midend` SHALL classify each
 player move by the game's `hintKeepTrack(move, currentStep, state)` verdict.
-`"completed"` SHALL advance the plan to the next step and hide the display, so
-manual play shows one hint per request. `"onTrack"` SHALL keep the current step
-displayed, with any adjustment the game made in place to the step's move to
-reflect partial progress. `"off"` SHALL drop the plan.
+`"completed"` SHALL advance the plan and hide the display. `"onTrack"` SHALL
+keep the current step, with any adjustment the game made to its move, displayed
+only where it was displayed before the move. `"off"` SHALL drop the plan. A
+player's move SHALL never display a step: one is shown only by a hint request
+or by auto-play.
 
 #### Scenario: Exact-follow keeps the plan and a conflict drops it
 
@@ -97,6 +98,20 @@ reflect partial progress. `"off"` SHALL drop the plan.
 - **THEN** the plan is kept (advanced), not dropped
 - **AND WHEN** the player instead makes a conflicting move
 - **THEN** the plan is dropped and the next hint recomputes from the new state
+
+#### Scenario: A leg of a journey is completed by hand
+
+- **WHEN** the player's move completes a displayed step and the next step is
+  flagged `continuesPrevious`
+- **THEN** no step is displayed
+- **AND** the next hint request displays that next step from the kept plan
+
+#### Scenario: A hidden plan's next step is made by hand
+
+- **WHEN** a step has been applied with `executeHint(true)`, so that the plan
+  is stored and hidden, and the player then makes the plan's next move, or
+  part of it
+- **THEN** no step is displayed
 
 ### Requirement: A completed verdict vouches for the rest of the plan
 
@@ -108,22 +123,6 @@ it only where that holds.
 
 - **WHEN** a player's move leaves a state the plan's later steps do not expect
 - **THEN** the game does not answer `"completed"` for it
-
-### Requirement: A journey stays on screen through its legs
-
-When a move completes a step and the next step is flagged `continuesPrevious`,
-the continuation of a journey the completed step previewed (the "then to
-column 5" leg), the display SHALL stay on and move to that step instead of
-hiding: a journey is presented as one hint and stays on screen through its
-legs.
-
-#### Scenario: The first leg of a journey is completed by hand
-
-- **WHEN** the player's move completes a displayed step and the next step is
-  flagged `continuesPrevious`
-- **THEN** that next step is displayed without another request
-- **AND** when the next step is not flagged, the display hides until the
-  player asks again
 
 ### Requirement: A stored plan is cleared when play leaves it
 
@@ -151,8 +150,8 @@ hints, the first leg of each unflagged.
   clue that resolves several of its sides at once
 - **THEN** the plan holds two steps for it, the first with the full
   explanation and the second flagged `continuesPrevious`
-- **AND** in manual play the hint stays on screen through both legs, and
-  auto-play animates them back to back as one multi-part move
+- **AND** a displayed leg is counted within the journey, and auto-play
+  animates the legs back to back as one multi-part move
 
 ### Requirement: A hint naming several kinds of element colors them by a stable legend
 

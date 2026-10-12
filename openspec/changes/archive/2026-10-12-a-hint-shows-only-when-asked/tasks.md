@@ -21,4 +21,4 @@
 
 ## 5. Acceptance
 
-- [ ] 5.1 The owner asked for this by name, and it is theirs to accept in the deployed app. Sixteen and Netslide are where it shows most: a tile's second leg ("then the other") now waits for a press of Hint, which the Sixteen midend test holds and which was not driven in the app
+- [x] 5.1 The owner asked for this by name, and it is theirs to accept in the deployed app: accepted, 2026-10-12. Sixteen and Netslide are where it shows most: a tile's second leg ("then the other") now waits for a press of Hint, which the Sixteen midend test holds and which was not driven in the app

@@ -722,8 +722,9 @@ draw state for a new tile size, and lays the ground under a fresh one").
 `Ui` alone (`UI_UPDATE`, a hover, a change of reference) leaves a move's
 animation and any flash running, and the next timer frame paints the new
 `Ui`. The release after a winning press is such an input in a game that tidies
-its `Ui` there, and it ended the win flash in Ascent until the midend stopped
-clearing on it. So `redraw` can be handed an `animTime` partway through with a
+its `Ui` there (Ascent), and the win flash plays through it
+(`engine-drawing` § "A change of the Ui alone leaves an animation running").
+So `redraw` can be handed an `animTime` partway through with a
 `Ui` that has moved on since the move: paint the `Ui` as it is.
 
 **The win flash is the engine's, and a game only says where its elements
