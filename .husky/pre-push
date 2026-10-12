@@ -1,7 +1,7 @@
 # The push runs, once, what its commits left out: the gate in scripts/gate.sh,
 # told which commit the remote already has (GATE_SINCE). A commit runs the
-# per-game work of the games it stages and no other, so that it costs about a
-# minute whatever it touches; a commit to shared code therefore leaves every
+# per-game work of the games it stages and no other, so that it costs a couple
+# of minutes whatever it touches; a commit to shared code therefore leaves every
 # other game's cases of the cross-game sweeps to this hook. A push whose
 # commits left nothing out (documentation, or each a game's own) ends in a
 # second or two.

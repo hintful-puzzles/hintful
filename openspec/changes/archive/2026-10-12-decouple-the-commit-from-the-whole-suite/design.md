@@ -81,9 +81,13 @@ too.
 | | A commit to the engine waits | The whole run happens | Reaches `main` unseen by any local run |
 | --- | --- | --- | --- |
 | Today | 10 to 13 min, every commit | at every such commit | the sweeps' wider boards |
-| A. CI only | about 1 min | in CI, 20 to 40 min after the push | every other game's cases, and the wider boards |
-| B. Before the push | about 1 min | once a session, about 9 min | the wider boards, as today |
-| C. After the commit, in the background | about 1 min | at every such commit, not waited for | the wider boards, and what a push overtakes |
+| A. CI only | about 2 min | in CI, 20 to 40 min after the push | every other game's cases, and the wider boards |
+| B. Before the push | about 2 min | once a session, about 9 min | the wider boards, as today |
+| C. After the commit, in the background | about 2 min | at every such commit, not waited for | the wider boards, and what a push overtakes |
+
+The two minutes were measured once the arrangement was built (`tasks.md`,
+"What the trials showed"): half a minute of fast checks, and 108 s of test
+time for the tests that are not split by game.
 
 **A lets through the thing the dear walks are for.** An engine change that
 breaks a game it did not touch would be reported by a run that finishes after

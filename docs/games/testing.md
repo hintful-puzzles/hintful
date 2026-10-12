@@ -598,7 +598,7 @@ its comments.
 
 | Run | When | What it tests |
 | --- | --- | --- |
-| The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other. About a minute, whatever it touches. |
+| The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other. About two minutes for a commit to shared code, plus the staged games' own cases. |
 | The push hook | once, at a session's end | What the commits left out: every game's cases of the sweeps a commit to shared code reaches. Nothing, when every commit was a game's own or documentation. |
 | CI | every push | Everything, on every board. Never canceled by a newer push. |
 
