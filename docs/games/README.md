@@ -38,8 +38,9 @@ input, params, difficulty, notes, colors, drawing, helpers) ·
 [`help-pages`](../../openspec/specs/help-pages/spec.md) (a game's help page) ·
 per-game specs under `openspec/specs/<game>/`.
 Doctrine: [`doctrine.md`](../doctrine.md). **Exemplar to read
-end-to-end before starting:** [`src/games/galaxies/`](../../src/games/galaxies/)
-(idiomatic six-file split, smaller than the C it replaced).
+end-to-end before starting:** [`src/games/galaxies/`](../../src/games/galaxies/).
+It is one of the larger games; § "File anatomy" says which files every game
+has.
 
 ## The guides
 
@@ -143,16 +144,20 @@ earlier line firing first makes the general claim false.
 
 ## File anatomy
 
-The file shape that has held across all 57 games (Galaxies is the reference;
-small games may collapse files):
+The file shape every game holds to (Galaxies is the reference; a game with no
+deduction or no dealt board has no `solver.ts` or `generator.ts`, and a large
+game splits further). Take the population of any row with
+`ls src/games/*/<file>`:
 
 | File | Holds |
 | --- | --- |
-| `index.ts` | The `Game<…>` object + glue: move logic, `interpretMove`/`executeMove`, presets, `colors()`, optional `hint`/`findMistakes`, `registerGame(...)`. |
+| `index.ts` | The `Game<…>` object + glue: move logic, `interpretMove`/`executeMove`, presets, `colors()`, `hint`/`findMistakes`, `registerGame(...)`. |
 | `state.ts` | Immutable state type + params, encode/decode/validate desc + params, `newState`, `cloneState`, the move/UI types. |
 | `solver.ts` | The deductive solver (used by the generator for uniqueness, by `solve`, and by `hint`/`findMistakes`). |
 | `generator.ts` | `newDesc`: board generation + retry-to-target-difficulty. |
 | `render.ts` | `redraw`, the palette indices, `computeSize`, the per-tile cache. |
+| `hint-text.ts` | Every sentence the hint speaks, exported as `say` ([`hints.md`](./hints.md) § "The sentences live in one file per game"). |
+| `hint.ts` | The hint's plan, where it is too long for `index.ts`: the solver's firings turned into steps, marks and sentences. |
 
 A drag-preview game adds a small `moves.ts` so `render.ts` can simulate the
 release move without an import cycle — see
@@ -202,7 +207,7 @@ A game (or a change to one) is done when **all** of these hold:
 - [ ] Idiomatic TS, not a transliteration
       ([`mechanics.md`](./mechanics.md) § "Idiomatic state, not a C transliteration").
 - [ ] Render cache keyed on `Int32Array`; every overlay in the diff key; the
-      the first frame paints over the midend's color-0 ground and never
+      first frame paints over the midend's color-0 ground and never
       repeats it ([`rendering.md`](./rendering.md)).
 - [ ] Config-summary header renders; preferences go through the `prefs` hook;
       a custom-params form is wired ([`mechanics.md`](./mechanics.md)).

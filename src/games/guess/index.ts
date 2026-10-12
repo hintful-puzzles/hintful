@@ -221,7 +221,7 @@ const SUBMIT_BUTTON = 13;
 /**
  * One key per color, then Clear, then Submit. The colors are Guess's elements
  * and this is where the collection puts a game's elements
- * (`docs/games/input.md` § "Put a game's markable elements on the panel").
+ * (`docs/games/input.md` § "The on-screen keypad").
  *
  * Painted from Guess's own palette rather than labeled with a bare digit: no
  * character names a color. The label stays the digit the keyboard sends, and

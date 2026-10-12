@@ -102,7 +102,7 @@ import type { ${P}DrawState, ${P}State } from "./state.ts";
 /** TODO: imperative redraw with a per-tile cache + first-draw bg fill. */
 export function redraw${P}(
   _dr: GameDrawing,
-  _ds: ${P}DrawState | null,
+  _ds: ${P}DrawState,
   _prev: ${P}State | null,
   _s: ${P}State,
 ): void {
@@ -187,6 +187,9 @@ export const ${GAME}Game: Game<
   },
   computeSize(p: ${P}Params, tileSize: number): Size {
     return { w: p.w * tileSize, h: p.h * tileSize };
+  },
+  newDrawState(_s: ${P}State, tileSize: number): ${P}DrawState {
+    return { started: false, tileSize };
   },
   redraw(dr, ds, prev, s): void {
     redraw${P}(dr, ds, prev, s);

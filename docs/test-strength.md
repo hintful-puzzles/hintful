@@ -129,7 +129,7 @@ The §2 loop, as a committed corpus rather than a thing you retype. Runner:
 
 ```sh
 npm run probe -- --verify        # every anchor still applies, ~0.2 s
-npm run probe                    # all 174 cases, 30–45 min
+npm run probe                    # every case, 30–45 min
 npm run probe -- latin midend    # substring-filtered
 ```
 
@@ -186,7 +186,7 @@ It is a diagnostic, **never a gate and never ratcheted**, the same standing as
 because a module scores badly is score-chasing.
 
 **One half of it *is* gated, and only that half.** `--verify` runs in the
-commit gate's fail-fast prefix (0.02 s), checking that every anchor still
+commit gate's fail-fast prefix, checking that every anchor still
 **applies** — never what the probe would find. The corpus quotes engine source
 verbatim, so a refactor of a probed line stops the case matching, and the
 harness then measures a smaller corpus and *reports success*: a silent cap that
@@ -195,11 +195,8 @@ rate itself stays ungated, because a gated feedback number invites tests written
 against the number. When it fails, re-anchor on surrounding text — and take the
 prompt to decide whether the case still states the defect it claims to.
 
-**A run restores only the module it currently has planted.** It used to put
-*every* probed module back from the copy it read at start, in its `finally` —
-which, forty minutes into a run, silently reverted a session's worth of edits
-to a module the run had long finished with. Editing a not-yet-probed or
-already-probed module during a run is now safe; the one module with a plant in
+**A run restores only the module it currently has planted.** Editing a
+not-yet-probed or already-probed module during a run is safe; the one module with a plant in
 it is the one to leave alone (and `git diff src/engine` names it). `--verify`
 during a run still reads the plant as an anchor mismatch on that module, for
 the reason the next paragraph gives.
@@ -210,8 +207,7 @@ A run *edits engine source in place* and restores it in a `finally` (and on
 baseline while the first has a defect planted, and then either restores the
 mutation as if it were the original or reports an anchor missing from a line
 that is sitting right there in git. Both happened here in one sitting — an
-argument-less invocation (which means *all eighteen modules*, twenty minutes)
-left running behind a filtered one. The tell is that the quoted anchor **does**
+argument-less invocation (which means *every module*) left running behind a filtered one. The tell is that the quoted anchor **does**
 match the committed file: check `git diff` on the probed module before believing
 the anchor drifted, because what you are looking at may be the other run's
 planted defect. Being mid-edit makes this worse rather than better — anything

@@ -93,7 +93,7 @@ export interface PresetAxis<Params> {
  * **Takes only what it reads**, the way `difficulty.ts`'s `difficultyTiers`
  * does, so the
  * rule can be exercised against a hand-written menu rather than only against
- * whatever the collection happens to offer today: `hint-games.test.ts` is where
+ * whatever the collection happens to offer today: `presets.test.ts` is where
  * the scalar/discrete split and the menu-order tie-break are actually pinned.
  */
 export function presetAxes<Params>(

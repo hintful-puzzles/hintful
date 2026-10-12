@@ -34,14 +34,9 @@ or font is replaced, and nothing else may invalidate a draw state. The midend
 repaints on every transition and drives the animation/flash timer; a game
 never schedules its own frames.
 
-Upstream's midend laid the ground too (`first_draw` in `midend_redraw`). The
-port once withdrew it, because it was armed from every `size()` call and the
-frontend calls `size()` on every layout tick, so the board flickered. It came
-back once a fresh draw state could arise only from a real clear, a new palette
-or a new tile size, each of which repaints everything anyway; four games had
-meanwhile shipped a first frame with bare black pixels, which is what a fill
-every game must remember to write gets you. `first-frame-coverage.test.ts`
-rasterizes every game's first frame and holds it to full coverage. The owning
+`first-frame-coverage.test.ts` rasterizes every game's first frame and holds it
+to full coverage, because a ground every game must remember to write is one
+some game forgets. The owning
 requirement is `engine-drawing` § "The midend repaints on every transition, rebuilds
 the draw state for a new tile size, and lays the ground under a fresh one" —
 link it, don't restate it.
@@ -110,25 +105,19 @@ and who rubs it out").
 sidecar is a *second cache*, and a second cache is a second key to forget an
 input from — which is the failure below, and it is silent.
 
-The pencil-mode indicator was the collection's worked example of both answers,
-and is now an example of the second only: the engine picks its position
-(`pencilIndicatorBox`), that position is a margin, and a margin is no tile's — so
-every game with the mode keeps a `ds.pencilModeShown` beside its tile cache.
-Towers packed it into its tile cache while where to put it was still Towers' own
-choice, and gave the bit up along with the choice. Crossing — the same file, a
-neighboring surface — is where the bug actually happened.
-
-A sidecar is still right when the cue has no tile to live in (a panel below the
+A sidecar is right when the cue has no tile to live in (a panel below the
 board, a margin outside the grid). Reach for it second, and then name **every**
-input the painter reads in its key.
+input the painter reads in its key. The pencil-mode indicator is the shared
+case: the engine picks its position (`pencilIndicatorBox`), that position is a
+margin, and a margin is no tile's, so every game with the mode keeps a
+`ds.pencilModeShown` beside its tile cache and repaints through
+`repaintPencilIndicator`
+([`engine/pencil-indicator.ts`](../../src/engine/pencil-indicator.ts)).
 
-**The sidecars also showed what a second cache costs in tests.** Each of the nine
-there were then was covered only through a render snapshot, and `RecordingDrawing` keeps
-`drawUpdate` out of `ops` deliberately — so deleting the invalidation from all
-nine at once failed *zero* tests. Exemplar of the fix:
-[`engine/pencil-indicator.ts`](../../src/engine/pencil-indicator.ts)
-(`repaintPencilIndicator`), whose own test asserts the `updates` channel that no
-snapshot can see.
+**A second cache is also invisible to a render snapshot.** `RecordingDrawing`
+keeps `drawUpdate` out of `ops` deliberately, so a deleted invalidation fails no
+snapshot; `pencil-indicator.ts`'s own test asserts the `updates` channel
+instead.
 
 ### Moving a cue out of the key's channel is how the key loses it
 
@@ -268,8 +257,8 @@ counted but not required, for the reason the next section gives.
 its hint marks only through `StepMarks.of(role, kind)`, and asks on every
 frame whether or not the step has any. The differential records those reads,
 so the requirement does not depend on any run's reach. A pair whose role the
-legend does not list needs nothing, since no step may name it: Undead's shared
-`HintSidecar` asks for striped cells, and Undead never stripes anything.
+legend does not list needs nothing, since no step may name it: Undead's
+`OverlaySidecar.pack` asks for striped cells, and Undead never stripes anything.
 
 **A mark the seeded run never shows needs a board that does.** Name it in
 `warm-repaint.test.ts`'s `PINNED`, as the board itself (`params:desc`), never
@@ -327,11 +316,9 @@ land.
 — `if (mistakeSet.has(i)) f |= DS_MISTAKE` — cannot omit it from the diff test,
 because the key *is* the diff test. The class lives in the sidecar games and in
 hand-packed side channels (Galaxies' wall mask), which is where the stale clause
-has to be. Measured 2026-09-09 across all 57 games
-(`openspec/postmortems/2026-09-09-tile-loop-inversion-withdrawal.md`): all 38
-whose `redraw` takes a `mistakes` parameter route it correctly, so the class has
-no live instance today — but it shipped twice before, and a new game reaching
-for a sidecar is reaching for the one shape that can still get it wrong.
+has to be. A new game reaching for a sidecar is reaching for the one shape that
+can still get it wrong
+(`openspec/postmortems/2026-09-09-tile-loop-inversion-withdrawal.md`).
 
 ### A mark band with `outer: 0` must lie inside the tile's *clip*, not on its outline
 
@@ -544,8 +531,8 @@ Three things that generalize:
   own bits above a named floor so the two can grow apart without colliding.
 - **The proof is a byte-clean snapshot, not a green suite.** A pure extraction
   must leave every draw call, argument and order identical, and tier 2.5 records
-  exactly that — 225 and 237 ops here, unchanged. If a snapshot needs `-u`,
-  pixels moved and the extraction is wrong.
+  exactly that. If a snapshot needs `-u`, pixels moved and the extraction is
+  wrong.
 
 ### The note-taking cell's picture
 
@@ -571,10 +558,7 @@ used to paint its cell's background rect, and hands it that same rect.
   keep a triangle in proportion.
 - **The color is `highlightWash(background)`, at an index the game names.** It
   is the palette's "you are here" wash under content (§ "The palette: three
-  layers, meaning first"). Before `share-the-selected-cell-highlight` five
-  games had drifted into four other answers — mkhighlight's near-white, its
-  lowlight, and pairs of the two — each a reasonable local choice, and not one
-  of them about the puzzle.
+  layers, meaning first"), and not a choice a game makes.
 
 What legitimately differs stays in the game: a Crossing *wall* can only be
 reached by the arrow keys and has no background to wash, so the keyboard
@@ -591,7 +575,7 @@ changing — and in notes mode the corner triangle in the region's first cell.
 The band is each cell's convex pieces clipped to a strip along their boundary
 sides, plus a corner square where the boundary only passes through a corner (an
 L-shaped region's inner corner, where two strips would meet at a point); see
-`drawSelection` in [`map/render.ts`](../../src/games/map/render.ts). The cell
+`drawBands` in [`map/render.ts`](../../src/games/map/render.ts). The cell
 guard excuses Map through a one-entry ledger it holds exactly right, and Map's
 own tests say what the band must be: inside the region, on every boundary cell,
 and well under half its area — the last is what tells a band from a wash.
@@ -808,7 +792,7 @@ undoing a break does not.
 The midend asks it on every
 transition and a nonzero answer replaces the win flash, so it returns 0 for a
 win. The game reads it in `redraw` as `flash.time`, seconds in. The two never
-run together: `flash.time` is 0 through a win, and `flash.win` is false
+run together: `flash.time` is 0 through a win, and `flash.winning` is false
 through a flash of the game's own, so a redraw needs no field in its `Ui` to
 tell which it is drawing.
 
@@ -840,21 +824,18 @@ no `ds?.tileSize ?? PREFERRED_TILE_SIZE` (see [mechanics](./mechanics.md) §
 "interpretMove and UI_UPDATE").
 
 **The draw state's field is `tileSize`**, the word `preferredTileSize` and
-`computeSize(p, tileSize)` already use. It is not a decision a game makes — the
-collection once spelled it several ways, and no game had a reason to. A board
+`computeSize(p, tileSize)` already use. It is not a decision a game makes. A board
 that is not tiled holds its scale as `tileSize` too (Cube's grid scale, Guess's
-peg size), because that is the number `newDrawState` is handed. Nothing enforces the name; a new spelling
-shows up as a line in the capability snapshot ([testing](./testing.md) § "The
-divergence no clone detector can see").
+peg size), because that is the number `newDrawState` is handed.
+`capability-surface.test.ts` records the field names, and a new spelling shows
+there as a line.
 
-*Compressed history:* the retired web build defined `NARROW_BORDERS`, so C
-games with an `#ifdef NARROW_BORDERS` variant (Slant's slim border; Bricks'
-`BORDER = 0`) were ported in the *narrow* variant — parity was with what the
-browser actually showed, not the desktop default. If a border constant looks
-surprisingly small, that is why. Exemplar:
-[`bricks/render.ts`](../../src/games/bricks/render.ts). Slant's slim border has
-since grown by `pencilIndicatorReach`, the room notes mode's pencil needs at the
-canvas's top-right corner.
+A border constant that looks surprisingly small is upstream's
+`NARROW_BORDERS` variant, the one its web build showed (Slant, Bricks). A game
+with notes mode keeps its border no narrower than `pencilIndicatorReach`, or
+grows its canvas with `pencilIndicatorCanvas` where its own corner is taken:
+the room the pencil needs at the canvas's top-right corner
+([`engine/pencil-indicator.ts`](../../src/engine/pencil-indicator.ts)).
 
 ## The palette: three layers, meaning first
 
@@ -882,8 +863,7 @@ decision:
   reads as "the cursor, on a board that uses green" rather than as a new
   color — the doc on `CURSOR` says why. **"This clue is
   done"** is `clueDoneColor` for retired *text* and `REGION_DONE` for
-  a completed *fill* — five games once encoded it five ways, from `INK` (Loopy,
-  which made the distinction invisible) to a bespoke `bg × 0.85`. **The solved
+  a completed *fill*. **The solved
   flash** lights every element in two roles, `FLASH_LEAD` (white) ahead of
   `FLASH` (the theme's yellow), in every game (§ "Animation and flash").
 - [`engine/color/colors.ts`](../../src/engine/color/colors.ts) — **the
@@ -892,7 +872,7 @@ decision:
   `EIGHT_FILLS`, `FOUR_FILLS`).
 - [`engine/color/palette-games.ts`](../../src/engine/color/palette-games.ts)
   — colors a game defines **relative to its own board**, prefixed with its
-  id (`slantGrid`, `undeadGhost`). Functions, not values.
+  id (`slantGrounded`, `undeadGhost`). Functions, not values.
 
 Write `out[COL_ERROR] = ERROR;`. Tokens deliberately drop the `COL_` prefix
 (which in this codebase means "a palette **index**"), so a game's own index
@@ -912,12 +892,9 @@ spoke). **Say why, at the assignment, in one line** — on the assignment line
 or the line above it, which is where
 [`palette-departures.test.ts`](../../src/engine/color/palette-departures.test.ts)
 looks: for every slot whose name says cursor, held, drag or hint, it requires
-the role or a comment, and fails on a bare departure. Before
-`consolidate-colour-palette` there were 190 named colors and seventeen
-cursors; the seventeen read as seventeen decisions and were one decision plus
-collisions. If nothing in the palette fits, that is an exception recorded in
-`palette-games.ts` under your game's prefix, with why no meaning and no named
-color serves — there is currently **none** in the collection. Aim to add
+the role or a comment, and fails on a bare departure. If nothing in the
+palette fits, that is an exception recorded in `palette-games.ts` under your
+game's prefix, with why no meaning and no named color serves. Aim to add
 none.
 
 **Pick the replacement against the span of what it lands on, not against one
@@ -1093,10 +1070,7 @@ before any game sees it, so every game paints the same board tone whether
 its C called `game_mkhighlight` or took `frontend_default_colour` raw.
 Assign `out[COL_BACKGROUND] = defaultBackground` and call `mkhighlight` only
 when you want the bevel trio — it re-derives the identical background, the
-shift being exactly idempotent. Before this, the collection was split 22/30
-along that C distinction, invisibly in light mode and loudly in dark, where
-Loopy's board resolved to `#161616` and Palisade's to `#3c3c3c` and every
-raw-background game's white flash landed on its own board.
+shift being exactly idempotent.
 `board-background.test.ts` holds every registered game to one board.
 
 ### Highlights from a fixed base
@@ -1109,28 +1083,15 @@ its trio from the frontend background and never extrapolates the base;
 opposite extreme, exactly as the C's `game_mkhighlight_specific`. Reach for
 it whenever a tile color isn't the host background (Slide's blocks).
 
-### Make determined state legible
-
-**Where upstream leaves known cells looking like undecided ones, give each
-determined state its own fill** — deliberate divergence; display was never in
-parity scope. Range paints a known-white cell pure white (via a dedicated
-color derived from `color-mkhighlight.ts`, which shifts the background off
-pure white precisely so a pure-white cell stays distinguishable), leaving
-only undecided cells gray. Exemplar:
-[`range/render.ts`](../../src/games/range/render.ts).
-
 ### A cue that equals the background is a bug
 
 **A "highlight" upstream draws as pure white may be invisible here — check
-both schemes.** Spokes' satisfied-hub fill read as nothing in light mode and
-as *literally the background* in dark mode, because `view.ts` handed the game
-pure white there (the engine now shifts it first — see "Every board is one
-tone" — but a pure-white cue is still only a sixth of the range above the
-board). A cue that has to be seen must be a clear step **away**
-from the background (`defaultBackground × 0.85` is enough; grays survive the
-dark-mode adaptation because it inverts lightness about the real background).
-When a game's own color nearly equals its background, fix it, don't preserve
-it. Pair the cue with a `GamePref` when it is a solving aid rather than game
+both schemes.** A cue that has to be seen must be a clear step **away** from
+the board, and a determined state must not look like an undecided one: take
+the surfaces of § "What a board looks like: pieces on a quiet surface"
+(Spokes' satisfied hub is the lifted `givenSurface`). When a game's own color
+nearly equals its background, fix it, don't preserve it. Pair the cue with a
+`GamePref` when it is a solving aid rather than game
 state (Bridges' `auto-mark-complete` and Spokes' `mark-satisfied` are the
 same control). Exemplars:
 [`spokes/render.ts`](../../src/games/spokes/render.ts),
@@ -1160,8 +1121,7 @@ game is dead code, and a second adaptation fights the layer that owns the
 concern. Derive exactly as upstream does, and when the derived dark value is
 wrong (Loopy's undecided edge inverted to near-invisible), **author the dark
 value on the shared role** with `token(light, dark)` rather than patching the
-game — that fixed Loopy, Palisade and Separate at once and retired the three
-identical `{ n: 0.6 }` overrides they carried. Exemplar:
+game. Exemplar:
 [`loopy/render.ts`](../../src/games/loopy/render.ts), and
 `lineMaybeColor` in [`palette.ts`](../../src/engine/color/palette.ts).
 
@@ -1171,8 +1131,7 @@ identical `{ n: 0.6 }` overrides they carried. Exemplar:
 reads your game's source and fails on a color literal, on channel-indexing
 the background, on importing the color combinators, and on importing another
 game's token (a genuinely-not-a-color three-number array is declared in its
-`NOT_COLORS` with a reason — it has two entries and should stay about that
-size). [`colors.test.ts`](../../src/engine/color/colors.test.ts) measures
+`NOT_COLORS` with a reason; keep that list short). [`colors.test.ts`](../../src/engine/color/colors.test.ts) measures
 every must-stay-distinguishable set in both schemes;
 `palette.test.ts` checks no meaning has quietly become a color of its own
 (meanings are references, checked by identity).

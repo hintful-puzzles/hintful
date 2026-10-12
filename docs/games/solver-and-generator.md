@@ -75,10 +75,9 @@ highest *tier* that fired as the grade. The runner owns:
   ladder. Counting happens only where a budget does or the caller passes its
   own `firings` tally, so the generator path allocates nothing;
 - the optional **`settled` early-out** — *"stop, there is nothing left for the
-  ladder to do"*. Deliberately broader than "solved", which is what it was
-  called until it had five callers and meant solved for two of them: Undead
-  stops on a *contradiction*, Clusters on complete-or-invalid, Spokes also on
-  its own tier's action budget. Only Filling and Pattern mean solved;
+  ladder to do"*. Deliberately broader than "solved": Undead stops on a
+  *contradiction*, Clusters on complete-or-invalid, Spokes also on its own
+  tier's action budget;
 - the `beforeTechnique` hook (used by `latinSolverTop` to bump the firing-group
   id so one firing's records share a `group`).
 
@@ -158,10 +157,7 @@ So an adoption is proved in two halves, one temporary and one permanent.
   same answer by different deductions fails), at **every cap** (the cap is what
   selects rungs), over a corpus the census below shows reaches every rung. Then
   **delete the old loop in the same change**. It is reference code once the
-  comparison has passed, and git keeps it (owner, 2026-09-28: *"delete any old
-  code that's just used for reference; that's what git is for"*). Thirteen
-  adoptions kept theirs as permanent oracles until `retire-the-ladder-oracles`
-  removed them.
+  comparison has passed, and git keeps it.
 - **What stays is the firing census** —
   [`engine/testing/ladder-census.ts`](../../src/engine/testing/ladder-census.ts)
   — walking a corpus at every cap and asserting which rungs fired. A rung the
@@ -221,8 +217,7 @@ rung would find, those writes would be counted against the Tricky rung too.
 **The census costs the adopting game one optional parameter**, forwarded straight
 to `runDeductionFixpoint`'s `firings` sink; the runner does the counting. That is
 the whole of it — if you find yourself wrapping the ladder in a closure to
-observe firings, the runner already does it
-(`return-the-firing-tally-from-the-runner` deleted seven such wrappers). The
+observe firings, the runner already does it. The
 parameter is production surface a test supplies, deliberately: a rung's
 reachability cannot be observed from the game's own results, which is this
 section's premise.
@@ -264,22 +259,12 @@ would only have re-declared it.
 **The ladder *shape* is near-universal; the bookkeeping wrapped around it is
 per-game — and that bookkeeping is often what decides which puzzles exist. A
 solver whose loop *looks* like this one is not evidence that it *is* this
-one; the differential is.** This module's own header used to overclaim ("the
-one loop every logic game hand-rolled") and the claim did real damage: it
-turned "does this game fit?" into "why has this game not been adopted yet?"
-and produced two separate handoffs asserting Loopy fits when it does not.
+one; the differential is.**
 
-**A no-go is re-derived when the contract changes, never carried forward** — and
-this rule has now paid for itself twice, both times against a list written here:
-
-- `declare-deduction-techniques` gave a technique its own `tier`, and **Unruly**
-  stopped being a no-go (it had been listed as "grades by difficulty constant,
-  not rung index").
-- `re-derive-the-fixpoint-no-gos` then read the five remaining solvers instead
-  of their recorded reasons, and **three of them had never needed anything
-  added**. Singles, Clusters and Spokes all adopted with no new option on the
-  runner. The reasons had been written against a runner that graded by array
-  position, and were then read as facts about the games.
+**A no-go is re-derived when the contract changes, never carried forward.**
+Unruly, Singles, Clusters and Spokes were each listed here as one, for reasons
+written against a runner that graded by array position, and each adopted with
+no new option on the runner.
 
 **So the test for a reason is: does it name a promise this runner makes that the
 game must break?** A reason that describes a loop's *syntax* — "drains a queue",
@@ -307,20 +292,12 @@ don't: your loop merely *looks* different. A cost accumulated across firings, a
 flag standing in for a `-1` return, a pre-pass at the top of each iteration, a
 verdict richer than a boolean — each reads as structural and each has adopted,
 because a technique can hold state and guard itself (the exemplar table above
-names where). Spokes' accumulator was once listed as a hatch case and turned out
-to be an early-out, not a grade. So did ABCD's "sweeps the whole ladder before
-restarting": its loop runs its first two techniques in one pass, but the first
-only retires lines and places nothing, so trying it again before the second, as
-the runner does, finds nothing, and the two walks are the same
-(`add-abcd-hint`). The hint-assessment audit's class B, "sweeps the whole
-ladder before restarting", was that one label on three games, and it was wrong
-for all three. Tents' loop restarts after every sweep that fires. Pearl's
-seemed to run its Tricky rung in the same pass as an earlier stage that had
-fired, but the `continue` that suggested it sits in an Easy-only branch that is
-only reached when nothing has fired. It was dead code, and the stage before it
-had already restarted (`certify-the-tents-and-pearl-ladders`). **Read the loop,
-not the reason somebody recorded for it**, and when a `continue` looks as if it
-decides the walk, check whether anything can reach it.
+names where). So has "sweeps the whole ladder before restarting": ABCD's loop
+ran its first two techniques in one pass, but the first only retires lines and
+places nothing, so trying it again before the second, as the runner does,
+finds nothing, and the two walks are the same. **Read the loop, not the reason
+somebody recorded for it**, and when a `continue` looks as if it decides the
+walk, check whether anything can reach it.
 
 #### What a bespoke loop still owes
 
@@ -388,8 +365,7 @@ game's own solver cannot solve:
   `DESC_NO_SINGLE_ANSWER` where the game has that tier and `DESC_NOT_DEDUCIBLE`
   where it does not, since only there is trial and error what is wrong;
 - an untiered game answers `Game.finishesByDeduction(state)`, and
-  `registerGame` throws for one that leaves it out, since a missing answer
-  used to read as yes and Palisade opened a board with no clues on it.
+  `registerGame` throws for one that leaves it out.
 
 **An untiered game gives one of two answers.** Where nothing is deduced (a
 sliding puzzle, a search, a guessing game), `nothingToDeduce`
@@ -513,7 +489,7 @@ that stops, and what its deal draws. What the tier is made of:
   A generator that mends a board toward one answer (Net's rewiring,
   Rectangles' moved numbers) does it inside `draw`, with `DEALING_BUDGET` for
   its own searches. Which of the three a game is, is the game's to measure:
-  the notes below say what each of the twelve found.
+  the notes below say what each game with the tier found.
 - **The contract** (`searchTierContract`): the lower cap is the game's
   deduction finishing the board and its hint finishing it too
   (`hintFinishes`), and the upper cap is "the search says one". The game has
@@ -627,10 +603,8 @@ What Crossing, the third, added:
   measured, since a draw has to survive the same rejections first.
 - **Measuring the new bound re-measures the old one, on shapes the old one
   never tried.** Crossing's Easy bound was an area, taken from near-square
-  boards. Thin boards inside it never dealt (2x60, 3x75, 4x56), and its
-  rarest admitted board was accepted once in 14,000 draws against a retry cap
-  of 10,000. Sweep the shorter side as well as the area, and size the retry
-  cap from the rarest board the bound admits.
+  boards. Thin boards inside it never dealt (2x60, 3x75, 4x56). Sweep the
+  shorter side as well as the area.
 - **A dead position may already be handled by `assume`.** Crossing's solver
   could not say "impossible" of a square with no digit left, and the search
   was right without it: that square is the one with the fewest candidates,
@@ -802,7 +776,8 @@ What Sticks, the ninth, added:
   refusal to running the generator out dealt a 4x2 board at once with another
   symmetry, and walking every 2x3 board found some with the tier. Only 2x2
   has none, and only 2x2 is refused. A size the generator seldom reaches
-  gives up in a second, which is an answer; a refusal says no board exists.
+  runs out at the deal's bound, which is an answer; a refusal says no board
+  exists.
 - **Vary every option before calling a size empty.** The sample had one
   symmetry and one share of blocks, which is one corner of what a size can
   be dealt as.
@@ -935,7 +910,7 @@ What Range, the eleventh, added:
   generator ran its bound out on 3x3 every time. Walking every set of clues
   found 176 boards of it with the tier, none with the symmetric clues the
   generator keeps. The size is not refused, a pasted one opens, and a deal
-  gives up in a second. Count what the walk finds by the generator's own
+  runs out at its bound. Count what the walk finds by the generator's own
   constraint as well as in all.
 - **A strip can have a proof where the walk only has lengths.** A shaded
   square anywhere but an end of a strip cuts it in two, so every number
@@ -1137,11 +1112,12 @@ non-Latin candidate game:
   candidate cells is a contradiction
   ([`undead/solver.ts`](../../src/games/undead/solver.ts) `countingPass`).
 - **Depth-1 forcing** (`forcingPass`): hypothesize one candidate, run the
-  arc-consistency + counting fixpoint, eliminate on contradiction — deduction,
-  per the line above, because the inner fixpoint never forces.
+  arc-consistency + counting fixpoint, eliminate on contradiction. That is a
+  solve from a hypothesis, so a Search (§ "Check, Tactic, Search"): the tier
+  that needs it is named Unreasonable and the hint refuses there.
 
 Then re-grade by which rung is needed, and accept a board only when the
-deductive ladder solves it uniquely with zero recursion — verified
+ladder solves it uniquely with zero recursion — verified
 independently against the brute-force oracle. Two lessons that transfer:
 
 - **Cap the ladder at the tier while grading** (`maxTier`): forcing is the
@@ -1178,12 +1154,12 @@ survey is not repeated: `DeductionTechnique.tier` is a *number* while a tier lis
 is *names*; `runDeductionFixpoint` **receives** `maxTier`, and every ladder in
 the collection is an array literal built inside a solve from board state, so
 there is nothing to ask at module load; and a tier is often not a rung at all —
-five latin games put their top tier on `latinSolverRecurse` outside the fixpoint,
+the Latin games that recurse put their top tier on `latinSolverRecurse` outside the fixpoint,
 and Undead's only shared-runner ladder is its hint recorder, two techniques on tier 0 against three
 offered tiers.
 
-**`solveAtCap` stays per-game, and that was measured.** Across all 29 adapters
-the only shared step is `newState(p, desc)`; the cap passes straight through to
+**`solveAtCap` stays per-game, and that was measured.** Across the hand-written
+adapters the only shared step is `newState(p, desc)`; the cap passes straight through to
 the game's own solver and the verdict mapping is the per-game knowledge the
 discriminated verdict exists to hold. The one genuinely shared mapping,
 `latinVerdict`, is already extracted.
@@ -1211,8 +1187,7 @@ and it costs one solve on every reload.
 is accepted for tier `t` only if it solves at `t` and does *not* solve at
 `t − 1`.** That rule is written once, as
 [`solvableAtExactlyTier`](../../src/engine/difficulty.ts) — use it instead of
-re-spelling it (`grade-difficulty-tiers-honestly` had to spell it out four
-separate times because there was nowhere to put it). Notes:
+re-spelling it. Notes:
 
 - **It asks the cheap question first** (solve at `t − 1` before `t`), which a
   retrying generator pays for far more often than the deep solve —
@@ -1222,13 +1197,10 @@ separate times because there was nowhere to put it). Notes:
   `index.ts` without a cycle, but it can always close over its solver
   (`cappedSolveFor` when you do hold a contract).
 - **A tier that cannot bind is refused, not silently downgraded** — the
-  `engine-difficulty` requirement of that name; two tiers were *removed* rather
-  than left generating boards of a different difficulty than their label.
-- **It is now checked cross-game.** `difficulty-contract.test.ts` deals a board
+  `engine-difficulty` requirement of that name.
+- **It is checked cross-game.** `difficulty-contract.test.ts` deals a board
   from every preset whose tier the contract can read and requires its lowest
-  solving cap to *be* that tier (`assert-that-tiers-bind`). Until then nothing
-  compared the two numbers — the monotonicity test computed the lowest cap and
-  used it only as a floor.
+  solving cap to *be* that tier.
 
 **Tell: the rule has two spellings, and a game's own tests only exercise one.**
 A generator states tier acceptance in its own terms (`gradeMatchesTier`,
@@ -1476,7 +1448,7 @@ where to look.
   left a whole technique unable to fire, and its hint rung excused as rare.
 - **Tell:** generate boards at the *lowest* tier and solve them at the
   *highest*; if that ever fails you have this bug, and a port that only tests
-  "solves at its own difficulty" will never see it. You no longer write that
+  "solves at its own difficulty" will never see it. You do not write that
   check by hand — declaring `Game.difficulty` runs it for every tiered game
   at once.
 
@@ -1681,13 +1653,13 @@ it; the spread of the drawn thing's size does. Four things made the fix small
 boundary and apply both fixes.** Seismic's upstream region grower collapses
 with board size (1/22 at 16 cells, 1/200,000 at 49, zero in 200,000 attempts
 at 56+). A size cap alone would forbid shipped presets; retry-only leaves a
-10×10 spinning for minutes. So it takes both: `MAX_CELLS` in
+10×10 spinning for minutes. So it takes both: `MAX_CELLS_SEISMIC` in
 `validateParams` for the range that provably cannot generate, and a retry
 under the engine's bound for the rest. **Sweep
 a grid of shapes, not a single dimension**: the ceiling tracked *cell
 count*, which neither a `w` bound nor an `h` bound would have expressed.
 Exemplar: [`seismic/state.ts`](../../src/games/seismic/state.ts)
-(`MAX_CELLS`, measurement table in its doc comment).
+(`MAX_CELLS_SEISMIC`, the measurements in its doc comment).
 
 **A filter that throws away what a draw could have been made to produce is a
 fourth case, and its fix is neither a retry nor a refusal: build it in.**
@@ -1781,8 +1753,7 @@ an edge it left open is walled
   20x21 in sixes, whose minute goes on solving a large board, and a thousand
   at 10x12 in tens, whose minute goes on boards thrown away. The first is a
   wait and is dealt. The second is refused, past the unit the count follows
-  (squares times letters squared), with the cap sized to the rarest size
-  under it.
+  (squares times letters squared).
 - **Try the neighbor's mend, and say when it does not carry.** Palisade's
   re-division at a stall was tried here and bought nothing: its failure is a
   fault in a few regions, and a stalled fill is not.
@@ -1901,11 +1872,10 @@ again.
 **When a generator strips or accepts clues by re-running the solver, the
 solver's verdict on every intermediate board decides which boards exist. The
 verdict — including its quirks — is therefore part of the algorithm, and a
-"fix" that strengthens or weakens the solver changes every board.** During
-the C era this was byte-match discipline; post-C it is the *maintenance*
-discipline for the same code: the 48 frozen differentials
-([testing.md](./testing.md)) are the net that catches a refactor moving a
-verdict. The lessons that stay live:
+"fix" that strengthens or weakens the solver changes every board.** The
+frozen differentials ([testing.md](./testing.md) § "The frozen
+differentials") are the net that catches a refactor moving a verdict. The
+tells:
 
 - **Preserved quirks are load-bearing; the code says so where it matters.**
   Filling's solver deliberately skips a square only its canonical cell can
@@ -2196,15 +2166,14 @@ the wrong tile and keeps its frame for the broken rule.
 
 ## The Latin family
 
-**Eleven games ride [`engine/latin.ts`](../../src/engine/latin.ts): the
+**The games that import [`engine/latin.ts`](../../src/engine/latin.ts) ride the
 generic `latin_solver` framework (candidate cube, positional/numeric and set
 elimination, forcing chains, guess-and-verify recursion as the uniqueness
 check) plus the RNG-faithful generator (`matching` / `latinGenerate` /
 `latinGenerateRect`).** A Latin game's `solver.ts` is its own clue deductions
 (`usersolvers`), a `valid` callback over completed grids, and a thin driver
-mapping its difficulty levels onto the config. Towers was the first consumer;
-Group is the proof of convergence — two `usersolvers` + a `valid` and zero
-framework changes. Exemplars, each showing a different wrinkle:
+mapping its difficulty levels onto the config. Group shows the shape: two
+`usersolvers` and a `valid`. Exemplars, each showing a different wrinkle:
 [`towers/solver.ts`](../../src/games/towers/solver.ts) (clue heuristics),
 [`unequal/solver.ts`](../../src/games/unequal/solver.ts) (two modes off
 `ctx.mode`), [`keen/solver.ts`](../../src/games/keen/solver.ts) (per-cage
@@ -2276,12 +2245,10 @@ Working rules, each earned:
   same-class test, while the root's *identity* turned out to be
   verdict-relevant elsewhere. When in doubt, reread
   [`engine/dsf.ts`](../../src/engine/dsf.ts)'s header.
-- **History (C era):** a `usersolver`'s contradiction `return -1` sometimes
-  sat inside `#ifdef STANDALONE_SOLVER`, so the shipped build silently
-  skipped the impossible placement — the ports preserve the shipped
-  behavior, with comments at the sites (Group; `git log` the port change for
-  the full account). The generalization stays useful: what a solver *doesn't*
-  do can be as load-bearing as what it does.
+- **What a solver *doesn't* do can be as load-bearing as what it does.**
+  Upstream's shipped build skips a `usersolver` contradiction that sits
+  inside `#ifdef STANDALONE_SOLVER`, and the port keeps the shipped behavior,
+  with a comment at the site ([`group/solver.ts`](../../src/games/group/solver.ts)).
 
 The shared hint-side machinery for this family (the recorder, reason
 narration, populate/cleanup steps) is hints.md's subject — start at

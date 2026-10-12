@@ -2,8 +2,8 @@
 
 A progressive web app (PWA) of [Simon Tatham's Portable Puzzle
 Collection][sgt-puzzles], plus additional puzzles from Lennard Sprong's
-[puzzles-unreleased][puzzles-unreleased], maintained by Yoni Lavi: all 57
-games implemented natively in TypeScript, with hints that explain the next
+[puzzles-unreleased][puzzles-unreleased], maintained by Yoni Lavi: every
+game implemented natively in TypeScript, with hints that explain the next
 move rather than just showing it.
 
 It is a fork of Mike Edmunds' [puzzles-web][puzzles-web], which adapted the
@@ -25,7 +25,7 @@ then `npm run dev`.
 ## Status
 
 **The app works, and the migration is done.** Every puzzle is playable, and
-every one of the 57 is a native TypeScript implementation running on this
+every one is a native TypeScript implementation running on this
 project's own engine. The C/WASM engine it grew up alongside — the sources, the
 Embind adapter, the Emscripten build, the worker's wasm path — was retired on
 2026-08-01 once the last game shipped. There is no C left to build and no wasm
@@ -33,9 +33,9 @@ in the app.
 
 **The migration is deliberate divergence, not a faithful port.** We are
 not tracking upstream and not preserving byte-identical behavior or old
-save-game / shared-ID compatibility from before the pivot. Going forward,
-game IDs stay stable (the RNG is bit-identical) so shared seeds keep
-reproducing boards.
+save-game / shared-ID compatibility from before the pivot. Going forward, a
+shared game ID names the board itself (`params:desc`), never a seed, so it
+keeps opening that board.
 
 The code is still rough in places. What the project is for is
 [`docs/doctrine.md`](docs/doctrine.md);
@@ -49,7 +49,7 @@ include:
 
 * App version (from the *About* box), browser, and device/OS.
 * A screenshot if something looks wrong.
-* For a game-specific bug, the game ID or seed (from *Share*), or an
+* For a game-specific bug, the game ID (from *Share*), or an
   exported saved game (*Save…* → *Export…*).
 * If you got the red "Uh-oh" crash dialog and chose *Send report*, add the
   event ID it showed afterwards.
@@ -68,7 +68,7 @@ Everything below is for building or contributing.
 
 - **`src/`** is the whole thing: the TypeScript web app, the engine
   (`src/engine/` — midend, `Game` interface, drawing and color
-  contracts) and all 57 games (`src/games/<id>/`).
+  contracts) and the games (`src/games/<id>/`).
 
 - **It went top-down.** A TS midend and a clean `Game` interface first, then
   games in order of user-facing value (simplest first to establish the pattern,
@@ -101,9 +101,9 @@ templates under [templates/](templates/). `src/` is organized by role:
 * `src/puzzle/` — the puzzle runtime + the Comlink worker boundary.
 * `src/engine/` — the `Game` interface, the `Midend`, the game registry,
   the drawing/color contracts and the in-process test harness.
-  `src/engine/random/` is the bit-identical RNG port, kept so shared game
-  IDs reproduce across builds.
-* `src/games/<id>/` — each game, all 57 of them.
+  `src/engine/random/` is the bit-identical RNG port, which the fixtures
+  and seeded tests rest on.
+* `src/games/<id>/` — each game.
 * `src/store/` — Dexie (IndexedDB) schema for settings and saved games.
 * Page entries, `main.ts`, the old-browser `preflight.ts` gate, the
   `sw.ts` service worker, and cross-cutting modules at `src/` root.
@@ -134,12 +134,8 @@ generated.
 npm install
 ```
 
-That is the entire setup, on any platform. There was a `Brewfile` until
-recently: it carried Emscripten, cmake and jq for the WASM puzzle engine, which
-was retired once every game had a native TypeScript implementation
-(`retire-c-engine`, 2026-08-01), and then halibut alone for the in-app manual,
-which was deleted with the manual (`retire-the-upstream-help-tree`). The
-repository now has no native toolchain dependency of any kind.
+That is the entire setup, on any platform. The repository has no native
+toolchain dependency of any kind.
 
 ### Commands
 

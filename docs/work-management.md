@@ -81,9 +81,8 @@ nothing. The next session starts from the repo.
 
 The owner's decision (2026-10-07): the open changes are worked down to none
 before new product work starts, and a session adds to them only what its own
-work found. Changes were being opened as fast as they were closed, about ten
-a day each way, and a well-scoped change goes stale when the code moves under
-it.
+work found. A well-scoped change goes stale when the code moves under it.
+What is open is `openspec list`.
 
 - **A session ends by handing a change to a fresh session**, once its own is
   archived. It stops, with its questions, only when no open change can start
@@ -119,12 +118,9 @@ it.
   reached, what the fix would touch.
 - **Before filing, ask what the engine could do so that no game has the
   finding** (owner, 2026-10-10), and file that. A finding with the same shape
-  in two games is one change to the shared layer, never a change a game.
-  Twelve games gained a tier in a day, each session measured its own game
-  and filed what it saw, and those changes filed their own: the open changes
-  grew, nearly all of it in one game at a time. A board dealt already solved
-  was found in Rectangles, and the fix was one loop in the engine's deal,
-  which mended Netslide unasked.
+  in two games is one change to the shared layer, never a change a game. A
+  board dealt already solved was found in Rectangles, and the fix was one
+  loop in the engine's deal, which mended Netslide unasked.
 - **A quick, low-risk fix is always made in passing**, whichever game it is
   in and whatever the session came for: a help page that says what the game
   does not do, a wrong label, a stale comment. It goes in with the work in
@@ -167,15 +163,12 @@ The owner's decision (2026-10-10): from here on the work is on the engine, for
 consistency across the games and ease of keeping them.
 
 - **A game is edited only by the least that fixes something already wrong in
-  it.** No new deduction, control or refusal for one game is proposed. The
-  three changes that give Crossing, Mosaic and Net the deduction their
-  Unreasonable boards lack were picked that day as the last of the kind.
+  it.** No new deduction, control or refusal for one game is proposed.
 - **Where the engine can do a thing, the engine does it, even against an
-  earlier decision.** Seven games each recorded a move that changed nothing,
-  and the guide said a game suppresses such a move itself and the midend never
-  compares boards. The owner chose the midend dropping the move over a guard
-  and seven fixes. Put that choice to the owner with a recommendation; do not
-  settle for the per-game fix because a guide line stands in the way.
+  earlier decision.** Where several games share a defect and a guide line
+  says each game handles it, put the engine's fix to the owner with a
+  recommendation; do not settle for the per-game fix because a guide line
+  stands in the way.
 - **A session working in one game says what the engine would have had to
   offer for the work not to be needed**, and files that.
 

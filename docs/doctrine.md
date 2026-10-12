@@ -16,6 +16,13 @@ games a shared layer's fixed cost dominates. At dozens the marginal cost per
 game dominates, and every concern turned from hand-built into derived
 compounds. So a framework investment is weighed at dozens of games.
 
+**The measure of "cheap" is one session.** A new game whose rules are already
+well understood is to be written whole (its logic, solver, generator, hint,
+presentation, tests, spec and help page) in a single long work session of
+under a million tokens. What a session reads before it writes counts against
+that as much as what it writes, so a guide is weighed by what a new game's
+author needs from it, and a shape every game repeats is the engine's to own.
+
 **No progression features.** No best times, streaks, statistics, achievements
 or unlocks, and no nudges built on them. A solve is complete in itself: the
 timer shows the time of this board and keeps no record of it. Do not propose

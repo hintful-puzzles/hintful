@@ -58,7 +58,7 @@ answer to "should this game exist at all" may end the change here.
 
 ## 5. Registration and stage 1 close-out
 
-- [ ] 5.1 Register in `ts-ported-ids.ts` + `games/index.ts`.
+- [ ] 5.1 Register in `src/games/index.ts`.
 - [ ] 5.2 Add a catalog entry + the two icon PNGs (numgame was never
       cataloged, so both are new — see `puzzle-icons` spec).
 - [ ] 5.3 Full gate green; `openspec validate add-numgame-ts-port --strict`.

@@ -16,9 +16,8 @@ read end-to-end: [`src/games/galaxies/`](../../src/games/galaxies/).
 
 ## The Game contract at a glance
 
-A game is one object implementing
-`Game<Params, State, Move, Ui, DrawState, Mistake>`
-([`game.ts`](../../src/engine/game.ts)): immutable state transitions, GC
+A game is one object implementing `Game<Params, State, Move, Ui, DrawState,
+Mistake, …>` ([`game.ts`](../../src/engine/game.ts)): immutable state transitions, GC
 instead of `dup`/`free`, discriminated unions instead of integer sentinels. A
 game depends on this interface only — never on the `Midend` — so the interface
 is the sole seam between a game and the engine. **An absent optional member
@@ -31,29 +30,21 @@ The converse is a rule too, and it is checked:
 optional member to have at least one implementer **and** at least one consumer.
 The two are counted separately because they fail differently — no implementer is
 dead weight in the interface, no consumer means every implementer wrote code
-that never runs. So don't add an optional member speculatively (the
-`PointerAction` mistake), and don't leave one whose consumer has gone: if a
-capability is worth keeping unread, it needs an entry naming the change that
-owns the decision.
+that never runs. So don't add an optional member speculatively, and don't
+leave one whose consumer has gone: if a capability is worth keeping unread, it
+needs an entry in that test naming the change that owns the decision.
 
 **When every game implements an optional member, ask what the optionality
-costs — and whose code pays.** It is not automatically a mistake:
-`preferredTileSize` and `paramConfig` are fine as they are, because their
-optionality is absorbed by the engine and never appears in a game. `newDrawState` and `redraw` were the
-opposite case: their optionality *leaked into the game-facing signature* as
-`ds: DrawState | null`, so 112 game files carried a guard against a null the
-engine could not produce, and 57 of them a `ds?.tilesize ?? PREFERRED_TILE_SIZE`
-that would have clicked the wrong cell had it ever fired. **The cost that
-decides is the cost borne by game code**, so both are required now.
+costs — and whose code pays.** `preferredTileSize` is fine optional, because
+the engine absorbs the absence and no game sees it. `newDrawState` and `redraw`
+are required because an optional one would reach every game as
+`ds: DrawState | null`. **The cost that decides is the cost borne by game
+code.** `PuzzleStaticAttributes`, the sibling contract that relays a game's
+capability flags to the app shell, is swept by the same test.
 
-The same question is worth asking of `PuzzleStaticAttributes`, the sibling
-contract that relays a game's capability flags to the app shell — two of its
-original nine fields turned out to have no reader, and it is swept by the same
-test.
-
-The five type parameters are yours to shape idiomatically; the file layout that
-has held across all 57 games is `index.ts` (the `Game` object + glue),
-`state.ts` (types + codecs), `solver.ts`, `generator.ts`, `render.ts` — see
+The type parameters are yours to shape idiomatically; the file layout every
+game follows is `index.ts` (the `Game` object + glue), `state.ts` (types +
+codecs), `solver.ts`, `generator.ts`, `render.ts` — see
 [README](./README.md) § "File anatomy".
 
 ### Absence is `null`
@@ -87,16 +78,13 @@ Why `null` rather than the word the language produces by itself:
   [`absence-spelling.mjs`](../../scripts/checks/absence-spelling.mjs) fails any
   union naming `undefined`. The rule the other way round would have to exempt
   every `null` a move or a save carries, and nothing marks which types those are.
-- **It was already this tree's word**, about 750 declared positions against 160
-  when `spell-absence-one-way` measured it.
 
 **A respelling is the one edit the compiler will not check.** `x === null`
-compiles against `number | undefined` and is always false. Moving the digit
-codecs and the key map to `null` left Loopy's and Mosaic's `validateDesc`
-accepting any character and an unmapped key reaching the game, with the typechecker
-and the suite green; the same guard fails a strict comparison against a word the value's
-type cannot hold. **Assertions move with it**: `toBeDefined()` passes on `null`,
-so assert a present answer with `not.toBeNull()`.
+compiles against `number | undefined` and is always false, so a check written
+that way accepts everything with the typechecker and the suite green; the same
+guard fails a strict comparison against a word the value's type cannot hold.
+**Assertions move with it**: `toBeDefined()` passes on `null`, so assert a
+present answer with `not.toBeNull()`.
 
 ## Idiomatic state, not a C transliteration
 
@@ -106,10 +94,7 @@ control-flow template.** Classes over handle-passing, iterators over
 C-array mirrors. **Comments and names pass one reading test**: a comment says
 what the code cannot, and a name changes only when a reader has to ask what it
 stands for — [`repo-layout`](../../openspec/specs/repo-layout/spec.md), "A
-comment says what the code cannot, and a name answers its own question". The C is a reference for the logic, never a template for control flow; the
-payoff is measured
-(Galaxies, 2026-09-11: 4,398 lines against upstream's 4,485, while also
-carrying an explained hint, mistake checking and a second drag gesture).
+comment says what the code cannot, and a name answers its own question".
 
 **Watch for logic that is correct only because of what `memmove` leaves
 behind.** C's `memmove` copies without clearing the source, so code that opens
@@ -189,9 +174,8 @@ encodable.
 
 **Not everything fits, and a bespoke codec stays first-class.** Float params
 (Rectangles, Net, Netslide), a leading letter before the dimensions (Cube), a
-`switch` over multi-character strings (Solo), a `while` loop over the tail
-(Dominosa, Mines) and a boolean encoded as an integer (Mosaic) are hand-written, and
-should stay that way — a grammar that grew an option per game would be two
+`switch` over multi-character strings (Solo) and a `while` loop over the tail
+(Dominosa, Mines) are hand-written, and should stay that way — a grammar that grew an option per game would be two
 ways plus a seam rather than one obvious way.
 
 **Whatever you write, the encodings are asserted.**
@@ -223,8 +207,7 @@ start-up choice. Presets must encode **full** params (including difficulty) —
 the midend builds the game id, and the type-menu label read from it, from
 `encodeParams(_, true)`, and a preset that omits the suffix shows the default
 difficulty in the header even though the board generated correctly. If a new
-game's header ignores a suffix, check that first (it cost a dev-verify cycle
-before the fix landed in `Midend.emitIdChange`).
+game's header ignores a suffix, check that first.
 
 ### Portrait boards, and turning them to fit
 
@@ -438,14 +421,9 @@ without moving a pinned board.
 `prefs` but over `Params`.** An ordered `ParamConfigItem<Params>[]`; the midend
 builds the app's form from it and parses a submission back onto a **copy** of
 the params, validated by `paramsError`, so the dialog rejects exactly what a
-game ID would. A game that omits it ships a blank Custom dialog — wire it or
-your game has no custom sizes. **This is now asserted rather than advised**
-([`custom-params.test.ts`](../../src/engine/custom-params.test.ts)): every
-registered game must declare a non-empty `paramConfig`. Sokoban shipped without
-one from its port until `audit-vestigial-contract-surface`, and nothing
-objected, because the sweep over `paramConfig` opened by skipping any game that
-had none and the menu entry was gated on a flag the midend answered `true`
-unconditionally. Conventions that keep it correct:
+game ID would. Every registered game must declare a non-empty `paramConfig`
+([`custom-params.test.ts`](../../src/engine/custom-params.test.ts)).
+Conventions that keep it correct:
 
 - **Keys match the C config slug**, so the form is stable across eras; `get`
   returns an index for a choice and a string for a text field, and `set` is its
@@ -485,11 +463,11 @@ Exemplars: [`pattern/index.ts`](../../src/games/pattern/index.ts) (pure w/h),
 `difficultyItem(TIERS, "diff")` in its `paramConfig` — or, for a game storing a
 word or an enum, `difficultyItem(TIERS, { get, set })` — and nobody writes
 `kw: "difficulty"` by hand. The engine's `tierOf(game, p)` and
-`withTier(game, p, tier)` read and move a tier through that item, because eight
+`withTier(game, p, tier)` read and move a tier through that item, because some
 games type their difficulty as a string union or enum and no cross-game caller
-can write `{ ...p, diff: cap }`. The contract is only the capped solve. The point is that properties *about* tiers — above all
-cap-monotonicity, whose absence silently broke Check & Save on every Boats Easy
-board — are asserted for all tiered games at once by
+can write `{ ...p, diff: cap }`. The contract is only the capped solve. The
+point is that properties *about* tiers — above all cap-monotonicity, which
+Check & Save depends on — are asserted for all tiered games at once by
 `difficulty-contract.test.ts`; declaring the contract enrolls the game in those
 guards automatically.
 
@@ -506,16 +484,12 @@ export const DIFF_NAMES = tierNames(3, { search: true });  // Easy · Normal · 
 ```
 
 That makes position and name a bijection across the collection — "Tricky" is the
-third rung in every game that has one — which is the whole point: before
-`adopt-conventional-tier-names` the 29 tiered games had picked twelve different
-words, and the six three-tier games used six different vocabularies. Override by
-writing the array, and say why in the change; `difficulty-contract.test.ts`
-fails a game that drifts back, naming the fix. No game overrides today.
+third rung in every game that has one. `difficulty-contract.test.ts` fails a
+game that writes its own words, naming the fix.
 
-**`DIFF_*` constant names are solver rung labels, not tier names.** They were
-never reliably the same — Solo declares eight and offers six — and since the
-convention they routinely differ: Unruly's `DIFF_TRIVIAL` is its first tier, so a
-player sees "Easy". Read `tierNames`, not the identifier.
+**`DIFF_*` constant names are solver rung labels, not tier names.** Unruly's
+`DIFF_TRIVIAL` is its first tier, so a player sees "Easy". Read `tierNames`,
+not the identifier.
 
 **Where the list comes from at runtime**: `difficultyTiers(game)` reads the
 game's difficulty item, so the names have exactly one definition per game. Never
@@ -576,15 +550,8 @@ Exemplar: [`fifteen/state.ts`](../../src/games/fifteen/state.ts).
 The reason is that two loops disagree in silence. A validator and a parser that
 each read the grammar can differ about a character without any test noticing:
 the accepted desc builds a board with its clues shifted, and **a typed array
-swallows the out-of-range write**, so nothing throws. Bricks shipped exactly
-that, its validator counting `A`–`Z` as blank runs its parser ignored; Rect's
-and Sticks' unbounded clues wrapped in their arrays, so the parser read a
-different board from the one the validator accepted. When every game was read
-for `read-descs-through-one-cursor`, about half the collection's validators
-accepted something their parser skipped. Each game then read its desc once but
-still wrote the validator line by hand, which only a convention kept honest;
-`let-the-engine-own-the-desc-parse` took the line away, so there is no second
-reading left to write.
+swallows the out-of-range write**, so nothing throws. With one parse there is
+no second reading to disagree with.
 
 **Read with the cursor** ([`engine/desc-reader.ts`](../../src/engine/desc-reader.ts),
 engine catalog § "`desc-reader.ts` — the cursor a desc parser drives") unless
@@ -611,8 +578,7 @@ cell, and your own parser depends on the answer.
 **A letter-run is not enough to make it that grammar.** What decides is the
 *other* token: Bricks' is a multi-digit clue with `_` separators over a padded
 grid, and Crossing has no value character at all — its decimal numbers are a
-second kind of run. Both were misfiled as adopters by a scan keyed on the
-character arithmetic the two families share.
+second kind of run.
 
 ### Digits and numbers in a desc are one fact, and it is not yours
 
@@ -629,11 +595,9 @@ spent the lowercase on blanks. Hex that is hex (a nibble bitmap) is
 
 **Convert at the codec, and keep numbers as numbers past it.** A desc, a params
 string and a Solve aux are text by contract; a rendered glyph is text. Nothing
-between those two edges should hold a digit as a character. Crossing kept its
-clue numbers as digit strings and paid for it with eleven `charCodeAt(k) - 48`
-sites across its solver, hint solver and renderer; its `readDesc` now turns
-each into a digit array once, and the string is rebuilt only where the desc,
-the number panel or a hint sentence needs one.
+between those two edges should hold a digit as a character: Crossing's parse
+turns each clue number into a digit array once, and the string is rebuilt only
+where the desc, the number panel or a hint sentence needs one.
 
 What is yours is the **bound** and what an out-of-range value means, written
 beside the call — `const v = digitValue(tok.value); if (v === null || v > 4)
@@ -648,19 +612,14 @@ spelling is § "Absence is `null`"). A
 write into a typed array names *that array's* absent constant — Filling's
 `?? EMPTY`, Slant's `?? -1` — because a borrowed `-1` in a `Uint8Array` is
 `255`. Inside one parse (§ "Read a desc once") the character is screened where
-it is read, so a write never relies on another loop having checked it; an array with no absent value, where every cell holds a number,
-throws instead. The reason is scale: a `-1` inside the return type passed every
-`>= 0` test by a coincidence of ordering and would have failed silently under
-`!== 0`, and a fact every new author must be told loses to one the compiler
-enforces.
+it is read, so a write never relies on another loop having checked it; an
+array with no absent value, where every cell holds a number, throws instead.
 
 Never write `c >= "0" && c <=
 "9"`, `c.charCodeAt(0) - 48`, `String.fromCharCode(48 + n)` or a private
 `isDigit`: [`decimal.test.ts`](../../src/engine/decimal.test.ts) scans every
 game source for the shapes and fails the build, and `emittable-keys.test.ts`
-fails a declaration of any name the fact modules export. Twelve files had
-their own `isDigit` and some forty loops read a number by hand before this
-was one place; every one of those was a copy waiting to drift.
+fails a declaration of any name the fact modules export.
 
 ## Moves
 
@@ -680,14 +639,13 @@ changed nothing out of the history: no step of Undo, the input answered as a
 UI-only change, your `changedState` still run (`ts-engine`, "A move that
 leaves the board as it was is no step of the history"). So an erase key on an
 empty square, an entry of what the square holds and a drag out and back need
-no test of yours. Upstream had no such thing and every C game suppresses the
-move in `interpret_move`; seven ports had missed a case each, which is why
-the rule moved. A test of your own may stay where it is cheap and already
-there (out of the grid, in the gutter), and is needed where the answer is
-`null` for another reason: a key the game has no use for must fall through to
-the app. No guard convicts a game for answering such a move, and the midend
-claims the key it came from: a key left unclaimed is the app's to act on, so
-declining a letter typed where it already stands would hand it to a shortcut. What the comparison reads is the whole state, so keep bookkeeping
+no test of yours; upstream's C suppresses each in `interpret_move`, and a port
+does not copy that. A test of your own is needed only where the answer is
+`null` for another reason: a press out of the grid, or a key the game has no
+use for, which must fall through to the app. The midend claims the key a
+no-change move came from, so a letter typed where it already stands is not
+handed to a shortcut. What the comparison reads is the whole state, so keep
+bookkeeping
 that changes on every move (a counter, a last-move marker) out of it unless a
 player can see it: with it, no move of yours is ever "the same board".
 
@@ -714,9 +672,7 @@ tileSize)`, builds a fresh one whenever the tile size changes, and declines
 input before a board exists. Do **not**
 write `ds?.tileSize ?? PREFERRED_TILE_SIZE`: that fallback cannot fire, and if
 it ever did it would map the click at the preferred tile size rather than the
-one on screen — the wrong cell, silently. Fifty-seven games had one, from back
-when `newDrawState` was optional; `audit-vestigial-contract-surface` made both
-it and `redraw` required and removed the lot. A test that calls `interpretMove`
+one on screen — the wrong cell, silently. A test that calls `interpretMove`
 or `redraw` directly builds the drawstate with `game.newDrawState(state,
 tileSize)`, or with
 [`preferredDrawState`](../../src/engine/testing/preferred-draw-state.ts) at the
@@ -844,14 +800,11 @@ read off a method:
 
 **A param-dependent capability the static flag can't express: widen the
 return, don't add a hook.** Loopy's text format works on the square lattice
-and none of its other seventeen tilings; the resolution was widening
-`textFormat` to return `string | null` — the midend and share dialog
-already treat an absent rendering as "no text panel". A
-`canFormatAsTextNow?(params)` hook would have been a wider surface for one
-adopter, which is the `PointerAction` mistake: a hook shipped speculatively,
-adopted by nobody, later deleted as phantom API. When one game needs a
-refinement, prefer the narrowest change the existing consumers already
-tolerate.
+and on none of its other tilings, so `textFormat` returns `string | null` —
+the midend and share dialog already treat an absent rendering as "no text
+panel". A `canFormatAsTextNow?(params)` hook would be a wider surface for one
+adopter. When one game needs a refinement, prefer the narrowest change the
+existing consumers already tolerate.
 
 ### Contract sections, and what makes a draft
 
@@ -882,8 +835,7 @@ notApplicable: {
 
 `difficulty`, `textFormat` and the affordances (`hover`, `reference`, `prefs`,
 the keypad) are not sections: nothing tells a puzzle that has no such thing
-from an unfinished one, so their absence says nothing. The measurement behind
-that line is `derive-the-draft-label`'s design.
+from an unfinished one, so their absence says nothing.
 
 ## Ui
 
@@ -910,11 +862,10 @@ the game's own, and a gesture armed from the keyboard
 ([rendering](./rendering.md) § "`changedState` cancels a dangling drag").
 
 **A `Ui` rebuilt from state must ask whether this transition touched what it
-rebuilds.** Guess rebuilt its working row from the holds after every
-transition, which was harmless while the only moves were guesses; the day marks
-became moves, each one would have wiped the row the player was marking against.
-It now rebuilds only when the row being played changes. Adding a move type to a
-game with a rebuilding `changedState` is the moment to check.
+rebuilds.** Guess rebuilds its working row from the holds only when the row
+being played changes, since a mark is a move too and must not wipe the row the
+player is marking against. Adding a move type to a game with a rebuilding
+`changedState` is the moment to check.
 
 ### Ui that must survive a save
 
@@ -926,17 +877,11 @@ another, since a row reaches the log only when it is submitted. Serialize
 exactly those fields with `encodeUi`/`decodeUi`; the midend restores them after
 the replay. A game whose `Ui` is fully derivable omits both hooks.
 
-**Writing the hooks is only half of it — check that something still takes a
-save.** The app autosaves when `puzzle-context` sees one of the values it
-watches change, and a `Ui` edit is not a move: it moves no move index, no game
-id and no checkpoint. So Guess shipped a perfectly correct `encodeUi` whose
-output nothing ever asked for, and the composed row came back empty from a real
-reload while every test passed. The fix carries the encoding itself in the
-`game-state-change` notification (`NotifyGameStateChange.uiState`), so the value
-the app compares **is** the part of the save that would differ — and a game with
-no `encodeUi` sends nothing and costs nothing. `midend-ui-state.test.ts` holds
-the derivation; the reload is the half only a browser can tell you about, which
-is why `AGENTS.md` says to run the app.
+**A `Ui` edit is not a move, and it still takes a save.** The encoding rides
+the `game-state-change` notification (`NotifyGameStateChange.uiState`), so the
+value the app watches for autosave is the part of the save that would differ;
+a game with no `encodeUi` sends nothing. `midend-ui-state.test.ts` holds the
+derivation; the reload is the half only a browser can tell you about.
 
 ### Preferences
 
@@ -1076,17 +1021,14 @@ no-line marks on a cell's four edges), and a **solver's** own working candidate
 scratch, which is a different object with a different lifetime. Guarded by
 [`note-vocabulary.test.ts`](../../src/engine/note-vocabulary.test.ts); the
 normative rule is the `engine-notes` spec, "One note-taking vocabulary and one
-layout across games". *What the disagreement cost while it lasted*: `mark-all.test.ts` carried
-a hand-written row per game whose whole job was to say where that game's notes
-were — the last per-game roster in the cross-game guards.
+layout across games".
 
 - **Mark-all — the `markAll(state)` hook.** It returns the press's move, and
   having it is having the *Fill marks* control. **A game never reads a key for
   the press.** The midend makes the hook's move for `MARK_ALL_BUTTON`, which
   the control and a hint's `markAllPress` send, and for the letter `M` on a
-  board whose keypad (`requestKeys`) has no such letter. While each game read
-  `M` for itself the control typed 22 into a Solo square, where M is that
-  number, and Group refused small `m` on every board.
+  board whose keypad (`requestKeys`) has no such letter (in a large Solo, M is
+  a number).
   A *candidate-elimination* game (one with a `regionsOf` — see
   [hints](./hints.md) § "Candidate-elimination games") builds the move with
   `adaptiveMarkAllMove`
@@ -1099,30 +1041,28 @@ were — the last per-game roster in the cross-game guards.
   same `regionsOf` the hint's plan declares (a Keen cage is **not** a region;
   a Solo Killer cage forbids repeats, so it is one, flagged `holdsEvery: false`);
   games without a row/column model keep plain fill-only. **The mark-all trap:**
-  a guard on this path must *narrow* a cell's notes or the bug hides — the
-  mark-all-resets-notes defect shipped in ten games at once; mutation-check
-  the guard (see [testing](./testing.md)).
+  a guard on this path must *narrow* a cell's notes first, or a Mark-all that
+  resets them passes; mutation-check the guard (see [testing](./testing.md)).
 - **Refuse a note Mark-all would never make.** Where a cell's full note set
   varies by cell, as Rome's arrows are bounded by the grid edge and Seismic's
   numbers by the area's size, input refuses a note outside it. No solver
   considers that candidate, so no hint has a strike for it, and a hint meeting
-  one could not explain the placement it hides. Rome's crashed exactly that
-  way (`rome-hint-survives-a-restored-note`). Refuse it on every way into notes
+  one could not explain the placement it hides. Refuse it on every way into notes
   (typed key, keypad, drag; the drag's preview too), and mask it in
   `executeMove` as well, because a saved move log from before the refusal
   replays through `executeMove`.
 - **Declare the pencil preferences from
   [`engine/pencil-prefs.ts`](../../src/engine/pencil-prefs.ts), never by
   hand.** `stickyPencilPref()` and `pencilKeepHighlightPref()` carry wording
-  ten and five games share; `autoPencilPref(name)` takes its label as an
+  their games share; `autoPencilPref(name)` takes its label as an
   argument *because* the sentence names the regions the game clears. Sharing
   only the keyword and plumbing is the honest amount to share — a copied
   player-visible label is a label that drifts, and `pencil-prefs.test.ts`
   fails on a divergent copy.
 - **Do not write the pointer arm by hand** — call
   [`engine/note-taking-cell.ts`](../../src/engine/note-taking-cell.ts)'s
-  `pressNoteTakingCell`, which is the mechanic itself, shared by all eleven
-  games that carry it. You supply two predicates about the cell (`canEnter`,
+  `pressNoteTakingCell`, which is the mechanic itself, shared by every game
+  that carries it. You supply two predicates about the cell (`canEnter`,
   `canMark`) and your own coordinates; it resolves the press and reports
   `"moved"` / `"unmoved"` / `null` so a game layering something on the
   selection (Crossing's across/down snap, Group's multifill anchors) can hang
@@ -1130,8 +1070,7 @@ were — the last per-game roster in the cross-game guards.
   matching rules for what a symbol *entry* does to the highlight — the
   keystroke decoding and the no-op predicate stay yours, because they read your
   grid. A game carrying `ui.pencilMode` and `ui.cursorFromKeyboard` without
-  calling `pressNoteTakingCell` fails `note-taking-cell.test.ts`; this used to
-  be eleven copies, and it is one now.
+  calling `pressNoteTakingCell` fails `note-taking-cell.test.ts`.
 - **If your press starts a drag, the gesture is the engine's.** Rome and Map
   spend the press (and the right button) on drags, so the selection cannot
   happen at the press — it is not yet known to be one. **Your press changes
@@ -1143,8 +1082,7 @@ were — the last per-game roster in the cross-game guards.
   the tap gets the mechanic's, and no game needs an exemption for a right
   button that is "already spoken for".
 
-  Two things to get right, both of which cost Rome and Map a player-visible
-  quirk apiece before `own-the-select-or-drag-gesture`. **Do not hide or move
+  Two things to get right. **Do not hide or move
   the highlight at the press** — the release needs to know what it was on, for
   the repeat tap and for the sticky mode switch that must leave it exactly
   where it was; keep your grabbed cell in the drag's own fields, not in the
@@ -1235,8 +1173,7 @@ in the input path is a drift bug waiting to happen — see "One function, both
 callers" below), and decide what "available" means *short of solving* —
 Crossing offers a clue on length/digit/unused pattern-matching over the
 player's own entries; testing crossing-run satisfiability is constraint
-propagation, i.e. the puzzle, and belongs to `hint()`. The stronger version is
-barely more code, which is exactly why the line needs stating.
+propagation, i.e. the puzzle, and belongs to `hint()`.
 
 **Check what a gesture already means before borrowing an interaction from
 another game.** Ascent's ghost grammar (left accepts a preview, right cycles
@@ -1273,24 +1210,17 @@ Exemplars: [`bricks/render.ts`](../../src/games/bricks/render.ts) +
 
 **Any rule the input and the display both need is one function, called by
 both.** Coordinates are only the obvious case. Crossing's clue list *colors*
-each clue by which run a click would send it to, and that rule was written
-twice — an inline loop in `redraw` and `runForNumber` for the click. They
-agreed until the rule gained a tie-break, at which point the list said "down"
-while the click placed "across" (owner-reported). The fix is not to fix both
-copies but to delete one: `redraw` now asks `runForNumber`. **Tell:** a
+each clue by which run a click would send it to, so `redraw` asks
+`runForNumber`, the function the click calls. **Tell:** a
 predicate in `redraw` that answers what a *move would do* — that belongs to
 the move code; render should be asking, not deciding. Exemplar:
 [`crossing/render.ts`](../../src/games/crossing/render.ts) (`layoutNumbers`,
 `runForNumber`).
 
-**The rule's most common concrete instance is the board's pixel origin**, and it
-was violated in eight games until `unify-the-board-origin` swept for it: the
-border was computed once in the module hosting `interpretMove` and again in the
-module hosting `redraw`. All eight agreed, which is exactly why nobody looked —
-the failure mode is that they agree until one gains a reason to change, and then
-the click lands on a different cell than the one the player sees highlighted,
-with the whole suite green because nothing drives paint and input against each
-other.
+**The rule's most common concrete instance is the board's pixel origin.** Two
+copies agree until one gains a reason to change, and then the click lands on a
+different cell than the one the player sees highlighted, with the whole suite
+green because nothing drives paint and input against each other.
 
 - **Put the origin in `render.ts`, export it, and import it from the input
   path.** One function cannot drift from itself, so this needs no test at all —
@@ -1300,26 +1230,10 @@ other.
   comment says *"Shared with `interpretMove` so pointer mapping and drawing
   agree"*).
 - **Tell: an input path that *cites* the render module in a comment instead of
-  importing from it.** Slant's read `const b = Math.floor(ts / 3) + 1; //
-  render.ts border (NARROW_BORDERS)` — a copy naming its own original, spelling
-  the same number a second way (`render.ts` said `clueRadius(ts) + 1`). A
-  comment pointing at the source of truth is the shape of an import that was
-  not written.
-- **Do not reach for a scan here.** One was considered and declined: it would
-  have to key on a name (`border`, `BORDER`, `margin`, `TLBORDER`), and Slant's
-  copy was an unnamed inline expression — so the scan would have reported the
-  worst instance in the set as clean. See [`method.md`](../method.md), "A scan that
-  keys on a name finds only the games that were named that way".
-- **And a scan keyed on *where* a thing is defined misses the copies that share
-  a file.** The sweep that found the eight games above keyed on "defines the
-  origin in more than one file", and reported Flip clean. Flip had **four**
-  copies of `tileSize >> 1` — for `interpretMove`, `computeSize`, `redraw` and
-  `drawTile` — all inside `index.ts`, so the key could not see them; they came
-  out only when the renderer moved to `render.ts`
-  (`move-renderers-into-render-ts`). The name-keyed miss and the location-keyed
-  miss are the same error: **the key was a proxy for the defect, not the
-  defect.** The defect is *more than one expression for one number*, and reading
-  the game is what finds it.
+  importing from it**, or one number spelled by more than one expression
+  (`tileSize >> 1` in `interpretMove`, `computeSize` and `redraw`). No scan
+  finds these, by name or by file ([`method.md`](../method.md) § "A scan that
+  keys on a name"); reading the game does.
 
 ### Grid modes are a movement table
 
@@ -1350,6 +1264,4 @@ Two adjacent Ascent patterns worth reaching for:
 Exemplars: [`ascent/state.ts`](../../src/games/ascent/state.ts),
 [`ascent/ui.ts`](../../src/games/ascent/ui.ts),
 [`ascent/moves.ts`](../../src/games/ascent/moves.ts),
-[`ascent/solver.ts`](../../src/games/ascent/solver.ts) (a scratch flag that
-persists across solves — a generation-critical quirk; see that change's
-design F1).
+[`ascent/solver.ts`](../../src/games/ascent/solver.ts).

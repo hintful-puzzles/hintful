@@ -1,0 +1,5 @@
+# No delta yet: a draft that holds measurements and a proposed order of work.
+# Each piece the owner takes up is filed as its own change, with its delta.
+schema: spec-driven
+created: 2026-10-12
+skip_specs: true

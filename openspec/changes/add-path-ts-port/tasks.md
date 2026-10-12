@@ -58,7 +58,7 @@ met, the change may end at §1.
 - [ ] 5.1 Tier-1 solver/generator/codec tests; tier-2.5 render scenarios.
       Assurance is behavioral (generated boards are uniquely solvable), not a
       C differential — there is no C game or solver to match.
-- [ ] 5.2 Register in `ts-ported-ids.ts` + `games/index.ts`; add a catalog entry
+- [ ] 5.2 Register in `src/games/index.ts`; add a catalog entry
       + two new icon PNGs (path was never cataloged).
 - [ ] 5.3 Full gate green; `openspec validate add-path-ts-port --strict`;
       dev-verify in the browser.

@@ -260,9 +260,9 @@ function packHint(
         const dy0 = y - 2 * ty;
         if (dx0 < 0 || dx0 > 2 || dy0 < 0 || dy0 > 2) continue;
         if (tx < 0 || tx >= w || ty < 0 || ty >= h) continue;
-        // Never ring a dot on a cell the hint has filled: the ring would be
-        // its own color on its own color — invisible, and saying nothing the
-        // fill does not already say. It is the "dot sits on these cells" rule
+        // Never ring a dot on a cell the hint has ringed: the ring would be
+        // its own color beside its own color, and saying nothing the cell's
+        // ring does not already say. It is the "dot sits on these cells" rule
         // that hits this, and its narration names the dot by position rather
         // than by a ring for exactly the same reason.
         if (ds.hint.packed[ty * w + tx] & HINT_TARGET_CELL) continue;

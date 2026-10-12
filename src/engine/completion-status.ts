@@ -2,10 +2,8 @@
  * The words a status bar opens with once the board is finished, or once the
  * solver has been used on it.
  *
- * They say the two facts `completion-vocabulary.test.ts` gives every game one
- * name for, so they are the same in every game. Fifteen status bars spelled
- * them seven ways (`own-the-player-facing-messages`), one with a trailing space
- * left behind when nothing followed.
+ * They say two facts that are the same in every game, so every game's status
+ * bar says them in the same words.
  *
  * **Four states, not three.** A game whose "solved" is recomputed on each move
  * lets a player use Solve and then move off the solution, and its status bar

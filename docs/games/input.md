@@ -17,14 +17,13 @@ shared helper inventory).
 
 A pointer or key event lands in `puzzle/components/view-interactive.ts`, which
 maps it to an upstream-style button code and hands it through the worker to
-`Midend.processInput`, which calls the game's `interpretMove`. Three facts
+`Midend.processInput`, which calls the game's `interpretMove`. Four facts
 about that pipeline shape everything below:
 
 - **Button codes and class predicates are shared** —
   [`engine/pointer.ts`](../../src/engine/pointer.ts) exports the
   `LEFT_BUTTON`…`CURSOR_SELECT2` codes, the `isMouseDown` / `isMouseDrag` /
-  `isMouseRelease` range predicates (upstream's `IS_MOUSE_*`; 27 ports each
-  rewrote the three-constant chain before they were extracted), the `MOD_*`
+  `isMouseRelease` range predicates (upstream's `IS_MOUSE_*`), the `MOD_*`
   masks and `stripModifiers`. Never redeclare `const MOD_MASK`.
 - **Shift on a key is yours to read, and you need not strip it.** A key held
   with Shift arrives with `MOD_SHFT` set, a capital letter included, since the
@@ -48,10 +47,7 @@ about that pipeline shape everything below:
 **Maximum parity between mouse, touch and keyboard is the collection-wide bar**
 (owner directive, 2026-08-03). A game where one mode cannot play to completion
 carries either a defect or an explicitly recorded exemption — never an
-unexamined gap. The precedent for why this is not paranoia:
-`fix-touch-input-stylus-modifier` found **nine of the then thirty-two ported
-games completely deaf to touch**, discovered by an owner bug report rather than
-a test.
+unexamined gap.
 
 **The sweeps below guard it automatically, all through the live registry and a
 real `Midend`, so your game is covered the day it is registered.** You do not
@@ -96,82 +92,60 @@ have to remember they exist; you do have to know what they will tell you.
 
 **What no sweep can tell you** is whether the resulting gesture is *usable* —
 hit targets big enough for a fingertip, a cursor a player can see, a panel
-offering the keys the game wants. Those need the browser, and the audit that
-built these guards was explicit that the sweep is the net and the browser pass
-is what catches what the net's mesh is shaped to miss.
+offering the keys the game wants. Those need the browser.
 
 **On writing a probe of your own**: take it from
 [`engine/testing/input-probe.ts`](../../src/engine/testing/input-probe.ts)
-rather than writing one. That module holds the board builder, the probe grid and
-the questions the guards ask, precisely because two guards in different
-directories had each grown their own copy and the copies had drifted — the
-bare-letter sweep seeded a different board and tested a single cursor position,
-so it reported a different set of games the moment that board changed.
+rather than writing one. That module holds the board builder, the probe grid
+and the questions the guards ask, so two guards cannot drift apart.
 
-If you do extend one, the rule about the question still holds, and it is sharper
-than "consumed": **never convict a game because the board did not change.** A
-right-button eraser has nothing to erase on a fresh board, a Clear key on an
-empty cell is a legitimate no-op, and Fifteen's gap starts in the corner where
-two of the four arrows correctly do nothing — each of those convicted an
-innocent game while `audit-input-mode-parity` was being written. What *is* sound
-is the other direction: a change is a **sufficient** sign that an input means
+If you do extend one: **never convict a game because the board did not
+change.** A right-button eraser has nothing to erase on a fresh board, a Clear
+key on an empty cell is a legitimate no-op, and Fifteen's gap starts in the
+corner where two of the four arrows correctly do nothing. What *is* sound is
+the other direction: a change is a **sufficient** sign that an input means
 something, and a game is reported meaningless only when it is invisible under
-*every* observation. That asymmetry is what lets `secondaryMeaning` ask a much
-sharper question than "was it consumed" without re-opening the rejected one.
+*every* observation (`secondaryMeaning`).
 
 ## The numeric keypad never arrives
 
 **A keypad binding must never be the only route to an input — bind the bare
-digits too.** This section said for a long time that "this web frontend does not
-set `MOD_NUM_KEYPAD`". **That was false**, and worth stating plainly because the
-wrong reason is more dangerous than no reason: `view-interactive.ts` sets the
-bit from `event.location === 3`, and has since the initial webapp version, so
-`MOD_NUM_KEYPAD | '7'` *does* fire. Cube ships a passing test asserting exactly
-that, and Bricks' comment calls the bit "load-bearing for the diagonals" — an
-audit acting on the old sentence would have deleted working code as dead.
-
-The real gap is narrower and still real. A numpad key only arrives as a **digit
-when Num Lock is on**: with it off, numpad 7 is `event.key === "Home"`, which
-`puzzleKeyMap` does not carry and the char-code fallback rejects for being
-longer than one character. And a laptop keyboard may have no numpad at all. So
-the keypad is a *convenience route*, never the only one.
+digits too.** `view-interactive.ts` sets `MOD_NUM_KEYPAD` from
+`event.location === 3`, so `MOD_NUM_KEYPAD | '7'` does fire. But a numpad key
+only arrives as a **digit when Num Lock is on**: with it off, numpad 7 is
+`event.key === "Home"`, which `puzzleKeyMap` does not carry. And a laptop
+keyboard may have no numpad at all. So the keypad is a *convenience route*,
+never the only one.
 
 **The bit rides a digit and nothing else.** With Num Lock off the pad's 8 is
 `ArrowUp` from location 3, and its Enter is `Enter`: both arrive as the plain
-`CURSOR_UP` and `CURSOR_SELECT`. When they carried the bit, every game that
-compares `button === CURSOR_UP` without stripping it (Ascent under "Move
-cursor", Bricks, Cube) was deaf to the pad's own arrows.
+`CURSOR_UP` and `CURSOR_SELECT`, so a game comparing `button === CURSOR_UP`
+hears the pad's own arrows.
 
-It bit hardest where it was the only one: Inertia's four diagonal moves are
-keypad-or-mouse upstream, so a keyboard-only player literally could not make
-them. Accept the bare digits as well as the modified ones (`stripModifiers`,
+Inertia's four diagonal moves are keypad-or-mouse upstream, which leaves a
+keyboard-only player without them. Accept the bare digits as well as the
+modified ones (`stripModifiers`,
 then look the character up) whenever the game binds no other meaning to those
 digits. Exemplar: [`inertia/index.ts`](../../src/games/inertia/index.ts)
 (`DIGIT_DIRECTIONS`); guarded by
 [`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts).
 
 **The same trap, one layer up: a whole feature can hang off a character this
-frontend never sends.** Upstream bound Slide's route-walking to
+frontend never sends.** Upstream binds Slide's route-walking to
 `button == ' '`, but `puzzleKeyMap` maps Space to `CURSOR_SELECT2` and Enter to
-`CURSOR_SELECT`, so the bare space character never arrives — a faithful
-transcription shipped a Solve route that literally could not be walked, and
-the C build's identical dead binding hid it from any parity comparison.
+`CURSOR_SELECT`, so the bare space character never arrives.
 
 **Tell:** an `interpretMove` comparing `button` against a **character literal**
 (`' '`, `'u'`) or against `MOD_NUM_KEYPAD | …`. Check what `puzzleKeyMap`
 actually delivers before porting the comparison; accept the buttons this
 frontend does send (keeping the literal too costs nothing).
 
-**The erase and cancel keys were the worst instance: fourteen of the
-fifty-seven games.** Upstream writes `button == '\b'` (8) to rub something out,
-and pairs it with Escape (27) to abandon a drag. This frontend sends **127** for
-Backspace, Delete *and* Clear — never 8 — and it used to swallow Escape whole
-rather than forwarding it. Ascent (twice; one of them the only way to correct a
-typo mid-number), Boats, Bricks, Clusters, Filling, Group, Guess, Rome, Slant,
-Sticks, Subsets, Undead and Unruly shipped a dead erase key, and Pearl and
-Rectangles a cancel arm in which *neither* code could arrive.
+**The erase and cancel keys are the commonest instance.** Upstream writes
+`button == '\b'` (8) to rub something out, and pairs it with Escape (27) to
+abandon a drag. This frontend sends **127** for Backspace, Delete *and* Clear,
+never 8 from the keyboard.
 
-**Never write the codes again.** [`engine/pointer.ts`](../../src/engine/pointer.ts)
+**Never write the codes.** [`engine/pointer.ts`](../../src/engine/pointer.ts)
 exports `isEraseKey` (8 | 127) and `isCancelKey` (27 | 8 | 127); a game with both
 meanings tests them in separate branches. Escape reaches games as 27 whenever no
 pointer gesture is in flight (`app-shell` spec, "Escape reaches the puzzle when
@@ -179,48 +153,35 @@ there is no gesture to cancel").
 
 **The digit keys are the same fact, and `digitOf(button)` answers it** — the
 digit `0`–`9` a key stands for, or `null`, looking through the modifier bits so
-a numpad digit with Num Lock on *is* that digit. Twenty games had each spelled
-the range by hand (measured 2026-09-10), two ways and disagreeing over whether
-it began at `0`. What stays with the game is everything that is genuinely about
+a numpad digit with Num Lock on *is* that digit. What stays with the game is everything that is genuinely about
 the puzzle: the **bound** (`n <= w`, the cell's region size) and the **meaning
 of `0`** — a clear in Seismic, Mathrax and Crossing, the tenth color in Guess,
 sixteen in Bridges, one more typed digit in Ascent — so each is written beside
 the call, in the game's own words. A command bound to a digit is the same call
 (`digit === 1` places Undead's ghost). The one thing to resolve *before* asking
-is a numpad digit that means something else — Ascent, Bricks, Cube and Twiddle
-use the keypad as a direction pad. **Take the direction from
-`numpadDirection(button)`, all eight at once**: Ascent turned 8, 2, 4 and 6
-into arrows itself and left the diagonals as digits, so each moved the cursor
-and then typed. Whatever the helper answers for is no digit; `digitOf` is
+is a numpad digit that means something else — Ascent, Bricks and Cube use the
+keypad as a direction pad. **Take the direction from
+`numpadDirection(button)`, all eight at once**, so a diagonal is never left to
+be read as a digit. Whatever the helper answers for is no digit; `digitOf` is
 asked only when it answers `null`. Guarded by the code-keyed scan in
 [`decimal.test.ts`](../../src/engine/decimal.test.ts), which reads any operand
 anywhere in a game source, not only against the button: a `48`, a `0x39`, a
 `- 48`, a numeric `case` or a `c >= "0"` all fail it, whatever the value is
-called — the desc side shares the fact, and once no desc site spelled a digit
-code either, the scan could stop caring about the name.
+called.
 
-Two things generalize past keys here, and both cost this project real defects:
+[`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts) reads the
+codes the frontend can produce and the codes the game sources test, and fails
+on a test with no producer. It is a source scan on purpose: what is asserted
+is that no behavior exists, which no behavioral test can see. Two things to
+know about it:
 
-- **The repair belonged one layer down.** The dead bindings were in the games,
-  but fixing them per-game would have left seven files each carefully testing a
-  code nothing sends. When a per-game obligation keeps being got wrong, suspect
-  the layer below before writing the same fix an eighth time.
-- **A trap that has bitten seven times deserves a mechanical check, not a
-  paragraph.** [`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts)
-  reads the codes the frontend can actually produce and the codes the game
-  sources actually test, and fails on a test with no producer. It is a source
-  scan on purpose: what is being asserted is that no behavior exists, which no
-  behavioral test can see — a game handed `8` directly handles it perfectly.
-- **Two things that scan misses, both found by widening it, one of them live.**
-  A **`switch (button) { case 8: }`** is a comparison the regex cannot see, and
-  Unruly carried one through the very sweep that fixed fourteen games: its gate
-  called `isEraseKey`, so `DELETE` passed the gate, reached the switch, matched
-  nothing and fell through to `default` — wired at every level, dead at the last
-  one. A `case` cannot call a predicate, so spell **both** codes
-  (`case BACKSPACE: case DELETE:`; exemplar `subsets/index.ts`). And **the
-  on-screen panel is a second emitter**: `clearKey`'s button is `8`, so the
-  emittable set is computed **per game** — 8 reaches Abcd, which offers it, and
-  reaches Unruly not at all.
+- **A `case` cannot call a predicate, so spell both codes**
+  (`case BACKSPACE: case DELETE:`; exemplar `subsets/index.ts`). A gate that
+  calls `isEraseKey` in front of a `switch` with `case 8:` alone is wired at
+  every level and dead at the last one.
+- **The on-screen panel is a second emitter**: `clearKey`'s button is `8`, so
+  the emittable set is computed **per game** — 8 reaches a game that offers
+  the key and no other.
 
 ## One pointer, two buttons
 
@@ -229,7 +190,7 @@ device pressed them.** A tap is `LEFT_BUTTON`, a long press is `RIGHT_BUTTON`
 (§ "A touch hold arrives as the right button"), and a drag from either is that
 button's drag. A player moves between a mouse and a finger without learning a
 game twice, and a player who has only one of them can reach everything (owner,
-2026-09-30; `one-pointer-for-mouse-and-touch`).
+2026-09-30).
 
 So three things upstream had are **not in the vocabulary at all**, rather than
 discouraged:
@@ -241,12 +202,10 @@ discouraged:
   Upstream's frontend turned Shift-click into the middle button and Ctrl-click
   into the other button, which only a player with a hand on each device can use.
   Modifiers on *keys* (Shift+arrow, Ctrl+arrow) are keyboard gestures and stay.
-- **`MOD_STYLUS`.** Upstream marked a finger's press so a game could give touch
-  its own behavior, and Loopy and Pattern did: a tap cycled three states where a
-  click toggled two. With a long press as the second button that is not needed,
-  and it only meant a second control scheme for one game. The same bit, left in
-  and stripped by the midend, once let nine ports ship deaf to touch
-  (`fix-touch-input-stylus-modifier`); absent, there is nothing to compare wrongly.
+- **`MOD_STYLUS`.** Upstream marks a finger's press so a game can give touch
+  its own behavior (in Loopy and Pattern a tap cycles three states where a
+  click toggles two). With a long press as the second button that is not
+  needed, and it would mean a second control scheme for one game.
 
 **What this asks of a game**: every action it has must be reachable with the
 two buttons, clicks and drags, and not only from the keyboard — and every
@@ -266,9 +225,7 @@ the rule is structural: a `keyOnly` verb without a `pointer` route is a type
 error, and its route is tested. An arm of the game's own — anything
 `interpretMove` handles before `interpretTargetVerbs` — is outside it, and
 nothing checks that arm's keys and gestures against each other. So put an
-action in the model whenever it fits; an arm is where a gap can hide, and
-the audit that found Net's source key, Ascent's typed numbers and Group's
-headings (`audit-input-affordances`) found every one of them in an arm.
+action in the model whenever it fits; an arm is where a gap can hide.
 
 ## A touch hold arrives as the right button
 
@@ -280,13 +237,9 @@ follow suit.
 **That kills any press-and-drag gesture, precisely when the player pauses to
 aim.** "Press, pause a moment to decide, then drag" is *exactly* a press that
 stays put — so the gesture dies only on touch, and only for the player who
-stopped to think. Inertia's swipe (hold the ball, drag out the direction, let
-go) hit this, and so did **seven more games**: Cube, Fifteen, Filling, Flip,
-Flood, Pegs and Sokoban, of which Pegs and Filling are entirely press-and-drag.
-Confirmed in Chrome — a Pegs jump held 600 ms before the drag left the board
-bit-identical.
+stopped to think (Inertia's swipe, a Pegs jump).
 
-Three resolutions, by whether the game uses the secondary button:
+Four resolutions, by whether the game uses the secondary button:
 
 - **No secondary meaning at all → declare `Game.ignoresSecondaryButton`**, and
   the view skips `detectSecondaryButton` for your game entirely: no promotion,
@@ -301,41 +254,14 @@ Three resolutions, by whether the game uses the secondary button:
   `REQUIRE_RBUTTON` inverted: a game may *use* the secondary button without
   *needing* it (Tracks), and that third group is the largest.
 
-  **"Meaning" is derived, and consumption is not it.** The guard asked "did
-  `interpretMove` return non-`null`" until `sharpen-the-secondary-button-derivation`,
-  and that was satisfied by a bare repaint: 16 of 57 games consume
-  `RIGHT_BUTTON` without ever committing a move, so for every one of them the
-  biconditional held whatever the game did. It now asks *did the secondary
-  gesture change anything the player can perceive, now or next* — which is one
-  question covering all three resolutions in this list, not three special cases.
-  Reading the whole collection is what showed they were one question. **You
-  need do nothing to enroll**: nine games get full credit for a pencil-mode
-  press they reach through `pressNoteTakingCell`, without a `RIGHT_BUTTON`
-  branch of their own.
-
-  The probe watches the **painted frame as well as the save**, because a
-  secondary meaning may live in UI state a game never serializes — Signpost's
-  backward grab, the nine games' pencil marks — and a save-only probe would
-  demand the flag from a game that has a meaning, turning off the very
-  promotion it handles. Guess's peg holds were the founding example and stopped
-  being one when `compose-guess-rows-without-dragging` gave that game an
-  `encodeUi`: a `Ui` field is frame-only until its game decides to persist it,
-  which is why the two observations are a union rather than a roster.
-
-  **It primes the board three ways before pressing** — one press, two presses,
-  and a drag — because a secondary meaning is usually "undo what the primary
-  one did" and has nothing to act on until something is there. Ascent needs two
-  presses to place a number before its right-click erase has a target; with a
-  one-press prime it was credited only by an incidental cursor hide it shares
-  with the primary press. Right verdict, evidence that would not have survived
-  the game changing.
-
-  **The one gap, so it isn't a surprise:** a secondary press whose *only* effect
-  is one the primary press also has is still credited — remove both of Ascent's
-  real secondary arms and the guard stays green. No shipped game rests on that
-  (all twelve frame-only games were read), and closing it needs a "does the
-  secondary do something the primary does not" test that Slide's deliberate fold
-  would fail.
+  **"Meaning" is derived, and consumption is not it.** The guard asks *did the
+  secondary gesture change anything the player can perceive, now or next*, in
+  the painted frame or the save, after priming the board three ways (one
+  press, two presses, a drag), since a secondary meaning is usually "undo what
+  the primary one did". **You need do nothing to enroll**: a pencil-mode press
+  reached through `pressNoteTakingCell` is credited without a `RIGHT_BUTTON`
+  branch of your own. The one gap: a secondary press whose *only* effect is
+  one the primary press also has is still credited.
 - **Secondary meaning, but the promoted gesture should do the primary thing →
   fold right onto left** at the top of `interpretMove`. One line; exemplar
   `asPrimary()` in [`inertia/index.ts`](../../src/games/inertia/index.ts).
@@ -346,37 +272,27 @@ Three resolutions, by whether the game uses the secondary button:
   like Boats where the secondary button carries meaning and folding would be
   wrong. See § "Drag models".
 - **Best of all → put the gesture on the left button too, so the promotion
-  never has to happen.** The first two resolutions make the promoted press
-  survive; this one means a touch player never triggers it. Galaxies' whole
-  association gesture was right-button-only, so on a phone the game's one
-  cell↔dot notation was reachable only by holding still for 350 ms and *then*
-  dragging. It is now a plain drag, with the right button unchanged for anyone
-  who has the habit. The price is that the left button then has two meanings —
-  see § "A button with two meanings resolves on the release". Ascent is the
-  second case: choosing the number below a selected one was a right-click, so
-  on a phone it took a long press nobody found, and the owner asked for a tap
-  instead ("cycling seems more intuitive"). A second tap on the number now
-  does it, and the right-click still works.
+  never has to happen.** The resolutions above make the promoted press
+  survive; this one means a touch player never triggers it. Galaxies'
+  association gesture is a plain left drag, with the right button doing the
+  same for anyone who has the habit. The price is that the left button then
+  has two meanings — see § "A button with two meanings resolves on the
+  release". Ascent is the second case: a second tap on a selected number
+  chooses the number below it, and the right-click does too.
 
 **Tell:** a drag lifecycle that matches `LEFT_DRAG` specifically where
 `isMouseDrag` is meant — it strands the touch player whose press was promoted.
 
-**The detector itself is tested** ([`utils/touch.test.ts`](../../src/utils/touch.test.ts)),
-which it was not for a long time: a per-game guard proves your game copes with
-the decision, never that the decision was right, and those are two different
-guarantees. Read it before changing the timings — the 350 ms window, the 8 px
+**The detector itself is tested** ([`utils/touch.test.ts`](../../src/utils/touch.test.ts)).
+Read it before changing the timings — the 350 ms window, the 8 px
 radius, and the second finger's *timer reset* (which makes the worst case twice
 the hold time) are each asserted, and `unhandledEvent` is what stops a tap faster
 than the detection round trip from losing its release.
 
 ## The board keeps the keyboard after a control
 
-**You can rely on this now, but know what it is doing for you.** Pressing a
-control — any `data-command` control in the Bar, the Menu or the Game
-controls — hands keyboard focus back to the interactive board view. Before
-`fix-board-focus-after-command`, focus stayed on the trigger, so one click
-made the board deaf to the keyboard until it was clicked again (Enter reopened
-the menu; cursor keys went nowhere).
+Pressing a control — any `data-command` control in the Bar, the Menu or the
+Game controls — hands keyboard focus back to the interactive board view.
 
 **The app claims a few keys above the game, and the rest reach it untouched.**
 `src/puzzle/shortcuts.ts` is the one table: always-on chords
@@ -384,8 +300,9 @@ the menu; cursor keys went nowhere).
 Check & save, `Ctrl/Cmd+K` the quick-switch), and bare `u`/`r`/`n`/`h`
 behind the `oneKeyShortcuts` preference. **A bare letter is offered to the
 game first and only becomes an app command if the game declines it** —
-`Midend.processInput` returns false exactly when `interpretMove` returned
-null, so a game that takes `n` simply keeps it and has to declare nothing.
+`Midend.processInput` returns false when `interpretMove` returned `null` and
+left what the `Ui` shows as it was, so a game that takes `n` simply keeps it
+and has to declare nothing.
 The same table supplies the key drawn on a Bar slot and a Menu row, so a label
 cannot come adrift from its binding (`src/puzzle/shortcuts.test.ts`).
 
@@ -453,8 +370,7 @@ declare it rather than writing it.** That is the target-verb model,
 **geometry** (which target a press addresses, which one the cursor rests on, how
 the arrows move the cursor) and a **verb** per button — a sentence fragment for
 the help and a function from `(state, target)` to the game's own `Move` or
-`null`. The model owns the rest, and the rest is exactly what the collection
-had written a dozen ways:
+`null`. The model owns the rest:
 
 - a press parks the cursor, hidden, on the target it hit, so the keyboard
   carries on from where the pointer was;
@@ -486,10 +402,8 @@ Controls paragraph says the route, and `target-verb.test.ts` holds it to what
 the key does, comparing the boards as the player sees them (`boardsReached`
 with `bySight`), since a half turn and two quarter turns leave one picture
 but different bookkeeping. **Space is always the right
-button's verb.** Net once put its lock on Space; no puzzle explains that, so
-Net's lock moved to its own key (S) and Space rotates clockwise like the
-right button. A game that wants a different key for a verb gives the verb
-`keys`; it does not remap Space.
+button's verb.** A game that wants a different key for a verb gives the verb
+`keys` (Net's lock is S); it does not remap Space.
 
 **A target is whatever the game aims at**, and the geometry is where the game
 says so: an edge between two cells (`borderGridGeometry` in
@@ -508,9 +422,9 @@ preference that swaps the buttons (Slant), a tally kept beside the board
 is shown (Black Box re-flashing a laser already fired).
 
 **Keep the `Ui` to where the player is.** The guard walks the cursor by
-comparing `Ui` digests, so a field that differs on every `newUi` — Net's jumble
-RNG, seeded from entropy, once lived there — makes every position look new and
-runs the walk out of budget. State that is neither the player's position nor
+comparing `Ui` digests, so a field that differs on every `newUi` (an RNG
+seeded from entropy) makes every position look new and runs the walk out of
+budget. State that is neither the player's position nor
 read by replay belongs outside the `Ui`.
 
 Two things follow from declaring:
@@ -574,11 +488,10 @@ drag of its own beside this one) opens the same drag with `beginSweep`,
 continues it with `sweepTo` and asks `endSweep` on the release whether the
 drag made a move, in which case the release is not a click. **Split two drags
 by what the press lands on, and prefer what it holds to where in it the press
-falls.** Tracks first split by position (a square's middle dragged squares,
-its rim dragged edges), and a drag from an empty square then laid track or
-square marks by a few pixels, which read as a fault. It splits by content
-now: a square that carries track drags segments, any other drags square
-marks. Galaxies has no such content to read, so a press on a line drags lines
+falls.** Tracks splits by content: a square that carries track drags
+segments, any other drags square marks; a split by where in the square the
+press fell made the outcome turn on a few pixels. Galaxies has no such content
+to read, so a press on a line drags lines
 and anywhere else is the association.
 `target-verb-sweep.test.ts` plays every declaring game: a drag between two
 like targets marks both, and one Undo takes it back.
@@ -599,9 +512,7 @@ fire, open) does not, and neither does a mark never wanted in a row (Light
 Up's bulb): leave its button out of `buttons`. Where the drag is the game's
 own gesture on that target (Rect, Bridges, Spokes, Map, Rome, Tents' left
 button, Loopy's notes mode), the click stays one mark a press. **Do not write
-a second paint drag beside the model's**: Mosaic had one that painted along a
-row or column, could not clear, and made a move an event, so Undo took it back
-a square at a time; it is the model's drag now.
+a second paint drag beside the model's.**
 
 **What the model is not for.** A drag game's drag is an arm of its own, and its
 keyboard form of a drag (Tents' Shift-arrows, its `L`) is a design (below). A
@@ -618,11 +529,6 @@ comment, where no rename can reach it). This is enforced, not requested:
 [`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts) derives the
 export list from `pointer.ts` itself and fails on any game-local declaration
 that shadows one, so a helper added there is guarded on the day it lands.
-
-The rule earns its strictness from history: `isMouseDown` and its two siblings
-were promoted after **27** ports had each written their own, five games still
-had theirs afterwards, and every dead-key defect in this collection began life
-as a local copy of a frontend fact.
 
 **One cursor, one name, one field.** Every game holds its keyboard cursor as
 `ui.cursor`, an [`engine/pointer.ts`](../../src/engine/pointer.ts) `GridCursor`
@@ -644,9 +550,8 @@ The lower-level pieces are still there for a bespoke traversal: `cursorDelta`
 
 **Do not invent a second name for any of it.** `cursor-vocabulary.test.ts`
 fails the build for a cursor held anywhere but `ui.cursor`, and it finds one
-*structurally* — by its shape, read off `newCursor()` — so an eleventh spelling
-is caught as surely as the ten that were there before
-`unify-cross-game-vocabulary`.
+*structurally* — by its shape, read off `newCursor()` — so no spelling of the
+name escapes it.
 
 What genuinely stays per-game is a *traversal* that is not a bounded grid step —
 a half-grid cursor, corner-skipping, lock modes, paint-while-traversing — which
@@ -678,14 +583,12 @@ rather than re-deriving.** Ascent draws a mouse hover differently from a
 keyboard cursor, so it carries `cursorFromKeyboard` alongside `cursor.visible`
 and reads the pair back through two named predicates (`keyboardCursor` /
 `mouseCursor` in `ascent/ui.ts`). Rome's `kmode` says what the cursor is *armed
-for* (move / place / pencil) and no longer doubles as whether it is shown. In
+for* (move / place / pencil), never whether it is shown. In
 both, the shared part is the noun and the game's part is the verb.
 
 **`cursorFromKeyboard` is the collection's name and the collection's polarity**,
-and there are twelve carriers of it: Ascent plus the eleven note-taking games,
-where it decides whether an entry keeps the highlight. It was `hcursor` in eight,
-`ckey` in three and `cursorFromMouse` — the same fact, inverted — in Ascent,
-until `unify-the-note-taking-cell`. Write the flag `true` when the keyboard
+carried by Ascent and the note-taking cell games, where it decides whether an
+entry keeps the highlight. Write the flag `true` when the keyboard
 revealed or moved the cursor and `false` when a pointer took it over; if you want
 the other reading, name a predicate for it rather than a second field.
 
@@ -696,11 +599,10 @@ notifies, and records no history entry) — the contract is in
 ### The keyboard equivalent of a drag is a design, not a derivation
 
 **Budget for designing it, and expect a playtest.** This is the standing rule
-behind the two sections that follow, and it was established the expensive way:
-`declare-the-gesture-table` proposed deriving each game's keyboard bindings from
-a declared pointer-gesture table, and the exploration that killed it
-(`openspec/postmortems/2026-09-05-gesture-table-withdrawal.md`) found seven drag
-games whose keyboards are hand-designed and *not* what any derivation would
+behind the two sections that follow. Deriving a game's keyboard bindings from
+a declared pointer-gesture table was tried and withdrawn
+(`openspec/postmortems/2026-09-05-gesture-table-withdrawal.md`): these drag
+games' keyboards are hand-designed and *not* what any derivation would
 produce:
 
 | Game | Pointer gesture | Keyboard, as designed |
@@ -765,25 +667,22 @@ generalized:
   one on an *edge* would need "the edge to the right of this edge", which is
   ill-defined exactly where the game is interesting. Reach an edge as
   (dot, direction) — which is also how a player draws a loop.
-- **Arrows walk, and the edge you walked is the one you act on.** The first
-  cut had arrows *choose* an incident edge without moving (with a repeat press
-  taking the next), and a modifier for travel; the owner's playtest found the
-  modifier confusing, and the pen-behind-you model replaced it: a plain arrow
+- **Arrows walk, and the edge you walked is the one you act on.** A plain arrow
   moves one dot along the edge that best continues that way (nearest in angle,
   within 90° so Up never walks you down), and Enter marks the edge behind you.
-  Drawing is walk-Enter-walk-Enter; undrawing is walk back and Enter.
+  Drawing is walk-Enter-walk-Enter; undrawing is walk back and Enter. Arrows
+  that *choose* an edge without moving, with a modifier for travel, were
+  playtested and rejected.
 - **Prove coverage under the walk, then measure the residue and cover it.**
   A walk can only choose the edge it walked, so an edge that is never the
   nearest choice from *either* endpoint is unselectable. Break ties in
   **opposite senses for opposite arrows** (Up/Right clockwise, Down/Left
   counter-clockwise): an edge tied at one end is the mirror tie for the
-  opposite arrow at the other end, which resolves it the other way — that
-  alone took the triangular grid from 120 stranded edges to none. The sweep
-  over every preset then found exactly one residue, nine edges on Penrose
-  kite/dart (degree-5 dots at 72°), and **Shift+arrow aims without moving**
-  (nearest, repeat takes the next) covers those. The test asserts both halves
-  separately — walk alone on 22 presets, walk plus aim on the 23rd — so the
-  residue is pinned and cannot grow. Plain is *go*, Shift is *look*.
+  opposite arrow at the other end, which resolves it the other way. The
+  residue is a few edges on Penrose kite/dart (degree-5 dots at 72°), and
+  **Shift+arrow aims without moving** (nearest, repeat takes the next) covers
+  those. The test asserts both halves over every preset and every tiling, so
+  the residue is pinned and cannot grow. Plain is *go*, Shift is *look*.
 - **Reset the aim's repeat when the arrow changes or the cursor moves**, or
   the second press of a fresh direction skips an edge.
 - **The cursor's shape is the game's when the noun genuinely differs.** Loopy
@@ -836,15 +735,12 @@ drag by recoloring accreted cells in the cache key — put it in the diff key
 Exemplars: [`clusters/index.ts`](../../src/games/clusters/index.ts) (the
 reference); [`bricks/index.ts`](../../src/games/bricks/index.ts) (confirms the
 shape generalizes — a single uniform `dragType` painted across accreted cells).
-All three spell the field `dragType`; Bricks spelled it `dragtype` until
-`widen-the-capability-snapshot`, which is the divergence the capability
-snapshot's `ui` diff exists to make visible.
-**A shared skeleton was evaluated twice and declined twice**: Sticks' drag
+**A shared skeleton was evaluated and declined**: Sticks' drag
 machine differs materially (the press picks no paint value — orientation comes
 from the drag *axis* via a bounding-box test; each accreted cell stores its
 own re-writable value; a matching-line start flips the whole drag into a
 clearing drag), so only "accrete + commit on release" is shared — too little
-to fix a callback shape over (Sticks `design.md` F7). If a third
+to fix a callback shape over. If a third
 Clusters-like consumer appears, revisit against Clusters and Bricks.
 
 One idiom Sticks added: its coordinate conversion is **truncating** division
@@ -887,13 +783,10 @@ sprites, canceling a dangling drag in `changedState`) are in
 **The sprite drag is a second consistent shape, and `GridDrag` is not it.**
 Pegs and Signpost independently arrived at the same three-part `Ui`: `sx`/`sy`
 the **grid** anchor, `dx`/`dy` the **pixel** current position, and `dragging`.
-That mix is why `name-the-drag` left them out (§4.1, "deferred, not refused"):
 `GridDrag`'s two ends live in one coordinate space, and here the far end is a
 pointer the release does not even read — the target cell is re-derived from it.
-So a `GridDrag` would carry an `ex`/`ey` that is either unused or in the wrong
-unit. **A third sprite drag should copy Pegs, not bend `GridDrag`**, and if one
-appears, the anchor-only drag that pair wants becomes worth building; doing
-either of them alone would not earn it. The pixel *destination* — where the
+**A third sprite drag should copy Pegs, not bend `GridDrag`**, and if one
+appears, the anchor-only drag that pair wants becomes worth building. The pixel *destination* — where the
 blitter saved the background — is `dragX`/`dragY` on the **draw state** in all
 three sprite games (Map's floating blob included), a half-tile offset from the
 pointer.
@@ -947,9 +840,8 @@ makes a long straight push. Two things it needed that Inertia's swipe did not:
 Galaxies' left button toggles a wall *and* starts an association drag: the
 press only records where it landed, travel beyond a few pixels turns it into a
 drag sourced from the press point, and a release that never traveled is the
-click. Upstream ducked this by putting the drag on the right button — which is
-the button this frontend serves worst (see the trap above), so the ducking
-costs more here than the disambiguation does.
+click. Upstream puts the drag on the right button instead, which is the button
+this frontend serves worst (§ "A touch hold arrives as the right button").
 
 Two things make it work, and neither is obvious:
 
@@ -958,25 +850,21 @@ Two things make it work, and neither is obvious:
   took as one (each drag event was inside the travel threshold of the last
   place it looked). A distance test rejects it for free; a flag needs the case
   spelled out.
-- **Claim the press anyway** — see the next section, which is where this cost
-  a session.
+- **Claim the press anyway** — see the next section.
 
 **Where a game does keep a flag for it, the flag is `dragged`** (Bridges,
 Rect): *set once the gesture moved off its start, so a returning drag is still
 a drag and a bare click is still a click*. It is not liveness and must not be
-confused with `GridDrag.live`, which a press sets immediately — that
-distinction is the whole reason the flag exists. Do not spell it `aiming`:
-Bridges did briefly, and Inertia's `aiming`/`aimDir` mean the *aimed direction*
-of an aim drag, which is a different thing. One name, one concept.
+confused with `GridDrag.live`, which a press sets immediately. Do not spell it
+`aiming`: Inertia's `aiming`/`aimDir` mean the *aimed direction* of an aim
+drag, which is a different thing.
 
 **A second tap that cycles belongs on the release too.** Ascent's selected
 number cycles what it offers on the squares around it (the number above, the
-one below, then deselected), and the first cut acted on the press. But a press
-on the selected number is also how a drag from it begins, so the drag then
-placed the other number. The cycle now acts on the release, where the
-double-tap deselect already lived, and a press on the number already selected
-leaves what it offers alone, or the release could not tell which state it was
-in. `ascent.test.ts` walks both the taps and the drag.
+one below, then deselected). A press on the selected number is also how a drag
+from it begins, so the cycle acts on the release, and a press on the number
+already selected leaves what it offers alone, or the release could not tell
+which state it was in. `ascent.test.ts` walks both the taps and the drag.
 
 **Tents resolves by where the drag ends, not by how far it went.** Upstream's
 left drag was only ever "a click at the start", so its link gesture (a drag
@@ -990,18 +878,15 @@ the release and the error feedback alike, so they cannot disagree.
 **Returning `null` from a press is not "nothing to repaint" — it is "I don't
 want this gesture", and it costs you every drag event that would have
 followed.** `view-interactive.ts` installs `pointerTracking` only
-`if (consumed)`, and `Midend.processInput` reports exactly `interpretMove`'s
-`null` as unconsumed. A game whose press defers its decision to the release
-therefore has to return `UI_UPDATE` from the press even when nothing on screen
-changes.
+`if (consumed)`, and `Midend.processInput` reports a `null` that changed
+nothing the `Ui` shows as unconsumed. A game whose press defers its decision
+to the release therefore has to return `UI_UPDATE` from the press when nothing
+on screen changes.
 
 **Tell:** a drag lifecycle that looks right and is never entered — the release
 arrives at the *press* coordinates (the frontend never tracked the pointer, so
 no move ever updated them), which then reads as a click and does the click's
-thing. Galaxies shipped its left-drag this way for the length of one debugging
-session: the press toggled a wall, every drag frame was silently dropped, and
-the served module was verifiably the new one, so all the obvious suspects —
-stale worker, service worker, HTTP cache — checked out fine.
+thing.
 
 **The exception is a game with no drag at all, and there it inverts:** decline
 the press deliberately, act only on the release, and the frontend's own
@@ -1011,14 +896,9 @@ nothing carries between them — and the behavior it buys is that a press which
 slides off before it lifts still acts where it started, which on a finger is
 the forgiving reading. The rule above is about a press that is *deferring* to a
 gesture it wants; a press with no gesture behind it should not claim anything
-(§ "A button you did not act on must not be claimed").
-
-**Both halves of the frontend's state machine must then be modeled by whatever
-sweeps you.** `input-parity.test.ts` implemented the `else` branch faithfully
-and still asked "was the *press* consumed" to decide whether there was anything
-to compare — so a release-only game was skipped entirely and the sweep reported
-health. It now asks whether the gesture *acted*, which is the question the guard
-was named for.
+(§ "A button you did not act on must not be claimed"). `input-parity.test.ts`
+models both halves: it asks whether the gesture *acted*, not whether the press
+was consumed.
 
 ## A canceled press is the engine's
 
@@ -1118,20 +998,9 @@ Returning `UI_UPDATE` for a button you did nothing with is not free politeness:
 
 **The trap, concretely.** Keyboard events arrive at `(0, 0)`, which is inside
 every grid. So a board arm gated on the *coordinates* alone runs for every key
-there is:
-
-```ts
-// Ascent, before `close-the-consumed-probe-blind-spot`. The gate is
-// coordinate-only, so a keypress at (0,0) reached it, set `finishTyping`, and
-// fell through the tail below into UI_UPDATE.
-if (gx >= 0 && gx < w && gy >= 0 && gy < h) { ret = mouseClick(…); finishTyping = true; }
-…
-if (finishTyping && !ret) return UI_UPDATE;
-```
-
-The fix is one conjunct — `isMouseDown(button) || isMouseDrag(button) ||
-isMouseRelease(button) &&` the coordinate test — **not** narrowing the tail. That
-tail is load-bearing (it repaints a moved cursor and a click that clears the UI):
+there is, and a tail that answers `UI_UPDATE` for whatever the arm touched
+claims them all. Add the conjunct — `isMouseDown(button) ||
+isMouseDrag(button) || isMouseRelease(button)` — to the coordinate test:
 decline in the arm that knows the input is not the game's, and nowhere else.
 
 **Why upstream does not have this problem** and you cannot copy its shape here:
@@ -1141,12 +1010,9 @@ game, act only if it declines — which needs no roster and cannot be forgotten 
 a new game, but which makes an honest `null` load-bearing in a way the C never
 made it.
 
-**On writing the probe**, if you extend the guard: the codes must be checked, not
-assumed. Unicode's private-use area is the obvious choice and it is **wrong** —
-button codes are not Unicode, `MOD_MASK` is `0x7000`, and `0xE000` decodes as
-`MOD_NUM_KEYPAD | MOD_SHFT | 0x8000`. Picking it convicted Sixteen, which reads
-the keypad bit and was behaving exactly as designed, and inflated a
-one-game finding into a two-game one that reached a proposal. `UNACTIONABLE` in
+**On writing the probe**, if you extend the guard: button codes are not
+Unicode. `MOD_MASK` is `0x7000`, so a private-use code such as `0xE000`
+decodes as modifier bits on another key. `UNACTIONABLE` in
 [`input-parity.test.ts`](../../src/engine/input-parity.test.ts) derives every
 reason its codes are safe from the vocabulary itself.
 
@@ -1156,10 +1022,9 @@ reason its codes are safe from the vocabulary itself.
 input to integers at the boundary.** Most ports convert a pixel to a cell
 index via [`fromCoord`](../../src/engine/geometry.ts) (a `Math.floor`), so
 this never bites. But `devicePixelRatio` scaling delivers sub-pixel
-coordinates where upstream's GUI frontends handed `interpret_move` integers —
-and Untangle, which keeps rational vertex positions, threw a `BigInt`
-`RangeError` in its exact-integer crossing test on the first in-window
-fractional drop. The fix rounds at the input boundary and re-checks the
+coordinates where upstream's GUI frontends handed `interpret_move` integers,
+and Untangle keeps rational vertex positions whose exact-integer crossing test
+throws on a fraction. It rounds at the input boundary and re-checks the
 integer invariant in `executeMove` (the single drag/solve/replay/load
 chokepoint), so any bypass fails loudly. Exemplar:
 [`untangle/index.ts`](../../src/games/untangle/index.ts)
@@ -1180,7 +1045,7 @@ matter:
   so re-applying the recorded move reproduces the same board without re-running the
   aid.
 
-Two things to get right, learned from `add-loopy-auto-rule-out`:
+Two things to get right:
 
 - **Read the counts through the pending ops, not off the board.** The ops are what
   make the count true, and a corridor can deliver several lines at once, so a
@@ -1188,9 +1053,8 @@ Two things to get right, learned from `add-loopy-auto-rule-out`:
   should trigger it.
 - **A move that does more than the hint asked drops the hint plan, unless you say
   otherwise.** `hintKeepTrack`'s honest default is that an op the step did not ask
-  for means the player went their own way. With the aid on, 27.8% of Loopy's own
-  line steps verdicted `"off"` when followed — the plan dropping on the step the
-  player had just taken. The allowance has to be **derived from the step's own
+  for means the player went their own way, so with the aid on the plan would
+  drop on the step the player had just taken. The allowance has to be **derived from the step's own
   move** (run the same aid over the *wanted* ops), so an extra mark the step does
   not force still counts as divergence. Guard:
   `loopy-hint.test.ts` "keeps track of a step the player took with auto rule-out on",
@@ -1220,167 +1084,80 @@ Normative: the on-screen-keys requirement in
   `toggleNoteTakingMode` handles for a note-taking cell game and which the app's
   bare `P` shortcut sends too.
 
-  **It was a per-game obligation until `derive-the-marks-key-from-having-notes`,
-  and two games never met it.** The guard read `typeof ui.pencilMode ===
-  "boolean"` — a *name*, so it saw only the games that had spelled the mode that
-  way — and read the keypad off `game.requestKeys` rather than off the `Midend`
-  the app renders. **Rome and Map carried notes with no Marks key for their
-  whole lives**, with that file green over both, until an owner noticed the
-  missing button. Two habits from it: **derive a population from the shape**
-  (`takesNotes` reads a `pencil` array *or* the mode flag, and accepts the
-  superset), and **check the artifact the player gets**, which for a keypad is
-  the midend's, not the game's.
-
   What a game still owes is that the key *acts*: the engine can put it on the
   panel, only the game can make it toggle. `pencil-mode-key.test.ts` asserts
-  both, with an exemption ledger that is empty and still asserts something.
+  both, reading the keypad off the `Midend` the app renders.
 - **Whether a game has a keypad is checked per game, from what its board is.**
   A board with a `pencil` array (`hasPencilArray`, the board arm of
   `takesNotes`) writes its notes by typing a symbol, so it must offer a keypad;
   a game that offers one *without* such an array is named in
   `input-parity.test.ts`'s `KEYPAD_WITHOUT_PENCIL` with the reason touch play
-  needs it (Filling, whose numbers are only ever typed; Guess, whose colors are
-  only ever pressed). The check is a biconditional, so adding a keypad to a
-  game with no pencil array fails until the game is ledgered. It replaced a
-  floor under the number of keypads, which went slack by three as keypads were
-  added and would have let any of them be lost unnoticed
-  (`derive-the-keypad-floor`).
+  needs it (Filling, whose numbers are only ever typed). The check is a
+  biconditional, so adding a keypad to a game with no pencil array fails until
+  the game is ledgered.
 - **Clear and Backspace are one key.** The panel's Clear sends `CLEAR_BUTTON`
   (8) and the keyboard's Backspace sends `DELETE` (127), so test for
-  `isEraseKey`, never for the panel's code. Unequal tested `8` alone and
-  shipped a Backspace its help page promised; the inert-key case now presses
+  `isEraseKey`, never for the panel's code. The inert-key case presses
   Backspace wherever a panel offers Clear.
 - **Put a game's markable elements on the panel, wherever they are an
-  enumerable per-cell set.** Every digit game already does — select a cell, tap
-  a value, and in notes mode the same key toggles it as a mark. **Rome did not**
-  until `give-rome-its-element-keypad`: its notes could only be *dragged*, which
-  is a different motion for the same job and the one thing a player had to learn
-  twice. Its panel is four arrow keys plus Clear, sending the character codes
-  its typed entry already answered, so the keys cost no new input path.
+  enumerable per-cell set.** Select a cell, tap a value, and in notes mode the
+  same key toggles it as a mark. A game whose notes can only be *dragged*
+  makes a player learn the same job twice. Rome's panel is four arrow keys
+  plus Clear, sending the character codes its typed entry already answers, so
+  the keys cost no new input path. What follows from it:
 
-  **What they cost instead was a way to reach the cursor.** A panel key enters
-  at the keyboard cursor, and a touch player has no arrow keys to move one with,
-  so every key was dead until a *tap* could select a square. Rome's taps used to
-  be bare no-ops in exactly the two cases that matter (a tap in notes mode, and
-  a release back on the arrow already there), so selecting there was additive —
-  nothing that made a move stopped making one. **Check this before adding a
-  keypad to a drag game**: `input-parity.test.ts` presses keys with a cursor
-  already placed, so it will not tell you the panel is unreachable.
-
-  **Map followed, in `give-map-element-keys`, and it is the case to copy when a
-  game's element is not a character.** Its mark is "possibly this color", and
-  its color was reachable only by dragging *from* a region already wearing it —
-  so the keys had to enter colors too, which is a change to how the game is
-  *played* and not only to how its notes are reached. Three things made it
-  cheap rather than a second input path:
-
-  - **The key is the pick-up.** Map's `drop(state, ui, r, altButton)` already
-    took a held color and a flag; a key sets `ui.dragColor` and calls it. Notes
-    mode, the refusal on a clue, and "no move where nothing changes" all come
-    for free, because they were already in the one function the drag used.
-  - **A tap selects, because a tap was already a no-op** — press and release on
-    one region picks that region's own color up and puts it straight back. The
-    rule below generalizes: *check this before adding a keypad to a drag game*.
+  - **A panel key enters at the keyboard cursor, so a tap must be able to
+    place one.** A touch player has no arrow keys. **Check this before adding
+    a keypad to a drag game**: `input-parity.test.ts` presses keys with a
+    cursor already placed, so it will not tell you the panel is unreachable.
+    A tap that is a bare no-op (press and release on one target) is the place
+    to put the selection. The exception is a key arm that acts with no cursor
+    shown: Guess's fills the first empty slot of the row. Read the key arm's
+    guard to see which kind of game you have.
+  - **Where the element is not a character, the key is the pick-up.** Map's
+    key sets `ui.dragColor` and calls the `drop` its drag calls, so notes
+    mode, the refusal on a clue and "no move where nothing changes" come from
+    the one function.
   - **A key that enters a color says so, with `KeyLabel.swatch`** — a palette
     index the panel paints the key in, resolved against the game's own palette
-    by the frontend (`Puzzle.palette`, set from the array the canvas is painted
-    from, so the key follows the board into dark mode). The label stays the
-    character the key sends, so the swatch teaches the binding rather than
-    replacing it. A bare `"1"` would have asked the player to learn which color
-    one *is*, which is the thing the panel exists to spare them.
-
-  **Guess followed, in `give-guess-element-keys`, and it corrects two things
-  the two cases above would have led you to assume.**
-
-  - **A panel is not automatically dead without tap-to-select.** Rome's and
-    Map's keys act only at the cursor, so a touch player could not reach them
-    until a tap could place one. Guess's color arm acts with no cursor shown —
-    it fills the first empty slot of the row and *reveals* the cursor on the
-    next one — so from a cold board, pressing colors composes a row and the
-    panel works before any selection gesture exists. Selection was still worth
-    adding (it is how a row is **edited** rather than only filled, and the only
-    way to leave a deliberate gap mid-row), but it was an improvement, not a
-    precondition. **Check which kind of game you have** before costing the
-    work: read the key arm's guard, not the other games' changes.
+    by the frontend, so the key follows the board into dark mode. The label
+    stays the character the key sends.
   - **A game with a real secondary meaning cannot buy its way out of the
     long-press trap.** `ignoresSecondaryButton` is available only to a game
-    whose right button means nothing, and Guess's toggles a peg's hold — so
-    "press a color, pause to aim, then drag" is genuinely dropped on touch and
-    there is no flag that fixes it. For such a game the keypad is not a second
-    way in, it is *the* reliable one.
-
-  Two more things from it worth copying. The predicate for "this release wrote
-  nothing, so select instead" is the **local** one — the peg already holds what
-  the release would put there — never a compare of state before and after
-  ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE"). And a tap that was *worse*
-  than a no-op is the best case you can find: Guess's tap on a filled slot put
-  the same color back **and hid the cursor**, so selecting there was a fix
-  rather than a divergence to argue for.
-
-  **Where the board already draws the elements, the panel replaces that
-  drawing — it does not join it.** Guess painted a palette column down the
-  board's left side to be dragged from, and the obvious-looking move while the
-  drag still existed was to make the column tap-to-**arm** instead of adding a
-  keypad. That is the wrong shape for the usual reason: a tap on a slot would
-  then mean "select" or "place" depending on state the player cannot see.
-
-  Tap-to-**place** is a different thing and is genuinely safe while it lasts —
-  neither surface holds state of its own, so they are one keypress spelled
-  twice. But it did not last: `compose-guess-rows-without-dragging` kept the
-  column for exactly one revision before deleting it, because two color
-  surfaces cost a quarter of the board's width and bought no capability either
-  one lacked. **The thing to weigh is not whether the duplicate is safe, but
-  what it is for.** Here it was for the drag, and the drag was gone.
-
-  A second surface also has a fault line: the moment either grows state the
-  other has not got — a strike-out notation on the panel, say — they stop being
-  one keypress, and the board becomes a palette that cannot show what has been
-  ruled out. Deleting the column ahead of any notation removes that question
-  rather than answering it later.
-
-  **A player's notes are a display, not a set of targets** — learned the hard
-  way on Guess. Its rule-out marks live in an *answer row* below the guesses,
-  one slot per peg with a block for every color still possible
-  (`add-guess-hint`). The first design made each color a tap target — a tap
-  entered the color in its column, a held finger ruled it out — on the argument
-  that a palette which *is* the notation could not disagree with it, and that it
-  restored pointer-only entry for a player with the keypad off. It could not be
-  aimed at: first as dots (2 px on a 360-px phone, `enlarge-guess-answer-row`),
-  then as blocks a fifth of a peg across, where the owner's taps on a slot kept
-  landing on one of its colors instead (`select-guess-answer-slots`). **A tap
-  now selects a slot as a whole, and the panel keys do the rest**: selecting an
-  answer slot turns notes mode on and selecting a peg turns it off, so the row
-  the frame is on says what a color key will do. Keypad off, Guess is where
-  Solo, Keen and Filling are — a sweep of every pointer gesture over a real
-  board commits zero moves in all three — which is the collection's answer for
-  a game whose elements are values. **Size a target to a finger, not to what
-  fits in a cell**, and when a cell holds several values, make the cell the
-  target and let a key name the value.
-
-  **And draw the notes to be read at a glance** (`enlarge-guess-answer-row`).
-  A possible dot and a ruled-out hollow one both read as rings in dark mode.
-  The fix was the owner's "you see it or you don't": solid blocks in fixed
-  places on a dark well, nothing where a color is ruled out, and a row half a
-  tile taller, which cost the pegs about 5% because the board's height is what
-  limits it.
+    whose right button means nothing, so for a game like Guess the keypad is
+    not a second way in, it is *the* reliable one.
+  - **The predicate for "this release wrote nothing, so select instead" is the
+    local one** — the peg already holds what the release would put there —
+    never a compare of state before and after ([`mechanics.md`](./mechanics.md)
+    § "interpretMove and UI_UPDATE").
+  - **Where the board already draws the elements, the panel replaces that
+    drawing — it does not join it.** Two surfaces for one keypress cost board
+    width and buy no capability, and the moment one grows state the other has
+    not got (a strike-out notation) they disagree. A drawn palette that
+    *arms* a tap is worse: a tap on a slot then means "select" or "place" by
+    state the player cannot see.
+  - **A player's notes are a display, not a set of targets.** Guess's rule-out
+    marks live in an answer row, one slot per peg with a block for every color
+    still possible. A tap selects a slot as a whole and the panel keys do the
+    rest: selecting an answer slot turns notes mode on and selecting a peg
+    turns it off. **Size a target to a finger, not to what fits in a cell**,
+    and when a cell holds several values, make the cell the target and let a
+    key name the value. Draw the notes to be read at a glance: solid blocks in
+    fixed places, nothing where a value is ruled out.
 
   **A panel key cannot be offered conditionally.** `requestKeys` takes `params`
   alone, because the panel reloads only on a param change, so there is no
   expressing "show Submit once the row is full" — and `KeyLabel` has no
   disabled state either. A key whose precondition is a board state therefore
   ships unconditionally, is **declined** when the precondition fails, and needs
-  somewhere to say why: Guess's Submit key is the case, and it is the reason
-  that game gained a status bar in the same change. A refusal that is
-  merely silent is indistinguishable from a broken key.
+  somewhere to say why (Guess's Submit key, and its status bar). A refusal that
+  is merely silent is indistinguishable from a broken key.
 
   Such a key also strains the **inert-panel-key probe**, which primes the board
-  by pressing the panel's first key and then tries the key under test. One press
-  is not a full Guess row, so Submit read as inert on arrival; the probe now
-  primes with a run as well, which cost nothing measurable because it
-  short-circuits as soon as a key is reached. If you add a key with a
-  multi-press precondition, check that the probe can still reach it rather than
-  reaching for `INERT_PANEL_KEYS` — that list is a finding under management, not
-  an exemption.
+  with the panel's first key, and with a run of keys, before trying the key
+  under test. If you add a key with a multi-press precondition, check that the
+  probe can still reach it rather than reaching for `INERT_PANEL_KEYS` — that
+  list is a finding under management, not an exemption.
 
   Two games remain deliberately without element keys, because their notes are
   **relational or positional rather than a value you choose**: Loopy's mark is
@@ -1391,14 +1168,13 @@ Normative: the on-screen-keys requirement in
 - **The panel must not take focus.** The board listens for `keydown` on
   *itself* (`view-interactive.ts`), and `puzzle-screen`'s window-level redirect
   steps in only when `document.activeElement` is the body — so a `mousedown`
-  landing on a key focused that button and left the **physical keyboard dead in
-  every keypad game** until the player clicked the board again. The panel
+  that focused a key would leave the **physical keyboard dead** until the
+  player clicked the board again. The panel
   prevents the `mousedown` default (`keepFocusOnTheBoard` in
   [`components/keys.ts`](../../src/puzzle/components/keys.ts)); a command
   control has its own answer to the same hole, `puzzle-screen.ts`'s `focusBoard`. **No
   behavioral tier can see this**: every one of them calls `processInput`
-  directly, so the panel and the keyboard both "work" in a suite that is green
-  over a game nobody can type into. It was found by driving the real app.
+  directly, so check it in the real app.
 - **A sticky mode must be visible, which can cost geometry.** Acquiring
   `ui.pencilMode` also acquires the pencil-mode indicator's corner
   (`pencil-indicator-placement.test.ts`), and a game whose borders cannot hold
@@ -1447,22 +1223,17 @@ Normative: the on-screen-keys requirement in
 - **Size the panel to the boards you generate, not to the format — and
   *derive* the bound rather than writing it.** Seismic is the worked example
   ([`seismic/generator.ts`](../../src/games/seismic/generator.ts)
-  `maxGeneratedRegionSize`): its format admits digits to 9 but its region-size
-  distribution tops out at 5, and entry is capped at the cell's region size, so
-  a `1`–`9` panel had four keys that were inert on every board anybody played.
-  The interesting half is not the wrong number but how it arose — `requestKeys`
-  inlined a copy of the *format* bound where the *generator* bound was wanted,
-  and the copy went stale the day the distribution moved, because a literal
-  three files away had no way to hear about it. So the keypad now reads a bound
-  *computed from the distribution* (`Math.max(...)` over the array, never a
-  restated `5`), the structural test asserts every generated region fits it, and
-  the format bound's only job is to bound the generator bound. `requestKeys`
+  `maxGeneratedRegionSize`): its format admits digits to 9 but its generator
+  makes smaller regions, and entry is capped at the cell's region size, so a
+  `1`–`9` panel would carry keys inert on every board anybody plays. The
+  keypad reads a bound *computed from the distribution* (`Math.max(...)` over
+  the array, never a restated number), and the structural test asserts every
+  generated region fits it. `requestKeys`
   takes params and cannot see the board, so this is a judgment made once — make
   it a derived one, and pin the resulting `KeyLabel[]` so widening the
   distribution *fails a test* rather than silently widening the panel.
 
-Exemplars: the five digit games (`solo`/`keen`/`towers`/`unequal`/`filling`)
-and Undead.
+Exemplars: `solo`, `keen`, `towers`, `unequal`, `filling` and Undead.
 
 ## Checklist
 
