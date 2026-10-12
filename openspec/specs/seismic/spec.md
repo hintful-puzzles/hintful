@@ -15,7 +15,8 @@ The grid SHALL be partitioned into regions, and a region of size N SHALL
 require one instance of each number from 1 to N. In Seismic mode two equal
 numbers Z on the same row or column SHALL have at least Z cells between them;
 in Tectonic mode two equal numbers SHALL NOT be orthogonally or diagonally
-adjacent.
+adjacent. The game SHALL be solved when every cell is filled and every region
+and keep-apart rule is satisfied.
 
 #### Scenario: Two equal numbers too close in a line
 
@@ -23,18 +24,11 @@ adjacent.
 - **THEN** the board is not solved, and both are in breach of the keep-apart
   rule
 
-### Requirement: Params: Seismic's parameters
+#### Scenario: Completing the grid wins
 
-Parameters SHALL be a width, a height, a difficulty (Easy or Normal), and a
-game mode (Seismic or Tectonic). A width or a height below 4, and an unknown
-difficulty, SHALL be refused. A game ID SHALL encode the width, height, mode
-and difficulty and round-trip through decode, with a bare number decoding as a
-square grid.
-
-#### Scenario: A game ID round-trips through the parameters
-
-- **WHEN** a parameter set is encoded to a game ID and decoded
-- **THEN** the same width, height, mode and difficulty are recovered
+- **WHEN** the last cell is filled so that every region and keep-apart rule is
+  satisfied
+- **THEN** the game is reported solved
 
 ### Requirement: Params: The size bound is measured, per mode, and says why
 
@@ -103,30 +97,20 @@ short, in either mode, and a test SHALL assert this.
 - **THEN** it is offered, though its slowest deal is seconds and not an instant,
   since no observed deal of that area is a long wait
 
-### Requirement: Params: Seismic's game ID writes Tectonic as T and the difficulty as de or dh
+### Requirement: Params: A Seismic params string with no mode is Seismic, and with no difficulty Easy
 
-After `{w}x{h}` the params SHALL write `T` in Tectonic mode and nothing in
-Seismic mode, and then the difficulty, `de` for Easy or `dh` for Normal, in the
-full encoding only. A string with no `T` SHALL decode as Seismic mode, and one
-with no `d` as Easy. A `d` followed by any other letter, or by none, SHALL be
-refused.
-
-#### Scenario: A Tectonic preset
-
-- **WHEN** `4x4Tde` is decoded
-- **THEN** it is a 4×4 Tectonic board at Easy, and its short encoding is `4x4T`
+Seismic's params, a size, a difficulty (Easy or Normal) and a mode (Seismic
+or Tectonic), SHALL be bounded and encoded as its `paramConfig` and its
+declared codec give (`engine-params`, "A game declares its params encoding
+once, and both codec halves are derived"), and its menu SHALL be what
+`presets` gives. A bare number SHALL decode as a square grid, a string with no
+`T` as Seismic mode, and one with no `d` as Easy.
 
 #### Scenario: A Seismic preset
 
 - **WHEN** `4x4dh` is decoded
 - **THEN** it is a 4×4 Seismic board at Normal, and its short encoding is `4x4`,
   which decodes as a 4×4 Seismic board at Easy
-
-#### Scenario: A letter that names no difficulty
-
-- **WHEN** the `h` of `4x4dh` is changed to `x`
-- **THEN** the params are refused:
-  `The parameters 4x4dx have a "x" where this puzzle reads none.`
 
 ### Requirement: Description: Seismic descriptions use the run-length wall and clue encoding
 
@@ -197,8 +181,10 @@ candidates.
 ### Requirement: Generation: The generator strips clues and accepts only a board of its tier
 
 After the fill the generator SHALL strip clues while the puzzle stays soluble
-at the target difficulty, and SHALL accept a puzzle only when it is soluble at
-that difficulty and not at the difficulty below.
+at the target difficulty. That it accepts a puzzle only when it is soluble at
+that difficulty and not at the difficulty below is the collection's
+(`engine-difficulty`, "A difficulty tier binds the board it generates"), and
+Seismic SHALL NOT depart from it.
 
 #### Scenario: Every preset produces a soluble board
 
@@ -220,18 +206,18 @@ round-trips through the codec.
   from 1 to that region's size, and no two equal numbers violate the mode's
   keep-apart rule
 
-### Requirement: Controls: Seismic input, note-taking and completion
+### Requirement: Controls: Seismic is played by the note-taking cell's rules
 
-Seismic SHALL be played by the note-taking cell's rules and SHALL offer a
-sticky pencil mode preference. The cursor keys SHALL move the selection. The
-game SHALL be solved when every cell is filled and every region and keep-apart
-rule is satisfied.
+Seismic SHALL be played by the note-taking cell's rules (`engine-notes`, "The
+note-taking cell is one shared mechanic"), with the cursor keys moving the
+selection, and SHALL depart from them nowhere. Its two answers to the
+mechanic are that a given takes no number and that a cell holding a number
+takes no pencil mark.
 
-#### Scenario: Completing the grid wins
+#### Scenario: A press on a given
 
-- **WHEN** the last cell is filled so that every region and keep-apart rule is
-  satisfied
-- **THEN** the game is reported solved and flashes
+- **WHEN** a given is pressed with the primary button and a digit is typed
+- **THEN** the highlight is not shown on the given and no number is entered
 
 ### Requirement: Controls: The on-screen keypad offers only digits a board can accept
 
@@ -281,17 +267,11 @@ that would leave the cell as it is SHALL make no move.
 
 ### Requirement: Controls: Seismic's Mark-all fills, then strikes what a placed number rules out
 
-While any empty cell has no notes, Mark-all SHALL fill every such cell with
-the numbers from 1 to its area's size and change no other. Otherwise it SHALL
-strike each note a placed number of the same value rules out: one in the same
-area, or one near enough under the board's ruleset. It SHALL never strike a
-cell's last note, and SHALL make no move when nothing is left to strike.
-
-#### Scenario: Mark-all leaves a narrowed cell alone
-
-- **WHEN** the player has narrowed one empty cell's notes and runs mark-all
-- **THEN** every note-less empty cell holds the numbers from 1 to its area's
-  size, and the narrowed cell's notes are as the player left them
+Seismic's `markAll` SHALL be the adaptive press of `engine-notes`, "Mark-all
+is adaptive in a game with an obvious-candidate rule", by a rule of its own:
+a note-less cell's candidates are the numbers from 1 to its area's size, and
+an obvious candidate is a note that a placed number of the same value rules
+out, one in the same area or one near enough under the board's ruleset.
 
 #### Scenario: A second press on a filled board
 
@@ -299,19 +279,6 @@ cell's last note, and SHALL make no move when nothing is left to strike.
 - **THEN** each note struck is a number placed in the cell's area or within
   that number of cells along its row or column
 - **AND** a third press makes no move
-
-### Requirement: Hint: Seismic explains the next deduction
-
-`hint(state)` SHALL return the forced steps from the player's own board as an
-ordered plan, each step narrating why its move is forced from premises the
-sentence itself states. Asking SHALL leave the state unchanged, the region
-partition every state of the game shares included.
-
-#### Scenario: Asking for a hint leaves the board untouched
-
-- **WHEN** a hint is requested on a freshly dealt board
-- **THEN** the state, including the region partition every state of the game
-  shares, is unchanged
 
 ### Requirement: Hint: The hint walks the shared candidate plan with the keep-apart reach
 
@@ -424,7 +391,7 @@ in Tectonic mode.
 
 Rendering SHALL draw the region boundaries, the placed numbers, and the pencil
 marks, and SHALL highlight a duplicate-in-region or a keep-apart violation in
-an error color as it is entered. There SHALL be no move animation.
+an error color as it is entered.
 
 #### Scenario: A duplicate in a region is shown as it is entered
 
@@ -470,10 +437,10 @@ SHALL meet in a solid corner.
 
 ### Requirement: Look: The completion flash lights each cell's surface
 
-The completion flash SHALL sweep the board's cells. A lit cell's surface SHALL
-be filled with a flash color inside its region's walls, a given's cell as a
-player's, and SHALL keep its digit and its notes. The cursor's highlight SHALL
-be hidden while the flash plays.
+The completion flash SHALL light each cell, a given's as a player's, by its
+place in the grid (`ts-engine`, "A game gives each element a position, and
+the route is which position it gives"), and SHALL fill it inside its region's
+walls. The cursor's highlight SHALL be hidden while the flash plays.
 
 #### Scenario: The flash moves
 

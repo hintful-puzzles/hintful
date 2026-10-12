@@ -24,7 +24,7 @@ them and no set edge inside them.
 
 ### Requirement: Rules: Galaxies detects mistakes against the unique solution
 
-Galaxies SHALL implement the engine's `findMistakes` hook. It SHALL recover the
+`findMistakes` SHALL recover the
 puzzle's unique solution by solving a cleared copy of the state, dots only, to
 its tile-to-dot partition. It SHALL flag every tile the player has associated
 with a dot different from the solution's dot for that tile, and every interior
@@ -70,12 +70,6 @@ that is not unique, Galaxies SHALL flag nothing.
 - **WHEN** the player draws an interior wall that the unique solution also has
 - **THEN** Galaxies does not flag it
 
-#### Scenario: A solved board is clean
-
-- **WHEN** the player has completed the board correctly
-- **THEN** mistake checking reports zero, and the engine's lifecycle has
-  already cleared any earlier highlight on the solving move
-
 ### Requirement: Rules: A line cannot be drawn through a dot
 
 An edge SHALL take no line where the line would cross a dot: an edge a dot
@@ -89,12 +83,14 @@ dotted corner, and a wall drag SHALL pass such an edge by.
   sits on, or presses Enter with the cursor on one
 - **THEN** no line is drawn and no history entry is added
 
-### Requirement: Params: Galaxies parameter strings round-trip, and a bare size is a square board
+### Requirement: Params: A Galaxies params string may leave out its height and its tier
 
-Galaxies' parameters SHALL be a width, a height, and a difficulty of `Easy` or
-`Unreasonable`. Parameter decoding SHALL accept a bare size as a square board
-(`"7"` is 7×7), the form `WxH`, and an optional trailing `dn` for the Easy tier
-or `du` for Unreasonable. Encoding SHALL round-trip a decoded parameter set.
+Galaxies' params are a size and a tier of Easy or Unreasonable, declared on
+`paramConfig` and encoded by the declared codec (`engine-params`, "A game
+declares its params encoding once, and both codec halves are derived").
+`decodeParams` SHALL read a bare size as a square board, and a string with no
+`d` segment as Easy, so the short form, which is the size alone, does not keep
+an Unreasonable tier.
 
 #### Scenario: The lenient forms decode
 
@@ -103,35 +99,23 @@ or `du` for Unreasonable. Encoding SHALL round-trip a decoded parameter set.
   for the last
 - **AND** encoding each result and decoding it again gives the same parameters
 
-### Requirement: Params: Galaxies' short params form is the size alone
-
-The full form of the params SHALL end in `d` and the tier's letter, `n` for
-Easy and `u` for Unreasonable. The short form SHALL leave that segment out and
-be the size alone, `WxH` even for a square board, so a string with no `d`
-segment decodes as Easy.
-
 #### Scenario: An Unreasonable preset in the short form
 
 - **WHEN** `7x7du` is decoded and encoded in the short form
 - **THEN** the result is `7x7`, which decodes as a 7×7 board at Easy
 
-### Requirement: Params: Galaxies refuses a size it cannot deal
+### Requirement: Params: Galaxies refuses to deal a 3×3 at Unreasonable
 
-Galaxies SHALL declare a width and a height of 3 to 100 each, so that the
-engine refuses a value outside them. When a board is to be dealt,
-`validateParams` SHALL refuse a 3×3 at Unreasonable, saying `No 3x3 puzzle is
-Unreasonable.`, because no 3×3 board needs that tier. It SHALL NOT refuse
-those params for a game ID that brings its own description.
+When a board is to be dealt, `validateParams` SHALL refuse a 3×3 at
+Unreasonable, saying `No 3x3 puzzle is Unreasonable.`, because no 3×3 board
+needs that tier. It SHALL NOT refuse those params for a game ID that brings
+its own description. The range of a width and a height is declared on
+`paramConfig`, and the engine refuses a value outside it.
 
 #### Scenario: A 3×4 has Unreasonable boards
 
 - **WHEN** a 3×4 at Unreasonable is to be dealt
 - **THEN** `validateParams` does not refuse it
-
-#### Scenario: A width of 2
-
-- **WHEN** the width of `7x7dn` is changed to 2
-- **THEN** the engine refuses it, saying `Width must be at least 3.`
 
 ### Requirement: Description: Galaxies descriptions run-length encode the dots
 
@@ -162,13 +146,15 @@ other character, an empty description, a place past the last, and a final `z`.
 - **WHEN** a `z` is added to the end of that description
 - **THEN** it is refused as too long for its board
 
-### Requirement: Generation: Galaxies generates uniquely-solvable boards at the requested difficulty
+### Requirement: Generation: A Galaxies board is Easy where the deduction chain finishes it and Unreasonable where only recursion does
 
-For every preset, `newDesc` SHALL produce a board whose layout of dots admits
-exactly one valid tile-to-dot association under 180° rotational symmetry about
-each dot, and whose minimum solver difficulty matches the requested `Easy` or
-`Unreasonable`. A board the solver diagnoses as `Ambiguous`, `Impossible`, or
-at a different difficulty than requested SHALL NOT be returned.
+What a dealt board promises is the collection's (`engine-difficulty`, "Every
+tier promises one solution found at its cap" and "A difficulty tier binds the
+board it generates"), and Galaxies departs from neither. `newDesc` SHALL
+return only a board the solver, run from the dots alone, diagnoses at exactly
+the tier asked for: Easy where its deduction chain finishes the board, and
+Unreasonable where the chain does not and its bounded recursion finds the one
+answer.
 
 #### Scenario: Generated boards are uniquely solvable at the right difficulty
 
@@ -380,22 +366,6 @@ that preference.
 - **THEN** no rings are drawn, and the drag and its commit preview are
   unaffected
 
-### Requirement: Hint: Galaxies explains its deductions in association vocabulary
-
-Galaxies SHALL implement the engine's `hint()` hook as a recorded projection of
-its own solver: the same deduction chain that generates and solves boards runs
-with a recorder, and each recorded firing becomes one narrated hint journey meeting
-the collection's hint quality bar. A journey SHALL explain why the association
-is forced, such as the blocked symmetric partner or the only dot whose symmetry
-can reach the tile, and never merely what to do.
-
-#### Scenario: A forced association is taught as one step
-
-- **WHEN** the player requests a hint on a board where a deduction forces a
-  tile's dot
-- **THEN** one step is shown whose narration states the forcing reason and
-  whose single move associates both the tile and its 180° partner
-
 ### Requirement: Hint: A hint step's action is a move the game already has
 
 A step's action SHALL be a move the game already has: the committed
@@ -421,9 +391,7 @@ dot, and the same arrow brings it along.
 ### Requirement: Hint: The hint plan finishes the board with walls
 
 Because associations alone never complete a board and only walls do, the plan
-SHALL carry the deduction through to the walls it justifies. Followed from any
-position it is asked from, the hints SHALL reach a solved board, or, on an
-Unreasonable board only, the refusal that deduction has run out.
+SHALL carry the deduction through to the walls it justifies.
 
 #### Scenario: The plan finishes the board, not just the notation
 
@@ -433,10 +401,9 @@ Unreasonable board only, the refusal that deduction has run out.
 
 ### Requirement: Hint: Hint marks name what the player can see
 
-Evidence SHALL be highlighted in the hint color legend, and
-dots SHALL be named by properties the player can see. A rule-out SHALL NOT be
-demanded of the player as a move, and where it is shown it SHALL be shown as
-evidence. Equivalent moves SHALL share a color.
+A hint's words SHALL name a dot by properties the player can see. A rule-out
+SHALL NOT be demanded of the player as a move, and where it is shown it SHALL
+be shown as evidence.
 
 #### Scenario: A dot is named by its color
 
@@ -468,13 +435,14 @@ advance.
 - **THEN** the resolved step is dropped without being shown as stale and the
   plan advances, recomputing only if it drains
 
-### Requirement: Hint: The Galaxies hint never guesses
+### Requirement: Hint: The Galaxies hint stops where its deductions do
 
-Every step the hint offers SHALL be a deduction the player could make from the
-board in front of them. The hint SHALL NOT guess: where the remaining progress
-can only be found by hypothesizing a cell's dot and propagating until something
-breaks, the hint SHALL refuse, and the refusal SHALL say that deduction has run
-out and what the player can do instead.
+The hint has no step that tries a square's dot and follows it until something
+breaks. Where none of its deductions applies it SHALL refuse with the
+collection's sentence that deduction has run out (`engine-hints`, "A Search is
+refused and never narrated" and "Deduction running out on a sound board SHALL
+have one wording"). That refusal SHALL be reached on an Unreasonable board
+only: an Easy board SHALL be carried all the way to solved by deduction alone.
 
 #### Scenario: Deduction running out is said plainly, not guessed past
 
@@ -484,18 +452,6 @@ out and what the player can do instead.
   and that the position can be tried from a saved checkpoint
 - **AND** it does not report the survivor of a search as though it were a
   technique
-
-### Requirement: Hint: An Easy board is finished by deduction alone
-
-An Easy board SHALL be carried all the way to solved by deduction alone. The
-refusal that deduction has run out SHALL NOT be reached on an Easy board:
-reaching it is what the Unreasonable tier means.
-
-#### Scenario: An Easy board is always finished by deduction
-
-- **WHEN** hints are followed from a fresh board at the Easy tier
-- **THEN** every step is a deduction whose premise is visible on the board as
-  it stands, and the board reaches solved
 
 ### Requirement: Hint: The hint gives a dot the squares it sits on and the squares walled in with it
 
@@ -742,11 +698,14 @@ same in both schemes, as a hint's words name them, each with a rim in ink.
 - **WHEN** a fresh board is drawn in the dark scheme
 - **THEN** each white dot is a white disc on its dark cells
 
-### Requirement: Look: Galaxies' win flash sweeps the cells
+### Requirement: Look: A lit cell of a black dot's region is drawn as a white dot's is
 
-The win flash SHALL sweep the cells diagonally. A lit cell SHALL be filled
-with a flash color in place of its region's fill, in a white dot's region
-and a black dot's alike, and SHALL keep its walls, dots and grid lines.
+The win flash is the collection's sweep over the cells (`ts-engine`, "A game
+gives each element a position, and the route is which position it gives"),
+and a lit cell is filled as `engine-colors`, "A solved flash drawn as a color
+takes a shared color", states. A lit cell of a black dot's region SHALL be
+filled as one of a white dot's region is, and its grid lines SHALL be the
+quiet ones a white region's cell has, in place of the ink a black fill needs.
 
 #### Scenario: A cell in a black dot's region
 

@@ -2207,6 +2207,35 @@ position in the ladder.
   that fired declares a lower tier than an earlier one that fired
 - **THEN** the board's grade is the higher tier
 
+### Requirement: A hint is deduced from the board in play
+
+The `Midend` SHALL hand `Game.hint` the state in play and its `Ui`, never the
+board as dealt, and the hint SHALL make its plan from it: an entry the player
+placed is never a step, and a step may rest on it. Which marks a step may rest
+on, and a step drawn from the clues alone, are the game's to state.
+`deduceHintPlan` SHALL deduce on the board it is handed and copy nothing. Of
+pencil notes: `engine-candidate-hints`, "A recording solve reads the placed
+entries and never the notes".
+
+#### Scenario: A right entry the deduction had not reached
+
+- **WHEN** the player makes an entry that is right and that the opening plan
+  comes to only after other steps, and then asks for a hint
+- **THEN** no step of the new plan makes that entry, and a step may rest on it
+  before the steps the opening plan put ahead of it
+
+#### Scenario: A plan in hand when the board changes
+
+- **WHEN** a hint is asked again after moves that left the stored plan
+- **THEN** the plan is deduced afresh from the board as it now stands, and not
+  continued from the board the first plan was made on
+
+#### Scenario: A mark the hint has not proved
+
+- **WHEN** the player sets a mark their game's hint does not take on trust, as
+  a Mines flag is, and asks for a hint
+- **THEN** the hint's first step reads as it would without the mark
+
 ### Requirement: The hint-resume walk excuses the games that can say a search ran out
 
 Which games the hint-resume walk excuses its completion promise SHALL be a

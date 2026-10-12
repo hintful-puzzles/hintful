@@ -51,11 +51,11 @@ other text there.
 
 ### Requirement: Params: Pegs refuses a board its type cannot make
 
-When a board is to be dealt, `validateParams` SHALL refuse a width or a height
-of 3 or less, a Cross board unless each side is 5, 7 or 9 and they are not both
-5, and an Octagon board unless it is 7×7. A board that arrives with its
-description SHALL NOT be refused for any of these. A grid of more than 10,000
-cells SHALL be refused either way.
+When a board is to be dealt, and only then, `validateParams` SHALL refuse a
+width or a height of 3 or less, a Cross board unless each side is 5, 7 or 9
+and they are not both 5, and an Octagon board unless it is 7×7. A grid of more
+than 10,000 cells SHALL be refused whether it is to be dealt or arrives with
+its description.
 
 #### Scenario: A Cross with both sides 5
 
@@ -94,7 +94,7 @@ a sentence of the game's own.
 
 ### Requirement: Solver: Pegs' Solve finishes from the player's position, or else from the dealt board
 
-Pegs SHALL provide `solve`, whose move leaves one peg on the square the search's line of jumps ends on. It SHALL search from the player's position first and, when that position is lost or past the search's reach, from the dealt board. It SHALL refuse with `NO_SOLUTION` only when the search proved the dealt board has no finish, and with `PUZZLE_NOT_REASONABLE` otherwise.
+Pegs' Solve move SHALL leave one peg on the square the search's line of jumps ends on. It SHALL search from the player's position first and, when that position is lost or past the search's reach, from the dealt board. It SHALL refuse with `NO_SOLUTION` only when the search proved the dealt board has no finish, and with `PUZZLE_NOT_REASONABLE` otherwise.
 
 #### Scenario: A lost position
 
@@ -130,10 +130,10 @@ select again SHALL disarm it.
 - **WHEN** CURSOR_SELECT is pressed again while jumping
 - **THEN** jumping mode is canceled
 
-### Requirement: Controls: Pegs discards a drag or an armed jump when the board changes under it
-Pegs SHALL clear its dragged peg and its armed keyboard jump whenever the midend
-replaces the game state, so that a pointer drag or a selected jump cannot act on
-a board that no longer holds the peg it was aimed at.
+### Requirement: Controls: Pegs disarms a keyboard jump when the board changes under it
+Pegs SHALL disarm its armed keyboard jump whenever the midend replaces the game
+state, so that a selected jump cannot act on a board that no longer holds the
+peg it was aimed at.
 
 #### Scenario: an undo disarms a selected jump
 
@@ -167,8 +167,8 @@ pointer press on a peg SHALL hide the cursor and disarm an armed jump.
 
 ### Requirement: Hint: Pegs' hint offers the first jump of a line that leaves one peg
 
-Pegs SHALL provide a `hint` that searches for a line of jumps leaving one peg
-and offers its first jump, ringing the peg that jumps and the hole it lands in.
+Pegs' hint SHALL search for a line of jumps leaving one peg and offer its
+first jump.
 It SHALL judge the other jumps from the same position within a work allowance
 per request, and a step SHALL say about those jumps only what the hint checked.
 

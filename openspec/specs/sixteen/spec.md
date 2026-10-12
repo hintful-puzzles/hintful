@@ -36,11 +36,15 @@ increment by one for a slide regardless of its distance.
 - **THEN** every tile in row 1 shifts right by one cell with toroidal wraparound
 - **AND** the move counter increments by one regardless of slide distance
 
-### Requirement: Params: Sixteen's params choose how the board is scrambled
+### Requirement: Params: Sixteen's params are its declared codec's, and choose how the board is scrambled
 
-Sixteen's params SHALL be written `WxH[mM]`. A movetarget `M` greater than 0
-SHALL select generation by shuffling with random moves; otherwise the board
-SHALL be a random permutation with parity correction.
+Sixteen's params, a width, a height and a number of shuffling moves, and their
+encoding SHALL be those its `paramConfig` and its declared codec give
+(`engine-params`, "A game declares its params encoding once, and both codec
+halves are derived"), with no departure from the codec grammar. A string with
+no `m` SHALL decode as no shuffling moves. A number above 0 SHALL select
+generation by shuffling with random moves; at 0 the board SHALL be a random
+permutation with parity correction.
 
 #### Scenario: Random-permutation generation is solvable
 
@@ -48,34 +52,11 @@ SHALL be a random permutation with parity correction.
 - **THEN** the generated permutation is parity-corrected so the board is
   reachable from the solved state
 
-### Requirement: Params: Sixteen writes its shuffle count wherever it is not zero
-
-The `m` and the number of shuffling moves SHALL be written whenever that
-number is not zero, in the short encoding as in the full one, and left out at
-zero. A bare number SHALL decode as a square board, and a string with no `m`
-as no shuffling moves. A width or a height below 2 SHALL be refused.
-
 #### Scenario: A board shuffled by ten moves
 
 - **WHEN** `4x4m10` is decoded and encoded again
 - **THEN** it is a 4×4 board shuffled by 10 moves, and both encodings are
   `4x4m10`
-
-#### Scenario: A strip is refused
-
-- **WHEN** the preset `3x4` has its width changed to 1
-- **THEN** the params are refused with "Width must be at least 2."
-
-### Requirement: Params: A shuffled Sixteen board's title counts its shuffles
-
-A board dealt by shuffling SHALL be titled by its size and the number of
-shuffling moves, and a board dealt in a random order by its size alone.
-
-#### Scenario: Ten shuffling moves
-
-- **WHEN** `4x4m10` is titled
-- **THEN** the title is "4x4, 10 shuffles", and the preset `4x4` is titled
-  "4x4"
 
 ### Requirement: Description: A Sixteen description is the tiles in reading order
 
@@ -280,18 +261,6 @@ search, which carries no such property.
 - **WHEN** a player slides a row of the solved board and asks for a hint
 - **THEN** the hint is the one move that slides it back
 
-### Requirement: Hint: Sixteen draws the hinted tile, its landing cell and its arrow
-
-The Sixteen `redraw` method SHALL render the current step by highlighting the
-tile to move with a filled overlay, its landing cell with a border, and the
-corresponding slide arrow, in the hint's color.
-
-#### Scenario: The current step is drawn
-
-- **WHEN** a hint step is displayed
-- **THEN** the tile, the target and the slide arrow are drawn in the hint
-  color
-
 ### Requirement: Hint: hintKeepTrack follows slides of the hinted line
 
 Sixteen's `hintKeepTrack` SHALL report `"completed"` when a slide of the
@@ -407,7 +376,7 @@ stay the board.
 A slide arrow SHALL be filled as Netslide fills its own in both schemes: a
 gray a step off the board, outlined in ink, which the bevel's dark-scheme swap
 does not reach. The arrow the keyboard cursor is on SHALL be filled in the
-collection's cursor color, and the arrow a hint names in the hint's.
+collection's cursor color.
 
 #### Scenario: The arrows match Netslide's in the dark scheme
 

@@ -2,9 +2,10 @@
 
 ## Purpose
 Signpost, the puzzle of linking every square into one numbered sequence in which
-each square's arrow points toward the next: its rules, its params and
-description encodings, how the chains are numbered and colored, its mistake
-checking, what its solver deduces, and how its squares look.
+each square's arrow points toward the next: its rules, what its params refuse
+and its description encoding, how the chains are numbered and colored, its
+mistake checking, what its solver and its hint deduce, and how its squares
+look.
 
 ## Requirements
 
@@ -62,20 +63,13 @@ real numbers only where one of its cells holds a given number.
 
 ### Requirement: Rules: Signpost reports mistakes for Check & Save
 
-`signpost` SHALL implement `findMistakes(state)`: it SHALL take the board's
-one chain from the search that counts its answers, at either difficulty, and
-flag every cell whose player `next` link disagrees with the solution's. A
-flagged cell, a given's included, SHALL be drawn with its number in the error
-color. A cell with no outgoing player link SHALL never be flagged. Where the
-search did not prove exactly one chain, `findMistakes` SHALL return no
-mistakes.
-
-#### Scenario: A wrong link is flagged
-
-- **WHEN** the player links two cells that are not consecutive in the unique
-  solution and requests Check & Save
-- **THEN** `findMistakes` flags that link, its cell is drawn with the error
-  styling on the next paint, and the save is refused
+`findMistakes(state)` SHALL flag every cell whose player `next` link
+disagrees with the board's one chain, which it SHALL take from the search as
+`engine-difficulty`, "One search answers a board for everything that asks"
+says. A flagged cell, a given's included, SHALL be drawn with its number in
+the error color. A cell with no outgoing player link SHALL never be flagged.
+Where the search did not prove exactly one chain, `findMistakes` SHALL return
+no mistakes.
 
 #### Scenario: A wrong link out of a given
 
@@ -83,11 +77,6 @@ mistakes.
   not put second, and requests Check & Save
 - **THEN** the `1` is drawn in the error color, though a clash of numbers
   never recolors a given
-
-#### Scenario: A hand-typed ambiguous board reports nothing
-
-- **WHEN** `findMistakes` runs on a desc with no unique solution
-- **THEN** it returns an empty list
 
 ### Requirement: Rules: Signpost's live error overlay is not its mistake check
 
@@ -116,32 +105,28 @@ to make.
 - **THEN** the 14 is linked to the 15, though none of the nine links joined
   them
 
-### Requirement: Params: Signpost's parameters
+### Requirement: Params: A Signpost params string may leave out its height and its difficulty
 
-Params SHALL be `w`, `h`, `forceCornerStart`, a boolean, and a difficulty,
-Easy or Unreasonable. They SHALL encode as `{w}x{h}`, with a trailing `c` when
-corner start is set and then the difficulty as `de` or `du`, both in the full
-encoding only. A bare `{n}` SHALL decode as a square grid, and a string with
-no difficulty letter as Easy. A width or a height below one SHALL be refused,
-and `validateParams` SHALL refuse a 1×1 grid for full generation.
+Signpost's params, a size, whether the chain starts and ends in corners, and
+a difficulty, SHALL be bounded and encoded as its `paramConfig` and its
+declared codec give (`engine-params`, "A game declares its params encoding
+once, and both codec halves are derived"), and its menu and default SHALL be
+what `presets` and `defaultParams` give. A bare number SHALL decode as a
+square grid, and a string with no difficulty letter as Easy.
 
-#### Scenario: Params round-trip
+#### Scenario: A string that leaves the difficulty out
 
-- **WHEN** Easy params `{ w: 5, h: 5, forceCornerStart: true }` are encoded
-  in full
-- **THEN** the result is `5x5cde` and decoding it round-trips the params
-- **AND** `5x5c`, written before the game had tiers, decodes to the same
-  params
+- **WHEN** `5x5c`, written before the game had tiers, is decoded
+- **THEN** it decodes to the params `5x5cde` does
+
+### Requirement: Params: Signpost refuses to deal a 1×1 board
+
+`validateParams` SHALL refuse a 1×1 grid when a board is to be dealt.
 
 #### Scenario: Invalid params are rejected
 
 - **WHEN** `validateParams` is given a 1×1 grid for full generation
 - **THEN** it returns a non-null error string
-
-#### Scenario: The difficulty is in the full encoding only
-
-- **WHEN** an Unreasonable 5×5 board with corner start is encoded
-- **THEN** the full encoding is `5x5cdu` and the shared one `5x5`
 
 ### Requirement: Params: Signpost refuses Unreasonable where no board needs it
 
@@ -179,18 +164,6 @@ naming the difficulty. The same size SHALL still be asked for at Easy.
   difficulty
 - **THEN** each is refused at Unreasonable and not at Easy
 - **AND** a 15×15, a 9×25 and a 7×30 board are admitted at Unreasonable
-
-### Requirement: Params: Signpost's menu offers each size at both difficulties
-
-Signpost's presets SHALL offer each of 4×4, 5×5, 6×6 and 7×7 with corner
-start as Easy and as Unreasonable, then 4×4 and 5×5 with free ends at Easy,
-and the default SHALL be the Easy 4×4 with corner start.
-
-#### Scenario: Every size is offered at both difficulties
-
-- **WHEN** Signpost's preset menu is read
-- **THEN** its four sizes each appear as Easy and then as Unreasonable,
-  followed by the two boards with free ends
 
 ### Requirement: Params: Signpost refuses an area past what a signed 32-bit number holds
 
@@ -247,19 +220,14 @@ board.
   board the solver does not finish
 - **THEN** that number stays given
 
-### Requirement: Generation: An Unreasonable Signpost board has one answer that the solver does not reach
+### Requirement: Generation: An Unreasonable Signpost board is an Easy one with more numbers taken away
 
-At Unreasonable the generator SHALL take an Easy board and strip further
-given numbers, never the first or the last, each only while the search still
-proves one chain within a budget of its own, well under the search's, and
-SHALL keep the board only when the solver stops short on it.
-
-#### Scenario: A dealt Unreasonable board needs search and has one answer
-
-- **WHEN** `newDesc` produces Unreasonable boards from 4×4 to 6×6, with the
-  ends in the corners and free
-- **THEN** the solver leaves each unfinished
-- **AND** exactly one chain fits each, by a count that has no search in it
+Signpost's Unreasonable boards SHALL be dealt by the engine's deal
+(`engine-difficulty`, "The engine deals the Unreasonable board of a game that
+searches"), from an Easy board, with a strip of the game's own: further given
+numbers are taken away, never the first or the last, each only while the
+search still proves one chain, within the budget of "A strip is asked within
+the engine's dealing budget".
 
 #### Scenario: The smallest boards and the largest carry the tier
 
@@ -268,26 +236,21 @@ SHALL keep the board only when the solver stops short on it.
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Generation: A pasted Signpost board opens at the difficulty it needs
+### Requirement: Generation: A Signpost board is Easy where the solver and the hint both finish it
 
-A board that arrives as a game ID SHALL open as Easy where the solver and the
-hint finish it, and as Unreasonable where it has exactly one chain that they
-do not reach, whatever lower difficulty its ID states. A board with several
-chains SHALL be refused as having more than one solution, and a board with
-none as one that contradicts itself.
+A board SHALL count as Easy where the solver and the hint finish it, and as
+Unreasonable where it has exactly one chain that they do not reach. What a
+pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A loaded
+board whose id states no tier takes the lowest tier that solves it" and "A
+pinned tier is kept or raised and never lowered"), and one with several
+chains or none SHALL be refused (`engine-params`, "A board with a mistake
+check loads only with exactly one answer").
 
 #### Scenario: A board that needs search opens as Unreasonable
 
 - **WHEN** a 4×4 ID whose board has one chain the solver does not reach is
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params end in `du`
-
-#### Scenario: A board with several answers or none is refused
-
-- **WHEN** a 4×4 board with two places for its 8, and one whose `1` points
-  off the grid, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
 
 ### Requirement: Solver: Signpost solves by forced-link deduction
 
@@ -296,8 +259,6 @@ a fixpoint: if a cell has exactly one legal next cell it can link to, the
 solver SHALL make that link, and symmetrically for a sole legal predecessor. A
 link SHALL be legal to the solver only where the region fits the numeric gap it
 would bridge. The solver SHALL report the board solved, stuck, or impossible.
-`solve()` SHALL take the chain from the search that counts a board's answers,
-at either difficulty.
 
 #### Scenario: Forced links are deduced
 
@@ -306,18 +267,15 @@ at either difficulty.
 - **THEN** it links them, and iterating to a fixpoint solves any generated
   Easy board
 
-#### Scenario: Solve recovers the chain from a dirty state
+### Requirement: Solver: Signpost's search assumes each link of the cell with the fewest, nearest first
 
-- **WHEN** `solve()` is invoked on a partially- and wrongly-linked board
-- **THEN** it returns a move reconstructing the correct full `1 … n` chain
-
-### Requirement: Solver: Signpost counts a board's answers by a bounded search
-
-The game SHALL count a board's chains up to two by trial and error over the
-solver: where the solver stops, it SHALL take the cell with the fewest cells
-it could link to and assume each in turn, nearest first. It SHALL report one
-answer, several, none, or that it stopped at its budget, which SHALL be
-counted in positions and never in time.
+Signpost SHALL count a board's chains by the engine's search
+(`engine-difficulty`, "The engine counts a searching game's answers up to
+two, within a budget of positions"), over the solver: where the solver stops,
+it SHALL take the cell with the fewest cells it could link to and assume each
+in turn, nearest first. Solve SHALL be the search's, by "Solve from the
+search shows the one answer or says which it lacks", and Signpost SHALL
+depart from neither.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -326,16 +284,6 @@ counted in positions and never in time.
   given, and on the first with the `1`'s arrow pointing off the grid
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given four positions on a board that needs five
-- **THEN** it reports that it stopped, and with five it reports one answer
-
-#### Scenario: An Easy board takes one position
-
-- **WHEN** the search is given one position on a dealt Easy board
-- **THEN** it reports one answer
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -422,7 +370,10 @@ edges.
 The hint SHALL never run the search. On an Unreasonable board its plan SHALL
 hold the links forced from the player's own and no others, and where none is
 forced it SHALL refuse with the collection's sentence that deduction has run
-out. It SHALL go on from the links the player then makes.
+out. It SHALL go on from the links the player then makes. A finished board,
+or one with a mistake, is refused before `hint` is asked: `engine-hints`,
+"The midend SHALL refuse a hint on a finished or wrong board before asking
+the game".
 
 #### Scenario: The hint stops, and goes on from a link tried rightly
 
@@ -521,11 +472,10 @@ lead in, the first in reading order.
 
 ### Requirement: Hint: A Signpost hint step marks both ends of its link
 
-A step SHALL draw the arrow its link leaves by in the hint color and ring the
-square the link arrives at. A step for the one square that can come next SHALL
-stripe every square its arrow points at, where there are several, and a step
-for the one arrow that can lead in SHALL outline the other squares whose arrows
-point at the ringed square.
+A step's marks SHALL be the roles `hintMarks` declares, the ring at both ends
+of its link: the arrow it leaves by and the square it arrives at. A step for
+the one square that can come next SHALL stripe the squares its arrow points
+at only where there are several.
 
 #### Scenario: An arrow with one square ahead of it stripes nothing
 
@@ -574,22 +524,3 @@ lifted surface in the dark scheme.
 - **WHEN** a given is linked to its successor and has no predecessor to find
 - **THEN** its number is drawn in the full fixed-number color on the lifted
   surface
-
-### Requirement: Look: The Signpost completion flash runs the chain from 1 to the last number
-
-The completion flash SHALL run the finished chain: a square's position SHALL
-be its number, and the arrows SHALL stay still. A lit square SHALL be filled
-with a flash color and SHALL keep its arrow and its number, a given as any
-other square.
-
-#### Scenario: The flash follows the numbers, not the grid
-
-- **WHEN** a board is won and frames of its flash are drawn from start to end
-- **THEN** the squares first light in the order of their numbers, wherever on
-  the grid the chain goes
-
-#### Scenario: A lit given
-
-- **WHEN** the highlight is on a given
-- **THEN** the given is filled with a flash color as the squares beside it
-  are, and returns to its lifted surface as the highlight leaves it

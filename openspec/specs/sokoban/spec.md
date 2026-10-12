@@ -30,37 +30,31 @@ target square), so that levels with spare barrels or pits still complete.
 
 - **WHEN** a move places the final off-target barrel onto a target so no free target
   and no free barrel remain
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
-### Requirement: Params: Sokoban's parameters are a width and a height
+### Requirement: Params: Sokoban's params are its declared codec's
 
-Sokoban SHALL support rectangular boards parameterized by width and height, both at
-least 4. A parameter string SHALL encode the width and the height, and a bare single
-number SHALL be read as a square board.
+Sokoban's params, a width and a height, and their encoding SHALL be those its
+`paramConfig` and its declared codec give (`engine-params`, "A game declares
+its params encoding once, and both codec halves are derived"), with no
+departure from the codec grammar.
 
-#### Scenario: Parameters round-trip
+#### Scenario: The default board
 
-- **WHEN** a parameter string naming a width and height is encoded and decoded
-- **THEN** the same width and height are recovered, and a bare single number is read
-  as a square board
+- **WHEN** `10x12` is decoded
+- **THEN** it is a board 10 squares wide and 12 tall, the first the menu offers
 
 ### Requirement: Params: Sokoban deals no level past the area its search can open
 
 Sokoban SHALL refuse to deal a level on a board of more than 1200 squares, with a sentence
 that names the limit, since the levels a deal must generate there to find one the hint can
-open take longer than a player would wait. The refusal SHALL apply only when a level is to
-be dealt: a board that arrives with its description SHALL load at any size.
+open take longer than a player would wait. The refusal SHALL bind dealing only.
 
 #### Scenario: A board past the limit is refused when dealing
 
 - **WHEN** the Custom dialog or a type link asks for a board whose width times height is
   more than 1200
 - **THEN** no level is dealt and the refusal says the limit
-
-#### Scenario: A board past the limit loads from its description
-
-- **WHEN** a game ID carries a description for a board of more than 1200 squares
-- **THEN** its params are accepted
 
 ### Requirement: Description: Sokoban descriptions use the upstream run-length encoding
 

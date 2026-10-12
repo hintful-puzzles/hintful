@@ -921,11 +921,12 @@ candidate once more before keeping it.
 ### Requirement: A game that searches has a tier for each deduction and Unreasonable above them
 
 The engine SHALL give a game whose top tier is the search's its tiers from a
-count of the deductions below it (`searchTiers`): the collection's names in
-order with Unreasonable last, a difficulty field, and a contract that asks the
-game's deduction at each tier below Unreasonable and its search there. The
-params segment SHALL write a tier as `d` and the first letter of its name, in
-the full form only, and SHALL read a string with no tier as Easy.
+count of the deductions below it (`searchTiers`): the collection's names,
+Unreasonable last, a difficulty field, and a contract that asks the game's
+deduction below Unreasonable and its search there. `searchTierSegment` SHALL
+write a tier as `d` and the first letter of its name, in the full form only,
+and SHALL leave a string with no `d` at the game's `defaultParams` tier, which
+SHALL be Easy.
 
 #### Scenario: One deduction is Easy and Unreasonable
 
@@ -943,6 +944,85 @@ the full form only, and SHALL read a string with no tier as Easy.
   first, and its search says one answer
 - **THEN** the contract says unsolved at Easy and solved at Normal and at
   Unreasonable
+
+#### Scenario: A string that states no tier
+
+- **WHEN** a game on these tiers decodes `7x7`, or `7x7dn` where it has no
+  Normal
+- **THEN** the first reads as Easy, the tier its default params hold, and the
+  second is refused as a letter the tag does not list
+
+### Requirement: The engine counts a searching game's answers up to two, within a budget of positions
+
+`searchAnswers` SHALL count a board's answers up to two by trial and error
+over the game's own deduction, and SHALL say the one answer, several, none,
+or out of reach, where its budget ran out first. The budget SHALL be counted
+in positions and never in time, so a board is kept or refused alike on every
+machine. The game SHALL supply the board as dealt, its deduction, which
+reports a contradiction, what to assume where that stops, each answer under
+one assumption only, and its budget.
+
+#### Scenario: The budget runs out with one answer in hand
+
+- **WHEN** a search has found one answer and still has a position to try when
+  its budget is spent
+- **THEN** it says out of reach and not one answer, since a second is not
+  ruled out
+
+#### Scenario: A board the deduction finishes
+
+- **WHEN** the game's deduction finishes the board as dealt, and the budget
+  is one position
+- **THEN** the search says one answer, having tried that position alone
+
+#### Scenario: A contradiction is not an answer
+
+- **WHEN** every way of the one assumption a search makes ends in a
+  contradiction
+- **THEN** the search says none
+
+### Requirement: One search answers a board for everything that asks
+
+A game on the search's tiers SHALL take a board's answer from one search
+wherever one is asked for: the contract at Unreasonable, solved for one
+answer, impossible for none and unsolved otherwise; `findMistakes`; and Solve,
+save on a board whose deal recorded its answer. `answerCache` SHALL keep each
+board's answer, searched once, by the part of the state no move replaces, so
+the search SHALL NOT read the player's entries. The deal asks the same search
+afresh and never the kept answer.
+
+#### Scenario: A board whose search runs out does not load as Unreasonable
+
+- **WHEN** a pasted board's deduction stops short and its search spends the
+  game's budget
+- **THEN** the contract says unsolved at every tier, and the board is refused
+  as one with no single answer
+
+#### Scenario: The mistake check after each move searches once
+
+- **WHEN** `findMistakes` is asked after each of several moves on one board
+- **THEN** the search ran for the first and its answer is read for the rest
+
+### Requirement: Solve from the search shows the one answer or says which it lacks
+
+`solveFromAnswer` SHALL make a game's Solve from a search's verdict, at any
+tier: the game's solve move of the one answer, and otherwise a refusal,
+`MULTIPLE_SOLUTIONS` for several, `NO_SOLUTION` for none and
+`PUZZLE_NOT_REASONABLE` where the budget ran out. A game on the search's tiers
+SHALL answer `solve` through it.
+
+#### Scenario: Solve on an Easy board
+
+- **WHEN** Solve is asked on a board the game's deduction finishes, whose
+  deal recorded no answer
+- **THEN** the move is of the search's answer, the same one the mistake check
+  reads, and not of a second solve by deduction
+
+#### Scenario: A board with two answers
+
+- **WHEN** `solveFromAnswer` is handed a verdict of several
+- **THEN** Solve is refused with "This puzzle has more than one solution, so
+  there is no single answer to show."
 
 ### Requirement: The engine deals the Unreasonable board of a game that searches
 

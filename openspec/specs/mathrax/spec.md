@@ -39,62 +39,40 @@ even clue SHALL require all four digits to be even and an odd clue all four to b
 - **WHEN** the four digits around an addition clue showing `n` are examined
 - **THEN** the two diagonally-opposite pairs each sum to `n`
 
-### Requirement: Rules: Mathrax flags mistakes against the unique solution
+### Requirement: Rules: Mathrax's mistake check re-solves from its givens and clues
 
-Mathrax SHALL provide `findMistakes`. It SHALL re-solve from the given digits
-and the clues to the unique solution, and flag every placed digit that
-contradicts it and every empty cell whose non-empty pencil notes have crossed
-out its solution value. A cell whose notes merely carry extra candidates SHALL
-NOT be flagged. When the board is not uniquely deducible, no cell SHALL be
-flagged.
+Mathrax's `findMistakes` SHALL report what the collection's check reports
+(`engine-hints`, "Check & Save names a wrong entry in every game", and
+`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
+the answer it re-solves from the given digits and the clues. When they do not
+solve to exactly one answer, no cell SHALL be flagged.
 
-#### Scenario: A wrong placed digit is flagged
+#### Scenario: A wrong digit that breaks no rule
 
-- **WHEN** a cell holds a digit that differs from the unique solution and mistakes are
-  checked
+- **WHEN** the player enters a digit that repeats nothing in its row or
+  column, contradicts no clue as the board stands, and is not the answer's
 - **THEN** that cell is reported as a mistake
 
-### Requirement: Params: Mathrax's parameters are a size, a difficulty and a set of clue types
+### Requirement: Params: Mathrax refuses to deal with no clue type enabled
 
-Parameters SHALL be a grid size, a difficulty (Easy, Normal, Tricky or
-`Unreasonable`), and a set of enabled clue types (addition, subtraction,
-multiplication, division, equality, even/odd). The top tier, which reaches its
-answer by guessing and verifying, SHALL be named `Unreasonable` and SHALL keep
-the difficulty character `r`. A game ID SHALL encode the size, difficulty and
-enabled clue types and round-trip through decode, where an empty encoded
-clue-type set means all clue types are enabled.
+`validateParams` SHALL refuse, when validating for generation, a parameter set
+with no clue type enabled. The range of the size SHALL be the one its
+`paramConfig` item declares.
 
-#### Scenario: A game ID round-trips through the parameters
+#### Scenario: Every clue type unchecked
 
-- **WHEN** a parameter set is encoded to a game ID and decoded
-- **THEN** the same size, difficulty and enabled clue types are recovered
-
-#### Scenario: The top tier keeps its difficulty character
-
-- **WHEN** params at the top tier are encoded to a game ID
-- **THEN** the difficulty character is `r`, so an ID that names the tier by
-  that character still names the same board
-
-### Requirement: Params: Mathrax refuses a size, a difficulty or a clue-type set it cannot play
-
-Mathrax SHALL play sizes 3 to 9, one digit to a cell, and SHALL refuse a size
-outside them. `validateParams` SHALL refuse, when validating for generation, a
-parameter set with no clue type enabled.
-
-#### Scenario: A size below the bound is refused
-
-- **WHEN** a parameter set of size 2 is checked
-- **THEN** it is refused with a message saying the size must be at least 3
+- **WHEN** a parameter set with all six clue types off is validated for
+  generation
+- **THEN** it is refused: "At least one clue type must be enabled."
 
 ### Requirement: Params: Mathrax offers only the difficulties a size can support
 
 Mathrax SHALL refuse to *generate* a size-3 board at Normal or at the top tier,
 because a 3×3 grid's four intersections cannot separate those tiers from their
-neighbors. `validateParams` SHALL reject those combinations for a full
-(generation-capable) parameter set and accept them otherwise, so a saved game
-or a game ID carrying its own description still loads. The refusal SHALL name
-the tiers from the game's tier list, as the difficulty menu does. Size 3 at
-Tricky SHALL be unaffected.
+neighbors. The refusal SHALL bind generation only, as the collection's does
+(`engine-difficulty`, "An unbindable tier is refused, not silently
+downgraded"), and SHALL name the tiers from the game's tier list, as the
+difficulty menu does. Size 3 at Tricky SHALL be unaffected.
 
 #### Scenario: An unsupported size and tier are refused
 
@@ -239,17 +217,25 @@ last square, and anything after the last intersection.
 - **WHEN** `i,E5c` is read at size 3
 - **THEN** it is refused at the `5`
 
-### Requirement: Generation: Mathrax grades its difficulty tiers honestly
+### Requirement: Generation: What a Mathrax board promises at its tier is the collection's
 
-A Mathrax board generated at a difficulty above the easiest SHALL NOT be soluble at
-the tier below it. The generator SHALL retry until a candidate needs its tier,
-and that loop SHALL be bounded.
+What a board dealt at a tier promises SHALL be the collection's
+(`engine-difficulty`, "Every tier promises one solution found at its cap" and
+"A difficulty tier binds the board it generates"), the `Unreasonable` tier
+included and with no departure. The generator SHALL NOT take an ambiguous
+solver verdict as grounds to keep removing.
 
 #### Scenario: A Tricky board genuinely needs the Tricky tier
 
 - **WHEN** a board generated at Tricky is solved at Normal
 - **THEN** the solver does not reach a unique solution
 - **AND** solving the same board at Tricky does
+
+#### Scenario: Even the guess-and-verify tier yields a unique solution
+
+- **WHEN** a board is generated at the `Unreasonable` difficulty
+- **THEN** it has exactly one solution, and it cannot be solved without the
+  guess-and-verify step
 
 ### Requirement: Generation: What separates Mathrax's difficulty tiers
 
@@ -267,27 +253,14 @@ guessing and verifying.
 - **THEN** the returned grid is the board's unique Latin-square solution and satisfies
   every clue
 
-### Requirement: Generation: A Mathrax board has one solution at every difficulty
+### Requirement: Controls: Mathrax enters digits through the shared note-taking cell
 
-Uniqueness SHALL be required at *every* difficulty, including the
-guess-and-verify `Unreasonable` tier, because a board with no unique answer
-cannot be mistake-checked. The generator SHALL NOT take an ambiguous solver
-verdict as grounds to keep removing.
-
-#### Scenario: Even the guess-and-verify tier yields a unique solution
-
-- **WHEN** a board is generated at the `Unreasonable` difficulty
-- **THEN** it has exactly one solution, and it cannot be solved without the
-  guess-and-verify step
-
-### Requirement: Controls: Mathrax input and keypad
-
-Mathrax SHALL be played with the Solo-style control scheme: a cell is selected
-by left-click or cursor, for ink outside pencil mode and for pencil marks in
-it; digit keys enter a value or toggle a pencil mark; and backspace, space or
-zero clear. In pencil mode no key SHALL change a cell that holds a digit.
-Immutable given cells SHALL NOT be editable. The on-screen keypad SHALL offer
-the digits 1 to the grid size and a clear key.
+Mathrax SHALL take its selection from the engine's note-taking cell
+(`engine-notes`, "The note-taking cell is one shared mechanic"). With a cell
+selected, a digit key SHALL enter that digit, or in pencil mode toggle its
+pencil mark, and backspace, space or zero SHALL clear the cell. In pencil mode
+no key SHALL change a cell that holds a digit. Immutable given cells SHALL NOT
+be editable.
 
 #### Scenario: A digit is entered into a selected cell
 
@@ -305,12 +278,10 @@ the digits 1 to the grid size and a clear key.
   Backspace is pressed
 - **THEN** no move is made and the digit stays
 
-### Requirement: Preferences: Mathrax offers the sticky pencil and auto-pencil preferences
+### Requirement: Preferences: Auto-pencil strikes a placed digit from its row and column
 
-Mathrax SHALL offer the collection's sticky pencil preference and its
-auto-pencil preference. When auto-pencil is on a placement SHALL remove its
-digit from the pencil marks of the rest of its row and column, both on the
-board and in the hint's plan.
+When auto-pencil is on a placement SHALL remove its digit from the pencil
+marks of the rest of its row and column.
 
 #### Scenario: A placement clears its digit from its row and column
 
@@ -321,7 +292,9 @@ board and in the hint's plan.
 ### Requirement: Hint: Mathrax's hint plan is the shared candidate-elimination walk
 
 The plan SHALL be built by the shared candidate-elimination walk over Mathrax's
-row and column regions; a clue is not a region. Mathrax SHALL start on the
+row and column regions (`engine-candidate-hints`, "A row/column Latin square
+answers no question its regions already settle"); a clue is not a region.
+Mathrax SHALL start on the
 reading that pencils in only the notes a deduction needs, because a clue reads
 the cell across it and the rest is singles, so a plan writes notes into few
 cells.
@@ -330,16 +303,6 @@ cells.
 
 - **WHEN** a hint is requested with no `Ui` on a board with no notes
 - **THEN** no step of the plan is `pencilAll`
-
-### Requirement: Hint: The recording solve stops below the guess-and-verify tier
-
-The recording solve SHALL be capped below the guess-and-verify tier, because a
-guess is not a teachable note strike.
-
-#### Scenario: A board at the top tier is hinted by deduction alone
-
-- **WHEN** a hint is requested on a board generated at `Unreasonable`
-- **THEN** the recording solve runs no higher than Tricky
 
 ### Requirement: Hint: A recorded clue elimination names one clue acting on one cell
 
@@ -417,6 +380,11 @@ tier does not.
 - **THEN** the recording solve runs at Easy, so no step is a set elimination
   or a chain, and an arithmetic clue is read only where one digit is left
   across it
+
+#### Scenario: A board at the top tier is hinted by deduction alone
+
+- **WHEN** a hint is requested on a board generated at `Unreasonable`
+- **THEN** the recording solve runs no higher than Tricky
 
 ### Requirement: Look: Mathrax draws its cells on a quiet surface and lifts a given
 

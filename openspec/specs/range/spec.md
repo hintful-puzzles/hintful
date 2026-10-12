@@ -4,10 +4,11 @@
 Range (Kurodoko), the puzzle of shading squares so that no two shaded
 squares touch, the squares left clear stay connected, and each number counts
 the clear squares it sees in four directions, itself included. This spec
-holds the puzzle's rules, its params and description encodings, what its
-generator promises, its controls, its live error highlighting and mistake
-check, its explained deduction hint with the marks it draws, and how the
-board looks.
+holds the puzzle's rules, what its params refuse and what a short params
+string means, its description encoding, what its generator promises, its
+three rules and what its search assumes, what its two verbs and a shifted
+arrow do, its live error highlighting and mistake check, its explained
+deduction hint, and how the board looks.
 
 ## Requirements
 
@@ -28,14 +29,13 @@ while `findErrors` finds no error on it.
 #### Scenario: Completing the board is detected
 
 - **WHEN** a move paints the final black square of the unique solution
-- **THEN** `findErrors` reports no error, `status` returns `"solved"`, and a
-  flash plays
+- **THEN** `findErrors` reports no error and `status` returns `"solved"`
 
 ### Requirement: Rules: Range's move is a list of cell-sets
 
 A `RangeMove` SHALL be a list of cell-sets, each painting a cell black, white
-or empty, plus an optional solve flag. `executeMove` SHALL be pure and SHALL
-throw on an out-of-bounds or clue-cell target.
+or empty, plus an optional solve flag. `executeMove` SHALL throw on an
+out-of-bounds or clue-cell target.
 
 #### Scenario: A move onto a clue throws
 
@@ -57,12 +57,11 @@ its number, or a white cell cut off from the main white component.
 
 ### Requirement: Rules: Range checks mistakes against the solution
 
-`findMistakes` SHALL take the board's one answer from the search that counts
-its answers, at either difficulty, and return every player-marked non-clue
-cell whose mark contradicts it: black where the solution is white, or marked
-white where the solution is black. It SHALL return none when the marks are
-consistent or undecided, and none where the search did not prove exactly one
-answer.
+`findMistakes` SHALL return every player-marked non-clue cell whose mark
+contradicts the board's one answer: black where the solution is white, or
+marked white where the solution is black. It SHALL return none when the marks
+are consistent or undecided, and none where the game's search did not prove
+exactly one answer.
 
 #### Scenario: findMistakes flags a wrong black
 
@@ -71,19 +70,18 @@ answer.
 - **THEN** `findMistakes` returns that cell
 - **AND** a board whose marks all agree with the solution returns no mistakes
 
-### Requirement: Params: Range params are a width and a height
+### Requirement: Params: A Range params string may leave out its height and its difficulty
 
-Params SHALL be `w`, `h` and the difficulty, encoded `{w}x{h}d{e|u}`: the
-difficulty, Easy as `de` or Unreasonable as `du`, only in the full encoding.
-A bare number SHALL decode as a square board of that size, and an ID with no
-difficulty letter SHALL decode as Easy.
+Range's params, a size and a difficulty, SHALL be bounded and encoded as its
+`paramConfig` and its declared codec give (`engine-params`, "A game declares
+its params encoding once, and both codec halves are derived"), and its menu
+SHALL be what `presets` builds. A bare number SHALL decode as a square board
+of that size, and an ID with no difficulty letter SHALL decode as Easy.
 
-#### Scenario: Params round-trip
+#### Scenario: A string that leaves a field out
 
-- **WHEN** params `{ w: 13, h: 9 }` at Easy are encoded
-- **THEN** the full encoding is `13x9de` and the shared one `13x9`
-- **AND** decoding `13x9`, written before the game had tiers, yields the same
-  params
+- **WHEN** `13x9`, written before the game had tiers, is decoded
+- **THEN** it yields the params `{ w: 13, h: 9 }` at Easy
 - **AND** decoding the bare `12` yields a 12×12 board
 
 ### Requirement: Params: Range params are refused outside their bounds
@@ -130,16 +128,6 @@ symmetric clues, so the generator gives up on it.
 - **AND** the same walk over a 2×3 board finds some that do, and over a 3×3
   board 176, none with symmetric clues
 
-### Requirement: Params: Range's menu offers each size at both difficulties
-
-Range's presets SHALL offer each of 6×9, 8×12, 9×13 and 11×16 as Easy and as
-Unreasonable, and the default SHALL be the Easy 6×9.
-
-#### Scenario: Every size is offered at both difficulties
-
-- **WHEN** Range's preset menu is read
-- **THEN** its four sizes each appear as Easy and then as Unreasonable
-
 ### Requirement: Description: Range descriptions are run-length clue grids
 
 The desc SHALL encode the board in scan order: the decimal digits of each
@@ -185,13 +173,11 @@ least two squares each way it SHALL contain at least one black square.
   solver cannot finish without search
 - **THEN** both clues are restored and the next pair is tried
 
-### Requirement: Generation: An Unreasonable Range board has one answer that the rules do not reach
+### Requirement: Generation: An Unreasonable Range board is an Easy one stripped further, a symmetric pair at a time
 
 At Unreasonable the generator SHALL strip an Easy board further: each
 symmetric pair of clues still showing SHALL go while the search still proves
-one answer within a budget of its own, well under the search's. It SHALL keep
-the board only when the three rules then stop short, and its clues SHALL stay
-two-way rotationally symmetric.
+one answer, so its clues SHALL stay two-way rotationally symmetric.
 
 #### Scenario: A dealt Unreasonable board needs search and has one answer
 
@@ -206,26 +192,16 @@ two-way rotationally symmetric.
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Generation: A pasted Range board opens at the difficulty it needs
+### Requirement: Generation: A Range board is Easy where the three rules finish it
 
-A board that arrives as a game ID SHALL open as Easy where the three rules
-finish it, and as Unreasonable where it has exactly one answer that they do
-not reach, whatever lower difficulty its ID states. A board with several
-answers SHALL be refused as having more than one solution, and a board with
-none as one whose clues contradict each other.
+A board SHALL count as Easy where the three rules finish it, and as
+Unreasonable where it has exactly one answer that they do not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
 - **WHEN** a 4×4 ID whose board has one answer the rules do not reach is
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `4x4du`
-
-#### Scenario: A board with several answers or none is refused
-
-- **WHEN** the description `c6h3_6b` of a 4×4 board, which has three answers,
-  and one with a 7 in one corner and a 1 in the opposite one, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
 
 ### Requirement: Solver: Range's deduction applies three rules to a fixpoint
 
@@ -256,12 +232,10 @@ dealt or pasted, however long a path its white squares form.
 - **WHEN** the solver runs on a 64×64 grid with no clue and nothing decided
 - **THEN** it returns having set no cell
 
-### Requirement: Solver: Range's Solve searches where deduction stalls
+### Requirement: Solver: Range's Solve is one move that sets every non-clue cell
 
-`solve` SHALL take the board's answer from the search that counts its
-answers, at either difficulty. It SHALL return one move, carrying the solve
-flag, that sets every non-clue cell, or an error when the clues admit no
-completion or more than one.
+`solve` SHALL return one move, carrying the solve flag, that sets every
+non-clue cell as the board's one answer has it.
 
 #### Scenario: Solve completes a generated board
 
@@ -269,13 +243,10 @@ completion or more than one.
 - **THEN** it returns a move whose cell-sets paint every undecided cell, after
   which `status` returns `"solved"` and `findErrors` reports no error
 
-### Requirement: Solver: Range counts a board's answers by a bounded search
+### Requirement: Solver: Range's search assumes the first undecided cell shaded, and then clear
 
-The game SHALL count a board's answers up to two by trial and error over the
-three rules: where they stop, it SHALL take the first undecided cell and
-assume it shaded, and then clear. It SHALL report one answer, several, none,
-or that it stopped at its budget, which SHALL be counted in positions and
-never in time.
+Where the three rules stop, Range's search SHALL take the first undecided cell
+and assume it shaded, and then clear.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -284,16 +255,6 @@ never in time.
   in one corner and a 1 in the opposite one
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given eight positions on a board that needs nine
-- **THEN** it reports that it stopped, and with nine it reports one answer
-
-#### Scenario: An Easy board takes one position
-
-- **WHEN** the search is given one position on a dealt Easy board
-- **THEN** it reports one answer
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -336,17 +297,11 @@ white cells they already hold.
   the solver runs
 - **THEN** it decides every cell as the answer has it, whichever cell it was
 
-#### Scenario: A hint asked after a right entry
+### Requirement: Controls: Range's two verbs cycle a cell's three states in opposite directions
 
-- **WHEN** a player marks a cell as the answer has it on an Easy board and
-  asks for hints until none is left
-- **THEN** the board is solved and no hint was refused
-
-### Requirement: Controls: Range marks cells via three-state cycling moves
-
-Left-button or select on a non-clue cell SHALL cycle empty → black → white →
-empty, and right-button or select2 SHALL cycle empty → white → black → empty.
-A clue cell SHALL be inert.
+The primary verb of Range's `targetVerbs` SHALL cycle a non-clue cell empty →
+black → white → empty and the secondary empty → white → black → empty, and a
+clue cell SHALL be inert.
 
 #### Scenario: Left and right cycle in opposite directions
 
@@ -363,40 +318,14 @@ A clue cell SHALL be inert.
 
 ### Requirement: Controls: Range's keyboard cursor marks white with shift
 
-A keyboard cursor SHALL move within the grid, and shift with a cursor
-direction SHALL mark the vacated and/or entered empty cells white.
+Shift with a cursor direction SHALL mark the vacated and/or entered empty
+cells white.
 
 #### Scenario: A shifted step crosses both empty cells
 
 - **WHEN** the visible cursor sits on an empty cell and shift with a direction
   moves it onto another empty cell
 - **THEN** one move marks both cells white
-
-### Requirement: Hint: Range provides an explained deduction hint
-
-The `range` game SHALL implement `hint(state)` returning a plan-carrying,
-narrated hint that explains why each move is forced. It SHALL deduce, from the
-player's current marks, the ordered sequence of cells the three rules force
-without search, and return one narrated `HintStep` per forced cell.
-
-#### Scenario: Hint explains the next forced move
-
-- **WHEN** `hint` is called on an unsolved, mistake-free generated board
-- **THEN** it returns `{ ok: true }` with a non-empty list of steps
-- **AND** the first step's move is a legal `executeMove` whose narration names
-  the deduction (adjacency / clue / connectedness) that forces its cell
-- **AND** applying every step's move in order solves the board
-
-### Requirement: Hint: A Range hint is refused only when the rules force no cell
-
-`hint` itself SHALL refuse only when the three rules force no cell from the
-player's marks, and then with the engine's deduction-exhausted refusal.
-
-#### Scenario: Deduction that forces nothing is refused
-
-- **WHEN** `hint` is asked about an unsolved, mistake-free board on which none
-  of the three rules forces a cell
-- **THEN** it returns the engine's deduction-exhausted refusal and no steps
 
 ### Requirement: Hint: A Range hint step states the deduction that forces its cell
 
@@ -415,8 +344,7 @@ white cells connected).
 
 ### Requirement: Hint: Range's hintKeepTrack follows the hinted cell and value
 
-The game SHALL implement `hintKeepTrack` so the plan advances as the player
-follows it. It SHALL report `"completed"` when the player's move sets the
+`hintKeepTrack` SHALL report `"completed"` when the player's move sets the
 hinted cell to the hinted value and `"off"` otherwise.
 
 #### Scenario: Following the hint advances the plan
@@ -454,13 +382,11 @@ follows the plan. It SHALL never include the target cell itself.
 - **THEN** the later step's outlined line of sight includes the cell the
   earlier step whitened
 
-### Requirement: Hint: Range hint color legend
+### Requirement: Hint: A shaded premise of a Range hint takes a color of its own
 
-When a Range hint is displayed, `redraw` SHALL distinguish the element types
-the deduction names using a stable legend of marks, none of them a fill that
-hides a cell's content. The legend SHALL be consistent across deductions.
-Which cell takes which mark SHALL be read from the step's words, so the
-sentence and the picture name the same cells.
+The doubled outline of a cited shaded square, the adjacent one in an
+`adjacency` deduction, SHALL be drawn in `COL_HINT_SHADEDREF`, not `COL_HINT`,
+so a shaded premise and the forced cell are not drawn in the same color.
 
 #### Scenario: A cited black square rings distinct from the forced cell
 
@@ -469,37 +395,6 @@ sentence and the picture name the same cells.
 - **THEN** the cited shaded premise takes a doubled outline in
   `COL_HINT_SHADEDREF` and the forced cell is ringed `COL_HINT`, in different
   colors
-
-### Requirement: Hint: The forced cell and its premises take different marks
-
-The forced cell (the move) SHALL be ringed `COL_HINT` at its edge, the same
-whether the step shades it or marks it not shaded, with no preview of the
-forced mark, which the narration says. Premise cells that hold no shaded
-piece (a clue's line of sight, the cells a cut would disconnect) SHALL be
-outlined `COL_HINT_CELL`.
-
-#### Scenario: Premises that are not shaded are outlined
-
-- **WHEN** a `satisfied`, `overrun`, `reach`, or `connect` hint cites the cells
-  a clue sees or the cells a cut would disconnect
-- **THEN** those premise cells are outlined `COL_HINT_CELL`, distinct from
-  both the target and any cited shaded square
-
-### Requirement: Hint: A shaded premise, a run and a clue each take their own mark
-
-A cited shaded square premise (the adjacent one in an `adjacency` deduction)
-SHALL keep its shaded piece and take a doubled outline in
-`COL_HINT_SHADEDREF`, not `COL_HINT`, so a shaded premise and the forced cell
-are not drawn in the same color. The run a `reach` deduction names, from the
-clue up to the target, SHALL be striped in `COL_HINT`. The clue a deduction
-counts from SHALL have its number drawn in `COL_HINT`.
-
-#### Scenario: A reach step stripes the run short of its target
-
-- **WHEN** a `reach` hint is displayed
-- **THEN** the cells from the clue up to, and not including, the forced cell
-  are striped `COL_HINT`
-- **AND** the clue's number is drawn in `COL_HINT`
 
 ### Requirement: Hint: Range's hint stops where its rules do
 
@@ -519,7 +414,8 @@ deduction has run out. It SHALL go on from the cells the player then fills.
 
 ### Requirement: Hint: Range's hint takes the clue rule first in each pass
 
-The hint's plan SHALL list the forced cells in the order the rules force them.
+The hint's plan SHALL list the forced cells in the order the rules force
+them, one narrated step for each cell.
 Each pass SHALL take every clue in turn (a clue that sees its count, else a
 cell that would overrun it, then a cell it cannot reach its count without),
 then the adjacency rule, then the connectedness rule, and passes SHALL repeat
@@ -553,8 +449,7 @@ cell SHALL be the plain cell surface, so no state is told by a step of gray.
 ### Requirement: Look: A Range clue sits on the lifted surface of a given
 
 A clue cell SHALL sit on the lifted surface of a given, with its number in
-ink. The line between cells and the frame round the grid SHALL be the
-surface's grid line.
+ink.
 
 #### Scenario: A clue is told by the cell under it
 

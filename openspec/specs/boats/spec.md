@@ -27,27 +27,14 @@ The game SHALL flag provably wrong placements live: a row or column whose
 occupancy count is exceeded, two boats touching even diagonally, a boat of a
 size the fleet cannot accommodate, and a placed segment that contradicts a
 given clue. A line whose count is broken SHALL have its number drawn in the
-error color.
+error color. On a board the puzzle's solver completes, a board the live flags
+mark SHALL be a board on which `findMistakes` reports a cell.
 
 #### Scenario: A row whose count is exceeded is flagged
 
 - **WHEN** more boat segments are placed in a row than its occupancy clue allows
 - **THEN** the row's count is shown in the error color, and `findMistakes`
   reports at least one of the row's cells
-
-### Requirement: Rules: Boats findMistakes re-solves to the unique solution
-
-The `findMistakes` hook SHALL re-solve the puzzle to its unique solution and
-report every placed cell that contradicts it, so that Check & Save also blocks
-a locally legal placement that no solution permits. On a board the puzzle's
-solver completes, a board the live flags mark SHALL be a board on which
-`findMistakes` reports a cell.
-
-#### Scenario: A legal placement no solution permits is reported
-
-- **WHEN** a boat segment is placed that exceeds no count and touches no boat,
-  on a square the unique solution has as water
-- **THEN** `findMistakes` reports that square
 
 ### Requirement: Rules: Boats is solved when the fleet is placed, without the water
 
@@ -62,28 +49,13 @@ as water.
 - **THEN** the game is reported solved, even if squares the player never marked
   as water remain undecided
 
-### Requirement: Params: Boats parameters are a board, a fleet, a difficulty and a remove-numbers flag
-
-Parameters SHALL be a width, a height, a maximum fleet (boat) size, a fleet
-configuration (how many boats of each size), a difficulty of Easy, Normal,
-Tricky or Hard, and a remove-numbers flag. The full parameter encoding of a
-game ID SHALL carry the width, height, fleet size, difficulty, remove-numbers
-flag and fleet configuration, and SHALL round-trip through decode.
-
-#### Scenario: A game ID round-trips through the parameters
-
-- **WHEN** a parameter set is encoded in full to a game ID and decoded
-- **THEN** the same width, height, fleet size, difficulty, remove-numbers flag and
-  fleet configuration are recovered
-
 ### Requirement: Params: Boats refuses parameters no fleet can be dealt from
 
-Parameters SHALL be refused unless width and height are each at least 2 and at
-most 99, the fleet size is between 1 and 9 and no greater than the larger of
-width and height, the fleet holds at least one boat, and the fleet fits in the
-grid. When a board is to be generated, a fleet of exactly one boat SHALL be
-refused at any difficulty above Easy, with a reason, since such a fleet has
-only Easy boards.
+`validateParams` SHALL refuse a fleet size greater than both the width and the
+height, a fleet with no boat, and a fleet that does not fit in the grid. When
+a board is to be generated, a fleet of exactly one boat SHALL be refused at
+any difficulty above Easy, with a reason, since such a fleet has only Easy
+boards.
 
 #### Scenario: A fleet size larger than both dimensions is refused
 
@@ -112,17 +84,6 @@ two of the next, and so on down), and a count the list lacks as none.
 - **THEN** it is a 6×6 Hard board with numbers removed, whose fleet is three
   one-square boats, two of two squares and one of three
 - **AND** its shared encoding is `6x6f3,3,2,1`
-
-### Requirement: Params: A Boats label gives the largest boat as its size
-
-A board's label SHALL say "size N" for a fleet whose largest boat is N
-squares, then "fleet" and the counts when the fleet is not the pyramid of
-that size, then "hidden clues" when numbers are removed.
-
-#### Scenario: A Hard board with numbers removed
-
-- **WHEN** `6x6f3dhS,3,2,1` is labeled
-- **THEN** the label is "6x6 Hard, size 3, hidden clues"
 
 ### Requirement: Description: Boats descriptions use the border-clue and run-length grid encoding
 
@@ -236,11 +197,11 @@ Boats satisfies the guess-free-generation policy at every named difficulty.
 - **THEN** the returned tier equals the hardest technique tier the deduction
   needed, and the completed grid is the unique solution
 
-### Requirement: Solver: The Boats solver is monotone in its difficulty cap
+### Requirement: Solver: Boats' Solve and mistake check solve once, at the highest cap
 
-The solver SHALL be monotone in its difficulty cap, as every capped solver is.
 A consumer that solves a board of unknown difficulty, which Solve and the
-mistake check are, SHALL solve once at the highest cap.
+mistake check are, SHALL solve once at the highest cap, which a solver
+monotone in its cap allows.
 
 #### Scenario: A board that solves at the easiest cap solves at every cap
 
@@ -248,13 +209,14 @@ mistake check are, SHALL solve once at the highest cap.
   solves at the easiest cap
 - **THEN** it solves at every cap above it
 
-### Requirement: Controls: Boats is played by pointer and by keyboard
+### Requirement: Controls: Boats declares its two verbs and its erase key, and adds a drag and a modifier stroke
 
-Boats SHALL be played by mouse or touch and by keyboard. A left-click SHALL
-cycle a cell between empty, a boat segment and water; a right-click SHALL place
-water on an empty cell and empty a filled one; a drag SHALL fill a run along a
-single row or column; and a keyboard cursor with a place-segment key, a
-place-water key and modifier-drag SHALL provide the same placements.
+Boats' buttons and keys SHALL be those its `targetVerbs` declares, a verb that
+cycles a square through boat segment and water, one that places water, and a
+key that empties (`engine-input`, "The engine owns a declaring game's press
+and select keys"). `interpretMove` SHALL add two arms of its own, which this
+subject's other requirements state: a drag that fills a run along a single
+row or column, and an arrow held with Ctrl or Shift.
 
 #### Scenario: Filling a run of cells along a row
 
@@ -277,13 +239,12 @@ beside it.
   that holds an empty square and another placed segment
 - **THEN** on release each of those squares is water
 
-### Requirement: Controls: Boats' modifier arrows fill as the cursor moves, and Backspace empties
+### Requirement: Controls: Boats' modifier arrows fill as the cursor moves
 
 Ctrl with an arrow SHALL move the keyboard cursor and place boat segments on
 the empty squares among the one it leaves and the one it enters, Shift with
 an arrow water on the empty ones, and both together SHALL empty each of the
-two that is no given. Backspace or Delete SHALL empty the square under the
-cursor.
+two that is no given.
 
 #### Scenario: Ctrl fills only what is empty
 
@@ -291,25 +252,6 @@ cursor.
   and the player presses Ctrl with Right
 - **THEN** the first square holds a boat segment and the water is left as it
   was
-
-### Requirement: Hint: The Boats hint replays the solver's deductions one firing at a time
-
-The hint SHALL be derived from the same deduction engine as the solver,
-replayed one firing at a time from the player's current board, and SHALL
-narrate each firing by the deduction that forces it.
-
-#### Scenario: A hint names the technique that forces the move
-
-- **WHEN** a hint is requested on a board where a row already shows all the ships
-  its number allows
-- **THEN** the remaining squares in that row are offered as water, and the
-  explanation states that the row's number is already met
-
-#### Scenario: A hint resumes from the player's board
-
-- **WHEN** a hint is requested on a board the player has partly filled
-- **THEN** the plan starts from that board, and every square its first step
-  asks for is one the player has left undecided
 
 ### Requirement: Hint: The Boats hint replays at the lowest cap that solves the board
 
@@ -337,10 +279,8 @@ technique, so the hint SHALL ask them again before it tries a harder one.
 - **THEN** the hint offers that square, and does not report that deduction has
   run out
 
-### Requirement: Hint: Every Boats technique is narrated
+### Requirement: Hint: A Boats refutation names the rule the other placement would break
 
-Every named technique SHALL be narratable. Boats guesses at no tier, so the
-hint SHALL NOT fall back on an unexplained "this is the only possibility" step.
 A step forced only because the opposite placement contradicts the board SHALL
 name the rule that placement would break. Where the board's check rejects the
 placement without naming a rule, the step SHALL say that the rest of the fleet
@@ -375,10 +315,9 @@ part of that step and SHALL NOT be narrated as further deductions.
 
 ### Requirement: Hint: A Boats hint marks a boat and water each in its own shape
 
-Forced squares and the evidence they are deduced from SHALL be visually
-distinct, and the two kinds of placement Boats admits, a boat segment and
-water, SHALL be marked in the shape of the action each represents, so that one
-hint color cannot stand for two different actions.
+The two kinds of placement Boats admits, a boat segment and water, SHALL each
+be marked in the shape of the action it represents, so that one hint color
+cannot stand for two different actions.
 
 #### Scenario: A step that places both kinds marks each differently
 
@@ -396,8 +335,7 @@ into is a boat segment and the square behind it water; that the four squares
 beside a given one-square boat are water; that the squares diagonally beside
 any segment are water; and that a given middle segment with water or the
 board's edge on one side has boat segments on the two squares along its other
-axis. Each such step SHALL outline the segment and ring the squares it
-decides.
+axis.
 
 #### Scenario: A given top end
 
@@ -412,8 +350,8 @@ squares it still needs, the hint SHALL make them all boat segments, and for
 one that already has its number, all its free squares water. While a number
 is still hidden, when the water marked and the fleet's squares together
 account for the whole grid, it SHALL make every free square a boat segment.
-A line step SHALL stripe its line, and SHALL say of a number the puzzle
-hides what that "hidden number can only be".
+A line step SHALL say of a number the puzzle hides what that "hidden number
+can only be".
 
 #### Scenario: A line numbered 0
 
@@ -575,10 +513,9 @@ alone gives.
 
 ### Requirement: Look: Boats draws its squares on the collection's quiet surface
 
-`redraw` SHALL draw an undecided square as the collection's cell surface, with
-the collection's surface grid line between squares and round the grid. A square
-the player has decided, water or segment, and a water square the puzzle gave
-SHALL keep the water fill, and given water SHALL keep its waves.
+`redraw` SHALL draw an undecided square as the collection's cell surface. A
+square the player has decided, water or segment, and a water square the puzzle
+gave SHALL keep the water fill, and given water SHALL keep its waves.
 
 #### Scenario: Undecided is surface and water is blue
 

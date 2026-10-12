@@ -37,17 +37,15 @@ value.
 
 ### Requirement: Rules: Dominosa flags a domino the unique solution lacks
 
-The game SHALL implement `findMistakes`, since a generated Dominosa board is
-uniquely solvable: re-solve to the unique solution and return both cells of
-every player-placed domino the solution does not contain. A board that is not
-uniquely solvable SHALL yield no mistakes, and blank squares and barrier edges
-SHALL never be flagged.
+`findMistakes` SHALL re-solve the board to its unique solution and return both
+cells of every player-placed domino the solution does not contain. A board
+that is not uniquely solvable SHALL yield no mistakes, and blank squares and
+barrier edges SHALL never be flagged.
 
 #### Scenario: A wrong placement is flagged
 
 - **WHEN** the player places a domino that the unique solution does not contain
-- **THEN** `findMistakes` includes both its cells and Check & Save refuses to
-  save
+- **THEN** `findMistakes` includes both its cells
 
 ### Requirement: Params: Dominosa params are the highest number, a tier and the tall flag
 
@@ -99,15 +97,9 @@ default tier stands.
 
 ### Requirement: Params: Dominosa refuses params outside its bounds
 
-Params with `n` below 1 SHALL be refused. `validateParams` SHALL enforce the
-bound on `n` that keeps the grid's area from overflowing, and SHALL refuse in
-full form a tier above Easy at `n = 1` and a tier above Normal at `n = 2`,
-which no board of that size reaches.
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** params with `n = 0` are checked
-- **THEN** they are refused with a non-null error string
+`validateParams` SHALL enforce the bound on `n` that keeps the grid's area
+from overflowing, and SHALL refuse in full form a tier above Easy at `n = 1`
+and a tier above Normal at `n = 2`, which no board of that size reaches.
 
 #### Scenario: A tier the smallest set cannot reach is refused
 
@@ -175,11 +167,9 @@ follow parity-linked chains of forced placements.
 
 ### Requirement: Controls: Dominosa input places dominoes and barrier edges
 
-A left-click or `CURSOR_SELECT` between two adjacent clue numbers SHALL toggle a
-domino covering them, erasing any dominoes or barrier edges that overlap the new
-placement. A right-click or `CURSOR_SELECT2` between two adjacent *empty*
-squares SHALL toggle a barrier edge, an annotation that never affects the win
-condition and is forbidden next to any placed domino.
+Placing a domino SHALL erase any dominoes or barrier edges that overlap it. A
+barrier edge SHALL be an annotation that never affects the win condition, and
+SHALL be refused next to any placed domino.
 
 #### Scenario: Placing a domino erases an overlapping one
 
@@ -216,8 +206,8 @@ Cursor keys SHALL move a half-grid keyboard cursor over the
 
 ### Requirement: Controls: Dominosa provides a domino reference with pair-occurrence highlight
 
-Dominosa SHALL implement the engine reference-aid hooks so the app shows a
-domino reference: a checklist of exactly one item for each of the game's
+Dominosa's `reference` SHALL be a domino reference: a checklist of exactly one
+item for each of the game's
 `DCOUNT(n)` distinct number-pairs (`0-0 … n-n`), each carrying its two face
 values as `pips`, an `"a–b"` `label` and its found status, with a
 click-to-highlight of a pair's candidate placements. The model's `selected`
@@ -272,12 +262,10 @@ would otherwise do nothing SHALL repaint, so the cleared spotlight disappears.
 - **AND** a tap that resolves to no move still clears the spotlight and
   repaints
 
-### Requirement: Hint: Dominosa provides an explained deductive hint
+### Requirement: Hint: Dominosa's hint is seeded from the placed dominoes
 
-The `dominosa` game SHALL implement `Game.hint(state)`, returning a narrated
-plan computed from the player's current board by running the deductive solver
-one firing at a time, seeded from the placed dominoes. Each step SHALL carry a
-forced move and an explanation of *why* it is forced.
+The hint's plan SHALL be computed by running the deductive solver one firing
+at a time, seeded from the placed dominoes.
 
 #### Scenario: The plan solves the board from any mid-game position
 
@@ -312,11 +300,10 @@ set analysis.
 - **THEN** the step's move draws the barrier edge on that spot and its
   explanation says that dominoes cannot fill such regions
 
-### Requirement: Hint: Barriers ruled out by one firing form one journey
+### Requirement: Hint: A barrier the player has already drawn is not shown again
 
-Barriers ruled out by one firing SHALL group into one `continuesPrevious`
-journey, and a barrier the player has already drawn SHALL be skipped for
-display while still advancing the deduction.
+A barrier the player has already drawn SHALL be skipped for display while
+still advancing the deduction.
 
 #### Scenario: A barrier already drawn is not shown again
 
@@ -335,17 +322,6 @@ solvable, which has no forced deduction to teach.
 - **WHEN** a hint is requested on a board whose clue grid has more than one
   solution
 - **THEN** `hint()` returns a refusal and no step
-
-### Requirement: Hint: Dominosa renders the hint distinctly
-
-The renderer SHALL draw the current hint step's forced cells (a placement's two
-squares, or a barrier's two squares and its edge) in `COL_HINT`, and the
-deduction's evidence squares in `COL_HINT_CELL`.
-
-#### Scenario: A placement hint highlights the target domino cells
-
-- **WHEN** a placement hint step is displayed
-- **THEN** the two cells of the forced domino render in `COL_HINT`
 
 ### Requirement: Hint: The forcing chain grades boards and is never narrated
 
@@ -508,9 +484,7 @@ coexist with the number-highlight aid as an independent visual channel.
 The renderer SHALL draw the rounded-corner domino ends, the clue numbers, the barrier edge lines, the two value-highlight
 colors, the red clash fill, the half-grid cursor corners, and the completion
 flash, with the board's border set to minus the domino gutter, so the gutters
-bleed to the canvas edge. Every per-square overlay (domino type / clash /
-highlight / edge / cursor / flash / mistake / hint / reference spotlight) SHALL
-be part of the render diff key so it repaints and clears correctly.
+bleed to the canvas edge.
 
 #### Scenario: A clash renders red
 

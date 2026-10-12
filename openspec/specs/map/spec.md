@@ -13,16 +13,9 @@ decisions about how the map is drawn.
 ### Requirement: Rules: Map reports completion and mistakes
 
 The board SHALL be completed when every region is colored and no two adjacent
-regions share a color. Because boards are uniquely solvable, the game SHALL
-implement `findMistakes`: re-solve from the immutable clues to the unique
-solution and return every region whose player-assigned color differs from it
-(a definite mistake). A non-uniquely-solvable board SHALL yield no mistakes.
-
-#### Scenario: A region colored against the unique solution is flagged
-
-- **WHEN** the player colors a region a color the unique solution does not give
-  it, and `findMistakes` is invoked
-- **THEN** that region is returned as a mistake
+regions share a color. `findMistakes` SHALL re-solve from the immutable clues
+to the unique solution and return every region whose player-assigned color
+differs from it. A non-uniquely-solvable board SHALL yield no mistakes.
 
 #### Scenario: A partially-colored but correct board has no mistakes
 
@@ -61,7 +54,8 @@ hint names a color by that word.
 
 Params SHALL be `w`, `h`, `n` (the number of regions) and `diff` (one of Easy,
 Normal, Tricky, Unreasonable), encoded `{w}x{h}n{n}` with a full-form
-`d{char}` difficulty suffix (chars `e`/`n`/`h`/`u`).
+`d{char}` difficulty suffix (chars `e`/`n`/`h`/`u`). The width, the height
+and the region count SHALL be bounded below as `paramConfig` declares.
 
 #### Scenario: Params round-trip
 
@@ -90,18 +84,6 @@ a width and height whose product overflows.
 
 - **WHEN** params with more regions than grid squares are validated
 - **THEN** a non-null error string is returned
-
-### Requirement: Params: Map's grid is at least two squares each way and holds at least five regions
-
-Map's `paramConfig` SHALL bound the width and the height at 2 or more and the
-region count `n` at 5 or more, so the engine refuses a smaller value both when
-a board is dealt and when a game ID is loaded.
-
-#### Scenario: Four regions are refused
-
-- **WHEN** the preset params `15x20n30de` are changed in one place, the region
-  count, to read `15x20n4de`
-- **THEN** they are refused with "Regions must be at least 5."
 
 ### Requirement: Params: Map refuses a tier that a map has no board at
 
@@ -209,12 +191,14 @@ additionally recurse (guess and verify).
 - **THEN** the solver does not report a unique solution
 - **AND** with the Normal cap it does
 
-### Requirement: Generation: Map's generator is gated on the solver
+### Requirement: Generation: Map's generator never removes the last clue of a color
 
-A generated board SHALL have one solution, which the solver finds at the
-requested difficulty and not at the one below it. The clues SHALL be reduced
-without ever removing the last clue of a color, so every color is on the board
-to be picked up.
+The clues of a generated board SHALL be reduced without ever removing the
+last clue of a color, so every color is on the board to be picked up. That
+the board has one solution, found at the requested difficulty and not at the
+one below, is the collection's (`engine-difficulty`, "Every tier promises one
+solution found at its cap" and "A difficulty tier binds the board it
+generates"), and Map SHALL depart from neither.
 
 #### Scenario: Generated boards are uniquely solvable at their difficulty
 
@@ -326,8 +310,9 @@ it started, SHALL select by the same rule and not by a second one.
 ### Requirement: Controls: A Map selection follows the note-taking cell's rule
 
 What a selecting gesture does to the highlight and to notes mode SHALL be the
-note-taking cell's rule, with the button the gesture used: a region may take a
-color when it is not a clue, and a mark when it is blank.
+note-taking cell's rule (`engine-notes`, "The button and the sticky preference
+decide the mode a press selects for"), with the button the gesture used: a
+region may take a color when it is not a clue, and a mark when it is blank.
 
 #### Scenario: A clue is a region that takes nothing
 
@@ -361,10 +346,10 @@ second way in and SHALL NOT replace either.
 
 ### Requirement: Controls: Map's Mark-all press is adaptive
 
-Map SHALL declare `canMarkAll` and answer the `M` key with an adaptive
-Mark-all: while some blank region has no dots, the press SHALL dot all four
-colors into every such region and change no other; once none is left, it SHALL
-remove from each blank region the dots of the colors its neighbors show.
+Map's `markAll` SHALL be the adaptive press of `engine-notes`, "Mark-all is
+adaptive in a game with an obvious-candidate rule", by a rule of its own: a
+blank region with no dots is filled with all four colors, and an obvious
+candidate is the dot of a color one of the region's neighbors shows.
 
 #### Scenario: Two presses dot each region with what its neighbors leave
 
@@ -436,11 +421,10 @@ whatever the notes mode.
   moved to a blank region and the secondary select key is pressed
 - **THEN** that region gains a dot of the color and stays blank
 
-### Requirement: Preferences: Map's preferences
+### Requirement: Preferences: The `l` key shows and hides the region numbers
 
-The two preferences number-regions and stipple display style SHALL be exposed
-through the `prefs` hook under the keywords `show-numbers` and
-`stipple-style`. The `l`/`L` key SHALL toggle region numbers in play.
+The `l`/`L` key SHALL toggle the `show-numbers` preference in play. It and
+`stipple-style` are the preferences of the game's own in its `prefs`.
 
 #### Scenario: A key shows and hides the region numbers
 
@@ -457,18 +441,6 @@ a seventh of a tile under "Small", the default, and a quarter of a tile under
 
 - **WHEN** a dotted region is drawn under "Small" and again under "Large"
 - **THEN** the dots have the same centers and colors, and the larger radius
-
-### Requirement: Hint: Map explains the next deduction
-
-`hint(state)` SHALL refuse with `DEDUCTION_EXHAUSTED` when nothing follows,
-which only an Unreasonable board allows, and otherwise SHALL return the forced
-steps from the player's own board as an ordered plan.
-
-#### Scenario: A board that needs a guess is refused
-
-- **WHEN** a hint is requested on an Unreasonable board where no deduction
-  fires
-- **THEN** `hint` refuses with `DEDUCTION_EXHAUSTED`
 
 ### Requirement: Hint: A blank region's colors are read from its dots
 
@@ -507,13 +479,22 @@ be that color.
 
 The plan SHALL offer the lowest rung that fires anywhere on the board and
 choose within it by continuing from its latest steps, so an Easy board's plan
-never shows a pair and a Normal board's never shows a chain.
+never shows a pair and a Normal board's never shows a chain. Where no rung
+fires, which only an Unreasonable board allows, the hint SHALL refuse as
+`engine-hints`, "Deduction running out on a sound board SHALL have one
+wording" says.
 
 #### Scenario: A single elsewhere comes before a pair nearby
 
 - **WHEN** a pair fires beside the last step's region and a region somewhere
   else has one color left
 - **THEN** the next step colors the region with one color left
+
+#### Scenario: A board that needs a guess is refused
+
+- **WHEN** a hint is requested on an Unreasonable board where no deduction
+  fires
+- **THEN** `hint` refuses with `DEDUCTION_EXHAUSTED`
 
 ### Requirement: Hint: A narrowing step says what it does
 
@@ -585,10 +566,10 @@ on the struck color.
 
 ### Requirement: Hint: A hint step rings the region it acts on
 
-A step SHALL ring the region it acts on with a solid band inside the region's
-boundary, in the hint's action color, and that band SHALL be the only hint mark
-on any region boundary. A region with one color left SHALL outline nothing
-else, because its neighbors' fills are its premise.
+A step's marks SHALL be the roles `hintMarks` declares. The ring's band on the
+region a step acts on SHALL be the only hint mark on any region boundary. A
+region with one color left SHALL outline nothing else, because its neighbors'
+fills are its premise.
 
 #### Scenario: A single's neighbors carry no mark
 
@@ -597,11 +578,10 @@ else, because its neighbors' fills are its premise.
 
 ### Requirement: Hint: A premise's regions are outlined apart from the ring
 
-The regions a pair or a chain rests on SHALL be outlined by a thin dashed line
-in the hint's evidence color, set in from their boundary, so that where they
-meet the target the two marks stay apart. A chain's regions SHALL be numbered
-at their label points, with the region numbers hidden while it shows. The
-selection band SHALL stay visible just inside a hint band on the same region.
+The outline of the regions a pair or a chain rests on, which the legend sets
+in from their boundary, SHALL stay apart from the ring where one of them
+meets the target. The selection band SHALL stay visible just inside a hint
+band on the same region.
 
 #### Scenario: An outlined pair beside its target
 
@@ -612,9 +592,9 @@ selection band SHALL stay visible just inside a hint band on the same region.
 ### Requirement: Hint: Map offers the player's reading of an undotted region
 
 Map SHALL offer the shared `hint-notes` preference, defaulting to `implicit`.
-Under `implicit` the hint SHALL plan as the requirements from "Map explains
-the next deduction" to "A premise's regions are outlined apart from the ring"
-state.
+Under `implicit` the hint SHALL plan as the requirements from "A blank
+region's colors are read from its dots" to "A premise's regions are outlined
+apart from the ring" state.
 
 #### Scenario: The implicit reading never fills
 
@@ -722,9 +702,8 @@ SHALL take the same surface.
 
 The completion flash SHALL sweep the map by region: the regions SHALL light in
 the order of the points their numbers are drawn at along the diagonal, one
-place apart however far apart the points are, and the whole of a lit region
-SHALL be filled with a flash color and keep its border and its number.
-The selected region's band SHALL be hidden while the flash plays.
+place apart however far apart the points are, and a region SHALL be lit
+whole. The selected region's band SHALL be hidden while the flash plays.
 
 #### Scenario: A region that spans the sweep
 

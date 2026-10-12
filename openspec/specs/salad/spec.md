@@ -16,84 +16,62 @@ Salad SHALL support both of its game modes: **ABC End View** (letters, with clue
 the grid's borders naming the first character seen looking inward) and **Number
 Ball** (numbers, with in-grid ball and cross clues).
 
-#### Scenario: Every preset produces a uniquely-solvable board
+#### Scenario: Where each mode carries its clues
 
-- **WHEN** a new game is generated for any preset or legal size, in either mode
-- **THEN** a board is produced whose clues admit exactly one completion under the
-  solver at the puzzle's difficulty
+- **WHEN** `CfABcBc,p` is opened as a `4n3L` board and `c2b1aOXbXb3c1OOc` as a
+  `5n3B` one
+- **THEN** the first has its clues on the border and none in the grid, and the
+  second has numbers, balls and crosses in the grid and no border clue
 
-### Requirement: Rules: Salad flags mistakes against the unique solution
+### Requirement: Rules: Salad checks its markers as well as its symbols and notes against the answer
 
-Salad SHALL flag mistakes on demand: given the board, `findMistakes` SHALL
-re-solve from the fixed clues and report every player entry that contradicts the
-unique solution: a wrong symbol, an empty marker where a symbol belongs, and a
-not-empty marker where an empty square belongs. It SHALL also report every empty
-cell whose pencil notes have crossed out its solution value.
+Salad's `findMistakes` SHALL be the collection's check of entries and notes
+(`ts-engine`, "A mistake check compares with the one answer, hidden or not"
+and "A candidate note that excludes the answer is a mistake"), the answer
+being the solver's from the fixed clues. A marker is an entry to it: it SHALL
+report an empty marker where a symbol belongs and a not-empty marker where an
+empty square belongs, and the note that a square might be empty is a
+candidate like any other.
 
-#### Scenario: Check flags a contradicting entry
+#### Scenario: A ball on a square that stays empty
 
-- **WHEN** the board holds a player entry that contradicts the unique solution and
-  mistakes are checked
-- **THEN** that entry is reported as a mistake and highlighted
+- **WHEN** the player marks as holding a symbol a square the answer leaves
+  empty, and mistakes are checked
+- **THEN** that square is reported, though it holds no symbol to be wrong
 
 ### Requirement: Rules: Salad is solved when every line and every border clue is satisfied
 
-The game SHALL be reported solved and SHALL flash when every line holds each
-symbol exactly once with the correct empty squares and all border clues are
-satisfied.
+The game SHALL be reported solved when every line holds each symbol exactly
+once with the correct empty squares and all border clues are satisfied.
 
 #### Scenario: Completing every line to the rules wins
 
 - **WHEN** the last entry makes every row and column hold each symbol once with the
   correct empty squares, satisfying all clues
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
-### Requirement: Params: Salad's parameters
+### Requirement: Params: Salad's Normal presets are the shapes that deal quickly
 
-Parameters SHALL be a grid size (`order`), a symbol count (`nums`), a game mode,
-and a difficulty. The bounds the params declare SHALL hold `order` to at least 3
-and `nums` to at least 2 and at most 9, and `validateParams` SHALL refuse a
-`nums` that is not less than `order`. A game ID SHALL encode the size, symbol
-count, mode and difficulty and round-trip through decode.
+Which boards the menu offers SHALL be Salad's `presets`, held to the
+collection's rule that every tier is on it (`engine-params`, "A board's tiers
+are one run of lines, and every tier is offered"). The Normal presets SHALL
+be shapes whose deal stays well under a second.
 
-#### Scenario: A game ID round-trips through the parameters
-
-- **WHEN** a parameter set is encoded to a game ID and decoded
-- **THEN** the same size, symbol count, game mode and difficulty are recovered
-
-#### Scenario: As many symbols as the size
-
-- **WHEN** parameters whose `nums` equals their `order` are validated
-- **THEN** `validateParams` refuses them
-
-### Requirement: Params: Salad's menu offers both of its difficulties
-
-Salad's presets SHALL include boards at each difficulty the game deals, so a
-player reaches Normal from the menu and every cross-game guard that deals from a
-game's presets deals a Normal Salad board. The Normal presets SHALL be shapes
-whose deal stays well under a second. Within a mode each shape's Normal preset
-SHALL follow its Easy one.
-
-#### Scenario: Normal is on the menu
+#### Scenario: A shape that is slow at Normal
 
 - **WHEN** Salad's preset menu is read
-- **THEN** it holds presets titled Normal as well as Easy, in both game modes,
-  and a shape offered at both has its Normal line straight after its Easy one
+- **THEN** the 7×7 and 8×8 boards of either mode are offered at Easy and not
+  at Normal
 
-#### Scenario: A cross-game guard deals a Normal board
+### Requirement: Params: A Salad params string is its declared codec's, and one with no mode letter is ABC End View
 
-- **WHEN** a cross-game guard takes Salad's presets one per value of every
-  field they vary
-- **THEN** difficulty is one of those fields, and a Normal board is among the
-  boards it deals
-
-### Requirement: Params: Salad params are a size, n, a symbol count and a mode letter
-
-Params SHALL encode as `{order}n{nums}`, then `L` for ABC End View or `B` for
-Number Ball, then, in the full form only, `d` and the difficulty's letter: `e`
-for Easy or `x` for Normal. A string with no mode letter SHALL decode as ABC
-End View, and one with no `d` as Easy. A `d`
-followed by any other letter SHALL be refused.
+Salad's params (a grid size, a symbol count, a game mode and a difficulty),
+their bounds and their encoding SHALL be those its `paramConfig` and its
+declared codec give (`engine-params`, "A game declares its params encoding
+once, and both codec halves are derived"), with no departure from the codec
+grammar. A string with no mode letter SHALL decode as ABC End View, and one
+with no `d` as Easy. `validateParams` SHALL refuse a symbol count that is not
+less than the grid size.
 
 #### Scenario: A Number Ball preset
 
@@ -107,19 +85,20 @@ followed by any other letter SHALL be refused.
 - **THEN** the board is 4×4 ABC End View with A to C at Easy, and its full
   encoding is `4n3Lde`
 
-#### Scenario: A letter that is no difficulty
+#### Scenario: As many symbols as the size
 
-- **WHEN** the `x` of `5n4Bdx` is changed to `z`
-- **THEN** the params are refused:
-  `The parameters 5n4Bdz have a "z" where this puzzle reads none.`
+- **WHEN** parameters whose `nums` equals their `order` are validated
+- **THEN** `validateParams` refuses them
 
 ### Requirement: Params: Salad refuses two symbols at Normal where no board has it
 
 When a board is to be dealt at Normal with two symbols, `validateParams` SHALL
 refuse an ABC End View board smaller than 8×8 and a Number Ball board up to
 4×4 with the sentence that no such puzzle is Normal, and a Number Ball board
-of 5×5, or of 8×8 and larger, with the sentence for a tier too rare to deal. A
-board that arrives with its description SHALL NOT be refused for this.
+of 5×5, or of 8×8 and larger, with the sentence for a tier too rare to deal.
+The refusal SHALL bind generation only, as the collection's does
+(`engine-difficulty`, "An unbindable tier is refused, not silently
+downgraded").
 
 #### Scenario: Two letters at Normal
 
@@ -194,37 +173,21 @@ refused.
 - **THEN** the board is refused with "This game ID has a number out of range
   for its board."
 
-### Requirement: Generation: Salad has two difficulties, both solved by deduction alone
+### Requirement: Generation: Salad has two difficulties, over the Latin deductions and its border clue's
 
-Salad's solver SHALL provide two difficulties, Easy and Normal, and both SHALL
-be solvable by pure deduction without guessing. To the shared Latin deductions
-it SHALL add one of its own, the border-clue deduction, in ABC End View mode.
-Easy SHALL be that deduction and the shared positional and numeric
-eliminations, and Normal SHALL add the shared set elimination and forcing
-chains.
-
-#### Scenario: The solver deduces the unique solution without guessing
-
-- **WHEN** a generated board is solved at its difficulty
-- **THEN** the solver reaches the unique completion using only its deductive
-  techniques, never backtracking search
-
-### Requirement: Generation: Salad's Normal tier is never soluble at Easy
-
-Every board Salad generates SHALL have exactly one solution, reached at its
-stated difficulty, and a board generated at Normal SHALL NOT be soluble at Easy.
+Salad SHALL offer two tiers. To the shared Latin deductions its solver SHALL
+add the border-clue deduction, in ABC End View mode. Easy SHALL be that
+deduction and the shared positional and numeric eliminations, and Normal
+SHALL add the shared set elimination and forcing chains. What a board dealt
+at either promises SHALL be the collection's (`engine-difficulty`, "Every
+tier promises one solution found at its cap" and "A difficulty tier binds the
+board it generates"), with no departure.
 
 #### Scenario: A Normal board genuinely needs the Normal tier
 
 - **WHEN** a board generated at Normal is solved at Easy
 - **THEN** the solver does not reach a solution
 - **AND** solving the same board at Normal does
-
-#### Scenario: A generated board is uniquely solvable at its stated tier
-
-- **WHEN** a board is generated at any tier
-- **THEN** the solver finds exactly one solution, and finds it at that tier and
-  not at the tier below
 
 ### Requirement: Solver: Salad's solver reasons about the empty square directly
 
@@ -262,18 +225,22 @@ as an on-screen keypad.
 
 ### Requirement: Controls: Salad selects a square and enters a symbol or a marker
 
-Salad SHALL be played by selecting a cell and entering a symbol, an empty
-marker, or a not-empty marker, with pencil marks available for tentative notes.
-The arrow keys SHALL move a keyboard cursor.
+Salad SHALL be played by selecting a cell, through the engine's note-taking
+cell (`engine-notes`, "The note-taking cell is one shared mechanic"), and
+entering a symbol, an empty marker, or a not-empty marker. The arrow keys
+SHALL move a keyboard cursor.
 
 #### Scenario: Entering a symbol places it in the selected cell
 
 - **WHEN** a cell is selected in ink mode and a valid symbol key is pressed
 - **THEN** that symbol is placed in the cell and the cell is no longer empty
 
-### Requirement: Controls: Salad offers a fill-all-candidates action
+### Requirement: Controls: Salad's Mark-all pencils nothing into a square marked empty
 
-A fill-all-candidates action SHALL be available.
+Salad's fill-all-candidates action SHALL be the collection's Mark-all
+(`engine-notes`, "Mark-all is adaptive in a game with an obvious-candidate
+rule"), from its `markAll` hook, with one departure: a square marked empty is
+not an empty cell to it, and takes no marks.
 
 #### Scenario: Filling in the candidates of an untouched board
 
@@ -330,19 +297,19 @@ Backspace, Delete and Space SHALL clear the square.
 - **WHEN** `-` and then `+` are typed on a selected blank square
 - **THEN** the square is marked empty, and then marked as holding a symbol
 
-### Requirement: Hint: Salad explains every hint as a pencil-note deduction
+### Requirement: Hint: Salad's hint is the candidate walk's, with steps of its own that enter a marker
 
-Salad SHALL implement the `hint` hook as a **candidate-elimination** hint: the
-plan sets and strikes pencil notes, settles a square's emptiness with an
-empty/not-empty marker, and places a symbol at the moment a square's notes
-collapse to one. Every step SHALL explain *why* its move is forced in terms of
-the board the player can see, never merely naming the move.
+Salad's hint SHALL be a plan of the shared candidate walk
+(`engine-candidate-hints`, "A shared candidate-elimination hint plan"), its
+marks those of its legend (`hintMarks`). Beside the walk's note steps and
+placements, a step of Salad's own SHALL settle a square's emptiness by
+entering an empty or a not-empty marker.
 
-#### Scenario: One deduction forcing several squares is one hint
+#### Scenario: A count that settles two squares
 
-- **WHEN** a single deduction forces changes to more than one square
-- **THEN** they are presented as one multi-leg hint journey rather than several
-  unrelated hints
+- **WHEN** one line's count settles two blank squares as empty
+- **THEN** the plan holds a step for each, whose move enters the empty marker
+  in its square and strikes or writes no pencil mark
 
 ### Requirement: Hint: Salad's hint narrates the hole and symbol synchronization in its own terms
 
@@ -381,20 +348,6 @@ many empty squares the line may still hold, the clue's own symbol is ruled out.
 - **THEN** the step explains what the clue sees and why that rules the candidate
   in or out, and highlights the clue together with the squares along the line it
   reasons about
-
-### Requirement: Hint: Salad's hint narrates the Latin deductions it inherits and needs no fallback
-
-The generic Latin deductions Salad inherits (forced singles, duplicate
-elimination, set elimination and forcing chains) SHALL be narrated too, so no
-accepted board can reach a step the hint cannot explain. Because both of Salad's
-difficulties are solvable by pure deduction, the hint SHALL never need a
-non-deductive fallback step.
-
-#### Scenario: A Normal board is walked to its end
-
-- **WHEN** the hint is followed step by step on a board dealt at Normal
-- **THEN** every step carries its reason, and the walk reaches a solved board
-  with no step that guesses
 
 ### Requirement: Hint: Salad's hint strikes a circled square's empty-square mark wherever the circle came from
 
@@ -537,8 +490,8 @@ label SHALL name the symbols in the same words.
 ### Requirement: Look: What Salad draws
 
 Rendering SHALL draw symbols, balls and crosses, pencil-mark candidate grids,
-border clues in the surrounding margin, a live highlight of rule violations, and
-a completion flash.
+border clues in the surrounding margin, and a live highlight of rule
+violations.
 
 #### Scenario: A symbol repeated in a line
 

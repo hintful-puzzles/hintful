@@ -3,10 +3,10 @@
 ## Purpose
 Magnets, the puzzle of filling each domino with a magnet or a neutral piece so
 that no two like poles are orthogonally adjacent and each row and column meets
-its clued pole counts: its description and params encodings, input that cycles
-a domino's contents and marks clues done, mistake checking against the unique
-solution, the two solver tiers, the board's look, and an explained hint whose
-sentences and marks are read off the board.
+its clued pole counts: its description encoding and what its params refuse,
+input that cycles a domino's contents and marks clues done, mistake checking
+against the unique solution, the two solver tiers, the board's look, and an
+explained hint whose sentences and marks are read off the board.
 
 ## Requirements
 
@@ -47,12 +47,12 @@ solution, SHALL never be flagged.
 - **THEN** `findMistakes` includes its cells, and the hint refuses until the
   mark is fixed
 
-### Requirement: Params: Magnets' parameters
+### Requirement: Params: A Magnets params string is its declared codec's, and a board too small for its tier is refused
 
-Params SHALL be `w`, `h`, `diff` (Easy or Normal) and `stripclues` (boolean),
-encoded `{w}x{h}` with, in the full form, a `d{e|t}` difficulty suffix and an
-`S` strip-clues suffix; a bare `{n}` SHALL decode as a square. `w` and `h`
-SHALL each be declared bounded from 2 to 61, the largest count one description
+Magnets' params and their encoding SHALL be those its `paramConfig` and its
+declared codec give (`engine-params`, "A game declares its params encoding
+once, and both codec halves are derived"), with no departure from the codec
+grammar. `w` and `h` SHALL each stop at 61, the largest count one description
 character writes. `validateParams` SHALL refuse Easy unless `w ≥ 3` or
 `h ≥ 3`, Normal unless `w ≥ 5` or `h ≥ 5`, and, of full params, Normal at
 3×6 and 6×3.
@@ -73,16 +73,6 @@ character writes. `validateParams` SHALL refuse Easy unless `w ≥ 3` or
 - **WHEN** a game ID carries a 3×6 Normal board with its description
 - **THEN** the params are accepted, and the same params are refused when a
   board is to be dealt
-
-### Requirement: Params: Every Magnets preset size is offered at each tier
-
-Each preset size, the largest included, SHALL be offered at Easy, at Normal,
-and at Normal with stripped clues.
-
-#### Scenario: The largest board is offered at Easy
-
-- **WHEN** the preset menu is read
-- **THEN** it holds a 9×10 Easy board beside the two 9×10 Normal ones
 
 ### Requirement: Description: Magnets descriptions carry the clues and domino layout
 
@@ -108,26 +98,15 @@ back at its partner), and a count that exceeds its row's or column's size.
 - **WHEN** a desc whose domino ends are inconsistent is validated
 - **THEN** it is refused with a non-null error string
 
-### Requirement: Generation: Magnets grades boards with a tiered deductive solver
-
-A generated board SHALL be solved by the solver at its own difficulty, and a
-Normal board SHALL NOT be solved at Easy. The solver SHALL propagate a
-deduction across a domino to its partner: a color excluded at one end excludes
-the opposite color at the other.
-
-#### Scenario: A generated board is uniquely solvable at its difficulty
-
-- **WHEN** a board generated at difficulty `d` is solved from empty
-- **THEN** the solver returns solved at `d`, and, for a Normal board, fails to
-  fully solve it at Easy
-
 ### Requirement: Generation: The deductions of Magnets' Easy tier
 
 The Easy tier SHALL perform: set-and-hold of the initial givens,
 force-by-flags, the neutral deduction that neither end can be a magnet, the
 row and column count-full pass (a color complete excludes it from the rest; the
 remaining unset squares all needed sets them), and the odd-length-section
-deduction.
+deduction. At either tier the solver SHALL propagate a deduction across a
+domino to its partner: a color excluded at one end excludes the opposite color
+at the other.
 
 #### Scenario: A met count clears its line
 
@@ -152,8 +131,7 @@ end has it set).
 With `stripclues` set, `newDesc` SHALL take the board's `+` and `−` numbers in
 a random order and remove each one without which the solver at the board's
 difficulty still reaches the same answer, so a row or column may carry no
-number for a pole. A removed number SHALL be written `.` in the description. A
-params label with it set SHALL end in the words "strip clues".
+number for a pole. A removed number SHALL be written `.` in the description.
 
 #### Scenario: A stripped preset and a board of it
 
@@ -164,13 +142,12 @@ params label with it set SHALL end in the words "strip clues".
 
 ### Requirement: Controls: Magnets input cycles domino contents and toggles clue aids
 
-A left-click or `CURSOR_SELECT` on a domino cell SHALL cycle its content
-empty → `+` → `−` → empty, setting the partner to the opposite polarity, and
-SHALL refuse to start from a placed neutral. A right-click or `CURSOR_SELECT2`
-SHALL cycle the whole domino empty → neutral → not-neutral (`?`) → empty, and
-SHALL refuse to start from a magnet. A left-click on a border clue number SHALL
-toggle that clue's "done" gray highlight, an aid tracked in the state that
-never affects the win condition.
+The left-click verb of Magnets' `targetVerbs` SHALL cycle a domino cell
+empty → `+` → `−` → empty, its partner taking the opposite polarity, and never
+from a placed neutral; the right-click verb SHALL cycle the whole domino
+empty → neutral → not-neutral (`?`) → empty, and never from a magnet. On a
+border clue number the left-click verb SHALL toggle that clue's "done" gray
+highlight, an aid tracked in the state that never affects the win condition.
 
 #### Scenario: The magnet cycle sets both domino ends
 
@@ -196,8 +173,7 @@ A click or cursor action on a singleton square SHALL do nothing.
 
 The keyboard cursor SHALL range over the tiles and the ring of clue slots
 around them, and SHALL NOT enter the four corners, which hold no clue.
-`CURSOR_SELECT` on a clue slot SHALL toggle that clue's done mark as a
-left-click there does, and `CURSOR_SELECT2` on one SHALL do nothing.
+On a clue slot the right-click verb SHALL do nothing.
 
 #### Scenario: Up from the top row, then Enter
 
@@ -215,12 +191,11 @@ left-click there does, and `CURSOR_SELECT2` on one SHALL do nothing.
 
 ### Requirement: Controls: A Magnets drag repeats its press across tiles or across clues
 
-Magnets SHALL declare a sweep for both buttons. A drag on from a press on a
-tile SHALL repeat the press on each square that holds what the pressed square
-held, a square's contents and its `?` mark together being what it holds, and
-SHALL pass over every clue. A drag on from a press on a clue SHALL repeat it on
-each clue whose done mark matched, and SHALL pass over every tile. A singleton
-square SHALL never be swept.
+What a square holds, for a drag (`engine-input`, "A drag on from a press
+repeats the press"), SHALL be its contents and its `?` mark together. A drag
+on from a press on a tile SHALL pass over every clue. A drag on from a press on a clue SHALL
+repeat it on each clue whose done mark matched, and SHALL pass over every
+tile. A singleton square SHALL never be swept.
 
 #### Scenario: A drag off the grid marks no clue
 
@@ -229,25 +204,13 @@ square SHALL never be swept.
 - **THEN** the second empty tile takes a `+` in the square the pointer crossed,
   and the neutral tile and the clue are left as they were
 
-### Requirement: Hint: Magnets offers an explained hint
-
-Magnets SHALL implement `hint` as the recording projection of its graded
-solver: the same ladder, run one firing at a time from the player's board, each
-firing narrated with the premise that forced it. The hint SHALL start from the
-player's placed dominoes and `?` marks.
-
-#### Scenario: The hint finishes the board
-
-- **WHEN** the player asks for hints on a fresh board of any preset and follows
-  every step
-- **THEN** the board is solved without a refusal
-
 ### Requirement: Hint: A Magnets firing the player can write is one journey of legs
 
 A firing that places dominoes SHALL be one journey of placement legs, and one
 that concludes dominoes cannot be neutral SHALL be one journey of legs that
 mark them `?`, so every "cannot be neutral" fact a later step rests on is on
-the board.
+the board. The hint SHALL start from the player's own `?` marks as it does
+from the placed dominoes.
 
 #### Scenario: Two dominoes found to be magnets
 
@@ -572,8 +535,8 @@ neutral color and the `?` mark SHALL keep their colors, which the game names.
 
 ### Requirement: Look: Magnets' win flash lights a domino whole
 
-The win flash SHALL sweep the dominoes diagonally, a domino's position being
-the middle of its two squares, so both squares light and go dark together. A
+The win flash's elements SHALL be the dominoes, a domino's position being the
+middle of its two squares, so both squares light and go dark together. A
 lit domino's ground SHALL be filled with a flash color in place of its
 pole's, and SHALL keep its symbols.
 

@@ -205,6 +205,37 @@ it off, which leaves cleaning the notes to the Mark-all press and the hint.
   that offers auto-pencil
 - **THEN** the pencil marks of every other cell are as they were
 
+### Requirement: The pencil preferences have one key each, which a saved preference depends on
+
+A game SHALL take a pencil preference from the engine's declaration, and the
+key its saved value is stored under SHALL NOT change: `sticky-pencil-mode`,
+whether a secondary press latches pencil mode until the next one;
+`auto-pencil`, whether placing a value strikes it from the pencil marks it can
+no longer be in, under a label of the game's own that says where; and
+`pencil-keep-highlight`, whether a pencil entry made with the pointer leaves
+the highlight on its cell.
+
+#### Scenario: Several notes in one cell with the pointer
+
+- **WHEN** `pencil-keep-highlight` is on, the pointer has selected a cell for
+  pencil marks and the player enters two candidates
+- **THEN** the highlight stays on the cell through both
+- **AND** with the preference off, the first entry puts the highlight away
+
+#### Scenario: A value entry puts the highlight away either way
+
+- **WHEN** the pointer has selected a cell for a value and the player enters
+  one, with `pencil-keep-highlight` on
+- **THEN** the highlight is put away, the preference being about pencil
+  entries only
+
+#### Scenario: A stored preference is read back by its key
+
+- **WHEN** a game's stored preferences hold `sticky-pencil-mode` as off and
+  the game, which starts with the sticky preference on, is opened
+- **THEN** a secondary press selects one cell for pencil marks and latches
+  nothing
+
 ### Requirement: An unoffered pencil preference is read from its absence
 
 Where a game does not offer one of the pencil preferences, its behavior SHALL

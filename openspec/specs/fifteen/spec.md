@@ -2,11 +2,11 @@
 
 ## Purpose
 Fifteen, the sliding-tile puzzle of putting numbered tiles in order from the top
-left, with the hole in the bottom-right corner: what counts as solved, the
-params encoding, what the generator promises, what a click and an arrow do, the
-move count, how the tiles look and slide, and a hint that plays out a full
-greedy solution, saying of each slide whether it puts a tile home or sets one
-up.
+left, with the hole in the bottom-right corner: what counts as solved, where
+its params are declared, what the generator promises, what a click and an
+arrow do, the move count, how the tiles look and slide, and a hint that plays
+out a full greedy solution, saying of each slide whether it puts a tile home
+or sets one up.
 
 ## Requirements
 
@@ -44,10 +44,13 @@ replace the grid with the solved permutation and count as one move.
 - **THEN** the new state is the solved permutation with the move count one
   higher
 
-### Requirement: Params: Fifteen's params are a width and a height
+### Requirement: Params: Fifteen's params are its declared codec's
 
-Params SHALL be `w` and `h`, encoded `WxH`. A bare `W` SHALL decode as a
-square `W×W` board. Params with `w < 2` or `h < 2` SHALL be refused.
+Fifteen's params, a width and a height, and their encoding SHALL be those its
+`paramConfig` and its declared codec give (`engine-params`, "A game declares
+its params encoding once, and both codec halves are derived"), with no
+departure from the codec grammar. The game SHALL refuse no params of its own:
+every refusal is a bound its `paramConfig` declares.
 
 #### Scenario: Params round-trip and lenient decode
 
@@ -55,11 +58,6 @@ square `W×W` board. Params with `w < 2` or `h < 2` SHALL be refused.
 - **THEN** the result is `4x4`
 - **AND** decoding `4x4` and `4` both yield `{ w: 4, h: 4 }`, while a
   non-square `5x4` decodes to `{ w: 5, h: 4 }`
-
-#### Scenario: A board one cell wide is refused
-
-- **WHEN** params `{ w: 1, h: 4 }` are checked
-- **THEN** they are refused
 
 ### Requirement: Description: Fifteen descriptions list the tiles in reading order
 
@@ -89,19 +87,16 @@ in order, so its description does not load.
 - **THEN** it reads as a description and is refused as a puzzle with no
   solution
 
-### Requirement: Generation: A generated Fifteen board is solvable and starts unsolved
+### Requirement: Generation: A generated Fifteen board is one slides can solve
 
 `newDesc` SHALL deal a permutation of the tiles whose parity matches the gap's
-chessboard parity, so the board is reachable from the solved arrangement. It
-SHALL NOT deal the solved arrangement.
+chessboard parity, so the board is reachable from the solved arrangement.
 
-#### Scenario: A generated board is solvable and starts unsolved
+#### Scenario: A generated board is solvable
 
 - **WHEN** a new game is created from any valid params
 - **THEN** the tile array is a permutation whose parity matches the gap's
   chessboard parity
-- **AND** the initial state is not in the solved arrangement and reports a
-  not-completed status
 
 ### Requirement: Controls: A click slides only along the gap's row or column
 
@@ -125,11 +120,11 @@ tile in that direction.
 ### Requirement: Hint: Fifteen offers a greedy full-solution hint plan
 
 `hint()` SHALL return the whole greedy solution as a multi-step plan. Each
-step SHALL be the next single-cell gap slide the greedy solver chooses,
-highlighting the tile it slides. The solver SHALL fill the shorter of the top
-row and the left column tile by tile, moving the next tile toward its home,
-with a fixed shortest-move table for the end-of-line corner. Following the
-plan from any solvable board SHALL reach the solved state.
+step SHALL be the next single-cell gap slide the greedy solver chooses. The
+solver SHALL fill the shorter of the top row and the left column tile by tile,
+moving the next tile toward its home, with a fixed shortest-move table for the
+end-of-line corner. Following the plan from any solvable board SHALL reach the
+solved state.
 
 #### Scenario: Hint plan solves a solvable board
 
@@ -137,12 +132,6 @@ plan from any solvable board SHALL reach the solved state.
   applied in order
 - **THEN** the steps are legal single-cell gap slides and the board reaches the
   solved arrangement within `5·n³` moves
-
-#### Scenario: Hint highlights the tile it moves
-
-- **WHEN** `hint()` is requested on an unsolved board
-- **THEN** the first step's move is a slide whose target is one cell from the
-  gap, and its highlight names the tile that will slide into the gap
 
 ### Requirement: Hint: A Fifteen hint step says whether its slide places a tile home
 
@@ -202,8 +191,7 @@ SHALL never return `"onTrack"`.
 
 ### Requirement: Status bar: Fifteen's status bar shows the move count
 
-The status bar SHALL show the move count after the engine's completion words.
-The move count SHALL never freeze or reset.
+The status bar SHALL show the move count, which SHALL never freeze or reset.
 
 #### Scenario: The count follows the completion words
 
@@ -248,12 +236,11 @@ schemes. The tile SHALL keep its bevel: it is an object the player moves.
 - **THEN** every tile's face is the lifted surface
 - **AND** the gap is the cell surface, darker than the board around the grid
 
-### Requirement: Look: A genuine Fifteen completion sweeps the tiles
+### Requirement: Look: Fifteen's win flash lights its tiles and never the gap
 
-A genuine completion's flash SHALL sweep the tiles diagonally, a tile's
-position being its cell's place in the grid. A lit tile's face SHALL be filled
-with a flash color inside its bevel, and SHALL keep its bevel and its
-number. The gap SHALL never be lit.
+A tile the win flash lights SHALL have its face filled with a flash color
+inside its bevel, and SHALL keep its bevel and its number. The gap SHALL never
+be lit.
 
 #### Scenario: The last slide flashes
 

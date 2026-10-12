@@ -4,9 +4,8 @@
 
 Flip, the puzzle of lighting every square by pressing squares, where each press
 also flips a fixed pattern of neighbors, in two rulesets. Its boards are
-generated solvable and not already solved, its solver finds a shortest set of
-presses, and its hint presses that answer in reading order, saying what forces
-each press.
+generated solvable, its solver finds a shortest set of presses, and its hint
+presses that answer in reading order, saying what forces each press.
 
 ## Requirements
 
@@ -32,8 +31,7 @@ with two identical rows SHALL be discarded and grown again.
 
 ### Requirement: Rules: A press flips the square and its matrix-defined neighbors
 
-Clicking a square, or selecting it with the keyboard cursor, SHALL toggle the
-square and its matrix-defined neighbors.
+Pressing a square SHALL toggle the square and its matrix-defined neighbors.
 
 #### Scenario: A press
 
@@ -50,23 +48,13 @@ The game SHALL report `solved` when every square is lit.
 - **WHEN** the player flips cells until every square is lit
 - **THEN** the game status becomes `solved`
 
-### Requirement: Rules: Flip's rulesets are Crosses and Random
+### Requirement: Params: A Flip params string is its declared codec's, and one with no ruleset letter is Crosses
 
-Flip SHALL declare Crosses and Random as its two rulesets, each with the rule
-for which squares a press flips.
-
-#### Scenario: The help says what Random changes
-
-- **WHEN** a player reads Flip's help page
-- **THEN** its rules say which squares a press flips in Crosses and which in
-  Random
-
-### Requirement: Params: Flip's params encoding
-
-The params encoding SHALL be the width and height, followed in the full form
-by `c` for Crosses or `r` for Random. Decoding SHALL accept these shorter forms:
-`"5"` is 5×5, `"5x4"` names both dimensions, and the trailing letter is
-optional, a string without one decoding as Crosses.
+Flip's params, a width, a height and a ruleset, and their encoding SHALL be
+those its `paramConfig` and its declared codec give (`engine-params`, "A game
+declares its params encoding once, and both codec halves are derived"), with
+no departure from the codec grammar. A string with no ruleset letter SHALL
+decode as Crosses.
 
 #### Scenario: The lenient forms decode
 
@@ -75,15 +63,13 @@ optional, a string without one decoding as Crosses.
 
 ### Requirement: Params: Flip refuses a size it cannot use
 
-Invalid parameters SHALL be refused with a human-readable reason: a
-non-positive width or height, which the engine refuses from the lower bound of
-1 that Flip declares on each, and unreasonably large dimensions, which Flip's
-`validateParams` refuses.
+Flip's `validateParams` SHALL refuse unreasonably large dimensions.
 
-#### Scenario: A width of zero
+#### Scenario: A board too large to hold
 
-- **WHEN** a params string with a width of 0 is validated
-- **THEN** it is refused, with a reason the player can read
+- **WHEN** a board 50000 squares wide and 50000 high is validated
+- **THEN** it is refused with "Width times height must not be unreasonably
+  large."
 
 ### Requirement: Description: Flip descriptions are two hex strings
 
@@ -109,18 +95,16 @@ set bit past a bitmap's last, a missing comma and anything after the lights.
   which sets a bit after the ninth square's
 - **THEN** the description is refused
 
-### Requirement: Generation: Flip generates solvable, non-trivial boards
+### Requirement: Generation: Flip generates solvable boards
 
 For every preset, in both matrix types, `newDesc` SHALL produce a board whose
-toggle matrix has no two identical rows and whose starting lights are not
-already solved, and the Flip solver SHALL find a solution for every generated
-board.
+toggle matrix has no two identical rows, and the Flip solver SHALL find a
+solution for every generated board.
 
 #### Scenario: Generated boards are solvable
 
 - **WHEN** a Flip board is generated for any preset
-- **THEN** its matrix has no duplicate rows and the start grid is
-  non-trivial
+- **THEN** its matrix has no duplicate rows
 - **AND** the solver returns a solution that, applied via
   `executeMove`, completes the game
 
@@ -142,12 +126,15 @@ the solution in one move.
 - **THEN** every square is lit after one move, and one undo restores the board
   as it was
 
-### Requirement: Controls: A square that flips nothing takes no press
+### Requirement: Controls: Flip's press is its declared verb, and a square that flips nothing takes none
 
-A press on a square whose row of the matrix is empty SHALL make no move, by
-the pointer or by the select keys, so it adds nothing to the move count and
-nothing to undo. Only a description typed by hand has such a square: a dealt
-board's every square flips itself.
+Flip SHALL take its press, its cursor and its select keys from its
+`targetVerbs` declaration (`engine-input`, "The engine owns a declaring game's
+press and select keys"), which has the one verb. A press on a square whose
+row of the matrix is empty SHALL make no move, by the pointer or by the select
+keys, so it adds nothing to the move count and nothing to undo. Only a
+description typed by hand has such a square: a dealt board's every square
+flips itself.
 
 #### Scenario: A hand-typed matrix with an empty row
 
@@ -156,11 +143,11 @@ board's every square flips itself.
   there and once to press the square
 - **THEN** the status bar still reads `Moves: 0` and there is nothing to undo
 
-### Requirement: Hint: Flip names no hue for either state
+### Requirement: Hint: Flip's hint calls the two states lit and unlit
 
-The game SHALL name no hue of its own for either state: its hint sentences and
-hint-mark legends SHALL say "lit" and "unlit", and its help page SHALL name the
-two pieces by placeholder and by shape.
+Flip's hint sentences and hint-mark legends SHALL say "lit" and "unlit" for a
+square's two states, and its help page SHALL name the two pieces by
+placeholder and by shape.
 
 #### Scenario: The help page names the pieces
 
@@ -185,9 +172,8 @@ SHALL claim nothing the code has not checked on the board the step is shown on.
 
 Where a press before the plan's last is the last square in reading order that
 flips some unlit square, the step SHALL say so as a deduction, naming the order
-in its own words, ring the square to press, outline those unlit squares, and
-stripe and name every other square the press flips, so that no square the
-press changes is left unmarked.
+in its own words, and SHALL mark and name every other square the press flips,
+so that no square the press changes is left unmarked.
 
 #### Scenario: A press that is an unlit square's last chance
 
@@ -219,7 +205,7 @@ there is only one way to light the board when no other set of presses does.
 ### Requirement: Hint: The last press says it finishes the board
 
 The plan's last press SHALL say that it finishes the board, whichever of the
-two kinds it is, and SHALL outline every other unlit square.
+two kinds it is.
 
 #### Scenario: The last press
 
@@ -249,15 +235,6 @@ solution cannot be determined.
 
 - **WHEN** a hint is asked on a board no set of presses lights
 - **THEN** it refuses, saying the puzzle's solution cannot be determined
-
-### Requirement: Status bar: Flip's status bar counts the moves
-
-Flip SHALL provide a status bar string reporting the move count.
-
-#### Scenario: The status bar after a press
-
-- **WHEN** the player presses a square on a fresh board
-- **THEN** the status bar reports one move
 
 ### Requirement: Status bar: Solve counts a move for each square it presses
 
@@ -304,12 +281,10 @@ SHALL sit at the square's edge, beside the piece.
 - **THEN** the cursor and the ring are each drawn as an outline along the
   square's edge, around the piece
 
-### Requirement: Look: A flip shows one piece at a time, and the win flash sweeps the squares
+### Requirement: Look: A flip shows one piece at a time
 
 A move SHALL animate each square it flips as the old piece shrinking away and
-the new one growing in its place, never both at once. The win flash SHALL
-sweep the squares along the diagonal, and a lit square's ground SHALL be
-filled with a flash color, with its piece and the diagram on it unchanged.
+the new one growing in its place, never both at once.
 
 #### Scenario: Halfway through a flip
 
@@ -317,8 +292,3 @@ filled with a flash color, with its piece and the diagram on it unchanged.
   it
 - **THEN** the first frame holds only the old piece, smaller than whole, and
   the second only the new one
-
-#### Scenario: A move that does not solve the board
-
-- **WHEN** a press flips squares and leaves a light on
-- **THEN** no square's ground is a flash color in any frame of the flip

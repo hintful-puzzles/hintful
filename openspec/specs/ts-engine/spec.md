@@ -1076,6 +1076,29 @@ after a restart is not marked by a solve made before it.
 - **THEN** its status is solved
 - **AND** undoing back across the restart shows it solved-with-help
 
+### Requirement: Only the Solve command sets the solver record
+
+The midend SHALL set its record that the solver was used only when the Solve
+command commits its move. A hint SHALL NOT set it, shown or played: a played
+step's gesture goes through the game's `interpretMove`, and the moves it makes
+are committed as the player's own. A hint is help ("Help is the app doing some
+of the solving"), which is another record: it labels the timer and changes
+neither the board's status nor the status bar's completion words.
+
+#### Scenario: A board finished by hints alone
+
+- **WHEN** every move of a board is made by playing a hint step, in a game
+  with a status bar, and the last one solves it
+- **THEN** the status bar reads `COMPLETED!` and not `Auto-solved.`, and the
+  board's status is solved, not solved with help
+- **AND** the timer's readout reports the board as assisted
+
+#### Scenario: A hint after a Solve was undone
+
+- **WHEN** the player uses Solve, undoes it, and then plays a hint step
+- **THEN** the status bar still reads `Auto-solver used.`, the record being
+  the Solve's and not the hint's
+
 ### Requirement: A restart leaves the timer running and plays no animation
 
 A restart SHALL NOT reset the solve timer and SHALL NOT hold it: the time is

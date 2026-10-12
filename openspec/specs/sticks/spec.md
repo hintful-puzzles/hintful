@@ -4,9 +4,10 @@
 Sticks (Tatebo-Yokobo), the puzzle of filling every blank cell with a horizontal
 or vertical line, where a number on a line gives its length, no line covers two
 numbers, and a number on a block counts the lines running into it. This
-capability specifies the game: its parameters and descriptions, the deductive
-solver and the generator it gates, input, mistake checking, the explained hint
-and the drawing.
+capability specifies what is the game's own: the params it refuses and what a
+short params string means, its descriptions, the deductive solver and the
+generator it gates, what its search assumes, its drag and its keys, mistake
+checking, the hint's reasons and order, and the drawing.
 
 ## Requirements
 
@@ -24,10 +25,9 @@ SHALL connect to the stated number of lines.
 
 ### Requirement: Rules: Sticks findMistakes flags only lines that contradict the solution
 
-`findMistakes` SHALL take the board's one fill from the search that counts
-its answers, at either difficulty, and flag every cell whose player-drawn line
-contradicts it; a merely missing line SHALL NOT be flagged. Where the search
-did not prove exactly one fill it SHALL flag nothing.
+`findMistakes` SHALL flag every cell whose player-drawn line contradicts the
+board's one fill; a merely missing line SHALL NOT be flagged. Where the search
+that counts the board's fills did not prove exactly one it SHALL flag nothing.
 
 #### Scenario: A contradicting line is flagged as a mistake
 
@@ -35,16 +35,15 @@ did not prove exactly one fill it SHALL flag nothing.
   solution's line for that cell
 - **THEN** that cell is reported as a mistake
 
-### Requirement: Rules: Sticks completion flashes once and nothing is animated
+### Requirement: Rules: A Sticks board is solved when every blank cell carries a line that meets the clues
 
 The game SHALL be reported solved when every blank cell carries a line
-consistent with all clues, and SHALL flash once on completion. There SHALL be no
-interpolated animation of line placement.
+consistent with all clues.
 
 #### Scenario: Completing the grid consistently wins
 
 - **WHEN** every blank cell carries a line consistent with all clues
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
 ### Requirement: Rules: A Sticks block takes no line
 
@@ -56,13 +55,9 @@ Blocks SHALL never take a line.
   block
 - **THEN** no move is made
 
-### Requirement: Params: Sticks parameters and what each check refuses
+### Requirement: Params: Sticks refuses, for a deal only, a block percentage outside 5 to 100 and a quarter-turn symmetry off a square
 
-Parameters SHALL be a width, a height, a percentage of blocks, and a symmetry
-(none, 2-way mirror, 2-way rotational, 4-way mirror, or 4-way rotational).
-Width and height SHALL each be at least 2 and the symmetry SHALL be a known
-one; both are declared on `paramConfig`, so the engine refuses them at every
-check. `validateParams` SHALL refuse, on a full parameter check only, a block
+`validateParams` SHALL refuse, on a full parameter check only, a block
 percentage outside 5 to 100, and 4-way rotational symmetry on a grid that is
 not square.
 
@@ -77,30 +72,27 @@ not square.
 - **WHEN** a 5x6 grid with 4-way rotational symmetry is checked in full
 - **THEN** it is refused
 
-### Requirement: Params: Sticks parameters round-trip through their encoding
+### Requirement: Params: A Sticks params string may leave out its blocks, its symmetry and its difficulty
 
-The full encoding of the parameters SHALL carry the width, height, block
-percentage, symmetry and difficulty, Easy as `de` or Unreasonable as `du`, and
-SHALL round-trip through decode. The short encoding SHALL be the bare
-`width x height`. A bare `width x height` ID SHALL decode without a symmetry
-marker, and an ID with no difficulty letter SHALL decode as Easy.
+Sticks' params (a size, a percentage of blocks, their symmetry and a tier),
+their bounds, encoding and label words SHALL be those its `paramConfig` and
+its declared codec give (`engine-params`, "A game declares its params encoding
+once, and both codec halves are derived"), and its menu what `presets` builds.
+A string with no `b` SHALL decode as 20 percent, one with no `s` as 2-way
+rotational, and one with no difficulty letter as Easy.
 
-#### Scenario: A game ID round-trips through the parameters
+#### Scenario: A string that leaves a field out
 
-- **WHEN** a parameter set is encoded in full and decoded
-- **THEN** the same width, height, block percentage, symmetry and difficulty
-  are recovered
-
-#### Scenario: A bare size decodes
-
-- **WHEN** `10x10` is decoded
-- **THEN** the parameters have width 10 and height 10
-
-#### Scenario: The difficulty is in the full encoding only
-
-- **WHEN** an Unreasonable 7×7 board is encoded
-- **THEN** the full encoding is `7x7b20s2du` and the shared one `7x7`
+- **WHEN** `7x7`, the short form of every 7×7 board, is decoded
+- **THEN** the board has 20 percent blocks in 2-way rotational symmetry, at
+  Easy
 - **AND** `7x7b20s2`, written before the game had tiers, decodes as Easy
+
+#### Scenario: An asymmetric board
+
+- **WHEN** `2x5b20s0du` is decoded
+- **THEN** the params are 2 wide and 5 high, 20 percent blocks, no symmetry,
+  and Unreasonable
 
 ### Requirement: Params: Sticks refuses Unreasonable where no board needs it
 
@@ -135,47 +127,6 @@ naming the difficulty. The same size SHALL still be asked for at Easy.
   difficulty
 - **THEN** each is refused at Unreasonable and not at Easy
 - **AND** a 10×10, a 4×25 and a 2×30 board are admitted at Unreasonable
-
-### Requirement: Params: Sticks' menu offers each size at both difficulties
-
-Sticks' presets SHALL offer each of 5×5, 7×7 and 10×10 as Easy and as
-Unreasonable, and the default SHALL be the Easy 7×7.
-
-#### Scenario: Every size is offered at both difficulties
-
-- **WHEN** Sticks' preset menu is read
-- **THEN** its three sizes each appear as Easy and then as Unreasonable
-
-### Requirement: Params: Sticks writes its block percentage after `b` and its symmetry's number after `s`
-
-In the full form of the params the size SHALL be followed by `b` and the block
-percentage, then `s` and the symmetry as a number: 0 for none, 1 for 2-way
-mirror, 2 for 2-way rotational, 3 for 4-way mirror and 4 for 4-way rotational.
-The difficulty letter SHALL come last. A string with no `b` SHALL decode as 20
-percent, and one with no `s` as 2-way rotational.
-
-#### Scenario: An asymmetric board
-
-- **WHEN** `2x5b20s0du` is decoded
-- **THEN** the params are 2 wide and 5 high, 20 percent blocks, no symmetry,
-  and Unreasonable
-
-#### Scenario: A string from before the game had tiers
-
-- **WHEN** `7x7b20s2` is decoded and encoded in full
-- **THEN** the result is `7x7b20s2de`, the Easy 7×7 preset
-
-### Requirement: Params: A Sticks title says its blocks and its symmetry where they are not the default
-
-The label of a set of params SHALL end with `N% blocks` where the block
-percentage is not 20, and with the symmetry's name as the Custom dialog lists
-it, or `no symmetry` for none, where the symmetry is not 2-way rotational.
-
-#### Scenario: Two boards off the default
-
-- **WHEN** the labels of `2x5b20s0du` and `2x2b50s2du` are composed
-- **THEN** they read "2x5 Unreasonable, no symmetry" and "2x2 Unreasonable,
-  50% blocks"
 
 ### Requirement: Description: Sticks descriptions use the run-length blank encoding
 
@@ -239,30 +190,18 @@ it SHALL keep each removal only while the solver still completes the board.
   solver does not complete
 - **THEN** that clue is put back, and the strip goes on to the next
 
-### Requirement: Generation: Uniqueness is established by a witness independent of the solver
+### Requirement: Generation: Uniqueness is held by a count, and not by the solver's verdict alone
 
-Uniqueness SHALL be established by a witness independent of the deductive
-solver, because the solver returning "complete" reports only on the line of play
-it followed and is not evidence about how many solutions exist. That witness
-SHALL itself be shown capable of reporting more than one solution, or the
-assertion is vacuous.
+That a dealt board has exactly one fill SHALL be held by a count that branches
+on every cell the deduction leaves undecided, and not by the solver's verdict
+alone. That count SHALL itself be shown capable of reporting more than one
+solution, or the assertion is vacuous.
 
 #### Scenario: The uniqueness witness can report more than one
 
 - **WHEN** the search that propagates the shipped deduction and branches on the
   cells it leaves undecided is run on a board carrying no clues at all
 - **THEN** it reports more than one solution
-
-### Requirement: Generation: Every Easy Sticks board has one solution, reached without guessing
-
-Every board generated at Easy SHALL have exactly one solution, and the shipped
-deduction SHALL reach it with no guessing anywhere.
-
-#### Scenario: A generated board has exactly one solution
-
-- **WHEN** a board generated at Easy is enumerated by a search that propagates
-  the shipped deduction and branches on the cells it leaves undecided
-- **THEN** exactly one solution is found
 
 ### Requirement: Generation: An Unreasonable Sticks board has one answer that the solver does not reach
 
@@ -283,26 +222,16 @@ solver stops short on it.
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Generation: A pasted Sticks board opens at the difficulty it needs
+### Requirement: Generation: A Sticks board is Easy where the solver and the hint both finish it
 
-A board that arrives as a game ID SHALL open as Easy where the solver and the
-hint finish it, and as Unreasonable where it has exactly one fill that they
-do not reach, whatever lower difficulty its ID states. A board with several
-fills SHALL be refused as having more than one solution, and a board with
-none as one whose clues contradict each other.
+A board SHALL count as Easy where the solver and the hint finish it, and as
+Unreasonable where it has exactly one fill that they do not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
 - **WHEN** a 4×4 ID whose board has one fill the solver does not reach is
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `4x4b20s2du`
-
-#### Scenario: A board with several answers or none is refused
-
-- **WHEN** a 4×4 board with no block and no number, and one whose corner
-  square holds a 4 with a 1 beside it and a 1 below it, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
 
 ### Requirement: Solver: Sticks ports the deductive solver and solver-gated generator
 
@@ -332,14 +261,10 @@ although they make the checker weaker than intended.
 - **THEN** that cell is counted as room without looking at whether the edge
   cell beyond it holds a line of another number
 
-### Requirement: Solver: Sticks counts a board's answers by a bounded search
+### Requirement: Solver: Sticks' search assumes the first blank square's line across, then up and down
 
-The game SHALL count a board's fills up to two by trial and error over the
-solver: where the solver stops, it SHALL take the first blank square and
-assume its line runs across, and then up and down. It SHALL report one
-answer, several, none, or that it stopped at its budget, which SHALL be
-counted in positions and never in time. Solve SHALL take the answer from it
-at either difficulty.
+Where the solver stops, the search that counts a board's fills SHALL take the
+first blank square and assume its line runs across, and then up and down.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -348,16 +273,6 @@ at either difficulty.
   one whose corner square holds a 4 with a 1 beside it and a 1 below it
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given four positions on a board that needs five
-- **THEN** it reports that it stopped, and with five it reports one answer
-
-#### Scenario: An Easy board takes one position
-
-- **WHEN** the search is given one position on a dealt Easy board
-- **THEN** it reports one answer
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -370,9 +285,7 @@ at either difficulty.
 ### Requirement: Controls: Sticks is played by drag, click and keyboard cursor
 
 Sticks SHALL be played by dragging to draw a line, clicking to place a line, or
-using a keyboard cursor with keys to place or clear a line. A left click SHALL
-cycle a cell through empty, vertical, horizontal and empty again, and a right
-click SHALL cycle it the other way, placing a horizontal line on an empty cell.
+using a keyboard cursor with keys to place or clear a line.
 
 #### Scenario: A left click on an empty cell places a vertical line
 
@@ -453,24 +366,13 @@ deductive game, and SHALL refer to a clue by the number the player can see.
 - **WHEN** a step forces a square that carries the number 2 to be vertical
 - **THEN** its explanation says that this 2 must be vertical
 
-### Requirement: Hint: One clue ruling out several Sticks squares is one journey
+### Requirement: Hint: A Sticks hint's marks count out against the words
 
-Where one clue and one rule rule out **several** squares at once, they SHALL be
-one journey rather than several hints, each of its later legs saying that it
-continues the same argument while keeping its own square's specifics.
-
-#### Scenario: One clue ruling out several squares is one hint
-
-- **WHEN** a single clue and rule force more than one square on the same board
-- **THEN** those squares arrive as one continuing journey, each leg naming the
-  square it decides and the orientation that square must take
-
-### Requirement: Hint: The Sticks hint draws the forced line in the hint color
-
-The hint SHALL show where to act in the game's own vocabulary: the forced
-square carrying a line of the forced orientation, in the hint color, since a
-uniform highlight could not say *which* orientation, and that is the whole of
-the move. It SHALL NOT draw the line in the color of a placed line.
+Where the explanation states a count (a run's length, the room a line has
+left, the lines or open sides a block's clue has) the marked squares SHALL
+number what the explanation says, so the player can count the picture against
+the words. Where the explanation names a run or a span, that run or span SHALL
+be the one the deduction actually walked.
 
 #### Scenario: The forced orientation is visible, not merely described
 
@@ -478,16 +380,6 @@ the move. It SHALL NOT draw the line in the color of a placed line.
 - **THEN** the forced square shows a line of the forced orientation in the hint
   color, and no square shows a line in the placed-line color that the player
   did not place
-
-### Requirement: Hint: The Sticks hint shows its evidence, and the marks count out against the words
-
-The hint SHALL also show the evidence its reasoning rests on, marked so that the
-evidence does not hide what makes it evidence. Where the explanation states a
-count (a run's length, the room a line has left, the lines or open sides a
-block's clue has) the marked squares SHALL number what the explanation says, so
-the player can count the picture against the words. Where the explanation names
-a run or a span, that run or span SHALL be the one the deduction actually
-walked.
 
 #### Scenario: A length argument marks the run it counts
 

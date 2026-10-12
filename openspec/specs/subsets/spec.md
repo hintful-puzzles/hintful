@@ -16,10 +16,10 @@ holds. A horseshoe between two neighbors says that one cell's set contains the
 other's; two neighbors with no horseshoe between them SHALL hold sets neither
 of which contains the other.
 
-#### Scenario: Completing the grid wins and flashes
+#### Scenario: Completing the grid wins
 
 - **WHEN** every set is placed exactly once so that all clues hold
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
 ### Requirement: Rules: Subsets flags mistakes for Check & Save
 
@@ -55,29 +55,15 @@ drawn in the mistake color.
 - **THEN** `findMistakes` reports that slot, and its cross is drawn in the
   mistake color
 
-### Requirement: Params: Subsets' parameters
+### Requirement: Params: Subsets accepts only the 4×4 board over four letters
 
 Parameters SHALL be a width, a height, a universe size `n` and a difficulty
-tier. Validation SHALL accept only `4×4` with `n = 4`. There SHALL be one
-preset per tier. A game ID SHALL encode the width, height, universe size and
-tier and round-trip through decode, and each tier SHALL encode to a *distinct*
-ID. A game ID whose difficulty character names no tier SHALL be refused, and
-SHALL NOT be played at another tier in its place.
-
-#### Scenario: A game ID round-trips through the parameters
-
-- **WHEN** a parameter set is encoded to a game ID and decoded
-- **THEN** the same width, height, universe size and tier are recovered
+tier. Validation SHALL accept only `4×4` with `n = 4`.
 
 #### Scenario: Unsupported parameters are rejected
 
 - **WHEN** parameters other than `4×4` with `n = 4` are validated
 - **THEN** they are rejected: "Currently only 4x4 puzzles are supported."
-
-#### Scenario: An unrecognized difficulty character is rejected
-
-- **WHEN** a game ID carries a difficulty character naming no tier
-- **THEN** decoding refuses it, rather than falling back to another tier
 
 ### Requirement: Params: The Custom dialog offers the tier alone
 
@@ -105,8 +91,8 @@ a string with no `n` as four letters, and a string with no `d` as Easy.
 
 ### Requirement: Params: A Subsets preset is titled by its board and its tier
 
-Each preset SHALL be titled `4x4 Size 4` and then its tier's name, where Size
-is the number of letters the sets are drawn from.
+There SHALL be one preset for each tier, titled `4x4 Size 4` and then the
+tier's name, where Size is the number of letters the sets are drawn from.
 
 #### Scenario: The Type menu
 
@@ -196,12 +182,12 @@ tier, still reaches a complete solution.
   tier, does not complete
 - **THEN** that cell is given again, and the blanking goes on to the next
 
-### Requirement: Generation: A board above the lowest tier is not solved by the tier below
+### Requirement: Generation: A Subsets candidate the tier below solves is redrawn whole
 
-Above the lowest tier the generator SHALL also reject a candidate board that
-the tier below already solves, and SHALL redraw a wholly fresh board, not
-perturb the rejected one: every candidate consumes fresh randomness, so a plain
-retry cannot re-derive what it rejected.
+Where a candidate board above the lowest tier is one the tier below already
+solves, the generator SHALL redraw a wholly fresh board, not perturb the
+rejected one: every candidate consumes fresh randomness, so a plain retry
+cannot re-derive what it rejected.
 
 #### Scenario: A candidate the lower tier solves is thrown away
 
@@ -264,13 +250,12 @@ generator's known assignment, and SHALL NOT be checked against the other cap.
 - **THEN** the solved board matches, cell for cell, the assignment the generator
   blanked to produce it
 
-### Requirement: Controls: Subsets is played by toggling letter slots
+### Requirement: Controls: Subsets' verbs cycle one letter slot, and a given slot does not change
 
-Subsets SHALL be played by toggling individual letter slots within each cell.
-A left-click or select SHALL cycle a slot unknown → known → cleared → unknown,
-a right-click or secondary select SHALL cycle unknown → cleared → known →
-unknown, and Backspace SHALL reset a slot to unknown. A given (immutable) slot
-SHALL NOT change.
+Each verb of Subsets' `targetVerbs` SHALL be aimed at one letter slot of a
+cell. The primary verb SHALL cycle a slot unknown → known → cleared → unknown,
+the secondary unknown → cleared → known → unknown, and the key-only verb SHALL
+reset a slot to unknown. A given (immutable) slot SHALL NOT change.
 
 #### Scenario: Toggling a letter slot cycles its state
 
@@ -382,31 +367,6 @@ back, and Up from the band's top row SHALL return to the grid.
 - **THEN** the cursor is in the tally band and the entry under it is ruled out of
   the cell in focus
 
-### Requirement: Hint: Subsets provides an explained hint
-
-Subsets SHALL implement `hint()`, planning from the player's current marks and
-rule-outs and narrating each firing as the deduction that forces it. A hint on
-a board that contradicts its own clues SHALL be refused, pointing at the
-mistakes.
-
-#### Scenario: A hint narrates an arrow deduction
-
-- **WHEN** a hint is requested on a board where a horseshoe forces a letter
-- **THEN** the explanation names the arrow relation that forces it, not just the
-  letter to write
-
-#### Scenario: A hidden single is shown with its placement spotlight
-
-- **WHEN** a set has exactly one cell it can still legally occupy
-- **THEN** the hint places it there and spotlights that cell as the only
-  candidate
-
-#### Scenario: A mistaken board is refused honestly
-
-- **WHEN** a hint is requested on a board contradicting its own clues
-- **THEN** the hint refuses and points at the mistakes instead of deducing from
-  a wrong position
-
 ### Requirement: Hint: The hint narrates every deduction the solver may use
 
 The recorder SHALL be able to narrate every deduction the solver may use,
@@ -492,9 +452,8 @@ Where a letter is marked present in the cell at a horseshoe's closed end and
 not in the cell at its open end, a step SHALL mark it present there ("…has C
 marked, so C must be here too"). Where a letter is cleared at the open end and
 not at the closed end, a step SHALL clear it there ("…which has no B, so B
-can't be here either"). The step SHALL ring the letter it decides and outline
-the cell across the horseshoe, and several letters from one horseshoe SHALL be
-one journey.
+can't be here either"). Several letters from one horseshoe SHALL be one
+journey.
 
 #### Scenario: A given set clears a letter from the cell inside it
 
@@ -519,6 +478,12 @@ are tried with it.
   set that can go in one cell only
 - **THEN** the next step is the horseshoe's
 
+#### Scenario: A hidden single is shown with its placement spotlight
+
+- **WHEN** a set has exactly one cell it can still legally occupy
+- **THEN** the hint places it there and spotlights that cell as the only
+  candidate
+
 ### Requirement: Hint: A Subsets hint refuses a letter the answer does not have
 
 Where a letter the player has marked present or cleared differs from the
@@ -534,12 +499,11 @@ entries contradict each other.
 - **THEN** the hint is refused: "These entries contradict each other, so one
   of them must be wrong. Undo, or clear the ones you are unsure of."
 
-### Requirement: Look: What Subsets draws
+### Requirement: Look: Subsets draws its letter slots, its horseshoes and a tally of every set
 
-The board SHALL be formattable as text. Rendering SHALL show each cell's
-letter slots, the horseshoe arrows, a tally of every set-value that tells
-whether it is placed never, once or more than once, and a completion flash.
-There SHALL be no move animation.
+Rendering SHALL show each cell's letter slots, the horseshoe arrows, and a
+tally of every set-value that tells whether it is placed never, once or more
+than once.
 
 #### Scenario: A set placed twice shows in the tally
 
@@ -562,8 +526,7 @@ every set ruled out of that cell struck through.
 
 `redraw` SHALL draw every letter slot of a cell the player fills on the
 collection's cell surface, and every slot of a cell whose set the puzzle gave
-on the collection's lifted surface of a given, with the collection's surface
-grid line between the slots of a cell.
+on the collection's lifted surface of a given.
 
 #### Scenario: A given cell is told by the surface under it
 
@@ -596,10 +559,9 @@ collection's color for a clue that is used up.
 
 ### Requirement: Look: The Subsets completion flash fills a cell's slots together
 
-The completion flash SHALL sweep the cells diagonally, a cell's position being
-its place in the grid. Every slot of a lit cell SHALL be filled with a flash
-color and keep its letter or cross, so that a cell lights as one piece,
-whether the player filled it or the puzzle gave it.
+The completion flash SHALL give a position to a cell and not to a slot, the
+cell's place in the grid, so that every slot of a lit cell is the same flash
+color and a cell lights as one piece.
 
 #### Scenario: The flash is on a cell
 

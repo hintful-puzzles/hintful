@@ -17,8 +17,7 @@ Unequal SHALL be a Latin-square puzzle on an `order × order` grid: the player
 places a number `1..order` in every cell so each row and column contains every
 number exactly once, subject to clues between orthogonally adjacent cells. The
 board SHALL be reported solved exactly while the filled grid satisfies every
-row, column and clue constraint. The game SHALL provide `solve` and
-`textFormat`, and SHALL NOT provide `statusbarText`.
+row, column and clue constraint.
 
 #### Scenario: Entering the last correct number completes the board
 
@@ -38,20 +37,13 @@ by exactly 1, and the absence of a bar between two cells means they do not.
   neighboring cells with no bar between them hold 2 and 3
 - **THEN** the board is not solved
 
-### Requirement: Rules: Unequal checks for mistakes against the unique solution
+### Requirement: Rules: Unequal's mistake check re-solves from its givens and clues
 
-`findMistakes` SHALL re-solve the board from its givens and clues and return
-every player-entered cell whose number contradicts the unique solution, plus
-every empty cell whose non-empty pencil notes have crossed out its solution
-value. When the board is not uniquely solvable from the givens it SHALL return
-an empty result.
-
-#### Scenario: A wrong number is flagged, ordinary notes are not
-
-- **WHEN** the player enters a number that contradicts the unique solution
-- **THEN** `findMistakes` includes that cell
-- **AND** a cell carrying notes that still include its solution value is never
-  included
+Unequal's `findMistakes` SHALL report what the collection's check reports
+(`engine-hints`, "Check & Save names a wrong entry in every game", and
+`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
+the answer it re-solves from the givens and clues. When they do not solve to
+exactly one answer it SHALL return an empty result.
 
 #### Scenario: An ambiguous board
 
@@ -62,7 +54,8 @@ an empty result.
 ### Requirement: Params: Unequal's parameters and their encoding
 
 Params SHALL be `order`, `mode` (Unequal or Adjacent), and `diff`, held as the
-values `"trivial"`, `"easy"`, `"tricky"`, `"extreme"` and `"recursive"`. They
+values `"trivial"`, `"easy"`, `"tricky"`, `"extreme"` and `"recursive"`, which
+are the tiers Easy, Normal, Tricky, Hard and Unreasonable in that order. They
 SHALL be encoded `{order}` with an `a` suffix for Adjacent mode and a `d{c}`
 suffix for difficulty when full, `c` being `t`, `e`, `k`, `x` or `r` in that
 order of the values.
@@ -75,38 +68,12 @@ order of the values.
 - **AND** decoding it round-trips the params
 - **AND** encoding with `full = false` yields `5a`
 
-### Requirement: Params: Unequal's top tier is named Unreasonable and keeps its character
-
-The five difficulty values SHALL be named Easy, Normal, Tricky, Hard and
-Unreasonable, in the order of the values. The top tier SHALL be named
-Unreasonable because it branches and backtracks, which is the one thing the
-collection reserves that name for. Its difficulty character SHALL stay `r`, so
-an existing game ID names the same board.
-
-#### Scenario: The top tier keeps its difficulty character
-
-- **WHEN** params at the top tier are encoded with `full = true`
-- **THEN** the difficulty suffix is `dr`
-
 ### Requirement: Params: Unequal refuses the parameters it cannot deal
 
-The game SHALL declare its size's bounds as 3 to the largest value a candidate
-mask holds (`MAX_CANDIDATE_VALUE`), and an order outside them SHALL be refused,
-an order of 32 included. A difficulty letter the encoding does not know SHALL
-be refused. `validateParams` SHALL refuse an Adjacent puzzle of
-Tricky difficulty or harder below order 5, and SHALL refuse, when a board is to
-be dealt, an order of 3 at Tricky or Unreasonable, which no 3×3 board needs.
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** the params are checked with an order of 2 or of 32
-- **THEN** they are refused with an error string
-
-#### Scenario: A difficulty letter that names no tier
-
-- **WHEN** the params string `5dz` is decoded
-- **THEN** it is refused:
-  `The parameters 5dz have a "z" where this puzzle reads none.`
+`validateParams` SHALL refuse an Adjacent puzzle of Tricky difficulty or
+harder below order 5, and SHALL refuse, when a board is to be dealt, an order
+of 3 at Tricky or Unreasonable, which no 3×3 board needs. The range of the
+order itself SHALL be the one its `paramConfig` item declares.
 
 #### Scenario: A small Adjacent puzzle has no upper tiers
 
@@ -148,19 +115,18 @@ written out: a letter standing for a run of blank cells SHALL be refused.
   flag it back
 - **THEN** the desc is refused as contradictory
 
-### Requirement: Generation: Unequal generates uniquely-solvable boards at the target difficulty
+### Requirement: Generation: What an Unequal board promises at its tier is the collection's
 
-`newDesc` SHALL deal a puzzle solvable at the chosen difficulty and not below
-it. It SHALL NOT fall back to an easier difficulty: it
-keeps looking, and a tier no board of the size needs is refused by
-`validateParams` before a board is dealt. The result SHALL be uniquely
-solvable.
+What a board dealt at a tier promises SHALL be the collection's
+(`engine-difficulty`, "Every tier promises one solution found at its cap", "A
+difficulty tier binds the board it generates" and "A generator never settles
+for a lower tier"), in both modes and with no departure.
 
-#### Scenario: Generated board is unique and correctly graded
+#### Scenario: An Adjacent board at Hard
 
-- **WHEN** a board is generated at a difficulty `d` in either mode
-- **THEN** the solver solves it at difficulty `d`
-- **AND** the solved grid is a valid Latin square satisfying every clue
+- **WHEN** a board is dealt from the params `5adx`, Adjacent 5×5 at Hard
+- **THEN** the solver capped at Tricky does not finish it, and capped at Hard
+  it does
 
 ### Requirement: Generation: An Adjacent board carries every bar
 
@@ -176,7 +142,8 @@ stripped.
 
 ### Requirement: Controls: Unequal accepts digit, pencil, clue-spent, and solve moves
 
-`interpretMove` SHALL select a cell by mouse or keyboard cursor. With a cell
+Unequal SHALL take its selection from the engine's note-taking cell
+(`engine-notes`, "The note-taking cell is one shared mechanic"). With a cell
 highlighted, a digit `1..order` (entered as a digit, or a letter for 11 and
 above) SHALL place that number, or toggle the pencil mark in pencil mode, and
 backspace, space, or below order 10 the `0` key, SHALL clear it. Immutable
@@ -223,24 +190,46 @@ and `'a'`, `'b'` and so on cover `11..order`.
 - **WHEN** the key labels are requested for an order-11 Unequal board
 - **THEN** the result is the buttons `0,1,…,9,a` (values 1..11) followed by a clear key
 
-### Requirement: Preferences: Unequal exposes pencil-mark preferences
+### Requirement: Preferences: Auto-pencil strikes a placed number from its row and column
 
-The game SHALL offer a "sticky pencil mode" preference, an "auto-pencil"
-preference (when on, placing a number strikes it from the pencil marks of its
-row and column), and a "keep mouse highlight after changing a pencil mark"
-preference. With auto-pencil off, note cleanup SHALL be manual: the player
-removes obvious candidates via the mark-all control or a hint.
+With auto-pencil on, placing a number SHALL strike it from the pencil marks of
+the other cells of its row and column.
 
-#### Scenario: A placement with auto-pencil off
+#### Scenario: A number is placed with auto-pencil on
 
-- **WHEN** the player places a number with auto-pencil off
-- **THEN** the pencil marks of the other cells in its row and column are left
-  as they were
+- **WHEN** auto-pencil is on and the player places a number in a cell whose
+  row and column hold cells penciled with it
+- **THEN** no other cell of that row or column pencils that number
 
-### Requirement: Hint: Unequal provides an explained deduction hint
+### Requirement: Hint: Unequal's hint is the shared candidate plan over rows and columns
 
-The game's hint SHALL teach the player the next deduction in pencil-notes
-terms.
+Unequal's hint SHALL be the collection's candidate-elimination plan, taken
+through its row/column preset (`engine-candidate-hints`, "A shared
+candidate-elimination hint plan" and "A row/column Latin square answers no
+question its regions already settle"), departing only in the reading it starts
+on. Unequal SHALL supply its recording solver and the words of its sign and
+bar deductions, which the requirements below state. What its marks stand for
+SHALL be the legend's (`hintMarks`).
+
+#### Scenario: A single on an Unequal board
+
+- **WHEN** a step places a number because it fits one cell of its row
+- **THEN** its sentence is the shared narrator's and names no sign or bar
+
+### Requirement: Hint: A clue elimination is one firing of one clue
+
+A clue elimination SHALL be the Unequal-mode greater-than "link" bound
+deduction or the Adjacent-mode differ-by-1 deduction: a single technique
+firing, striking the candidates it rules out of one cell by one `pencilStrike`
+move. One recorded firing (one inequality link, or one cell and direction of an
+adjacency clue) SHALL map to exactly one `group`, so a hint step never mixes
+clues.
+
+#### Scenario: A strike step stays in its narrated cell
+
+- **WHEN** a clue elimination's step is built in either mode
+- **THEN** every mark its `pencilStrike` clears lies in one cell, and that cell
+  is one of the two the clue sits between
 
 #### Scenario: An inequality bound is taught as a note strike
 
@@ -259,36 +248,6 @@ terms.
 - **THEN** the hint returns a `pencilStrike` step clearing those candidates, the
   narration stating that the two numbers must (or must not) differ by exactly one
 
-### Requirement: Hint: The hint prefers a single, then a strike, then a placement
-
-At each step the plan SHALL prefer a naked single, an empty cell whose live
-notes have collapsed to a single candidate, placed via a `set` move. Failing
-one it SHALL take the basic Latin eliminations a given or placed value implies
-in its row and column, struck via `pencilStrike`. Failing those it SHALL take
-the next clue elimination, and failing that a forced placement of a cell whose
-sound candidates have collapsed to one.
-
-#### Scenario: A naked single comes before any elimination
-
-- **WHEN** a hint is asked on a fully-penciled, mistake-free board where one
-  cell's notes have been narrowed to its solution value
-- **THEN** the first step places that value there with a `set` move
-
-### Requirement: Hint: A clue elimination is one firing of one clue
-
-A clue elimination SHALL be the Unequal-mode greater-than "link" bound
-deduction or the Adjacent-mode differ-by-1 deduction: a single technique
-firing, striking the candidates it rules out of one cell by one `pencilStrike`
-move. One recorded firing (one inequality link, or one cell and direction of an
-adjacency clue) SHALL map to exactly one `group`, so a hint step never mixes
-clues.
-
-#### Scenario: A strike step stays in its narrated cell
-
-- **WHEN** a clue elimination's step is built in either mode
-- **THEN** every mark its `pencilStrike` clears lies in one cell, and that cell
-  is one of the two the clue sits between
-
 ### Requirement: Hint: The hint starts on the implicit reading
 
 Unequal's `newUi` SHALL state the implicit reading of an unmarked cell, because
@@ -300,14 +259,11 @@ a sign strikes from one cell at a time.
   with no pencil notes
 - **THEN** no step is the fill-all move
 
-### Requirement: Hint: Unequal's hint narration meets the hint quality bar
+### Requirement: Hint: Unequal's clue sentences read correctly at the ends of the range
 
-Each step SHALL carry a narration meeting the hint quality bar: leading with
-the spotted indication (the inequality or adjacency pattern), then the
-reasoning, then a necessity-voice conclusion, "must cross out the N" for an
-elimination and "can only be N" for a placement. It SHALL
-read correctly at the degenerate value extremes: the differ-by-1 clue SHALL
-speak of being one away from N and SHALL NOT say "N−1 or N+1".
+A clue step's sentence SHALL lead with the inequality or adjacency pattern,
+and SHALL read correctly at the degenerate value extremes: the differ-by-1
+clue SHALL speak of being one away from N and SHALL NOT say "N−1 or N+1".
 
 #### Scenario: A bound at the edge of the range
 
@@ -315,28 +271,6 @@ speak of being one away from N and SHALL NOT say "N−1 or N+1".
   across it can still be 1
 - **THEN** the narration says the larger side cannot hold the smallest number,
   and does not say the other cell is "at least 1"
-
-### Requirement: Hint: A hint's marks ring the struck cell and outline the clue's pair
-
-A clue elimination's step SHALL ring the cell it strikes from and outline the
-two cells its sign or bar sits between. Equivalent strikes of one firing SHALL
-share the target hint color.
-
-#### Scenario: A link elimination is drawn
-
-- **WHEN** an Unequal-mode link elimination is the displayed step
-- **THEN** the clue's two cells are outlined and the struck cell is ringed
-
-### Requirement: Hint: The hint's deduction is capped below recursion
-
-The deduction SHALL be capped below recursion, because a guess is not a
-teachable note strike.
-
-#### Scenario: An Unreasonable board
-
-- **WHEN** a hint is asked on a board dealt at Unreasonable
-- **THEN** the recording solver runs no higher than Hard, and no step rests on a
-  guess
 
 ### Requirement: Hint: The selection is drawn over the box and the hint's marks beside it
 
@@ -394,6 +328,12 @@ several rows and columns, and the chain, at Hard.
 - **THEN** no step reasons from a sign: each one places a number, as the last
   its row and column leave the cell or in the last cell of a row or column
   left for it
+
+#### Scenario: An Unreasonable board
+
+- **WHEN** a hint is asked on a board dealt at Unreasonable
+- **THEN** the recording solver runs no higher than Hard, and no step rests on a
+  guess
 
 ### Requirement: Look: Unequal renders greater-than signs or adjacency bars between cells
 

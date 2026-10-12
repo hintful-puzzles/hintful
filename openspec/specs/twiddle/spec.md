@@ -14,14 +14,12 @@ block, its well and its completion flash.
 Twiddle SHALL be a `w×h` grid of numbered tiles, solved when the tile numbers
 read in non-decreasing row-major order and, when `orientable`, every tile is
 upright. A generated board SHALL be a scramble of the solved arrangement by
-rotations, and SHALL NOT itself be solved. The game SHALL provide
-`statusbarText`, `solve` and `textFormat`.
+rotations.
 
-#### Scenario: A generated board is scrambled and starts unsolved
+#### Scenario: A generated board is scrambled
 
 - **WHEN** a new game is created from any valid params
-- **THEN** the grid is a scramble of the solved arrangement that is not itself
-  the solved arrangement, and reports a not-completed status
+- **THEN** the grid is a scramble of the solved arrangement
 - **AND** generation terminates for every preset
 
 ### Requirement: Rules: A rotation turns the block and its tiles
@@ -61,21 +59,20 @@ missing `nN` as `n = 2`.
 
 ### Requirement: Params: Twiddle refuses a board smaller than its block
 
-`validateParams` SHALL reject `w < n`, `h < n` and an unreasonably large `w·h`,
-each with a human-readable reason.
+`validateParams` SHALL reject `w < n`, `h < n` and an unreasonably large `w·h`.
 
 #### Scenario: A board narrower than its block is rejected
 
 - **WHEN** the engine's params check receives `{ w: 2, n: 3 }`
-- **THEN** it returns a non-null human-readable reason
+- **THEN** it is refused with "Width must be at least the rotating block
+  size."
 
 ### Requirement: Params: Twiddle's short params are its full ones
 
 `encodeParams` SHALL write the same string with and without `full`, the shuffle
 target included, because the status bar reports progress against it.
 `decodeParams` SHALL read `nN` only directly after the size, and `r`, `o` and
-`mK` in any order after that. It SHALL refuse a character it does not know,
-and SHALL read `n0` as a block of 2.
+`mK` in any order after that, and SHALL read `n0` as a block of 2.
 
 #### Scenario: A shuffle target survives the short form
 
@@ -88,35 +85,6 @@ and SHALL read `n0` as a block of 2.
 - **WHEN** `4x4n2ro` is decoded
 - **THEN** the board is 4×4 with a 2×2 block, one number to a row, and tiles
   that show their turns
-
-### Requirement: Params: Twiddle's block is at least two squares wide
-
-The block size SHALL declare a lower bound of 2 in `paramConfig`, and the
-shuffle count a lower bound of 0, which the engine's params check refuses
-below.
-
-#### Scenario: A block of one square
-
-- **WHEN** the params string `4x4n3` has its block size changed to 1 and goes
-  through the engine's params check
-- **THEN** it is refused with "Rotating block size must be at least 2."
-
-### Requirement: Params: A Twiddle title names what departs from the basic game
-
-A board's label SHALL be its size, followed by `rows only` when `rowsonly`, by
-`orientable` when `orientable`, by `rotating NxN blocks` when the block is not
-2×2, and by `K shuffles` when a shuffle target is set. A board with none of
-these SHALL be labeled by its size alone.
-
-#### Scenario: The Type menu's boards
-
-- **WHEN** the params `3x3n2r`, `3x3n2` and `4x4n3` are labeled
-- **THEN** they read "3x3 rows only", "3x3" and "4x4, rotating 3x3 blocks"
-
-#### Scenario: A shuffle target
-
-- **WHEN** the params `3x3n3m20` are labeled
-- **THEN** the label reads "3x3, rotating 3x3 blocks, 20 shuffles"
 
 ### Requirement: Description: Twiddle descriptions list the tiles in reading order
 
@@ -199,11 +167,9 @@ every orientation, and SHALL count as one move.
 
 ### Requirement: Controls: A click rotates the block centered on it
 
-`interpretMove` SHALL convert a left or right click to a rotation by offsetting
-the click by `(n−1)/2` tiles, so that it selects the region centered on the
-click, and mapping the result to grid coordinates. It SHALL reject a click
-whose region falls outside `0 ≤ x ≤ w−n`, `0 ≤ y ≤ h−n`. A left-click SHALL
-rotate anticlockwise (`dir +1`) and a right-click clockwise (`dir −1`).
+A click SHALL be offset by `(n−1)/2` tiles, so that it selects the block
+centered on the click, and a click whose block falls outside `0 ≤ x ≤ w−n`,
+`0 ≤ y ≤ h−n` SHALL make no move.
 
 #### Scenario: Click geometry constrains legal rotations
 
@@ -321,9 +287,8 @@ keeps its bevel: it is an object the player moves. Color 0 stays the board.
 
 ### Requirement: Look: The Twiddle completion flash lights each tile's face
 
-The completion flash SHALL sweep the tiles diagonally, a tile's position being
-its place in the grid. A lit tile's face SHALL be filled with a flash color
-inside its bevel, and SHALL keep its number and its orientation mark.
+A tile the completion flash lights SHALL have its face filled with a flash
+color inside its bevel, and SHALL keep its number and its orientation mark.
 
 #### Scenario: The flash leaves a tile
 

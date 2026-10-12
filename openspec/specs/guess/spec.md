@@ -125,35 +125,13 @@ SHALL read the fields in any order and SHALL refuse any other character.
 
 ### Requirement: Params: Guess refuses params no board can be dealt for
 
-The `paramConfig` bounds SHALL hold `ncolors` to 2 through 10, `npegs` to at
-least 2 and `nguesses` to at least 1, so that the engine refuses a value outside
-them. `validateParams` SHALL reject `allowMultiple = false` with
-`ncolors < npegs`.
+`validateParams` SHALL reject `allowMultiple = false` with `ncolors < npegs`.
 
 #### Scenario: Invalid params are rejected
 
 - **WHEN** `validateParams` is called with `allowMultiple: false` and
   `ncolors: 3, npegs: 4`
 - **THEN** it returns a non-null error string
-
-#### Scenario: An eleventh color is refused by the engine
-
-- **WHEN** the engine's params check is given `ncolors: 11`
-- **THEN** it returns a refusal that names the Colors field
-
-### Requirement: Params: Standard and Super are Guess's two named boards
-
-The preset titled Standard SHALL be six colors, four pegs and ten guesses,
-with no blanks and with repeats allowed, and the preset titled Super eight
-colors, five pegs and twelve guesses on the same terms. Any other board SHALL
-be titled by its params.
-
-#### Scenario: The two names
-
-- **WHEN** the presets are listed
-- **THEN** `c6p4g10Bm` is titled `Standard` and `c8p5g12Bm` is titled `Super`
-- **AND** `c6p4g10BM`, Standard without repeats, is titled `4x10, 6 colors, no
-  duplicates`
 
 ### Requirement: Description: Guess descriptions are obfuscated solution bitmaps
 
@@ -210,13 +188,10 @@ has never moved a cursor can fill a row by pressing colors alone.
 - **THEN** the color lands in the first slot and the cursor is shown on the
   second
 
-### Requirement: Controls: A color key wears its color and its digit
+### Requirement: Controls: Guess's tenth color is the zero key
 
-A key SHALL be painted in the color it enters (`KeyLabel.swatch`) and labeled
-with the digit it sends. The tenth color SHALL be the `'0'` key, not the `'a'`
-that the collection's digit keypad rolls over to past nine: `digitOf` answers
-that key as zero and this game reads it as ten, so an `'a'` key would be one the
-game refuses.
+The tenth color SHALL be the `'0'` key, which the game reads as ten: its
+colors stop at ten, so an `'a'` key would be one the game refuses.
 
 #### Scenario: The tenth color is the zero key
 
@@ -530,10 +505,9 @@ off.
 
 ### Requirement: Hint: Guess's hint places what the rows prove, then suggests a guess
 
-Guess SHALL provide `hint`, `hintKeepTrack` and `refreshHintStep`. The hint
-SHALL read nothing but the scored rows, never the hidden answer, so that two
-boards whose rows scored alike get the same plan. Its steps SHALL be of two
-kinds, in this order: marks, then a probe.
+The hint SHALL read nothing but the scored rows, never the hidden answer, so
+that two boards whose rows scored alike get the same plan. Its steps SHALL be
+of two kinds, in this order: marks, then a probe.
 
 #### Scenario: Two answers behind the same rows
 
@@ -544,11 +518,9 @@ kinds, in this order: marks, then a probe.
 ### Requirement: Hint: A mark step places what one reading proves
 
 Each mark step SHALL place, as one mark move, the rule-outs that one one-row
-reading proves and the answer row does not yet show, narrated with the reading,
-with the row it reads striped, any answer slots it leans on outlined, and the
-colors it rules out framed. The hint SHALL derive its own rule-outs from the
-rows rather than read the player's, and SHALL NOT place a mark the board already
-has.
+reading proves and the answer row does not yet show, narrated with the reading.
+The hint SHALL derive its own rule-outs from the rows rather than read the
+player's, and SHALL NOT place a mark the board already has.
 
 #### Scenario: A row with no blacks is read as marks
 
@@ -627,8 +599,7 @@ slot, saying none of its colors can be in the answer. It SHALL rule each
 color of a row that scored no black pegs out of the slot it was guessed in,
 saying none can be where it was guessed. It SHALL rule every color a row does
 not hold out of every slot when every peg of the row scored, saying the
-answer can only use its colors. Each SHALL stripe the row and frame the
-colors it rules out.
+answer can only use its colors.
 
 #### Scenario: A row that scored nothing
 
@@ -642,8 +613,7 @@ A slot is settled when the rows prove it can hold one color only. Where the
 slots settled on a row's own pegs number as many as its black pegs, the hint
 SHALL rule the row's other pegs out of the slots they were guessed in. Where
 settled slots account for a row's whole score, it SHALL rule each color the
-row holds more of than they do out of every slot not settled on it. Each
-SHALL stripe the row and outline the settled slots.
+row holds more of than they do out of every slot not settled on it.
 
 #### Scenario: A settled slot holds the row's one black
 
@@ -830,12 +800,9 @@ row's well SHALL keep their own colors.
 
 ### Requirement: Look: Guess's win flash sweeps the whole board
 
-The win flash SHALL sweep every peg position of the board diagonally: each
-guess row's, played or not, and the answer's, counted as the row under the
-last guess. A lit position's box SHALL be filled with a flash color, an empty
-hole with it and a peg keeping its color. Empty holes light because a quick win
-leaves the winning row and the answer a board apart. The feedback pegs SHALL
-not be lit.
+The win flash SHALL light every peg position of the board: each guess row's,
+played or not, and the answer's, counted as the row under the last guess. Empty holes light because a quick win leaves the winning row
+and the answer a board apart. The feedback pegs SHALL not be lit.
 
 #### Scenario: A win on the first guess
 

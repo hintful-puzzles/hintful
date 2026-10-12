@@ -3,10 +3,11 @@
 ## Purpose
 Singles (Hitori), the puzzle of shading squares so that no number repeats
 in a row or column, no two shaded squares share an edge, and the squares left
-clear stay connected: its params and description formats, its controls and
-its show-black-numbers preference, how the board is drawn, what its two
-difficulty tiers mean and what the generator promises, mistake-checking, and
-an explained deduction hint with its own legend of marks.
+clear stay connected: what its params refuse and its description format, its
+controls and its show-black-numbers preference, how the board is drawn, its
+solver's techniques and the test its generator adds to the collection's,
+mistake-checking, and an explained deduction hint with its own colors of
+marks.
 
 ## Requirements
 
@@ -43,10 +44,12 @@ never be reported.
   black nor circled
 - **THEN** `findMistakes` does not include that cell
 
-### Requirement: Params: Singles params are a size and a difficulty
+### Requirement: Params: A Singles params string is its declared codec's
 
-Params SHALL be `w`, `h`, and `diff` (Easy or Normal), encoded `{w}x{h}d{c}`
-when full (`c` = `e` for Easy, `k` for Normal) and `{w}x{h}` otherwise.
+Singles' params (a width, a height and a difficulty) and their encoding SHALL
+be those its `paramConfig` and its declared codec give (`engine-params`, "A
+game declares its params encoding once, and both codec halves are derived"),
+with no departure from the codec grammar.
 
 #### Scenario: Params round-trip
 
@@ -60,8 +63,7 @@ when full (`c` = `e` for Easy, `k` for Normal) and `{w}x{h}` otherwise.
 
 Params SHALL be refused unless `w ≥ 2`, `h ≥ 2` and both are `≤ 61`: 61 is the
 largest number the desc alphabet writes, and a cell holds a number up to
-`max(w, h)`. A difficulty letter the encoding does not know SHALL be
-refused.
+`max(w, h)`.
 
 #### Scenario: Invalid params are rejected
 
@@ -76,8 +78,8 @@ refused.
 ### Requirement: Params: Normal is refused on a Singles grid under 4 squares both ways
 
 Generating at Normal SHALL be refused, with a reason, when both `w` and `h`
-are under 4. The difficulty SHALL NOT be downgraded to Easy: a grid 4 or
-longer either way SHALL be generated at the difficulty asked for.
+are under 4. A grid 4 or longer either way SHALL be generated at the
+difficulty asked for.
 
 #### Scenario: A 3×3 Normal is refused
 
@@ -91,22 +93,23 @@ longer either way SHALL be generated at the difficulty asked for.
 
 ### Requirement: Description: Singles descriptions are fixed-length number grids
 
-The desc SHALL encode the board's numbers in scan order, one character per cell:
-digits `0`–`9` for `0`–`9`, letters `a`–`z` for `10`–`35`, `A`–`Z` for `36`–`61`.
-A desc SHALL be refused unless its length equals `w·h` exactly and every
-decoded number lies in `1..max(w,h)`.
+The desc SHALL encode the board's numbers in scan order, one character per
+cell, each written by `n2c` (`engine-params`, "The engine provides the two
+desc value alphabets"). A desc SHALL be refused unless its length equals `w·h`
+exactly and every decoded number lies in `1..max(w,h)`.
 
 #### Scenario: Wrong-length description is rejected
 
 - **WHEN** a desc whose length is not `w·h` is checked
 - **THEN** it is refused with a non-null error
 
-### Requirement: Generation: Singles generates unique, difficulty-graded boards
+### Requirement: Generation: Singles tests a board one level below with the sneaky deduction
 
-`newDesc` SHALL deal a board with exactly one solution. It SHALL accept a board
-only when it is solvable at the requested difficulty and *not* solvable one
-difficulty level below (with the sneaky generation-artifact deduction enabled),
-regenerating otherwise.
+What a Singles board dealt at a tier promises SHALL be the collection's
+(`engine-difficulty`, "Every tier promises one solution found at its cap" and
+"A difficulty tier binds the board it generates"), with one addition: the test
+that a board is *not* solvable one difficulty level below SHALL run with the
+sneaky generation-artifact deduction enabled.
 
 #### Scenario: Generated boards are uniquely solvable at their difficulty
 
@@ -143,10 +146,9 @@ solved.
 
 ### Requirement: Controls: Singles toggle moves
 
-`interpretMove` SHALL map a left-click / `CURSOR_SELECT` on a grid cell to a move
-that toggles the cell black (clearing it to empty if it was already black or
-circled), and a right-click / `CURSOR_SELECT2` to a move that toggles the cell
-circled (clearing it to empty if already set).
+The left-click verb of Singles' `targetVerbs` SHALL toggle a cell black
+(clearing it to empty if it was already black or circled), and the right-click
+verb SHALL toggle it circled (clearing it to empty if already set).
 
 #### Scenario: Left-click cycles a cell through black and back to empty
 
@@ -178,34 +180,15 @@ way.
   pressed
 - **THEN** the cursor is on the last square of the top row
 
-### Requirement: Preferences: Singles show-black-numbers preference
+### Requirement: Preferences: Singles' show-black-numbers preference defaults to off
 
-The game SHALL expose a single boolean preference (keyword `show-black-nums`),
-labeled "Show numbers on … squares" with the collection's word for the shaded
-color. It SHALL default to off.
+The show-black-numbers preference SHALL be stored under the keyword
+`show-black-nums` and SHALL default to off.
 
 #### Scenario: Preference toggles numbers on black squares
 
 - **WHEN** the show-black-numbers preference is turned on
 - **THEN** subsequent redraws draw each black cell's number
-
-### Requirement: Hint: Singles provides an explained deduction hint
-
-The `singles` game SHALL implement `hint(state)` returning a plan-carrying,
-narrated hint that explains why each move is forced, and `hintKeepTrack` so
-the plan auto-advances as the player follows it. `hint` SHALL run the
-deductive solver from the player's current marks, recording each forced cell
-in deduction order with the deduction that forces it, and return the ordered
-sequence of narrated `HintStep`s (the remaining solution).
-
-#### Scenario: Hint explains the next forced move
-
-- **WHEN** `hint` is called on an unsolved, mistake-free generated board
-- **THEN** it returns `{ ok: true }` with a non-empty list of steps
-- **AND** the first step's move is a legal `executeMove` whose narration names
-  the deduction (sandwich / pair / corner / offset / connectivity / cascade)
-  that forces its cell
-- **AND** applying every step's move in order solves the board
 
 ### Requirement: Hint: A Singles hint step states the number pattern that forces its cell
 
@@ -247,11 +230,10 @@ two.
   corner with four matching numbers, or an offset-pair pattern)
 - **THEN** the hint emits a single `HintStep` whose move sets both cells
 
-### Requirement: Hint: A Singles hint outlines its evidence
+### Requirement: Hint: Every Singles step shows the evidence it rests on
 
-`redraw` SHALL outline the displayed step's evidence at the cell's edge so the
-narration's premise is visible. Every step SHALL carry visible evidence, at
-least one outlined cell, never a bare conclusion.
+Every step SHALL carry visible evidence, at least one outlined cell, never a
+bare conclusion.
 
 #### Scenario: Every hint step shows visible evidence
 
@@ -261,13 +243,11 @@ least one outlined cell, never a bare conclusion.
 
 ### Requirement: Hint: Distinct premise roles in a Singles hint take distinct colors
 
-Where a single deduction has premise cells in distinct roles, those roles
-SHALL be rendered in distinct colors, so the highlight does not imply cells
-share a role they do not. A 2×2-corner deduction SHALL distinguish the
-matching pair (the cells that share a number, outlined as evidence) from the
-protected corner (the cell that would be sealed off, outlined in its own
-distinct color). The three roles (target, evidence, protected corner) SHALL be
-mutually disjoint: no cell carries two.
+A 2×2-corner deduction SHALL distinguish the matching pair (the cells that
+share a number, outlined as evidence) from the protected corner (the cell that
+would be sealed off, outlined in its own distinct color), so the highlight
+does not imply cells share a role they do not. The three roles (target,
+evidence, protected corner) SHALL be mutually disjoint: no cell carries two.
 
 #### Scenario: A corner deduction separates the corner from the matching pair
 
@@ -325,12 +305,9 @@ otherwise.
 
 ### Requirement: Hint: Singles hint roles are bands and stripes, never fills
 
-When a Singles hint is displayed, `redraw` SHALL distinguish the element types
-the deduction names using a stable color legend. Every cell carries a number,
-so no hint role SHALL be a fill: each SHALL be a band at the cell's edge,
-beside the piece and the ring, or stripes under the cell's content. The legend
-SHALL be consistent across deductions (a shaded-square premise is the same
-color in every hint that cites one).
+Every cell carries a number, so no hint role SHALL be a fill: each SHALL be a
+band at the cell's edge, beside the piece and the ring, or stripes under the
+cell's content.
 
 #### Scenario: A premise's digit stays readable
 
@@ -339,11 +316,11 @@ color in every hint that cites one).
 
 ### Requirement: Hint: The forced cell, the number premises and the corner have their own colors
 
-The forced cell(s) (the move) SHALL be banded `COL_HINT` and drawn without
-the forced mark: the narration says whether to shade or circle. An undecided number premise (the matching numbers a deduction reasons
-over) SHALL be banded `COL_HINT_CELL`. The protected corner of a corner
-deduction SHALL be banded `COL_HINT_STRAND`. The row or column a sentence
-names SHALL be striped in `COL_HINT`.
+The forced cell(s) (the move) SHALL be banded `COL_HINT`. An undecided number
+premise (the matching numbers a deduction reasons over) SHALL be banded
+`COL_HINT_CELL`. The protected corner of a corner deduction SHALL be banded
+`COL_HINT_STRAND`. The row or column a sentence names SHALL be striped in
+`COL_HINT`.
 
 #### Scenario: A cell a hint says to shade is drawn empty
 
@@ -526,10 +503,9 @@ each lands beside the piece and the ring and never on them.
 
 ### Requirement: Look: Singles completion flash
 
-The completion flash SHALL sweep every cell of the board. A lit cell's ground
-SHALL be filled with a flash color, and what the cell holds, its number, a
-kept cell's ring and a blackened cell's piece, SHALL be drawn over it as on
-any other frame.
+The ground of a cell the completion flash is on SHALL be filled with a flash
+color, and what the cell holds, its number, a kept cell's ring and a
+blackened cell's piece, SHALL be drawn over it as on any other frame.
 
 #### Scenario: A hand-made completion flashes
 

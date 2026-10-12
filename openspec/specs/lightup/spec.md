@@ -108,17 +108,15 @@ rotational when `w ≠ h`. The legacy `r` flag SHALL decode as difficulty 2.
 
 ### Requirement: Params: Light Up's params are validated
 
-Params SHALL be refused when the width or the height is below 2, or when the
-symmetry or the difficulty is not one of its listed values: the engine refuses
-these from the game's `paramConfig`. `validateParams` SHALL refuse, of full
-params, a `blackpc` outside 5 to 100, 4-way rotational symmetry on a grid that
-is not square, either 4-way symmetry on a grid whose width and height are
-both below 3, and a board too small for the tier asked for.
+`validateParams` SHALL refuse, of full params, a `blackpc` outside 5 to 100,
+4-way rotational symmetry on a grid that is not square, either 4-way symmetry
+on a grid whose width and height are both below 3, and a board too small for
+the tier asked for.
 
 #### Scenario: Invalid params are rejected
 
-- **WHEN** full params carry a 1-wide grid, a `blackpc` outside 5 to 100, or
-  4-way rotational symmetry on a non-square grid
+- **WHEN** full params carry a `blackpc` outside 5 to 100, or 4-way rotational
+  symmetry on a non-square grid
 - **THEN** they are refused with a non-null error string
 
 #### Scenario: 4-way mirror symmetry on a non-square grid
@@ -280,13 +278,11 @@ the solution to be unique.
 
 ### Requirement: Controls: Light Up accepts pointer and cursor input
 
-A left-click SHALL toggle a bulb on an open square that carries no mark, and a
-right-click the impossible-mark on an open square that carries no bulb. A click
-on a wall SHALL be a no-op. A left-click on a marked square, and a right-click
-on a bulb, SHALL be rejected without a history entry. A right-drag SHALL repeat
-the right-click on the squares it passes that held what the pressed square
-held, and a left-drag SHALL repeat nothing, because a row of bulbs light each
-other.
+The left-click verb of Light Up's `targetVerbs` SHALL toggle a bulb on an open
+square that carries no mark, and the right-click verb the impossible-mark on
+one that carries no bulb. On a wall, or a square that holds the other, a verb
+SHALL make no move. Only the right-click verb SHALL be repeated by a drag,
+because a row of bulbs light each other.
 
 #### Scenario: Left-click places and toggles a bulb
 
@@ -307,36 +303,27 @@ other.
 - **AND WHEN** the player left-drags across three empty open squares
 - **THEN** only the first holds a bulb
 
-### Requirement: Controls: Light Up's keyboard cursor
-
-The arrow keys SHALL move a cursor over the grid and reveal it. Select or
-Enter SHALL toggle a bulb on the cursor's square, and select2 or `i` SHALL
-toggle a mark there, under the same rejection rules as the two clicks.
-Completing the board SHALL hide the cursor.
-
 #### Scenario: The keyboard is refused where the click is
 
 - **WHEN** the cursor is on a square carrying an impossible-mark and the
   player presses Enter
 - **THEN** no move is produced and no history entry is created
 
-### Requirement: Hint: Light Up ships an explained deductive hint
+### Requirement: Controls: Completing a Light Up board hides the cursor
 
-The game SHALL implement `hint()` returning a plan of narrated steps computed
-by the game's own solver techniques from the player's current position,
-honoring the bulbs and impossible-marks already placed.
+Completing the board SHALL hide the keyboard cursor.
 
-#### Scenario: The plan completes deductive boards
+#### Scenario: The last bulb is placed from the keyboard
 
-- **WHEN** the plan is computed on any generated Easy or Normal board
-- **THEN** following it step by step solves the board with no un-narrated step
+- **WHEN** the cursor shows on the one square still to take a bulb and Enter
+  places it, leaving the grid correct
+- **THEN** the board is solved and no cursor is drawn on it
 
-### Requirement: Hint: A Light Up hint step names its technique and says why
+### Requirement: Hint: A Light Up hint step leads with what to look for, and one firing is one step
 
-Each step SHALL name its technique. Its narration SHALL lead with the
-recognizable indication, state why the move is forced, and conclude in the
-necessity voice. One deduction firing SHALL be one step: a clue firing that
-forces several squares is one grouped multi-cell step.
+A step's narration SHALL lead with the recognizable indication and then state
+why the move is forced. One deduction firing SHALL be one step: a clue firing
+that forces several squares is one grouped multi-cell step.
 
 #### Scenario: A forced bulb is explained
 
@@ -369,7 +356,8 @@ that would extinguish every way to satisfy an unlit square or a clue).
 
 A step that rules squares out SHALL emit the game's own impossible-mark move,
 so that the marks a followed plan leaves on the board show the deductions
-later steps rest on.
+later steps rest on. The hint SHALL honor the impossible-marks the player has
+placed as it does the bulbs.
 
 #### Scenario: A discounted square is crossed
 
@@ -407,12 +395,11 @@ and SHALL NOT leave the reader to supply it.
   outlined ones as a place the bulb could go, and does not attribute the whole
   set to the other outlined squares
 
-### Requirement: Hint: Light Up hint rendering follows the element-type legend
+### Requirement: Hint: A Light Up hint target is ringed with no bulb or mark previewed
 
-The displayed hint SHALL highlight, not perform. Each target square SHALL be
-ringed `COL_HINT` at its edge with no bulb or mark preview, so that a bulb or
-a cross already on it stays visible. A bulb target and a mark target SHALL
-look identical: the narration says which action it is.
+Each target square SHALL be ringed `COL_HINT` at its edge with no bulb or mark
+preview, so that a bulb or a cross already on it stays visible. A bulb target
+and a mark target SHALL look identical: the narration says which action it is.
 
 #### Scenario: A target keeps its content
 
@@ -513,9 +500,9 @@ ruled-out cross. It SHALL be suppressed on a lit square when the
 ### Requirement: Look: Light Up's cursor and completion flash
 
 The keyboard cursor SHALL be brackets at the corners of its square, clear of a
-bulb. The completion flash SHALL sweep the open squares diagonally, a lit
-square filled with a flash color in place of its yellow and keeping its bulb.
-A wall SHALL never be lit.
+bulb. The completion flash SHALL light the open squares only: a lit square
+SHALL be filled with a flash color in place of its yellow and keep its bulb,
+and a wall SHALL never be lit.
 
 #### Scenario: The cursor on a bulb
 

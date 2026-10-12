@@ -184,20 +184,14 @@ declaration.
 
 ### Requirement: Params: Black Box refuses params that cannot be played
 
-A `w` or an `h` below 2 or above 255 SHALL be refused, by the bounds the size
-fields declare. `validateParams` SHALL reject `minballs < 1`,
-`minballs > maxballs`, and `minballs >= w*h`.
+`validateParams` SHALL reject `minballs < 1`, `minballs > maxballs`, and
+`minballs >= w*h`.
 
 #### Scenario: Invalid params are rejected
 
 - **WHEN** `validateParams` is called with `minballs: 0`, or with
   `minballs > maxballs`, or with `minballs >= w*h`
 - **THEN** it returns a non-null error string
-
-#### Scenario: A box too narrow
-
-- **WHEN** params with `w: 1` are checked
-- **THEN** they are refused
 
 ### Requirement: Params: Only a deal is bound by the ball limit
 
@@ -306,6 +300,20 @@ generator builds again, and a loaded board loads.
 - **WHEN** a game ID is opened whose answer count runs past its budget
 - **THEN** `solve` does not say `MULTIPLE_SOLUTIONS` and the board loads
 
+### Requirement: Controls: Black Box takes its presses, its cursor and its select keys from its target verbs
+
+Black Box SHALL take its presses, its cursor, its select keys and its drag
+from its `targetVerbs` declaration (`engine-input`, "The engine owns a
+declaring game's press and select keys"), so a select key does at the cursor
+what its button does at the pointer. Its one arm of its own SHALL be the left
+button's release, which ends the showing of a laser pressed again.
+
+#### Scenario: Enter on an edge square
+
+- **WHEN** the keyboard cursor shows on an edge square whose laser is not
+  fired, and Enter is pressed
+- **THEN** that laser is fired, as a primary press there fires it
+
 ### Requirement: Controls: A primary press on the edge fires a laser, or shows again one already fired
 
 A primary press on a square round the edge SHALL fire the laser that enters
@@ -353,10 +361,8 @@ the top or the bottom edge, the row from the left or the right.
 
 The game's sweep SHALL cover the squares inside the box alone, and SHALL
 compare a square's guessed ball and its known mark together. A drag that
-starts inside SHALL repeat its press on each inside square it passes that
-holds what the pressed one held, and SHALL pass over the edge. A drag that
-starts on the edge SHALL repeat nothing, since a laser is a move and not a
-mark.
+starts inside SHALL pass over the edge, and a drag that starts on the edge
+SHALL repeat nothing, since a laser is a move and not a mark.
 
 #### Scenario: A drag of balls runs out onto the edge
 
@@ -407,7 +413,7 @@ came out at a numbered square SHALL be followed from either end.
 ### Requirement: Hint: A settled square is shown by a mark, in one step
 
 A settled empty square SHALL be shown by marking it known and a settled ball by
-guessing it, in one step that rings the square and outlines the laser's ends.
+guessing it, in one step.
 
 #### Scenario: A settled ball
 
@@ -549,14 +555,13 @@ sentences and help page SHALL name no hue for a ball.
 - **WHEN** a hint step puts a ball on a square
 - **THEN** its sentence says "a ball" and names no color
 
-### Requirement: Look: Black Box's win flash sweeps the squares of the revealed box
+### Requirement: Look: Black Box's win flash lights the squares of the box and never a laser square
 
-A reveal is the win, and Black Box SHALL declare no flash of its own for it:
-the win flash SHALL sweep the squares of the box diagonally. A lit square
-SHALL be filled with a flash color and SHALL keep the ball it holds. A laser
-square SHALL never be lit.
+A reveal is the win, and the win flash SHALL light the squares of the box
+alone. A laser square SHALL never be lit.
 
-#### Scenario: The Solve command reveals without a flash
+#### Scenario: A check the box accepts
 
-- **WHEN** the Solve command reveals the box
-- **THEN** the balls are shown and no flash runs
+- **WHEN** the player's check is accepted and the win flash runs
+- **THEN** the highlight crosses the squares of the box, and every laser
+  square is drawn as on any other frame

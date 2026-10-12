@@ -40,22 +40,50 @@ is the next session's, starting at 3.1.**
 - [x] 3.0 **The owner answers A, B or C** (`design.md` § "The question for
       the owner"). Answered 2026-10-12: C, amended (`design.md` § "The
       owner's answer: C, amended", which every task below follows).
-- [ ] 3.1 Write the brief for a batch's writer and the one for its reviewer
+- [x] 3.1 Write the brief for a batch's writer and the one for its reviewer
       from that section, the guide, and the two ledgers in `sample/` (what
       the first draft did badly is the list of traps). Batch the 57 by kind,
-      so a batch leans on the same engine capabilities.
-- [ ] 3.2 The engine amendments of rule 1, as deltas, before any batch that
-      leans on them: the three homeless sentences, `border-grid` (what each
-      button does, the sweep drag, how under-size is measured and reddened,
-      the keep-track verdict on a wrong-button click). Each read against the
-      engine code and reviewed. Add to this list as the batches report a
-      sentence several games state of themselves.
-- [ ] 3.3 Redo Clusters and Palisade under the three rules, as deltas, and
-      read the two results whole as specs before starting the rest: they are
-      the proof the rules give a spec a new game's author can copy.
+      so a batch leans on the same engine capabilities. `brief.md`; the
+      batches are listed under 3.4. **The specs are edited in place and not
+      by delta** (`design.md`, "The specs are edited in place, with no
+      delta"), and `tools/cut-check.mjs` holds each ledger to its spec's
+      diff.
+- [x] 3.2 The engine amendments of rule 1, before any batch that leans on
+      them, each read against the engine code and reviewed:
+      `ledger/_engine.md`. Round one: `border-grid` (buttons, nearest edge,
+      cursor, drag, the two reddening rules, the keep-track verdict),
+      `ts-engine` (only Solve sets the solver record), `engine-params` (the
+      dot-run grammar), `engine-notes` (the pencil preference keys). Round
+      two, from what Clusters and Palisade found: `engine-input` (a key on a
+      hidden cursor), `engine-hints` (a hint is deduced from the board in
+      play), `engine-difficulty` (the bounded answer search, Solve from it,
+      the tier a string with no `d` decodes to), `border-grid` (the edge
+      byte), `engine-params` (the dot-run round trip).
+- [ ] 3.2a **A last engine round**, when every batch is written: gather
+      `## Engine requests` from all the ledgers
+      (`grep -n -A30 '^## Engine requests' ledger/*.md`), give a home to each
+      sentence more than one game states, review it, then remove that
+      sentence from the games that kept it, with a ledger row each.
+- [x] 3.3 Redo Clusters and Palisade under the three rules, and read the two
+      results whole as specs before starting the rest. Clusters 17,754 to
+      14,166 bytes, Palisade 31,602 to 25,015; both read whole and reviewed.
 - [ ] 3.4 The other 55, a writer then a reviewer a batch. Each game: its
-      delta, and its ledger rows (requirement, what happens, where it is
-      stated instead).
+      spec cut in place, and its ledger. A game is done when it has a
+      `## Review` section in its ledger and `cut-check` passes; run
+      `node openspec/changes/order-and-shrink-the-game-specs/tools/cut-check.mjs`
+      for the games that have no ledger yet, and
+      `grep -L '^## Review' ledger/*.md` for those written and not reviewed.
+      The batches: (separate slant rect) (loopy galaxies) (keen towers
+      unequal group mathrax) (solo salad rome abcd undead) (crossing map
+      seismic filling signpost) (unruly singles lightup tents magnets)
+      (mosaic pattern range boats subsets) (tracks pearl bridges spokes
+      sticks) (net netslide dominosa bricks ascent) (fifteen sixteen twiddle
+      cube flip) (inertia sokoban slide pegs samegame) (mines blackbox guess
+      untangle flood).
+- [ ] 3.4a Read `## Found` in every ledger
+      (`grep -n -A30 '^## Found' ledger/*.md`): fix what is quick and safe, a
+      spec sentence the code contradicts above all, and raise the rest in
+      `design.md` under "Found, and the owner's to decide".
 - [ ] 3.5 Where a removed requirement held the only statement of a promise
       to a player (a save or link format), the ledger names the test that
       holds the promise now, or the requirement stays.

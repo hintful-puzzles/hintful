@@ -2,12 +2,12 @@
 
 ## Purpose
 Towers (Skyscrapers), the Latin-square puzzle whose edge clues count the towers
-visible from that side: its params and description formats, its 3D and 2D
-styles and the surfaces they stand on, its sticky pencil mode, an optional
+visible from that side: its rules, what its params refuse and its description
+format, its 3D and 2D styles and the surfaces they stand on, an optional
 auto-pencil that strikes a placed height from its row and column, clue
-striking, a mistake check that also catches a pencil note excluding the true
-height, its keypad, and what is Towers' own in a hint explained through pencil
-notes.
+striking, and what is Towers' own in a hint explained through pencil notes.
+What it shares with every note-taking and candidate-hint game is in
+`engine-notes` and `engine-candidate-hints`.
 
 ## Requirements
 
@@ -34,50 +34,46 @@ clue and no Latin constraint.
 - **WHEN** the player enters the final tower that completes a correct grid
 - **THEN** `status` reports the state `executeMove` returns as solved
 
-### Requirement: Rules: Towers checks for mistakes against the unique solution
+### Requirement: Rules: Towers' mistake check re-solves from its clues and givens
 
-`findMistakes` SHALL re-solve the board from its clues and givens and return
-every marking that contradicts the unique solution: a filled cell whose tower
-differs from it (`kind: "cell"`), and a cell whose non-empty candidate set
-lacks its solution height (`kind: "note"`). Both kinds SHALL render as the same
-red cell overlay. When the board is not uniquely solvable from the givens,
-`findMistakes` SHALL return an empty result.
+Towers' `findMistakes` SHALL report what the collection's check reports
+(`engine-hints`, "Check & Save names a wrong entry in every game", and
+`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
+the answer it re-solves from the clues and givens. A wrong tower and a note
+set that lacks its height SHALL render as the same red cell overlay. When the
+clues and givens do not solve to exactly one answer the result SHALL be empty.
 
-#### Scenario: A wrong tower is flagged
+#### Scenario: A wrong tower that breaks no rule
 
-- **WHEN** the player enters a tower height that contradicts the unique solution
-- **THEN** `findMistakes` includes that cell with `kind: "cell"`
+- **WHEN** the player enters a height that repeats nothing in its row or
+  column, contradicts no clue as the board stands, and is not the answer's
+- **THEN** `findMistakes` includes that cell, though nothing is drawn as an
+  error before the check
 
-#### Scenario: A note that excludes the correct height is flagged
+### Requirement: Params: A Towers params string is its declared codec's, and one with no difficulty is Easy
 
-- **WHEN** an empty cell carries pencil notes that do not include the cell's
-  solution height
-- **THEN** `findMistakes` includes that cell with `kind: "note"`
+Towers' params, a grid size and a difficulty, and their encoding SHALL be
+those its `paramConfig` and its declared codec give (`engine-params`, "A game
+declares its params encoding once, and both codec halves are derived"), with
+no departure from the codec grammar. A params string that carries no
+difficulty SHALL decode to Easy.
 
-### Requirement: Params: Towers' parameters are a grid size and a difficulty
+#### Scenario: The tier letters are not the tiers' initials
 
-Params SHALL be `w` and a difficulty (Easy, Normal, Tricky, or Unreasonable),
-encoded `{w}d{c}` when full, with `c` being `e`, `h`, `x` or `u` in that order
-of tier, and `{w}` otherwise.
+- **WHEN** `5dh` is decoded
+- **THEN** it is a 5×5 board at Normal, whose short form is `5`
+- **AND** `4` decoded is a 4×4 board at Easy
 
-#### Scenario: Params round-trip
+### Requirement: Params: A 3×3 Towers is not dealt above Normal
 
-- **WHEN** params `{ w: 6, diff: "unreasonable" }` are encoded with `full = true`
-- **THEN** the result is `6du`
-- **AND** decoding it round-trips the params
-- **AND** encoding with `full = false` yields `6`
+When a board is to be generated, `validateParams` SHALL refuse a 3×3 board
+above Normal.
 
-### Requirement: Params: Towers' grid size runs from 3 to 9
+#### Scenario: A 3×3 Tricky is asked for
 
-The grid-size item of `paramConfig` SHALL declare the bounds 3 and 9, so that
-the engine refuses a `w` outside them. A difficulty letter that names no tier
-SHALL be refused. When full, `validateParams` SHALL refuse a
-3×3 board above Normal.
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** params with `w < 3` or `w > 9` are checked
-- **THEN** they are refused with a sentence that names the grid size
+- **WHEN** `3dx` or `3du` is validated for a board that is to be generated
+- **THEN** it is refused as a tier no 3×3 puzzle has
+- **AND** the same params are accepted when a description comes with them
 
 ### Requirement: Description: Towers descriptions encode edge clues and grid givens
 
@@ -106,24 +102,27 @@ a length other than `w²`, and a `_` anywhere but between two adjacent givens.
   read
 - **THEN** it is refused with an error and no state is built
 
-### Requirement: Generation: Towers generates uniquely-solvable boards at the target difficulty
+### Requirement: Generation: An Easy Towers board keeps every clue
 
-A generated board SHALL be uniquely solvable, and solvable by the graded solver
-at exactly the chosen difficulty and no lower. An Easy board SHALL keep every
-one of its `4w` edge clues; above Easy the generator SHALL remove clues as well
-as grid givens, for as long as the board stays solvable at that difficulty.
+What a board dealt at a tier promises SHALL be the collection's
+(`engine-difficulty`, "Every tier promises one solution found at its cap" and
+"A difficulty tier binds the board it generates"), with no departure. An Easy
+board SHALL keep every one of its `4w` edge clues; above Easy the generator
+SHALL remove clues as well as grid givens, for as long as the board stays
+solvable at that difficulty.
 
-#### Scenario: Generated board is unique and correctly graded
+#### Scenario: An Easy board and a Normal one
 
-- **WHEN** a board is generated at a difficulty `d`
-- **THEN** the solver solves it at difficulty `d`
-- **AND** the solver does not solve it at any lower difficulty
-- **AND** the solved grid is a valid Latin square satisfying every clue
+- **WHEN** a board is generated at Easy
+- **THEN** every one of its `4w` clue fields holds a number
+- **AND** a board generated above Easy may leave clue fields empty
 
 ### Requirement: Controls: Towers selects a cell by pointer or by keyboard cursor
 
-Under the 3D appearance the pointer's hit-testing SHALL follow the towers, so a
-press on a tower protruding from a neighboring cell selects that neighbor.
+Towers SHALL take its selection from the engine's note-taking cell
+(`engine-notes`, "The note-taking cell is one shared mechanic"). Under the 3D
+appearance the pointer's hit-testing SHALL follow the towers, so a press on a
+tower protruding from a neighboring cell selects that neighbor.
 
 #### Scenario: A press lands on a neighbor's tower
 
@@ -152,17 +151,6 @@ onto one, SHALL toggle that clue's struck-through ("done") state.
 - **WHEN** the player clicks an outside clue
 - **THEN** `executeMove` toggles that clue's done flag
 
-### Requirement: Controls: Towers provides on-screen key labels
-
-Towers SHALL implement `requestKeys(params)` returning one button per digit
-`1..w` (labeled by the digit character) followed by a clear key (button code
-`8`, labeled `"Clear"`).
-
-#### Scenario: The keypad covers the grid's heights plus clear
-
-- **WHEN** the key labels are requested for a `5×5` Towers board
-- **THEN** the result is the buttons `1,2,3,4,5` followed by a clear key
-
 ### Requirement: Preferences: Towers exposes an appearance preference
 
 The game SHALL offer an appearance preference under the key `appearance`, a
@@ -173,24 +161,10 @@ choice of 2D or 3D in that order, defaulting to 3D.
 - **WHEN** the appearance preference is changed between 3D and 2D
 - **THEN** subsequent frames render in the selected style
 
-### Requirement: Preferences: Towers offers a sticky pencil mode
-
-Towers SHALL offer the sticky pencil preference.
-
-#### Scenario: Sticky mode keeps pencil entry across left-clicks
-
-- **WHEN** sticky pencil mode is on and the player right-clicks a cell, then
-  left-clicks a different cell
-- **THEN** pencil mode stays on, the highlight moves to the second cell, and a
-  digit there writes a pencil mark (not a real entry)
-- **AND** the on-screen pencil-mode indicator is shown the whole time
-
 ### Requirement: Preferences: Towers auto-pencils row/column eliminations on placement
 
-The game SHALL provide an auto-pencil preference: when it is on and the player
-places a tower height, the game SHALL strike that height from the pencil marks
-of every other cell in the same row and column, and when it is off a placement
-SHALL leave other cells' pencil marks untouched. The decision SHALL be fixed at
+With auto-pencil on, a placement SHALL strike its height from the pencil marks
+of every other cell in the same row and column. The decision SHALL be fixed at
 move-creation time, recorded on the move, so that replaying a saved game is
 deterministic regardless of the preference's later value.
 
@@ -201,32 +175,26 @@ deterministic regardless of the preference's later value.
   from its pencil marks
 - **AND** cells sharing neither the row nor the column keep candidate `n`
 
-#### Scenario: Auto-pencil off leaves notes untouched
+### Requirement: Hint: Towers' hint is the shared candidate plan over rows and columns
 
-- **WHEN** auto-pencil is off and the player places a height
-- **THEN** no other cell's pencil marks change
+Towers' hint SHALL be the collection's candidate-elimination plan, taken
+through its row/column preset (`engine-candidate-hints`, "A shared
+candidate-elimination hint plan" and "A row/column Latin square answers no
+question its regions already settle"), with no departure. Towers SHALL supply
+its recording solver, one rung of its own and its words, which the
+requirements below state. What its marks stand for SHALL be the legend's
+(`hintMarks`).
 
-### Requirement: Hint: Towers provides an explained, pencil-notes-based deduction hint
+#### Scenario: A single on a Towers board
 
-The hint SHALL teach Towers' candidate-elimination reasoning by setting and
-striking pencil notes. It SHALL be the solver's own narrated deduction script:
-the recording solver's ordered operations are expressed against the player's
-live notes and grid as a sequence of `HintStep`s.
+- **WHEN** a step places a height because it fits one cell of its row
+- **THEN** its sentence is in Towers' own words for a height, and reasons from
+  no clue
 
-#### Scenario: The player has edited the notes
+### Requirement: Hint: A Towers clue elimination strikes one height a leg
 
-- **WHEN** a hint is requested on a mistake-free board whose notes the player
-  has edited
-- **THEN** each step is expressed against the notes as they stand
-
-### Requirement: Hint: A Towers hint step populates, eliminates or places
-
-Under the `populate` reading Towers starts on, a hint's steps SHALL be of three
-kinds: a populate step, emitted only when some empty cell lacks notes, that
-fills every empty cell's candidate marks through the fill-all (`pencilAll`)
-move; eliminate steps, each one `pencilStrike` move clearing what a single
-technique firing rules out, one step for each height it rules out; and place
-steps that fill a cell whose sound candidates have collapsed to one.
+An elimination step SHALL clear what a single technique firing rules out, and a
+firing that rules out several heights SHALL be one leg for each height.
 
 #### Scenario: A clue elimination is taught as a note strike
 
@@ -235,21 +203,12 @@ steps that fill a cell whose sound candidates have collapsed to one.
 - **THEN** the hint returns a step whose `pencilStrike` move clears exactly those
   candidates
 
-### Requirement: Hint: A Towers hint is ordered the way a person solves
+### Requirement: Hint: Towers' own rung is the clue lines that need no notes
 
-The hint's rung order SHALL put a naked single first: an empty cell whose live
-notes have collapsed to a single candidate, which is sound on a mistake-free
-board. After it SHALL come the clue lines that need no notes: a clue equal to
-the grid size, whose line climbs from 1 beside the clue, and a clue of 1,
-which has the tallest tower beside it. Then SHALL come the next clue
-elimination, and after that a forced placement. A freshly built plan SHALL
-open in that order.
-
-#### Scenario: A naked single is offered ahead of further elimination
-
-- **WHEN** a hint is requested on a mistake-free board where some empty cell's
-  pencil notes have collapsed to a single candidate
-- **THEN** the next step places that height in that cell
+Towers' own rung of the walk's ladder (`engine-candidate-hints`, "The walk
+owns the ladder") SHALL be the clue lines that need no notes: a clue equal to
+the grid size, whose line climbs from 1 beside the clue, and then a clue of 1,
+which has the tallest tower beside it.
 
 #### Scenario: A full-height clue opens an empty board
 
@@ -257,32 +216,6 @@ open in that order.
   clues equals the grid size
 - **THEN** the plan opens by placing that clue's line in order from the clue,
   one cell a leg, before any step that fills in notes
-
-### Requirement: Hint: A Towers hint step says what was spotted and why it forces the move
-
-Each step SHALL carry a narration that meets the hint quality bar: it leads
-with the spotted indication (the clue or line pattern), then gives the
-reasoning, then a necessity-voice conclusion.
-
-#### Scenario: A clue elimination is narrated
-
-- **WHEN** a hint step strikes heights that a clue's line of sight rules out
-- **THEN** the narration names the clue pattern and states why those heights
-  cannot sit there, concluding in the necessity voice
-
-### Requirement: Hint: A Towers hint step marks the clue it reasons from and the cells it acts on
-
-Each step's highlight SHALL mark the driving clue cell or cells and their line
-of sight, so the player can see which clue the hint is about: the clue outlined
-in its slot beside the grid, and the line striped through the clue slots at
-both its ends. It SHALL ring the target cell or cells, with the equivalent
-strikes of one firing sharing the target's mark.
-
-#### Scenario: A clue elimination is marked
-
-- **WHEN** a hint step strikes heights that a clue's line of sight rules out
-- **THEN** the driving clue is outlined, its line of sight is striped and each
-  cell struck from is ringed
 
 ### Requirement: Hint: Facing Towers clues that sum to one more than the grid size place the tallest tower
 

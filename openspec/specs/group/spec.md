@@ -5,49 +5,43 @@ Group, the Latin-square puzzle whose completed grid must be a group's Cayley
 table: Latin and associative. It rides on the shared Latin solver and the
 shared candidate hint walk, and this spec holds what is Group's own: its tiers
 and their associativity and identity deductions, the hidden identity, the
-reordering of rows and columns, subgroup dividers, what its hint teaches, and
-that Check & Save flags pencil marks that have crossed out the answer.
+reordering of rows and columns, subgroup dividers, and what its hint teaches.
+What it shares with every note-taking game is in `engine-notes`.
 
 ## Requirements
 
 ### Requirement: Rules: A Group board is solved by a group table
 
 A board SHALL be solved when every cell is filled and the grid is a valid group
-Cayley table: Latin and associative. Because a board has one solution, Group
-SHALL provide `findMistakes`, so Check & Save applies.
+Cayley table: Latin and associative.
 
 #### Scenario: A completed valid table wins
 
 - **WHEN** every cell is filled so the grid is Latin and associative
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
-### Requirement: Rules: Group's Check & Save flags pencil marks that have crossed out the answer
+### Requirement: Rules: Group's mistake check re-solves from its givens
 
-Group's `findMistakes` SHALL report, beside every entry that contradicts the
-unique solution, every empty cell whose non-empty pencil marks leave out that
-cell's solution element, as a `note` mistake drawn in the same mistake
-outline. Marks that include the answer beside other candidates SHALL NOT be
-reported. Because the hint reasons from the marks, it SHALL refuse while such
-a mark set stands.
+Group's `findMistakes` SHALL report what the collection's check reports
+(`engine-hints`, "Check & Save names a wrong entry in every game", and
+`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
+the answer it re-solves from the givens. A mark set that leaves out its cell's
+answer SHALL be drawn in the same mistake outline as a wrong entry.
 
-#### Scenario: Marks without the answer are a mistake and the hint refuses
+#### Scenario: A wrong element that breaks no rule
 
-- **WHEN** an empty cell's pencil marks hold only elements other than its solution
-- **THEN** `findMistakes` reports that cell as a `note` mistake, and a hint request
-  refuses asking the player to fix the highlighted mistakes first
-
-#### Scenario: Extra candidates beside the answer are not a mistake
-
-- **WHEN** an empty cell's pencil marks hold its solution element and others
-- **THEN** `findMistakes` reports nothing for that cell
+- **WHEN** the player enters an element that repeats nothing in its row or
+  column, breaks no product as the board stands, and is not the answer's
+- **THEN** `findMistakes` includes that cell, though nothing is annotated as an
+  error before the check
 
 ### Requirement: Params: Group's parameters
 
-Group SHALL accept a grid size (the group's order) between 3 and 26, a
-difficulty of Easy, Normal, Tricky, Hard or Unreasonable, and a "show
-identity" flag. `validateParams` SHALL reject an identity-hidden 3×3 puzzle
-with a reason, because a 3×3 board is never harder than Easy and an Easy board
-cannot hide its identity.
+Group's params SHALL be a grid size (the group's order), a difficulty and a
+"show identity" flag, each a field of its `paramConfig`, which declares the
+size's range and the tiers. `validateParams` SHALL reject an identity-hidden
+3×3 puzzle with a reason, because a 3×3 board is never harder than Easy and an
+Easy board cannot hide its identity.
 
 #### Scenario: An identity-hidden 3×3 is rejected
 
@@ -69,10 +63,10 @@ columns that only a deduction above Easy can tell apart.
 ### Requirement: Params: A size is refused at a tier none of its boards need
 
 When parameters are about to deal a board, `validateParams` SHALL refuse a
-tier no board of the size needs, and SHALL NOT deal an easier board in its
-place: Unreasonable below 5×5; Hard below 6×6; Tricky below 4×4, and below 6×6
-with the identity shown; Normal below 4×4, and at 4×4 with the identity shown.
-It SHALL refuse a 6×6 at Hard with the identity shown as too rare to deal.
+tier no board of the size needs: Unreasonable below 5×5; Hard below 6×6;
+Tricky below 4×4, and below 6×6 with the identity shown; Normal below 4×4, and
+at 4×4 with the identity shown. It SHALL refuse a 6×6 at Hard with the
+identity shown as too rare to deal.
 
 #### Scenario: A 5×5 has no Hard board
 
@@ -105,8 +99,7 @@ The params encoding SHALL be the size in decimal, then in the full form `d`
 and the tier's letter (`t` Easy, `n` Normal, `h` Tricky, `x` Hard, `u`
 Unreasonable), then `i` when the identity is hidden. The short form SHALL
 leave out the tier and keep the `i`. Decoding SHALL read a string with no `d`
-as Normal and one with no `i` as showing the identity, and SHALL refuse a
-character it does not know and a `d` followed by no tier letter.
+as Normal and one with no `i` as showing the identity.
 
 #### Scenario: A preset that hides its identity
 
@@ -118,12 +111,6 @@ character it does not know and a `d` followed by no tier letter.
 
 - **WHEN** `8dh` is decoded
 - **THEN** it is an 8×8 board at Tricky, not Hard, with the identity shown
-
-#### Scenario: A letter that is no tier
-
-- **WHEN** the `h` of `8dh` is changed to `q`
-- **THEN** the params are refused:
-  `The parameters 8dq have a "q" where this puzzle reads none.`
 
 ### Requirement: Description: Group descriptions use the upstream run-length encoding
 
@@ -172,15 +159,16 @@ a Group-specific technique.
 
 Group SHALL deal a board whose solution is a group of the requested order
 taken from the transcribed group data table, its elements permuted, with the
-identity kept in place when the identity is shown. Its clues SHALL admit
-exactly one completion, at the requested difficulty.
+identity kept in place when the identity is shown. What the board promises at
+its tier SHALL be the collection's (`engine-difficulty`, "Every tier promises
+one solution found at its cap" and "A difficulty tier binds the board it
+generates"), with no departure.
 
 #### Scenario: A generated board is a solvable group table
 
 - **WHEN** a new game is generated for a legal size and difficulty in either
   identity mode
-- **THEN** its clues admit exactly one completion, that completion is a valid
-  group table, and the solver grades it at the requested difficulty
+- **THEN** its one completion is a valid group table
 
 ### Requirement: Generation: An identity-hidden board blanks two rows and columns
 
@@ -195,15 +183,29 @@ afterward.
 - **THEN** the identity's row and column, and one further row and column, are
   blank, and the board is still uniquely solvable at its difficulty
 
-### Requirement: Solver: Group's solver accepts only an associative grid and grades a board at its tier
+### Requirement: Solver: Group's solver accepts only an associative grid
 
-The solver SHALL accept a completed grid only if it is associative. A board
-dealt at a difficulty SHALL be solvable at that tier and not at the tier below.
+The solver SHALL accept a completed grid only if it is associative.
 
-#### Scenario: The solver grades a board at the intended difficulty
+#### Scenario: A Latin square that is no group
 
-- **WHEN** a board generated at a given difficulty is solved
-- **THEN** it is solvable at that difficulty and not at the tier below
+- **WHEN** the solver completes a grid that is Latin and in which the two
+  bracketings of one triple differ
+- **THEN** it does not accept that grid as a solution
+
+### Requirement: Controls: Group selects a cell through the shared note-taking cell
+
+Group SHALL take its selection from the engine's note-taking cell
+(`engine-notes`, "The note-taking cell is one shared mechanic"). A cell that
+holds no given SHALL take an entry, and only an empty cell SHALL take a pencil
+mark.
+
+#### Scenario: A secondary press on an empty cell
+
+- **WHEN** the player presses the secondary button on an empty cell the
+  highlight is not on
+- **THEN** that cell is selected for pencil marks and no mode is latched, since
+  Group offers no sticky pencil preference
 
 ### Requirement: Controls: A diagonal drag fills a whole diagonal at once
 
@@ -310,11 +312,12 @@ for each element, in the order of their numbers, then Clear.
 
 ### Requirement: Hint: Group's own placements lead the eliminations
 
-The plan SHALL prefer a naked single, placed by a `set` move: an empty cell
-whose notes have collapsed to one candidate. Next SHALL come an associativity
+Group's hint SHALL be the collection's candidate plan through its row/column
+preset, and its own rung of the walk's ladder SHALL be its placements
+(`engine-candidate-hints`, "A row/column Latin square answers no question its
+regions already settle" and "The walk owns the ladder"): an associativity
 placement or an identity fill wherever the board shows its premise, and, until
-the notes are set up, any single the board shows. Then SHALL come the
-eliminations, and last a forced generic placement. Group SHALL start on the
+the notes are set up, any single the board shows. Group SHALL start on the
 implicit reading, which has no populate step.
 
 #### Scenario: Associativity is taught before any note is needed
@@ -383,8 +386,8 @@ Those placements SHALL be one journey, its continuation legs flagged
 ### Requirement: Look: Group draws its legend, marks and errors
 
 Rendering SHALL draw the element legend along the top and left, lay out pencil
-marks in a grid, highlight the selection, annotate Latin duplicates and
-associativity failures in the error color, and flash on completion.
+marks in a grid, and annotate Latin duplicates and associativity failures in
+the error color.
 
 #### Scenario: A broken product is annotated
 

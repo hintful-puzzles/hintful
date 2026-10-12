@@ -154,14 +154,13 @@ the solution breaks (at least one line where the solution has neither edge, at m
 one where it has both) and every pair note it breaks (a match where the solution's
 two edges differ, opposites where they agree), and SHALL report none on a board with
 no provably unique solution. The renderer SHALL draw a mistaken note in the mistake
-color, and the hint SHALL refuse while one stands.
+color.
 
 #### Scenario: A wrong note is a mistake
 
 - **WHEN** the player notes a corner the loop passes by as needing a line, or two
   edges the loop treats differently as matching, and Check is requested
-- **THEN** each note is reported and drawn in the mistake color, and a hint asks
-  for the mistakes to be fixed first
+- **THEN** each note is reported and drawn in the mistake color
 
 ### Requirement: Params: Loopy offers every tiling the geometry module provides
 
@@ -246,26 +245,13 @@ the same shape turned: those SHALL NOT turn.
 - **WHEN** a Honeycomb board is dealt to fit a wide area
 - **THEN** it is dealt at the size chosen, because Honeycomb does not turn
 
-### Requirement: Params: Loopy's params are a size, t with a grid index, and d with a tier letter
+### Requirement: Params: A Loopy params string may leave out its height, its tiling and its tier
 
-`encodeParams` SHALL write the width, `x`, the height, `t` and the tiling's
-index in `LOOPY_GRIDS`, then in the full form `d` and the tier's letter: `e`
-Easy, `n` Normal, `t` Tricky, `h` Hard. The short form SHALL leave the tier
-out. `decodeParams` SHALL read a lone size as both sides, SHALL keep Squares
-where `t` is absent and Easy where `d` is absent, and SHALL refuse a `d` whose
-letter is none of the four.
-
-#### Scenario: The Hats preset
-
-- **WHEN** `9x11t16dh` is decoded
-- **THEN** the board is 9 wide and 11 tall on row 16 of `LOOPY_GRIDS`, Hats,
-  at Hard, and its short form is `9x11t16`
-
-#### Scenario: Hard is h, and Tricky is t
-
-- **WHEN** `7x7t0dt` and `7x7t0dh` are decoded
-- **THEN** the first is the 7x7 Squares Tricky preset and the second the 7x7
-  Squares Hard one
+Loopy's params are a size, a tiling and a tier, declared on `paramConfig` and
+encoded by the declared codec (`engine-params`, "A game declares its params
+encoding once, and both codec halves are derived"), the tiling as its index in
+`LOOPY_GRIDS`. `decodeParams` SHALL read a lone size as both sides, and SHALL
+keep Squares where `t` is absent and Easy where `d` is absent.
 
 #### Scenario: A part left out keeps its default
 
@@ -343,8 +329,7 @@ Where building a grid from a generated description fails because the patch
 contains no landlocked dots, Loopy SHALL discard that description, generate a
 fresh one, and retry, within a bounded number of attempts. It SHALL NOT raise
 the per-type minimum sizes to avoid the condition, which depends on the random
-draw and not on the size. Exhausting the bound SHALL raise an error rather than
-return a fallback board.
+draw and not on the size.
 
 #### Scenario: A degenerate patch yields a playable board rather than an error
 
@@ -388,8 +373,7 @@ Where no patch drawn has more than half the usual count, Loopy SHALL deal the
 largest patch it drew. A size SHALL NOT be refused because its patches are
 small. A tier SHALL be refused at such a size, in the words of `noSuchTier`,
 only where its faces have no puzzle of it: Normal on the Penrose (rhombs)
-sizes whose every patch is three rhombs round a point. A deal that runs its
-bound on patches out SHALL throw `RetryLimitExceeded`, as any generator does.
+sizes whose every patch is three rhombs round a point.
 
 #### Scenario: A size no patch fills deals the largest patch drawn
 
@@ -407,13 +391,6 @@ bound on patches out SHALL throw `RetryLimitExceeded`, as any generator does.
 - **WHEN** a 3x3, 3x4, 3x5 or 4x3 Penrose (rhombs) board is asked for at Normal
 - **THEN** `validateParams` refuses the tier and names the size, and 5x3 at
   Normal is dealt
-
-#### Scenario: Every patch drawn is one that cannot carry the tier
-
-- **WHEN** the generator is asked directly for a 3x3 Penrose (rhombs) board at
-  Normal, past `validateParams`
-- **THEN** it throws `RetryLimitExceeded` once its patches are spent, and the
-  engine's `generate` answers that there is no board
 
 ### Requirement: Generation: A redraw changes only which description is drawn
 
@@ -488,20 +465,13 @@ rule.
 Loopy SHALL accept keyboard input that can select any edge and set it to any of
 its three states, so that a player with no pointer can play a board to
 completion. This SHALL hold for every tiling Loopy offers, including the
-aperiodic ones. Loopy SHALL NOT be exempt from the collection's
-keyboard-reachability guard.
+aperiodic ones.
 
 #### Scenario: A keyboard-only player completes a board
 
 - **WHEN** a player uses only the keyboard, on any of Loopy's tilings
 - **THEN** every edge is reachable, each can be set to line, cross or unknown,
   and the board can be brought to a solved state
-
-#### Scenario: Loopy is not on the keyboard-exemption list
-
-- **WHEN** the collection-wide keyboard-reachability guard runs
-- **THEN** Loopy is not on the exemption list, and a keyboard-only sequence
-  changes its board
 
 ### Requirement: Controls: A plain arrow walks Loopy's cursor along an edge
 
@@ -553,12 +523,13 @@ cannot grow.
 
 ### Requirement: Controls: Enter, Space and the erase key act on Loopy's chosen edge
 
-Outside notes mode, Enter and Space SHALL be the left and right pointer buttons
-on the chosen edge, and the erase key SHALL clear it. In notes mode they note
-corners and pairs instead, as "The keyboard notes corners and pairs at the
-cursor" describes. A select SHALL NOT move the cursor, which is already at the
-far end of the edge it walked. A pointer press SHALL hide the cursor, and
-Escape SHALL hide it too.
+Outside notes mode Enter, Space and the erase key SHALL apply the verbs of
+`targetVerbs` to the chosen edge (`engine-input`, "The engine owns a declaring
+game's press and select keys"), so a key's move is the click's, auto-follow
+included. In notes mode they note corners and pairs, as "The keyboard notes
+corners and pairs at the cursor" describes. A select SHALL NOT move the
+cursor, which is already at the far end of the edge it walked. A pointer press
+or Escape SHALL hide the cursor.
 
 #### Scenario: Enter marks the edge behind you and stays put
 
@@ -570,14 +541,6 @@ Escape SHALL hide it too.
 
 - **WHEN** a player draws a run of lines from the keyboard, outside notes mode
 - **THEN** each edge takes one arrow press and one Enter
-
-### Requirement: Controls: The keyboard sets an edge through the code a click uses
-
-The keyboard SHALL reach an edge through the same code path a click uses, so
-that the auto-follow preference, which extends a click along a forced path of
-edges, applies identically to a keyboard selection. Loopy SHALL NOT keep a
-parallel path for the keyboard, since a second input model would drift from the
-first.
 
 #### Scenario: Auto-follow applies to a keyboard selection
 
@@ -614,11 +577,10 @@ so that replaying a move is idempotent.
 
 ### Requirement: Controls: Each button sets its own state and clears a decided edge
 
-Outside notes mode, the left button (a tap) SHALL set an undecided edge to a
-line and the right button (a long press) to a cross, and either SHALL return a
-decided edge to unknown. A finger and a mouse SHALL behave the same. In notes
-mode a press notes corners and pairs instead, as "A tap cycles a corner note
-and a drag cycles a pair note" describes.
+Outside notes mode, the left button SHALL set an undecided edge to a line and
+the right button to a cross, and either SHALL return a decided edge to
+unknown. In notes mode a press notes corners and pairs instead, as "A tap
+cycles a corner note and a drag cycles a pair note" describes.
 
 #### Scenario: Either button clears a decided edge
 
@@ -681,8 +643,8 @@ and release arrive as, and a release off the board SHALL note nothing.
 
 In notes mode the left button SHALL cycle a corner through none, at least one,
 at most one and exactly one, and a pair through none, match and opposites. The
-right button, and a held finger, SHALL cycle each the other way. Each cycle
-passes through none, so the pointer clears a note by cycling it.
+right button SHALL cycle each the other way. Each cycle passes through none,
+so the pointer clears a note by cycling it.
 
 #### Scenario: The right button reaches exactly one first
 
@@ -708,12 +670,12 @@ the cursor.
 
 ### Requirement: Controls: A drag outside notes mode repeats the press along the edges it passes
 
-Loopy's `targetVerbs` SHALL declare a sweep over an edge's state, for both
-buttons: a drag on from a press gives the pressed button's verb to each
-further edge that holds what the pressed edge held. An edge SHALL be taken
-only where the pointer passes within three tenths of that edge's own drawn
-length of its midpoint, since a tiling's edges are not one size and several
-meet at every dot.
+Outside notes mode a drag on from a press of either button SHALL repeat it
+along the edges it passes, by the sweep `targetVerbs` declares (`engine-input`,
+"A drag on from a press repeats the press"). An edge SHALL be taken only where
+the pointer passes within three tenths of that edge's own drawn length of its
+midpoint, since a tiling's edges are not one size and several meet at every
+dot.
 
 #### Scenario: A drag through a dot takes only the edges it runs along
 
@@ -745,30 +707,20 @@ or off SHALL release a pin.
 - **THEN** that edge is pinned, and the pair becomes opposites only when Space
   is next pressed on the first
 
-### Requirement: Preferences: Loopy offers auto-follow and faint-line preferences
+### Requirement: Preferences: Loopy's preferences are three aids of its own and none of the pencil ones
 
-Loopy SHALL provide an auto-follow preference (off / grid-only /
-grid-and-state) which extends a click along a forced path of edges, and a
-preference for drawing excluded lines faintly. Their keys SHALL be
-`auto-follow`, off by default, and `draw-faint-lines`, on by default; with it
-off an excluded edge is not drawn. `prefs` SHALL hold these two and
-`auto-rule-out`, and none of the collection's pencil preferences, since the
-right button rules an edge out and never switches notes mode.
-
-#### Scenario: Auto-follow extends a click along a corridor
-
-- **WHEN** auto-follow is set to grid-only and an edge is clicked whose
-  neighbor along the path is forced by the grid alone and is in the state the
-  clicked edge was in
-- **THEN** the one move sets the clicked edge and the forced edges after it to
-  the same state
+Loopy's preferences are declared on `prefs`, each with its key: auto-follow,
+the faint drawing of excluded lines, and the ruling out of settled edges. A
+new game SHALL have auto-follow off and the faint drawing on; with the faint
+drawing off an excluded edge is not drawn. `prefs` SHALL hold none of the
+collection's pencil preferences, since the right button rules an edge out and
+never switches notes mode.
 
 #### Scenario: The preferences of a new game
 
 - **WHEN** the preferences of a new game are read
-- **THEN** `auto-follow` offers "No", "Based on grid only" and "Based on grid
-  and game state" and is "No", `draw-faint-lines` and `auto-rule-out` are on,
-  and no sticky-pencil, keep-highlight or hint-notes preference is offered
+- **THEN** `auto-follow` is "No", `draw-faint-lines` and `auto-rule-out` are
+  on, and no sticky-pencil, keep-highlight or hint-notes preference is offered
 
 #### Scenario: A new game follows nothing and rules out what counting settles
 
@@ -831,6 +783,14 @@ Under "Based on grid only" every other edge at the dot counts. Under "Based on
 grid and game state" a ruled-out edge does not count, unless the clicked edge
 was itself ruled out.
 
+#### Scenario: Auto-follow extends a click along a corridor
+
+- **WHEN** auto-follow is set to grid-only and an edge is clicked whose
+  neighbor along the path is forced by the grid alone and is in the state the
+  clicked edge was in
+- **THEN** the one move sets the clicked edge and the forced edges after it to
+  the same state
+
 #### Scenario: A ruled-out branch is followed past only with the game state
 
 - **WHEN** an undecided edge is clicked whose far dot has three edges, the
@@ -838,13 +798,12 @@ was itself ruled out.
 - **THEN** under "Based on grid only" the move sets the clicked edge alone, and
   under "Based on grid and game state" it sets the second edge too
 
-### Requirement: Hint: Loopy explains the next deduction from notes the player can make
+### Requirement: Hint: Loopy's plan takes the player's lines, ruled-out edges and notes as facts
 
-`hint(state)` SHALL return the lines the solver can decide from the player's
-own board as an ordered plan, each step narrating why its move is forced from
-premises the sentence itself states. Because the mistake check vouches for
-every mark before the game is asked, the plan SHALL take the player's lines,
-ruled-out edges and notes as facts.
+`hint(state)` SHALL deduce its plan from the player's own board (`engine-hints`,
+"A hint is deduced from the board in play"). Because the mistake check vouches
+for every mark before the game is asked, the plan SHALL take the player's
+corner and pair notes as facts beside the lines and ruled-out edges.
 
 #### Scenario: Following the plan finishes the board on every tiling
 
@@ -859,8 +818,7 @@ The plan SHALL be the solver's own rungs, run with a recorder that names the
 premise behind each change and returns at the first premise that changed a
 line, so that one firing is one step. It SHALL try the rungs of the easiest
 tier to exhaustion before those of the next, whatever tier the board was
-generated at, since a game ID need not carry one. The generator SHALL NOT build
-a recorder, so no generated board changes.
+generated at, since a game ID need not carry one.
 
 #### Scenario: A Hard board's first hints are Easy deductions
 
@@ -902,13 +860,14 @@ placed one link at a time.
 - **THEN** every corner and pair a step cites is already noted on the board when that
   step is shown
 
-### Requirement: Hint: A hint step marks what it sets and what its sentence names
+### Requirement: Hint: A Loopy hint step's marks are its legend's
 
-Each step SHALL mark the edges it sets with a band in the hint's action color,
-solid for a line and broken for an edge that cannot be one, outline the clues
-its sentence names, and ring the dot its sentence names. A step placing a note
-SHALL draw it in the hint's action color, and the notes a step cites SHALL be
-redrawn in its evidence color.
+What a step marks SHALL be what the legend `hintMarks` declares of each role,
+painted from the step's words (`engine-hints`, "A bound hint step's words SHALL
+name exactly the marks it draws"), and Loopy makes no departure. A note is
+marked as an edge is: the note a step places takes the role of what it
+decides, and a note it cites the role of what it reasons from. Which clue, dot
+and lines a technique marks is said in that technique's requirement.
 
 #### Scenario: A step that rules an edge out bands it broken
 
@@ -1202,14 +1161,14 @@ legible.
 ### Requirement: Look: Loopy draws edges in a fixed color order with clues at the incenter
 
 Rendering SHALL draw edges in a fixed color order so that mistaken edges paint
-over all others, SHALL place clue text at each face's incenter, and
-SHALL flash on completion.
+over all others, and SHALL place clue text at each face's incenter.
 
-#### Scenario: Completing a single loop wins
+#### Scenario: A flagged line meets a plain one
 
-- **WHEN** the drawn lines form exactly one closed loop with no stray paths and
-  every clue is satisfied
-- **THEN** the game is reported solved and flashes
+- **WHEN** three lines meet at a dot and one of them runs on to a further
+  line, which is not flagged
+- **THEN** the three flagged lines are painted after the plain one, so the
+  mistake color is not overdrawn where they meet
 
 ### Requirement: Look: Loopy draws a mistaken edge in the mistake color
 
@@ -1228,9 +1187,9 @@ are drawn faintly.
 Loopy SHALL highlight the connected run of drawn lines containing the edge
 under the mouse pointer. An edge carrying no line has no run, and hovering it
 SHALL highlight nothing. When the pointer leaves the board the highlight SHALL
-clear. The highlight of every closed loop but the largest SHALL be unaffected:
-that one reports a loop already closed, and this one lets the player see the
-closure coming.
+clear. The flag `checkCompletion` puts on every piece but the largest SHALL be
+unaffected: that one reports a loop already closed, and this one lets the
+player see the closure coming.
 
 #### Scenario: hovering a line lights its run and no other
 

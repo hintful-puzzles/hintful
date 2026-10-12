@@ -4,9 +4,10 @@
 Pearl (Masyu), the puzzle of drawing one closed loop through square centers that
 turns at every black pearl but not in the squares either side of it, and runs
 straight through every white pearl with a turn in at least one square beside it.
-This capability specifies the game: its rules, its description and params
-encodings, completion and mistake reporting, its controls, the solver's ladder
-and what the generator promises, its hint, and how it looks.
+This capability specifies what is the game's own: its rules, what a short
+params string means and which sizes are refused, its description encoding,
+completion and mistake reporting, its controls, the solver's ladder and what
+the generator promises, its hint's techniques, and how it looks.
 
 ## Requirements
 
@@ -37,13 +38,12 @@ a line with no reciprocal line in the neighboring square SHALL be refused.
 - **THEN** the board is not reported solved, and that pearl carries an error
   mark
 
-### Requirement: Rules: Pearl's findMistakes compares the board with its one solution
+### Requirement: Rules: A Pearl mistake is a line the solution lacks or a cross on an edge it uses
 
-Because boards are uniquely solvable, the game SHALL implement `findMistakes`:
-re-solve from the clues to the unique solution's line grid and return every
-line segment the player has drawn that the solution does not contain, and every
-no-line cross the player has placed on an edge the solution does contain, each
-a definite mistake. A missing solution segment SHALL NOT be a mistake, and a
+`findMistakes` SHALL re-solve from the clues to the unique solution's line
+grid and return every line segment the player has drawn that the solution does
+not contain, and every no-line cross the player has placed on an edge the
+solution does contain. A missing solution segment SHALL NOT be a mistake, and a
 board the solver cannot finish SHALL yield no mistakes.
 
 #### Scenario: A line the solution does not contain is flagged
@@ -64,47 +64,13 @@ board the solver cannot finish SHALL yield no mistakes.
   contains
 - **THEN** `findMistakes` returns an empty result
 
-### Requirement: Params: Pearl's parameters
+### Requirement: Params: A Pearl params string with no difficulty letter is Easy
 
-Params SHALL be `w`, `h` and `difficulty` (Easy or Normal), encoded `{w}x{h}`
-with a full-form `d{char}` difficulty suffix. Decoding SHALL read upstream's
-trailing `n`, which asks for a board nothing has checked, and SHALL change
-nothing for it; encoding SHALL never write it.
-
-#### Scenario: Params round-trip
-
-- **WHEN** params `{ w: 10, h: 10, difficulty: DIFF_TRICKY }` (the
-  Normal tier) are encoded in full
-- **THEN** decoding the result round-trips the params
-
-#### Scenario: Upstream's unchecked-board letter
-
-- **WHEN** `12x8dtn` is decoded
-- **THEN** the params are those of `12x8dt`
-
-### Requirement: Params: Pearl's parameter bounds
-
-`w` and `h` SHALL each be at least 5, which the game declares as the bounds of
-its dimension fields and the engine's check enforces. `validateParams` SHALL
-enforce that width×height does not overflow, and that a Normal board has
-`w + h ≥ 11`.
-
-#### Scenario: The Normal tier requires a large enough board
-
-- **WHEN** `validateParams` is given a Normal board with `w + h < 11`
-- **THEN** it returns a non-null error string
-
-#### Scenario: A board narrower than the minimum
-
-- **WHEN** params with `w < 5` or `h < 5` are checked for validity
-- **THEN** they are refused
-
-### Requirement: Params: Pearl's difficulty letters are e and t
-
-The letter after `d` SHALL be `e` for Easy and `t` for Normal, and the short
-form SHALL leave both out. Decoding a string with no difficulty letter SHALL
-give Easy, whatever the default preset's difficulty, and a `d` followed by a
-letter that is neither SHALL be refused.
+Pearl's params (a size and a tier), their bounds and their encoding SHALL be
+those its `paramConfig` and its declared codec give (`engine-params`, "A game
+declares its params encoding once, and both codec halves are derived"), and
+its menu what `presets` builds. Decoding a string with no difficulty letter
+SHALL give Easy, whatever the default preset's difficulty.
 
 #### Scenario: A string with no letter
 
@@ -112,10 +78,15 @@ letter that is neither SHALL be refused.
 - **THEN** the board is Easy and its full encoding is `6x6de`, though the
   default preset, `8x8dt`, is Normal
 
-#### Scenario: The Normal preset
+### Requirement: Params: Pearl refuses a Normal board whose width and height sum under 11
 
-- **WHEN** `6x6dt` is decoded
-- **THEN** the board is the 6×6 Normal preset, and its short form is `6x6`
+`validateParams` SHALL enforce that width×height does not overflow, and that a
+Normal board has `w + h ≥ 11`.
+
+#### Scenario: The Normal tier requires a large enough board
+
+- **WHEN** `validateParams` is given a Normal board with `w + h < 11`
+- **THEN** it returns a non-null error string
 
 ### Requirement: Description: Pearl descriptions use the upstream run-length encoding
 
@@ -151,14 +122,17 @@ description covers the grid exactly.
 
 ### Requirement: Generation: Pearl's generator gates every board on the solver
 
-The generator SHALL gate every board on the solver finding a unique solution
-at the requested difficulty (and failing one tier easier), and SHALL then
-greedily minimize the clues.
+The generator SHALL keep a loop only where its full set of pearls passes the
+collection's two-way gate (`engine-difficulty`, "A difficulty tier binds the
+board it generates"), a tier being the rungs of "Solver: Pearl's solver is a
+certified deduction ladder", and SHALL then greedily minimize the clues.
 
-#### Scenario: Generated boards are uniquely solvable at their difficulty
+#### Scenario: A pearl is taken away after the gate
 
-- **WHEN** a board is generated and graded by the solver
-- **THEN** the grading is a unique solution at exactly the requested difficulty
+- **WHEN** a loop's full set of pearls has passed the gate and a pearl is
+  removed
+- **THEN** the removal stands only where the solver still finds the one
+  solution at the tier asked for, and the lower tier is not asked again
 
 ### Requirement: Solver: Pearl's Solve uses the generator's solution when it has one
 
@@ -288,19 +262,18 @@ an `appearance` preference (default traditional).
 - **WHEN** the game is opened with no `appearance` preference stored
 - **THEN** the board is drawn in the traditional style
 
-### Requirement: Hint: Pearl explains the next deduction
+### Requirement: Hint: One Pearl hint step is one premise of the solver's ladder
 
-The game SHALL implement `hint` as a recording projection of its own solver
-ladder, one premise per step: a square read off its own edges (one axis of a
-black pearl at a time), each of the four pearl rules, an edge that would close
-a loop early, and a square state that would.
+A hint step SHALL be one premise of the solver's ladder: a square read off its
+own edges (one axis of a black pearl at a time), each of the four pearl rules,
+an edge that would close a loop early, and a square state that would.
 
-#### Scenario: Following the hint finishes a board
+#### Scenario: A black pearl settled on both axes
 
-- **WHEN** a generated board at either tier is played by repeatedly taking the
-  first step of a fresh hint
-- **THEN** the board is completed, and every line a step asked for is in the
-  solution and every cross is not
+- **WHEN** a black pearl's own edges settle an edge to its left or right and
+  an edge above or below it
+- **THEN** the step decides the edges to its left and right alone, and the
+  others are a step of their own
 
 ### Requirement: Hint: A Pearl hint step rests only on edges and pearls
 
@@ -326,18 +299,6 @@ lines.
 - **WHEN** a step's deduction rules out an edge of a square that already has
   two lines
 - **THEN** the step does not ask the player to cross that edge
-
-### Requirement: Hint: A Pearl hint step says why and marks what it decides
-
-Each hint step SHALL name why its edges are forced, draw each decided edge in
-the hint's action color as the line or cross it asks for, and outline the
-squares it reasons from.
-
-#### Scenario: A step that asks for a cross
-
-- **WHEN** a displayed step decides that an edge cannot be a line
-- **THEN** the edge is drawn as a cross in the hint's action color, and the
-  squares the step reasons from are outlined
 
 ### Requirement: Hint: Pearl's hint follows a step made one edge at a time
 

@@ -4,9 +4,9 @@
 Tents, the puzzle of placing tents so that each tree can be matched to its own
 orthogonally adjacent tent, no two tents touch even diagonally, and each row and
 column holds its clued count. This capability specifies the game: what counts
-as solved, its params and description encodings, its solver ladder, tiers and
-generator, live errors and its look, drag, cursor and direct-key input, the
-link notation, mistake-checking and the explained hint.
+as solved, what its params refuse and its description encoding, its solver
+ladder, tiers and generator, live errors and its look, its drag and its
+painting arrows, the link notation, mistake-checking and the explained hint.
 
 ## Requirements
 
@@ -116,40 +116,34 @@ shared grid line, in a shape and color distinct from a tree's trunk.
 - **WHEN** a joined tent is cleared or marked as grass
 - **THEN** neither it nor its tree is joined to anything
 
-### Requirement: Params: Tents' parameters
+### Requirement: Params: A Tents params string is its declared codec's, and one with no difficulty is Easy
 
-Params SHALL be `w`, `h` and `diff` (Easy or Normal), encoded
-`{w}x{h}d{e|t}`, with the short form `{w}x{h}` and the square shorthand `{n}`.
-The width and the height SHALL each be at least 4. Of full params
-`validateParams` SHALL refuse a 4×4 above Easy, a size none of whose boards
-needs the harder tier.
+Tents' params (a width, a height and a difficulty) and their encoding SHALL be
+those its `paramConfig` and its declared codec give (`engine-params`, "A game
+declares its params encoding once, and both codec halves are derived"), with
+no departure from the codec grammar. A params string with no `d` SHALL decode
+as Easy.
 
 #### Scenario: Params round-trip
 
 - **WHEN** the params 15×15 at Normal are encoded in full
 - **THEN** the result is `15x15dt` and decoding it round-trips the params
 
-#### Scenario: Invalid params are rejected
+#### Scenario: A bare size
 
-- **WHEN** the engine's check of the params is given a grid narrower or
-  shorter than 4
-- **THEN** it returns a non-null error string
+- **WHEN** `10` is decoded
+- **THEN** the params are a 10×10 board at Easy
+
+### Requirement: Params: No 4×4 Tents board is dealt above Easy
+
+Of full params `validateParams` SHALL refuse a 4×4 above Easy, a size none of
+whose boards needs the harder tier.
 
 #### Scenario: A 4×4 Normal board that arrives written still loads
 
 - **WHEN** a game ID carries a 4×4 Normal board with its description
 - **THEN** the params are accepted, and the same params are refused when a
   board is to be dealt
-
-### Requirement: Params: Tents params that name no difficulty are Easy
-
-A params string with no `d`, or whose `d` is followed by a letter that names
-no tier, SHALL decode as Easy.
-
-#### Scenario: A bare size
-
-- **WHEN** `10` is decoded
-- **THEN** the params are a 10×10 board at Easy
 
 ### Requirement: Params: Tents refuses a grid whose area cannot be counted
 
@@ -292,18 +286,11 @@ every blank square it covers to a non-tent. Trees SHALL never be modified.
 - **WHEN** the right button is dragged across a row of blank squares
 - **THEN** every covered blank square becomes a non-tent
 
-### Requirement: Controls: Tents takes a cursor and direct keys
+### Requirement: Controls: An arrow with Shift or Ctrl grasses the squares the cursor leaves and enters
 
-Select SHALL set the keyboard cursor's square to a tent, and select2 to a
-non-tent, or clear it. The literal keys `T`, `N` and `B` SHALL set the cursor
-square directly: to a tent, to a non-tent and to blank. Shift or Ctrl with an
-arrow SHALL move the cursor and set the square it leaves and the square it
-enters to a non-tent where blank, and with Ctrl where a tent too.
-
-#### Scenario: A letter sets the cursor square
-
-- **WHEN** the cursor is on a blank square and `T` is pressed
-- **THEN** the square becomes a tent
+Shift or Ctrl with an arrow SHALL move the cursor and set the square it leaves
+and the square it enters to a non-tent where blank, and with Ctrl where a tent
+too.
 
 #### Scenario: A shifted arrow paints grass
 
@@ -340,14 +327,14 @@ Any other key SHALL disarm it.
   toward the blank square or tent beside it
 - **THEN** the same link move is made and the cursor moves onto that square
 
-### Requirement: Hint: Tents explains the next deduction
+### Requirement: Hint: A Tents hint step has one premise
 
-The game SHALL implement `hint` as a recording projection of its own solver
-rungs, one premise per step: grass beside no tree, grass beside trees that all
-have their tents, grass round a tent, a tree's one open square, the square
-between a tree's two diagonal candidates, a row or column's count over its own
-squares (met, or with no spare room), and over the lines beside it. A tree's
-single open square SHALL be one step placing the tent joined to that tree.
+Each step of the Tents hint SHALL rest on one premise, a rung of the game's
+own solver: grass beside no tree, grass beside trees that all have their
+tents, grass round a tent, a tree's one open square, the square between a
+tree's two diagonal candidates, a row or column's count over its own squares
+(met, or with no spare room), and over the lines beside it. A tree's single
+open square SHALL be one step placing the tent joined to that tree.
 
 #### Scenario: Following the hint finishes a board
 
@@ -385,10 +372,8 @@ first pending link be drawn anyway.
 
 ### Requirement: Hint: A Tents hint step says why and marks what it uses
 
-Each step SHALL name why it is forced, in one sentence, ring what it decides,
-outline what it reasons from, hatch the row or column it counts with, color
-that clue in the action color, and draw a link it asks for in the action
-color.
+Each step SHALL say why it is forced in one sentence. What its ring, its
+outline and its stripes stand for SHALL be the legend's (`hintMarks`).
 
 #### Scenario: A line count's picture
 
@@ -480,10 +465,9 @@ the grid's color.
 
 ### Requirement: Look: The Tents completion flash fills each square and keeps its pieces
 
-The completion flash SHALL sweep the squares diagonally, a square's position
-being its place in the grid. A lit square SHALL be filled with a flash color
-in place of its grass or its plain surface, and SHALL keep its tree or tent
-and its link.
+A square the completion flash is on SHALL be filled with a flash color in
+place of its grass or its plain surface, and SHALL keep its tree or tent and
+its link.
 
 #### Scenario: The flash is on a tree
 

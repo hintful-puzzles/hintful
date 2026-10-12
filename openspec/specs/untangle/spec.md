@@ -50,20 +50,12 @@ included: the exact crossing test depends on `RationalPoint` holding integers.
 
 ### Requirement: Params: Untangle's params are a vertex count
 
-Params SHALL be `{ n }`, the vertex count, encoded as the integer. The `n`
-field SHALL declare a lower bound of 4 and an upper bound, so that the engine's
-params check refuses an `n` under 4 and an unreasonably large `n`.
+Params SHALL be `{ n }`, the vertex count, encoded as the integer.
 
 #### Scenario: Params round-trip
 
 - **WHEN** params `{ n: 10 }` are encoded and decoded
 - **THEN** the round-trip yields `{ n: 10 }`
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** the engine's params check receives `{ n: 3 }` (too few) or an `n`
-  above the declared upper bound
-- **THEN** it returns a non-null reason
 
 ### Requirement: Params: An Untangle title is its number of points
 
@@ -187,8 +179,7 @@ fails that test, the layout SHALL be the `aux` as the generator gave it.
 
 `interpretMove` SHALL let the player move one vertex at a time. A pointer
 press near a vertex SHALL begin a drag, motion SHALL preview the vertex
-following the pointer as a `UI_UPDATE` with no history entry, and release SHALL
-place that vertex at its position.
+following the pointer, and release SHALL place that vertex at its position.
 
 #### Scenario: A drag moves one vertex and updates crossings
 
@@ -239,22 +230,17 @@ within 45° of it. A nudge SHALL move a held point half a board unit.
   of the circle
 - **THEN** point 0 is selected, no point lying above it
 
-### Requirement: Preferences: The Untangle port exposes its three preferences via the hook
+### Requirement: Preferences: Untangle shows crossed edges until the player turns that off
 
-Untangle SHALL expose three preferences through `prefs`, under the keywords
-`snap-to-grid` (boolean), `show-crossed-edges` (boolean) and `vertex-style` (a
-two-way choice, Circles or Numbers). Its `newUi` SHALL set the defaults:
-show-crossed-edges on, since it doubles as the built-in mistake feedback,
-snap-to-grid off, and vertex-style Circles.
+Untangle's `newUi` SHALL set its preferences' defaults: show-crossed-edges on,
+since it doubles as the built-in mistake feedback, snap-to-grid off, and
+vertex-style Circles.
 
-#### Scenario: Untangle preferences round-trip through the engine
+#### Scenario: A board opened with no preference set
 
-- **WHEN** `getPreferencesConfig()` is called for Untangle
-- **THEN** it returns two booleans and one two-way choice of the game's own,
-  beside the engine's `show-timer`, and `getPreferences()` reports
-  show-crossed-edges true by default
-- **AND** `setPreferences({ "show-crossed-edges": false })` turns off the
-  crossed-edge highlight and repaints, leaving the others unchanged
+- **WHEN** a player who has set no preference opens a board
+- **THEN** the lines that cross are told from the rest, a dropped point stays
+  at the pixel it was dropped on, and the points are drawn as circles
 
 ### Requirement: Preferences: Snap-to-grid drops a point in the middle of a grid square
 
@@ -408,22 +394,13 @@ still give the moves that remove crossings.
 
 Each step SHALL mark the vertex it moves, its destination, where the crossings
 the move removes sit, and, on a journey's leg, the marked vertices still to
-move after it. For a displayed step `redraw` SHALL draw a hint-colored line
-from the vertex to its destination, the vertex and a destination marker in the
-hint color, and an unfilled hint-colored ring on each crossing the move removes
-and around each marked vertex still to move.
+move after it.
 
 #### Scenario: A journey's first leg marks the others
 
 - **WHEN** the first leg of a journey of three vertices is on display
 - **THEN** it marks its own vertex, its destination, and the two vertices
   still to move
-
-#### Scenario: Displayed hint is rendered
-
-- **WHEN** a hint step is on display
-- **THEN** `redraw` draws a hint-colored line to, and a hint-colored marker at,
-  the suggested destination, and one ring for each crossing the move removes
 
 ### Requirement: Hint: Untangle hints finish a knot of crossings as one journey
 

@@ -56,19 +56,13 @@ square `W×W` board.
 
 ### Requirement: Params: Flood refuses params it cannot deal
 
-`validateParams` SHALL reject a grid with `w·h < 2`. A `colors` outside 3–10
-and a negative `leniency` SHALL be refused too.
+`validateParams` SHALL reject a grid with `w·h < 2`.
 
 #### Scenario: A one-square grid is refused
 
 - **WHEN** params with `w = 1` and `h = 1` are validated
 - **THEN** `validateParams` refuses them, saying the grid must contain at
   least two squares
-
-#### Scenario: Too many colors are refused
-
-- **WHEN** params with `colors = 11` are checked
-- **THEN** they are refused, naming the Colors field and its upper bound
 
 ### Requirement: Params: Flood's Easy, Medium and Hard name the extra moves
 
@@ -176,9 +170,11 @@ is a loss.
 
 ### Requirement: Controls: Flood input fills with the chosen square's color
 
-`interpretMove` SHALL produce a fill only when the clicked or cursor-selected
-cell's color differs from the current corner color and the game is not
-complete.
+Flood SHALL take its click, its cursor and its select keys from its
+`targetVerbs` declaration (`engine-input`, "The engine owns a declaring game's
+press and select keys"), which has one verb. `interpretMove` SHALL produce a
+fill only when the clicked or cursor-selected cell's color differs from the
+current corner color and the game is not complete.
 
 #### Scenario: A fill that does not change the corner color is rejected
 
@@ -188,8 +184,7 @@ complete.
 ### Requirement: Hint: Flood offers a solver-backed hint plan
 
 The Flood `hint()` SHALL return the solver's whole remaining move sequence as a
-multi-step plan: each step is a fill, narrated by its color and highlighting the
-squares that fill will absorb.
+multi-step plan: each step is a fill, narrated by its color.
 
 #### Scenario: Hint plan completes the board
 

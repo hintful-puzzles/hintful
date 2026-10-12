@@ -42,21 +42,20 @@ in the direction is a wall.
 - **WHEN** the ball's slide takes it onto a mine
 - **THEN** the resulting state is dead and the slide stops there
 
-### Requirement: Params: Inertia's parameters
+### Requirement: Params: Inertia's params are its declared codec's, and a grid under six squares is refused
 
-Params SHALL be `w` and `h`, encoded `WxH`. Each dimension SHALL be 2 or more,
-and a grid whose area is below 6 squares SHALL be refused: the generator places
-one gem for every five squares and needs at least one.
+Inertia's params, a width and a height, and their encoding SHALL be those its
+`paramConfig` and its declared codec give (`engine-params`, "A game declares
+its params encoding once, and both codec halves are derived"), with no
+departure from the codec grammar. A grid whose area is below 6 squares SHALL
+be refused: the generator places one gem for every five squares and needs at
+least one.
 
-#### Scenario: Params round-trip
+#### Scenario: The smallest boards
 
-- **WHEN** params `{ w: 15, h: 12 }` are encoded in full and decoded
-- **THEN** the decoded params equal the original
-
-#### Scenario: Degenerate params are rejected
-
-- **WHEN** params have a dimension below 2, or an area below 6 squares
-- **THEN** they are refused
+- **WHEN** a 2×2 board, whose sides are each within their bounds, is validated
+- **THEN** it is refused with "Grid area must be at least six squares."
+- **AND** a 3×2 board is accepted
 
 ### Requirement: Description: Descriptions encode the grid, and the start square becomes a stop
 
@@ -131,7 +130,8 @@ since one interpolated slide over a route of many would cross walls.
 #### Scenario: Solve finishes the game
 
 - **WHEN** the player invokes Solve on a board with gems remaining
-- **THEN** every gem is collected and the game reports itself solved with help
+- **THEN** every gem is collected by one move, and the ball is at the route's
+  end with no slide animated
 
 ### Requirement: Solver: The route may end on gems the ball cannot come back from
 
@@ -240,7 +240,7 @@ mouse's right click plays as its left does.
 
 ### Requirement: Hint: The hint plans for the nearest gem the ball can safely take
 
-The game SHALL implement `hint`, planning in **legs**: a leg is the shortest walk
+The hint SHALL plan in **legs**: a leg is the shortest walk
 to a gem, ending with the move that collects it. Each leg SHALL go for the
 **nearest** gem, fewest moves to collect, that the ball can take **without
 stranding itself**: a candidate leg SHALL be rejected when the position it
@@ -367,25 +367,6 @@ reach.
 - **WHEN** a step's narration says one more slide sweeps up the subgoal gem
 - **THEN** the plan's next step is the slide that collects it
 
-### Requirement: Hint: A hint is a nudge, and only Solve is a commitment
-
-`hint` SHALL NOT record that the solver was used: Solve plays the whole route
-and the engine records that, while a player asking for one nudge does not pay
-that price. The engine's own mark that a board was helped, which it sets for
-any game when a hint's step is shown and which labels the timer, is a
-different record and is set here as everywhere.
-
-#### Scenario: Asking for a hint does not brand the game auto-solved
-
-- **WHEN** the player asks for a hint
-- **THEN** the status bar does not report that the auto-solver was used
-
-#### Scenario: A board finished after a hint
-
-- **WHEN** the player takes one hint and then finishes the board by hand
-- **THEN** the status bar reads as completed and not as auto-solved, and the
-  timer shows the board as helped
-
 ### Requirement: Hint: Following the hint keeps the plan
 
 The game SHALL implement `hintKeepTrack`, so that a move in the displayed step's
@@ -417,18 +398,18 @@ make is to undo.
 - **THEN** the hint refuses, says that a gem can no longer be reached, and says
   that the move to make is to undo
 
-### Requirement: Hint: The hint is drawn as a marked gem and an arrow
+### Requirement: Hint: An aimed swipe's arrow replaces the hint's
 
-`redraw` SHALL mark the displayed step's subgoal gem with a ring in its own color,
-and SHALL draw the step's direction as an arrow on the ball. While a swipe is
+While a swipe is
 aimed in a direction, its aim arrow SHALL replace the hint's arrow, being what
 the ball will actually do next.
 
-#### Scenario: The marked gem is ringed and the direction shown
+#### Scenario: A swipe aimed across a displayed hint
 
-- **WHEN** a hint step is displayed
-- **THEN** the board rings its subgoal gem, and an arrow on the ball points the way
-  the step suggests
+- **WHEN** a frame is drawn with a hint step on display and a swipe aimed in
+  another direction
+- **THEN** the one arrow on the ball is the swipe's, and the step's gem keeps
+  its circle
 
 ### Requirement: Hint: Inertia's hint refuses in Solve's words where no route is found
 

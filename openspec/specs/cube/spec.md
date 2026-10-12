@@ -254,10 +254,8 @@ color as a painted square, and its edges in ink.
 
 ### Requirement: Look: Cube's win flash sweeps the squares of the arena
 
-The win flash SHALL sweep the arena diagonally: a square's position SHALL be
-that of its center, on the square grid and on the triangular one alike, and a
-lit square SHALL be filled with a flash color. The solid SHALL be drawn over
-the arena as on any other frame.
+The elements Cube's win flash lights SHALL be the squares of the arena, square
+or triangular. The solid SHALL be drawn over the arena as on any other frame.
 
 #### Scenario: A triangular arena
 

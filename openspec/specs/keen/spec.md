@@ -35,41 +35,39 @@ the grid with no errors completes the game.
   error
 - **THEN** `status` reports solved
 
-### Requirement: Rules: Keen flags mistakes against its unique solution
+### Requirement: Rules: Keen's mistake check re-solves from the cage clues
 
-The game SHALL implement `findMistakes`: re-solve from the cage clue structure
-to the unique solution and return every player cell that contradicts it: a
-filled cell whose digit is wrong (`"cell"`), and an empty cell whose non-empty
-pencil notes have crossed out its solution digit (`"note"`). When the board is
-not uniquely solvable from the clues the result SHALL be empty.
+Keen's `findMistakes` SHALL report what the collection's check reports
+(`engine-hints`, "Check & Save names a wrong entry in every game", and
+`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
+the answer it re-solves from the cage clues alone. When the clues do not solve
+to exactly one answer the result SHALL be empty.
 
-#### Scenario: A wrong digit and a wrong note are flagged
+#### Scenario: A wrong digit its cage allows
 
-- **WHEN** the player fills a cell with a digit other than its solution value, or
-  pencils out the solution digit in an empty cell
-- **THEN** `findMistakes` includes that cell
-- **AND** a cell whose notes merely carry extra (non-solution) candidates is not
-  flagged
+- **WHEN** the player fills a cage with digits that satisfy its clue and are
+  not the answer's, repeating nothing in a row or column
+- **THEN** `findMistakes` includes each cell whose digit is not the answer's,
+  though no cell is in error as the board stands
 
 ### Requirement: Params: Keen's parameters
 
-Params SHALL be `w`, `diff` and `multiplicationOnly`. `diff` SHALL be one of
-Easy, Normal, Tricky, Hard or Unreasonable, held as the keys `"easy"`,
-`"normal"`, `"hard"`, `"extreme"` and `"unreasonable"`, so the Tricky tier is
-`"hard"`. The grid size SHALL be refused outside `3 ≤ w ≤ 9`, by the bounds its
-`paramConfig` item declares.
+Keen's params SHALL be a grid size `w`, a tier `diff` and `multiplicationOnly`,
+each a field of its `paramConfig`, which declares the size's range. `diff`
+SHALL be one of Easy, Normal, Tricky, Hard or Unreasonable, held as the keys
+`"easy"`, `"normal"`, `"hard"`, `"extreme"` and `"unreasonable"`, so the Tricky
+tier is `"hard"`.
 
-#### Scenario: Invalid params are rejected
+#### Scenario: The Tricky preset
 
-- **WHEN** the engine's params check is given `w < 3` or `w > 9`
-- **THEN** it returns a non-null error sentence naming the grid size
+- **WHEN** `6dh` is decoded
+- **THEN** its `diff` is `"hard"`, and the board is labeled "6x6 Tricky"
 
 ### Requirement: Params: Keen's params encoding
 
 Params SHALL be encoded `{w}` without `full` and `{w}d{c}{m?}` with `full`,
 where `c` is `e`, `n`, `h`, `x` or `u` for the five tiers in order and a
-trailing `m` marks a multiplication-only puzzle. A `d` followed by a letter
-that is none of the five, or by nothing, SHALL be refused.
+trailing `m` marks a multiplication-only puzzle.
 
 #### Scenario: Params round-trip
 
@@ -79,13 +77,6 @@ that is none of the five, or by nothing, SHALL be refused.
 - **AND** decoding it round-trips the params
 - **AND** encoding with `full = false` yields `6`
 - **AND** a multiplication-only puzzle's full encoding ends with `m`
-
-#### Scenario: A difficulty letter that names no tier
-
-- **WHEN** the params string `6dq` is decoded
-- **THEN** it is refused:
-  `The parameters 6dq have a "q" where this puzzle reads none.`
-- **AND** `6d`, which stops at its `d`, is refused too
 
 ### Requirement: Params: A 3×3 Keen is not dealt above Normal
 
@@ -121,18 +112,6 @@ every tier.
 - **WHEN** `9dhm`, a multiplication-only 9×9 Tricky, or `8dxm`, a
   multiplication-only 8×8 Hard, is validated with `full = true`
 - **THEN** it is not refused
-
-### Requirement: Params: A Keen label ends in multiplication only for a product-only puzzle
-
-The label of a multiplication-only params set SHALL be its size and tier
-followed by ", multiplication only". The label of any other params set SHALL
-be its size and tier alone.
-
-#### Scenario: The multiplication-only preset
-
-- **WHEN** the label of `6dnm` is asked for
-- **THEN** it is "6x6 Normal, multiplication only"
-- **AND** the label of `6dn` is "6x6 Normal"
 
 ### Requirement: Description: Keen descriptions encode the block structure and cage clues
 
@@ -249,26 +228,24 @@ values, at Normal by per-square value bitmaps, and at Tricky by the cross-cage
   along one row
 - **THEN** 1 is removed from the candidates of that row's cells outside the cage
 
-### Requirement: Generation: Keen generates boards uniquely solvable at exactly the requested difficulty
+### Requirement: Generation: A Keen cage has at most six cells and a balanced mix of clues
 
-`newDesc` SHALL deal a board only when the graded solver solves it at exactly
-the requested difficulty: solvable at `diff` and not at `diff − 1`. Every cage
-SHALL have area at most 6, and the generator SHALL assign a balanced mix of
-cage operations and values that avoids low-quality clues. It SHALL regenerate
-otherwise, under a capped-iteration backstop that throws and does not hang.
+What a board dealt at a tier promises SHALL be the collection's
+(`engine-difficulty`, "Every tier promises one solution found at its cap" and
+"A difficulty tier binds the board it generates"), with no departure. Every
+cage SHALL have area at most 6, and the generator SHALL assign a balanced mix
+of cage operations and values that avoids low-quality clues.
 
-#### Scenario: Generated board is uniquely solvable at its difficulty
+#### Scenario: The cages of a dealt board
 
 - **WHEN** a board is generated for given params
-- **THEN** the solver solves it uniquely at the requested difficulty
-- **AND** the solver fails to solve it at one difficulty level lower (for
-  difficulties above Easy)
-- **AND** no cage has more than 6 cells, and every subtraction or division
+- **THEN** no cage has more than 6 cells, and every subtraction or division
   cage has area 2
 
 ### Requirement: Controls: Keen selects a cell through the shared note-taking cell
 
-Keen SHALL take its selection from the engine's note-taking cell. Every cell
+Keen SHALL take its selection from the engine's note-taking cell
+(`engine-notes`, "The note-taking cell is one shared mechanic"). Every cell
 SHALL take an entry, since Keen has no givens, and only an empty cell SHALL
 take a pencil mark. The cursor keys SHALL move the highlight.
 
@@ -306,17 +283,6 @@ SHALL change a cell that holds a digit.
   Backspace is pressed
 - **THEN** no move is made and the digit stays
 
-### Requirement: Controls: Keen provides on-screen key labels
-
-Keen SHALL implement `requestKeys(params)` returning one button per digit `1..w`
-(labeled by the digit character) followed by a clear key (button code `8`,
-labeled `"Clear"`).
-
-#### Scenario: The keypad covers the grid's digits plus clear
-
-- **WHEN** the key labels are requested for a `6×6` Keen board
-- **THEN** the result is the buttons `1,2,…,6` followed by a clear key
-
 ### Requirement: Preferences: Auto-pencil strikes a placed digit from its row and column
 
 With auto-pencil enabled, a real placement SHALL additionally strike that digit
@@ -328,27 +294,26 @@ from the pencil marks of every other cell in its row and column.
   column hold cells penciled with 4
 - **THEN** the new state has no 4 among the pencil marks of that row and column
 
-### Requirement: Hint: Keen provides an explained deduction hint
+### Requirement: Hint: Keen's hint is the shared candidate plan over rows and columns
 
-The hint SHALL teach the player the next deduction in pencil-notes terms. Its
-deductions SHALL be capped below recursion, because a guess is not a teachable
-note strike.
+Keen's hint SHALL be the collection's candidate-elimination plan, taken through
+its row/column preset (`engine-candidate-hints`, "A shared candidate-elimination
+hint plan" and "A row/column Latin square answers no question its regions
+already settle"), with no departure. Keen SHALL supply its recording solver and
+the words of its two cage deductions, which the requirements below state.
 
-#### Scenario: A hint on an Unreasonable board
+#### Scenario: A single on a Keen board
 
-- **WHEN** a hint is asked for on a board of the Unreasonable tier
-- **THEN** the recording solver runs with its cap at Hard, and no step rests on
-  a trial
+- **WHEN** a step places a digit because it fits one cell of its row
+- **THEN** its sentence is the shared narrator's and names no cage
 
-### Requirement: Hint: A cage elimination is one firing, struck as one journey
+### Requirement: Hint: A cage elimination is one firing, and a firing is one cage's
 
 A cage elimination SHALL be taught as one firing: no layout of the cage's
 digits consistent with its clue leaves a candidate possible in a cage cell, or,
 at the harder level, a digit the cage requires along a row or column is ruled
 out elsewhere in that line. A firing SHALL be one cage's, so a hint step never
-mixes cages. It SHALL strike what it rules out through `pencilStrike` moves
-linked as one journey, and every cell it strikes in SHALL be marked in the one
-acted-on hint color.
+mixes cages.
 
 #### Scenario: A cage elimination is taught as a note strike
 
@@ -368,7 +333,7 @@ acted-on hint color.
 
 A cage step's narration SHALL lead with the spotted indication, the cage named
 by its clue's goal ("sum to N", "multiply to N", "differ by N", "have a ratio
-of N"), then give the reasoning, then end in a necessity-voice conclusion.
+of N"), then give the reasoning.
 
 #### Scenario: A sum cage rules two digits out of a cell
 
@@ -393,6 +358,12 @@ the tier the board was dealt at.
 - **WHEN** a hint is asked for on a board of `6dn`
 - **THEN** the recording solver runs with its cap at Normal
 - **AND** no step it records is a set deduction or a forcing chain
+
+#### Scenario: A hint on an Unreasonable board
+
+- **WHEN** a hint is asked for on a board of the Unreasonable tier
+- **THEN** the recording solver runs with its cap at Hard, and no step rests on
+  a trial
 
 ### Requirement: Look: Keen draws a cell's digit or its pencil marks
 
@@ -446,14 +417,12 @@ digits, so no cell takes the lifted surface of a given.
 - **AND** the line between two cells of one cage is the surface grid line
 - **AND** the line between two cages, and the frame, are ink
 
-### Requirement: Look: The selection is drawn under the clue, and the hint's ring in the gutter
+### Requirement: Look: The hint's ring and its outline are drawn in the gutter
 
-The selection's wash and its pencil-mode corner SHALL be drawn over the cell's
-surface, under the cage's clue. The hint's ring and its outline SHALL stay in
-the gutter at the cell's edge.
+The hint's ring and its outline SHALL stay in the gutter at the cell's edge.
 
-#### Scenario: A cage's minimal cell is selected for a pencil mark
+#### Scenario: A hint rings a cell inside a cage
 
-- **WHEN** the cell that carries a cage's clue is highlighted in pencil mode
-- **THEN** the corner triangle is painted before the clue, and the clue is drawn
-  whole on top of it
+- **WHEN** a hint rings a cell whose neighbor is in the same cage
+- **THEN** the ring covers the gutter between the two cells, and nothing of it
+  is drawn inside either cell

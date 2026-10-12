@@ -16,7 +16,7 @@ path from the lowest to the highest, and every arrow clue is satisfied.
 
 - **WHEN** the last move fills the grid so the numbers form a single path from
   lowest to highest and all arrow clues are satisfied
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
 ### Requirement: Rules: A number cannot be placed on a given
 
@@ -30,38 +30,32 @@ Placing a number on a cell the puzzle fixed SHALL be rejected.
 ### Requirement: Rules: findMistakes compares the board with its one solution
 
 `findMistakes` SHALL solve the clues again and flag every placed number that
-contradicts the unique completion, so that Check & Save refuses a board holding
-one. The shading drawn during play is another thing: it marks a duplicated
-number and a path segment that breaks adjacency.
+contradicts the unique completion. The shading drawn during play is another
+thing: it marks a duplicated number and a path segment that breaks adjacency.
 
 #### Scenario: A wrong number is reported as a mistake
 
 - **WHEN** `findMistakes` runs on a board containing a placed number that differs
   from the unique solution at that cell
-- **THEN** that cell is reported as a mistake, and Check & Save refuses to save
+- **THEN** that cell is reported as a mistake
 
-### Requirement: Params: Ascent's parameters
+### Requirement: Params: Ascent refuses an area of 1000, a Hexagon out of proportion and a 2×2 in Edges
 
-Parameters SHALL be a width, a height, a difficulty (Easy, Normal, Tricky or
-Hard), a ruleset with its board shape, and the booleans "remove start and end
-points" and "symmetrical clues". Validation SHALL require a width and a height
-between 2 and 50 with an area under 1000, and an odd height and a width greater
-than half the height on a Hexagon, and SHALL refuse a 2×2 grid in Edges. A game
-ID SHALL encode every parameter and round-trip through decode.
+`validateParams` SHALL refuse an area of 1000 squares or more, on a Hexagon
+an even height or a width not greater than half the height, and a 2×2 grid in
+Edges.
 
-#### Scenario: A game ID round-trips through the parameters
+#### Scenario: A Hexagon of even height
 
-- **WHEN** a parameter set is encoded to a game ID and decoded
-- **THEN** the same width, height, difficulty, mode and clue flags are recovered
+- **WHEN** a Hexagon board seven wide and six high is validated
+- **THEN** it is refused with "Height must be an odd number."
 
-### Requirement: Params: Ascent's rulesets are told apart by a square's neighbors
+### Requirement: Params: One mode letter names an Ascent ruleset and its shape
 
-Ascent SHALL declare four rulesets, in this order: Orthogonal (four neighbors,
-mode letter `O`), Hex (six, `H` and `C`), Classic (eight, `R`) and Edges
-(eight, with arrows round the grid, `E`). The Custom dialog SHALL ask for the
-ruleset and the board's shape as separate fields, the shape offering Rectangle,
-Honeycomb and Hexagon. The params encoding SHALL be one mode letter, and a
-string that names no mode SHALL decode as Classic.
+The params encoding SHALL hold the ruleset and the board's shape, which the
+Custom dialog asks for as separate fields, in one mode letter: `O` for
+Orthogonal, `H` and `C` for Hex, `R` for Classic and `E` for Edges. A string
+that names no mode SHALL decode as Classic.
 
 #### Scenario: Hex is chosen in the dialog
 
@@ -73,33 +67,6 @@ string that names no mode SHALL decode as Classic.
 
 - **WHEN** a params string with any mode letter, or with none, is decoded
 - **THEN** it names the board it always did
-
-### Requirement: Params: Each ruleset declares what it offers
-
-Each ruleset SHALL declare what it offers (`Ruleset.only`): Hex the Honeycomb
-and the Hexagon, and every other ruleset the Rectangle alone; Edges also
-symmetrical clues off and the tiers from Normal up. `validateParams` SHALL
-write no refusal for any of these.
-
-#### Scenario: A ruleset is asked for on a shape it does not have
-
-- **WHEN** the dialog's values are submitted, by something other than its form,
-  with the game mode Edges and the board shape Hexagon
-- **THEN** it is refused: "Board shape must be Rectangle for Edges."
-
-### Requirement: Params: The Type menu has a section for each ruleset
-
-The Type menu SHALL hold a section for each ruleset, each offering one board:
-Orthogonal, Hex's Honeycomb and Classic at every tier, Edges from Normal up,
-and Hex's Hexagon from Normal up beside the Honeycomb. Other sizes are
-Custom's. The game's default SHALL be the menu's first line.
-
-#### Scenario: The menu's sections
-
-- **WHEN** the player opens Ascent's Type menu
-- **THEN** its sections are Orthogonal, Hex, Classic and Edges, in that order,
-  and the Hex section holds a Honeycomb board at every tier and a Hexagon board
-  from Normal to Hard
 
 ### Requirement: Params: Ascent's square grids turn and its hexagonal grids do not
 
@@ -252,24 +219,13 @@ tier.
 Outside Edges the generator SHALL remove clue numbers from a full path while
 the graded solver still solves, honoring the symmetry and keep-endpoints
 options; in Edges it SHALL move numbers out to arrow clues, retrying until
-soluble. Its loop SHALL be bounded.
+soluble.
 
 #### Scenario: Every preset produces a uniquely soluble board
 
 - **WHEN** a new game is generated for any preset or legal size and mode
 - **THEN** a board is produced whose clues admit exactly one completion under the
   graded solver
-
-### Requirement: Generation: Ascent grades its difficulty tiers honestly
-
-A board generated above Easy SHALL NOT be soluble at the tier below it, in any
-grid mode.
-
-#### Scenario: A board above Easy genuinely needs its own tier
-
-- **WHEN** a board generated above Easy is solved at the tier below it
-- **THEN** the solver does not reach a solution
-- **AND** solving the same board at its own tier does
 
 ### Requirement: Solver: Ascent's solver treats the last number like any other
 
@@ -310,8 +266,7 @@ clicks.
 A path SHALL be drawn by left-dragging across cells and erased by
 right-clicking or right-dragging, and a fully drawn path SHALL resolve into
 placed numbers. A right-click SHALL otherwise clear a number or the line
-through a cell, so Ascent has a secondary meaning and SHALL NOT declare
-`ignoresSecondaryButton`.
+through a cell.
 
 #### Scenario: A drawn path between two numbers is complete
 
@@ -361,10 +316,10 @@ move. It SHALL NOT be narrowed by comparing UI state before and after.
 
 ### Requirement: Controls: Ascent offers a number keypad
 
-Ascent SHALL offer an on-screen keypad of the digits `1`–`9` and `0` and a
-Clear key, so that a number can be written into any empty square by a pointer
-alone: a tap on the square, the number's digits, and a tap anywhere to confirm
-it. Clear SHALL rub out the last digit typed, as Backspace does. The hint
+With Ascent's on-screen keypad a number SHALL be written into any empty
+square by a pointer alone: a tap on the square, the number's digits, and a tap
+anywhere to confirm it. Clear SHALL rub out the last digit typed, as Backspace
+does. The hint
 places numbers no chain of taps reaches, and the keypad is how a touch player
 makes them.
 
@@ -410,11 +365,10 @@ it.
 
 Enter SHALL be a left click at the keyboard cursor, and Space, or Backspace
 while no number is being typed, a right click there. The `numpad` preference
-SHALL choose what the number pad's digits do: under "Enter numbers", the
-default, they type as the top row's do; under "Move cursor" 8, 2, 4 and 6
-move the cursor as the arrows do and 7, 9, 1 and 3 up-left, up-right,
-down-left and down-right. On a hexagonal board Up and Down SHALL zigzag,
-keeping the cursor in its column.
+SHALL choose what the number pad's digits do: under "Enter numbers", its first
+choice and the default, they type as the top row's do; under "Move cursor" the
+pad is a direction pad, its 5 and 0 still typing. On a hexagonal board the
+cursor SHALL step as the engine's `shearedHexStep` gives.
 
 #### Scenario: The number pad moves the cursor
 
@@ -424,25 +378,11 @@ keeping the cursor in its column.
 - **AND** under "Enter numbers" the same key on an empty square begins the
   number 8 there
 
-### Requirement: Controls: A number-pad key that moves Ascent's cursor types nothing
-
-Under "Move cursor", each of the number pad's eight direction digits SHALL
-move the cursor and do nothing else: none SHALL begin or extend a typed
-number, on whatever square the cursor lands. The pad's 5 and 0, which name no
-direction, SHALL type as the top row's do.
-
-#### Scenario: A diagonal onto an empty square
-
-- **WHEN** "Numpad inputs" is "Move cursor", the cursor is in the top-left
-  corner of a Classic board, and the number pad's 3 is pressed
-- **THEN** the cursor is one square down and one right, and no number is being
-  typed there
-
 ### Requirement: Preferences: Ascent's auto-advance preference moves the selection past numbers already placed
 
-The `auto-advance-runs` preference ("Skip past already-placed numbers when
-advancing"), on by default, SHALL decide where the selection goes when a
-number is placed beside the selected one. When it is on and the numbers that
+The `auto-advance-runs` preference, on by default, SHALL decide where the
+selection goes when a number is placed beside the selected one. When it is on
+and the numbers that
 follow in the direction of play are already on the board, the selection SHALL
 move to the last of them, so the next missing number is offered at once. When
 it is off the selection SHALL stay on the number just placed.
@@ -460,9 +400,8 @@ Every hint step SHALL place one number, or one whole run where a later
 requirement says so, and every fact it rests on SHALL be a number, a wall or an
 arrow on the board. The reading the techniques reason
 from SHALL be rebuilt from the player's board, through the solver's own rungs,
-before every step, and SHALL NOT read lines the player drew. The hint SHALL
-refuse on a solved board and while `findMistakes` reports anything. A step
-SHALL be followed by placing its number by any gesture.
+before every step, and SHALL NOT read lines the player drew. A step SHALL be
+followed by placing its number by any gesture.
 
 #### Scenario: Following the hint finishes the board
 
@@ -494,11 +433,9 @@ above the board's tier.
 
 ### Requirement: Hint: A hint step says why in one sentence and marks what it reads
 
-Each step SHALL say why its number is forced in one sentence of at most 120
-characters, naming numbers by value. It SHALL ring the square it fills without
-drawing the number, SHALL outline the numbers and squares it reasons from, in
-square and hexagonal cells alike, and SHALL stripe an arrow's line when the
-sentence names it. A step whose move fills in more than its own square SHALL
+Each step SHALL say why its number is forced in one sentence, naming numbers
+by value. Its ring and its outlines SHALL follow the shape of the cell, square
+and hexagonal alike. A step whose move fills in more than its own square SHALL
 end the plan.
 
 #### Scenario: A step on a hexagonal board

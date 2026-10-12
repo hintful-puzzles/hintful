@@ -4,8 +4,9 @@
 Unruly (Binairo), the puzzle of filling every square with one of two pieces so that no
 three consecutive squares in a line match and each row and column is half of
 each, optionally with no two rows or columns alike. This holds the game's own
-rules: its params and description formats, what each difficulty's techniques
-are and what a dealt board promises, its controls, its look and live errors,
+rules: what its params refuse and which piece each case of its description's
+letters gives, what each difficulty's techniques are and how a board's clues
+are winnowed, its cycling clicks and digit keys, its look and live errors,
 its mistake check, and its hint's techniques, journeys and marks. What every
 game shares is in the engine capabilities.
 
@@ -63,19 +64,19 @@ the player's marks are all consistent.
 - **AND** placing instead the solution's color there leaves `findMistakes`
   returning no mistakes
 
-### Requirement: Params: Unruly's params are a size, the unique variant and a difficulty
+### Requirement: Params: An Unruly params string is its declared codec's, and one with no difficulty is Easy
 
-Params SHALL be `w2`, `h2` (both even and at least 6), `unique` (boolean), and
-`diff` (Easy / Normal / Tricky), encoded `{w2}x{h2}` with an optional `u` for
-the unique variant and, when `full`, `d{c}` for the difficulty char.
+Unruly's params (a width and a height, the `unique` variant and a difficulty)
+and their encoding SHALL be those its `paramConfig` and its declared codec
+give (`engine-params`, "A game declares its params encoding once, and both
+codec halves are derived"), with no departure from the codec grammar. A params
+string with no `d` SHALL decode as Easy.
 
-#### Scenario: Params round-trip
+#### Scenario: The unique board of the Type menu
 
-- **WHEN** params `{ w2: 10, h2: 10, unique: false }` at the Tricky tier are
-  encoded with `full`
-- **THEN** the result encodes the dimensions and difficulty char
-- **AND** decoding it round-trips the params
-- **AND** decoding a bare `8x8` yields a square grid with `unique` false
+- **WHEN** `8x8ude` is decoded
+- **THEN** the board is 8×8 with unique rows and columns, at Normal
+- **AND** encoding it without `full` gives `8x8u`
 
 ### Requirement: Params: Unruly refuses params no board can be dealt for
 
@@ -89,79 +90,28 @@ rows (the A177790 bound).
   below 6, or a `unique`-mode grid exceeding the distinct-rows bound
 - **THEN** it returns a non-null error string
 
-### Requirement: Params: Unruly's difficulty letters are t, e and n
-
-The difficulty char SHALL be `t` for Easy, `e` for Normal and `n` for Tricky.
-A params string with no `d` SHALL decode as Easy. One whose `d` is followed by
-any other character, or by nothing, SHALL be refused.
-
-#### Scenario: The unique board of the Type menu
-
-- **WHEN** `8x8ude` is decoded
-- **THEN** the board is 8×8 with unique rows and columns, at Normal
-- **AND** encoding it without `full` gives `8x8u`
-
-#### Scenario: A letter that names no tier
-
-- **WHEN** `8x8dn`, an 8×8 board at Tricky, has its last letter changed to
-  `z` and is decoded
-- **THEN** it is refused:
-  `The parameters 8x8dz have a "z" where this puzzle reads none.`
-
-### Requirement: Params: An Unruly title says unique when rows and columns must differ
-
-A board's label SHALL be its size and its tier, followed by `unique` when the
-`unique` variant is on.
-
-#### Scenario: The unique board of the Type menu
-
-- **WHEN** the params `8x8ude` and `8x8dn` are labeled
-- **THEN** they read "8x8 Normal, unique" and "8x8 Tricky"
-
 ### Requirement: Description: Unruly descriptions are run-length color grids
 
-The desc SHALL encode the immutable clue cells in scan order using upstream's
-run-length alphabet: a lowercase letter advances past a run of empty cells and
-places a `zero` clue, an uppercase letter does the same placing a `one` clue,
-and `z`/`Z` advance 25 cells without placing a clue; the encoded positions SHALL
-sum to exactly `w2·h2 + 1`.
+The desc SHALL encode the immutable clue cells in scan order, in the engine's
+dot-run grammar (`engine-params`, "The engine provides the dot-run description
+grammar"): a lowercase letter is a `zero` clue and an uppercase letter a `one`
+clue. The parser SHALL refuse what `readDotRuns` refuses (`engine-params`,
+"The dot-run reader refuses what its writer never writes"), and nothing of
+its own.
 
-#### Scenario: A description round-trips
+#### Scenario: Two clues of the two kinds
 
-- **WHEN** a generated desc is parsed by `newState` and the clue grid is
-  re-encoded
-- **THEN** the re-encoded desc equals the original
+- **WHEN** a 6×6 board whose first cell is a `one` clue and whose second is a
+  `zero` clue, with no other, is written and read back
+- **THEN** its description opens with an uppercase letter and then a lowercase
+  one
+- **AND** the first two cells are immutable in those values, and the third is
+  empty and the player's to fill
 
-### Requirement: Description: A malformed Unruly description is refused
+### Requirement: Generation: Unruly winnows the clues of a full valid grid
 
-`validateDesc` SHALL reject a desc holding any character outside the
-run-length alphabet and any desc whose decoded length differs from
-`w2·h2 + 1`.
-
-#### Scenario: A malformed description is rejected
-
-- **WHEN** `validateDesc` is given a desc with an invalid character or a decoded
-  length mismatching the params
-- **THEN** it returns a non-null error string
-
-### Requirement: Generation: Unruly generates uniquely solvable boards at the target difficulty
-
-Every board `newDesc` generates SHALL pass `validateDesc` and be solvable by
-the deductive solver at its target difficulty, from its clues alone. `newDesc`
-SHALL winnow the clues of a full valid grid, keeping a clue only where the
-solver at the target difficulty could not finish without it.
-
-#### Scenario: Generated boards are valid and solvable
-
-- **WHEN** `newDesc` runs for a seeded RNG across the presets
-- **THEN** every desc passes `validateDesc`
-- **AND** the deductive solver at the board's difficulty solves it from its
-  clues alone to a counts-valid, run-valid state
-
-### Requirement: Generation: A board above Easy needs its own tier
-
-For any difficulty above Easy, `newDesc` SHALL reject a board the solver one
-level easier can already finish (the too-easy gate), and SHALL regenerate.
+`newDesc` SHALL winnow the clues of a full valid grid, keeping a clue only
+where the solver at the target difficulty could not finish without it.
 
 #### Scenario: A Tricky board is not a Normal one
 
@@ -209,8 +159,8 @@ create three-in-a-row, that color is forced elsewhere.
 
 ### Requirement: Controls: Unruly marks cells via three-state cycling moves
 
-Left-button / select on a non-immutable cell SHALL cycle
-empty → one → zero → empty; right-button / select2 SHALL cycle
+The left-click verb of Unruly's `targetVerbs` SHALL cycle a non-immutable
+cell empty → one → zero → empty, and the right-click verb
 empty → zero → one → empty. An immutable cell SHALL be inert.
 
 #### Scenario: Left and right cycle in opposite directions
@@ -226,34 +176,15 @@ empty → zero → one → empty. An immutable cell SHALL be inert.
 - **WHEN** a marking action targets an immutable clue cell
 - **THEN** `interpretMove` produces no move and the cell is unchanged
 
-### Requirement: Controls: Unruly's keys place and clear at the cursor
+### Requirement: Controls: Unruly's digit keys place at the cursor
 
-A keyboard cursor SHALL move within the grid. At the cell under a shown cursor,
-the `1` key SHALL place one, `0` or `2` SHALL place zero, and Backspace or
-Delete SHALL clear the cell.
+At the cell under a shown cursor, the `1` key SHALL place one and `0` or `2`
+SHALL place zero.
 
 #### Scenario: A digit sets the cell under the cursor
 
 - **WHEN** the cursor is shown on an empty non-immutable cell and `1` is pressed
 - **THEN** a move places one in that cell
-
-### Requirement: Hint: Unruly provides an explained deduction hint
-
-The `unruly` game SHALL implement `hint(state)` returning a plan-carrying,
-narrated hint that explains why each move is forced, and `hintKeepTrack` so the
-plan auto-advances as the player follows it. `hint(state)` SHALL deduce, from
-the player's current marks, the ordered sequence of forced cells, run to
-fixpoint at the solver's full strength, and return one narrated `HintStep` per
-forced cell.
-
-#### Scenario: Hint explains the next forced move
-
-- **WHEN** `hint` is called on an unsolved, mistake-free generated board
-- **THEN** it returns `{ ok: true }` with a non-empty list of steps
-- **AND** the first step's move is a legal `executeMove` whose narration names the
-  technique (three-in-a-row / completed count / unique rows / near-complete) that
-  forces its cell
-- **AND** applying every step's move in order solves the board
 
 ### Requirement: Hint: A hint step states the technique that forces its cell
 
@@ -272,9 +203,9 @@ one window (so every other empty cell is forced).
 
 ### Requirement: Hint: A firing that forces several cells is one journey
 
-Moves that a single firing forces (a whole line completing to one kind, a
-near-complete row's forced remainder) SHALL be emitted as one journey via
-`continuesPrevious`, so they read and auto-play as a single coherent hint.
+The plan SHALL hold one narrated step per forced cell. The moves that a single
+firing forces (a whole line completing to one kind, a near-complete row's
+forced remainder) SHALL be one journey.
 
 #### Scenario: One firing reads as one journey
 
@@ -296,12 +227,11 @@ hinted cell to the hinted value and `"off"` otherwise.
 - **AND** a move that sets a different cell, or the hinted cell to a different
   value, returns `"off"`
 
-### Requirement: Hint: A displayed step carries the marks its sentence refers to
+### Requirement: Hint: Every step shows the evidence it rests on
 
-`redraw` SHALL render the displayed step with the marks its sentence refers
-to: a ring on the cell the step fills, an outline on each cell the step reasons
-from, and stripes on the row or column the sentence names. Every step SHALL
-carry visible evidence, never a bare conclusion.
+What the ring, the outline and the stripes of a displayed step stand for SHALL
+be the legend's (`hintMarks`). Every step SHALL carry visible evidence, never
+a bare conclusion.
 
 #### Scenario: Every hint step shows visible evidence
 
@@ -402,12 +332,11 @@ identical full rows or columns.
 - **THEN** `redraw` draws an error-colored outline around them without any
   explicit check action
 
-### Requirement: Look: Unruly draws a cursor outline and a completion flash
+### Requirement: Look: Unruly draws a cursor outline, and the win flash fills a cell under its piece
 
-A keyboard cursor SHALL be drawn as an outline on the focused cell. The
-completion flash SHALL sweep the cells diagonally, a cell's position being its
-place in the grid, and a lit cell SHALL be filled with a flash color and
-keep its piece, a given as any other cell.
+A keyboard cursor SHALL be drawn as an outline on the focused cell. A cell the
+completion flash is on SHALL be filled with a flash color and keep its piece,
+a given as any other cell.
 
 #### Scenario: The completion flash plays once
 

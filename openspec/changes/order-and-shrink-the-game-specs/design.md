@@ -297,6 +297,32 @@ stated instead. The engine amendments of rule 1 are written and reviewed
 before the batches that lean on them. `sample/` is the first draft of two
 games and is redone under these rules, then deleted when the deltas exist.
 
+**The specs are edited in place, with no delta** (decided 2026-10-12 by the
+session that began the cut; it overrides "a `MODIFIED` entry restated whole"
+above and the delta files of the paragraph before this one). The pinned
+openspec refuses a `MODIFIED` block that omits a scenario the spec still has
+(`findScenarioLossIssues` in its validator, and the archive throws on the
+same comparison), and dropping a copied scenario from a kept requirement is
+the commonest thing the cut does. By delta each such requirement would be
+`REMOVED` and `ADDED` under a different title, retitled for the tool's sake
+and moved to the end of its spec. So the cut is made as the reorder was: the
+writer edits `openspec/specs/<game>/spec.md`, the engine amendments are
+edited into their capabilities the same way, and the record is the git diff
+and a ledger per game under `ledger/` in this change. What replaces the
+validator's reading of a delta:
+
+- **`tools/cut-check.mjs`** holds each ledger to the diff of its spec against
+  `c86372f4`: a row for every requirement removed or changed, by the title it
+  had; every new title named; the 500 characters and a scenario each. Seen to
+  fail on a changed requirement with no row and on a row for an untouched
+  one. It reads the shape and cannot tell that a row's "where it is stated
+  instead" is true, which is the reviewer's reading.
+- **`brief.md`** is what a batch's writer and reviewer are given.
+- `openspec validate --all --strict`, `spec-subjects.mjs` and `spec-form.mjs`
+  read the specs themselves on every commit.
+
+`tools/` and `sample/` are deleted before the archive; the ledgers stay.
+
 **What is not cut**: what a hand-written function does; a hint technique by
 what it concludes and from what; the order techniques are tried in where a
 loop and not `hintRungs` fixes it; a promise a save or a shared link depends

@@ -26,18 +26,12 @@ powered.
 
 The `j` jumble SHALL rotate every unlocked tile by a random amount, and SHALL
 record the result as an explicit per-tile rotation list so that replaying the
-move log reproduces the same board without the RNG. The keypad SHALL offer a
-Jumble key, making the same move as `J`.
+move log reproduces the same board without the RNG.
 
 #### Scenario: A jumbled board restores exactly on load
 
 - **WHEN** a game is jumbled, saved, and restored
 - **THEN** the restored board matches the jumbled board tile-for-tile
-
-#### Scenario: The Jumble key jumbles
-
-- **WHEN** the player presses the keypad's Jumble key
-- **THEN** a jumble move is made, as `J` makes it
 
 ### Requirement: Rules: Net takes side notes
 
@@ -54,12 +48,11 @@ side with a wall on it SHALL take no note.
 
 ### Requirement: Rules: Net flags wrong locks and notes
 
-Net SHALL implement `findMistakes`, taking the board's one answer from the
-search that counts its answers, at either difficulty, and flagging a locked
-tile the answer turns differently and a side note the answer contradicts. A
-tile turned wrong but unlocked SHALL NOT be flagged. Where the search did not
-prove exactly one answer it SHALL flag nothing. A flagged note SHALL be drawn
-in the error color, and a flagged lock SHALL be ringed in it.
+`findMistakes` SHALL flag a locked tile the board's one answer turns
+differently and a side note the answer contradicts. A tile turned wrong but
+unlocked SHALL NOT be flagged. Where the search did not prove exactly one
+answer it SHALL flag nothing. A flagged note SHALL be drawn in the error
+color, and a flagged lock SHALL be ringed in it.
 
 #### Scenario: A wrong note is flagged
 
@@ -168,18 +161,6 @@ wrapping at Unreasonable.
 - **AND** a 5×6 and a 7×7 board are admitted, and so are a 5×5 and a 4×4
   wrapping board
 
-### Requirement: Params: Net's menu offers each size at the difficulties it deals
-
-Net's presets SHALL offer 5×5 as Easy, each of 7×7, 9×9, 11×11 and 11×13 as
-Easy and as Unreasonable, then one wrapping 7×7 board at Easy, and the default
-SHALL be the Easy 5×5.
-
-#### Scenario: Every size from 7×7 is offered at both difficulties
-
-- **WHEN** Net's preset menu is read
-- **THEN** 5×5 appears as Easy alone, the four larger sizes each appear as
-  Easy and then as Unreasonable, and the wrapping board comes last
-
 ### Requirement: Params: Net refuses a single square and a grid past a million squares
 
 `validateParams` SHALL refuse a grid whose width and height are both 1, and
@@ -237,11 +218,6 @@ it deals for a seed SHALL be upstream's, draw for draw.
 - **THEN** the solver reports it uniquely solvable, and no guess is required to reach the
   solution
 
-#### Scenario: A generated board is hinted to the end
-
-- **WHEN** a board is generated at Easy and the player follows the hint from the opening position
-- **THEN** every step agrees with the solution and the board ends solved
-
 ### Requirement: Generation: A board two squares wide is dealt
 
 The generator SHALL deal a board with a side of two squares without fail. Its
@@ -254,13 +230,11 @@ joins as a loop.
 - **WHEN** 2×5, 5×2 and 2×9 boards are dealt from forty seeds each
 - **THEN** every deal returns a board
 
-### Requirement: Generation: A pasted Net board opens at the difficulty it needs
+### Requirement: Generation: A Net board is Easy where the hint finishes it
 
-A board that arrives as a game ID SHALL open as Easy where the hint finishes
-it, whether or not the solver does, and as Unreasonable where it has exactly
-one answer that the hint does not reach, whatever lower difficulty its ID
-states. A board with several answers SHALL be refused as having more than one
-solution, and a board with none as one whose clues contradict each other.
+A board SHALL count as Easy where the hint finishes it, whether or not the
+solver does, and as Unreasonable where it has exactly one answer the hint does
+not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
@@ -273,13 +247,6 @@ solution, and a board with none as one whose clues contradict each other.
 - **WHEN** `5x5:81924a3be3be5731bb848cca2`, which the solver stops short of
   and the hint finishes, is entered with no difficulty letter
 - **THEN** it opens, and the board's params read `5x5de`
-
-#### Scenario: A board with several answers or none is refused
-
-- **WHEN** a network as first drawn that other turnings join up too, and a
-  board with one wire end too many, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
 
 ### Requirement: Generation: An Unreasonable Net board has one answer that the hint does not reach
 
@@ -305,14 +272,12 @@ the tiles the solver settled.
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Solver: Net counts a board's answers by a bounded search
+### Requirement: Solver: Net's search assumes each turning of the tile with the fewest left
 
-The game SHALL count a board's answers up to two by trial and error over the
+Net's search SHALL count a board's answers by trial and error over the
 solver: where the solver stops, it SHALL take the first tile with the fewest
-turnings left and assume each in turn. It SHALL report one answer, several,
-none, or that it stopped at its budget, which SHALL be counted in positions
-and never in time. Solve SHALL take the answer from it at either difficulty,
-or from the network a dealt board was drawn as.
+turnings left and assume each in turn. Solve on a board Net dealt SHALL take
+the network the board was drawn as.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -322,16 +287,11 @@ or from the network a dealt board was drawn as.
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
 
-#### Scenario: A spent budget is neither answer
+#### Scenario: The search does not read how the tiles are turned
 
 - **WHEN** the search is given four positions on a board that needs five
 - **THEN** it reports that it stopped, and with five it reports one answer
 - **AND** the same holds however the board's tiles are turned when it is asked
-
-#### Scenario: An Easy board takes one position
-
-- **WHEN** the search is given one position on a dealt Easy board
-- **THEN** it reports one answer
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -342,13 +302,12 @@ or from the network a dealt board was drawn as.
 - **THEN** the search reports one answer exactly where one turning fits,
   several where more do and none where none does
 
-### Requirement: Controls: Tiles rotate and lock
+### Requirement: Controls: A tap in the middle of a tile in notes mode locks it
 
-Left-click or `a` SHALL rotate a tile anticlockwise, right-click or `d` clockwise, and `f`
-by 180°. `s` SHALL toggle a tile's lock, and so SHALL a tap in the middle
-third of a tile in notes mode, where the pointer's other taps note sides:
-outside notes mode both buttons rotate, so notes mode is where the pointer
-reaches the lock. A locked tile SHALL NOT rotate.
+A tap of either button in the middle third of a tile in notes mode SHALL
+toggle the tile's lock, where the pointer's other taps note sides: outside
+notes mode both buttons rotate, so notes mode is where the pointer reaches the
+lock. A locked tile SHALL NOT rotate.
 
 #### Scenario: A tap in the middle of a tile in notes mode locks it
 
@@ -372,8 +331,8 @@ treated as non-wrapping.
 
 Notes SHALL be taken in the collection's notes mode. In notes mode a
 left-click SHALL note a wire across the side of the tile it lands
-nearest and a right-click, or a held finger, SHALL note none, each toggling
-off a note it would repeat.
+nearest and a right-click SHALL note none, each toggling off a note it would
+repeat.
 
 #### Scenario: A tap notes the nearest side
 
@@ -394,10 +353,10 @@ wrapping edge SHALL be neighbors.
 
 ### Requirement: Controls: Net's view controls and jumble have pointer routes
 
-Every action Net's keyboard offers outside its verbs SHALL also be reachable
-by a pointer alone: moving the source, the jumble, and scrolling the origin of
-a wrapping grid. Source mode and a scroll in progress SHALL be transient `Ui`
-state that a save does not carry.
+The pointer's routes to what Net's keyboard offers outside its verbs SHALL be
+the keypad's Source and Jumble keys and the margin drag that scrolls the
+origin of a wrapping grid. Source mode and a scroll in progress SHALL be
+transient `Ui` state that a save does not carry.
 
 #### Scenario: A save taken in Source mode
 
@@ -476,9 +435,9 @@ Outside notes mode a drag SHALL turn nothing further.
 ### Requirement: Preferences: Net's one preference keeps loop highlighting to locked squares
 
 A wire that is part of a loop SHALL be drawn in the error color. The
-preference `unlocked-loops`, "Highlight loops involving unlocked squares",
-SHALL be on by default. Turned off, a wire SHALL be drawn so only where the
-loop it is part of runs through locked squares alone.
+preference `unlocked-loops` SHALL be on by default. Turned off, a wire SHALL
+be drawn so only where the loop it is part of runs through locked squares
+alone.
 
 #### Scenario: A loop with one square unlocked
 
@@ -488,9 +447,9 @@ loop it is part of runs through locked squares alone.
 
 ### Requirement: Hint: Net's hint reasons from notes, locks and walls
 
-Net SHALL provide an explained `hint` that reasons only from the facts a
-player records, side notes and locked tiles, and the walls the board shows,
-treating an unlocked tile as unknown however it is turned. Each step SHALL add
+Net's hint SHALL reason only from the facts a player records, side notes and
+locked tiles, and the walls the board shows, treating an unlocked tile as
+unknown however it is turned. Each step SHALL add
 one fact: a note on a side every surviving way of turning a tile agrees on, or
 a lock on a tile only one way of turning survives for.
 
@@ -666,22 +625,9 @@ step of gray of the game's own.
 
 The completion flash SHALL spread from the source along the wires: a tile's
 position SHALL be its distance from the source in tiles along the connections,
-through the wrap of a wrapping board and never through a barrier. A lit tile's
-ground SHALL be filled with a flash color, locked or not, and the tile SHALL
-keep its wires. The keyboard cursor, the note pin and a hint's ring SHALL stay
-rings inside the tile's edge, over whichever ground the tile has.
-
-#### Scenario: The ripple reaches an unlocked tile
-
-- **WHEN** the board is solved and the flash's highlight is on an unlocked tile
-- **THEN** that tile's ground is a flash color, and the cell surface again
-  once the highlight has left it
-
-#### Scenario: The ripple reaches a locked tile
-
-- **WHEN** the highlight is on a tile the player locked
-- **THEN** that tile's ground is a flash color, and the lifted surface again
-  once the highlight has left it
+through the wrap of a wrapping board and never through a barrier. The keyboard
+cursor, the note pin and a hint's ring SHALL stay rings inside the tile's
+edge, over whichever ground the tile has, a flash color included.
 
 #### Scenario: A neighbor the wires do not join
 

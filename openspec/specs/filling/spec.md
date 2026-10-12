@@ -4,7 +4,7 @@
 Filling (Fillomino), the puzzle of writing numbers so that every connected group
 of equal numbers has exactly that many cells, with uniquely solvable
 generation, mistake checking, a selection the player fills with one digit, and
-an explained deduction hint with its own color legend.
+an explained deduction hint.
 
 ## Requirements
 
@@ -22,10 +22,11 @@ the size of its region, and not before.
 
 ### Requirement: Rules: Filling reports mistakes for Check & Save
 
-The game SHALL implement `findMistakes(state)` by taking the board's one
-answer from the search that counts its answers, at either difficulty, and
-returning every player-filled cell whose number contradicts it. It SHALL
-return an empty result when the search did not prove exactly one answer.
+`findMistakes(state)` SHALL return every player-filled cell whose number
+contradicts the board's one answer, which it SHALL take from the search as
+`engine-difficulty`, "One search answers a board for everything that asks"
+says. It SHALL return an empty result when the search did not prove exactly
+one answer.
 
 #### Scenario: A wrong fill is flagged and clears
 
@@ -34,25 +35,20 @@ return an empty result when the search did not prove exactly one answer.
 - **THEN** that cell is reported as a mistake
 - **AND** when the cell is corrected the mistake is no longer reported
 
-### Requirement: Params: Filling's parameters
+### Requirement: Params: A Filling params string may leave out its height and its difficulty
 
-Params SHALL be `w`, `h` and a difficulty, Easy or Unreasonable. A `w` or an
-`h` below 1 SHALL be refused. The encoding SHALL carry `{w}x{h}`, and the
-difficulty in the full form only, as `de` or `du`. A string with no difficulty
-letter SHALL decode as Easy.
+Filling's params, a size and a difficulty, SHALL be bounded and encoded as its
+`paramConfig` and its declared codec give (`engine-params`, "A game declares
+its params encoding once, and both codec halves are derived"), and its menu
+and default SHALL be what `presets` and `defaultParams` give. A string with no
+height SHALL decode as a square grid, and one with no difficulty letter as
+Easy.
 
-#### Scenario: Params round-trip
+#### Scenario: A string that leaves a field out
 
-- **WHEN** params `{ w: 13, h: 9 }` are encoded
-- **THEN** the result is `13x9`
-- **AND** decoding it round-trips the params
+- **WHEN** `13x9`, written before the game had tiers, is decoded
+- **THEN** it decodes as Easy
 - **AND** decoding a bare `9` yields a 9×9 square grid
-
-#### Scenario: The difficulty is in the full encoding only
-
-- **WHEN** an Unreasonable 13×9 board is encoded
-- **THEN** the full encoding is `13x9du` and the shared one `13x9`
-- **AND** `13x9`, written before the game had tiers, decodes as Easy
 
 ### Requirement: Params: Filling refuses Unreasonable where no board of a size needs it
 
@@ -76,29 +72,13 @@ No clue set of those sizes has one answer that the solver does not reach.
 
 `validateParams` SHALL refuse, when a board is to be dealt at either
 difficulty, a board of more than 300 squares, with a reason naming that
-maximum. A description that is supplied SHALL NOT be held to the bound.
+maximum.
 
 #### Scenario: A board past the bound is refused with a reason
 
 - **WHEN** an 18×17, a 20×20 and a 1×301 board are validated for generation
 - **THEN** each is refused with a message naming 300
 - **AND** a 17×17, a 15×20 and a 1×300 board are admitted at either difficulty
-
-#### Scenario: An existing large description still loads
-
-- **WHEN** a 25×25 board's params accompany a supplied description
-- **THEN** validation succeeds
-
-### Requirement: Params: Filling's menu offers each size at both difficulties
-
-Filling's presets SHALL offer each of 7×9, 9×13 and 13×17 as Easy and as
-Unreasonable, and the default SHALL be an Easy 9×13.
-
-#### Scenario: Every size is offered at both difficulties
-
-- **WHEN** Filling's preset menu is read
-- **THEN** its 7×9, 9×13 and 13×17 boards each appear as Easy and as
-  Unreasonable
 
 ### Requirement: Description: Filling descriptions are run-length number grids
 
@@ -143,17 +123,13 @@ upstream's generator deals from the same seed.
 - **THEN** the solver fills every cell
 - **AND** each resulting region's size equals its number
 
-### Requirement: Generation: An Unreasonable Filling board has one answer that the solver does not reach
+### Requirement: Generation: An Unreasonable Filling board is a full board with clues hidden while one answer is proved
 
-At Unreasonable the generator SHALL hide clues from a full board while the
-search still proves one answer within a budget of its own, well under the
-search's, and SHALL keep the board only when the solver stops short on it.
-
-#### Scenario: A dealt Unreasonable board needs search and has one answer
-
-- **WHEN** `newDesc` produces Unreasonable boards from 2×2 to 6×6
-- **THEN** the solver leaves each unfinished
-- **AND** exactly one filling fits each, by a count that has no search in it
+Filling's Unreasonable boards SHALL be dealt by the engine's deal
+(`engine-difficulty`, "The engine deals the Unreasonable board of a game that
+searches"), with a strip of the game's own: clues are hidden from a full
+board while the search still proves one answer, within the budget of "A strip
+is asked within the engine's dealing budget".
 
 #### Scenario: The smallest boards carry the tier
 
@@ -161,26 +137,21 @@ search's, and SHALL keep the board only when the solver stops short on it.
 - **THEN** it is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Generation: A pasted Filling board opens at the difficulty it needs
+### Requirement: Generation: A Filling board is Easy where the solver and the hint both finish it
 
-A board that arrives as a game ID SHALL open as Easy where the solver and the
-hint finish it, and as Unreasonable where it has exactly one answer that they
-do not reach, whatever lower difficulty its ID states. A board with several
-answers SHALL be refused as having more than one solution, and a board with
-none as one whose clues contradict each other.
+A board SHALL count as Easy where the solver and the hint finish it, and as
+Unreasonable where it has exactly one answer that they do not reach. What a
+pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A loaded
+board whose id states no tier takes the lowest tier that solves it" and "A
+pinned tier is kept or raised and never lowered"), and one with several
+answers or none SHALL be refused (`engine-params`, "A board with a mistake
+check loads only with exactly one answer").
 
 #### Scenario: A board that needs search opens as Unreasonable
 
 - **WHEN** a 5×5 ID whose board has one answer the solver does not reach is
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `5x5du`
-
-#### Scenario: A board with several answers or none is refused
-
-- **WHEN** an empty 3×1 board and `3x1:222`, whose three 2s are one region of
-  three, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
 
 ### Requirement: Solver: Filling solver deduces the unique solution
 
@@ -198,13 +169,14 @@ monotone.
 - **THEN** it reports solved
 - **AND** the produced board has every region sized to its number
 
-### Requirement: Solver: Filling counts a clue set's answers by a bounded search
+### Requirement: Solver: Filling's search assumes each number an empty square can still take
 
-The game SHALL count a clue set's answers up to two by trial and error over
-the solver, assuming each number an empty square can still take where the
-solver stops. It SHALL report one answer, several, none, or that it stopped
-at its budget, which SHALL be counted in positions and never in time. Solve
-SHALL take the answer from it at either difficulty.
+Filling SHALL count a clue set's answers by the engine's search
+(`engine-difficulty`, "The engine counts a searching game's answers up to
+two, within a budget of positions"), over the solver, assuming each number an
+empty square can still take where the solver stops. Solve SHALL be the
+search's, by "Solve from the search shows the one answer or says which it
+lacks", and Filling SHALL depart from neither.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -212,11 +184,6 @@ SHALL take the answer from it at either difficulty.
   answer that it does not reach, on an empty 3×1 and on a 3×1 of three 2s
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given fewer positions than a board needs
-- **THEN** it reports that it stopped, and neither one answer nor several
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -275,17 +242,6 @@ rejected, the limit on a 2×2 board being `3` in place of `max(w,h)`.
 - **WHEN** a cell is selected on a 3×3 board and the digit `4` is pressed
 - **THEN** no move is emitted
 
-### Requirement: Controls: Filling provides on-screen key labels
-
-Filling's on-screen keypad SHALL be the digits `1` to `9`, each labeled by its
-digit, followed by the collection's Clear key. It SHALL be those keys whatever
-the board's size.
-
-#### Scenario: The keypad is digits 1–9 plus clear
-
-- **WHEN** the key labels are requested for any Filling board
-- **THEN** the result is the buttons `1,2,…,9` followed by a clear key
-
 ### Requirement: Controls: Enter starts and ends a Filling keyboard drag
 
 With the cursor shown, Enter SHALL start a keyboard drag and add the cursor's
@@ -316,23 +272,6 @@ show it.
 - **THEN** the clicked square alone is selected, and the square the cursor
   moved onto is not
 
-### Requirement: Hint: Filling provides an explained deduction hint
-
-`hint(state)` SHALL return a plan-carrying, narrated hint that explains why
-each move is forced, and `hintKeepTrack` SHALL advance the plan as the player
-follows it. From any mistake-free position, `hint` SHALL deduce an ordered
-sequence of forced steps that together solve the board, one narrated `HintStep`
-per step. Each step's narration SHALL name the deduction that forces it and
-SHALL avoid repeating the region's number.
-
-#### Scenario: Hint explains the next forced move and solves the board
-
-- **WHEN** `hint` is called on an unsolved, mistake-free generated board
-- **THEN** it returns `{ ok: true }` with a non-empty list of steps
-- **AND** each step's move is a legal `executeMove` whose narration names the
-  deduction (region growth / lonely cell / elimination) that forces its squares
-- **AND** applying every step's move in order solves the board
-
 ### Requirement: Hint: One region-growth firing is one hint step
 
 The region-growth deduction, the empty squares a region cannot reach its size
@@ -340,7 +279,8 @@ without, SHALL be emitted as one step filling all of them, since that single
 deduction pins them together. Its
 narration SHALL read either as the region fitting exactly into those squares,
 when the group completes the region, or as the region being unable to fully
-grow without them, when it still needs more.
+grow without them, when it still needs more. A step's narration SHALL avoid
+repeating the region's number.
 
 #### Scenario: One firing forces several squares as a single step
 
@@ -378,15 +318,13 @@ touches any other cell or uses the wrong value.
 - **AND** a move touching any other cell, or using a different value, returns
   `"off"`
 
-### Requirement: Hint: Filling draws the displayed step's target and evidence
+### Requirement: Hint: A Filling target is ringed empty, and is never its own evidence
 
-`redraw` SHALL render the displayed step. Each target square SHALL be ringed
-with no digit drawn in it: a call to action and not a filled-in answer, the
-value being read from the narration. The deduction's evidence SHALL be marked
-too, so the picture the narration names is visible: the region the deduction
-reasons about, or the neighboring cells that pin a lonely or eliminated cell.
-The evidence cells' digits SHALL remain readable, and the evidence SHALL never
-include a target square.
+A displayed step's marks SHALL be the roles `hintMarks` declares. Each target
+square SHALL be ringed with no digit drawn in it: a call to action and not a
+filled-in answer, the value being read from the narration. The evidence, the
+region the deduction reasons about or the neighbors that pin a lonely or
+eliminated cell, SHALL never include a target square.
 
 #### Scenario: Region-based steps show visible evidence
 
@@ -394,37 +332,15 @@ include a target square.
 - **THEN** every region-growth step carries a non-empty evidence area, and no
   step marks one of its own target squares as evidence
 
-### Requirement: Hint: Filling hint color legend
-
-When a Filling hint is displayed, `redraw` SHALL distinguish the element types
-the deduction names by a stable legend, each color paired with a non-color
-cue. A target square SHALL be ringed in `COL_HINT`, the region the sentence
-names SHALL be striped in `COL_HINT`, and the neighbors that pin a lonely or
-eliminated cell SHALL be outlined in `COL_HINT_CELL`. The legend SHALL be
-consistent across the deduction kinds (`growth` exact and partial, `blocked`,
-`lonely`, `bitmap`).
-
-#### Scenario: The empty target reads distinct from the striped premise
-
-- **WHEN** a `growth` hint names a region of N and the empty squares it must grow
-  into
-- **THEN** the target squares are ringed in `COL_HINT` with no digit, and the
-  cited region is striped with its digits drawn over the stripes and no outline
-
-#### Scenario: Grouped target squares share one color
-
-- **WHEN** one deduction forces several empty squares at once
-- **THEN** every forced square is ringed in the same `COL_HINT`, not distinct
-  colors
-
 ### Requirement: Hint: Filling's hint keeps what the solver deduces from the clues alone
 
-Where no rule forces a square of the board the plan has reached, the plan
-SHALL take the next still-empty square the solver fills from the clues alone,
-narrated with the deduction that forced it there and with its evidence read
-from the board the step is shown on. The plan SHALL so finish every
-mistake-free position of a board that loads, whatever order its squares were
-filled in.
+The plan SHALL depart in one thing from `engine-hints`, "A hint is deduced
+from the board in play": where no rule forces a square of the board it has
+reached, it SHALL take the next still-empty square the solver fills from the
+clues alone, narrated with the deduction that forced it there and with its
+evidence read from the board the step is shown on. The plan SHALL so finish
+every mistake-free position of a board that loads, whatever order its squares
+were filled in.
 
 #### Scenario: A board the rules stall on from its own hint's position
 
@@ -445,7 +361,9 @@ The hint SHALL never run the search. On an Unreasonable board its plan SHALL
 hold the steps its deductions force from the player's numbers and no others,
 and where none forces anything it SHALL refuse with the collection's sentence
 that deduction has run out. It SHALL go on from the numbers the player then
-enters.
+enters. A finished board, or one with a mistake, is refused before `hint` is
+asked: `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong
+board before asking the game".
 
 #### Scenario: The hint stops, and goes on from a number tried rightly
 
@@ -478,16 +396,6 @@ both are filled, or when either's region is complete or overfull.
 - **WHEN** a filled cell whose region is smaller than its number sits beside an
   empty cell
 - **THEN** no bold border is drawn between them
-
-### Requirement: Look: Filling flashes when the board is solved
-
-On the transition to solved, and not when Solve made it, the board SHALL flash.
-
-#### Scenario: A fill flashes and Solve does not
-
-- **WHEN** the player's last fill completes the grid
-- **THEN** the board flashes
-- **AND** a board completed by Solve does not
 
 ### Requirement: Look: Filling draws its cells on a quiet surface and keeps its borders
 

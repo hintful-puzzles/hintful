@@ -28,11 +28,11 @@ correct.
 
 ### Requirement: Rules: Rectangles flags a drawn edge the solution lacks
 
-The game SHALL implement `findMistakes`: take the board's one answer from the
-search that counts its answers, at either difficulty, and return every edge
-the player has drawn that the answer does not contain. A missing edge SHALL
-NOT be a mistake, and a board the search did not prove has exactly one answer
-SHALL yield no mistakes.
+`findMistakes` SHALL return every edge the player has drawn that the board's
+one answer does not contain. A missing edge SHALL NOT be a mistake. It SHALL
+take the answer from the game's one search (`engine-difficulty`, "One search
+answers a board for everything that asks"), and a board that search did not
+prove has exactly one answer SHALL yield no mistakes.
 
 #### Scenario: A wall the solution does not contain is flagged
 
@@ -119,11 +119,11 @@ draws none.
 - **AND** a 2×11 board is still asked for at Easy
 - **AND** a 2×9 board that arrives with its description is not refused
 
-### Requirement: Params: Rectangles' menu offers its sizes at both difficulties, the largest two at Easy
+### Requirement: Params: Rectangles' menu offers its two largest sizes at Easy alone
 
-Rectangles' presets SHALL offer each of 7×7, 9×9, 11×11, 13×13 and 15×15 as
-Easy and as Unreasonable, and 17×17 and 19×19 as Easy alone, and the default
-SHALL be the Easy 7×7.
+Rectangles' menu SHALL be the grid `presets` builds from its sizes
+(`engine-params`, "The preset menu is a grid"), with one departure: the two
+largest, 17×17 and 19×19, SHALL be offered as Easy alone.
 
 #### Scenario: The menu's twelve lines
 
@@ -277,22 +277,16 @@ pasted board's.
 
 A board that arrives as a game ID SHALL open as Easy where the hint finishes
 it, and as Unreasonable where it has exactly one answer that the hint does
-not reach, whatever lower difficulty its ID states. A board with several
-answers SHALL be refused as having more than one solution, and a board with
-none as one whose clues contradict each other.
+not reach: `engine-difficulty`, "A loaded board whose id states no tier takes
+the lowest tier that solves it" and "A pinned tier is kept or raised and never
+lowered". One with several answers or none SHALL be refused (`engine-params`, "A
+board with a mistake check loads only with exactly one answer").
 
 #### Scenario: A board that needs search opens as Unreasonable
 
 - **WHEN** a 5×5 ID whose board has one answer the hint does not reach is
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `5x5du`
-
-#### Scenario: A board with several answers or none is refused
-
-- **WHEN** the 4×4 board `2b2_2a2b2b2a2_2`, which has several answers, and a
-  5×5 board whose numbers come to 26, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
 
 ### Requirement: Generation: Rectangles deals a strip with an expansion factor
 
@@ -308,9 +302,9 @@ wide, whatever the expansion factor.
 ### Requirement: Solver: Rectangles' Solve returns the unique solution's edges
 
 `solve` SHALL return the generator's `aux` when it is present, and otherwise
-SHALL take the board's answer from the search that counts its answers, at
-either difficulty, and return its edges, or an error when the numbers admit
-no division or more than one.
+SHALL be made from the answer of the game's search (`engine-difficulty`,
+"Solve from the search shows the one answer or says which it lacks"), as its
+edges.
 
 #### Scenario: Solve without aux
 
@@ -318,15 +312,14 @@ no division or more than one.
 - **THEN** its move leaves the board solved
 - **AND** on an Unreasonable board it is the move the `aux` gives
 
-### Requirement: Solver: Rectangles counts a board's answers by a bounded search
+### Requirement: Solver: Rectangles' search tries the number with the fewest placements left
 
-The game SHALL count a board's answers up to two by trial and error over the
-solver: where the solver stops, it SHALL take the first number with the
-fewest placements left and assume each in turn. A position SHALL be
-impossible where the solver's deductions broke off at a square no rectangle
-can cover, or a number has no placement left. It SHALL report one answer,
-several, none, or that it stopped at its budget, which SHALL be counted in
-positions and never in time.
+Rectangles SHALL count a board's answers with the engine's search over its
+solver (`engine-difficulty`, "The engine counts a searching game's answers up
+to two, within a budget of positions"). Where the solver stops, the search
+SHALL take the first number with the fewest placements left and assume each
+in turn. A position SHALL be impossible where the solver's deductions broke
+off at a square no rectangle can cover, or a number has no placement left.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -335,16 +328,6 @@ positions and never in time.
   whose numbers come to 26 and on one with no number
 - **THEN** it reports one answer for the first two, several for the third and
   none for the last two
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given two positions on a board that needs three
-- **THEN** it reports that it stopped, and with three it reports one answer
-
-#### Scenario: An Easy board takes one position
-
-- **WHEN** the search is given one position on a dealt Easy board
-- **THEN** it reports one answer
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -398,12 +381,12 @@ started.
 - **WHEN** Enter is pressed twice with no arrow between
 - **THEN** no move is made
 
-### Requirement: Hint: Rectangles offers an explained hint that reads only the board
+### Requirement: Hint: A Rectangles hint step draws one rectangle or one line, and reads only the board
 
-Rectangles SHALL offer a hint whose every step draws one rectangle or one line
-and says why it is forced, reasoning only from the clues and the lines drawn.
-A clue's fits are the rectangles of its area that contain it, stay on the
-board, take in no other clue and cross no drawn line.
+Every step of the hint SHALL draw one rectangle or one line, reasoning only
+from the clues and the lines drawn. A clue's fits are the rectangles of its
+area that contain it, stay on the board, take in no other clue and cross no
+drawn line.
 
 #### Scenario: The player draws the rectangle a side at a time
 
@@ -552,9 +535,7 @@ width.
 ### Requirement: Look: A finished rectangle fills whole with the finished-region role
 
 A rectangle the game counts as correct SHALL fill whole with the shared
-finished-region role, a wash of the theme pair's first hue, so it is told by
-hue from an unfinished square and from a number's lifted square in both
-schemes. The fill SHALL cover the number's square too.
+finished-region role. The fill SHALL cover the number's square too.
 
 #### Scenario: A finished rectangle shades whole
 

@@ -22,11 +22,11 @@ error highlight, independently of `findMistakes`.
 
 ### Requirement: Rules: Crossing's findMistakes compares the board with the unique solution
 
-`findMistakes` SHALL take the board's one answer from the search that counts
-its answers, at either difficulty, and flag every placed digit that
-contradicts it and every empty cell whose pencil notes have crossed out its
-solution digit. It SHALL return nothing when the search did not prove the
-board has exactly one answer.
+`findMistakes` SHALL flag every placed digit that contradicts the board's one
+answer and every empty cell whose pencil notes have crossed out its solution
+digit. It SHALL take the answer from the search, as `engine-difficulty`, "One
+search answers a board for everything that asks" says, and SHALL return
+nothing when the search did not prove the board has exactly one answer.
 
 #### Scenario: Entering the wrong digit is caught by Check & Save
 
@@ -37,51 +37,48 @@ board has exactly one answer.
 ### Requirement: Rules: Crossing is complete when every clue is placed exactly once
 
 The game SHALL be reported complete when every run matches exactly one clue
-number and each clue number is used once, and SHALL flash on that completion.
+number and each clue number is used once.
 
 #### Scenario: Placing every clue exactly once wins
 
 - **WHEN** a move fills the grid so every run matches exactly one clue number and
   each clue number is used once
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
-### Requirement: Params: Crossing's parameters
+### Requirement: Params: A Crossing params string may leave out its height and its difficulty
 
-Parameters SHALL be a width, a height, a symmetric-walls flag and a
-difficulty, Easy or Unreasonable. Each dimension SHALL be declared with a
-lower bound of 2, and `validateParams` SHALL refuse a board whose width and
-height are both below 4. The encoding SHALL carry the width and height, and
-one that omits the height SHALL decode as a square board. The
-symmetry and the difficulty SHALL appear only in the full encoding, as `S`
-and then `de` or `du`, and no difficulty letter SHALL decode as Easy.
+Crossing's params, a size, a symmetric-walls flag and a difficulty, SHALL be
+bounded and encoded as its `paramConfig` and its declared codec give
+(`engine-params`, "A game declares its params encoding once, and both codec
+halves are derived"), and its menu SHALL be what `presets` builds. A params
+string that omits the height SHALL decode as a square board, and one with no
+difficulty letter SHALL decode as Easy.
 
-#### Scenario: A game ID round-trips through the parameters
+#### Scenario: A string that leaves a field out
 
-- **WHEN** a parameter set is encoded in full and decoded
-- **THEN** the same width, height, symmetric-walls flag and difficulty are
-  recovered, and a string omitting the height is read as a square board
+- **WHEN** `7x4S`, written before the game had tiers, is decoded
+- **THEN** it decodes as Easy
+- **AND** a string omitting the height is read as a square board
 
-#### Scenario: A dimension below the minimum is rejected
+### Requirement: Params: Crossing refuses a board with no side of 4
+
+`validateParams` SHALL refuse a board whose width and height are both below
+4, whether it is to be dealt or comes with its description.
+
+#### Scenario: Both sides below the minimum
 
 - **WHEN** parameters are validated with both width and height below 4
 - **THEN** `validateParams` refuses them with "Width or height must be at
   least 4."
-- **AND** a width or a height below 2 is refused by the field's declared bound
-
-#### Scenario: The difficulty is in the full encoding only
-
-- **WHEN** an Unreasonable 7×4 board with symmetric walls is encoded
-- **THEN** the full encoding is `7x4Sdu` and the shared one `7x4`
-- **AND** `7x4S`, written before the game had tiers, decodes as Easy
 
 ### Requirement: Params: Crossing rejects board sizes it cannot generate
 
 Parameter validation SHALL reject, when validating for generation, any board
 whose area is larger than the generable maximum, giving a reason. A board two,
 three or four squares on its shorter side SHALL be held to a smaller maximum
-of its own, since its long runs give out sooner. Validation SHALL NOT
-apply a ceiling when a description is already supplied, so an existing puzzle
-of any size remains playable.
+of its own, since its long runs give out sooner. The ceilings SHALL bind
+generation only, as the collection's do (`engine-params`, "A generation-only
+bound is gated on full").
 
 #### Scenario: An ungenerable size is refused with a reason
 
@@ -95,12 +92,6 @@ of any size remains playable.
   either difficulty
 - **THEN** each is refused with a message naming its shorter side and that
   side's maximum area, and a 2×40 board is admitted
-
-#### Scenario: An existing large description still loads
-
-- **WHEN** parameters larger than the generable maximum accompany a supplied
-  description
-- **THEN** validation succeeds
 
 ### Requirement: Params: Unreasonable is bounded on its own measurements
 
@@ -120,20 +111,6 @@ difficulty, and SHALL still be dealt at Easy where the Easy bound admits it.
 - **WHEN** an Unreasonable 12×12, 8×18, 4×36 and 2×40 board is dealt
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
-
-### Requirement: Params: Crossing's menu offers each size at the difficulties it is dealt at
-
-Crossing's presets SHALL offer each of five square sizes from 5×5 to 13×13 at
-Easy, and at Unreasonable each of them the Unreasonable bound admits. After
-them SHALL come two Easy boards with symmetric walls: a 9×9, and the largest
-board there is, 15×15, which symmetric walls make quick to deal.
-
-#### Scenario: The largest size is offered at Easy alone
-
-- **WHEN** Crossing's preset menu is read
-- **THEN** its 5×5, 7×7, 9×9 and 11×11 boards each appear as Easy and as
-  Unreasonable and its 13×13 board as Easy, followed by a symmetric 9×9 and a
-  symmetric 15×15
 
 ### Requirement: Description: Crossing descriptions use the upstream run-length encoding
 
@@ -182,12 +159,6 @@ and the open cells SHALL be connected. An Easy deal SHALL keep a board that
 needs the solver's third deduction, which upstream's generator throws away, so
 a seed need not deal the board upstream deals from it.
 
-#### Scenario: Every preset produces a uniquely-solvable board
-
-- **WHEN** a new Easy game is generated for any preset or legal size
-- **THEN** a board is produced whose walls and number list admit exactly one
-  solution reachable by the deductive solver
-
 #### Scenario: A recorded seed deals upstream's board unless an earlier draw is kept
 
 - **WHEN** each seed recorded from upstream whose board has no cell out of a
@@ -208,21 +179,19 @@ the player put there.
 - **THEN** every cell that is not a wall belongs to at least one horizontal or
   vertical run
 
-### Requirement: Generation: An Unreasonable Crossing board has one answer that the solver does not reach
+### Requirement: Generation: An Unreasonable Crossing board keeps the shape an Easy one has
 
-At Unreasonable the generator SHALL accept a board only when the solver stops
-short on it and the search proves it has exactly one answer. Such a board
-SHALL keep what an Easy one keeps: no 2×2 block fully closed, the open cells
-connected, and no cell that no clue can reach.
+Crossing's Unreasonable boards SHALL be dealt by the engine's deal
+(`engine-difficulty`, "The engine deals the Unreasonable board of a game that
+searches"), from the candidates an Easy deal draws. Such a board SHALL keep
+what an Easy one keeps: no 2×2 block fully closed, the open cells connected,
+and no cell that no clue can reach.
 
-#### Scenario: A dealt Unreasonable board needs search and has one answer
+#### Scenario: A dealt Unreasonable board leaves no cell out of a run
 
 - **WHEN** `newDesc` produces Unreasonable boards from 4×2 to 9×9, with
   symmetric walls and without
-- **THEN** the solver leaves each unfinished
-- **AND** exactly one way of writing the numbers into the runs fits each, by
-  a count that has no search in it
-- **AND** every open cell of each lies in a run
+- **THEN** every open cell of each lies in a run
 
 #### Scenario: The smallest boards carry the tier
 
@@ -230,27 +199,21 @@ connected, and no cell that no clue can reach.
 - **THEN** it is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Generation: A pasted Crossing board opens at the difficulty it needs
+### Requirement: Generation: A Crossing board is Easy where the solver and the hint both finish it
 
-A board that arrives as a game ID SHALL open as Easy where the solver and the
-hint finish it, and as Unreasonable where it has exactly one answer that they
-do not reach, whatever lower difficulty its ID states. A board with several
-answers SHALL be refused with the collection's sentence that it has more than
-one solution, and a board with none with the sentence that its clues
-contradict each other.
+A board SHALL count as Easy where the solver and the hint finish it, and as
+Unreasonable where it has exactly one answer that they do not reach. What a
+pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A loaded
+board whose id states no tier takes the lowest tier that solves it" and "A
+pinned tier is kept or raised and never lowered"), and one with several
+answers or none SHALL be refused (`engine-params`, "A board with a mistake
+check loads only with exactly one answer").
 
 #### Scenario: A board that needs search opens as Unreasonable
 
 - **WHEN** a 5×5 ID whose board has one answer the solver does not reach is
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `5x5du`
-
-#### Scenario: A board with several answers or none is refused
-
-- **WHEN** a 4×3 ID of two separate runs that two numbers fit either way, and
-  a 4×2 ID whose two runs cannot share their cell, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
 
 ### Requirement: Solver: Crossing's solver propagates what the fitting numbers allow
 
@@ -274,15 +237,14 @@ run only that run's cells, and iterate all three to a fixpoint.
   across run alone
 - **THEN** it writes 26 into that run and reports the board valid
 
-### Requirement: Solver: Crossing counts a board's answers by a bounded search
+### Requirement: Solver: Crossing's search assumes each candidate digit of an empty cell in turn
 
-The game SHALL count a board's answers up to two by trial and error over the
-solver's deductions, assuming each candidate digit of an empty cell in
-turn where they stop. It SHALL report one answer, several, none, or that it
-stopped at its budget, which SHALL be counted in positions tried and never in
-time. Solve SHALL take the board's answer from it at either difficulty, and
-SHALL say that a board has more than one solution or none only where the
-search proved it.
+Crossing SHALL count a board's answers by the engine's search
+(`engine-difficulty`, "The engine counts a searching game's answers up to
+two, within a budget of positions"), over the solver's deductions, assuming
+each candidate digit of an empty cell in turn where they stop. Solve SHALL be
+the search's, by "Solve from the search shows the one answer or says which it
+lacks", and Crossing SHALL depart from neither.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -292,11 +254,6 @@ search proved it.
   numbers start with different digits
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given fewer positions than a board needs
-- **THEN** it reports that it stopped, and neither one answer nor several
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -323,7 +280,9 @@ digit left as contradictory, and not as one it merely cannot finish.
 
 Crossing SHALL be played by selecting an open cell and entering a digit, with a
 separate pencil-mark mode for candidate notes. A press on a cell SHALL be the
-engine's note-taking cell's.
+engine's note-taking cell's (`engine-notes`, "The note-taking cell is one
+shared mechanic"), but for the repeat click that turns the fill direction and
+the clicks a held clue takes, which the requirements below state.
 
 #### Scenario: A right click is the way into pencil marks
 
@@ -333,13 +292,8 @@ engine's note-taking cell's.
 ### Requirement: Controls: A digit key enters, and Backspace, Space or 0 clears
 
 With a cell selected, a digit key `1` to `9` SHALL place that digit, or in
-pencil mode toggle that note, and Backspace, Space or `0` SHALL clear. The
-on-screen keypad SHALL offer the digits 1 to 9. Walls SHALL NOT be editable.
-
-#### Scenario: The keypad offers the digits
-
-- **WHEN** the game's on-screen keys are requested
-- **THEN** the digits 1 to 9 are among them
+pencil mode toggle that note, and Backspace, Space or `0` SHALL clear. Walls
+SHALL NOT be editable.
 
 #### Scenario: A no-op entry makes no move
 
@@ -350,10 +304,11 @@ on-screen keypad SHALL offer the digits 1 to 9. Walls SHALL NOT be editable.
 
 Entering a digit SHALL move the selection to the next cell of the run being
 filled, also where the cell already held that digit and no move is made. The
-behavior SHALL be a preference, enabled by default. The selection SHALL NOT
-advance after clearing a cell or after a pencil mark. After the run's last
-digit the cursor SHALL stay in the run, and a highlight the pointer placed
-SHALL be put away, as after any pointer entry; a keyboard cursor stays shown.
+behavior SHALL be the `auto-advance` preference, on by default. The selection
+SHALL NOT advance after clearing a cell or after a pencil mark. After the
+run's last digit the cursor SHALL stay in the run, and a highlight the pointer
+placed SHALL be put away, as after any pointer entry; a keyboard cursor stays
+shown.
 
 #### Scenario: A number typed over a cell that already holds its digit
 
@@ -374,6 +329,12 @@ SHALL be put away, as after any pointer entry; a keyboard cursor stays shown.
   typed
 - **THEN** the cursor does not leave the run, and after the last digit no cell
   is highlighted, no run is marked and no clue is colored
+
+#### Scenario: Auto-advance switched off
+
+- **WHEN** `auto-advance` is off, a run's first cell is selected with the
+  keyboard cursor and `4` and then `7` are typed
+- **THEN** the cell holds 7 and the cursor has not moved
 
 ### Requirement: Controls: The fill direction is remembered and set by three gestures
 
@@ -463,53 +424,16 @@ a wall, a right-click, an arrow and Enter SHALL leave the clue held.
 
 ### Requirement: Preferences: The board marking and the list coloring are separate preferences
 
-Marking the runs on the board and coloring the clue list by where each clue
-fits SHALL be separately available as preferences, both enabled by default.
+Marking the runs through the selected cell on the board (`highlight-runs`)
+and coloring the clue list by where each clue fits (`fit-highlight`) SHALL be
+separately available as preferences, both on by default. They and
+`auto-advance` are the game's own in its `prefs`; its pencil preferences are
+the engine's.
 
 #### Scenario: The board marking and the list coloring are independent
 
 - **WHEN** the preference for marking runs on the board is turned off
 - **THEN** the board is no longer marked, and the clue list is still colored
-
-### Requirement: Preferences: Crossing's own preferences are `auto-advance`, `highlight-runs` and `fit-highlight`
-
-The game SHALL offer three preferences of its own, each a switch that is on by
-default: `auto-advance`, whether entering a digit moves the selection along
-the run being filled; `highlight-runs`, whether the runs through the selected
-cell are marked on the board; and `fit-highlight`, whether the clue list is
-colored by where each number could go from the selected cell.
-
-#### Scenario: Auto-advance switched off
-
-- **WHEN** `auto-advance` is off, a run's first cell is selected with the
-  keyboard cursor and `4` and then `7` are typed
-- **THEN** the cell holds 7 and the cursor has not moved
-
-### Requirement: Hint: Crossing explains its next deduction from the board
-
-Crossing SHALL provide an explained hint that computes a plan of forced moves
-from the player's current board and narrates each one by the deduction that
-forces it, meeting the project's hint quality bar: the narration SHALL state
-why the move is forced, the premise that singles out this conclusion, and not
-merely what to enter.
-
-#### Scenario: A run determined by a single remaining number is offered whole
-
-- **WHEN** exactly one unplaced listed number matches a run's length and agrees
-  with the digits and notes already in it
-- **THEN** the hint offers that number as a single placement filling the whole
-  run, and the explanation states that only one number still fits
-
-### Requirement: Hint: The hint replays the solver's deduction
-
-The hint SHALL be derived from the same deduction engine as the solver,
-replayed one firing at a time.
-
-#### Scenario: Following the hint solves the board
-
-- **WHEN** hints are requested and followed, one plan after another, from a
-  generated board with nothing entered
-- **THEN** the board reaches the solution the solver finds
 
 ### Requirement: Hint: The hint names the technique, not the candidate elimination
 
@@ -535,6 +459,13 @@ elimination.
   the two sets share exactly one digit
 - **THEN** that square is offered as that digit, and the explanation names what
   each of the two runs allows
+
+#### Scenario: A run determined by a single remaining number is offered whole
+
+- **WHEN** exactly one unplaced listed number matches a run's length and agrees
+  with the digits and notes already in it
+- **THEN** the hint offers that number as a single placement filling the whole
+  run, and the explanation states that only one number still fits
 
 #### Scenario: A number with one run left is offered whole
 
@@ -588,22 +519,14 @@ and SHALL NOT cite entries the board does not carry.
 - **THEN** the explanation states that it is the notes in the run that only one
   number fits
 
-### Requirement: Hint: Every Crossing hint step is narrated
+### Requirement: Hint: Crossing's marks are its legend's, on the clue list as on the grid
 
-Every step of a Crossing hint plan SHALL carry an explanation that names the
-run its deduction reasons over.
-
-#### Scenario: Every step of a plan has its deduction
-
-- **WHEN** a plan is computed for a board the solver can finish
-- **THEN** every step carries an explanation that names the run its deduction
-  reasons over
-
-### Requirement: Hint: The hint's evidence includes the listed numbers it reasons over
-
-A hint whose premise is which listed numbers still fit a run SHALL highlight
-those numbers in the clue list as well as the run on the grid, so the premise
-the narration cites is visible.
+A step's marks SHALL be the roles `hintMarks` declares, painted from the
+step's words (`engine-hints`, "A bound hint step's words SHALL name exactly
+the marks it draws"). Every step's explanation SHALL name the run its
+deduction reasons over. Crossing departs in one thing: a role marks a number
+in the clue list below the grid as it marks a square, so a premise about
+which listed numbers still fit a run is visible where the numbers are.
 
 #### Scenario: The evidence includes the numbers the deduction reasons over
 
@@ -676,15 +599,15 @@ remains legible against the hint's own colors.
 - **THEN** the hint remains displayed, and the selected square shows a cursor cue
   that is legible against the hint's highlight
 
-### Requirement: Hint: Crossing refuses to hint a board it cannot honestly advise
+### Requirement: Hint: Crossing's hint stops where the solver does
 
-A hint request SHALL be refused, with a reason, when the board is already
-solved, when the player has entered a digit or ruled out a candidate that
-contradicts the puzzle's unique solution, or when no further deduction is
-available. On the mistake refusal the offending cells SHALL be surfaced through
-the mistake overlay. A note set that excludes the solution's digit is such a
-mistake, so the hint SHALL NOT reason onward from a position the player's notes
-have made unsolvable.
+The hint SHALL never run the search. On an Unreasonable board its plan SHALL
+hold the steps its deductions force from the player's digits and notes and no
+others, and where none forces anything it SHALL refuse with the collection's
+sentence that deduction has run out. It SHALL go on from the digits the player
+then enters. A board with a mistake, a wrong note included, is refused first
+(`engine-hints`, "The midend SHALL refuse a hint on a finished or wrong board
+before asking the game").
 
 #### Scenario: A note that rules out the right digit is refused rather than reasoned from
 
@@ -692,14 +615,6 @@ have made unsolvable.
   digit the unique solution places there
 - **THEN** the hint refuses and the offending cell is highlighted, rather than a
   plan being computed from the contradicted position
-
-### Requirement: Hint: Crossing's hint stops where the solver does
-
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the steps its deductions force from the player's digits and notes and no
-others, and where none forces anything it SHALL refuse with the collection's
-sentence that deduction has run out. It SHALL go on from the digits the player
-then enters, as it does from any position.
 
 #### Scenario: The hint stops, and goes on from a digit tried rightly
 
@@ -775,9 +690,8 @@ by its direction.
 Selecting a cell SHALL mark the runs through it on the board. Selecting it for
 digit entry SHALL also indicate which clues can still go in either run, since
 clicking one places it there; selecting it for pencil marks SHALL leave the
-clues uncolored. Each of the two aids is a preference, on by default. A clue
-already written into the grid SHALL remain distinguishable from one that merely
-cannot go in the selected run.
+clues uncolored. A clue already written into the grid SHALL remain
+distinguishable from one that merely cannot go in the selected run.
 
 #### Scenario: Both runs through the selected cell are answered for
 
@@ -887,17 +801,6 @@ flat, strong fill that is told from both surfaces in both schemes.
 - **WHEN** a digit is entered into an empty square
 - **THEN** the square changes from the cell surface to the lifted surface
 
-### Requirement: Look: The grid lines are the collection's surface grid line
-
-The line between squares and the frame round the grid SHALL be the collection's
-surface grid line.
-
-#### Scenario: The frame and the inner lines are one color
-
-- **WHEN** a board is drawn
-- **THEN** the outline of every square, on the grid's edge and inside it, is
-  drawn in the surface grid line's color
-
 ### Requirement: Look: A wash replaces a square's surface, empty or filled
 
 The selected square's wash SHALL replace the surface of an empty square and of
@@ -913,12 +816,12 @@ SHALL be corner brackets in a color that stands off the wall in both schemes.
 - **THEN** that square is filled with the run's direction color in place of the
   lifted surface
 
-### Requirement: Look: The completion flash sweeps the squares holding digits
+### Requirement: Look: The completion flash lights the squares holding digits and never a wall
 
-The completion flash SHALL sweep the squares holding digits diagonally: a
-square's position SHALL be that of its place in the grid, and a lit square
-SHALL be filled with a flash color and SHALL keep its digit. A wall SHALL
-never be lit. The selection SHALL be hidden while the flash runs.
+The elements the completion flash lights SHALL be the squares holding digits,
+each at the position of its place in the grid (`ts-engine`, "A game gives
+each element a position, and the route is which position it gives"). A wall
+SHALL never be lit. The selection SHALL be hidden while the flash runs.
 
 #### Scenario: A wall takes no part in the flash
 

@@ -763,19 +763,33 @@ keys, with no button.
 
 ### Requirement: The engine owns a declaring game's press and select keys
 
-For every `targetVerbs` game the engine SHALL own that: a pointer press
-parks the cursor, hidden, on the target it pressed; the first select key
-on a hidden cursor only shows it; a press that applies nothing is a repaint
-only when it hid a shown cursor; Enter applies the left-click verb, Space the
-right-click verb, or the left-click verb when the game has no second one; and
-a verb's own keys apply that verb. Space SHALL NOT be bound to another verb: a
-verb that wants a key is given its own.
+For every `targetVerbs` game the engine SHALL own that: a press of a button
+with a verb parks the cursor, hidden, on its target, and where the model
+applies nothing repaints only if it hid a shown one; Enter applies the
+left-click verb, Space the right-click verb or, for want of one, the
+left-click, and a verb's own keys that verb, key-only verbs included; and each
+such key on a hidden cursor only shows it. Space SHALL NOT be bound to another
+verb: a verb that wants a key is given its own.
 
 #### Scenario: The first select only shows the cursor
 
 - **WHEN** Enter is pressed in a declaring game whose cursor is hidden
 - **THEN** the cursor shows and no verb is applied, and the next Enter applies
   the left-click verb at the cursor
+
+#### Scenario: A verb's own key on a hidden cursor
+
+- **WHEN** `1`, the key of a key-only verb of Clusters, is pressed while the
+  cursor is hidden on an empty square
+- **THEN** the cursor shows and the square stays empty, and the next `1`
+  colors it
+
+#### Scenario: A key where the shown cursor rests on no target
+
+- **WHEN** Enter or a verb's own key is pressed while the cursor shows on a
+  place the game's geometry gives no target for, as a corner of a border-grid
+  board is
+- **THEN** no verb is applied and nothing is repainted
 
 ### Requirement: A verb is the game's function, and other input is the game's own arm
 

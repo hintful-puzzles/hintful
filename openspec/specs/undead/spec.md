@@ -68,19 +68,17 @@ by filling every blank, SHALL flag the clue and every cell of the line.
 
 ### Requirement: Rules: Undead's findMistakes compares the board with its unique solution
 
-The game SHALL implement `findMistakes`: re-solving the board to its unique
-solution and returning every placed cell that contradicts it, plus every empty
-cell whose non-empty pencil notes have crossed out its solution monster. The
-solution SHALL be derived from the description clues only.
+Undead's `findMistakes` SHALL report what the collection's check reports
+(`engine-hints`, "Check & Save names a wrong entry in every game", and
+`ts-engine`, "A candidate note that excludes the answer is a mistake"), pencil
+marks included, against the answer it re-solves from the description alone:
+the totals, the mirrors, the sighting clues and any monster the puzzle fixed.
 
-#### Scenario: Check & Save flags a wrong placement
+#### Scenario: A wrong monster that breaks no count
 
-- **WHEN** the player places a monster that contradicts the unique solution and
-  invokes Check & Save
+- **WHEN** the player places a monster that is not the answer's, and no total
+  or sighting clue is flagged by the live legality check
 - **THEN** `findMistakes` reports that cell
-- **AND** the save is blocked
-- **AND** an empty cell whose notes have crossed out its solution monster is also
-  reported, while a cell with merely extra notes is not
 
 ### Requirement: Rules: Undead's pencilStrike clears candidate bits atomically
 
@@ -105,20 +103,19 @@ Fixed cells SHALL reject monster, clear and pencil edits.
   monster cell
 - **THEN** both edits are rejected
 
-### Requirement: Params: Undead's parameters and their encoding
+### Requirement: Params: An Undead params string is its declared codec's, and a grid past 54 squares is refused
 
-Params SHALL be `w`, `h` and `diff`, a tier of Easy, Normal or `Unreasonable`
-held as the values `"easy"`, `"normal"` and `"tricky"`. They SHALL encode as
-`{w}x{h}` without `full` and as `{w}x{h}d{c}` with `full`, `c` being `e`, `n`
-or `t`.
+Undead's params (a width, a height and a difficulty), their bounds and their
+encoding SHALL be those its `paramConfig` and its declared codec give
+(`engine-params`, "A game declares its params encoding once, and both codec
+halves are derived"), with no departure from the codec grammar.
+`validateParams` SHALL refuse `w·h > 54`.
 
-#### Scenario: Params round-trip
+#### Scenario: A grid of 54 squares and one of 60
 
-- **WHEN** params `{ w: 5, h: 5, diff: "tricky" }` (the `Unreasonable` tier) are
-  encoded with `full = true`
-- **THEN** the result is `5x5dt`
-- **AND** decoding it round-trips the params
-- **AND** encoding with `full = false` yields `5x5`
+- **WHEN** a 6×9 board and a 6×10 board go through the engine's params check
+- **THEN** the first is accepted and the second is refused with "Width times
+  height must be at most 54."
 
 ### Requirement: Params: Undead's top tier is Unreasonable and keeps the letter t
 
@@ -133,18 +130,6 @@ lower tiers SHALL be plain deduction.
 - **WHEN** the params string `5x5dt` is decoded
 - **THEN** it names the top tier, which the difficulty choice shows as
   `Unreasonable`
-
-### Requirement: Params: Undead's parameter limits
-
-Width and height SHALL each declare a minimum of 3 in `paramConfig`, which the
-engine's params check refuses below, and `validateParams` SHALL refuse
-`w·h > 54`. A difficulty letter the encoding does not know SHALL be refused.
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** params with `w < 3`, `h < 3` or `w·h > 54` go through the engine's
-  params check
-- **THEN** it returns a refusal sentence
 
 ### Requirement: Description: Undead descriptions encode totals, the mirror grid, and sightline clues
 
@@ -231,18 +216,12 @@ the cursor pencil toggle) it SHALL toggle a pencil note.
 - **THEN** the cell holds a Zombie after the first move and is undecided after the
   second
 
-#### Scenario: Pencil-mark UX
-
-- **WHEN** the player turns on sticky pencil mode and notes a monster in one
-  empty cell and then in another
-- **THEN** each note toggles without leaving pencil mode
-- **AND** a CapsLock-style indicator shows pencil mode is active
-
 ### Requirement: Controls: Undead's Mark-all fills the cells that have no notes
 
-Mark-all SHALL fill every undecided cell that carries no notes with all three
-candidate notes, and SHALL make no move once none is left: a monster placed in
-one cell rules nothing out of another, so there is no note to strike.
+Undead's Mark-all SHALL be the collection's fill-only press (`engine-notes`,
+"A game with no obvious-candidate rule keeps a fill-only Mark-all"), from its
+`markAll` hook: a monster placed in one cell rules nothing out of another, so
+there is no note to strike.
 
 #### Scenario: Mark-all fills candidate notes
 
@@ -340,20 +319,13 @@ style has no in-play toggle.
 - **THEN** the count blocks re-render in the new style and monsters render as letters
 - **AND** the letters option is also available through the preferences dialog
 
-### Requirement: Hint: Undead explained deduction hint
+### Requirement: Hint: Undead's hint is deductive, by a plan of the game's own
 
-The hint SHALL be purely deductive: it SHALL NOT reveal the known solution and
-SHALL NOT narrate a guess or backtracking search. On the two tiers below
-`Unreasonable`, a freshly computed plan SHALL solve the board from empty, and
-following hints one move at a time SHALL reach a solved board.
-
-#### Scenario: The plan reaches a solved board from any mistake-free position
-
-- **WHEN** a hint is asked repeatedly from a mistake-free board on any shipped
-  non-`Unreasonable` tier, each time applying only the first step and recomputing
-- **THEN** every hint makes progress (never a no-op and never "give up") and the
-  sequence reaches the solved board using only deductive steps (no solution reveal,
-  no guess)
+Undead's hint SHALL keep the collection's rules for a deductive hint
+(`engine-hints`, "A hint step always names a technique, with no un-narrated
+fallback" and "A Search is refused and never narrated"), with no departure.
+Its plan SHALL be the game's own, built from its solver's record and the
+player's pencil marks.
 
 #### Scenario: Naked single is surfaced first as a placement
 
@@ -437,14 +409,11 @@ fold away.
   on
 - **THEN** the two plans are the same
 
-### Requirement: Hint: Undead's hint marks follow the element-type color legend
+### Requirement: Hint: A ringed Undead cell shows no monster ahead of the move
 
-The hint SHALL render with `COL_HINT` (the placement target or acted-on
-marking) and `COL_HINT_CELL` (the sightline evidence) in the palette, following
-the element-type color legend. The placement target SHALL be ringed in
-`COL_HINT` with no pre-rendered monster glyph, and the sightline evidence SHALL
-be outlined in `COL_HINT_CELL`. Both marks SHALL sit on the cell's edge, over
-the grid line.
+What the ring and the outline of a step stand for SHALL be the legend's
+(`hintMarks`). The cell a step places in SHALL be ringed with no pre-rendered
+monster glyph.
 
 #### Scenario: A sightline step on screen
 
@@ -452,17 +421,6 @@ the grid line.
 - **THEN** the whole sightline, mirrors included, is outlined as the evidence
   area while the leg targets a single cell, which is ringed and still shows its
   notes
-
-### Requirement: Hint: A struck candidate stays legible
-
-A candidate a hint step strikes SHALL be drawn in its normal pencil color with
-a strikethrough, on a background that is not `COL_HINT`, so it stays legible.
-
-#### Scenario: A hint is dismissed
-
-- **WHEN** a step that struck a candidate stops being shown and no move was
-  made
-- **THEN** the cell repaints with the candidate drawn as an ordinary note
 
 ### Requirement: Hint: Undead's hint fills a cell when a monster has exactly the cells it needs
 

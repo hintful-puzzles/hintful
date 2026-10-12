@@ -365,6 +365,78 @@ bound beside the call.
 - **THEN** the desc carries `C` and `G` respectively, `c2nUpper` reads them
   back, and Bridges' own parse still rejects `H`
 
+### Requirement: The engine provides the dot-run description grammar
+
+`writeDotRuns` SHALL write, and `readDotRuns` read, blank cells and marks of
+two kinds, which the game assigns: a letter for each mark in cell order, its
+offset from `a` or `A` the blanks before it that no skip counted, lowercase
+for the first kind and uppercase for the second. A `z` or `Z` SHALL stand for
+twenty-five blanks and no mark, in the case of the mark that ends its run. A
+lowercase letter SHALL close the description, for the blanks after the last
+mark.
+
+#### Scenario: A long run is chunked in its mark's case
+
+- **WHEN** sixty cells holding one mark of the second kind, on the
+  thirty-first cell, are written
+- **THEN** the description is `ZFze`: a `Z` skip and `F` for the thirty blanks
+  before the mark, a `z` skip and `e` for the twenty-nine after it
+
+#### Scenario: Twenty-five blank cells and nothing else
+
+- **WHEN** a board of twenty-five blank cells is written
+- **THEN** the description is `za`, a skip and a closing letter for no blanks
+
+### Requirement: The dot-run reader refuses what its writer never writes
+
+`readDotRuns` SHALL read to the end of the description and refuse, in the
+collection's description error kinds: as too short, one that ends before its
+closing letter; as too long, one whose runs pass the last cell or that goes on
+after its closing letter; and as a character that cannot appear, naming it, a
+character that is not a letter, a skip followed by a letter of the other case,
+and an uppercase closing letter.
+
+#### Scenario: Six cells read four ways
+
+- **WHEN** `bCb` is read for six cells
+- **THEN** it places a first-kind mark on the second cell and a second-kind
+  mark on the fifth
+- **AND** `bCB` is refused naming `B`, `bCc` and `bCbx` are refused as too
+  long, and `bC` as too short
+
+#### Scenario: A skip that changes case before its mark
+
+- **WHEN** `Zfd` is read for sixty cells
+- **THEN** it is refused naming `f`, since an uppercase skip is followed by an
+  uppercase letter
+
+### Requirement: The dot-run reader reads back what its writer wrote
+
+For every number of cells and every placing of marks on them, `readDotRuns`
+given what `writeDotRuns` wrote for those cells SHALL place each mark on its
+cell with its kind, SHALL place no other, and SHALL read to the end with no
+refusal. A game whose description is this grammar alone SHALL thereby read
+back every description it writes.
+
+#### Scenario: A mark on the last cell
+
+- **WHEN** three cells with a mark of the second kind on the third are written
+- **THEN** the description is `Ca`, and reading it for three cells places that
+  one mark and takes the closing `a` as no blanks
+
+#### Scenario: Twenty-five blanks before a mark
+
+- **WHEN** twenty-six cells with a mark of the first kind on the last are
+  written
+- **THEN** the description is `zaa`: a skip, `a` for the mark with no further
+  blanks before it, and the closing letter, and reading it for twenty-six
+  cells places the mark on the last
+
+#### Scenario: A board of no cells
+
+- **WHEN** no cells are written
+- **THEN** the description is `a`, and reading it for no cells places nothing
+
 ### Requirement: Choosing params changes the next board, not the one on screen
 
 The midend SHALL keep the params of the board on screen apart from the params
@@ -1270,7 +1342,8 @@ Every game's `decodeParams` SHALL read every character of a params string or
 refuse the string. A letter after a tag that the tag does not list, a tag
 with nothing after it, and any character no piece of the game's grammar reads
 where it stands SHALL each be refused, and none SHALL be read as a default or
-passed over. A piece left out SHALL still take its default.
+passed over. A piece left out SHALL NOT be refused: a declared codec leaves a
+tagged field as `defaultParams` has it, or as a `whenAbsent` sets it.
 
 #### Scenario: A difficulty letter the game does not have
 
@@ -1289,8 +1362,23 @@ passed over. A piece left out SHALL still take its default.
 
 #### Scenario: A piece left out
 
-- **WHEN** `8x8` is decoded by a game with a tagged difficulty
-- **THEN** it is read, at the tier the game's spec gives a string with no `d`
+- **WHEN** `8x8` is decoded by a game whose difficulty is a `choice` segment
+- **THEN** it is read, at the tier of the game's `defaultParams`: the segment
+  names no tier of its own, and a game on `searchTierSegment` is held to Easy
+  there by `engine-difficulty`, "A game that searches has a tier for each
+  deduction and Unreasonable above them"
+
+#### Scenario: A region size left out
+
+- **WHEN** `9` is decoded by a game whose region size is a `num` with a
+  `whenAbsent` that takes the width
+- **THEN** the board is 9 by 9 in regions of 9, whatever `defaultParams` holds
+
+#### Scenario: A bare flag letter left out
+
+- **WHEN** a string without the letter of a `flag` segment is decoded
+- **THEN** the field is set to the opposite of what the letter means, whatever
+  `defaultParams` holds, since a bare letter has no other way to say so
 
 ### Requirement: The engine makes the one refusal of a params string
 

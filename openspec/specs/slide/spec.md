@@ -43,17 +43,6 @@ position.
 - **WHEN** the main block is slid onto the target position
 - **THEN** the game is reported solved
 
-### Requirement: Params: Slide's params are a width, a height and a solution-length limit
-
-Slide's parameters SHALL be a width, a height, and a solution-length limit
-(`maxmoves`, where a negative value means no limit). A game ID SHALL encode the
-width, height and limit and round-trip through decode.
-
-#### Scenario: A game ID round-trips through the parameters
-
-- **WHEN** a parameter set is encoded to a game ID and decoded
-- **THEN** the same width, height and solution-length limit are recovered
-
 ### Requirement: Params: A solution-length limit of zero is refused
 
 `validateParams` SHALL reject a solution-length limit of zero, which asks for a
@@ -65,7 +54,7 @@ board that starts finished and which the generator provably cannot satisfy.
 - **THEN** they are rejected with a message the custom-parameters dialog can show
 - **AND** a limit of one and a negative limit are both accepted
 
-### Requirement: Params: A Slide board too large to generate is rejected
+### Requirement: Params: A Slide board too large for the solver's search is rejected
 
 `validateParams` SHALL reject a board whose cell count exceeds a documented
 bound, because generation runs an exhaustive breadth-first search whose memory
@@ -82,7 +71,8 @@ recorded with it.
 ### Requirement: Params: Slide's params write the limit as m and a number, or u
 
 `encodeParams` SHALL write `{w}x{h}` and then `m{n}` for a solution-length
-limit of `n`, or `u` for no limit, the same in the short form and the full.
+limit of `n`, or `u` for no limit, which a negative `maxmoves` means, the same
+in the short form and the full.
 `decodeParams` SHALL read a bare number as a square board, and a string with
 neither `m` nor `u` as the default limit of 40.
 
@@ -98,12 +88,11 @@ neither `m` nor `u` as the default limit of 40.
 - **THEN** the board is 7 by 6 with a limit of 40
 - **AND** `6u` is a 6 by 6 board with no limit
 
-### Requirement: Params: Slide's size limits hold for a board that arrives with its description
+### Requirement: Params: Slide's area limit holds for a board that arrives with its description
 
-A width below 5 or above 251 and a height below 4 SHALL be refused as the
-bounds of the Custom dialog's fields. `validateParams` SHALL refuse a board of
-more than 48 squares whatever `full` says. Each limit therefore holds whether
-the board is to be dealt or arrives with its description.
+`validateParams` SHALL refuse a board of more than 48 squares whatever `full`
+says, so the limit holds whether the board is to be dealt or arrives with its
+description.
 
 #### Scenario: A 7 by 7 board is refused with its description in hand
 
@@ -111,14 +100,11 @@ the board is to be dealt or arrives with its description.
   and carries a description
 - **THEN** it is refused with "Width times height must be at most 48; the
   solver runs out of memory beyond that."
-- **AND** `6x7m25` with its width written `4` is refused with "Width must be
-  at least 5."
 
 ### Requirement: Params: A Slide board's name gives the limit on its shortest solution
 
-A board's name SHALL give its size and then `max {n} moves` for a
-solution-length limit of `n`, or `no move limit`. The limit is on the
-shortest solution the board was dealt with and SHALL NOT bound the player,
+The solution-length limit a board's name gives SHALL be a limit on the
+shortest solution the board was dealt with, and SHALL NOT bound the player,
 whose move count may pass it.
 
 #### Scenario: A player takes more moves than the name gives
@@ -224,8 +210,7 @@ stays soluble.
 ### Requirement: Solver: Solve plays a shortest route from the current position
 
 Solve SHALL play a shortest route from the current position to the exit, not
-from the board as dealt, so the board is finished, as Solve finishes every
-game's board.
+from the board as dealt.
 
 #### Scenario: Solve after the player has moved
 
@@ -268,18 +253,6 @@ release, it SHALL move the block there, or do nothing if the block did not move.
 
 - **WHEN** a block is grabbed and released without having moved
 - **THEN** the board and the move count are unchanged
-
-### Requirement: Controls: Slide plays from the keyboard alone
-
-Slide SHALL be playable by keyboard as well as by pointer, both driving the same
-move machinery: every move the pointer can make SHALL be reachable from the
-keyboard.
-
-#### Scenario: A board can be completed without a pointer
-
-- **WHEN** a player uses only the keyboard from a fresh board
-- **THEN** every move the pointer can make is reachable, and the board can be
-  driven to completion
 
 ### Requirement: Controls: The keyboard select grabs with the pointer's grab
 
@@ -351,12 +324,6 @@ changed; losing it would read as a dropped keypress.
 - **THEN** the grab is dropped, because its reachable set is stale
 - **AND** the cursor stays where the player left it
 
-#### Scenario: An undo made while the pointer is still down
-
-- **WHEN** a block is being dragged and an undo is made before the pointer is
-  released
-- **THEN** the drag is canceled, and the undone board is drawn with no block held
-
 ### Requirement: Controls: Either pointer button moves a Slide block
 
 The right button's press, drag and release SHALL do what the left button's
@@ -403,12 +370,11 @@ nothing where it carries none.
 - **THEN** the status bar reads "Moves: 0 (min 25)"
 - **AND** the same description without its final `,25` reads "Moves: 0"
 
-### Requirement: Look: Slide draws a held block where it would land, with no slide animation
+### Requirement: Look: Slide draws a held block where it would land
 
 Rendering SHALL draw each block with beveled highlights. A held block SHALL be
 drawn lit up at its snapped destination, the cell it would land on if released,
-and at no position between cells. There SHALL be no interpolated sliding
-animation: a block released goes straight to its cell.
+and at no position between cells.
 
 #### Scenario: A dragged block is drawn at its snapped cell
 

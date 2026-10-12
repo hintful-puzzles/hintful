@@ -18,7 +18,7 @@ within a region.
 
 - **WHEN** the final arrow is placed so every square leads to a goal with no loop
   and no duplicate arrow in any region
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
 ### Requirement: Rules: Mistake-checking reports the rule violations the board shows
 
@@ -33,31 +33,18 @@ an outlined region, and an arrow that forms a loop.
 
 ### Requirement: Rules: Rome mistake-checking covers arrows and marks that break no rule
 
-Mistake-checking SHALL report, separately from the rule violations, any arrow
-the player has placed that contradicts the puzzle's unique solution even though
-it breaks no rule. The unique solution SHALL be re-derived from the fixed clues
-alone, and when the board is not deducible from those clues no contradiction
-SHALL be reported.
+Separately from the rule violations, mistake-checking SHALL make the
+collection's check of entries and notes (`ts-engine`, "A mistake check
+compares with the one answer, hidden or not" and "A candidate note that
+excludes the answer is a mistake"), against the solution Rome's solver derives
+from the fixed clues alone. When the board is not deducible from those clues
+no contradiction SHALL be reported.
 
 #### Scenario: A legal-looking arrow that contradicts the solution is flagged
 
 - **WHEN** an arrow is placed that breaks no rule but differs from the unique
   solution's arrow for that square
 - **THEN** it is reported as a mistake and Check & Save is hard-blocked
-
-### Requirement: Rules: Marks that rule out the answer are a mistake
-
-A pencil mark SHALL claim that its arrow is still possible for that square, so
-an empty square whose marks are non-empty and exclude the solution's arrow
-SHALL be reported as a mistake of its own kind, `note`. An empty square
-carrying no marks SHALL NOT be reported as a mistake.
-
-#### Scenario: Marks that rule out the answer are a mistake
-
-- **WHEN** an empty square carries pencil marks that exclude the solution's
-  direction for that square
-- **THEN** a `note` mistake is reported for that square and Check & Save is
-  hard-blocked
 
 ### Requirement: Rules: A replayed off-grid mark leaves no note
 
@@ -85,34 +72,18 @@ which the board flags as an error.
 - **WHEN** an up arrow is placed in a top-row square
 - **THEN** the arrow is placed, and the square is flagged as an error
 
-### Requirement: Params: Rome's parameters
+### Requirement: Params: A Rome params string is its declared codec's, and one with no difficulty letter is Easy
 
-Parameters SHALL be a width, a height, and a difficulty (Easy, Normal or
-Tricky). Validation SHALL require a width of at least 3, a height of at least
-3, and a difficulty within range. The encoding SHALL be `WxH`, an absent `x`
-meaning a square board, followed in the full form only by `d` and the
-difficulty's letter: `e`, `n` or `t`. It SHALL round-trip through decode.
-
-#### Scenario: A game ID round-trips through the parameters
-
-- **WHEN** a parameter set is encoded in the full form and decoded
-- **THEN** the same width, height and difficulty are recovered
-
-### Requirement: Params: A Rome params string with no difficulty letter is Easy
-
-Decoding a string with no `d` SHALL give Easy. A `d` followed by anything but
-`e`, `n` or `t` SHALL be refused.
+Rome's params (a width, a height and a difficulty), their bounds and their
+encoding SHALL be those its `paramConfig` and its declared codec give
+(`engine-params`, "A game declares its params encoding once, and both codec
+halves are derived"), with no departure from the codec grammar and no refusal
+of the game's own. Decoding a string with no `d` SHALL give Easy.
 
 #### Scenario: A string with no letter
 
 - **WHEN** `4x4` is decoded
 - **THEN** the board is Easy, and its full encoding is `4x4de`
-
-#### Scenario: A letter that is no difficulty
-
-- **WHEN** the `n` of `4x4dn` is changed to `z`
-- **THEN** the params are refused:
-  `The parameters 4x4dz have a "z" where this puzzle reads none.`
 
 ### Requirement: Description: Rome descriptions use the region-border and clue encoding
 
@@ -166,16 +137,17 @@ refused.
 - **THEN** the board is refused, naming the `c` as a character the game ID
   cannot have there
 
-### Requirement: Generation: Rome's generator keeps every board soluble at its tier
+### Requirement: Generation: A Rome board keeps the collection's promise at its tier
 
-The generator SHALL accept a board only when the solver finds it soluble at the
-target difficulty and not soluble at the difficulty below.
+What a board dealt at a tier promises SHALL be the collection's
+(`engine-difficulty`, "Every tier promises one solution found at its cap" and
+"A difficulty tier binds the board it generates"), with no departure.
 
-#### Scenario: Every preset produces a soluble board
+#### Scenario: A Tricky board needs the Tricky rule
 
-- **WHEN** a new game is generated for any preset or legal size and difficulty
-- **THEN** a board is produced that is solvable by pure deduction at exactly that
-  difficulty
+- **WHEN** a board dealt at Tricky is solved with the Easy and Normal rules
+  alone
+- **THEN** the solver does not finish it, and with the Tricky rule it does
 
 ### Requirement: Generation: Rome's rules are met in one order, Easy first
 
@@ -262,12 +234,12 @@ drag.
 ### Requirement: Controls: A tap that commits no move selects the square
 
 A press and release on one square that commits no move SHALL act on the
-selection as a press does in every note-taking game, in both modes: it selects
-that square, a second tap on the selected square puts the highlight away, and
-the highlight shows only where the mode could write. A player without a
-keyboard has no other way to place the cursor Rome's keys act at. A tap that
-does commit a move SHALL NOT select: with notes mode off,
-a tap on a square holding the player's arrow clears that arrow.
+selection as a press does in every note-taking game, in both modes
+(`engine-notes`, "A game whose press starts a drag joins the note-taking cell
+through its tap"). A player without a keyboard has no other way to place the
+cursor Rome's keys act at. A tap that does commit a move SHALL NOT select:
+with notes mode off, a tap on a square holding the player's arrow clears that
+arrow.
 
 #### Scenario: A tap that commits nothing still selects
 
@@ -279,11 +251,6 @@ a tap on a square holding the player's arrow clears that arrow.
 - **WHEN** notes mode is off and a press and release land on a square holding
   an arrow the player placed
 - **THEN** the arrow is cleared and no square is left shown as selected
-
-#### Scenario: A second tap on the selected square
-
-- **WHEN** an empty square is tapped twice with the left button
-- **THEN** the second tap makes no move and puts the highlight away
 
 #### Scenario: A notes-mode tap on a square holding an arrow
 
@@ -372,36 +339,28 @@ the squares of a loop, off by default, under the key `loop`.
 - **THEN** the squares whose arrows reach a goal are highlighted and the
   squares of a loop are not
 
-### Requirement: Hint: Rome explains its next deduction
+### Requirement: Hint: Rome's hint is the candidate walk's, started on the implicit reading
 
-Rome SHALL provide an explained `hint()` that narrates the next forced move by
-the premise that forces it, in Rome's own vocabulary of arrows, squares and
-areas.
+Rome's hint SHALL be a plan of the shared candidate walk
+(`engine-candidate-hints`, "A shared candidate-elimination hint plan"), its
+marks those of its legend (`hintMarks`) and its sentences in Rome's own
+vocabulary of arrows, squares and areas. Rome SHALL start it on the implicit
+reading, under which a square with no marks holds every arrow its area has
+not used that does not point off the grid.
 
-#### Scenario: A hint can be followed to a finished board
+#### Scenario: A board with no marks and no stored preference
 
-- **WHEN** the hint's move is applied repeatedly from any mid-game position
-- **THEN** the board reaches a solved state, and every step changes the board
-  when it is reached
-
-### Requirement: Hint: A Rome hint rests on what the player can see or mark
-
-Every sentence of a hint SHALL rest only on facts the player can see on the
-board or record with Rome's own marks. A step's evidence SHALL be marked on
-the board, the squares it reasons from by an outline and an area it names by
-stripes, and the square the step acts on SHALL be ringed rather than filled.
-
-#### Scenario: The square a step decides is ringed
-
-- **WHEN** a hint step that places an arrow is shown
-- **THEN** the square it acts on is ringed and not filled
+- **WHEN** the hint is followed from the dealt position of a board with no
+  preference stored
+- **THEN** no step is the Mark-all fill, and a step that needs a square's marks
+  pencils in that square's alone
 
 ### Requirement: Hint: A walk in a Rome hint is numbered square by square
 
 Where a firing's premise is a walk, an arrow chain that leads back to the
-square being struck, the chain SHALL be outlined in order, numbered, so the
-claim the sentence makes is one the player can follow square by square. The
-chain SHALL be computed rather than assumed.
+square being struck, the chain SHALL be shown as the collection shows a walk
+(`engine-candidate-hints`, "A premise that asserts a walk is computed and
+numbered").
 
 #### Scenario: A deduction is narrated by its premise, not by its move
 
@@ -496,32 +455,19 @@ from that neighbor's square, and the two SHALL be one journey.
   struck square's lower neighbor, and says an arrow into it would close a loop
   or be the area's second down
 
-### Requirement: Hint: Rome's hint pencils marks in only as a step needs them
-
-Rome SHALL offer the shared `hint-notes` preference, defaulting to `implicit`:
-unless the player chooses otherwise, the hint SHALL read a square with no
-marks as holding every arrow its area has not used that does not point off the
-grid, and SHALL pencil marks in only where a step needs them.
-
-#### Scenario: A board with no marks and no stored preference
-
-- **WHEN** the hint is followed from the dealt position of a board with no
-  preference stored
-- **THEN** no step is the Mark-all fill, and a step that needs a square's marks
-  pencils in that square's alone
-
 ### Requirement: Look: What Rome draws
 
 Rendering SHALL draw the region outlines, arrows and goals, pencil marks in
 the cell quadrants, an optional highlight of squares whose arrows reach a goal,
 an inline error tint on the square of an off-grid arrow, a duplicate arrow
-the player placed in the error color, and a completion flash. There SHALL be
-no interpolated arrow animation.
+the player placed in the error color, and a completion flash.
 
-#### Scenario: An arrow appears at once
+#### Scenario: The player repeats a fixed arrow
 
-- **WHEN** an arrow is placed
-- **THEN** the next frame shows it whole, with no animation between
+- **WHEN** the player places an arrow that a fixed arrow of its area already
+  shows
+- **THEN** the player's arrow is drawn in the error color and the fixed one
+  keeps its ink
 
 ### Requirement: Look: The selected square is drawn with the note-taking cell's picture
 
@@ -579,16 +525,12 @@ each replace the square's surface.
 
 ### Requirement: Look: Rome's completion flash sweeps the board
 
-The win flash SHALL sweep the board's squares from the bottom left to the top
-right, and a lit square SHALL be filled with a flash color in place of its
-surface and keep what it holds. The selected square's
-highlight SHALL not be drawn while the win flash runs.
-
-#### Scenario: The flash moves
-
-- **WHEN** the win flash is drawn early and late
-- **THEN** the early frame lights the bottom-left square and the late one the
-  top-right square
+The win flash SHALL cross the board's squares by the collection's sweep
+(`ts-engine`, "A game gives each element a position, and the route is which
+position it gives"), and a lit square SHALL be painted as the collection
+paints one (`engine-colors`, "A solved flash drawn as a color takes a shared
+color"). The selected square's highlight SHALL not be drawn while the win
+flash runs.
 
 #### Scenario: The selection through the flash
 

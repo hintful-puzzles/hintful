@@ -3,10 +3,13 @@
 ## Purpose
 Slant (Gokigen Naname), the puzzle of drawing a diagonal in every square so that
 no loop forms and each numbered point meets that many lines. This capability
-specifies the game: its formats and controls, its live errors, its two
-preferences, its same-slant marks, its mistake-checking, what each difficulty's
-solver may use and what the generator promises, how the board is drawn, and an
-explained deductive hint drawn in the element-type legend.
+specifies what is the game's own: its description format and what a short
+params string means, its live errors, its same-slant marks and the notes mode
+that sets them, its mistake-checking, what its two preferences change, what
+each difficulty's solver may use and how the generator strips clues, how the
+board is drawn, and its deductive hint: its techniques, their order, the marks
+a step puts down first and what its legend does not say. Its clicks and keys
+are its `targetVerbs` declaration and its params its `paramConfig`.
 
 ## Requirements
 
@@ -53,7 +56,7 @@ whose solution slants differ. Such a mark SHALL be drawn in the mistake color.
 #### Scenario: A wrong mark is a mistake
 
 - **WHEN** a same-slant mark joins two squares the solution slants differently
-- **THEN** `findMistakes` reports that mark and the hint refuses
+- **THEN** `findMistakes` reports that mark
 
 ### Requirement: Rules: Slant notes mode marks squares that slant alike
 
@@ -83,34 +86,19 @@ diagonal in the border-connected vertex component is grounded.
 - **WHEN** a vertex clue `1` has two incident diagonals
 - **THEN** that vertex carries the vertex-error flag
 
-### Requirement: Params: Slant's parameters are a size and a difficulty
-
-Params SHALL be `w`, `h` and `diff` (Easy or Normal), encoded `{w}x{h}d{e|h}`,
-with the short form `{w}x{h}` and the square shorthand `{n}`. A `w` or an `h`
-below 2 SHALL be refused.
-
-#### Scenario: Params round-trip
-
-- **WHEN** params `{ w: 12, h: 10, diff: DIFF_HARD }` (the Normal tier) are
-  encoded in full
-- **THEN** the result is `12x10dh` and decoding it round-trips the params
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** params for a 1-wide or a 1-high grid are validated
-- **THEN** the result is a non-null error string
-
 ### Requirement: Params: A Slant string with no difficulty letter reads as Easy
 
-`decodeParams` SHALL read a string with no `d` segment as the default
-difficulty, Easy, and SHALL refuse one whose `d` is followed by a letter other
-than `e` or `h`.
+Slant's params (a size and a difficulty, Easy or Normal), their bounds and
+their encoding SHALL be those its `paramConfig` and its declared codec give
+(`engine-params`, "A game declares its params encoding once, and both codec
+halves are derived"), and its menu what `presets` lists. Normal SHALL keep the
+letter `h`. `decodeParams` SHALL read a string with no `d` segment as the
+default difficulty, Easy.
 
 #### Scenario: The short form of a Normal preset
 
 - **WHEN** `5x5`, the short form of the preset `5x5dh`, is decoded
 - **THEN** the params are 5 by 5 at Easy, the board `5x5de` names
-- **AND** `5x5dh` with its `h` written `x` is refused
 
 ### Requirement: Params: Slant refuses a grid too large to count
 
@@ -204,13 +192,14 @@ ruled out becomes equivalent.
   side, both ends inside the grid
 - **THEN** neither v-shape is left to the pair and the two become equivalent
 
-### Requirement: Generation: Slant generates solver-gated boards
+### Requirement: Generation: Slant strips clues while its difficulty's solver still solves the board
 
-A generated board SHALL have a unique solution that its difficulty's solver
-finds, and above Easy SHALL NOT be solvable one level down. A clue SHALL stay
-removed only while that solver still finds the solution, and above Easy the
-obvious starting points (4s, 0s, border 2s and corner 1s) SHALL be tried for
-removal before the rest, so that few of them survive.
+A clue SHALL stay removed only while the solver of the board's difficulty
+still finds the unique solution, and above Easy the obvious starting points
+(4s, 0s, border 2s and corner 1s) SHALL be tried for removal before the rest,
+so that few of them survive. What the dealt board's tier then promises is
+`engine-difficulty`, "Every tier promises one solution found at its cap" and
+"A difficulty tier binds the board it generates".
 
 #### Scenario: A removal the solver cannot bear is undone
 
@@ -224,28 +213,18 @@ The solver SHALL apply its deductions by difficulty, Normal adding to Easy,
 and SHALL return one of three verdicts: impossible, unique or non-converged.
 The solver SHALL be reused by `solve()` and `findMistakes`.
 
-#### Scenario: Generated boards solve at exactly their difficulty
-
-- **WHEN** a board generated at Normal is solved
-- **THEN** the Normal solver reaches the unique solution
-- **AND** the Easy solver fails to converge on it
-
 #### Scenario: Solve recovers from a wrong mid-game state
 
 - **WHEN** `solve()` runs against a state containing wrong diagonals
 - **THEN** the returned move list yields the unique solution
 
-### Requirement: Controls: A click cycles a square through its three states
+### Requirement: Controls: Slant's clicks and keys are its declared verbs, and a preference swaps the buttons
 
-`interpretMove` SHALL cycle a square blank→`\`→`/`→blank on a left-click and
-blank→`/`→`\`→blank on a right-click, the two swapped when the `left-button`
-preference selects `/`-first.
-
-#### Scenario: Left-click cycles a square
-
-- **WHEN** a blank square is left-clicked three times (default button
-  order)
-- **THEN** the square becomes `\`, then `/`, then blank
+Slant SHALL take its clicks, its cursor and its select keys from its
+`targetVerbs` declaration (`engine-input`, "The engine owns a declaring game's
+press and select keys"): a left-click cycles a square blank→`\`→`/`→blank and
+a right-click the other way round. The two SHALL be swapped when the
+`left-button` preference selects `/`-first.
 
 #### Scenario: Swapped button order
 
@@ -253,22 +232,13 @@ preference selects `/`-first.
   square is left-clicked
 - **THEN** the square becomes `/`
 
-### Requirement: Controls: The Marks key turns Slant's notes mode on and off
-
-Notes mode (`ui.pencilMode`) SHALL be toggled by the collection's Marks key,
-which SHALL be the only key on Slant's keypad. With notes mode off, input
-SHALL be unchanged.
-
-#### Scenario: Notes mode off leaves a click cycling
-
-- **WHEN** notes mode is off and a blank square is left-clicked
-- **THEN** the move sets the square's diagonal and no mark
-
 ### Requirement: Controls: A notes-mode press marks the nearest side
 
-In notes mode a press of either button SHALL toggle the mark on the side of
-the pressed square nearest the press, and SHALL do nothing when that side is
-the board's outer edge.
+Notes mode SHALL be turned on and off as in every game that takes notes
+(`engine-notes`, "One way into note-taking across the collection"); Slant has
+no keypad key of its own beside the Marks key. In notes mode a press of either
+button SHALL toggle the mark on the side of the pressed square nearest the
+press, and SHALL do nothing when that side is the board's outer edge.
 
 #### Scenario: A tap marks the nearest shared side
 
@@ -288,24 +258,22 @@ and move the pin when pressed elsewhere. Escape SHALL let go of a pin.
   the square below and Enter is pressed again
 - **THEN** the move sets the mark between the two squares and the pin is released
 
-### Requirement: Controls: Slant's keys cycle the cursor square or set it outright
+### Requirement: Controls: Slant's own keys set the cursor square outright
 
-Arrow keys SHALL move a cursor, revealing it in the same press. Select and
-select2 SHALL cycle the cursor square, one in each direction. The literal keys
-`\` and `/` SHALL set the cursor square directly and Backspace SHALL clear it.
+Each key-only verb of `targetVerbs` SHALL set the cursor square to its state
+directly, whatever the square held, where a click or a select key cycles it.
 
 #### Scenario: A literal key replaces the other diagonal
 
 - **WHEN** the cursor is on a square holding `\` and the `/` key is pressed
 - **THEN** the square holds `/`, with no empty state between
 
-### Requirement: Preferences: Slant exposes its two upstream preferences
+### Requirement: Preferences: Slant's two preferences swap the buttons and fade grounded diagonals
 
-The game SHALL expose via the `Game.prefs` hook: `left-button` (choices
-"Left \, right /", the default, and "Left /, right \") mapping to the
-click-cycle swap, and `fade-grounded` (boolean, default off) fading the
-diagonals in the border-connected component to a dimmed color so that the
-diagonals that could still close a loop stand out.
+Of the two preferences `prefs` declares, `left-button` SHALL swap which way
+round each button cycles a square, and `fade-grounded`, off unless set, SHALL
+fade the diagonals in the border-connected component to a dimmed color so that
+the diagonals that could still close a loop stand out.
 
 #### Scenario: Fade-grounded dims border-connected diagonals
 
@@ -313,48 +281,14 @@ diagonals that could still close a loop stand out.
   border
 - **THEN** it renders in the grounded color instead of its slash color
 
-### Requirement: Hint: Slant ships an explained deductive hint
-
-The game SHALL implement `hint()` returning a plan of narrated steps computed
-by the game's own solver techniques from the player's current position: the
-solver seeded with the placed diagonals and the player's same-slant marks.
-
-#### Scenario: The plan completes deductive boards
-
-- **WHEN** the plan is computed on any generated Easy or Normal board
-- **THEN** following it step-by-step solves the board with no un-narrated step
-
-### Requirement: Hint: The hint's recorder leaves the generator's solve unchanged
-
-The plan's recording and seeding SHALL be options of the solver that are off
-unless asked for. The generator SHALL solve with them off, so that the hint
-changes no verdict the generator reads.
-
-#### Scenario: The generator solves with no recorder
-
-- **WHEN** `newDesc` asks the solver whether a board is still solvable
-- **THEN** it passes no recorder and no seed
-
-### Requirement: Hint: Each hint step names its technique and says why the move is forced
-
-Each step SHALL name its technique, lead with the recognizable indication,
-state why the move is forced and conclude in the necessity voice.
-
-#### Scenario: Loop and dead-end firings name the connectivity reason
-
-- **WHEN** the plan reaches a square forced by simple loop avoidance or by
-  dead-end avoidance
-- **THEN** the step's narration explains that the ruled-out slant would close a
-  loop (or seal points off from the grid's edge), and its evidence shades the
-  connected chain / trapped components involved
-
 ### Requirement: Hint: Each Slant technique is narrated by its own reason
 
-A clue-counting step SHALL name the clue and say why its count forces the
-slants, and SHALL fill every square the clue forces in one journey. A
-loop-avoidance step SHALL say that the ruled-out slant would close a loop, and
-a dead-end step that it would seal points off from the grid's edge; each SHALL
-shade the chain or the trapped components involved.
+Each step SHALL lead with the recognizable indication. A clue-counting step
+SHALL name the clue and say why its count forces the slants, and SHALL fill
+every square the clue forces in one journey. A loop-avoidance step SHALL say
+that the ruled-out slant would close a loop, and a dead-end step that it would
+seal points off from the grid's edge; each SHALL shade the chain or the
+trapped components involved.
 
 #### Scenario: A clue-counting firing is explained and grouped
 
@@ -392,30 +326,18 @@ named as that pattern. No mark SHALL be placed that no firing uses.
 - **THEN** that mark was placed by an earlier step saying why its two squares
   slant alike
 
-### Requirement: Hint: Slant hint rendering follows the element-type legend
+### Requirement: Hint: Slant's hint marks are its legend's, with no slash drawn in a ringed square
 
-The displayed hint SHALL highlight, not perform. A target square SHALL be
-ringed `COL_HINT` with no slash preview: the diagonal is drawn only once the
-move is made. A mark the step places SHALL be drawn in `COL_HINT`.
+A step's marks SHALL be the roles `hintMarks` declares, in the hint colors of
+its palette: a ring on what the step decides, and an outline on what it
+reasons from. A ringed square SHALL hold no slash preview: the diagonal is
+drawn only once the move is made. The evidence a step outlines SHALL be
+computed against the board as that step fires.
 
 #### Scenario: A target is ringed and left empty
 
 - **WHEN** a clue-counting step is displayed
 - **THEN** the target square(s) render `COL_HINT` with no slash drawn
-
-### Requirement: Hint: A hint's evidence is drawn in the evidence color
-
-The deduction's evidence SHALL be outlined `COL_HINT_CELL`: the clue's
-neighborhood, the loop chain, the trapped components, or the pairs a v-shape
-argument reads, computed against the board as that step fires. The marks the
-step cites SHALL be drawn `COL_HINT_CELL`, the clues it reads recolored
-`COL_HINT`, and a cited filled anchor ringed `COL_HINT_REF`.
-
-#### Scenario: Evidence is visible as an area
-
-- **WHEN** a clue-counting step is displayed
-- **THEN** the clue's digit recolors `COL_HINT` and the reasoned neighborhood
-  renders `COL_HINT_CELL`
 
 #### Scenario: Every step carries visible evidence
 
@@ -441,9 +363,10 @@ anything starts the clues again.
 
 ### Requirement: Hint: Slant's hint uses every technique at either difficulty
 
-The hint SHALL plan with the Normal solver's techniques on every board, an
-Easy one included, so that a same-slant mark the player has put down is used
-whatever the board's difficulty.
+`hint` SHALL seed the solver with the player's position, the placed diagonals
+and the same-slant marks. It SHALL plan with the Normal solver's techniques on
+every board, an Easy one included, so that a same-slant mark the player has
+put down is used whatever the board's difficulty.
 
 #### Scenario: A mark is used on an Easy board
 

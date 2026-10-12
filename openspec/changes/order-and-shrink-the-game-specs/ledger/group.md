@@ -1,0 +1,144 @@
+# group
+
+The Purpose no longer says that Check & Save flags pencil marks that have
+crossed out the answer, which is now the collection's and cited from `Rules`,
+and says where the note-taking part is stated.
+
+| Requirement (title as it stood) | What happens | Where it is stated instead |
+| --- | --- | --- |
+| Rules: A Group board is solved by a group table | sentence 2 (because a board has one solution, Group provides `findMistakes`) cut; sentence 1 untouched; "and flashes" reworded out of the scenario | `findMistakes` on the game object, `src/games/group/index.ts:817`; the flash: `ts-engine`, "The win flash plays on a forward move that solves the board"; `ts-engine`, "The engine supports an ephemeral, opt-in mistake-checking hook" and "A mistake check compares with the one answer, hidden or not"; that the board has one answer: `engine-params`, "A board with a mistake check loads only with exactly one answer" |
+| Rules: Group's Check & Save flags pencil marks that have crossed out the answer | retitled "Rules: Group's mistake check re-solves from its givens". Sentences 1 and 2 (a wrong entry, a mark set that leaves out the answer, extra candidates not reported) replaced by one that names the two shared requirements and says what the answer is re-solved from; kept from sentence 1: the mark set is drawn in the same mistake outline. Sentence 3 (the hint refuses while such a mark set stands) cut. Scenarios "Marks without the answer are a mistake and the hint refuses" and "Extra candidates beside the answer are not a mistake" dropped; scenario "A wrong element that breaks no rule" written as the game's case | `engine-hints`, "Check & Save names a wrong entry in every game"; `ts-engine`, "A candidate note that excludes the answer is a mistake" (both dropped scenarios are its first); the hint's refusal: `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong board before asking the game" (scenario "Asking for a hint on a board with a mistake highlights it"). The check: `index.ts:474` |
+| Params: Group's parameters | title kept. Sentence 1 (a size between 3 and 26, the five tiers, the flag) reworded to say the three are the fields of `paramConfig`, which declares the range and the tiers; sentence 2 and the scenario untouched | `bounds: { min: 3, max: 26 }`, `index.ts:770`; `difficultyItem(DIFF_NAMES, "diff")`, `index.ts:773`, with `DIFF_NAMES = tierNames(5, { search: true })`, `src/games/group/state.ts:49`; `engine-params`, "Params validity is the engine's check" |
+| Params: A size is refused at a tier none of its boards need | "and SHALL NOT deal an easier board in its place" reworded out of sentence 1; the rest and both scenarios untouched | `engine-difficulty`, "A generator never settles for a lower tier" |
+| Params: Group's params are a size, a tier letter and an identity flag | the last clause (refuses a character it does not know and a `d` followed by no tier letter) cut; what a string with no `d` and no `i` decodes to kept. Scenario "A letter that is no tier" dropped; the other two kept | `engine-params`, "A params string is read whole or refused" and "The engine makes the one refusal of a params string" (whose first scenario is this sentence for `8x8dq`). Group's calls: `paramsLetter` and `unreadParams`, `state.ts:138`-`144` |
+| Generation: A Group board is a group from the data table | title kept. Sentence 2 (its clues admit exactly one completion, at the requested difficulty) replaced by one that names the two shared requirements and says Group departs from neither. The scenario keeps its middle clause (the completion is a valid group table) and loses the other two | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates". The gate: `src/games/group/generator.ts:101` and `:120` |
+| Solver: Group's solver accepts only an associative grid and grades a board at its tier | retitled "Solver: Group's solver accepts only an associative grid". Sentence 2 (solvable at its tier and not at the tier below) cut. Scenario "The solver grades a board at the intended difficulty" dropped; scenario "A Latin square that is no group" written | `engine-difficulty`, "A difficulty tier binds the board it generates" (the dropped scenario is its first). The validity check: `groupValid`, `src/games/group/solver.ts:322` |
+| Hint: Group's own placements lead the eliminations | title kept. The order (a naked single first, Group's placements next, then the eliminations, last a forced generic placement) cut to what is Group's: its own rung of the walk's ladder, with the citation, and a clause that says where the rest of the hint is stated (rule 2). The reading it starts on and the scenario untouched | `engine-candidate-hints`, "The walk owns the ladder" (naked singles, the game's own rungs, the recorded strikes, the recorded placements; the note-free opening). Group's rung: `leads`, `index.ts:628`, handed over at `index.ts:648` |
+| Controls: Group selects a cell through the shared note-taking cell | added (rule 2): the subject began at "a cell selected for entry" and said nowhere how a cell is selected. Its two answers and its scenario are from `pressNoteTakingCell`'s call, `index.ts:199`-`202`, and `prefs`, `index.ts:821` | |
+| Look: Group draws its legend, marks and errors | "highlight the selection" and "and flash on completion" reworded out of the one sentence; the legend, the pencil-mark grid and the error annotation, the title and the scenario untouched | the highlight: `engine-notes`, "The note-taking cell's highlight has one picture, drawn by the engine" (`cellHighlight`, `src/games/group/render.ts:548`); the flash: `ts-engine`, "The win flash plays on a forward move that solves the board" and "The win flash is one traveling highlight in every game" (`winHighlight`, `render.ts:551`) |
+
+## Kept, and why
+
+- **Rules: … re-solves from its givens**, the outline sentence. How Group
+  draws the two kinds alike is its own.
+- **Params: Hiding the identity leaves every tier but Easy.** The modifier's
+  `only` declares it (`index.ts:783`); the requirement stays for its reason,
+  which the declaration cannot give and the next requirement's refusals rest
+  on.
+- **Params: Group's params are a size, a tier letter and an identity flag.**
+  The codec is hand-written (`state.ts:120`, `:127`), and what a missing `d`
+  or `i` decodes to is the promise an old link depends on.
+- **Controls: A letter key enters its element**, the keypad sentence.
+  `requestKeys` is written out by hand (`index.ts:136`), through the
+  identity-dependent lettering.
+- **Hint: … lead the eliminations**, the implicit reading. A departure from
+  the convention of `engine-candidate-hints`, "A game states the reading it
+  starts on".
+- **Hint: Learning the identity fills its row and column as one journey.**
+  `engine-hints`, "One deduction firing is one journey" gives the form; that
+  the identity's whole row and column are one firing is Group's
+  (`placing`, `index.ts:612`).
+- **Hint: The hint teaches Group's three deductions**, "by a `set` move" and
+  "by a `pencilStrike` move". They say which of the three places and which
+  strikes.
+
+## Engine requests
+
+The five Latin games' requests go under five names, the same in `keen.md`,
+`towers.md`, `unequal.md`, `group.md` and `mathrax.md`. Each name's first
+line, the rule as the engine would state it and the home, is the same in every
+ledger that has it; what follows is this game's sentence and code.
+
+- **The entry arm of a note-taking game.** With a cell highlighted, a value's
+  key enters that value, or in pencil mode toggles its pencil mark; Backspace
+  and Space clear the cell; in pencil mode no key changes a cell that holds a
+  value; a given takes no entry. Home: `engine-notes`, beside "The engine owns
+  what a press and an entry do to the highlight".
+  Group's sentences: "Backspace, Space and the keypad's Clear SHALL empty the
+  selected cells … In pencil mode they SHALL leave a cell that holds a letter
+  as it is, and in either mode a given.", in "Controls: Backspace, Space and
+  Clear empty the selected Group cells", and "A letter key … SHALL enter the
+  element it letters in the selected cells, or toggle that element's pencil
+  mark in pencil mode", in "Controls: A letter key enters its element". Code:
+  `index.ts:307`-`335`. Stays Group's: letters for values, by the
+  identity-dependent lettering; a run of cells entered at once; and a given
+  that already holds the element being part of the move.
+- **A mistake check reports nothing where the puzzle does not solve to one
+  answer.** Group's spec does not state it (see Found); its `findMistakes`
+  does it (`index.ts:480`). See `keen.md`.
+- **A candidate hint's recording solve runs at the board's tier, and no higher
+  than the top tier below Unreasonable.** Group's spec does not state it (see
+  Found); its `buildSteps` does it (`index.ts:606`). See `keen.md`.
+- **Auto-pencil strikes a placed value from the other cells of its no-repeat
+  regions**, and **the auto-pencil decision is recorded on the move.** Not
+  Group's: it offers no auto-pencil (`prefs`, `index.ts:821`).
+
+## Found
+
+- **The spec does not say what the mistake check reports of a board its
+  givens do not solve to one answer.** `findMistakes` returns nothing there
+  (`index.ts:480`), as the other four Latin games' specs say of theirs.
+- **The spec does not say at what tier the hint deduces.** `buildSteps` caps
+  the recording solve at the board's tier, and at Hard on an Unreasonable
+  board (`index.ts:606`); Keen's, Towers', Unequal's and Mathrax's specs each
+  say so.
+- **Group offers no sticky pencil preference and no auto-pencil**, alone
+  among the five (`prefs`, `index.ts:821`), so a secondary press there selects
+  one cell and latches nothing (`engine-notes`, "An unoffered pencil
+  preference is read from its absence"). The spec has no `Preferences`
+  requirement; the scenario of "Controls: Group selects a cell through the
+  shared note-taking cell" now gives the secondary press.
+- **"Description: A Group description is validated against the grid area"**
+  says the refusal tells "not enough data" from "too much"; the words a
+  player reads are the collection's too-short and too-long kinds
+  (`engine-params`, "A description error kind says what went wrong for the
+  player").
+
+## Review
+
+8 rows read, each against the declaration or the requirement it names, read
+whole; 1 row corrected (a clause more cut), 2 rows added, and nothing
+restored.
+
+Changed:
+
+- **"Controls: Group selects a cell through the shared note-taking cell"
+  added.** The writer filed under Found that the subject never says how a
+  cell is selected; rule 2 asks for the sentence, and the other four games
+  have it. The Found item went with it.
+- **"Look: Group draws its legend, marks and errors"** lost "highlight the
+  selection" and "flash on completion", two clauses of the collection's that
+  the writer filed under Found and left. Each has one requirement that states
+  all of it. The Found item went with it. "And flashes" went from the
+  scenario of "Rules: A Group board is solved by a group table" for the same
+  reason, in that requirement's row.
+- **Engine requests** reworded under the five names the five ledgers share.
+  Group's spec states only the first; the second and third are in its code
+  and under Found.
+
+Checked and found sound:
+
+- Every engine title the spec cites is exact (`spec-citations` resolves
+  them), and each requirement a row names states all of what the row removed.
+  "It SHALL refuse while such a mark set stands" follows from two
+  requirements, each whole: the note is a mistake (`ts-engine`), and a
+  mistake refuses the hint (`engine-hints`, "The midend SHALL refuse a hint on
+  a finished or wrong board before asking the game").
+- The declarations: `bounds` (`index.ts:770`), `difficultyItem` (`:773`), the
+  modifier's `only` (`:783`), `prefs` (`:821`).
+- The new sentences against the code: `findMistakes` solves from
+  `state.immutable` alone; `leads` hands over every recorded placement, and
+  every single until the notes are set up (`index.ts:628`); `groupValid`
+  refuses a full grid whose two bracketings of a triple differ
+  (`solver.ts:322`); Group's `newUi` states the implicit reading
+  (`state.ts:313`).
+- The engine requests' claim that no capability states them: `engine-notes`,
+  `engine-input`, `ts-engine`, `engine-hints`, `engine-candidate-hints`,
+  `engine-difficulty` and `engine-params` searched for the entry arm, an
+  empty check on an unsolved puzzle and the hint's tier. None states any.
+- Each subject read alone: none hollow, no dangling antecedent, every title
+  fits its body. `Generation` and `Solver` each name where the tier's promise
+  is stated or state Group's own.
+- Left: the hand-written codec and keypad; the three `Found` items the spec is
+  silent on (the empty check, the hint's tier, the description's words), which
+  are not a reviewer's to add.

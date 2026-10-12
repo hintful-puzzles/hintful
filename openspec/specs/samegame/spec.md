@@ -50,31 +50,16 @@ SHALL NOT be `"lost"`, because Undo rescues it.
 - **THEN** that state's `impossible` flag is set and `status()` returns
   `"ongoing"`
 
-### Requirement: Params: Same Game's params are a size, a color count and a scoring system
-
-Params SHALL be `w`, `h`, `ncols` and `scoresub` (1 or 2), encoded
-`{w}x{h}c{ncols}s{scoresub}`. Decoding SHALL read a trailing `r`, the letter
-that asks for colors scattered at random with no promise the grid can be
-cleared, and SHALL change nothing for it; encoding SHALL never write it.
-
-#### Scenario: Params round-trip and lenient decode
-
-- **WHEN** params `{ w: 15, h: 10, ncols: 4, scoresub: 2 }` are
-  encoded with `full = true`
-- **THEN** the result is `15x10c4s2`
-- **AND** decoding `15x10c4s2` round-trips those params
-- **AND** decoding `15x10c4s2r` yields the same params
-
 ### Requirement: Params: Same Game refuses params it cannot deal
 
-Params SHALL be refused unless `w ≥ 1`, `h ≥ 1`, `3 ≤ ncols ≤ 9`,
-`scoresub ∈ {1,2}` and `w·h > 1`.
+`validateParams` SHALL refuse fewer than three colors, and a grid of a single
+square.
 
-#### Scenario: Invalid params are rejected
+#### Scenario: Two colors, and one square
 
-- **WHEN** the engine's params check is given `ncols: 2`, `ncols: 10`,
-  `scoresub: 3`, or a `1×1` grid
-- **THEN** it returns a non-null error string
+- **WHEN** the engine's params check is given two colors, or a `1×1` grid
+- **THEN** it answers "Number of colors must be at least three." for the
+  first and "Grid area must be greater than one." for the second
 
 ### Requirement: Params: Same Game refuses an area too large to count
 
@@ -106,16 +91,16 @@ the `(n-2)²` scoring, `s2`.
 - **THEN** it decodes as a 5×5 board in three colors scored `(n-2)²`, which
   encodes as `5x5c3s2`
 
-### Requirement: Params: A Same Game title names the colors and the other scoring
+### Requirement: Params: Same Game reads upstream's r and sets nothing
 
-A board's title SHALL give its size and its color count, as "5x5, 3 colors",
-and SHALL add "alt. scoring" where a group of `n` scores `(n-1)²`, the scoring
-that is not the default.
+The `r` upstream writes for colors scattered at random, with no promise the
+grid can be cleared, SHALL be read and SHALL set nothing.
 
-#### Scenario: The other scoring system
+#### Scenario: A string upstream wrote for a random grid
 
-- **WHEN** the `s2` of the preset `5x5c3s2` is changed to `s1`
-- **THEN** the board is titled "5x5, 3 colors, alt. scoring"
+- **WHEN** `15x10c4s2r` is decoded
+- **THEN** it is the 15×10 board in four colors that `15x10c4s2` names, and it
+  encodes as `15x10c4s2`
 
 ### Requirement: Description: A Same Game description is one color for every tile
 

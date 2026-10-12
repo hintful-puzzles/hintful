@@ -42,10 +42,9 @@ only one another while other islands are left out.
 
 ### Requirement: Rules: Bridges findMistakes reports every span the unique solution contradicts
 
-Because a generated board is uniquely solvable, the game SHALL implement
-`findMistakes`: it SHALL solve the board again from its island clues and
-return every span whose player marks that solution contradicts: a bridge where
-the solution has none, a count exceeding the solution's, or a limit below the
+`findMistakes` SHALL solve the board again from its island clues and return
+every span whose player marks that solution contradicts: a bridge where the
+solution has none, a count exceeding the solution's, or a limit below the
 solution's count, the cross included. It SHALL also return every island marked
 complete short of its count. A board that is not uniquely solvable SHALL yield
 no mistakes.
@@ -54,7 +53,7 @@ no mistakes.
 
 - **WHEN** the player places a bridge the unique solution does not contain,
   without yet over-committing an island
-- **THEN** `findMistakes` includes that bridge and Check & Save refuses to save
+- **THEN** `findMistakes` includes that bridge
 
 #### Scenario: An island marked complete too soon
 
@@ -98,35 +97,28 @@ bridges drawn, above `maxb`, or of none.
 - **THEN** the span is limited to one bridge, then free again, and is never
   crossed
 
-### Requirement: Params: Bridges params are size, bridge limit, density, expansion, loops and difficulty
+### Requirement: Params: Bridges takes its params, their encoding and its label words from its declarations
 
-Params SHALL be `w`, `h`, `maxb`, `islands` (the percentage of squares that are
-islands), `expansion` (a percentage), `allowloops` (boolean) and `difficulty`
-(Easy, Normal or Tricky). They SHALL be encoded `{w}x{h}`, then `m{maxb}`, then
-an `L` when loops are not allowed. The full form SHALL add `i{islands}` and
-`e{expansion}` before the `m`, and `d` with the tier's number, from 0, at the
-end.
+Bridges' params (a size, a bridge limit, an island and an expansion
+percentage, whether loops are allowed, and a tier), their bounds, encoding and
+label words SHALL be those its `paramConfig` and its declared codec give
+(`engine-params`, "A game declares its params encoding once, and both codec
+halves are derived"), and its menu what `presets` builds. A string that leaves
+out the tier, the island percentage or the expansion SHALL decode with each as
+`defaultParams` has it: Easy, 30% and 10%.
 
-#### Scenario: Params round-trip
+#### Scenario: A short form drops the tier
 
-- **WHEN** params `{ w: 15, h: 15, maxb: 2, islands: 30, expansion: 10, allowloops: true, difficulty: 2 }`
-  are encoded in full
-- **THEN** the result is `15x15i30e10m2d2` and decoding it round-trips the
-  params
-- **AND** the same params with loops not allowed encode in short as `15x15m2L`
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** `validateParams` is given, in full, a board whose island target is
-  three at a tier above Easy (e.g. `3×3` Normal at the default density)
-- **THEN** it returns a non-null error string
+- **WHEN** `10x10m2L`, the short form of the preset `10x10i30e10m2Ld1`, is
+  decoded
+- **THEN** it is a 10×10 board with two bridges a line and no loops, at Easy,
+  30% islands and 10% expansion, as `defaultParams` has the three it leaves out
 
 ### Requirement: Params: Bridges refuses to generate Tricky with one bridge per line
 
-Generating a Tricky board with `maxb` 1 SHALL be refused with a reason, because
-with one bridge per line no "at most" limit can exist and sealing off is
-Normal's, so Tricky has almost nothing a Normal board could not need. A board
-already dealt that way SHALL still load.
+With one bridge per line Bridges SHALL deal no Tricky board, because no "at
+most" limit can exist and sealing off is Normal's, so Tricky has almost
+nothing a Normal board could not need.
 
 #### Scenario: Tricky with one bridge per line is refused
 
@@ -150,6 +142,12 @@ loops are made where loops are disallowed or the expansion is 0%.
 - **THEN** the first is refused with "No puzzle of 4 islands is Tricky." and
   the second is not refused
 
+#### Scenario: Invalid params are rejected
+
+- **WHEN** `validateParams` is given, in full, a board whose island target is
+  three at a tier above Easy (e.g. `3×3` Normal at the default density)
+- **THEN** it returns a non-null error string
+
 ### Requirement: Params: Bridges refuses a percentage past its last choice when dealing
 
 When a board is to be dealt, `validateParams` SHALL refuse an island
@@ -165,18 +163,6 @@ that arrives with its description alike.
 - **THEN** it is refused with "%age of island squares must be between 1% and
   30%."
 
-### Requirement: Params: A Bridges label says only what departs from two bridges, 30% islands and 10% expansion
-
-A board's label SHALL say "no loops" where loops are disallowed, "max N
-bridges" (or "max 1 bridge") where the most bridges a line may carry is not
-two, "N% islands" where that is not 30, and "N% expansion" where that is not
-10, and SHALL say none of them otherwise.
-
-#### Scenario: The preset that disallows loops
-
-- **WHEN** `10x10i30e10m2Ld1` is labeled
-- **THEN** the label is "10x10 Normal, no loops"
-
 ### Requirement: Description: Bridges descriptions encode the island clue grid
 
 The desc SHALL encode the island positions and their bridge counts row-major: a
@@ -190,10 +176,10 @@ run-length letter skips that many empty cells.
 
 ### Requirement: Description: A Bridges description that describes no board is refused
 
-`newState` SHALL refuse, so that `validateDesc` reports with a reason, a desc
-that overruns the grid or stops short of it, that holds a character which is
-neither a count from 1 to 16 nor a run length, that places two islands
-orthogonally next to each other, or that has fewer than two islands.
+`newState` SHALL refuse a desc that overruns the grid or stops short of it,
+that holds a character which is neither a count from 1 to 16 nor a run length,
+that places two islands orthogonally next to each other, or that has fewer
+than two islands.
 
 #### Scenario: A malformed description is rejected
 
@@ -260,15 +246,14 @@ because filling every other direction would seal a group off.
 
 ### Requirement: Solver: Bridges solves with a graded multi-stage deductive solver
 
-The solver SHALL run its stages gated by difficulty, and SHALL report whether
-it solved the board. It SHALL be purely deductive and SHALL NOT guess and
-verify.
+The solver SHALL run the stages of its tier and no others, and SHALL be purely
+deductive: it SHALL NOT guess and verify.
 
-#### Scenario: A generated board is uniquely solvable at its difficulty
+#### Scenario: A board the stages leave short
 
-- **WHEN** a board generated at difficulty `d` is solved from the clue-only state
-- **THEN** the solver returns solved at `d`, and a Normal/Tricky board is not fully
-  solved at the tier below it
+- **WHEN** the stages allowed at a tier stop with a span still undecided
+- **THEN** the solver reports the board unsolved at that tier, having tried no
+  bridge to see what follows
 
 ### Requirement: Solver: A Bridges solve ignores and lifts the player's limits
 
@@ -399,8 +384,8 @@ or off, as the `show-hints` preference does.
 
 ### Requirement: Preferences: Bridges auto-marks satisfied islands (fork aid)
 
-The game SHALL offer an `auto-mark-complete` boolean preference through
-`Game.prefs`, default on. When on, `redraw` SHALL draw an island whose bridge
+The `auto-mark-complete` preference of the game's `prefs` SHALL be on unless
+set. When on, `redraw` SHALL draw an island whose bridge
 count equals its clue with the face of a completed island, with no player
 action, and SHALL revert it when a bridge is removed. The aid SHALL be purely
 visual: it SHALL NOT set the completed mark or lock the island's bridges, and
@@ -417,10 +402,9 @@ the live-error red, on the rim and count.
 
 ### Requirement: Preferences: Bridges offers a show-hints preference for possible bridges
 
-The game SHALL expose a `show-hints` boolean preference through the
-`Game.prefs` hook. When it is on, `redraw` SHALL draw a faint line along every
-span between two in-line islands that carries neither a bridge nor a cross, in
-the possible-bridge color, which is not a hint color.
+With the `show-hints` preference of the game's `prefs` on, `redraw` SHALL draw
+a faint line along every span between two in-line islands that carries neither
+a bridge nor a cross, in the possible-bridge color, which is not a hint color.
 
 #### Scenario: The show-hints preference toggles the possible-bridge lines
 
@@ -433,11 +417,10 @@ the possible-bridge color, which is not a hint color.
 The hint's ladder SHALL be capped at the board's own difficulty and not at the
 top rung, since that is the tier the generator certified it soluble at.
 
-#### Scenario: Following the plan solves the board at every tier
+#### Scenario: An Easy board is not handed a harder argument
 
-- **WHEN** a hint is requested, its first step applied, and the hint requested
-  again, repeatedly, on a board of any tier
-- **THEN** deduction never runs out before the board is solved
+- **WHEN** a hint is requested on a board dealt at Easy
+- **THEN** every step of its plan is the single-island arithmetic
 
 ### Requirement: Hint: One Bridges firing is one hint step
 
@@ -484,11 +467,12 @@ clear them. It SHALL first mark as complete every island whose bridges already
 meet its clue, so a resumed position is the position the certified ladder was
 certified on.
 
-#### Scenario: A hint runs from the player's own bridges
+#### Scenario: An island the player filled and did not mark
 
-- **WHEN** the player has drawn correct bridges of their own and asks for a hint
-- **THEN** the plan is deduced from those bridges and its first step is a
-  deduction that follows from them
+- **WHEN** the player has drawn every bridge of an island, left it unmarked,
+  and asks for a hint
+- **THEN** the plan is deduced from a board on which that island is complete,
+  and from the player's bridges, crosses and limits as they stand
 
 ### Requirement: Hint: Bridges hint hides the bookkeeping mark
 
@@ -537,24 +521,11 @@ named island left short of its clue.
 
 ### Requirement: Hint: Bridges marks a hint in its own vocabulary
 
-`redraw` SHALL draw the displayed step's marks from `BridgesHighlights` as the
-game's own shapes recolored, because neither element a Bridges deduction
-points at is a cell: an island is a circle wider than its own tile, and a
-bridge is a span between two islands, which is no cell's border. No mark SHALL
-come from `engine/hint-mark.ts`, whose every mark is a band on a cell's border
-box.
-
-#### Scenario: No hint mark is a fill
-
-- **WHEN** any frame of a hint plan is captured
-- **THEN** no rect in either hint color is tile-sized in both directions
-
-### Requirement: Hint: A Bridges hint draws a span as what the step makes of it
-
-A span the step decides SHALL be drawn as the bridge bundle it would become,
-with the bars the step adds in `COL_HINT` and the bars already there in the
-board's own color, or as the game's own pair of crosses in `COL_HINT` when the
-step blocks it.
+A step's marks SHALL be drawn as the game's own shapes recolored, because
+neither element a Bridges deduction points at is a cell: an island is a circle
+wider than its own tile, and a bridge is a span between two islands, which is
+no cell's border. No mark SHALL come from `engine/hint-mark.ts`, whose every
+mark is a band on a cell's border box.
 
 #### Scenario: Raising a span leaves the bridges already there in board ink
 
@@ -579,6 +550,13 @@ of one color and not at one mark of each.
 - **THEN** every island of that group, the one the bridge would start from
   included, takes the evidence color and none takes the action color
 
+#### Scenario: A hint explains an island with exactly enough room left
+
+- **WHEN** an island's remaining count equals the bridges it can still take and a
+  hint is requested
+- **THEN** the step's narration states that count, its move draws exactly that
+  many bridges, and the island it names is the one the hint recolors
+
 ### Requirement: Hint: A Bridges hint asks its stages in order after every step
 
 The hint SHALL ask its stages in this order and take the first that fires,
@@ -593,20 +571,17 @@ SHALL take the islands in the order the description lists them.
   another needs a bridge one way by counting its other directions
 - **THEN** the step is the first island's
 
-### Requirement: Hint: Bridges explains each forced deduction
+### Requirement: Hint: A Bridges hint refuses where its deduction contradicts itself
 
-`hint(state)` SHALL return the forced deductions from the player's own marks as
-an ordered plan, each step narrating why its moves are forced from premises the
-sentence itself states. Where the deduction contradicts itself on a board
-`findMistakes` finds nothing wrong with, it SHALL refuse with the collection's
-unlocalized-contradiction wording.
+Where the deduction contradicts itself on a board `findMistakes` finds nothing
+wrong with, `hint` SHALL refuse with the collection's unlocalized-contradiction
+wording.
 
-#### Scenario: A hint explains an island with exactly enough room left
+#### Scenario: A contradiction with no entry to blame
 
-- **WHEN** an island's remaining count equals the bridges it can still take and a
-  hint is requested
-- **THEN** the step's narration states that count, its move draws exactly that
-  many bridges, and the island it names is the one the hint recolors
+- **WHEN** the stages run into a contradiction on a board whose mistake check
+  reports nothing, which can only be a board Solve cannot finish
+- **THEN** the hint refuses, and shows no step it derived on the way
 
 ### Requirement: Look: Every Bridges mark is in the tile diff key
 

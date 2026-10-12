@@ -4,11 +4,13 @@
 Separate: every cell of a `w × h` grid holds one of `k` letters, each letter
 occurring `w·h/k` times, and the player draws walls along the edges to divide
 the grid into connected regions of `k` cells that each hold one of each letter.
-This capability specifies the game's own part: its params and description, its
-three-valued walls and half-grid cursor, what counts as solved and as a
-mistake, what its generator promises, its shading of completed regions, and its
-deduction hint and that hint's words. The border-marking mechanic is shared
-with Palisade, and this spec says what is shared and what stays Separate's.
+This capability specifies the game's own part: what its params refuse and
+what a short params string means, its description, what counts as solved and
+as a mistake, what its generator promises, its solver's techniques and the
+search that counts a board's answers, its shading of completed regions, and
+its deduction hint and that hint's words. What the buttons, the drag and the
+cursor do to an edge, how the edges are stored and which of them redden are
+`border-grid`'s to state, the mechanic being shared with Palisade.
 
 ## Requirements
 
@@ -22,21 +24,6 @@ state, with only the grid-rim walls set.
 - **WHEN** `newState` builds a board from a valid desc
 - **THEN** every edge on the grid's rim is a wall
 - **AND** every edge between two cells is unknown
-
-### Requirement: Rules: Separate uses a three-valued wall model with a half-grid cursor
-
-The player SHALL divide the grid by toggling edges. Each edge SHALL be
-three-valued (wall, no-wall mark or unknown) and shared between the two cells
-it separates, so every edit records both sides. A half-grid keyboard cursor,
-with corner, edge and center coordinates in `[1, 2w-1] × [1, 2h-1]`, SHALL move
-with the arrow keys and set the edge it rests on with select and select2.
-
-#### Scenario: Clicking an interior edge toggles a wall on both sides
-
-- **WHEN** the player left-clicks near the shared edge between two adjacent
-  cells
-- **THEN** the returned move sets the wall bit on that edge of both cells
-- **AND** re-applying the same click clears it
 
 ### Requirement: Rules: The grid rim cannot be edited
 
@@ -65,41 +52,56 @@ exactly once, and no wall lies interior to a component. `status` SHALL report
 - **WHEN** a wall-bounded region has size `k` but contains a repeated letter
 - **THEN** `status` reports `ongoing`
 
-### Requirement: Rules: Separate ships findMistakes for Check & Save
+### Requirement: Rules: A letter repeated in a completed region is drawn as an error
 
-The game SHALL implement `findMistakes`: take the board's one partition from
-the search that counts its answers, at either difficulty, and return every
-player edge whose state contradicts it, a wall where the solution has none or
-a no-wall mark where the solution has a wall. A flagged edge SHALL be drawn
-in the error color. Where the search did not prove exactly one partition
-`findMistakes` SHALL return an empty list.
+A letter that a wall-bounded region of exactly `k` cells holds more than once
+SHALL be drawn in the error color wherever that region holds it. This is the
+one error Separate draws itself; the edges that redden are the shared error
+model's: `border-grid`, "The board reddens an edge beside a group joined past
+the region size" and "The board reddens a wall beside an undersized region
+and a wall that divides nothing".
+
+#### Scenario: A repeated letter in a completed region is Separate's error
+
+- **WHEN** a wall-bounded region of exactly `k` cells holds one letter twice
+- **THEN** Separate's own tile callback draws both of those letters in the
+  error color
+
+### Requirement: Rules: Separate's mistake check flags an edge decided against the one partition
+
+`findMistakes` SHALL return every player edge whose state contradicts the
+board's one partition: a wall where the solution has none, or a no-wall mark
+where the solution has a wall. It SHALL take the partition from the game's
+one search (`engine-difficulty`, "One search answers a board for everything
+that asks"), and where that did not prove exactly one partition it SHALL
+return an empty list.
 
 #### Scenario: A contradicting wall is flagged
 
 - **WHEN** the player draws a wall that the unique solution does not have and
   Check & Save runs
 - **THEN** `findMistakes` includes that edge
-- **AND** the next `redraw` draws that edge in the error color
 
-### Requirement: Params: Separate's parameters are a size and a letter count
+### Requirement: Params: A Separate params string may leave out its letter count and its difficulty
 
-Params SHALL be `w`, `h`, `k` (the letter count) and a difficulty, Easy or
-Unreasonable. They SHALL encode as `{w}x{h}n{k}`, and the difficulty in the
-full form only, as `de` or `du`. A bare `{w}` SHALL decode to a square
-`w × w` grid with `k = w`, and a string with no difficulty letter as Easy.
+Separate's params, their bounds and their encoding SHALL be those its
+`paramConfig` and its declared codec give (`engine-params`, "A game declares
+its params encoding once, and both codec halves are derived"), and its menu
+what `presets` builds. A params string with no `n` SHALL decode with as many
+letters `k` as the grid is wide, whether or not it gives a height, and a
+string with no difficulty letter SHALL decode as Easy.
 
-#### Scenario: Params round-trip
+#### Scenario: A string that leaves a field out
 
-- **WHEN** params `{ w: 6, h: 6, k: 4 }` are encoded
-- **THEN** the result is `6x6n4`
-- **AND** decoding it round-trips the params
-- **AND** decoding a bare `5` yields `{ w: 5, h: 5, k: 5 }`
-
-#### Scenario: The difficulty is in the full encoding only
-
-- **WHEN** an Unreasonable 6×6 board with four letters is encoded
-- **THEN** the full encoding is `6x6n4du` and the shared one `6x6n4`
+- **WHEN** a bare `5` is decoded
+- **THEN** it yields `{ w: 5, h: 5, k: 5 }`
 - **AND** `6x6n4`, written before the game had tiers, decodes as Easy
+
+#### Scenario: A preset without its letter count
+
+- **WHEN** the `n4` is taken out of the preset `6x6n4de`, leaving `6x6de`
+- **THEN** it decodes as a 6×6 board with six letters, whose full encoding is
+  `6x6n6de`
 
 ### Requirement: Params: Separate refuses a letter count the grid cannot be divided by
 
@@ -144,17 +146,6 @@ three. No such board has one partition that the solver does not reach.
 - **AND** a 3×3 board with three letters has a fill that the solver leaves
   unfinished and that has exactly one
 
-### Requirement: Params: Separate's menu offers each board at both difficulties
-
-Separate's presets SHALL offer each of its four boards, 4×4 with four
-letters, 5×5 with five, 6×6 with four and 6×6 with six, as Easy and as
-Unreasonable, and the default SHALL be the Easy 5×5.
-
-#### Scenario: Every board is offered at both difficulties
-
-- **WHEN** Separate's preset menu is read
-- **THEN** its four boards each appear as Easy and then as Unreasonable
-
 ### Requirement: Params: Separate refuses to deal a size its generator gives up on
 
 Under full validation, on a grid wider and taller than one square,
@@ -186,6 +177,12 @@ smaller grid.
 - **WHEN** a 1×52 board with 26 letters is checked for dealing
 - **THEN** it is not refused
 
+#### Scenario: A pasted board of a refused size
+
+- **WHEN** a 3×6 board with nine letters that has one answer is loaded from
+  its ID
+- **THEN** it opens, at the difficulty it needs
+
 ### Requirement: Params: Separate refuses no size of up to seven letters
 
 `validateParams` SHALL refuse no board of seven letters or fewer for its
@@ -197,29 +194,6 @@ the params can hold: a player can stop a deal.
 - **WHEN** a 40×40 board with two letters and a 21×21 board with seven are
   checked for dealing at Easy
 - **THEN** neither is refused
-
-### Requirement: Params: A Separate board of a size that is not dealt still opens
-
-A board that arrives with its description SHALL be opened at any size
-`validateParams` admits without full validation, the sizes it refuses to
-deal among them.
-
-#### Scenario: A pasted board of a refused size
-
-- **WHEN** a 3×6 board with nine letters that has one answer is loaded from
-  its ID
-- **THEN** it opens, at the difficulty it needs
-
-### Requirement: Params: A Separate size with no letter count takes its width
-
-A params string with no `n` SHALL decode with as many letters as the grid is
-wide, whether or not it gives a height.
-
-#### Scenario: A preset without its letter count
-
-- **WHEN** the `n4` is taken out of the preset `6x6n4de`, leaving `6x6de`
-- **THEN** it decodes as a 6×6 board with six letters, whose full encoding is
-  `6x6n6de`
 
 ### Requirement: Description: Separate descriptions encode the letters grid
 
@@ -288,26 +262,21 @@ SHALL keep the board only when the solver stops short on it.
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Generation: A pasted Separate board opens at the difficulty it needs
+### Requirement: Generation: A Separate board is Easy where the solver and the hint both finish it
 
-A board that arrives as a game ID SHALL open as Easy where the solver and the
-hint finish it, and as Unreasonable where it has exactly one partition that
-they do not reach, whatever lower difficulty its ID states. A board with
-several partitions SHALL be refused as having more than one solution, and a
-board with none as one that contradicts itself.
+A board SHALL count as Easy where the solver and the hint finish it, and as
+Unreasonable where it has exactly one partition that they do not reach. What
+a pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A
+loaded board whose id states no tier takes the lowest tier that solves it" and
+"A pinned tier is kept or raised and never lowered"), and one with several
+or none SHALL be refused (`engine-params`, "A board with a mistake check
+loads only with exactly one answer").
 
 #### Scenario: A board that needs search opens as Unreasonable
 
 - **WHEN** a 4×4 ID whose board has one partition the solver does not reach
   is entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `4x4n4du`
-
-#### Scenario: A board with several answers or none is refused
-
-- **WHEN** a 4×4 board whose rows and 2×2 blocks each hold one of each
-  letter, and one that is all As, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
 
 ### Requirement: Solver: The ladder's three techniques disconnect, wall and merge
 
@@ -322,14 +291,15 @@ square, marking the edges between them "no wall".
 - **WHEN** two adjacent lone squares hold the same letter
 - **THEN** `shared-letter` disconnects them and walls the edge between them
 
-### Requirement: Solver: Separate counts a board's answers by a bounded search
+### Requirement: Solver: Separate's search tries the region with the fewest squares to grow into
 
-The game SHALL count a board's partitions up to two by trial and error over
-the solver: where the solver stops, it SHALL take the region with the fewest
-squares it could still grow into and assume it takes the first of them, and
-then that it does not. It SHALL report one answer, several, none, or that it
-stopped at its budget, which SHALL be counted in positions and never in time.
-Solve SHALL take the answer from it at either difficulty.
+Separate SHALL count a board's partitions with the engine's search over its
+solver (`engine-difficulty`, "The engine counts a searching game's answers up
+to two, within a budget of positions"). Where the solver stops, the search
+SHALL take the region with the fewest squares it could still grow into and
+assume it takes the first of them, and then that it does not. Solve SHALL be
+made from its answer (`engine-difficulty`, "Solve from the search shows the
+one answer or says which it lacks").
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -338,16 +308,6 @@ Solve SHALL take the answer from it at either difficulty.
   blocks each hold one of each letter, and on one that is all As
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given fewer positions than a board needs
-- **THEN** it reports that it stopped, and neither one answer nor several
-
-#### Scenario: An Easy board takes one position
-
-- **WHEN** the search is given one position on a dealt Easy board
-- **THEN** it reports one answer
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -368,12 +328,14 @@ solved once every region is of full size.
   12
 - **THEN** it has one answer with 13 and is out of reach with 12
 
-### Requirement: Controls: Each button toggles the nearest edge toward its own state
+### Requirement: Controls: Separate takes its buttons, drag and cursor from the border grid
 
-A left click SHALL act on the edge nearest the pointer, toggling it between
-wall and unknown. A right click SHALL toggle it between no-wall mark and
-unknown. An edge holding the other button's state SHALL go straight to the
-clicked button's state, without passing through unknown.
+Separate's `targetVerbs` SHALL be `borderGridVerbs`, whose edits it wraps in
+its `edges` move, and `interpretMove` SHALL add no input of its own. What the
+buttons, a drag and the keys do is `border-grid`'s: "Each button cycles an
+edge between its own state and undecided", "A press addresses the nearest
+interior edge", "A drag along a line of edges repeats the press" and "The
+keyboard cursor moves by half a cell". Separate SHALL depart from none.
 
 #### Scenario: A right click turns a wall into a no-wall mark
 
@@ -384,9 +346,7 @@ clicked button's state, without passing through unknown.
 ### Requirement: Hint: Separate runs its solver as a declared ladder that its hint shares
 
 Separate's solver SHALL run on `runDeductionFixpoint` as three tier-0
-techniques, in order: `shared-letter`, `walled-apart` and `only-way`. The
-working state SHALL carry the same facts as border-grid bytes, so the generator
-and the hint run the same techniques on the same state.
+techniques, in order: `shared-letter`, `walled-apart` and `only-way`.
 
 #### Scenario: The hint and the generator run one ladder
 
@@ -394,11 +354,11 @@ and the hint run the same techniques on the same state.
 - **THEN** it comes from the same three techniques, in the same order, that
   the generator's solve attempt runs
 
-### Requirement: Hint: Separate offers a deduction-based hint
+### Requirement: Hint: The plan starts from the player's no-wall marks and walls
 
-Separate SHALL provide `hint()`, seeded from the player's own marks (no-wall
-marks merge, walls disconnect), returning one multi-leg journey per firing of
-its ladder, each leg setting one edge.
+`hint` SHALL start its ladder from the player's own marks: the squares a
+no-wall mark joins are merged into one region already, and the regions on
+either side of a wall the player drew are disconnected already.
 
 #### Scenario: The hint finishes from the player's own positions
 
@@ -434,6 +394,21 @@ be outlined.
   lone one, and the sentence calls it a square: "A wall already separates the
   striped square and the outlined region" where the square is the striped one,
   and "the striped region and the outlined square" where it is the outlined
+
+### Requirement: Hint: Separate's marks and its keep-track verdict are the border grid's
+
+A step's marks SHALL be the roles `hintMarks` declares: a ring along every
+edge its firing has yet to set, and stripes and an outline inside the cell
+body, all drawn by the layer of `border-grid`, "Border-grid games share the
+hint's notation layer". `hintKeepTrack` SHALL hand an `edges` move's edits to
+`borderHintKeepTrack`, whose verdict is `border-grid`, "A hinted edge's step
+is completed by the edit that sets it". Separate SHALL depart from neither.
+
+#### Scenario: The hinted edit, and the other button on the same edge
+
+- **WHEN** the first step of a dealt board's hint is displayed, and the player
+  sets its edge to the state the step forces, or to the other button's
+- **THEN** the first completes the step and the second is off the plan
 
 ### Requirement: Hint: Separate's hint stops where the solver does
 
@@ -484,8 +459,7 @@ that square can't be a wall.
 ### Requirement: Status bar: Separate's status bar says how many letters a region holds
 
 `statusbarText` SHALL return "`k` letters per region" for a board of `k`
-letters, the same at every point of play, which the engine's completion words
-precede on a finished board.
+letters, the same at every point of play.
 
 #### Scenario: A board of four letters
 
@@ -497,9 +471,8 @@ precede on a finished board.
 ### Requirement: Look: Separate shades completed correct regions
 
 The render SHALL fill a wall-bounded region with the shared finished-region
-role, `REGION_DONE`, a wash of the theme pair's first hue, once it is a
-completed, correct region: exactly `k` cells, holding one of each letter with
-no duplicate, with no wall interior to it. The untouched board, one undivided
+role once it is a completed, correct region: exactly `k` cells, holding one
+of each letter with no duplicate, with no wall interior to it. The untouched board, one undivided
 region, SHALL NOT be filled. The fill SHALL be a local check on the region as
 drawn, not a check against the unique solution.
 
@@ -515,26 +488,11 @@ drawn, not a check against the unique solution.
 - **WHEN** the player removes a wall from the boundary of a filled region
 - **THEN** the next `redraw` draws that region's cells without the fill
 
-### Requirement: Look: Separate's clue layer stays its own
+### Requirement: Look: No Separate cell is lifted as a given
 
-Separate's region constraints (required region sizes and the cells that must
-be kept apart), its solver, its generator and its clue rendering SHALL remain
-entirely its own: the letter, the repeated-letter error inside a completed
-region, and the test that decides when a region is finished.
-
-#### Scenario: A repeated letter in a completed region is Separate's error
-
-- **WHEN** a wall-bounded region of exactly `k` cells holds one letter twice
-- **THEN** Separate's own tile callback draws both of those letters in the
-  error color
-
-### Requirement: Look: Separate draws its cells on the collection's quiet surface
-
-`redraw` SHALL draw every cell's body on the collection's cell surface, with
-its letter in ink. No cell SHALL be lifted as a given, since every cell holds a
-letter the puzzle fixed and the player enters none: the surface is one tone and
-the edges carry the board. The edges SHALL keep their own roles and strengths:
-a wall in ink, an edge ruled out and an edge undecided each in its own color.
+No cell SHALL be lifted as a given, since every cell holds a letter the puzzle
+fixed and the player enters none: every cell's body is the plain cell surface
+with its letter in ink, and the edges carry the board.
 
 #### Scenario: Every cell is the same surface
 

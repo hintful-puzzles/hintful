@@ -3,8 +3,9 @@
 ## Purpose
 Spokes, the puzzle of drawing lines between numbered hubs, never crossing, so
 that each hub starts as many lines as its number and all hubs join one connected
-group. This capability specifies the game: its parameters and descriptions, its
-honestly graded tiers, diagonals that rule out their crossing, and a hint that
+group. This capability specifies what is the game's own: the params it refuses
+and what a short params string means, its descriptions, its honestly graded
+tiers, diagonals that rule out their crossing, and a hint that
 explains why each move is forced, stops at bounded reasoning, and refuses a
 position it cannot vouch for.
 
@@ -45,7 +46,7 @@ diagonal line.
   carries a line
 - **THEN** no line is drawn and the board is unchanged
 
-### Requirement: Rules: Spokes' findMistakes compares the board with its one solution
+### Requirement: Rules: A Spokes mistake is a line the solution forbids or a mark where it needs a line
 
 `findMistakes` SHALL flag every line the player has drawn that the unique solution
 forbids, and every mark the player has placed where the solution requires a line; a
@@ -58,19 +59,12 @@ line the solution requires but the player has not yet drawn SHALL NOT be flagged
 - **THEN** that line is reported as a mistake, while lines merely not yet drawn are
   not
 
-### Requirement: Params: Spokes' parameters
+### Requirement: Params: Spokes refuses Unreasonable on a board too small or too narrow to have one
 
-Parameters SHALL be a width, a height, and a difficulty: Easy, Normal or
-`Unreasonable`. Validation SHALL require width and height each at least 2, with
-no upper bound. When a board is to be dealt it SHALL also refuse `Unreasonable`
-on a board of eight squares or fewer, which has no such board, and on a board
-two squares wide, where one is too rare to deal. A game ID SHALL encode the
-width, height and difficulty and round-trip through decode.
-
-#### Scenario: A game ID round-trips through the parameters
-
-- **WHEN** a parameter set is encoded to a game ID and decoded
-- **THEN** the same width, height and difficulty are recovered
+When a board is to be dealt, `validateParams` SHALL refuse `Unreasonable` on a
+board of eight squares or fewer, which has no such board, and on a board two
+squares wide, where one is too rare to deal. It SHALL set no upper bound on
+the width or the height.
 
 #### Scenario: A narrow board at the top tier
 
@@ -89,24 +83,18 @@ character names the same board whatever the tier is called.
 - **WHEN** a parameter set at `Unreasonable` is encoded to a game ID
 - **THEN** its difficulty is written with the character `h`
 
-### Requirement: Params: Spokes' params write the difficulty as d and a letter
+### Requirement: Params: A Spokes params string with no difficulty is Easy
 
-`encodeParams` SHALL write `{w}x{h}` and, in the full form only, `d` and `e`
-for Easy, `t` for Normal or `h` for `Unreasonable`. `decodeParams` SHALL read
-a bare number as a square board and a string with no `d` as Easy. A `d`
-followed by any other letter, or by nothing, SHALL be refused.
+Spokes' params (a size and a tier), their bounds and their encoding SHALL be
+those its `paramConfig` and its declared codec give (`engine-params`, "A game
+declares its params encoding once, and both codec halves are derived"), and
+its menu what `presets` builds. A string with no `d` SHALL decode as Easy.
 
 #### Scenario: A Normal preset and its short form
 
 - **WHEN** `4x4dt` is decoded
 - **THEN** the board is 4 by 4 at Normal
 - **AND** its short form `4x4` decodes to a 4 by 4 board at Easy
-
-#### Scenario: A letter that names no tier
-
-- **WHEN** `4x4dt` is entered with its `t` written `z`
-- **THEN** the params are refused:
-  `The parameters 4x4dz have a "z" where this puzzle reads none.`
 
 ### Requirement: Description: Spokes descriptions use one clue character per cell
 
@@ -164,11 +152,9 @@ the tier's name reports.
 - **THEN** the solver at Normal does not commit the opposite value on that account
 - **AND** the solver at `Unreasonable` does
 
-### Requirement: Generation: Spokes' generator keeps every board uniquely soluble
+### Requirement: Generation: Every hub of a dealt Spokes board carries a line
 
-The generator SHALL use the solver to keep every board uniquely soluble at the
-target difficulty, and every hub of a generated board SHALL carry at least one
-line.
+Every hub of a generated board SHALL carry at least one line.
 
 #### Scenario: A hub's last line is never stripped
 
@@ -176,17 +162,6 @@ line.
   either of its hubs
 - **THEN** the line stays, whether or not the board would solve uniquely
   without it
-
-### Requirement: Generation: Spokes' difficulty tiers bind the boards they generate
-
-A Spokes board generated at a difficulty above the easiest SHALL NOT be soluble at
-the tier below it.
-
-#### Scenario: An Unreasonable board genuinely needs its own tier
-
-- **WHEN** a board generated at `Unreasonable` is solved at Normal
-- **THEN** the solver does not reach a solution
-- **AND** solving the same board at `Unreasonable` does reach one
 
 ### Requirement: Solver: Spokes solves with a tiered deductive solver
 
@@ -240,18 +215,11 @@ performance dial, since lifting it would silently make the middle tier a search.
 
 ### Requirement: Controls: Spokes is played by dragging between hubs or with a keyboard cursor
 
-Spokes SHALL be played by dragging between two adjacent hubs, or with a keyboard
-cursor. A left drag SHALL toggle a line between the hubs, and a right drag SHALL
-toggle a ruled-out mark; a keyboard cursor on the half-grid SHALL draw a line on
-select and place a mark on the alternate select. Either gesture on a spoke that
-already holds a line or a mark SHALL clear it, except a crossing a diagonal line
-blocks. A drag or key that resolves to no valid change SHALL leave the board
-unchanged.
-
-#### Scenario: Dragging between two hubs draws a line
-
-- **WHEN** the player left-drags from one hub to an adjacent hub with a free spoke
-- **THEN** a line is drawn between them, or removed if one was already present
+Spokes' two verbs, a line and a ruled-out mark, SHALL be applied by a drag
+between two adjacent hubs or by the select keys on a cursor that walks the
+dots' half-grid. Either on a spoke that already holds a line or a mark SHALL
+clear it, except a crossing a diagonal line blocks. A drag or key that
+resolves to no valid change SHALL leave the board unchanged.
 
 #### Scenario: A left drag over a ruled-out spoke clears the mark
 
@@ -284,9 +252,9 @@ aim at nothing, and its release SHALL change nothing.
 ### Requirement: Preferences: The satisfied-hub marking is visual only and can be turned off
 
 The distinction between a hub whose count is met and one with lines still to take
-SHALL be visual only: a marked hub remains fully editable. A preference SHALL let
-the player turn the marking off, and with it off every hub SHALL have the cell
-surface.
+SHALL be visual only: a marked hub remains fully editable. The
+`mark-satisfied` preference SHALL start on and SHALL let the player turn the
+marking off, and with it off every hub SHALL have the cell surface.
 
 #### Scenario: The marking can be switched off
 
@@ -298,12 +266,6 @@ surface.
 - **WHEN** the player erases a line of a hub whose count is met
 - **THEN** the line is removed and the hub returns to the cell surface
 
-### Requirement: Preferences: The satisfied-hub preference is mark-satisfied and starts on
-
-The preference that marks a hub whose count is met SHALL have the key
-`mark-satisfied`, SHALL be a boolean named "Highlight hubs once their spoke
-count is met", and SHALL start on.
-
 #### Scenario: A player who has changed no preference
 
 - **WHEN** a player who has changed no preference draws the last line a hub's
@@ -312,10 +274,10 @@ count is met", and SHALL start on.
 
 ### Requirement: Hint: Spokes explains why each hinted move is forced
 
-Spokes SHALL implement the hint hooks, and each hint SHALL narrate the argument
-that forces the move, not merely the move. The narration SHALL state the premises
-it rests on before its conclusion, and every claim it makes SHALL be one the
-implementation has checked.
+Each hint SHALL narrate the argument that forces the move, not merely the
+move. The narration SHALL state the premises it rests on before its
+conclusion, and every claim it makes SHALL be one the implementation has
+checked.
 
 #### Scenario: The two-ones rule names the connectivity constraint
 
@@ -333,34 +295,12 @@ implementation has checked.
   reaches, naming the hub that would over-fill, the diagonals that would cross,
   or the hubs that would be stranded, and only then the conclusion
 
-### Requirement: Hint: Spokes' hint is a projection of its solver
-
-The hint SHALL be derived from the same deduction engine as the solver, so that
-no hinted move is reachable by reasoning the solver does not perform. No shipped
-board SHALL require a step the hint cannot explain, except a step of the
-unbounded rung, which "Spokes' hint stops at bounded reasoning" withholds.
-
-#### Scenario: A hinted move agrees with the solver's solution
-
-- **WHEN** a hint step is offered on a board that carries no mistake
-- **THEN** a spoke it draws as a line is a line of the solver's unique solution,
-  and a spoke it rules out is not
-
-### Requirement: Hint: A deduction that forces several spokes is one journey
-
-Where a single deduction forces several spokes at once, a hub with exactly as
-many free spokes as it still needs lines, or one that already has all of them,
-those SHALL be emitted as one multi-leg journey rather than as separate hints,
-and all of its legs SHALL be rendered in the same color, because they share a
-fate.
-
 #### Scenario: A saturated hub is explained by the count that forces it
 
 - **WHEN** a hub still needs as many lines as it has spokes left that could carry
   one, and the player asks for a hint
 - **THEN** the hint states that the hub's remaining count and its remaining places
   are equal, and concludes that every one of those spokes is a line
-- **AND** all of those spokes are presented as one hint in one color
 
 ### Requirement: Hint: A Spokes hint plan is stable across recomputation
 
@@ -426,11 +366,10 @@ line before a forced rule-out.
 
 ### Requirement: Hint: A Spokes hint shows a line to draw and marks a dot to rule out
 
-A displayed step SHALL show each spoke it has still to decide: a spoke to
-draw as a line in the hint color, and a spoke to rule out as a ring in the
-hint color round its dot on the hub's rim, the dot itself left as an unmarked
-one. The hubs the step's words name SHALL carry an outline just outside their
-rim in the evidence color. A spoke that an earlier leg of the journey settled
+A displayed step SHALL mark each spoke it has still to decide and the hubs its
+words name. A dot to rule out SHALL
+itself be left as an unmarked one inside its ring, and a hub's outline SHALL
+sit just outside its rim. A spoke that an earlier leg of the journey settled
 SHALL carry no hint mark.
 
 #### Scenario: The second leg of a saturated hub
@@ -461,7 +400,7 @@ gray of the game's own.
 Rendering SHALL draw each hub as a circle carrying its available spokes and clue,
 SHALL draw lines between connected hubs, SHALL highlight the hub being dragged
 from, SHALL color an over-filled or isolated hub as an error, and SHALL flash on
-completion. There SHALL be no interpolated line-drawing animation.
+completion.
 
 #### Scenario: Completing the connected, satisfied board wins
 

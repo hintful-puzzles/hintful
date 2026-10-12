@@ -29,8 +29,7 @@ mine is open.
 Clicking a mine SHALL expose only the mine that killed the player, leaving every
 other square covered, and SHALL block further moves until the player undoes,
 Solve aside: Solve SHALL show the finished board over the opened mine, as it
-replaces any wrong entry. The game status SHALL NOT report a loss on death, and
-only a win taken with the Solve function SHALL report as solved-with-help.
+replaces any wrong entry. The game status SHALL NOT report a loss on death.
 
 #### Scenario: A player dies, undoes, and carries on
 
@@ -74,12 +73,6 @@ Mines SHALL implement `findMistakes`, reporting every flag on a square with no
 mine under it, and nothing before the first click lays the mines out. An opened
 mine SHALL NOT be reported: the hint's dead-board refusal answers it. The mistake
 SHALL be drawn as a frame in the error color around the flagged square.
-
-#### Scenario: Check & Save on Mines
-
-- **WHEN** the player invokes Check & Save with a flag on a square that has no
-  mine
-- **THEN** the flag is framed as a mistake and the board is not saved
 
 #### Scenario: A right flag passes
 
@@ -172,19 +165,13 @@ generated.
 The game SHALL implement `finishesByDeduction` as the engine's walk of its
 hint (`hintFinishes`), played from the first click, opening every safe square.
 A board not laid out yet SHALL pass: it will be laid out to finish from
-whichever square is opened first. A board already won SHALL pass.
+whichever square is opened first.
 
 #### Scenario: A board not laid out yet passes
 
 - **WHEN** `finishesByDeduction` is asked of a board whose first square has not
   been opened
 - **THEN** it answers that the board finishes
-
-#### Scenario: A board its first square wins
-
-- **WHEN** the first click on a `9x9n1` board opens every safe square
-- **THEN** `finishesByDeduction` answers that the board finishes, the game ID
-  the board then shows opens it again, and its save restores
 
 ### Requirement: Description: A layout with no first square is a board not laid out yet
 
@@ -207,18 +194,6 @@ does not name.
   log whose first open brings no layout
 - **THEN** it restores to the board it was saved on
 - **AND** saved again from any position of its history, it restores again
-
-### Requirement: Description: The board laid out supersedes the description it started from
-
-Once the first click has laid the board out, the game SHALL answer
-`Game.supersededDesc` with that board and its first square, so that the
-shareable game ID, a restart and a save all name the board actually being
-played.
-
-#### Scenario: The game ID names the board being played
-
-- **WHEN** the player's first click has laid a board out
-- **THEN** the game ID names that layout and the square it was laid out around
 
 ### Requirement: Description: A Mines description before the first click is a mine count and a seed
 
@@ -246,7 +221,8 @@ the state is shorter, longer or other than what the encoder writes.
 
 ### Requirement: Description: A laid-out Mines description is its first square and a masked layout
 
-The description `supersededDesc` writes SHALL be `{x},{y},m{hex}`: the first
+Once the first click has laid the board out, the description
+`supersededDesc` writes SHALL be `{x},{y},m{hex}`: the first
 square, counted from zero, and the layout as one bit a square in reading
 order, most significant bit first, masked by the engine's bitmap obfuscation
 and written as `⌈w·h/4⌉` lowercase hex digits. `u` in place of `m` SHALL read
@@ -381,21 +357,16 @@ pressed on a number.
 The left button SHALL act on its release: after a press on a covered square
 it opens the covered square it is released over, and after a press on a
 number it chords the number it is released over. A release off the grid SHALL
-make no move. The secondary button SHALL flag a covered square or take its
-flag off, and a drag on from it SHALL be the engine's sweep; the left button
-has none. A flagged square SHALL NOT be opened, nor an opened one flagged.
+make no move. The flag, its drag, the cursor and the select keys SHALL come
+from `targetVerbs` (`engine-input`, "The engine owns a declaring game's press
+and select keys"); the left button has no drag. A flagged square SHALL NOT be
+opened, nor an opened one flagged.
 
 #### Scenario: A press slid to another square
 
 - **WHEN** the player presses the left button on a covered square, moves to
   another covered square and releases
 - **THEN** the second square is opened and the first stays covered
-
-#### Scenario: A flag drag
-
-- **WHEN** the player presses the secondary button on a covered square and
-  drags across a flagged square and another covered square
-- **THEN** both covered squares are flagged and the flagged one keeps its flag
 
 ### Requirement: Hint: Mines ships an explained deductive hint from proved facts
 
@@ -439,9 +410,7 @@ deduction-exhausted words.
 
 A number that already touches as many proved mines as it counts SHALL make
 its other unopened squares safe. A number with exactly as many unopened,
-unproved squares as mines still to place SHALL make them all mines. The step
-SHALL outline the number, and the mines it already touches, and ring the
-squares it decides.
+unproved squares as mines still to place SHALL make them all mines.
 
 #### Scenario: A number with just enough room
 
@@ -473,7 +442,6 @@ squares do not overlap, one of them at most a set of the kind above, every
 other unopened square SHALL be safe; where the squares outside them number
 exactly the mines they leave over, those SHALL all be mines. With no number counted the same
 SHALL hold of the whole board: all mines found, or as many squares as mines.
-The step SHALL outline the numbers and stripe the squares they account for.
 
 #### Scenario: Every mine is found
 
@@ -591,11 +559,8 @@ surface.
 - **THEN** each square keeps its own surface under the cursor's mark
 - **AND** the square the cursor left is repainted with no trace of the mark
 
-### Requirement: Look: Mines' flashes fill every square on their lit beats
+### Requirement: Look: A death's flash fills every square in the error color on its lit beats
 
-The win flash SHALL sweep the board's squares from the bottom left to the top
-right, and a lit square's face SHALL be filled with a flash color and keep
-what it holds.
 The flash on a death SHALL be the game's own: it SHALL fill every square in
 the error color on its lit beats. The mine the player trod on SHALL keep the
 error color throughout.
@@ -606,9 +571,3 @@ error color throughout.
 - **THEN** every square is filled in the error color on the lit beat
 - **AND** on the unlit beat the trodden mine's square is still filled in it,
   while the others return to their own surfaces
-
-#### Scenario: A flagged mine under the win's highlight
-
-- **WHEN** the win flash's highlight is on a flagged mine
-- **THEN** the square is filled with a flash color, its flag drawn on it as
-  usual

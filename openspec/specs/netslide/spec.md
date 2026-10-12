@@ -48,7 +48,7 @@ complete when every tile is active.
 #### Scenario: Completion is every tile powered
 
 - **WHEN** a slide leaves every tile reachable from the source
-- **THEN** the game reports itself complete and plays a completion flash
+- **THEN** the game reports itself complete
 
 ### Requirement: Params: Netslide's params and their encoding
 
@@ -161,8 +161,7 @@ grid its tiles can be slid into, which no generator writes, SHALL be refused.
 #### Scenario: Solve on a freshly generated game
 
 - **WHEN** Solve is invoked on a game created from a random seed
-- **THEN** the board is restored to the generator's unshuffled grid and is
-  reported solved-with-help
+- **THEN** the board is restored to the generator's unshuffled grid
 
 #### Scenario: Solving a game built from a descriptive id
 
@@ -348,9 +347,7 @@ merely useful. Such a move SHALL be narrated as setting up, not as arriving.
 
 Following Netslide's hint SHALL finish the board from any position a player
 can reach, on any preset, whether or not the game came with a known answer,
-and SHALL never walk the player in circles. The hint's searches are bounded:
-where they return no plan the hint SHALL refuse as out of reach, and SHALL NOT
-narrate a move it cannot justify.
+and SHALL never walk the player in circles.
 
 #### Scenario: Following the hint finishes a board that came with no answer
 
@@ -376,9 +373,7 @@ the picture worse and cannot disagree with itself between recomputes.
 
 An endgame the heuristic cannot see past, such as two tiles wanting each
 other's cells, which reads as two cells from finished and is many more moves
-away, SHALL be planned by an exact shortest search, so that the plan's first
-move provably shortens the distance to a finished board. A heuristic plan
-carries no such guarantee, and loops.
+away, SHALL be planned by an exact shortest search.
 
 #### Scenario: Two tiles in each other's cells
 
@@ -409,30 +404,6 @@ the legs of its journey, and SHALL mark that tile on the board.
 - **WHEN** the second leg of a journey is displayed
 - **THEN** the tile it marks is the tile the first leg marked, in the cell the
   first leg's slide landed it in
-
-### Requirement: Hint: Netslide renders the displayed hint step
-
-`redraw` SHALL show the current hint step: the tile being placed highlighted,
-the cell the plan is taking it to marked, and the slide arrow the player
-should press drawn in the hint color.
-
-#### Scenario: A displayed step
-
-- **WHEN** a hint step is displayed on a board with no keyboard cursor showing
-- **THEN** the tile it places is highlighted, its destination cell is marked,
-  and the arrow that performs the slide is drawn in the hint color
-
-### Requirement: Hint: A destination a tile belongs in is marked apart from a stop on the way
-
-A destination the tile genuinely belongs in SHALL be marked distinctly from
-one it is only passing through, so that a setting-up move never reads as the
-answer.
-
-#### Scenario: A destination the tile does not belong in
-
-- **WHEN** a displayed step takes its tile to a cell the finished board does
-  not want its wires in
-- **THEN** that cell's mark differs from the mark of a cell a tile belongs in
 
 ### Requirement: Hint: The tile mark travels with the tile during a slide
 

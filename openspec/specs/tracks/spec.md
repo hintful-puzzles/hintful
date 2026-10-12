@@ -8,23 +8,22 @@ that explains the next deduction and marks it in the game's own vocabulary.
 
 ## Requirements
 
-### Requirement: Rules: Tracks judges completion from the board
+### Requirement: Rules: A Tracks board is solved while one track meets every clue
 
 The player lays a single continuous train track from an entrance on the left
 edge to an exit on the bottom edge of a `w × h` grid, using only straight and
 curved rails that neither cross nor form a loop, so that every row and column
 clue counts the track-bearing cells in its line. The board SHALL be reported
 solved exactly while no errors exist and every clue's completed track count
-matches, judged from the board however it was reached.
+matches.
 
-#### Scenario: Completion follows the board
+#### Scenario: A whole track that meets its clues
 
 - **WHEN** a continuous entrance→exit track is laid meeting every clue with no
   loop
 - **THEN** `status` reports the board solved
-- **AND** a later move that breaks the track or a clue reports it unsolved again
 
-### Requirement: Rules: Tracks ships findMistakes
+### Requirement: Rules: A Tracks mistake is a mark on a square or its edges that the solution contradicts
 
 `findMistakes(state)` SHALL re-solve the board's clues to the unique solution
 and, when one exists, report every square holding a player's mark, on itself
@@ -37,7 +36,7 @@ uniquely solvable.
 
 - **WHEN** a cell is marked as track where the unique solution has none and
   `findMistakes` runs
-- **THEN** that cell is reported and rendered red
+- **THEN** that cell is reported
 
 ### Requirement: Rules: Tracks computes live errors on every move
 
@@ -62,42 +61,14 @@ path exists and no cell is in error.
 - **WHEN** a row has more track cells than its clue number
 - **THEN** that row's clue is marked in error
 
-### Requirement: Params: Tracks' parameters
+### Requirement: Params: A Tracks params string may leave out its difficulty and its `o`
 
-Params SHALL be `w`, `h`, `diff` (Easy, Normal or Tricky, the constants
-`DIFF_EASY`, `DIFF_TRICKY` and `DIFF_HARD`) and `singleOnes` (disallow
-consecutive 1 clues). They SHALL be encoded `{w}x{h}`, followed in the full
-form by `d` and one of `e`, `t` or `h` for the difficulty, and by an `o` when
-`singleOnes` is false. A bare `{n}` SHALL decode as an `n × n` grid.
-
-#### Scenario: Params round-trip
-
-- **WHEN** params `{ w: 10, h: 8, diff: DIFF_TRICKY, singleOnes: false }` (the
-  Normal tier) are encoded in full
-- **THEN** the result is `10x8dto` and decoding it round-trips the params
-
-### Requirement: Params: Tracks refuses a grid under 4×4, and a 4×4 above Easy
-
-The params config SHALL bound the width and the height at a minimum of 4, so
-that the engine refuses a smaller grid. `validateParams` SHALL refuse a 4×4
-grid above Easy when the params are to deal a board (its `full` argument), in
-the words of `noSuchTier`, because no 4×4 board needs a higher tier.
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** params for a grid smaller than 4×4 are checked
-- **THEN** they are refused with a non-null error string
-
-#### Scenario: A 4×4 above Easy is refused
-
-- **WHEN** the params `4x4dt` or `4x4dh` are checked for a deal
-- **THEN** they are refused, and no board is dealt
-
-### Requirement: Params: Tracks params that name no difficulty are Normal
-
-A params string with no `d`, or whose `d` is followed by a letter that names
-no tier, SHALL decode as Normal, with consecutive 1 clues disallowed unless it
-carries the `o`.
+Tracks' params (a size, a tier and whether consecutive 1 clues are
+disallowed), their bounds, their encoding and their label words SHALL be
+those its `paramConfig` and its declared codec give (`engine-params`, "A game
+declares its params encoding once, and both codec halves are derived"), and
+its menu what `presets` builds. A params string with no `d` SHALL decode as
+Normal, with consecutive 1 clues disallowed unless it carries the `o`.
 
 #### Scenario: An Easy preset's short form
 
@@ -105,12 +76,21 @@ carries the `o`.
   the result, `8x8`, is decoded
 - **THEN** the params are an 8×8 board at Normal
 
+### Requirement: Params: Tracks refuses a 4×4 above Easy
+
+`validateParams` SHALL refuse a 4×4 grid, the smallest its bounds allow, above
+Easy when the params are to deal a board (its `full` argument), in the words
+of `noSuchTier`, because no 4×4 board needs a higher tier.
+
+#### Scenario: A 4×4 above Easy is refused
+
+- **WHEN** the params `4x4dt` or `4x4dh` are checked for a deal
+- **THEN** they are refused, and no board is dealt
+
 ### Requirement: Params: Tracks refuses a grid whose area cannot be counted
 
 `validateParams` SHALL refuse, at every check, a width and a height whose
-product is past the largest whole number the program counts exactly, in the
-engine's sentence that the width times the height must not be unreasonably
-large.
+product is past the largest whole number the program counts exactly.
 
 #### Scenario: A width in the thousands of millions of millions
 
@@ -118,17 +98,6 @@ large.
   are checked, for a deal or for a board that arrives written
 - **THEN** they are refused: "Width times height must not be unreasonably
   large."
-
-### Requirement: Params: A Tracks title says when adjacent 1 clues are allowed
-
-The label of a set of params that does not disallow consecutive 1 clues SHALL
-end with the words "allow adjacent 1’s", and the label of one that does SHALL
-say nothing of them.
-
-#### Scenario: A board with the rule off
-
-- **WHEN** the label of `10x8dto` is composed
-- **THEN** it reads "10x8 Normal, allow adjacent 1’s"
 
 ### Requirement: Description: Tracks descriptions use the upstream encoding
 
@@ -147,10 +116,9 @@ marking the exit column and the entrance row.
 ### Requirement: Description: newState parses a Tracks description and refuses a malformed one
 
 `newState` SHALL parse the desc into a board whose player grid is blank. It
-SHALL refuse, as a desc error the engine's `validateDesc` reports, a desc
-with an unknown character, clue flags whose bit-count is not exactly two, a
-number list that is too short, or anything but exactly one entrance and one
-exit.
+SHALL refuse a desc with an unknown character, clue flags whose bit-count is
+not exactly two, a number list that is too short, or anything but exactly one
+entrance and one exit.
 
 #### Scenario: A malformed description is rejected
 
@@ -317,14 +285,13 @@ no-track on that edge.
 
 ### Requirement: Controls: The Tracks keyboard cursor walks a half-grid
 
-`interpretMove` SHALL support a half-grid keyboard cursor whose select toggles
-a square (at a cell center) or an edge (on a cell border), with select2
-toggling no-track.
+The keyboard cursor SHALL walk a half-grid whose stops are the squares (cell
+centers) and the edges (cell borders) a press addresses.
 
 #### Scenario: Select on a cell border toggles the edge
 
-- **WHEN** the cursor stands on the border between two undecided squares and
-  select is pressed
+- **WHEN** the cursor shows on the border between two undecided squares and
+  Enter is pressed
 - **THEN** that edge carries a track segment and neither square's mark changes
 
 ### Requirement: Controls: A Tracks press outside the grid, or a no-track drag over track, makes no move
@@ -338,28 +305,11 @@ SHALL set no no-track mark on a square that holds track.
   so no flag can change
 - **THEN** `interpretMove` returns no history move
 
-### Requirement: Hint: Tracks explains the next deduction
+### Requirement: Hint: The Tracks hint starts from the player's marks and is capped at the board's own tier
 
-`hint(state)` SHALL return the forced deductions from the player's current marks as an ordered
-plan, each step narrating why its moves are forced from premises the sentence
-itself states.
-
-#### Scenario: A hint runs from the player's own marks
-
-- **WHEN** the player has made correct marks of their own and asks for a hint
-- **THEN** the plan is deduced from those marks and its first step is a
-  deduction that follows from them
-
-#### Scenario: Following the plan solves the board at every tier
-
-- **WHEN** a hint is requested, its first step applied, and the hint requested
-  again, repeatedly, on a board of any tier
-- **THEN** deduction never runs out before the board is solved
-
-### Requirement: Hint: The Tracks hint is capped at the board's own tier
-
-The hint's ladder SHALL be capped at the board's own difficulty and not at the
-highest tier, since the board's own is the tier the generator certified it
+`hint` SHALL deduce its plan from the player's current marks, on squares and
+on edges. Its ladder SHALL be capped at the board's own difficulty and not at
+the highest tier, since the board's own is the tier the generator certified it
 soluble at.
 
 #### Scenario: An Easy board is not handed a harder argument
@@ -386,20 +336,18 @@ until the last of them is placed.
 
 ### Requirement: Hint: A firing the board already shows is hidden
 
-Every change a rung makes SHALL be recorded. Through the shared plan loop's
-`showable` hook, the plan SHALL hide (apply to its working board, but not
-show) a firing that declares no reason or whose every change the player's
-board already decides. A change is already decided when the game would refuse
-the player its contrary: track on a side of a square marked empty or of the
-rim, track as a third side of a finished piece, or "no track" on a square
-showing a rail.
+Every change a rung makes SHALL be recorded. Tracks' `showable` judgment
+SHALL hide a firing that declares no reason or whose every change the
+player's board already decides. A change is already decided when the game
+would refuse the player its contrary: track on a side of a square marked
+empty or of the rim, track as a third side of a finished piece, or "no track"
+on a square showing a rail.
 
-#### Scenario: A narrated rule the board already shows is not a step
+#### Scenario: A blocked side on the rim is not a step
 
-- **WHEN** a rule with a reason fires and every side it blocks borders a
-  square the player has marked empty
-- **THEN** the plan applies the firing to its working board and shows no step
-  for it
+- **WHEN** a rule with a reason fires and the one side it blocks lies on the
+  grid's rim
+- **THEN** the plan shows no step for it
 
 ### Requirement: Hint: Three rules of update-flags declare no reason
 
@@ -417,28 +365,15 @@ by the already-decided test.
 
 ### Requirement: Hint: Tracks marks a hint in its own vocabulary
 
-`redraw` SHALL draw the displayed step's marks from the marks the step's words
-carry, using the shape of the action and not color alone to say which action
-is meant: a square the step decides is ringed in `COL_HINT`, and additionally
-carries the game's own center cross in that color when the move marks it
-empty; a side that must carry track is drawn as the game's own rail stubs; a
-side that must be blocked is drawn as the game's own edge cross. Nothing SHALL
-be a fill.
+What a step decides SHALL be drawn in the game's own shapes: its center
+cross, its rail stubs and its edge cross. A clue the step counts with is not
+on the grid, so its digit SHALL be drawn in `COL_HINT` in the margin.
 
 #### Scenario: A forced side is drawn as the action it asks for
 
 - **WHEN** a step forces one side to carry track and another to be blocked
 - **THEN** the first is drawn as rail stubs and the second as a cross, both in
   the action color, and neither renders the finished piece
-
-### Requirement: Hint: Tracks hint evidence is drawn in the evidence color
-
-Evidence on the grid SHALL be drawn in `COL_HINT_CELL`: a contour round the
-squares the deduction reasons from, painted per side wherever the neighbor
-across it is not also evidence, and a bar on a cited side. A clue the step
-counts with SHALL have its digit drawn in `COL_HINT` in the margin, because a
-clue is part of the deduction and is not on the grid, and the `hintMarks`
-legend SHALL say that the number takes the hint color.
 
 #### Scenario: A clue the step counts with is recolored
 

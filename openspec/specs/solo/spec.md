@@ -39,22 +39,20 @@ a killer board no cage repeats a digit and every cage makes its sum.
 - **WHEN** a placement fills the grid with no rule broken
 - **THEN** `status` reports the board solved
 
-### Requirement: Rules: Solo flags mistakes against its unique solution
+### Requirement: Rules: Solo checks entries and notes against the answer its givens and cage sums fix
 
-The game SHALL implement `findMistakes`: re-solve from the given cells (and,
-for killer, the cage sums) to the unique solution, and return every player cell
-that contradicts it: a filled cell whose digit is wrong (`"cell"`), and an
-empty cell whose non-empty pencil notes have crossed out its solution digit
-(`"note"`). When the board is not uniquely solvable from the givens the result
-SHALL be empty.
+Solo's `findMistakes` SHALL be the collection's check of entries and notes
+(`ts-engine`, "A mistake check compares with the one answer, hidden or not"
+and "A candidate note that excludes the answer is a mistake"), against the
+answer its solver reaches from the given cells and, on a killer board, the
+cage sums. When the board is not uniquely solvable from those the result SHALL
+be empty.
 
-#### Scenario: A wrong digit and a wrong note are flagged
+#### Scenario: A killer board, which has no givens
 
-- **WHEN** the player fills a cell with a digit other than its solution value, or
-  pencils out the solution digit in an empty cell
-- **THEN** `findMistakes` includes that cell
-- **AND** a cell whose notes merely carry extra (non-solution) candidates is not
-  flagged
+- **WHEN** the player enters a digit in a cell of a dealt killer board that is
+  not the one the cage sums leave that cell
+- **THEN** `findMistakes` includes that cell, though no given says so
 
 ### Requirement: Params: Solo encodes and decodes its parameters
 
@@ -74,11 +72,9 @@ with `dt`, the default `DIFF_BLOCK`, omitted).
 ### Requirement: Params: Solo reads the legacy jigsaw form and a single leading number
 
 `decodeParams` SHALL accept the legacy `"{c}x{r}j"` form, in which a `j` after
-a seen `r` collapses the rectangle to a jigsaw of edge `c·r`, and SHALL
-round-trip the preset list. A leading number with no `x` after it SHALL be
-read as both `c` and `r`, and `r2` SHALL be read as the default symmetry. A
-`d` followed by no tier letter, and a character the encoding does not use,
-SHALL be refused.
+a seen `r` collapses the rectangle to a jigsaw of edge `c·r`. A leading
+number with no `x` after it SHALL be read as both `c` and `r`, and `r2` SHALL
+be read as the default symmetry.
 
 #### Scenario: The legacy jigsaw form is read
 
@@ -96,9 +92,10 @@ SHALL be refused.
 `validateParams` SHALL refuse a grid of more than 31 digits, a killer grid
 whose dimensions are not below 10, and an X grid of fewer than 4 digits. In
 full form it SHALL also refuse, in the words of `noSuchTier`, a tier that no
-board of a tiny grid has. The limit on a single field is that field's bound in
-the Custom dialog, and the difficulty is a choice among the declared tiers; the
-engine refuses a value outside either.
+board of a tiny grid has. A single field's limit is its bound in the Custom
+dialog and the difficulty a choice among the declared tiers, and the engine
+refuses a value outside either (`engine-params`, "Params validity is the
+engine's check").
 
 #### Scenario: Invalid params are rejected
 
@@ -250,21 +247,21 @@ cage.
   cell begins a cage
 - **THEN** it is refused with the same sentence
 
-### Requirement: Generation: Solo generates boards uniquely solvable at exactly the requested difficulty
+### Requirement: Generation: Solo builds a full grid under every active constraint and keeps a board at its tier
 
 `newDesc` SHALL generate a full solution grid satisfying all active
 constraints: Latin rows and columns, sub-blocks, X-diagonals when `xtype` and
 killer cages when `killer`, with jigsaw blocks produced by the engine's
-`divvy`. It SHALL keep a board only when the graded solver finds it
-**uniquely** solvable at **exactly** the requested difficulty, regenerating
-otherwise.
+`divvy`. What a board kept at a tier promises SHALL be the collection's
+(`engine-difficulty`, "Every tier promises one solution found at its cap" and
+"A difficulty tier binds the board it generates"), with no departure.
 
-#### Scenario: Generated board is uniquely solvable at its difficulty
+#### Scenario: A board with the diagonals and cages both
 
-- **WHEN** a board is generated for given params
-- **THEN** the graded solver solves it uniquely at the requested difficulty
-- **AND** (for difficulties above the lowest) the solver fails to solve it one
-  difficulty level lower
+- **WHEN** a board is generated with X and Killer both on
+- **THEN** the grid it was built from holds every digit once on each main
+  diagonal and repeats none in a cage, as well as in each row, column and
+  sub-block
 
 ### Requirement: Generation: Givens are removed in symmetry orbits
 
@@ -368,25 +365,14 @@ cells SHALL be a contradiction.
 
 A digit key `1..cr` SHALL enter that digit in the highlighted non-given cell
 or, in pencil mode, toggle that pencil mark in the highlighted empty cell;
-backspace or space SHALL clear the cell.
+backspace or space SHALL clear the cell. The on-screen keypad SHALL be the one
+`requestKeys` declares for the grid's size.
 
 #### Scenario: Placing and penciling digits
 
 - **WHEN** a non-given cell is highlighted and a digit key is pressed
 - **THEN** `interpretMove` yields a `set` move that places (or, in pencil mode,
   toggles the pencil mark of) that digit
-
-### Requirement: Controls: Solo provides on-screen key labels
-
-Solo SHALL implement `requestKeys(params)` returning the digit keypad for its grid:
-one button per symbol `1..cr` (where `cr = c·r`), labeled by the symbol character
-(`"1".."9"`, then `"a"`, `"b"`, … for `cr > 9`), followed by a clear key (button
-code `8`, the backspace, labeled `"Clear"`).
-
-#### Scenario: A 9-symbol board shows digits 1–9 plus clear
-
-- **WHEN** the key labels are requested for a `3×3` Solo board
-- **THEN** the result is the buttons `1,2,…,9` followed by a clear key
 
 ### Requirement: Controls: Solo types the numbers past 9 as letters
 
@@ -413,20 +399,6 @@ cage under Killer.
 - **WHEN** auto-pencil is on and a digit is placed in a cell of a killer board
 - **THEN** that digit leaves the pencil marks of the other cells of its cage, as
   well as of its row, column and sub-block
-
-### Requirement: Preferences: Solo exposes pencil-mark preferences
-
-The game SHALL expose, via the `prefs` hook, a sticky-pencil-mode preference,
-an auto-pencil preference, and a keep-mouse-highlight-after-pencil preference.
-With auto-pencil off, note cleanup is manual: the player removes obvious
-candidates via the mark-all control or a hint.
-
-#### Scenario: Pencil preferences are exposed with their defaults
-
-- **WHEN** the game's preferences are read
-- **THEN** they include a sticky-pencil-mode boolean defaulting to on
-- **AND** an auto-pencil boolean defaulting to off
-- **AND** a keep-highlight boolean defaulting to on
 
 ### Requirement: Preferences: The auto-pencil label names the relation, not the regions
 
@@ -479,24 +451,13 @@ no sentence says a cage's other cells are filled while any is open.
 - **WHEN** a killer deduction rests on what a row, column or block leaves its open cells, or on the rest of the cage those cells lie in
 - **THEN** the sentence names the region and the sum it leaves, the step hatches the region, and it outlines the cells the sum is left to
 
-### Requirement: Hint: Solo provides an explained deduction hint
+### Requirement: Hint: Solo's hint is the candidate walk's, started on the implicit reading
 
-The game SHALL implement `hint(state, aux?, ui?)`, returning a plan of
-`HintStep`s that teaches the player the next deduction in pencil-notes terms.
-The plan SHALL be built by walking a working copy of the board the way a person
-solves it.
-
-#### Scenario: A region elimination is taught as a note strike
-
-- **WHEN** the player asks for a hint on a fully-penciled board where a placed
-  digit, or a deductive technique, rules a digit out of a cell
-- **THEN** the hint returns a step whose `pencilStrike` move clears exactly those
-  candidates
-
-### Requirement: Hint: Solo's hint starts on the implicit reading
-
-Solo SHALL start its hint on the implicit reading of a cell with no notes, and
-under it the plan SHALL emit no fill-all step.
+Solo's hint SHALL be a plan of the shared candidate walk
+(`engine-candidate-hints`, "A shared candidate-elimination hint plan"), its
+marks those of its legend (`hintMarks`). Solo SHALL start it on the implicit
+reading of a cell with no notes (`engine-candidate-hints`, "A candidate hint
+plan reads an unmarked cell the way the player chose").
 
 #### Scenario: Nothing is filled in under Solo's own reading
 
@@ -567,32 +528,6 @@ the notes for a step that sets them up.
 - **THEN** its narration begins "Every other number has been ruled out in" that
   cell, names no region, and concludes "it can only be" that number
 
-### Requirement: Hint: Solo's hint marks pair each color with a shape
-
-When a single step names two or more board-element types at once, each type
-SHALL carry a stable per-game color always paired with a non-color cue: a ring
-round the cell the step acts on, an outline round the cells the reason rests
-on, and stripes over the region the sentence names.
-
-#### Scenario: A strike shows its region, its cell and its candidates
-
-- **WHEN** a strike step that names a region is shown
-- **THEN** the region's cells are striped, the cell acted on is ringed, and the
-  struck candidates are crossed through among its pencil marks
-
-### Requirement: Hint: Solo's hint never narrates a guess
-
-The deduction SHALL be capped below recursion (`DIFF_RECURSIVE`), since a guess
-is not a teachable note strike, so on a board only solvable by guessing the
-hint SHALL report that it cannot deduce the next move.
-
-#### Scenario: The hint declines when only a guess remains
-
-- **WHEN** a hint is requested on a board whose next move requires the recursion
-  (Unreasonable) tier
-- **THEN** the hint reports that it cannot deduce the next move rather than
-  narrating a guess
-
 ### Requirement: Hint: Solo marks every board element its hint sentence points at
 
 A Solo hint step SHALL mark, as evidence or as its target, every cell its
@@ -627,18 +562,6 @@ positions across several lines.
 - **AND** the narration points at both marks, and says how many lines there
   are each way
 
-### Requirement: Hint: A single-digit pattern step names the fewer lines
-
-Every single-digit pattern firing can be read two ways, as some columns
-confined to as many rows or as the remaining rows confined to the remaining
-columns; the step SHALL name whichever is fewer lines.
-
-#### Scenario: The step names the fewer lines
-
-- **WHEN** a single-digit pattern firing confines more columns than it leaves
-  rows outside the pattern
-- **THEN** the step stripes those rows and names them, not the columns
-
 ### Requirement: Hint: Solo's hint uses no technique above the board's tier
 
 The hint's deduction SHALL be capped at the tier in the board's params, and
@@ -651,13 +574,20 @@ tier promises the player.
   a mistake
 - **THEN** no step of the plan is an intersection, a set or a chain
 
+#### Scenario: The hint declines when only a guess remains
+
+- **WHEN** a hint is requested on a board whose next move requires the recursion
+  (Unreasonable) tier
+- **THEN** the hint reports that it cannot deduce the next move rather than
+  narrating a guess
+
 ### Requirement: Look: Solo draws its cages, digits, pencil marks and live errors
 
 `redraw` SHALL draw the block boundaries from the block partition, so that
 rectangular and jigsaw-irregular blocks look alike; the killer cage outlines
 and cage-sum labels (at each cage's top-left-most cell) when `killer`; given
 digits distinct from player digits; an auto-sized grid of pencil marks per
-empty cell; live rule-violation errors; and a completion flash.
+empty cell; and live rule-violation errors.
 
 #### Scenario: Variant decorations are drawn
 

@@ -2,8 +2,9 @@
 
 ## Purpose
 Pattern (Nonogram), the puzzle of shading a grid so that the runs of shaded
-squares in each row and column match its clue list: what counts as solved, the
-params and description encodings, what the generator promises, what a press, a
+squares in each row and column match its clue list: what counts as solved,
+what its params refuse and what a short params string means, the description
+encoding, what the generator promises, what the search assumes, what a press, a
 drag and the keyboard do, how the picture and its errors look, and what the
 explained deductive hint says and marks.
 
@@ -47,50 +48,42 @@ drawn in the error color at the cell's edge, beside the piece.
 - **AND** its outline is drawn at the cell's edge and the shaded piece stays
   visible inside it
 
-### Requirement: Params: Pattern's parameters are a size and a difficulty
+### Requirement: Params: A Pattern params string may leave out its height and its difficulty
 
-Params SHALL be `w` and `h`, positive integers, and a difficulty, Easy or
-Unreasonable. They SHALL encode as `{w}x{h}`, followed in the full encoding by
-`de` for Easy or `du` for Unreasonable; the shared encoding SHALL leave the
-difficulty out. A bare `{w}` SHALL decode to a square `w × w` grid, and a
-string with no difficulty letter SHALL decode as Easy, so that an ID written
-before the game had tiers reads as it did. `validateParams` SHALL refuse an
-unreasonably large `w·h`.
-
-#### Scenario: Params round-trip
-
-- **WHEN** Easy params `{ w: 20, h: 15 }` are encoded in full
-- **THEN** the result is `20x15de`, and the same params at Unreasonable give
-  `20x15du`
-- **AND** decoding each round-trips the params
-- **AND** decoding a bare `10` yields an Easy `10 × 10` grid
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** params with a non-positive dimension, or with a grossly oversized
-  `w·h`, are checked
-- **THEN** they are refused with an error string
+Pattern's params, a size and a difficulty, SHALL be bounded and encoded as its
+`paramConfig` and its declared codec give (`engine-params`, "A game declares
+its params encoding once, and both codec halves are derived"), and its menu
+SHALL be what `presets` builds. A bare `{w}` SHALL decode to a square `w × w`
+grid, and a string with no difficulty letter SHALL decode as Easy, so that an
+ID written before the game had tiers reads as it did.
 
 #### Scenario: An ID from before the tiers is Easy
 
 - **WHEN** `20x15` is decoded
 - **THEN** the params are an Easy `20 × 15` grid
+- **AND** decoding a bare `10` yields an Easy `10 × 10` grid
+
+### Requirement: Params: Pattern refuses a grid unreasonably large
+
+`validateParams` SHALL refuse an unreasonably large `w·h`.
+
+#### Scenario: A grossly oversized grid
+
+- **WHEN** params with a grossly oversized `w·h` are checked
+- **THEN** they are refused with an error string
 
 ### Requirement: Params: Pattern refuses Unreasonable at a size none of whose boards needs it
 
 `validateParams` SHALL refuse Unreasonable, when a board is to be dealt, for a
 grid one square wide or tall and for any grid up to 3×3, with the collection's
 sentence that no puzzle of that size is Unreasonable. No picture of those
-sizes has one answer that the lines do not reach. A board of such a size that
-arrives with its description SHALL still load.
+sizes has one answer that the lines do not reach.
 
 #### Scenario: A 3x3 Unreasonable board is not dealt
 
 - **WHEN** the params of an Unreasonable 3×3, 2×3 or 1×5 board are checked for
   dealing
 - **THEN** each is refused
-- **AND** the same params are accepted for a board that arrives with its
-  description
 
 #### Scenario: No picture of a refused size needs search
 
@@ -152,27 +145,10 @@ grid.
 - **THEN** the solver completes to a single fully-determined grid (no remaining
   unknown cells, no contradiction)
 
-### Requirement: Generation: An Unreasonable Pattern board has one answer that the lines do not reach
+### Requirement: Generation: A Pattern board is Easy where the per-line solver and the hint both finish it
 
-At Unreasonable the generator SHALL accept a grid only when the per-line
-solver leaves some cell of it undecided and the search proves its clues have
-exactly one answer.
-
-#### Scenario: A dealt Unreasonable board needs search and has one answer
-
-- **WHEN** `newDesc` produces Unreasonable boards from 4×4 to 10×10
-- **THEN** the per-line solver leaves each unfinished
-- **AND** exactly one picture fits each board's clues, by a count that has no
-  search in it
-
-### Requirement: Generation: A pasted Pattern board opens at the tier it needs
-
-A board that arrives as a game ID SHALL open as Easy where the per-line solver
-and the hint finish it, and as Unreasonable where it has exactly one answer
-that they do not reach, whatever tier its ID states below that. A board with
-several answers SHALL be refused with the collection's sentence that it has
-more than one solution, and a board with none with the sentence that its clues
-contradict each other.
+A board SHALL count as Easy where the per-line solver and the hint finish it,
+and as Unreasonable where it has exactly one answer that they do not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
@@ -180,22 +156,11 @@ contradict each other.
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `5x5du`
 
-#### Scenario: A board with several answers or none is refused
+### Requirement: Solver: Pattern's search assumes an undecided cell each way
 
-- **WHEN** a 2×2 ID whose two diagonals both fit, and one whose clues
-  contradict each other, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
-
-### Requirement: Solver: Pattern counts a board's answers by a bounded search
-
-The game SHALL count a board's answers up to two by trial and error over the
-per-line solver: where no line forces a cell it assumes one each way and
-deduces on, and a line that no placement of its runs fits ends that branch.
-The search SHALL report one answer, several, none, or that it stopped at its
-budget, which SHALL be counted in positions tried and never in time. Solve and
-the mistake check SHALL take the board's answer from this search at either
-tier.
+Pattern's search SHALL run over the per-line solver: where no line forces a
+cell it SHALL assume one each way and deduce on, and a line that no placement
+of its runs fits SHALL end that branch.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -204,11 +169,6 @@ tier.
   a board whose clues contradict each other
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given fewer positions than a board needs
-- **THEN** it reports that it stopped, and neither one answer nor several
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -228,6 +188,12 @@ SHALL overwrite the cell, so a deliberate click can change a mark.
 
 - **WHEN** the player clicks a single already-marked cell
 - **THEN** the cell takes the next state in that button's cycle
+
+#### Scenario: A click and Enter agree
+
+- **WHEN** the player clicks a cell, or presses Enter with the cursor on it
+- **THEN** the cell moves to the same next state, and likewise a right-click and
+  Space
 
 ### Requirement: Controls: Pattern accepts drag-fill rectangle and cursor input
 
@@ -264,20 +230,13 @@ SHALL be carried by an `onlyBlank` flag on the `fill` move, honored by
 - **THEN** that already-marked cell keeps its color and only the blank cells of
   the line are painted
 
-### Requirement: Controls: Pattern's keyboard paints and cycles as the pointer does
+### Requirement: Controls: Pattern's keyboard stroke paints as the pointer's drag does
 
 A cursor move with Ctrl held SHALL set the square it leaves and the square it
 reaches to `Full`, with Shift to `Empty` and with both to `Unknown`, through
 the same rectangle `fill` move. A stroke that paints SHALL carry `onlyBlank`,
 as the pointer's paint drag does and upstream's stroke does not; one that
-clears SHALL NOT. The cursor-select keys SHALL cycle the cursor's cell: Enter
-as a left press does, Space as a right press does.
-
-#### Scenario: A click and Enter agree
-
-- **WHEN** the player clicks a cell, or presses Enter with the cursor on it
-- **THEN** the cell moves to the same next state, and likewise a right-click and
-  Space
+clears SHALL NOT.
 
 #### Scenario: A keyboard stroke crosses a marked square
 
@@ -298,36 +257,13 @@ as a left press does, Space as a right press does.
   squares
 - **THEN** both become `Unknown`
 
-### Requirement: Hint: Pattern provides an explained, deductive hint
-
-Each hint SHALL teach why the move is forced by a recognizable line technique,
-not merely state the move: run overlap, cells no run can reach, a line with no
-clues, or the general single-line intersection, the cells forced in every
-arrangement of one line's runs consistent with its marks.
-
-#### Scenario: A hint explains a forced line deduction
-
-- **WHEN** `hint` is called on an unsolved, mistake-free board with at least one
-  deducible cell
-- **THEN** it returns a step whose move fills every cell that one line technique
-  forces, and whose explanation names the clue/pattern and concludes that those
-  cells must be `Full` (or must be `Empty`)
-
 ### Requirement: Hint: A Pattern hint never reveals the solution or searches
 
-The hint SHALL never reveal the stored solution or run a search. Every Easy
-board is one the per-line solver solves with no guessing, so the plan for a
-generated Easy board SHALL complete without any un-narrated step. On an
+The hint SHALL never reveal the stored solution or run a search. On an
 Unreasonable board the plan SHALL hold the steps the lines force and no
 others, and where no line forces a cell the hint SHALL refuse with the
 collection's sentence that deduction has run out. It SHALL go on from the
-marks the player then makes, as it does from any position.
-
-#### Scenario: The plan solves the board
-
-- **WHEN** the full hint plan for any generated Easy board is applied step by
-  step
-- **THEN** the board reaches its unique solution
+marks the player then makes.
 
 #### Scenario: The hint stops where the lines do
 
@@ -392,27 +328,10 @@ otherwise.
 - **THEN** the verdict is `"onTrack"` and the step's move and ring cover the
   other two cells
 
-### Requirement: Hint: Pattern hint color legend
+### Requirement: Hint: A cell a Pattern hint cites is outlined by what it holds
 
-The displayed hint SHALL render forced cells in `COL_HINT` as a ring only,
-never pre-drawing the piece or the cross the move would place: the cell's own
-state stays visible and the narration says which it must be.
-
-#### Scenario: Forced cells are highlighted, not pre-filled
-
-- **WHEN** a hint step targeting cells the player must shade is displayed
-- **THEN** those cells are ringed in `COL_HINT` and their prior (undecided)
-  state is still visible: the piece is not pre-rendered
-
-### Requirement: Hint: Pattern's hint premises follow the element-type legend
-
-Premise elements SHALL follow the stable element-type color legend, each color
-paired with a non-color cue and never named in the narration text. The
-reasoned-about line's clue SHALL be drawn in `COL_HINT` and its line of sight
-hatched in it. A cited already-placed `Full` cell SHALL be outlined
-`COL_HINT_BLACKREF` and a cited `Empty` cell `COL_HINT_WHITEREF`, each outline
-at the cell's edge, beside the piece or the cross, so it never hides what the
-cell holds.
+Of the cells a step cites, an already-placed `Full` cell SHALL be outlined
+`COL_HINT_BLACKREF` and an already-placed `Empty` cell `COL_HINT_WHITEREF`.
 
 #### Scenario: Premise marks are ringed by their color
 
@@ -459,11 +378,10 @@ every step.
   slide only 2 cells, so these cells must be purple.", its second the second
   column's run of 6, and its next seven the third column's
 
-### Requirement: Look: Pattern's grid lines are the surface's quiet grid color
+### Requirement: Look: Pattern doubles every fifth grid line, and its frame is one line thick
 
-The lines between cells and the frame round the grid SHALL be the surface's
-quiet grid color, the frame no heavier than a line inside it, with a doubled
-line every fifth cell. The clue numbers SHALL stay in the ink color.
+The frame round the grid SHALL be no heavier than a line inside it, and the
+line between cells SHALL be doubled every fifth cell.
 
 #### Scenario: A fifth line is doubled and the frame is not
 

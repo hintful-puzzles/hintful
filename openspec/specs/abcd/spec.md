@@ -8,25 +8,6 @@ sizes that generator cannot produce, and an explained hint.
 
 ## Requirements
 
-### Requirement: Rules: ABCD's findMistakes compares the board with its one solution
-
-Because ABCD has a unique solution, it SHALL declare a `findMistakes` hook that
-reports every entered letter that differs from that solution, and every empty
-cell whose pencil marks are not empty yet leave out its answer. Marks that
-merely include extra letters SHALL NOT be reported.
-
-#### Scenario: An entry that contradicts the solution is flagged
-
-- **WHEN** the mistake check runs and a cell holds a letter that differs from the
-  puzzle's unique solution
-- **THEN** that cell is reported as a mistake
-
-#### Scenario: A mark that has crossed out the answer is a mistake
-
-- **WHEN** the mistake check runs on an empty cell whose pencil marks leave out the
-  letter the unique solution puts there
-- **THEN** that cell is reported as a mistake, and the hint refuses until it is fixed
-
 ### Requirement: Rules: ABCD is solved when the grid is full and every rule holds
 
 The game SHALL be reported solved when every cell is filled, every clue is
@@ -37,35 +18,44 @@ rule.
 
 - **WHEN** the final cell is filled so that every clue is met and no identical
   letters are adjacent
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
-### Requirement: Params: ABCD's parameters
+### Requirement: Rules: ABCD checks letters and notes against the one answer its clues fix
 
-Parameters SHALL be a width, a height, a letter count, a "disallow diagonal
-adjacency" flag, a "remove clues" flag, and a difficulty, Easy or
-Unreasonable. Validation SHALL refuse a width or a height under 2, and a
-letter count over 9, under 3, or under 5 when diagonal adjacency is
-disallowed. A game ID SHALL encode the width, height, letter count and the
-diagonal flag and round-trip through decode.
+ABCD's `findMistakes` SHALL report what the collection's check reports of
+entries and of notes (`ts-engine`, "A mistake check compares with the one
+answer, hidden or not" and "A candidate note that excludes the answer is a
+mistake"), against the one answer the search proves from the clues
+(`engine-difficulty`, "One search answers a board for everything that asks").
 
-#### Scenario: A game ID round-trips through the parameters
+#### Scenario: A mark that has crossed out the answer is a mistake
 
-- **WHEN** a parameter set is encoded to a game ID and decoded
-- **THEN** the same width, height, letter count and diagonal flag are recovered
+- **WHEN** the mistake check runs on an empty cell whose pencil marks leave out the
+  letter the unique solution puts there
+- **THEN** that cell is reported as a mistake
 
-#### Scenario: Invalid letter counts are rejected
+### Requirement: Params: ABCD needs five letters where diagonal touching is disallowed
 
-- **WHEN** parameters request fewer than 3 letters in normal mode, fewer than 5
-  letters with diagonal adjacency disallowed, or more than 9 letters
-- **THEN** validation rejects them with a message naming the offending bound
+`validateParams` SHALL refuse a letter count under 5 when diagonal touching
+is disallowed. The limits on a single field SHALL be its bounds in
+`paramConfig`, which the engine refuses (`engine-params`, "Params validity is
+the engine's check").
 
-### Requirement: Params: ABCD's generation-time settings are in the full encoding only
+#### Scenario: Four letters and no diagonal touching
 
-The "remove clues" flag and the difficulty are generation-time settings and
-SHALL appear only in the full parameter encoding, the flag as `R` and the
-difficulty after it as `de` or `du`. A string with no difficulty letter SHALL
-decode as Easy, so that an ID written before the game had tiers reads as it
-did.
+- **WHEN** parameters request four letters with diagonal touching disallowed
+- **THEN** validation rejects them with "Letters must be at least 5 when
+  diagonal touching is not allowed."
+
+### Requirement: Params: An ABCD params string is its declared codec's, and one with no difficulty letter is Easy
+
+ABCD's params (a width, a height, a letter count, whether diagonal touching
+is disallowed, whether clues are removed, and a difficulty) and their
+encoding SHALL be those its `paramConfig` and its declared codec give
+(`engine-params`, "A game declares its params encoding once, and both codec
+halves are derived"), with no departure from the codec grammar. A string with
+no `D` SHALL decode as a board that allows diagonal touching, and one with no
+difficulty letter as Easy.
 
 #### Scenario: The difficulty is in the full encoding only
 
@@ -74,38 +64,28 @@ did.
 - **THEN** the full encoding is `5x5n5DRdu` and the shared one `5x5n5D`
 - **AND** `5x5n5DR`, written before the game had tiers, decodes as Easy
 
-### Requirement: Params: ABCD's label names the tier and the hidden clues apart
+#### Scenario: The preset that disallows diagonal touching
 
-A board's label SHALL say its difficulty by the tier's name, and SHALL say
-"clues hidden" after the letter count when the "remove clues" flag is set and
-nothing when it is not, since the two are independent and a board is offered
-at every pairing.
-
-#### Scenario: The label names the tier and the hidden clues apart
-
-- **WHEN** an Easy 4×4 board of four letters with clues removed is labeled
-- **THEN** the label is "4x4 Easy, 4 letters, clues hidden"
+- **WHEN** `6x6n5Dde` is decoded
+- **THEN** it is a 6×6 Easy board of five letters with diagonal touching
+  disallowed and every clue showing
+- **AND** its shared encoding is `6x6n5D`
 
 ### Requirement: Params: ABCD refuses board sizes it cannot generate
 
 Parameter validation SHALL reject, when validating for generation, any
 combination of grid size and letter count whose measured generation-success
 rate is too low to produce a board in an acceptable time, giving a reason,
-rather than retrying until an attempt budget is exhausted. Validation SHALL NOT
-apply the bound when a description is already in hand, so that a previously
-shared game ID remains loadable.
+rather than retrying until an attempt budget is exhausted. The bound SHALL
+bind generation only, and a board that arrives with its description loads as
+the collection's does (`engine-params`, "Param validation distinguishes
+generating a board from loading one").
 
 #### Scenario: An un-generable configuration is refused immediately
 
 - **WHEN** a configuration below the measured rate is entered in the Custom
   dialog
 - **THEN** it is refused with a reason, without the generator being run
-
-#### Scenario: An existing game ID outside the bound still loads
-
-- **WHEN** a game ID whose parameters fall outside the bound is opened, with its
-  description present
-- **THEN** the board loads and is playable
 
 ### Requirement: Params: The bound is measured across size, shape and letter count
 
@@ -139,14 +119,13 @@ un-generable.
 - **THEN** it is accepted, so a bound drawn tighter than the measurements
   fails as one drawn looser does
 
-### Requirement: Params: ABCD's menu offers a board under each of its rules
+### Requirement: Params: ABCD's board without diagonal touching is a preset of its own
 
-ABCD's presets SHALL offer each of four sizes at both difficulties, and after
-them one Easy board for each thing that is neither a size nor a difficulty: a
-board with clues hidden, a board with diagonal touching disallowed, and a
-board of three letters. The rule against diagonal touching needs five letters,
-which no other preset has, so writing the one field onto another preset is
-refused and nothing but a preset reaches it from the menu.
+Which boards the menu offers SHALL be ABCD's `presets`, in the collection's
+shape (`engine-params`, "The preset menu is a grid"). The rule against
+diagonal touching needs five letters, which no other preset has, so writing
+the one field onto another preset is refused and nothing but a preset SHALL
+reach it from the menu.
 
 #### Scenario: The rule against diagonal touching is on the menu
 
@@ -160,20 +139,13 @@ refused and nothing but a preset reaches it from the menu.
 - **WHEN** that preset is dealt
 - **THEN** the deal is immediate, and following the hint solves the board
 
-#### Scenario: Every size is offered at both difficulties
-
-- **WHEN** ABCD's preset menu is read
-- **THEN** its 4x4, 5x5, 6x6 and 7x7 boards of four letters each appear as
-  Easy and as Unreasonable
-
 ### Requirement: Params: ABCD refuses Unreasonable where none of a size's boards needs it
 
 When a board is to be dealt with every clue showing, `validateParams` SHALL
 refuse Unreasonable for any grid of nine squares or fewer, as a size with no
 such puzzle, and for a grid two squares wide with diagonal touching
 disallowed, as one whose such puzzles are too rare to deal. With "remove
-clues" set neither refusal applies. A board of a refused size that arrives
-with its description SHALL still load.
+clues" set neither refusal applies.
 
 #### Scenario: A 3x3 Unreasonable board with every clue showing is not dealt
 
@@ -216,20 +188,6 @@ the Easy bound admits it.
   letters, for four, for eight, and with diagonal touching disallowed
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
-
-### Requirement: Params: ABCD params are written as the size, n with the letter count, and D for no diagonal touching
-
-`encodeParams` SHALL write the width and height as `WxH`, then `n` and the
-letter count, then `D` when diagonal touching is disallowed; the full
-encoding SHALL go on with `R` when clues are removed, and the difficulty. A
-string with no `D` SHALL decode as a board that allows diagonal touching.
-
-#### Scenario: The preset that disallows diagonal touching
-
-- **WHEN** `6x6n5Dde` is decoded
-- **THEN** it is a 6×6 Easy board of five letters with diagonal touching
-  disallowed and every clue showing
-- **AND** its shared encoding is `6x6n5D`
 
 ### Requirement: Description: ABCD descriptions use the edge-clue encoding
 
@@ -274,12 +232,12 @@ upstream's generator deals from the same seed.
 
 ### Requirement: Generation: An Unreasonable ABCD board has one answer that the ladder does not reach
 
-At Unreasonable with every clue showing, the generator SHALL accept a fill
-only when the ladder stops short on its clues and the search proves they have
-exactly one answer. With "remove clues" set it SHALL start from a fill whose
-clues have one answer, hide clues in a randomized order while the search still
-proves one answer within a budget far under the one a pasted board is allowed,
-and keep the board only if the ladder then stops short.
+ABCD's Unreasonable boards SHALL be dealt by the engine's deal
+(`engine-difficulty`, "The engine deals the Unreasonable board of a game that
+searches"), a candidate being the clues of a random fill. With "remove clues"
+set, ABCD's strip SHALL hide clues in a randomized order, each only while the
+search still proves one answer (`engine-difficulty`, "A strip is asked within
+the engine's dealing budget").
 
 #### Scenario: A dealt Unreasonable board needs search and has one answer
 
@@ -292,12 +250,13 @@ and keep the board only if the ladder then stops short.
 
 ### Requirement: Generation: A pasted ABCD board opens at the difficulty it needs
 
-A board that arrives as a game ID SHALL open as Easy where the ladder and the
-hint finish it, and as Unreasonable where it has exactly one answer that they
-do not reach, whatever difficulty its ID states below that. A board with
-several answers SHALL be refused with the collection's sentence that it has
-more than one solution, and a board with none with the sentence that its clues
-contradict each other.
+A board SHALL be Easy where the ladder and the hint finish it, and
+Unreasonable where it has exactly one answer that they do not reach. What a
+pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A loaded
+board whose id states no tier takes the lowest tier that solves it" and "A
+pinned tier is kept or raised and never lowered"), and one with several
+answers or none SHALL be refused (`engine-params`, "A board with a mistake
+check loads only with exactly one answer").
 
 #### Scenario: A board that needs search opens as Unreasonable
 
@@ -339,30 +298,15 @@ assert that every technique fires.
 - **WHEN** a preset is added to ABCD's preset list
 - **THEN** the census walks boards generated at it with no edit to the census
 
-### Requirement: Solver: ABCD's Solve does not claim a second answer it has not found
-
-The game's `solve` SHALL take a clue set's answer from the search that counts
-its answers. It SHALL say the puzzle has more than one solution only where the
-search found a second, that it has none only where the search proved that, and
-SHALL refuse with `PUZZLE_NOT_REASONABLE` where the search stopped at its
-budget, which proves neither. The ladder stopping short is none of these: it
-is what the search starts from.
-
-#### Scenario: A game ID the ladder cannot finish
-
-- **WHEN** a hand-built 10×10 ABCD game ID whose clues the ladder stops short
-  on is opened, and its clues repeat and so fit many grids
-- **THEN** it is refused with `DESC_NOT_UNIQUE`, the search having found a
-  second
-
 ### Requirement: Solver: ABCD counts a clue set's answers by a bounded search
 
-The game SHALL count a clue set's answers up to two by trial and error over
-the solver's ladder, assuming each candidate of an empty cell in turn where
-the ladder stops. It SHALL report one answer, several, none, or that it
-stopped at its budget, which SHALL be counted in positions tried and never in
-time. Solve and the mistake check SHALL take the board's answer from it at
-either difficulty.
+ABCD's search SHALL be the engine's (`engine-difficulty`, "The engine counts
+a searching game's answers up to two, within a budget of positions") over the
+solver's ladder, assuming each candidate of an empty cell in turn where the
+ladder stops. Solve and the mistake check SHALL take the board's answer from
+it as every searching game's do (`engine-difficulty`, "One search answers a
+board for everything that asks" and "Solve from the search shows the one
+answer or says which it lacks").
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -371,11 +315,6 @@ either difficulty.
   a board whose top row may hold none of its letters
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given fewer positions than a board needs
-- **THEN** it reports that it stopped, and neither one answer nor several
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -386,8 +325,9 @@ either difficulty.
 
 ### Requirement: Controls: ABCD enters a letter into the selected cell
 
-ABCD SHALL be played by selecting a cell, by mouse click or arrow-key cursor,
-and entering one of the letters, with a pencil-mark mode for candidate marks.
+ABCD SHALL be played on the collection's note-taking cell (`engine-notes`,
+"The note-taking cell is one shared mechanic"): a click or the arrow keys
+select a cell, and a key enters a letter there or, in pencil mode, a mark.
 Entering a letter SHALL accept the letter keys and the bare digit keys `1` to
 `9` up to the letter count. Clearing SHALL accept Backspace, Space, and `0`.
 
@@ -424,9 +364,7 @@ wipes them.
 ### Requirement: Controls: ABCD's keypad offers the board's letters and Clear
 
 `requestKeys` SHALL offer one key for each of the board's letters, labeled
-with the letter and in order from `A`, and then the Clear key. A letter key
-SHALL do what typing that letter does at the selected cell, an entry or a
-pencil mark by the mode, and Clear what Backspace does.
+with the letter and in order from `A`, and then the Clear key.
 
 #### Scenario: A board of five letters
 
@@ -442,11 +380,12 @@ neighbors, and of its diagonal ones when diagonal touching is disallowed.
 Besides the walk's own steps, its rungs SHALL be one line's firing of the
 solver's satisfied-clue and runs techniques.
 
-#### Scenario: The hint finishes every generated board
+#### Scenario: A letter placed where diagonal touching is disallowed
 
-- **WHEN** a hint plan is built from a freshly generated board of any preset, under
-  either reading, and its steps are played
-- **THEN** the board is solved, and the grid is the solver's solution
+- **WHEN** the hint places a letter on a board that disallows diagonal
+  touching, in a cell away from the grid's edge
+- **THEN** the cull after it strikes that letter from the marks of the eight
+  cells round it that still show it
 
 ### Requirement: Hint: The satisfied-clue rung strikes a letter from a line that has its count
 
@@ -501,7 +440,8 @@ The hint SHALL never run the search. On an Unreasonable board its plan SHALL
 hold the steps the three techniques force from the player's marks and no
 others, and where none forces anything it SHALL refuse with the collection's
 sentence that deduction has run out. It SHALL go on from the letters the
-player then enters, as it does from any position.
+player then enters, as every hint does from the board in play
+(`engine-hints`, "A hint is deduced from the board in play").
 
 #### Scenario: The hint stops, and goes on from a letter tried rightly
 
@@ -529,11 +469,11 @@ Until then the hint SHALL offer only the walk's own singles.
 
 ### Requirement: Look: What ABCD draws
 
-Rendering SHALL draw the letter grid with edge clues and corner letters, SHALL
-show pencil marks in empty cells and the cursor highlight, and SHALL flash on
-completion. It SHALL color red a clue its line exceeds or can no longer reach,
-and a letter with an identical letter adjacent: orthogonally, and diagonally
-when that is disallowed. There SHALL be no move animation.
+Rendering SHALL draw the letter grid with edge clues and corner letters, and
+SHALL show pencil marks in empty cells and the cursor highlight. It SHALL
+color red a clue its line exceeds or can no longer reach, and a letter with
+an identical letter adjacent: orthogonally, and diagonally when that is
+disallowed.
 
 #### Scenario: A clue its line can still reach is not red
 
