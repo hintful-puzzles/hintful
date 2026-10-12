@@ -1413,11 +1413,9 @@ describe("Midend hint plan lifecycle", () => {
     expect(c.hintCalls()).toBe(1);
   });
 
-  it("completing into a journey-continuation step keeps the hint displayed", () => {
-    // A two-leg journey is presented as ONE hint: completing the first
-    // leg must transition the display to the flagged continuation step
-    // instead of hiding. The unflagged step after the journey hides as
-    // usual.
+  /** `fakeGame` with the plan's second step flagged as a leg of the first's
+   * journey. */
+  function journeyGame() {
     const c = countingHintGame();
     const game = {
       ...c.game,
@@ -1433,19 +1431,52 @@ describe("Midend hint plan lifecycle", () => {
         };
       },
     };
-    h = harness(game);
+    return { game, hintCalls: c.hintCalls };
+  }
+
+  it("a journey's next leg waits to be asked for, like any step", () => {
+    // A sentence appears only when the player asks for one. Completing a
+    // leg by hand hides the hint, whatever the next step is flagged as.
+    const c = journeyGame();
+    h = harness(c.game);
     h.m.newGame(); // target 3 ⇒ steps 1,2,3; step 2 continues step 1
     h.m.hint();
     expect(explanation()).toBe("Increment the counter to 1");
-    // Completing step 1 flows straight into its journey continuation.
-    h.m.processInput(0, 0, LEFT_BUTTON);
-    expect(explanation()).toBe("Increment the counter to 2");
-    // Completing the journey's last leg hides (step 3 is unflagged).
     h.m.processInput(0, 0, LEFT_BUTTON);
     expect(explanation()).toBeUndefined();
+    expect(h.m.activeHintStep()).toBeNull();
+    // Asked for, the leg is shown from the kept plan.
     expect(h.m.hint()).toBeNull();
-    expect(explanation()).toBe("Increment the counter to 3");
+    expect(explanation()).toBe("Increment the counter to 2");
     expect(c.hintCalls()).toBe(1);
+  });
+
+  it("a hint applied and then a move made by hand shows nothing unasked", () => {
+    // The Hint button's apply leaves the plan stored and hidden. The player's
+    // own next move, where it is the plan's too, must leave it hidden: the
+    // step after it continues a journey here, which once brought it back.
+    const c = journeyGame();
+    const game = {
+      ...c.game,
+      hint: (s: Parameters<NonNullable<typeof fakeGame.hint>>[0]) => {
+        const base = c.game.hint(s);
+        if (!base.ok) return base;
+        return {
+          ok: true as const,
+          steps: base.steps.map((step, i) =>
+            i === 2 ? { ...step, continuesPrevious: true } : step,
+          ),
+        };
+      },
+    };
+    h = harness(game);
+    h.m.newGame(); // target 3 ⇒ steps 2 and 3 both continue step 1
+    expect(h.m.executeHint(true)).toBeNull();
+    expect(h.m.activeHintStep()).toBeNull();
+    h.m.processInput(0, 0, LEFT_BUTTON); // the plan's step 2, by hand
+    expect(h.m.formatAsText()).toBe("count=2");
+    expect(h.m.activeHintStep()).toBeNull();
+    expect(explanation()).toBeUndefined();
   });
 
   it("a hidden plan keeps tracking moves: completions advance it silently", () => {
@@ -1509,6 +1540,20 @@ describe("Midend hint plan lifecycle", () => {
     h.m.hint();
     h.m.processInput(0, 0, LEFT_BUTTON);
     expect(explanation()).toBe("Increment the counter to 1");
+  });
+
+  it("an onTrack move leaves a hidden step hidden", () => {
+    // Part of a step made by hand after the plan was put away (Ascent: one
+    // number of a whole run) is still the player's own move.
+    h = harness({
+      ...fakeGame,
+      hintKeepTrack: (_m, _step, s) => (s.count === 0 ? "completed" : "onTrack"),
+    });
+    h.m.newGame();
+    expect(h.m.executeHint(true)).toBeNull(); // step 1 applied, plan hidden
+    h.m.processInput(0, 0, LEFT_BUTTON); // on track for step 2
+    expect(h.m.activeHintStep()).toBeNull();
+    expect(explanation()).toBeUndefined();
   });
 
   it("following the plan to the end clears it (exhaustion + solved)", () => {
@@ -1719,7 +1764,7 @@ function strikeGame(opts: {
             move: { type: "strike", i } as StrikeMove,
             rung: "strike",
             explanation: `Strike candidate ${i}`,
-            // One journey, so the display stays on across legs (Towers' dup chain).
+            // One journey, counted as "Step i of n" (Towers' dup chain).
             continuesPrevious: i > 0,
           });
         }
@@ -1754,8 +1799,9 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
     // Strike candidate 0 — its side effect also strikes candidate 1, so the
     // stored step 1 is now resolved. The midend must advance past it to step 2.
     expect(m.processInput(0, 0, 100)).toBe(true);
+    expect(m.activeHintStep(), "the player's own move shows no step").toBeNull();
+    expect(m.hint()).toBeNull();
     const shown = m.activeHintStep();
-    expect(shown, "a kept journey stays displayed across its legs").not.toBeNull();
     expect(
       (shown?.move as StrikeMove & { i: number }).i,
       "the stale step (candidate 1, already struck) must be skipped",
@@ -1767,6 +1813,7 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
     m.newGame();
     m.hint();
     m.processInput(0, 0, 100); // strike 0 only
+    m.hint();
     expect((m.activeHintStep()?.move as StrikeMove & { i: number }).i).toBe(1);
   });
 
@@ -1785,7 +1832,8 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
     m.hint(); // plan: strike 0, 1, 2 — legs 1 and 2 continue the first
     expect(seen().at(-1)).toEqual({ index: 1, length: 3 });
 
-    m.processInput(0, 0, 100); // strike 0; the journey stays displayed
+    m.processInput(0, 0, 100); // strike 0 by hand, which hides the hint
+    m.hint(); // the second leg, asked for
     expect(seen().at(-1)).toEqual({ index: 2, length: 3 });
 
     expect(seen(), "the whole run, so an off-by-one is visible").toEqual([

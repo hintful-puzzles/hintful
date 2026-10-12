@@ -1004,30 +1004,29 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       if (verdict === "completed") {
         // The game asserts the post-move state matches the plan's
         // expectation after this step, so the rest stays valid —
-        // advance. Manual play surfaces one hint per request, so the
-        // display hides until the next `hint()` call — unless the
-        // next step continues the journey this step previewed
-        // ("then to column 5"): that was presented as one hint, so
-        // it stays on screen through its legs. Re-validate first, so a
-        // continuation step the move already resolved (auto-pencil
-        // striking what an explicit `pencilStrike` leg would have) is
-        // skipped rather than shown empty.
+        // advance. A step is shown only by `hint()` or by auto-play: the
+        // player's own move never puts a sentence on screen that they
+        // did not ask for, so the display hides here, a journey's next
+        // leg included. Re-validate all the same, so the plan is not
+        // left standing on a step the move already resolved.
         this.advanceHint();
         this.refreshActiveHint(next);
-        this.hintDisplayed = this.currentHintStep?.continuesPrevious === true;
+        this.hintDisplayed = false;
       } else if (verdict === "off") {
         this.clearHint();
       } else {
         // "onTrack": keep the current step (the game may have adjusted
         // its move in place to the remaining distance) — but drop any of
         // its parts this move's side effects also resolved, and if that
-        // empties the step, advance as if completed.
+        // empties the step, advance as if completed. The step stays on
+        // screen only where it was on screen and is still the same step:
+        // a hidden plan stays hidden, and a later step waits to be asked for.
         const idxBefore = this.activeHint?.index ?? -1;
         this.refreshActiveHint(next);
         this.hintDisplayed =
-          this.activeHint != null && this.activeHint.index === idxBefore
-            ? true
-            : this.currentHintStep?.continuesPrevious === true;
+          this.hintDisplayed &&
+          this.activeHint != null &&
+          this.activeHint.index === idxBefore;
       }
     }
     // A drag's later marks join its first in the history, and one pointer

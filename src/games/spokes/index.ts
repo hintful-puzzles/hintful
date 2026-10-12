@@ -440,7 +440,7 @@ function continuation(f: SpokesFiring, hl: SpokesHint): Sentence {
 
 /** Flatten one firing into its journey of legs: leg 0 carries the full
  * narration, the rest continue it. Each leg shows the spokes still to settle,
- * so the whole deduction stays on screen as its spokes are drawn one by one. */
+ * so whichever leg is asked for shows what is left of the deduction. */
 function stepsOfFiring(
   f: SpokesFiring,
   w: number,

@@ -463,7 +463,7 @@ function legMoves(f: BoatsFiring, w: number, squares: BoatsSquare[]): BoatsMove[
 /**
  * One firing is **one journey**: a deduction that forces several squares is a
  * single hint whose continuation legs are flagged `continuesPrevious`, so the
- * midend keeps it displayed across the legs and auto-play walks them as one
+ * midend counts the legs as one and auto-play walks them as one
  * (docs/games/hints.md § "Group one firing into one step"). The narration
  * rides on the opening leg; the rest carry the same highlight so the picture
  * never shrinks mid-journey.

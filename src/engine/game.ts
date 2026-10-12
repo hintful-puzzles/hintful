@@ -76,11 +76,9 @@ export interface HintStep<Move, Highlights = unknown, Rung extends string = stri
   highlights?: Highlights;
   /** True when this step is the continuation of the journey the
    * previous step previewed (e.g. the "then to column 5" leg of
-   * "Working on tile 10: move it to row 2, then column 5"). The midend keeps the
-   * hint displayed across a manual completion into such a step — the
-   * journey was presented as one hint, so it stays on screen through
-   * its legs — whereas an unflagged next step waits for the user to
-   * ask again. */
+   * "Working on tile 10: move it to row 2, then column 5"). The midend counts
+   * a displayed step's place in its journey from it ("Step 2 of 3"). It does
+   * not decide when a step is shown: every step waits to be asked for. */
   continuesPrevious?: boolean;
 }
 
@@ -116,7 +114,7 @@ export interface ActiveHint<Move, Highlights = unknown> {
  *   matches what the plan expected after this step, so the remaining
  *   steps stay valid.
  * - `"onTrack"` — progress toward the step without finishing it; the
- *   midend keeps the step displayed.
+ *   midend keeps the step, and keeps it displayed where it was.
  * - `"off"` — the move deviates from the plan; the midend drops it
  *   (the next hint request recomputes). */
 export type HintTrackVerdict = "completed" | "onTrack" | "off";

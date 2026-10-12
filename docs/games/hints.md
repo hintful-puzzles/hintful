@@ -1071,9 +1071,13 @@ The `Game` hooks and the `Midend` lifecycle are in
   (Towers once had this inverted, testing post-move state the production path
   never passes — guard against a unit test that fabricates a timing the
   midend doesn't use.)
-- **`continuesPrevious`** on a `HintStep` — the midend keeps a multi-leg
-  journey displayed through its legs; only an unflagged next step waits to be
-  asked for. The mechanism is generic; a game just emits grouped steps.
+- **`continuesPrevious`** on a `HintStep` groups steps into one journey: the
+  chrome counts a displayed leg within it ("Step 2 of 9") and auto-play runs
+  the legs back to back. It does not decide when a leg is shown. **A move of
+  the player's own never puts a sentence on screen** (owner, 2026-10-12): a
+  completed step hides the hint whatever follows it, and every leg waits to be
+  asked for. So a leg's sentence cannot lean on the one before it still being
+  on screen.
 - **`refreshHintStep(step, state)`** — validate-at-display (§ "Stale plans
   and refreshHintStep").
 - **`hintGesture(state, ui, ds, move, step)`** — how the pointer makes the step's

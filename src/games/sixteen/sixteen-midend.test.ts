@@ -283,10 +283,10 @@ describe("Sixteen midend integration — hint persistence", () => {
     expect(mPrivate.activeHint).toBeNull();
   });
 
-  it("a multi-leg journey stays displayed through its legs (owner board, 2026-06-10)", () => {
-    // Landing the tile on the intermediate target must not hide the hint
-    // mid-journey. A journey is one hint: its flagged continuation steps
-    // stay displayed; only the step after the journey waits for a request.
+  it("a multi-leg journey is kept through its legs, each shown when asked for", () => {
+    // Landing the tile on the intermediate target hides the hint, as any move
+    // of the player's does, and the next request carries on with the same
+    // tile from the kept plan.
     const h = harness();
     h.m.newGameFromId(
       "5x5:1,2,3,4,6,7,13,8,9,5,11,12,18,14,15,16,17,24,19,20,21,22,23,10,25",
@@ -300,7 +300,8 @@ describe("Sixteen midend integration — hint persistence", () => {
     // Leg 1: slide row 0 left by 1 (cursor at (0,0), shift+left).
     h.m.processInput(0, 0, CURSOR_SELECT);
     h.m.processInput(0, 0, 0x2000 | CURSOR_LEFT);
-    // The journey continues: leg 2 is displayed without a new request.
+    expect(banner()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(banner()).toBe(
       "Working on tile 6: move it on to the nearer ringed square, then the other.",
     );
@@ -310,6 +311,8 @@ describe("Sixteen midend integration — hint persistence", () => {
     h.m.processInput(0, 0, CURSOR_RIGHT);
     h.m.processInput(0, 0, CURSOR_RIGHT);
     h.m.processInput(0, 0, 0x2000 | CURSOR_DOWN);
+    expect(banner()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(banner()).toBe("Working on tile 6: move it on to the ringed square.");
 
     // Leg 3 ends the journey: slide row 1 right by 1.
