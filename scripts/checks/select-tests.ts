@@ -30,10 +30,10 @@
  * the cross-game guards. The games an engine path merely reaches wait for the
  * push, which is what keeps a commit to the midend from costing every game's
  * boards (`build-pipeline`, "A commit runs the per-game work of the games it
- * stages"). Two kinds of file still run `whole` in a commit: a test file that
- * is itself staged, since it is what the author just wrote, and a guard that
- * reads a staged path as text, since a source scan costs milliseconds and its
- * subject is the text.
+ * stages"). One kind of file still runs `whole` in a commit: a test file that
+ * is itself staged, since it is what the author just wrote. Every test in a
+ * selected file that is not titled for a game runs too, which is where a scan
+ * of the engine's own text reports.
  *
  * A push prints `NOTHING` when its commits' own plans left none of it out, so a
  * session that touched only games pushes without a second run.
@@ -280,10 +280,12 @@ function commitLines(change: Change, graph: Graph): string[] {
   // Nothing selected, or a path with an unknown blast radius: every file that
   // is not another game's, with the per-game cases left to the push.
   if (files.length === 0) files = allTestFiles().filter(own);
-  const whole = ownTextReaders(change.paths);
+  // A staged test file is what the author just wrote, and runs whole. A guard
+  // that reads a staged path as text does not: the narration sweep reads
+  // `game.ts` through a helper, and its walk of every game is the push's.
   return [
     `scope ${[...mine].sort().join(",") || NO_GAME}`,
-    ...files.map((f) => `${whole.has(f) ? "whole" : "narrow"} ${f}`),
+    ...files.map((f) => `${change.paths.includes(f) ? "whole" : "narrow"} ${f}`),
   ];
 }
 
@@ -407,6 +409,19 @@ function verify(): void {
   );
 
   // The commit's plan: the same files, and no game's boards but its own.
+  // `enrollment.ts` reads `game.ts` as text, and the narration sweep imports
+  // it: a reader of the text that also walks boards keeps them for the push.
+  const contract = commit(["src/engine/game.ts"]);
+  expect(
+    contract.narrow.includes("src/engine/hint-quality.test.ts") &&
+      contract.narrow.includes("src/engine/hint-em-dash.test.ts") &&
+      contract.whole.length === 0,
+    "a commit to game.ts runs hint-quality and the em-dash scan with no game's cases",
+  );
+  expect(
+    owed(["src/engine/game.ts"]).includes("whole src/engine/hint-quality.test.ts"),
+    "the push that carries a game.ts commit runs hint-quality whole",
+  );
   const ownMidend = commit(["src/engine/midend.ts"]);
   expect(
     ownMidend.scope.length === 0 &&
@@ -424,12 +439,6 @@ function verify(): void {
       both.lines.some((l) => l.includes(" src/games/pearl/")) &&
       !both.lines.some((l) => l.includes(" src/games/solo/")),
     "a commit to the midend and to Pearl runs Pearl's cases and Pearl's tests only",
-  );
-  expect(
-    commit(["src/engine/latin-hint.ts"]).whole.includes(
-      "src/engine/hint-em-dash.test.ts",
-    ),
-    "a commit runs whole a guard that reads the staged module as text",
   );
   expect(
     commit(["src/engine/hint-quality.test.ts"]).whole.includes(

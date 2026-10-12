@@ -113,9 +113,10 @@ and deleting `.husky/pre-push` is all it takes to make it A.
   stages and for no other: those games' own test files and their `<id>: …`
   cases. A commit to the midend therefore runs the engine's own tests and the
   whole-collection tests that are not split by game, and no game's boards.
-  Two kinds of file still run whole: a staged test file, since it is what the
-  author just wrote, and a guard that reads a staged path as text, since it
-  costs milliseconds.
+  A staged test file still runs whole, since it is what the author just
+  wrote. A guard that reads a staged path as text does not: the first trial
+  below ran the narration sweep whole, 153 s, on a commit to `game.ts`,
+  because a helper it imports reads that file as text.
 - **A push** runs what its commits left out, at the hooks' slice, as one plan
   over everything between the remote's commit and `HEAD`. It runs nothing when
   they left nothing out, which is a session that touched only games, help

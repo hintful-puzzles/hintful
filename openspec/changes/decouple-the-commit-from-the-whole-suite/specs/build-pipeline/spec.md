@@ -6,9 +6,9 @@ The per-commit hook SHALL run per-game work for the games whose directories
 hold a staged path and for no other: a game's own test files, and the cases
 titled `<id>: …` in the cross-game guards. The games a staged path outside
 the game directories merely reaches SHALL wait for the push. A staged test
-file, and a guard that reads a staged path as text, SHALL still run with every
-game's cases. When no game reaches a staged path the hook SHALL NOT narrow at
-all.
+file SHALL still run with every game's cases, and every selected test that is
+not titled for a game SHALL run. When no game reaches a staged path the hook
+SHALL NOT narrow at all.
 
 #### Scenario: A commit touches a module every guard reads itself
 
