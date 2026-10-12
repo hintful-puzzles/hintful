@@ -56,7 +56,9 @@ export interface PuzzleData {
   aliases?: readonly string[];
   description: string;
   objective: string;
-  collection: "original" | "unreleased";
+  /** Where the puzzle comes from: Simon Tatham's collection, the unreleased
+   * puzzles ported with it, or this app's own, which has no upstream. */
+  collection: "original" | "unreleased" | "own";
   /**
    * The one family this puzzle belongs to — what a player browses the
    * collection by ("what else is like this one?"), and what maintenance work
@@ -434,6 +436,15 @@ export const puzzleCatalog = {
     objective: "Connect all hubs using horizontal, vertical and diagonal lines.",
     collection: "unreleased",
     family: "lines",
+  },
+  starbattle: {
+    name: "Star Battle",
+    aliases: ["Queens", "Two Not Touch"],
+    description: "Star placement puzzle",
+    objective:
+      "Place stars so that every row, column and region holds the same number and no two touch.",
+    collection: "own",
+    family: "objects",
   },
   sticks: {
     name: "Sticks",

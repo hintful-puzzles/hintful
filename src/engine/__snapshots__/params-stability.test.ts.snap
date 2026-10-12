@@ -688,6 +688,21 @@ bump:w  full=7x6de  brief=7x6
 bump:h  full=6x7de  brief=6x7"
 `;
 
+exports[`encoded params are byte-stable > starbattle 1`] = `
+"default  full=5s1de  brief=5s1
+preset:5x5 Normal, 1 star  full=5s1dn  brief=5s1
+preset:5x5 Tricky, 1 star  full=5s1dt  brief=5s1
+preset:6x6 Easy, 1 star  full=6s1de  brief=6s1
+preset:6x6 Normal, 1 star  full=6s1dn  brief=6s1
+preset:6x6 Tricky, 1 star  full=6s1dt  brief=6s1
+preset:8x8 Easy, 1 star  full=8s1de  brief=8s1
+preset:8x8 Normal, 1 star  full=8s1dn  brief=8s1
+preset:8x8 Tricky, 1 star  full=8s1dt  brief=8s1
+preset:10x10 Easy, 2 stars  full=10s2de  brief=10s2
+preset:10x10 Normal, 2 stars  full=10s2dn  brief=10s2
+bump:stars  full=5s2de  brief=5s2"
+`;
+
 exports[`encoded params are byte-stable > sticks 1`] = `
 "default  full=7x7b20s2de  brief=7x7
 preset:Sticks/5x5 Easy  full=5x5b20s2de  brief=5x5

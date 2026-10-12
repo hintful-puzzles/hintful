@@ -1,9 +1,10 @@
 # add-starbattle
 
-**Status: scaffolded 2026-10-12, not started. It waits for the five changes
-before it** in `fit-a-new-game-in-one-session`: it is that change's
-measurement, and is written from the skeleton, the guides, the one command,
-the spec rule and the region division those leave.
+**Status: built 2026-10-13 and waiting for the owner to play it** (§
+"Acceptance"). It is the measurement of `fit-a-new-game-in-one-session`,
+written from the skeleton, the guides, the one command, the spec rule and
+the region division the five changes before it left. `design.md` holds what
+was decided and measured, and `findings.md` the log.
 
 ## Why
 

@@ -58,7 +58,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | Generation | you are writing a generator |
 | – `retry-limit.ts` — a bound on generate-until-it-works | a generator retries until a board passes |
 | – `divvy.ts` — random equal-omino partition | a generator divides a rectangle into equal regions |
-| – `redivide.ts` — divide a few regions of a partition again | a generator mends a division where it fails |
+| – `redivide.ts` — divide a few regions of a partition again | a generator mends a division into regions of one size where it fails |
 | – `divide.ts` — regions of unequal size | a generator divides a grid into regions that differ in size |
 | – `laydomino.ts` — random domino tiling | a generator tiles a board with dominoes |
 | – `symmetric-blacks.ts` — symmetric black-square placement | a generator places black squares symmetrically |

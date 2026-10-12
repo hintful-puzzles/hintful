@@ -54,6 +54,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | [Sokoban](../sokoban)    | [help](sokoban)  | Sokoban (倉庫番)                                                                   |
 | [Solo](../solo)          | [help](solo)     | Sudoku, Diagonal (X) Sudoku, Hexdoku, Jigsaw Sudoku, Killer Sudoku, Mega Sudoku |
 | [Spokes](../spokes)      | [help](spokes)   |                                                                                 |
+| [Star Battle](../starbattle) | [help](starbattle) | Queens, Two Not Touch |
 | [Sticks](../sticks)      | [help](sticks)   | Tatebo-Yokobo (タテボーヨコボー)                                                        |
 | [Subsets](../subsets)    | [help](subsets)  | Sabusettorinku (サブセットリンク)                                                       |
 | [Tents](../tents)        | [help](tents)    |                                                                                 |

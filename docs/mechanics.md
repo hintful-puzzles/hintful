@@ -33,6 +33,12 @@ the section that says more.
    or `null`. See "The params codec and validation".
 5. **`transposeParams: transposeDimensions()`**, in `index.ts`. See "Portrait
    boards, and turning them to fit".
+
+   A board sized by one number differs from the skeleton in three places: the
+   size is `numberItem` with `label: { slot: "size", words: squareSize(field) }`,
+   its codec segment is `size(paramConfig, kw)`, and `index.ts` writes
+   `notApplicable: { transposeParams: SQUARE_GRID }`. Exemplar:
+   [`starbattle/state.ts`](../src/games/starbattle/state.ts).
 6. **The desc**: one `parseDesc` built on `readDesc`, and a `newState` that
    builds from `descValue(parseDesc(p, desc))`. See "Read a desc once".
 7. **`executeMove`**: clone the state, apply the move, and end the dispatch

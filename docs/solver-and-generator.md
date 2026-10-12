@@ -1222,7 +1222,7 @@ states what it wants:
 | The game knows | The walk | Exemplar |
 | --- | --- | --- |
 | Which neighboring regions may join | `mergeNeighbors`, with what a region holds and how two holdings join | [`rome/generator.ts`](../src/games/rome/generator.ts) |
-| That, and how many regions there are to be | `mergeToCount`, which returns `null` where the rule cannot be met | none yet |
+| That, and how many regions there are to be | `mergeToCount`, which returns `null` where the rule cannot be met | [`starbattle/generator.ts`](../src/games/starbattle/generator.ts) |
 | Where each region starts, or how many there are | `growFromSeeds`, over cells the game places or `scatterSeeds` draws | [`map/generator.ts`](../src/games/map/generator.ts) |
 | How large a region may be | `growToSize`, with a size the game draws for each | [`seismic/generator.ts`](../src/games/seismic/generator.ts) |
 
@@ -1239,6 +1239,15 @@ states what it wants:
   mirror image together, and Keen and Solo's Killer lay dominoes before they
   fold single cells in, because they want pairs and a merge under a largest
   size deals regions at that size.
+- **Where the regions are the board's only clue, a division dealt at random
+  seldom has one answer, and the game mends it.** Star Battle's regions grown
+  round its stars gave no board its ladder finishes in 300 draws at 8x8. The
+  mend moves one cell at a time between two regions that are there: a cell
+  holding a star of a second answer `solvedPositions` found, or one the
+  ladder left open, kept unless more cells are left open. Run it with the
+  ladder capped at the tier asked for. Exemplar: `mend` in
+  [`starbattle/generator.ts`](../src/games/starbattle/generator.ts).
+  `redivide.ts` mends only regions of one size.
 - **Moving a division onto a walk here keeps its boards only if the draws
   and their order are kept**, and a move that changes them is a divergence
   like any other (§ "Divergence and what it costs").

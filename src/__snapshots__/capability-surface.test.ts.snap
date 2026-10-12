@@ -1816,6 +1816,36 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "cache",
+      "marks",
+      "started",
+      "tileSize",
+      "walls",
+    ],
+    "id": "starbattle",
+    "members": [
+      "animLength",
+      "difficulty",
+      "findMistakes",
+      "hint",
+      "hintGesture",
+      "hintKeepTrack",
+      "hintMarks",
+      "hintRungs",
+      "notApplicable",
+      "paramConfig",
+      "preferredTileSize",
+      "solve",
+      "targetVerbs",
+      "textFormat",
+      "validateParams",
+    ],
+    "ui": [
+      "cursor",
+    ],
+  },
+  {
+    "drawState": [
+      "cache",
       "mistakes",
       "started",
       "tileSize",
