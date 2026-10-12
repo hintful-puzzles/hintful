@@ -31,6 +31,9 @@ incident only what a later session acts on: the rule, and the shape to look for.
 - **Never bypass the gate**, in whole or in part, however small the change and
   however sure you are that it is not needed. No `--no-verify`, no disabled
   step.
+- **Combine commits where it makes sense, so the gate's full run is not waited
+  for twice.** An archive goes in with the change's last commit once the owner
+  has accepted it. A commit stays separate where it has its own reason to.
 - **A green suite does not show that a game plays correctly.** Run the app
   before calling game-facing or UI work done: rendering, animation, input and
   wording included. A shortfall is never called "cosmetic" or "out of scope",
