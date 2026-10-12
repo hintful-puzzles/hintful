@@ -333,7 +333,7 @@ export type Relation =
   | { readonly kind: "again"; readonly basis: Narration }
   | { readonly kind: "serves" };
 
-/** A step's words, in their parts (docs/games/hints.md § "A sentence has
+/** A step's words, in their parts (docs/hints.md § "A sentence has
  * parts"): what to look at, what follows, the move, and how the move stands to
  * them. The game writes the parts; {@link sentence} joins them. */
 export interface Said {

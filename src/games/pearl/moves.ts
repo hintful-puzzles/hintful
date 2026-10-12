@@ -4,7 +4,7 @@
  * `check_completion` / `dsf_update_completion` (pearl.c).
  *
  * Split out of `index.ts` so `render.ts`, which previews the in-progress drag,
- * can share the drag helpers without an import cycle (docs/games/rendering.md
+ * can share the drag helpers without an import cycle (docs/rendering.md
  * § "A simulated-release preview lives in `moves.ts`").
  */
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";

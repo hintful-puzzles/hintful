@@ -4,13 +4,13 @@
  *
  * The deduction end is entirely `solver.ts`'s: the same eight rungs on the
  * same `runDeductionFixpoint`, run one firing at a time with a recorder
- * standing (docs/games/hints.md § "Recording the deduction", the *threaded*
+ * standing (docs/hints.md § "Recording the deduction", the *threaded*
  * shape). This file turns each firing into the sentence and the picture: what
  * the player is shown and what they are taught.
  *
  * **A line is named by its clue, never by an index.** Tracks draws no row or
  * column numbers, so "column 5" is a name the player cannot check against the
- * board (docs/games/hints.md § "Name elements by what the player can see", the
+ * board (docs/hints.md § "Name elements by what the player can see", the
  * Netslide lesson). Every narration that reasons over a line highlights that
  * line's clue digit in the margin and says "this column" / "this row", so the
  * words point at something visible.
@@ -75,7 +75,7 @@ export interface TracksHintEdge {
 /**
  * What one step's sentence names, in five roles.
  *
- * The split follows docs/games/hints.md § "The element-type color legend": the
+ * The split follows docs/hints.md § "The element-type color legend": the
  * squares and edges a step *decides* take the action color, the squares and
  * edges it *reasons from* take the evidence color, and the clue it counts with
  * has its own digit recolored. `targets` and `targetEdges` are separate roles
@@ -95,7 +95,7 @@ export interface TracksPicture {
   /** Clue indices the deduction counts with (`0..w-1` columns, then rows). */
   clues: number[];
   /** The line the sentence names, by the same index, hatched with its clue;
-   * `null` when it names none (docs/games/hints.md § "Hatch the line the
+   * `null` when it names none (docs/hints.md § "Hatch the line the
    * sentence names"). */
   line: number | null;
   /** The closed block a parity sentence names, hatched like a line; empty when
@@ -262,7 +262,7 @@ export function evident(b: Board, op: TracksOp): boolean {
 
 /**
  * A step is worth showing when it has a premise to narrate and tells the player
- * something their board does not already say (docs/games/hints.md § "Show only
+ * something their board does not already say (docs/hints.md § "Show only
  * what the board does not already say").
  *
  * Both halves are needed. Without the board check, a narrated rule that lands
@@ -396,7 +396,7 @@ function flagChanges(before: Board, after: Board): Map<string, boolean> {
  * flags are the same move.
  *
  * A firing that forces several squares is one step whose move carries all of
- * them (docs/games/hints.md § "Group one firing into one step"), and the player
+ * them (docs/hints.md § "Group one firing into one step"), and the player
  * places them one click or one drag at a time, so the step is shrunk in place
  * to what is left and a later `executeHint` does not re-apply what is done.
  */

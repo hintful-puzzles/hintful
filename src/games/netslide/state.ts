@@ -207,7 +207,7 @@ export interface NetslideState {
  * Each cell of the new line reads from a copy of the old one, `dir` places
  * along: the same permutation as upstream's in-place rotating walk, without
  * its read-back-what-was-vacated hazard
- * (docs/games/mechanics.md § "Idiomatic state, not a C transliteration").
+ * (docs/mechanics.md § "Idiomatic state, not a C transliteration").
  */
 
 export function slideRow(w: number, tiles: Uint8Array, dir: number, row: number): void {

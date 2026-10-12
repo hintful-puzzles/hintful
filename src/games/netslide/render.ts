@@ -113,7 +113,7 @@ export function colors(defaultBackground: Color): Color[] {
  * These ride in the per-tile cache word, which is the diff key, so a hint
  * requested on an otherwise unchanged board still repaints. Left out of the key,
  * the hint never appears until something else moves
- * (docs/games/rendering.md § "The tile cache and the diff key").
+ * (docs/rendering.md § "The tile cache and the diff key").
  */
 
 /** The tile the hint is placing. */

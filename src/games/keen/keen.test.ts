@@ -496,7 +496,7 @@ describe("keen render", () => {
   });
 
   it("Check & Save highlights a mistake even when the cell was already drawn", () => {
-    // Regression (docs/games/rendering.md § "Overlay sidecars"): the mistake overlay isn't part of a cell's
+    // Regression (docs/rendering.md § "Overlay sidecars"): the mistake overlay isn't part of a cell's
     // tile value, so it must be in the diff cache key — otherwise findMistakes()
     // on an already-painted cell repaints nothing and the red never shows.
     const me = new Midend(keenGame);

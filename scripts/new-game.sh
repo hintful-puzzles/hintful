@@ -131,6 +131,6 @@ What is left to do, and the copy does none of it:
   5. Add the two icons, src/assets/icons/${GAME}-{64,128}d8.png, captured
      from the running game (openspec/specs/puzzle-icons/spec.md).
   6. Write the game's spec in the openspec change that adds it
-     (docs/games/README.md § "What a game's spec holds").
+     (docs/new-game.md § "What a game's spec holds").
   7. Run the app and play it before calling anything done.
 EOF

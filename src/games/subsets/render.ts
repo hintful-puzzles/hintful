@@ -21,7 +21,7 @@
  *
  * `findMistakes` duplicates and wrong rule-outs get an inset red frame via an
  * `OverlaySidecar`
- * (docs/games/rendering.md § "The tile cache and the diff key"); violated
+ * (docs/rendering.md § "The tile cache and the diff key"); violated
  * edges are already red live, exactly as the C shows them.
  */
 

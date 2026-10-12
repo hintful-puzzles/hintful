@@ -80,7 +80,7 @@ const REGION_COUNT_WRONG = puzzleDescError(
  *
  * The region numbering is independent of which element the union-find picks as
  * a class root — a region's number is fixed at its minimum-index cell in scan
- * order — so the shared `Dsf` is byte-match safe here (docs/games/solver-and-generator.md § "Solver-gated generation").
+ * order — so the shared `Dsf` is byte-match safe here (docs/solver-and-generator.md § "Solver-gated generation").
  */
 function readEdgeList(r: DescReader, w: number, h: number, n: number): Int32Array {
   const wh = w * h;

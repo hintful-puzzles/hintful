@@ -187,7 +187,7 @@ const pinned = describeHintPins({
 
 describe("salad hint — the three signature techniques", () => {
   it("never emits a step it cannot name a technique for", () => {
-    // The standing bar: no "just because" fallback (docs/games/solver-and-generator.md § "Guess-free generation"). Every
+    // The standing bar: no "just because" fallback (docs/solver-and-generator.md § "Guess-free generation"). Every
     // narration must match one of the arms the game knows how to say.
     const KNOWN =
       /(sees [A-C1-9] first|fit \S+ only in the outlined squares|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|square in this (?:row|column) rules out|too, for the same (?:row|column)|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;

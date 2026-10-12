@@ -195,7 +195,7 @@ const BAR_LENGTHS = [4, 5];
  *
  * A **ledger against the derived set**, not a filter applied before deriving:
  * the assertion below requires it to be exactly right, so an entry that stops
- * being true fails just as loudly as a missing home. (`docs/games/testing.md`:
+ * being true fails just as loudly as a missing home. (`docs/testing.md`:
  * where intent cannot be observed, attach it to the derived member.)
  */
 const IN_NO_PANEL: Record<string, string> = {

@@ -10,7 +10,7 @@
  * a region *might* be (its help page), a region with none is simply unmarked,
  * and a neighbor's color is on the board for anyone to see. So the Easy rung
  * needs no dots at all, and the hint places them only where a Normal or Hard
- * deduction removes a color no neighbor shows (docs/games/hints.md § "The quality bar",
+ * deduction removes a color no neighbor shows (docs/hints.md § "The quality bar",
  * rule 6).
  *
  * That is the candidate walk's implicit reading, and it is Map's default. The
@@ -26,7 +26,7 @@
  * answer, and the hint refuses on either. So wherever this runs, every color on
  * the board is right and every dotted region's dots hold its answer: the
  * colors computed here contain the truth, and each rung is sound on any such
- * superset (docs/games/hints.md § "Deduce from the notes when the mistake check
+ * superset (docs/hints.md § "Deduce from the notes when the mistake check
  * vouches for them").
  *
  * ## The ladder is the tiers

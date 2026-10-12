@@ -1,7 +1,7 @@
 /**
  * ABCD's explained hint, measured over generated boards.
  *
- * Tiers (docs/games/testing.md § "The test tiers"): tier 1 for the plan, the
+ * Tiers (docs/testing.md § "The test tiers"): tier 1 for the plan, the
  * finders and the keep-track hooks; tier 2.5 for the runs frame. The cross-game
  * guards enroll ABCD by its `hint` and its `candidateReading`, so resume, voice,
  * length, continuity and the implicit reading's premise duty are theirs and are
@@ -220,7 +220,7 @@ describe("the runs technique's arithmetic", () => {
 // --- the corpus -------------------------------------------------------------
 
 /** Every premise the plan can speak. Adding one fails the census below until it
- * is listed (docs/games/hints.md § "Census the reasons, not only the rungs"). */
+ * is listed (docs/hints.md § "Census the reasons, not only the rungs"). */
 type Kind =
   | "populate"
   | "clean"

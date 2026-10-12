@@ -123,7 +123,7 @@ export function highlightIsOn(ui: NoteTakingUi, x: number, y: number): boolean {
  *
  * **A press moves the highlight to the pressed cell**, even onto a cell that
  * cannot take what the press offers. A pointer press takes the board over
- * (`docs/games/input.md`), which is only true if the highlight goes where the
+ * (`docs/input.md`), which is only true if the highlight goes where the
  * player pointed; and the position matters even while hidden, because the next
  * arrow key resumes from it.
  *

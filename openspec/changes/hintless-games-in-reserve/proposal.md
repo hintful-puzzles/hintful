@@ -49,12 +49,12 @@ Re-take the population from the registry (games without `hint`, as
 
 ## The decision point
 
-A game without a hint is a draft (docs/games/hints.md § "The quality bar").
+A game without a hint is a draft (docs/hints.md § "The quality bar").
 The owner manages the timeline for clearing the reserve, and no deadline is
 tracked here. If the owner asks for reserve hints written ahead of a framework
 change, each such change says it was written for that reason, not as a check.
 
 The search games in it (Cube, Same Game, Slide) start with a short
-design pass on what the hint can *prove* (docs/games/hints.md §
+design pass on what the hint can *prove* (docs/hints.md §
 "Non-deductive (heuristic) hints": Inertia's unreachable gem is the shape),
 because a search may certify a position but never teach one.

@@ -1,7 +1,7 @@
 /**
  * Behavioral tests for the Seismic port.
  *
- * Tiers (docs/games/testing.md § "The test tiers"): tier 1 for params / codec /
+ * Tiers (docs/testing.md § "The test tiers"): tier 1 for params / codec /
  * solver / moves / mistakes, tier 2 and 2.5 for every frame the renderer can
  * reach.
  *
@@ -418,7 +418,7 @@ describe("seismic generator", () => {
  * unique solubility at the requested band, and determinism.
  *
  * Every case is a fixed seed, so the work and the verdict are identical on every
- * run, and nothing is clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
+ * run, and nothing is clock-gated (docs/testing.md § "Seed-deterministic, never clock-gated").
  */
 describe("seismic constructive generator", () => {
   /** The configurations swept below — small enough to stay fast, but covering
@@ -826,7 +826,7 @@ describe("seismic moves", () => {
 
   it("completes the board on Solve, and marks it solved-with-help", () => {
     // Driven through a real Midend: the interactive completion path is not the
-    // one the differential exercises (docs/games/testing.md § "The test tiers").
+    // one the differential exercises (docs/testing.md § "The test tiers").
     const h = driveMidend(seismicGame);
     const me = h.midend;
     expect(me.newGameFromId(idOf(SMALL))).toBeNull();
@@ -885,7 +885,7 @@ describe("seismic keypad", () => {
     }
   });
 
-  // Pinned literally, per docs/games/input.md § "The on-screen keypad". Both
+  // Pinned literally, per docs/input.md § "The on-screen keypad". Both
   // modes offer five: the panel is sized to the largest region the generator
   // produces, not to the nine the Seismic format admits — a digit no board can
   // hold is a button that does nothing, and on touch the panel is the only way
@@ -943,7 +943,7 @@ describe("seismic findMistakes", () => {
   });
 
   it("flags an empty cell whose notes have crossed the solution out", () => {
-    // Notes are first-class markings (docs/games/mechanics.md § "Pencil marks: the full note-taking UX"): penciling every value
+    // Notes are first-class markings (docs/mechanics.md § "Pencil marks: the full note-taking UX"): penciling every value
     // *except* the right one is as wrong as writing the wrong number.
     const state = stateOf(SMALL);
     const soln = solutionOf(SMALL);
@@ -1154,7 +1154,7 @@ describe("seismic rendering", () => {
   });
 
   it("highlights a mistake on a board that was already drawn", () => {
-    // Paint-twice (docs/games/rendering.md § "Prove the overlay repaints"): Check & Save runs a frame *after* the move
+    // Paint-twice (docs/rendering.md § "Prove the overlay repaints"): Check & Save runs a frame *after* the move
     // that drew the cell, so an overlay missing from the diff key would never
     // appear — a cold frame could not catch that.
     const state = stateOf(SMALL);
@@ -1170,7 +1170,7 @@ describe("seismic rendering", () => {
     });
     expect(r.mistakeCount).toBe(1);
     // The overlay is a stroked outline, so it records as lines, not a rect
-    // (docs/games/testing.md § "Render-op vocabulary").
+    // (docs/testing.md § "Render-op vocabulary").
     expect(
       r.recording.ops.some((o) => o.op === "line" && o.color === COL_NUM_ERROR),
     ).toBe(true);

@@ -134,7 +134,7 @@ export function cleanObviousText(
   cell = "cell",
 ): (marks: readonly Note[]) => Sentence {
   // Says nothing about the "fill all pencil marks" button doing this same
-  // cleanup: help/features.md says so once (docs/games/hints.md § "Rules belong
+  // cleanup: help/features.md says so once (docs/hints.md § "Rules belong
   // in the help"). The notes it names are the ringed ones it strikes.
   return (marks) =>
     unshaped(
@@ -269,7 +269,7 @@ export function candidateConclusions(vocab: {
  * for six arms; **Solo** names a different region set per arm ("row, column
  * **and** block", plus block/diagonal region names in `hiddenSingle`). Both stay
  * on their own `narrate` — one vocabulary can't express a per-arm difference,
- * and forcing it would read worse than the duplication (docs/games/hints.md § "Persist, populate, and the moves"'s
+ * and forcing it would read worse than the duplication (docs/hints.md § "Persist, populate, and the moves"'s
  * standing rule).
  */
 export interface LatinVocab {
@@ -430,7 +430,7 @@ export function placedRulesOut(
  * **The case split is the load-bearing part.** A forcing chain does not refute a
  * hypothesis; it concludes from *both* branches of one, and a walk that narrates
  * only the chain has a final leg that does not follow from its own premises (the
- * Palisade lesson, `docs/games/hints.md` § "Writing the narration"):
+ * Palisade lesson, `docs/hints.md` § "Writing the narration"):
  *
  * - the origin (chain cell 1) has exactly two candidates, the struck value and
  *   one other;
@@ -463,7 +463,7 @@ export function placedRulesOut(
  * make a bare "this cell" ambiguous, and this frame shows several — but every
  * chain cell is *numbered* and the conclusion is not, so "cell 1"/"cell 5" and
  * "this cell" pick out different things by the presence or absence of a label
- * rather than by a color. See `docs/games/hints.md` § "Two marks on the board,
+ * rather than by a color. See `docs/hints.md` § "Two marks on the board,
  * one "this cell" — tie them, and never by color".
  */
 export function forcingChainPremise(

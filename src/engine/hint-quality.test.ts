@@ -1,7 +1,7 @@
 /**
  * Cross-game guarantees on hint narration *form* (never content).
  *
- * `docs/games/hints.md` § "Writing the narration" is a list of narration rules
+ * `docs/hints.md` § "Writing the narration" is a list of narration rules
  * that were, until this file, enforced per-game or by review alone — and
  * narration quality is the broadest hint-defect class in the history (8 games;
  * see `unify-hint-framework` §0.2). Three of its rules are pure form, so
@@ -244,7 +244,7 @@ const LONG_NARRATIONS: {
     games: ["palisade"],
     rungs: ["equivalentEdges"],
     why:
-      "The collection's hint exemplar, quoted in docs/games/hints.md § \"The " +
+      "The collection's hint exemplar, quoted in docs/hints.md § \"The " +
       'quality bar" and owner-endorsed: the "share a fate" premise and its ' +
       "gloss are what made the conclusion follow.",
   },
@@ -477,7 +477,7 @@ function exemptByForm(step: HintStep<unknown>): boolean {
  *
  * **The population is derived and the exceptions are declared**, which is the
  * way round this repo settled on (`audit-declared-versus-derived-capabilities`;
- * `docs/games/testing.md` § "How a cross-game guard finds its population").
+ * `docs/testing.md` § "How a cross-game guard finds its population").
  * It was the other way round until then: an opt-in set of eighteen names, which
  * had silently missed **six** hinting games — Boats, Bricks, Group, Salad,
  * Sticks and Subsets — every one of them deductive, and five of them passing
@@ -568,7 +568,7 @@ interface NarratedStep {
 const IDIOMS: Record<string, (step: NarratedStep) => boolean> = {
   // Filling's grouped region step: "The shaded region of N fits exactly
   // into these squares." — the exactness *is* the forcing claim
-  // (docs/games/hints.md § "Group one firing into one step"; owner-endorsed with the Filling hint).
+  // (docs/hints.md § "Group one firing into one step"; owner-endorsed with the Filling hint).
   filling: (s) => /fits exactly into/.test(s.explanation),
 
   // Loopy's blocked-pair rung: "Both outlined dots already have a line, so
@@ -930,7 +930,7 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
       // menu offers that tier at, which is a board the player can pick rather
       // than a tier label written onto the smallest grid in the game.
       //
-      // The `withTier` form is the tell `docs/games/testing.md` § "How a
+      // The `withTier` form is the tell `docs/testing.md` § "How a
       // cross-game guard finds its population" rule 6 names: it writes the tier
       // field and nothing else, so it never produced a Killer board, an
       // Adjacent board or a Tectonic one, and a trial rung that fires only in a
@@ -1068,7 +1068,7 @@ const CORNER_WALKED = !PRECOMMIT_HOOK_RUN;
  *
  * **"Hardest teachable" excludes a declared search tier**, which is where the
  * cost lives and where there is nothing to hear: a hint refuses on a board that
- * needs a guess (docs/games/hints.md § "The quality bar" rule 6), so the plan stops
+ * needs a guess (docs/hints.md § "The quality bar" rule 6), so the plan stops
  * early — Group's 6x6 yields 27 steps at Unreasonable against 253 at Hard — and
  * generation there is by far the most expensive thing in the cross product
  * (12x12 Unreasonable ran past 25 minutes for 12 boards and was abandoned;

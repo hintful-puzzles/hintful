@@ -46,7 +46,7 @@ beforeAll(registerAllGames);
 
 /**
  * Games whose Marks key is offered but does **not** toggle a mode, each with
- * the reason — the `NO_KEYBOARD` shape (`docs/games/testing.md` § "How a
+ * the reason — the `NO_KEYBOARD` shape (`docs/testing.md` § "How a
  * cross-game guard finds its population"): the population is derived and only
  * the *exception* is written down, one entry per member, asserted exact so a
  * game that quietly stops handling the key fails here.

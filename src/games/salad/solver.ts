@@ -1,7 +1,7 @@
 /**
  * Salad's solver — a consumer of the shared Latin framework
  * ([`engine/latin.ts`](../../engine/latin.ts)), per
- * docs/games/solver-and-generator.md § "The Latin family".
+ * docs/solver-and-generator.md § "The Latin family".
  *
  * **The empty square is a symbol of the cube.** Salad wants "each of `nums`
  * symbols once per line, the other `order − nums` squares empty" — a
@@ -273,7 +273,7 @@ function saladLettersSolver(solver: LatinSolver, b: SaladBoard): number {
       // **Hint path only**: one *clue's* scan is one firing, so stop after the
       // first that fires and let the driver open a new `group`. Without this a
       // hint step would gather strikes from unrelated clues under one clue's
-      // narration (docs/games/hints.md § "Non-uniform value sets (Salad)").
+      // narration (docs/hints.md § "Non-uniform value sets (Salad)").
       // Gated, so the generator sweeps every clue exactly as upstream does.
       if (n && solver.recorder) return nchanged;
     }
@@ -308,7 +308,7 @@ function seedGridClues(solver: LatinSolver, b: SaladBoard): void {
 /** Seed the cube from a board's *confirmed markers* — the hint path's analog
  * of {@link seedGridClues}. A cross or ball is a real entry (Check & Save flags a
  * wrong one), so it is a fact the working cube may assume; the player's *pencil
- * notes* never are (docs/games/hints.md § "The recorder and the soundness
+ * notes* never are (docs/hints.md § "The recorder and the soundness
  * boundary"). Symbols need no seeding here because they sit in `b.grid`, which
  * `LatinSolver.alloc` places. */
 function seedMarkers(solver: LatinSolver, b: SaladBoard): void {
@@ -486,7 +486,7 @@ export interface SaladMistake {
  *
  * Solved at the top tier: Salad's Normal rung only *adds* sound generic
  * techniques to Easy's, so an Easy board still solves here (pinned by the
- * "generate low, solve high" check, docs/games/solver-and-generator.md
+ * "generate low, solve high" check, docs/solver-and-generator.md
  * § "Solver-gated generation").
  */
 export function saladSolution(s: SaladState): number[] | null {
@@ -501,7 +501,7 @@ export function saladSolution(s: SaladState): number[] | null {
 
 /**
  * Re-solve from the fixed clues alone and flag every player marking the unique
- * solution contradicts (docs/games/solver-and-generator.md § "The solvable-game
+ * solution contradicts (docs/solver-and-generator.md § "The solvable-game
  * contract"): a wrong symbol, a cross on a square that holds one, a circle on a
  * square that must stay empty, and — notes being first-class markings — an
  * empty square whose non-empty notes have crossed out its solution value.

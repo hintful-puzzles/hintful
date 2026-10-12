@@ -351,7 +351,7 @@ function status(s: BoatsState): GameStatus {
  * `targets` are the squares to decide, each with what goes there: a ringed
  * square is drawn in `COL_HINT` in the shape of that action (a boat mark for a
  * segment, a water mark for water), because a single color standing for two
- * different actions reads as one action (docs/games/hints.md § "Echo the
+ * different actions reads as one action (docs/hints.md § "Echo the
  * move's shape in the hint color"). `evidence` is the particular squares the
  * deduction reasons from; `line` the row or column the sentence names.
  */
@@ -464,7 +464,7 @@ function legMoves(f: BoatsFiring, w: number, squares: BoatsSquare[]): BoatsMove[
  * One firing is **one journey**: a deduction that forces several squares is a
  * single hint whose continuation legs are flagged `continuesPrevious`, so the
  * midend counts the legs as one and auto-play walks them as one
- * (docs/games/hints.md § "Group one firing into one step"). The narration
+ * (docs/hints.md § "Group one firing into one step"). The narration
  * rides on the opening leg; the rest carry the same highlight so the picture
  * never shrinks mid-journey.
  */
@@ -494,7 +494,7 @@ function hint(state: BoatsState): HintResult<BoatsMove, BoatsHint, BoatsRung> {
   // The midend asks only about a board `findMistakes` passes, and that is a
   // re-solve, so a placement that breaks no rule *yet* but appears in no
   // solution never reaches this: deducing onward from a doomed board would
-  // produce confident nonsense (docs/games/hints.md § "Refusal couples to the
+  // produce confident nonsense (docs/hints.md § "Refusal couples to the
   // mistake overlay").
   const plan = deduceBoatsPlan(state);
   const steps = plan.firings.flatMap((f) =>

@@ -1,6 +1,6 @@
 /**
  * Skeleton's rendering: a loop over the squares that repaints only the ones
- * whose packed key changed (docs/games/rendering.md § "The tile cache and the
+ * whose packed key changed (docs/rendering.md § "The tile cache and the
  * diff key").
  *
  * A square is a `COL_GRID` box under a surface one pixel smaller, so the grid

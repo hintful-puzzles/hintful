@@ -82,7 +82,7 @@ import {
  * The eight directions on the digits `1`–`9` (not `5`), beside the cursor keys'
  * four. Upstream binds only the number pad's digits; the bare digits are bound
  * too, because a numpad sends digits only with Num Lock on and a laptop may
- * have none (docs/games/input.md § "The numeric keypad never arrives").
+ * have none (docs/input.md § "The numeric keypad never arrives").
  * `stripModifiers` lets the numpad's own digits through.
  */
 const DIGIT_DIRECTIONS: Record<string, { dx: number; dy: number }> = {
@@ -163,7 +163,7 @@ function interpretMove(
     // A press on the player or a barrel is a drag starting, so it must be
     // claimed for the drag to arrive; anywhere else only the release decides,
     // and a press that slides off before it lifts still taps where it started
-    // (docs/games/input.md § "A press you do not act on must still be consumed").
+    // (docs/input.md § "A press you do not act on must still be consumed").
     const x = fromCoord(p.x, ts, 0);
     const y = fromCoord(p.y, ts, 0);
     const inside = x >= 0 && x < state.w && y >= 0 && y < state.h;

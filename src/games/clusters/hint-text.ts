@@ -4,7 +4,7 @@
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads. Each is a proof by
  * contradiction: premise, the rule the refuted color breaks, conclusion in the
- * necessity voice (docs/games/hints.md § "Necessity for deductions, imperative
+ * necessity voice (docs/hints.md § "Necessity for deductions, imperative
  * for moves"). Every word that points at the board is a reference to the mark
  * it points at (`engine/hint-words.ts`): the cell the step colors is ringed,
  * the tile the refuted color would break is outlined, and a chain's forced
@@ -78,7 +78,7 @@ export const say = {
     //
     // The sentence names the two ends and lets the numbers carry the middle:
     // reciting the links would put the chain back in the reader's head, which
-    // is what the picture exists to prevent (docs/games/hints.md § "The forcing
+    // is what the picture exists to prevent (docs/hints.md § "The forcing
     // boundary").
     const n = m.chain.length;
     const cells = mark.as(

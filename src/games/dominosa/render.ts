@@ -3,7 +3,7 @@
  * square packs its full draw state (domino type, clash, highlights, barrier
  * edges, cursor sub-position, flash, and the mistake, hint and reference
  * overlays) into one `Int32Array` cache word, so the diff key covers every
- * overlay by construction (docs/games/rendering.md § "Overlay sidecars").
+ * overlay by construction (docs/rendering.md § "Overlay sidecars").
  *
  * Geometry follows upstream's web build (`NARROW_BORDERS`): `BORDER` is minus
  * the domino gutter, so the gutters bleed to the canvas edge.
@@ -140,7 +140,7 @@ const gutter = (ts: number) => Math.floor(ts / 16);
 /** The board's pixel origin — negative, so the domino gutters bleed to the
  * canvas edge (NARROW_BORDERS). Exported so `interpretMove` reads the same
  * number the painter does — one function, both callers
- * ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
+ * ([`docs/mechanics.md`](../../../docs/mechanics.md)). */
 export const border = (ts: number) => -gutter(ts);
 const coord = (n: number, ts: number) => n * ts + border(ts);
 const dominoRadius = (ts: number) => Math.floor(ts / 8);

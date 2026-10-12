@@ -111,7 +111,7 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
     "rejection sampling over squares, and validateParams keeps the balls fewer than the squares",
   ],
   "games/boats/generator.ts › newBoatsDesc": [
-    "validateParams places the fleet first-fit, so a placement is on offer (docs/games/solver-and-generator.md, on load-bearing validation)",
+    "validateParams places the fleet first-fit, so a placement is on offer (docs/solver-and-generator.md, on load-bearing validation)",
   ],
   "games/bridges/generator.ts › newBridgesDesc": [
     "adds an island each pass, and misses count `badTries` to MAX_NEWISLAND_TRIES",

@@ -142,7 +142,7 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 /** Highlight payload an Unequal hint step carries (built in `index.ts`). The
- * element-type legend (docs/games/hints.md § "The element-type color legend"): the driving clue's cells outlined
+ * element-type legend (docs/hints.md § "The element-type color legend"): the driving clue's cells outlined
  * `COL_HINT_CELL`, the acted-on cell(s) ringed `COL_HINT`, the ruled-out
  * candidate(s) shown struck. Outline and ring sit in the gap around a cell, so
  * neither covers what the cell holds. */
@@ -195,7 +195,7 @@ export interface UnequalDrawState {
   /** `order²` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
    * evidence, struck candidates at `valueBit(n)` in its `struck` lane. Owns the
    * repack/stale/commit dance that keeps the overlay in the cache diff key
-   * (docs/games/rendering.md § "The tile cache and the diff key"). */
+   * (docs/rendering.md § "The tile cache and the diff key"). */
   hint: OverlaySidecar;
   /** `order²` mistake-overlay sidecar (fork addition) — same dance, so that a
    * Check & Save repaints the red highlight on an already-drawn cell. */
@@ -458,7 +458,7 @@ function drawCell(
   const ox = coord(x, ts);
   const oy = coord(y, ts);
 
-  // Hint overlay (docs/games/hints.md § "The element-type color legend"): both
+  // Hint overlay (docs/hints.md § "The element-type color legend"): both
   // cell-level marks are read in `redraw`, which rings the target and outlines
   // the evidence region in the gap around the cell, so a hint never paints over
   // the digits it is talking about. What is left here is `struck`, the set of
@@ -517,7 +517,7 @@ function drawCell(
 /** Pencil-mark grid (upstream `draw_hints`, stolen from solo). A candidate in
  * `struck` (bit `1 << n`) is a hint-ruled-out mark, drawn in its normal pencil
  * color with a same-color strikethrough — high-contrast, reads as a real note,
- * and the line is the "ruled out" cue (docs/games/hints.md § "The element-type color legend"). */
+ * and the line is the "ruled out" cue (docs/hints.md § "The element-type color legend"). */
 function drawHints(
   dr: GameDrawing,
   ts: number,

@@ -2,7 +2,7 @@
  * Sokoban's hint.
  *
  * Sokoban is a search game: no push is forced by logic, so the hint is the
- * non-deductive kind (docs/games/hints.md § "Non-deductive (heuristic)
+ * non-deductive kind (docs/hints.md § "Non-deductive (heuristic)
  * hints"). It finds a line of pushes that finishes and offers one push, set
  * against the other pushes the player could walk to and make, which is what a
  * player has to learn to tell apart:

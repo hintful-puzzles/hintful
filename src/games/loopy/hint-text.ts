@@ -4,7 +4,7 @@
  * The deduction decides which sentence and with what values ([`hint.ts`](./hint.ts)'s
  * `planSteps`); this file decides only how it reads. Each sentence runs indication,
  * reasoning, conclusion, with the conclusion in the necessity voice
- * (docs/games/hints.md § "Writing the narration"). An edge the loop cannot use
+ * (docs/hints.md § "Writing the narration"). An edge the loop cannot use
  * "can't be a line", as a Palisade edge "can't be a wall".
  *
  * Every word that points at the board is a reference to the mark it points at
@@ -18,7 +18,7 @@
  * **Notes are named by what they look like.** A corner *needs a line* (at least
  * one), *can take one line at most*, or *takes exactly one line*; a pair's edges
  * *match* (both lines or neither) or are *opposites* (exactly one is a line), which
- * the help teaches once rather than every step repeating (docs/games/hints.md
+ * the help teaches once rather than every step repeating (docs/hints.md
  * § "Rules belong in the help").
  */
 

@@ -16,7 +16,7 @@
  *     difficulty, and start over.
  *
  * So the published description depends on the solver's verdict on every board
- * along the way (docs/games/solver-and-generator.md § "Solver-gated
+ * along the way (docs/solver-and-generator.md § "Solver-gated
  * generation").
  *
  * **RNG draws must be reproduced in order, including the wasted ones.** The
@@ -24,7 +24,7 @@
  * the clue-removal passes shuffle a full-grid permutation twice — the second
  * `shuffle` permutes the array the first one already permuted, rather than a
  * fresh identity, so it cannot be replaced with one shuffle of a fresh array
- * (docs/games/testing.md § "Byte-match: fidelity where there is a right answer").
+ * (docs/testing.md § "Byte-match: fidelity where there is a right answer").
  */
 
 import { noSuchTier } from "../../engine/difficulty.ts";

@@ -14,14 +14,14 @@
  * Because stage 4's solubility test is the solver's verdict on every candidate
  * board, the description is decided end-to-end by the solver — which is what
  * makes a single byte-for-byte desc match validate generator, solver and codec
- * together (docs/games/solver-and-generator.md § "Solver-gated generation").
+ * together (docs/solver-and-generator.md § "Solver-gated generation").
  *
  * Upstream's FIXMEs ask for variety in stage 2 and it never delivers any: the
  * main block is always a 2×2 at the top left and the exit is always a
  * two-square hole punched in the right wall, guarded by forcefield squares only
  * the main block can cross. That is ported as-is — a less varied generator is
  * the curve upstream shipped, not a defect
- * (docs/games/solver-and-generator.md § "Divergence and what it costs" rule 3).
+ * (docs/solver-and-generator.md § "Divergence and what it costs" rule 3).
  */
 
 import { Dsf } from "../../engine/dsf.ts";
@@ -102,7 +102,7 @@ function generateBoard(
   // here")`. That is every 5×4 board, the smallest size `validateParams`
   // admits, where removing both interior singletons is exactly what frees the
   // main block. Divergence is free where the C has no defined behavior
-  // (docs/games/solver-and-generator.md § "Divergence and what it costs" rule 1):
+  // (docs/solver-and-generator.md § "Divergence and what it costs" rule 1):
   // the missing check draws no randomness and runs only where the C aborts.
   if (moves < 0) moves = solveBoard(w, h, board, forcefield, tx, ty, movelimit).moves;
   if (moves < 0)

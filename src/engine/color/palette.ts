@@ -182,7 +182,7 @@ export const ERROR_WASH: Color = RED_WASH;
  * twelve-color palette holds exactly one cool wash and the evidence has it. Do
  * not add one back: ringing the cell removes the constraint rather than trading
  * it, which is why this role has the *emphatic* blue and not a pale one.
- * `hint-mark.ts` is the mechanism; `docs/games/hints.md` § "Shade vs ring" is the
+ * `hint-mark.ts` is the mechanism; `docs/hints.md` § "Shade vs ring" is the
  * rule.
  */
 export const HINT_ACTION: Color = BLUE;

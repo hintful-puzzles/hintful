@@ -1382,7 +1382,7 @@ describe("crossing rendering", () => {
   });
 
   it("highlights a mistake even on a cell that was already drawn", () => {
-    // The paint-twice test (docs/games/rendering.md § "Prove the overlay repaints"): the overlay must sit in the diff
+    // The paint-twice test (docs/rendering.md § "Prove the overlay repaints"): the overlay must sit in the diff
     // key, or Check & Save — which runs a frame *after* the move that drew the
     // cell — would silently highlight nothing.
     const state = newState(P5, FIX.desc);

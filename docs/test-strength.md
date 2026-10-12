@@ -3,7 +3,7 @@
 **How to find out whether a test would actually catch anything** — and how to
 avoid being lied to by the tool you use to find out.
 
-This is the companion to [`games/testing.md`](games/testing.md) § "The test
+This is the companion to [`testing.md`](testing.md) § "The test
 tiers" and § "Render scenarios", which cover *writing* tests (the tiers, the
 render harness, keeping the gate cheap). This one covers *assessing* them, which is a different activity and
 applies to the whole tree, not just the games.

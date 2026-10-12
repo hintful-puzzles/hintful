@@ -4,7 +4,7 @@
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`, which reads a sightline's two clues off the board); this file
  * decides only how it reads: the spotted indication first, then the reasoning,
- * then a necessity-voice conclusion (docs/games/hints.md § "Writing the
+ * then a necessity-voice conclusion (docs/hints.md § "Writing the
  * narration"). A monster set arrives as its bitmask.
  *
  * Every word that points at the board is a reference to the mark it points at
@@ -80,7 +80,7 @@ export const say = {
 
   // Which monster shows where is the game's rule, and the help teaches it
   // (help/games/undead.md); the step says only what this sightline's two
-  // clues decide (docs/games/hints.md § "Rules belong in the help").
+  // clues decide (docs/hints.md § "Rules belong in the help").
   /** The sightline's clues `a` and `b` leave no room for `bits` in the cell. */
   sightline: (a: number, b: number, bits: number, m: Marked): Sentence => {
     const them = (left: number): string => {

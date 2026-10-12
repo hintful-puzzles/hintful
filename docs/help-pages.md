@@ -53,7 +53,7 @@ word.
 - **A mode's name is typed once.** Rulesets and modifiers are declared on
   `paramConfig`, and the page writes `{{rulesets}}`, `{{modifiers}}` or
   `{{choice:<kw>:<index>}}` where it names one
-  ([`games/mechanics.md`](./games/mechanics.md) § "Params are declared once,
+  ([`mechanics.md`](./mechanics.md) § "Params are declared once,
   on `paramConfig`").
 - **A piece's color is typed nowhere.** A page about pieces of the two-state
   pair writes `{{pair:0}}` and `{{pair:1}}`, and the build says the palette's
@@ -76,4 +76,4 @@ word.
 - **The Hints section is checked for presence, not content.** It says what
   the hint's marks mean in that game, which are the player's own notation,
   and the words its sentences use for them
-  ([`games/hints.md`](./games/hints.md) § "The help teaches the marks").
+  ([`hints.md`](./hints.md) § "The help teaches the marks").

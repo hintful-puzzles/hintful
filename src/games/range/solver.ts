@@ -46,7 +46,7 @@ import {
  * **This buys nothing for a player** — `vite build` flattens the two modules
  * into one scope and the read becomes a direct `var` access. Keeping them local
  * is worth it only because it keeps the *suite* fast; do not read it as a rule
- * against shared constants. `docs/games/testing.md` § "Timing anything under
+ * against shared constants. `docs/testing.md` § "Timing anything under
  * vitest: two things to know first". */
 export const DR = [1, 0, -1, 0];
 export const DC = [0, 1, 0, -1];

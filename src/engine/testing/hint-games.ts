@@ -9,7 +9,7 @@
  * because games mention `hint` without declaring one (an unused `redraw`
  * parameter, Guess's unrelated `ui.hint`).
  *
- * **A game with no `hint()` is a draft** (docs/games/hints.md § "The quality bar"), and
+ * **A game with no `hint()` is a draft** (docs/hints.md § "The quality bar"), and
  * joins every guard here the moment it gains one.
  *
  * Dev/test-only; never imported by production code.
@@ -130,7 +130,7 @@ export function markRoles(highlights: unknown): number {
  * carried a cage, a jigsaw block, an X diagonal, an Adjacent clue, a Tectonic
  * region, a multiplication-only Keen or any Loopy tiling but Squares. Three of
  * them have *narration* as their subject, while Killer alone adds four cage
- * sentences. `docs/games/testing.md` § "How a cross-game guard finds its
+ * sentences. `docs/testing.md` § "How a cross-game guard finds its
  * population" rule 6 names the tell: a guard that builds its inputs with a
  * `with*` rather than reading them off something the game offers.
  *
@@ -147,7 +147,7 @@ export function markRoles(highlights: unknown): number {
  *
  * **The local hooks take a game's modes and not its sizes, for every game.**
  * `perCommit` leaves the largest board to CI, where the whole slice is
- * walked on every push to `main` (`docs/games/testing.md` § "One board of
+ * walked on every push to `main` (`docs/testing.md` § "One board of
  * each kind in the hooks"). Every value of every mode, tier and choice keeps
  * a board in the hooks, on the smallest preset offering it.
  *

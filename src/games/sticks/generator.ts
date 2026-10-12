@@ -66,7 +66,7 @@ function clueFill(p: SticksParams, rng: RandomState): Dealt {
 
     // Upstream's dsf_minimal (a class's smallest index), which the shared Dsf
     // doesn't track, so precompute it after all merges. Independent of the root
-    // choice (docs/games/solver-and-generator.md § "The Latin family").
+    // choice (docs/solver-and-generator.md § "The Latin family").
     minimal.fill(-1);
     for (let i = 0; i < s; i++) {
       const r = dsf.canonify(i);

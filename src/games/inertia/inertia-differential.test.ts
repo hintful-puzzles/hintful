@@ -1,5 +1,5 @@
 /**
- * Inertia differential — the frozen C-reference check (docs/games/testing.md § "Fixture lifecycle", gated).
+ * Inertia differential — the frozen C-reference check (docs/testing.md § "Fixture lifecycle", gated).
  *
  * The fixtures in `__fixtures__/inertia-c-reference.json` were recorded from
  * upstream's C. The two halves of the game get two different bars:
@@ -7,13 +7,13 @@
  * 1. **The desc is byte-matched.** The generator's only RNG draws are `shuffle`
  *    calls and `random.ts` is bit-identical to `random.c`, so a faithful
  *    generator reproduces the C board for the same seed
- *    (docs/games/testing.md § "Byte-match: fidelity where there is a right answer")
+ *    (docs/testing.md § "Byte-match: fidelity where there is a right answer")
  *    — a cheap check on the generator and the gem-candidate search it gates on.
  *
  * 2. **The route is not.** A route is a traveling-salesman tour: there is no
  *    right answer to match, only better and worse ones, and byte-matching one
  *    would pin the port to C's in-place `memmove` splicing
- *    (docs/games/solver-and-generator.md § "Divergence and what it costs").
+ *    (docs/solver-and-generator.md § "Divergence and what it costs").
  *    So the route is checked on what matters: it is **legal** (every move a
  *    real slide, never onto a mine), it **collects every gem**, and it is **no
  *    longer than C's** — stronger than byte-equality, which a faithfully

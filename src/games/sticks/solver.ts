@@ -43,7 +43,7 @@ export type SticksStatus = "complete" | "unfinished" | "invalid";
  * detects it — one variant per branch the validator can fail on, which is the
  * whole of its vocabulary. The classifier must be total, and it is total here
  * because it is written *inside* the oracle rather than re-derived from its
- * verdict (docs/games/hints.md § "Read the reason off the validator").
+ * verdict (docs/hints.md § "Read the reason off the validator").
  *
  * Each variant carries the clue that broke, its value, and the cells the
  * argument reasons over — the hint's evidence area, so the picture cannot
@@ -602,7 +602,7 @@ function reasonKey(r: SticksReason): string {
  * handed — unlike {@link sticksSolveGame}, which wipes every white cell first
  * and so can never be a hint's engine — and rescans every blank cell on every
  * call, which is why a mid-game board needs no cascade priming
- * (docs/games/hints.md § "A hint must resume from any position").
+ * (docs/hints.md § "A hint must resume from any position").
  *
  * Where `sticksTry` returns at its first success, this keeps scanning: a black
  * clue that has run out of lines to give rules out *all* its open neighbors at
@@ -677,7 +677,7 @@ export function findLiveErrors(state: SticksState): number[] {
 /**
  * Flag every white cell whose placed line contradicts the board's one
  * answer, which the search found at either tier
- * (docs/games/solver-and-generator.md § "The solvable-game contract"). A
+ * (docs/solver-and-generator.md § "The solvable-game contract"). A
  * *missing* line is merely incomplete, never a mistake. Returns `[]` where
  * the search did not prove there is exactly one.
  */

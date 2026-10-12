@@ -16,7 +16,7 @@
  *    cannot reach a square.
  *  - **No step uses a technique above its board's tier.**
  *  - **Every technique and every dead-end cause is reached**, the rare ones on
- *    boards pinned as descriptions (docs/games/hints.md § "Census the reasons,
+ *    boards pinned as descriptions (docs/hints.md § "Census the reasons,
  *    not only the rungs").
  */
 

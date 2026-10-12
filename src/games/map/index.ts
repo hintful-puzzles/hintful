@@ -280,7 +280,7 @@ function interpretMove(
 
   // A color key or Clear, entered at the cursor — the collection's "select a
   // cell, tap a value", where in notes mode the same key marks it instead
-  // (`docs/games/input.md` § "The on-screen keypad").
+  // (`docs/input.md` § "The on-screen keypad").
   //
   // The key *is* the pick-up: Map holds a color rather than typing one, so
   // loading what the key names into the drag and dropping it where the cursor

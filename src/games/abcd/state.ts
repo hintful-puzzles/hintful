@@ -513,7 +513,7 @@ export function status(s: AbcdState): "solved" | "ongoing" {
  * borders, an outlined `w × h` grid of entered letters (`.` for empty), and a
  * `+`/`*` corner cue for the no-diagonal-touch mode. Returns `null` when a
  * clue could be two digits (`w ≥ 19` or `h ≥ 19`), which is upstream's
- * `game_can_format_as_text_now` (docs/games/mechanics.md § "Capability flags").
+ * `game_can_format_as_text_now` (docs/mechanics.md § "Capability flags").
  */
 export function textFormat(state: AbcdState): string | null {
   const { w, h, n } = state.params;

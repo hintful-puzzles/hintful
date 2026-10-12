@@ -489,7 +489,7 @@ describe("magnets hint sentences", () => {
 
   /** Every sentence the arms can speak, at every value that changes the words:
    * the only instrument that reads an arm no corpus happens to fire
-   * (docs/games/hints.md § "Census the reasons, not only the rungs"). */
+   * (docs/hints.md § "Census the reasons, not only the rungs"). */
   function everySentence(): string[] {
     const out: string[] = everyCountSentence()
       .filter((s) => !s.reasoned)
@@ -604,7 +604,7 @@ describe("magnets hint sentences", () => {
   });
 
   it("never cites a marked magnet on a board with none", () => {
-    // The fresh-board firing specifically (docs/games/hints.md § "Sanity-read
+    // The fresh-board firing specifically (docs/hints.md § "Sanity-read
     // at the degenerate extremes"): nothing is marked yet, so no sentence on
     // the first plan may lean on a mark.
     let checked = 0;

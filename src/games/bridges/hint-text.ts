@@ -9,7 +9,7 @@
  * choose.
  *
  * Each sentence runs indication, reasoning, conclusion, with the conclusion in
- * the necessity voice (docs/games/hints.md § "Writing the narration"). An
+ * the necessity voice (docs/hints.md § "Writing the narration"). An
  * island is named by its clue digit, which is the one thing about it the player
  * can read off the board, and the island the sentence is about is the one the
  * hint recolors. A *bridge* has no name at all, so every sentence points at one

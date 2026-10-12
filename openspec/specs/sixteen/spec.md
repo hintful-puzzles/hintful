@@ -6,7 +6,7 @@ numbers read in order from the top left: the game, its direct row and column
 dragging, and a hint that plans by searching, finishes the swapped-pair
 endgames, counts the tangles its distance measure cannot see, and refuses only
 by saying its search ran out. Why the hint's searches are arranged as they are
-is in `docs/games/hints.md` § "Sliding-permutation games".
+is in `docs/hints.md` § "Sliding-permutation games".
 
 ## Requirements
 

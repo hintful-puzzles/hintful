@@ -101,7 +101,7 @@ export type BricksMove =
 export interface BricksUi {
   /** Keyboard cursor visible + position. */
   cursor: GridCursor;
-  /** The accreting paint drag — `docs/games/input.md` § "The accreting-paint
+  /** The accreting paint drag — `docs/input.md` § "The accreting-paint
    * drag". The color the in-flight drag paints (`F_SHADE`/`F_UNSHADE`/
    * `F_EMPTY`, or 0 when no drag is active). */
   dragType: number;

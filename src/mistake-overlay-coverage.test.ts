@@ -20,7 +20,7 @@
  * from the ledger is a game whose Check-&-Save feedback someone has actually
  * seen drawn.
  *
- * That is the `NO_KEYBOARD` shape (`docs/games/testing.md` § "How a cross-game
+ * That is the `NO_KEYBOARD` shape (`docs/testing.md` § "How a cross-game
  * guard finds its population"), and the reason it is a ledger rather than a
  * skip: a roster nothing derives rots silently, and this one cannot — it is
  * checked against the derivation on every run.
@@ -38,7 +38,7 @@
  * written theirs before that harness existed (`explore-the-tile-loop-inversion`,
  * 2026-09-09; `openspec/postmortems/2026-09-09-tile-loop-inversion-withdrawal.md`).
  * Galaxies' three-frame test — which asserts the overlay *clears*, and which
- * `docs/games/rendering.md` cites **by name** as this discipline's exemplar —
+ * `docs/rendering.md` cites **by name** as this discipline's exemplar —
  * was on the list. Four of the six were proven covered by mutation: planting
  * the defect turns a test red in abcd, keen, rome and galaxies.
  *
@@ -94,7 +94,7 @@ const testSources = (() => {
  *
  * **Three spellings, because there are three and the guard once knew one.**
  * `renderScenario`'s `showMistakes` is the newest; the other two predate it and
- * are what `docs/games/rendering.md` § "Prove the overlay repaints" actually
+ * are what `docs/rendering.md` § "Prove the overlay repaints" actually
  * describes. See "ON THE KEYS" above for what keying on the newest alone cost.
  *
  * The `showMistakes` arm stays file-wide and unconditional — the flag *is* a
@@ -114,7 +114,7 @@ function isCovered(sources: readonly string[]): boolean {
         /findMistakes\??[.(]/.test(block) &&
         // `[Rr]edraw` and not `\bredraw`: a game whose export collides with
         // something in its own test file imports it aliased, and Galaxies —
-        // whose three-frame test `docs/games/rendering.md` cites *by name* as
+        // whose three-frame test `docs/rendering.md` cites *by name* as
         // this discipline's exemplar — calls `galaxiesRedraw(`. The first cut
         // of this widened key missed it, which is the same defect one layer
         // down, caught only because the exploration had already read the test.

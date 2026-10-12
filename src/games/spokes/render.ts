@@ -94,7 +94,7 @@ export const COL_CURSOR = 7;
  */
 export const COL_SATISFIED = 8;
 /** The forced spoke(s) of the displayed hint: a line to draw, or a rim dot for
- * a spoke to rule out (docs/games/hints.md § "Echo the move's shape in the hint
+ * a spoke to rule out (docs/hints.md § "Echo the move's shape in the hint
  * color"). Every leg of one firing shares it. */
 export const COL_HINT = 9;
 /** A ring around each evidence hub the hint reasons over. */
@@ -111,7 +111,7 @@ export const COL_DONE_LEAD = 12;
  * *not* luminance-adjusted for dark mode: `components/view.ts` passes pure white
  * as the background there and adapts the whole returned palette itself, so a
  * second adaptation here would fight the layer that owns the concern
- * (docs/games/rendering.md § "The palette: three layers, meaning first").
+ * (docs/rendering.md § "The palette: three layers, meaning first").
  */
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -164,7 +164,7 @@ export interface SpokesDrawState {
   corners: Int8Array;
   /** Check-&-Save mistake overlay: bit `d` set ⇒ spoke `d` of this cell is
    * flagged. Its own sidecar so it repaints a cell nothing else changed
-   * (docs/games/rendering.md § "The tile cache and the diff key"). */
+   * (docs/rendering.md § "The tile cache and the diff key"). */
   wrong: OverlaySidecar;
   /** Hint overlay, per cell: bits `0..7` ⇒ spoke `d` is a hint *line*
    * (`COL_HINT`, "draw this"), {@link HINT_RING} ⇒ ring this hub as evidence

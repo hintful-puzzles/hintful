@@ -7,7 +7,7 @@
  * word `undefined` is left to what the language means by it, *not supplied*: an
  * optional parameter or member is written `?`, and a value the language produced
  * that way (`?.`, `Map.get`, an index read) is converted with `?? null` where it
- * enters a declared type. `docs/games/mechanics.md` § "Absence is `null`" has the
+ * enters a declared type. `docs/mechanics.md` § "Absence is `null`" has the
  * reasons; the ones that decide a guard's shape are two:
  *
  * - **It is checkable by syntax alone, with no ledger.** `undefined` written as a

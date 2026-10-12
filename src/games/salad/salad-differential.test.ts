@@ -35,7 +35,7 @@ interface Fixture {
   /** Lowest difficulty at which the C solver finishes the board. */
   solverDiff: number;
   /** The C's own generation wall-clock, carried for reference (never asserted
-   * — a wall-clock assertion measures the box, not the code; docs/games/testing.md § "Seed-deterministic, never clock-gated"). */
+   * — a wall-clock assertion measures the box, not the code; docs/testing.md § "Seed-deterministic, never clock-gated"). */
   genMs: number;
 }
 

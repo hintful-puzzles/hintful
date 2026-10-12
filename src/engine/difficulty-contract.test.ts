@@ -166,7 +166,7 @@ for (const { id, game, contract, tiers } of tiered) {
       // **What this deliberately does NOT check**, stated rather than implied:
       // `search` is read off the game's own top name, so this cannot tell a game
       // that has earned `Unreasonable` from one that merely claims it. That is
-      // the Search classification, and `docs/games/solver-and-generator.md`
+      // the Search classification, and `docs/solver-and-generator.md`
       // § "Check / Tactic / Search" records that nothing can check it
       // mechanically — "this rung is a Search" is a judgment about the code. So
       // the guard covers the shape of the list and not the promise its last word
@@ -275,7 +275,7 @@ for (const { id, game, contract, tiers } of tiered) {
       // reachable tier, find the lowest cap that solves it, and require every
       // higher cap to solve it too.
       //
-      // Seed-deterministic and bounded, never clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
+      // Seed-deterministic and bounded, never clock-gated (docs/testing.md § "Seed-deterministic, never clock-gated").
       //
       // **Four boards per tier, and the number was measured rather than guessed.**
       // One board a tier passed a solver that failed at a higher cap on 7 of 8

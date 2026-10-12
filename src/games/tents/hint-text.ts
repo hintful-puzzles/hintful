@@ -4,7 +4,7 @@
  * The deduction decides which sentence and with what values ([`hint.ts`](./hint.ts)'s
  * `stepsOf`); this file decides only how it reads. Each sentence runs
  * indication, reasoning, conclusion, with the conclusion in the necessity voice
- * (docs/games/hints.md § "Writing the narration").
+ * (docs/hints.md § "Writing the narration").
  *
  * The words are the help page's: a square is a tent, grass, or open (still
  * blank), and a tent **belongs to** a tree once the two are joined, which the
@@ -14,7 +14,7 @@
  * are ringed; the squares it reasons from are outlined, and so is the number it
  * counts with; and the row or column it counts along is striped ("this row").
  * That every tent sits beside a tree of its own and that tents never touch are
- * the rules, and sit in the help (docs/games/hints.md § "Rules belong in the
+ * the rules, and sit in the help (docs/hints.md § "Rules belong in the
  * help").
  *
  * A step that decides several squares shrinks as the player makes some of them

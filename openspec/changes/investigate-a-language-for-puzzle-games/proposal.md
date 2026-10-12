@@ -34,7 +34,7 @@ Two findings from a first search make it worth a proper look
 - **That missing layer is what this collection already has in code.** A logic
   game here has one deduction engine whose named techniques both decide which
   boards are dealt at a tier and narrate the hint
-  (`docs/games/solver-and-generator.md` § "One engine, two projections"). No
+  (`docs/solver-and-generator.md` § "One engine, two projections"). No
   prior work found has that for dozens of games.
 
 ## What it has to reckon with first

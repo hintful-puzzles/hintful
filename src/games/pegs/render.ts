@@ -7,7 +7,7 @@
  *
  * The board's pixel origin lives here and `interpretMove` imports its
  * `fromCoordWithTileSize` — one function, both callers
- * (`docs/games/mechanics.md`). The grid vocabulary comes the other way, from
+ * (`docs/mechanics.md`). The grid vocabulary comes the other way, from
  * `state.ts`: this module imports no value from `index.ts`, so the two cannot
  * form a runtime cycle (`module-layering.test.ts`).
  */

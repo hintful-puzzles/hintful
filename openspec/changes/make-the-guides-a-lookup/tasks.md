@@ -30,12 +30,12 @@
 ## 3. The move, the openings and their check
 
 - [ ] 3.1 Move the guides up into `docs/` and repoint every citation of a
-      `docs/games/` path outside the archive, in one commit of its own,
+      `docs/` path outside the archive, in one commit of its own,
       verified by the shape of its diff: the count of citations before and
-      after, and none left (`git grep -c 'docs/games/'`). Check the gate's
+      after, and none left (`git grep -c 'docs/'`). Check the gate's
       documentation-only path and every check under `scripts/checks/` that
       names the directory.
-- [ ] 3.2 `docs/new-game.md` from `docs/games/README.md`, with the route per
+- [ ] 3.2 `docs/new-game.md` from `docs/new-game.md`, with the route per
       kind of game, and the table in `README.md` § "Documentation" naming
       it first. Move out of `AGENTS.md` whatever else there is not about
       how an agent works.

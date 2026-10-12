@@ -189,7 +189,7 @@ node scripts/checks/spelling.mjs
 
 # --- 1b-ii. The engine catalog names every shared helper there is. ~0s. ---
 #
-# `docs/games/engine-catalog.md` is the menu that stops a game author
+# `docs/engine-catalog.md` is the menu that stops a game author
 # re-rolling something the engine already has, and its value is entirely in
 # being complete: the entry most likely to be missing is the newest one, which
 # is the one an author is least likely to know about. Five modules had gone

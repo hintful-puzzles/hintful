@@ -4,7 +4,7 @@
  * reproducing them: the TS solver must reach, on every recorded board, the
  * verdict upstream recorded — including `2`, *ambiguous*, on all three of
  * upstream's Recursive boards, the defect the generator's uniqueness divergence
- * fixes (docs/games/testing.md § "Order-independent verdicts").
+ * fixes (docs/testing.md § "Order-independent verdicts").
  *
  * The generator is no longer asked to reproduce the descriptions: it rejects a
  * board the tier below already solves, which upstream never did. The codec

@@ -11,7 +11,7 @@
  * compares the board, notes included, with its unique solution and the hint
  * refuses on any wrong one, so the plan may take the player's marks as facts.
  *
- * **Every fact a step rests on is a note on the board first** (docs/games/hints.md
+ * **Every fact a step rests on is a note on the board first** (docs/hints.md
  * § "The marks have to be the player's own"). From Normal the solver reasons about
  * corners and pairs of edges, which the player notes in notes mode. Each such fact
  * a line depends on becomes a step placing that note, as close before the line as

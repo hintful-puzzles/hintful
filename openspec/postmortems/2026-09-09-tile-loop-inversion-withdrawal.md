@@ -247,14 +247,14 @@ The ledger keys coverage on the string `showMistakes` — `renderScenario`'s fla
 There are two other spellings in the tree, and both are older:
 
 1. `midend.findMistakes()` between two `midend.redraw()`s — the shape
-   `docs/games/rendering.md` § "Prove the overlay repaints" names Towers'
+   `docs/rendering.md` § "Prove the overlay repaints" names Towers'
    exemplar. **abcd, keen, lightup, rome.**
 2. `game.findMistakes?.(state)` passed straight into a direct `redraw(...)` call.
    **galaxies, map.**
 
 Galaxies' is the strongest mistake-overlay test in the collection — three
 frames, including the one that proves the overlay *clears* — and
-`docs/games/rendering.md` cites it by name as an exemplar while the ledger lists
+`docs/rendering.md` cites it by name as an exemplar while the ledger lists
 it as uncovered.
 
 Verified by mutation rather than by reading: planting the defect (dropping the

@@ -3,7 +3,7 @@
  * `render.ts` needs them too: upstream's `game_redraw` shows an in-progress
  * drag by *simulating the release move*, so the renderer calls `movePiece`, and
  * from `index.ts` that would be an import cycle
- * (docs/games/rendering.md § "A simulated-release preview lives in `moves.ts`").
+ * (docs/rendering.md § "A simulated-release preview lives in `moves.ts`").
  */
 
 import { assertNever } from "../../engine/assert-never.ts";

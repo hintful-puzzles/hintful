@@ -1,5 +1,5 @@
 /**
- * Tier-2.5 render-scenario tests for Ascent (docs/games/rendering.md § "The tile cache and the diff key").
+ * Tier-2.5 render-scenario tests for Ascent (docs/rendering.md § "The tile cache and the diff key").
  *
  * Reaches a fresh board for the Rectangle, Hexagon and Edges modes through a
  * real `Midend`, asserts the ops that matter (background fill, square borders,

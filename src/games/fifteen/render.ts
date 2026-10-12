@@ -3,7 +3,7 @@
  * two-pass sliding animation.
  *
  * The board's pixel origin lives here and `interpretMove` imports it — one
- * function, both callers (`docs/games/mechanics.md`).
+ * function, both callers (`docs/mechanics.md`).
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";

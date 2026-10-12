@@ -105,7 +105,7 @@ export const say = {
   lineFull: (c: ClueSight, n: number): Narration =>
     phrase`${clue(c)} already sees all but one of its towers deeper in ${line(c, "the line")}, so the cell nearest the clue must be tall enough to keep everything between it and them hidden. Height ${n} is too short for that`,
 
-  // "height N", never "a N": the article trap (docs/games/hints.md § "Name a
+  // "height N", never "a N": the article trap (docs/hints.md § "Name a
   // square by its value").
   lowerBound: (c: ClueSight, n: number): Narration =>
     phrase`${clue(c)} sees exactly ${c.value} towers along ${line(c, "its line")}; height ${n} so near it would hide too many`,

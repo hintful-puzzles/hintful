@@ -1,7 +1,7 @@
 /**
  * The shared deduction-fixpoint runner: an ordered ladder of *declared*
  * techniques that several logic games' solvers and hints share. The followable
- * guide is `docs/games/solver-and-generator.md` § "The deduction fixpoint".
+ * guide is `docs/solver-and-generator.md` § "The deduction fixpoint".
  *
  * A logic game's generator and its explained hint are two projections of **one
  * deduction engine**: the generator runs the techniques to a fixpoint with no
@@ -31,7 +31,7 @@
  *   which boards generate.
  *
  * That list is re-derived whenever this contract changes, never carried forward
- * (`docs/games/solver-and-generator.md` § "Where the fixpoint does not fit").
+ * (`docs/solver-and-generator.md` § "Where the fixpoint does not fit").
  *
  * **A conditionally-available technique guards itself in `run` and returns `0`**
  * (Unruly's `unique` variant; Spokes' look-ahead that runs at *exactly* Tricky).
@@ -284,7 +284,7 @@ export interface SingleFirings {
 /**
  * The **recording projection's** driver: the same ladder as
  * {@link runDeductionFixpoint}, stopping after every firing so that one firing
- * is one hint step (docs/games/hints.md § "Recording the deduction").
+ * is one hint step (docs/hints.md § "Recording the deduction").
  *
  * **Every firing is returned, including one that changed nothing the player
  * can see.** Whether a firing is worth a step is the plan loop's question

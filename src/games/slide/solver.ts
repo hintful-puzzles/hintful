@@ -16,7 +16,7 @@
  * an ordered multiset — so this is deliberately **not** a `tree234` port and
  * **not** `SortedMultiset`, which is the right answer for almost every other
  * `tree234` in the collection
- * (docs/games/engine-catalog.md § "Reach for these, don't re-roll"):
+ * (docs/engine-catalog.md § "Reach for these, don't re-roll"):
  *
  *  - `sorted`, under the comparator `memcmp(a->data, b->data, w*h)`, only
  *    **deduplicates by exact board bytes**; its ordering is never read out.

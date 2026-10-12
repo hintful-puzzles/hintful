@@ -3,7 +3,7 @@
  * for `Unreasonable`, derived from upstream's `solver_state`.
  *
  * The rules take an optional {@link SolverRecorder}, which is how `hint.ts`
- * narrates them (one engine, two projections — docs/games/hints.md §
+ * narrates them (one engine, two projections — docs/hints.md §
  * "Recording the deduction"). The generator and `solve` pass none, so their
  * path is byte-identical by construction and the frozen differential is the
  * guard.
@@ -57,7 +57,7 @@ const PROGRESS = 1;
 /**
  * One deduction firing, in the vocabulary of the rule that fired it. The
  * *reason* is built where the deduction is made — only the rule knows why the
- * other possibilities died (docs/games/hints.md § "The premise must single out
+ * other possibilities died (docs/hints.md § "The premise must single out
  * the conclusion").
  *
  * Every association firing carries `opp`, the 180° partner the game commits in

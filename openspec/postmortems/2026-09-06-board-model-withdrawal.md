@@ -316,7 +316,7 @@ machinery."
   `share-the-run-length-desc-scanner` (one grammar, four spellings, written
   twice per game).
 - **The rule this exploration cost a day to sharpen**, now in
-  `docs/games/mechanics.md` § "One function, both callers": the rule's most
+  `docs/mechanics.md` § "One function, both callers": the rule's most
   common concrete instance is the board's pixel origin, and the fix is to
   export it from one module and import it in the other — never to copy it with
   a comment naming the original.

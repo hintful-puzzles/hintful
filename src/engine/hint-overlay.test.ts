@@ -1,7 +1,7 @@
 /**
  * Cross-game guarantee: a hint overlay reaches the render cache.
  *
- * The defect class (docs/games/rendering.md § "The tile cache and the diff key"; `unify-hint-framework` seam S4): an
+ * The defect class (docs/rendering.md § "The tile cache and the diff key"; `unify-hint-framework` seam S4): an
  * overlay is applied *on top of* a cell, so it usually isn't part of the
  * cell's packed tile value — and if it also isn't compared in the game's
  * cache-miss branch, it only repaints when the cell's tile coincidentally
@@ -88,7 +88,7 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
             declaresNoMarks(step.highlights),
             `${seed}: displaying a hint with board marks painted ` +
               "nothing on a warm frame — its overlay is not reaching the " +
-              "render cache (docs/games/rendering.md § 'The tile cache and the diff key')",
+              "render cache (docs/rendering.md § 'The tile cache and the diff key')",
           ).toBe(true);
 
           // Apply the marks-free opener's own move (a board transition,

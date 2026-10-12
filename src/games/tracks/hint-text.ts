@@ -8,7 +8,7 @@
  * "both" at two and the name of a direction are this file's to choose.
  *
  * Each sentence runs indication, reasoning, conclusion, with the conclusion in
- * the necessity voice (docs/games/hints.md § "Writing the narration"), and a
+ * the necessity voice (docs/hints.md § "Writing the narration"), and a
  * line is always "this column" / "this row", striped through its clue: Tracks
  * draws no line numbers to name it by.
  *

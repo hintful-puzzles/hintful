@@ -16,7 +16,7 @@
  * ## Divergence: removals must keep the board *unique*
  *
  * Both strip loops keep a removal only while the board stays **uniquely**
- * solvable (docs/games/solver-and-generator.md § "Divergence and what it costs",
+ * solvable (docs/solver-and-generator.md § "Divergence and what it costs",
  * rule 3). Upstream tests `mathrax_solve`'s verdict for bare truthiness, and that
  * verdict is `2` for *ambiguous*, so it strips past the point where the board
  * has one answer.
@@ -29,7 +29,7 @@
  *
  * That tier's frozen C descriptions stay in the fixture and are checked the
  * order-independent way instead: the TS solver must reach C's recorded verdict
- * on them (docs/games/testing.md § "Order-independent verdicts").
+ * on them (docs/testing.md § "Order-independent verdicts").
  */
 
 import { latinGenerate } from "../../engine/latin.ts";
@@ -172,7 +172,7 @@ export function newMathraxDesc(p: MathraxParams, rs: RandomState): { desc: strin
   const diff = diffToLevel(p.diff);
 
   // Upstream generates exactly once; the tier gate below can reject, so the
-  // loop needs the house runaway guard (docs/games/testing.md § "Quirks are load-bearing — capped, not cleaned").
+  // loop needs the house runaway guard (docs/testing.md § "Quirks are load-bearing — capped, not cleaned").
   const attempt = retryLimit(`mathrax: generation (o${o} d${diff})`);
   for (;;) {
     attempt();

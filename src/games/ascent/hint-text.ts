@@ -5,7 +5,7 @@
  * `narrate`); this file decides only how it reads. Numbers arrive as the board
  * shows them, counting from 1, each with the square it stands on. Each sentence
  * runs indication, reasoning, conclusion, with the conclusion in the necessity
- * voice (docs/games/hints.md § "Writing the narration").
+ * voice (docs/hints.md § "Writing the narration").
  *
  * The words are the help page's: a **step** is one move to a neighboring
  * square, so a number sits within as many steps of another as they are apart

@@ -1,6 +1,6 @@
 /**
  * Magnets solver — faithful port of `solve_state` and its deduction helpers in
- * `magnets.c`. Byte-match critical (docs/games/solver-and-generator.md §
+ * `magnets.c`. Byte-match critical (docs/solver-and-generator.md §
  * "Solver-gated generation"): the generator gates difficulty on this solver's
  * verdict, so it must reach C's exact solved/ambiguous/impossible outcome on
  * every intermediate board — including the upstream quirks (notably the
@@ -85,7 +85,7 @@ export type MagnetsReason =
  * The hint's recorder, standing only on the recording path. With one attached
  * each rung records its premise before acting and returns at the first line
  * (or square) that changed anything, so one firing is one premise
- * (docs/games/hints.md § "A rung is not a premise, so return per premise").
+ * (docs/hints.md § "A rung is not a premise, so return per premise").
  * Without one, every rung accumulates across the whole grid exactly as the
  * generator has always run it.
  */

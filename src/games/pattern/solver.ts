@@ -480,7 +480,7 @@ export function lineHasError(state: PatternState, line: number): boolean {
 // same way in every arrangement of the line's runs, which is overlap
 // generalized to the whole clue rather than a "just because". Every generated
 // board is line-solvable, so the plan always completes. All three are parallel
-// recorders (docs/games/hints.md § "A non-Latin candidate game (Undead)"): they
+// recorders (docs/hints.md § "A non-Latin candidate game (Undead)"): they
 // never touch `solvePuzzle`/`isSoluble`, so the generator differential is
 // unaffected by construction.
 
@@ -758,7 +758,7 @@ function intersectionFiring(
  * for the rest. The plan is built on a working copy, each step applied before
  * the next is computed, so every step's narration and highlight reflect the
  * board as that step fires, and a fresh recompute resumes from any position
- * (docs/games/hints.md § "A hint must resume from any position").
+ * (docs/hints.md § "A hint must resume from any position").
  */
 export function deduceHintPlan(state: PatternState): PatternHintMove[] {
   const { w, h, clues } = state.common;

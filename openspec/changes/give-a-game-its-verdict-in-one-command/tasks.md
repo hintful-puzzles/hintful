@@ -25,6 +25,6 @@
 
 ## 3. Close
 
-- [ ] 3.1 `docs/games/testing.md` and `docs/games/README.md` name the
+- [ ] 3.1 `docs/testing.md` and `docs/new-game.md` name the
       command as what a session runs while writing a game.
 - [ ] 3.2 Gate, commit, archive, push.

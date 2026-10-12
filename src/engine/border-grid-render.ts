@@ -74,7 +74,7 @@ export const F_FLASH = 1 << 13;
  * Nothing *draws* from these — the cursor is drawn once, over the tiles, by
  * {@link drawBorderCursor}. They are here so the tile's diff key changes when
  * the cursor moves across it, which is what makes the old cursor get erased
- * (`docs/games/rendering.md` § "The tile cache and the diff key").
+ * (`docs/rendering.md` § "The tile cache and the diff key").
  */
 export const CONTAINS_CURSOR = (x: number): number => x << 14;
 /** This cell is in a region the game considers finished and correct. */

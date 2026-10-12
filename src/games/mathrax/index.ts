@@ -136,7 +136,7 @@ import {
  * - `"cell"` — a filled-in digit that is wrong;
  * - `"note"` — an empty cell whose non-empty pencil notes have crossed out the
  *   cell's solution digit
- *   (docs/games/mechanics.md § "Pencil marks: the full note-taking UX"). */
+ *   (docs/mechanics.md § "Pencil marks: the full note-taking UX"). */
 export interface MathraxMistake extends Point {
   kind: "cell" | "note";
 }
@@ -243,7 +243,7 @@ function interpretMove(
 }
 
 /** The adaptive mark-all
- * (docs/games/mechanics.md § "Pencil marks: the full note-taking UX").
+ * (docs/mechanics.md § "Pencil marks: the full note-taking UX").
  * Mathrax's uniqueness regions are exactly the row and the column; a clue is
  * *not* one. */
 function markAll(state: MathraxState): MathraxMove | null {
@@ -348,7 +348,7 @@ function findMistakes(state: MathraxState): readonly MathraxMistake[] {
 // --- hint ------------------------------------------------------------------
 
 /**
- * Why a strike is forced (docs/games/hints.md § "Writing the narration"):
+ * Why a strike is forced (docs/hints.md § "Writing the narration"):
  * indication, then reasoning, which the walk concludes with the move it makes.
  * `ns` is the struck value list. The words are
  * [`hint-text.ts`](./hint-text.ts)'s.

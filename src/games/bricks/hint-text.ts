@@ -64,7 +64,7 @@ export const say = {
     }),
 
   // "More than its 0 shaded neighbors" is nonsense: a 0 allows none at all
-  // (docs/games/hints.md § "Sanity-read at the degenerate extremes").
+  // (docs/hints.md § "Sanity-read at the degenerate extremes").
   /** Shading the target over-fills the outlined clue `n`. */
   overcount: (target: Point, clue: Point, n: number): Sentence =>
     so({

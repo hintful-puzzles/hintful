@@ -261,7 +261,7 @@ describe("the hint-notes preference", () => {
               effects.add(effect);
               // Every blank element the step reasons from shows its notes: the
               // premise is on the board, not left to be worked out
-              // (docs/games/hints.md § "Two readings of an unmarked cell").
+              // (docs/hints.md § "Two readings of an unmarked cell").
               const blank = blanks(state, step, effect);
               blankPremises[reading] += blank.length;
               expect(

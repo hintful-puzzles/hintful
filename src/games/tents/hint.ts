@@ -3,7 +3,7 @@
  * [`solver.ts`](./solver.ts).
  *
  * The deduction end is the solver's own rungs, run one firing at a time by
- * `tentsRecordingPass` with a recorder standing (docs/games/hints.md
+ * `tentsRecordingPass` with a recorder standing (docs/hints.md
  * § "Recording the deduction", the *threaded* shape). This file turns each
  * firing into its steps, sentences and picture.
  *
@@ -12,7 +12,7 @@
  * only where they have drawn it or can read it off the board at a glance. So
  * the recording pass reads the links afresh before every firing, and a
  * pairing the solver needs beyond that is drawn by a step of its own
- * (docs/games/hints.md § "Give the facts a notation (Loopy)", and
+ * (docs/hints.md § "Give the facts a notation (Loopy)", and
  * `add-tents-hint`'s design).
  */
 

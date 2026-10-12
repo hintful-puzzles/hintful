@@ -2,7 +2,7 @@
  * Check & Save's per-cell verdict for a game whose player writes one value per
  * cell, and may pencil a set of candidates there: a placed value that differs from
  * the solution is wrong, and so is a blank cell whose marks have crossed out
- * the solution's value (docs/games/mechanics.md § "Pencil marks: the full
+ * the solution's value (docs/mechanics.md § "Pencil marks: the full
  * note-taking UX"). Marks carrying extra candidates beside the answer are
  * ordinary mid-solve state, and a cell with no marks says nothing.
  *

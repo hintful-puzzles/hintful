@@ -1,6 +1,6 @@
 /**
  * Every sentence Palisade's hint speaks, and the words inside them. Palisade
- * is the collection's exemplar hint (docs/games/hints.md § "The quality bar"), so these
+ * is the collection's exemplar hint (docs/hints.md § "The quality bar"), so these
  * are the sentences other games' are measured against.
  *
  * The deduction decides which sentence and with what values (`index.ts`'s

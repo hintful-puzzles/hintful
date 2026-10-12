@@ -377,7 +377,7 @@ export const QUOTATIONS = {
   frontend_default_colour: [
     "AGENTS.md",
     "openspec/specs/repo-layout/spec.md",
-    "docs/games/rendering.md",
+    "docs/rendering.md",
     "src/engine/color/color-mkhighlight.ts",
     "src/engine/game.ts",
     "src/games/loopy/render.ts",

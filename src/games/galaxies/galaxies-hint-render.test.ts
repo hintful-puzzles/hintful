@@ -1,5 +1,5 @@
 /**
- * Galaxies' hint, as pixels — tier 2.5 (docs/games/testing.md § "Render
+ * Galaxies' hint, as pixels — tier 2.5 (docs/testing.md § "Render
  * scenarios"). Each frame is a pinned position played into a real `Midend`, so
  * these are the frames a player sees, not a hand-built drawstate.
  *

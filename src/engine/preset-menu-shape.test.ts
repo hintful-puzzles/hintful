@@ -1,5 +1,5 @@
 /**
- * The shape every game's preset menu has (`docs/games/mechanics.md` § "The
+ * The shape every game's preset menu has (`docs/mechanics.md` § "The
  * preset menu is a grid"), read off the menu itself, so it holds for a game
  * that calls `presetGrid` and for one that writes its list out.
  */

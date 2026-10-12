@@ -124,12 +124,12 @@ export const say = {
           ? phrase`join ${clueRef(m, `two ${vals[0]}s`)} into ${line}`
           : phrase`join ${clueRef(m, `the ${vals[0]} and the ${vals[1]}`)} into ${line}`;
     // One number per line is the rule, and the help teaches it
-    // (docs/games/hints.md § "Rules belong in the help").
+    // (docs/hints.md § "Rules belong in the help").
     return opens(phrase`A ${bad} line here would ${joined}`, move);
   },
 
   // No "another" at a black 0: nothing runs into it yet, so the word would be
-  // false exactly where the rule is starkest (docs/games/hints.md
+  // false exactly where the rule is starkest (docs/hints.md
   // § "Sanity-read at the degenerate extremes").
   overConnected: (
     reason: R<"overConnected">,

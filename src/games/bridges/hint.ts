@@ -4,13 +4,13 @@
  *
  * The deduction end is entirely `solver.ts`'s: the same rungs on the same
  * `runDeductionFixpoint`, run one firing at a time with a recorder standing
- * (docs/games/hints.md § "Recording the deduction", the *threaded* shape). This
+ * (docs/hints.md § "Recording the deduction", the *threaded* shape). This
  * file turns each firing into the sentence and the picture.
  *
  * **An island is named by its clue, and a bridge is named by nothing.** Bridges
  * draws no coordinates, so an island's digit is the only handle a sentence can
  * offer, and the step recolors that island so the words point at something
- * visible (docs/games/hints.md § "Name a square by its value"). A bridge has no
+ * visible (docs/hints.md § "Name a square by its value"). A bridge has no
  * handle at all: the narration says "this way" or "here" and the hint draws the
  * bridge, or the cross, that the move would make.
  */
@@ -67,7 +67,7 @@ export interface BridgesTarget extends BridgesSpan {
 /**
  * What one step is about, in four roles; its words name the ones it marks.
  *
- * The split follows docs/games/hints.md § "The element-type color legend". The
+ * The split follows docs/hints.md § "The element-type color legend". The
  * two `COL_HINT` roles are `focus` and `targets`, and they are safe to share a
  * color because they are **different kinds of element**: every sentence names
  * one as an island ("this 5") and the other as a direction ("this way"), which
@@ -131,7 +131,7 @@ export function narrate(
  * than that. Two of the three count a *group* the source island belongs to, so
  * marking it apart would say two islands play different parts in an argument
  * that treats them the same, and "these 2 islands" would point at one mark of
- * each color (docs/games/hints.md § "The element-type color legend").
+ * each color (docs/hints.md § "The element-type color legend").
  */
 function namesFocus(reason: BridgesReason): boolean {
   switch (reason.kind) {
@@ -177,7 +177,7 @@ function highlightsOf(
     focus: focused ? { x: focus.x, y: focus.y } : null,
     // Only the island the words are *about* is filtered out of its own
     // evidence: a demotion that removes context makes the remaining mark
-    // louder, not quieter (docs/games/hints.md, the Galaxies partner). Where
+    // louder, not quieter (docs/hints.md, the Galaxies partner). Where
     // the sentence does not name it, it stays in the group it belongs to.
     islands: reason.ev.islands.filter((i) => !focused || i !== reason.island).map(at),
     spans: reason.ev.spans,

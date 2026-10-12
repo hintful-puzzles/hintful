@@ -22,7 +22,7 @@
  * job is to make a capability's disappearance a reviewable line in a text diff
  * rather than a silence. `vitest -u` re-baselines it, which is correct for an
  * intended change and is why the assertions below are not snapshots: a careless
- * `-u` must not be able to erase the guarantee (`docs/games/testing.md`).
+ * `-u` must not be able to erase the guarantee (`docs/testing.md`).
  *
  * WHY NOT A MANIFEST. Because the change that drops a capability would drop its
  * manifest entry in the same edit, and nothing would notice — the shape this
@@ -57,7 +57,7 @@ describe("capability surface", () => {
     // nothing to remember. One game is genuinely that, so the exemption is a
     // **ledger keyed to the derived set**, not a skip: the derivation says who,
     // and the ledger says why, one entry per member, asserted to be exactly the
-    // set (`docs/games/testing.md` § "How a cross-game guard finds its
+    // set (`docs/testing.md` § "How a cross-game guard finds its
     // population"). If a converted game empties its `Ui`, this fails; if Cube
     // ever gains state, the stale entry fails too.
     // An entry is a game whose every gesture is a bare direction relative to a

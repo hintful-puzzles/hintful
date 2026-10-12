@@ -1,5 +1,5 @@
 /**
- * Every sentence Map's hint speaks (docs/games/hints.md § "The sentences live
+ * Every sentence Map's hint speaks (docs/hints.md § "The sentences live
  * in one file per game").
  *
  * ## A color is named by its word
@@ -156,7 +156,7 @@ export const say = {
    * "Use both" is the premise the conclusion rests on, and it is stated rather
    * than left for the player to supply: without it, "so this region can't be
    * either" does not follow from "both can only be red or teal" (the
-   * `equivalentEdges` lesson, docs/games/hints.md § "Writing the narration").
+   * `equivalentEdges` lesson, docs/hints.md § "Writing the narration").
    */
   pair: (
     r: number,
@@ -180,7 +180,7 @@ export const say = {
    * Map's own sentence rather than `forcingChainPremise`, which is written for
    * a line: its "this cell's row already has it" and the candidate walk's
    * conclusion become "touches" and one of three moves here, so two of its three clauses would
-   * differ (docs/games/hints.md § "Candidate-elimination games": extract when
+   * differ (docs/hints.md § "Candidate-elimination games": extract when
    * only the vocabulary differs, decline when an arm's shape does).
    */
   chain: (

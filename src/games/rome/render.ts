@@ -25,7 +25,7 @@
  *
  * ## Colors
  *
- * The colors are the shared palette's meanings (docs/games/rendering.md § "The palette: three layers, meaning
+ * The colors are the shared palette's meanings (docs/rendering.md § "The palette: three layers, meaning
  * first").
  */
 
@@ -518,7 +518,7 @@ export function redraw(
         const q = ts * 0.12;
         // A mark this hint rules out keeps its own color and takes a
         // strikethrough in the same color — the collection's "ruled out" cue
-        // (docs/games/hints.md § "The element-type color legend"). The hint
+        // (docs/hints.md § "The element-type color legend"). The hint
         // says what to cross off; it never crosses it off for the player.
         const struck = ds.hint.struck[i1];
         const markAt = (bit: number, mx: number, my: number, n: number): void => {
@@ -563,7 +563,7 @@ export function redraw(
 
       // A loop firing shades the arrow chain that leads back here, and the
       // ordinal is what makes it a chain the player can walk rather than a heap
-      // of squares (docs/games/hints.md § "Number the chain").
+      // of squares (docs/hints.md § "Number the chain").
       const order = ds.hint.order[i1];
       if (order > 0) {
         drawHintOrdinal(dr, { x: cx, y: cy }, ts, order, COL_HINT_CELL);

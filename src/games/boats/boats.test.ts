@@ -5,7 +5,7 @@
  * generator, the solver and the codec against the C. What it cannot reach is
  * everything downstream of `newDesc`: input mapping, `executeMove`'s shape
  * resolution and completion check, the mistake overlay, and the frame the
- * player actually sees. That is what this file is for (docs/games/testing.md §
+ * player actually sees. That is what this file is for (docs/testing.md §
  * "The test tiers": a byte-match differential does not exercise the
  * interactive completion path).
  */
@@ -673,7 +673,7 @@ describe("boats solve", () => {
 
     expect(midend.solve()).toBeNull();
     // Solve must actually finish the game, not merely fill some squares in
-    // (docs/games/solver-and-generator.md § "Solve and the generator's aux").
+    // (docs/solver-and-generator.md § "Solve and the generator's aux").
     expect(boatsGame.status(stateOf(midend))).toBe("solved");
   });
 
@@ -946,7 +946,7 @@ describe("boats rendering", () => {
     expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
   it("highlights a mistake on a board that was already drawn", () => {
-    // The paint-twice test (docs/games/rendering.md § "Prove the overlay
+    // The paint-twice test (docs/rendering.md § "Prove the overlay
     // repaints"): a cold frame proves nothing, because every cell misses the
     // cache on frame 1 anyway.
     const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4) });

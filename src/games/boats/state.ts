@@ -10,7 +10,7 @@
  *
  * **Two grids, two lifetimes.** `gridClues` and `borderClues` never change once
  * a game is created, so every state shares the one instance by reference
- * (docs/games/mechanics.md § "Idiomatic state, not a C transliteration") and a
+ * (docs/mechanics.md § "Idiomatic state, not a C transliteration") and a
  * move replaces only `grid`. The *solver* needs both mutable — it fills in
  * hidden border numbers and restores them afterwards — so it works on a
  * separate {@link BoatsBoard} scratch, never on a `BoatsState`.
@@ -469,7 +469,7 @@ const TEXT_CHARS: Readonly<Record<number, string>> = {
  * Upstream `game_text_format`, gated by `game_can_format_as_text_now`
  * (`w <= 10 && h <= 10` — an 11-wide board's counts would not fit the
  * single-character columns), so this returns `null` for the params it
- * cannot render (docs/games/mechanics.md § "Capability flags").
+ * cannot render (docs/mechanics.md § "Capability flags").
  */
 export function textFormat(s: BoatsState): string | null {
   const { w, h } = s.params;

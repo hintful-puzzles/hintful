@@ -683,7 +683,7 @@ describe("input", () => {
 
   it("accepts the bare numpad digits and backspace", () => {
     // `MOD_NUM_KEYPAD` never arrives in this frontend, and upstream already
-    // keys off the bare characters (docs/games/input.md § "The numeric keypad never arrives").
+    // keys off the bare characters (docs/input.md § "The numeric keypad never arrives").
     const st = board(3, 3, EMPTY_3);
     const ui = newUi();
     romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_RIGHT);
@@ -800,7 +800,7 @@ describe("findMistakes", () => {
   });
 
   it("flags an arrow that breaks no rule but contradicts the solution", () => {
-    // The layer a live-only check cannot give (docs/games/solver-and-generator.md § "The solvable-game contract"): without it,
+    // The layer a live-only check cannot give (docs/solver-and-generator.md § "The solvable-game contract"): without it,
     // Check & Save would happily store this board.
     const { state, index, wrong } = firstDeviatingPlacement();
     const after = romeGame.executeMove(state, {
@@ -834,7 +834,7 @@ describe("findMistakes", () => {
  * Find a square of a fixed-seed board where a *legal-looking* wrong arrow can
  * be placed: empty, with the solution's arrow known, and some other direction
  * that breaks no rule on its own. The fixed-seed scan is the deterministic way
- * to reach a specific position without hand-authoring a board (docs/games/testing.md § "Render scenarios", the fixed-seed scan idiom).
+ * to reach a specific position without hand-authoring a board (docs/testing.md § "Render scenarios", the fixed-seed scan idiom).
  */
 function firstDeviatingPlacement(): {
   state: RomeState;

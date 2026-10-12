@@ -408,7 +408,7 @@ describe("availableFirings", () => {
   it("withholds a firing that reads a placement the board has not made, or its cull", () => {
     // The recording past an unmade placement ran on a board with that cell
     // decided and its cull struck, so a firing reading either rests on a state
-    // the player has not reached (docs/games/hints.md § "Solve the way a human
+    // the player has not reached (docs/hints.md § "Solve the way a human
     // does").
     const [grid, pencil] = board(
       [0, 0, 0, 0],

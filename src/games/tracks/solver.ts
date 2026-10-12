@@ -4,7 +4,7 @@
  * clues by re-running this solver and keeping only removals that stay soluble
  * at exactly the target difficulty), the desc is decided by this solver's
  * *verdict* on every intermediate board, so the port reproduces C's
- * deductions, and their order, verbatim (docs/games/solver-and-generator.md
+ * deductions, and their order, verbatim (docs/solver-and-generator.md
  * § "Solver-gated generation"). Reused by `solve()` and `findMistakes`.
  *
  * **The ladder runs on the shared `runDeductionFixpoint`**, and three things
@@ -72,7 +72,7 @@ import {
  * destroy its own premise: `looseEndSpans` cites the column's *unfinished*
  * squares and then finishes one of them, so a snapshot taken after the firing
  * would shade a different set than the sentence counts
- * (docs/games/hints.md § "Show the evidence as an area").
+ * (docs/hints.md § "Show the evidence as an area").
  */
 export interface TracksEvidence {
   /** Cell indices (`y * w + x`). */
@@ -142,7 +142,7 @@ export interface TracksFiring {
  * `if (rec && did > before) return did;` is the **per-premise early return**
  * that keeps one firing = one hint step (a rung like `updateFlags` scans the
  * whole grid and would otherwise pile dozens of unrelated deductions into one
- * step: docs/games/hints.md § "Group one firing into one step"), and
+ * step: docs/hints.md § "Group one firing into one step"), and
  * `if (rec) rec.reason = null;` stops a premise that changed nothing from
  * lending its reason to the next one.
  */
@@ -202,7 +202,7 @@ function sidesWith(b: Board, x: number, y: number, eflag: number): number[] {
  *    every time it fired (671 of 671, measured).
  *
  * All three are real and needed by the deduction, so they run; none claims a
- * reason, so each comes back as a firing the plan hides (docs/games/hints.md
+ * reason, so each comes back as a firing the plan hides (docs/hints.md
  * § "Show only what the board does not already say"). Each returns on its own
  * on the recording path, like every narrated premise, so a hidden firing never
  * shares a step with a shown one.

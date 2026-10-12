@@ -63,7 +63,7 @@ export const say = {
       move: phrase`it must be ${UNSHADED_NAME}`,
     }),
 
-  // Read at the small extremes (docs/games/hints.md § "Sanity-read at the
+  // Read at the small extremes (docs/hints.md § "Sanity-read at the
   // degenerate extremes"): a 1 sees only its own cell, and "all 2 of" reads
   // wrong where "both" is the word — Salad's line counts say it the same way.
   /** The clue `n` already sees all its clear cells. */

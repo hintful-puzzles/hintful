@@ -650,7 +650,7 @@ function interpretMove(
   // DRAG_SLOP_PX says which it was. That costs the edge toggle its
   // fire-on-press immediacy, and it is the only reason upstream put the drag
   // on the right button. Worth paying: right-drag reaches touch only through
-  // the 350 ms long-press promotion, which docs/games/input.md § "A touch hold
+  // the 350 ms long-press promotion, which docs/input.md § "A touch hold
   // arrives as the right button" records as fatal to exactly this gesture.
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
     ui.cursor.visible = false;

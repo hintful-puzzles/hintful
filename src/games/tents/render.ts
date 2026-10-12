@@ -13,7 +13,7 @@
  * The per-tile cache packs the square value plus every error / cursor / flash
  * / mistake overlay bit and the square's link into one `Int32Array` word, and
  * the hint's rings, outlines, hatch and link into a second, so the diff key
- * covers every overlay (docs/games/rendering.md § "Overlay sidecars"). Edge
+ * covers every overlay (docs/rendering.md § "Overlay sidecars"). Edge
  * numbers diff a parallel key of their error flag and hatch.
  */
 
@@ -160,7 +160,7 @@ const HINT_LINK_SHIFT = 9;
 
 // --- geometry (NARROW_BORDERS) --------------------------------------------
 /** The board's pixel origin. Exported so `interpretMove` reads the same number
- * the painter does ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
+ * the painter does ([`docs/mechanics.md`](../../../docs/mechanics.md)). */
 export const TLBORDER = 1;
 const brBorder = (ts: number) => ts + 2;
 const coord = (n: number, ts: number) => n * ts + TLBORDER;

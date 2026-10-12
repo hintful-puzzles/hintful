@@ -37,6 +37,6 @@
 - [ ] 4.1 The gate check: what a spec owes, derived from each registered
       game, and the order. See it fail on a spec with a subject removed and
       on one out of order.
-- [ ] 4.2 `docs/games/README.md` § "What a game's spec holds" states the
+- [ ] 4.2 `docs/new-game.md` § "What a game's spec holds" states the
       rule and the order.
 - [ ] 4.3 Gate, commit, archive, push.

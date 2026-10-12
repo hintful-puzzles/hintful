@@ -4,7 +4,7 @@
  * exactly — the `random_upto` tent-placement permutation and the bipartite
  * `matching`'s own internal draws (RNG-faithful in `engine/latin.ts`) — and
  * the solver's verdict must match C on every candidate board (the difficulty
- * gate rejects any board solvable one level down). See docs/games/testing.md
+ * gate rejects any board solvable one level down). See docs/testing.md
  * § "Byte-match: fidelity where there is a right answer".
  *
  * Generation strategy: place `w*h/5` tents at random non-adjacent squares,

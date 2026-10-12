@@ -70,7 +70,7 @@ const ORDINAL_RGB = rgbOf(HINT_EVIDENCE);
  * readily on the 4x4 its first preset gives once the tier is turned up.
  *
  * **A synthesized tier is not a fiction here**, and that is what separates this
- * from `docs/games/testing.md` § "How a cross-game guard finds its population"
+ * from `docs/testing.md` § "How a cross-game guard finds its population"
  * rule 6. Rule 6's case asked whether a *board* carries the difficulty its
  * params claim, which a 4x4 cannot; this asks whether a renderer draws what its
  * hint declares, and 4x4 Hard is a configuration the Custom dialog offers and

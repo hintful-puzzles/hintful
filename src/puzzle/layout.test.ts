@@ -10,7 +10,7 @@
  * one name would be drawn on top of each other.
  *
  * What it cannot see is pixels: that the tracks are wide enough is checked in
- * the browser (`docs/games/input.md`, "The puzzle screen's three panels").
+ * the browser (`docs/input.md`, "The puzzle screen's three panels").
  */
 import { describe, expect, it } from "vitest";
 import {

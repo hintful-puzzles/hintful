@@ -6,7 +6,7 @@
  * block, ink on an open cell, red when its constraint is currently violated),
  * and the cursor's frame under the keyboard cursor. The in-flight drag previews its accreted cells; the win flash
  * fills each open cell it passes with the flash color, under its line. `findMistakes` cells get
- * an inset red frame via an `OverlaySidecar` (docs/games/rendering.md § "Overlay sidecars" — the overlay is
+ * an inset red frame via an `OverlaySidecar` (docs/rendering.md § "Overlay sidecars" — the overlay is
  * part of the diff key so Check & Save repaints an otherwise-unchanged
  * frame).
  *
@@ -118,7 +118,7 @@ export function computeSize(p: SticksParams, ts: number): Size {
 const F_ERR = 1 << 8;
 const F_CUR = 1 << 9;
 // The hint overlay is part of the diff key, or an otherwise-unchanged frame
-// never repaints when a hint is shown or dismissed (docs/games/rendering.md § "Overlay sidecars").
+// never repaints when a hint is shown or dismissed (docs/rendering.md § "Overlay sidecars").
 const F_HINT_HOR = 1 << 11;
 const F_HINT_VER = 1 << 12;
 const F_HINT_EVID = 1 << 13;

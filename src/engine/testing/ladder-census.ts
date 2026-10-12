@@ -11,7 +11,7 @@
  *
  * **What it cannot see is a rung that fires and is not needed.** Other rungs can
  * reach the same conclusion, and then silencing one leaves the board unchanged;
- * docs/games/solver-and-generator.md § "Proving an adoption" says how to find
+ * docs/solver-and-generator.md § "Proving an adoption" says how to find
  * out. Each adoption was once proved against the hand-written loop it replaced,
  * which git keeps; the census is what stays live.
  *
@@ -31,7 +31,7 @@ export interface LadderCensusSpec<Board> {
    *
    * **Empty is the goal.** An entry is a rung whose behavior nothing here
    * certifies, so it is a live shortfall: the `NO_KEYBOARD` shape
-   * (`docs/games/testing.md` § "How a cross-game guard finds its population").
+   * (`docs/testing.md` § "How a cross-game guard finds its population").
    */
   unreached: Readonly<Record<string, string>>;
   /** The caps to walk each board at: the game's own tier values. */

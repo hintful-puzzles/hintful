@@ -3,7 +3,7 @@
  *
  * The deduction is entirely the solver's: the same graded ladder, run one
  * firing at a time through `singleFirings` with a recorder standing
- * (docs/games/hints.md § "Recording the deduction", the *threaded* shape). This
+ * (docs/hints.md § "Recording the deduction", the *threaded* shape). This
  * file turns each firing into a journey of moves the player can make, and the
  * sentence and picture that explain it.
  *
@@ -193,7 +193,7 @@ export function recordingPass(
 // --- narration ------------------------------------------------------------
 
 /** What a step's outlined clue digits are, beyond being outlined. Both colors
- * of clue digit are outlines (docs/games/hints.md § "The element-type color
+ * of clue digit are outlines (docs/hints.md § "The element-type color
  * legend"): the count of the line it counts takes the action color, and a clue
  * cited as a reason, a met line's count, the evidence color. */
 export interface MagnetsHighlights {

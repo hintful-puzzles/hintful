@@ -79,7 +79,7 @@ export const DELETE = 127;
  *
  * Both codes are accepted: `8` costs nothing and keeps upstream's binding true
  * for any frontend that does send it. The point is that no game decides this
- * again from memory (docs/games/input.md § "The numeric keypad never arrives").
+ * again from memory (docs/input.md § "The numeric keypad never arrives").
  */
 export function isEraseKey(button: number): boolean {
   return button === BACKSPACE || button === DELETE;
@@ -118,7 +118,7 @@ export function isCancelKey(button: number): boolean {
  * Modifier bits are looked through, because a numpad digit with Num Lock on
  * arrives as `MOD_NUM_KEYPAD | '7'` and *is* a press of 7: the keypad is a
  * convenience route to the same digit, never a different key
- * (docs/games/input.md § "The numeric keypad never arrives"). A game that gives
+ * (docs/input.md § "The numeric keypad never arrives"). A game that gives
  * the **numpad's** digits another meaning — Ascent, Bricks, Cube and Twiddle use
  * them as a direction pad — resolves those before asking
  * ({@link numpadDirection}).

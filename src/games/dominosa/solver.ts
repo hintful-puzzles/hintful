@@ -8,7 +8,7 @@
  * back-index bookkeeping in `ruleOutPlacement` — so the verdict (0 impossible /
  * 1 unique / 2 ambiguous) matches C on every board. The generator is
  * solver-gated, so a faithful verdict is what makes the byte-match differential
- * hold (docs/games/solver-and-generator.md § "Solver-gated generation").
+ * hold (docs/solver-and-generator.md § "Solver-gated generation").
  *
  * The three `.sort()`s (`squaresByNumber`, the two forcing-chain comparators)
  * use total or tie-order-irrelevant orderings that feed set-membership

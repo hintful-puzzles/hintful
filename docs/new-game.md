@@ -6,16 +6,16 @@ authoritative and must not be trusted *less* than these files. Anti-drift rule:
 a guide states a normative rule briefly and links it; it points at an exemplar
 file rather than pasting code that rots (the owning requirement is "Developer
 guides live under docs/ and link to specs" in
-[`repo-layout`](../../openspec/specs/repo-layout/spec.md)).
+[`repo-layout`](../openspec/specs/repo-layout/spec.md)).
 
 **These are a live wiki, not frozen docs.** Whenever you work on a game and hit
 something a guide didn't tell you, got wrong, or could say better, **update the
 guide in the same change** — that is part of "done", not a separate chore. The
-standing obligation is stated in [`AGENTS.md`](../../AGENTS.md).
+standing obligation is stated in [`AGENTS.md`](../AGENTS.md).
 
 **Where a guide offers you a choice, ask whether it should.** The collection's
 goal is *convention over configuration: one obvious way to do it, and no
-unnecessary decisions* ([`doctrine.md`](../doctrine.md) § "Convention over
+unnecessary decisions* ([`doctrine.md`](./doctrine.md) § "Convention over
 configuration"). So a guide passage that reads *"games do this in a few
 different ways"* is describing accidental complexity, not documenting a feature —
 and **the fix belongs in the same change that hit it**, either by unifying the
@@ -24,21 +24,21 @@ Decisions that are genuinely about the puzzle stay with the puzzle; the rest are
 a convention somebody has not made yet.
 
 **Cite sections by heading, never by position.** A citation reads
-`docs/games/<file>.md § "Heading"`. Cited headings are grep-stable: renaming
+`docs/<file>.md § "Heading"`. Cited headings are grep-stable: renaming
 one repoints every citation in the same change.
 
 Authoritative specs:
-[`ts-migration`](../../openspec/specs/ts-migration/spec.md) (what the port
+[`ts-migration`](../openspec/specs/ts-migration/spec.md) (what the port
 left standing, the acceptance gate) ·
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md) (the `Game` interface,
+[`ts-engine`](../openspec/specs/ts-engine/spec.md) (the `Game` interface,
 the `Midend`) and the `engine-*` specs beside it, one per subject (hints,
 input, params, difficulty, notes, colors, drawing, helpers) ·
-[`repo-layout`](../../openspec/specs/repo-layout/spec.md) (where things live) ·
-[`testing`](../../openspec/specs/testing/spec.md) (the in-process test tiers) ·
-[`help-pages`](../../openspec/specs/help-pages/spec.md) (a game's help page) ·
+[`repo-layout`](../openspec/specs/repo-layout/spec.md) (where things live) ·
+[`testing`](../openspec/specs/testing/spec.md) (the in-process test tiers) ·
+[`help-pages`](../openspec/specs/help-pages/spec.md) (a game's help page) ·
 per-game specs under `openspec/specs/<game>/`.
-Doctrine: [`doctrine.md`](../doctrine.md). **A new game starts as a copy of
-the skeleton**, [`src/skeleton/`](../../src/skeleton/README.md): a small game
+Doctrine: [`doctrine.md`](./doctrine.md). **A new game starts as a copy of
+the skeleton**, [`src/skeleton/`](../src/skeleton/README.md): a small game
 that plays, on the shared way for every concern that has one. It is what to
 read before starting, and § "File anatomy" says what each of its files holds.
 No existing game is required reading.
@@ -55,13 +55,13 @@ No existing game is required reading.
 | [`testing.md`](./testing.md) | The test tiers, render scenarios and snapshots, the frozen differentials, generation invariants, seed-determinism, metrics. |
 | [`engine-catalog.md`](./engine-catalog.md) | The shared-helper reference: what exists in `src/engine/`, when to reach for each, and the promotion rule. |
 
-Repo-wide and not game-specific: [`../test-strength.md`](../test-strength.md)
+Repo-wide and not game-specific: [`../test-strength.md`](./test-strength.md)
 — assessing whether a test would actually catch anything (`npm run probe`, the
 five-minute mutation probe, the instrument traps);
-[`../method.md`](../method.md) — trusting a check, a census or a bulk edit;
-[`../doctrine.md`](../doctrine.md) — what the project is for, and how that
-decides a framework question; [`../work-management.md`](../work-management.md)
-— changes, acceptance, pushing; [`../help-pages.md`](../help-pages.md) — the
+[`../method.md`](./method.md) — trusting a check, a census or a bulk edit;
+[`../doctrine.md`](./doctrine.md) — what the project is for, and how that
+decides a framework question; [`../work-management.md`](./work-management.md)
+— changes, acceptance, pushing; [`../help-pages.md`](./help-pages.md) — the
 rules for `help/`.
 
 ## The lifecycle of a game change
@@ -73,7 +73,7 @@ proposal-approval gate is off by default in this project; the gate that matters
 is owner acceptance at the *end*). The workflow ships as the `openspec-*` skills
 the pinned CLI installs (`propose`, `explore`, `apply`, `update`, `sync`,
 `archive`), with the project's own rules for it in
-[`work-management.md`](../work-management.md).
+[`work-management.md`](./work-management.md).
 
 For a new game:
 
@@ -84,7 +84,7 @@ For a new game:
    and checks the copy: it compiles, lints and passes its tests before a line
    is changed. It then prints what the copy leaves undone. The owning
    requirement is "A scaffolding script stamps out a new game from the
-   skeleton" in [`repo-layout`](../../openspec/specs/repo-layout/spec.md).
+   skeleton" in [`repo-layout`](../openspec/specs/repo-layout/spec.md).
 3. **Implement by replacing the skeleton's puzzle with yours**, keeping its
    tests green as you go: the board and the moves (`state.ts`), the rules
    (`solver.ts`), the generator, the picture, the hint's sentences. Each
@@ -93,8 +93,8 @@ For a new game:
    that concern says what else a game may do.
 4. **Register** the game — two edits, made together because
    `catalog-registry.test.ts` holds them to each other: import the game in
-   [`src/games/index.ts`](../../src/games/index.ts) and add its catalog entry
-   to [`src/puzzle/catalog-data.ts`](../../src/puzzle/catalog-data.ts). A game
+   [`src/games/index.ts`](../src/games/index.ts) and add its catalog entry
+   to [`src/puzzle/catalog-data.ts`](../src/puzzle/catalog-data.ts). A game
    absent from the registry is simply unplayable. The entry names the game's
    **family** (one of `puzzleFamilies`), which a player browses by. Choose the
    family whose other members a player of the new game would most want to try
@@ -104,7 +104,7 @@ For a new game:
    `puzzlesInFamily("latin")` rather than typing the list out.
 5. **Icons**: two committed PNGs (`src/assets/icons/<gameId>-{64,128}d8.png`),
    captured from the running game via the dev-only `?screenshot` mode — see
-   [`puzzle-icons`](../../openspec/specs/puzzle-icons/spec.md).
+   [`puzzle-icons`](../openspec/specs/puzzle-icons/spec.md).
 6. **Owner acceptance**, then close out (below).
 
 ## What a game's spec holds
@@ -148,7 +148,7 @@ earlier line firing first makes the general claim false.
 ## File anatomy
 
 The file shape a new game has, which is the skeleton's
-([`src/skeleton/grid/`](../../src/skeleton/grid/)). A game with no deduction
+([`src/skeleton/grid/`](../src/skeleton/grid/)). A game with no deduction
 or no dealt board has no `solver.ts` or `generator.ts`, and a large game
 splits further. The games written before the skeleton hold to it less evenly:
 take the population of any row with `ls src/games/*/<file>`.
@@ -273,8 +273,8 @@ live list:
 ## Greenfield games have no oracle
 
 Path and Numgame (the two remaining greenfield changes,
-[`add-path-ts-port`](../../openspec/changes/add-path-ts-port/proposal.md) /
-[`add-numgame-ts-port`](../../openspec/changes/add-numgame-ts-port/proposal.md))
+[`add-path-ts-port`](../openspec/changes/add-path-ts-port/proposal.md) /
+[`add-numgame-ts-port`](../openspec/changes/add-numgame-ts-port/proposal.md))
 — and any future game — have no upstream build to check against. What replaces
 the retired byte-match oracle is stated per game, normally "every generated
 board is uniquely solvable at exactly its stated difficulty" as a property test
@@ -310,7 +310,7 @@ new game:
 rendering, animation, input — never on a green suite alone.** A suite
 asserting only state transitions can be fully green while the game does not
 render; that happened, and the doctrine is spec-enforced (the authoritative
-rule is in [`ts-migration`](../../openspec/specs/ts-migration/spec.md)).
+rule is in [`ts-migration`](../openspec/specs/ts-migration/spec.md)).
 **Never call a shortfall "cosmetic", "out of scope", or defer it without
 explicit owner approval.**
 
@@ -357,7 +357,7 @@ gate above:
   keypad, a reference aid or tiers. The set is *derived* from what the game is —
   its optional `Game` members, the `Ui` its `newUi` returns — never declared, so
   a re-expression that drops a member changes the diff;
-  [`contract-surface.test.ts`](../../src/contract-surface.test.ts) reads the
+  [`contract-surface.test.ts`](../src/contract-surface.test.ts) reads the
   optional surface off the interface itself.
 
 Both held across `re-express-the-collection`'s eight batches: all but one

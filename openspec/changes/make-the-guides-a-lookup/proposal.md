@@ -5,7 +5,7 @@
 
 ## Why
 
-The guides under `docs/games/` are 919 KB. The owner's intent (2026-10-12)
+The guides under `docs/` are 919 KB. The owner's intent (2026-10-12)
 was always that a session reads an overview and looks the rest up, alone or
 through a subagent, and `AGENTS.md` now says so. The guides are not yet
 written to be used that way:
@@ -51,12 +51,12 @@ judgment and the first new game is its test.
   an agent works in this repository, and anything a person would also use
   lives outside it. So the table moved there that day, and `AGENTS.md`
   tells a session to read it. The owner also asked whether the depth of
-  `docs/games/` and an index file in it are needed, the whole repository
+  `docs/` and an index file in it are needed, the whole repository
   being about games. They are not:
-  - **The guides move up into `docs/`**, and `docs/games/` goes. About 590
+  - **The guides move up into `docs/`**, and `docs/` goes. About 590
     citations in 316 files outside the archive name the old paths
-    (`git grep -c 'docs/games/'`), and each is repointed.
-  - **`docs/games/README.md` stops being an index.** What it holds that a
+    (`git grep -c 'docs/'`), and each is repointed.
+  - **`docs/new-game.md` stops being an index.** What it holds that a
     new game's author needs (the lifecycle, the definition of done, the
     route by kind of game) becomes one guide, `docs/new-game.md`, that the
     table names first. The rest goes to the guide for its subject.
@@ -77,10 +77,10 @@ judgment and the first new game is its test.
 
 ## What Changes
 
-- Every guide under `docs/games/` is restructured to that form, a guide at a
+- Every guide under `docs/` is restructured to that form, a guide at a
   time, moving text and cutting stories without changing a rule, and moves
   up into `docs/`.
-- `docs/games/README.md` becomes `docs/new-game.md` and loses what is not a
+- `docs/new-game.md` becomes `docs/new-game.md` and loses what is not a
   new game's.
 - A gate check holds each guide's opening to naming every one of its
   sections, and to a budget of bytes.
@@ -93,5 +93,5 @@ None at filing; see `.openspec.yaml`.
 
 ## Impact
 
-`docs/games/`, `README.md`'s table, `AGENTS.md`, source comments that cite a moved
+`docs/`, `README.md`'s table, `AGENTS.md`, source comments that cite a moved
 heading, `scripts/gate.sh`.

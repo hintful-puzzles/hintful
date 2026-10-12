@@ -203,7 +203,7 @@ function boardSize(type: GridType, w: number, h: number, tileSize: number): Size
  * lighter. Oy vey."*). **Do not adapt for it here**: `colors()` never sees a
  * dark background — `components/view.ts` hands the engine pure white in dark
  * mode and adapts the returned palette in OKLCH — and the two roles carry their
- * own authored dark values (docs/games/rendering.md § "Dark mode is the app's
+ * own authored dark values (docs/rendering.md § "Dark mode is the app's
  * concern").
  */
 export function colors(defaultBackground: Color): Color[] {

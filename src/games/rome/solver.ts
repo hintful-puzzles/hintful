@@ -279,7 +279,7 @@ export function parseDesc(p: RomeParams, desc: string): DescParse<RomeState> {
  * Why one recorded Rome deduction fired — the premise its sentence states and
  * its evidence shades. Each arm carries what the *finder* knew, because only
  * the finder knows which of several causes killed a candidate
- * (docs/games/hints.md § "The premise must single out the conclusion").
+ * (docs/hints.md § "The premise must single out the conclusion").
  *
  * `dup` is the shared {@link import("../../engine/candidate-plan.ts").DupReason}
  * spelling on purpose: `solverDoubles` is exactly the cull a candidate plan does
@@ -318,7 +318,7 @@ export type RomeReason =
    * `values` is carried rather than read back off the struck marks, because
    * those are only the *live* ones: where the region's other squares had
    * already lost one of the two, a sentence built from them would say a pair is
-   * one arrow (docs/games/hints.md § "The premise must single out the
+   * one arrow (docs/hints.md § "The premise must single out the
    * conclusion" — compute the reason where the elimination is computed). */
   | {
       kind: "pair";
@@ -510,7 +510,7 @@ function solverLoops(board: RomeBoard, dsf: Dsf, rec: RomeRecording | null): num
 
 /**
  * The chain of arrows from `from` to `to`, inclusive of both — the walk a loop
- * sentence claims exists, computed rather than assumed (docs/games/hints.md § "The
+ * sentence claims exists, computed rather than assumed (docs/hints.md § "The
  * quality bar", rule 5).
  *
  * It always exists where {@link solverLoops} calls it, and the argument is the

@@ -38,7 +38,7 @@ none holds more stars than the board's number.
 - **The games that fit move onto it.** Moving one changes which board a
   seed deals, which breaks nothing a player holds, and retires that game's
   frozen fixture where the fixture then holds nothing
-  (`docs/games/testing.md` § "The frozen differentials"). Each move is
+  (`docs/testing.md` § "The frozen differentials"). Each move is
   judged by the boards it deals: the same sizes dealt, in the same time or
   less, with regions a player would not call worse. A game that does not
   fit keeps its own and the design says what it would legitimately want to
@@ -56,4 +56,4 @@ Not in this change: `divvy.ts`'s equal division, and Star Battle itself.
 ## Impact
 
 `src/engine/`, the generators above and their fixtures,
-`docs/games/engine-catalog.md`, `docs/games/solver-and-generator.md`.
+`docs/engine-catalog.md`, `docs/solver-and-generator.md`.

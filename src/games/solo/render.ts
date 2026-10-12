@@ -23,7 +23,7 @@
  * highlight byte (cursor/flash/error/cage-sum) plus the immutable block/cage
  * structure, so a per-cell cache of `(digit|hl, pencil)` suffices — with the
  * (fork) Check-&-Save mistake overlay tracked in a sidecar so an already-drawn
- * cell still repaints when flagged (docs/games/rendering.md § "Overlay sidecars").
+ * cell still repaints when flagged (docs/rendering.md § "Overlay sidecars").
  */
 
 import { valueBit } from "../../engine/candidate-bits.ts";
@@ -134,7 +134,7 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 /** Highlight payload a Solo hint step carries (built in `index.ts`). The
- * element-type legend (docs/games/hints.md § "The element-type color legend"):
+ * element-type legend (docs/hints.md § "The element-type color legend"):
  * the cells the reason rests on outlined `COL_HINT_CELL` in the gutter, the
  * acted-on cell(s) ringed `COL_HINT`, the ruled-out candidate(s) shown struck.
  * The region a sentence names is hatched from the step's marks, not from here. */
@@ -189,7 +189,7 @@ export interface SoloDrawState {
   /** `cr²` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
    * evidence cell, struck candidates at `valueBit(n)` in its `struck` lane. A
    * sidecar rather than a tile bit, because digit and pencil already fill the
-   * two cache words (docs/games/rendering.md § "The tile cache and the diff
+   * two cache words (docs/rendering.md § "The tile cache and the diff
    * key"). */
   hint: OverlaySidecar;
   /** `cr²` mistake-overlay sidecar (fork addition) — same dance, so Check & Save
@@ -277,7 +277,7 @@ function drawNumber(
   const cell = y * cr + x;
   const colKiller = hl & HL_KSUM ? COL_ERROR : COL_KILLER;
 
-  // Hint overlay (docs/games/hints.md § "The element-type color legend"): both
+  // Hint overlay (docs/hints.md § "The element-type color legend"): both
   // cell-level marks are read in `redraw`, which draws the target's ring and the
   // evidence region's outline in the gutter. What is left here is `struck`, the
   // set of candidates this firing rules out (bit n ⇒ candidate n), crossed
@@ -550,7 +550,7 @@ function drawPencilMarks(
     const gy = pt + (((fontsize * (2 * dy + 1)) / 2) | 0);
     dr.drawText({ x: gx, y: gy }, glyphFont(fontsize), COL_PENCIL, digitChar(i + 1));
     // A hint-ruled-out candidate keeps its normal pencil color with a
-    // same-color strikethrough — the "ruled out" cue (docs/games/hints.md § "The element-type color legend").
+    // same-color strikethrough — the "ruled out" cue (docs/hints.md § "The element-type color legend").
     if (struck & (1 << (i + 1))) {
       const r = Math.max(2, (fontsize / 3) | 0);
       dr.drawLine({ x: gx - r, y: gy }, { x: gx + r, y: gy }, COL_PENCIL, 2);

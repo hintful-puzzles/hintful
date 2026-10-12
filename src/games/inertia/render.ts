@@ -2,7 +2,7 @@
  * Inertia's renderer.
  *
  * The board is a plain per-tile cache: cell value OR'd with the flash and hint
- * bits (docs/games/rendering.md § "The tile cache and the diff key"). The ball
+ * bits (docs/rendering.md § "The tile cache and the diff key"). The ball
  * is a *sprite*, drawn after saving the tile beneath it into a blitter that is
  * restored at the top of the next frame — so the arrows drawn on the ball are
  * repainted every frame and need no place in the diff key.
@@ -73,7 +73,7 @@ export const COL_HINT = 9;
  * hint says go this way"). */
 export const COL_AIM = 10;
 /** Appended: the ring round the gem a hint is going for. The hint's two roles
- * get two cues (docs/games/hints.md § "The element-type color legend"): the
+ * get two cues (docs/hints.md § "The element-type color legend"): the
  * direction is the hint's *arrow* in its action color, the subgoal gem a
  * *ring* in its evidence color. */
 export const COL_HINT_GOAL = 11;
@@ -135,7 +135,7 @@ const WIN_MASK = 3 << WIN_SHIFT;
 /** Likewise the hint's ring. Unlike the arrow — which rides the ball sprite and
  * so is repainted every frame — the ring is drawn *on a tile*, so it has to be
  * part of that tile's diff key or it would never be painted, and never erased
- * (docs/games/rendering.md § "The tile cache and the diff key"). */
+ * (docs/rendering.md § "The tile cache and the diff key"). */
 const HINT_GOAL = 0x400;
 
 const UNDRAWN = -1;

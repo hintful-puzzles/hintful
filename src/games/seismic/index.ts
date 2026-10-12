@@ -93,7 +93,7 @@ import {
 
 /** A player marking that contradicts the unique solution: a wrong placed number
  * (`"cell"`), or an empty cell whose notes have crossed out its solution number
- * (`"note"` — notes are first-class markings, docs/games/mechanics.md § "Pencil
+ * (`"note"` — notes are first-class markings, docs/mechanics.md § "Pencil
  * marks: the full note-taking UX"). */
 export interface SeismicMistake {
   kind: "cell" | "note";

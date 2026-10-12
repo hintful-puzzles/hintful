@@ -2,7 +2,7 @@
 /**
  * The engine catalog names every shared helper there is.
  *
- * `docs/games/engine-catalog.md` is the menu a game author reads before
+ * `docs/engine-catalog.md` is the menu a game author reads before
  * re-rolling something the engine already has, and AGENTS.md makes keeping it
  * current part of "done". A menu nobody holds complete is a menu that omits the
  * newest entry, which is the one an author is least likely to know about — and
@@ -26,7 +26,7 @@
  */
 import { readdirSync, readFileSync } from "node:fs";
 
-const CATALOG = "docs/games/engine-catalog.md";
+const CATALOG = "docs/engine-catalog.md";
 const ENGINE = "src/engine";
 
 /** Fewer modules than this means the listing broke, not that the engine shrank. */

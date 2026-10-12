@@ -175,7 +175,7 @@ function narrate(reason: HintReason, m: Marked): Sentence {
 
 /** What a forced move's words mark, from its reason: the row or column the
  * sentence calls "this row", hatched whatever its cells hold
- * (docs/games/hints.md § "Hatch the line the sentence names"), and the
+ * (docs/hints.md § "Hatch the line the sentence names"), and the
  * premise cells whose color is the evidence (the same-color pair, the
  * completed quota, the near-complete reserved window, the reference row),
  * outlined so the color that *is* the reason stays visible. */

@@ -1,6 +1,6 @@
 /**
  * The association moves, shared by `index.ts` and the drag preview in
- * `render.ts` (docs/games/rendering.md § "A simulated-release preview lives in
+ * `render.ts` (docs/rendering.md § "A simulated-release preview lives in
  * `moves.ts`"). The preview must show exactly the association a release
  * commits, so both go through one legality predicate.
  */

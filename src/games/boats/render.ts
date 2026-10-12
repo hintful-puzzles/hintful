@@ -26,7 +26,7 @@
  *    the player filled.
  *
  * The per-tile cache is an `Int32Array` holding the drawn segment, the live
- * error/cursor flags, the flash phase and the hint role (docs/games/rendering.md
+ * error/cursor flags, the flash phase and the hint role (docs/rendering.md
  * § "The tile cache and the diff key"); the Check & Save overlay rides in an
  * `OverlaySidecar`, so it repaints a cell whose contents are otherwise
  * unchanged (the frame after the move that drew it).
@@ -144,7 +144,7 @@ export function colors(defaultBackground: Color): Color[] {
 // --- geometry --------------------------------------------------------------
 
 /** The web build compiles `NARROW_BORDERS`, so there is no outer margin
- * (docs/games/rendering.md § "Sizing"). */
+ * (docs/rendering.md § "Sizing"). */
 export const BORDER = 0;
 
 /** Vertical gap between the number row and the fleet display. */
@@ -276,7 +276,7 @@ export interface BoatsDrawState {
   /** Last-drawn count of completed boats per size. */
   fleetCount: Int32Array;
   /** The Check & Save mistake overlay; it must be in the diff key or it never
-   * repaints (docs/games/rendering.md § "Overlay sidecars"). */
+   * repaints (docs/rendering.md § "Overlay sidecars"). */
   wrong: OverlaySidecar;
 }
 
@@ -458,7 +458,7 @@ function drawFleet(
 
 // Hint bits, folded into the per-tile cache key so the overlay both paints and
 // clears: a hint bit outside the key never repaints a warm frame
-// (docs/games/rendering.md § "The tile cache and the diff key").
+// (docs/rendering.md § "The tile cache and the diff key").
 const HINT_SHIP = 1 << 9; // a square the step asks for a boat segment on
 const HINT_WATER = 1 << 10; // …or for water
 const HINT_EVID = 1 << 11; // a square the deduction reasons over
@@ -501,7 +501,7 @@ function hintBits(
 
 /** The two tildes Boats draws for a *given* water square — reused in the hint
  * color so a "place water here" suggestion speaks the game's own vocabulary
- * (docs/games/hints.md § "Echo the move's shape in the hint color"). */
+ * (docs/hints.md § "Echo the move's shape in the hint color"). */
 function drawWaves(
   dr: GameDrawing,
   tx: number,
@@ -668,7 +668,7 @@ export function redraw(
       }
 
       // The hint marks *where and which action* in the game's own vocabulary,
-      // recolored, and never performs the move (docs/games/hints.md §
+      // recolored, and never performs the move (docs/hints.md §
       // "Highlight, never perform"): an unresolved segment for a boat, the
       // given-water waves for water.
       if (hintBit & HINT_SHIP) drawSegment(dr, tx, ty, ts + 1, SHIP_VAGUE, COL_HINT);

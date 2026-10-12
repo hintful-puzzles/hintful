@@ -3,7 +3,7 @@
  *
  * The deduction decides which sentence and with what values
  * ([`hint.ts`](./hint.ts)); this file decides only how it reads. Each sentence
- * says what to look at and then what must follow (docs/games/hints.md
+ * says what to look at and then what must follow (docs/hints.md
  * § "Writing the narration"). Every word that points at the board is a
  * reference to the mark it points at (`engine/hint-words.ts`): the squares a
  * step decides are ringed, and the numbers it reasons from are outlined and

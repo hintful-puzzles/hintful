@@ -1,7 +1,7 @@
 /**
  * The shared plan-accumulation loop every recording deduction pass runs.
  *
- * A hint that is "a second projection of the solver" (docs/games/hints.md §
+ * A hint that is "a second projection of the solver" (docs/hints.md §
  * "Re-derive the named technique") always ends up writing the same five lines:
  * from a working copy of the player's board, while the board is still
  * unfinished, ask for the *single* next forced firing, stop when there is none,
@@ -64,7 +64,7 @@ export interface HintPlanSpec<Board, Firing, Status> {
    * hides a firing whose move the game would **refuse** (an arrow drawn inside a
    * closed region); Tracks hides one whose **contrary** move the game would
    * refuse, because then the player's board has already decided it. Both are
-   * docs/games/hints.md § "Show only what the board does not already say".
+   * docs/hints.md § "Show only what the board does not already say".
    */
   showable?(board: Board, firing: Firing): boolean;
   /**
@@ -73,7 +73,7 @@ export interface HintPlanSpec<Board, Firing, Status> {
    * hidden ones spends it.
    */
   planCap?: number;
-  /** Non-termination guard, ticked once per iteration (docs/games/hints.md § "The step budget"). */
+  /** Non-termination guard, ticked once per iteration (docs/hints.md § "The step budget"). */
   budget?: StepBudget;
 }
 

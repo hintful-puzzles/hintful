@@ -12,7 +12,7 @@
  * intermediate goes through `Math.fround`. A division is computed in double
  * then rounded (JS has no single-precision divide), so a double-rounding ULP
  * difference could in principle flip a knife-edge cell; the differential is
- * what shows the match holds on real boards (docs/games/testing.md
+ * what shows the match holds on real boards (docs/testing.md
  * § "Byte-match: fidelity where there is a right answer").
  */
 import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";

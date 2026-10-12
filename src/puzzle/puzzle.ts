@@ -889,7 +889,7 @@ export class Puzzle {
       await (await this.board()).processHover(p);
       // `{ at: null }` is a queued "the pointer left", which is a real hover to
       // deliver; `null` is nothing queued. Two kinds of nothing, two states
-      // (`docs/games/mechanics.md` § "Absence is `null`").
+      // (`docs/mechanics.md` § "Absence is `null`").
       while (this.hoverPending !== null) {
         const next = this.hoverPending.at;
         this.hoverPending = null;

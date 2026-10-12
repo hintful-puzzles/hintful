@@ -11,12 +11,12 @@
  * **A clue's operation is stated in words, not left to its glyph.** `7+` on the
  * board says which clue, and the sentence names it so the player can point at
  * it — but "add to 7" is the technique, and a hint that only cites the glyph
- * teaches nothing the board did not already show (docs/games/hints.md
+ * teaches nothing the board did not already show (docs/hints.md
  * § "Lead with the indication"). The rules are in `help/games/mathrax.md` too;
  * one clause per step is what earns its room here.
  *
  * The subtraction arms read correctly at the degenerate value: a `0−` clue is
- * the `=` clue and means "equal", never "differ by 0" (docs/games/hints.md
+ * the `=` clue and means "equal", never "differ by 0" (docs/hints.md
  * § "Sanity-read at the degenerate extremes"). Division has no such value: the
  * desc reader in `state.ts` refuses a quotient of 1.
  */

@@ -14,7 +14,7 @@
  * Upstream repaints the entire canvas every frame — its own TODO list asks for
  * "optimize drawing routines". Here each cell's pixels depend only on its own
  * digit, notes, error/cursor flags and the win flash, so a per-tile
- * `Int32Array` cache suffices (docs/games/rendering.md § "The tile cache and the diff key"), with the Check-&-Save mistake
+ * `Int32Array` cache suffices (docs/rendering.md § "The tile cache and the diff key"), with the Check-&-Save mistake
  * overlay in an `OverlaySidecar` so a mistaken-but-otherwise-unchanged cell
  * still repaints. The number panel repaints only when some clue's color or hint
  * mark changes.
@@ -293,7 +293,7 @@ export interface CrossingHint {
    * number out of every run but one. Every other technique's reason is a
    * whole run, and leaves this empty. */
   area: Point[];
-  /** The run(s) the sentence names, hatched (docs/games/hints.md § "Hatch the
+  /** The run(s) the sentence names, hatched (docs/hints.md § "Hatch the
    * line the sentence names"). */
   hatch: Point[];
   /** The square(s) the move writes into. */
@@ -316,7 +316,7 @@ export interface CrossingDrawState {
   wrong: OverlaySidecar;
   /** Hint-overlay sidecar — same reason as `wrong`: a hint is requested a frame
    * *after* the move that drew the board, so without it in the diff key the
-   * overlay would never paint (docs/games/rendering.md § "Overlay sidecars"). */
+   * overlay would never paint (docs/rendering.md § "Overlay sidecars"). */
   hint: OverlaySidecar;
   /** Per-number last-drawn panel state: the color class, plus the hint class
    * in the high nibble (-1 = never drawn). */
@@ -635,7 +635,7 @@ export interface NumberSlot {
 /**
  * Lay the clue list out under the grid — upstream `draw_numbers`' sizing loop,
  * extracted so the renderer and `interpretMove` cannot disagree about where a
- * number is (the same rule as Bricks' shared `offsets`, docs/games/mechanics.md § "Padded rectangles and sheared draws").
+ * number is (the same rule as Bricks' shared `offsets`, docs/mechanics.md § "Padded rectangles and sheared draws").
  *
  * The row count and font size are grown/shrunk until the widest number of each
  * column fits the board width — upstream's answer to its own "find a way to fit

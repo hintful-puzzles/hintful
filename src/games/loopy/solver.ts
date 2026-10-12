@@ -282,7 +282,7 @@ function faceSetall(
  * A rung sweeps every face or dot and applies what it finds, so left alone one
  * call would put many independent deductions under one premise. The recording
  * path returns at the first premise that changed a line instead, and the driver
- * starts again from the cheapest rung (docs/games/hints.md § "A rung is not a
+ * starts again from the cheapest rung (docs/hints.md § "A rung is not a
  * premise, so return per premise").
  */
 function fired(rec: LoopyRecorder, reason: LoopyReason): number {

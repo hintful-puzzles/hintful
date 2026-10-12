@@ -1,7 +1,7 @@
 /**
  * Words that tell apart squares a hint's sentence would otherwise name alike.
  *
- * A number is named by its value (docs/games/hints.md § "Name a square by its
+ * A number is named by its value (docs/hints.md § "Name a square by its
  * value"), and a step that reasons from two numbers of one value would say
  * "the 3" of both. Where each sits among the others says which: "the upper 3"
  * and "the lower 3".

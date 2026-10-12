@@ -3,7 +3,7 @@
  *
  * **What the scored rows prove** is deduction, and every conclusion is an
  * answer-row mark ("not this color, in this slot"), placed as a move so the
- * player can keep it (`docs/games/hints.md` § "Give the facts a notation"). The
+ * player can keep it (`docs/hints.md` § "Give the facts a notation"). The
  * rules read one row at a time, plus the marks earlier rules placed, and
  * `guess-hint.test.ts` brute-forces each against every answer the rows allow.
  *
@@ -47,7 +47,7 @@ export type GuessRung = (typeof GUESS_RUNGS)[number];
 /** What a step points at. */
 export interface GuessHighlights {
   /** The scored row the sentence reads ("the striped row"), hatched; empty when
-   * it reads none (docs/games/hints.md § "Hatch the line the sentence names"). */
+   * it reads none (docs/hints.md § "Hatch the line the sentence names"). */
   line: number[];
   /** Answer-row slots whose marks the step cites, outlined. */
   slots: number[];
@@ -536,7 +536,7 @@ export function guessHint(
   for (let f = nextFiring(p, rows, out); f; f = nextFiring(p, rows, out)) {
     for (const m of f.marks) out[m.pos] |= bit(m.color);
     // A mark the player has already made is not taught again
-    // (`docs/games/hints.md` § "Show only what the board does not already say").
+    // (`docs/hints.md` § "Show only what the board does not already say").
     const place = f.marks.filter((m) => !(board[m.pos] & bit(m.color)));
     if (place.length === 0) continue;
     for (const m of place) board[m.pos] |= bit(m.color);

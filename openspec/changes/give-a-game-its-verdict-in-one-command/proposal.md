@@ -8,7 +8,7 @@
 A game's own tests run in 4 to 6 seconds (Clusters 3.6 s, Tents 6.5 s,
 measured 2026-10-12). They are not its verdict. What refuses a new game's
 commit is the cross-game guards, which take their population from the
-registry and run in the gate, twelve minutes in. `docs/games/testing.md`
+registry and run in the gate, twelve minutes in. `docs/testing.md`
 tells a session how to run them against one game in three places, by a
 pipeline through `scripts/checks/select-tests.ts` and `-t <game>`, and
 `-t` breaks any guard that pins a count over the whole collection.
@@ -64,4 +64,4 @@ None at filing; see `.openspec.yaml`.
 ## Impact
 
 `package.json`, `scripts/`, the population helpers under
-`src/engine/testing/`, `docs/games/testing.md`.
+`src/engine/testing/`, `docs/testing.md`.

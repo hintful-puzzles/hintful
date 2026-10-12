@@ -208,7 +208,7 @@ export interface GroupDrawState {
   /** Grid-indexed hint-overlay sidecar: bit 0 = target cell, bit 1 = evidence,
    * and the struck candidates at `valueBit(n)` in its `struck` lane. Keyed by grid cell
    * (`y·w + x`) so the overlay follows an element through a display reorder
-   * (docs/games/rendering.md § "Overlay sidecars"). */
+   * (docs/rendering.md § "Overlay sidecars"). */
   hint: OverlaySidecar;
   /** The hint target's ring and the evidence region's outline, keyed by
    * **display** position — a reorder moves the mark with its element. See
@@ -301,7 +301,7 @@ function drawTile(
   const id = ds.id;
   let tile = tileIn;
 
-  // Hint overlay (docs/games/hints.md § "The element-type color legend"): both
+  // Hint overlay (docs/hints.md § "The element-type color legend"): both
   // cell-level marks are drawn by `redraw` on the cell's own border, so a hint
   // never paints over the elements it is talking about. What is left here is
   // `struck` (bit `n`): the candidates this firing rules out, crossed through.

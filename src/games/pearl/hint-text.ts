@@ -4,7 +4,7 @@
  * The deduction decides which sentence and with what values ([`hint.ts`](./hint.ts)'s
  * `narrate`); this file decides only how it reads. Each sentence runs
  * indication, reasoning, conclusion, with the conclusion in the necessity voice
- * (docs/games/hints.md § "Writing the narration").
+ * (docs/hints.md § "Writing the narration").
  *
  * The words are the help page's: the loop runs along the **edges** between
  * squares. Every word that points at the board is a reference to the mark it
@@ -14,7 +14,7 @@
  * reasons from are outlined, so "the outlined square" and "the outlined line"
  * point at them. That a black pearl's line goes straight on through the squares
  * either side of it, and that a white pearl's turns in a square beside it, is
- * the game's rule and sits in the help (docs/games/hints.md § "Rules belong in
+ * the game's rule and sits in the help (docs/hints.md § "Rules belong in
  * the help").
  */
 

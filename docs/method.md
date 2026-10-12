@@ -39,7 +39,7 @@ iterations, and a filter can exclude everything. Every assertion downstream
 then passes over nothing. Count the inputs and assert the count. The count is
 a floor set well below the true value, because its job is to tell working
 from resolving nothing; it is not one of the ratcheted thresholds of
-`docs/games/testing.md` § "Metrics and instruments".
+`docs/testing.md` § "Metrics and instruments".
 
 ## A sweep that finds zero owes a power argument
 
@@ -100,7 +100,7 @@ The errors run both ways: it can miss members and convict innocent ones.
 A regex over a sentence the code itself wrote is a name-keyed scan aimed at
 our own output: a rewording empties it without a sound. When a check reads
 prose to learn a fact, give the producer a field for the fact, as
-`HintStep.rung` does ([`games/hints.md`](./games/hints.md) § "Name the rung a
+`HintStep.rung` does ([`hints.md`](./hints.md) § "Name the rung a
 step speaks"). A regex stays right where the wording is the thing under test.
 
 ## A count written in prose is a census nobody re-runs

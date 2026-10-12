@@ -159,7 +159,7 @@ const D_L_LIMIT_SHIFT_V = 30;
 // A second `Int32Array` beside `grid`, compared in the same per-tile diff test:
 // that is what puts the overlay in the tile cache's diff key, which is the
 // whole of the bug class `hint-overlay.test.ts` guards
-// (docs/games/rendering.md § "The tile cache and the diff key"). There is no
+// (docs/rendering.md § "The tile cache and the diff key"). There is no
 // room in the packed word — an island square already reaches bit 29 — and a
 // lane of its own is what `engine/overlay-sidecar.ts` reaches for too.
 //
@@ -381,7 +381,7 @@ function lineColor(ldata: number, flashCol: number): number {
  *
  * `hdata` is this direction's hint word, and the hint borrows the shapes this
  * function already draws rather than inventing one
- * (docs/games/hints.md § "Echo the move's shape in the hint color"): a span the
+ * (docs/hints.md § "Echo the move's shape in the hint color"): a span the
  * step wants bridged is drawn as the bundle it would become, with the bars the
  * step *adds* in `COL_HINT` over the ones already there; a span it wants
  * blocked takes the game's own pair of crosses in `COL_HINT`; and a bridge the
@@ -839,7 +839,7 @@ function buildMistakeMask(
  * thing a Bridges deduction points at is one: an island is a circle wider than
  * its own tile, and a bridge is a *span* between two of them, which is nobody's
  * border. Both marks are therefore the game's own shapes recolored
- * (docs/games/hints.md § "Echo the move's shape in the hint color").
+ * (docs/hints.md § "Echo the move's shape in the hint color").
  */
 function hintWords(
   s: BridgesState,
@@ -851,7 +851,7 @@ function hintWords(
   const hl = hint?.highlights;
 
   // Islands: the focus wins over a citation, so "this 5" is never ambiguous
-  // with "the outlined islands" (docs/games/hints.md § "Two marks on the
+  // with "the outlined islands" (docs/hints.md § "Two marks on the
   // board, one 'this cell'").
   const pieces = marks.of("outline", PIECE);
   for (const i of pieces) {

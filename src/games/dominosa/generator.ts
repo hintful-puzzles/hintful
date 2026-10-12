@@ -7,7 +7,7 @@
  * and keep the board only if it is uniquely solvable at *exactly* the target
  * difficulty. Every `shuffle` and `randomUpto` draw is reproduced in order over
  * the bit-identical `random.ts`, so `newDesc` matches C's desc byte-for-byte for
- * a given seed (docs/games/testing.md § "Byte-match: fidelity where there is a
+ * a given seed (docs/testing.md § "Byte-match: fidelity where there is a
  * right answer").
  */
 

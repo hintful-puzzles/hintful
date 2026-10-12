@@ -1,5 +1,5 @@
 /**
- * Every sentence Rome's hint speaks (docs/games/hints.md § "The sentences live
+ * Every sentence Rome's hint speaks (docs/hints.md § "The sentences live
  * in one file per game").
  *
  * ## A direction needs a word and a relation, not a glyph
@@ -50,7 +50,7 @@ const WORD = ["", "up", "down", "left", "right"];
 /** Where the neighbor an arrow of value `n` points at sits, relative to the
  * square holding it. Used only where the code guarantees the relation (the
  * struck mark's own direction), which is what a deixis tie has to rest on
- * (docs/games/hints.md § "Two marks on the board, one 'this cell'"). */
+ * (docs/hints.md § "Two marks on the board, one 'this cell'"). */
 const NEIGHBOR = ["", "above", "below", "to the left", "to the right"];
 
 /** The same relation as an adjective, for "its left neighbor". */

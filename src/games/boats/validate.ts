@@ -12,7 +12,7 @@
  * and the fleet inventory only counts boats it can see a `LEFT`…`RIGHT` or
  * `TOP`…`BOTTOM` pair for. Porting `validateFullState` as a pure predicate
  * would silently disable half the solver (the mutating-validator hazard in
- * docs/games/solver-and-generator.md § "Solver-gated generation"). It is why
+ * docs/solver-and-generator.md § "Solver-gated generation"). It is why
  * the solver works on a mutable {@link BoatsBoard} rather than on a
  * `BoatsState`.
  *

@@ -319,7 +319,7 @@ consume `findLoops` and SHALL NOT re-roll it.
 
 ### Requirement: The engine catalog names every shared helper there is
 
-`docs/games/engine-catalog.md` SHALL name every module directly under
+`docs/engine-catalog.md` SHALL name every module directly under
 `src/engine/`, and every directory of modules under it as one entry, so the
 menu an author consults cannot silently shrink. A module without one SHALL be in a ledger with its reason, which SHALL fail when it
 names a module that no longer exists. The check SHALL run in the

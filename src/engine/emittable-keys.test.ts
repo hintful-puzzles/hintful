@@ -47,7 +47,7 @@
  * any game source, which closes the blind spot for the digits by construction,
  * and it lives beside the fact it guards.
  *
- * See docs/games/input.md § "The numeric keypad never arrives".
+ * See docs/input.md § "The numeric keypad never arrives".
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
@@ -360,7 +360,7 @@ describe("no game tests a button this frontend cannot send", () => {
   });
 
   it("keeps `MOD_NUM_KEYPAD` bindings paired with a bare-key route", () => {
-    // **Not** because the modifier is dead. `docs/games/input.md` said for a
+    // **Not** because the modifier is dead. `docs/input.md` said for a
     // long time that "this web frontend does not set `MOD_NUM_KEYPAD`", and
     // that is false — `view-interactive.ts` sets it from
     // `event.location === 3`, and has since the initial webapp version. Cube

@@ -4,7 +4,7 @@
  * (no consistent solution), 1 unique (fully determined), 2 ambiguous /
  * non-converged. The generator gates on this exact verdict, so the deductive
  * power must match C on every board
- * (docs/games/solver-and-generator.md § "Solver-gated generation").
+ * (docs/solver-and-generator.md § "Solver-gated generation").
  *
  * `diff` caps the ladder by tier: `DIFF_EASY - 1` runs only the tent↔tree
  * link, which is what the generator's "not solvable one level down" check asks

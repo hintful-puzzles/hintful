@@ -10,7 +10,7 @@
  *
  * The drag and Solve frames are captured on a **warm** draw state (a frame has
  * already been painted), because that is the case where an overlay left out of
- * the cache diff key silently fails to repaint (docs/games/rendering.md § "Overlay sidecars"). Slide packs
+ * the cache diff key silently fails to repaint (docs/rendering.md § "Overlay sidecars"). Slide packs
  * every overlay into the one per-tile word, so this is structurally safe — but
  * a cold frame would not prove it.
  */

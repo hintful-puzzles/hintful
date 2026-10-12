@@ -3,7 +3,7 @@
  *
  * Display code is not byte-parity scope: the aim is upstream's look with clean
  * code. The per-tile diff cache mirrors upstream's `ds` arrays, with the
- * keyboard cursor folded into the cell repaint instead of a blitter (docs/games/rendering.md § "Overlay sidecars").
+ * keyboard cursor folded into the cell repaint instead of a blitter (docs/rendering.md § "Overlay sidecars").
  * Moves are instant; the only motion is the completion flash.
  */
 

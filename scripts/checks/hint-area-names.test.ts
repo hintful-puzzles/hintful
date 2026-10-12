@@ -5,7 +5,7 @@
  * find a square. Where the only mark drawn for the reference is the clue's
  * area, the player finds the square by working out the area's middle, and the
  * same digit elsewhere inside the area is as good a reading
- * (docs/games/hints.md § "A clue named with its area is marked on its own
+ * (docs/hints.md § "A clue named with its area is marked on its own
  * square").
  *
  * No list of games says which references have that shape, since what a

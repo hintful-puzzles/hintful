@@ -138,7 +138,7 @@ const WIN_SHIFT = 25;
 export interface MosaicDrawState {
   tileSize: number;
   /** (width+1)×(height+1) cache of last-drawn packed cell values; -1
-   * forces a draw (docs/games/rendering.md § "The tile cache and the diff
+   * forces a draw (docs/rendering.md § "The tile cache and the diff
    * key"). */
   cache: Int32Array;
 }

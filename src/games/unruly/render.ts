@@ -117,7 +117,7 @@ const FF_HINT_RING = 0x20000; // a cited premise / pivotal cell (COL_HINT_REF ou
 // --- geometry -----------------------------------------------------------
 /** The board's pixel origin. Exported so `interpretMove` reads the same number
  * the painter does — one function, both callers
- * ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
+ * ([`docs/mechanics.md`](../../../docs/mechanics.md)). */
 export const border = (ts: number) => Math.floor(ts / 2);
 /** The frame closes the grid on its top and left and is no heavier than it. */
 const outerEdge = (_ts: number) => 1;

@@ -32,11 +32,11 @@
  * Upstream's author asked for exactly this fix (`unreleased/docs/seismic.md`:
  * "The generator step that creates randomly filled regions needs to be
  * completely replaced with a different approach"), which makes it a
- * docs/games/solver-and-generator.md § "Divergence and what it costs" rule 3
+ * docs/solver-and-generator.md § "Divergence and what it costs" rule 3
  * divergence. Fixing the region sizes **before** any number is placed removes
  * the failure: a region of size `k` asks for `1..k` from the start. The
  * partition-and-fill carries property tests
- * (docs/games/solver-and-generator.md § "Solver-gated generation").
+ * (docs/solver-and-generator.md § "Solver-gated generation").
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -87,7 +87,7 @@ export function maxRegionSize(mode: number): number {
  * when it runs out of free neighbors, and the leftover pockets are small. The
  * realized mean lands at ~2.9 against upstream's 2.62, with the same shape and
  * the same size-6 ceiling. Deliberately **not** matched exactly: there is no
- * oracle for region layout (it is display-adjacent taste — docs/games/solver-and-generator.md § "Divergence and what it costs"), the C's
+ * oracle for region layout (it is display-adjacent taste — docs/solver-and-generator.md § "Divergence and what it costs"), the C's
  * distribution is an artifact of a broken algorithm rather than a design, and
  * its 28% singletons are the least interesting cells on the board — a size-1
  * region is forced to `1`, so it is a free given.

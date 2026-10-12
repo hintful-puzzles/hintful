@@ -12,7 +12,7 @@
  * **Two bitmask conventions, deliberately.** The solver's candidate masks
  * (`solver.ts`) keep upstream's `BIT(d) = 1 << (d−1)`, because they decide the
  * solver's verdict and so the generated description
- * (docs/games/solver-and-generator.md § "Solver-gated generation"). The player's
+ * (docs/solver-and-generator.md § "Solver-gated generation"). The player's
  * pencil marks use the Latin-family `1 << n` (bits `1..o`), which
  * `engine/candidate-hint.ts` reads. Marks never reach the desc or a save (the
  * save replays moves), so the divergence is free.
@@ -100,7 +100,7 @@ const DIVIDE_SIGN = "÷";
  * subtraction clue of 0 is the equality clue, which reads `=`.
  *
  * Here rather than in `render.ts` because the hint's sentences name a clue by
- * what the player can see (docs/games/hints.md § "Name elements by what the
+ * what the player can see (docs/hints.md § "Name elements by what the
  * player can see"), so the renderer and the narration must print it the same
  * way or the sentence points at nothing.
  */
@@ -444,7 +444,7 @@ export function bitOf(d: number): number {
 /** "No constraint": upstream's `~0`, every bit set. Not masked to
  * `(1 << o) − 1`: the `simple` early return below hands it straight back, and a
  * different value could change a solver verdict and so the description
- * (docs/games/solver-and-generator.md § "Solver-gated generation"). */
+ * (docs/solver-and-generator.md § "Solver-gated generation"). */
 const ALL_DIGITS = ~0;
 
 /**

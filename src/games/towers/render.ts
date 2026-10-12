@@ -80,7 +80,7 @@ export const COL_DONE = 6;
 // Fork addition: the yellow body of the pencil-mode indicator glyph (a classic
 // #2 school pencil). Appended past the upstream enum.
 export const COL_PENCIL_BODY = 7;
-// Fork additions: the explained-hint legend (see docs/games/hints.md § "The element-type color legend").
+// Fork additions: the explained-hint legend (see docs/hints.md § "The element-type color legend").
 export const COL_HINT = 8; // the acted-on cell's ring (drawn once per frame in redraw)
 /** The driving clue's line of sight, outlined (same pass), **and** a forcing
  * chain's ordinal — one index, because the number indexes the evidence. */
@@ -168,7 +168,7 @@ export interface TowersDrawState {
    * its `struck` lane. */
   hint: OverlaySidecar;
   /** `(w+2)²` mistake-overlay sidecar (fork addition). Neither overlay changes
-   * a cell's tile value, so both are in the diff key (docs/games/rendering.md
+   * a cell's tile value, so both are in the diff key (docs/rendering.md
    * § "The tile cache and the diff key"). */
   wrong: OverlaySidecar;
   /** The hint target's ring and the evidence area's outline (fork additions),

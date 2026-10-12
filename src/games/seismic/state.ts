@@ -13,7 +13,7 @@
  * membership comparison, the solver re-reads its root-indexed scratch arrays
  * through `canonify`, and every clue is per-cell. So union-by-size's root choice
  * is unobservable and the shared `Dsf` is byte-match faithful as-is
- * (docs/games/solver-and-generator.md § "The Latin family"). Don't add a
+ * (docs/solver-and-generator.md § "The Latin family"). Don't add a
  * min-dsf variant to "restore fidelity".
  */
 
@@ -193,7 +193,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  * between 64 cells and 100 nobody has counted where the fill starts to fail.
  *
  * Refusing in `validateParams`, where the Custom dialog can show a reason, is
- * docs/games/solver-and-generator.md § "Unlucky, impossible, and load-bearing
+ * docs/solver-and-generator.md § "Unlucky, impossible, and load-bearing
  * validation"'s prescribed handling. Its cost: a hand-authored Seismic
  * `10x10:⟨desc⟩` game ID is refused too, since params are validated the same
  * way for a `:desc` id as for a `#seed` one.
@@ -275,7 +275,7 @@ export type SeismicMove =
   | { type: "pencilAll" }
   /** Cross out several notes at once: how a hint step rules candidates out, since
    * one deduction can strike several and a pencil toggle is neither multi-cell nor
-   * idempotent (docs/games/hints.md § "Persist, populate, and the moves"). */
+   * idempotent (docs/hints.md § "Persist, populate, and the moves"). */
   | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
   /** Write several notes at once: how a hint puts down the candidates a
    * deduction rests on, when the player leaves a cell's notes unwritten. */
@@ -291,7 +291,7 @@ export interface SeismicUi {
   cursorFromKeyboard: boolean;
   /** Whether entry goes to pencil marks rather than the cell. */
   pencilMode: boolean;
-  /** Fork divergence (docs/games/mechanics.md § "Pencil marks: the full note-taking UX"): right-click toggles a *persistent* pencil
+  /** Fork divergence (docs/mechanics.md § "Pencil marks: the full note-taking UX"): right-click toggles a *persistent* pencil
    * mode rather than a one-shot pencil selection. */
   pencilSticky: boolean;
   /** Preference (default on): keep the mouse highlight after a pencil change. */
@@ -310,7 +310,7 @@ export function newUi(_state: SeismicState): SeismicUi {
     // Not the convention: an Easy board falls to singles the board shows, so
     // the implicit plan writes no notes and is about half as long, with no cull
     // after each placement; on Normal the two are about even
-    // (docs/games/hints.md § "Two readings of an unmarked cell").
+    // (docs/hints.md § "Two readings of an unmarked cell").
     candidateReading: "implicit",
   };
 }

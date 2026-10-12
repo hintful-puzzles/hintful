@@ -130,7 +130,7 @@ const noteTaking = enrolledIn(
 
 /**
  * Members whose selection is not a cell, and so cannot take the cell's
- * picture. Nothing a game declares says so, so this is the ledger docs/games/testing.md
+ * picture. Nothing a game declares says so, so this is the ledger docs/testing.md
  * allows for intent that cannot be observed — one entry per member, held
  * exactly right below. Each draws the pair's meaning in its own shape and
  * tests it beside its renderer.

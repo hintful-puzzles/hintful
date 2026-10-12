@@ -179,7 +179,7 @@ describe("mathrax recording solver", () => {
     // deduction intersects up to four clues per cell at once, and a hint step
     // that narrated one of them while striking marks another ruled out would be
     // a lie. `group` is what a hint step is built from, so the property has to
-    // hold per group (docs/games/hints.md § "A rung is not a premise").
+    // hold per group (docs/hints.md § "A rung is not a premise").
     let groups = 0;
     for (const p of [NORMAL, TRICKY]) {
       for (let s = 0; s < 6; s++) {
@@ -213,7 +213,7 @@ describe("mathrax recording solver", () => {
     // generator path sweeps the whole board, so it is a *finer attribution* of
     // the same eliminations and must reach the same verdict on the same grid.
     // The generator is solver-gated, so a divergence here would change which
-    // boards exist (docs/games/solver-and-generator.md § "Solver-gated
+    // boards exist (docs/solver-and-generator.md § "Solver-gated
     // generation"); the frozen fixture corpus checks the other side of it.
     let checked = 0;
     for (const p of [NORMAL, TRICKY]) {

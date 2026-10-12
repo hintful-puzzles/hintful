@@ -13,7 +13,7 @@
  *  - **`findMistakes`.** Every reachable position is legal — you are simply
  *    nearer to or further from the exit — so there is nothing to flag, as for
  *    the permutation games
- *    (docs/games/solver-and-generator.md § "The solvable-game contract").
+ *    (docs/solver-and-generator.md § "The solvable-game contract").
  *    Check & Save degrades to a plain quick-save.
  *  - **A guess-free-generation obligation.** That binds logic puzzles; Slide is
  *    a movement puzzle whose "solver" is a shortest-path search, with no
@@ -88,7 +88,7 @@ import {
 /**
  * Fold the right button onto the left. Slide's whole pointer vocabulary is one
  * press-and-drag, and a touch that holds still arrives as `RIGHT_BUTTON`
- * (docs/games/input.md § "A touch hold arrives as the right button"), so
+ * (docs/input.md § "A touch hold arrives as the right button"), so
  * "press a block, pause to aim, then drag" would die exactly when the player
  * stops to think.
  *
@@ -251,7 +251,7 @@ function moveSlideCursor(
  *
  * Divergence: upstream solves the *initial* board, though its own comment says
  * "from the current position", and a route from the start is illegal from any
- * later position (docs/games/solver-and-generator.md § "Divergence and what it
+ * later position (docs/solver-and-generator.md § "Divergence and what it
  * costs" rule 3). We solve `curr`.
  */
 function solve(_orig: SlideState, curr: SlideState): SolveResult<SlideMove> {

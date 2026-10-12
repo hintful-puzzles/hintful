@@ -71,7 +71,7 @@ function fate(why: Stuck, it: Narration | string): Narration {
 }
 
 /**
- * Every sentence runs from what to look at to the move (docs/games/hints.md §
+ * Every sentence runs from what to look at to the move (docs/hints.md §
  * "Lead with the indication"), and says how the move follows: a danger is
  * answered by a move that avoids it, offered as one way, since the other pushes
  * were not all judged; only `only` and `alone`, where nothing else could

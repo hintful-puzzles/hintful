@@ -235,14 +235,14 @@ silently contradict a requirement.
 
 ### Requirement: The game guides are organized by concern
 
-The game guides SHALL be the `docs/games/` set, one guide for each concern,
+The game guides SHALL be the `docs/` set, one guide for each concern,
 with `README.md` the map, the game lifecycle and the definition of done. A
 repo-wide guide SHALL sit directly under `docs/`.
 
 #### Scenario: A lesson about rendering is written down
 
 - **WHEN** a change teaches something about how a game redraws
-- **THEN** it is written into `docs/games/rendering.md`, the guide for that
+- **THEN** it is written into `docs/rendering.md`, the guide for that
   concern, and not into a guide named for the change
 
 ### Requirement: A guide section is cited by its heading
@@ -333,7 +333,7 @@ The scaffolding script SHALL type-check, lint and test the copy it made and
 fail if any does. It SHALL print, and SHALL NOT perform, what the copy leaves
 undone: replacing the puzzle, registering the game in `src/games/index.ts`
 and `src/puzzle/catalog-data.ts`, pinning its hint again, its help page's
-words, its two icons and its spec. `docs/games/README.md` SHALL name the
+words, its two icons and its spec. `docs/new-game.md` SHALL name the
 skeleton as what a new game starts from.
 
 #### Scenario: The copy is checked where it is made
@@ -696,7 +696,7 @@ When part of the fiction ships, the shipped part SHALL move into the real
 guides or specs in the shipping change, and the fiction SHALL be updated or
 retired rather than left claiming the present tense. A vision doc SHALL NOT be
 the home of a rule that has become live: the rule moves to `AGENTS.md`, a
-`docs/games/` guide or a spec, and the vision links to it, because a rule
+`docs/` guide or a spec, and the vision links to it, because a rule
 stated only in a document labeled as fiction cannot be cited by the code that
 obeys it.
 
@@ -956,7 +956,7 @@ matching fails loudly rather than passing over nothing.
 ### Requirement: A numbered section or a design tag names its document
 
 A citation of a numbered section, or of a design tag such as `D5`, SHALL say
-which document's numbering it means. The `docs/games/` guides have no numbered
+which document's numbering it means. The `docs/` guides have no numbered
 headings, so a `§<number>` pointing into one is dead by construction; a
 numbered section resolves only in `docs/test-strength.md` and in an archived
 change's own document.

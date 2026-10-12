@@ -8,7 +8,7 @@
  * border, a **ball** (two concentric circles) or a **cross**, and then either
  * the entered symbol or the solo.c-style grid of pencil marks.
  *
- * Two error layers coexist, and they are not alternatives (docs/games/solver-and-generator.md § "The solvable-game contract"):
+ * Two error layers coexist, and they are not alternatives (docs/solver-and-generator.md § "The solvable-game contract"):
  * upstream's **live** rule check (a symbol repeated in a line, too many holes
  * in a line, a border clue the visible squares already contradict) reds the
  * offending glyph as you play, while the fork's **Check & Save** overlay marks
@@ -102,7 +102,7 @@ export const COL_E_HOLE = 16;
 export const COL_MISTAKE = 17;
 /** Fork addition: the yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 18;
-// Fork additions: the explained-hint legend (docs/games/hints.md § "The element-type color legend").
+// Fork additions: the explained-hint legend (docs/hints.md § "The element-type color legend").
 /** The square(s) / candidate(s) / entry the deduction acts on. */
 export const COL_HINT = 19;
 /** The deduction's evidence — a clue's line of sight, or a whole line, outlined
@@ -224,7 +224,7 @@ export interface SaladDrawState {
   borderfs: Int32Array;
   borderDrawn: Int32Array;
   /** Check & Save overlay — kept in a sidecar so it is part of the cache-miss
-   * test (docs/games/rendering.md § "The tile cache and the diff key"); it changes nothing in a cell's tile value. */
+   * test (docs/rendering.md § "The tile cache and the diff key"); it changes nothing in a cell's tile value. */
   wrong: OverlaySidecar;
   /** Explained-hint overlay, same rule: target/area flags, struck candidates and
    * the ghosted entry, none of which touch a square's tile value. */
@@ -479,7 +479,7 @@ function drawPencilMarks(
 }
 
 /** The entry a hint step is asking for, previewed in `COL_HINT` in the shape the
- * move itself would draw (`docs/games/hints.md` § "Echo the move's shape in the
+ * move itself would draw (`docs/hints.md` § "Echo the move's shape in the
  * hint color"): a symbol as its glyph, an empty-square marker
  * as a cross, a holds-a-symbol marker as a ball outline. */
 function drawGhost(
@@ -544,7 +544,7 @@ export function redraw(
 
   // The hint overlay: the shared target/area/marks pack, plus the ghosted entry
   // the step asks for in each ringed square. Both live in `ds.hint`, so both are
-  // part of the cache-miss test below (docs/games/rendering.md § "The tile cache
+  // part of the cache-miss test below (docs/rendering.md § "The tile cache
   // and the diff key").
   const marks = stepMarks(hint);
   ds.hint.pack(
@@ -567,7 +567,7 @@ export function redraw(
       const tone = flash.win(sweepStep(x, y));
       const highlight = winHighlight(tone) ?? highlightOf(flags[i]);
       // Packed key: flags (5) | symbol (4) | marks (nums+1 ≤ 10) | tone (2).
-      // Every overlay is in here or in a sidecar (docs/games/rendering.md
+      // Every overlay is in here or in a sidecar (docs/rendering.md
       // § "Overlay sidecars"), so nothing can change on screen without the cell
       // missing the cache.
       const key = flags[i] | (s.grid[i] << 5) | (s.pencil[i] << 9) | (tone << 19);
@@ -689,7 +689,7 @@ export function redraw(
   // boundaries land at `ts − 1` / `ts` / `(o+1)·ts − 1`, all outside their clue
   // tile's `ts − 1` erase. Upstream's one-off `tx+1, ty+1, TILE_SIZE-2` for the
   // right clue; do not fold the four sides into one uniform rect
-  // (docs/games/rendering.md § "A clue-ring erase must not wipe the grid").
+  // (docs/rendering.md § "A clue-ring erase must not wipe the grid").
   for (let i = 0; i < o; i++) {
     const spots = [
       { j: i, tx: cellOrigin(i, ts), ty: cellOrigin(-1, ts), inset: 0 },

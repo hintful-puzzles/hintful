@@ -106,7 +106,7 @@ playtest, not a derivation. Seven worked examples, each already documented:
 | Sixteen | drag a row | three cursor lock modes |
 
 Not one of those is what a mechanical derivation from the pointer gesture would
-produce, and `docs/games/input.md` carries two whole sections — "Giving a drag
+produce, and `docs/input.md` carries two whole sections — "Giving a drag
 game a keyboard" and "Giving a geometric game a keyboard" — that exist precisely
 because it is not derivable.
 
@@ -262,11 +262,11 @@ escapers, and a hatch.
 
 - **The classification itself.** The gesture shapes named in Finding 4 are a
   real vocabulary for *describing* the collection's input, and they belong in
-  `docs/games/input.md` § "Drag models", which already carries three of them.
+  `docs/input.md` § "Drag models", which already carries three of them.
   What they are not is a contract a game can be assembled from.
 - **The parity bar, unchanged**, and stronger than the table would have made it:
   derived per run, both exemption lists empty and asserted empty.
-- **The rule this cost a day to restate**, now in `docs/games/input.md`: *the
+- **The rule this cost a day to restate**, now in `docs/input.md`: *the
   keyboard equivalent of a drag is a design, not a derivation.*
 
 ## What would reopen this

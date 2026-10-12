@@ -13,7 +13,7 @@
  * those can drift from the game, because they are the game.
  *
  * The rule is the `ts-engine` spec's "A shared mechanic is joined by having it"
- * (followable form: `docs/games/testing.md` § "How a cross-game guard finds its
+ * (followable form: `docs/testing.md` § "How a cross-game guard finds its
  * population"). A value a *mechanism consumes* (a technique's tier, a
  * `paramConfig` field list) is a healthy declaration and not what this is
  * against.

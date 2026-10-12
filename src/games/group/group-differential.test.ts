@@ -7,7 +7,7 @@
  * board at the same minimal difficulty the C solver recorded. Because the
  * generator is solver-gated, that single byte-match validates the generator,
  * the solver's every deduction, the group data table and the codec together —
- * the strongest available bar (docs/games/testing.md § "Byte-match: fidelity
+ * the strongest available bar (docs/testing.md § "Byte-match: fidelity
  * where there is a right answer").
  *
  * The fixture is **frozen and cannot be regenerated**: it was captured by

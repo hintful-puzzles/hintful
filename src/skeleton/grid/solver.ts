@@ -4,7 +4,7 @@
  * {@link solveSkeleton} runs it to a fixpoint, which is how the generator
  * grades a board and how Solve and the mistake check find the answer.
  * {@link skeletonRecordingPass} runs the same rungs one firing at a time, and
- * the hint narrates each (docs/games/solver-and-generator.md § "One engine,
+ * the hint narrates each (docs/solver-and-generator.md § "One engine,
  * two projections").
  *
  * Both rungs only ever decide a square the numbers force, so a board the

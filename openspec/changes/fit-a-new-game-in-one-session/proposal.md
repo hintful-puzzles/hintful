@@ -20,7 +20,7 @@ routes a game's work to seven guides and the specs they name.
 
 | Reading | Bytes | Query |
 | --- | --- | --- |
-| The guides under `docs/games/` | 919 KB | `wc -c docs/games/*.md` |
+| The guides under `docs/` | 919 KB | `wc -c docs/*.md` |
 | The shared specs they name | 641 KB | `wc -c openspec/specs/{ts-engine,engine-*,testing,help-pages,repo-layout}/spec.md` |
 | The exemplar read "end to end", Galaxies, with tests | 288 KB | `find src/games/galaxies -name '*.ts' \| xargs cat \| wc -c` |
 
@@ -105,7 +105,7 @@ new game to say what to build. The fifth is the measurement.
 3. **One command that gives a game its whole verdict**: its own tests and
    every cross-game guard, narrowed to it.
 4. **A game spec with one order, held by a check.** The subjects of
-   `docs/games/README.md` § "What a game's spec holds" become the order of
+   `docs/new-game.md` § "What a game's spec holds" become the order of
    every game spec; the 57 are reordered without changing a word; and the
    census becomes a gate check that derives what a spec owes from the `Game`
    object. A spec stops restating what the game declares (params letters,

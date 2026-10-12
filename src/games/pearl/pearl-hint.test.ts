@@ -14,7 +14,7 @@
  *    from the player's own board, after following the plan up to it, is the
  *    same step: no fact the plan used is one the player does not have.
  *  - **Every premise the corpus reaches is reached**, with the census one level
- *    finer than the ladder's (docs/games/hints.md § "Census the reasons, not
+ *    finer than the ladder's (docs/hints.md § "Census the reasons, not
  *    only the rungs").
  */
 

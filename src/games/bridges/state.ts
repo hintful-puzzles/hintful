@@ -322,7 +322,7 @@ export interface BridgesUi {
    * *dragged*. The keyboard arm sets it at the press, because Ctrl/Shift+arrow
    * is a drag from the outset.
    *
-   * The name is the collection's — `docs/games/input.md` § "A button with two
+   * The name is the collection's — `docs/input.md` § "A button with two
    * meanings resolves on the release". */
   dragged: boolean;
   /** The drag is the secondary one, which lowers the span's limit. */

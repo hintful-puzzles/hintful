@@ -506,7 +506,7 @@ export const GROUP_RUNGS = [
 ] as const;
 export type GroupRung = (typeof GROUP_RUNGS)[number];
 
-/** Narrate *why* a placement is forced (docs/games/hints.md § "Writing the
+/** Narrate *why* a placement is forced (docs/hints.md § "Writing the
  * narration"). `n` is the value placed. The generic Latin arms go to
  * `narrateLatinReason` under {@link groupVocab}; only Group's own placing
  * techniques are chosen here. `identityFill`'s continuation legs are narrated

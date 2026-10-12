@@ -106,7 +106,7 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** The board's pixel origin. Exported so `interpretMove` reads the same number
  * the painter does — one function, both callers
- * ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
+ * ([`docs/mechanics.md`](../../../docs/mechanics.md)). */
 export const border = (ts: number): number => Math.floor(ts / 2);
 const coord = (v: number, ts: number): number => v * ts + border(ts);
 /** The thickness of a mark at the cell's edge (the cursor's brackets, a hint's

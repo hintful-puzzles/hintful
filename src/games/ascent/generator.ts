@@ -304,7 +304,7 @@ export function newAscentDesc(
   let success = false;
 
   // Upstream loops unboundedly, but the tier gate below rejects candidates, so
-  // the loop takes the house runaway guard (docs/games/testing.md § "Quirks are load-bearing — capped, not cleaned").
+  // the loop takes the house runaway guard (docs/testing.md § "Quirks are load-bearing — capped, not cleaned").
   const attempt = retryLimit(`ascent: generation (${w}x${h} d${params.diff})`);
   do {
     attempt();

@@ -8,7 +8,7 @@
  * at a time in a shuffled order, keeping each removal only while the puzzle
  * still solves by pure deduction at the target difficulty. Because every
  * removal is gated on the solver's verdict, a change to the solver changes which
- * boards exist (docs/games/solver-and-generator.md § "Solver-gated generation").
+ * boards exist (docs/solver-and-generator.md § "Solver-gated generation").
  *
  * Two upstream quality rules are reproduced verbatim:
  *

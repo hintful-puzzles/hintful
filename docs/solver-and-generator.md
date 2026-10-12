@@ -3,11 +3,11 @@
 How a game's deduction engine, difficulty tiers, generator, `solve()` and
 `findMistakes` fit together. This file is the followable *how*; the normative
 *what* lives in the specs — chiefly the
-[`engine-difficulty`](../../openspec/specs/engine-difficulty/spec.md) requirements
+[`engine-difficulty`](../openspec/specs/engine-difficulty/spec.md) requirements
 **"Narratable-deduction generation policy"**, **"A difficulty-capped solver is
 monotone in its cap"**, **"A difficulty tier binds the board it generates"**
 and **"An unbindable tier is refused, not silently downgraded"**, and the
-[`engine-hints`](../../openspec/specs/engine-hints/spec.md) requirement **"A hint
+[`engine-hints`](../openspec/specs/engine-hints/spec.md) requirement **"A hint
 step always names a technique, with no un-narrated fallback"**.
 
 Related guides: [hints.md](./hints.md) (narration and plan mechanics),
@@ -44,7 +44,7 @@ Consequences, each expanded below:
 ## The deduction fixpoint
 
 **New logic games build their solver/hint loop on
-[`engine/deduction-fixpoint.ts`](../../src/engine/deduction-fixpoint.ts)
+[`engine/deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)
 (`runDeductionFixpoint`) rather than hand-rolling it.** The loop is an ordered
 ladder of techniques, easiest first, that restarts from the top the moment any
 technique fires ("return after first firing", which keeps one firing = one hint
@@ -66,7 +66,7 @@ highest *tier* that fired as the grade. The runner owns:
   after an expensive one still runs under a low cap; a ladder whose tiers are
   not monotonically increasing is therefore legal;
 - the **recording-path step budget** — pass a
-  [`stepBudget`](../../src/engine/step-budget.ts) on the hint call and omit it
+  [`stepBudget`](../src/engine/step-budget.ts) on the hint call and omit it
   on the generator call, so a technique that reports progress without changing
   the board fails loud on the hint path and the generator path stays
   byte-for-byte unchanged (see hints.md on the budget guard). **The failure
@@ -123,23 +123,23 @@ Converged call sites to read as exemplars, easiest first:
 
 | Read this for | Where |
 | --- | --- |
-| the clearest ladder in the tree — five techniques, three tiers, one `maxTier` | [`unruly/solver.ts`](../../src/games/unruly/solver.ts) (`solveGame`) |
-| two tiers, plus a second untiered ladder in the same file | [`magnets/solver.ts`](../../src/games/magnets/solver.ts) |
-| an untiered ladder — every technique on tier 0, the grade unused, so the ladder is an *order* not a grading | [`filling/solver.ts`](../../src/games/filling/solver.ts) (`FillingSolver.run`) |
-| a ladder built per difficulty level, so `tier` *is* the level | [`engine/latin.ts`](../../src/engine/latin.ts) (`latinSolverTop`, and through it the Latin family) |
-| `settled` used for a **contradiction** rather than a solve | [`undead/solver.ts`](../../src/games/undead/solver.ts) (`recordUndeadDeductions`) |
-| `settled` carrying a three-valued verdict out through a closure | [`clusters/solver.ts`](../../src/games/clusters/solver.ts) (`solveGame`) |
-| a non-firing technique in position 0 used as a per-iteration pre-pass, and a flag mapped onto the `-1` arm | [`singles/solver.ts`](../../src/games/singles/solver.ts) (`solveSpecific`) |
-| a ladder that is **not** a tier prefix, a clamped cap, and an accumulator threaded through `settled` | [`spokes/solver.ts`](../../src/games/spokes/solver.ts) (`spokesSolve`) |
-| a hint-only recording ladder | [`pattern/solver.ts`](../../src/games/pattern/solver.ts) |
-| a rung whose availability is **non-monotone in the cap** (runs at Tricky, *not* at Hard) — no `tier` can say that, so it guards itself | [`ascent/solver.ts`](../../src/games/ascent/solver.ts) (`ascentLadder`) |
-| a per-iteration **prologue** carried by `settled` rather than by a never-firing rung | [`subsets/solver.ts`](../../src/games/subsets/solver.ts) (`subsetsSolveGame`) |
-| a rung that **sweeps a whole population before reporting** — legal, because the runner's "return after first firing" is about the *ladder* | [`bridges/solver.ts`](../../src/games/bridges/solver.ts) (`Solver.ladder`) |
-| a recorder threaded through the rungs, untouched by adoption, so an explained hint survives it | [`galaxies/solver.ts`](../../src/games/galaxies/solver.ts) (`galaxiesLadder`) |
-| Tricky deductions upstream folds into Easy sweeps, each split into a rung of its own, and a rung whose tier sits *below* Easy because the generator caps there | [`tents/solver.ts`](../../src/games/tents/solver.ts) (`tentsLadder`) |
-| a terminal rung that ends the ladder through `settled`, and a rung that rebuilds shared state the rung before it just built | [`pearl/solver.ts`](../../src/games/pearl/solver.ts) (`pearlLadder`) |
-| a rung that exists only because the player's **notation** needs it: it writes the edge walls a merge leaves implied (upstream ORs a disconnect matrix silently), touches nothing the generator reads, and so moves no board and shows only in the census; and a sweep split per firing on the recording path because its disconnects are order-independent | [`separate/solver.ts`](../../src/games/separate/solver.ts) (`separateLadder`) |
-| **two grades with a cap each**, so the runner's one grade and `maxTier` go unused: the ladder holds only the rungs both caps admit and each rung raises its own scale; and rungs that work shared state out afresh (cages reduced by their filled cells, partial cages cached by filled-cell count) so any one can run alone | [`solo/solver.ts`](../../src/games/solo/solver.ts) (`SolverUsage.ladder`) |
+| the clearest ladder in the tree — five techniques, three tiers, one `maxTier` | [`unruly/solver.ts`](../src/games/unruly/solver.ts) (`solveGame`) |
+| two tiers, plus a second untiered ladder in the same file | [`magnets/solver.ts`](../src/games/magnets/solver.ts) |
+| an untiered ladder — every technique on tier 0, the grade unused, so the ladder is an *order* not a grading | [`filling/solver.ts`](../src/games/filling/solver.ts) (`FillingSolver.run`) |
+| a ladder built per difficulty level, so `tier` *is* the level | [`engine/latin.ts`](../src/engine/latin.ts) (`latinSolverTop`, and through it the Latin family) |
+| `settled` used for a **contradiction** rather than a solve | [`undead/solver.ts`](../src/games/undead/solver.ts) (`recordUndeadDeductions`) |
+| `settled` carrying a three-valued verdict out through a closure | [`clusters/solver.ts`](../src/games/clusters/solver.ts) (`solveGame`) |
+| a non-firing technique in position 0 used as a per-iteration pre-pass, and a flag mapped onto the `-1` arm | [`singles/solver.ts`](../src/games/singles/solver.ts) (`solveSpecific`) |
+| a ladder that is **not** a tier prefix, a clamped cap, and an accumulator threaded through `settled` | [`spokes/solver.ts`](../src/games/spokes/solver.ts) (`spokesSolve`) |
+| a hint-only recording ladder | [`pattern/solver.ts`](../src/games/pattern/solver.ts) |
+| a rung whose availability is **non-monotone in the cap** (runs at Tricky, *not* at Hard) — no `tier` can say that, so it guards itself | [`ascent/solver.ts`](../src/games/ascent/solver.ts) (`ascentLadder`) |
+| a per-iteration **prologue** carried by `settled` rather than by a never-firing rung | [`subsets/solver.ts`](../src/games/subsets/solver.ts) (`subsetsSolveGame`) |
+| a rung that **sweeps a whole population before reporting** — legal, because the runner's "return after first firing" is about the *ladder* | [`bridges/solver.ts`](../src/games/bridges/solver.ts) (`Solver.ladder`) |
+| a recorder threaded through the rungs, untouched by adoption, so an explained hint survives it | [`galaxies/solver.ts`](../src/games/galaxies/solver.ts) (`galaxiesLadder`) |
+| Tricky deductions upstream folds into Easy sweeps, each split into a rung of its own, and a rung whose tier sits *below* Easy because the generator caps there | [`tents/solver.ts`](../src/games/tents/solver.ts) (`tentsLadder`) |
+| a terminal rung that ends the ladder through `settled`, and a rung that rebuilds shared state the rung before it just built | [`pearl/solver.ts`](../src/games/pearl/solver.ts) (`pearlLadder`) |
+| a rung that exists only because the player's **notation** needs it: it writes the edge walls a merge leaves implied (upstream ORs a disconnect matrix silently), touches nothing the generator reads, and so moves no board and shows only in the census; and a sweep split per firing on the recording path because its disconnects are order-independent | [`separate/solver.ts`](../src/games/separate/solver.ts) (`separateLadder`) |
+| **two grades with a cap each**, so the runner's one grade and `maxTier` go unused: the ladder holds only the rungs both caps admit and each rung raises its own scale; and rungs that work shared state out afresh (cages reduced by their filled cells, partial cages cached by filled-cell count) so any one can run alone | [`solo/solver.ts`](../src/games/solo/solver.ts) (`SolverUsage.ladder`) |
 
 ### Proving an adoption: the fixtures are not enough
 
@@ -159,7 +159,7 @@ So an adoption is proved in two halves, one temporary and one permanent.
   **delete the old loop in the same change**. It is reference code once the
   comparison has passed, and git keeps it.
 - **What stays is the firing census** —
-  [`engine/testing/ladder-census.ts`](../../src/engine/testing/ladder-census.ts)
+  [`engine/testing/ladder-census.ts`](../src/engine/testing/ladder-census.ts)
   — walking a corpus at every cap and asserting which rungs fired. A rung the
   corpus cannot reach is recorded with its reason, and checked against the C
   first, because an unreachable deduction is exactly the shape a porting bug
@@ -180,7 +180,7 @@ tier's stall, and no board in the corpus was one
 per Tricky rung tells you the boards reach it. And an `unreached` entry can be
 **structural** rather than a corpus shortfall — Magnets' `neither` is
 foreclosed by the primitive beneath it, in the C exactly as in the port
-([`magnets-ladder.test.ts`](../../src/games/magnets/magnets-ladder.test.ts)
+([`magnets-ladder.test.ts`](../src/games/magnets/magnets-ladder.test.ts)
 argues it) — in which case "empty is the goal" is a diagnosis, not a target.
 
 **On a ladder whose every rung only removes candidates, the census is the half
@@ -190,7 +190,7 @@ that weakens a rung changes the corpus along with the verdicts. ABCD is the case
 silencing its runs rung left all 24 board comparisons green, because the
 weakened solver dealt only boards it could finish, and only the census (and 11
 of the differential's 18 fixtures) went red
-([`abcd-ladder.test.ts`](../../src/games/abcd/abcd-ladder.test.ts)). Plant a
+([`abcd-ladder.test.ts`](../src/games/abcd/abcd-ladder.test.ts)). Plant a
 rung before trusting the board comparison to see it.
 
 **A rung can fire often and still not be needed, and then only the census sees
@@ -198,7 +198,7 @@ it.** Tents' diagonal-pair elimination fires on most Tricky boards (on 34 of
 40 at 10x10), but other rungs reach the same conclusion on all but about one
 Tricky board in fifty. Silencing it left every board comparison and the whole
 frozen differential green; only the census went red
-([`tents-ladder.test.ts`](../../src/games/tents/tents-ladder.test.ts)). So a
+([`tents-ladder.test.ts`](../src/games/tents/tents-ladder.test.ts)). So a
 rung's firing count tells you it runs, not that anything depends on it. To
 find out whether a board depends on it, solve with the rung silenced and see
 whether the board still finishes.
@@ -250,7 +250,7 @@ stronger, since it holds for the board nobody generated; the open question
 (recorded 2026-09-09) is whether that margin is worth changing the contract every
 technique implements. The standard of evidence is the one that withdrew the
 gesture table
-([postmortem](../../openspec/postmortems/2026-09-05-gesture-table-withdrawal.md)):
+([postmortem](../openspec/postmortems/2026-09-05-gesture-table-withdrawal.md)):
 its benefit had already shipped, derived from behavior, and the declaration
 would only have re-declared it.
 
@@ -324,15 +324,15 @@ it's revealing the answer.
   deductive solver with zero guessing**, enforced at generation time: a board
   is accepted only if the deductive solver (no recursion/backtracking) solves
   it uniquely. Exemplars:
-  [`range/solver.ts`](../../src/games/range/solver.ts) (keeps a board "only
+  [`range/solver.ts`](../src/games/range/solver.ts) (keeps a board "only
   if uniquely solvable without any guessing") and
-  [`unequal/generator.ts`](../../src/games/unequal/generator.ts) (caps
+  [`unequal/generator.ts`](../src/games/unequal/generator.ts) (caps
   assembly below the recursive level).
 - **The one sanctioned exception is a tier explicitly named "Unreasonable".**
   An Unreasonable preset MAY require guess-and-backtrack, and its hint is
   correspondingly allowed to be non-deductive on those boards
-  ([`towers/index.ts`](../../src/games/towers/index.ts),
-  [`keen/index.ts`](../../src/games/keen/index.ts)). No other tier name
+  ([`towers/index.ts`](../src/games/towers/index.ts),
+  [`keen/index.ts`](../src/games/keen/index.ts)). No other tier name
   (Easy/Normal/Hard/Tricky/Extreme/…) may require guessing.
 - **Movement / objective games are out of scope.** Fifteen, Sixteen, Flood and
   Untangle are always solvable and carry no deductive "why"; their hints are
@@ -428,7 +428,7 @@ every elimination the solver makes, then ask the hint's engine, at the state
 where it stalled, whether it still holds what the solver just dropped: the
 first disagreement is the missing deduction. And a first sample of 1,510 Net
 boards read as a clean zero while one board in about 700 still stalled, which
-only 22,600 showed ([`method.md`](../method.md), on a census that finds zero).
+only 22,600 showed ([`method.md`](./method.md), on a census that finds zero).
 
 **Where the solver's own rule is what stops firing, the hint keeps the
 solver's run from the clues.** Filling's hint replans from the board at every
@@ -441,7 +441,7 @@ no longer makes. No rule was missing, so there was none to add, and the
 technique cannot be made monotone without knowing which region a lone square
 belongs to. So when replanning finds nothing, the plan takes the next fill of
 the run from the clues whose square is still empty
-(`deduceHintPlan` in [`filling/solver.ts`](../../src/games/filling/solver.ts)).
+(`deduceHintPlan` in [`filling/solver.ts`](../src/games/filling/solver.ts)).
 Every fill before it is on the board, so the board is a correct superset of
 the one it was deduced on and the step is as true there; its evidence is read
 again from the board it is shown on. That is a guarantee and not a census: the
@@ -455,7 +455,7 @@ deduction. A rule the hint never had is still a missing rung.
 **A game whose deductions finish every board it deals can deal a second kind:
 a board with one answer that they do not reach** (owner, 2026-10-10, so that a
 player meets "trial and error" only where they asked for it). Pattern was the
-first, and [`pattern/`](../../src/games/pattern/) is the copy to follow. What
+first, and [`pattern/`](../src/games/pattern/) is the copy to follow. What
 is the same in every such game is `engine/answer-search.ts`, and the game
 writes three things for it: its deduction with a verdict, what to assume where
 that stops, and what its deal draws. What the tier is made of:
@@ -1110,7 +1110,7 @@ non-Latin candidate game:
   equality): a type whose full count is placed is struck everywhere; a type
   whose candidate cells equal its remaining need forces them all; too few
   candidate cells is a contradiction
-  ([`undead/solver.ts`](../../src/games/undead/solver.ts) `countingPass`).
+  ([`undead/solver.ts`](../src/games/undead/solver.ts) `countingPass`).
 - **Depth-1 forcing** (`forcingPass`): hypothesize one candidate, run the
   arc-consistency + counting fixpoint, eliminate on contradiction. That is a
   solve from a hypothesis, so a Search (§ "Check, Tactic, Search"): the tier
@@ -1133,7 +1133,7 @@ independently against the brute-force oracle. Two lessons that transfer:
 ### The difficulty contract
 
 **A game with tiers declares
-[`Game.difficulty`](../../src/engine/difficulty.ts) — a
+[`Game.difficulty`](../src/engine/difficulty.ts) — a
 `DifficultyContract`: a `solveAtCap` that runs its solver from a fresh state
 with the ladder capped.** Declaring it enrolls the game in the cross-game guards
 (`difficulty-contract.test.ts`) the moment the field exists; an untiered game
@@ -1186,7 +1186,7 @@ and it costs one solve on every reload.
 **The generator-acceptance rule that makes a tier mean what it says: a board
 is accepted for tier `t` only if it solves at `t` and does *not* solve at
 `t − 1`.** That rule is written once, as
-[`solvableAtExactlyTier`](../../src/engine/difficulty.ts) — use it instead of
+[`solvableAtExactlyTier`](../src/engine/difficulty.ts) — use it instead of
 re-spelling it. Notes:
 
 - **It asks the cheap question first** (solve at `t − 1` before `t`), which a
@@ -1266,7 +1266,7 @@ The followable form, for a refusal that clears it:
 1. **Refuse only when dealing.** The check sits behind `full`, since boards
    dealt under the old label are in saved games and shared IDs, and a board
    that arrives with its desc is graded by what it needs, whatever its ID says.
-2. **Say it with [`noSuchTier`](../../src/engine/difficulty.ts)**, so the
+2. **Say it with [`noSuchTier`](../src/engine/difficulty.ts)**, so the
    sentence is the same in every game: *"No 3x3 puzzle is Tricky."* Name the
    boards as the menu does, and add whatever else about them makes the tier
    absent (Group: *"that shows its identity"*, where hiding it brings the tier
@@ -1274,7 +1274,7 @@ The followable form, for a refusal that clears it:
 3. **Say it in the size field's `doc`**, which is the help page's Parameters
    section.
 4. **Pin the cells** with
-   [`describeAbsentTiers`](../../src/engine/testing/absent-tiers.ts): refused
+   [`describeAbsentTiers`](../src/engine/testing/absent-tiers.ts): refused
    when dealing, accepted with a desc, and in the slow tier the generator run
    out at each.
 5. **Pin the cells beside them** with `describeDealtTiers`, in the same file:
@@ -1305,7 +1305,7 @@ takes 119 and a hundredth of a second, Group's 6x6 at Tricky showing its
 identity 48,000 and ten seconds. What decides is seconds a board. A cell found
 once in `m` seconds runs the deadline out with chance `e^(-120/m)`,
 and the app deals the next board ahead in a second worker and keeps it
-([`deal-ahead.ts`](../../src/puzzle/deal-ahead.ts)), so the wait is the first
+([`deal-ahead.ts`](../src/puzzle/deal-ahead.ts)), so the wait is the first
 board's only. Keep a type that takes more than a second or two off the preset
 menu, and write nothing else for it.
 
@@ -1382,7 +1382,7 @@ could. Two counts settle it, how often a patch can carry the tier and how
 many boards such a patch needs, and they came out far apart: a patch that can
 needs under 500, and one that cannot had been given 10,000 before the next was
 drawn. So the deal went from ten patches of 10,000 boards to two hundred of
-500 ([`loopy/generator.ts`](../../src/games/loopy/generator.ts)), the same
+500 ([`loopy/generator.ts`](../src/games/loopy/generator.ts)), the same
 run-out, and only the sizes whose every patch is the one shape are refused.
 Key the count on the drawn thing's shape and not its size, and read which
 shapes fail: it was four of them, across two tilings.
@@ -1392,7 +1392,7 @@ so.** Boats takes a fleet as a list, and which fleets lack a tier has no line
 through it: one boat never has one, two single boats on a 3x3 do not, two on
 an 8x8 do. A generator that finds no board before the deadline is answered by
 the midend (`Midend.deal`), which keeps the board in play and returns
-[`dealGaveUp`](../../src/engine/difficulty.ts)'s sentence for the app to
+[`dealGaveUp`](../src/engine/difficulty.ts)'s sentence for the app to
 show; it says the tier may be rare or absent, since a run-out cannot tell. So
 refuse what you have counted and can name, and let the rest run out. Never
 catch the run-out in the game to deal something else.
@@ -1472,8 +1472,8 @@ not an objection that ends the discussion. Display code was never in scope at
 all (owner, 2026-07-04): rendering, layout, geometry, animation and colors
 target neat visuals and clean code, and deliberate visual improvements are
 the point of the fork. The doctrine is
-[`doctrine.md`](../doctrine.md) § "Upstream" and the
-[`ts-migration`](../../openspec/specs/ts-migration/spec.md) spec; the
+[`doctrine.md`](./doctrine.md) § "Upstream" and the
+[`ts-migration`](../openspec/specs/ts-migration/spec.md) spec; the
 followable form is this section.
 
 Two rules govern every divergence decision:
@@ -1516,7 +1516,7 @@ before paying or refusing it:
 ### Every retry loop is bounded
 
 **A "generate until it works" loop takes a
-[`retryLimit`](../../src/engine/retry-limit.ts) guard.** Generators are
+[`retryLimit`](../src/engine/retry-limit.ts) guard.** Generators are
 synchronous, so an unbounded loop that never succeeds owns its thread
 outright — test timeouts can't fire and vitest workers orphan to init.
 Exhaustion **throws** (`RetryLimitExceeded`) rather than returning a
@@ -1527,7 +1527,7 @@ reshuffles on a stalled tie rather than throwing). Read the module header —
 it also explains why the bound is a guard call, not a `for…of` iterator.
 
 **Give the guard a label and no number.** The bound is the engine's, and it
-is two bounds. When the app deals, [`generate`](../../src/engine/deal.ts) arms
+is two bounds. When the app deals, [`generate`](../src/engine/deal.ts) arms
 a deadline, `DEAL_DEADLINE_MS`, and a guard given no count gives up when it
 passes, however many tries that was: so a size with no board is answered
 after the same wait in every game, and a board found once in 100,000 tries is
@@ -1549,7 +1549,7 @@ generator deal a different board, or none where it deals one, if the number
 were ten times as large? For a budget, never.
 
 **A test that deals a rare board asks for the tries, in one place.**
-[`dealRare`](../../src/engine/testing/dealt.ts) is `newDesc` with the count
+[`dealRare`](../src/engine/testing/dealt.ts) is `newDesc` with the count
 raised for that call, and `describeDealtTiers` and the boards the cross-game
 sweeps share (`dealt`) deal through it, so a cell whose board is past the
 house count is pinned with no number in the game. A test of your own that
@@ -1557,7 +1557,7 @@ runs out at 10,000 tries on a board the app deals calls `dealRare`. A test
 never arms a deadline to find a board.
 
 **The gate holds you to it, in its fast pass.**
-[`retry-bound.test.ts`](../../src/engine/retry-bound.test.ts) reads every
+[`retry-bound.test.ts`](../src/engine/retry-bound.test.ts) reads every
 loop under `src/games/` and `src/engine/` whose header does not count
 (`while`, `do…while`, a `for` missing its condition or its step) and whose
 body draws from the RNG, and requires one of two answers: the loop calls a
@@ -1568,7 +1568,7 @@ says what ends it. So a new generator meets three cases:
   always works" is the case the rule is for, and the reject-a-solved-shuffle
   loops (Fifteen, Flood, Flip, Twiddle) take one like any other. A new
   generator needs no such loop for a board that comes solved: the engine's
-  deal ([`generate`](../../src/engine/deal.ts)) asks the game for the board's
+  deal ([`generate`](../src/engine/deal.ts)) asks the game for the board's
   status and deals again, for every game. **That is a rule about dealing
   only: a game ID whose board is already solved opens** (`ts-engine` § "A game
   ID whose board is already solved opens"; owner, 2026-10-11). Generators
@@ -1632,7 +1632,7 @@ Penrose patch is cut from a random place, and one 5x5 in four was three rhombs
 in a box that otherwise held five to eleven. Nothing fails there, since the
 three rhombs are a legal board, so neither a retry on error nor a refusal sees
 it; the spread of the drawn thing's size does. Four things made the fix small
-([`loopy/grid-build.ts`](../../src/games/loopy/grid-build.ts)):
+([`loopy/grid-build.ts`](../src/games/loopy/grid-build.ts)):
 
 - **Say what the size usually gives as arithmetic, not as a table.** The
   medians fit the box less a border, `(w - 2)(h - 2)`, on both Penrose
@@ -1658,7 +1658,7 @@ at 56+). A size cap alone would forbid shipped presets; retry-only leaves a
 under the engine's bound for the rest. **Sweep
 a grid of shapes, not a single dimension**: the ceiling tracked *cell
 count*, which neither a `w` bound nor an `h` bound would have expressed.
-Exemplar: [`seismic/state.ts`](../../src/games/seismic/state.ts)
+Exemplar: [`seismic/state.ts`](../src/games/seismic/state.ts)
 (`MAX_CELLS_SEISMIC`, the measurements in its doc comment).
 
 **A filter that throws away what a draw could have been made to produce is a
@@ -1669,7 +1669,7 @@ walk is about 25 squares long at any size, so the first filter kept one walk
 in 13 at 8x8 and one in 100,000 at 60x8, and the second kept none of the
 tracks of a 200x8. Lifting the bound showed nothing else failing: clue-laying
 took one to three tracks a board at every size. Two things to take from
-[`tracks/generator.ts`](../../src/games/tracks/generator.ts):
+[`tracks/generator.ts`](../src/games/tracks/generator.ts):
 
 - **Ask what each try is thrown away for before accepting the rate.**
   Count the tries each filter turns away, by size. A rate that falls with size
@@ -1695,7 +1695,7 @@ bound. It was not one: a failed division has a second answer under its own
 clues, in a few neighboring regions that can be cut another way. The generator
 now divides the regions round a wall the solver did not place again, and keeps
 the step if no more walls are left unplaced
-([`palisade/generator.ts`](../../src/games/palisade/generator.ts)). Every size
+([`palisade/generator.ts`](../src/games/palisade/generator.ts)). Every size
 deals, 30x30 in threes among them, and no size is refused. What to take:
 
 - **Sort the failures by what the search says of them before blaming the
@@ -1727,7 +1727,7 @@ deduction had read and filled the rest again. One division in 200 was
 finished at 6x6 in fours and none in 400 at 8x8, and the proposal was a
 size bound. The generator now swaps two letters where the solver stops, so that
 an edge it left open is walled
-([`separate/generator.ts`](../../src/games/separate/generator.ts)), and
+([`separate/generator.ts`](../src/games/separate/generator.ts)), and
 20x20 in twos deals in under a second. What to take:
 
 - **Look at where a failed try stopped, and not only at how many fail.** A
@@ -1772,7 +1772,7 @@ raised, repeat the sizes near it across several seeds first. Two corollaries:
 - **Optimize first, then bound.** Slide's tail at its largest upstream preset
   measured 22.8 s before its visited-set hashing fix and 1.8 s after — a
   bound drawn from the first number would have forbidden a board upstream
-  ships ([`slide/solver.ts`](../../src/games/slide/solver.ts)).
+  ships ([`slide/solver.ts`](../src/games/slide/solver.ts)).
 - **Check whether the wall is time or memory.** Slide's curve doesn't end in
   a slow generation: at 54 cells the BFS exhausts the heap. A retry budget
   assumes failure is recoverable; an OOM in the worker is a crash, so that
@@ -1789,7 +1789,7 @@ raised, repeat the sizes near it across several seeds first. Two corollaries:
   observed. Every other preset measured below `10^−15`.
 
 **The instrument past the menu is the deal walk**, `npm run deal-walk`
-([`scripts/deal-walk.ts`](../../scripts/deal-walk.ts)): every game, each
+([`scripts/deal-walk.ts`](../scripts/deal-walk.ts)): every game, each
 menu's largest size at every tier and then 1.5 to 8 times it, a few deals a
 cell, each in a watched process so that a deal which never returns is killed
 and written down. It writes `metrics/deal-walk.md`. Three things it has shown,
@@ -1818,7 +1818,7 @@ sizes each side of it.
 
 **A Custom size is not refused for its wait.** The app runs every deal beside
 the board in play and the player can stop it
-([`deal-ahead.ts`](../../src/puzzle/deal-ahead.ts), `Puzzle.stopDeal`), so a
+([`deal-ahead.ts`](../src/puzzle/deal-ahead.ts), `Puzzle.stopDeal`), so a
 large size is a wait they chose and can leave, and the line a table of
 refusals would need is in a different place at every tier, on every machine.
 A size bound in `validateParams` is for what a wait does not fix:
@@ -1834,7 +1834,7 @@ A tier's own bound is held to the same rule: "a larger one takes too long to
 deal" is a wait, and Range's Unreasonable bound went when every deal past it
 was measured to return the board asked for. Two things to do before a table
 of times is read as a bound
-([`range/solver.ts`](../../src/games/range/solver.ts)):
+([`range/solver.ts`](../src/games/range/solver.ts)):
 
 - **A deal that throws is a defect in the code that throws.** Range's
   connectedness walk made a call a square and overflowed the stack on a 64x64
@@ -1852,7 +1852,7 @@ of times is read as a bound
   of 10,000. A second answer differs from the dealt one somewhere, and there
   a clue can move so that the dealt answer stands and the other does not:
   `solvedPositions` hands the answers over. A board then took a few hundred
-  draws at every size ([`rect/generator.ts`](../../src/games/rect/generator.ts)).
+  draws at every size ([`rect/generator.ts`](../src/games/rect/generator.ts)).
 - **A check that replays the hint rereads the board at every step unless it
   is told not to.** Rectangles' was half of a large deal: every step read
   every clue's every shape again, though a step only draws lines and so only
@@ -1885,9 +1885,9 @@ tells:
   early-outs that only existed under a diagnostics `#ifdef`. Each carries a
   loud comment at the definition. Do not tidy these; the comment is the
   contract. Exemplars:
-  [`filling/solver.ts`](../../src/games/filling/solver.ts),
-  [`solo/generator.ts`](../../src/games/solo/generator.ts) `mergeSomeCages`,
-  [`slant/solver.ts`](../../src/games/slant/solver.ts) `fillSquare`.
+  [`filling/solver.ts`](../src/games/filling/solver.ts),
+  [`solo/generator.ts`](../src/games/solo/generator.ts) `mergeSomeCages`,
+  [`slant/solver.ts`](../src/games/slant/solver.ts) `fillSquare`.
 - **Tell — the truthiness trap:** grep a solver-gated generator for
   `if (solve(` / `if (!solve(` before trusting it. A solver that returns a
   multi-valued verdict makes bare truthiness a bug: Mathrax's verdict `2`
@@ -1896,13 +1896,13 @@ tells:
   player-visible defect (`findMistakes` refuses a board with no unique
   answer, so Check & Save silently degraded across the tier). The fix was
   two comparisons, provably inert on the tiers whose verdict set excludes
-  the ambiguous code ([`mathrax/generator.ts`](../../src/games/mathrax/generator.ts)).
+  the ambiguous code ([`mathrax/generator.ts`](../src/games/mathrax/generator.ts)).
 - **Tell — the dirty scratch:** when a generator hands its solver a *reused*
   board, ask what state that board is in on entry — the answer is part of the
   algorithm. Spokes' acceptance gate re-solved on whatever the last
   candidate's solve left behind (often a finished board), so 31–45% of
   attempts were judged on garbage and "Hard" mostly wasn't
-  ([`spokes/generator.ts`](../../src/games/spokes/generator.ts)).
+  ([`spokes/generator.ts`](../src/games/spokes/generator.ts)).
 - **Tell — the unchecked start:** a stripping loop keeps a removal only while
   the board still solves, so it preserves a solvable board and cannot make
   one. Ask what proves the board it *starts* from solves. Bricks re-founds its
@@ -1910,7 +1910,7 @@ tells:
   clue, and on a board two wide that could leave a brick resting on nothing:
   the loop then reverted every removal and wrote out a board with no solution,
   which its own game ID refused
-  ([`bricks/generator.ts`](../../src/games/bricks/generator.ts)). Any step
+  ([`bricks/generator.ts`](../src/games/bricks/generator.ts)). Any step
   that edits the answer after it was built owes a solve before the stripping.
 - **Tell — the mutating validator:** any C-descended `validate`/`check` that
   both returns a verdict *and* writes a flag back into the board is a hazard
@@ -1918,9 +1918,9 @@ tells:
   generator depends on a leaked error bit surviving into a whole-cell
   compare; the port keeps a *mutating* validate on the generator path and
   separate pure checks for play, so persisted state and the renderer stay
-  clean ([`clusters/solver.ts`](../../src/games/clusters/solver.ts)).
+  clean ([`clusters/solver.ts`](../src/games/clusters/solver.ts)).
 - **Some deductions branch on the canonical-DSF-root *identity*.** The shared
-  [`Dsf`](../../src/engine/dsf.ts) matches upstream `dsf.c`'s root choice for
+  [`Dsf`](../src/engine/dsf.ts) matches upstream `dsf.c`'s root choice for
   exactly this. A game that uses the dsf only for connectivity won't notice;
   one that reads `canonify(i)` as an *element* (an index into something)
   does. Tell: a loop bounded by a canonify result used as an index value
@@ -1930,7 +1930,7 @@ tells:
   code that says "the canonical index is the first square" and still calls
   `dsf_canonify` is broken upstream, and a faithful port of it is broken the
   same way. `Dsf.withMinimal` answers `minimal(i)`
-  ([`boats/validate.ts`](../../src/games/boats/validate.ts) `checkDsf`).
+  ([`boats/validate.ts`](../src/games/boats/validate.ts) `checkDsf`).
 
 ### A divergence retires or re-founds its fixture
 
@@ -2000,7 +2000,7 @@ it refuses with a `SolveFailure` (Flood, whose greedy finish can overrun the
 move limit once moves are spent, says `NO_SOLUTION_FROM_HERE`), and where a
 mistake stands in the way, the answer replaces it as it replaces a wrong digit
 (Mines shows the finished board over an opened mine).
-[`solve-finishes.test.ts`](../../src/engine/solve-finishes.test.ts) solves
+[`solve-finishes.test.ts`](../src/engine/solve-finishes.test.ts) solves
 every game from positions played into, which is how Flood was found.
 
 ## findMistakes
@@ -2018,8 +2018,8 @@ unique solution, `findMistakes(state)` is part of "done": re-solve from the
 fixed clues and return every player cell that contradicts the unique solution
 (`[]` when the board isn't uniquely deducible — never guess). A permutation
 puzzle with no notion of a wrong-but-legal state correctly omits the hook.
-Exemplar: [`unruly/solver.ts`](../../src/games/unruly/solver.ts)
-`findMistakes` + [`unruly/render.ts`](../../src/games/unruly/render.ts); the
+Exemplar: [`unruly/solver.ts`](../src/games/unruly/solver.ts)
+`findMistakes` + [`unruly/render.ts`](../src/games/unruly/render.ts); the
 overlay must be in the render diff key
 ([rendering.md](./rendering.md) § "Overlay sidecars"), and the refusal/banner
 coupling is in [hints.md](./hints.md).
@@ -2032,7 +2032,7 @@ answer, so a saved board can always be finished; on a board with two answers it
 would call a mark that fits the other a mistake. So `loadDesc` asks the game's
 own `solve` about every board it loads, and refuses one the solver proves has
 several answers (`DESC_NOT_UNIQUE`) or none (`DESC_CONTRADICTORY`), whoever wrote
-the desc ([`engine/desc-error.ts`](../../src/engine/desc-error.ts)). A game joins
+the desc ([`engine/desc-error.ts`](../src/engine/desc-error.ts)). A game joins
 by having a `solve` that says `MULTIPLE_SOLUTIONS` or `NO_SOLUTION` when it has
 proved it; a solver that merely gave up says neither, and that verdict passes
 (the board is then asked whether the solver solves it at all, § "No option
@@ -2054,7 +2054,7 @@ minutes, and Flip's shortest answer doubles with every free square after the
 elimination has already said whether there is one). So look for the invariant
 the moves keep, and split "is there an answer" from "which". A new game with
 no mistake check pins a board with no solution in
-[`no-solution-load.test.ts`](../../src/engine/no-solution-load.test.ts), which
+[`no-solution-load.test.ts`](../src/engine/no-solution-load.test.ts), which
 holds the list of games that still let one through, each with its board.
 
 **A proof need not be complete, and must be sound.** Flood counts the colors
@@ -2063,7 +2063,7 @@ Twiddle checks three things its turns keep; each passes most boards that
 cannot be finished, and that is fine, because the hook refuses only what it
 proves. Hold it to the moves themselves: list every board a small one reaches
 and see the proof hold for none
-([`twiddle-no-solution.test.ts`](../../src/games/twiddle/twiddle-no-solution.test.ts),
+([`twiddle-no-solution.test.ts`](../src/games/twiddle/twiddle-no-solution.test.ts),
 where 3x2 with a block of 2 reaches a sixth of its arrangements and no
 invariant written down says why). **A search game's quick loss is such a
 proof**: what Pegs, Sokoban and Inertia ask before they search costs under
@@ -2086,7 +2086,7 @@ generator that makes the answer the only one the visible clues allow: Black
 Box's verify accepts any balls that send every laser where the real ones do, and
 its upstream generator scattered balls at random, so it now builds a board a
 ball at a time, keeping each ball only where the board still has one answer
-([`blackbox/answer.ts`](../../src/games/blackbox/answer.ts)). Building beat
+([`blackbox/answer.ts`](../src/games/blackbox/answer.ts)). Building beat
 scattering and redealing by a wide margin: on 8×8 with 16 balls, redealing found
 no board in 2,000 tries where building found one in 0.2 s, and on a ranged preset
 redealing skewed the count toward its fewest balls.
@@ -2098,7 +2098,7 @@ answer is a mistake, exactly as a wrong entry is** — and a candidate hint
 depends on it, because it reasons from those marks. Marks carrying extra
 candidates beside the answer are ordinary mid-solve state, and a cell with no
 marks says nothing. Don't write this loop: `entryMistakes` in
-[`engine/entry-mistakes.ts`](../../src/engine/entry-mistakes.ts) owns it, and
+[`engine/entry-mistakes.ts`](../src/engine/entry-mistakes.ts) owns it, and
 the game hands it the answer, its arrays, its `NoteEncoding` and its fixed
 cells ([engine-catalog.md](./engine-catalog.md) § "`entry-mistakes.ts` — Check
 & Save for one value or a set of marks per cell"). Group once checked entries
@@ -2113,9 +2113,9 @@ solution — never "the cell looks invalid", and never a missing edge.** A
 **set** that the solution forbids is a definite mistake. A 2×2 box drawn
 around no number *looks* wrong, but if each wall is a real solution boundary
 it is legitimate partial progress. Exemplars:
-[`rect/index.ts`](../../src/games/rect/index.ts),
-[`tracks/index.ts`](../../src/games/tracks/index.ts),
-[`galaxies/index.ts`](../../src/games/galaxies/index.ts) (which also flags
+[`rect/index.ts`](../src/games/rect/index.ts),
+[`tracks/index.ts`](../src/games/tracks/index.ts),
+[`galaxies/index.ts`](../src/games/galaxies/index.ts) (which also flags
 the second way that game is played: an interior wall set inside a single
 galaxy).
 
@@ -2129,7 +2129,7 @@ no rule yet, and a live-only hook would let Check & Save bless it. Keep the
 live errors (free, immediate) *and* base `findMistakes` on the re-solve —
 and render them so both read (Boats recolors a wrong ship red and insets an
 outline, which is what makes a wrong *water* square visible at all).
-Exemplar: [`boats/render.ts`](../../src/games/boats/render.ts).
+Exemplar: [`boats/render.ts`](../src/games/boats/render.ts).
 
 ### Self-validating games run their rule checker
 
@@ -2142,9 +2142,9 @@ each other" by a hint that compared the board with the answer and kept the
 cell to itself. Check & Save is an answer check in every game (owner,
 2026-10-02), so a game that holds the answer adds the comparison beside its
 rule pass, with a mark for an entry that is wrong and breaks nothing.
-Exemplars: [`bricks/solver.ts`](../../src/games/bricks/solver.ts)
+Exemplars: [`bricks/solver.ts`](../src/games/bricks/solver.ts)
 `findMistakes`, which keeps the rule pass's flags and adds one for a cell the
-answer contradicts, and [`subsets/solver.ts`](../../src/games/subsets/solver.ts),
+answer contradicts, and [`subsets/solver.ts`](../src/games/subsets/solver.ts),
 whose `letter` mistake is that comparison and whose `cell` and `edge` mistakes
 are the rule pass. **Where the player enters one value a cell, the comparison
 is `entryMistakes`** (§ "Marks are checked like entries"), with no `notes` for
@@ -2153,7 +2153,7 @@ complete short of its count locks bridges the answer needs, so it is the
 mistake, and the island is what lights up. **The shape to look for** is a hint
 that opens by re-solving and answers `CONTRADICTION_UNLOCALIZED`: what it
 found there belongs in `findMistakes`.
-[`wrong-entry-check.test.ts`](../../src/engine/wrong-entry-check.test.ts)
+[`wrong-entry-check.test.ts`](../src/engine/wrong-entry-check.test.ts)
 looks for it in every game by entering things blind and asking whether Check
 & Save can name what the answer contradicts.
 
@@ -2166,7 +2166,7 @@ the wrong tile and keeps its frame for the broken rule.
 
 ## The Latin family
 
-**The games that import [`engine/latin.ts`](../../src/engine/latin.ts) ride the
+**The games that import [`engine/latin.ts`](../src/engine/latin.ts) ride the
 generic `latin_solver` framework (candidate cube, positional/numeric and set
 elimination, forcing chains, guess-and-verify recursion as the uniqueness
 check) plus the RNG-faithful generator (`matching` / `latinGenerate` /
@@ -2174,12 +2174,12 @@ check) plus the RNG-faithful generator (`matching` / `latinGenerate` /
 (`usersolvers`), a `valid` callback over completed grids, and a thin driver
 mapping its difficulty levels onto the config. Group shows the shape: two
 `usersolvers` and a `valid`. Exemplars, each showing a different wrinkle:
-[`towers/solver.ts`](../../src/games/towers/solver.ts) (clue heuristics),
-[`unequal/solver.ts`](../../src/games/unequal/solver.ts) (two modes off
-`ctx.mode`), [`keen/solver.ts`](../../src/games/keen/solver.ts) (per-cage
+[`towers/solver.ts`](../src/games/towers/solver.ts) (clue heuristics),
+[`unequal/solver.ts`](../src/games/unequal/solver.ts) (two modes off
+`ctx.mode`), [`keen/solver.ts`](../src/games/keen/solver.ts) (per-cage
 arithmetic in the transposed cube space),
-[`group/solver.ts`](../../src/games/group/solver.ts),
-[`salad/solver.ts`](../../src/games/salad/solver.ts).
+[`group/solver.ts`](../src/games/group/solver.ts),
+[`salad/solver.ts`](../src/games/salad/solver.ts).
 
 Working rules, each earned:
 
@@ -2192,7 +2192,7 @@ Working rules, each earned:
   assembly reads the candidate cube through a flat index that is a
   *transposition* of the cube's layout. It is deliberate; "fixing" it to the
   tidy accessor changes the greedy choice and hence the board
-  ([`unequal/generator.ts`](../../src/games/unequal/generator.ts)). The same
+  ([`unequal/generator.ts`](../src/games/unequal/generator.ts)). The same
   generator's second trap rides along: the numeric and inequality clue codes
   are shuffled in **two separate `shuffle` calls, in that order** — folding
   them into one tidy shuffle changes the draw sequence and the desc.
@@ -2216,7 +2216,7 @@ Working rules, each earned:
   the multiplicity-aware `setGeneral`, and forcing chains never link through it.
   A **cross** is the hole symbol placed, a **ball** the hole symbol struck, and
   the marker array is read back off the final cube (`cubeOut`) —
-  [`salad/solver.ts`](../../src/games/salad/solver.ts) is the consumer. Two
+  [`salad/solver.ts`](../src/games/salad/solver.ts) is the consumer. Two
   things to know before touching it: **the extension is inert when not
   declared** (`symbols = o`, every multiplicity 1, every path reduces to the C's
   — the family's byte-match differentials are the proof, and
@@ -2233,9 +2233,9 @@ Working rules, each earned:
   `cubeOut` that receives the final candidate cube; omit it on the solve/hint
   path. (3) Keen *partitions* structurally (cages over a generated square),
   then solver-gates on exactly the target difficulty
-  ([`keen/generator.ts`](../../src/games/keen/generator.ts)).
+  ([`keen/generator.ts`](../src/games/keen/generator.ts)).
 - **A cage/region game over the shared `Dsf` precomputes its minimal-element
-  map** (`buildMinimal` in [`keen/state.ts`](../../src/games/keen/state.ts))
+  map** (`buildMinimal` in [`keen/state.ts`](../src/games/keen/state.ts))
   rather than growing a min-tracking dsf variant: the minimal element is
   membership-determined, so a single ascending pass after all merges is exact
   regardless of which root union-by-size picks. But first check whether the
@@ -2244,11 +2244,11 @@ Working rules, each earned:
   the correction cut both ways: the scan it planned to port was just a
   same-class test, while the root's *identity* turned out to be
   verdict-relevant elsewhere. When in doubt, reread
-  [`engine/dsf.ts`](../../src/engine/dsf.ts)'s header.
+  [`engine/dsf.ts`](../src/engine/dsf.ts)'s header.
 - **What a solver *doesn't* do can be as load-bearing as what it does.**
   Upstream's shipped build skips a `usersolver` contradiction that sits
   inside `#ifdef STANDALONE_SOLVER`, and the port keeps the shipped behavior,
-  with a comment at the site ([`group/solver.ts`](../../src/games/group/solver.ts)).
+  with a comment at the site ([`group/solver.ts`](../src/games/group/solver.ts)).
 
 The shared hint-side machinery for this family (the recorder, reason
 narration, populate/cleanup steps) is hints.md's subject — start at

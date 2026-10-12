@@ -1,7 +1,7 @@
 # Engine catalog
 
 The shared-helper reference for game work: what lives in
-[`src/engine/`](../../src/engine/), when to reach for each piece, and the traps
+[`src/engine/`](../src/engine/), when to reach for each piece, and the traps
 that have already cost real debugging. Organized by category; each entry is
 deliberately short — **the module's own header comment is the authoritative
 documentation**, and the entry's job is to make sure you know the module exists
@@ -30,12 +30,12 @@ when the thing shared is a fact; a module owning a mechanic is right when the
 thing shared is a shape; and something stays per-game only when we can say what a
 game would legitimately want to do differently.* The test for the first two is
 not "is this the same text" but *"would a change here have to happen in every
-copy at once?"* — [`note-taking-cell.ts`](../../src/engine/note-taking-cell.ts)'s
-header applies it, after [`border-grid.ts`](../../src/engine/border-grid.ts). A
+copy at once?"* — [`note-taking-cell.ts`](../src/engine/note-taking-cell.ts)'s
+header applies it, after [`border-grid.ts`](../src/engine/border-grid.ts). A
 fact splits cleanly from the answers beside it: which button codes are digit
-keys is one fact (`digitOf` in [`pointer.ts`](../../src/engine/pointer.ts)),
+keys is one fact (`digitOf` in [`pointer.ts`](../src/engine/pointer.ts)),
 and which characters are digits in a game ID is its twin
-([`decimal.ts`](../../src/engine/decimal.ts)), while the bound a game puts on
+([`decimal.ts`](../src/engine/decimal.ts)), while the bound a game puts on
 them and whether `0` clears or means ten are the game's own and stay beside
 each call. "It would
 touch a lot of files" measures how much an extraction is worth; it is never an
@@ -51,8 +51,8 @@ things look identical to it.
   *contract looking like itself*. It is never the finding, and it is what the
   largest "clone" between two games usually turns out to be.
 - **Real duplication of a shared mechanic**, which is what
-  [`border-grid.ts`](../../src/engine/border-grid.ts) and
-  [`note-taking-cell.ts`](../../src/engine/note-taking-cell.ts) came from.
+  [`border-grid.ts`](../src/engine/border-grid.ts) and
+  [`note-taking-cell.ts`](../src/engine/note-taking-cell.ts) came from.
 - **Genuinely parallel but independent logic**, which stays put.
 
 **Byte-match sensitivity is marked per entry.** Several helpers are
@@ -88,8 +88,8 @@ flag.
 `Dsf` (union-by-size) plus `FlipDsf`, the parity/flip variant (upstream
 `dsf_new_flip`; each class tracks a same/opposite-sense bit) that Dominosa's
 forcing-chain deduction needs. Exemplar consumers:
-[`galaxies/state.ts`](../../src/games/galaxies/state.ts),
-[`dominosa/solver.ts`](../../src/games/dominosa/solver.ts).
+[`galaxies/state.ts`](../src/games/galaxies/state.ts),
+[`dominosa/solver.ts`](../src/games/dominosa/solver.ts).
 
 Two lessons, both byte-match surface:
 
@@ -101,7 +101,7 @@ Two lessons, both byte-match surface:
   leaf; correct because generation never reads a minimal mid-merge, and
   byte-identical regardless of root choice because minimality is
   membership-determined. Exemplar: `buildMinimal` in
-  [`keen/state.ts`](../../src/games/keen/state.ts). A game that does read
+  [`keen/state.ts`](../src/games/keen/state.ts). A game that does read
   one mid-merge makes its dsf with `Dsf.withMinimal(n)` and asks
   `minimal(i)` (Boats' `checkDsf`, which asks whether a boat's first square is
   an end cap while it is still joining boats up).
@@ -342,7 +342,7 @@ whose key is built and thrown away); a 32-bit FNV-1a hash bucketed to an exact
 byte comparison kept `memcmp` semantics with no per-candidate allocation and
 made the generator 3.4× faster. This is the safest place to optimize: the
 byte-match differential proves the substitution changed nothing. Exemplar:
-`hashOf`/`sameBoard` in [`slide/solver.ts`](../../src/games/slide/solver.ts).
+`hashOf`/`sameBoard` in [`slide/solver.ts`](../src/games/slide/solver.ts).
 
 ### `shuffle.ts` — Fisher–Yates + permutation parity
 
@@ -524,7 +524,7 @@ nobody counted: the sentence
 the midend returns when a generator found no board before the deal's deadline.
 A game never calls it.
 
-[`deal.ts`](../../src/engine/deal.ts) is dealing apart from playing:
+[`deal.ts`](../src/engine/deal.ts) is dealing apart from playing:
 `generate` runs a game's `newDesc` and answers `null` for a run-out, and
 `dealBoard` is what the app's second worker calls for every board a New game
 plays, dealt ahead or waited for. A game calls neither.
@@ -825,7 +825,7 @@ endgame database of the goal side plus a depth-first walk of the board side, so
 it costs time rather than memory — and it may reach exactly **one** ply further
 than the ungated search, which is what makes gating *it* safe. Sixteen uses it;
 Netslide's ±1 move set already reaches deep enough without it (measured: 108
-walked games, none stranded). `docs/games/hints.md` § "Sliding-permutation
+walked games, none stranded). `docs/hints.md` § "Sliding-permutation
 games" lessons (b) 4 and 5 have the numbers. Consumers: Sixteen, Netslide.
 
 ### `piece.ts` — a piece on its cell
@@ -944,7 +944,7 @@ export list, and
 `cursor-vocabulary.test.ts` fails the build for a cursor held under any other
 field, finding it structurally rather than by name. The digit range is guarded
 by its **codes**, not by a name, and since the desc side joined
-([`decimal.ts`](../../src/engine/decimal.ts)) the scan in `decimal.test.ts`
+([`decimal.ts`](../src/engine/decimal.ts)) the scan in `decimal.test.ts`
 reads any operand anywhere in a game source: a `48`, `0x39` or `- 48`, a
 numeric `case`, a `c >= "0"`, whatever the value is called. A non-trivial *traversal*
 (half-grid, lock modes, corner-skipping) still keeps its own logic, and so does
@@ -1013,7 +1013,7 @@ Each adopter reads its desc in one parse (§ "`desc-reader.ts` — the cursor a
 desc parser drives"), and the engine's verdict on a desc is that parse
 (§ "`desc-error.ts` — why a game ID will not load"). What can still go wrong is the encoder and the parser disagreeing about
 `keepTrailingBlanks`, and
-[`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) loads
+[`desc-error-games.test.ts`](../src/engine/desc-error-games.test.ts) loads
 every desc a game's generator writes: flipping that option in Slant's encoder
 turns it red.
 
@@ -1457,7 +1457,7 @@ versioned-JSON move-log save envelope); `index.ts` (the app's barrel);
 
 ## Testing harness
 
-[`src/engine/testing/`](../../src/engine/testing/) — the in-process harness:
+[`src/engine/testing/`](../src/engine/testing/) — the in-process harness:
 `recording-drawing.ts` + `render-scenario.ts` + `svg-drawing.ts` (tier 2.5 —
 **every render test drives `RecordingDrawing`; do not hand-roll a double.** A
 local double records only the calls its author anticipated, so a game that

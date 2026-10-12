@@ -21,6 +21,6 @@
       squares, as it does today.
 - [ ] 3.2 Fix what the stricter guard finds in the games, each with its own
       test where the defect is a game's.
-- [ ] 3.3 Time it again, and say the figure in `docs/games/testing.md` if the
+- [ ] 3.3 Time it again, and say the figure in `docs/testing.md` if the
       guide names this guard's cost.
 - [ ] 3.4 Gate, commit, archive.

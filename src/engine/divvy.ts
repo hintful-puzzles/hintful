@@ -215,7 +215,7 @@ const MAX_DIVVY_ATTEMPTS = 10000;
 /**
  * Partition a `w × h` rectangle into size-`k` connected ominoes, retrying
  * failed attempts as upstream does, capped so a divergence fails loudly instead
- * of hanging (docs/games/testing.md § "Quirks are load-bearing — capped, not
+ * of hanging (docs/testing.md § "Quirks are load-bearing — capped, not
  * cleaned").
  */
 export function divvyRectangle(w: number, h: number, k: number, rng: RandomState): Dsf {

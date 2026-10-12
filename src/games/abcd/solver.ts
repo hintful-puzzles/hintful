@@ -66,7 +66,7 @@ export interface AbcdMark {
 /**
  * The *obvious* pencil-mark eliminations given the placed letters, for the
  * adaptive mark-all — ABCD's analog of the Latin family's row/column duplicate
- * strikes (docs/games/mechanics.md § "Pencil marks: the full note-taking UX").
+ * strikes (docs/mechanics.md § "Pencil marks: the full note-taking UX").
  * A penciled candidate `c` in an empty cell is struck when either:
  *   - an orthogonal (or, under `diag`, diagonal) neighbor already holds `c`; or
  *   - `c`'s row or column already holds its full clue count of `c`.

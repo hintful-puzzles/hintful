@@ -59,7 +59,7 @@ form and its change says why.
 - Ask first whether the exception should exist. An override can excuse a
   defect for a long time: Boats declared its solver non-monotone for as long
   as one wrong read went unlooked for
-  ([`solver-and-generator.md`](./games/solver-and-generator.md) §
+  ([`solver-and-generator.md`](./solver-and-generator.md) §
   "Cap-monotonicity, and the game that broke it").
 
 **The framework owns a shared idiom.** When several games write the same
@@ -90,7 +90,7 @@ derives a population because nothing declared it, a consumed contract
 supersedes the derivation. Sections are built only where two channels must
 agree: a hint's words and its marks, params and their labels and help, input
 and its controls text. What exists today is `src/engine/sections.ts` and
-[`games/mechanics.md`](./games/mechanics.md) § "Contract sections, and what
+[`mechanics.md`](./mechanics.md) § "Contract sections, and what
 makes a draft".
 
 Until a section lands, a game joins a shared mechanic by having it, and a
@@ -104,7 +104,7 @@ consumer is already being sent: the declaration may already be crossing the
 boundary.
 
 Where intent cannot be observed, and where production needs a flag it cannot
-derive at run time, see [`games/testing.md`](./games/testing.md) § "How a
+derive at run time, see [`testing.md`](./testing.md) § "How a
 cross-game guard finds its population".
 
 ## Nothing is sacred
@@ -141,7 +141,7 @@ player-visible benefit, and where it drops an assurance the change says what
 replaces it. Display code was never in scope for fidelity: rendering, layout,
 animation and colors aim at neat visuals and clean code. The rules for a
 solver or generator divergence are
-[`games/solver-and-generator.md`](./games/solver-and-generator.md)
+[`solver-and-generator.md`](./solver-and-generator.md)
 § "Divergence and what it costs".
 
 **Game IDs from upstream keep loading where that is easy.** A desc upstream's

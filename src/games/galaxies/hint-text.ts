@@ -111,7 +111,7 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
 
     // Its walled sides are drawn on the board, and "every way out" already
     // excludes them; that a galaxy is connected is the rule, and the help teaches
-    // it (docs/games/hints.md § "Rules belong in the help").
+    // it (docs/hints.md § "Rules belong in the help").
     case "enclosed": {
       const lead = mark.as(
         "outline",

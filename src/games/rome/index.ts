@@ -169,7 +169,7 @@ function newUi(_state: RomeState): RomeUi {
     // Not the convention: a strike from an unmarked square ends in what it
     // leaves, so the plan is about 0.7 the length of penciling in every arrow
     // first, and it continues from its last step as often as that plan does
-    // (docs/games/hints.md § "Two readings of an unmarked cell").
+    // (docs/hints.md § "Two readings of an unmarked cell").
     candidateReading: "implicit",
   };
 }
@@ -177,7 +177,7 @@ function newUi(_state: RomeState): RomeUi {
 // --- input ------------------------------------------------------------------
 
 /** Direct arrow entry by character code, keyed off the bare characters as
- * upstream does, so the number-row digits work too (docs/games/input.md §
+ * upstream does, so the number-row digits work too (docs/input.md §
  * "The numeric keypad never arrives"). */
 const DIGIT_DIRS: Readonly<Record<number, RomeDir>> = {
   56: FM_UP, // '8'
@@ -600,7 +600,7 @@ function solve(orig: RomeState): SolveResult<RomeMove> {
 
 /**
  * Two layers, because either alone would bless a wrong board
- * (docs/games/solver-and-generator.md § "The solvable-game contract").
+ * (docs/solver-and-generator.md § "The solvable-game contract").
  *
  * The **rule violations** — an off-grid arrow, an arrow duplicated inside a
  * region, an arrow on a loop — are what the board already paints as you play,
@@ -613,7 +613,7 @@ function solve(orig: RomeState): SolveResult<RomeMove> {
  *
  * **A mark is a claim that the arrow is still possible**, so a square whose
  * marks have crossed out the answer is wrong in the same way a wrong arrow is,
- * and is flagged the same way (docs/games/mechanics.md § "Pencil marks: the
+ * and is flagged the same way (docs/mechanics.md § "Pencil marks: the
  * full note-taking UX"; every other note-taking game in the collection does
  * this). Rome's marks went unchecked until `add-rome-hint`, on the strength of
  * upstream's "can be used for any purpose" — but a Mark-all press that fills

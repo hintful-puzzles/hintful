@@ -2,7 +2,7 @@
  * Rectangles state construction and move execution, plus the edge-drawing
  * primitive and the correctness analysis. Kept separate from `index.ts` so
  * `render.ts` can import `gridDrawRect` for the drag preview without a cycle
- * (docs/games/rendering.md § "The tile cache and the diff key").
+ * (docs/rendering.md § "The tile cache and the diff key").
  */
 
 import { assertNever } from "../../engine/assert-never.ts";

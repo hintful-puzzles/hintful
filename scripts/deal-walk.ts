@@ -13,7 +13,7 @@
  * its numbers are one machine's on one day. A cell here is a few deals, which
  * is enough to find where a ladder leaves a second and not enough to draw a
  * line: before a bound is written, deal the sizes each side of it a dozen
- * times (docs/games/solver-and-generator.md § "Bound a generator by its tail,
+ * times (docs/solver-and-generator.md § "Bound a generator by its tail,
  * not its median").
  *
  * **Each game is dealt in a process of its own, which this watches.** A

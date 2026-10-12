@@ -1,7 +1,7 @@
 /**
  * What stands in for an oracle: every board dealt needs exactly the tier it
  * was asked at, and every rung of the ladder fires on boards the generator
- * deals (docs/games/testing.md § "What a new game ships").
+ * deals (docs/testing.md § "What a new game ships").
  */
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";

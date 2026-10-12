@@ -1,6 +1,6 @@
 /**
  * Light Up rendering: a per-tile diffed loop over a packed display-flag word
- * per cell (docs/games/rendering.md § "The tile cache and the diff key"), on
+ * per cell (docs/rendering.md § "The tile cache and the diff key"), on
  * the collection's quiet surface. A wall is a solid block (`wallFill`) with its clue
  * (red when provably wrong); an open square is the cell surface, washed yellow
  * when lit; a bulb is a white disc (red when lit by another bulb); the

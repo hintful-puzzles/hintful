@@ -133,7 +133,7 @@ describe("hint", () => {
   it("ties 'this cell' to the second mark, on every step of every reason", () => {
     // Every Range step shows a second mark (the test above pins that), so a
     // bare "this cell" would point at neither it nor the target. The tie is
-    // geometric — never a color name, which `docs/games/hints.md` § "Two marks
+    // geometric — never a color name, which `docs/hints.md` § "Two marks
     // on the board" forbids as scheme-relative and invisible to a color-blind
     // reader.
     const TIE =

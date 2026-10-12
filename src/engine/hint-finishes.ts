@@ -4,7 +4,7 @@
  * tiered game asks at the tier beneath Unreasonable.
  *
  * A deductive game has tiers, and is held to a pasted board through them
- * (docs/games/solver-and-generator.md § "Giving a deductive game an
+ * (docs/solver-and-generator.md § "Giving a deductive game an
  * Unreasonable tier"). What is left without tiers is the games with nothing
  * to deduce, and Mines, whose answer is hidden and whose test is its own.
  */

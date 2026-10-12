@@ -129,7 +129,7 @@ const F_WRONG = 1 << 10;
 const K_LIT = 11; // bits 11-12: the win flash's tone on this cell
 
 // Hint-overlay bits, packed per cell into the OverlaySidecar, which is part of
-// the diff key (docs/games/rendering.md § "Overlay sidecars").
+// the diff key (docs/rendering.md § "Overlay sidecars").
 const HB_TARGET = 1; // the forced cell — COL_HINT mark
 const HB_DANGER = 1 << 1; // tile that would break — COL_HINT_DANGER ring
 const HB_CHAIN_0 = 1 << 2; // what-if cell forced `F_COLOR_0` in the hypothetical

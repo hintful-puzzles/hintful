@@ -8,7 +8,7 @@
  * The two ui-derived overlays — the mouse-down highlight radius and the "too
  * many flags" wrong-number tint — are folded into each tile's cache value `v`
  * (exactly as the C does), so they live *in* the diff key and repaint/clear on
- * their own frames (docs/games/rendering.md § "Prove the overlay repaints"). The
+ * their own frames (docs/rendering.md § "Prove the overlay repaints"). The
  * paint-twice test in `mines.test.ts` guards that.
  */
 

@@ -392,7 +392,7 @@ function findMistakes(state: TowersState): readonly TowersMistake[] {
 
 /** Narrate *why* a firing is forced, per the technique that fired — leading
  * with the spotted indication, then the reasoning, then a necessity-voice
- * conclusion (docs/games/hints.md § "Writing the narration"). `n` is the placed height for a placement;
+ * conclusion (docs/hints.md § "Writing the narration"). `n` is the placed height for a placement;
  * `continues` (a journey continuation leg) gets a terser line that doesn't
  * restate the premise the journey's first leg already gave. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */

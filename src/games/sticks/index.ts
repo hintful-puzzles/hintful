@@ -376,7 +376,7 @@ function solve(orig: SticksState): SolveResult<SticksMove> {
  * 3 squares" shades all three, with the blue bar on the one to act on), while
  * the lines a black clue already counts do not include the one being ruled
  * out. Dropping it everywhere leaves an `unreachable` step whose whole
- * evidence *is* the target with nothing on the board (docs/games/hints.md
+ * evidence *is* the target with nothing on the board (docs/hints.md
  * § "Show the evidence as an area").
  */
 function narrate(

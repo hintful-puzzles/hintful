@@ -604,7 +604,7 @@ describe("sticks rendering (tier 2.5)", () => {
   });
 
   it("repaints the mistake overlay on an already-drawn frame", () => {
-    // The paint-twice guard (docs/games/rendering.md § "Prove the overlay repaints"): a cold frame proves nothing, so
+    // The paint-twice guard (docs/rendering.md § "Prove the overlay repaints"): a cold frame proves nothing, so
     // warm the drawstate, then redraw the SAME drawstate with mistakes.
     const i = whiteCellSolved(F_VER);
     const result = renderScenario({

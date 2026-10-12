@@ -3,7 +3,7 @@
  *
  * `hint.ts` decides which sentence and with what squares; this file decides
  * only how it reads: the pattern first, then why it forces the move, then the
- * conclusion in the necessity voice (docs/games/hints.md § "Writing the
+ * conclusion in the necessity voice (docs/hints.md § "Writing the
  * narration"). Each deduction is written as a **premise**, and the sentence
  * ends on whichever conclusion the step's leg acts on: the ringed squares are
  * mines, or are safe.

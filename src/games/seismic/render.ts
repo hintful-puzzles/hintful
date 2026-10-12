@@ -10,7 +10,7 @@
  * the cell, because the cell's own fill can cover them.
  *
  * That geometry depends only on the region partition, which never changes for
- * the life of a game — so the per-tile cache (docs/games/rendering.md § "The tile
+ * the life of a game — so the per-tile cache (docs/rendering.md § "The tile
  * cache and the diff key") keys on the cell's *contents* alone: its digit,
  * pencil marks, error flags and the background color the cursor/flash chose.
  * The Check-&-Save mistake overlay rides in an `OverlaySidecar` so it repaints a
@@ -18,11 +18,11 @@
  *
  * Upstream stores the 9-bit pencil bitmask in a `char` before drawing it, so a
  * penciled **9** is truncated away and never appears; this draws it (a
- * display-only divergence, docs/games/solver-and-generator.md § "Divergence and
+ * display-only divergence, docs/solver-and-generator.md § "Divergence and
  * what it costs").
  *
  * The canvas also gains a half-tile margin at its right for the pencil-mode
- * indicator (docs/games/mechanics.md § "Pencil marks: the full note-taking
+ * indicator (docs/mechanics.md § "Pencil marks: the full note-taking
  * UX"): the web build compiles `NARROW_BORDERS`, so the black board rectangle
  * covers its own area edge to edge, leaving nowhere for the top-right corner
  * the engine puts the indicator in.
@@ -85,7 +85,7 @@ export const PREFERRED_TILE_SIZE = 40;
 const GRIDEXTRA = 1;
 /** The `NARROW_BORDERS` arm — the web build defines it, so the grid's outer
  * outline is drawn *inside* the border area rather than a half-tile margin
- * (docs/games/rendering.md § "Sizing": check the define, don't port the desktop default). */
+ * (docs/rendering.md § "Sizing": check the define, don't port the desktop default). */
 const BORDER = GRIDEXTRA * 2;
 
 // --- palette ---------------------------------------------------------------
@@ -105,7 +105,7 @@ export const COL_NUM_PENCIL = 7;
 export const COL_GRID = 8;
 /** The pencil indicator's body. */
 export const COL_PENCIL_BODY = 9;
-/** Fork additions: the explained hint's two marks (docs/games/hints.md § "Shade vs
+/** Fork additions: the explained hint's two marks (docs/hints.md § "Shade vs
  * ring"), the ring on the cell a step acts on and the outline of what it reasons
  * from. Both are drawn on a cell's edge rather than behind its notes. */
 export const COL_HINT = 10;
@@ -164,7 +164,7 @@ export function computeSize(p: SeismicParams, ts: number): Size {
 
 /** Upstream `FROMCOORD` — C integer division, which **truncates** toward zero,
  * so a pointer inside the two-pixel border maps to row/column 0 rather than −1
- * (docs/games/input.md § "The accreting-paint drag"). This declines the shared
+ * (docs/input.md § "The accreting-paint drag"). This declines the shared
  * `fromCoord` of `engine/geometry.ts`, whose floor would put that pointer off
  * the grid. */
 export function fromCoord(v: number, ts: number): number {

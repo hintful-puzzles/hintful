@@ -2,7 +2,7 @@
  * Inertia's hint.
  *
  * Inertia is a movement game, so its hint belongs to the **non-deductive
- * family** (docs/games/hints.md § "Non-deductive (heuristic) hints"): no move
+ * family** (docs/hints.md § "Non-deductive (heuristic) hints"): no move
  * is *forced* by logic, and a narration claiming otherwise would be a
  * fabrication. But every move here has a concrete consequence the player can be
  * taught — and the one beginners get wrong is precisely the one a hint can say
@@ -69,7 +69,7 @@ type Said = { rung: InertiaRung; words: Sentence };
  *
  * The two are told apart because saying "every other way runs you onto a mine"
  * about a ball hemmed in by walls would be a lie
- * (docs/games/hints.md § "Sanity-read at the degenerate extremes").
+ * (docs/hints.md § "Sanity-read at the degenerate extremes").
  */
 function onlyMove(s: InertiaState, dir: number): Only | null {
   const others = legalDirections(s.board, s.px, s.py).filter((d) => d !== dir);
@@ -118,7 +118,7 @@ function oneSlideGrab(s: InertiaState, goal: number): number | null {
  * place but up to eight, because the ball arrives still moving and cannot turn,
  * so *which way you come at it* decides where you fetch up. Claiming more —
  * that the grab is a trap, or that this move is the only one — would not be
- * honest (docs/games/hints.md § "The premise must single out the conclusion").
+ * honest (docs/hints.md § "The premise must single out the conclusion").
  */
 function narrate(
   before: InertiaState,

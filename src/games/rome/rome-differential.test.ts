@@ -8,7 +8,7 @@
  * one assertion validates, together: the three generation stages and their
  * RNG draw order, all seven deduction rules and their firing order, both disjoint-set forests (including
  * the union-by-size root identity that naked-pairs reads as an element), and
- * the two-part run-length codec (docs/games/testing.md § "Byte-match: fidelity where there is a right answer").
+ * the two-part run-length codec (docs/testing.md § "Byte-match: fidelity where there is a right answer").
  *
  * The follow-on assertions add what the desc alone cannot say: that the
  * description validates, and that the TS solver grades the board at exactly

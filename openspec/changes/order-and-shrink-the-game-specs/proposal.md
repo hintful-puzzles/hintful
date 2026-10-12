@@ -37,7 +37,7 @@ not settled:
   cut, and the cut is the owner's to accept because the specs are what a
   change is checked against.
 - **One order of subjects in every game spec**, that of
-  `docs/games/README.md` § "What a game's spec holds", each requirement's
+  `docs/new-game.md` § "What a game's spec holds", each requirement's
   title leading with its subject. The 57 are reordered without a word of a
   requirement's body changing.
 - **A gate check derives what a spec owes from the `Game` object** and
@@ -51,5 +51,5 @@ every game capability.
 ## Impact
 
 `openspec/specs/<game>/spec.md` for every game, `scripts/checks/`,
-`docs/games/README.md` § "What a game's spec holds", citations of a
+`docs/new-game.md` § "What a game's spec holds", citations of a
 requirement by title.

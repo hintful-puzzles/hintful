@@ -2,7 +2,7 @@
  * Boats — the recording deduction pass behind the explained hint.
  *
  * The hint is a **second projection of the same deduction engine as the
- * solver** (docs/games/hints.md § "Re-derive the named technique"):
+ * solver** (docs/hints.md § "Re-derive the named technique"):
  * `solveBoats` runs the techniques to a fixpoint and reports a difficulty; this
  * module runs the *same* techniques one **firing** at a time and reports what
  * each one forced, why, and from what evidence. Every deduction Boats knows is
@@ -19,7 +19,7 @@
  *  - **It resumes from the player's board.** `solveBoats` opens with
  *    `solverInitial`, which *wipes the grid* and re-derives it from the given
  *    clues — fine for a solver, useless for a hint, which must start from what
- *    the player has actually placed (docs/games/hints.md § "A hint must resume
+ *    the player has actually placed (docs/hints.md § "A hint must resume
  *    from any position"). So the clue derivations upstream folds into that
  *    wipe become an ordinary narratable technique here ({@link BoatsTechnique}
  *    `givenClue`), and the never-touch water that `placeShip` applies as a
@@ -27,7 +27,7 @@
  *    too, and seeding it silently would put water on the deduction's board
  *    that the player cannot see, making a later narration describe a board
  *    that isn't theirs.
- *  - **It orders goal-first, not solver-first** (docs/games/hints.md § "Hint
+ *  - **It orders goal-first, not solver-first** (docs/hints.md § "Hint
  *    the move that advances the goal"): placements before rule-outs, cheaper
  *    tier before dearer.
  *  - **It does not ask the dsf for the board's *status*.** A board the player
@@ -115,7 +115,7 @@ export interface BoatsLine {
 }
 
 /** Why the board rejected a Hard tier's trial — read straight off the
- * validators' own error arrays (docs/games/hints.md § "Read the reason off the
+ * validators' own error arrays (docs/hints.md § "Read the reason off the
  * validator"). */
 export type BoatsBreach =
   /** Two boats would touch, if only at a corner. */
@@ -131,7 +131,7 @@ export type BoatsBreach =
   /**
    * The board is left with no legal way to finish, without one rule naming
    * itself the culprit. Honest catch-all rather than a fabricated cause
-   * (docs/games/hints.md § "Honest non-local evidence").
+   * (docs/hints.md § "Honest non-local evidence").
    */
   | { kind: "unfinishable" };
 
@@ -222,7 +222,7 @@ export interface BoatsFiring {
   /** The particular cells the deduction reasons from, outlined `COL_HINT_CELL`. */
   evidence: Point[];
   /** The row or column the sentence names ("Row 3 still needs…"), hatched with
-   * its clue; empty when it names none (docs/games/hints.md § "Hatch the line
+   * its clue; empty when it names none (docs/hints.md § "Hatch the line
    * the sentence names"). */
   line: Point[];
   /**
@@ -230,7 +230,7 @@ export interface BoatsFiring {
    * not yet. The step's move is built against it (a `fill` move is a rectangle
    * that sets every still-empty cell in its span, so "which cells in this span
    * are already decided?" must be asked of the right board), and it is the
-   * board the narration and the shaded area describe (docs/games/hints.md §
+   * board the narration and the shaded area describe (docs/hints.md §
    * "Show the evidence as an area").
    */
   grid: Int8Array;
@@ -927,7 +927,7 @@ function recoverHiddenNumbers(ctx: Ctx): boolean {
 /**
  * Classify *why* a trial board is contradictory by re-running the validation
  * family with its own error arrays and reading the flags back — the Bricks
- * pattern (docs/games/hints.md § "Read the reason off the validator"). A fixed
+ * pattern (docs/hints.md § "Read the reason off the validator"). A fixed
  * priority picks the clearest reason when several fire at once.
  *
  * **Total by construction, and that is the whole difficulty.** `validateFullState`
@@ -1130,7 +1130,7 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
 // --- the firing order -------------------------------------------------------
 
 /**
- * The next firing, **goal-first** (docs/games/hints.md § "Hint the move that
+ * The next firing, **goal-first** (docs/hints.md § "Hint the move that
  * advances the goal"): within each tier the placements — the moves that build
  * the fleet — run before the rule-outs, and a cheaper tier always runs before a
  * dearer one, so an Easy board is taught the Easy technique that suffices
@@ -1196,7 +1196,7 @@ export interface BoatsPlan {
  * difficulty admits a one-line count, wherever the player has left the cheaper
  * techniques nothing to say. Derived from the puzzle's clues alone (`solveBoats` wipes the grid first), so
  * it does not move as the player plays — a hint plan must be recompute-stable,
- * not merely correct (docs/games/hints.md § "Recompute-stable plans").
+ * not merely correct (docs/hints.md § "Recompute-stable plans").
  */
 function lowestSolvingDiff(state: BoatsState): number {
   for (let maxDiff = DIFF_EASY; maxDiff < DIFFCOUNT; maxDiff++)

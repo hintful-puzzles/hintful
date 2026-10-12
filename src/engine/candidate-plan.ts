@@ -7,7 +7,7 @@
  * split on, and any rungs of its own — and the walk does the rest: the naked
  * singles, the recorded strikes and placements as rungs, populate and the
  * obvious clean, the row/column cull after each placement, the journey flags,
- * and each next firing taken through a `HintFrontier`. See docs/games/hints.md
+ * and each next firing taken through a `HintFrontier`. See docs/hints.md
  * § "Candidate-elimination games".
  *
  * **A firing is data, and its steps are built here.** A rung returns firings as
@@ -294,7 +294,7 @@ export interface CandidatePlan<
   conclude: Conclusions;
   /** The axis a firing's strikes split into legs on: the ones sharing a key are
    * one leg, in the order their keys first appear. It follows what the
-   * narration names singular (docs/games/hints.md § "Solve the way a human
+   * narration names singular (docs/hints.md § "Solve the way a human
    * does"). Default: the whole firing is one leg. */
   strikeAxis?: (op: R) => unknown;
   /** The words of the default setup: pencil everything in, then clear the
@@ -975,7 +975,7 @@ class CandidateWalk<
    * written down first. An outlined blank cell is evidence only through what it
    * can still be, and a player following a deduction over several cells cannot
    * hold each one's candidates in their head (Map's owner playtests,
-   * docs/games/hints.md § "A graph, not a grid (Map)"). So each blank, note-less
+   * docs/hints.md § "A graph, not a grid (Map)"). So each blank, note-less
    * cell a step outlines as evidence or `reads`, or strikes from, gets a note leg
    * before the firing, and a cell gets none from the step that places in it or
    * any step after. A cell a *later* leg places is still premise to the steps

@@ -460,7 +460,7 @@ function soloSingleReason(
   }
 }
 
-/** Narrate *why* a placement is forced (docs/games/hints.md § "Writing the
+/** Narrate *why* a placement is forced (docs/hints.md § "Writing the
  * narration"): indication, reasoning, necessity-voice conclusion, the digit
  * placed at `at`. The region a sentence names is striped by the words that name
  * it, so the walk reads the step's marks off them. */

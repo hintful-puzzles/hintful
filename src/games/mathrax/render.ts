@@ -11,11 +11,11 @@
  * A cell's pixels depend only on its own digit, pencil marks and flags, so one
  * packed `Int32Array` per-tile cache suffices; the (fork) Check-&-Save mistake
  * overlay rides in an `OverlaySidecar` so it repaints a cell that is otherwise
- * unchanged (docs/games/rendering.md § "The tile cache and the diff key").
+ * unchanged (docs/rendering.md § "The tile cache and the diff key").
  *
  * **One deliberate geometric divergence**: upstream's web build has `BORDER 1`,
  * leaving nowhere to show the pencil-mode indicator every pencil-mark game ships
- * (docs/games/mechanics.md § "Pencil marks: the full note-taking UX"). The canvas therefore gains a half-tile margin at its
+ * (docs/mechanics.md § "Pencil marks: the full note-taking UX"). The canvas therefore gains a half-tile margin at its
  * right, so the indicator has the top-right corner the engine puts it in. The
  * grid's own geometry is untouched, so pointer mapping and the board's own size
  * are exactly upstream's.
@@ -81,7 +81,7 @@ import {
 export const PREFERRED_TILE_SIZE = 40;
 
 /** Upstream's `NARROW_BORDERS` arm, which the web build compiled: a one-pixel
- * border, not half a tile (docs/games/rendering.md § "Sizing"). */
+ * border, not half a tile (docs/rendering.md § "Sizing"). */
 const BORDER = 1;
 
 // --- palette ---------------------------------------------------------------
@@ -103,7 +103,7 @@ export const COL_PENCIL_BODY = 8;
 export const COL_FLASH = 9;
 export const COL_FLASH_LEAD = 14;
 export const COL_CURSOR = 10;
-/** The hint's two marks (docs/games/hints.md § "The element-type color
+/** The hint's two marks (docs/hints.md § "The element-type color
  * legend"): a ring around the cell the deduction acts on, and an outline around
  * the cells it reasons from. Both replace a cell's own border rather than its
  * background, so neither has to be read through the digits it surrounds. */
@@ -138,7 +138,7 @@ export function colors(background: Color): Color[] {
 }
 
 /** Highlight payload a Mathrax hint step carries (built in `index.ts`). The
- * element-type legend (docs/games/hints.md § "The element-type color legend"):
+ * element-type legend (docs/hints.md § "The element-type color legend"):
  * the clue's cells shaded `COL_HINT_CELL`, the acted-on cell ringed `COL_HINT`,
  * the ruled-out candidates struck through among the pencil marks. */
 export interface MathraxHint {
@@ -173,7 +173,7 @@ export function computeSize(p: { o: number }, ts: number): Size {
 
 /** Upstream `FROMCOORD`: C integer division **truncates**, so a pointer inside
  * the one-pixel border maps to row/column 0 rather than −1 (the Sticks idiom,
- * docs/games/input.md § "The accreting-paint drag"). This declines the shared
+ * docs/input.md § "The accreting-paint drag"). This declines the shared
  * `fromCoord` of `engine/geometry.ts`, whose floor would put that pointer off
  * the grid. */
 export function fromCoord(v: number, ts: number): number {
@@ -193,7 +193,7 @@ export interface MathraxDrawState {
   wrong: OverlaySidecar;
   /** `o²` hint overlay: bit 0 = target cell, bit 1 = evidence, and the struck
    * candidates at `valueBit(n)` in its `struck` lane. Owns the chain ordinal and the
-   * evidence outline lanes too (docs/games/rendering.md § "Overlay sidecars"). */
+   * evidence outline lanes too (docs/rendering.md § "Overlay sidecars"). */
   hint: OverlaySidecar;
   /** The hint target's ring and the evidence region's outline. */
   marks: HintMarks;
@@ -403,7 +403,7 @@ function drawPencilMarks(
     const cy = ty + ((((4 * hy + 3) * ts) / (4 * hh + 2)) | 0);
     // A struck candidate keeps its pencil color, so it still reads as the
     // player's note; the same-color strikethrough is what says the hint rules it
-    // out (docs/games/hints.md § "The element-type color legend").
+    // out (docs/hints.md § "The element-type color legend").
     dr.drawText({ x: cx, y: cy }, glyphFont(fontsz), COL_PENCIL, String(n));
     if (struck & (1 << n)) {
       const r = Math.max(2, (fontsz / 3) | 0);

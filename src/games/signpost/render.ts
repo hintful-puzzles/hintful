@@ -84,7 +84,7 @@ export const COL_FLASH_LEAD = COL_FLASH + 1;
 
 /** The board's pixel origin (NARROW_BORDERS). Exported so `interpretMove` and
  * `computeSize` read the same number the painter does — one function, both
- * callers ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
+ * callers ([`docs/mechanics.md`](../../../docs/mechanics.md)). */
 export const BORDER = 1;
 const TWO_PI = 2 * Math.PI;
 

@@ -9,7 +9,7 @@ the collection-wide scale its tier names come from, the policy that a logic
 game deals only boards its hint can narrate, the bounds on a generator's
 loops and what the engine answers when one runs out, and the tier the midend
 gives a loaded board and holds a hint to. Why each rule is as it is, and how to follow it, is in
-`docs/games/solver-and-generator.md`.
+`docs/solver-and-generator.md`.
 
 ## Requirements
 

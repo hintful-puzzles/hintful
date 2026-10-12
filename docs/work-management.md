@@ -203,7 +203,7 @@ there and push.
 tests the games it stages, and the push hook runs everything the session's
 commits left out before they leave the machine, which for a change to shared
 code is every game's boards. A second push in a session pays that again.
-`docs/games/testing.md` § "What runs when" has the three runs.
+`docs/testing.md` § "What runs when" has the three runs.
 `.github/workflows/ci.yml` is the definition of what a push publishes, and
 `gate.yml` beside it runs the whole gate.
 

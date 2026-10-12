@@ -9,7 +9,7 @@
  * (center dots + inter-cell grid lines). A per-cell packed `Int32Array`
  * cache mirrors upstream's `lflags`; the `findMistakes` wrong-edge overlay
  * rides its own bit field in that word so it is part of the diff key
- * (docs/games/rendering.md § "The tile cache and the diff key").
+ * (docs/rendering.md § "The tile cache and the diff key").
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
@@ -133,7 +133,7 @@ const DS_FLASH_LEAD = 1 << 27;
 //
 // A word of its own beside `lflags`, compared in the same cache-miss test, so a
 // hint displayed on an otherwise unchanged board still repaints
-// (docs/games/rendering.md § "The tile cache and the diff key"). Edge bits are
+// (docs/rendering.md § "The tile cache and the diff key"). Edge bits are
 // set on both squares sharing the edge, and each paints its own half.
 const H_LINE_SHIFT = 0; // 4 bits: edges the step says must be lines
 const H_CROSS_SHIFT = 4; // 4 bits: edges the step says can't be

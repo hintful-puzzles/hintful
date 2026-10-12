@@ -3,7 +3,7 @@
  * the properties a plan has on any board.
  *
  * `npm run hint-scan -- <this file>` writes the pins
- * (docs/games/testing.md § "Pinning a hint's positions").
+ * (docs/testing.md § "Pinning a hint's positions").
  */
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";

@@ -127,7 +127,7 @@ export function probeBoard(
   // constructors and moves hand them over, so reading them costs no frame.
   let current: unknown = null;
   let liveUi: unknown = null;
-  // A state is immutable once built (docs/games/mechanics.md), so its digest is
+  // A state is immutable once built (docs/mechanics.md), so its digest is
   // too: memoized by identity, a walk that revisits one board hundreds of times
   // serializes it once. Loopy's state holds its whole cyclic grid, which made
   // the target-verb guard's walk over it cost ~18 s unmemoized.

@@ -1,7 +1,7 @@
 /**
  * Skeleton's explained hint: the solver's rungs run one firing at a time from
  * the player's own marks, and each firing turned into a step
- * (docs/games/hints.md § "Recording the deduction").
+ * (docs/hints.md § "Recording the deduction").
  *
  * Every fact a step rests on is a number or a mark the player has made: the
  * ladder reads nothing else.

@@ -289,7 +289,7 @@ describe("boats hint — convergence", () => {
     // Every third turn, ignore the hint and play a correct square of the
     // player's own choosing instead, so the board keeps arriving at positions
     // no plan proposed. A recording solver written to run from empty is not
-    // automatically resumable (docs/games/hints.md § "A hint must resume from
+    // automatically resumable (docs/hints.md § "A hint must resume from
     // any position"); this is what catches it.
     let state = board(4, "resume-own-play");
     const truth = solveToGrid(state);
@@ -412,7 +412,7 @@ describe("boats hint — narration", () => {
   it("never narrates the never-touch water as a deduction of its own", () => {
     // The water a placement drags along is shown as part of the same step, not
     // explained again — a rule of the game belongs in the help
-    // (docs/games/hints.md § "Rules belong in the help").
+    // (docs/hints.md § "Rules belong in the help").
     const { state } = findFiring("lineForced");
     const r = hintOf(state);
     expect(r.ok).toBe(true);
@@ -737,7 +737,7 @@ describe("boats hint — rendering", () => {
 
 /** Guards the two placement marks stay distinct — a single color standing for
  * "place a boat" and "place water" would read as one action
- * (docs/games/hints.md § "Echo the move's shape in the hint color"). */
+ * (docs/hints.md § "Echo the move's shape in the hint color"). */
 describe("boats hint — the two move shapes", () => {
   it("carries both placement shapes on the step that forces both", () => {
     // A line filled with boats drags its never-touch water along, so one step

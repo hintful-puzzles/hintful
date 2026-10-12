@@ -253,7 +253,7 @@ describe("bricks hint — the full hint()", () => {
 describe("bricks hint — a second mark on the board is named", () => {
   /** The phrases that tie the acted-on cell to the outlined evidence, one per
    * reason. Geometric or relational throughout — never a color name, which
-   * `docs/games/hints.md` § "Two marks on the board, one 'this cell'" forbids
+   * `docs/hints.md` § "Two marks on the board, one 'this cell'" forbids
    * as scheme-relative and invisible to a color-blind reader. */
   const TIE =
     /next to the outlined shaded bricks?|outlined cells? below this cell|outlined \d+ beside (it|this cell)|above rests only on this cell|break the board at the outlined cells?/;

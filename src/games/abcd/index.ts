@@ -196,7 +196,7 @@ function interpretMove(
 
 /** The adaptive mark-all: fill while some empty cell has no notes, then only
  * strike the obvious eliminations, never re-fill
- * (docs/games/mechanics.md § "Pencil marks: the full note-taking UX"). */
+ * (docs/mechanics.md § "Pencil marks: the full note-taking UX"). */
 function markAll(state: AbcdState): AbcdMove | null {
   const needsFill = state.grid.some((c, i) => c === EMPTY && state.pencil[i] === 0);
   return adaptiveMarkAll<AbcdMove, AbcdMark>(needsFill, () =>

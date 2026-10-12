@@ -1,6 +1,6 @@
 /**
  * Every hint that speaks keeps its sentences in the game's `hint-text.ts`
- * (docs/games/hints.md § "The sentences live in one file per game").
+ * (docs/hints.md § "The sentences live in one file per game").
  *
  * **Both populations are derived.** The games are the registry's hinting games
  * (`HINT_GAMES`), split by whether a hint on a real board says anything — which

@@ -11,7 +11,7 @@
  * it counts along is striped.
  *
  * A line is "this row" or "this column", never a number: Magnets draws no line
- * numbers, and the hint marks the line's clue digits instead (docs/games/hints.md
+ * numbers, and the hint marks the line's clue digits instead (docs/hints.md
  * § "Name elements by what the player can see").
  */
 

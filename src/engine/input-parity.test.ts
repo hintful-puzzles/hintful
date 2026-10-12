@@ -58,7 +58,7 @@
  * that sent the drag regardless would score Galaxies' shipped left-drag bug —
  * press consumed nothing, every drag frame silently dropped — as healthy.
  *
- * See docs/games/input.md § "The input-parity bar".
+ * See docs/input.md § "The input-parity bar".
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
@@ -245,7 +245,7 @@ describe("a game does not claim a button it did not act on", () => {
 
 describe("a long press cannot silently swallow a gesture", () => {
   /**
-   * The trap `docs/games/input.md` § "A touch hold arrives as the right button"
+   * The trap `docs/input.md` § "A touch hold arrives as the right button"
    * describes, stated so it cannot be innocent. `Game.ignoresSecondaryButton`
    * declares that the secondary button means nothing in this game, and the flag
    * turns off `detectSecondaryButton` entirely — so a wrong answer in either

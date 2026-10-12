@@ -56,7 +56,7 @@ export interface BridgesSpan {
  * Captured there rather than reconstructed afterwards because two of the three
  * stages destroy their own premise: stage 3 rolls its trial back before the
  * conclusion is drawn, so the group it would have sealed off exists only while
- * the trial stands (docs/games/hints.md § "Show the evidence as an area").
+ * the trial stands (docs/hints.md § "Show the evidence as an area").
  */
 export interface BridgesEvidence {
   /** Island indices the argument counts. */
@@ -77,7 +77,7 @@ export interface BridgesEvidence {
  * The single rule that declares **no** reason is stage 1's "this island now has
  * all its bridges, mark it complete": a bookkeeping annotation the fork's own
  * auto-mark aid already draws, so the plan hides it
- * (docs/games/hints.md § "Show only what the board does not already say").
+ * (docs/hints.md § "Show only what the board does not already say").
  */
 export type BridgesReason = { ev: BridgesEvidence; island: number } & (
   | { kind: "exactSpace"; missing: number }
@@ -478,7 +478,7 @@ class Solver {
    * Two separate teachable rules in one rung — a bridge that would close a loop
    * and a direction the island's count cannot do without — so on the recording
    * path each returns as soon as it fires
-   * (docs/games/hints.md § "A rung is not a premise, so return per premise").
+   * (docs/hints.md § "A rung is not a premise, so return per premise").
    */
   solveIslandStage2(is: Island): { ok: boolean; didsth: boolean } {
     const st = this.st;
@@ -625,7 +625,7 @@ class Solver {
 
   /**
    * Two rules again, and both are **Checks** rather than Searches
-   * ([`solver-and-generator.md`](../../../docs/games/solver-and-generator.md)
+   * ([`solver-and-generator.md`](../../../docs/solver-and-generator.md)
    * § "Check, Tactic, Search"): each places bridges, asks two validators that
    * run no fixpoint and no sub-solve, and rolls back. So both narrate directly
    * at Tricky, and the per-premise early return applies here as it does above.
@@ -647,7 +647,7 @@ class Solver {
       let maxb = -1;
       // Which of the two validators refused, read while the trial still
       // stands: rolling it back destroys both answers, and naming the wrong
-      // one is docs/games/hints.md § "The premise must single out the
+      // one is docs/hints.md § "The premise must single out the
       // conclusion".
       let sealed: number[] | null = null;
       let starved = -1;
@@ -771,7 +771,7 @@ class Solver {
    * **On the recording path a sweep stops at the first island that moved**, so
    * that one firing is one hint step. A stage that reports after sweeping
    * sixty-seven islands is the right unit for a *grade* and the wrong one for a
-   * *sentence* (docs/games/hints.md § "A rung is not a premise, so return per
+   * *sentence* (docs/hints.md § "A rung is not a premise, so return per
    * premise"); the generator keeps the accumulate-across-the-whole-list pass it
    * always had, which `bridges-differential.test.ts` proves.
    */

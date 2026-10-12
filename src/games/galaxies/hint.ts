@@ -1,6 +1,6 @@
 /**
  * Galaxies' explained hint — the second projection of the solver in
- * `solver.ts` (docs/games/hints.md § "Recording the deduction"). The rules
+ * `solver.ts` (docs/hints.md § "Recording the deduction"). The rules
  * there record *why* each association or wall is forced; everything in this
  * file turns one such firing into a step the player can read and follow.
  *
@@ -38,7 +38,7 @@ import {
 } from "./state.ts";
 
 /**
- * What a step paints, in two roles (docs/games/hints.md § "The element-type
+ * What a step paints, in two roles (docs/hints.md § "The element-type
  * color legend"):
  *
  *  - the **action** — the cells the association claims, the walls it draws,
@@ -72,7 +72,7 @@ export interface GalaxiesHint {
   /** Particular cells the deduction reasons from, outlined. */
   area: Point[];
   /** The galaxy or piece of one the sentence is about ("the striped galaxy"),
-   * hatched (docs/games/hints.md § "Hatch the line the sentence names"). */
+   * hatched (docs/hints.md § "Hatch the line the sentence names"). */
   hatch: Point[];
   /** Walls the deduction reasons over. */
   walls: Point[];
@@ -161,7 +161,7 @@ function soleOwnerFiring(s: GalaxiesState): GalaxiesFiring | null {
 
 /**
  * The ladder, in the order the *player* is best served by, which is not the
- * order the solver happens to use (`docs/games/hints.md` § "Notation and goal
+ * order the solver happens to use (`docs/hints.md` § "Notation and goal
  * are different move sets (Galaxies)"). Every rule is run to a fixpoint
  * regardless, so this decides which explanation is offered first and nothing
  * about what can be deduced.
@@ -200,7 +200,7 @@ function nextPlanFiring(b: GalaxiesState): GalaxiesFiring | null {
  * deduction inside a region the player has already closed correctly is sound
  * and pointless — `addAssocWithOpposite` refuses to draw an arrow there — so
  * it advances the working board and is never shown (the Spokes
- * "useless-but-forced move" rule, docs/games/hints.md § "Hint the move that
+ * "useless-but-forced move" rule, docs/hints.md § "Hint the move that
  * advances the goal"). */
 interface Planned {
   firing: GalaxiesFiring;

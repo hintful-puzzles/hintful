@@ -36,7 +36,7 @@
  * then test it and correct all the typos" — a 5×5 subdivision of the tile with
  * up to five cases per section. Verbatim transcription is the low-risk way to
  * reproduce a shape like that
- * (docs/games/solver-and-generator.md § "Divergence and what it costs"), so the
+ * (docs/solver-and-generator.md § "Divergence and what it costs"), so the
  * `maybeRect` calls below stay 1:1 with the C and auditable against it.
  */
 
@@ -196,7 +196,7 @@ export function colors(defaultBackground: Color): Color[] {
 // --- geometry ---------------------------------------------------------
 
 export const PREFERRED_TILE_SIZE = 32;
-/** The web build defines `NARROW_BORDERS` (docs/games/rendering.md § "Sizing"), so the board is
+/** The web build defines `NARROW_BORDERS` (docs/rendering.md § "Sizing"), so the board is
  * exactly `w*TILESIZE` by `h*TILESIZE` with no border at all. */
 export const BORDER = 0;
 
@@ -217,7 +217,7 @@ export function computeSize(p: { w: number; h: number }, ts: number): Size {
  * overlay has to widen the diff key rather than find a spare flag. Widening is
  * cheap — it is a repaint cache, not a wire format — but must be deliberate,
  * because an overlay that does not fit in the word silently fails to repaint
- * (docs/games/rendering.md § "A packed diff key runs out of bits, and dead flags are where the next one comes from").
+ * (docs/rendering.md § "A packed diff key runs out of bits, and dead flags are where the next one comes from").
  */
 const FG_CURSOR = 0x00000001;
 const BG_TARGET = 0x00000002;
@@ -263,7 +263,7 @@ export interface SlideDrawState {
   tileSize: number;
   /** Last-drawn packed value per cell; `-1` forces a repaint. Every overlay
    * (drag, cursor, gate, flash) is part of this one word, so they
-   * all sit in the diff key by construction (docs/games/rendering.md § "The tile cache and the diff key"). */
+   * all sit in the diff key by construction (docs/rendering.md § "The tile cache and the diff key"). */
   grid: Int32Array;
 }
 

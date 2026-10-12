@@ -122,7 +122,7 @@ export function newDrawState(s: BlackboxState, tileSize: number): BlackboxDrawSt
 
 /** The board's pixel origin. Exported so `fromDraw` reads the same number the
  * painter does — one function, both callers
- * ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
+ * ([`docs/mechanics.md`](../../../docs/mechanics.md)). */
 export function borderFor(tileSize: number): number {
   return Math.floor(tileSize / 2);
 }

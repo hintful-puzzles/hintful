@@ -217,7 +217,7 @@ export function isUniquelySolvable(common: UndeadCommon): boolean {
 // --- the deductive ladder (fork divergence: guess-free generation) ---------
 //
 // Upstream grades difficulty by *how much brute force* a board needs, which
-// conflicts with guess-free generation (docs/games/solver-and-generator.md
+// conflicts with guess-free generation (docs/solver-and-generator.md
 // § "Guess-free generation"). This ladder adds the two rungs upstream never
 // built, **exact counting** and **depth-1 forcing**, above arc-consistency
 // (`solveIterative`), and grades a board by the highest rung it needs.
@@ -450,7 +450,7 @@ export function solveDeductive(
 // a board the ladder cannot crack without guessing yields a short plan, and
 // guess-free generation keeps such boards out of every tier below Unreasonable.
 
-/** Why a candidate was eliminated, or a cell forced (docs/games/hints.md
+/** Why a candidate was eliminated, or a cell forced (docs/hints.md
  * § "Candidate-elimination games"):
  * - `sightline` — one path's two count clues admit no legal beam arrangement
  *   leaving this cell the eliminated monster (the core mirror-sighting deduction);

@@ -11,7 +11,7 @@
  * the unreflected-placement index, the available strikes, the next-place
  * lookup) and the generic `keepCandidateHintTrack` / `refreshCandidateHintStep`.
  * The walk that composes them into a plan is `candidate-plan.ts`. See
- * `docs/games/hints.md` § "Candidate-elimination games".
+ * `docs/hints.md` § "Candidate-elimination games".
  */
 
 import { valueBit, valuesOneTo } from "./candidate-bits.ts";
@@ -51,7 +51,7 @@ export interface Mark {
  * symbol is ever placed (holes live in a separate marker array) nor ever
  * singled (which hole symbol sits where is undecidable, and immaterial). The
  * collapse lives in Salad's own step emission, where it *is* the game's sync
- * deduction; see `docs/games/hints.md` § "Non-uniform value sets (Salad)".
+ * deduction; see `docs/hints.md` § "Non-uniform value sets (Salad)".
  */
 export interface NoteEncoding {
   /** The pencil-mask bit for candidate `n`. Default `1 << n`. */
@@ -241,7 +241,7 @@ export function candidateHint<State, Move, Hint, Rung extends string = string>(
 /** A naked single in the working notes: the first empty cell whose pencil set has
  * exactly one candidate. On a mistake-free board that lone candidate is the
  * solution, so placing it is sound — and it is the move a human makes next, so the
- * hint surfaces it ahead of any further elimination (docs/games/hints.md § "Solve the way a human does").
+ * hint surfaces it ahead of any further elimination (docs/hints.md § "Solve the way a human does").
  * `grid`: 0 = empty, one entry per cell; `pencil`: the note bits `enc` describes;
  * `w` = the row stride, and the highest value unless `enc.values` says otherwise.
  *
@@ -513,7 +513,7 @@ export function regionDuplicateMarks(
  * still appears as a live pencil mark in one of its uniqueness regions. Generalizes
  * the per-game `basicLatinStrike` (row+col) / `basicRegionStrike`
  * (row+col+block+diag) to a single scan over `regionsOf` — the basic-region opening
- * a given or auto-pencil-off placement leaves behind (docs/games/hints.md § "Persist, populate, and the moves"). Returns
+ * a given or auto-pencil-off placement leaves behind (docs/hints.md § "Persist, populate, and the moves"). Returns
  * one firing (one placed value and every stray copy of it), or `null`.
  * `regionsOf(x, y)` returns the uniqueness regions of the cell at `(x, y)`. */
 export function findRegionDuplicate(

@@ -105,7 +105,7 @@ function executeMove(s: InertiaState, m: InertiaMove): InertiaState {
  *
  * Upstream accepts these only with the `MOD_NUM_KEYPAD` bit set, but a numpad
  * produces a digit only with Num Lock on, and a laptop may have no numpad
- * (docs/games/input.md § "The numeric keypad never arrives"). So `digitOf`
+ * (docs/input.md § "The numeric keypad never arrives"). So `digitOf`
  * takes the bare digits too: without them the four **diagonal** moves are
  * unreachable from the keyboard. Inertia binds no other digit, so nothing
  * collides.

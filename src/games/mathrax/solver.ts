@@ -1,7 +1,7 @@
 /**
  * Mathrax solver — the game-specific clue deduction plus a thin difficulty
  * driver over the shared generic `LatinSolver` (`engine/latin.ts`), exactly the
- * Latin-family shape (docs/games/solver-and-generator.md § "The Latin family").
+ * Latin-family shape (docs/solver-and-generator.md § "The Latin family").
  *
  * Everything Latin — positional/numeric elimination, set elimination, forcing
  * chains, and the guess-and-verify recursion that doubles as the uniqueness
@@ -18,7 +18,7 @@
  * - **Tricky** propagates fully.
  *
  * Byte-match surface: the generator is solver-gated, so this file's exact
- * deductive *strength* decides which puzzles exist (docs/games/solver-and-generator.md § "Solver-gated generation"). The
+ * deductive *strength* decides which puzzles exist (docs/solver-and-generator.md § "Solver-gated generation"). The
  * candidate masks therefore keep upstream's `BIT(d) = 1 << (d − 1)` convention
  * verbatim — do not "align" them with the player-facing pencil-mark encoding.
  */
@@ -62,7 +62,7 @@ export const SOLVE_AMBIGUOUS = 2;
  * number, the intersection `(cx, cy)` plus the acted-on cell give the cell
  * diagonally across it, and whether that cell shows a digit is a fact about the
  * *working board* the hint re-derives at narration time rather than a fact the
- * solver could record (docs/games/hints.md § "Re-derive a placement's why"
+ * solver could record (docs/hints.md § "Re-derive a placement's why"
  * applies the same rule to a single).
  */
 export type MathraxReason =

@@ -419,7 +419,7 @@ function findMistakes(state: UnequalState): readonly UnequalMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
-/** Why a strike is forced (docs/games/hints.md § "Writing the narration"):
+/** Why a strike is forced (docs/hints.md § "Writing the narration"):
  * indication, then reasoning, which the walk concludes with the move it makes.
  * `ns` is the struck value list; `o` is the grid order. Two-mode aware. The
  * words, and how they read at the value extremes, are

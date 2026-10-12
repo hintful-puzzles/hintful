@@ -33,7 +33,7 @@ incident only what a later session acts on: the rule, and the shape to look for.
   step.
 - **Push once, at the session's end, or when the owner asks to see the work
   sooner.** A commit tests only the games it stages; the push runs what the
-  commits left out, whole, once (`docs/games/testing.md` § "What runs when").
+  commits left out, whole, once (`docs/testing.md` § "What runs when").
   An archive goes in with the change's last commit.
 - **A green suite does not show that a game plays correctly.** Run the app
   before calling game-facing or UI work done: rendering, animation, input and
@@ -140,7 +140,7 @@ The long form, with the shapes to search for, is `docs/method.md`.
 - TypeScript strict, no `any`. Absence is `T | null`. American spelling.
 - A comment says what the code cannot: a reason, a constraint, a provenance. It
   describes the lines it sits on and never another file's behavior
-  (`docs/games/README.md` § "Comments, and what earns one").
+  (`docs/new-game.md` § "Comments, and what earns one").
 - Port to idiomatic TypeScript. The C is a reference for the logic, never a
   template for control flow.
 - Keep Baseline 2023 compatibility. Weigh bundle size and offline use before

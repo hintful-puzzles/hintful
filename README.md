@@ -160,14 +160,14 @@ the one index of them.
 
 | Working on | Guide |
 | --- | --- |
-| Any game: the lifecycle, the definition of done | [`docs/games/README.md`](docs/games/README.md) |
-| Params, state, moves, capability hooks, affordances | [`docs/games/mechanics.md`](docs/games/mechanics.md) |
-| Pointer, keyboard, touch, the keypad | [`docs/games/input.md`](docs/games/input.md) |
-| Redraw, tile cache, palette, animation | [`docs/games/rendering.md`](docs/games/rendering.md) |
-| Solver, generator, difficulty tiers, `findMistakes` | [`docs/games/solver-and-generator.md`](docs/games/solver-and-generator.md) |
-| A hint: its words, marks, rungs, pins, its help section | [`docs/games/hints.md`](docs/games/hints.md) |
-| A test, a render scenario, a cross-game guard | [`docs/games/testing.md`](docs/games/testing.md) |
-| A shared engine helper | [`docs/games/engine-catalog.md`](docs/games/engine-catalog.md) |
+| Any game: the lifecycle, the definition of done | [`docs/new-game.md`](docs/new-game.md) |
+| Params, state, moves, capability hooks, affordances | [`docs/mechanics.md`](docs/mechanics.md) |
+| Pointer, keyboard, touch, the keypad | [`docs/input.md`](docs/input.md) |
+| Redraw, tile cache, palette, animation | [`docs/rendering.md`](docs/rendering.md) |
+| Solver, generator, difficulty tiers, `findMistakes` | [`docs/solver-and-generator.md`](docs/solver-and-generator.md) |
+| A hint: its words, marks, rungs, pins, its help section | [`docs/hints.md`](docs/hints.md) |
+| A test, a render scenario, a cross-game guard | [`docs/testing.md`](docs/testing.md) |
+| A shared engine helper | [`docs/engine-catalog.md`](docs/engine-catalog.md) |
 | Judging tests, or quoting a measurement | [`docs/test-strength.md`](docs/test-strength.md) |
 | A check, a census, a bulk edit, a number in a proposal | [`docs/method.md`](docs/method.md) |
 | An openspec change, acceptance, pushing, a deploy | [`docs/work-management.md`](docs/work-management.md) |

@@ -13,7 +13,7 @@
  * A cell's pixels depend only on its own letter, pencil marks and a small flag
  * set (cursor, pencil cursor, adjacency error, the win flash), so a per-tile
  * `Int32Array` cache suffices, with the Check & Save overlay in a sidecar so a
- * mistaken but unchanged cell still repaints (docs/games/rendering.md § "The
+ * mistaken but unchanged cell still repaints (docs/rendering.md § "The
  * tile cache and the diff key").
  */
 

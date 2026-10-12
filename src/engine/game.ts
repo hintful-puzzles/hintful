@@ -61,7 +61,7 @@ export interface HintStep<Move, Highlights = unknown, Rung extends string = stri
   /** Which of the game's deductions this step is: one of {@link Game.hintRungs}.
    * Whatever needs to know reads this and never the sentence, so rewording a
    * step moves nothing that is not about its wording
-   * (docs/games/hints.md § "Name the rung a step speaks"). */
+   * (docs/hints.md § "Name the rung a step speaks"). */
   rung: Rung;
   /** The sentence, as the status bar shows it: `words.text` when the step has
    * words. The only part of a step that crosses the worker boundary. */

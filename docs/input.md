@@ -4,10 +4,10 @@ How a game receives input in this frontend, and the traps this frontend has
 that upstream never had. Every trap below has already cost this project a
 shipped bug — read them before writing a game's input, not after.
 
-Authoritative specs: [`engine-input`](../../openspec/specs/engine-input/spec.md) (touch
-equivalence, on-screen keys, the keyboard cursor) · [`ts-engine`](../../openspec/specs/ts-engine/spec.md) (the
+Authoritative specs: [`engine-input`](../openspec/specs/engine-input/spec.md) (touch
+equivalence, on-screen keys, the keyboard cursor) · [`ts-engine`](../openspec/specs/ts-engine/spec.md) (the
 `Game` interface) ·
-[`app-shell`](../../openspec/specs/app-shell/spec.md) (focus handling).
+[`app-shell`](../openspec/specs/app-shell/spec.md) (focus handling).
 Related guides: [`mechanics.md`](./mechanics.md) (the `interpretMove` /
 `executeMove` contract and `UI_UPDATE`) · [`rendering.md`](./rendering.md)
 (drag *previews*, blitters) · [`engine-catalog.md`](./engine-catalog.md) (the
@@ -21,7 +21,7 @@ maps it to an upstream-style button code and hands it through the worker to
 about that pipeline shape everything below:
 
 - **Button codes and class predicates are shared** —
-  [`engine/pointer.ts`](../../src/engine/pointer.ts) exports the
+  [`engine/pointer.ts`](../src/engine/pointer.ts) exports the
   `LEFT_BUTTON`…`CURSOR_SELECT2` codes, the `isMouseDown` / `isMouseDrag` /
   `isMouseRelease` range predicates (upstream's `IS_MOUSE_*`), the `MOD_*`
   masks and `stripModifiers`. Never redeclare `const MOD_MASK`.
@@ -53,10 +53,10 @@ unexamined gap.
 real `Midend`, so your game is covered the day it is registered.** You do not
 have to remember they exist; you do have to know what they will tell you.
 
-- [`view-interactive.test.ts`](../../src/puzzle/components/view-interactive.test.ts)
+- [`view-interactive.test.ts`](../src/puzzle/components/view-interactive.test.ts)
   — a finger and a mouse send a game the same codes, and a held key or the
   middle button changes nothing (§ "One pointer, two buttons").
-- [`input-parity.test.ts`](../../src/engine/input-parity.test.ts) — the
+- [`input-parity.test.ts`](../src/engine/input-parity.test.ts) — the
   `ignoresSecondaryButton` biconditional (§ "A touch hold arrives as the right
   button"); **keyboard reachability**, which asks not only whether a cursor key
   is consumed but whether any keyboard-only sequence *commits a move*;
@@ -64,20 +64,20 @@ have to remember they exist; you do have to know what they will tell you.
   keypad"); and the guard on the instrument all of those run on, that a game
   **declines a button it did not act on** (§ "A button you did not act on must
   not be claimed").
-- [`shortcuts.test.ts`](../../src/puzzle/shortcuts.test.ts) — that every bare
+- [`shortcuts.test.ts`](../src/puzzle/shortcuts.test.ts) — that every bare
   letter the app binds still reaches the app in your game (same section).
-- [`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts) — the
+- [`emittable-keys.test.ts`](../src/engine/emittable-keys.test.ts) — the
   source scan for a key that can never fire (§ "The numeric keypad never
   arrives").
-- [`canceled-press.test.ts`](../../src/engine/canceled-press.test.ts) — a press
+- [`canceled-press.test.ts`](../src/engine/canceled-press.test.ts) — a press
   the browser or Escape cancels leaves the board and the `Ui` as they were
   (§ "A canceled press is the engine's").
-- [`input-answers.test.ts`](../../src/engine/input-answers.test.ts) — what each
+- [`input-answers.test.ts`](../src/engine/input-answers.test.ts) — what each
   answer of `interpretMove` leaves behind: no move that left the board as it
   was is a step of Undo and none that changed it is dropped, and no input
   left unclaimed changed the frame
   ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE").
-- [`modifier-arrow.test.ts`](../../src/engine/modifier-arrow.test.ts) — Shift
+- [`modifier-arrow.test.ts`](../src/engine/modifier-arrow.test.ts) — Shift
   or Ctrl with an arrow and with its opposite, pressed from every position the
   arrows reach, never change the board alike. It cannot read which way a game
   acted, since what a modified arrow does is each game's own, so it holds the
@@ -85,7 +85,7 @@ have to remember they exist; you do have to know what they will tell you.
   (`cursorDelta`), never from where the clamped cursor ended up**, which is
   right everywhere but the far edge. It sees a board, so a game whose cursor
   travels with the move (Sixteen under Ctrl) tests that itself.
-- [`hint-gesture.test.ts`](../../src/engine/hint-gesture.test.ts) — every hint
+- [`hint-gesture.test.ts`](../src/engine/hint-gesture.test.ts) — every hint
   step is played through your `interpretMove` by the gesture your
   `hintGesture` gives for it, so a hint can only ask for what the pointer does
   ([`hints.md`](./hints.md) § "Every step is a gesture").
@@ -95,7 +95,7 @@ hit targets big enough for a fingertip, a cursor a player can see, a panel
 offering the keys the game wants. Those need the browser.
 
 **On writing a probe of your own**: take it from
-[`engine/testing/input-probe.ts`](../../src/engine/testing/input-probe.ts)
+[`engine/testing/input-probe.ts`](../src/engine/testing/input-probe.ts)
 rather than writing one. That module holds the board builder, the probe grid
 and the questions the guards ask, so two guards cannot drift apart.
 
@@ -126,9 +126,9 @@ Inertia's four diagonal moves are keypad-or-mouse upstream, which leaves a
 keyboard-only player without them. Accept the bare digits as well as the
 modified ones (`stripModifiers`,
 then look the character up) whenever the game binds no other meaning to those
-digits. Exemplar: [`inertia/index.ts`](../../src/games/inertia/index.ts)
+digits. Exemplar: [`inertia/index.ts`](../src/games/inertia/index.ts)
 (`DIGIT_DIRECTIONS`); guarded by
-[`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts).
+[`emittable-keys.test.ts`](../src/engine/emittable-keys.test.ts).
 
 **The same trap, one layer up: a whole feature can hang off a character this
 frontend never sends.** Upstream binds Slide's route-walking to
@@ -145,7 +145,7 @@ frontend does send (keeping the literal too costs nothing).
 abandon a drag. This frontend sends **127** for Backspace, Delete *and* Clear,
 never 8 from the keyboard.
 
-**Never write the codes.** [`engine/pointer.ts`](../../src/engine/pointer.ts)
+**Never write the codes.** [`engine/pointer.ts`](../src/engine/pointer.ts)
 exports `isEraseKey` (8 | 127) and `isCancelKey` (27 | 8 | 127); a game with both
 meanings tests them in separate branches. Escape reaches games as 27 whenever no
 pointer gesture is in flight (`app-shell` spec, "Escape reaches the puzzle when
@@ -164,12 +164,12 @@ keypad as a direction pad. **Take the direction from
 `numpadDirection(button)`, all eight at once**, so a diagonal is never left to
 be read as a digit. Whatever the helper answers for is no digit; `digitOf` is
 asked only when it answers `null`. Guarded by the code-keyed scan in
-[`decimal.test.ts`](../../src/engine/decimal.test.ts), which reads any operand
+[`decimal.test.ts`](../src/engine/decimal.test.ts), which reads any operand
 anywhere in a game source, not only against the button: a `48`, a `0x39`, a
 `- 48`, a numeric `case` or a `c >= "0"` all fail it, whatever the value is
 called.
 
-[`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts) reads the
+[`emittable-keys.test.ts`](../src/engine/emittable-keys.test.ts) reads the
 codes the frontend can produce and the codes the game sources test, and fails
 on a test with no producer. It is a source scan on purpose: what is asserted
 is that no behavior exists, which no behavioral test can see. Two things to
@@ -264,7 +264,7 @@ Four resolutions, by whether the game uses the secondary button:
   one the primary press also has is still credited.
 - **Secondary meaning, but the promoted gesture should do the primary thing →
   fold right onto left** at the top of `interpretMove`. One line; exemplar
-  `asPrimary()` in [`inertia/index.ts`](../../src/games/inertia/index.ts).
+  `asPrimary()` in [`inertia/index.ts`](../src/games/inertia/index.ts).
 - **Secondary is meaningful → continue the drag on the button class, not the
   press button.** A drag keyed off `isMouseDrag`/`isMouseRelease` (rather than
   the exact press code) lets a long-press that arrived as `RIGHT_BUTTON` start
@@ -283,7 +283,7 @@ Four resolutions, by whether the game uses the secondary button:
 **Tell:** a drag lifecycle that matches `LEFT_DRAG` specifically where
 `isMouseDrag` is meant — it strands the touch player whose press was promoted.
 
-**The detector itself is tested** ([`utils/touch.test.ts`](../../src/utils/touch.test.ts)).
+**The detector itself is tested** ([`utils/touch.test.ts`](../src/utils/touch.test.ts)).
 Read it before changing the timings — the 350 ms window, the 8 px
 radius, and the second finger's *timer reset* (which makes the worst case twice
 the hold time) are each asserted, and `unhandledEvent` is what stops a tap faster
@@ -308,7 +308,7 @@ cannot come adrift from its binding (`src/puzzle/shortcuts.test.ts`).
 
 It matters most to a keyboard player who alternates a *menu* command with play
 — asking for a hint, then making its move — which is unusable without it. The normative rule is the
-[`app-shell`](../../openspec/specs/app-shell/spec.md) spec's "Pressing a
+[`app-shell`](../openspec/specs/app-shell/spec.md) spec's "Pressing a
 control gives the keyboard back to the board"; its two carve-outs are a click
 that opens a menu (the menu needs the focus) and a keyboard activation of a
 button (that player is in the tab order deliberately).
@@ -321,12 +321,12 @@ exactly one"). A porter decides nothing here: what a game is puts its controls
 in the right one.
 
 - **Bar**: the commands every game has. **Menu**: the rest. They are one
-  ordered list, [`command-list.ts`](../../src/puzzle/command-list.ts), cut
+  ordered list, [`command-list.ts`](../src/puzzle/command-list.ts), cut
   once: the Bar shows its leading entries and the Menu every entry after. A
   new command is a new entry in that list, placed by how often it is used, and
   never a control added to a panel.
 - **Game controls**: what the game in play brings, in
-  [`components/game-controls.ts`](../../src/puzzle/components/game-controls.ts).
+  [`components/game-controls.ts`](../src/puzzle/components/game-controls.ts).
   Its keys come from `requestKeys`, its note toggle from the key whose code is
   `PENCIL_MODE_BUTTON`, mark-all from a `markAll` hook, and Reference from a
   `reference` hook. A game that brings none of them has no panel.
@@ -344,7 +344,7 @@ in the right one.
   columns.
 
 Where a panel docks is the player's layout, kept for each window shape
-([`layout.ts`](../../src/puzzle/layout.ts)): the grid's template is computed
+([`layout.ts`](../src/puzzle/layout.ts)): the grid's template is computed
 from it, and a panel only names its area. No panel carries a media query, and
 a new one must not start.
 
@@ -366,7 +366,7 @@ backdrop does not cover reaches the document's root and not the dialog, so
 
 **If your game is "aim at a square, and each button does something there",
 declare it rather than writing it.** That is the target-verb model,
-[`engine/target-verb.ts`](../../src/engine/target-verb.ts): the game supplies a
+[`engine/target-verb.ts`](../src/engine/target-verb.ts): the game supplies a
 **geometry** (which target a press addresses, which one the cursor rests on, how
 the arrows move the cursor) and a **verb** per button — a sentence fragment for
 the help and a function from `(state, target)` to the game's own `Move` or
@@ -407,7 +407,7 @@ button's verb.** A game that wants a different key for a verb gives the verb
 
 **A target is whatever the game aims at**, and the geometry is where the game
 says so: an edge between two cells (`borderGridGeometry` in
-[`engine/border-grid.ts`](../../src/engine/border-grid.ts), Palisade and
+[`engine/border-grid.ts`](../src/engine/border-grid.ts), Palisade and
 Separate; Dominosa's pair of numbers), a tile or a clue in the ring around the
 grid (Magnets, whose keyboard reaches the clues it can mark done), a tile
 drawn from a scrolled origin (Net — which is why `pointerTarget` receives the
@@ -435,7 +435,7 @@ Two things follow from declaring:
   end of "Click a square to …" — and describe the *common* case there, leaving a
   cycle's full story ("clicking again moves on round…") to the page.
 - **The declaration is held to the behavior.**
-  [`target-verb.test.ts`](../../src/engine/target-verb.test.ts) plays every
+  [`target-verb.test.ts`](../src/engine/target-verb.test.ts) plays every
   declaring game and asserts that Enter at every cursor position resting on a
   target reaches exactly the boards a left-click reaches, Space those of its
   verb's button, and each verb key those of its button — which is what the
@@ -526,12 +526,12 @@ model to it.
 predicates, not a locally-named copy — and not a magic number where a named
 button exists (`button === 0x0209` is `CURSOR_UP` with the name hidden in a
 comment, where no rename can reach it). This is enforced, not requested:
-[`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts) derives the
+[`emittable-keys.test.ts`](../src/engine/emittable-keys.test.ts) derives the
 export list from `pointer.ts` itself and fails on any game-local declaration
 that shadows one, so a helper added there is guarded on the day it lands.
 
 **One cursor, one name, one field.** Every game holds its keyboard cursor as
-`ui.cursor`, an [`engine/pointer.ts`](../../src/engine/pointer.ts) `GridCursor`
+`ui.cursor`, an [`engine/pointer.ts`](../src/engine/pointer.ts) `GridCursor`
 (`x`, `y`, `visible`). Build it with `newCursor(x?, y?, visible?)` and drive it
 with:
 
@@ -561,7 +561,7 @@ legitimately want the cursor to *move* differently, and to *do* something as it
 moves; no game has ever wanted to *name* it differently. Tents paints the cells
 it passes and Boats drags a fill, both by reading `ui.cursor` either side of a
 `moveCursor` call. Palisade and Separate get their half-grid cursor through
-[`engine/border-grid.ts`](../../src/engine/border-grid.ts) (whose own
+[`engine/border-grid.ts`](../src/engine/border-grid.ts) (whose own
 `moveBorderCursor` is named apart from the shared helper because a step there
 crosses *half* a cell), so a sweep reading only a game's `index.ts` would
 wrongly convict them of having none.
@@ -627,7 +627,7 @@ hold.** A press-and-drag game already has the whole machinery — a grab compute
 what the held thing can reach, and a release turns "where it is now" into one
 move. The keyboard needs no part of that rebuilt; it needs a *cursor* that can
 reach the same set. Slide is the worked example
-([`slide/index.ts`](../../src/games/slide/index.ts)): `grabBlockAt` and
+([`slide/index.ts`](../src/games/slide/index.ts)): `grabBlockAt` and
 `releaseGrab` are called by the pointer arm and the cursor arm alike, so a
 keyboard journey and the equivalent drag are the same move by construction
 rather than by agreement.
@@ -656,8 +656,8 @@ The concrete rules that fell out, each of which had a wrong answer available:
 
 A game whose input is **per-edge on an arbitrary tiling** has no cell for a
 cursor to sit on and no row or column for an arrow to step along. Loopy is the
-worked example ([`loopy/cursor.ts`](../../src/games/loopy/cursor.ts),
-[`loopy-keyboard.test.ts`](../../src/games/loopy/loopy-keyboard.test.ts));
+worked example ([`loopy/cursor.ts`](../src/games/loopy/cursor.ts),
+[`loopy-keyboard.test.ts`](../src/games/loopy/loopy-keyboard.test.ts));
 normative: the `loopy` spec, "Loopy is playable from the keyboard alone". What
 generalized:
 
@@ -732,8 +732,8 @@ the right button") continues its own drag correctly. The renderer previews the
 drag by recoloring accreted cells in the cache key — put it in the diff key
 ([`rendering.md`](./rendering.md) § "The tile cache and the diff key").
 
-Exemplars: [`clusters/index.ts`](../../src/games/clusters/index.ts) (the
-reference); [`bricks/index.ts`](../../src/games/bricks/index.ts) (confirms the
+Exemplars: [`clusters/index.ts`](../src/games/clusters/index.ts) (the
+reference); [`bricks/index.ts`](../src/games/bricks/index.ts) (confirms the
 shape generalizes — a single uniform `dragType` painted across accreted cells).
 **A shared skeleton was evaluated and declined**: Sticks' drag
 machine differs materially (the press picks no paint value — orientation comes
@@ -770,7 +770,7 @@ The far-edge click target is widened by one so the number row/column is a grab
 handle for its line — small, and worth keeping. Because the drag continues off
 the button class, a touch long-press water drag works without folding right
 onto left — the correct answer for a game that genuinely uses the secondary
-button. Exemplar: [`boats/index.ts`](../../src/games/boats/index.ts).
+button. Exemplar: [`boats/index.ts`](../src/games/boats/index.ts).
 
 ### Other drag shapes
 
@@ -797,9 +797,9 @@ snapped aim (an octant, a tile), each drag event recomputes it and returns
 would do nothing draws no preview — the absence *is* the feedback — and
 release commits **what was previewed**, not the raw release pixel (they
 differ exactly on touch lift-jitter, and the player saw the preview).
-Exemplars: [`inertia/index.ts`](../../src/games/inertia/index.ts) (the
+Exemplars: [`inertia/index.ts`](../src/games/inertia/index.ts) (the
 swipe: octant aim off the ball, walls preview nothing);
-[`galaxies/index.ts`](../../src/games/galaxies/index.ts) (the association
+[`galaxies/index.ts`](../src/games/galaxies/index.ts) (the association
 drag: snapped drop tile, preview shows the target *and* its 180° partner
 because release commits both, legality shared with `executeMove` through
 `moves.ts` so preview and commit cannot drift).
@@ -816,7 +816,7 @@ the target *is* the source, and there is no arrow to lift off a source
 that never had one).
 
 **An aim drag can aim a distance as well as a direction.** Sokoban's push
-([`sokoban/index.ts`](../../src/games/sokoban/index.ts), `aimAt`) takes its
+([`sokoban/index.ts`](../src/games/sokoban/index.ts), `aimAt`) takes its
 direction from the drag's main axis off the square it started on (the player,
 or a barrel, which walks the player round behind it), and its length from how
 many tiles the drag reaches, clamped to how far the barrel can go, so one drag
@@ -906,7 +906,7 @@ was consumed.
 cancels a pointer when a scroll or a system gesture takes a touch over, and the
 view cancels one when Escape is pressed with a pointer down. Either way the
 view calls `Midend.cancelPress`, which puts back what the midend kept at the
-press: the `Ui`, copied ([`engine/ui-snapshot.ts`](../../src/engine/ui-snapshot.ts)),
+press: the `Ui`, copied ([`engine/ui-snapshot.ts`](../src/engine/ui-snapshot.ts)),
 and the place in the history. A move the press or its drag made is gone, the
 moves ahead of it for Redo are back, and a held piece, a drag preview or a
 selection is as it was. Normative: `engine-input`, "A canceled press leaves
@@ -930,7 +930,7 @@ What it asks of a game:
 - **Do not test for a drag off the top left of the board as a cancel.** That
   point is only somewhere a player dragged to.
 
-[`canceled-press.test.ts`](../../src/engine/canceled-press.test.ts) presses
+[`canceled-press.test.ts`](../src/engine/canceled-press.test.ts) presses
 and cancels across every game's board, with both buttons, where it pressed and
 after a drag, on the opening board and on one played on, and requires the board
 and the `Ui` to be what they were (`canceledPresses` in the probe module).
@@ -971,7 +971,7 @@ and Pegs' keyboard moves). Do not write one for Undo. What else
 keyboard, which is no pointer gesture and sits armed across any number of
 board changes.
 
-[`drag-cancel.test.ts`](../../src/engine/drag-cancel.test.ts) presses every
+[`drag-cancel.test.ts`](../src/engine/drag-cancel.test.ts) presses every
 game's board with both buttons, held and dragged, changes the board under the
 gesture by an Undo and by a Redo, sends the rest of it, and requires that no
 move follows and that the `Ui` is the one from before the press, told of the
@@ -990,7 +990,7 @@ Returning `UI_UPDATE` for a button you did nothing with is not free politeness:
 2. The **app's bare-letter shortcuts** are derived from it.
    `view-interactive.ts` raises `puzzle-key-unhandled` exactly when a game
    declines a key, which is how `u`, `r`, `n` and `h` become undo, redo, New
-   game and Hint with no per-game roster ([`shortcuts.ts`](../../src/puzzle/shortcuts.ts)).
+   game and Hint with no per-game roster ([`shortcuts.ts`](../src/puzzle/shortcuts.ts)).
    A game claiming every key takes all four away from its own players.
 3. The **frontend's gesture machinery** — that is § "A press you do not act on
    must still be consumed", pulling the other way. The two together say: claim a
@@ -1013,21 +1013,21 @@ made it.
 **On writing the probe**, if you extend the guard: button codes are not
 Unicode. `MOD_MASK` is `0x7000`, so a private-use code such as `0xE000`
 decodes as modifier bits on another key. `UNACTIONABLE` in
-[`input-parity.test.ts`](../../src/engine/input-parity.test.ts) derives every
+[`input-parity.test.ts`](../src/engine/input-parity.test.ts) derives every
 reason its codes are safe from the vocabulary itself.
 
 ## Round fractional pointer coordinates
 
 **A game that stores pixel-space coordinates in its state must round pointer
 input to integers at the boundary.** Most ports convert a pixel to a cell
-index via [`fromCoord`](../../src/engine/geometry.ts) (a `Math.floor`), so
+index via [`fromCoord`](../src/engine/geometry.ts) (a `Math.floor`), so
 this never bites. But `devicePixelRatio` scaling delivers sub-pixel
 coordinates where upstream's GUI frontends handed `interpret_move` integers,
 and Untangle keeps rational vertex positions whose exact-integer crossing test
 throws on a fraction. It rounds at the input boundary and re-checks the
 integer invariant in `executeMove` (the single drag/solve/replay/load
 chokepoint), so any bypass fails loudly. Exemplar:
-[`untangle/index.ts`](../../src/games/untangle/index.ts)
+[`untangle/index.ts`](../src/games/untangle/index.ts)
 (`placeDraggedPoint`).
 
 ## An aid extends the move, at the one place the move is built
@@ -1067,10 +1067,10 @@ Two things to get right:
 (correct for games upstream gave none, like Flip). On touch this panel is the
 *primary* digit-entry affordance, so it is not optional for a keypad game.
 Normative: the on-screen-keys requirement in
-[`engine-input`](../../openspec/specs/engine-input/spec.md).
+[`engine-input`](../openspec/specs/engine-input/spec.md).
 
 - **Digit games use the shared helper.** `digitKeys(n)` in
-  [`engine/key-labels.ts`](../../src/engine/key-labels.ts) builds `'1'..'9'`
+  [`engine/key-labels.ts`](../src/engine/key-labels.ts) builds `'1'..'9'`
   then `'a','b',…` past nine, plus the clear key — whose `"Clear"` label is
   load-bearing (it is what the `puzzle-keys` icon map turns into the clear
   icon). Size `n` from params: Solo `c*r`, Keen/Towers `w`, Filling fixed `9`.
@@ -1171,7 +1171,7 @@ Normative: the on-screen-keys requirement in
   that focused a key would leave the **physical keyboard dead** until the
   player clicked the board again. The panel
   prevents the `mousedown` default (`keepFocusOnTheBoard` in
-  [`components/keys.ts`](../../src/puzzle/components/keys.ts)); a command
+  [`components/keys.ts`](../src/puzzle/components/keys.ts)); a command
   control has its own answer to the same hole, `puzzle-screen.ts`'s `focusBoard`. **No
   behavioral tier can see this**: every one of them calls `processInput`
   directly, so check it in the real app.
@@ -1222,7 +1222,7 @@ Normative: the on-screen-keys requirement in
   control that does nothing when pressed.
 - **Size the panel to the boards you generate, not to the format — and
   *derive* the bound rather than writing it.** Seismic is the worked example
-  ([`seismic/generator.ts`](../../src/games/seismic/generator.ts)
+  ([`seismic/generator.ts`](../src/games/seismic/generator.ts)
   `maxGeneratedRegionSize`): its format admits digits to 9 but its generator
   makes smaller regions, and entry is capped at the cell's region size, so a
   `1`–`9` panel would carry keys inert on every board anybody plays. The

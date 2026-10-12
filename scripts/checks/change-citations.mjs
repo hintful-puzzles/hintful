@@ -47,7 +47,7 @@
  *
  * 3. **The unresolved tokens are a ledger asserted EXACTLY equal to the
  *    unresolved set, with a reason per entry** — the `NO_KEYBOARD` shape
- *    (`docs/games/testing.md` § "How a cross-game guard finds its population").
+ *    (`docs/testing.md` § "How a cross-game guard finds its population").
  *    A skip list rots silently; this one fails in both directions, so an entry
  *    that starts resolving must be removed and a new one must be added
  *    deliberately, by somebody writing down why.

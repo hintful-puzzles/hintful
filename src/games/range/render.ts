@@ -100,7 +100,7 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** The board's pixel origin. Exported so `interpretMove` reads the same number
  * the painter does — one function, both callers
- * ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
+ * ([`docs/mechanics.md`](../../../docs/mechanics.md)). */
 export const border = (ts: number): number => Math.floor(ts / 2);
 
 export function computeSize(p: RangeParams, ts: number): Size {

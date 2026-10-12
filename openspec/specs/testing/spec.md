@@ -10,7 +10,7 @@ fixtures and what they still guarantee, the capability snapshot, the harness
 that pins a hint test's positions, and the boards a cross-game sweep walks
 and how many of them on a commit. What the gate runs, and
 what it may defer, is `build-pipeline`; how to write a test is
-`docs/games/testing.md` and how to judge one is `docs/test-strength.md`.
+`docs/testing.md` and how to judge one is `docs/test-strength.md`.
 
 ## Requirements
 

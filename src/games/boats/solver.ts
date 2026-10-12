@@ -13,7 +13,7 @@
  * and there is no "Unreasonable" guessing tier to exempt. Don't add a knob.
  *
  * **The loop is ported directly rather than onto the shared
- * `runDeductionFixpoint`** (docs/games/solver-and-generator.md § "Where the
+ * `runDeductionFixpoint`** (docs/solver-and-generator.md § "Where the
  * fixpoint does not fit"). Three pieces of this loop's bookkeeping feed back
  * into which puzzles exist, and none of them fits the shared runner:
  *
@@ -108,7 +108,7 @@ export function placeWater(b: BoatsBoard, x: number, y: number): number {
  * **Divergence (deliberate, and free):** upstream `assert`s that the square is
  * in bounds where this port returns 0. A release build compiles that assert
  * out and then indexes out of bounds, so the C has no defined behavior there
- * (docs/games/solver-and-generator.md § "Divergence and what it costs", rule
+ * (docs/solver-and-generator.md § "Divergence and what it costs", rule
  * 1). No generated board reaches it (`centersTrivial` is the only caller that
  * could pass an off-board square, and only for a center clue on an edge row
  * whose boat cannot be perpendicular), but a hand-written game ID can.
@@ -860,7 +860,7 @@ function centersAttempt(b: BoatsBoard, tmpGrid: Int8Array): number {
  * `CORRUPT`, which ends the solve on the next validation) or reveal a hidden
  * border number (of which there are at most `w + h`), so the real bound is
  * `w·h + w + h`. The factor of two leaves room without letting a genuine
- * divergence hang the browser (docs/games/testing.md § "Seed-deterministic,
+ * divergence hang the browser (docs/testing.md § "Seed-deterministic,
  * never clock-gated": bound non-termination in the code).
  */
 function iterationBudget(b: BoatsBoard): number {
@@ -995,7 +995,7 @@ export type BoatsMistake = Point;
 /**
  * Re-solve the puzzle from its clues to the unique solution and report every
  * square the player has decided differently — the Check & Save basis
- * (docs/games/solver-and-generator.md § "The solvable-game contract"). Returns
+ * (docs/solver-and-generator.md § "The solvable-game contract"). Returns
  * `[]` when the board is not uniquely deducible, so a puzzle the solver cannot
  * finish never accuses the player.
  *

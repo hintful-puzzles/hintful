@@ -3,7 +3,7 @@
  * [`solver.ts`](./solver.ts).
  *
  * The deduction end is the solver's own ladder, run one firing at a time by
- * `pearlRecordingPass` with a recorder standing (docs/games/hints.md
+ * `pearlRecordingPass` with a recorder standing (docs/hints.md
  * § "Recording the deduction", the *threaded* shape). This file turns each
  * firing into the sentence and the picture.
  *
@@ -11,7 +11,7 @@
  * per square, the shapes it may still take, which the player has no way to
  * mark; the recording pass re-reads those off the edges before each firing and
  * counts a shape it rules out only through the edges that settles there and
- * then (docs/games/hints.md § "Give the facts a notation (Loopy)", and the
+ * then (docs/hints.md § "Give the facts a notation (Loopy)", and the
  * measurement in `add-pearl-hint`'s design).
  */
 

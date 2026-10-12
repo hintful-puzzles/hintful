@@ -43,7 +43,7 @@ import { NO_FLASH } from "./win-wave.ts";
  *
  * `permitsSearch` says whether this board's tier is one whose boards may need
  * trial and error — derived from the tier's *name*, since `Unreasonable` is the
- * collection's promise about search (docs/games/solver-and-generator.md § "Check, Tactic, Search").
+ * collection's promise about search (docs/solver-and-generator.md § "Check, Tactic, Search").
  * On such a board a refusal is the honest end of the road rather than a defect,
  * so the walk accepts it — but only with the collection's single wording for it,
  * because a refusal that does not tell the player trial and error is expected
@@ -565,7 +565,7 @@ describe("a hint can solve from any mid-game position", () => {
     // every seed). The work per seed is bounded and deterministic; only the
     // wall-clock varies, stretching several-fold under full-suite CPU
     // saturation. That is why nothing here is clock-gated — the assertion is on
-    // the *result*. See docs/games/testing.md § "Seed-deterministic, never clock-gated".
+    // the *result*. See docs/testing.md § "Seed-deterministic, never clock-gated".
     it(`${name}: following hints one move at a time always reaches solved`, () => {
       const presets = gatePresets(name, game);
       // Per-game vacuity: a presets menu that flattened to nothing would leave
@@ -588,7 +588,7 @@ describe("a hint can solve from any mid-game position", () => {
         // wall clock without reporting. Two was tried next and was still north
         // of 20. A once-per-refactoring-round check that takes tens of minutes
         // has not been made thorough, it has been made unrunnable
-        // (`docs/games/testing.md` § "Right-sizing the gate": a slow tier nobody invokes is not
+        // (`docs/testing.md` § "Right-sizing the gate": a slow tier nobody invokes is not
         // coverage), and this walk is quadratic in board size twice over — one
         // full hint recompute per move, and more moves on a bigger board.
         //

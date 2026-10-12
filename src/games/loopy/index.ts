@@ -301,7 +301,7 @@ export function nextLineState(button: number, old: number): LineState | null {
  * {@link interpretMove} differ only in where `e` comes from, which is what
  * makes a keyboard selection the *same* move as the click on that edge rather
  * than a parallel path that agrees with it today (the Slide rule — see
- * docs/games/input.md § "Giving a drag game a keyboard").
+ * docs/input.md § "Giving a drag game a keyboard").
  */
 function setEdge(
   state: LoopyState,
@@ -458,7 +458,7 @@ function interpretMove(
   if (isMouseDown(button) && ui.pencilMode) {
     // A tap notes a corner and a drag notes a pair, and only the release can
     // tell them apart, so the press is claimed and decided then
-    // (docs/games/input.md § "A button with two meanings resolves on the release").
+    // (docs/input.md § "A button with two meanings resolves on the release").
     cursor.visible = false;
     const e = edgeAt(g, ds.tileSize, p);
     ui.pin = -1;
@@ -470,7 +470,7 @@ function interpretMove(
   // press along the edges it passes.
   if ((isMouseDrag(button) || isMouseRelease(button)) && ui.noteDrag !== null) {
     // Whatever button class the drag and release arrive as: a finger held still
-    // before dragging arrives as the right button (docs/games/input.md § "A touch
+    // before dragging arrives as the right button (docs/input.md § "A touch
     // hold arrives as the right button"), and the press already said which way.
     const drag = ui.noteDrag;
     drag.at = p;

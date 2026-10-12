@@ -28,7 +28,7 @@
  * whose path argument, or an import whose specifier, names one of the skipped
  * roots — not for the roots' names anywhere in the file. A path assembled at
  * run time from parts is outside what it sees. A plain mention is what most of these files do: dozens cite
- * `docs/games/*.md` and `AGENTS.md` in prose, and a name-keyed scan would
+ * `docs/*.md` and `AGENTS.md` in prose, and a name-keyed scan would
  * convict all of them. (Keying on a name is this repo's most repeated
  * instrument failure; see docs/method.md, "A scan that keys on a name".)
  *

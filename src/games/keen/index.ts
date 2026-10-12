@@ -305,7 +305,7 @@ function findMistakes(state: KeenState): readonly KeenMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
-/** Why a strike is forced (docs/games/hints.md § "Writing the narration"):
+/** Why a strike is forced (docs/hints.md § "Writing the narration"):
  * indication, then reasoning, which the walk concludes. `ns` is the struck value
  * list. Cage deductions name the cage by its clue; the generic Latin arms read
  * identically to Unequal's, narrated once, shared. The words are

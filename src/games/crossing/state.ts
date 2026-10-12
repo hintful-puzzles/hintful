@@ -143,7 +143,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  * becomes near-certain (a birthday problem over at most 81 two-digit numbers).
  *
  * So this is the "impossible ⇒ reject in `validateParams`" case, not the
- * "unlucky ⇒ retry" one (docs/games/solver-and-generator.md § "Unlucky, impossible, and load-bearing validation").
+ * "unlucky ⇒ retry" one (docs/solver-and-generator.md § "Unlucky, impossible, and load-bearing validation").
  * It also bounds the clue list, which is what makes the author's "no reliable
  * way to always fit the list on screen" tractable here.
  *
@@ -726,7 +726,7 @@ export type CrossingMove =
   /** Clear a list of notes atomically — the hint's rule-out move. A `pencil`
    * toggle is *one* candidate and is not idempotent (re-applying it would put
    * the note back), so one deduction ruling out several candidates needs a move
-   * that only ever removes (docs/games/hints.md § "Persist, populate, and the moves"). Players produce it only by
+   * that only ever removes (docs/hints.md § "Persist, populate, and the moves"). Players produce it only by
    * following a hint; typing produces `pencil` toggles. */
   | { kind: "pencilStrike"; marks: readonly { x: number; y: number; n: number }[] }
   /** Add a list of notes atomically — the hint's move for writing the digits a

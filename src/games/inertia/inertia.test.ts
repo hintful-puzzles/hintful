@@ -2,7 +2,7 @@
  * Inertia — behavioral tests.
  *
  * Tier 1 (the slide rule, the codec, the generator, Solve, the deaths
- * tally) plus tier 2.5 render scenarios (docs/games/testing.md § "The test tiers").
+ * tally) plus tier 2.5 render scenarios (docs/testing.md § "The test tiers").
  */
 import { describe, expect, it } from "vitest";
 import {

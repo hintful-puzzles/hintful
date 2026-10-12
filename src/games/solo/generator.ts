@@ -11,7 +11,7 @@
  *  3. Reduce to a uniquely-solvable puzzle at *exactly* the target difficulty:
  *     - **non-killer:** remove givens in shuffled symmetry orbits, keeping a
  *       removal only while the graded solver still solves within the target
- *       (a solver-gated minimizer — docs/games/solver-and-generator.md § "Solver-gated generation");
+ *       (a solver-gated minimizer — docs/solver-and-generator.md § "Solver-gated generation");
  *     - **killer:** grade the `gen_killer_cages` layout (cages of size ≤ 2 after
  *       singleton removal) and, if it lands on the target difficulty, publish it
  *       with no givens. Upstream *intends* to grow cages by merging adjacent
@@ -297,7 +297,7 @@ function computeKclues(
  * merge stays a valid region (no repeated digit) and within the size cap, and
  * merge them — returning false when none exists.
  *
- * UPSTREAM BUG, reproduced verbatim (docs/games/solver-and-generator.md § "Solver-gated generation"): the C enumeration writes
+ * UPSTREAM BUG, reproduced verbatim (docs/solver-and-generator.md § "Solver-gated generation"): the C enumeration writes
  * each adjacent pair to `pairs[npairs]` but **never executes `npairs++`**, so
  * `npairs` stays 0, the random pick-and-merge loop below never runs, and the
  * function **always returns false without drawing any RNG**. The net effect is

@@ -5,7 +5,7 @@
  * A Tactic is a bounded chain of forced consequences to a named endpoint.
  * Narrated over an *unordered* set of shaded cells ("a contradiction further
  * along"), it is a claim the player can only check by redoing the deduction,
- * which docs/games/hints.md § "The forcing boundary" forbids; the order is what
+ * which docs/hints.md § "The forcing boundary" forbids; the order is what
  * turns the shading back into something walkable.
  *
  * **Why a number and not an arrow.** The obvious drawing is a path through the

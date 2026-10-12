@@ -4,7 +4,7 @@
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads. Each sentence runs
  * indication, reasoning, conclusion in the necessity voice
- * (docs/games/hints.md § "Writing the narration").
+ * (docs/hints.md § "Writing the narration").
  *
  * Every word that points at the board is a reference to the mark it points at
  * (`engine/hint-words.ts`): the squares a step decides are ringed (drawn as a
@@ -12,7 +12,7 @@
  * outlined, and the row or column it counts with is striped. The never-touch
  * water a placement drags along is shown with the step, so the sentence names
  * it in a closing clause and no more: why it is there is a rule of the game,
- * and rules belong in the help (docs/games/hints.md § "Rules belong in the
+ * and rules belong in the help (docs/hints.md § "Rules belong in the
  * help").
  */
 
@@ -56,7 +56,7 @@ const outlined = (cells: readonly Point[], words: string): Narration =>
   mark.as("outline", CELL, cells, words);
 
 /** A line as the player reads it: "this row", striped on the board. Never a
- * number, which the board does not draw (docs/games/hints.md § "Hatch the line
+ * number, which the board does not draw (docs/hints.md § "Hatch the line
  * the sentence names"). */
 const lineRef = (line: BoatsLine, m: BoatsMarks): Narration =>
   mark.this("stripes", whole(CELL), m.line, line.horizontal ? "row" : "column");
@@ -64,7 +64,7 @@ const lineRef = (line: BoatsLine, m: BoatsMarks): Narration =>
 /**
  * A hidden occupancy number the deduction recovered is not a number the player
  * can see, so a narration citing it says where it came from first
- * (docs/games/hints.md § "Name elements by what the player can see"). Only
+ * (docs/hints.md § "Name elements by what the player can see"). Only
  * reachable with "Remove numbers" on.
  */
 const lineIntro = (line: BoatsLine, m: BoatsMarks): Narration | string =>
@@ -78,7 +78,7 @@ const follows = (m: BoatsMarks): Narration | string =>
   m.follows.length ? phrase`, with ${ringed(m.follows, "the water around it")}` : "";
 
 /** The consequence clause of a refutation — the rule the rejected trial broke,
- * read off the validator's own rejection (docs/games/hints.md § "Read the
+ * read off the validator's own rejection (docs/hints.md § "Read the
  * reason off the validator"), naming the squares it flagged. */
 function breachClause(breach: BoatsBreach, cells: readonly Point[], m: BoatsMarks) {
   const at = (words: string): Narration =>
@@ -145,7 +145,7 @@ export const say = {
       move: phrase`${ringed(m.waters, (els) => `the square${plural(els.length)} diagonally beside`)} ${mark.this("outline", CELL, m.evidence, "segment")} must be water`,
     }),
 
-  // Read at both extremes (docs/games/hints.md § "Sanity-read at the
+  // Read at both extremes (docs/hints.md § "Sanity-read at the
   // degenerate extremes"): "shows the 0 ships its number allows" is nonsense,
   // and a 0 line is the common case worth its own sentence.
   lineSatisfied: (t: T<"lineSatisfied">, m: BoatsMarks): Sentence => {

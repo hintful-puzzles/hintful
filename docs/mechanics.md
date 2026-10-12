@@ -3,21 +3,21 @@
 How a game's *mechanism* is expressed here: params, descriptions, state, moves,
 status, capability hooks, and the player affordances this fork adds on top of
 upstream's model. The authoritative contract is
-[`src/engine/game.ts`](../../src/engine/game.ts) — its doc comments are
+[`src/engine/game.ts`](../src/engine/game.ts) — its doc comments are
 normative-adjacent and kept current; this guide is the tour with the traps
 marked. Normative requirements live in the
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md) spec and the `engine-*` specs beside
+[`ts-engine`](../openspec/specs/ts-engine/spec.md) spec and the `engine-*` specs beside
 it, one per subject.
 
 Sibling guides: [input](./input.md) · [rendering](./rendering.md) ·
 [solver & generator](./solver-and-generator.md) · [hints](./hints.md) ·
 [testing](./testing.md) · [engine catalog](./engine-catalog.md). Exemplar to
-read end-to-end: [`src/games/galaxies/`](../../src/games/galaxies/).
+read end-to-end: [`src/games/galaxies/`](../src/games/galaxies/).
 
 ## The Game contract at a glance
 
 A game is one object implementing `Game<Params, State, Move, Ui, DrawState,
-Mistake, …>` ([`game.ts`](../../src/engine/game.ts)): immutable state transitions, GC
+Mistake, …>` ([`game.ts`](../src/engine/game.ts)): immutable state transitions, GC
 instead of `dup`/`free`, discriminated unions instead of integer sentinels. A
 game depends on this interface only — never on the `Midend` — so the interface
 is the sole seam between a game and the engine. **An absent optional member
@@ -26,7 +26,7 @@ not a stub: a game with no solver omits `solve`, a permutation game with no
 notion of a wrong-but-legal position omits `findMistakes`.
 
 The converse is a rule too, and it is checked:
-[`contract-surface.test.ts`](../../src/contract-surface.test.ts) requires every
+[`contract-surface.test.ts`](../src/contract-surface.test.ts) requires every
 optional member to have at least one implementer **and** at least one consumer.
 The two are counted separately because they fail differently — no implementer is
 dead weight in the interface, no consumer means every implementer wrote code
@@ -45,12 +45,12 @@ capability flags to the app shell, is swept by the same test.
 The type parameters are yours to shape idiomatically; the file layout every
 game follows is `index.ts` (the `Game` object + glue), `state.ts` (types +
 codecs), `solver.ts`, `generator.ts`, `render.ts` — see
-[README](./README.md) § "File anatomy".
+[README](./new-game.md) § "File anatomy".
 
 ### Absence is `null`
 
 One spelling of "nothing here", in the engine, the games, the app and the build
-([`ts-engine`](../../openspec/specs/ts-engine/spec.md), "Absence has one
+([`ts-engine`](../openspec/specs/ts-engine/spec.md), "Absence has one
 spelling"):
 
 - **A value that may be absent is `T | null`.** `undefined` is never written as
@@ -75,7 +75,7 @@ Why `null` rather than the word the language produces by itself:
   end is a compile error (TS2366); a `T | undefined` return accepts the missing
   `return` in silence.
 - **It is checkable with no exceptions.**
-  [`absence-spelling.mjs`](../../scripts/checks/absence-spelling.mjs) fails any
+  [`absence-spelling.mjs`](../scripts/checks/absence-spelling.mjs) fails any
   union naming `undefined`. The rule the other way round would have to exempt
   every `null` a move or a save carries, and nothing marks which types those are.
 
@@ -93,7 +93,7 @@ control-flow template.** Classes over handle-passing, iterators over
 `while (next())`, `boolean` and unions over `0|1`, modern containers over
 C-array mirrors. **Comments and names pass one reading test**: a comment says
 what the code cannot, and a name changes only when a reader has to ask what it
-stands for — [`repo-layout`](../../openspec/specs/repo-layout/spec.md), "A
+stands for — [`repo-layout`](../openspec/specs/repo-layout/spec.md), "A
 comment says what the code cannot, and a name answers its own question".
 
 **Watch for logic that is correct only because of what `memmove` leaves
@@ -104,7 +104,7 @@ surfaces only on the narrow case that read them (Inertia's tour splice failed
 on the round-trip-out-of-one-vertex case only). The narrow fix is capturing
 values before the splice; the real fix is building the new array out of the
 pieces you mean (`[...before, ...detour, ...after]`), which makes the bug
-unwritable. Exemplar: [`inertia/solver.ts`](../../src/games/inertia/solver.ts)
+unwritable. Exemplar: [`inertia/solver.ts`](../src/games/inertia/solver.ts)
 (`spliceDetour`). **Tell:** any transcribed in-place array surgery — an
 overlapping `memmove`, a buffer read past its logical end.
 
@@ -114,7 +114,7 @@ barrier grid) is shared across every cloned state so a move copies only what
 moves. `Object.freeze` **throws** on a populated typed array, so the `readonly`
 type is the whole guarantee — don't reach for a runtime freeze, and don't
 downgrade to a plain `Array` to get one; just don't write to it. Exemplar:
-[`netslide/state.ts`](../../src/games/netslide/state.ts).
+[`netslide/state.ts`](../src/games/netslide/state.ts).
 
 ## Params
 
@@ -131,7 +131,7 @@ string is read whole or refused"). A piece left out takes its default; a
 letter the game does not read where it stands is never a default and never
 passed over, because either opens a board the sender did not send under a
 label that hides it. The refusal is the engine's, from
-[`engine/params.ts`](../../src/engine/params.ts), and `decodeParams` throws
+[`engine/params.ts`](../src/engine/params.ts), and `decodeParams` throws
 it: `paramsLetter(s, i, letters)` for the letter after a tag, `unreadParams(s,
 i)` in the last arm of a scanning loop, `endParams(s, i)` before a decoder
 that reads in order returns. A declared codec does all three by itself.
@@ -142,7 +142,7 @@ port's there from its `encode_params`.
 
 **Declare the codec, don't write it twice.** Both halves are derived from one
 ordered segment list in
-[`engine/params-codec.ts`](../../src/engine/params-codec.ts), so a game states
+[`engine/params-codec.ts`](../src/engine/params-codec.ts), so a game states
 its encoding once instead of hand-maintaining an encoder and a decoder that
 must be exact inverses:
 
@@ -179,7 +179,7 @@ encodable.
 ways plus a seam rather than one obvious way.
 
 **Whatever you write, the encodings are asserted.**
-[`params-stability.test.ts`](../../src/engine/params-stability.test.ts) holds
+[`params-stability.test.ts`](../src/engine/params-stability.test.ts) holds
 every game's encoded params against a recorded table and checks that encode and
 decode are mutual inverses over a corpus derived from each game's presets. Re-baselining that snapshot
 is a **compatibility decision** — every line that moves is a shared game ID
@@ -197,8 +197,8 @@ back); decode with `atof` semantics (garbage → **0**, which bounds checks then
 reject — `Number.parseFloat` yields `NaN`, which slips past every `<`/`>`
 check); and store what C stores by `Math.fround`-ing at every boundary that
 admits a value. `formatG`/`atof` live in
-[`engine/params.ts`](../../src/engine/params.ts); exemplar
-[`netslide/state.ts`](../../src/games/netslide/state.ts).
+[`engine/params.ts`](../src/engine/params.ts); exemplar
+[`netslide/state.ts`](../src/games/netslide/state.ts).
 
 ### Presets
 
@@ -219,7 +219,7 @@ wrong. So choose a new game's sizes by what `computeSize` returns, and for a
 tiling that cannot turn (below), pick sizes of its own that draw tall rather
 than transposing a landscape one. A board whose shape is the puzzle's own (a
 Cube solid, Ascent's hexagon) goes in the `WIDE_BY_NATURE` ledger of
-[`orientation.test.ts`](../../src/engine/orientation.test.ts) with its reason.
+[`orientation.test.ts`](../src/engine/orientation.test.ts) with its reason.
 
 **`transposeParams` lets a new board be dealt either way round.** The midend's
 `newGame` takes the board area the view measured and deals the chosen params
@@ -253,9 +253,9 @@ only records it in `UNEVEN_FRAME`.
 **Every fact about a params field lives on its `paramConfig` item**, and the
 engine builds everything else from it: the Custom dialog, the preset titles and
 the type header of a custom board
-([`engine/param-label.ts`](../../src/engine/param-label.ts)), the bounds check
-(`paramsError` in [`engine/params.ts`](../../src/engine/params.ts)), the help's
-Parameters section ([`engine/param-help.ts`](../../src/engine/param-help.ts),
+([`engine/param-label.ts`](../src/engine/param-label.ts)), the bounds check
+(`paramsError` in [`engine/params.ts`](../src/engine/params.ts)), the help's
+Parameters section ([`engine/param-help.ts`](../src/engine/param-help.ts),
 expanded from the page's `{{parameters}}` by `vite-plugins/parameters.ts`), the
 tier accessors and the codec. Each item carries:
 
@@ -284,7 +284,7 @@ tier accessors and the codec. Each item carries:
 
 **A game that plays different puzzles on one board declares its rulesets**,
 with `rulesetItem(rulesets, field)` in `paramConfig`
-([`engine/ruleset.ts`](../../src/engine/ruleset.ts)), the way a tiered game
+([`engine/ruleset.ts`](../src/engine/ruleset.ts)), the way a tiered game
 calls `difficultyItem`. Each ruleset is a `name` and its `rule`, the sentence
 that sets it apart (Seismic's Tectonic: "Two equal numbers cannot be
 horizontally, vertically or diagonally adjacent."). The engine builds the rest:
@@ -320,7 +320,7 @@ such a pair. A limit on a typed number (Seismic's area by ruleset) is not this:
 a text box cannot show it before OK, and it stays in `validateParams`.
 
 **A setting that adds, removes or bounds one rule is a modifier**, declared
-with `modifierItem` ([`engine/modifier.ts`](../../src/engine/modifier.ts)):
+with `modifierItem` ([`engine/modifier.ts`](../src/engine/modifier.ts)):
 Net's wrapping, Solo's X, Jigsaw and Killer, Bridges' "no loops". It differs
 from a ruleset in that modifiers hold together, and the test is a deal: if
 every combination of a game's candidates is a board, they are modifiers, and
@@ -361,12 +361,12 @@ preset's name as the `label` of its leaf in `presetMenu(game)`**, never from
 thing that is neither a size nor a tier.** A player who wants a small hard
 board or a large easy one finds it in the list, and the menu of one game reads
 like the menu of the next. `presetGrid(paramConfig, boards, opts)`
-([`engine/preset-grid.ts`](../../src/engine/preset-grid.ts)) builds it: the
+([`engine/preset-grid.ts`](../src/engine/preset-grid.ts)) builds it: the
 game names its boards, smallest first, and the builder writes each one's tiers
 in order. A game without tiers lists its boards. What the game decides is which
 boards, and that is about the puzzle; the shape is not.
 
-[`preset-menu-shape.test.ts`](../../src/engine/preset-menu-shape.test.ts) reads
+[`preset-menu-shape.test.ts`](../src/engine/preset-menu-shape.test.ts) reads
 the shape off every game's menu, whether or not the game calls the builder:
 
 - **A whole menu holds at most eighteen lines** (`MENU_LINES`; owner,
@@ -422,7 +422,7 @@ without moving a pinned board.
 builds the app's form from it and parses a submission back onto a **copy** of
 the params, validated by `paramsError`, so the dialog rejects exactly what a
 game ID would. Every registered game must declare a non-empty `paramConfig`
-([`custom-params.test.ts`](../../src/engine/custom-params.test.ts)).
+([`custom-params.test.ts`](../src/engine/custom-params.test.ts)).
 Conventions that keep it correct:
 
 - **Keys match the C config slug**, so the form is stable across eras; `get`
@@ -434,7 +434,7 @@ Conventions that keep it correct:
   field.
 - **Never hand-write the width/height pair.** Every two-dimension game calls
   `dimensionParamConfig({ doc, bounds })`
-  ([`engine/params.ts`](../../src/engine/params.ts)); a game that spells its
+  ([`engine/params.ts`](../src/engine/params.ts)); a game that spells its
   fields differently passes the field map (`fields: { w: "w2", h: "h2" }`)
   rather than being renamed to fit — a game contorted to satisfy a shared
   contract is the failure the refactoring guardrails exist to prevent. A square
@@ -448,18 +448,18 @@ Conventions that keep it correct:
   choice list (eyeball those), and is **blind to a swapped field map**, because
   `get` and `set` name the same field either way. A game passing a field map
   asserts the mapping directly, where the fact lives (see the "drives w2/h2"
-  test in [`unruly.test.ts`](../../src/games/unruly/unruly.test.ts)). The
+  test in [`unruly.test.ts`](../src/games/unruly/unruly.test.ts)). The
   general lesson: *a test whose only observer is the thing under test cannot
   establish ground truth.*
 
-Exemplars: [`pattern/index.ts`](../../src/games/pattern/index.ts) (pure w/h),
-[`towers/index.ts`](../../src/games/towers/index.ts) (size + difficulty),
-[`solo/index.ts`](../../src/games/solo/index.ts) (the jigsaw fold).
+Exemplars: [`pattern/index.ts`](../src/games/pattern/index.ts) (pure w/h),
+[`towers/index.ts`](../src/games/towers/index.ts) (size + difficulty),
+[`solo/index.ts`](../src/games/solo/index.ts) (the jigsaw fold).
 
 ### Difficulty is a declared contract
 
 **A tiered game declares its difficulty item and `Game.difficulty`
-([`engine/difficulty.ts`](../../src/engine/difficulty.ts)).** The item is
+([`engine/difficulty.ts`](../src/engine/difficulty.ts)).** The item is
 `difficultyItem(TIERS, "diff")` in its `paramConfig` — or, for a game storing a
 word or an enum, `difficultyItem(TIERS, { get, set })` — and nobody writes
 `kw: "difficulty"` by hand. The engine's `tierOf(game, p)` and
@@ -527,14 +527,14 @@ from a desc, and its parse is also what refuses a malformed one (it guards the
 game-ID surface — descs arrive from URLs). You write no validator; the engine
 derives the verdict (§ "Read a desc once"). **The reason is the engine's
 words, not yours**: a parse fails with a `DescError`, and the only ways to make
-one are [`desc-error.ts`](../../src/engine/desc-error.ts)'s kinds and its
+one are [`desc-error.ts`](../src/engine/desc-error.ts)'s kinds and its
 `puzzleDescError` escape for a rule of your puzzle's own (engine catalog §
 "`desc-error.ts` — why a game ID will not load"). Fail the parse, never throw
 your own error: a malformed ID is a player's typo, not a bug. The desc codec is
 frozen into shared ids, same as params. State is **immutable**: `executeMove`
 returns a new state and `cloneState` is cheap by construction (parallel typed
 arrays clone well; see Galaxies'
-[`state.ts`](../../src/games/galaxies/state.ts)).
+[`state.ts`](../src/games/galaxies/state.ts)).
 
 ### Read a desc once
 
@@ -545,7 +545,7 @@ the engine's `loadDesc` turns that one throw into the verdict the Enter Game ID
 dialog shows, and builds state 0 from the same call. Put every check that needs
 the parsed board — a count, a region, a rule of your puzzle — inside that
 parse; anything `newState` throws after `descValue` is treated as a bug.
-Exemplar: [`fifteen/state.ts`](../../src/games/fifteen/state.ts).
+Exemplar: [`fifteen/state.ts`](../src/games/fifteen/state.ts).
 
 The reason is that two loops disagree in silence. A validator and a parser that
 each read the grammar can differ about a character without any test noticing:
@@ -553,7 +553,7 @@ the accepted desc builds a board with its clues shifted, and **a typed array
 swallows the out-of-range write**, so nothing throws. With one parse there is
 no second reading to disagree with.
 
-**Read with the cursor** ([`engine/desc-reader.ts`](../../src/engine/desc-reader.ts),
+**Read with the cursor** ([`engine/desc-reader.ts`](../src/engine/desc-reader.ts),
 engine catalog § "`desc-reader.ts` — the cursor a desc parser drives") unless
 your grammar is one character per token. It decides *too short* against *bad
 character* for you, and its `int` takes bounds, so a stray or oversized value
@@ -561,16 +561,16 @@ is refused rather than stored. **Accept what your encoder writes and refuse
 what your grammar has no place for**: a parser that skips a character it does
 not recognize is a second spelling of every board, and a player's typo loads.
 
-[`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) checks
+[`desc-error-games.test.ts`](../src/engine/desc-error-games.test.ts) checks
 what it can from outside: every desc your generator writes must load, every
-one-edit near miss ([`testing/desc-mutants.ts`](../../src/engine/testing/desc-mutants.ts))
+one-edit near miss ([`testing/desc-mutants.ts`](../src/engine/testing/desc-mutants.ts))
 that loads must draw, and junk must be refused at least once — the last is
 what catches a `newState` that never reads through `descValue` and so refuses
 nothing.
 
 Where the desc is the shared run-length grammar — a value character, or a
 letter standing for a run of blanks — use
-[`engine/run-length.ts`](../../src/engine/run-length.ts) inside that one parse.
+[`engine/run-length.ts`](../src/engine/run-length.ts) inside that one parse.
 `keepTrailingBlanks` is the one real decision it hands back and it is not a
 style knob: it decides whether the desc ends with the run reaching the last
 cell, and your own parser depends on the answer.
@@ -583,11 +583,11 @@ second kind of run.
 ### Digits and numbers in a desc are one fact, and it is not yours
 
 Whatever the grammar, the digits in it are read and written one way, from
-[`engine/decimal.ts`](../../src/engine/decimal.ts): `isDigit(c)`,
+[`engine/decimal.ts`](../src/engine/decimal.ts): `isDigit(c)`,
 `digitValue(c)` (`0`–`9` or `null`) and `parseLeadingInt(s, pos)` for a run of
 them (`{ value, next }`, with `next === pos` meaning "no number here"). A
 single digit is *written* as `String(n)`. A value above nine takes one of the
-two alphabets in [`engine/desc-alphabet.ts`](../../src/engine/desc-alphabet.ts)
+two alphabets in [`engine/desc-alphabet.ts`](../src/engine/desc-alphabet.ts)
 — `n2c`/`c2n` (62 values) where every character is a value, and
 `n2cUpper`/`c2nUpper` (`0`–`9`, `A`–`Z`) where the desc is run-length and has
 spent the lowercase on blanks. Hex that is hex (a nibble bitmap) is
@@ -617,7 +617,7 @@ array with no absent value, where every cell holds a number, throws instead.
 
 Never write `c >= "0" && c <=
 "9"`, `c.charCodeAt(0) - 48`, `String.fromCharCode(48 + n)` or a private
-`isDigit`: [`decimal.test.ts`](../../src/engine/decimal.test.ts) scans every
+`isDigit`: [`decimal.test.ts`](../src/engine/decimal.test.ts) scans every
 game source for the shapes and fails the build, and `emittable-keys.test.ts`
 fails a declaration of any name the fact modules export.
 
@@ -634,7 +634,7 @@ this hook.
 **Return a move when the input asks for one, and leave "did it change
 anything?" to the engine.** The midend compares the board your move leaves
 with the board before it
-([`same-value.ts`](../../src/engine/same-value.ts)) and keeps a move that
+([`same-value.ts`](../src/engine/same-value.ts)) and keeps a move that
 changed nothing out of the history: no step of Undo, the input answered as a
 UI-only change, your `changedState` still run (`ts-engine`, "A move that
 leaves the board as it was is no step of the history"). So an erase key on an
@@ -663,7 +663,7 @@ What counts as shown: everything in the `Ui`, except that a part hidden
 before and after is the same wherever it sits, read off `visible: false`. A
 press parks the hidden cursor on what it pressed, and that is not a change.
 So keep the flag's name, and never paint from a part while its `visible` is
-off. [`input-answers.test.ts`](../../src/engine/input-answers.test.ts) sweeps
+off. [`input-answers.test.ts`](../src/engine/input-answers.test.ts) sweeps
 every registered game for an input left unclaimed that changed the frame.
 
 **`ds` is non-null and built at the tile size on screen, so read `ds.tileSize`
@@ -675,7 +675,7 @@ it ever did it would map the click at the preferred tile size rather than the
 one on screen — the wrong cell, silently. A test that calls `interpretMove`
 or `redraw` directly builds the drawstate with `game.newDrawState(state,
 tileSize)`, or with
-[`preferredDrawState`](../../src/engine/testing/preferred-draw-state.ts) at the
+[`preferredDrawState`](../src/engine/testing/preferred-draw-state.ts) at the
 game's preferred size, rather than passing `null`.
 
 ### executeMove is pure
@@ -700,10 +700,10 @@ structured-clone-safe as-is, or the game supplies `serializeMove`/
 untrusted input. `SaveEnvelope.moves` is `unknown[]` and is **cast** to `Move` on
 replay, never parsed, so a move written by another build arrives looking
 perfectly well typed. Your dispatch must refuse it — normative rule in the
-[`ts-engine` spec](../../openspec/specs/ts-engine/spec.md) § "A game rejects a
+[`ts-engine` spec](../openspec/specs/ts-engine/spec.md) § "A game rejects a
 move it cannot play, rather than guessing".
 
-End the dispatch with [`assertNever`](../../src/engine/assert-never.ts):
+End the dispatch with [`assertNever`](../src/engine/assert-never.ts):
 
 ```ts
 default:
@@ -726,7 +726,7 @@ Two shapes need care, and both are common here:
   context string: ``assertNever(op.kind, `lightup: executeMove op at (${op.x},${op.y})`)``.
 - **Where the move is one object shape with no discriminant at all**
   (`{ ops: Op[] }`, `{ dir }`), there is nothing to narrow. Use
-  [`rejectMove`](../../src/engine/assert-never.ts) on the fields the dispatch
+  [`rejectMove`](../src/engine/assert-never.ts) on the fields the dispatch
   reads — and **never** `assertNever(move as never, …)`, which silences the
   error the helper exists to raise.
 
@@ -762,10 +762,10 @@ The solver side of Solve is [solver & generator](./solver-and-generator.md)
 § "Solve and the generator's aux".
 
 **What a player reads is the engine's.** A refused Solve returns a
-`SolveFailure` ([`solve-failure.ts`](../../src/engine/solve-failure.ts)), and
+`SolveFailure` ([`solve-failure.ts`](../src/engine/solve-failure.ts)), and
 the status bar's completion words (`COMPLETED!`, `Auto-solved.`,
 `Auto-solver used.`) are prefixed by the midend to whatever `statusbarText`
-returns ([`completion-status.ts`](../../src/engine/completion-status.ts)), so
+returns ([`completion-status.ts`](../src/engine/completion-status.ts)), so
 `statusbarText` returns only the game's own phrase. Neither leaves you a word
 to choose; the engine catalog's entries for them say which failure a solver's
 verdict entitles it to.
@@ -808,7 +808,7 @@ existing consumers already tolerate.
 
 ### Contract sections, and what makes a draft
 
-Four members are **sections** ([`sections.ts`](../../src/engine/sections.ts)):
+Four members are **sections** ([`sections.ts`](../src/engine/sections.ts)):
 `hint`, `findMistakes`, `solve` and `transposeParams`. Each is implemented, not
 applicable, or absent, and **an absent one makes the game a draft**: still
 playable, labeled "Draft" on the home screen, never hidden. Nothing sets draft
@@ -902,9 +902,9 @@ booleans. Two verify-cycle gotchas:
   smoke-test may be the app's intended default — check that map before chasing
   your hook.
 
-Exemplar: [`untangle/index.ts`](../../src/games/untangle/index.ts). Pencil
+Exemplar: [`untangle/index.ts`](../src/games/untangle/index.ts). Pencil
 games declare the shared prefs from
-[`engine/pencil-prefs.ts`](../../src/engine/pencil-prefs.ts) — see below.
+[`engine/pencil-prefs.ts`](../src/engine/pencil-prefs.ts) — see below.
 
 ## Timed games
 
@@ -931,7 +931,7 @@ exercises.
 from the state, so `executeMove` stays pure and no game holds a midend
 back-reference. Mines lays out its mines on the first click (which is
 therefore never a mine). The engine guarantees, so don't re-derive them
-(normative: [`engine-params`](../../openspec/specs/engine-params/spec.md), "A game
+(normative: [`engine-params`](../openspec/specs/engine-params/spec.md), "A game
 can supersede its game description mid-play"):
 
 - The answer is a function of the state, and `null` means the desc the board
@@ -954,9 +954,9 @@ generator has since become, which a seed and a click alone would not. Do not
 keep the settled board in a holder shared across states:
 upstream's did, it outlived the undo of the move that filled it, and a player
 could then open a different square of a layout made for another. Exemplars:
-[`mines/index.ts`](../../src/games/mines/index.ts) +
-[`mines/state.ts`](../../src/games/mines/state.ts) (`MinesMove`'s `begin`);
-[`desc-supersede.test.ts`](../../src/engine/desc-supersede.test.ts) is the
+[`mines/index.ts`](../src/games/mines/index.ts) +
+[`mines/state.ts`](../src/games/mines/state.ts) (`MinesMove`'s `begin`);
+[`desc-supersede.test.ts`](../src/engine/desc-supersede.test.ts) is the
 shape in miniature.
 
 ## Affordances
@@ -1007,7 +1007,7 @@ mistake overlay".
 
 Any game with candidate pencil marks carries all of the following — deliberate
 default-on divergences that make note-taking usable with mouse and touch, not
-just keyboard. Exemplar: [`towers/index.ts`](../../src/games/towers/index.ts).
+just keyboard. Exemplar: [`towers/index.ts`](../src/games/towers/index.ts).
 
 **Put the marks in `pencil`.** A game's provisional per-cell candidates live in
 a typed array of that name on its state — the noun the engine already uses
@@ -1019,7 +1019,7 @@ reading guard read it that way. Two things are outside the convention and
 keep their own words — a field that is not a candidate set (Pearl's `marks` are
 no-line marks on a cell's four edges), and a **solver's** own working candidate
 scratch, which is a different object with a different lifetime. Guarded by
-[`note-vocabulary.test.ts`](../../src/engine/note-vocabulary.test.ts); the
+[`note-vocabulary.test.ts`](../src/engine/note-vocabulary.test.ts); the
 normative rule is the `engine-notes` spec, "One note-taking vocabulary and one
 layout across games".
 
@@ -1032,7 +1032,7 @@ layout across games".
   A *candidate-elimination* game (one with a `regionsOf` — see
   [hints](./hints.md) § "Candidate-elimination games") builds the move with
   `adaptiveMarkAllMove`
-  ([`engine/candidate-hint.ts`](../../src/engine/candidate-hint.ts)): fill
+  ([`engine/candidate-hint.ts`](../src/engine/candidate-hint.ts)): fill
   note-less empty cells, or — on an already-fully-noted board — strike each
   cell's *obvious* candidates (values already placed in one of its uniqueness
   regions) as one atomic move. It returns `null` when there is nothing to do,
@@ -1052,7 +1052,7 @@ layout across games".
   `executeMove` as well, because a saved move log from before the refusal
   replays through `executeMove`.
 - **Declare the pencil preferences from
-  [`engine/pencil-prefs.ts`](../../src/engine/pencil-prefs.ts), never by
+  [`engine/pencil-prefs.ts`](../src/engine/pencil-prefs.ts), never by
   hand.** `stickyPencilPref()` and `pencilKeepHighlightPref()` carry wording
   their games share; `autoPencilPref(name)` takes its label as an
   argument *because* the sentence names the regions the game clears. Sharing
@@ -1060,7 +1060,7 @@ layout across games".
   player-visible label is a label that drifts, and `pencil-prefs.test.ts`
   fails on a divergent copy.
 - **Do not write the pointer arm by hand** — call
-  [`engine/note-taking-cell.ts`](../../src/engine/note-taking-cell.ts)'s
+  [`engine/note-taking-cell.ts`](../src/engine/note-taking-cell.ts)'s
   `pressNoteTakingCell`, which is the mechanic itself, shared by every game
   that carries it. You supply two predicates about the cell (`canEnter`,
   `canMark`) and your own coordinates; it resolves the press and reports
@@ -1122,7 +1122,7 @@ layout across games".
   not flagged. Derive the solution from placed givens only, never from notes
   (a note can be wrong; that is what is being checked). Normative: the
   `findMistakes` requirement in
-  [`ts-engine`](../../openspec/specs/ts-engine/spec.md). **Carve-out:** this
+  [`ts-engine`](../openspec/specs/ts-engine/spec.md). **Carve-out:** this
   holds only where notes *are* candidates. Rome's marks are documented as
   free-purpose (a player as likely marks what they ruled out), so with no
   agreed meaning no reading of a note can be called wrong — Rome checks placed
@@ -1149,10 +1149,10 @@ seam is generic (Dominosa implements it today):
 - **Presence flows the chain Mark-all's does** (`hasReference` →
   `PuzzleStaticAttributes` → a *Reference* control in the Game controls
   panel). The panel is the generic
-  [`components/reference-panel.ts`](../../src/components/reference-panel.ts),
+  [`components/reference-panel.ts`](../src/components/reference-panel.ts),
   a region of the puzzle screen's grid: beside the board in a landscape
   window and under it in a tall one (`gridLayout` in
-  [`puzzle/layout.ts`](../../src/puzzle/layout.ts)).
+  [`puzzle/layout.ts`](../src/puzzle/layout.ts)).
 - **The board highlight is a per-game `Ui` field + render bit** (Dominosa's
   `highlightPair` drives `COL_REFERENCE` boxes; the bit folds into the packed
   cache key — [rendering](./rendering.md) § "The tile cache and the diff key"). Drive the frame
@@ -1160,8 +1160,8 @@ seam is generic (Dominosa implements it today):
   boxes appear only with a selection.
 
 Normative: the reference-aid requirement in
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md); exemplar
-[`dominosa/`](../../src/games/dominosa/index.ts).
+[`ts-engine`](../openspec/specs/ts-engine/spec.md); exemplar
+[`dominosa/`](../src/games/dominosa/index.ts).
 
 **When the inventory is already drawn on the board, make it an input surface
 instead of a panel.** Crossing's clue list was already painted, so the port
@@ -1203,8 +1203,8 @@ half a tile per row). Three rules keep it cheap and correct:
   offset shows instantly as a staircase; see
   [testing](./testing.md) § "Render scenarios".
 
-Exemplars: [`bricks/render.ts`](../../src/games/bricks/render.ts) +
-[`bricks/index.ts`](../../src/games/bricks/index.ts).
+Exemplars: [`bricks/render.ts`](../src/games/bricks/render.ts) +
+[`bricks/index.ts`](../src/games/bricks/index.ts).
 
 ### One function, both callers
 
@@ -1214,7 +1214,7 @@ each clue by which run a click would send it to, so `redraw` asks
 `runForNumber`, the function the click calls. **Tell:** a
 predicate in `redraw` that answers what a *move would do* — that belongs to
 the move code; render should be asking, not deciding. Exemplar:
-[`crossing/render.ts`](../../src/games/crossing/render.ts) (`layoutNumbers`,
+[`crossing/render.ts`](../src/games/crossing/render.ts) (`layoutNumbers`,
 `runForNumber`).
 
 **The rule's most common concrete instance is the board's pixel origin.** Two
@@ -1225,14 +1225,14 @@ green because nothing drives paint and input against each other.
 - **Put the origin in `render.ts`, export it, and import it from the input
   path.** One function cannot drift from itself, so this needs no test at all —
   which is stronger than a guard asserting the two agree. Exemplars:
-  [`mines/render.ts`](../../src/games/mines/render.ts) (`borderFor`) and
-  [`bricks/render.ts`](../../src/games/bricks/render.ts) (`offsets`, whose doc
+  [`mines/render.ts`](../src/games/mines/render.ts) (`borderFor`) and
+  [`bricks/render.ts`](../src/games/bricks/render.ts) (`offsets`, whose doc
   comment says *"Shared with `interpretMove` so pointer mapping and drawing
   agree"*).
 - **Tell: an input path that *cites* the render module in a comment instead of
   importing from it**, or one number spelled by more than one expression
   (`tileSize >> 1` in `interpretMove`, `computeSize` and `redraw`). No scan
-  finds these, by name or by file ([`method.md`](../method.md) § "A scan that
+  finds these, by name or by file ([`method.md`](./method.md) § "A scan that
   keys on a name"); reading the game does.
 
 ### Grid modes are a movement table
@@ -1261,7 +1261,7 @@ Two adjacent Ascent patterns worth reaching for:
   fixpoint** after the edit, then the completion check — a single pass misses
   the fully-drawn segment between two known numbers.
 
-Exemplars: [`ascent/state.ts`](../../src/games/ascent/state.ts),
-[`ascent/ui.ts`](../../src/games/ascent/ui.ts),
-[`ascent/moves.ts`](../../src/games/ascent/moves.ts),
-[`ascent/solver.ts`](../../src/games/ascent/solver.ts).
+Exemplars: [`ascent/state.ts`](../src/games/ascent/state.ts),
+[`ascent/ui.ts`](../src/games/ascent/ui.ts),
+[`ascent/moves.ts`](../src/games/ascent/moves.ts),
+[`ascent/solver.ts`](../src/games/ascent/solver.ts).

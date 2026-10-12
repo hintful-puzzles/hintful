@@ -99,7 +99,7 @@ describe("geometry", () => {
   it("uses the NARROW_BORDERS arm, compensating for the outer outline", () => {
     // BORDER = GRIDEXTRA*2 = 2, and computeSize subtracts GRIDEXTRA*2 back off
     // because that outline is drawn inside the border area — not the desktop
-    // `tileSize / 2` (docs/games/rendering.md § "The tile cache and the diff key").
+    // `tileSize / 2` (docs/rendering.md § "The tile cache and the diff key").
     expect(BORDER).toBe(2);
     // The board is 6*40 + 2*2 - 2 = 242 across, and the canvas is that plus the
     // pencil-mode indicator's reach on **both** sides: two pixels of border
@@ -381,7 +381,7 @@ describe("completion flash", () => {
 
 describe("mistake overlay", () => {
   it("highlights a mistake even when the square was already drawn", () => {
-    // Regression guard for docs/games/rendering.md § "Overlay sidecars": the overlay isn't part of the tile
+    // Regression guard for docs/rendering.md § "Overlay sidecars": the overlay isn't part of the tile
     // value, so it must be in the diff cache key. Check & Save runs a frame
     // *after* the move that drew the square, so a cold first frame proves
     // nothing — this asserts the highlight appears on the SECOND paint, and

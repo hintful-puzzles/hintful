@@ -14,7 +14,7 @@
  * **What this gives up is that each guard used to see a different board of
  * the same params.** Nothing relied on that: a guard that needs a property to
  * hold across boards takes several with `n`, and one that needs a particular
- * board pins its description (docs/games/testing.md § "Pinning a hint's
+ * board pins its description (docs/testing.md § "Pinning a hint's
  * positions"). What it buys beside the time is that a failure in one guard
  * names a board every other guard also walked.
  *

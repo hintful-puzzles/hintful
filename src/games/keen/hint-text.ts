@@ -14,7 +14,7 @@ import type { Point } from "../../engine/types.ts";
 import { C_ADD, C_DIV, C_MUL, C_SUB } from "./state.ts";
 
 /** The cage's arithmetic goal as a verb phrase, read off its packed clue — the
- * indication a cage deduction leads with (docs/games/hints.md § "Lead with the indication"). Reads across the
+ * indication a cage deduction leads with (docs/hints.md § "Lead with the indication"). Reads across the
  * whole operation set: `sum to 15`, `multiply to 72`, `differ by 3`,
  * `have a ratio of 2`. */
 function cageGoal(op: number, value: number): string {

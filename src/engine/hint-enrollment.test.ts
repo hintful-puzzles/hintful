@@ -191,7 +191,7 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
  * Keyed on the **shape** — the two calls themselves, anywhere in any test file,
  * comments stripped — and the superset is then classified by the ledger rather
  * than narrowed away (`docs/method.md` § "A scan that keys on a name"). The ledger is
- * the rule 3 shape from `docs/games/testing.md` § "How a cross-game guard finds
+ * the rule 3 shape from `docs/testing.md` § "How a cross-game guard finds
  * its population": the scan says *who*, each entry says *why*, and the equality
  * below means neither can rot.
  */
@@ -258,7 +258,7 @@ describe("a cross-game sweep takes its boards from the slice", () => {
     expect(
       found,
       "a test builds its own board population instead of calling `gatePresets` " +
-        '(docs/games/testing.md § "Slicing a preset sweep for the gate"). If it ' +
+        '(docs/testing.md § "Slicing a preset sweep for the gate"). If it ' +
         "genuinely needs a params record the presets menu does not offer, say " +
         "which behavior needs it and add it to BUILDS_ITS_OWN_BOARDS.",
     ).toEqual(Object.keys(BUILDS_ITS_OWN_BOARDS).sort());

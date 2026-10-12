@@ -223,7 +223,7 @@ describe("magnets render scenarios", () => {
       showMistakes: true,
     });
     // The mistake overlay (inset red outline) appears on a frame *after* the
-    // move that placed the cell (docs/games/rendering.md § "Overlay sidecars":
+    // move that placed the cell (docs/rendering.md § "Overlay sidecars":
     // the overlay must be in the diff key).
     expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(
       true,

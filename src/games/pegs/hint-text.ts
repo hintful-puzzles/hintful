@@ -91,7 +91,7 @@ const count = (n: number): string => (n === 3 ? "Three" : "Six");
 
 /**
  * Every sentence runs from what to look at, through what follows from it, to
- * the move (docs/games/hints.md § "Lead with the indication"), and each part
+ * the move (docs/hints.md § "Lead with the indication"), and each part
  * says how it follows from the last: a danger is answered by a move that
  * answers it, never by a bare "instead". Where other jumps would do as well,
  * the move is offered as one of them, even when the danger is this peg's own

@@ -6,7 +6,7 @@
  * and Sixteen shipped that way for months, framed in a black square in light
  * mode, and Mines and Pearl left a thin black ring — all with every snapshot
  * green, because a snapshot records what a frame drew and cannot see what it
- * did not (docs/games/testing.md § "A snapshot cannot see a hole"). The midend
+ * did not (docs/testing.md § "A snapshot cannot see a hole"). The midend
  * now lays a color-0 ground under every first frame, so what this holds is that
  * ground: present, first, and the size of the canvas the game was given.
  *

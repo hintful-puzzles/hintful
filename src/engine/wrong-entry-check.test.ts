@@ -241,7 +241,7 @@ describe("Check & save names a wrong entry", () => {
         sweep(id, game).unnamed,
         `${id}: an entry the answer contradicts, from which the hint cannot ` +
           "finish, and `findMistakes` returns nothing. Compare the player's " +
-          "entries with the answer there (docs/games/solver-and-generator.md " +
+          "entries with the answer there (docs/solver-and-generator.md " +
           '§ "Self-validating games run their rule checker")',
       ).toEqual([]);
     });
@@ -253,7 +253,7 @@ describe("Check & save names a wrong entry", () => {
         sweep(id, game).stalled,
         `${id}: a position with nothing wrong on it that the hint does not ` +
           "finish the board from. A rule that reads the board must conclude " +
-          "no less from one that says more (docs/games/hints.md " +
+          "no less from one that says more (docs/hints.md " +
           '§ "A hint carries on from an entry the player made first")',
       ).toEqual([]);
     });

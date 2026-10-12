@@ -11,7 +11,7 @@
  * The per-cell flag word keeps upstream's exact bit layout (an `Int32Array`
  * of `sflags`): the solver is byte-match-critical, so reproducing its bit
  * arithmetic verbatim is the lowest-risk choice
- * (docs/games/solver-and-generator.md § "Solver-gated generation"). Edges are
+ * (docs/solver-and-generator.md § "Solver-gated generation"). Edges are
  * shared between neighboring cells: setting one cell's edge mirrors the bit
  * onto the adjacent cell, so the two never disagree.
  */
@@ -154,7 +154,7 @@ export interface Board {
    * The hint path's recorder; the generator and `findMistakes` leave it
    * undefined and allocate nothing. It rides on the board because every rung
    * already takes the board, so one optional field reaches all eight and the
-   * flag setters they change it through (docs/games/hints.md § "Recording the
+   * flag setters they change it through (docs/hints.md § "Recording the
    * deduction").
    */
   rec?: TracksRecorder;

@@ -130,7 +130,7 @@ export function newDrawState(s: GalaxiesState, tileSize: number): GalaxiesDrawSt
 /** The board's pixel origin: a full tile on every side, so the dots that sit on
  * the outer grid lines have room to draw. Exported so `interpretMove` and
  * `computeSize` read the same number the painter does — one function, both
- * callers ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
+ * callers ([`docs/mechanics.md`](../../../docs/mechanics.md)). */
 export function borderFor(tileSize: number): number {
   return tileSize;
 }
@@ -385,7 +385,7 @@ function drawSquare(
 
   // Arrow or cursor. A drag-preview arrow renders in COL_DRAG and
   // thicker than a committed one: a preview must not look like a
-  // committed arrow (docs/games/rendering.md § "A press preview must
+  // committed arrow (docs/rendering.md § "A press preview must
   // not look like a commit"), and both preview tiles share one color
   // because release commits them together — they share a fate.
   if (flags & DRAW_ARROW) {
@@ -413,7 +413,7 @@ function drawSquare(
   // is COL_HINT_CELL; and the wall a hint asks the player to *draw* is a
   // COL_HINT bar drawn whether or not the wall exists yet — that is the whole
   // suggestion, and it is Palisade's forced-edge treatment in Galaxies'
-  // vocabulary (docs/games/hints.md § "Echo the move's shape in the hint
+  // vocabulary (docs/hints.md § "Echo the move's shape in the hint
   // color"). `null` means this side draws nothing.
   const edgeCol = (side: number): number | null => {
     if (hint & (side << HINT_WALL_SHIFT)) return COL_HINT;

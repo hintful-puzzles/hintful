@@ -7,7 +7,7 @@
  * in ASCII mode), or a 2×2 grid of pencil notes. The count blocks and edge clues
  * recolor red on error and dim when complete / struck. Cells are diffed against
  * a per-monster-cell cache; the Check & Save mistake overlay rides a sidecar in
- * the diff key (docs/games/rendering.md § "The tile cache and the diff key"). The
+ * the diff key (docs/rendering.md § "The tile cache and the diff key"). The
  * fork's pencil-mode indicator sits in the top-right border corner.
  *
  * Upstream computes `cell_errors` but never *renders* them (only the count
@@ -75,7 +75,7 @@ import {
 } from "./state.ts";
 
 /** Highlight payload an Undead hint step carries (built in `index.ts`). See
- * docs/games/hints.md § "The element-type color legend". Coordinates are
+ * docs/hints.md § "The element-type color legend". Coordinates are
  * interior (1-based) grid cells, matching `redraw`/`findMistakes`. */
 export interface UndeadHint {
   /** The driving sightline's bounce path, outlined `COL_HINT_CELL` (evidence). */
@@ -104,7 +104,7 @@ export const COL_ZOMBIE = 7;
 export const COL_VAMPIRE = 8;
 export const COL_DONE = 9;
 export const COL_PENCIL_BODY = 10;
-// The explained-hint legend (docs/games/hints.md § "The element-type color legend").
+// The explained-hint legend (docs/hints.md § "The element-type color legend").
 export const COL_HINT = 11; // the cell(s)/candidate(s) the deduction acts on
 export const COL_HINT_CELL = 12; // the driving sightline's bounce path (evidence)
 export const COL_CELL = 13; // the surface of a cell the player fills
@@ -192,7 +192,7 @@ export interface UndeadDrawState {
   /** `wh` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
    * evidence area, and the struck-monster mask in its `struck` lane. Owns the
    * repack/stale/commit dance that keeps the overlay in the cache diff key
-   * (docs/games/rendering.md § "The tile cache and the diff key"). */
+   * (docs/rendering.md § "The tile cache and the diff key"). */
   hint: OverlaySidecar;
   /** `wh` mistake-overlay sidecar (Check & Save) — same dance. */
   wrong: OverlaySidecar;

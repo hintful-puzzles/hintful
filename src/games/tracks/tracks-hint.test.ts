@@ -465,7 +465,7 @@ describe("every narratable premise is reached", () => {
 
 describe("narration reads correctly at the degenerate extremes", () => {
   // Every arm whose wording branches on a count, read at the value that breaks
-  // the typical phrasing (docs/games/hints.md § "Sanity-read at the degenerate
+  // the typical phrasing (docs/hints.md § "Sanity-read at the degenerate
   // extremes"). Reasons are built by hand: the corpus does not reliably reach a
   // clue of 0 or a full-width row.
   const board = stateToBoard(

@@ -14,7 +14,7 @@
  *    tied and the board does not show.
  *  - **A link is drawn only for a step that rests on it**: the firing after a
  *    link step could not have fired before it.
- *  - **Every premise and every line case is reached** (docs/games/hints.md
+ *  - **Every premise and every line case is reached** (docs/hints.md
  *    § "Census the reasons, not only the rungs").
  */
 
