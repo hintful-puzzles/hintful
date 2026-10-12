@@ -1,7 +1,7 @@
 # Loopy
 
 Form a single closed loop out of the grid edges, in such a way that
-every numbered square has exactly that many of its edges included in
+every number has exactly that many of the edges around it included in
 the loop.
 
 Two words are used throughout, here and in the hints, and they mean different
@@ -31,7 +31,7 @@ whole lot back together. If you would rather keep your own board, turn off
 **Rule out edges that counting has already settled** under Loopy preferences.
 
 You can play entirely from the keyboard. Here you are marking the *edges*
-between squares, so the cursor sits on a **dot**, where edges meet, and the
+of the grid, so the cursor sits on a **dot**, where edges meet, and the
 arrow keys walk it from dot to dot along the grid's edges. The edge you just
 walked along is the one your keys act on — think of a pen that inks where it
 has been. Walk, Enter, walk, Enter traces a loop; walk back over a marked

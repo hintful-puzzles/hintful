@@ -22,14 +22,12 @@ import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
-  CURSOR_DOWN,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  CURSOR_UP,
-  digitOf,
+  cursorDelta,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MOD_NUM_KEYPAD,
+  numpadDirection,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
@@ -101,25 +99,21 @@ function executeMove(s: InertiaState, m: InertiaMove): InertiaState {
 // --- input -----------------------------------------------------------
 
 /**
- * Digit key → direction: the number pad's own layout is the compass.
+ * The direction a key names, or -1: an arrow, or a digit read off the number
+ * pad's own layout, which is the compass.
  *
- * Upstream accepts these only with the `MOD_NUM_KEYPAD` bit set, but a numpad
- * produces a digit only with Num Lock on, and a laptop may have no numpad
- * (docs/input.md § "The numeric keypad never arrives"). So `digitOf`
- * takes the bare digits too: without them the four **diagonal** moves are
+ * Upstream accepts the digits only with the `MOD_NUM_KEYPAD` bit set, but a
+ * numpad produces a digit only with Num Lock on, and a laptop may have no numpad
+ * (docs/input.md § "The numeric keypad never arrives"). So the top row's
+ * digits are read as the pad's: without them the four **diagonal** moves are
  * unreachable from the keyboard. Inertia binds no other digit, so nothing
  * collides.
  */
-const DIGIT_DIRECTIONS: Readonly<Record<number, number>> = {
-  8: 0,
-  9: 1,
-  6: 2,
-  3: 3,
-  2: 4,
-  1: 5,
-  4: 6,
-  7: 7,
-};
+function keyDirection(button: number): number {
+  const step = numpadDirection(button | MOD_NUM_KEYPAD) ?? cursorDelta(button);
+  if (step === null) return -1;
+  return DX.findIndex((dx, dir) => dx === step.dx && DY[dir] === step.dy);
+}
 
 /** The octant (0 = north, then clockwise) of an offset `dx`/`dy` from the ball:
  * `atan2(dx, -dy)` measures the angle clockwise from north. */
@@ -154,6 +148,10 @@ function aimedDirection(s: InertiaState, ts: number, p: Point): number {
  * put for `holdTime` (350ms) arrives as a **right** button
  * (`detectSecondaryButton`), and "hold the ball, then drag" is exactly such a
  * press — so without this the gesture would die when the player paused to aim.
+ *
+ * `Game.ignoresSecondaryButton` would save the swipe as well, but only by
+ * stopping the promotion: a mouse's right click would still arrive as
+ * `RIGHT_BUTTON`, and would stop sending the ball toward the square clicked.
  */
 function asPrimary(button: number): number {
   if (button === RIGHT_BUTTON) return LEFT_BUTTON;
@@ -203,18 +201,8 @@ function interpretMove(
     if (aimed < 0) return UI_UPDATE;
     ui.justMadeMove = true;
     return { type: "move", dir: aimed };
-  } else if (button === CURSOR_UP) {
-    dir = 0;
-  } else if (button === CURSOR_DOWN) {
-    dir = 4;
-  } else if (button === CURSOR_LEFT) {
-    dir = 6;
-  } else if (button === CURSOR_RIGHT) {
-    dir = 2;
   } else {
-    // A digit, with or without the number-pad modifier (see DIGIT_DIRECTIONS).
-    const digit = digitOf(button);
-    dir = digit === null ? -1 : (DIGIT_DIRECTIONS[digit] ?? -1);
+    dir = keyDirection(button);
   }
 
   if (dir < 0 || s.dead) return null;

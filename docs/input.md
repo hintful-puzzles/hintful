@@ -174,9 +174,9 @@ questions the guards ask, so two guards cannot drift apart.
 **A keypad binding is never the only route to an input: bind the bare digits
 too.** `MOD_NUM_KEYPAD | '7'` does fire, but only with Num Lock on. With it
 off the key is `Home`, which `puzzleKeyMap` does not carry, and a laptop may
-have no numpad. Where the game gives those digits no other meaning, strip the
-modifiers and look the character up. Exemplar:
-[`inertia/index.ts`](../src/games/inertia/index.ts) (`DIGIT_DIRECTIONS`).
+have no numpad. Where the game gives those digits no other meaning, read a
+bare digit as the pad's: `numpadDirection(button | MOD_NUM_KEYPAD)`. Exemplar:
+[`inertia/index.ts`](../src/games/inertia/index.ts) (`keyDirection`).
 
 The keypad bit rides a digit and nothing else. With Num Lock off the pad's 8
 is the plain `CURSOR_UP` and its Enter the plain `CURSOR_SELECT`.

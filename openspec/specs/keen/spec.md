@@ -328,17 +328,6 @@ from the pencil marks of every other cell in its row and column.
   column hold cells penciled with 4
 - **THEN** the new state has no 4 among the pencil marks of that row and column
 
-### Requirement: Preferences: Keen exposes pencil-mark preferences
-
-The game SHALL offer a sticky-pencil-mode preference and an auto-pencil
-preference.
-
-#### Scenario: Pencil preferences are exposed with their defaults
-
-- **WHEN** the game's preferences are read
-- **THEN** they include a sticky-pencil-mode boolean defaulting to on
-- **AND** an auto-pencil boolean defaulting to off
-
 ### Requirement: Hint: Keen provides an explained deduction hint
 
 The hint SHALL teach the player the next deduction in pencil-notes terms. Its

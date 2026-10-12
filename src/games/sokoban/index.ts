@@ -20,6 +20,8 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MOD_NUM_KEYPAD,
+  numpadDirection,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -79,22 +81,15 @@ import {
 // --- input ------------------------------------------------------------
 
 /**
- * The eight directions on the digits `1`–`9` (not `5`), beside the cursor keys'
- * four. Upstream binds only the number pad's digits; the bare digits are bound
+ * The step a key names, or null: a cursor key's, or one of the eight on the
+ * digits `1`–`9` (not `5`), read off the number pad's own layout. Upstream
+ * binds only the number pad's digits; the bare digits are read as the pad's
  * too, because a numpad sends digits only with Num Lock on and a laptop may
  * have none (docs/input.md § "The numeric keypad never arrives").
- * `stripModifiers` lets the numpad's own digits through.
  */
-const DIGIT_DIRECTIONS: Record<string, { dx: number; dy: number }> = {
-  "7": { dx: -1, dy: -1 },
-  "8": { dx: 0, dy: -1 },
-  "9": { dx: 1, dy: -1 },
-  "4": { dx: -1, dy: 0 },
-  "6": { dx: 1, dy: 0 },
-  "1": { dx: -1, dy: 1 },
-  "2": { dx: 0, dy: 1 },
-  "3": { dx: 1, dy: 1 },
-};
+function keyStep(button: number): { dx: number; dy: number } | null {
+  return numpadDirection(button | MOD_NUM_KEYPAD) ?? cursorDelta(button);
+}
 
 /**
  * The push a drag held from `grab` and now at `p` would make, along the
@@ -194,7 +189,7 @@ function interpretMove(
     return canWalkTo(state, x, y) ? { type: "walk", x, y } : null;
   }
 
-  const dir = cursorDelta(button) ?? DIGIT_DIRECTIONS[String.fromCharCode(button)];
+  const dir = keyStep(button);
   if (!dir) return null;
   const { dx, dy } = dir;
   if (moveType(state, dx, dy) === "illegal") return null;

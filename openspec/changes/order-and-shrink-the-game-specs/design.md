@@ -251,25 +251,57 @@ If the answer is B or C, the work is this change's task 3, and it starts by
 adding the three engine requirements. If it is A, task 3 is struck, the
 `sample/` directory is deleted, and the change is archived as it stands.
 
-## Found, and not this change's to fix
+## Found by the readers, and fixed at the owner's word
 
-- **Clusters and Ascent refuse a grid too large in a sentence of their own**
-  ("Width times height must be less than 10000.", `src/games/clusters/state.ts`;
-  "... less than 1000.", `src/games/ascent/index.ts`), against `engine-params`,
-  "A grid too large for a game is refused in one sentence". Theirs names the
-  ceiling and the engine's does not, so which gives way is a question about
-  the engine's sentence: it could take the ceiling as an argument and say it
-  in every game.
-- **Loopy has no requirement stating what the puzzle is or what solved
-  means.** The Purpose paragraph and a scenario under `Look` are all there
-  is; its `Rules` subject holds the edge states and the mistake check, which
-  is why the check passes.
-- **Keen's preferences requirement names two of the game's four preferences
-  and gives no key**, and none of the four is Keen's own. It is one of the
-  whole copies of option B.
-- **Inertia takes number-pad digits by a helper of its own and remaps the
-  secondary button by hand**, where `engine-input` has `numpadDirection` and
-  the `Game` contract has `ignoresSecondaryButton`. Its spec states what it
-  does and names neither departure.
-- **Flood's spec has no requirement for** its `ignoresSecondaryButton` or its
-  `hasNoSolution`, both members of its `Game` object.
+- **Clusters and Ascent refused a grid too large in a sentence of their
+  own**, against `engine-params`, "A grid too large for a game is refused in
+  one sentence". Both return `AREA_TOO_LARGE`, ceilings unchanged. No guard
+  caught it because `params-refusal.test.ts` asks only that a refusal is a
+  sentence. Slide's "must be at most 48; the solver runs out of memory beyond
+  that." is left: its spec states that sentence, and it is the refusal of a
+  board the solver cannot work, as Filling's, Sokoban's and Net's
+  generation-only ceilings are, each with its reason. A guard keyed on the
+  comparison would have to tell those from a hold limit, and was not written.
+- **Loopy had no requirement stating the puzzle or what solved means.** It
+  has four more under `Rules`: the loop and the clues, when a board is
+  solved, and the two ways the board flags lines as drawn. The last replaced
+  a clause of a `Look` requirement that the code contradicted ("every closed
+  loop but the largest": a stray line beside a loop is flagged, and a loop
+  closed beside longer paths is itself flagged). The help page's "every
+  numbered square" now reads true of every tiling.
+- **Keen's preferences requirement named two of four preferences, none of
+  them Keen's own.** Removed: `engine-notes` and `engine-candidate-hints`
+  state each for every note-taking game.
+- **Flood's spec said nothing of `hasNoSolution`.** It has a `Description`
+  requirement for which boards are refused and why. Its
+  `ignoresSecondaryButton` gets none: Flood only follows `engine-input`, "A
+  game with no secondary meaning is not given a synthetic one".
+- **Inertia and Sokoban each kept a copy of the number pad's layout.** Both
+  read it from the engine's `numpadDirection`, with every button code
+  compared before and after and none differing. The bare top-row digits stay
+  bound, which `docs/input.md` § "The numeric keypad never arrives" asks for.
+
+## Found, and the owner's to decide
+
+- **Inertia and Slide fold the secondary button onto the primary by hand**,
+  where seven games declare `ignoresSecondaryButton`. The fold is one of the
+  ways `docs/input.md` § "A touch hold arrives as the right button" gives, so
+  it is not a defect, and Inertia's spec now says so. Taking the flag would
+  change three things a player meets in Inertia: a mouse's right click on a
+  square would stop sending the ball there; the bar's "Right click" toggle,
+  which does nothing in this game, would go; and a held finger would act at
+  once and not after the hold is detected. The recommendation is to take the
+  flag in both.
+- **Three preference keys are stated in no spec**: `auto-pencil`,
+  `sticky-pencil-mode` and `pencil-keep-highlight` are strings in
+  `src/engine/pencil-prefs.ts` alone, and a saved preference depends on them.
+  A requirement in `engine-notes` would state them once.
+- **The Controls text the engine writes for Loopy speaks of "the edge under"
+  a cursor that sits on a dot.** The sentence is `target-verb.ts`'s, the same
+  for every game with a cursor, and Loopy's own paragraph two below it says
+  where the cursor is and which edge a key acts on, so the keyboard is
+  introduced twice and the first time loosely. A fix is the engine's: the
+  sentence takes what the cursor rests on from the game's geometry.
+- **How Loopy colors a clue's number** (too many lines, too many edges ruled
+  out, and too few lines once the lines are one loop) is stated nowhere in
+  its spec.

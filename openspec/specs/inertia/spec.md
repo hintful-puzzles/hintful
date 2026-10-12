@@ -188,7 +188,7 @@ digits `1`–`4` and `6`–`9`, laid out as the number pad, which is itself a
 compass, for all eight, **with or without** the `MOD_NUM_KEYPAD` modifier.
 Without the unmodified digits a keyboard with no number pad, or with Num Lock
 off, could not make the four diagonal moves. Inertia binds no other digit, so
-no other input is shadowed.
+no other input is shadowed. The layout is the engine's `numpadDirection`.
 
 #### Scenario: A diagonal is reachable from the keyboard
 
@@ -228,7 +228,9 @@ can make).
 The whole swipe gesture SHALL also work on the **secondary** button, because on
 touch a press that stays put for the long-press interval is delivered as one,
 and a press that stays put is exactly what holding the ball to aim looks like.
-Inertia binds nothing else to the secondary button.
+Inertia binds nothing else to the secondary button. It folds that button onto
+the primary by hand and does not declare `ignoresSecondaryButton`, so that a
+mouse's right click plays as its left does.
 
 #### Scenario: A held finger still aims
 

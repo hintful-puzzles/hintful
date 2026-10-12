@@ -20,6 +20,7 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { clearKey, numberKeys } from "../../engine/key-labels.ts";
 import {
+  AREA_TOO_LARGE,
   dimensionParamConfig,
   endParams,
   paramsLetter,
@@ -380,7 +381,7 @@ function lacksTier({ w, h, mode, diff }: AscentParams): boolean {
 
 function validateParams(p: AscentParams, full: boolean): string | null {
   const { w, h } = p;
-  if (w * h >= 1000) return "Width times height must be less than 1000.";
+  if (w * h >= 1000) return AREA_TOO_LARGE;
   if (p.mode === MODE_HEXAGON && (h & 1) === 0) return "Height must be an odd number.";
   if (p.mode === MODE_HEXAGON && w <= Math.trunc(h / 2))
     return "Width must be more than half the height for a hexagon grid.";

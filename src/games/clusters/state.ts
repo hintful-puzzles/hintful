@@ -14,7 +14,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 
@@ -156,7 +156,7 @@ const MIN_TRICKY_AREA = 12;
 
 export function validateParams(p: ClustersParams, full: boolean): string | null {
   // Upstream order: too-large before too-small.
-  if (p.w * p.h >= 10000) return "Width times height must be less than 10000.";
+  if (p.w * p.h >= 10000) return AREA_TOO_LARGE;
   if (p.w * p.h < 2) return "Width times height must be at least 2.";
   // 1x2 and 2x2 pass upstream's area check and have no puzzle whatever the
   // difficulty: every coloring of them either leaves a cell touching none of

@@ -10,6 +10,108 @@ corner and pair notes, its hint, and its presets.
 
 ## Requirements
 
+### Requirement: Rules: Loopy is one closed loop along the edges, counted by the clues
+
+Each edge of the tiling SHALL be a line, ruled out, or undecided, and a new
+board has every edge undecided. The lines are to form one closed loop that
+neither branches nor crosses itself, so a dot carries two lines or none. A
+clue SHALL be the number of its own face's edges that are lines, whatever the
+face's number of sides, and a face without a clue constrains nothing.
+
+#### Scenario: A clue on a face that is not a square
+
+- **WHEN** a hexagon of a Honeycomb board carries the clue 5
+- **THEN** the loop runs along five of its six edges
+
+#### Scenario: A clue of 0
+
+- **WHEN** a face carries the clue 0
+- **THEN** the loop runs along none of its edges, and may still pass through
+  its dots along the edges of other faces
+
+### Requirement: Rules: A Loopy board is solved when its lines are one loop and every clue is met
+
+`status` SHALL report `"solved"` exactly when every line on the board lies on
+one closed loop and every clued face has its clue's count of lines among its
+edges; any other board is `"ongoing"`, and no board is lost. An edge that is
+not a line MAY be ruled out or undecided, and no note counts. The lines SHALL
+NOT be compared with the board's solution.
+
+#### Scenario: The loop is closed with nothing ruled out
+
+- **WHEN** the player draws every line of the loop and rules out no edge
+- **THEN** the board is solved, as it is when Solve fills it in and rules out
+  every other edge
+
+#### Scenario: Two loops
+
+- **WHEN** the lines form two closed loops apart from each other
+- **THEN** the board is ongoing, however the clues count
+
+#### Scenario: A line left apart from the loop
+
+- **WHEN** the lines form one closed loop, and one more line stands apart
+  from it
+- **THEN** the board is ongoing until that line is cleared or ruled out
+
+#### Scenario: The loop is one line short
+
+- **WHEN** every line of the loop but one is drawn
+- **THEN** the board is ongoing
+
+### Requirement: Rules: Loopy flags the lines at a dot the loop cannot pass
+
+`checkCompletion` SHALL flag, on the board as drawn and without the solution,
+every line at a dot that carries three or more lines, and the one line at a
+dot whose every other edge is ruled out. A dot with one line and an edge still
+undecided SHALL NOT be flagged, since the loop can go on from it.
+
+#### Scenario: Three lines meet
+
+- **WHEN** a dot of a Squares board carries three lines, and one of them runs
+  on to a further line
+- **THEN** the three lines at the dot are flagged and the line beyond is not
+
+#### Scenario: A dead end with one way left
+
+- **WHEN** a line ends at a dot with three other edges, two of them ruled out
+  and one undecided
+- **THEN** nothing is flagged, and ruling out the third flags the line
+
+### Requirement: Rules: Once a loop is closed, Loopy flags all but the largest piece
+
+Lines joined to a dot flagged for its own lines are left out. Of the rest,
+each closed loop SHALL be one piece and all the open paths together one, sized
+by the dots they pass through. Where a loop is closed and there is more than
+one piece, `checkCompletion` SHALL flag every line outside the largest; a loop
+wins a tie with the paths, and of two loops of one size one is flagged. With
+no loop closed nothing SHALL be flagged, however many paths lie apart.
+
+#### Scenario: A line left apart from a loop
+
+- **WHEN** a loop round one square is closed and one line stands elsewhere
+- **THEN** the lone line is flagged and the loop is not
+
+#### Scenario: A loop closed early beside longer paths
+
+- **WHEN** a loop round one square, through four dots, is closed while a path
+  elsewhere runs through five dots, or two paths through three dots each
+- **THEN** the loop's four lines are flagged and no path is
+- **AND** beside a single path through four dots the path is flagged and the
+  loop is not
+
+#### Scenario: Two loops
+
+- **WHEN** a loop round one square and a loop round four are both closed
+- **THEN** the lines of the smaller are flagged
+
+#### Scenario: A branch takes its loop out of the comparison
+
+- **WHEN** a loop round four squares has a spur drawn off one of its dots,
+  and a loop round one square is closed elsewhere
+- **THEN** the three lines at the spur's dot are flagged and the small loop is
+  not, being the only piece left
+
 ### Requirement: Rules: Loopy checks the board against its solution
 
 `findMistakes(state)` SHALL report every edge the player has marked against the
@@ -1100,8 +1202,7 @@ legible.
 ### Requirement: Look: Loopy draws edges in a fixed color order with clues at the incenter
 
 Rendering SHALL draw edges in a fixed color order so that mistaken edges paint
-over all others, SHALL place clue text at each face's incenter, SHALL highlight
-the edges of every closed loop but the largest when more than one exists, and
+over all others, SHALL place clue text at each face's incenter, and
 SHALL flash on completion.
 
 #### Scenario: Completing a single loop wins
