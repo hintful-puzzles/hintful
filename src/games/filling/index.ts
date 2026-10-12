@@ -244,7 +244,7 @@ const pointOf = (i: number, w: number): Point => ({ x: i % w, y: (i / w) | 0 });
  * forced `cells` are ringed; `region` is the region the sentence is about
  * ("the striped region of N"), and `evidence` the neighbors that pin a lonely
  * or eliminated cell, outlined, so the player sees the reasoning, not just the
- * conclusion (docs/hints.md § "Hatch the line the sentence names"). All
+ * conclusion (docs/hints-marks.md § "Hatch the line the sentence names"). All
  * are indices into a grid `w` wide. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
 function narrate(

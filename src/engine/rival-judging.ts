@@ -2,7 +2,7 @@
  * What a searching hint may say about the moves it did not offer.
  *
  * A search hint teaches by setting the move it offers against its rivals, the
- * other moves from the same position (docs/hints.md § "Judge the rivals
+ * other moves from the same position (docs/hints-search.md § "Judge the rivals
  * of a searched move"). Each rival is judged by the game: it finishes, it is
  * lost, or the search could not settle it. The judging draws on one allowance
  * counted in positions, never in time, so the same position always gets the

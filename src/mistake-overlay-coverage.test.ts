@@ -48,8 +48,8 @@
  * its cost is paid by whoever tries to close it and finds the test already
  * there. `isCovered` below now takes all three spellings and classifies the
  * superset rather than narrowing to one, which is this repo's standing
- * instrument rule (`docs/method.md` § "A scan that keys on a name finds only the
- * games that were named that way").
+ * instrument rule (`docs/method.md` § "A scan that keys on a
+ * name").
  *
  * **What this deliberately does not measure**, learned by getting it wrong:
  * whether a game's *error* mark is drawn in a test at all. Crossing was on this

@@ -105,7 +105,7 @@ export const COL_NUM_PENCIL = 7;
 export const COL_GRID = 8;
 /** The pencil indicator's body. */
 export const COL_PENCIL_BODY = 9;
-/** Fork additions: the explained hint's two marks (docs/hints.md § "Shade vs
+/** Fork additions: the explained hint's two marks (docs/hints-marks.md § "Shade vs
  * ring"), the ring on the cell a step acts on and the outline of what it reasons
  * from. Both are drawn on a cell's edge rather than behind its notes. */
 export const COL_HINT = 10;

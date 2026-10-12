@@ -155,7 +155,7 @@ describe("narration — a second mark on the board is named", () => {
    * out neither. */
   const DEICTIC = /\b(this|that) (square|cell)\b|\bhere\b/;
   /** What each branch ties it with — relational throughout, never a color
-   * name (`docs/hints.md` § "Two marks on the board, one 'this cell'").
+   * name (`docs/hints.md` § "Two marks of one kind: tie them, and never by color").
    * Lightup could not tie positionally: the driving clue is never adjacent to
    * or in line with the target, so the tie is the reach relation `discountSet`
    * does guarantee. */

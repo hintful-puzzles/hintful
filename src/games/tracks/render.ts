@@ -92,7 +92,7 @@ export const COL_ERROR_BACKGROUND = 12;
  *
  * **The collection's default blue, kept rather than moved**, although
  * `COL_DRAGON` is the same `DRAG_ADD` blue Galaxies moved its hint away from
- * (docs/hints.md § "The element-type color legend"). Galaxies' reason
+ * (docs/hints-marks.md § "The element-type color legend"). Galaxies' reason
  * does not transfer: there the drag ring and the hint ring pointed at
  * *different* dots, so one hue made two contradictory claims about the same
  * object. Here the drag preview recolors a square's own rails and crosses while
@@ -421,7 +421,7 @@ function drawTracksSpecific(
  * Split out of {@link drawTracksSpecific}'s last branch so the hint can borrow
  * the game's own vocabulary for "track runs through this side" without also
  * borrowing the finished rails-and-sleepers a full piece is drawn with
- * (docs/hints.md § "Echo the move's shape in the hint color"). Stubs are
+ * (docs/hints-marks.md § "Echo the move's shape in the hint color"). Stubs are
  * the right shape for a suggestion precisely because they are what an
  * *unfinished* square already looks like.
  */
@@ -500,7 +500,7 @@ function drawCross(
  *
  * Every mark is the game's own vocabulary recolored, or a border band; nothing
  * is a fill, which is the cross-game rule `hint-mark.test.ts` enforces
- * (docs/hints.md § "Shade vs ring"). The three action shapes are
+ * (docs/hints-marks.md § "Shade vs ring"). The three action shapes are
  * deliberately different from each other so the *shape* says which action is
  * being asked for and the color only says "not yet": a ring for a square, rail
  * stubs for a side that must carry track, a cross for a side that must be
@@ -788,7 +788,7 @@ export function redraw(
 
   // Clue numbers in the margin. Half of several deductions lives out here
   // rather than on the grid, so the clue the hint counts with recolors with the
-  // rest of the mark (docs/hints.md § "Off-board evidence"), which means
+  // rest of the mark (docs/hints-marks.md § "Off-board evidence"), which means
   // the hint has to be part of *this* surface's cache key too, not only the
   // per-tile one.
   // The hatched line runs on through its clue, so that is in the key as well.

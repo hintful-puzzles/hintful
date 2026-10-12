@@ -159,8 +159,11 @@ at the start of a session, and go to the guide it names for the part of the
 tree you are about to touch. This file holds how an agent works here, and
 nothing a person reading the project would also need.
 
-**A guide is looked up, never read through.** Read its opening and headings,
-then the section the work needs and the requirement it names. Send a subagent
+**A guide is looked up, never read through.** Read its opening, down to the
+end of its `## Sections` table: that is what every game does for the concern,
+and every section with when a game needs it. Then read the sections the work
+needs and the requirements they name. For a game, `docs/new-game.md` § "The
+route by kind of game" names the sections its kind needs. Send a subagent
 with a question that spans sections. One session writes a game: its concerns
 share one state, so the writing is not split among agents. Work is tracked
 with openspec, through its skills; one change per coherent unit of work.

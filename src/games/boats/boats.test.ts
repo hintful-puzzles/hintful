@@ -6,7 +6,7 @@
  * everything downstream of `newDesc`: input mapping, `executeMove`'s shape
  * resolution and completion check, the mistake overlay, and the frame the
  * player actually sees. That is what this file is for (docs/testing.md §
- * "The test tiers": a byte-match differential does not exercise the
+ * "What a new game ships": a byte-match differential does not exercise the
  * interactive completion path).
  */
 

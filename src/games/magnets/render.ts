@@ -134,7 +134,7 @@ const DS_NOTNEU = 0x200;
 const DS_MISTAKE = 0x800; // fork overlay
 // The hint's marks, as the sides of this square each role draws
 // (`MarkOutlines.packed`, a byte): part of the diff key, so a square whose
-// outline changes repaints and takes the old one with it (docs/hints.md §
+// outline changes repaints and takes the old one with it (docs/hints-marks.md §
 // "Where the band goes, and who rubs it out").
 const DS_HINT_SIDES_SHIFT = 12;
 /** The square is on the line the hint's sentence calls "this row/column". */
@@ -425,7 +425,7 @@ function getCountColor(
       ? clueIndex(w, h, index, which === POSITIVE ? -1 : h)
       : clueIndex(w, h, which === POSITIVE ? -1 : w, index);
   // The clue a hint counts with takes the action color, tying the line the
-  // sentence calls "this row" to its count (docs/hints.md § "Off-board
+  // sentence calls "this row" to its count (docs/hints-marks.md § "Off-board
   // evidence").
   if (hinted.has(idx)) return COL_HINT;
   // A met line cited as a reason is evidence, and named in words by where it

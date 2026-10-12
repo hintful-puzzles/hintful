@@ -55,7 +55,7 @@ export interface NetslideHint {
   arrowX: number;
   arrowY: number;
   /** Flat cells of the row or column the sentence names as never sliding,
-   * hatched; empty when it names none (docs/hints.md § "Hatch the line
+   * hatched; empty when it names none (docs/hints-marks.md § "Hatch the line
    * the sentence names"). */
   line: number[];
   /** The grid width the flat cells are in. */

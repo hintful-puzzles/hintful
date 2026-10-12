@@ -193,7 +193,7 @@ export function recordingPass(
 // --- narration ------------------------------------------------------------
 
 /** What a step's outlined clue digits are, beyond being outlined. Both colors
- * of clue digit are outlines (docs/hints.md § "The element-type color
+ * of clue digit are outlines (docs/hints-marks.md § "The element-type color
  * legend"): the count of the line it counts takes the action color, and a clue
  * cited as a reason, a met line's count, the evidence color. */
 export interface MagnetsHighlights {

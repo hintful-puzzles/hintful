@@ -273,7 +273,7 @@ function saladLettersSolver(solver: LatinSolver, b: SaladBoard): number {
       // **Hint path only**: one *clue's* scan is one firing, so stop after the
       // first that fires and let the driver open a new `group`. Without this a
       // hint step would gather strikes from unrelated clues under one clue's
-      // narration (docs/hints.md § "Non-uniform value sets (Salad)").
+      // narration (docs/hints-candidates.md § "A cell decided without a value in the grid").
       // Gated, so the generator sweeps every clue exactly as upstream does.
       if (n && solver.recorder) return nchanged;
     }
@@ -308,7 +308,7 @@ function seedGridClues(solver: LatinSolver, b: SaladBoard): void {
 /** Seed the cube from a board's *confirmed markers* — the hint path's analog
  * of {@link seedGridClues}. A cross or ball is a real entry (Check & Save flags a
  * wrong one), so it is a fact the working cube may assume; the player's *pencil
- * notes* never are (docs/hints.md § "The recorder and the soundness
+ * notes* never are (docs/hints-candidates.md § "The recorder and the soundness
  * boundary"). Symbols need no seeding here because they sit in `b.grid`, which
  * `LatinSolver.alloc` places. */
 function seedMarkers(solver: LatinSolver, b: SaladBoard): void {

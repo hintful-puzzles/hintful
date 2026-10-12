@@ -1546,7 +1546,7 @@ class SolverUsage {
     }
     // Givens are seeded; from here every deduction is teachable, so enable the
     // recorder (kept off through the given placement above so cube-seeding dups
-    // aren't mistaken for deductions — `docs/hints.md` § "The recorder
+    // aren't mistaken for deductions — `docs/hints-candidates.md` § "The recorder
     // and the soundness boundary").
     this.recorder = this.pendingRecorder;
     this.onSeeded?.();

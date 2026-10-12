@@ -16,6 +16,10 @@
  *   is 1: pin it by hand, or list the rung in `unreached` with why.
  * - **A file that declares no scan fails**, so an empty result is not read as
  *   health; so does one that failed to collect, with vitest's own error.
+ * - **A pin that does not load cannot stop the scan.** The file runs with
+ *   `HINT_SCAN` set, under which a `pinned()` call whose pin does not load
+ *   returns a stand-in and does not throw, so one in a `describe` body still
+ *   lets the file be collected and its scan run.
  *
  * It writes only the test file it was given.
  */

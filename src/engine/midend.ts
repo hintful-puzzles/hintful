@@ -1737,8 +1737,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * alternatives are a right-click, which a touch player does not have, and a
    * long press, which in a drag-driven game is already the start of a drag. A
    * per-game obligation is one a game can miss with nothing noticing
-   * (docs/method.md § "A scan that keys on a name finds only the games that
-   * were named that way").
+   * (docs/method.md § "A scan that keys on a
+   * name").
    *
    * Appending here is what makes the discrepancy unreachable: the keypad the
    * app renders is this one, so a game **cannot** ship notes without the key,

@@ -131,7 +131,7 @@ describe("Bridges render scenarios", () => {
 
     // No hint mark is a fill. The cross-game guard says this too; a
     // frame-level assertion is what survives a careless `vitest -u`
-    // (docs/hints.md § "Shade vs ring").
+    // (docs/hints-marks.md § "Shade vs ring").
     for (const o of recording.ops) {
       if (o.op !== "rect") continue;
       if (o.color !== COL_HINT && o.color !== COL_HINT_CELL) continue;
@@ -188,7 +188,7 @@ describe("Bridges render scenarios", () => {
   it("a bridge the step adds to an existing one leaves the first in board ink", () => {
     // The half of "highlight, never perform" a bundle has to get right: raising
     // a span from one bridge to two draws two bars, and only the new one is the
-    // hint's (docs/hints.md § "Echo the move's shape in the hint color").
+    // hint's (docs/hints-marks.md § "Echo the move's shape in the hint color").
     const { recording } = hintFrame("raisesSpan");
     expect(
       recording.ops.some((o) => o.op === "rect" && o.color === COL_FOREGROUND),

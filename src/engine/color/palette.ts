@@ -182,7 +182,7 @@ export const ERROR_WASH: Color = RED_WASH;
  * twelve-color palette holds exactly one cool wash and the evidence has it. Do
  * not add one back: ringing the cell removes the constraint rather than trading
  * it, which is why this role has the *emphatic* blue and not a pale one.
- * `hint-mark.ts` is the mechanism; `docs/hints.md` § "Shade vs ring" is the
+ * `hint-mark.ts` is the mechanism; `docs/hints-marks.md` § "Shade vs ring" is the
  * rule.
  */
 export const HINT_ACTION: Color = BLUE;
@@ -356,6 +356,12 @@ export function lineNoColor(background: Color): Color {
  * Darker than the board in both schemes. The dark value is authored because
  * derivation inverts the step and would put the cell above the board, where a
  * given's lifted cell ({@link givenSurface}) has to go.
+ *
+ * The dark board itself stays at the tone the scheme gives it (the owner's
+ * decision). The dark scheme's contrast between a cell and what is on it is
+ * opened by these two values, the cell sunk below the board and the settled
+ * cell standing above the cell, because they reach only the games that take
+ * the surfaces and a lower board would move every game's.
  */
 export function cellSurface(background: Color): Color {
   return token(scale(background, 0.92), [0.15, 0.15, 0.15]);

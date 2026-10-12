@@ -180,7 +180,7 @@ export const say = {
    * Map's own sentence rather than `forcingChainPremise`, which is written for
    * a line: its "this cell's row already has it" and the candidate walk's
    * conclusion become "touches" and one of three moves here, so two of its three clauses would
-   * differ (docs/hints.md § "Candidate-elimination games": extract when
+   * differ (docs/hints-candidates.md § "What every game does": extract when
    * only the vocabulary differs, decline when an arm's shape does).
    */
   chain: (

@@ -11,7 +11,7 @@
  * per square, the shapes it may still take, which the player has no way to
  * mark; the recording pass re-reads those off the edges before each firing and
  * counts a shape it rules out only through the edges that settles there and
- * then (docs/hints.md § "Give the facts a notation (Loopy)", and the
+ * then (docs/hints-marks.md § "Give the facts a notation", and the
  * measurement in `add-pearl-hint`'s design).
  */
 

@@ -67,7 +67,7 @@ export interface BridgesTarget extends BridgesSpan {
 /**
  * What one step is about, in four roles; its words name the ones it marks.
  *
- * The split follows docs/hints.md § "The element-type color legend". The
+ * The split follows docs/hints-marks.md § "The element-type color legend". The
  * two `COL_HINT` roles are `focus` and `targets`, and they are safe to share a
  * color because they are **different kinds of element**: every sentence names
  * one as an island ("this 5") and the other as a direction ("this way"), which
@@ -131,7 +131,7 @@ export function narrate(
  * than that. Two of the three count a *group* the source island belongs to, so
  * marking it apart would say two islands play different parts in an argument
  * that treats them the same, and "these 2 islands" would point at one mark of
- * each color (docs/hints.md § "The element-type color legend").
+ * each color (docs/hints-marks.md § "The element-type color legend").
  */
 function namesFocus(reason: BridgesReason): boolean {
   switch (reason.kind) {

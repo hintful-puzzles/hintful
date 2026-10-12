@@ -26,7 +26,10 @@
  * a speed optimization, but because the generator is solver-gated it is
  * **load-bearing for which puzzles exist**: a solver that explores in a
  * different order accepts a different set of boards. So the loop is ported
- * exactly rather than adapted to the shared shape.
+ * exactly rather than adapted to the shared shape. It could be transcribed
+ * onto the runner as closures over the pair, and is not: the skip would then
+ * satisfy the runner's interface while hiding inside it, where here it is a
+ * few lines in one place that say what they decide.
  */
 import { Dsf, FlipDsf } from "../../engine/dsf.ts";
 import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";

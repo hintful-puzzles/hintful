@@ -134,7 +134,7 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 /** Highlight payload a Solo hint step carries (built in `index.ts`). The
- * element-type legend (docs/hints.md § "The element-type color legend"):
+ * element-type legend (docs/hints-marks.md § "The element-type color legend"):
  * the cells the reason rests on outlined `COL_HINT_CELL` in the gutter, the
  * acted-on cell(s) ringed `COL_HINT`, the ruled-out candidate(s) shown struck.
  * The region a sentence names is hatched from the step's marks, not from here. */
@@ -277,7 +277,7 @@ function drawNumber(
   const cell = y * cr + x;
   const colKiller = hl & HL_KSUM ? COL_ERROR : COL_KILLER;
 
-  // Hint overlay (docs/hints.md § "The element-type color legend"): both
+  // Hint overlay (docs/hints-marks.md § "The element-type color legend"): both
   // cell-level marks are read in `redraw`, which draws the target's ring and the
   // evidence region's outline in the gutter. What is left here is `struck`, the
   // set of candidates this firing rules out (bit n ⇒ candidate n), crossed
@@ -550,7 +550,7 @@ function drawPencilMarks(
     const gy = pt + (((fontsize * (2 * dy + 1)) / 2) | 0);
     dr.drawText({ x: gx, y: gy }, glyphFont(fontsize), COL_PENCIL, digitChar(i + 1));
     // A hint-ruled-out candidate keeps its normal pencil color with a
-    // same-color strikethrough — the "ruled out" cue (docs/hints.md § "The element-type color legend").
+    // same-color strikethrough — the "ruled out" cue (docs/hints-marks.md § "The element-type color legend").
     if (struck & (1 << (i + 1))) {
       const r = Math.max(2, (fontsize / 3) | 0);
       dr.drawLine({ x: gx - r, y: gy }, { x: gx + r, y: gy }, COL_PENCIL, 2);

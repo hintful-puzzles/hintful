@@ -72,7 +72,7 @@ export function borderStepEdge(edits: readonly BorderEdit[]): BorderEdge {
 export type BorderHint = ForcedBorderEdge;
 
 /**
- * One firing as one journey (docs/hints.md § "Group one firing into one
+ * One firing as one journey (docs/hints-marks.md § "Group one firing into one
  * step"): a leg per edge, each leg's move the two-sided edit that sets it,
  * wrapped by the game's `toMove`, and the legs after the first flagged
  * `continuesPrevious`. Each leg shows the edges still to come, so the whole set

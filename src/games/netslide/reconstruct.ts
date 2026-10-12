@@ -236,11 +236,13 @@ export function findSolutions(
  * - **An even dimension.** A row of even length is an odd cycle, so both parities
  *   are reachable and every valid grid is fair game.
  * - **A repeated tile.** Swapping two tiles that look alike flips the parity
- *   while leaving the *picture* untouched — so if any wire mask occurs twice, a
- *   finished grid of either parity can be reached.
+ *   while leaving the *picture* untouched — so if any wire mask occurs twice
+ *   among the tiles that can move, a finished grid of either parity can be
+ *   reached. The center tile cannot move, so a tile that matches only it does
+ *   not count.
  *
- * Only an all-distinct board on an all-odd grid is genuinely pinned, and there the
- * rearrangement is unique and its parity decides.
+ * Only a board whose movable tiles are all distinct, on an all-odd grid, is
+ * genuinely pinned, and there the rearrangement is unique and its parity decides.
  */
 export function isReachable(s: NetslideState, target: Uint8Array): boolean {
   const { w, h, cx, cy, tiles } = s;

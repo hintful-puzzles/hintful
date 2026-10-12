@@ -2,7 +2,7 @@
  * Inertia's hint.
  *
  * Inertia is a movement game, so its hint belongs to the **non-deductive
- * family** (docs/hints.md § "Non-deductive (heuristic) hints"): no move
+ * family** (docs/hints-search.md § "What every game does"): no move
  * is *forced* by logic, and a narration claiming otherwise would be a
  * fabrication. But every move here has a concrete consequence the player can be
  * taught — and the one beginners get wrong is precisely the one a hint can say

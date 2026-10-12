@@ -13,11 +13,12 @@ context: |
   `npm install` is the entire setup.
 
   Read AGENTS.md at the repository root before proposing or implementing
-  anything: it holds the rules that bind every session and a map of the guides.
+  anything: it holds the rules that bind every session. The index of the
+  guides is the table in README.md, "Documentation".
   Before planning a change, also read `docs/work-management.md` (how a change
   is scoped, finished and accepted here), `docs/doctrine.md` (what the project
   is for) and `docs/method.md` (how to trust a check or a number a proposal
-  argues from), then the guide the map names for the part of the tree the
+  argues from), then the guide that table names for the part of the tree the
   change touches. `openspec/specs/` is what is normatively true; the record of
   what was built is `openspec/changes/archive/` and the git log, and is not
   required reading.

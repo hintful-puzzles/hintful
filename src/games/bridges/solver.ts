@@ -56,7 +56,7 @@ export interface BridgesSpan {
  * Captured there rather than reconstructed afterwards because two of the three
  * stages destroy their own premise: stage 3 rolls its trial back before the
  * conclusion is drawn, so the group it would have sealed off exists only while
- * the trial stands (docs/hints.md § "Show the evidence as an area").
+ * the trial stands (docs/hints-marks.md § "Show the evidence as an area").
  */
 export interface BridgesEvidence {
   /** Island indices the argument counts. */

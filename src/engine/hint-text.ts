@@ -269,7 +269,7 @@ export function candidateConclusions(vocab: {
  * for six arms; **Solo** names a different region set per arm ("row, column
  * **and** block", plus block/diagonal region names in `hiddenSingle`). Both stay
  * on their own `narrate` — one vocabulary can't express a per-arm difference,
- * and forcing it would read worse than the duplication (docs/hints.md § "Persist, populate, and the moves"'s
+ * and forcing it would read worse than the duplication (docs/hints-candidates.md § "Persist, populate, and the moves"'s
  * standing rule).
  */
 export interface LatinVocab {
@@ -463,8 +463,8 @@ export function placedRulesOut(
  * make a bare "this cell" ambiguous, and this frame shows several — but every
  * chain cell is *numbered* and the conclusion is not, so "cell 1"/"cell 5" and
  * "this cell" pick out different things by the presence or absence of a label
- * rather than by a color. See `docs/hints.md` § "Two marks on the board,
- * one "this cell" — tie them, and never by color".
+ * rather than by a color. See `docs/hints.md` § "Two marks of one kind:
+ * tie them, and never by color".
  */
 export function forcingChainPremise(
   reason: { chain: readonly ForcingLink[] },

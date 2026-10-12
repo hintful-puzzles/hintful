@@ -480,7 +480,7 @@ export function lineHasError(state: PatternState, line: number): boolean {
 // same way in every arrangement of the line's runs, which is overlap
 // generalized to the whole clue rather than a "just because". Every generated
 // board is line-solvable, so the plan always completes. All three are parallel
-// recorders (docs/hints.md § "A non-Latin candidate game (Undead)"): they
+// recorders (docs/hints-candidates.md § "A candidate game off the shared walk"): they
 // never touch `solvePuzzle`/`isSoluble`, so the generator differential is
 // unaffected by construction.
 

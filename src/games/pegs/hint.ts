@@ -2,7 +2,7 @@
  * Pegs' hint.
  *
  * Pegs is a search game: no jump is forced by logic, so the hint is the
- * non-deductive kind (docs/hints.md § "Non-deductive (heuristic) hints").
+ * non-deductive kind (docs/hints-search.md § "What every game does").
  * It finds a line of jumps that leaves one peg (`findFinish`) and offers its
  * first jump, set against the other jumps from the same position, which is
  * what a player has to learn to tell apart (`add-pegs-hint` design D6):
@@ -18,7 +18,7 @@
  * A request plans one step, or one shape's journey, and the next request plans
  * from wherever the player is, so what a step says about its rivals is always
  * about the board on display. Every jump removes a peg, so the plans cannot
- * cycle (docs/hints.md § "Recompute-stable plans").
+ * cycle (docs/hints-search.md § "Recompute-stable plans").
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";

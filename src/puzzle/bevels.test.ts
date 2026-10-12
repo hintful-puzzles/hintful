@@ -6,7 +6,9 @@
  * game joins both guards below by drawing one.
  *
  * It reads the frames `sampleFrames` takes, so a bevel only input brings out is
- * not covered.
+ * not covered. Neither is a bevel of another shape (Slide's piece parts,
+ * Twiddle's trapezoids), whose two halves do not split a box along its
+ * diagonal.
  */
 import { describe, expect, it, vi } from "vitest";
 import "../games/index.ts";

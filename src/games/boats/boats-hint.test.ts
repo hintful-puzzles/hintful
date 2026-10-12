@@ -737,7 +737,7 @@ describe("boats hint — rendering", () => {
 
 /** Guards the two placement marks stay distinct — a single color standing for
  * "place a boat" and "place water" would read as one action
- * (docs/hints.md § "Echo the move's shape in the hint color"). */
+ * (docs/hints-marks.md § "Echo the move's shape in the hint color"). */
 describe("boats hint — the two move shapes", () => {
   it("carries both placement shapes on the step that forces both", () => {
     // A line filled with boats drags its never-touch water along, so one step

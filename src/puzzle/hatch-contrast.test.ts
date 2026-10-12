@@ -1,7 +1,7 @@
 /**
  * The hint's line hatch (`engine/hatch.ts`) has to be visible on the board it
  * is drawn over, in both schemes. A flat fill could not be made to work in both
- * (docs/hints.md § "Why a fill cannot work, whatever color it is"), so the
+ * (docs/hints-marks.md § "Why a fill cannot work, whatever color it is"), so the
  * bands have a bar of their own, and it is measured on the colors the app
  * actually paints: each game's hatch color is read off a recorded hint frame,
  * not off a constant, and blended over its board the way the canvas blends it.

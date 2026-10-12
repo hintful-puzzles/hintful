@@ -4,7 +4,7 @@
 avoid being lied to by the tool you use to find out.
 
 This is the companion to [`testing.md`](testing.md) § "The test
-tiers" and § "Render scenarios", which cover *writing* tests (the tiers, the
+tiers" and `testing.md` § "Render scenarios", which cover *writing* tests (the tiers, the
 render harness, keeping the gate cheap). This one covers *assessing* them, which is a different activity and
 applies to the whole tree, not just the games.
 
@@ -352,7 +352,7 @@ the population from 24 to 53; widening it further to *loop bodies* reports
 The guard proves itself on every run against seven fixtures, because a guard
 about tests that cannot fail has no business being one.
 
-### "The test passed" is not evidence the test *file* is well-formed
+### A passing test is not evidence the test *file* is well-formed
 
 Writing a "feed `decodeSave` some garbage" case put a literal **NUL byte** into
 `save.test.ts`. tsc compiled it, biome formatted it, the test went green, and
@@ -448,7 +448,7 @@ remembering.
 
 ---
 
-## 5. Distinguish "not covered" from "not reachable"
+## 5. Distinguish not covered from not reachable
 
 A survivor has three explanations and they need different actions:
 

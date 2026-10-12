@@ -242,7 +242,7 @@ export interface SinglesHint {
  * decided black/circle cell, whose state *is* the reason, in that state's own
  * color. `line` is the row or column the sentence names ("in the line",
  * "shares a line with"), hatched; empty when it names none
- * (docs/hints.md § "Hatch the line the sentence names"). */
+ * (docs/hints-marks.md § "Hatch the line the sentence names"). */
 interface Named {
   targets: readonly Point[];
   evidence: Point[];

@@ -22,6 +22,9 @@ Shapes to search for:
 - A count taken from one list while the loop skips members missing from
   another.
 - A hash of output whose order is not stable.
+- A round trip through the two halves under test (`get` after `set`, decode
+  after encode), which agrees with itself whatever both got wrong: a test
+  whose only observer is the thing under test cannot establish ground truth.
 
 ## See a guard fail before trusting it
 

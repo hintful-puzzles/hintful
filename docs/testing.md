@@ -1,1290 +1,966 @@
 # Testing a game
 
-> How a game change is *verified*: which tier a test belongs in, what a new
-> game must ship, what the frozen differentials still guarantee now that the C
-> build is gone, and the rules that keep the suite deterministic and the gate
-> affordable. **Writing tests is here; *assessing* them is
-> [`docs/test-strength.md`](./test-strength.md)** — the five-minute mutation
-> probe, `npm run probe`, and the instrument traps that make an assessment lie.
->
-> Authoritative specs: [`testing`](../openspec/specs/testing/spec.md)
-> (the in-process tiers, the render harness, determinism under load, the
-> differential helper, a hint test's pins, the boards a cross-game sweep
-> walks) ·
-> [`build-pipeline`](../openspec/specs/build-pipeline/spec.md) (what the
-> gate runs, and what a commit may leave to the push and to CI).
-> Neighboring guides: [`rendering.md`](./rendering.md) (what to draw),
-> [`hints.md`](./hints.md) (hint verification recipe),
-> [`solver-and-generator.md`](./solver-and-generator.md) (when to diverge from a
-> fixture, and what replaces it).
+How a game change is verified: which tier a test belongs in, what a new game
+ships, how a hint's positions and a frame are pinned, what the frozen
+differentials still hold, the rules that keep the suite deterministic, what
+runs at a commit and at a push, and what a game and a new guard owe the
+cross-game guards. Writing tests is here; assessing them (the mutation probe,
+`npm run probe`) is [`test-strength.md`](./test-strength.md). The specs are
+[`testing`](../openspec/specs/testing/spec.md) (the tiers, the render
+harness, determinism under load, the differential helper, a hint test's pins,
+the boards a cross-game sweep walks) and
+[`build-pipeline`](../openspec/specs/build-pipeline/spec.md) (what the gate
+runs, and what a commit may leave to the push and to CI).
+
+## What every game does
+
+1. Start from the three test files `scripts/new-game.sh` stamps beside the
+   game, which pass as stamped, and keep their shape
+   ([`src/skeleton/grid/`](../src/skeleton/grid/)). See "What a new game
+   ships".
+2. In `<game>.test.ts` (`skeleton.test.ts`), on a board written into the
+   file: the params and desc codecs round-trip and refuse, each input gives
+   its move, `executeMove` leaves its argument alone, the solve move played
+   through `executeMove` reaches a solved board, the mistake check, a save
+   that loads, and one frame through `renderScenario` with a targeted op
+   assertion beside its snapshot. See "The test tiers" and "Render
+   scenarios".
+3. In `<game>-generation.test.ts` (`skeleton-generation.test.ts`):
+   `describeDealtTiers` over every preset and the smallest board, and
+   `describeLadderCensus` over dealt boards with `unreached` empty. See "What
+   a new game ships".
+4. In `<game>-hint.test.ts` (`skeleton-hint.test.ts`): one
+   `describeHintPins` call with a pin for every rung, written by
+   `npm run hint-scan -- <the test file>`; plans followed to the answer; and
+   a frame from a pin through `renderPinnedHint`. See "Pinning a hint's
+   positions".
+5. Deal every board from a fixed seed or write its desc down. Give no test a
+   timeout or an elapsed-time assertion. See "Seed-deterministic, never
+   clock-gated".
+6. Break the line each new test is for, see it fail, and put it back. See
+   "Break the code under a new test".
+7. Run the game's directory, then the cross-game guards' cases for the game.
+   See "Running the cross-game guards for one game".
+8. Run the app, commit, and push once when the session's work is done. See
+   "What runs when".
+
+## Sections
+
+| Section | Read it when |
+| --- | --- |
+| The test tiers | you are deciding where a test goes, or which environment and setup file it needs |
+| – Stand in for a module with a spy | a test must replace or observe another module's export |
+| – Focus after a pointer press | a component test asserts where keyboard focus lands after a press |
+| Pinning a hint's positions | your game gains a hint rung, or a hint test needs the board a sentence fires on |
+| – A rung the scan finds no position for | `npm run hint-scan` exits 1, or you are about to list a rung in `unreached` |
+| – A kind a rung id does not say | a test needs a case of a rung, a step's shape, a later leg, or a position off the hint's own line |
+| Running the cross-game guards for one game | your game's own tests pass and you want what the commit hook will run |
+| Render scenarios | your game draws a highlight, an overlay, a cursor or an animation frame |
+| – A frame that needs the browser | a check has to be made in the running app and the frame is deep in a game |
+| – A snapshot cannot see a hole | a change moves the canvas geometry: a margin, an origin, `computeSize` |
+| Observing a midend | a test asks what the midend told the app: status bar, timer, repaint requests |
+| Render-op vocabulary | an op assertion never matches, or you are matching a ring, a circle or a color |
+| What a new game ships | you are writing a new game's tests |
+| The frozen differentials | a game has a `<game>-differential.test.ts`, or you wonder whether to write or delete one |
+| Byte-match: fidelity where there is a right answer | you refactor or optimize a generator, a codec or an RNG-drawing library a fixture pins |
+| Order-independent verdicts | a fixture's generator was never reproducible byte for byte |
+| Quirks are load-bearing — capped, not cleaned | you are tempted to tidy an upstream quirk in a fixture-pinned generator |
+| When a fixture goes red | a differential fails after your change |
+| Seed-deterministic, never clock-gated | a test needs a particular board, is slow, flaky under load or hangs, or you want to give it a timeout |
+| – A test that fails only in a full run | a test passes alone and fails in the suite |
+| Right-sizing the gate | a test is expensive and you are deciding whether to shrink, defer or retire it |
+| – What runs when | you want to know what a commit, a push and CI each test |
+| – Running the slow tier | a refactor moves a solver, a generator or a hint planner |
+| – Narrowing a game's own sweep | a game's own property test is expensive |
+| Break the code under a new test | you have just written a test, or made one cheaper |
+| A shared module needs its own tests | you extract logic from a game into `src/engine/` |
+| What a game owes the cross-game guards | you add a game, a hint, a difficulty contract, a `Ui` field or a mistake overlay |
+| – How a cross-game guard finds its population | you are writing a cross-game guard, not a game |
+| – Slicing a preset sweep for the gate | you are writing a cross-game guard, not a game, and it walks boards |
+| – Deal through `dealt` | you are writing a cross-game guard, not a game, and it deals boards |
+| – One board of each kind in the hooks | you are writing a cross-game guard, not a game, and the hooks should walk less than CI |
+| – A cross-game guard the hooks can narrow | you are writing a cross-game guard, not a game: its case titles and whole-sweep assertions |
+| – A guard that only reads source | you are writing a guard, not a game, and it scans source text |
+| – One concept under several names | you suspect games name the same `Ui` or draw-state field differently |
+| Metrics and instruments | you start or end a refactoring change, or read a jscpd, madge or biome figure |
+| – Timing anything under vitest | you are about to time a test, a generator or a refactor |
 
 ## The test tiers
 
-**Reach for the lowest tier that fits; Playwright is visual/integration smoke
-only.** The tiers are codified in the
-[`testing`](../openspec/specs/testing/spec.md) spec; in brief:
+Reach for the lowest tier that fits; Playwright is visual and integration
+smoke only. The tiers are the
+[`testing`](../openspec/specs/testing/spec.md) spec's:
 
-- **Tier 1** — pure logic (`Game` impl, solver, generator, codecs). Default
-  `node` environment, no setup.
-- **Tier 2** — render ops: drive `redraw` against the shared recording
-  `GameDrawing` double and assert draw calls. Still `node`.
-- **Tier 2.5** — render scenarios + snapshots via
+- **Tier 1**, pure logic (the `Game` implementation, solver, generator,
+  codecs): the default `node` environment, no setup.
+- **Tier 2**, render ops: drive `redraw` against the shared recording
+  `GameDrawing` and assert draw calls. Still `node`.
+- **Tier 2.5**, render scenarios and snapshots through
   [`src/engine/testing/`](../src/engine/testing/): a real `Midend` driven to
-  a target frame. **New render code SHOULD ship one** (see below).
-- **Tier 3** — components + persistence: opt a file into `happy-dom` for Lit
-  components. A fake IndexedDB is in place for every file
-  (`src/test-setup/indexeddb.ts`, a vitest setup file): Dexie reads the global
-  once as its module loads and every later file in the worker shares it, so
-  the fake cannot be left to the files that know they need it. Import that
-  module only for `resetDb`.
+  a frame. New render code should ship one (§ "Render scenarios").
+- **Tier 3**, components and persistence: opt the file into `happy-dom` for
+  Lit components. A fake IndexedDB is in place for every file
+  (`src/test-setup/indexeddb.ts`); import that module only for `resetDb`.
   Mounting Web Awesome controls needs `src/test-setup/element-internals.ts`,
   and opening a `wa-dialog` that holds a config form needs
-  `src/test-setup/resize-and-animations.ts` too — Lit resolves its `node`
-  build under vitest, so anything gated on `isServer` behaves as on a server
-  even in `happy-dom`. Each module's header says what fails without it.
+  `src/test-setup/resize-and-animations.ts` too. Each module's header says
+  what fails without it.
 
-**Stand in for a module with a spy, never a mock.** The suite runs with
-`isolate: false`, so a worker's module graph outlives each file, and `vi.mock`
-misses any importer an earlier file already loaded — which file ran first is
-the sequencer's choice, not yours. Spy on the real export in a `beforeEach`
-(`vi.spyOn(toast, "showToast")` after `import * as toast from …`, or
-`vi.spyOn(savedGames, "quickSave")` on a shared object) and restore in
-`afterEach`; the importer reads the export at call time, whenever it loaded.
-`src/no-module-mocks.test.ts` refuses `vi.mock`, `vi.doMock` and `vi.hoisted`;
-`src/screens/puzzle-screen.test.ts` is the exemplar.
+### Stand in for a module with a spy
 
-**A pointer press focuses nothing in `happy-dom`.** It does not focus an
-element on `mousedown`, so a Tier 3 test cannot observe where keyboard focus
-lands after a press, and a test of "this press does not take focus from the
-board" passes whether or not the code is right. Assert the cause the code
-controls (that the `mousedown` default was prevented, say), write in the test
-that it is a proxy, and look at the consequence in Chrome:
-`document.activeElement` after the press, and a physical key reaching the game
-straight after. `src/puzzle/components/keys.test.ts` is the worked case.
+Replace another module's export with `vi.spyOn` in a `beforeEach` and restore
+it in `afterEach`; never `vi.mock`, `vi.doMock` or `vi.hoisted`. The suite
+runs with `isolate: false`, so a worker's module graph outlives each file and
+a mock misses any importer an earlier file already loaded. Spy on the real
+export (`vi.spyOn(toast, "showToast")` after `import * as toast from …`), or
+on a shared object's method. `src/no-module-mocks.test.ts` refuses the three
+calls; `src/screens/puzzle-screen.test.ts` is the exemplar.
 
-**A test that needs a specific board should find it deterministically, not by
-scanning further.** The idiom for reaching a specific deduction or board state
-without knowing its desc is a fixed-seed scan — loop ids, keep the first whose
-state matches — run once, with the board it found written into the test.
-The position a *hint sentence* fires on is the exception: pin it through
-`describeHintPins` (§ "Pinning a hint's positions") and do not write a seed
-scan for it.
+### Focus after a pointer press
 
-### Pinning a hint's positions
+Do not assert where focus lands after a press in `happy-dom`: it focuses
+nothing on `mousedown`, so "this press does not take focus from the board"
+passes whether or not the code is right. Assert the cause the code controls
+(the `mousedown` default was prevented), say in the test that it is a proxy,
+and check the consequence in Chrome: `document.activeElement` after the
+press, and a physical key reaching the game straight after. Exemplar:
+`src/puzzle/components/keys.test.ts`.
 
-**For a hint's rungs the scan is shared, and it stays in the tree.**
-`describeHintPins` ([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts))
-pins one position for **every rung the game declares** (`Game.hintRungs`,
-[`hints.md`](./hints.md) § "Name the rung a step speaks"), keyed on the rung's
-id, and returns the loader the game's own tests read the pins through
-(`pinned("trap")` gives the board, the plan, the step of that rung and its
-index, and the `id` and `moves` a `renderScenario` takes). It declares two
-tests: every pin still fires its kind, and a snapshot of the sentence said at
-each pin, which is where a rung's wording is held. One call a game, in
-`<game>-hint.test.ts`.
+## Pinning a hint's positions
 
-**Adding a rung is: name it, run one command, read the count.** The types
-require a pin for every rung, so a new one does not compile until
-`npm run hint-scan -- <the test file>` has run. That walks hint-guided play
-over fixed seeds, taking each plan's first step and asking again, and writes
-the pins into the file, each under how many of the positions walked it held on.
-That count is the power argument the pin owes ([`method.md`](./method.md)): a rung
-that held on 5 of 937 is the one to watch. What the command does with a pin
-already there:
+Pin one position for every rung the game declares, with one
+`describeHintPins` call in `<game>-hint.test.ts`, and let
+`npm run hint-scan -- <the test file>` write the pins. Never write a seed
+scan for a hint position.
 
-- **a pin that still fires is left alone**, since tests and snapshots are
-  written against its board (`--all` replaces every pin the scan found);
-- **a pin the scan found no position for is left alone too**, and named: it is
-  one kept by hand, for a rung this scan's line of play does not reach;
-- **a rung with no pin and no position found is named, and the command exits
-  1.** Widen the scan (`params`, `seeds`, `stray`), build the board by hand and
-  pin that, or, when no board is known to fire the rung, list it in
-  `unreached` with the reason, which is a shortfall on show: empty is the goal,
-  as it is for `describeLadderCensus`. The scan walks the excused rungs too and
-  says when one fires.
+`describeHintPins`
+([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts))
+keys each pin on a rung's id (`Game.hintRungs`, [`hints.md`](./hints.md)
+§ "Name the rung a step speaks"). It declares two tests: every pin still
+fires its kind, and a snapshot of the sentence said at each pin, which is
+where a rung's wording is held. It returns the loader the game's own tests
+read through: `pinned("trap")` gives the board, the plan, the step of that
+rung and its index, and the `id` and `moves` a `renderScenario` takes.
 
-**An excused rung is one of several things, and the scan's zero cannot say
-which.** The scan follows the hint's own play, where the cheapest rung always
-goes first, on boards the generator deals at the sizes it was given. "Rare" and
-"a cheaper rung gets there first" are seldom the true reason. Before an
-entry is written:
+- **Adding a rung is: name it, run the command, read the count.** The types
+  require a pin for every rung, so a new one does not compile until the
+  command has run. It walks hint-guided play over fixed seeds and writes each
+  pin under how many of the positions walked it held on. That count is the
+  power argument the pin owes ([`method.md`](./method.md)): a rung that held
+  on a handful of several hundred is the one to watch.
+- **A pin that still fires is left alone**, since tests and snapshots are
+  written against its board; `--all` replaces every pin the scan found. A
+  pin the scan found no position for is left alone and named: it is one kept
+  by hand.
+- **A rung's pin is a position whose plan speaks the rung.** The scan prefers
+  one where the rung's step opens the plan, then the fewest moves in;
+  `index` says where the step is. Some steps are only ever a later leg.
+- **Draw a pin with `renderPinnedHint(game, pinned(kind))`**
+  ([`render-scenario.ts`](../src/engine/testing/render-scenario.ts)), not
+  with a `renderScenario` fed the pin's `id` and `moves`, which shows the
+  step the plan opens with. It plays the legs before the pin's step, throws
+  when the step on show is not the pin's, and returns the pin's `step` typed
+  as the game's.
+- **A game whose mid-game board is itself a desc passes `descOf`**, and its
+  pins are bare `params:desc` strings. Otherwise a pin is a board and the
+  moves played on it.
+- **Prefer `pinned(kind)` inside a test to one in a `describe` body**, which
+  runs at collection, where a pin that does not load fails the whole file.
+- **A refusal is not pinned**, having no step to return. A test that wants a
+  lost board keeps the desc by hand and says why beside it
+  (`pegs-hint.test.ts`'s `LOST`).
+- **A pin does not keep `aux`.** The scan asks the hint with none, so a kind
+  that needs the generator's answer to fire cannot be pinned.
 
-- **Ask the hint from positions its own play does not visit.** A player fills
-  a board in any order: play random shares of the answer and ask from there,
-  and give the board the marks only a player makes. Loopy follows a pair note
-  on 1 step in 80 once the player has noted pairs, and on none of its own
-  line. Deal the sizes the scan was not given too: Tracks' premise fires on a
-  fresh 5x4 board. A game whose generator places pieces only where they are
-  safe needs boards it does not deal (Inertia, on scattered cells).
+Exemplars: `pegs-hint.test.ts` (rungs, cases of a rung as kinds, a stray line
+of play, a pin kept by hand), `galaxies-hint.test.ts` (a ladder's rungs,
+pinned mid-game) with `galaxies-hint-render.test.ts` (a frame from a pin).
+
+### A rung the scan finds no position for
+
+When the command names a rung with no pin and no position and exits 1, widen
+the scan (`params`, `seeds`, `stray`), or build the board by hand and pin
+that. List the rung in `unreached` with its reason only when no board is
+known to fire it; that is a shortfall on show, and empty is the goal, as it
+is for `describeLadderCensus`. The scan walks the excused rungs too and says
+when one fires.
+
+The scan's zero cannot say why a rung did not fire: it follows the hint's own
+play, cheapest rung first, on boards the generator deals at the sizes it was
+given. "Rare" and "a cheaper rung gets there first" are seldom the true
+reason. Before writing an entry:
+
+- **Ask the hint from positions its own play does not visit.** Play random
+  shares of the answer and ask from there, give the board the marks only a
+  player makes, deal the sizes the scan was not given, and for a generator
+  that places pieces only where they are safe, build boards it does not deal.
 - **Build the rung's shape and see what decides it.** Where nothing fires
-  across thousands of positions, construct the exact position the rung reads
-  and record which rung speaks in its place. A harder rung speaking there is a
-  defect: Boats' `mustGrow` was excused as rare on 672 boards and could not
-  fire on any, and the Hard refutation answered for it.
+  across thousands of positions, construct the position the rung reads and
+  record which rung speaks in its place. A harder rung speaking there is a
+  defect.
 - **A rung proved dead leaves the list**, with its sentence, and the proof is
-  the comment where its reason was (Bricks' `BricksReason`, Tracks'
-  `checkLooseSub`). Prove it from the code, then measure it off the hint's
-  line, since an argument from reading has been wrong here before.
-- **A rung the game's plan cannot speak is the list's to lose, not the test's
-  to excuse.** Where a shared list or type puts it there, the fix is a layer
-  down: Salad's `note` and `regionsFull` came with the Latin family's rungs,
-  and went when a plan could say which reading it walks
-  ([`hints.md`](./hints.md) § "Name the rung a step speaks").
+  the comment where its reason was. Prove it from the code, then measure it
+  off the hint's line too.
+- **A rung the game's plan cannot speak is removed from the list, not
+  excused by the test.** Where a shared list or type put it there, fix it a
+  layer down ([`hints.md`](./hints.md) § "Name the rung a step speaks").
 - **What may stay** is a rung on a board no pin can hold, saying so and
-  naming the test that builds the board (Mines' `restart`).
+  naming the test that builds the board.
 
 A pin found this way is kept by hand, under a comment saying where it came
 from and out of how many.
 
-**A rung's pin is a position whose plan speaks the rung; a further kind's is one
-whose plan opens with it.** Of the positions a rung holds on, the scan takes one
-where its step opens the plan before one where it comes later (`index` says
-where), and then the fewest moves in. Some steps are only ever a later leg: the
-sentence that follows a placement inside a plan opens none, because asked
-afresh the same square is explained by another rung.
+### A kind a rung id does not say
 
-**The frame of a pin is `renderPinnedHint(game, pinned(kind))`**
-([`render-scenario.ts`](../src/engine/testing/render-scenario.ts)), and not
-a `renderScenario` fed the pin's `id` and `moves`, which shows the step the
-plan opens with whatever the pin is for. It plays the legs before the pin's
-step through the midend, so a later leg is drawn on the board the player meets
-it on, and it throws when the step on show is not the pin's, by its sentence
-and its move (a journey's legs can all say one thing). Its result carries the
-pin's `step`, typed as the game's. A game whose mid-game board is itself a
-desc passes `descOf`, and its pins are bare `params:desc` strings; otherwise a
-pin is a board and the moves played on it, which the scan writes as their JSON
-in one string once there are more than a few. A deep pin is long, because a
-ladder's late rung opens a plan only once every earlier one is spent.
+Pin what a rung id does not say as a predicate under `kinds`, over the
+opening step, its board and its plan: a step's shape, which of a rung's cases
+it is (`step.rung === "trap" && ownRival(step)`), the board's, or the plan's.
 
-**A further kind is a predicate over the opening step, its board and its
-plan**, under `kinds`, for what a rung id does not say: a step's shape (several
-cells), which of a rung's cases it is (`step.rung === "trap" && ownRival(step)`),
-the board's, or the plan's. The plan is the third argument, so a journey is
-`(_step, _state, steps) => steps[1]?.continuesPrevious === true`; a predicate
-that calls the game's `hint` to see it pays for the plan twice, and for a
-search that is the scan's whole cost. **Written as `{ leg: predicate }` the
-kind is held by any step of the plan**, as a rung id is, for a case of a rung
-that is only a later leg (`pearl-render-scenario.test.ts`). The board a `leg`
-is given is still the one the plan was asked from, so it reads what play does
-not change (the clues). It reads the step's fields and never its sentence: a regex over
-`step.explanation` is the name-keyed scan aimed at our own output ([`method.md`](./method.md)
-§ "Our own code keys on a reference, a type or an id"), and `HintKind` does not take one.
+- **The plan is the third argument**; a predicate that calls the game's
+  `hint` to see it pays for the plan twice.
+- **`{ leg: predicate }` is held by any step of the plan**, as a rung id is,
+  for a case of a rung that is only a later leg
+  (`pearl-render-scenario.test.ts`). The board a `leg` is given is still the
+  one the plan was asked from, so it reads only what play does not change.
+- **A predicate reads the step's fields, never its sentence.** A regex over
+  `step.explanation` is a name-keyed scan of our own output
+  ([`method.md`](./method.md) § "Our own code keys on a reference, a type or
+  an id"), and `HintKind` does not take one.
+- **A kind may read the board and ignore the step**, for the board on which a
+  solver rung fires where no step says so:
+  `(_step, state) => firstFiring(state)?.kind === "…"`. Whether a rung fires
+  at all on a corpus is `describeLadderCensus`'s question.
 
 What a scan can be told:
 
 - **`opening`**: moves played on a fresh board before the first hint, for a
   game whose deductions want a mark-all or whose board is dealt by the first
   click (`keen-hint.test.ts`, `mines-hint.test.ts`). Give the callback its
-  return type (`(): SoloMove[] => [{ type: "pencilAll" }]`): a bare literal
-  widens to `{ type: string }` and every kind then fails to typecheck.
+  return type (`(): SoloMove[] => …`): a bare literal widens to
+  `{ type: string }` and every kind then fails to typecheck.
 - **`ui`**: the `Ui` the hint is asked under, for a kind a candidate reading
   decides (`group-hint.test.ts`).
-- **`stray`**: a second line of play on every board, steered by the game. A
-  hint keeps to lines that finish, so a rung about a jump that would not is
-  spoken only off them (`pegs-hint.test.ts`, which follows the hint on even
-  turns and takes any legal jump on odd ones).
-- **A kind may read the board and ignore the step.** A test that wants the
-  board on which a solver rung fires, where no step says so, asks the solver
-  in the predicate: `(_step, state) => firstFiring(state)?.kind === "…"`.
-  Whether a rung fires at all on a corpus is `describeLadderCensus`'s
-  question, not this one's.
+- **`stray`**: a second line of play on every board, steered by the game, for
+  a rung spoken only off the lines that finish (`pegs-hint.test.ts`).
 
-**A test file with positions of its own takes `describeHintKindPins`**: a
-render test's frames, a second scan under another `ui`. Its kinds are rung ids
-or predicates, and the same command writes its pins. A file may hold several
-blocks, at any indent.
+A test file with positions of its own (a render test's frames, a second scan
+under another `ui`) takes `describeHintKindPins`. Its kinds are rung ids or
+predicates, the same command writes its pins, and a file may hold several
+blocks at any indent.
 
-**Prefer `pinned(kind)` inside a test to one in a `describe` body.** A
-`describe` body runs while tests are collected, so a pin that does not load
-fails the whole file there, with the command to run. The command itself is
-safe from that: while it scans, a pin that does not load reads as a stand-in.
+## Running the cross-game guards for one game
 
-What it does not do: **pin a refusal.** A refusal has no step for a loader to
-return, so a test that wants a lost board keeps the desc by hand and says why
-beside it (`pegs-hint.test.ts`'s `LOST`). And a pin does not keep `aux`: the
-scan asks the hint with none, as a board loaded from `params:desc` has none, so
-a kind that needs the generator's answer to fire is not one a pin can hold.
+Do not take a green `vitest run src/games/<game>` as the game's coverage. Its
+input paths, save round-trip, params codec and its source text (color
+literals, hint wording, note vocabulary) are checked by guards outside
+`src/games/`, and two guards read the whole tree
+(§ "What a game owes the cross-game guards").
 
-**A cross-game guard pins too.** `hint-ordinal.test.ts` reads one pinned
-position a game from `testing/hint-chain-pins.ts`, and searches no board for a
-numbered chain. `hint-quality.test.ts`, whose walk is paid for anyway, fails on
-a numbered chain from a game with no pin there, so membership is still derived.
-
-Exemplars: `pegs-hint.test.ts` (rungs, cases of a rung as kinds, a stray line
-of play, a pin kept by hand), `galaxies-hint.test.ts` (a ladder's rungs, pinned
-mid-game) with `galaxies-hint-render.test.ts` (a frame from a pin, through
-`renderPinnedHint`).
-
-**A game's own directory is not its coverage.** Its input paths, save
-round-trip, params codec and even its source text (color literals, hint
-wording, note vocabulary) are checked by cross-game guards that live outside
-`src/games/`, so `vitest run src/games/<game>` can be green on a change the
-commit hook then refuses. The hook's own plan is
-`node scripts/checks/select-tests.ts` over what is staged: each test file on a
-line of its own after `whole` or `narrow`. The guards name their per-game cases
-after the game or its file path, so filter the files with `-t <game>` and check
-the count is not zero. Pass the list through `xargs`: zsh does not word-split
-an unquoted `$VAR`, and `vitest run $LIST` then finds no tests at all.
+- `node scripts/checks/select-tests.ts` prints the commit hook's plan for
+  what is staged: each test file on a line of its own after `whole` or
+  `narrow`.
+- The guards title a game's cases `<id>: …`, so run those files with
+  `-t <game>` and check the count of tests run is not zero.
+- Pass the file list through `xargs`. zsh does not word-split an unquoted
+  `$VAR`, and `vitest run $LIST` then finds no tests.
+- Do not pick tests with `vitest related` or `--changed` alone. The guards
+  read game source as text through `import.meta.glob(…, "?raw")`, which forms
+  no import edge.
+- To see what the hook would reject, run a guard with
+  `GATE_PRECOMMIT=1 GATE_GAME_SCOPE=<game>`.
 
 ## Render scenarios
 
-**The default for any highlight / overlay / animation-frame work.**
-[`render-scenario.ts`](../src/engine/testing/render-scenario.ts) exposes
-`renderScenario({ game, id, moves?, presses?, at?, settle?, showHint?,
-showMistakes? })`: it drives a real `Midend` to a target frame by
-replaying game `Move`s directly (no pointer events, no coordinate maths),
-optionally shows the hint's opening step (a pinned step, at any leg, is
-`renderPinnedHint`: § "Pinning a hint's positions"), then captures `redraw`
-through the shared
-[`recording-drawing.ts`](../src/engine/testing/recording-drawing.ts).
+Test any highlight, overlay or animation frame with `renderScenario`
+([`render-scenario.ts`](../src/engine/testing/render-scenario.ts)). It takes
+`{ game, id, moves?, presses?, at?, settle?, showHint?, showMistakes? }`,
+drives a real `Midend` to the frame by replaying `Move`s (no pointer events,
+no coordinates), optionally shows the hint's opening step or the mistake
+overlay, and captures `redraw` through
+[`recording-drawing.ts`](../src/engine/testing/recording-drawing.ts). A
+pinned hint step, at any leg, is `renderPinnedHint` (§ "Pinning a hint's
+positions").
 
-- **Assert what matters with targeted op checks** — these are the real
-  guarantee.
-- **Add `toMatchSnapshot` on the record** to catch unintended drift; a render
-  regression is then a reviewable text diff. Re-baseline an intended change
-  with `vitest -u` and **commit the regenerated `__snapshots__/*.snap`**. Pair
-  every snapshot with targeted assertions so a careless `-u` can't erase the
-  guarantee.
+- **Assert what matters with targeted op checks.** They are the guarantee.
+- **Add `toMatchSnapshot` on the record** to catch drift as a reviewable text
+  diff. Re-baseline an intended change with `vitest -u` and commit the
+  regenerated `__snapshots__/*.snap`. Pair every snapshot with a targeted
+  assertion, so a careless `-u` cannot erase the guarantee.
 - **`toSvg(ops, size)`**
   ([`svg-drawing.ts`](../src/engine/testing/svg-drawing.ts)) renders the
-  record as a z-ordered SVG for the rare frame that needs eyeballing — keep it
-  out of committed tests.
+  record as SVG for a frame that needs eyeballing. Keep it out of committed
+  tests.
+- **`moves` reaches a board state; `presses` reaches a `Ui` state.** Prefer
+  `moves`. A keyboard cursor lives on the `Ui`, so no `Move` can place it:
+  send buttons through `presses` (at `at`, default the origin). Use `presses`
+  for a pointer button only when the coordinates are under test. Exemplar:
+  `tracks-render-scenario.test.ts`'s cursor frame.
+- **On an animated game `moves` lands on animation frame zero**, with the
+  previous state still on screen. Pass `settle: true` to run the animation
+  and flash clock out first. Asserting both frames from the same `moves`
+  pins an animation's endpoints.
 
-**`moves` reaches a board state; `presses` reaches a `Ui` state.** `moves` stays
-the default — no coordinates, nothing a layout change can break. But a keyboard
-cursor lives on the `Ui`, so **no `Move` can put it anywhere**, and "the frame
-after one arrow press" was a frame this harness could not reach at all until
-`presses` (a list of buttons sent through `Midend.processInput`, at `at`,
-default the origin — a keyboard press ignores the coordinates). Pointer buttons
-work through it too; prefer `moves` for those unless the *coordinates* are what
-is under test. Exemplar: `tracks-render-scenario.test.ts`'s cursor frame.
+Exemplar:
+[`palisade-render-scenario.test.ts`](../src/games/palisade/palisade-render-scenario.test.ts),
+a mid-plan hint frame.
 
-**On an animated game, `moves` lands you on animation frame *zero*, not the
-settled frame.** The move armed an animation, so the previous state is still on
-screen, and anything drawn only once the move has landed (Inertia's dead-player
-splat) is absent from the capture. Pass `settle: true` to run the
-animation/flash clock out first. Asserting both frames from the same `moves` is
-the cheap way to pin an animation's endpoints, and costs one extra scenario
-call.
+### A frame that needs the browser
 
-Seed exemplar:
-[`palisade-render-scenario.test.ts`](../src/games/palisade/palisade-render-scenario.test.ts)
-— reaches a mid-plan hint frame in-process that no browser harness could.
-
-**When a check genuinely needs the browser, choose the board so the frame is one
-press deep.** The acceptance bar sends real UI work to the running app, and the
-expensive part there is not the browser but the *walk* — clicking thirty hints to
-reach the first interesting one, in a place where nothing is asserted and every
-step costs a round trip. Invert it: scan seeds in a throwaway `vitest` file for a
-board whose **first** press is the frame under test, print its game ID, and open
-`/<game>.html?id=<id>` directly (`routing.ts` reads `type` and `id` off the query
-string). Verifying that a Loopy note journey renders took one seed scan, one URL
-and four clicks; a previous attempt at the same check walked in from a default
-board and confirmed nothing. The scan is the same fixed-seed idiom tier 2.5 uses
-to reach a deduction, aimed at picking the *board* rather than the frame.
+When a check needs the running app, choose the board so the frame is one
+press deep, and do not walk in from a default board. Scan seeds in a
+throwaway vitest file for a board whose first press is the frame under test,
+print its game ID, and open `/<game>.html?id=<id>` (`routing.ts` reads `type`
+and `id` off the query string).
 
 ### A snapshot cannot see a hole
 
-**A render snapshot records the ops a frame *drew*, so it is structurally blind
-to a region the frame left unpainted.** Nothing is missing from the record —
-there was never an op there to miss — and the diff is clean whether the gap is
-deliberate or a defect.
+When a change moves a canvas's geometry (a new margin, a shifted origin, a
+grown `computeSize`), look at the frame in the app. A snapshot records the
+ops a frame drew, so a region left unpainted has no op to miss and the diff
+is clean.
 
-So when a change moves a canvas's *geometry* — a new margin, a shifted origin, a
-grown `computeSize` — a green suite and a reviewed snapshot diff are not
-evidence that the frame is right. Two habits:
+Where a game paints a ground layer of its own (a whole-board repaint, or a
+ground in a color other than 0), assert the flood covers the canvas and not
+the board: a `rect` op at `(0,0)` the size of `computeSize`.
 
-- **Look at it.** This is the acceptance bar's "a green suite is not a rendered
-  frame" in its sharpest form, because here the suite cannot in principle tell
-  you.
-- **Assert the flood covers the canvas**, not the board, wherever a game paints
-  a ground layer *of its own* — a whole-board repaint (Cube, Loopy) or a ground
-  in a color other than 0 (Rect, Untangle). That *is* expressible as an op
-  assertion — a `rect` at `(0,0)` the size of `computeSize` — and it is the one
-  part of the class a test can hold.
-
-On the first frame of a fresh draw state the midend lays a color-0 ground over
-the whole of `computeSize` (`docs/rendering.md` § "The rendering
-doctrine"), so a grown margin can no longer be left black there; it is still
-worth looking at, because color 0 may not be the color the margin should be.
-`src/engine/first-frame-coverage.test.ts` rasterizes every registered game's
-first frame at its default params, fails on any bare pixel, and requires the
-ground to be the frame's first op. It does not see a margin that only a later
-frame opens up, so the two habits above still apply there.
+The midend lays a color-0 ground over `computeSize` on a fresh draw state's
+first frame ([`rendering.md`](./rendering.md) § "The first frame and a fresh draw state"),
+and `src/engine/first-frame-coverage.test.ts` fails on a bare pixel in any
+game's first frame at its default params. Neither sees a margin only a later
+frame opens, nor whether color 0 is the color the margin should be.
 
 ## Observing a midend
 
-A render scenario answers "what does this frame look like". The other question
-a midend-level test asks is **what the midend told the app** — the status bar,
-the game state, the id, the timer readout, whether it wants the clock, how
-often it asked for a repaint. Ask it through
-[`drive-midend.ts`](../src/engine/testing/drive-midend.ts):
+Ask what the midend told the app (the status bar, the game state, the id, the
+timer readout, whether it wants the clock, how often it asked for a repaint)
+through `driveMidend(game)`, or `observeMidend(midend)` for one you hold
+([`drive-midend.ts`](../src/engine/testing/drive-midend.ts)).
 
-```ts
-const h = driveMidend(cubeGame); // or observeMidend(aMidendYouHold)
-h.midend.newGameFromId("c3x3:E38,4");
-expect(h.last("status-bar-change")?.statusBarText).toContain("Moves: 0");
-```
-
-`last(type)` is typed from its argument, so a call site never restates a
-notification's shape in a cast — a renamed field is a type error everywhere it
-is read, rather than a hand-written `Extract<…>` that went on compiling. It
-returns `null` when nothing of that type was sent. Clear `h.notes` to look only
-at what follows. A test that only needs the midend to run passes no callbacks at
-all: they are optional, and an all-no-op `setCallbacks` is ceremony.
+`last(type)` returns the last notification of that type, typed from its
+argument, or `null` when none was sent; never restate a notification's shape
+in a cast. Clear `notes` to look only at what follows. A test that only needs
+the midend to run passes no callbacks: they are optional. Exemplar:
+`src/engine/midend-ui-state.test.ts`.
 
 ## Render-op vocabulary
 
-**Know which primitive records as which op, or your assertion silently never
-matches.** The shared `RecordingDrawing` records a *filled* `drawRect` as
-`op === "rect"`, but `drawRectOutline` — a stroked box: hint ring, error
-outline, cursor frame — records as `op === "line"` segments. A test checking a
-ring color must match `"line"`, not `"rect"` (asserting Range's premise ring
-cost a debug cycle on exactly this). A `drawCircle` records with
-`fill`/`outline` fields, **not** `color` — matching
-`o.op === "circle" && o.color === …` type-errors and always misses (Light Up's
-bulb assertions hit this). Prefer the shared recorder over ad-hoc doubles — a
-local recorder that names ops differently is a second vocabulary to misremember.
+Match an op by the name the shared `RecordingDrawing` records it under, and
+use that recorder, not a local double.
 
-**An op carries both forms of its color**: `op.color` is the palette index
-the game passed; `op.rgb` the resolved `"rgb(r, g, b)"` label. Assert against
-the game's own constant (`o.color === COL_HINT`); the resolved label exists so
-a *snapshot* diff stays readable when a palette index moves, not for tests to
-match on. Narrowing note: `DrawOp` is a discriminated union, so a chained
-`.filter(o => o.op === "rect").filter(o => o.w …)` doesn't narrow — put the
-whole predicate in one `filter`, or write a type guard.
+- A filled `drawRect` is `op === "rect"`. `drawRectOutline` (a hint ring, an
+  error outline, a cursor frame) records as `op === "line"` segments.
+- A `drawCircle` records `fill` and `outline`, not `color`.
+- `paintsWith(op, color)` answers "is anything painted in this color"
+  whichever primitive carries it, and `opsOfKind(ops, kind)` narrows a list
+  to one op.
+- An op carries `color`, the palette index the game passed, and `rgb`, the
+  resolved label. Assert against the game's own constant
+  (`o.color === COL_HINT`); `rgb` is there so a snapshot diff stays readable
+  when an index moves.
+- `DrawOp` is a discriminated union, so chained `.filter` calls do not
+  narrow. Put the whole predicate in one `filter`, or use a type guard.
 
 ## What a new game ships
 
-**A new game has no oracle; its assurance is behavioral, and the standard
-floor is a generation-invariant property test**: every generated board is
-uniquely solvable at *exactly* its stated difficulty, across a fixed-seed
-sweep. `scripts/new-game.sh` copies the skeleton's three test files with the
-game, passing, and they are the shape to keep
-([`src/skeleton/grid/`](../src/skeleton/grid/)):
-`<game>-generation.test.ts` is this floor (`describeDealtTiers` over the
-presets and the smallest board, `describeLadderCensus` over dealt boards),
-`<game>-hint.test.ts` pins every rung, and `<game>.test.ts` is the game's own
-behavior. No differential is written for a new game. Beyond that floor:
+Ship the skeleton's three test files, filled in; write no differential. A new
+game has no oracle, so its floor is a generation-invariant property test:
+every generated board is uniquely solvable at exactly its stated difficulty,
+across a fixed-seed sweep.
 
-- Tier-1 behavioral tests: input→move mapping, `executeMove` purity,
-  serialize/deserialize round-trips, completion detection.
+- `<game>-generation.test.ts` is the floor: `describeDealtTiers`
+  ([`absent-tiers.ts`](../src/engine/testing/absent-tiers.ts)) over the
+  presets and the smallest board, and `describeLadderCensus`
+  ([`ladder-census.ts`](../src/engine/testing/ladder-census.ts)) over dealt
+  boards.
+- `<game>-hint.test.ts` pins every rung (§ "Pinning a hint's positions").
+- `<game>.test.ts` is the game's own behavior, at tier 1: input to move,
+  `executeMove` purity, serialize and deserialize round-trips, completion.
 - A tier-2.5 scenario for anything the game renders beyond plain tiles.
-- Property tests wherever a closed-form invariant exists — cheap, additive,
-  and they catch inputs no fixture recorded.
+- A property test wherever a closed-form invariant exists.
 
-**Drive `executeMove` to completion in a unit test — no differential exercises
-the interactive completion path.** A generator/solver check runs the solver's
-verdict-only completion; the *interactive* completion path (error marking,
-loop/path marking, flash labeling) is different code. Tracks shipped an
-infinite loop confined to it: the connectivity `Dsf` build dropped an in-grid
-guard, an out-of-bounds merge corrupted the union-find, and `canonify` hung —
-behind a green 22-fixture differential. It surfaced only when a
-`solve()` → `executeMove` → completed unit test hung. Always pair generation
-checks with a tier-1 test that plays a move (or the solve move) through to a
-completed board. Exemplar: [`tracks.test.ts`](../src/games/tracks/tracks.test.ts).
+**Play a move through `executeMove` to a completed board in a tier-1 test.**
+A generation check runs the solver's verdict-only completion; the interactive
+completion path (error marking, loop and path marking, flash labeling) is
+other code, and no generation check or differential runs it. Play the solve
+move, or the moves, to a solved board. Exemplars:
+[`skeleton.test.ts`](../src/skeleton/grid/skeleton.test.ts),
+[`tracks.test.ts`](../src/games/tracks/tracks.test.ts).
 
 ## The frozen differentials
 
-**Most games carry `<game>-differential.test.ts` against a frozen
-`__fixtures__/*.json` recorded from the C build before `retire-c-engine`
-(2026-08-01). The fixtures cannot be regenerated — ever — and that is by
-decision, not accident.** There is no C build to ask "what would upstream have
-produced?", so a deliberate divergence *retires or re-founds* its fixture
-rather than re-recording it. What a fixture still does:
-**it is the net under refactoring**. A change that alters a solver's verdict
-alters which boards exist, which is exactly what these catch — nothing else in
-the suite would notice a solver that got quietly stronger.
+Treat a `<game>-differential.test.ts` and its `__fixtures__/*.json` as the
+net under refactoring, and never regenerate, re-record or hand-edit a
+fixture: the C build that recorded them is gone. A change that alters a
+solver's verdict alters which boards exist, and nothing else in the suite
+notices a solver that got quietly stronger.
 
-**None is kept for parity's sake**, and a fixture may be deleted with its test
-(owner, 2026-10-09: *"we're really long past our need to maintain parity with
-upstream during the port, and I'd be absolutely ok with you removing any such
-old fixtures"*). Tracks' went when its path was laid another way: every seed
-then dealt another board, and the tier contract grades what it deals.
+- **A deliberate divergence retires or re-founds its fixture**
+  ([`solver-and-generator.md`](./solver-and-generator.md) has the policy and
+  the assurance that must replace it).
+- **None is kept for parity's sake.** A fixture may be deleted with its test
+  when a change deals other boards and another assurance (the tier contract)
+  grades what it deals.
+- **Cost is not a reason to retire one.** Together they were about a tenth of
+  suite time (measured 2026-09-09).
+- **A differential test file carries no regeneration recipe**, because none
+  can be run. The full statement is the header of
+  [`differential.ts`](../src/engine/testing/differential.ts), per the
+  `testing` spec.
+- **The gated, committed, frozen-fixture test is the only form a differential
+  has.** `npm run diff` runs the advisory checks under `scripts/checks/`
+  (`diff.vitest.config.mts` lists them), which report and never gate; no
+  differential is among them. Delete on sight a check that still sits in the
+  tree and can no longer run its real comparison.
+- **A fixture's `"genMs"` field is evidence, not an assertion**: the C's
+  wall-clock per board at capture.
 
-The full statement lives once, in
-[`differential.ts`](../src/engine/testing/differential.ts) (the shared
-helper's header), per the `testing` requirement — **a differential test
-file must not carry a regeneration recipe, because none can be executed.**
+Two shapes:
 
-Two shapes, both live:
-
-- **Byte-for-byte desc match** — a faithful generator over the bit-identical
-  RNG reproduces the C desc exactly for the same seed. Don't re-roll the loop:
-  call `describeDescDifferential` with your fixtures, a params mapper, your
-  `newDesc`, and an optional `extra` follow-on (e.g. the engine's
-  `validateDesc(game, …)` returns null). Exemplar:
+- **Byte-for-byte desc match**: a faithful generator over the bit-identical
+  RNG reproduces the recorded desc for the same seed. Call
+  `describeDescDifferential` with the fixtures, a params mapper, the game's
+  `newDesc`, and an optional `extra` follow-on. Exemplar:
   [`unruly-differential.test.ts`](../src/games/unruly/unruly-differential.test.ts).
-- **Solver-agreement** — decode a recorded board, run the TS solver, assert
-  the recorded difficulty verdict. Game-specific; stays inline. Exemplar:
+- **Solver agreement**: decode a recorded board, run the solver, assert the
+  recorded difficulty verdict. Game-specific, so it stays inline. Exemplar:
   [`galaxies-differential.test.ts`](../src/games/galaxies/galaxies-differential.test.ts).
 
-**Not every game carries one, and that is a recorded decision, not a gap.**
-Permutation / short-RNG games get their RNG-faithfulness transitively from
-`random.ts`'s own corpus; each such skip is stated in that port's `design.md`.
-
-## Fixture lifecycle
-
-**The gated, committed, frozen-fixture test is the only form a differential
-has.** `npm run diff` runs the advisory checks under `scripts/checks/`
-(`diff.vitest.config.mts` lists them), which report and never gate; no
-differential is among them. **A check that can no longer run its real
-comparison but still sits in the tree reads as coverage while measuring
-nothing**: delete one on sight.
-
-Some fixtures carry a `"genMs"` field, the C's own wall-clock per board at
-capture time. It is evidence, not an assertion (a wall-clock assertion measures
-the box, not the code).
+A game without one is a recorded decision. Permutation and short-RNG games
+get their RNG faithfulness from the RNG's own corpus
+([`random.test.ts`](../src/engine/random/random.test.ts)).
 
 ## Byte-match: fidelity where there is a right answer
 
-**Compressed history with a live core.** Byte-match was the porting era's
-verification mechanism: on a solver-gated generator the desc depends on the
-solver's verdict on every intermediate board, so one byte-match assertion
-validated generator, solver and codec at once. The owner released the
-constraint when porting finished — matching the C is no longer a reason not to
-improve a game (the divergence policy and what must replace a retired oracle
-live in [`solver-and-generator.md`](./solver-and-generator.md)). What stays
-live here:
+Before refactoring or optimizing a fixture-pinned generator, find what the
+fixture pins and keep it. Matching the C is not a reason to hold back an
+improvement to a game ([`solver-and-generator.md`](./solver-and-generator.md)
+has the divergence policy); while a fixture stands, these hold:
 
-- **A byte-match proves a substitution changed no behavior — which makes it
-  the safest possible ground for optimization.** Slide's key-encoding rewrite
-  (35% of generation time → a hash + exact compare, 3.4× faster) was provable
-  precisely because the differential pinned the output. When an optimization
-  looks risky, check whether a fixture already pins its observable output.
-- **RNG draws are observable side effects.** A generator loop that *rejects* a
-  candidate has already spent its draws; "pick only legal candidates in the
-  first place" silently diverges the stream. Tell: a C-style loop whose counter
-  increments conditionally, or any draw skipped "because n === 1". This governs
-  refactors of any fixture-pinned generator today, including the RNG-bearing
-  leaf libraries (`latin.ts`'s `matching`, `loopgen.ts`, `laydomino.ts`) — a
-  fixture-pinned game's generator is byte-sensitive *through* them.
+- **A byte-match proves a substitution changed no behavior**, so it is the
+  safest ground for an optimization. When one looks risky, check whether a
+  fixture already pins its observable output.
+- **RNG draws are observable side effects.** A loop that rejects a candidate
+  has already spent its draws, so "pick only legal candidates in the first
+  place" diverges the stream. The tell is a loop whose counter increments
+  conditionally, or a draw skipped "because n === 1". This holds through the
+  RNG-drawing leaf libraries too (`latin.ts`'s `matching`, `loopgen.ts`,
+  `laydomino.ts`).
 - **A recorded artifact with no right answer is a yardstick, not an answer
-  key.** Inertia's recorded C solver routes stopped being a byte-match target
-  (an approximate optimizer has many equally good outputs, and a byte-match
-  welds the port to C's shape and forbids improvement) and became a quality
-  bar: the test asserts the TS route is legal, complete, and **no longer than
-  C's** — a regression bar a byte-match could never give, since a byte-match is
-  equally satisfied by faithfully reproducing a bad answer. Exemplar:
+  key.** Where an approximate optimizer has many equally good outputs, assert
+  the result is legal, complete and no worse than the recorded one, not equal
+  to it. Exemplar:
   [`inertia-differential.test.ts`](../src/games/inertia/inertia-differential.test.ts).
-- **Read what the reader accepts before deciding what a writer owes it.** Two
-  codec lessons that generalize: an encoder that never flushes its trailing run
-  is a *format*, not a bug — "completing" it diverges every desc (Boats); and a
-  writer can emit what its own reader mis-parses, in which case the undefined
-  range is free to fix — validate the fix by round-tripping through a decoder
-  written strictly to the *reading* rules, never encoder-vs-own-decoder
-  (Seismic's walls, [`engine/wall-runs.ts`](../src/engine/wall-runs.ts)
-  `encodeRegionWalls`).
-- **A sort that feeds only rendering does not threaten a fixture.** Only sorts
-  and draws on the path that produces the desc matter; trace whether the result
-  reaches the desc byte-stream before treating a `.sort()` as byte-match
-  surface.
+- **Read what the reader accepts before deciding what a writer owes it.** An
+  encoder that never flushes its trailing run is a format, and "completing"
+  it diverges every desc. Where a writer can emit what its own reader
+  mis-parses, the undefined range is free to fix: validate the fix by
+  round-tripping through a decoder written strictly to the reading rules,
+  never encoder against its own decoder. Exemplar: `encodeRegionWalls` in
+  [`engine/wall-runs.ts`](../src/engine/wall-runs.ts).
+- **A sort that feeds only rendering does not threaten a fixture.** Trace
+  whether a `.sort()` or a draw reaches the desc before treating it as
+  byte-match surface.
 
 ## Order-independent verdicts
 
-**When a generator's output was never reproducible byte-for-byte (upstream
-sorted with `qsort`, whose tie-order is implementation-defined), its fixture
-records only verdicts that are provably independent of the ambient order** —
-for Undead: uniquely solvable, iterative-solver-solved, post-fixpoint ambiguity
-count, brute-force outcome. An order-*dependent* quantity ("passes to
-fixpoint") is deliberately not recorded. The TS test decodes the same descs and
-asserts its solver reaches identical verdicts — validating solver + codec
-where the generator cannot be pinned. Exemplar:
-[`undead-differential.test.ts`](../src/games/undead/undead-differential.test.ts)
-and its design D1. When asserting against such a fixture, keep the
-order-independence argument in the test — it is the load-bearing part.
+Where a generator's output was never reproducible byte for byte (upstream
+sorted with `qsort`, whose tie order is implementation-defined), assert only
+verdicts that are provably independent of that order, and keep the
+order-independence argument in the test. The fixture records such verdicts
+(uniquely solvable, solved by the iterative solver, the ambiguity count after
+the fixpoint, the brute-force outcome) and no order-dependent quantity such
+as passes to fixpoint; the test decodes the same descs and asserts the solver
+reaches the same verdicts, which validates solver and codec where the
+generator cannot be pinned. Exemplar:
+[`undead-differential.test.ts`](../src/games/undead/undead-differential.test.ts).
 
 ## Quirks are load-bearing — capped, not cleaned
 
-**A preserved upstream quirk is part of which boards exist; a hygiene "fix"
-diverges the fixture.** But a quirk whose safety depends on an unproven
-invariant gets a belt: port the quirk faithfully *and* wrap the loop in a
-generous throw-on-exceeded cap, so a faithful port stays correct while an
-accidental divergence fails loudly instead of hanging (Singles'
-`MAX_REGENERATE`; the shared form is
-[`retry-limit.ts`](../src/engine/retry-limit.ts)). The same shape guards
-every generate-until-success loop, quirk or not.
+Do not tidy an upstream quirk in a fixture-pinned generator: it is part of
+which boards exist, and a hygiene fix diverges the fixture. Where the quirk's
+safety rests on an unproven invariant, port it faithfully and wrap the loop
+in a generous cap that throws when exceeded, so an accidental divergence
+fails loudly and does not hang. The shared form is
+[`retry-limit.ts`](../src/engine/retry-limit.ts), and every
+generate-until-success loop takes it, quirk or not.
 
 ## When a fixture goes red
 
-**A red differential after a refactor means the set of boards that exist
-changed — treat the fixture as the instrument and your change as the suspect.**
-The debugging loop, retold for the post-C world: find the first fixture that
-mismatches; if the game records intermediate verdicts, binary-search for the
-first board whose solver verdict moved; toggle techniques off one at a time to
-isolate which got stronger or weaker; then diff that technique against its
-pre-change self. Two gotchas that have burned real time:
+Treat the fixture as the instrument and your change as the suspect: a red
+differential after a refactor means the set of boards that exist changed.
+Never hand-edit a fixture to pass. If the divergence is deliberate, the
+fixture is retired or re-founded
+([`solver-and-generator.md`](./solver-and-generator.md)).
+
+Find the first fixture that mismatches. If the game records intermediate
+verdicts, binary-search for the first board whose solver verdict moved.
+Toggle techniques off one at a time to find which got stronger or weaker,
+then diff that technique against its earlier self. Two things to check
+first:
 
 - **A sentinel imported from the wrong module reads as `undefined`** and
-  silently weakens a `diff >= X` gate — a Tricky board "fails to solve" with no
-  type error. When a difficulty-sentinel test misbehaves, check the import
-  source before the solver.
-- **Beware translated C loops whose increment clause had side effects** — an
-  original `for (…; …; ++j, board[i] = 1)` also ran its side effect after the
-  final iteration; a naive translation won't. If a fixpoint refactor touches
-  such a site (they are commented at the sites that survived porting), the
-  after-last-iteration effect is part of the behavior.
-
-If the change is a *deliberate* divergence, the fixture is retired or
-re-founded — never hand-edited to pass; see
-[`solver-and-generator.md`](./solver-and-generator.md) for the policy and the
-required replacement assurance.
+  weakens a `diff >= X` gate with no type error. Check a difficulty
+  sentinel's import source before the solver.
+- **A translated C loop whose increment clause had a side effect**
+  (`for (…; …; ++j, board[i] = 1)`) ran that effect after the final iteration
+  too. The surviving sites are commented; the after-last-iteration effect is
+  part of the behavior.
 
 ## Seed-deterministic, never clock-gated
 
-**A heavy test's work must be identical every run; only the clock may move.**
-A retry-until-unique generation or an exhaustive solve legitimately takes 1–3 s
-solo and stretches 5–10× under full-suite CPU saturation. Rules, all learned by
-violating them:
+Make a heavy test's work identical every run, so that only the clock moves.
+The requirement is `testing`, "The test suite is deterministic under parallel
+load".
 
-- **Drive generation from a fixed seed** (`randomNew("…")`) so the work and
-  the verdict are load-independent.
-- **Never give a test its own timeout.** There is exactly one ceiling,
-  `testTimeout` in [`vitest.config.ts`](../vitest.config.ts), and it is a
-  runaway backstop, not a gate. A per-test ceiling is a guess about contention:
-  it can only be tighter than the global one, and it must be re-guessed forever
-  (one game's went 30 s → 60 s → 120 s and still failed a green commit).
-- **Never assert `elapsed < N ms`** as a proxy for "the algorithm is
-  efficient" — that measures the box's spare capacity. Assert a
-  load-independent proxy instead: a bounded expansion count, iteration count,
-  or result shape.
-- **A hang is not a slow test, and a timeout was never going to catch one.**
-  These tests are synchronous; a runaway loop blocks the event loop, so the
-  timeout's timer cannot fire (the same mechanism that orphans vitest workers —
-  [`reap-orphaned-workers.sh`](../scripts/reap-orphaned-workers.sh)). Bound
-  non-termination **in the code**: [`step-budget.ts`](../src/engine/step-budget.ts)
-  for solver/hint fixpoints, [`retry-limit.ts`](../src/engine/retry-limit.ts)
-  for retries — opt-in/gated so a false trip can't hit the production hot path.
-- **Don't judge a generator's real cost from a vitest run.** The vitest module
-  runner plus suite contention has shown a ~7× gap against a plain `node`
-  process on the same seeds. Re-measure outside the runner before designing a
-  fix for a "slow" generator.
+- **Drive generation from a fixed seed** (`randomNew("…")`), so the work and
+  the verdict do not depend on load.
+- **A test that needs a specific board finds it once and writes it down**; it
+  does not scan further each run. Loop fixed-seed ids, keep the first whose
+  state matches, and put the board it found in the test. The position a hint
+  sentence fires on is the exception: pin it through `describeHintPins`
+  (§ "Pinning a hint's positions") and write no seed scan for it.
+- **Never give a test its own timeout.** The one ceiling is `testTimeout` in
+  [`vitest.config.ts`](../vitest.config.ts), a runaway backstop and not a
+  gate. A per-test ceiling is a guess about contention.
+- **Never assert `elapsed < N ms`.** Assert a load-independent proxy: a
+  bounded expansion count, an iteration count, or the result's shape.
+- **Bound non-termination in the code, not with a timeout.** These tests are
+  synchronous, so a runaway loop blocks the event loop and no timer fires.
+  Use [`step-budget.ts`](../src/engine/step-budget.ts) for solver and hint
+  fixpoints and [`retry-limit.ts`](../src/engine/retry-limit.ts) for
+  retries.
+- **Do not judge a generator's cost from a vitest run.** The module runner
+  and suite contention have shown about a 7× gap against a plain `node`
+  process on the same seeds. Measure outside the runner before designing a
+  fix (§ "Timing anything under vitest").
 
-Normative: `testing`, "The test suite is deterministic under parallel load".
-"Contention on work that terminates" is a complete diagnosis and its fix is
-removing the clock gate — reach for the other causes (shared state, order
-dependence, non-termination) only when evidence points there; re-run the file
-alone.
+A heavy generation or exhaustive solve takes 1 to 3 s alone and 5 to 10 times
+that in a saturated full run. "Contention on work that terminates" is a
+complete diagnosis, and its fix is removing the clock gate. Look for shared
+state, order dependence or non-termination only when evidence points there,
+and re-run the file alone first.
 
-**Localize a suspected cross-file leak in one worker, in both orders.** A test
-that fails only in a full run and passes alone is localized by forcing the
-suspected files into one worker (`VITEST_MAX_WORKERS=1 vitest run <a> <b>`) and
-running them in both orders, with `--sequence.shuffle.files` under recorded
-seeds. One worker still runs its files in the order the sequencer picks, so a
-pair run once can pass by scheduling the victim first.
+### A test that fails only in a full run
+
+Localize a suspected cross-file leak by forcing the suspected files into one
+worker and running them in both orders:
+`VITEST_MAX_WORKERS=1 vitest run <a> <b>`, with `--sequence.shuffle.files`
+under recorded seeds. One worker still runs its files in the order the
+sequencer picks, so a pair run once can pass by scheduling the victim first.
 
 ## Right-sizing the gate
 
-**A test earns its runtime.** The bar is what it would catch in a refactor that
-no cheaper test would, and a test that cannot answer that is a candidate for
-retirement whatever it cost to write. Three things keep that from becoming an
-excuse:
+Hold every test to what it would catch in a refactor that no cheaper test
+would; one that cannot answer is a candidate for retirement whatever it cost
+to write.
 
 - **Retire by measurement, never by category.** "It was a porting test" is
-  not a reason: the frozen differentials are porting artifacts and the
-  strongest net under solver refactoring. Answer per fixture.
+  not a reason. Answer per fixture.
 - **Say what still covers the configuration**, at the site, when you defer or
-  delete the only case covering a mode, grid type or difficulty.
+  delete the only case covering a mode, a grid type or a difficulty.
 - **A guard that catches what the author just wrote stays on the per-commit
   path, on one board of every kind it walks.** More boards of the same kind,
-  and a check on *decay*, go to CI (§ "One board of each kind in the hooks");
+  and a check on decay, go to CI (§ "One board of each kind in the hooks");
   the conditions are in the `build-pipeline` spec.
+
+Three treatments for an expensive test, in order of how little they lose:
+
+1. **Run a deterministic search once.** A loop that scans seeds until a board
+   shows a technique finds the same board every time, so write the board
+   down. For a hint's rung that is `describeHintPins`, as in
+   [`boats-hint.test.ts`](../src/games/boats/boats-hint.test.ts).
+2. **Turn a seed count down** with `seedBudget(gate, full)`
+   ([`slow.ts`](../src/engine/testing/slow.ts)), only for a property whose
+   violation would be systematic, and say at the call site how many
+   assertions the reduced count still executes.
+3. **Defer to `npm run test:slow`** (`slow: true` on
+   `describeDescDifferential`, or `describeSlow` and `itSlow`), only where
+   the cost is board size and not configuration. Never defer the only fixture
+   covering a configuration, and state what still covers it.
 
 ### What runs when
 
-**Three runs, each wider than the last, and the suite is paid for whole once a
-session.** `scripts/gate.sh` is all three, and the steps and their reasons are
-its comments.
+Run the sweep that guards what you changed before committing, and push once,
+when the session's work is done or the owner asks to see it sooner.
+`scripts/gate.sh` is all three runs below, and its comments give the steps
+and their reasons.
 
 | Run | When | What it tests |
 | --- | --- | --- |
-| The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other. About two minutes for a commit to shared code, plus the staged games' own cases. |
-| The push hook | once, at a session's end | What the commits left out: every game's cases of the sweeps a commit to shared code reaches. Nothing, when every commit was a game's own or documentation. |
+| The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other, so a commit costs about the same whatever it touches. |
+| The push hook | once, at a session's end | What the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries, on the boards a commit walks. Nothing, when every commit was a game's own or documentation. |
 | CI | every push | Everything, on every board. Never canceled by a newer push. |
 
 - **Per-game work** is a game's own test files and the cases a cross-game
-  guard titles `<id>: …`. It is nearly all of the suite: 880 s of 1,005 s of
-  test time (2026-10-12), over 57 games. So **title a per-game case
-  `<id>: …`**, or no hook can leave it out and it runs on every commit to any
-  game.
+  guard titles `<id>: …`, and it is nearly all of the suite's time.
 - **A commit to the engine tests no game's boards.** It runs the engine's own
   tests and the whole-collection tests that are not split by game. Run the
-  sweep that guards what you changed yourself, before committing:
-  `npx vitest run src/engine/hint-resume.test.ts` for a hint planner, the file
-  named for the mechanic otherwise. The push would tell you, at the end.
-- **Push once, when the session's work is done**, or when the owner asks to
-  see it sooner. A push that carries a change to shared code is one whole run
-  on two workers, and it will not run over uncommitted changes.
-- A change to nothing but comments in a source file outside the games selects
-  only the guards that read the file as text.
+  guarding sweep yourself first: `npx vitest run src/engine/hint-resume.test.ts`
+  for a hint planner, the file named for the mechanic otherwise. A bare
+  `vitest` is the wide run, since only the hooks narrow.
+- **A staged test file runs with every game's cases**, being what the author
+  just wrote.
+- **A push that carries a change to shared code is one whole run**, and it
+  will not run over uncommitted changes to tracked files. It judges only
+  `HEAD`: a push of another commit runs nothing here.
+- **A commit that stages only documentation** (`docs/`, `openspec/`,
+  `AGENTS.md`) runs the gate's fast prefix and no test or build. `help/` and
+  `README.md` are not documentation here: a test or the build reads them.
+- **A change to nothing but comments** in a source file outside the games
+  selects only the guards that read the file as text.
+- **A path the selector does not model** (a config file, `package.json`, a
+  script) has a commit run every test file outside the game directories, and
+  the push run the rest.
 
 The selector is `scripts/checks/select-tests.ts`, and its `--verify` holds
 both plans to known cases. The spec is `build-pipeline`, "A commit runs the
-per-game work of the games it stages" and "The push runs what its commits left
-out, and nothing when they left nothing".
+per-game work of the games it stages" and "The push runs what its commits
+left out, and nothing when they left nothing".
 
-**The suite is paid for at every push; keep each test's cost proportional to
-what it catches.** Three treatments, in order of how little they lose:
+### Running the slow tier
 
-1. **Run a deterministic search once.** A "scan seeds until a board shows
-   technique X" loop finds the same hit every time, so write the board down.
-   For a hint's rung that is `describeHintPins` (§ "Pinning a hint's
-   positions"), as in
-   [`boats-hint.test.ts`](../src/games/boats/boats-hint.test.ts). Loses
-   nothing.
-2. **Turn a seed count down** with `seedBudget(gate, full)`
-   ([`slow.ts`](../src/engine/testing/slow.ts)) — only for a property whose
-   violation would be *systematic*, and say at the call site how many
-   assertions the reduced count still executes.
-3. **Defer to `npm run test:slow`** (`slow: true` on `describeDescDifferential`,
-   or `describeSlow`/`itSlow`) — only where the cost is board **size** rather
-   than configuration. **Never defer the only fixture covering a
-   configuration**, and state what still covers it. The slow tier runs once per
-   refactoring round; a tier nobody runs is worse than a deleted test, because
-   the file still reads as coverage.
-
-### Deal through `dealt`
-
-**A cross-game sweep takes its boards from `dealt(game, params, n)`**
-([`testing/dealt.ts`](../src/engine/testing/dealt.ts)), and a sweep that
-drives a midend begins it with `beginDealt`. Dealing is where a sweep's time
-goes: following a hint plan to the end of a board measured under 0.1 s on all
-but three of the boards of the six dearest games, and dealing one took up to
-19.5 s (Group's 8x8 at Hard, 2026-10-08). The suite runs with
-`isolate: false`, so the dealer's cache is one per worker and every guard
-shares a board.
-
-- Take a second board of the same params with `n`, only where the property
-  needs one. Never seed a deal from the guard's own name.
-- A sweep reports on the boards it walked; a sentence or a rung that matters
-  is pinned to a board (§ "Pinning a hint's positions").
-- A game's own test deals as it likes. The dealer is for the sweeps that walk
-  every game.
-
-### One board of each kind in the hooks
-
-**The two local hooks walk one board of each kind, and CI walks the rest.**
-`perCommit(hook, wide)` ([`slow.ts`](../src/engine/testing/slow.ts))
-is the lever, and `gatePresets` uses it, so a sweep that takes its boards
-there has it already. In the hooks:
-
-- a sweep walks one board of each params set where CI walks several;
-- `gatePresets` leaves out a game's largest board, and keeps one board for
-  every value of every mode, tier and choice;
-- the bound-hint walk in `hint-quality.test.ts` checks the first 400 steps of
-  a board;
-- the resume walk in `hint-resume.test.ts` asks for a fresh plan at no more
-  than 64 evenly spaced moves of a board and follows the plan between them,
-  where CI asks after every move.
-
-CI runs everything on every push, and so does a bare `vitest`: nothing but
-the hooks set the toggle. **After changing the code a sweep guards, run that
-sweep wide before committing.** No hook is that run.
-
-Use it only for more of the same. The only board of a mode, a tier or a rule
-stays in the hooks, and so does anything a single board shows. Say at the call
-site what the hooks' amount still walks.
-
-**The hooks and CI can walk different boards of one game.** The slice
-takes the smallest preset that supplies each value still wanted, so leaving out
-the largest board can change which preset a mode is walked on. A ledger a walk
-is held against has to be true of both.
-
-**A guard that only reads source runs first, if you let it.** The gate runs
-the *source scans* as a pass ahead of the rest of the suite, so their failures
-arrive in seconds rather than after the whole run. Nobody enrolls a file:
-[`scripts/checks/source-scans.ts`](../scripts/checks/source-scans.ts) takes
-any test that reads source through a `?raw` `import.meta.glob` and whose import
-closure reaches nothing under `src/games/`. So when you write a guard that scans
-game source, keep its imports off the registry and the game modules. Reading a
-game's text needs neither, and one import of `games/index.ts` (or of a helper
-such as `testing/hint-games.ts` that imports it) moves the file into the main
-pass without a word. `node scripts/checks/source-scans.ts` prints the current
-set. The spec is `build-pipeline`, "The gate runs the source-scan tests as a
-pass ahead of the rest of the suite".
-
-**Run the slow tier targeted, not whole.** `npm run test:slow` re-runs every
-gate test *as well*, with the widened seed budgets on top; the deferred tier
-itself is a handful of cases
-(`git grep -n -e 'itSlow(' -e describeSlow -e 'slow: true' -- src`). Pass a path and the script forwards it
-to vitest — `npm run test:slow -- src/games/seismic`,
-`npm run test:slow -- src/engine/hint-resume.test.ts`. That is the form to reach
-for when a refactor moves a solver, a generator or a hint planner: run the slow
-tier for the games it could have moved, when you move them.
+Run the slow tier with a path, for the games a refactor could have moved,
+when you move a solver, a generator or a hint planner:
+`npm run test:slow -- src/games/seismic`,
+`npm run test:slow -- src/engine/hint-resume.test.ts`. The bare command
+re-runs every gate test as well, with the widened seed budgets on top. The
+deferred cases are
+`git grep -n -e 'itSlow(' -e describeSlow -e 'slow: true' -- src`.
 
 ### Narrowing a game's own sweep
 
-Four shapes to look for in a game's expensive property test before choosing
-among the treatments above. Each is settled by timing the items inside one run
-and planting the defect the test is named for, never by reading the test.
+Before choosing a treatment for a game's expensive property test, time the
+items inside one run and plant the defect the test is named for. Never settle
+it by reading the test. Four shapes to look for:
 
-- **Time the dealing apart from the property.** A sweep that deals a board per
-  case can spend most of its time in the generator: a top-tier 4x4 Spokes
-  board takes up to 2.4 s to deal and 5 ms to plan on. A test that wants such
-  a board only to plan on writes its descriptions down. A description stays a
-  board of its tier whatever the generator later deals.
-- **"Systematic" is a claim about one rung, and it is planted, not argued.** A
-  seed count is a confidence dial only for a defect that shows on most boards.
-  Lift each guard the property rests on and count the boards that show it, per
-  tier. Where few do, write down boards on which that guard decides something;
-  where a tier shows nothing, it is not buying its cost.
-- **A rule that rarely decides anything needs a board where it does.** A test
-  named for a rule, walking boards on which the rule never changes the
-  outcome, stays green with the rule deleted. Lift the rule, scan for the
-  positions where the outcome changes, and write those down; have the test
-  hold a written-down board to being such a board where it can
-  ([`method.md`](./method.md) § "A sweep that finds zero owes a power
-  argument").
-- **A game's own walk follows the plan; asking again after every move is
-  `hint-resume.test.ts`'s.** Recomputing per move multiplies the cost by the
-  plan's length and reads only each plan's first step. Follow each plan to its
-  end and ask again when it runs out, unless what is under test is the
-  recomputation itself: a cycle, or a plan length that must fall by one.
-
-### Where the cost actually is — measured 2026-09-09, so you need not re-derive it
-
-`retire-tests-that-do-not-earn-their-runtime` ranked every test file. Two
-results are worth not rediscovering:
-
-- **The frozen differentials are not the expense.** They were **10.1%** of suite
-  time; the heaviest single one is 11.5 s CPU. Keeping every one of them is
-  cheap, so the question "can we afford the differential corpus?" has an answer
-  and it is yes. They stay — see [The frozen differentials](#the-frozen-differentials)
-  for why they are worth keeping on the merits.
-- **The expense is search-based hints amplified by the cross-game guards.**
-  Attributing each guard's per-game case to the game it names: Sixteen **30%**,
-  Netslide **13%**, Spokes 8.5% — half the suite in three games. A hint that
-  *searches* pays for board size twice over (one full search per move, and more
-  moves to make), and the guards recompute a hint after every move. So the axis
-  to slice for those games is **board size**, and `SEARCH_PLANNING_GAMES`
-  ([`hint-games.ts`](../src/engine/testing/hint-games.ts)) derives the
-  population from each game's own source rather than listing it.
-
-**Attribute cost per game, not per directory.** Ranking by file reports
-`hint-resume.test.ts` and `hint-quality.test.ts` as undifferentiated "engine"
-cost and hides which game makes them expensive — Sixteen reads as 17% by
-directory and 30% once its cases inside the cross-game guards are counted. The
-per-game `it` title is the join key; this is [`method.md`](./method.md) § "A scan that keys on a
-name" aimed at a cost model.
-
-**The import graph alone cannot say which tests a change affects.** Measured
-(`measure-test-impact-selection`, 2026-09-09): `vitest related` walks the static
-import graph, but many test files reach their subjects through
-`import.meta.glob(..., "?raw")` — reading game source as *text*, because a
-cross-game guard derives its population from what a game **is**. A file read as
-text forms no import edge, so a game change omits five glob-only guards and a
-`help/` change selects **nothing at all**. The rule that makes the guards
-impossible to forget is what makes them invisible to the graph. That is why the
-hook's selection (`scripts/checks/select-tests.ts`) is the union of the graph
-and a walk that follows imports *and* globs, and never the graph alone. The walk
-is [`reach.ts`](../scripts/checks/reach.ts), and it reads the globs in every
-module it visits, not only in the test file: a guard that reads source through a
-helper reads whatever the helper's glob matches.
-
-**Title a cross-game case `<id>: …`, and let it read only that game.** Any
-change to a game reaches the registry, and every cross-game guard imports the
-registry, so file selection saves nothing there; the cost is inside the files.
-Measured 2026-09-27 on a Pearl-only change, 518 s of 593 s of test time was
-per-game cases in cross-game guards, and 413 s of that was games other than
-Pearl. So the hook scopes a commit to the games whose own code reaches a staged
-path: a game directory's own files, or the engine modules its imports reach.
-It sets `GATE_GAME_SCOPE`, and vitest skips every case titled for a game outside
-it. That took the Pearl commit's selection from 310 s to 103 s of wall time. A
-test file that reaches a staged path *itself*, not through a game, runs whole in
-a vitest run of its own, because nothing but the games is partitioned by title.
-The soundness condition and both of the things that read the variable are in
-[`game-scope.ts`](../src/engine/testing/game-scope.ts). A case titled some
-other way still runs, which costs time and never a check. A case titled for one
-game that reads another would be skipped unsoundly, so don't write one. Build
-the title with a template, never `describe.each(...)("$id: …")`: vitest renders
-a `$` field quoted, so the title comes out as `'keen': …`. That is how
-`difficulty-contract.test.ts` escaped the narrowing until it became a loop.
-
-**An assertion over a whole sweep has to narrow with it.** A narrowed run's
-counters see only the touched game's cases, so a count held against the
-registry or a floor like "walked more than 100 boards" goes red on an innocent
-commit. [`slow.ts`](../src/engine/testing/slow.ts) has the two answers. Filter
-a ledger compared against what the cases found with `inSweep`, so the touched
-game's entry is still checked. Put a floor no single game could meet in
-`itOverWholeSweep`, which skips it on a narrowed run. When a touched game *could*
-fail a floor on its own, for example by dropping out of the population so that
-it has no case left, compute the floor from the games directly rather than from
-the cases, and keep it in a plain `it` (`input-parity.test.ts`'s `offered`
-keypads). To check a new guard, run it with `GATE_PRECOMMIT=1
-GATE_GAME_SCOPE=<one game>`; what fails there is what the hook would reject.
-
-**A helper's glob is paid for by every file that imports it.** The walk works
-at the grain of a module, so a helper that reads every engine module as text
-makes each of its importers run whole on any engine commit, whether or not the
-importer calls the function that reads them. `engine/testing/enrollment.ts` once
-held the engine-source and test-source scanners beside `builtGames`, and every
-hint guard imported it through `hint-games.ts`: on an engine commit none of the
-heavy guards could narrow. So a glob over a broad tree lives in a module of its
-own (`engine-source.ts`, `test-source.ts`, beside `code-lines.ts` for the shared
-comment-stripping), and a scan over that tree lives in a test file of its own
-(`hint-em-dash.test.ts`, split out of `hint-quality.test.ts`). The same holds
-for a test file: one cheap `describe` reading the engine makes every sweep in
-the file run whole. Losing the narrowing fails nothing and only costs time, so
-`select-tests.ts --verify` holds four heavy hint guards to running narrowed on
-an engine module only some games reach; if it goes red, find the import that
-now reads a broad tree rather than widening the check.
-
-**Measure CPU rather than wall — and check what the box is short of first.**
-Contention inflates wall several-fold and unevenly (5.2× on one file, 1.6× on
-another in the same run), so even the *ranking* distorts. `/usr/bin/time`'s
-`user + sys` is the better instrument but **not an immune one**: two untouched
-files re-measured at 22.4 s and 14.8 s against 40.5 s and 25.2 s — inflation of
-**1.7–1.8×**.
-
-The reason is worth carrying, because it caught three instruments in a row.
-**This box has 16 GB of RAM and sits ~24 GB into swap**, so the scarce resource
-is memory, not cores; under paging `sys` time *is* page-fault time, and
-`user + sys` therefore re-imports the contention that switching off wall clock
-was meant to escape. Record free memory and swap beside the load average, treat
-any figure taken under paging as an upper bound, and trust **ratios taken under
-comparable conditions** rather than absolute seconds.
+- **Dealing costs more than the property.** A sweep that deals a board per
+  case can spend most of its time in the generator. A test that wants a board
+  only to plan on writes the descs down; a desc stays a board of its tier
+  whatever the generator later deals.
+- **"Systematic" is a claim about one rung, and it is planted, not argued.**
+  A seed count is a confidence dial only for a defect that shows on most
+  boards. Lift each guard the property rests on and count the boards that
+  show it, per tier. Where few do, write down boards on which that guard
+  decides something; where a tier shows nothing, it is not earning its cost.
+- **A rule that rarely decides anything needs a board where it does.** Lift
+  the rule, scan for the positions where the outcome changes, write those
+  down, and have the test hold a written-down board to being such a board
+  where it can ([`method.md`](./method.md) § "A sweep that finds zero owes a
+  power argument").
+- **A game's own walk follows the plan.** Follow each plan to its end and ask
+  again when it runs out. Asking again after every move is
+  `hint-resume.test.ts`'s, unless the recomputation itself is under test: a
+  cycle, or a plan length that must fall by one.
 
 ## Break the code under a new test
 
-**Writing a test is not the same as the test working — flip the line it is
-for, watch it go red, put it back.** This applies double to a test you just
-made cheaper: the failure mode optimization causes is a test that still passes
-and no longer catches anything. `wires.test.ts`'s both-sides check passed with
-the checked code *deleted*, because its chosen case was caught by an unrelated
-guard. Seconds of work; it is the only thing distinguishing an assertion from a
-decoration. (The systematic version of this instinct is the mutation probe —
-[`docs/test-strength.md`](./test-strength.md).)
+Flip the line a new test is for, watch it go red, and put it back. Do it
+again for a test you just made cheaper, since what an optimization breaks is
+a test that still passes and catches nothing. A chosen case can be caught by
+another guard and pass with the checked code deleted. The systematic form is
+the mutation probe ([`test-strength.md`](./test-strength.md)).
 
 ## A shared module needs its own tests
 
-**Extracting logic from a game into `src/engine/` moves the code but not its
-tests** — the game's frozen differential still catches a defect in the shared
-module, so nothing goes red and the module quietly ends up with no local
-assertions. That is adequate *protection* but poor *feedback*: the failure
-arrives as a differing desc string after a full generate-and-compare, not as a
-named rule in 100 ms, and it is invisible to the run-just-what-I-touched habit.
-**When you extract, write the extracted module's tests in the same change**,
-stating the rules its doc comment claims rather than pinning values. Exemplar:
+When you extract logic from a game into `src/engine/`, write the extracted
+module's tests in the same change, stating the rules its doc comment claims
+and not pinning values. The game's differential still catches a defect in the
+module, but as a differing desc after a full generate-and-compare and not as
+a named rule in 100 ms. Exemplar:
 [`wires.test.ts`](../src/engine/wires.test.ts).
 
-## Enrollment duties
+## What a game owes the cross-game guards
 
-**The cross-game guards derive their populations mechanically; a game enrolls
-by declaring, not by being remembered.**
+A game joins a cross-game guard by declaring or having the thing the guard
+reads; no list is edited. What each asks of the game's author:
 
-**Which means a change confined to one game's directory is not confined to one game's
-tests.** Two guards take their population from the *whole tree*, so any edit anywhere
-can move them, and neither lives under `src/games/`:
-
-- [`capability-surface.test.ts`](../src/capability-surface.test.ts) snapshots every
-  game's method and `Ui` field lists. A new `Ui` field is an intended re-baseline —
-  `vitest run <path> -u`, then **say so in the change**, because the snapshot's own
-  comment distinguishes a deliberate re-baseline from the sweep silently shrinking a
-  game.
-- [`asset-integrity.test.ts`](../src/asset-integrity.test.ts) § "no doc comment
-  describes a member that was deleted out from under it" scans every `.ts` file under
-  `src/`. Inserting an exported function immediately above another one strands the
-  **second** function's doc comment on the **first**, leaving two stacked comments and
-  one silently undocumented export — type-correct, test-green, and invisible in review.
-
-So a green `vitest run src/games/<game>` does not show that a game-local change is
-game-local; the commit hook's selection is the run that does, and
-`node scripts/checks/select-tests.ts` prints it.
-
-- **Hints**: **declaring `hint()` *is* the enrollment.**
-  [`hint-games.ts`](../src/engine/testing/hint-games.ts) filters the registry
-  for games that declare one, so a game is covered by every guard that reads
-  `HINT_GAMES` (`git grep -l HINT_GAMES -- src scripts`): `hint-resume.test.ts`
-  (plans resume from any position), `hint-overlay.test.ts` (the overlay reaches
-  the render cache), `hint-quality.test.ts` (narration form) and the rest, with
-  nothing to remember and nothing to add. Recipe and rationale:
-  [`hints.md`](./hints.md).
-
-  *What guards a derived population is not the same as what guarded a list.*
-  [`hint-enrollment.test.ts`](../src/engine/hint-enrollment.test.ts) puts
-  floors under both the registry it draws from and the set it produces, because
-  the consumers build their `it()` blocks in a loop and an empty array leaves
-  them with nothing to run — and `npm run test:run` passes
-  `--passWithNoTests`, under which "nothing to run" is **green**. Asserting the
-  derivation against its own definition would have been a tautology; the floors
-  are the part that can actually fail.
+- **Hints**: declaring `hint()` enrolls the game in every guard that reads
+  `HINT_GAMES` (`git grep -l HINT_GAMES -- src scripts`): plans resume from
+  any position, the overlay reaches the render cache, narration form, and the
+  rest. Recipe: [`hints.md`](./hints.md).
+- **A numbered chain**: a game whose hint numbers a chain adds one pinned
+  position to
+  [`testing/hint-chain-pins.ts`](../src/engine/testing/hint-chain-pins.ts);
+  `hint-quality.test.ts` fails on a numbered chain from a game with no entry.
 - **Recorded premises**: a game whose hint calls the candidate walk is in
   [`firing-replay.test.ts`](../src/engine/firing-replay.test.ts), which
-  audits that every recorded firing it offers follows from its premise. The
-  solver's part is a replay: a `latinSolver` game has one already, and a
-  bespoke recording solver writes a `ReplayAdapter`. One that records without
-  offering a replay is reported, not skipped, so a new solver cannot go
-  unaudited in silence. See [`hints.md`](./hints.md) § "A premise names
-  everything its deduction reads".
+  audits that every recorded firing follows from its premise. A `latinSolver`
+  game has its replay already; a bespoke recording solver writes a
+  `ReplayAdapter`, and one that records without offering a replay is
+  reported. See [`hints-candidates.md`](./hints-candidates.md) § "A premise names everything its
+  deduction reads".
 - **Difficulty tiers**: declaring `Game.difficulty`
-  ([`difficulty.ts`](../src/engine/difficulty.ts)) *is* the enrollment —
-  [`difficulty-contract.test.ts`](../src/engine/difficulty-contract.test.ts)
-  derives its set from the registry, so a tiered game that fails to declare
-  fails a test. The guards: cap-monotonicity (Boats shipped without it and it
-  silently broke Check & Save on every Easy board), every tier generating or
-  refusing with a reason, tier list matching the difficulty `paramConfig`
-  choices, tiers surviving the params codec. Adapter gotchas (build the solver
-  input from the desc, never reuse scratch, seed the givens):
+  ([`difficulty.ts`](../src/engine/difficulty.ts)) enrolls the game in
+  [`difficulty-contract.test.ts`](../src/engine/difficulty-contract.test.ts):
+  caps are monotonic, every tier generates or refuses with a reason, the tier
+  list matches the difficulty `paramConfig` choices, and tiers survive the
+  params codec. A tiered game that does not declare fails. Adapter rules:
   [`solver-and-generator.md`](./solver-and-generator.md).
-- **Registration**: [`catalog-registry.test.ts`](../src/catalog-registry.test.ts)
-  asserts catalog ≡ registry in both directions; adding a game is two edits
-  (`src/games/index.ts`, `src/puzzle/catalog-data.ts`) and this test holds them
-  together.
-- **Layering**: [`module-layering.test.ts`](../src/module-layering.test.ts)
-  enforces that no game imports another game, the engine imports no game
-  (except `testing/hint-games.ts`, the enrollment file), neither imports the app
-  shell — and ratchets runtime import cycles at zero. Every rule there has been
-  verified to fail when violated; a layering rule that has never fired may not
-  work.
-- **Mistake overlay**: the paint-twice per-game test obligation (a cold frame
-  proves nothing — every cell misses the cache on frame 1) is owned by
-  [`rendering.md`](./rendering.md) § "Overlay sidecars"; the testing
-  half is: paint, `findMistakes()`, redraw the *same* drawstate, assert the
-  highlight on the second paint, and ideally that a third frame without the
-  overlay erases it.
+- **Registration**: adding a game is two edits, `src/games/index.ts` and
+  `src/puzzle/catalog-data.ts`, and
+  [`catalog-registry.test.ts`](../src/catalog-registry.test.ts) holds them
+  equal in both directions.
+- **Layering**: no game imports another game, the engine imports no game
+  (but for `testing/hint-games.ts`, the enrollment file), and neither imports
+  the app shell;
+  [`module-layering.test.ts`](../src/module-layering.test.ts) also holds
+  runtime import cycles at zero.
+- **Mistake overlay**: paint, call `findMistakes()`, redraw the same draw
+  state, and assert the highlight on the second paint, and ideally that a
+  third frame without the overlay erases it. A cold frame proves nothing,
+  since every cell misses the cache on frame one
+  ([`rendering.md`](./rendering.md) § "Prove the overlay repaints").
+- **A new `Ui` or draw-state field**, or a new optional `Game` method, moves
+  [`capability-surface.test.ts`](../src/capability-surface.test.ts)'s
+  snapshot. Re-baseline with `vitest run <path> -u` and say so in the change.
+- **An exported function inserted directly above another** strands the second
+  one's doc comment on the first.
+  [`asset-integrity.test.ts`](../src/asset-integrity.test.ts) scans every
+  `.ts` file under `src/` for it.
+
+The last two take their population from the whole tree, so an edit inside one
+game's directory can move them (§ "Running the cross-game guards for one
+game").
 
 ### How a cross-game guard finds its population
 
-The bullets above are instances of one rule, and writing a new guard means
-following it rather than re-deriving it. Surveyed across every cross-game guard
-in the tree by `audit-declared-versus-derived-capabilities`; the normative form
-is the `ts-engine` spec, "A shared mechanic is joined by having it".
+For the author of a new cross-game guard. The normative form is the
+`ts-engine` spec, "A shared mechanic is joined by having it".
 
-1. **Derive the population from what the game *is*** — the object it registers,
-   a method's presence, the `Ui` its `newUi` returns, its own comment-stripped
-   source. [`testing/enrollment.ts`](../src/engine/testing/enrollment.ts) is
-   the shared way to ask (`builtGames`, `enrolledIn`, `membersNotMentioning`),
-   and it memoizes each game's board for every guard. **Never
-   a roster of opted-in names**: a game left off a roster gets none of the
-   guard, silently, and nothing says so.
-2. **Put a floor under the population you drew from**, not only under the set
-   you filtered out of it (`Enrollment.population`). A filtered count can look
-   healthy while the registry behind it is empty, and `--passWithNoTests` makes
-   "nothing to run" green.
-3. **State the exceptions as a ledger, never as the enrollment key.** Where the
-   derived set legitimately has members the rule must not apply to, record them
-   in the *guard* — one entry per member, each with its reason — and assert the
-   ledger equals what the derivation found. The declaration then says *why*, and
-   the derivation says *who*; the ledger cannot rot, because the derivation
-   checks it. Exemplars: `input-parity.test.ts`'s `NO_KEYBOARD`,
-   `hint-quality.test.ts`'s
-   `NARRATES_MOVES`, `contract-surface.test.ts`'s `NO_CONSUMER`. Several are
-   **empty and meant to stay so**, which is a real assertion and not a stub.
-   **An excuse that says the game has no such section is not a ledger entry**:
-   it is the game's `notApplicable` reason, which its help page prints, and the
-   guard reads it with `sectionState` ([mechanics](./mechanics.md) § "Contract
-   sections, and what makes a draft").
-4. **Where the game must declare a flag because production needs the answer
-   synchronously, hold the flag to the behavior.** The `Game` contract carries
-   boolean declarations, and each is asserted equal to a derivation rather
-   than trusted: `ignoresSecondaryButton` iff the secondary button means nothing
-   the player can perceive (`input-parity.test.ts`; consuming `RIGHT_BUTTON`
-   with a bare repaint is not a meaning). Better still is no flag: Mark-all
-   is a `markAll` hook the engine calls, and the midend reads `canMarkAll` off
-   its presence, so the two cannot disagree. A flag that only turns a
-   guard *off* is the one that most needs this — nothing else notices when it
-   lies.
-5. **Scan code, not text.** `membersNotMentioning` strips comments first,
-   because a mention in prose is not a use: the check's first cut convicted Net
-   for a comment explaining that it deliberately has no stylus branch. Key on
-   the name and take the superset; narrowing the key is the error this repo
-   makes most ([`method.md`](./method.md), "A scan that keys on a name"). When the population is
-   *who uses a symbol*, skip the key altogether: `npm run refs -- <file> <Name |
-   Type.member>` answers by reference, including the `latinSolver<Ctx>(` calls a
-   grep misses. It is blind to source read as text, which is exactly what
-   `membersNotMentioning` reads, so the two answer different questions.
-6. **Ask a question the system is actually asked.** A guard that *synthesizes*
-   its own inputs can pose one no code path ever poses, and then convict games of
-   failing to answer it. `assert-that-tiers-bind`'s first cut asked "does a board
-   generated with tier T applied to the collection's cheapest valid preset need
-   tier T?" — and a 4×4 Solo board cannot be Hard however its params are labeled,
-   so it reported **ten violations across four games**. Re-keyed on the presets a
-   player can pick, reading each one's *own* tier: **three, in one game, and they
-   were real.** `validateParams` accepting a params record is not evidence a board
-   can carry what is in it.
-
-   **Tell:** your guard builds its inputs with a `with*`/setter rather than
-   reading them off something the game offers. The population is what the game
-   presents — its presets, its registered object, its `Ui` — not what the guard
-   can construct out of the parts. **It is the most common tell in the tree**:
-   eleven sweeps were found wearing it at once
-   (`slice-the-first-leaf-hint-guards-by-axis`), so when you write one, grep the
-   file you are copying from before you copy its population.
-
-   **The exception is real and narrow, and it has to be said at the site.** A
-   synthesized params record is the wrong input when the question is what a
-   *board* carries, and the right one when the question is what the *contract
-   does to a record* — `difficulty-contract.test.ts`'s codec round-trip
-   generates no board at all. It is also right when the behavior needs a
-   combination no preset carries: a menu never pairs a small grid with a hard
-   tier, because menus climb size and difficulty together, and Keen's ordered
-   chain fires on none of its ten presets and readily on 4x4 at Hard — a board
-   the Custom dialog offers and `validateParams` accepts. Say which behavior
-   needs it, and keep the slice beside it rather than instead of it.
-7. **A coverage guard has a *second* key, and it needs the same discipline as
-   the first.** Rules 1–6 are about finding *who*; a guard that reports a
-   shortfall also has to decide who is already covered, and that side is the one
-   nobody checks — an over-reported shortfall fails no commit. It sits in the
-   tree looking like diligence until somebody tries to close it and finds the
-   test already there. `mistake-overlay-coverage.test.ts` derived its population
-   from the capability set, argued the point at length, and then keyed coverage
-   on the string `showMistakes` — one harness's flag, and the newest of three
-   ways to drive a mistake frame. **Six of the seventeen games it convicted
-   already had the test**, including Galaxies, whose three-frame version this
-   guide's `rendering.md` cites *by name* as the exemplar
-   (`widen-the-mistake-overlay-coverage-key`, 2026-09-09).
-
-   **And the fix's own first cut repeated the defect one layer down**: the
-   widened key matched `\bredraw\w*\(` and still missed Galaxies, which calls
-   `galaxiesRedraw(`. Take the superset on *both* keys and classify what it
-   catches.
-
-   **Tell:** the covered set is a single `includes("…")` while the population
-   above it took twenty lines to derive.
+1. **Derive the population from what the game is**: the object it registers,
+   a method's presence, the `Ui` its `newUi` returns, its comment-stripped
+   source. Ask through
+   [`testing/enrollment.ts`](../src/engine/testing/enrollment.ts)
+   (`builtGames`, `enrolledIn`, `membersNotMentioning`). Never a roster of
+   opted-in names: a game left off one gets none of the guard, silently.
+2. **Put a floor under the population you drew from**
+   (`Enrollment.population`), not only under the set you filtered out of it.
+   The gate passes `--passWithNoTests`, so a loop of `it()` over an empty
+   array is green.
+3. **State exceptions as a ledger in the guard, never as the enrollment
+   key**: one entry per member with its reason, asserted equal to what the
+   derivation found. Exemplars: `input-parity.test.ts`'s `NO_KEYBOARD`,
+   `hint-quality.test.ts`'s `NARRATES_MOVES`, `contract-surface.test.ts`'s
+   `NO_CONSUMER`. An empty ledger meant to stay empty is a real assertion. An
+   excuse that the game has no such section is not an entry: it is the game's
+   `notApplicable` reason, read with `sectionState`
+   ([`mechanics.md`](./mechanics.md) § "Contract sections, and what makes a
+   draft").
+4. **Hold a declared flag to the behavior.** Where production needs an answer
+   synchronously and the game declares a boolean, assert it equal to a
+   derivation (`ignoresSecondaryButton`, in `input-parity.test.ts`). Better
+   is no flag: the midend reads `canMarkAll` off the presence of the
+   `markAll` hook. A flag that only turns a guard off most needs this.
+5. **Scan code, not text.** `membersNotMentioning` strips comments, because a
+   mention in prose is not a use. Key on the name and take the superset
+   ([`method.md`](./method.md), "A scan that keys on a name"). When the
+   population is who uses a symbol, ask by reference:
+   `npm run refs -- <file> <Name | Type.member>`, which is blind to source
+   read as text.
+6. **Ask a question the system is actually asked.** Read the guard's inputs
+   off what the game presents (its presets, its registered object, its `Ui`)
+   and do not construct them: `validateParams` accepting a record is not
+   evidence a board can carry what is in it. The tell is a guard that builds
+   its inputs with a `with*` or a setter; check the file you copy from for
+   it. The exception is narrow and said at the site: a synthesized record is
+   right when the question is what the contract does to a record (a codec
+   round-trip that generates no board), or when the behavior needs a
+   combination no preset carries, such as a small grid at a hard tier. Say
+   which behavior needs it, and keep the slice beside it.
+7. **A coverage guard has a second key: who is already covered.** Take the
+   superset there too and classify what it catches; an over-reported
+   shortfall fails no commit, so nothing else checks it. The tell is a
+   covered set that is one `includes("…")`.
 8. **A behavioral sweep drives its board through `probeBoard`**
-   ([`testing/input-probe.ts`](../src/engine/testing/input-probe.ts)), and
-   reads a `Ui` through its `ui()`, which reads the one the midend hands to
-   `redraw`. It answers two questions every such sweep has to answer. The board
-   is dealt from a fixed seed, so a failure names the same board every run. And
-   `reset()` **deals the id again, never `restartGame`**, which replaces the
-   board but keeps the `Ui`. A highlight left showing by one probe point then
-   answers for the next: `select-or-drag.test.ts`'s first cut reported repeat
-   taps as inert in Crossing, which has no such defect. Use
-   `restartGame` only where the state replacement is the thing under test.
+   ([`testing/input-probe.ts`](../src/engine/testing/input-probe.ts)) and
+   reads a `Ui` through its `ui()`. Its `reset()` deals the id again and does
+   not call `restartGame`, which keeps the `Ui` and lets one probe point's
+   highlight answer for the next. Use `restartGame` only where the state
+   replacement is under test.
 
 ### Slicing a preset sweep for the gate
 
-Rules 1–7 find *which games*. A sweep over **boards** has a second population —
-which of each game's presets — and it goes wrong the same way, one axis at a
-time, because every wrong answer looks like coverage.
+For the author of a cross-game sweep over boards. Do not build a population
+of presets: call `gatePresets(id, game)`
+([`testing/hint-games.ts`](../src/engine/testing/hint-games.ts)). It returns
+every preset in the slow tier and otherwise the slice, one preset per value
+of every axis the game's `paramConfig` varies, and it bounds the searching
+hints' board sizes for you. Difficulty is a `"choices"` item like any other,
+so the slice replaces a `tiers.map(withTier(base))` loop.
 
-**Never invent a key, and do not build a population at all. Call
-`gatePresets(id, game)`**
-([`testing/hint-games.ts`](../src/engine/testing/hint-games.ts)): it hands
-back every preset in the slow tier and the slice otherwise — one
-preset per *value* of every axis the game varies, derived from the game's own
-`paramConfig` — and it decides the search-planning games' cost discipline for
-you. In the local hooks the slice leaves out each game's largest board
-(§ "One board of each kind in the hooks"). Difficulty is not special there; it is a `"choices"` item like any other,
-so the slice **replaces** a `tiers.map(withTier(base))` loop rather than
-multiplying with it, and the board it walks a tier on is one the player can pick
-from the menu.
+- **`dealtBoards`**
+  ([`testing/presets.ts`](../src/engine/testing/presets.ts), which reads no
+  registry) is the call for a sweep over games without a hint, or one that
+  wants its modes and no large board (`scalarEnds: false`), as
+  [`desc-error-games.test.ts`](../src/engine/desc-error-games.test.ts) and
+  [`mistake-invariant.test.ts`](../src/engine/mistake-invariant.test.ts) do.
+  `axisSlice` and `leafPresets` are for a sweep about the slicing rule
+  itself, and deal nothing the menu leaves out.
+- **A sweep that calls `firstLeaf(` or `withTier(` is held to a ledger** in
+  [`hint-enrollment.test.ts`](../src/engine/hint-enrollment.test.ts), one
+  entry per file with the behavior that needs a record the menu does not
+  offer.
+- **A value the Custom dialog offers and no preset holds is dealt beside the
+  slice** (`unofferedValues`), written onto the first preset in menu order
+  that `paramsError` accepts it on: the `with*` form of § "How a cross-game
+  guard finds its population" rule 6, used for the one thing it is right for.
+  A tier written onto the smallest grid may not be a hard board, so a rung
+  that needs a large board at a hard tier still wants its pin.
+- **Expect a guard to meet a board its setup never allowed for**: a refusal
+  from a fresh board, or no cell with two candidates. Fix the guard's
+  assumption; do not drop the board.
+- **A value no preset accepts has no board**, and `hint-enrollment.test.ts`
+  holds such values to the ledger `NO_BOARD`, which is empty. Add a preset
+  that carries the value.
+- **Say what still covers the presets between.** The slow tier walks them all
+  (`npm run test:slow -- src/engine/hint-resume.test.ts`).
+  `hint-quality.test.ts`'s `lintCases` reads every preset of every game at
+  one seed, for narration and not convergence, so it is no substitute.
+- **Pay for the slice in seeds, not in presets.** For a property that is a
+  code path, the second seed of one configuration repeats the first; take one
+  seed across the slice.
+- **Expect a lexical rule to meet wording it has not heard** when its walk
+  widens. Extend the vocabulary with the reason, or declare the idiom where
+  the wording is owner-endorsed. Never flatten a sentence to fit the regex.
 
-`dealtBoards` is underneath it
-([`testing/presets.ts`](../src/engine/testing/presets.ts), which reads no
-registry), and is the call for a sweep over games without a hint, or one that
-wants its modes and no large board (`scalarEnds: false`).
-[`desc-error-games.test.ts`](../src/engine/desc-error-games.test.ts) wants a
-board only for its **desc**: a large board adds no grammar its mutants do not
-already write, and generating one cost Slide 30 s.
-[`mistake-invariant.test.ts`](../src/engine/mistake-invariant.test.ts) asks a
-solver's second consumer, which a cap or a clue structure desynchronizes and a
-size does not. `axisSlice` and `leafPresets`, beneath that, are for a sweep
-about the slicing rule itself: a sweep that calls them deals nothing the menu
-leaves out.
+### Deal through `dealt`
 
-**Calling it is the whole of the enrollment.** A sweep that decides this
-population for itself decides it wrong one axis at a time (the smallest board
-misses every tier and mode; one per tier misses an untiered game's other
-presets; tier plus size ends misses every mode), so the rule names the
-function, and
-[`hint-enrollment.test.ts`](../src/engine/hint-enrollment.test.ts) scans the
-suite for `firstLeaf(`/`withTier(` and holds what it finds to a ledger, one
-entry per file with the behavior that needs a record the presets menu does not
-offer. Do not count these in prose; the scan is the count.
+For the author of a cross-game sweep. Take its boards from
+`dealt(game, params, n)`
+([`testing/dealt.ts`](../src/engine/testing/dealt.ts)), and begin a midend
+on one with `beginDealt`. Dealing is where a sweep's time goes, and the
+dealer's cache is one per worker, so every guard shares a board.
 
-**What the menu does not offer is dealt beside the slice.** The slice walks one
-preset per value *the presets vary*, so by itself it is blind to a value the
-Custom dialog offers and no preset holds (a tier no preset carries). So
-`dealtBoards`, which `gatePresets` calls, adds every such value of a
-`"boolean"` or `"choices"` item, written onto the first preset in menu order
-that `paramsError` accepts it on (`unofferedValues`). A game is dealt on
-everything its dialog offers by having a `paramConfig`, and there is no list.
+- Take a second board of the same params with `n` only where the property
+  needs one. Never seed a deal from the guard's own name.
+- A sweep reports on the boards it walked; a sentence or a rung that matters
+  is pinned to a board (§ "Pinning a hint's positions").
+- A game's own test deals as it likes.
 
-Three things to know about those boards:
+### One board of each kind in the hooks
 
-- **This is the `with*` form rule 6 warns against, used for the one thing it
-  is right for.** The rule is about a sweep that synthesizes its boards
-  *instead of* reading the menu. These are for a value the menu has no board
-  to read, and they are dealt beside the slice.
-- **A tier written onto the smallest grid is a board the dialog deals, and it
-  may not be a hard one.** It reaches the code that tier switches on, and it is
-  not a substitute for a preset at that tier. A rung that needs a large board
-  at a hard tier still wants its pin (§ "Pinning a hint's positions").
-- **Expect a guard to meet a board its own setup never allowed for**: a
-  refusal from a fresh board, which Group's Unreasonable tier gives honestly
-  on most of its 6x6 boards, or no cell with two candidates on the smallest
-  Solo. Fix the guard's assumption; do not drop the board.
-- **A value no preset accepts has no board**, because the field depends on
-  another (ABCD's rule against diagonal touching needs five letters).
-  `hint-enrollment.test.ts` holds such values to a ledger, `NO_BOARD`, which
-  is empty: add a preset that carries the value. A whole rule with no board on
-  the menu is an omission a player meets too.
+For the author of a cross-game sweep. Use `perCommit(hook, wide)`
+([`slow.ts`](../src/engine/testing/slow.ts)) only for more of the same: the
+two local hooks walk one board of each kind and CI walks the rest. The only
+board of a mode, a tier or a rule stays in the hooks, and so does anything a
+single board shows. Say at the call site what the hooks' amount still walks.
 
-A `"string"` item is not walked this way. A free scalar has no list of values
-to hold the menu against, and its ends are the slice's.
+- `gatePresets` uses it already: in the hooks it leaves out a game's largest
+  board and keeps a board for every value of every mode, tier and choice.
+- The hooks and CI can walk different boards of one game, because the slice
+  takes the smallest preset that supplies each value still wanted. A ledger a
+  walk is held against has to be true of both.
+- Nothing but the hooks sets the toggle. After changing the code a sweep
+  guards, run that sweep wide before committing (`npx vitest run <file>`); no
+  hook is that run.
 
-**Why `paramConfig` is the right source**, and not the params object's keys: it
-is a value a mechanism *consumes* (the Custom dialog is built from it), so it is
-a declaration of the healthy kind rather than a manifest; `custom-params.test.ts`
-already fails a registered game whose list is empty, so it is complete; and it is
-*typed*, which is the whole of the rule. A `"string"` item is a free scalar whose
-values lie on a line — cover both ends. A `"boolean"` or `"choices"` item is a
-selection from a closed set with nothing between its members — cover every one.
+### A cross-game guard the hooks can narrow
 
-**It is cheap where it matters and expensive where you would guess.** Measured
-2026-09-20 across the collection, the slice went 88 → 141 walks and
-`hint-resume.test.ts` 25.1 s → 67.0 s (on a box 18.6 GB into swap, so upper
-bounds; the ratio is the figure that survives). But the *mode* coverage that
-motivated the widening is nearly free — Seismic's Tectonic board 3 ms, Group's
-identity-hidden 11 ms, Unequal's Adjacent 34 ms — because presets are taken in
-menu order, so each value is claimed by the **smallest** board offering it. The
-two big line items were Loopy's eighteen tilings and one largest board per game.
+For the author of a cross-game guard. A commit runs the per-game cases of the
+games it stages and skips the rest by title, so:
 
-**Say what still covers the presets between.** The slow tier walks them all
-(`npm run test:slow -- src/engine/hint-resume.test.ts`), and
-`hint-quality.test.ts`'s `lintCases` reads every preset of every game per commit
-at one seed — but for *narration*, not convergence, so it is a different
-question and not a substitute.
+- **Title a per-game case `<id>: …` and let it read only that game.** A case
+  titled some other way runs on every commit to any game. A case titled for
+  one game that reads another would be skipped unsoundly; do not write one.
+  The soundness condition is in
+  [`game-scope.ts`](../src/engine/testing/game-scope.ts).
+- **Build the title with a template in a loop, never
+  `describe.each(…)("$id: …")`.** Vitest renders a `$` field quoted, so the
+  title comes out as `'keen': …` and is not narrowed.
+- **An assertion over a whole sweep narrows with it.** Filter a ledger
+  compared against what the cases found with `inSweep`. Put a floor no single
+  game could meet in `itOverWholeSweep`. Where a touched game could fail a
+  floor on its own, compute the floor from the games and not from the cases,
+  in a plain `it` (`input-parity.test.ts`'s `offered`). All are in
+  [`slow.ts`](../src/engine/testing/slow.ts).
+- **Keep a glob over a broad tree in a module of its own**
+  (`engine-source.ts`, `test-source.ts`, with `code-lines.ts` for the shared
+  comment stripping), and a scan over that tree in a test file of its own. A
+  helper's glob is paid for by every file that imports it, and one cheap
+  `describe` reading the engine makes every sweep in its file run whole on an
+  engine commit.
+- **Check a new guard with `GATE_PRECOMMIT=1 GATE_GAME_SCOPE=<one game>`**;
+  what fails there is what the hook would reject. If
+  `node scripts/checks/select-tests.ts --verify` goes red on a heavy hint
+  guard no longer narrowing, find the import that now reads a broad tree and
+  do not widen the check.
 
-**Pay for it in seeds, not in presets.** Every guard widened to the slice was
-sampling several seeds of *one* configuration, and the slice is a hundred and
-forty configurations: for a property that is a code path — a renderer branch
-that fills instead of ringing, a diff key missing the hint bits, a rung that
-emits a stale step — the second seed of a board buys a repeat of a
-configuration the first already walked. Measured per guard, 2026-09-20 (load
-2.9–5.7, the box ~18.4 GB into swap, so upper bounds and the ratios are what
-survive):
+### A guard that only reads source
 
-| guard | before | after | what it traded |
-| --- | --- | --- | --- |
-| `hint-text-convention.test.ts` | 0.26 s | 0.35 s | nothing — it returns on the first speaking board |
-| `hint-overlay` | 0.74 s | 9.7 s | 3 seeds → 1 |
-| `hint-mark` | 1.1 s | 20.9 s | 6 seeds → 2 |
-| `hint-ordinal` | 6.6 s | 25.9 s | nothing; it walks the slice **and** the first preset's tiers |
-| `mark-all` | 0.42 s | 26.2 s | nothing; 19.8 s of it is one `interpretMove` probe over 227 boards |
-| `hint-quality` | 99.8 s | 121.7 s | 3 seeds → 1 on the form block; `lintCases` already read every preset |
-| `hint-resume` | 67 s | 93 s | 5 seeds → 1 on its two single-plan blocks |
+For the author of a guard that scans source text. Keep its imports off the
+registry and the game modules, and the gate runs it in the pass ahead of the
+rest of the suite, so its failure arrives in seconds. Nobody enrolls a file:
+[`scripts/checks/source-scans.ts`](../scripts/checks/source-scans.ts) takes
+any test that reads source through a `?raw` `import.meta.glob` and whose
+import closure reaches nothing under `src/games/`. One import of
+`games/index.ts`, or of a helper that imports it such as
+`testing/hint-games.ts`, moves the file to the main pass without a word.
+`node scripts/checks/source-scans.ts` prints the current set. The spec is
+`build-pipeline`, "The gate runs the source-scan tests as a pass ahead of the
+rest of the suite".
 
-**And expect a lexical rule to meet vocabulary it has never heard.** A rule that
-recognizes narration by its words was tuned against the sentences a one-board
-walk happened to hear, so widening it fails on phrasings the collection has used
-all along: *"can take one line at most"* (Loopy, Bridges, Clusters, Slant,
-Unequal) and *"none of its remaining edges can be walls"* (Palisade, Bridges,
-Seismic, Spokes) both failed the necessity rule the first time it heard them.
-Extend the vocabulary with the reason, or declare the idiom where the wording is
-owner-endorsed — never flatten the sentence to fit the regex, which is the
-failure mode `hint-quality.test.ts`'s own header forbids.
+### One concept under several names
 
-### The divergence no clone detector can see
+To find one concept spelled several ways across games (a `dragType` beside a
+`dragtype`, a private pencil indicator per game), read
+[`capability-surface.test.ts`](../src/capability-surface.test.ts)'s snapshot
+through: it lists every game's `Ui` and draw-state field names, sorted, in
+one file. A clone detector does not see this, since differing spellings are
+not duplication. The snapshot asserts nothing about which names a game may
+use; it makes a change of vocabulary a line in a diff.
 
-**One concept spelled several ways is not duplication, so jscpd is blind to it,
-and it is the failure mode a collection this size produces most**: a private
-pencil indicator per game, each computing its own box, or a drag's anchor
-under a different name in every game.
-
-**The instrument for it is the capability snapshot**
-([`capability-surface.test.ts`](../src/capability-surface.test.ts)), which
-records every game's field names — its `Ui` *and* its draw state — sorted, in
-one file. It asserts nothing about which names a game may use; an approved
-vocabulary that nothing consumed would be a second copy of the names, with nothing
-to keep it true. Its whole job is to
-put the collection's vocabulary somewhere a person can **read** it, and to make
-a change to that vocabulary a reviewable line in a text diff. Reading it
-through is how a `dragType`/`dragtype` split, or a `dragCol` that means *color*
-beside a `dragColumn` that means *column*, is found.
-
-Two limits to know before trusting it:
-
-- **The `Ui` half sees only what `newUi` returned.** A field an interface
-  declares `optional` and only a gesture assigns is invisible: Sixteen's
-  `newUi` returns `{cursor, curMode}` and its nine drag fields — `dragX?`,
-  `dragStartX?`, … — appear nowhere in the snapshot. So a census taken off the
-  snapshot alone **under-counts**, which is the same wrong-key error as § "How
-  a cross-game guard finds its population" rule 1, one level up. Read the
-  interface when the count is the point.
-- **The draw-state half sees only what `newDrawState` returned**, at the game's
-  preferred tile size and before any `redraw`. A draw state is built at its size
-  and nothing sizes it afterwards, so that is the only reading there is — but a
-  field only a frame assigns, never declared in the constructor's literal, is
-  invisible, exactly like the `Ui` half's gesture fields.
+Read the game's interface when the count is the point, because the snapshot
+under-counts: the `Ui` half holds only what `newUi` returned, so an optional
+field only a gesture assigns is absent, and the draw-state half holds only
+what `newDrawState` returned at the preferred tile size, before any `redraw`.
 
 ## Metrics and instruments
 
-**`npm run metrics` records duplication (jscpd), runtime import cycles (madge,
-calibrated), dead code (the gate's unused-export check) and cognitive complexity (biome) into a dated
-snapshot — deliberately not in the gate.** Its value is the diff between
-refactoring rounds: run it at the start and end of a refactoring change and
-quote the delta. File the snapshot **under your change** (`openspec archive`
-then carries it with the work); a snapshot left at the repo root reads as a
-current measurement of a tree that no longer exists. Top-level `metrics/` is
-for live instruments only.
+Run `npm run metrics` at the start and end of a refactoring change and quote
+the difference. It records duplication (jscpd), runtime import cycles (madge,
+calibrated), dead code (the gate's unused-export check) and cognitive
+complexity (biome) into a dated snapshot, and it is not in the gate. File the
+snapshot under your change, so the archive carries it; top-level `metrics/`
+is for live instruments only.
 
-Three rules, each learned by getting it wrong:
+1. **Thresholds are ratchets.** Lower a cap when a change earns it, never
+   raise one to fit new code, and never suppress without a specific reason:
+   the suppression list is the work queue.
+2. **Confirm every finding against the config the project runs.** An isolated
+   measuring config can report findings the real one does not have.
+3. **Know where an instrument clamps.** Biome's complexity counter saturates
+   at 255, and a stable 255 is unmeasured, not unchanged.
 
-1. **Thresholds are ratchets, never aspirations.** Lower a cap when a change
-   earns it; never raise one to accommodate new code; never suppress without a
-   specific reason — the suppression list *is* the work queue.
-2. **Confirm every finding against the config the project actually runs.** An
-   isolated measuring config once manufactured 35 phantom "unused suppression"
-   deletions; the real count was 0.
-3. **Know where your instruments clamp.** Biome's complexity counter saturates
-   at 255 — a stable 255 does not mean "no regression"; it means unmeasured.
+A raw madge cycle count is not a runtime cycle count here:
+`verbatimModuleSyntax` erases `import type`, the standard fix for a cycle, so
+madge reports the fix as the problem. `scripts/metrics-cycles.mjs`
+calibrates, and treats an edge it cannot classify as a failure.
+`npm run probe` and `npm run mutation` are diagnostics, never gates and never
+ratcheted ([`test-strength.md`](./test-strength.md)).
 
-### Timing anything under vitest: two things to know first
+### Timing anything under vitest
 
-**Time a cost on an idle machine, and say which machine you timed.** A
-contended timing measures the contention. Record free memory and swap beside
-the load average: under paging, `sys` time is page-fault time, so a figure
-taken then is an upper bound. Ratios taken under comparable conditions survive
-where absolute seconds do not. A single test file that takes tens of minutes
-has been made unrunnable, not thorough; the fix is a cheaper configuration or
-a narrower invocation, never a longer wait.
+Time a cost on an idle machine, say which machine, and trust ratios taken
+under comparable conditions over absolute seconds.
 
-**An imported constant costs real time under the test transform, and nothing in
-the production build.** Vite's module-runner transform rewrites `DR[i]` to
-`__vite_ssr_import_0__.DR[i]`, and it defines every export as a **getter**, so a
-table read inside a hot loop pays an accessor call per access. Measured
-2026-09-12 on Range's real generator, three arms rotated and interleaved, 21
-reps, four runs: **imported / local = 1.62–1.73×**, against an A/A control (a
-second, separately loaded copy that keeps its tables local) of **0.98–1.01**.
-That is why `range/solver.ts` keeps `DR`/`DC` beside the loops that read them.
-
-**It does not survive `vite build`.** Rolldown flattens both modules into one
-scope and the read compiles to a direct `var` access, byte-identical to the
-local form. So this is a fact about the suite, not about the game: it is a
-reason to be careful when *timing* a refactor that hoists a hot table, and not a
-reason to refuse the hoist. If the shared form is better, take it — and know
-that the suite will report a slowdown the player will never see.
-
-**A control does not need two module instances; it needs a warm-up.** It was
-reported, twice and independently, that an A/A control timing one loaded
-instance twice flatters itself (the second timing running an already-warm
-function), and that an instance polluted by an equivalence fuzz runs ~40%
-slower. Measured on the same harness: **one instance timed twice gives
-0.98–1.02, and a fuzz-polluted instance gives 0.94–1.05** — both indistinguishable
-from 1.00. What separates a tight control from a loose one here is not how many
-instances you load but whether **every arm is exercised once before the clock
-starts**; this harness warms all three, and the distinction vanishes. Warm every
-arm, rotate their order, and report the minimum beside the median — on a loaded
-box the minima are the least contended samples, and here the two agreed.
-
-**To compare two configurations of a sweep, time the *items* once inside one
-run — not the sweep twice.** Two whole-file runs are taken minutes apart under
-whatever load the box has then, and this one swings several-fold. A single run
-that records the wall time of each (game, preset, seed) case pays for the widest
-configuration once and then answers every narrower one by summing the cases it
-would have kept, so every figure and every ratio comes from the same conditions.
-It also attributes the cost, which is the part that changes decisions:
-`slice-presets-by-the-axes-a-game-varies` widened a walk from 88 boards to 141,
-and the one run showed the *modes* that motivated it costing 3–95 ms each while
-two line items carried almost all of the increase. Summing wall clock across
-separate runs is an instrument that has read 5× off.
-
-Two calibration notes that recur: a raw madge cycle count is **not** a runtime
-cycle count here (`verbatimModuleSyntax` erases `import type`, which is the
-standard cycle *fix*, so madge reports the fix as the problem —
-`scripts/metrics-cycles.mjs` calibrates, and treats an unclassifiable edge as a
-failure, not as clean); and `npm run probe` / `npm run mutation` are
-diagnostics, never gates and never ratcheted — the full treatment is
-[`docs/test-strength.md`](./test-strength.md).
+- **Record free memory and swap beside the load average.** Under paging,
+  `sys` time is page-fault time, so a figure taken then is an upper bound.
+- **Measure CPU (`/usr/bin/time`'s `user + sys`), not wall.** Contention
+  inflates wall several-fold and unevenly, so even a ranking distorts. CPU
+  time is the better instrument and still inflates under paging.
+- **To compare two configurations of a sweep, time the items once inside one
+  run**, not the sweep twice. Record the wall time of each (game, preset,
+  seed) case in the widest configuration and sum the cases a narrower one
+  would keep. Two whole-file runs are minutes apart under different load.
+- **Attribute cost per game, not per directory.** A cross-game guard's time
+  belongs to the games its cases name; the `<id>: …` title is the join key.
+- **Warm every arm before the clock starts, rotate their order, and report
+  the minimum beside the median.** A control needs a warm-up, not a second
+  module instance.
+- **An imported constant costs time under the test transform and nothing in
+  the build.** The module runner makes every export a getter, so a table read
+  in a hot loop pays a call per access: 1.6 to 1.7 times on one generator
+  (measured 2026-09-12). `vite build` flattens it away, so do not refuse a
+  hoist for a slowdown only the suite sees.
+- **A single test file that takes tens of minutes is unrunnable, not
+  thorough.** The fix is a cheaper configuration or a narrower invocation.

@@ -3,7 +3,7 @@
  *
  * **What the scored rows prove** is deduction, and every conclusion is an
  * answer-row mark ("not this color, in this slot"), placed as a move so the
- * player can keep it (`docs/hints.md` § "Give the facts a notation"). The
+ * player can keep it (`docs/hints-marks.md` § "Give the facts a notation"). The
  * rules read one row at a time, plus the marks earlier rules placed, and
  * `guess-hint.test.ts` brute-forces each against every answer the rows allow.
  *
@@ -47,7 +47,7 @@ export type GuessRung = (typeof GUESS_RUNGS)[number];
 /** What a step points at. */
 export interface GuessHighlights {
   /** The scored row the sentence reads ("the striped row"), hatched; empty when
-   * it reads none (docs/hints.md § "Hatch the line the sentence names"). */
+   * it reads none (docs/hints-marks.md § "Hatch the line the sentence names"). */
   line: number[];
   /** Answer-row slots whose marks the step cites, outlined. */
   slots: number[];

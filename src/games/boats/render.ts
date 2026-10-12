@@ -501,7 +501,7 @@ function hintBits(
 
 /** The two tildes Boats draws for a *given* water square — reused in the hint
  * color so a "place water here" suggestion speaks the game's own vocabulary
- * (docs/hints.md § "Echo the move's shape in the hint color"). */
+ * (docs/hints-marks.md § "Echo the move's shape in the hint color"). */
 function drawWaves(
   dr: GameDrawing,
   tx: number,
@@ -668,7 +668,7 @@ export function redraw(
       }
 
       // The hint marks *where and which action* in the game's own vocabulary,
-      // recolored, and never performs the move (docs/hints.md §
+      // recolored, and never performs the move (docs/hints-marks.md §
       // "Highlight, never perform"): an unresolved segment for a boat, the
       // given-water waves for water.
       if (hintBit & HINT_SHIP) drawSegment(dr, tx, ty, ts + 1, SHIP_VAGUE, COL_HINT);

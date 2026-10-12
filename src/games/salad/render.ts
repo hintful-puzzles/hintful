@@ -102,7 +102,7 @@ export const COL_E_HOLE = 16;
 export const COL_MISTAKE = 17;
 /** Fork addition: the yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 18;
-// Fork additions: the explained-hint legend (docs/hints.md § "The element-type color legend").
+// Fork additions: the explained-hint legend (docs/hints-marks.md § "The element-type color legend").
 /** The square(s) / candidate(s) / entry the deduction acts on. */
 export const COL_HINT = 19;
 /** The deduction's evidence — a clue's line of sight, or a whole line, outlined
@@ -479,7 +479,7 @@ function drawPencilMarks(
 }
 
 /** The entry a hint step is asking for, previewed in `COL_HINT` in the shape the
- * move itself would draw (`docs/hints.md` § "Echo the move's shape in the
+ * move itself would draw (`docs/hints-marks.md` § "Echo the move's shape in the
  * hint color"): a symbol as its glyph, an empty-square marker
  * as a cross, a holds-a-symbol marker as a ball outline. */
 function drawGhost(

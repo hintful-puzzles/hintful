@@ -826,7 +826,7 @@ describe("seismic moves", () => {
 
   it("completes the board on Solve, and marks it solved-with-help", () => {
     // Driven through a real Midend: the interactive completion path is not the
-    // one the differential exercises (docs/testing.md § "The test tiers").
+    // one the differential exercises (docs/testing.md § "What a new game ships").
     const h = driveMidend(seismicGame);
     const me = h.midend;
     expect(me.newGameFromId(idOf(SMALL))).toBeNull();

@@ -47,7 +47,7 @@ import {
  * into one scope and the read becomes a direct `var` access. Keeping them local
  * is worth it only because it keeps the *suite* fast; do not read it as a rule
  * against shared constants. `docs/testing.md` § "Timing anything under
- * vitest: two things to know first". */
+ * vitest". */
 export const DR = [1, 0, -1, 0];
 export const DC = [0, 1, 0, -1];
 
@@ -278,6 +278,10 @@ const NOT_VISITED = -1;
  * cut vertex of the white graph) must be white. DFS lowpoint
  * articulation-point detection, as upstream's
  * `solver_reasoning_connectedness` / `dfs_biconnect_visit`.
+ *
+ * Alone it can conclude less from a board that says more: shading the square
+ * a cut vertex cut off leaves it no cut vertex. {@link ruleAdjacency} then
+ * clears that same square, so the rules together lose nothing.
  *
  * The walk keeps its own stack. It goes as deep as the clear squares are
  * many, and a call a square overflows the engine's stack on a board of a few

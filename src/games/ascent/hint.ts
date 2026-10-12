@@ -7,7 +7,7 @@
  * here: each technique rebuilds what it reads from the player's board, through
  * the solver's own rungs, and places the one number that reading forces.
  * `add-ascent-hint`'s design D1 measured that nothing more is ever needed
- * (docs/hints.md § "Give the facts a notation (Loopy)").
+ * (docs/hints-marks.md § "Give the facts a notation").
  *
  * The techniques, easiest first, and the rungs each is a projection of:
  *

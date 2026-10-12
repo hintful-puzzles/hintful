@@ -169,7 +169,7 @@ function newUi(_state: RomeState): RomeUi {
     // Not the convention: a strike from an unmarked square ends in what it
     // leaves, so the plan is about 0.7 the length of penciling in every arrow
     // first, and it continues from its last step as often as that plan does
-    // (docs/hints.md § "Two readings of an unmarked cell").
+    // (docs/hints-candidates.md § "Two readings of an unmarked cell").
     candidateReading: "implicit",
   };
 }

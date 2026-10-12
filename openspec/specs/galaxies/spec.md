@@ -740,3 +740,16 @@ and a black dot's alike, and SHALL keep its walls, dots and grid lines.
 - **WHEN** the flash is on a cell of a black dot's finished region
 - **THEN** the cell is a flash color, and its grid lines are the quiet ones
   a white region's cell has, not the ink a black fill needs
+
+### Requirement: The deduced cell is ringed twice and its partner once
+
+Where a step's move claims a cell and its 180° partner, the cell the sentence
+is about SHALL carry a double ring in the action color and the partner a
+single one, so that "this cell" points at one mark. A step with no one cell
+it is about SHALL ring every cell it decides alike, doubled.
+
+#### Scenario: A step that brings a partner
+
+- **WHEN** a step settles a cell whose 180° partner is a different cell
+- **THEN** the cell is ringed twice and the partner once, both in the action
+  color

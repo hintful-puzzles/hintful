@@ -12,6 +12,12 @@
  * **The population is derived**: every game whose `newUi` carries a
  * `candidateReading`. Carrying the field is what makes a game offer the choice,
  * so it is also what enrolls it here.
+ *
+ * **A step is read by what it does to the board**, the notes before and after
+ * it (`effectOf`), never by the move's `type`: a move that is a list of ops
+ * has no discriminant, and the board asks every game the same question. A
+ * step's premise is addressed the same way, by cell on a grid and by region
+ * on a graph (`premiseOf`).
  */
 import { describe, expect, it } from "vitest";
 import { type CandidateReading, candidateHint } from "./candidate-hint.ts";
@@ -261,7 +267,7 @@ describe("the hint-notes preference", () => {
               effects.add(effect);
               // Every blank element the step reasons from shows its notes: the
               // premise is on the board, not left to be worked out
-              // (docs/hints.md § "Two readings of an unmarked cell").
+              // (docs/hints-candidates.md § "Two readings of an unmarked cell").
               const blank = blanks(state, step, effect);
               blankPremises[reading] += blank.length;
               expect(

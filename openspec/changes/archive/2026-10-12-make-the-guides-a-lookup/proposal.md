@@ -1,7 +1,11 @@
 # make-the-guides-a-lookup
 
-**Status: scaffolded 2026-10-12, not started.** Second of the five pieces of
+**Status: done 2026-10-12.** Second of the five pieces of
 `fit-a-new-game-in-one-session`, whose proposal holds the measurements.
+`design.md` holds the outline that was fixed, what was measured afterwards,
+and two things decided in the work that this proposal did not foresee: the
+hints guide became four guides, and the check holds citations as well as
+openings.
 
 ## Why
 
@@ -89,7 +93,9 @@ Not in this change: any change to what a rule says.
 
 ## Capabilities
 
-None at filing; see `.openspec.yaml`.
+`repo-layout`: where the guides live, what a guide's opening and sections
+are, and that a citation of a section resolves. `untangle`, `salad`, `boats`,
+`crossing` and `galaxies`: a rule of each that only a guide stated.
 
 ## Impact
 

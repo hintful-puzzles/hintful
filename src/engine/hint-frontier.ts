@@ -21,7 +21,7 @@
  * never the midend's displayed step or the player's last move: a plan is
  * recomputed whenever the player goes their own way, and an order keyed on
  * history would make two identical boards hint differently
- * (docs/hints.md § "Recompute-stable plans"). A fresh plan has no
+ * (docs/hints-search.md § "Recompute-stable plans"). A fresh plan has no
  * frontier, so its first step is exactly the one the rung order gives.
  *
  * Only the choice is shared. Which firings are available, and what each one

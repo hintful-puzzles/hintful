@@ -72,7 +72,7 @@ import {
  * destroy its own premise: `looseEndSpans` cites the column's *unfinished*
  * squares and then finishes one of them, so a snapshot taken after the firing
  * would shade a different set than the sentence counts
- * (docs/hints.md § "Show the evidence as an area").
+ * (docs/hints-marks.md § "Show the evidence as an area").
  */
 export interface TracksEvidence {
   /** Cell indices (`y * w + x`). */
@@ -142,7 +142,7 @@ export interface TracksFiring {
  * `if (rec && did > before) return did;` is the **per-premise early return**
  * that keeps one firing = one hint step (a rung like `updateFlags` scans the
  * whole grid and would otherwise pile dozens of unrelated deductions into one
- * step: docs/hints.md § "Group one firing into one step"), and
+ * step: docs/hints-marks.md § "Group one firing into one step"), and
  * `if (rec) rec.reason = null;` stops a premise that changed nothing from
  * lending its reason to the next one.
  */

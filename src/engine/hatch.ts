@@ -3,7 +3,7 @@
  * or column a step's sentence calls "this row" or "this column".
  *
  * A flat fill under content cannot be tuned to work in both schemes
- * (docs/hints.md § "Why a fill cannot work, whatever color it is"). The
+ * (docs/hints-marks.md § "Why a fill cannot work, whatever color it is"). The
  * bands cover half the surface and the square's own symbol is drawn over them,
  * so the content keeps its own background under half its area and the line
  * still reads as one striped strip across whatever its squares hold.

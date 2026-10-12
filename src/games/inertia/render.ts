@@ -73,7 +73,7 @@ export const COL_HINT = 9;
  * hint says go this way"). */
 export const COL_AIM = 10;
 /** Appended: the ring round the gem a hint is going for. The hint's two roles
- * get two cues (docs/hints.md § "The element-type color legend"): the
+ * get two cues (docs/hints-marks.md § "The element-type color legend"): the
  * direction is the hint's *arrow* in its action color, the subgoal gem a
  * *ring* in its evidence color. */
 export const COL_HINT_GOAL = 11;

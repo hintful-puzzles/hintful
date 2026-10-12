@@ -19,7 +19,9 @@
  * marks for (`StepMarks.of`), in a role the game's legend lists. A mark the run
  * never shows passes the comparison whatever its tile key gets wrong, which is
  * how Pegs' stripes and arrows went unchecked. Where the seeded deal does not
- * reach a mark, the game pins a board that does ({@link PINNED}). Mistake
+ * reach a mark, the game pins a board that does ({@link PINNED}). The
+ * requirement reads hint marks only: a mark the rules draw (Bricks' gravity
+ * diamond) is held by a board pinned in its game's own tests. Mistake
  * frames are counted but not required: reaching a board with a mistake takes a
  * move that is specific to the game, which is why
  * `src/mistake-overlay-coverage.test.ts` is a ledger rather than a guard.

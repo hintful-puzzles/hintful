@@ -301,7 +301,7 @@ function drawTile(
   const id = ds.id;
   let tile = tileIn;
 
-  // Hint overlay (docs/hints.md § "The element-type color legend"): both
+  // Hint overlay (docs/hints-marks.md § "The element-type color legend"): both
   // cell-level marks are drawn by `redraw` on the cell's own border, so a hint
   // never paints over the elements it is talking about. What is left here is
   // `struck` (bit `n`): the candidates this firing rules out, crossed through.

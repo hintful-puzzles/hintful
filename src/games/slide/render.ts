@@ -217,7 +217,7 @@ export function computeSize(p: { w: number; h: number }, ts: number): Size {
  * overlay has to widen the diff key rather than find a spare flag. Widening is
  * cheap — it is a repaint cache, not a wire format — but must be deliberate,
  * because an overlay that does not fit in the word silently fails to repaint
- * (docs/rendering.md § "A packed diff key runs out of bits, and dead flags are where the next one comes from").
+ * (docs/rendering.md § "When the packed key runs out of bits").
  */
 const FG_CURSOR = 0x00000001;
 const BG_TARGET = 0x00000002;

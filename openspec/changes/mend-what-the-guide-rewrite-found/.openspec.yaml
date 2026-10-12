@@ -1,0 +1,5 @@
+# No delta at filing: task 1.1 decides what `engine-drawing` means and writes
+# the delta, removing this line.
+schema: spec-driven
+created: 2026-10-12
+skip_specs: true

@@ -134,7 +134,7 @@ describe("hint", () => {
     // Every Range step shows a second mark (the test above pins that), so a
     // bare "this cell" would point at neither it nor the target. The tie is
     // geometric — never a color name, which `docs/hints.md` § "Two marks
-    // on the board" forbids as scheme-relative and invisible to a color-blind
+    // of one kind: tie them, and never by color" forbids as scheme-relative and invisible to a color-blind
     // reader.
     const TIE =
       /touches the outlined \S+ square|just past (?:it|them|the outlined cells?)|along the striped run(?: to|:) the ringed cell|the outlined cells? around it/;

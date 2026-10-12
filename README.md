@@ -155,17 +155,21 @@ pages are committed markdown.
 ## Documentation
 
 The guides under [`docs/`](docs) say how work is done here, and each is
-written to be looked up by section rather than read through. This table is
-the one index of them.
+written to be looked up by section rather than read through: a guide about
+writing a game opens with what every game does and a table of its sections.
+This table is the one index of them.
 
 | Working on | Guide |
 | --- | --- |
-| Any game: the lifecycle, the definition of done | [`docs/new-game.md`](docs/new-game.md) |
+| A new game, or any game: the route through the guides by kind of game, the lifecycle, the definition of done | [`docs/new-game.md`](docs/new-game.md) |
 | Params, state, moves, capability hooks, affordances | [`docs/mechanics.md`](docs/mechanics.md) |
 | Pointer, keyboard, touch, the keypad | [`docs/input.md`](docs/input.md) |
 | Redraw, tile cache, palette, animation | [`docs/rendering.md`](docs/rendering.md) |
 | Solver, generator, difficulty tiers, `findMistakes` | [`docs/solver-and-generator.md`](docs/solver-and-generator.md) |
-| A hint: its words, marks, rungs, pins, its help section | [`docs/hints.md`](docs/hints.md) |
+| A hint: the quality bar, its words, its plan, refusals, the guards | [`docs/hints.md`](docs/hints.md) |
+| A hint's marks on the board, how a step is grouped, the facts it may rest on | [`docs/hints-marks.md`](docs/hints-marks.md) |
+| The hint of a game with candidate notes | [`docs/hints-candidates.md`](docs/hints-candidates.md) |
+| The hint of a game solved by search or a heuristic | [`docs/hints-search.md`](docs/hints-search.md) |
 | A test, a render scenario, a cross-game guard | [`docs/testing.md`](docs/testing.md) |
 | A shared engine helper | [`docs/engine-catalog.md`](docs/engine-catalog.md) |
 | Judging tests, or quoting a measurement | [`docs/test-strength.md`](docs/test-strength.md) |

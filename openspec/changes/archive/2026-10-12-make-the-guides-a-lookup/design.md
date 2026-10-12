@@ -116,17 +116,19 @@ The rule for a passage, applied a passage at a time:
 No rule changes. A rewriter that thinks a rule is wrong, or finds two guides
 disagreeing, reports it and leaves both as they are.
 
-## One guide a concern, and the hints guide is three
+## One guide a concern, and the hints guide is four
 
 The guides stay one a concern, because a session looks things up by concern.
-`hints.md` is the exception to its size and not to the rule: 100 KB of it is
-for a game with candidate notes and 47 KB for a game whose hint is a search,
-and a game is one or the other or neither. So it becomes three guides, and
-the split is the route by kind of game for the hint:
+`hints.md` is the exception to its size and not to the rule. Of its 363 KB,
+112 KB is how a step is drawn on the board, 94 KB is for a game with
+candidate notes and 46 KB for a game whose hint is a search, and a game is
+one of those last two or neither (the bytes under each `##` heading). So it
+becomes four guides, and the split is the route by kind of game for the hint:
 
 | Guide | Holds | Who opens it |
 | --- | --- | --- |
-| `docs/hints.md` | the quality bar, the narration, the plan mechanics, the marks, refusals, the guards | every game |
+| `docs/hints.md` | the quality bar, the narration, the plan mechanics, refusals, the guards | every game |
+| `docs/hints-marks.md` | how a step is shown on the board: the marks, the legend, evidence, chains | every game, when it draws the hint |
 | `docs/hints-candidates.md` | the candidate-elimination machinery and what a game with notes owes it | a game with notes |
 | `docs/hints-search.md` | the hint of a game solved by search or by a heuristic | a game with no deduction ladder |
 
@@ -168,8 +170,17 @@ default.
 
 ## The budget
 
-Set after the guides are restructured, from what the openings measure; see
-"What was done" below.
+**An opening is at most 12,000 bytes**, `OPENING_BYTES` in the check. The
+openings measured 4.2 to 7.5 KB after the rewrite, and the engine catalog's
+11.0 KB, its table being a row for each of 81 modules. The number is the
+catalog's with room for a few more modules, and it is three thousand tokens:
+a session that opens every guide a game touches reads about 62 KB of
+openings. A guide whose opening passes it has more sections than one table
+can route, and is split as `hints.md` was.
+
+There is no budget on a whole guide. A section is read alone, so what a
+guide's length costs is the length of its table, which the opening's budget
+already holds.
 
 ## Decisions about the work
 
@@ -188,4 +199,129 @@ Set after the guides are restructured, from what the openings measure; see
 
 ## What was done
 
-(Filled in as the work lands.)
+Measured 2026-10-12, at the commit that rewrote the guides.
+
+**The sizes** (`wc -c`):
+
+| Guide | Before | After |
+| --- | --- | --- |
+| `hints.md` | 362,744 | 69,141 |
+| `hints-marks.md` | in `hints.md` | 72,747 |
+| `hints-candidates.md` | in `hints.md` | 62,960 |
+| `hints-search.md` | in `hints.md` | 29,768 |
+| `solver-and-generator.md` | 143,482 | 92,538 |
+| `engine-catalog.md` | 89,397 | 74,342 |
+| `testing.md` | 79,559 | 55,437 |
+| `input.md` | 76,939 | 56,198 |
+| `mechanics.md` | 74,715 | 64,281 |
+| `rendering.md` | 71,511 | 53,919 |
+| `games/README.md`, now `new-game.md` | 24,003 | 21,977 |
+| All | 922,350 | 653,308 |
+
+The guides are 71% of what they were, and each rewriter was told to expect
+40 to 60. The second readers were asked to cut further and could not without
+cutting rules: what the first pass removed was story, and what is left is a
+rule a sentence. The two that shrank least were already reference
+(`engine-catalog.md` at 83%, `mechanics.md` at 86%), and each gained a 6 to
+11 KB opening it did not have.
+
+**What a game reads is the number that moved.** By the route in
+`docs/new-game.md` § "The route by kind of game", summing the nine openings
+(62 KB) and the bytes of each section the route names (a scratch script
+over the route's citations):
+
+| Kind | Bytes by the route | And of its own hint guide, as its table sends it |
+| --- | --- | --- |
+| Cells with notes | 212 KB | up to 57 KB of `hints-candidates.md` |
+| Cells marked by state | 208 KB | none |
+| Edges and loops | 211 KB | none |
+| Moves and search | 183 KB | up to 26 KB of `hints-search.md` |
+
+Against 919 KB that a session was told to read before, that is under a
+quarter, about 52,000 tokens. It is a ceiling on the route and not on a
+session, which also reads the sections whose "Read it when" turns out true
+of its game.
+
+**What the rewrite removed, and where it went.** Each rewriter listed every
+rule it removed with a destination, and a second reader who had not written
+the guide read the source against the guide and opened the destinations.
+Across the ten guides:
+
+- 28 rules were in neither the guide nor a destination, and were restored.
+  The largest: Crossing's step that stripes both runs through a square, the
+  absent-candidate half of the pencil-toggle rule, and why a deductive game
+  may be untiered.
+- Of about 290 removed rules said to be stated by a spec, a comment at the
+  site or a guard's header, 10 were not, and each was restored, written as a
+  comment, or drafted as a delta. (The readers' own counts, summed from
+  their reports; each opened the destinations it counted.)
+- 26 statements the old guides made were untrue of the tree and are now
+  true: which presets the hint-resume walk takes, where the Marks key is
+  appended, how an erase key reaches a game, what runs at a commit and at a
+  push.
+- 7 rules of one game went to its spec, as this change's deltas: Untangle's
+  tie-break, Salad's populate-only hint and its markers, Boats' catch-all
+  refutation and its journeys, Crossing's two striped runs, Galaxies' two
+  ring weights.
+- One rule was dropped as superseded and not lost: "adding a hint to an
+  existing game is its own change", which `docs/work-management.md` now
+  decides otherwise.
+- What the readers found that is not a guide's to mend is filed as
+  `mend-what-the-guide-rewrite-found`.
+
+**The citations.** 55 headings were renamed and 154 citations moved to one
+of the three new hints guides, by a script from the rewriters' maps, in 109
+files. The check then held 1,010 citations in 353 files, none dead. The 20
+that were dead before the change were among those mended. Three headings
+lost a double quote, since a citation is the text between two.
+
+**The check failing.** A heading renamed and a section added in
+`docs/input.md` gave three failures (two sections with no row, one row with
+no section). And before the three new guides were tracked, the check read
+eight guides and passed: it lists files with `git ls-files`, as
+`unused-exports.mjs` does, so a new guide is unseen until it is added to
+the index. It fails on a count of zero, and not on a count that is short.
+
+## The route test
+
+A reader with no knowledge of the repository was given `AGENTS.md` and
+`README.md` and ten questions the author of Star Battle would have, and told
+to go where the documentation sent it and count the bytes of every range it
+read. All ten were answered by the route, for 111,846 bytes, 15% of the
+guides, and no "Read it when" sent it to a wrong section.
+
+| Question | Bytes | Route |
+| --- | --- | --- |
+| Which sections to read, which guides to skip | 10,043 | direct |
+| The scaffold command, and what it leaves | 10,403 | the list was only in the script's output |
+| Params for a size and a count | 12,395 | the square-size rule was in a section the route left out |
+| A drag that marks several cells | 8,780 | direct |
+| A mistake highlight, the cache, the test owed | 12,071 | direct |
+| A board of exactly its tier, bounded retries | 15,760 | direct; one routed section was for a port |
+| Marking a row and binding the words | 21,553 | direct, through two openings |
+| Six forced cells: one step or six | 3,457 | direct |
+| The tests a game ships, pinning a rung | 10,720 | direct |
+| Done, and what to run | 6,664 | "what to run" took three places |
+
+What it showed, and what was done with each:
+
+- **The openings are half of what a lookup costs**: 57,812 of the 111,846
+  bytes, most of it section tables of 40 to 50 rows of which about one in
+  six applied. The table is what makes the lookup direct, so it stays; what
+  it argues for is that the route in `new-game.md` name sections outright,
+  which it does, so that a session following the route can skip a table.
+- **The scaffold's list of what is left was in no guide.** The how-to now
+  names it, and § "Registering a game" says that records kept by hand refuse
+  a registered game and that the script prints them.
+- **Two routed sections were wrong for a new game**: "Solver-gated
+  generation" left the route, and "The Custom dialog" joined it.
+- **`params-stability.test.ts`**: the guide forbade `-u` and the script
+  asks for it. Both are right, of different lines, and the guide now says a
+  new game adds its lines and moves none.
+- **Left to the next change in the series**: "Definition of done" names no
+  one command to run, which `give-a-game-its-verdict-in-one-command` is to
+  build and then name there.
+- **Left as found**: the four records a registered game must be added to by
+  hand are a hand-kept list of games, which `docs/doctrine.md` § "One source
+  of truth" says will rot. The first new game will pay it once and say what
+  it cost.

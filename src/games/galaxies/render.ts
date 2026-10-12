@@ -413,7 +413,7 @@ function drawSquare(
   // is COL_HINT_CELL; and the wall a hint asks the player to *draw* is a
   // COL_HINT bar drawn whether or not the wall exists yet — that is the whole
   // suggestion, and it is Palisade's forced-edge treatment in Galaxies'
-  // vocabulary (docs/hints.md § "Echo the move's shape in the hint
+  // vocabulary (docs/hints-marks.md § "Echo the move's shape in the hint
   // color"). `null` means this side draws nothing.
   const edgeCol = (side: number): number | null => {
     if (hint & (side << HINT_WALL_SHIFT)) return COL_HINT;

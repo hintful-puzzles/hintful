@@ -43,7 +43,7 @@ export type SticksStatus = "complete" | "unfinished" | "invalid";
  * detects it — one variant per branch the validator can fail on, which is the
  * whole of its vocabulary. The classifier must be total, and it is total here
  * because it is written *inside* the oracle rather than re-derived from its
- * verdict (docs/hints.md § "Read the reason off the validator").
+ * verdict (docs/hints-marks.md § "Read the reason off the validator").
  *
  * Each variant carries the clue that broke, its value, and the cells the
  * argument reasons over — the hint's evidence area, so the picture cannot

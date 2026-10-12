@@ -219,7 +219,7 @@ function solve(
 /** Re-solve from the clues and flag every player-set cell whose value
  * contradicts the unique solution, and every `?` on a domino that is neutral
  * in it. The `?` counts because the hint reads it as a fact (`hint.ts`
- * `seedSolver`), so the check has to vouch for it (docs/hints.md §
+ * `seedSolver`), so the check has to vouch for it (docs/hints-candidates.md §
  * "Deduce from the notes when the mistake check vouches for them"). Blanks are
  * never mistakes, and a non-uniquely-solvable board yields none. */
 function findMistakes(state: MagnetsState): readonly MagnetsMistake[] {

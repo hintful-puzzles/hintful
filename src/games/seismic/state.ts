@@ -275,7 +275,7 @@ export type SeismicMove =
   | { type: "pencilAll" }
   /** Cross out several notes at once: how a hint step rules candidates out, since
    * one deduction can strike several and a pencil toggle is neither multi-cell nor
-   * idempotent (docs/hints.md § "Persist, populate, and the moves"). */
+   * idempotent (docs/hints-candidates.md § "Persist, populate, and the moves"). */
   | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
   /** Write several notes at once: how a hint puts down the candidates a
    * deduction rests on, when the player leaves a cell's notes unwritten. */
@@ -310,7 +310,7 @@ export function newUi(_state: SeismicState): SeismicUi {
     // Not the convention: an Easy board falls to singles the board shows, so
     // the implicit plan writes no notes and is about half as long, with no cull
     // after each placement; on Normal the two are about even
-    // (docs/hints.md § "Two readings of an unmarked cell").
+    // (docs/hints-candidates.md § "Two readings of an unmarked cell").
     candidateReading: "implicit",
   };
 }

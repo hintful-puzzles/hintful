@@ -56,7 +56,7 @@ const outlined = (cells: readonly Point[], words: string): Narration =>
   mark.as("outline", CELL, cells, words);
 
 /** A line as the player reads it: "this row", striped on the board. Never a
- * number, which the board does not draw (docs/hints.md § "Hatch the line
+ * number, which the board does not draw (docs/hints-marks.md § "Hatch the line
  * the sentence names"). */
 const lineRef = (line: BoatsLine, m: BoatsMarks): Narration =>
   mark.this("stripes", whole(CELL), m.line, line.horizontal ? "row" : "column");
@@ -78,7 +78,7 @@ const follows = (m: BoatsMarks): Narration | string =>
   m.follows.length ? phrase`, with ${ringed(m.follows, "the water around it")}` : "";
 
 /** The consequence clause of a refutation — the rule the rejected trial broke,
- * read off the validator's own rejection (docs/hints.md § "Read the
+ * read off the validator's own rejection (docs/hints-marks.md § "Read the
  * reason off the validator"), naming the squares it flagged. */
 function breachClause(breach: BoatsBreach, cells: readonly Point[], m: BoatsMarks) {
   const at = (words: string): Narration =>

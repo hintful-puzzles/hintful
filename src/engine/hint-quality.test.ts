@@ -208,8 +208,8 @@ const LONG_NARRATIONS: {
     games: ["singles"],
     rungs: ["offset"],
     why:
-      'The owner-endorsed indication-first offset narration (hints.md § "Lead ' +
-      'with the indication"): its opener alone, the pattern the player learns ' +
+      "The owner-endorsed indication-first offset narration " +
+      '(hints.md § "Lead with the indication"): its opener alone, the pattern the player learns ' +
       "to spot, is 65 characters.",
   },
   {
@@ -344,8 +344,8 @@ const LONG_NARRATIONS: {
     games: ["singles"],
     rungs: ["corner2", "corner3", "corner4"],
     why:
-      'The owner-directed corner family (hints.md § "Name a square by its ' +
-      'value": concrete values read far clearer): each arm is a proof by ' +
+      'The owner-directed corner family (hints.md § "Name a square by its value": ' +
+      "concrete values read far clearer): each arm is a proof by " +
       "contradiction whose links are values the player can check, and the " +
       "box-in step is the one a shorter sentence would drop.",
   },
@@ -568,7 +568,7 @@ interface NarratedStep {
 const IDIOMS: Record<string, (step: NarratedStep) => boolean> = {
   // Filling's grouped region step: "The shaded region of N fits exactly
   // into these squares." — the exactness *is* the forcing claim
-  // (docs/hints.md § "Group one firing into one step"; owner-endorsed with the Filling hint).
+  // (docs/hints-marks.md § "Group one firing into one step"; owner-endorsed with the Filling hint).
   filling: (s) => /fits exactly into/.test(s.explanation),
 
   // Loopy's blocked-pair rung: "Both outlined dots already have a line, so
@@ -695,7 +695,7 @@ describe("hint narration form, cross-game", () => {
             ).toBe(false);
             // No board in the collection draws row or column numbers, so a
             // line named by one sends the player counting; the line a sentence
-            // is about is striped instead (hints.md § "Hatch the line the
+            // is about is striped instead (hints-marks.md § "Hatch the line the
             // sentence names").
             expect(
               NUMBERED_LINE.test(step.explanation),
@@ -1015,10 +1015,11 @@ const LINT_ROUNDS = 30;
  * Whether this run walks {@link lintCases}' third rule — and with it, whether
  * the ledger's *rot* half can decide anything.
  *
- * **Off in the automatic per-commit hook, on everywhere else.** That is the
- * gate's existing third-scoping-by-role shape (`scripts/gate.sh`, `slow.ts`'s
+ * **Off in the two local hooks, pre-commit and pre-push, on everywhere else**
+ * (CI, `npm run gate`, a bare `vitest`). That is the gate's
+ * third-scoping-by-role shape (`scripts/gate.sh`, `slow.ts`'s
  * {@link PRECOMMIT_HOOK_RUN}): CI runs `npm run gate` with the toggle unset on
- * every push to `main`, so this narrows what a *commit* costs and never what
+ * every push to `main`, so this narrows what a hook costs and never what
  * protects the branch.
  *
  * **Why this rule and not the rest of the block.** Measured: the rule is 47 s
@@ -1254,7 +1255,7 @@ describe("hint narration stays readable at a glance", () => {
     expect(pinned).toBeGreaterThan(0);
   });
 
-  // Skipped rather than weakened in the per-commit hook, so a deferred check is
+  // Skipped rather than weakened in the two local hooks, so a deferred check is
   // **reported** instead of passing over a walk that could not see its subject.
   it.skipIf(!CORNER_WALKED)("ledgers only listings that still need the room", () => {
     // Registered last, so it runs after every per-game case has filled

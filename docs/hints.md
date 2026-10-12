@@ -1,217 +1,242 @@
 # Hints
 
-**How to give a game a full explained hint.** Every game is expected to carry
-a `hint()` — explained hints are a **core deliberate-divergence product
-value** of this fork, not a nicety — but coverage is not yet complete: the
-games still lacking one are the registered games that declare no `hint`, which
-[`engine/testing/hint-games.ts`](../src/engine/testing/hint-games.ts) derives.
-A hintless game is a draft, and every game is to have a hint (§ "The quality
-bar"); [`work-management.md`](./work-management.md) § "Which hintless game
-comes next" says how the order is chosen. Upstream's `'h'` returns one next move with
-no explanation; that is below the bar. Adding a hint to a game is its **own
-openspec change** (`add-<game>-hint`), acceptance-gated like a port.
+What every game's explained hint owes: the quality bar, the words of a step,
+the `Game` hooks and the plan behind them, the refusals, and the cross-game
+guards that hold all of it. It rests on the specs
+[`engine-hints`](../openspec/specs/engine-hints/spec.md) and
+[`engine-candidate-hints`](../openspec/specs/engine-candidate-hints/spec.md),
+and on [`palisade`](../openspec/specs/palisade/spec.md) for the bar. Three more
+guides hold the rest of the hint. Every game opens
+[`hints-marks.md`](./hints-marks.md) when it draws a step on the board: the
+marks, the legend, evidence, chains, and also how a firing is grouped into a
+step or a journey and which facts a hint may rest on. A game with candidate notes opens
+[`hints-candidates.md`](./hints-candidates.md). A game with no deduction
+ladder, whose hint is a search or a heuristic, opens
+[`hints-search.md`](./hints-search.md).
 
-Authoritative specs: [`engine-hints`](../openspec/specs/engine-hints/spec.md), and
-[`engine-candidate-hints`](../openspec/specs/engine-candidate-hints/spec.md) for the candidate walk. Quality bar:
-[`palisade`](../openspec/specs/palisade/spec.md) + § "The quality bar" below. **Exemplars to
-read:** Palisade (grouped multi-leg deductions),
-[`src/games/range/`](../src/games/range/) (`solver.ts` recording →
-`index.ts` `hint`/`hintKeepTrack` → `render.ts` highlight),
-[`src/games/towers/`](../src/games/towers/) (candidate-elimination), and
-[`src/games/inertia/`](../src/games/inertia/) (the **non-deductive**
-exemplar: verified-claim narration, a stable marked subgoal, a
-recompute-stable plan).
+## What every game does
 
-This is one of the [`docs/`](./new-game.md) guides. Related files:
-[`solver-and-generator.md`](./solver-and-generator.md) (the deduction engine
-the hint is a projection of, and the guess-free generation policy),
-[`rendering.md`](./rendering.md) (the cache/overlay machinery hint highlights
-ride on), [`testing.md`](./testing.md) (the test tiers). **Update this file
-whenever you work on a hint** and hit something it didn't tell you — that edit
-is part of "done", in the same change.
+Each step names the file of `src/skeleton/grid/` that already does it.
+
+1. **Run the solver's rungs one firing at a time.** `solver.ts` holds the
+   reason union, the rung list `SKELETON_RUNGS` and `skeletonRecordingPass`,
+   built on `singleFirings` (§ "Recording the deduction", § "Name the rung a
+   step speaks").
+2. **Build the plan from the player's own marks.** `hint.ts`'s `skeletonHint`
+   hands a copy of the board, the pass and a `stepBudget` to `deduceHintPlan`,
+   and returns a `HintRefusal` where there is no step (§ "The shared plan
+   loop: deduceHintPlan", § "The step budget", § "Refusal wording comes from
+   one module").
+3. **Turn each firing into a `HintStep`**: its `move`, `rung: reason.kind`,
+   its `words` and `explanation: words.text` (`stepOf` in `hint.ts`).
+4. **Write every sentence in `hint-text.ts`**, exported as `say`, as a
+   `Sentence` whose pointing words are references to marks (§ "Writing the
+   narration").
+5. **Judge the player's move against the step** in `skeletonKeepTrack`, with
+   `trackTargets` and `changedCells` from `engine/hint-track.ts`, narrowing
+   the words when a step shrinks (§ "The hooks a hinted game implements").
+6. **Declare the hooks in `index.ts`**: `hint`, `hintRungs`, `hintMarks`,
+   `hintKeepTrack` and `hintGesture` (§ "Every step is a gesture").
+7. **Paint the marks from the words** in `render.ts`, from `stepMarks(hint)`.
+   How is [`hints-marks.md`](./hints-marks.md).
+8. **Write the help page's `## Hints` section**, with `{{hint-marks}}`
+   (`help.md`, stamped to `help/games/<id>.md`; § "The help teaches the
+   marks").
+9. **Pin a position for every rung and test the plan** in
+   `skeleton-hint.test.ts`: `describeHintPins`, `npm run hint-scan`, and
+   `renderPinnedHint` for a frame (§ "Verifying a hint in-process").
+10. **Run the app and read each sentence against its frame.**
+
+## Sections
+
+| Section | Read it when |
+| --- | --- |
+| The quality bar | you start a hint, or a review cites a rule of the bar by its number |
+| Guess-free generation is the precondition | a hint would fall back on the answer or a search to find its move |
+| Cognitive load: one step per hint | a step's reasoning takes more than one inference to follow |
+| – The forcing boundary | a rung supposes a value and propagates to a contradiction |
+| Writing the narration | you write or review any sentence a hint speaks |
+| – A sentence has parts | you build a step's `Sentence`, or choose its relation |
+| – Bind the words to the marks | a sentence points at the board, or the binding check fails |
+| – Necessity for deductions, imperative for moves | you word a step's conclusion |
+| – Lead with the indication | a step reasons from more than one local rule |
+| – Two marks of one kind: tie them, and never by color | a step marks two elements of one kind and says "this cell" |
+| – Name a square by its value | a step's squares hold numbers, or two of them hold the same one |
+| – The premise must single out the conclusion | another move would satisfy the premise a sentence states |
+| – Keep the narration terse | a sentence runs past 120 characters, or the length ledger fails |
+| – The sentences live in one file per game | you add, move or reword a sentence |
+| – No em-dashes | a sentence wants a dash |
+| – Conclude with the action the move makes | a step strikes candidates, or its words claim a placement |
+| – Sanity-read at the degenerate extremes | a sentence interpolates a clue, a count or a size |
+| – Name elements by what the player can see | a sentence names a tile, a line or a place on the board |
+| – Rules belong in the help | a sentence opens with a fact true of every step |
+| – The help teaches the marks | you write the help page's `## Hints` section, or change a mark |
+| – Hint the move that advances the goal | a plan offers forced moves that build nothing |
+| – Show only what the board does not already say | a step restates what the player's own marks show |
+| The hooks a hinted game implements | you wire `hint`, `hintKeepTrack` or another hint hook into `Game` |
+| – Name the rung a step speaks | you add a deduction, or a test needs to know which one a step is |
+| – Every step is a gesture | you write `hintGesture`, or a walk throws on a step's move |
+| – The shared plan loop: deduceHintPlan | you write the loop that turns firings into a plan |
+| – Recording the deduction | the solver must say why each firing happened |
+| – A rung is not a premise, so return per premise | one rung holds several rules, or one step shows several deductions |
+| – A firing is not always a technique, so check the boundary too | true, forced steps split one thing a player sees at once |
+| – Census the reasons, not only the rungs | a reason kind may never fire, or you add one |
+| Refusal wording comes from one module | `hint()` has no step to give |
+| Refusal couples to the mistake overlay | the board holds a mistake when a hint is asked, or `solve` refuses |
+| The cross-game guards | a cross-game hint test fails for your game |
+| – A hint must resume from any position | the hint is asked from a board the player reached alone |
+| – A hint carries on from an entry the player made first | a rule bounds a line by the nearest undecided cell |
+| – The step budget | a deduction loops until nothing changes |
+| – Stale plans and refreshHintStep | a followed move or a preference can settle a later step |
+| – A plan's copy is the board, no further on and no further back | the planner works on a copy of the board |
+| Verifying a hint in-process | you test a hint's frame or pin its positions |
+| Probe before trusting a diagnosis | a hint misbehaves and you have a theory why |
 
 ## The quality bar
 
-Explained hints are a core product value of this project, and the Palisade
-deduction hint is the exemplar. It is not enough to point at the next move.
-The bar a `hint()` must clear, cited elsewhere by these numbers:
+Every game is to have a `hint()`, a game without one is a draft, and a new
+game ships with its hint. A hint that names the next move with no explanation,
+as upstream's `'h'` does, is below the bar. The rules are cited elsewhere by
+these numbers:
 
-1. **Explain *why* the move is forced, not just *what* to do.** Narrate the
-   actual deduction ("both edges border the same region, so they share a fate;
-   walling both exceeds clue 2, so neither is a wall"). If a narration's
-   conclusion doesn't follow from its own stated premises, the deductive
-   coupling is missing — surface it. A good hint *teaches the technique*.
-2. **One deduction firing = one journey.** A single deduction that forces
-   several moves is emitted as one multi-leg `HintStep` journey (continuation
-   legs flagged `continuesPrevious`), so it reads and auto-plays as one
-   coherent hint, not N disjoint ones.
+1. **Explain why the move is forced, not only what to do.** Narrate the
+   deduction itself. If the conclusion does not follow from the premises the
+   sentence states, the coupling is missing: state it.
+2. **One deduction firing is one journey.** A firing that forces several moves
+   is one multi-leg `HintStep` journey, its later legs flagged
+   `continuesPrevious`, so it reads and auto-plays as one hint.
 3. **Equivalent moves share a color.** Moves that share a fate render
-   identically (Palisade: all `COL_HINT`); a distinct color reads as
-   "different roles" and misleads.
-4. **Pace auto-hint uniformly.** `AUTO_HINT_STEP_MS` (1s) per step in
-   [`src/puzzle/puzzle.ts`](../src/puzzle/puzzle.ts), floored by the move's
-   own animation so animated moves still play out fully.
-5. **Claim only what you have checked, and make the plan recompute-stable.**
-   Every sentence a hint utters is a claim; one that is not verified in code
-   will be read by a player who trusts it. A heuristic plan must also be
-   stable across recomputes, because a plan is recomputed whenever the player
-   goes their own way. See § "Recompute-stable plans".
+   identically; a second color reads as a second role.
+4. **Pace auto-hint uniformly.** `AUTO_HINT_STEP_MS` a step
+   ([`src/puzzle/puzzle.ts`](../src/puzzle/puzzle.ts)), floored by the move's
+   own animation.
+5. **Claim only what the code has checked, and make the plan
+   recompute-stable.** Every sentence is a claim a player will trust. A plan
+   is recomputed whenever the player goes their own way, so a heuristic plan
+   must be stable across recomputes (`hints-search.md` § "Recompute-stable
+   plans").
 6. **A hint relies only on marks the player can make.** Every fact a step
-   rests on is on the board or can be put there by the player. If a deduction
-   needs a mark the game does not offer, the game gains that mark and the
-   hint's steps place it; a hint never draws facts the player has no way to
-   record. Where a notation would genuinely be too hard to manage, the tier that
-   needs it becomes `Unreasonable` instead. See § "Give the facts a notation
-   (Loopy)".
-7. **A hint asks only for what the pointer does.** A game with a hint declares
+   rests on is on the board or can be put there by the player. Where a
+   deduction needs a mark the game does not offer, the game gains the mark and
+   the hint's steps place it. Where a notation would be too hard to manage,
+   the tier that needs it becomes `Unreasonable` (`hints-marks.md` § "Give the
+   facts a notation").
+7. **A hint asks only for what the pointer does.** A hinted game declares
    `hintGesture`, and the midend plays a step by sending that gesture through
-   `interpretMove`. See § "Every step is a gesture".
-8. **One deductive step per hint; externalize the rest onto the board.** A
-   hint must land *at a glance* — at most one inferential step's worth of
-   reasoning. Multi-step reasoning (including single-level forcing) is spread
-   across **gradual board marks** — one mark per step, the accumulated marks
-   carrying the state — never crammed into one dense sentence. See
-   § "Cognitive load: one step per hint".
+   `interpretMove` (§ "Every step is a gesture").
+8. **One deductive step per hint; the rest goes onto the board.** A step
+   carries at most one inference, and longer reasoning is spread over board
+   marks, one a step (§ "Cognitive load: one step per hint").
 
-A non-deductive game is exempt only from deduction, not from the bar: see
-§ "Non-deductive (heuristic) hints". Every game is to have a hint, a game
-without one is a draft, and a new game ships with its hint.
+A game with no deduction is exempt from deduction only, not from the bar
+(`hints-search.md` § "What every game does"). The games still
+without a hint are the registered games that declare no `hint`, derived by
+[`engine/testing/hint-games.ts`](../src/engine/testing/hint-games.ts), and
+[`work-management.md`](./work-management.md) § "Which hintless game comes
+next" orders them.
+
+Exemplars: Palisade (grouped multi-leg deductions),
+[`src/games/range/`](../src/games/range/) (a recording solver, `hint` and
+`hintKeepTrack`, and the highlight), [`src/games/towers/`](../src/games/towers/)
+(candidate elimination), and [`src/games/inertia/`](../src/games/inertia/)
+(no deduction: verified claims, a stable marked subgoal, a recompute-stable
+plan).
 
 ## Guess-free generation is the precondition
 
-An explained hint can exist only if the board is **solvable by pure
-deduction** — a hint that falls back on the known solution or a backtracking
-search isn't teaching a *why*, it's revealing the answer. That is a
-**generation policy**, not merely a hint policy, and it lives with the
-generator: see [`solver-and-generator.md`](./solver-and-generator.md)
-§ "Guess-free generation" for the policy (every non-`Unreasonable` tier is
-pure deduction; the deduction/recursion line; the no-"just because"-fallback
-bar and the two compliant ways to meet it; the one-narratable-engine shape
-over `runDeductionFixpoint`). Movement/objective games (Fifteen, Sixteen,
-Flood, Untangle) are out of the policy's scope and hint
-heuristically/imperatively — § "Non-deductive (heuristic) hints".
+Do not let a hint fall back on the known solution or a backtracking search: an
+explained hint needs a board solvable by deduction alone, and that is the
+generator's policy to keep.
+[`solver-and-generator.md`](./solver-and-generator.md) § "Guess-free
+generation" holds it. A game of movement or of an objective is outside the
+policy and hints by `hints-search.md` § "What every game does".
 
 ## Cognitive load: one step per hint
 
-Owner principle (2026-06-26): **every hint a non-`Unreasonable` tier shows
-must be understandable at a glance — at most one inferential step of
-reasoning.** A hint the player has to *work through* (holding a chain of "…and
-therefore… and therefore…") has failed, even when it's correct. The product
-value is a hint that lands immediately, not a proof to parse.
+Make every hint of a tier below `Unreasonable` understandable at a glance: at
+most one inferential step. A hint the player has to work through has failed
+even when it is correct.
 
-The corollary is the mechanism: **when a deduction's justification spans more
-than one inferential step, externalize the chain as gradual marking on the
-board — one mark per step — instead of cramming it into one dense sentence.**
-The board's accumulated marks (pencil notes, for candidate-elimination games)
-carry the state, so the player never holds the chain in their head; each
-individual hint then narrates a single, self-evident step. This is exactly the
-candidate-elimination pattern (populate → strike one candidate with a one-line
-reason → … → place a naked single): each strike is one step, the marks are the
-externalized memory.
+Where a deduction's justification spans more than one step, spread it over
+the board as gradual marks, one mark a step, each step narrating one
+self-evident inference. The accumulated marks carry the state, as pencil notes
+do in a candidate game: populate, strike one candidate with a one-line reason,
+and so on to a naked single.
 
-**The marks have to be the player's own.** Externalizing works because the
-player can make the same marks when they solve without help, so what a hint
-teaches carries over to the next board. A chain that would need a mark the
-player cannot make is a notation the game is missing, not a display to design,
-and the fix is to give the player that notation (§ "Give the facts a notation
-(Loopy)").
+The marks must be ones the player can make, so that what a hint teaches
+carries to the next board. A chain that needs a mark the player cannot make is
+a notation the game is missing (`hints-marks.md` § "Give the facts a
+notation").
 
 ### The forcing boundary
 
-Read this before hinting a hard tier. *Single-level forcing* — "suppose X
-here; propagate; it hits a contradiction; so not X" — is sound deduction, but
-it is **not** one glance-able step. Arc-consistency and counting already catch
-every *direct*, single-constraint contradiction, so a contradiction that
-*survives* to the forcing rung necessarily comes from **combining several
-constraints** (the hypothesis forces another cell, which then breaks a
-clue/count elsewhere). A forcing deduction is therefore intrinsically a short
-chain — measured, never fewer than **three** implication links, because a one-
-or two-link chain *is* a naked pair and set elimination has already eaten it.
+Never compress a forcing chain ("suppose X; it hits a contradiction; so not
+X") into one sentence and call it one step. A contradiction that survives the
+direct rungs comes from combining constraints, so it is a chain of at least
+three links, and the sentence asks the player to run the propagation in their
+head.
 
-Two compliant options, one non-option:
-
-- **Externalize it as a guided "what-if" walk** — tentative marks the player
-  watches accumulate ("suppose vampire here → then this cell must be a ghost →
-  now the left clue of 2 can't be met → so cross vampire out here"), each leg
-  one glance-able step, only the final strike real. Buildable on the existing
-  multi-leg journey (`continuesPrevious`) + pencil-strike machinery, but it
-  introduces *tentative* (hypothetical) marks — a visual state distinct from
-  real notes.
-- **Keep the shipped tiers direct-only** — arc-consistency + counting (or
-  positional + set for Latin), and don't ship forcing-tier boards at a
-  non-`Unreasonable` difficulty. Simpler hints; a less-hard top tier.
-- **Not allowed:** compress the forcing chain into a single "if X then
-  contradiction" sentence and call it one step. It reads as a glance-able hint
-  but isn't one — it asks the player to run the propagation in their head.
-  (Existing forcing/`Extreme`-tier hints in the Latin family should be
-  reviewed against this when next touched.)
-
-**Which of the three applies is decided by
+Which treatment a rung takes is decided by
 [`solver-and-generator.md`](./solver-and-generator.md) § "Check, Tactic,
-Search"** (owner, 2026-08-12, `audit-guessing-tier-names` design D9), and the
-split is *bounded-and-walkable*, not *was a trial involved*:
+Search", by whether the reasoning is bounded and walkable, not by whether a
+trial was involved:
 
-- a **Check** — one placement, one validator call, no fixpoint (Sticks'
-  `sticksTry`, Bricks' and Clusters' single-cell rungs) — is ordinary deduction
-  and narrates directly, at any tier;
-- a **Tactic** — a bounded chain, measured 3–12 links in the Latin family and
-  2–3 forced cells in Clusters — keeps its middle tier and **is walked**;
-- a **Search** — the hypothesis runs a whole *unbounded* fixpoint or sub-solve
-  (Undead's `forcingPass`, Bricks' `solverRecurse`, Dominosa's chain closure,
-  Spokes' top-tier look-ahead, Galaxies' deleted rung) — is `Unreasonable` and is
-  **not narrated at all**. The hint refuses and says deduction has run out.
+- **A Check** is one placement and one validator call with no fixpoint. It is
+  ordinary deduction and narrates directly at any tier. Exemplar: Sticks'
+  `sticksTry`.
+- **A Tactic** is a bounded chain. It keeps its middle tier and is walked:
+  tentative marks the player watches accumulate, each leg one step, only the
+  last strike real, on the multi-leg journey (`continuesPrevious`). Exemplar:
+  Clusters, which renders every forced cell of its hypothetical from its own
+  overlay bits.
+- **A Search** runs an unbounded fixpoint or sub-solve from its hypothesis. It
+  is `Unreasonable` and is not narrated: the hint refuses and says deduction
+  has run out. Exemplar: Undead's `forcingPass`.
 
-**A game can ship a Tactic and a Search that are the same function** — Spokes
-calls one look-ahead with a capped sub-solve at Tricky and an uncapped one above
-it — in which case they narrate identically and no wording check can separate
-them. Prove the hint reaches only the permitted one *structurally*: Spokes
-asserts that a plan computed at the top tier equals one computed at Tricky, plus
-a control showing Tricky does add firings the tier below lacks, so the equality
-cannot pass vacuously. See `solver-and-generator.md` § "Check, Tactic, Search".
+The other compliant choice is to keep the shipped tiers direct-only and not
+deal forcing-tier boards below `Unreasonable`.
 
-**The walk is the bar, and it is not a cross-game engine build.** Clusters
-renders every forced cell of its hypothetical from per-game overlay bits, with
-no engine change. Stating the classified contradiction and anchoring it to the
-board is not a destination, and
-[`engine/hint-quality.test.ts`](../src/engine/hint-quality.test.ts) § "no
-hint leaves a chain for the player to carry, at any tier" holds every game to
-it.
-
-**Measure the shape of the call, not the length of the sentence.** A rung that
-runs a fixpoint from its hypothesis is a Search however short its sentence
-(Undead's forcing rung was 130 characters), and brevity cannot redeem it.
+- **Judge the shape of the call, not the length of the sentence.** A rung
+  that runs a fixpoint from its hypothesis is a Search however short its
+  sentence.
+- **Where a Tactic and a Search are the same function** with a different cap,
+  no wording check separates them, so prove structurally that the hint reaches
+  only the permitted one. Spokes asserts that a plan computed at its top tier
+  equals one computed at Tricky, with a control showing Tricky adds firings
+  the tier below lacks, so the equality cannot pass vacuously.
+- **Stating the classified contradiction and anchoring it to the board is not
+  a walk.** [`engine/hint-quality.test.ts`](../src/engine/hint-quality.test.ts)
+  ("no hint leaves a chain for the player to carry, at any tier") holds every
+  game to the walk.
 
 ## Writing the narration
 
-The narration *is* the product value, so most of this guide's hard-won lessons
-are about prose. The arc every nontrivial hint follows:
-
-> **indication** (the spotted pattern, named in board terms and generalizable)
-> → **reasoning** (why that pattern forces the move) → **conclusion** (the
-> action, in the necessity voice).
+Write every nontrivial step as indication, then reasoning, then conclusion:
+the spotted pattern in board terms, why it forces the move, and the action.
+The sections below are the rules for each part; `src/skeleton/grid/hint-text.ts`
+is the smallest example of all of them.
 
 ### A sentence has parts
 
-A step's words are a `Sentence` (`engine/hint-words.ts`), and the only ways
-to make one are `sentence(said)`, its shorthand `so(...)`, and `unshaped(...)`.
-So the arc above is the shape of what a game hands over, and the engine
-writes the joins. Five rules hold for every game:
+Build a step's words as a `Sentence`
+([`engine/hint-words.ts`](../src/engine/hint-words.ts)) with `sentence(said)`,
+its shorthand `so(...)`, or `unshaped(...)`. The game hands over the parts and
+the engine writes the joins. Five rules hold:
 
-1. **Look, then what follows, then the move.** Start with what the player
-   should pay attention to.
-2. **Each part follows from the last.** Never "move A is bad; do move B" with
-   no stated relation between them.
-3. **"So" concludes only a move the sentence has narrowed to one.** Where
-   several moves would do, offer the move as one of them.
-4. **Leave the move to the board when the board makes it obvious.**
-5. **Omit needless words.**
+1. Look, then what follows, then the move. Start with what the player should
+   pay attention to.
+2. Each part follows from the last. Never "move A is bad; do move B" with no
+   stated relation.
+3. "So" concludes only a move the sentence has narrowed to one. Where several
+   moves would do, offer the move as one of them.
+4. Leave the move to the board when the board makes it obvious.
+5. Omit needless words.
 
-The parts are `look` (the indication, and whatever follows inside the same
-clause: a premise may fuse the two), an
-optional `follows` (a consequence the move rests on), the `move` as it reads
-mid-sentence, an optional `aim` (a stable subgoal), and the `relation`, which
-picks the engine's words. The forms are in `hint-words.ts`'s `Relation` and
-pinned word for word in `hint-words.test.ts`:
+The parts are `look` (the indication, and whatever follows in the same
+clause), an optional `follows` (a consequence the move rests on), the `move`
+as it reads mid-sentence, an optional `aim` (a stable subgoal) and the
+`relation`, which picks the engine's words. The forms are `Relation` in
+`hint-words.ts`, pinned word for word in `hint-words.test.ts`:
 
 | relation | reads |
 |---|---|
@@ -223,40 +248,31 @@ pinned word for word in `hint-words.test.ts`:
 | again | "…and M, for B." (a journey's later leg) |
 | serves | "Working on A: M." |
 
-Any form takes an aim: "Working on A: …". `sentence` capitalizes the result,
+Any form takes an aim ("Working on A: …"). `sentence` capitalizes the result,
 so a look that opens on a reference needs no `.capitalized()`.
 
-**Rules 1 and 3 are where the parts have teeth.** Order is fixed, and rule 3
-has a mechanical half: in a game whose hint searches, `forced` must carry the
-proof that every rival was judged lost, and the hint-quality walk fails a
-searching game's forced step without it. That proof is a value only
-`judgeRivals` makes (§ "Judge the rivals of a searched move"), so the only
-way to write "so" over a searched move is to have judged its rivals. Pegs'
-same-peg trap arms ("…, so jump this peg into the ringed hole instead") are
-the case: the code never judged the peg's other jumps. Rule 2
-is the one the structure cannot check: it guarantees the order and the
-connective, not that the conclusion follows. A reviewer reads the parts.
-
-**Rule 4 is `mark.move(words)`**: a ring on the step's own move (the engine's
-`MOVE` kind), which the renderer draws as it draws any move, so "go back for
-it" is bound to the frame like any other reference.
-
-**Exceptions are a closed set, each with a property the walk checks**:
-`bare` (nothing to say but the move; names only ring marks), `setup` (the
-method's opening procedure; names no outline or stripes), `evident` (a look
-alone whose ringed squares say the move, Filling's owner-endorsed "fits
-exactly into"; names a ring). A step that fits none of them is a question
-about the relations first; a new kind is an engine change with its reason.
-
-**Refusals stay `Narration`**: a dead end is not a step, and its words are
-checked by the refusal machinery (§ "Refusal wording comes from one module").
+- **Rule 3 is checked in a game whose hint searches.** `forced` there must
+  carry the proof that every rival was judged lost, a value only `judgeRivals`
+  makes (`hints-search.md` § "Judge the rivals of a searched move"), and the
+  hint-quality walk fails a searching game's forced step without it.
+- **Rule 2 is the reviewer's.** The structure fixes the order and the
+  connective, not that the conclusion follows.
+- **Rule 4 is `mark.move(words)`**: a ring on the step's own move (the
+  engine's `MOVE` kind), which the renderer draws as it draws any move.
+- **The exceptions are a closed set, each with a property the walk checks**:
+  `bare` (nothing to say but the move; names only ring marks), `setup` (the
+  method's opening procedure; names no outline or stripes) and `evident` (a
+  look alone whose ringed squares say the move; names a ring). A step that
+  fits none is first a question about the relations, and a new kind is an
+  engine change with its reason.
+- **A refusal stays a `Narration`**, not a `Sentence` (§ "Refusal wording
+  comes from one module").
 
 ### Bind the words to the marks
 
-**A sentence that points at the board is built from references to the marks it
-points at** ([`engine/hint-words.ts`](../src/engine/hint-words.ts)), so the
-words and the marks cannot say different things. The roles are the engine's,
-and they mean the same thing in every game:
+Build every word that points at the board from a reference to the mark it
+points at ([`engine/hint-words.ts`](../src/engine/hint-words.ts)), and paint
+every hint mark from those references. The roles mean the same in every game:
 
 | role | adjective | marks |
 |---|---|---|
@@ -264,5419 +280,969 @@ and they mean the same thing in every game:
 | outline | outlined | what the step reasons from |
 | stripes | striped | the line or region the sentence names |
 
-Write the sentence with `phrase` and a reference wherever it points:
-`mark.this("ring", CELL, [c], "cell")` for "this cell",
+**The words.** Write with `phrase` and a reference wherever the sentence
+points: `mark.this("ring", CELL, [c], "cell")` for "this cell",
 `mark.the("outline", CELL, cells, "square")` for "the outlined squares",
-`mark.this("stripes", whole(CELL), cage, "cage")` for "this cage" (`whole` counts
-a region as one thing), `mark.as(role, kind, els, words)` for anything else that
-names a mark ("clue 3", "every remaining edge"), and `mark.paren` for "its bulbs
-(ringed)". A literal "this", "these" or mark adjective throws, and so does a
-reference whose words use another role's adjective. The words re-render from a
-reference's elements, which is how a refresh that shrinks a step's marks
-rewrites its sentence (`Narration.narrow`).
+`mark.this("stripes", whole(CELL), cage, "cage")` for "this cage" (`whole`
+counts a region as one thing), `mark.as(role, kind, els, words)` for anything
+else that names a mark, and `mark.paren` for "its bulbs (ringed)". A literal
+"this", "these" or mark adjective throws, and so does a reference whose words
+use another role's adjective. The words re-render from a reference's elements,
+so `Narration.narrow` rewrites the sentence of a step whose marks shrink.
 
-**Every hinted game declares `hintMarks`** (`hint-quality.test.ts`, "every
-hinted game is bound"): the roles its steps name, in
-the words its help page's list of marks gives them. Its page writes
-`{{hint-marks}}` where its list goes, and the help build fills it
+**The declaration.** Every hinted game declares `hintMarks`: the roles its
+steps name, in the words its help page gives them. The page writes
+`{{hint-marks}}` where the list goes and the help build fills it
 (`vite-plugins/hint-marks.ts`).
 
-**The renderer paints every hint mark from the words.** `stepMarks(hint)` is
-the step's references grouped by role and kind, and `marks.of("outline", CELL)`
-is what the words outline, once each, carrying whatever the reference named
-(an outlined cell keeps its chain ordinal). Nothing else is a source for a mark:
-a highlight field may carry data that is not a mark (a ghost glyph, a route, an
-animation), painted only where a named mark is. The glyph a role takes on a kind
-stays the game's. The shared painters read the words too:
-`OverlaySidecar.pack(stepMarks(hint), …)` for the candidate games and
-`hintTileBits` for the border grid. A contained kind marks its container with it
-(`MarkKind.within`): a ringed note rings its cell, so the painter must ring the
-cell from the note even when no reference names the cell.
+**The paint.** `stepMarks(hint)` is the step's references grouped by role and
+kind, and `marks.of("outline", CELL)` is what the words outline, once each,
+carrying what the reference named (an outlined cell keeps its chain ordinal).
+Nothing else is a source for a mark. A highlight field may carry data that is
+not a mark (a ghost glyph, a route, an animation), painted only where a named
+mark is. The glyph a role takes on a kind is the game's. The shared painters
+read the words too: `OverlaySidecar.pack(stepMarks(hint), …)` for candidate
+games and `hintTileBits` for the border grid. A contained kind marks its
+container (`MarkKind.within`): a ringed note rings its cell even when no
+reference names the cell.
 
-**The check is measured on the frame.** `testing/hint-binding.ts` renders every
-step the hint-quality walk visits, from a fresh draw state, and ablates the
-words. Narrowing any one named element out of them (`Narration.narrow`) must
-change the frame, and narrowing all of them out must leave the frame with no hint
-at all. It needs no statement of what a glyph looks like or where an element
-sits, only whether the paint comes and goes with the reference, and it cannot
-pass a renderer that still reads a mark off a highlight field.
+**The check.** `testing/hint-binding.ts` renders every step the hint-quality
+walk visits and ablates the words: narrowing any one named element out must
+change the frame, and narrowing all of them out must leave no hint on it. A
+renderer that reads a mark off a highlight field cannot pass. The walk plays
+refresh but not keep-track, so a game whose step shrinks on keep-track asserts
+`bindingDefects` after a shrink in its own test (Tents).
 
-**A continuation leg names what it still shows**: "…and these edges can't be
-walls either, for clue 3" rings the edges left and points back at the evidence
-the first leg named. A strike's ending is a reference to the struck notes, so a
-refresh that finds some already gone rewrites "cross out 2 and 4" as "cross out
-the 4", and the marks follow because they are read from the words.
+What binding a hint turns up:
 
-**Two marks of one role are told apart by their kind, not their color.** A
-Signpost step decides a link, whose two ends are different things: the arrow
-it leaves by and the square it arrives at. Two ringed squares would leave
-"this square" pointing at neither; an arrow drawn in the action color beside a
-ringed square lets the sentence say "this arrow" and "the ringed square" and
-mean one of each. So the arrow is a kind of its own (`signpost/hint-marks.ts`'s
-`ARROW`), and the game draws its ring. A kind is also how a note's ring counts
-as its cell's (`MarkKind.within`): "we must cross out the 4" names the ringed
-cell it strikes from.
-
-**What binding a hint turns up, and the answers that hold**:
-
-- **Evidence is outlined, never "ringed"**, whatever glyph draws it: a ring is
-  what the step decides. Name the highlight field by the role too, so the code
-  speaks the role's word.
-- **A mark drawn and never named is the common defect**, not the rare one.
-  Name it in the sentence ("given the outlined cells", "it and its partner");
-  when a clause would be pure overhead on every step, and the mark is there by
-  the owner's choice, ledger the clause's length rather than drop the mark
-  (Boats' ", with the water around it").
-- **A leg names the element it rings**, not everything the firing will decide:
-  "so this cell and every other empty one in it must be white", never "every
-  remaining cell" over one ring.
+- **Evidence is outlined, never "ringed"**, whatever glyph draws it. Name the
+  highlight field by the role too.
+- **A mark drawn and never named is the common defect.** Name it in the
+  sentence ("given the outlined cells"). Where the clause would be overhead on
+  every step and the mark is there by the owner's choice, ledger the clause's
+  length and keep the mark.
+- **A leg names the element it rings**, not everything the firing will
+  decide. A continuation leg rings what is left and points back at the
+  evidence the first leg named ("…and these edges can't be walls either, for
+  clue 3").
+- **A strike ends on a reference to the struck notes**, so a refresh that
+  finds some gone rewrites "cross out 2 and 4" as "cross out the 4".
 - **A step that shrinks on keep-track narrows its words** with
-  `Narration.narrow` and resets `explanation`; the binding walk plays refresh
-  but not keep-track, so the game's own test asserts `bindingDefects` after a
-  shrink (Tents).
+  `Narration.narrow` and resets `explanation` (`skeletonKeepTrack`).
+- **Two marks of one role are told apart by their kind, not their color.**
+  Where a step decides two different things, give one a kind of its own and
+  let the game draw its ring, so the sentence can say "this arrow" and "the
+  ringed square". Exemplar: `ARROW` in `signpost/hint-marks.ts`.
 - **A kind's key must tell apart every mark that can be drawn separately.**
   `stepMarks` keeps one element per key, so two marks sharing a key merge and
-  one is never painted. Untangle keyed crossings by position, and two crossings
-  can share a point (a line through another's end); it keys them by their pair
-  of lines.
-- **A renderer rule is a rule about the words.** Where a renderer lets one mark
-  win an element over another (Ascent's ring over an outline), the words must
-  not name the losing mark there: the ablation finds a named mark whose removal
-  changes nothing.
-- **A rule word is not a mark word.** "Shaded" is a shading genre's cell state
-  (Bricks) and the lint allows it; "hatched" and "highlighted" only ever named
+  one is never painted. Untangle keys a crossing by its pair of lines, since
+  two crossings can share a point.
+- **A renderer rule is a rule about the words.** Where the renderer lets one
+  mark win an element over another, the words must not name the losing mark
+  there: the ablation finds a named mark whose removal changes nothing.
+- **A rule word is not a mark word.** "Shaded" is a cell state in a shading
+  game and the lint allows it; "hatched" and "highlighted" only ever name
   marks.
 
 ### Necessity for deductions, imperative for moves
 
-A hint exists to tell the player **the next action to take**, so the clause
-that states the conclusion (the "so …" tail) must read as a decision, not a
-description. The collection has **two houses**, chosen by whether the move is
-*logically forced* (owner-decided 2026-06-19):
+Word the conclusion clause as a decision, in the voice the move's nature
+calls for:
 
-- **Deductive games** (the move is *forced* by the rules): state the
-  conclusion with a **modal of necessity** — `must be` / `can only be` /
-  `can't be` / `must stay` / `must cross out`. **Never** a static
-  state-of-being verb (`is` / `are` / `stays` / `it's`): "so it **stays**
-  white" describes a continuing state instead of a forced decision and reads
-  as flat — rewrite to "so it **must be** white". The necessity is the
-  *teaching*. Keep the modal in the **conclusion clause only** — *premise*
-  clauses still state facts plainly ("One of these matching neighbors
-  **stays** white …, so every other copy **must be** shaded").
-- **Movement / objective games** (Fifteen, Sixteen, Flood — the suggested move
-  is *not* a logical necessity, just the recommended next action): use the
-  **imperative** ("slide it into place", "move it to column 5", "fill with
-  red"). A necessity modal would be wrong. Untangle states a measurement
-  instead ("Moving this point here cuts its crossings from 16 to 4."), which is
-  neither voice and needs neither.
+- **A forced move takes a modal of necessity**: `must be`, `can only be`,
+  `can't be`, `must stay`, `must cross out`. Never a state-of-being verb
+  (`is`, `are`, `stays`, `it's`) in the conclusion: "so it must be white",
+  not "so it stays white". Premise clauses still state facts plainly.
+- **A move that is recommended and not forced takes the imperative**: "slide
+  it into place", "fill with red". A statement of a measurement ("Moving this
+  point here cuts its crossings from 16 to 4.") is neither voice and needs
+  neither.
 
-Pick the house by the *nature of the move*, not the genre: a deductive game
-whose hint ever recommends a non-forced move uses the imperative for that
-step. Palisade shows the houses can co-exist in one string — its necessity
-premise ("Clue c reaches its count only if every remaining edge is a wall")
-can carry an imperative tail ("draw them all"), because the forced-ness is
-already explicit in the premise.
+Choose by the move, not the genre: a deductive game's step that recommends a
+non-forced move uses the imperative. A necessity premise may carry an
+imperative tail where the premise already states the forcing (Palisade: "Clue
+c reaches its count only if every remaining edge is a wall", then "draw them
+all").
 
-**Guarded cross-game** (`src/engine/hint-quality.test.ts`): every deductive
-game's **forced** steps must match the shared necessity vocabulary. The
-relation a step's words declare (§ "A sentence has parts") says whether it is
-a deduction at all: a step offering a move (one of several, an answer, an
-effect, a leg of a sequence or of a journey, `serves`) or declared `setup` or
-`bare` is read by its form and not held to the modal, so a deductive game's
-"fire this laser" step needs no ledger. An owner-endorsed phrasing that
-carries necessity in its own words (Filling's "fits exactly into") is a
-*declared idiom* in that file — add to the idiom table deliberately, never by
-loosening the shared pattern. Game-specific phrasing rules (the exact modal
-for a strike vs a placement) stay per-game tests.
+`src/engine/hint-quality.test.ts` holds every deductive game's forced steps to
+the shared necessity vocabulary. The step's relation says whether it is a
+deduction: a step that offers a move, or is declared `setup` or `bare`, is
+read by its form and not held to the modal. An owner-endorsed phrasing that
+carries necessity in its own words is a declared idiom in that file's idiom
+table; add one deliberately, never by loosening the shared pattern. The exact
+modal for a strike against a placement is a per-game test.
 
 ### Lead with the indication
 
-**Every nontrivial hint SHALL open by naming the *indication* — the
-recognizable board pattern that triggered the deduction — before any
-reasoning** (owner-directed, 2026-06-19). The player should come away able to
-*spot this pattern themselves next time*, not merely convinced that this one
-instance is valid.
+Open every nontrivial hint by naming the indication, the recognizable board
+pattern that triggered the deduction, before any reasoning. Phrase it as
+something the player can learn to spot ("there's a pair of 5s in one column
+and a pair of 1s in the next"), not buried mid-sentence or left to the
+highlight.
 
-A hint is **pedagogy, not a terse textbook proof**. A proof that jumps
-straight to "shading either of these would force a contradiction, so both are
-white" leaves understanding *as an exercise to the reader*. Good teaching
-states **what you noticed** first, phrased as a pattern the player can learn
-to recognize ("there's a pair of 5s in one column and a pair of 1s in the
-next"), not buried mid-sentence or left implicit in the highlight.
+Nontrivial is anything past one local rule application. A step whose signal
+is the move itself ("These squares touch a shaded square…") satisfies the
+rule already. The multi-element deductions are the ones that need care; when
+in doubt, lead with the indication. Read orientation off the reason so
+"column" or "row" is concrete. Exemplar: the `offset` arm of Singles, and the
+`singles-hint.test.ts` case that asserts how it opens.
 
-Worked example — Singles `offset`. Even value-aware it still *opened on the
-conclusion* (*"Shading either of these two squares would force…"*): a valid
-proof, but the player never learns **what to look for**. Leading with the
-indication fixes it: *"There's a pair of 5s in one column and a pair of 1s in
-the next, lined up so that shading either of these two squares would force one
-of the 5s and one of the 1s to be shaded next to each other — and shaded
-squares can't touch. So both must be white."* Now the first clause is a
-teachable recognition cue. (Read the orientation off `reason.quad` so
-"column"/"row" is concrete; `singles-hint.test.ts` "offset" asserts it opens
-`/^There's a pair of \d+s in one (column|row)/`.)
+### Two marks of one kind: tie them, and never by color
 
-What counts as "nontrivial": anything past a single local rule application.
-The simplest cascade hints satisfy this for free because their *signal is the
-move* — Singles `adjBlack` opens *"These squares touch a shaded square…"*. The
-ones that need care are the multi-element deductions (offset, the corners, the
-sandwich/pair pattern). When in doubt, lead with the indication; it is never
-wrong to.
+Where a step marks more than one element of the same kind, do not say a bare
+"this cell": tie the target to the other mark in words. With one mark in
+view, "this cell" is right and a qualifier is noise.
 
-### Two marks on the board, one "this cell" — tie them, and never by color
+Ask first whether the two marks are the same kind of thing. An edge against
+regions, a spoke against hubs, a square against a clue: the noun already
+picks the target out. The defect is a cell marked against another cell.
 
-**If a step marks more than one element *of the same kind*, a bare "this cell"
-points at neither** (owner-reported, 2026-08-14, on a Clusters frame showing a
-solid target beside a ringed tile). The collection's mark convention is
-consistent (§ "Bind the words to the marks") and
-the narrations already name the *other* mark ("the **outlined** squares", "the
-**striped** row"). Only the target is left bare,
-so the sentence is one word short and the player has to know the convention
-before it parses. With **one** mark in view, "this cell" is right and a qualifier
-is noise.
+Never tie by color. The palette is scheme-relative, so a hue named in prose
+is false under the other scheme and unreadable to a color-blind player. Two
+marks that differ only by hue are marks to fix. The action color against the
+evidence color is not such a pair, since it differs in weight, which
+`palette.test.ts` ("keeps the hint emphases distinct, in both schemes")
+asserts.
 
-**The fix is never the color.** *"the cell marked purple"* is the obvious
-reading and the one thing ruled out: the palette is scheme-relative by
-construction, so a hue named in prose is false under the other scheme, and it is
-unreadable to a color-blind player. If two marks differ *only* by hue, the marks
-need fixing, not the sentence.
+Tie by something the code guarantees, cheapest first:
 
-**The action color against the evidence color is not a hue-only pair** — it
-differs in *weight*, which is what a reader who cannot compare hues is left
-with, and it is why Range and Light Up may mark a cell against a cell and tie
-them in prose rather than redrawing them. That exemption rests on numbers, so
-the numbers are asserted: `palette.test.ts` § "keeps the hint emphases
-distinct, in both schemes" holds every pair of `HINT_` roles above an OKLCH
-distance of 0.12 **in each scheme** and `HINT_ACTION` above twice the chroma of
-the wash.
+- **A relation** ("its ringed red neighbor", "the shaded brick above").
+  Check in code that the relation holds on every firing, by measuring, before
+  writing it: a run may be longer than the two the sentence assumed, and a
+  clue may never be adjacent to its target at all.
+- **A value**, where the puzzle has one (§ "Name a square by its value").
+- **A role word tied to the mark's shape**, where the game's marks already
+  use distinct ones.
+- **A number on the other marks.** Where the second mark is a chain the hint
+  numbers, name those cells by ordinal and keep "this cell" for the one with
+  no number. A numbered mark and an unnumbered one are not the same kind of
+  thing, so this ties every mark on screen. Numbering a chain does not retire
+  a tie that says which mark "this cell" means.
 
-Tie them by something the code guarantees, cheapest first:
+Guard it in the game's test: a second mark displayed implies the explanation
+contains the tie. See the guard fail first, and give it a `checked` floor and
+the set of reason kinds the sweep must have reached. Exemplars: the hint
+tests of Clusters, Bricks, Range and Light Up.
 
-- **A relation.** Clusters' `contradictionAround` only ever reports the placed
-  cell or one of its four orthogonal neighbors, so *"its ringed red
-  **neighbor**"* identifies both squares at once and is shorter than what it
-  replaced. Bricks already had the shape in one branch — *"The shaded brick
-  **above** rests only on this cell"*. **Check the relation holds in code first:**
-  Clusters' chain branch could *not* use it, because that break is adjacent to
-  the last forced cell rather than to the target, so it ties on the chain's
-  origin instead (*"forced **from it**"*). That tie survived
-  `walk-tactic-hint-chains` numbering the chain: ordinals say which consequence
-  fell when, which is a different question from which of three marks "this
-  cell" means, so numbering the marks does not retire the deixis tie.
-- **A value**, where the puzzle has one — see the next section.
-- **A role word tied to the mark's shape**, where the game's other marks already
-  use distinct ones ("ringed" outline vs "shaded" wash).
-- **A number on the other marks.** Where the second mark is a *chain* the hint
-  numbers (`walk-tactic-hint-chains`), the sentence names those cells by their
-  ordinal and keeps "this cell" for the one that carries no number — so the
-  reader picks the target out by the absence of a label, not by a hue. It is the
-  strongest tie of the four when it is available, because it identifies *every*
-  mark on screen rather than just relating two of them. Note what makes it work,
-  since it is the general rule underneath all of these: **a numbered mark and an
-  unnumbered one are not the same kind of thing.** The six Latin forcing chains
-  rely on this and carry no other tie.
-
-Guard it per game — *a second mark displayed ⇒ the explanation contains the tie*
-— and prove the guard fails before trusting it. Exemplars: `clusters-hint`,
-`bricks-hint`, `range-hint`, `lightup-hint`. Give the guard the vacuity pair the
-bar now expects: a `checked` floor **and** the set of reason kinds the sweep must
-have reached, since a guard that only ever saw the one already-tied branch
-measures nothing.
-
-**Ask first whether the two marks are the same kind of thing** — that is what
-decides whether there is a defect at all, and it is cheap to answer. Palisade
-marks an *edge* against *regions*, Spokes a *spoke* against *hubs*, Sticks a
-*square* against a *clue*: in each the noun in "this edge" / "this line" / "this
-square" already picks the target out, and a qualifier would be noise. Every
-genuine case found by `disambiguate-hint-deixis` marked a **cell against another
-cell**.
-
-**Check the relation before you assert it, by measuring.** Every worked example
-above came out of a sweep, and each sweep changed the sentence that was about to
-be written: Bricks' three-in-a-row runs are 3, 4 *and* 5 long, so *"the two
-ringed bricks"* would have been false; its gravity supports number 1 or 2, so the
-sentence needs a singular arm; Lightup's driving clue is adjacent to its target
-in **0 of 133** firings, so no positional tie exists there at all. The same
-measurement found two defects that were not deixis: Lightup's discount sentence
-never stated the premise its conclusion needs, and attributed the whole candidate
-set to "the shaded squares" when the *ringed* square is a member of it in over
-half of all firings.
-
-**A grep only finds sentences that mention the second mark.** One that is bare
-while a mark is displayed-but-unmentioned is the same defect and invisible to it.
-`scripts/checks/hint-deixis.test.ts` (advisory, `npm run diff`, writes
-`metrics/hint-deixis.md`) reads the frame instead — every hinting game, every
-tier, mark roles counted, explanations tested for a bare deictic. **It is a
-report, not a gate, and deliberately so**: it flags ~230 sentence shapes in 20
-games of which the review found one genuine, because a lexical filter cannot see
-a tie made by value, by line context, by a continuation leg's antecedent, or by
-the marks being different kinds. Read it periodically; do not turn it into a
-gate.
+`scripts/checks/hint-deixis.test.ts` (`npm run diff`, writes
+`metrics/hint-deixis.md`) reads every frame for a bare deictic beside a second
+mark, including one the sentence never mentions, which a grep cannot find. It
+is a report to read periodically. Do not turn it into a gate: a lexical
+filter cannot see a tie made by value, by line, by a leg's antecedent or by
+kind.
 
 ### Name a square by its value
 
-**In a number puzzle the square's value is its name and its locator, so use
-it** (owner-directed, 2026-06-20) — never a bare pronoun. Two failure modes,
-the second subtler:
+In a number puzzle, name a square by its value, never by a bare pronoun or
+"this square": "This 3 shares a line with the ringed white 3", so both squares
+are found by sight and the duplicate the deduction turns on is in the words.
+The deduction knows its targets, so read the digit off the state in `narrate`.
 
-1. A hint must not *open* on a dangling *"It"* / *"They"* / *"This is…"* with
-   no noun. Singles `sameLine` opened *"It shares a line with the ringed white
-   square…"*: the *"It"* has no antecedent (the banner is the player's first
-   sight of this sentence), so the reader must hunt the highlight before the
-   sentence parses.
-2. The fix is **not** *"This square shares a line…"* either — still generic.
-   Name the value: *"This 3 shares a line with the ringed white 3, which
-   already uses that number — so this copy must be shaded."* Now both squares
-   are identified by sight, and the duplicate the deduction turns on is
-   *visible in the wording*. The reference is free — the deduction already
-   knows its target cell(s), so read the digit off the state
-   (`numAt(targets[0])`).
+- **Never open on a dangling "It", "They" or "This is…".** The banner is the
+  player's first sight of the sentence.
+- **A pronoun may only avoid restating the same value** where the referent is
+  obvious ("This 3 … so it must be shaded"). Name the referent mid-sentence
+  too where "it" could be read as another square.
+- **Several squares of differing values are listed** (`joinNums`); squares
+  sharing a value name it once in the plural ("These 3s").
+- **An empty square has no value**: anchor it on a concrete neighbor ("The
+  shaded region of N has only this one empty square to grow into").
+- **On a subtle deduction, concrete values beat role words**, in the order of
+  the proof: the signal, the move ruled out, the consequence, the deduction.
+- **A narration with no digit or coordinate and three or more of "this",
+  "that", "it", "the one"** is almost certainly improvable.
+- **Describe only what is invariant in the layout.** Values do not make the
+  geometry true: delete words that assume a tight figure ("overlap", "between
+  them", "side by side") unless the solver's loop bounds guarantee it, and
+  lean on the highlight for where.
+- **Dodge "a 8"**: write without the article ("one of the 6s") or branch on
+  the digit.
+- **Guard the equal-value branch**: where two groups coincide, "Two 4s and two
+  4s" reads broken, so special-case it.
+- **Two squares of one value are named by where they sit.**
+  `apartByPosition`
+  ([`engine/apart-by-position.ts`](../src/engine/apart-by-position.ts)) gives
+  "the upper 7" and "the lower 7", built over every number the one sentence
+  names. Its users: `npm run refs -- src/engine/apart-by-position.ts
+  apartByPosition`.
 
-**Pronouns are allowed only to avoid restating the *same* value when the
-referent is obvious** — *"This 3 … so it must be shaded"* is fine. When one
-firing forces **several squares of differing values**, list them (`joinNums` →
-*"These squares — 3, 5 and 2 — touch a shaded square…"*); when they **share**
-a value, name it once and pluralize (*"These 3s share a line…"*). For a square
-that is *empty* when acted on there is no value to name — anchor it on a
-concrete neighbor (*"The shaded region of N has only this one empty square to
-grow into"*). Exemplar: every branch of `narrate` in
+Exemplar: every branch of `narrate` in
 [`singles/index.ts`](../src/games/singles/index.ts) names a value.
-
-The same lesson, learned the hard way on the multi-link deductions:
-
-- **Concrete values beat role words on a subtle deduction.** Distinct colors
-  alone weren't enough for Singles' corner case — even ambered and shaded, the
-  owner couldn't follow *"shading this square would seal off the highlighted
-  corner…"*. What unblocked it was making the narration **value-aware** (read
-  the numbers off the board in `narrate(reason, targets, state)`) and ordering
-  it as the **proof-by-contradiction arc the deduction is**: *the signal that
-  fired it → the move we're ruling out → the consequence → the deduction*.
-  Result: *"A touching pair of 3s sits at the corner; one of them must be
-  shaded. Shading this 5 would then force the 3 beside the corner 4 shaded as
-  well, leaving the corner boxed in on both sides — so the 5 must stay
-  white."* Watch dangling pronouns mid-sentence too: an early cut ended
-  "…shaded as well, **trapping it**" — "it" read as the 3, not the corner;
-  name the referent ("leaving **the corner** boxed in").
-- **Sweep abstract pronouns out of the easy cases too.** Singles' `offset`
-  once read *"Whichever paired square stays white forces the one across from
-  it shaded, so both squares beside it must be white."* — grammatical, but a
-  wall of deixis with not one concrete reference. Heuristic: a narration with
-  *zero* digits/coordinates and three or more "this/that/it/the one" pronouns
-  is almost certainly improvable.
-- **Concrete *value* and concrete *geometry* are different bars — a
-  value-aware narration can still lie about the layout.** A first cut of the
-  offset fix said *"Two 6s and two 4s **overlap, offset by a square**…"* —
-  concrete values, but geometrically **false**: `solveOffsetpair` pairs equal
-  numbers *anywhere along a line*. **Describe only what's invariant** (the
-  forced adjacency) and delete words that assume a tight figure ("overlap",
-  "between them", "side by side"); lean on the highlight for *where*. When you
-  add concrete values, re-check every spatial word against the *general*
-  firing — read the solver's loop bounds, don't assume locality.
-
-**Two squares of one value are named by where they sit.** A value is a name
-only while it is the one of its kind in the sentence. A step that reasons from
-two 7s and says "this 7" and "the other 7" has told the player nothing about
-which is which, however they are marked. `apartByPosition`
-([`engine/apart-by-position.ts`](../src/engine/apart-by-position.ts)) gives
-each its words, "the upper 7" and "the lower 7", built over every number the
-one sentence names. Take the games that use it with
-`npm run refs -- src/engine/apart-by-position.ts apartByPosition`.
 
 #### A clue named with its area is marked on its own square
 
-**Where a sentence names a clue and the frame shows the clue's area, the
-clue's own square carries a mark too.** "This 4", over an outline round the
-nine squares the 4 counts, leaves the player to find the 4 by taking the
-outline's middle, and the same digit elsewhere inside the outline is as good a
-reading. Mosaic did this (seen in the app, 2026-10-11), and a step comparing
-two numbers made it worse: two blocks that overlap, with the ring taking the
-border they share, are not two shapes with two middles.
+Where a sentence names a clue and the frame shows the clue's area, mark the
+clue's own square too. "This 4" over an outline round the squares it counts
+leaves the player to find the 4 by the outline's middle, and two overlapping
+areas have no two middles.
 
-The roles already say what each mark is. The clue is what the step reasons
-from, so it is an outline reference; the glyph is the game's
-(§ "Bind the words to the marks"). What the rule adds is where the glyph goes:
+The clue is what the step reasons from, so it is an outline reference, and
+the glyph is the game's. Put the glyph:
 
-- **On the clue's square, and inside it.** A clue's square can also be one the
-  step decides, and a ring owns the border. Mosaic circles the number, which
-  shows inside a ring and reads as "the number" where one more square outline
-  among the blocks' would read as "a square". Range redraws the digit in the
-  action color for the same reason, with its line of sight striped apart.
-- **Legible on every surface the clue is drawn on.** Mosaic's number can sit
-  on the shaded piece, where the evidence color differs in hue and hardly in
-  lightness, so the circle there takes the number's own ink. The shape is the
-  mark and the color is not.
-- **One reference, both glyphs.** The block and the circle are the one
-  reference to the number (`mosaic/hint-marks.ts`'s `BLOCK`), so the binding
-  check holds them together and no word has to name them apart.
+- **On the clue's square, and inside it**, because the square can also be one
+  the step decides and a ring owns the border. Mosaic circles the number;
+  Range redraws the digit in the action color.
+- **Legible on every surface the clue is drawn on.** Where the evidence color
+  hardly differs in lightness from the surface, the glyph takes the number's
+  own ink: the shape is the mark, not the color.
+- **Under one reference with the area.** The block and the circle are one
+  reference (`BLOCK` in `mosaic/hint-marks.ts`), so the binding check holds
+  them together and no word names them apart.
 
-**Which references have the shape is read off the frame, since what a
-reference paints is its renderer's business.**
-`scripts/checks/hint-area-names.test.ts` (advisory, `npm run diff`, writes
-`metrics/hint-area-names.md`) narrows each one-unit outline or stripes
-reference out of its step and measures the paint that goes with it. Most rows
-name the area itself ("this row", "this cage") and are right as they stand.
-Read the rows whose words name a clue, a number or a square. It cannot tell a
-reference that paints the area and the square from one that paints the area
-alone, so a game that follows this rule stays a row.
-
-Two drafting gotchas from interpolating values: (a) **dodge the a/an trap** —
-`a ${n}` becomes "a 8"; write articleless ("one of the 6s", "two of the Ns")
-or branch on the digit. (b) **guard the equal-value branch** — when two groups
-coincide (`n === m`), "Two 4s and two 4s …" reads broken; special-case it
-("two of the 4s").
+`scripts/checks/hint-area-names.test.ts` (`npm run diff`, writes
+`metrics/hint-area-names.md`) lists each one-unit outline or stripes
+reference that paints an area. It is a report, not a gate. Read the rows whose
+words name a clue, a number or a square; a game that follows this rule stays a
+row.
 
 ### The premise must single out the conclusion
 
-**A narration whose stated premise doesn't discriminate *this* move from
-another is a bug, even when the move is right.** Caught on Singles' all-equal
-2×2 corner (`corner4`): its first cut read "the only non-touching pair that
-leaves one white per line is this diagonal" — but *both* diagonals of an
-all-equal 2×2 leave one white per line, so the premise doesn't justify shading
-*this* diagonal. The real reason is connectivity (at a grid corner the corner
-cell's only neighbors are its two sides, so shading the other diagonal
-strands it). When two candidate moves both satisfy the stated premise, you're
-describing the wrong reason — find the premise that actually discriminates and
-say *that*. Cheap guard: assert the discriminating phrase present and the
-false one absent (`singles-hint.test.ts` "corner4" checks
-`not.toContain("one white per line")`).
+State the premise that discriminates this move from the others. Where two
+candidate moves both satisfy the stated premise, the sentence describes the
+wrong reason, even when the move is right: find the premise that separates
+them. Guard it by asserting the discriminating phrase present and the false
+one absent (`singles-hint.test.ts`, "corner4").
 
-**One technique can be forced several different ways — carry *which*, don't
-pick a favorite (Crossing).** A "only one candidate is left" rung looks like
-it needs one sentence, but the candidates can die of unrelated causes, and
-naming the wrong one is this same bug. Crossing's whole-run placement fires
-when exactly one listed number still fits a run, and the others can be out
-because they are *the wrong length*, because they are *already written in
-elsewhere*, or because they *contradict a digit already in the run*. The first
-cut said "only one N-digit number left matches what is already in this run"
-for all three — which on a **fresh board** (the opener the player sees first,
-and the commonest firing) cites digits that do not exist: vacuous as a premise
-and visibly false as a sentence. The fix is a `because` field on the firing,
-set where the elimination is actually computed, and one sentence per cause —
-the opener became *"This run is 6 squares long, and only one number in the
-list is 6 digits — so it must be 197665."*, which the player can verify by
-counting. Two habits: **compute the reason at the point of elimination, not at
-narration time** (only the finder knows why the others died), and
-**sanity-read the fresh-board firing specifically** — the degenerate-extremes
-check applies to *the board*, not only to interpolated values. Guard: assert
-each cause's phrasing *and* that the ones with nothing entered never say
-"already in this run" (`crossing-hint.test.ts`).
+Where one technique can be forced several ways, carry which. An "only one
+candidate is left" rung has candidates that died of unrelated causes (the
+wrong length, already used elsewhere, contradicting an entry), and one
+sentence for all of them cites, on a fresh board, entries that do not exist.
+
+- **Compute the reason at the point of elimination**, as a field on the
+  firing, not at narration time: only the finder knows why the others died.
+- **Write one sentence per cause.**
+- **Read the fresh-board firing specifically.** It is the opener the player
+  sees first.
+
+Exemplar: the `because` field of Crossing's firing, and
+`crossing-hint.test.ts`, which asserts each cause's phrasing and that a run
+with nothing entered never cites what is "already in this run".
 
 ### Keep the narration terse
 
-Explaining *why* is the bar, but say it in one sentence, not three
-(owner-directed). Filling's first cut spelled out the full deduction
-("…without exceeding N cells — every other neighbor would overshoot. So it
-must extend here: a N.") and read as a wall of text; the owner trimmed it to
-*"The shaded region of N has only this one empty square to grow into."* —
-same logical content, a third the length. Lean on the picture (the shaded area
-carries the premise) and on implied values ("the region of N" already tells
-the player to write N). **Don't repeat the number.** When a narration feels
-long, cut to the single premise the highlight doesn't already show.
+Say the why in one sentence, within 120 characters. Cut to the single premise
+the highlight does not already show, lean on implied values ("the region of N"
+already says to write N), and do not repeat the number.
 
-**Guarded cross-game: 120 characters per step** (`hint-quality.test.ts`
-§ "hint narration stays readable at a glance", owner-chosen 2026-09-10 from a
-measured census — median 84, p75 110, p90 147). It walks every tier and every
-preset of every hinting game into the middle game (a preset can pick a mode,
-Adjacent or Killer or Number Ball, that no tier reaches), plus each game's last
-preset at its hardest teachable tier (the Custom-dialog corner neither of those
-reaches), because long sentences are the ones spoken
-once more of the board is decided, and the easiest preset's opening plan is
-exactly where they are not.
+`hint-quality.test.ts` ("hint narration stays readable at a glance") holds
+every step to the limit, over every tier and preset into the middle game and
+each game's last preset at its hardest teachable tier. A sentence over the
+limit fails the commit that wrote it.
 
-That last corner is the costly one, and the hooks' test selector
-reaches this guard from any staged path under `src/games/`, so it is
-**scoped by role**: off in the two local hooks, on in CI and in
-`npm run gate`. What it defers is the ledger's *rot* half below, which cannot
-be decided without it. **The limit itself never defers** — a sentence you just
-wrote too long fails your commit, at every tier and every preset.
+**A sentence that needs more room is listed in `LONG_NARRATIONS`**: an entry
+per reason, with the `rungs` that speak it and a `games` roster, held to 300.
 
-**A sentence that genuinely needs more room goes in the ledger**
-(`LONG_NARRATIONS`), one entry per reason with the `rungs` that speak it and a
-`games` roster, held to 300 instead. The ledger is asserted both ways — an unlisted
-long step fails, and so does a *listing* that matches nothing long — so
-shortening a sentence means deleting its entry. What earned a place when the
-limit was introduced is worth knowing before you add one: chain Tactics whose
-form the spec mandates (name both ends, cite links, state the case split),
-owner-endorsed exemplar wording, two-premise deductions, and an owner-requested
-second sentence.
+- **Shortening a sentence means deleting its listing.** The ledger fails an
+  unlisted long step and also a listing that matches nothing long. The
+  commit and push hooks skip that reverse half, and report it skipped
+  (`CORNER_WALKED` in that file), so after shortening a listed sentence run
+  `npx vitest run src/engine/hint-quality.test.ts`, which runs it as CI and
+  `npm run gate` do. The limit itself is never skipped.
+- **What earns a listing**: a chain Tactic whose form the spec mandates, an
+  owner-endorsed wording, a deduction with two premises, or a second sentence
+  the owner asked for.
+- **Add a game to a shared entry only once you have seen it speak the
+  sentence.** That the solver records the rung is an inference: a plan may
+  finish every board on cheaper rungs.
+- **Where the guard calls a listing dead, suspect the walk first.** Give the
+  listing `spokenOn`, a `params:desc` that speaks the sentence, which every
+  commit then holds; reach for that pin before a wider walk. Before deleting a
+  listing, widen the walk for that game (every leaf preset, every tier, both
+  auto-pencil settings) and record the wider walk beside the entry.
 
-**The unit of both halves is the `(entry, game, rung)` listing**, which matters for
-the sentences the engine writes on several games' behalf. A roster read off the
-solver — "this game records `forcing`, so it speaks the chain sentence" — is an
-inference, and a false one: Mathrax records `forcing` about ten times in sixteen
-boards and spoke the sentence in **none** of 100,249 plan steps, because the
-plan's frontier finishes the board on cheaper rungs before a chain is ever the
-best candidate. So **add your game to a shared entry only once you have seen it
-speak the sentence.**
+To shorten without losing a premise:
 
-**When the guard calls a listing dead, suspect the walk first.** Its reverse
-half is a negative over a sample, and the sample is the gate's own walk. Group
-is the case: it speaks the chain sentence **only** at 12×12 Hard, which is not a
-shipped preset — a player reaches it through the Custom dialog — so every tier
-of its smallest board and every preset at its own tier heard nothing, twelve
-seeds deep, and the listing read as dead while being perfectly live. That is
-why `lintCases` walks each game's last preset at its hardest teachable tier: it
-is the one corner of `presets × tiers` the other two rules both miss. So before
-deleting a listing, widen the walk for that game — every leaf preset, every
-tier, both auto-pencil settings where the game has them — and make the wider
-walk the deletion's evidence, recorded beside the entry so the next reader can
-re-run it rather than re-derive it.
-
-**A sentence only a few boards speak pins one of them.** A listing may carry
-`spokenOn`, a `params:desc` for a game, and a case that runs on every commit
-holds that board to speaking the sentence over the limit; the reverse half
-then leaves that listing to its pin. Rect's line sentence is the case: three
-seeds a preset heard it on none, so the listing read as dead on every push
-while the sentence was live. Reach for a pin before a wider walk, since a
-wider walk is a bigger sample and a pin is an input.
-
-**If you are reading a red from that half, you are not in a local hook**
-— it is skipped there and reported as skipped, so the run that flagged it was
-CI or `npm run gate`, and the corner walk did happen.
-
-**Shortening a sentence without losing a premise**, most often useful first:
-
-- **Move the rule to the help.** Undead's step says only what this sightline's
-  two clues decide, not which monster shows before a mirror (§ "Rules belong in
-  the help"). Check the help actually teaches the rule before cutting it.
-- **Let the picture carry what it shows.** "(its other sides are walled)" beside
-  a cell whose walls are drawn; "the next one out past the outlined run" where
-  "just past them" points at the same outline.
-- **Keep every per-game guard's intent when its pinned words move.** Range and
-  Bricks key their deixis gates on relational ties, Sticks detects each kind by
-  a phrase only that kind says, Light Up's necessity check wants "must be a
-  bulb": each rewrite kept or re-keyed the tie rather than dropping it.
-- **Re-read the degenerate extremes while you are in there.** Filling had been
-  shipping "must be a 8"; Range's "sees all N of its cells" needed a branch for
-  a 1.
+- **Move a rule to the help** (§ "Rules belong in the help"), after checking
+  the help teaches it.
+- **Let the picture carry what it shows**: drop "(its other sides are
+  walled)" beside walls that are drawn.
+- **Keep every per-game guard's intent when its pinned words move**: re-key a
+  tie or a phrase a test detects, do not drop it.
+- **Re-read the degenerate extremes while there** (§ "Sanity-read at the
+  degenerate extremes").
 
 ### The sentences live in one file per game
 
-**Every sentence a game's hint speaks, and every word inside one, is in
-`src/games/<id>/hint-text.ts`, exported as `say`** — a plain string for a fixed
-sentence, a typed function for one that takes values. The deduction decides
-*which* sentence and *with what values* (the game's `narrate`); the text file
-decides only how it reads. So a wording pass edits one file, a reviewer reads a
-game's whole voice in one place, and an i18n layer, if one ever comes, has a
-seam to replace. Sentences several games speak word for word are the engine's
-`hint-text.ts` (the generic Latin arms, the forcing chain, the candidate
-games' two setup steps, the sliding-tile "Working on tile N:" prefix, and the
-list joiners). Exemplar: `src/games/tracks/hint-text.ts`. A hint that speaks
-no words would have no text file.
+Put every sentence a game's hint speaks, and every word inside one, in
+`src/games/<id>/hint-text.ts`, exported as `say`: a string for a fixed
+sentence, a typed function for one that takes values. The deduction (the
+game's `narrate`) decides which sentence and with what values; the text file
+decides only how it reads. Sentences several games speak word for word are
+the engine's [`hint-text.ts`](../src/engine/hint-text.ts). Exemplar:
+`src/games/tracks/hint-text.ts`.
 
-- **Values arrive as the board means them, never as words.** An axis, a count,
-  a direction constant, a monster bitmask: the plural, "both" at two, "a"/"an",
-  and the name of a direction are the text file's choices, because they are the
-  language's. A conclusion the deduction computes — Tracks' crossing parity
-  deciding "carry track" or "be blocked" — arrives as a boolean, so no rule of
-  the game hides in the text.
+- **Values arrive as the board means them, never as words.** An axis, a
+  count, a direction constant: the plural, "both" at two, "a" or "an" and a
+  direction's name are the text file's choices. A conclusion the deduction
+  computes arrives as a boolean, so no rule of the game hides in the text.
 - **No entry reads the board.** An entry may take the deduction's own record
-  where every value is already in it (Boats' techniques, Clusters' deduction);
-  a value that has to be looked up (Singles' numbers, Dominosa's, Galaxies' dot
-  colors) is looked up in `narrate` and passed in.
-- **A game whose voice depends on a mode takes the mode.** Salad's `say` is a
-  function of the mode, returning its sentences in letters or numbers.
-- **Wording comments move with the wording.** Why a sentence says "no way
-  across it" belongs beside it; why the arm fires stays with `narrate`.
-- **Refusals are not hint text in this sense.** They are `HintRefusal`s,
-  worded once in `engine/hint-refusal.ts`, and a game's own dead end goes
-  through `puzzleDeadEnd` or `markedDeadEnd`, whose test reads the call;
-  wrapping one in a `say` entry would hide its sentence from that test.
-- **Moving a sentence is not rewording it.** A bulk move is held by a census of
-  every step spoken across every tier, byte-identical before and after, and a
-  diff check that every literal on a removed line reappears on an added one. A
-  reword is its own commit.
+  where every value is in it; a value that must be looked up is looked up in
+  `narrate` and passed in.
+- **A game whose voice depends on a mode takes the mode**: `say` is then a
+  function of it (Salad).
+- **A wording comment moves with the wording.** Why an arm fires stays with
+  `narrate`.
+- **A refusal is not hint text.** It is a `HintRefusal`, and a game's own dead
+  end goes through `puzzleDeadEnd` or `markedDeadEnd`, whose test reads the
+  call; a `say` entry would hide the sentence from it.
+- **Moving a sentence is not rewording it.** Hold a bulk move to a census of
+  every step spoken across every tier, byte-identical before and after, and
+  to a diff check that every literal on a removed line reappears on an added
+  one. A reword is its own commit.
 
 ### No em-dashes
 
-Use a comma, a semicolon, a colon or a sentence break instead (owner-directed
-2026-09-09). Parentheses are fine for a genuine aside (Galaxies' *"(its other
-sides are walled)"*).
+Write no em-dash in a hint. Use a comma, a semicolon, a colon or a sentence
+break; parentheses are fine for a real aside. Rewrite the sentence, never
+delete the clause to lose the dash. The en-dash is notation and stays
+(Dominosa's `3–5`).
 
-The one thing the rule must not buy is a **shorter** hint. Deleting the clause
-to lose the dash is the flattening this guide's § "Keep the narration terse"
-already warns about from the other direction — rewrite the sentence.
-
-**The en-dash is untouched**, because it is notation rather than punctuation:
-Dominosa's dominoes are `3–5`, and a sweep over both would convict a label for
-a connective's sin.
-
-**Guarded cross-game** by three nets, deliberately overlapping: the runtime
-narration sweep in `hint-quality.test.ts` (sees what a player actually reads,
-but only the arms that fire), and in `hint-em-dash.test.ts` a scan of every
-hinting game's comment-stripped source and the same scan over the engine's
-shipped code. The third exists because a family's narration is often written
-**once** in the engine — `latin-hint.ts`, `candidate-hint.ts`,
-`hint-refusal.ts` — so a sweep stopping at `games/**` reports a clean
-collection while the sentence those games actually show carries the character.
+Held by the narration sweep in `hint-quality.test.ts` and, in
+[`hint-em-dash.test.ts`](../src/engine/hint-em-dash.test.ts), a scan of every
+hinting game's source and of the engine's shipped code, where a family's
+sentence is often written once.
 
 ### Conclude with the action the move makes
 
-The conclusion clause must match the move's *type* (sharpened on Towers,
-owner-flagged 2026-06-22):
+Make the conclusion clause match the move's type:
 
-- **An elimination step says only which candidates are *ruled out* and why** —
-  conclude with the strike action naming the value (*"…so we must cross out
-  the ${n}."*), not the abstract *"…so it can't go here"* repeated across
-  every technique. A **placement** step keeps the positive necessity voice
-  (*"it can only be ${n}"*). **On the candidate walk the conclusion is not the
-  game's to write at all**: a strike's words are its premise, and the walk
-  ends it by the move the step makes, which under the implicit reading need not
-  be a strike (§ "The shared candidate-hint machinery"). So the rule holds by
-  construction there, and a game's sentences only have to read well before
-  ", so …". Exemplar: `premise` in
-  [`towers/index.ts`](../src/games/towers/index.ts).
-- **Never imply a placement the rule doesn't establish.** Towers' line-full
-  rule strikes the *shortest* heights from the cell nearest the clue — but a
-  first cut said the cell *"must hold the tallest remaining one"*, which reads
-  as a forced placement. It isn't. If a narration claims a unique value, the
-  step must actually *place* it. Cross-check: does the conclusion match the
-  move type (`pencilStrike` ⇒ "rule out", `set` ⇒ "must be")?
+- **An elimination says which candidates are ruled out and why**, ending on
+  the strike that names the value ("…so we must cross out the 4"), not an
+  abstract "so it can't go here".
+- **A placement keeps the positive necessity voice** ("it can only be 4").
+- **Never imply a placement the rule does not establish.** A sentence that
+  claims a unique value belongs to a step that places it: `pencilStrike` is
+  "rule out", `set` is "must be".
+
+On the candidate walk the conclusion is not the game's to write: a strike's
+words are its premise, and the walk ends the sentence by the move the step
+makes (`hints-candidates.md` § "The shared candidate-hint machinery"). The
+game's sentences there only have to read well before ", so …". Exemplar:
+`premise` in [`towers/index.ts`](../src/games/towers/index.ts).
 
 ### Sanity-read at the degenerate extremes
 
-A phrase tuned for the typical case can read as nonsense at a boundary value
-(owner-flagged 2026-06-22). Towers' lower-bound text said *"clue ${c} can see
-only ${c} towers"* — fine for a small clue, self-contradictory when `c` equals
-the grid width (the clue then sees *all* towers, so "only" is wrong); its
-line-full text described *"an increasing run one tower short of its count"* —
-a run of *zero* at `c = 1`. Phrase counts so they hold across the whole range
-(*"sees exactly ${c}"*, *"all but one of its towers deeper in the line"*).
-**When a narration interpolates a clue/count, re-read it at the min and max
-that value can take.** (And re-read the *fresh-board* firing — see
-§ "The premise must single out the conclusion".)
+Where a sentence interpolates a clue, a count or a size, re-read it at the
+minimum and maximum the value can take, and on a fresh board. "Can see only N
+towers" contradicts itself when N is the grid's width, and "a run one short of
+its count" is a run of zero at 1; phrase counts so they hold across the range
+("sees exactly N").
 
-**An image has a range too.** Loopy's blocked-pair step first said the loop
-"has to take the long way around this 3": true of a 3 in a square, where the
-loop runs round the other three sides, but the same firing covers a 2 whose
-fourth edge is already out, and there the loop goes round nothing (owner,
-2026-09-19). The guard firing it was stated over the *open* edges, so the
-sentence had to hold for every face that guard admits, not only the one it was
-written for. Read the premise's guard to find the cases, then read the
-sentence against each one.
+An image has a range too. Read the guard of the premise's firing to find
+every case it admits, and read the sentence against each: "the long way
+around this 3" is false of a 2 with one edge already out, which the same
+guard admits.
 
 ### Name elements by what the player can see
 
-A name is a claim, and "claim only what you have checked" applies to it
-(owner-flagged 2026-07-14, Netslide). Netslide's hint called the immovable
-tile *"the center tile"* and its frozen lines *"the center row / center
-column"* — but `cx` is `⌊w/2⌋`, so on a 4×4 board the tile is at row 3, column
-3, and the player is looking straight at a square that is visibly **not** the
-center. Two fixes, both of which also came out *shorter*:
+A name is a claim, so name an element only by something the player can check
+against the picture.
 
-- **Name the element by what it does and how it's drawn.** Netslide's fixed
-  tile became *"the source"* — the black box the power comes from — which the
-  player can point at and which explains *why* the network grows around it.
-  Rule of thumb: if the name would not survive a player checking it against
-  the picture, it's the wrong name.
-- **Name a line by its number, not its position.** *"Row 3 never slides"* is
-  true at every board size, is shorter, and tells the player exactly which row
-  to look at. Re-read a name at the degenerate size (even vs odd, `w = 1`),
-  not just a value at its extremes.
-
-If the hint introduces a word (*source*), the **help text must teach it** —
-check `help/games/<game>.md`. Netslide's said "the middle square" (so the
-vocabulary didn't even match) and never stated the rule the whole game turns
-on. A hint and a help page that disagree are worse than either alone.
+- **Name it by what it does and how it is drawn**, not by a position that
+  holds at some sizes. Netslide's immovable tile is "the source", since
+  `⌊w/2⌋` is not the center of an even board.
+- **Name a line as "this row" or "this column", over that line's stripes,
+  never by a number.** No board draws line numbers, so "row 3" is a name the
+  player cannot check. Name a line cited beside it by where it lies or by its
+  mark ("the striped row", "the column beside it"), and a square a piece is
+  sent to by the mark on that square. The rule is `engine-hints`, requirement
+  "A hint names no row or column by a number the board does not draw", and
+  `hint-quality.test.ts` fails a sentence that numbers a line.
+- **Re-read a name at the degenerate size** (even against odd, `w = 1`).
+- **A word the hint introduces is taught by the help page**
+  (`help/games/<game>.md`), in the same word (§ "The help teaches the
+  marks").
 
 ### Rules belong in the help
 
-The premise on a step must be what makes *this move* follow. A fact that is
-true of the whole board, every step, forever, is a **rule**, and repeating it
-is noise the player learns to skip (owner-flagged 2026-07-14). Netslide opened
-12% of its steps with
+State on a step only the premise that makes this move follow. A fact true of
+the whole board on every step is a rule: teach it on the help page and leave
+it out of the sentence. Keep a rule in a sentence only where it is the
+technique ("This row never slides, so only a column move shifts this
+corner").
 
-> The center tile can never move, so the network has to be built around it —
-> and this corner belongs right beside it: take it to row 2 (setting up).
-
-The preamble is a rule the board *already shows*, and the move does not follow
-from it. It became simply *"This corner belongs beside the source: take it to
-row 2 (setting up)."* — 69 characters, down from 146 — while the genuinely
-move-specific deduction kept its premise, because there it does work: *"Row 3
-never slides, so only a column move can shift this corner."* That one **is**
-the technique; the other was the rulebook.
-
-**Diagnose before you rewrite: measure length × frequency, not frequency
-alone.** A throwaway that plans N fresh boards and tallies each narration
-branch (count, share, mean length) is ~40 lines and tells you which sentence
-actually dominates. Netslide's offender fired on only 12% of steps but ran
-1.8× the mean length, so it wrapped to two lines and read as if it were on all
-of them. Guard the result with a **max-length assertion** over a scan of
-boards (`netslide-hint.test.ts` holds every sentence to ≤ 120 chars), so the
-preamble cannot creep back.
-
-**The rule's own consequence goes in the same step.** The flip side: a move
-that a rule makes follow from the one just asked for is not a deduction worth a
-step of its own. Pearl asked for a black pearl's edge in one step and for the
-line's run-on through the next square in the next, and the second step only
-restated the rule the help already teaches (owner-flagged 2026-09-27). Drawing
-the whole arm in one step cut 17% of a plan's steps; carrying lines on through
-white pearls too, the same afternoon, cut another 4%. Fold such consequences in
-where the plan is built, to closure, since one rule's line can enter another
-pearl (`carryOn` in `src/games/pearl/hint.ts`). Name each fold in the sentence,
-and make the narration fail loudly on any step that folds one in without
-naming it. A fold that can follow any deduction gets one fixed second sentence
-("It runs straight on through the next white pearl too."), listed in
-`LONG_NARRATIONS`, rather than a rewrite of every sentence it can follow.
+- **Diagnose by length times frequency.** Plan a number of fresh boards and
+  tally each narration branch by count, share and mean length before
+  rewriting.
+- **Guard the result with a maximum-length assertion** over a scan of boards
+  (`netslide-hint.test.ts`).
+- **A rule's own consequence goes in the same step.** A move that a rule
+  makes follow from the one just asked for is not a step of its own. Fold
+  such consequences in where the plan is built, to closure, name each fold in
+  the sentence, and make the narration fail on a step that folds one in
+  without naming it. A fold that can follow any deduction takes one fixed
+  second sentence, listed in `LONG_NARRATIONS`. Exemplar: `carryOn` in
+  `src/games/pearl/hint.ts`.
 
 ### The help teaches the marks
 
-Every game with a hint has a `## Hints` section on its help page, and that
-section is where a mark's meaning lives, so the sentence can use it without
-defining it: what is ringed, outlined, striped or hatched *in that game*, which
-marks are the player's own notation and how to make them, and the words the
-sentences use for them ("an *open* square, in its words, is…"). Write it from
-the game's `hint-text.ts` and one rendered hint, never from memory: writing
-these sections found hints whose words and marks disagreed (a "striped column"
-drawn as rings in Boats, "highlighted cells" drawn as outlines in Solo, a
-rule-out dot in Spokes identical to a finished one). A change to what
-a hint draws or calls its marks updates the section in the same change;
-`src/help-coverage.test.ts` checks only that it is there.
+Give every hinted game's help page a `## Hints` section that says what is
+ringed, outlined, striped or hatched in that game, which marks are the
+player's own notation and how to make them, and the words the sentences use
+for them. A sentence can then use a mark without defining it.
+
+Write it from the game's `hint-text.ts` and one rendered hint, never from
+memory. A change to what a hint draws or calls its marks updates the section
+in the same change. `src/help-coverage.test.ts` checks only that the section
+is there. Exemplar: `src/skeleton/grid/help.md`.
 
 ### Hint the move that advances the goal
 
-A solver makes *every* forced deduction; a hint should offer the ones that
-move the player toward **solving the puzzle**, in an order that leads with
-progress. A recording pass that faithfully replays the solver's rung order
-inherits two smells (owner-flagged on Spokes):
+Offer the forced moves that take the player toward solving the puzzle, with
+progress first. A hint need not follow the solver's rung order: each firing
+only has to be forced.
 
-- **Order goal-first.** The hint is free to reorder the solver's rungs (it
-  only needs each firing to be *forced*, not to match the solver's internal
-  order). Lead with the moves that build the answer — Spokes hints a forced
-  **connection** (line) before any **rule-out** (mark). A plan that dribbles
-  out marks before the connection they enable reads as busywork even when
-  every step is correct.
-- **Drop the useless-but-forced move.** A move can be genuinely forced yet
-  advance nothing: Spokes' rule-out of the spoke between two
-  *already-satisfied* hubs is real but pointless. Find the local "does this
-  help?" predicate — for Spokes, *at least one endpoint hub still needs
-  lines* — and skip firings that fail it. **Verify it's safe to skip:** a move
-  worth suppressing must not be load-bearing for the solve (asserted in
-  `spokes-hint.test.ts`). If suppressing a move *would* stall the plan, it
-  wasn't useless; narrate it instead.
+- **Order goal-first.** Lead with the moves that build the answer, a forced
+  connection before any rule-out.
+- **Drop a move that is forced and advances nothing.** Find the local "does
+  this help?" predicate and skip firings that fail it.
+- **Prove the skip is safe.** A suppressed move must not be load-bearing for
+  the solve; if suppressing it would stall the plan, narrate it.
 
-The distinction from cognitive load: that's about a single hint being too much
-to *read*; this is about the *plan* offering moves not worth reading at all.
+Exemplar: Spokes, which hints a line before a mark and skips the rule-out
+between two finished hubs, with the safety asserted in `spokes-hint.test.ts`.
 
 ### Show only what the board does not already say
 
-**A step must tell the player something their board does not already show.**
-Tracks' *"The track already enters and leaves this square, so … both must be
-blocked"*, about two sides the player had closed off themselves by marking the
-squares beyond them empty, was a third of every plan and redundant every time
-it fired. The filter is the engine's:
-[`deduceHintPlan`](../src/engine/hint-plan.ts)'s `showable(board, firing)`
-(its users: `git grep -l showable -- src/games`).
+A step must tell the player something their board does not already show.
+Filter with [`deduceHintPlan`](../src/engine/hint-plan.ts)'s
+`showable(board, firing)` (its users: `git grep -l showable -- src/games`). A
+firing that is not showable still advances the working board and becomes no
+step. The plan cap counts shown steps only, and the result's `hidden` count is
+what a test reads to prove its corpus exercised the hook.
 
-A firing that is not showable **still advances the working board** — it is a
-real deduction and later firings may rest on it — but it becomes no step, and
-the plan cap counts shown steps only, so a run of hidden firings can never turn
-into a refusal. The result's `hidden` count is what a
-test reads to prove its corpus exercised the hook at all.
+Decide what is evident by asking the game's own move legality, from either
+side:
 
-**How to decide what is evident: ask the game's own move legality.** It is the
-cheapest honest source there is, since the UI already encodes what the board
-decides, and it is asked from either direction:
+- **Hide a firing whose move the game would refuse** (Galaxies: an arrow
+  inside a region already closed correctly).
+- **Hide a firing whose contrary move the game would refuse** (Tracks: track
+  on a side of a square marked empty).
 
-- **Galaxies** hides a firing whose move the game would **refuse** — an arrow
-  inside a region the player has already closed correctly. Sound, and nothing
-  the player could do with it.
-- **Tracks** hides a firing whose **contrary** move the game would refuse —
-  track on a side of a square marked empty, a third side on a finished piece,
-  "no track" on a square showing a rail. If the player cannot make the opposite
-  choice, their board has already made this one.
+What the loop cannot check:
 
-Two obligations the loop cannot check for you:
+- **Hide only what the player can already see.** A later step may cite a
+  hidden firing's conclusion as a premise, which is honest only because the
+  player sees it on the board.
+- **Never hide a change the win condition needs**, or the plan never
+  finishes. `hint-resume.test.ts` catches it.
+- **Where a firing declares itself hidden, hold the declaration to the
+  legality test.** `tracks-hint.test.ts` asserts every reasonless firing is
+  evident, judged on the board before the firing landed, and that the
+  production predicate and the legality test agree across the corpus
+  ([`testing.md`](./testing.md) § "How a cross-game guard finds its
+  population").
 
-- **Hide only what the player can already see.** A later step may cite a hidden
-  firing's conclusion as a premise — Tracks' "only one side of this square is
-  still open" often counts a side that was blocked by a hidden firing. That is
-  honest because the player sees the empty square beside it; it would be a lie
-  if the hidden firing were a real deduction.
-- **Never hide a change the win condition needs**, or following the plan never
-  finishes. `hint-resume.test.ts` catches this one for you.
+Use `showable` when the hidden firing must still move the board. A filter
+that trims within a firing and never applies what it drops filters at find
+time (Spokes).
 
-**Declare where you must, and hold the declaration to a derivation.** Tracks'
-rules that restate the board declare no reason, and a firing with none is
-hidden; `tracks-hint.test.ts` then asserts every such firing is evident by the
-legality test, judged on the board *before* it landed (after, the op's own flag
-makes the contrary look illegal and everything reads as evident), and that the
-production predicate and the legality test agree on every firing in the corpus.
-That is the `ignoresSecondaryButton` shape from [`testing.md`](./testing.md) § "How a
-cross-game guard finds its population": a flag the code needs synchronously,
-kept honest by a derivation it cannot drift from.
+## The hooks a hinted game implements
 
-**Not every filter is this shape (Spokes).** Spokes trims *within* a firing — an
-exhaustion firing keeps the rule-outs that reach a hub still needing lines and
-drops the rest — and never applies what it drops, because a mark between two
-finished hubs is never load-bearing. There is nothing to advance, so it filters
-at find time and does not use `showable`. Reach for the hook when the hidden
-firing must still move the board.
+Implement these on `Game`. The contract and the `Midend` lifecycle are the
+[`engine-hints`](../openspec/specs/engine-hints/spec.md) spec, and the
+implementation is [`src/engine/midend.ts`](../src/engine/midend.ts). Exemplar:
+`src/skeleton/grid/index.ts` and `hint.ts`.
 
-## Engine mechanics
-
-The `Game` hooks and the `Midend` lifecycle are in
-[`engine-hints`](../openspec/specs/engine-hints/spec.md); the implementation is
-[`src/engine/midend.ts`](../src/engine/midend.ts). A game implements:
-
-- **`hint(state, aux?, ui?): HintResult`** — return `{ ok: true, steps }`, or
-  `{ ok: false, error }` with a `HintRefusal` (§ "Refusal wording comes from
-  one module"; the midend has already refused a solved board and one with
-  mistakes). Each `HintStep` carries `move`,
-  `rung` (§ "Name the rung a step speaks"), `words` (§ "A sentence has parts")
-  and `highlights` (game-specific render data). Compute the
-  **whole remaining plan** once; the midend advances steps as the player
-  follows or auto-play executes them. `aux` (the generator's solution, when
-  present) is there for a hint that falls back on the solution (§ "Non-deductive
-  (heuristic) hints"). The
-  optional third `ui` arg lets a game read a relevant preference (Towers'
-  auto-pencil) — the midend passes `this.ui`; games that don't need it ignore
-  it.
-- **`hintKeepTrack(move, step, state): "completed" | "onTrack" | "off"`** —
-  `"completed"` when the player's move matches the step's intent (advance the
-  plan), `"onTrack"` for partial progress on a multi-cell step, else `"off"`
-  (drop the plan to recompute). **`hintKeepTrack` is handed the PRE-move
-  state.** The midend classifies a move against the plan *before* applying it
-  (`Midend.processInput`), so `state` is the board the move is about to
-  change — a game that needs the *result* applies the move itself (Sixteen's
-  slide does `executeMove(state, m)`). For a pencil toggle this means "the
-  candidate is present now" ⇒ the toggle *clears* it (the right strike to
-  follow); an *absent* candidate ⇒ the toggle would re-add it ⇒ off-plan.
-  Guard against a unit test that fabricates a timing the midend doesn't use.
-- **`continuesPrevious`** on a `HintStep` groups steps into one journey: the
-  chrome counts a displayed leg within it ("Step 2 of 9") and auto-play runs
-  the legs back to back. It does not decide when a leg is shown. **A move of
-  the player's own never puts a sentence on screen** (owner, 2026-10-12): a
-  completed step hides the hint whatever follows it, and every leg waits to be
-  asked for. So a leg's sentence cannot lean on the one before it still being
-  on screen.
-- **`refreshHintStep(step, state)`** — validate-at-display (§ "Stale plans
-  and refreshHintStep").
-- **`hintGesture(state, ui, ds, move, step)`** — how the pointer makes the step's
-  move (§ "Every step is a gesture"). Required of every hinted game.
-- **`hintRungs`** — every rung a step can be (§ "Name the rung a step
-  speaks"). Required of every hinted game.
-- **`hintMarks`** — the roles its steps name (§ "Bind the words to the
-  marks"). Required of every hinted game.
+- **`hint(state, aux?, ui?): HintResult`** returns `{ ok: true, steps }` or
+  `{ ok: false, error }` with a `HintRefusal`. Compute the whole remaining
+  plan once; the midend advances it as the player follows or auto-play runs.
+  Each `HintStep` carries `move`, `rung`, `words` and `highlights`
+  (game-specific render data). `aux` is the generator's solution where there
+  is one, for a hint that falls back on it (`hints-search.md`
+  § "What every game does"). `ui` is the midend's, for a game that
+  reads a preference.
+- **`hintKeepTrack(move, step, state)`** returns `"completed"` when the move
+  matches the step's intent, `"onTrack"` for partial progress on a step of
+  several moves, else `"off"`, which drops the plan. It is handed the state
+  before the move (`Midend.processInput`), so a game that needs the result
+  applies the move itself. For a pencil toggle, a candidate present now is
+  one the toggle clears, the strike to follow, and an absent one is a toggle
+  that would add it back, which is `"off"`. Do not test it with a timing the
+  midend never uses.
+- **`continuesPrevious`** on a step groups steps into one journey: the chrome
+  counts a leg within it and auto-play runs the legs back to back. A move of
+  the player's own never puts a sentence on screen: a completed step hides the
+  hint and every leg waits to be asked for. So a leg's sentence cannot lean
+  on the one before it still being on screen.
+- **`refreshHintStep(step, state)`** validates a kept step at display
+  (§ "Stale plans and refreshHintStep").
+- **`hintGesture(state, ui, ds, move, step)`**, **`hintRungs`** and
+  **`hintMarks`** are required of every hinted game (§ "Every step is a
+  gesture", § "Name the rung a step speaks", § "Bind the words to the
+  marks").
 
 ### Name the rung a step speaks
 
-**A step says which deduction it is in a value, `HintStep.rung`, and nothing
-reads its sentence to find out.** Everything that needs to know which deduction
-a step is keys on the id: the pins a game's tests read
-([`testing.md`](./testing.md) § "Pinning a hint's positions"), the narration
-ledger in `hint-quality.test.ts`. So rewording a sentence moves
-only what asserts the wording, and a rung with no pinned board does not
-compile.
+Stamp every step with `HintStep.rung`, the id of its deduction, and let
+nothing read a sentence to find out which deduction a step is. The pins a
+game's tests read ([`testing.md`](./testing.md) § "Pinning a hint's
+positions") and the narration ledger key on the id, so a reword moves only
+what asserts wording. A game writes three things, each once:
 
-Three things, and a game writes each once:
-
-1. **The list**, beside the hint: `export const FOO_RUNGS = [...] as const` and
-   `export type FooRung = (typeof FOO_RUNGS)[number]`.
-2. **The stamp**, where a step is built. The reason is in hand there, so it is
-   one line: `rung: reason.kind`. Type the step
+1. **The list**, beside the solver or the hint: a `FOO_RUNGS` tuple `as
+   const` and the `FooRung` type derived from it.
+2. **The stamp**, where a step is built: `rung: reason.kind`. Type the step
    `HintStep<FooMove, FooHint, FooRung>`, and a reason kind missing from the
-   list fails to compile at the stamp.
-3. **The declaration**: `Game<…, FooHint, FooRung>` and `hintRungs: FOO_RUNGS`.
+   list fails to compile.
+3. **The declaration**: `Game<…, FooHint, FooRung>` and `hintRungs:
+   FOO_RUNGS`.
 
-**What a rung is: the deduction, at the grain the solver or the plan already
-names it.** A game with a reason union takes its `kind`s. A game whose hint
-picks a branch (Pegs: a trap, a package, a judged rival) names the branches. The
-legs of one journey share their firing's rung. Two sentences for one deduction
-(a row or a column, one cell or several, this peg's jump or another's) are
-*not* two rungs: a test that wants one of them writes a predicate over the
-step's fields (`step.rung === "trap" && …`), which is what a kind is for. Split
-a rung only when the two halves are different reasoning.
+Exemplar: `SKELETON_RUNGS` in `src/skeleton/grid/solver.ts` and `stepOf` in
+its `hint.ts`.
 
-**The candidate walk stamps its own steps.** `runCandidatePlan` gives a
-placement or a strike the `kind` of the reason it narrates, and its setup steps
-and a placement's cull the engine's ids (`CANDIDATE_RUNGS`: `populate`,
-`clean`, `note`, `dup`). So a candidate game writes no stamp at all: its list
-is `[...CANDIDATE_RUNGS, …its reasons' kinds]`, and `PlanRung<Reason>` is the
-type its steps carry. Where a game's `placeWords` narrates another of its
-reasons than the one it was handed (Seismic says a one-cell area is a
-singleton whichever single the walk found), it returns that `rung` beside the
-words, so the id and the sentence cannot disagree.
+- **A rung is the deduction at the grain the solver or the plan already
+  names it.** A reason union gives its `kind`s; a hint that picks a branch
+  names the branches. The legs of one journey share their firing's rung.
+- **Two sentences for one deduction are not two rungs** (a row or a column,
+  one cell or several). A test that wants one of them writes a predicate
+  over the step's fields. Split a rung only where the halves are different
+  reasoning.
+- **An id is the game's own word** as its solver spells it, and no sentence,
+  help page or save holds it: a rename costs its pins' keys.
 
-**A plan on the populate reading alone says so, and its list is shorter.** Two
-of the walk's rungs are spoken only of a cell with no notes: `note`, and the
-`regionsFull` single. A plan that gives a `setUp` of its own never walks the
-implicit reading, so it takes the reading as a type argument
-(`runLatinCandidatePlan<…, "populate">`, steps of
-`PlanRung<Reason, "populate">`), its reason union takes
-`SingleReasonUnder<"populate">`, and its list spreads `LATIN_POPULATE_RUNGS`.
-The `setUp` is the declaration: the argument does not compile without one, a
-plan on both readings does not compile with one, and the walk throws before it
-reads a note-less single on a plan that gave one. That last can only happen to
-an own rung that asks for `RungContext.placements()` before the setup is done,
-as Group's does; a game that wants that and its own setup has a list with
-`regionsFull` in it, and the type to widen is `OwnSetUp`. Salad is the one such
-plan.
+On the candidate walk the game writes no stamp
+(`hints-candidates.md` § "The shared candidate-hint machinery"):
 
-**A rung's pin can sit under the wrong candidate reading.** `populate` is
-spoken only under the populate reading and `note` only under the implicit one,
-and a pin is loaded under the scan's `ui`. So a candidate game's scan gives
-`ui` a rule that splits its boards between the two readings
-(`towers-hint.test.ts`).
-
-A rung id is the game's own word, as its solver already spells it (Slant's
-techniques are `clue-fill` and `deadend`), and it is not player-facing:
-no sentence, help page or save holds it, so renaming one costs its pins' keys
-and nothing else.
+- **`runCandidatePlan` stamps its own steps**: a placement or a strike takes
+  its reason's `kind`, and the setup steps and a placement's cull take the
+  engine's `CANDIDATE_RUNGS`. The game's list is `[...CANDIDATE_RUNGS, …its
+  reasons' kinds]` and its steps carry `PlanRung<Reason>`.
+- **A `placeWords` that narrates another reason than the one it was handed
+  returns that `rung` beside the words**, so the id and the sentence agree.
+- **A plan with a `setUp` of its own is on the populate reading alone and
+  says so in its types**: `runLatinCandidatePlan<…, "populate">`, steps of
+  `PlanRung<Reason, "populate">`, a reason union of
+  `SingleReasonUnder<"populate">`, and a list that spreads
+  `LATIN_POPULATE_RUNGS`. The argument does not compile without a `setUp`,
+  and a plan on both readings does not compile with one. The walk throws
+  before it reads a single with no notes on such a plan. A game that wants
+  its own setup and an own rung that asks `RungContext.placements()` before
+  the setup is done lists `regionsFull` and widens `OwnSetUp`.
+- **A candidate game's pin scan gives `ui` a rule that splits its boards
+  between the two readings**, since `populate` is spoken only under one and
+  `note` only under the other (`towers-hint.test.ts`).
 
 ### Every step is a gesture
 
-A hint teaches the player to make its move, so the move must be one the
-pointer makes on its own: a tap, a long press, a drag, or an on-screen key.
-The midend enforces it by never applying a step's move. `executeHint` asks
-the game's `hintGesture` for the step's gesture (`hint-gesture.ts`), sends it
-through `interpretMove` as the frontend sends a real tap, and hands each move
-that makes to `hintKeepTrack`. A move off the step, a key no on-screen control
-sends, or a gesture that ends before the step completes throws, so a step the
-pointer cannot make fails every walk of the plan
-(`hint-gesture.test.ts`), which is how Net's lock hint would have been caught.
+Make every step's move one the pointer makes: a tap, a long press, a drag or
+an on-screen key. The midend never applies a step's move. `executeHint` asks
+`hintGesture` for the gesture
+([`hint-gesture.ts`](../src/engine/hint-gesture.ts)), sends it through
+`interpretMove`, and hands each move it makes to `hintKeepTrack`. A move off
+the step, a key no on-screen control sends, or a gesture that ends before the
+step completes throws, and `hint-gesture.test.ts` walks every plan.
 
-Writing one:
-
-- **A game that declares `targetVerbs` names its step's targets and no more.**
-  `verbClicks(targetVerbs, { executeMove, hintKeepTrack }, state, ui, ds, step,
-  targets)` clicks each target once, with the first button whose verb makes a
-  move `hintKeepTrack` keeps on the step. That is the midend's own judge, so the
-  gesture cannot disagree with it, and the point is the geometry's `pointAt`,
-  which `target-verb.test.ts` holds to the press. So the gesture never says
-  which button makes which value. It is
-  one click per target because the midend refuses a move off the step, so a
-  target reached only by cycling through a value the step does not want cannot
-  be played at all; a step that presses a target several times over values
-  the step accepts (Loopy's notes), or drags, keeps its own gesture. The
-  gesture receives the step as its fifth argument for this. Exemplars: Pattern,
-  Mosaic.
+- **A game that declares `targetVerbs` names its step's targets and no
+  more.** `verbClicks(targetVerbs, { executeMove, hintKeepTrack }, state, ui,
+  ds, step, targets)` clicks each target once with the first button whose
+  verb makes a move `hintKeepTrack` keeps on the step, at the geometry's
+  `pointAt`. It is one click a target because the midend refuses a move off
+  the step, so a target reached only by cycling through a value the step does
+  not want cannot be played. A step that presses a target several times over
+  values the step accepts, or drags, keeps its own gesture. Exemplars: the
+  skeleton's `hintGesture`, Pattern, Mosaic.
 - **Aim at the middle of what the move changes**, computed from `ds.tileSize`
-  and the game's own pixel mapping, the inverse of what `interpretMove` reads.
-  Use the same helper the renderer uses to place the square or edge, so the two
-  cannot drift apart.
-- **A step the pointer makes in several moves is several actions.** A pencil
-  strike of three candidates is three taps; Net's half turn is two quarter
-  turns. `hintKeepTrack` must call the earlier moves `"onTrack"` and the last
-  `"completed"`, which is what a player following the step by hand needs from it
-  anyway.
-- **A mode is part of the gesture.** A step in notes mode presses the Marks key
-  (`PENCIL_MODE_BUTTON`), plays the notes, and presses it again if the mode was
-  off, so the player's mode is as they left it. A keypad digit follows the tap
-  that selects its cell. The shared shapes do this for you: `verbClicks`,
-  `verbGesture` and `routeGesture` for target-verb games (border grids included,
-  whose step names its edge with `borderStepEdge`), `candidateGesture` (with the game's `markAll` move, so a strike the mark-all control makes
-  whole is one press of it) for candidate games.
-- **A gesture that depends on the `Ui` asks the game.** Where the right taps
-  depend on a selection or a held piece (Crossing, Group, Ascent), rehearse
-  them on a `structuredClone` of the `Ui` through the game's own
-  `interpretMove`, rather than restating its rules.
-- **A point on a continuous board must be one a pixel can reach.** The pointer
-  lands on a pixel, so a hint that names a position (Untangle) proposes only
-  spots where its words hold for every landing inside the half-pixel box, at
-  any tile size the game can be drawn at; see `untangle/landing.ts`.
-- **The keyboard is not a gesture.** Its route to every move is held by the
-  target-verb model's keys-equal-buttons guard (`target-verb.test.ts`), and a
-  game outside the model owes the same by its own tests.
+  with the helper the renderer uses to place the square or edge.
+- **A step the pointer makes in several moves is several actions.**
+  `hintKeepTrack` calls the earlier moves `"onTrack"` and the last
+  `"completed"`.
+- **A mode is part of the gesture.** A step in notes mode presses
+  `PENCIL_MODE_BUTTON`, plays the notes, and presses it again if the mode was
+  off. A keypad digit follows the tap that selects its cell. The shared
+  shapes do this: `verbClicks`, `verbGesture` and `routeGesture` for
+  target-verb games (a border grid names its edge with `borderStepEdge`), and
+  `candidateGesture` for candidate games, given the game's `markAll` move so
+  that a strike the mark-all control makes whole is one press of it.
+- **A gesture that depends on the `Ui` asks the game.** Rehearse the taps on
+  a `structuredClone` of the `Ui` through the game's own `interpretMove`
+  (Crossing, Group, Ascent).
+- **A point on a continuous board must be one a pixel can reach.** Propose
+  only spots where the words hold for every landing inside the half-pixel
+  box, at any tile size (`untangle/landing.ts`).
+- **The keyboard is not a gesture.** Its route to every move is held by
+  `target-verb.test.ts`, and a game outside the target-verb model owes the
+  same in its own tests.
 
 ### The shared plan loop: deduceHintPlan
 
-Every recording pass ends up writing the same five lines. Use
-[`deduceHintPlan`](../src/engine/hint-plan.ts) rather than a copy:
-give it the (caller-cloned) working board, a `status`/`incomplete` pair, a
-`next(board)` firing finder, an optional `apply`, and the two bounds. Only the
-**loop** is shared: every rung order, reason type and narration string stays
-in its game. Three things worth knowing before you wire it up:
+Build the plan with [`deduceHintPlan`](../src/engine/hint-plan.ts), not a
+loop of your own. Give it the working board (cloned by the caller), a
+`status` and `incomplete` pair, a `next(board)` firing finder, an optional
+`apply`, and the two bounds. Rung order, reason types and sentences stay in
+the game. Exemplar: `skeletonHint` in `src/skeleton/grid/hint.ts`.
 
-- **Both bounds are parameters on purpose.** A plan-length cap (`planCap`) and
-  a `StepBudget` answer different questions ("stop nagging" vs "this rule
-  isn't advancing"), and collapsing them would silently retune the games that
-  chose the other.
-- **`status()` is called before `next()` every iteration, and that ordering
-  can be load-bearing.** Subsets' validator refills the `counts` array its
-  later rungs read, so the status call is not merely a check — don't
-  "optimize" it away.
-- **Omit `apply` when your rungs mutate as they detect.** Re-applying a firing
-  that has already been applied is not merely redundant; for a rung that reads
-  its own effect it is wrong.
+- **`planCap` and a `StepBudget` are separate bounds**: one stops a plan
+  running on, the other catches a rule that is not advancing.
+- **`status()` is called before `next()` on every iteration**, and a game may
+  depend on it (Subsets' validator refills what its later rungs read), so do
+  not skip it.
+- **Omit `apply` when the rungs mutate as they detect.** Applying a firing
+  twice is wrong for a rung that reads its own effect.
 
 Its users: `npm run refs -- src/engine/hint-plan.ts deduceHintPlan`. A game's
 own `function deduceHintPlan` (`git grep -n "function deduceHintPlan" --
-src/games`) is its plan builder, which may or may not call this one. Moving a game onto it is
-behavior-preserving when its hint tests pass **unedited**.
+src/games`) is its plan builder, which may or may not call this one. Moving a
+game onto it preserves behavior when its hint tests pass unedited.
 
 ### Recording the deduction
 
-**First decide *where* the record comes from: threaded, or parallel.** Both
-ship, the guide's exemplars below cover both, and the choice is not a style
-preference.
+Record, for each firing, why it fired and on what evidence, from the rules
+themselves. Decide first where the record comes from:
 
-- **Threaded** — an optional recorder passed into the game's own rules, built
+- **Threaded**: an optional recorder passed into the game's own rules, built
   only on the hint path, with every reason allocation gated on it so the
-  generator's solve path is byte-identical. Range, Singles and Filling.
-- **Parallel** — separate code reusing the solver's primitives, which the
-  generator never calls. Clusters, Subsets, Undead; § "A non-Latin candidate
-  game (Undead)" argues it.
+  generator's path is unchanged. Exemplars:
+  [`range/solver.ts`](../src/games/range/solver.ts) (a `record` callback),
+  the skeleton's `ladder`.
+- **Parallel**: separate code over the solver's primitives that the generator
+  never calls. Choose it where the hint needs the deduction in another order
+  or at another grain than the generator, which needs only that it fires
+  (`hints-candidates.md` § "A candidate game off the shared walk"). Exemplar:
+  Clusters, which restarts its scan after each firing and takes the shortest
+  chain.
 
-**Two reasons get given for parallel and only one of them is good.** *"The
-byte-match differential surface never calls any of this"* is the weak one —
-[`doctrine.md`](./doctrine.md) § "Upstream" released that constraint, so it is a
-convenience and not an argument. The strong one is that **the generator needs
-only *that* a deduction fires while the hint needs *why*, at which cell, on
-which premise, and often in a different order**: Clusters restarts its scan
-after each firing so one deduction is one plan step, and takes the shortest
-forcing chain rather than the first in scan order. Where that is true, parallel
-is right and the duplication is not the cost it looks like.
+A ladder on `runDeductionFixpoint` still makes that choice: a technique's
+`run` returns a number and its `firings` tally counts by rung id, which is
+not a record. What the ladder gives is the driver and a certified rung list:
 
-**Being on `runDeductionFixpoint` does not settle it.** The runner supplies the
-loop, the tier cap, the restart rule, the grade and the budget; a technique's
-`run` returns a `number` and the runner is explicitly *oblivious* to what it
-recorded. So an adopted game still chooses, and its `firings` tally — which
-counts firings by rung **id** for `ladder-census.ts` — is not a
-recorder. What adoption *does* give a hint author is a **declared, certified
-ladder**: the rungs are named, and the game's `<game>-ladder.test.ts` says which
-of them the generator ever reaches, so a rung in the `unreached` ledger needs no
-narration at all.
+- **Drive it with `singleFirings({ techniques, maxTier, budget,
+  beforeTechnique })`**
+  ([`deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)), built
+  once over the working board. `next()` returns the technique that
+  fired or `null`, and `impossible()` is sticky. Wrap it in a `next()` that
+  turns the recorder into a firing and hand that to `deduceHintPlan`.
+  Exemplars: `skeletonRecordingPass`, and `tracksRecordingPass` in
+  [`tracks/solver.ts`](../src/games/tracks/solver.ts).
+- **`beforeTechnique` clears the standing reason**, so a rung that declares
+  none returns `null` and does not borrow the last one.
+- **Record every firing, including one that changed nothing the player
+  sees**, and let the plan loop hide it (§ "Show only what the board does not
+  already say"). Do not bend `settled` to skip such firings: the `hidden`
+  count cannot see them.
+- **Read what the firing changed yourself**, from the recorder or by
+  comparing the board before and after.
+- **A rung in the `unreached` ledger of `<game>-ladder.test.ts` needs no
+  narration.**
 
-**But it does supply the single-firing driver: `singleFirings`.** An adopted
-game does not write a "run the ladder until one rung fires" loop; it builds
-`singleFirings({ techniques, maxTier, budget, beforeTechnique })` once over
-its working board and calls `next()` per step. `next()` returns the technique
-that fired, or `null` when none does (or `settled` says there is nothing left);
-`impossible()` is sticky once a rung proves a contradiction. It is the same
-one-pass-down-the-ladder the fixpoint repeats, so tier cap, restart rule and
-budget attribution cannot drift between the two projections.
+Rules for any recorder:
 
-- **`beforeTechnique`** clears the standing reason, so a rung that declares
-  none comes back with a `null` reason instead of borrowing the previous
-  rung's.
-- **Every firing comes back, including one that changed nothing the player
-  can see.** Record every change, reason or not, and let the plan loop decide
-  what is worth showing (§ "Show only what the board does not already say").
-  Do not make the driver skip such firings by bending `settled` into "stop
-  once the recorder holds a move" — that hides them where `deduceHintPlan`'s
-  `hidden` count cannot see them, which is how Bridges' per-direction maximum
-  went uncounted until the driver was shared.
-- **What the firing changed is yours to read**: from the recorder (Tracks,
-  Bridges), or by comparing the board before and after (Magnets). The driver
-  takes no snapshot, because only one adopter reads the board that way.
-
-Wrap the call in a `next()` closure that turns the recorder into a firing, and
-hand it to `deduceHintPlan`. Exemplar: `tracksRecordingPass` in
-[`tracks/solver.ts`](../src/games/tracks/solver.ts). What this does **not**
-save you is the record itself — measured against a control, an adopted game's
-recording projection is not cheaper than an unadopted one's
-(`add-tracks-hint`'s `findings.md`), because the loop was never the expensive
-part.
+- **Group by a firing id, not by adjacency.** Give one firing's ops a shared
+  `group` ([`deduction-record.ts`](../src/engine/deduction-record.ts)) and
+  merge records by group into one multi-cell `HintStep`, in first-seen order.
+  The links of a real chain stay separate steps.
+- **One `group` covers exactly one firing.** A counter that bumps once per
+  pass, under a routine that loops over every clue, puts several firings in
+  one step. Make each clue or line routine return as soon as it fires on the
+  recording path, and assert that every struck mark of a step lies within the
+  step's narrated area (`towers-hint.test.ts`).
+- **A solver that queues ops and cascades** attaches the reason to the queued
+  op and records each op where it changes a flag, the cascade building its
+  own reason at the apply site. Exemplar:
+  [`singles/solver.ts`](../src/games/singles/solver.ts).
+- **A solver that wipes the board cannot be replayed as it is.** Whatever the
+  wipe derived from the givens becomes an ordinary narrated firing, and so
+  does a placement's side effect, or a later sentence describes a board that
+  is not the player's. Exemplar: Boats' `givenClue` and `neverTouch`. Where
+  the wipe wraps only a loop, `deduceHintPlan` replaces it and the wrapper is
+  never called (Sticks).
+- **A Latin candidate cube is a notes representation; record off it**
+  (`hints-candidates.md` § "What every game does").
 
 ### A rung is not a premise, so return per premise
 
-**One `DeductionTechnique` routinely holds several separate teachable rules, and
-the runner cannot see inside one.** Tracks has 8 rungs and **11** narrated
-premises; `update-flags` alone holds five local rules, two of them taught and
-three hidden because the board already shows them. A rung that scans the
-whole grid therefore fires many *independent* deductions in a single `run()`,
-and left alone they all land in one hint step — the exact defect § "Group one
-firing into one step" records from Towers, one level up.
+Where one `DeductionTechnique` holds several teachable rules, or scans the
+whole grid, return at the first premise that changed something, gated on the
+recorder. Otherwise independent deductions land in one hint step
+(`hints-marks.md` § "Group one firing into one step"). The gate keeps the
+generator's accumulate-across-the-grid path unchanged. A coarse ladder needs
+this as much as a fine one, and may need it at two levels: the sweep returns
+at the first unit that moved, and a stage of two rules returns at the first
+rule that fired.
 
-**This is not a property of fine ladders, and two measurements now say so.**
-Bridges has **3** rungs holding **7** narrated premises, and its recording
-projection costs the same per premise as Tracks' — 42 lines against 45 per
-distinct rule, on ladders whose rung counts differ by 2.7× (`add-bridges-hint`'s
-`findings.md` §3). So the cost of a recorder tracks **how many distinct premises
-a game's rungs hold**, not how many rungs hold them, and a coarse ladder needs
-the per-premise return at least as badly as a fine one. Bridges needs it at two
-levels: a stage sweeps every island before reporting, so the *sweep* returns at
-the first island that moved, and each of its two-rule stages returns again at
-the first rule that fired.
+- **Set the standing reason before applying the premise, and reset it only
+  when the premise changed nothing.** Clearing it after a firing hands the
+  driver ops with no reason.
+- **Build the reason behind the `if (rec)`, never as an argument to a
+  helper.** Some evidence costs a full-board scan, and an argument is built on
+  the generator's hot path.
+- **Capture the evidence inside the rung, before it acts.** A rung can
+  destroy its own premise, and a snapshot afterward then shows a different
+  set than the sentence counts.
 
-The fix is the same one, and it is the single most repeated shape in a recording
-projection: **return at the first premise that changed something, gated on the
-recorder**, so the generator's accumulate-across-the-whole-grid path stays
-byte-identical.
-
-```ts
-const before = did;
-const rec = b.rec;
-if (rec) rec.reason = { kind: "…", /* evidence, captured now */ };
-…apply the premise…
-if (rec && did > before) return did;   // one firing = one step
-if (rec) rec.reason = null;            // a premise that changed nothing lends nothing
-```
-
-Two things that are easy to get wrong here, both found by writing it:
-
-- **Reset the standing reason only when the premise recorded nothing.** Clearing
-  it after a firing hands the driver ops with no reason, and the narration
-  switch then reads `null.kind`.
-- **Build the reason *behind* the `if (rec)`, never as an argument to a helper.**
-  A reason carries its evidence, and some of that evidence costs a full-board
-  scan; a `claim(b, {…})` helper looks tidier and builds all of it on the
-  generator's hot path, where nothing reads it.
-
-**And capture the evidence inside the rung, before it acts** — not from a
-snapshot afterwards. A rung can destroy its own premise: Tracks' `looseEndSpans`
-cites a line's *unfinished* squares and then finishes one of them, so a
-post-firing snapshot shades a different set than the sentence counts.
+Exemplar: [`tracks/solver.ts`](../src/games/tracks/solver.ts); Bridges for
+the two levels.
 
 ### A firing is not always a technique, so check the boundary too
 
-The section above splits a rung that fires *too coarsely*. The opposite case
-exists, and Loopy found it: the engine's firing boundary can be **finer** than
-the human technique, and then a hint that narrates firings perfectly faithfully
-still teaches badly.
+Where a hint is true and forced and the player still cannot name what they
+learned, check whether the solver's firings are finer than the technique a
+player sees: one human deduction reached in several firings is shown as
+several unrelated hints, narrowest first.
 
-Loopy's owner-reported case (`teach-loopy-the-blocked-corner-pair`): a clue
-needing all but one of its open edges, with two dots next to each other around
-it that already carry a line. A player sees one thing: joining those dots would
-leave the clue short, so that edge is out and the others are lines, the whole
-clue settled at once. The solver reached the same conclusions in **three**
-firings: one narrow step drawing the two far edges, a dot filling up, then the
-clue starving. "One deduction firing is one journey" rendered those as three
-unrelated hints, and the player was shown the narrowest of them first.
+- **Teach the engine the pattern as a rung; do not group firings in the
+  hint.** A hint-side recognizer puts one technique in two places. Fall back
+  to it only if the rung re-grades boards.
+- **Measure a new rung on a solver-gated generator before writing it.** It
+  changes when conclusions are reached, which can move a board's tier. Grade
+  a corpus both ways and count the boards that change.
+- **A pattern whose conclusions the existing rungs already reach** cannot
+  strengthen the solver, but firing order is still observable, so measure
+  that too.
 
-So the defect was not a missing deduction — every conclusion was already
-reachable — and not a narration bug either. **It was a granularity mismatch**,
-and the tell is a hint that is *true*, *forced* and still leaves the player
-unable to name what they just learned.
-
-Two things to take from how it was fixed:
-
-- **Teach the engine the pattern; do not group firings in the hint.** The
-  alternative — a hint-side recognizer spotting the three firings and emitting
-  them as one journey — costs nothing in the generator, but it puts the
-  technique in two places, and two descriptions of one technique drift. Prefer
-  the rung, and fall back to the recognizer only if the rung re-grades boards.
-- **A new rung on a solver-gated generator must be measured before it is
-  written.** Adding one changes *when* conclusions are reached, and on a
-  generator that gates every clue removal on the solver's verdict that is enough
-  to move a board's tier — a board labeled Tricky that a player can now solve at
-  Normal is a dishonest difficulty, not a nicety. Grade a corpus both ways and
-  count the boards that change tier. The measurement is cheap, and the frozen
-  differential answers it independently and harder: it asserts, per grid type and
-  tier, that the C's board still needs the difficulty it claims.
-
-The favorable case is a pattern whose conclusions the existing rungs **already
-reach**, differing only in how many steps they take. That cannot strengthen the
-solver at any cap, so it re-grades nothing — but firing *order* is still
-observable (a rung-skipping optimization, an early "ambiguous" exit), so the
-argument bounds the risk and only the measurement closes it.
+Exemplar: Loopy's blocked corner pair.
 
 ### Census the reasons, not only the rungs
 
-`<game>-ladder.test.ts`'s `unreached` ledger says which **rungs** a corpus
-reaches. Run the same census one level finer over the **reason kinds**, because
-an arm of a reachable rung can be just as unreached.
+Reach every reason kind in the game's hint test, not only every rung: an arm
+of a reachable rung can be unreached. Write a `Record<Reason["kind"], true>`
+constant, so a new variant fails to compile until the census lists it, and
+add a board by hand for a premise the generated corpus does not deal.
+Exemplar: `tracks-hint.test.ts`.
 
-The shape that works (`tracks-hint.test.ts`): a `Record<Reason["kind"], true>`
-const, so **adding a variant breaks compilation** until the census lists it,
-and a census that reaches every one of them, with a board added by hand for a
-premise the generated corpus does not deal.
-
-**An arm no board reaches is a finding to explain, and "a cheaper rung gets
-there first" is a guess until it is proved.** Three of Tracks' premises fired
-on none of 119 boards, and each was ledgered with that reason. One was dead by
-the ladder's order, which the code shows line by line, and it went. One fires on
-a 5x4 board, a size the corpus never dealt. The same reason excused Boats'
-`mustGrow`, which could not fire at all: a wrong read had disabled the
-technique in the solver too
-([`solver-and-generator.md`](./solver-and-generator.md) § "Cap-monotonicity,
-and the game that broke it"). How to tell the cases apart is
-[`testing.md`](./testing.md) § "Pinning a hint's positions".
-
-**A solver that *wipes the board* cannot be replayed as-is (Boats).** A
-recording solver written to run from empty is not automatically resumable;
-Boats is the sharp end. `solveBoats` opens with `solverInitial`, which
-**clears the grid** and re-derives it from the given clues — calling it for a
-hint would throw away everything the player has placed. Two consequences worth
-copying:
-
-- **Whatever the wipe folded in becomes an ordinary narratable technique.**
-  The clue derivations inside `solverInitial` ("this given ▲ is a boat's top
-  end, so its boat continues below") became a `givenClue` firing like any
-  other — *better*, because it is a real technique a player should learn, and
-  it was previously invisible.
-- **So do the placement's side effects.** `placeShip` also waters the four
-  diagonals. Left as a silent side effect only the deduction's board knows
-  about, a later narration describes a board that isn't the player's. Boats
-  emits it as a `neverTouch` firing, which also covers the player's *own*
-  placements.
-
-But **look at what the wipe wraps before moving it** (Sticks): if the wrapping
-is only a loop, `deduceHintPlan` already replaces it — the hint runs the
-game's per-firing function directly, the wiping wrapper is simply never
-called, and the generator's solver stays byte-identical **by construction**.
-
-**Inline (Range).** Thread an *optional* `record(cell, value, reason)`
-callback through the solver's rules (built only on the hint path), plus a
-`deduceHintPlan(...)` that runs the deduction from the player's current marks.
-Exemplar: [`range/solver.ts`](../src/games/range/solver.ts) +
-[`range/index.ts`](../src/games/range/index.ts).
-
-**Through an op-queue + cascade (Singles).** A solver that **queues** ops and
-**applies** them while **cascading** new ops knows the cause of a cell at two
-sites — the rule that queued it and the apply step that queued a follow-on.
-Attach the reason to the queued op, and record each op when it actually
-changes a flag inside the apply/cascade loop; the cascade builds its own
-reason at the apply site. Put the recorder + a group counter on the existing
-solver state so it threads everywhere for free, and **gate every reason
-allocation on it** (`if (ss.records)`) so the generator's hot solve path is
-byte-for-byte unchanged. Exemplar:
-[`singles/solver.ts`](../src/games/singles/solver.ts).
-
-**A Latin candidate cube *is* a notes representation; record off it** — see
-§ "Candidate-elimination games".
-
-**Group by a firing id, not by adjacency.** When one firing forces several
-cells, give that firing's ops a shared `group` id
-([`deduction-record.ts`](../src/engine/deduction-record.ts)) and **merge
-records by group into one multi-cell `HintStep`** (quality-bar rule 2).
-Records of one firing are queued consecutively, so a first-seen-order bucket
-keeps the plan's order. A genuine *chain* (a black → neighbors white → those
-blacken line-mates → …) stays *separate* steps — each link is its own
-teachable local deduction.
-
-**One `group` must cover exactly one firing — beware a shared counter that
-bumps per *pass*, not per *firing*.** If the recording solver bumps the group
-once per solver invocation but a single routine loops over *every* clue/line
-and records eliminations for several before returning, all those distinct
-firings land under one group — the hint then narrates `group[0]`'s clue while
-struck marks from *other* clues' lines bleed into the same step (the Towers
-"the 5 from the next column got pulled into it" bug, 2026-06-21). Fix: make
-each clue/line routine **`return` as soon as it fires on the recording path**
-(gated on the recorder, so the generator's accumulate-across-clues path stays
-byte-identical). Guard it: assert every struck mark of a standalone
-clue-strike step lies within that step's shaded `area`
-(`towers-hint.test.ts` "clue-strike marks never bleed outside the narrated
-clue's line").
+An arm no board reaches is a finding to explain. "A cheaper rung gets there
+first" is a guess until the ladder's order proves it: the arm may fire only on
+a size the corpus never dealt, or be unable to fire because of a defect
+([`solver-and-generator.md`](./solver-and-generator.md) § "A capped solver
+must be monotone in its cap"). [`testing.md`](./testing.md) § "Pinning a
+hint's positions" says how to tell the cases apart.
 
 ## Refusal wording comes from one module
 
-**A refusal is a type, not a string.** `HintResult`'s error is a `HintRefusal`
-([`src/engine/hint-refusal.ts`](../src/engine/hint-refusal.ts)): one of
-`DEDUCTION_EXHAUSTED`, `CONTRADICTION_UNLOCALIZED`, `NO_MOVE_WORTH_MAKING`,
-`SEARCH_OUT_OF_REACH`, `GAME_OVER`, `PUZZLE_NOT_REASONABLE` and friends, so a
-sentence you type yourself does not compile.
+Return a refusal as a `HintRefusal` from
+[`src/engine/hint-refusal.ts`](../src/engine/hint-refusal.ts), never a string
+of your own: `DEDUCTION_EXHAUSTED`, `CONTRADICTION_UNLOCALIZED`,
+`NO_MOVE_WORTH_MAKING`, `SEARCH_OUT_OF_REACH`, `GAME_OVER`,
+`PUZZLE_NOT_REASONABLE` and the rest. The wording is shared because
+`help/features.md` teaches "there is a mistake" and "deduction has run out"
+as a pair that call for opposite responses.
 
-**And you do not write the *opening* at all: the midend refuses before it
-asks.** A board whose status is solved gets `ALREADY_SOLVED`; then a board on
-which your `findMistakes` finds anything gets `FIX_MISTAKES_FIRST`, with the
-mistakes on the overlay. So `hint()` is only ever asked about an unfinished
-board with nothing wrong on it that `findMistakes` can see, and it starts
-reasoning on its first line. Two rules live in that opening: the refusals are
-asked **in order**, because a finished board is not a wrong board, and `FIX_MISTAKES_FIRST`
-**promises a highlight**, which only the midend can keep, because it is what
-draws it. That is why `FIX_MISTAKES_FIRST` is not a `HintRefusal`.
+**The midend refuses before it asks.** A solved board gets `ALREADY_SOLVED`,
+then a board on which `findMistakes` finds anything gets `FIX_MISTAKES_FIRST`
+with the mistakes on the overlay. `FIX_MISTAKES_FIRST` promises a highlight
+only the midend can draw, so it is not a `HintRefusal`. So `hint()` is asked
+only about an unfinished board with nothing wrong that `findMistakes` can
+see, and starts reasoning on its first line.
 
-**What a game still answers for itself is about the puzzle:**
-
-- **A board `findMistakes` passes that is still doomed.** A deduction that
-  runs into a contradiction says `CONTRADICTION_UNLOCALIZED`, and on a board
-  with an answer it never gets to: `findMistakes` compares every entry with
-  the answer first. So the refusal is for a board the game's own solver cannot
-  finish, where no answer says which entry is wrong. A dealt board that
-  reaches it has a shortfall in its `findMistakes`, never a design: the player
-  is told something is wrong and not what
-  ([solver-and-generator.md](./solver-and-generator.md) § "Self-validating
-  games run their rule checker").
-- **A lost board.** The midend does not refuse on `"lost"`, because a lost board
-  is not always over: Flood plays on past its move limit and its hint still
-  leads home. Guess's revealed answer and Flood's board flooded past the limit
-  take no more moves, and say `GAME_OVER`.
-- **A dead end only this puzzle has**, in its own words, through
-  `puzzleDeadEnd(sentence)`. Inertia's dead ball is the case: naming the
-  specific dead end *is* the hint's value. `hint-refusal.test.ts` reads every
-  call and fails a sentence two games pass, since a situation two games share is
-  a kind, and a sentence that spells out a kind, and one that does not tell the
-  player to undo. Untangle once had such a refusal, telling the player to move a
-  tangled vertex themselves, the one thing the hint existed to do for them; it
-  was replaced by a hint that never runs out on a solvable board.
-- **A dead end whose cause the game can point at** returns
-  `markedDeadEnd(phrase…)`, so its words name the elements that cause it and the
-  board marks them, held to the words by the binding walk
-  (`deadEndBindingDefects`). Pegs' cut-off pegs and Inertia's stranded gems are
-  outlined. The renderer reads `redraw`'s `deadEnd` beside `hint`
-  (`stepMarks(hint ?? deadEnd)`); one that reads only `hint` names marks it does
-  not paint, which the walk reports.
-- **A proof that nothing finishes from the position is not `hint`'s to give.**
-  Where a game with no mistake check can prove it cheaply (a peg nothing can
-  reach, a barrel stuck off every target, a gem out of reach), that
-  `markedDeadEnd` is the answer of `hasNoSolution`, which `loadDesc` refuses a
-  board for. The midend asks it before `hint` on a Hint press and on a check,
-  so the proof is written once and `hint` opens with its search. A `hint`
-  called directly on such a position still has to answer, and says what its
-  search finds (`NO_SOLUTION_FROM_HERE`). A bare `true` from the hook is a
-  verdict for loading alone and leaves the hint to the game: Flood's limit
-  that can no longer be met is one, and its hint leads home all the same.
-  Solve is not refused there either, since a search game's Solve finishes
-  from the board as dealt (`solveBySearch`).
-
-**Every refusal is a verdict as well as a sentence.** `isDeadEnd` says whether
-its advice is to go back: a contradiction, a game that is over, nothing found
-that finishes from here, or a game's own dead end. Check & save asks the hint
-for that verdict after `findMistakes`, and refuses to save a dead end, because a
-save is a position to come back to. A search past its reach settles nothing, so
-the check saves and says so. `hint-refusal.test.ts` holds each kind's verdict to
-whether its sentence tells the player to undo, so a new kind's verdict and its
-words cannot disagree.
-
-**There is one message for running out of deduction.** A game whose tiers are
-all deduction-complete cannot reach it at all, so `DEDUCTION_EXHAUSTED` says
-what the position is *and* what to do about it, and `hint-resume.test.ts` fails
-any refusal outside a search-permitting tier.
-
-**The midend holds the same rule at runtime**, because the walk sees only boards
-the generators dealt, and those are tiered correctly by construction. A board
-that arrives from an id or a save is held to the same promise when it loads
-(`loadDesc`, [solver-and-generator.md](./solver-and-generator.md) § "No option
-switches the generator's checks off"), but loading asks the solver, and a hint
-weaker than its game's solver can still run out on a board that loaded.
-When `hint()` returns `DEDUCTION_EXHAUSTED` and `difficulty.ts`'s
-`permitsSearch` says the board's tier does not allow search, `Midend` throws
-with the game, the tier and the full id. The player gets the crash dialog
-instead of a false sentence, and the report says how to reopen the board. So a
-game must never use this refusal for anything but deduction running out on a
-sound board. A board that is inconsistent without any single entry being wrong
-is `CONTRADICTION_UNLOCALIZED`; the runtime check would read anything else as a
-broken tier.
-
-The reason this is a rule: `help/features.md` §Hints teaches "there is a mistake
-on the board" and "deduction has run out" as a pair, because they call for
-opposite responses. That is unteachable if the wording changes between games.
-
-**A hint that *searches* has a reach, and past it says so** —
-`SEARCH_OUT_OF_REACH`, not `NO_MOVE_WORTH_MAKING`. The distinction is what each
-sentence claims. "No move here would get you closer" is a statement about the
-**board**, and only a game that checked it may say it; the games that do are
-constructions that cannot come back empty on an unsolved board (Fifteen's
-placement, Flood's solver, Inertia's tour), where it is a backstop. A bounded
-search coming back empty has established nothing about the board — only about
-itself — and Sixteen spent two years saying the first sentence on tangled
-endgames where most moves *did* get the player closer, reached by following
-thirty-odd of its own hints.
-
-This is the one place the walk's central promise is relaxed, so it is derived
-rather than declared: `hint-resume.test.ts` accepts this refusal from exactly
-the games whose own code names it (`SEARCH_REACH_GAMES` in
-`testing/hint-games.ts`), with a per-member ledger saying why each has a reach.
-A deductive game emitting it fails, and so does a searching game emitting
-anything else.
-
-**A hint makes no wrong-board check of its own.** A game's `findMistakes`
-re-solves the clues and compares, so it catches a wrong-but-legal entry and the
-midend never hands the hint a doomed board. A hint that opens by comparing the
-board with the answer is a second copy of that check which keeps the cell to
-itself: move what it found into `findMistakes`.
+**A hint makes no wrong-board check of its own.** A hint that opens by
+comparing the board with the answer is a second copy of `findMistakes` that
+keeps the cell to itself: move what it found into `findMistakes`.
 [`wrong-entry-check.test.ts`](../src/engine/wrong-entry-check.test.ts) holds
-every game to it, and its header says what it cannot see.
+every game to it.
+
+What a game answers for itself:
+
+- **`DEDUCTION_EXHAUSTED` only for deduction running out on a sound board.**
+  A game whose tiers are all deduction-complete cannot reach it. Where
+  `hint()` returns it and `permitsSearch` (`difficulty.ts`) says the tier does
+  not allow search, `Midend` throws with the game, the tier and the id, and
+  `hint-resume.test.ts` fails the same refusal. A hint weaker than its game's
+  solver can run out on a board that loaded
+  ([`solver-and-generator.md`](./solver-and-generator.md) § "No option
+  switches the generator's checks off").
+- **`CONTRADICTION_UNLOCALIZED` for a board `findMistakes` passes that is
+  still doomed**: inconsistent with no single entry wrong. A dealt board that
+  reaches it has a shortfall in its `findMistakes`
+  ([`solver-and-generator.md`](./solver-and-generator.md) § "Self-validating
+  games run their rule checker").
+- **`GAME_OVER` for a lost board that takes no more moves.** The midend does
+  not refuse on `"lost"`, since a lost board may play on (Flood past its
+  limit).
+- **`SEARCH_OUT_OF_REACH` when a bounded search comes back empty.** That says
+  nothing about the board. `NO_MOVE_WORTH_MAKING` is a claim about the board
+  and only a game that checked it may say it, as a backstop in a construction
+  that cannot come back empty on an unsolved board. `hint-resume.test.ts`
+  accepts `SEARCH_OUT_OF_REACH` from exactly the games whose code names it
+  (`SEARCH_REACH_GAMES` in `testing/hint-games.ts`, with a reason for each):
+  a deductive game emitting it fails, and so does a searching game emitting
+  anything else.
+- **`puzzleDeadEnd(sentence)` for a dead end only this puzzle has**, in its
+  own words (Inertia's dead ball). `hint-refusal.test.ts` reads every call and
+  fails a sentence two games pass, one that spells out a shared kind, and one
+  that does not tell the player to undo. Never refuse by telling the player
+  to do what the hint exists to do.
+- **`markedDeadEnd(phrase…)` for a dead end whose cause the game can point
+  at.** Its words name the elements and the board marks them, held by
+  `deadEndBindingDefects`. The renderer reads `redraw`'s `deadEnd` beside
+  `hint` (`stepMarks(hint ?? deadEnd)`). Exemplar: Pegs' cut-off pegs.
+- **A cheap proof that nothing finishes from the position belongs to
+  `hasNoSolution`**, not `hint`, in a game with no mistake check. Its
+  `markedDeadEnd` is what `loadDesc` refuses a board for, and the midend asks
+  it before `hint` on a Hint press and on a check. A `hint` called directly
+  on such a position says `NO_SOLUTION_FROM_HERE`. A bare `true` from the hook
+  is a verdict for loading alone and leaves the hint to the game. Solve is not
+  refused there (`solveBySearch`).
+
+**Every refusal is also a verdict.** `isDeadEnd` says whether its advice is
+to go back, and Check & save asks the hint for it after `findMistakes` and
+refuses to save a dead end; a search past its reach settles nothing, so the
+check saves and says so. `hint-refusal.test.ts` holds each kind's verdict to
+whether its sentence tells the player to undo.
 
 ## Refusal couples to the mistake overlay
 
-A hint refused because the board is wrong lights up the same overlay **Check &
-Save** uses: `Midend.computeHintPlan` asks `findMistakes` before it asks the
-hint, puts what it finds on the overlay, and says "fix the highlighted mistakes
-first" *with the cells actually highlighted*. A game with both `hint` and
-`findMistakes` gets this without a line of its own, and its `findMistakes` is
-therefore a precondition of its hint: `hint-resume.test.ts`'s walk asks it at
-every position the hints reach, and fails if it ever flags one.
-
-The refusal message reaches the player via the banner on **both** paths —
-manual Hint and Auto-Hint route the returned string into the transient banner
-([`src/puzzle/puzzle.ts`](../src/puzzle/puzzle.ts) `hint()` →
-`setHelpMessage`). A hint-carrying game with no `statusbarText`
-(e.g. Range) still shows and clears the banner. (Both behaviors are
-requirements in [`engine-hints`](../openspec/specs/engine-hints/spec.md).) A refused **Solve** uses the same banner, so a game's `solve`
-refusal is player-facing text too — word it as one.
-
-## Rendering the hint
-
-Render the hint in `redraw` from the displayed `HintStep` (the midend hands it
-in). The base conventions: the forced cell ringed in `COL_HINT` (§ "Shade vs
-ring"), equivalent moves in the **same** color, the hint bits folded into the per-tile `Int32Array` cache
-([`rendering.md`](./rendering.md) § "The tile cache and the diff key"). Exemplar:
-[`range/render.ts`](../src/games/range/render.ts).
-
-### Highlight, never perform
-
-**The displayed (manual) hint must only mark the cell(s) to act on — ring the
-target in `COL_HINT` — and must NOT pre-render the move's result**
-(owner-directed, 2026-06-20). Do not fill the cell with the black square /
-circle / color / digit the move would place. A pre-filled mark (a) **obscures
-the cell's own content** (a target painted black hides the `1` printed there,
-so the hint reads as nonsense against its own narration), and (b) **reads as
-already-done** when applying the move is still the player's job. Keep the
-cell's number/state visible inside the ring and let the **narration** say
-*which* mark to place. The move is performed for real only in **animation mode**: auto-hint
-calls `executeHint`, which applies the move, so the cell then renders as the
-actual mark and (for fill games) plays its placement animation.
-
-The rail's **Next hint button alternates show/apply** (`add-hint-button-stepper`):
-the first press *shows* the step (highlight-only), and a second press *with
-nothing done in between* calls `executeHint(true)` to apply that one step in
-slow motion and then **stop** — the plan is hidden and the banner reads "Hint
-applied". The *next* press shows the next step (any intervening action re-arms
-the show). Applying is deliberately terminal: most players want one nudge, not
-to be raced through the solution (contrast Auto-Hint, which rolls continuously
-via `executeHint()`). This is a `Puzzle`-level orchestration of the two midend
-primitives and needs **nothing from a game's `hint()`**; it does mean a player
-experiences the plan at per-step granularity, so the "one deduction firing =
-one journey" grouping is also what makes the stepper read well.
-
-### Echo the move's shape in the hint color
-
-When a game's moves come in more than one visible *kind* — Spokes draws a
-**line** between hubs *or* places a **rule-out mark** — the hint highlight
-must use the shape that matches the move, recolored `COL_HINT`, not force
-every suggestion into one shape. Spokes' first cut drew every forced spoke as
-a `COL_HINT` line; but three of its five rungs force a *mark*, and a solid
-blue line for a rule-out reads as *"connect these"* — the exact opposite of
-the narration, a picture-lies bug. The fix: a `SPOKE_LINE` suggestion is a
-`COL_HINT` line, a `SPOKE_MARKED` suggestion is a `COL_HINT` dot at the
-spoke's rim — the same two shapes the game already draws for a real line and a
-real mark. Rule of thumb: **the hint borrows the game's own vocabulary for the
-action, in the hint color** — it never invents a shape the player would have
-to translate, and never shows the shape of the *wrong* action. (Exemplar:
-`spokes/render.ts` line-bit vs mark-bit branches. Sticks draws its forced
-square as a `COL_HINT` **bar in the forced orientation** for the same reason —
-a uniform tint cannot express an orientation.) This is the converse of
-"highlight, never perform": you show *where and which action*, in hint color,
-without performing it.
-
-### Show the evidence as an area
-
-The visual half of quality-bar rule 1. A single shaded premise cell tells the
-player *that* there's a reason; shading the whole area the deduction reasons
-over lets them **see** it. Palisade shades the connected **region** a
-clue/size argument is about; Range shades a clue's **line of sight**, the
-**run it must reach along**, or the **non-black cells a cut would isolate** —
-`COL_HINT_CELL` (a light blue), with the action cell still the lone `COL_HINT`
-blue. Make the words and the picture agree: if the narration says "the shaded
-run", a run must actually be shaded. Exemplar: `markedOf` in
-[`range/index.ts`](../src/games/range/index.ts).
-
-**Compute each step's area against the board as that step fires, not the
-original.** The plan is computed once, but a frozen area goes stale: a `reach`
-run the player has since filled white wouldn't be shaded. Range threads the
-solver's working grid through each recorded move (`HintMove.grid` — a
-`dup.slice()` at record time) and builds the highlight from *that* snapshot,
-so the shaded run grows as the player follows. (The snapshot has the move
-applied, so filter the target out of its own area.)
-
-**Guarded cross-game** (`hint-quality.test.ts`): every step must *show
-something* — board marks or words. The stronger per-game form — this
-deduction's evidence area is non-empty — is still worth a per-game test: the
-"visible evidence" test in
-[`range-hint.test.ts`](../src/games/range/range-hint.test.ts) caught a
-`connect` step whose known-white filter left the area empty (the connectivity
-rule treats every non-black cell as white, so shade non-black neighbors, not
-only marked-white ones).
-
-**"The rest of the line" is not evidence for a count (Magnets).** A premise
-of the form "this line needs N more and only N can still supply one" rests on
-every *other* square being ruled out, and that is the fact to show. Magnets
-outlined the line's leftover squares instead, which says nothing about why
-they are out, and the owner's first playtest of it found the outline had joined
-the halves of two horizontal dominoes into one vertical shape that was not on
-the board. The step now names what a pole there would do, marks what rules
-each square out (`tellCount` in
-[`magnets/hint.ts`](../src/games/magnets/hint.ts)), and hatches the line
-itself (§ "Hatch the line the sentence names"). Two things came with it. **A leg can be forced by the leg before it** when a solver places a
-firing's moves in one sweep, so read each leg against the board with the
-earlier legs applied. **And ring what the leg's sentence concludes, not
-every square the journey still has to decide.** Magnets rang all of a count's
-remaining legs while each leg said "so this square must be +", so the owner
-saw two rings under a singular (2026-09-23). The legs its sentence can
-conclude together (dominoes crossing the line, forced by the count alone) now
-go first and are named with their number, "these 2 squares", and a domino
-lying along the line gets its own leg and its own ring. **A count of dominoes
-must say why it is not a count of squares**: a domino lying along the line has
-two open squares and gives it one pole, and without "one per magnet" the same
-owner read four open squares for three +s as a board with several answers.
-The outlines the ruled-out squares make are named too, "a + in either outlined
-tile would …", but only when every one of them is a whole outlined tile; a lone
-outlined square keeps "anywhere else", since calling it a tile would be false.
-`magnets-hint.test.ts` holds every "this square" to one ring and every "these N
-squares" to N, over boards pinned as descs, because the plural fired on 12 of
-320 generated boards and the seeded corpus saw none.
-
-**Name a piece the way the player thinks of it, not by the word the code
-inherited.** Magnets' hint said "domino", upstream's word for the two-square
-shape, and the owner found it confusing beside the magnet or neutral the player
-fills it with (2026-09-23). The hint and help page now say "tile", while the
-code keeps `dominoes` because no player reads it. When a sentence reaches for
-the name of a piece, check it against the help page's own words for what the
-player does to the piece.
-And when a line of reasons varies by row and column, merge the axes ("overfill
-its row or column") before reaching for the long-narration ledger.
-
-**Filtering the target out of the evidence is a *per-technique* call, not a
-house rule (Sticks).** Most games drop the acted-on cell from the evidence
-list so the one solid target color is never diluted — and copying that
-everywhere is what emptied a Sticks `unreachable` step: the span its sentence
-counts ("room for only 1 square") *was* the target square, so the frame showed
-a lone blue bar and nothing else. Ask per technique whether the acted-on
-square is genuinely part of the area being reasoned over. A run whose *length*
-is the argument contains it; a clue's already-counted neighbors do not. Same
-list, opposite answers, and the same per-game non-empty assertion catches it.
-
-**A plural deictic is a promise about the frame.** "These cells", "their
-region", "across these lines" — each says a set is on the board, and a
-sentence that says one while the step marks a single place cannot be followed
-at all; the player has no way to find what it is talking about. This is the
-deixis defect (§ "Two marks on the board, one 'this cell'") turned inside out,
-and `scripts/checks/hint-deixis.test.ts` cannot see it, because that sweep
-looks only at steps with *two* marks. The key that does find it is a plural
-deictic plus a count of the distinct *places* a step marks (role fields are
-not places — two roles naming one cell are one mark). Run over every hinting
-game it returned six shapes, four of them Loopy's, where the move's own pair
-connector is the mark; both real ones were Solo's, and the fix was to record
-the premise (`mark-the-cells-solo-points-at`): the region an extra-cage
-counted down, and the cells a locked pattern is locked into.
-
-**So is a singular one.** "This square" beside two action rings of the same
-kind leaves the player to guess which. Swept across every hinting game
-(2026-09-23), with the target-like highlight fields counted as places: the one
-real case was Magnets' count premise (its paragraph above, under § "Show the
-evidence as an area"). Every other hit tied itself by kind: Boats draws its
-extra targets as water marks beside the boat mark the sentence names, a Magnets
-tile sentence rings both halves of "this tile", and Galaxies' "this cell"
-names its partner cell in the same sentence. Highlight fields differ per game,
-so the check lives beside the vocabulary that can judge it, per game, like the
-deixis gates.
-
-**The strongest form of "the words and the picture agree" is a count you can
-assert.** Where a sentence states a number — a run's length, the room left,
-the sides a clue has — make the evidence list have exactly that many entries
-and assert it (`segment.length === size`, `span.length === max`,
-`lines.length === value + 1`). Sharper than "non-empty", checked by the
-*player* every time they look, and it fails loudly if a later edit shades a
-convenient approximation instead of the deduction's own walk.
-
-### Off-board evidence
-
-A game whose deduction reasons over a **clue list, palette or tray** rather
-than only over cells has half its premise outside the grid, and shading the
-grid alone hides the part that does the work. Every Crossing technique turns
-on "which listed numbers still fit this run" — a fact that lives in the number
-panel under the board — so the hint highlights **both**: the run's squares as
-the area, and the still-fitting numbers as a patch behind their text in the
-panel, with the number a whole-run placement writes in taking the stronger
-target color. The narration and the picture then agree: *"only one number in
-the list is 6 digits"* points at exactly one highlighted clue. Two things that
-made it cheap and one that made it correct:
-
-- **The layout is already shared.** Crossing's `layoutNumbers` was extracted
-  during the port so `interpretMove` and `redraw` could not disagree about
-  where a clue is; the hint just reads it. If your game's off-board surface is
-  laid out inline in `redraw`, extract it first.
-- **Its cache is separate from the per-tile one.** The `OverlaySidecar` covers
-  the grid; the panel has its own per-clue state array, so the hint class has
-  to be folded into *that* key too or the patch never paints
-  ([`rendering.md`](./rendering.md) § "The tile cache and the diff key" applies per surface, not
-  per game).
-- **Ride behind the existing aid, don't replace it.** Crossing already colors
-  the clue list by which run each number could go in. The hint draws its patch
-  *under* that ink instead of overriding the color, so both aids stay
-  readable. Guard: assert the step names at least one clue **and** that a
-  hint-colored rect lands below the grid (`crossing-hint.test.ts`).
-
-### Suppression must dismiss on UI_UPDATE
-
-A bug that has shipped **twice** — Subsets first, Crossing after
-(owner-reported both times). When a hint takes over a surface the game also
-uses for something else (Subsets' reference aid; Crossing's selected-run wash,
-suppressed so blue and green can't both mean "washed square"), the suppression
-is invisible until the player touches that surface — and then **nothing
-happens at all**: no wash, no aid, no change, and no way out of hint mode
-short of finding the right control in the chrome.
-
-The gap in the plumbing: `hintKeepTrack` is only consulted for **moves**. In a
-game whose board clicks *are* moves, going your own way returns `"off"` and
-the hint drops. In a **selection-based** game (the pencil-notes family, plus
-Crossing) a click is a `UI_UPDATE`, which never reaches `hintKeepTrack`, so
-nothing dismisses anything.
-
-Implement **`Game.uiUpdateClearsHint(step, state, ui)`** — the midend calls it
-on every `UI_UPDATE` while a plan is stored, with the ui **after**
-`interpretMove` has moved the cursor, and drops the plan when it returns true.
-Two shapes:
-
-- **`() => true`** — dismiss on any UI change. The simplest rule, and enough
-  when the hint marks nothing the player has to select in order to act on it
-  (Subsets).
-- **Answer per step** — dismiss *unless* the player is working inside the
-  squares the hint is about. Crossing does this (owner-directed): its
-  whole-run placement is followed by clicking into the run and typing the
-  number, and losing the explanation mid-way is the wrong trade. Everything a
-  firing is about is already in `highlights.area`/`targets`, so the predicate
-  is "am I inside the highlight?" and nothing new has to be stored.
-
-**If you answer `false` anywhere the hint paints, the cursor cue becomes your
-problem.** The hint owns the background on those squares, so a
-*background-only* selection cue is invisible exactly when the player is about
-to type there. Fall back to a **foreground** cue on hinted squares, in a
-color that reads against the hint: Crossing draws the keyboard cursor's
-corner marks for a mouse selection too, in dark `COL_GRID` rather than the
-near-white the green would swallow. Guard it with the *discriminator*, not
-just the presence: assert the corner cue appears on a hinted square **and does
-not** on a plain selection (`crossing-hint.test.ts` "keeps the cursor visible
-on a square the hint has painted").
-
-Two more things: **dropping the plan costs nothing** when the deduction is
-deterministic and cheap (Crossing recomputes in milliseconds and re-shows the
-same step) — weigh it if your hint is expensive. And the hook is a **method,
-not a function property**: `Game` is stored type-erased in the registry, where
-a function property's contravariant parameters do not survive the erasure,
-while method syntax is checked bivariantly like every other hook.
-
-The other selection-based games (Towers, Solo, Keen, Unequal, Undead, ABCD,
-Group) do **not** set it: their hints suppress nothing, so a click there still
-visibly moves the selection. The trigger for this rule is *suppression*, not
-selection.
-
-### The element-type color legend
-
-Quality-bar rule 3 ("equivalent moves share a color") has a converse:
-**premise cells that play *different* roles must NOT share a color**, or the
-highlight lies. Singles' 2×2-corner deduction is the cautionary tale — its
-first cut shaded three cells one color and called them all "two corner
-squares", but those cells are *two* roles: the **matching pair** (cells that
-share a number) and the **corner being protected** (a different cell that gets
-sealed off). The fix: a third highlight role with its own color
-(`COL_HINT_STRAND`, amber) for the protected corner, disjoint from the shaded
-`COL_HINT_CELL` matching pair and the `COL_HINT` target. Carry the roles as
-separate lists on the hint type and apply them with a clear precedence in
-`redraw` (target > strand > evidence); test the roles are **disjoint**.
-Exemplar: `SinglesHint` + `strandOf`/`narrate` in
-[`singles/index.ts`](../src/games/singles/index.ts).
-
-This generalizes into a **stable per-game color legend**: when a hint
-narration names more than one distinct *kind* of board element, give each
-*type* its own highlight color so the words map to the picture — and keep it
-stable (a "shaded square" is the *same* color in every hint that cites one),
-so the player learns it. Normative rule + scenarios:
-[`engine-hints`](../openspec/specs/engine-hints/spec.md)
-("A hint naming several kinds of element colors them by a stable legend"). Three non-negotiables:
-
-- **Color is never the sole carrier** (colorblind users). Every legend
-  color is paired with a non-color cue — ring vs shade vs fill, the drawn
-  digit, or position — and color *names* never go in the narration text.
-- **This is orthogonal to rule 3.** The legend governs *premise/element
-  types*; equivalent *forced moves* still all share the one target color.
-  Don't color two cells differently just because they're different cells —
-  only different *types*.
-- **A foreground highlight must contrast with the cell it sits on — never
-  paint the acted-on glyph the same color as its background.** A struck
-  candidate *digit* must stay legible, or it reads as already removed: it is
-  drawn in its normal `COL_PENCIL` color with a same-color **strikethrough**
-  as the "ruled out" cue, in a cell that is ringed and never filled
-  (§ "Shade vs ring").
-
-What a game's hint draws is its `hintMarks` legend, which its help page's
-`## Hints` section shows, and its `render.ts`. Read the nearest game's when you
-add a hint to a similar one.
-
-**Mark the premise element in the action color only where the sentence names
-it (Bridges).** Bridges recolors an island's rim and digit `COL_HINT` when the
-step says *"This 5 still needs two more bridges"*, and `COL_HINT_CELL` when it
-only counts it. Three of its seven premises count a **group** the acted-from
-island belongs to and never name it, and there the island is marked like the
-rest of the group: a sentence saying *"a bridge here would shut these 2 islands
-into a finished group"* has to point at two marks of one color, not at one mark
-of each. So the rule is narrower than "the subject of the deduction is the
-action color" — it is *the element the words name*, and a step whose words name
-none marks nothing that way. A mark the sentence never accounts for is one the
-player has to explain to themselves.
-
-**If the game has already spent the hint hue, the *hint* moves — and takes the
-board with it (Crossing).** `COL_HINT` blue is the collection's default, not a
-mandate, and it is the wrong choice in a game whose own legend already means
-something in blue. Crossing washes a horizontal run pale blue and a vertical
-one amber (**the hue *is* the information**), and the collection's hint blue
-is within eight hundredths of that wash in OKLCH — a hint mark the player
-reads as "across". So Crossing's hint took **green**, the far corner of the
-wheel from both dimension hues, and — the half that actually settles it — **a
-displayed hint suppresses the run wash entirely**, so only one meaning of
-"washed square" is ever on screen. Rule of thumb: check the new hint color
-against the game's *existing* legend in OKLCH before assuming the default, and
-when two washes would coexist, decide which one owns the board while it is up.
-
-**A second thing can hold blue: a transient affordance that lands on the same
-objects (Galaxies).** Its drag preview is `DRAG_ADD`, which *is* hint blue, and
-the collision is not incidental — both **ring a dot**, and they are on screen
-together the moment the player drags to follow the hint (a cell→dot drag rings
-every dot the cell may join; the hint rings the one it must). Same shape, same
-object, same instant, so the hint took **purple**. The tell that this is the
-real thing and not a tidy-up: the two roles agree about *what* they point at,
-which is exactly when one shared color is most confusing rather than least.
-
-**But when the thing holding the hue is the *cursor*, the cursor moves
-(Sticks).** Crossing's blue carried *information about the puzzle*, which is
-why the hint had to yield. Sticks' clash was with `COL_CURSOR` — and a cursor
-is a UI affordance that is already per-game, whereas hint blue is learned
-across the collection. Check *which* role is the cross-game one before
-deciding who yields. The collection's answer when green and blue are both
-spent is **purple**, twice already (`spokes/render.ts`,
-`subsets/render.ts`) — copy the precedent, and say why at the assignment.
-
-Two reusable legend readings: (1) **teal = "a cited black square", violet =
-"a cited white square"** is a cross-game reading worth preserving — reuse
-those hues for a decided black/white premise, and pick a *different* hue
-(Unruly's orange) when a game's premise ring isn't a single decided color.
-(2) When the ring set is **mixed** (filled + empty, or both colors), use
-**one** premise color, not a per-cell split.
-
-**Single-action *imperative* hints are exempt.** Movement/objective games name
-only **one** element type — the tile/color being moved — so there is no
-premise type to disambiguate. The legend bites only when a hint narrates a
-*premise* distinct from the *move*.
-
-### Shade vs ring
-
-**The acted-on cell is ringed in every game, with no exceptions**, and an
-evidence area is outlined unless the game can say that nothing is drawn on it.
-The mechanism is [`engine/hint-mark.ts`](../src/engine/hint-mark.ts); this
-section is the rule and the reasoning.
-
-**Read "cell" literally: `hint-mark.ts` is for a mark on a *cell*, and it is
-the right tool exactly that often.** A `MarkBand` is a content box plus an
-outward and an inward reach, so every mark it draws is a band on a cell's
-border box. Most hinting games mark cells and import it. Where a game's
-decided element is something else, the mark comes from § "Echo the move's shape
-in the hint color" instead — the game's own shapes recolored — and that is a
-first-class answer rather than a gap:
-
-- **Tracks** decides squares *and the sides between them*. Its squares take the
-  band; its sides are drawn as the game's own rail stubs and edge crosses.
-- **Bridges** uses none of it. A bridge is a **span** between two islands and is
-  no cell's border; and an island is not a cell either, because its circle has a
-  radius of `12/20` of the tile, so it is wider than its own tile and a band on
-  that tile's border would cut across it. The span is drawn as the bridge bundle
-  it would become, with only the *added* bars in the action color; the island is
-  marked by recoloring its own rim and clue digit, which is already a ring
-  because `drawIsland` paints an annulus.
-- **Loopy** has no cells and no tiles at all. Every mark is drawn from
-  `engine/grid/` geometry: a band under an edge, an outline inset in a face, a
-  ring under a dot, a wedge in a face's angle.
-- **Map** decides **regions**, each a polyomino of half-cell triangles, so no
-  cell's border box is one. It already drew a band just inside a region's whole
-  boundary for its selection, and the hint's ring and outline are that band in
-  the hint colors (§ "A graph, not a grid (Map)").
-
-**A piece is ringed as one shape.** A target spanning several squares — the
-domino a Dominosa placement asks for, the domino Magnets decides whole — is one
-ring around the piece, not a box per square with a double bar across its middle.
-The one thing the game knows and the painter does not is which squares belong
-together, so that is all it says: `HintMarkStyle.joinTargets(a, b)` for the
-target, and `joinEvidence` when evidence is whole pieces too (Magnets, so two
-dominoes side by side do not merge into a shape that is not on the board).
-Omitted, targets never join and evidence always does, which is every other
-game's frame unchanged. The relation can come from the hint rather than the
-board: Dominosa's pieces are not placed yet, so it joins a *placement's* two
-squares and leaves a barrier's two apart. `expectPieceRing` in
-[`engine/testing/mark-shape.ts`](../src/engine/testing/mark-shape.ts) holds
-the six sides of a domino.
-
-So ask **what shape the game already draws for this action** before reaching
-for the band; a game whose every decided element is a cell (Seismic) uses the
-band whole.
-
-**And check the guard is looking at your colors.** `hint-mark.test.ts` finds a
-game's hint colors by reading the `COL_HINT` export out of its own `render.ts`,
-so a game that exports that name for anything else points the guard at a color
-no hint paints (Bridges' "possible bridge" bevel is `COL_POSSIBLE` for this
-reason). [`method.md`](./method.md) § "A scan that keys on a name", from the
-end where the name was already taken.
-
-#### Why a fill cannot work, whatever color it is
-
-`HINT_FILL` behind a pencil mark scored **1.91:1** in light and **1.96:1** in
-dark, and behind an entered digit 2.20 / 2.71. It is not fixable by recoloring:
-the pale end of the palette holds exactly one cool wash and the evidence has it,
-so the only hues clearing ~2.6:1 are the ones nearest `ERROR_WASH` — which would
-make the cell the hint points at look like the cell that is *wrong*. A joint
-search over both hint roles, every hue and both schemes returns **no feasible
-arrangement** (owner-reported, 2026-08-22; the search is in
-`walk-tactic-hint-chains` D7). The role is gone from the palette, so nobody
-reopens the question by retuning a color.
-
-A mark drawn on the cell's **border** is read *against* a surface rather than
-*through* it, so the constraint disappears instead of being traded, and the mark
-can take a strong color — **`HINT_ACTION`**, the emphatic blue this cell always
-meant. It also unifies two branches the candidate games had split: they
-suppressed the fill whenever candidates were struck (Towers: *"painting the cell
-COL_HINT as well would hide the very digit the hint is crossing out"*), so on a
-strike step the target carried **no cell-level mark at all** and the player had
-to hunt for the strikethrough.
-
-**And the target is ringed even where the fill hid nothing.** Eight games filled
-a genuinely empty cell — measured, one frame at a time — and were converted
-anyway (owner, 2026-08-22). Two reasons: one mark should mean one thing across
-the collection, and in a shading game (Bricks, Clusters, Unruly, Singles,
-Pattern, Slant) the move *is* "give this cell a color", so a solid fill says
-with the board what the narration is still proposing.
-
-#### Where the band goes, and who rubs it out
-
-`MarkBand` is a content box plus how far the band reaches **outside** it and how
-far **inside**. That is the one thing that genuinely differs between games, and
-it decides who undoes the mark:
-
-- **Outside** (`outer > 0`) — Keen and Solo have a `2·GRIDEXTRA + 1` gutter of
-  `COL_GRID` backing; Unequal has a `TILESIZE/2` gap; Clusters, Group and Undead
-  add one pixel of real gutter to a band that is otherwise inside. The mark costs
-  the content nothing. Every one of these games calls
-  `HintMarks.eraseBeforeTiles(…, gutterColor, overlaps)` **before** its tile
-  loop and dirties the tiles `overlaps` names; `paint` after the loop only
-  stamps, and **restamps a mark that stayed every frame**, because a neighbor
-  repainting for its own reasons can paint over a side. Before, because no color
-  painted after the tiles is right everywhere: a band's inside part is its
-  cell's own border, and Keen's cages and Solo's sub-blocks widen each cell's
-  background `GRIDEXTRA` under the outside part. Erasing first and letting every
-  tile the band touches repaint on top settles both. The erase runs when the
-  marks' *shape* changes — which cells, and which sides — so a side a joining
-  neighbor closes, or a mark a Group row reorder carries onto a cell that looks
-  the same, is dirtied without the game keying anything on it.
-- **Inside** (`outer = 0`) — Towers, Filling, Crossing, Dominosa and Salad tile
-  exactly and draw their own per-cell outline, so the band replaces it. Nothing
-  needs erasing: the cell whose overlay changed repaints itself and takes its
-  mark with it, which is why those games can draw the mark from `drawTile`.
-  Seismic is here for a different reason: the one-pixel gap between its cells is
-  the black backing its region walls are made of, so a band in the gap would read
-  as a wall.
-
-  **"The cell whose overlay changed" includes a cell whose *outline* changed.** A
-  cell can stay evidence from one step to the next while the shape around it does
-  not — Seismic outlines a just-placed number's cell alone, and the very next
-  step can outline that cell's whole area. Its packed word is `HINT_AREA` both
-  times, so it kept the sides it no longer had until `OverlaySidecar` took each
-  evidence cell's outline sides into its diff key (`add-seismic-hint`). Nothing
-  to wire: `pack` computes them. A game that keys its own tile word and passes a
-  join relation takes the same sides from `MarkOutlines.packed`: a target whose
-  partner leaves keeps its role while its sides change, and the side that has to
-  go lives in the square that did not (Dominosa's `markSides` lane, Magnets'
-  tile word).
-- **Both** — Group, Undead and Clusters have a one-pixel gutter plus a couple of
-  pixels of the cell's own edge. The `outer` part makes them outside-band games:
-  they erase before the tiles like the rest, which also covers the inside part.
-- **Inset** — Galaxies and Palisade put the mark *inside* the cell body, because
-  in those games the cell border is where a **wall** lives and a mark there would
-  read as one.
-
-The band is the width of the border it replaces, not the heaviest line that fits:
-it reads as a highlight by **color**, not by weight. The inner reach is bounded
-by the content, and the bound is arithmetic rather than taste — Undead's penciled
-monster is a circle of radius `2/5` of its `TILESIZE/2` box centered a quarter-tile
-in, so it clears the edge by `TILESIZE/20`; Unequal's greater-than chevron reaches
-to within `GAP/4 − 1` of the cell it points away from. Each game's `markBand`
-records its own.
-
-#### Outline or wash: what the evidence cells carry
-
-**Outline** where the cells carry anything the player has to read — digits,
-pencil marks, clue glyphs, a placed slash, an association's own black or white
-background. One rule draws both shapes it needs: paint a side wherever the
-neighbor across it is not also evidence, so a contiguous region (a cage, a row,
-a line of sight) comes out as a single contour, concave corners and all, and a
-scattered set (a forcing chain's cells) as one ring per cell — honest, because
-they really are separate cells.
-
-**Wash** only where the game can say *nothing is drawn on these*, and one game
-can: **Light Up** (dark squares, where the premise is that the square is **not
-lit** — which a teal shade preserves, being not yellow). `hint-mark.test.ts`
-asserts that set exactly, so a second game washing its evidence fails until
-somebody writes down why it may. Pattern (its reasoned line's undecided
-squares) and Unruly (a journey's still-empty squares in the line) washed too,
-until the line became a hatch (§ "Hatch the line the sentence names"): a line is
-not evidence, and the hatch shows it whole, filled squares included.
-
-**Filling used to be the counterexample and is not.** Its premise is a *number*,
-and a digit reads perfectly well on a pale fill — 3.41:1 in light, 4.04:1 in
-dark. That is true, and it is not the binding constraint. The wash also has to be
-dark enough for a *derived* foreground, and at that lightness it measures
-**1.15:1 against its own board in dark mode**: legible content on a tint nobody
-can see. The two requirements move in opposite directions along one axis, so a
-wash under content loses whichever way it is tuned; an outline is not on that
-axis at all. Sticks and Boats collapsed the same way — each had *split* its
-evidence, washing one kind of cell and ringing the other, and both are now one
-shape for one role.
-
-Note what is *not* an option: dropping the evidence mark. Keen's narration says
-*"**This** cage"* while the target often sits in a different one, so the mark is
-the only thing identifying which — the deixis rule two sections up, enforced by
-geometry rather than prose.
-
-Give an outline a **`_BOLD`** color, not the base. `color-dark-check` is what
-settles it: a base step at the same lightness in both schemes lands close to a
-pale board and far from a dark one — a soft line under one scheme and a bright
-one under the other — and the check flags exactly that. The bold step is defined
-as "dark in light mode, light in dark mode", which is what a line drawn *against*
-a board wants. `HINT_EVIDENCE` is that step, and it covers the **chain ordinal**
-too: a number saying where a cell falls in the chain is an index *into* the
-evidence, not a hint role of its own, so the two are one role rather than two
-that happen to agree.
-
-#### Guarding it
-
-Guard the *shape*, not the color: "some rect is `COL_HINT`" is precisely what a
-fill also satisfies, so it would pass unchanged through the very rewrite that
-removed the fills. [`hint-mark.test.ts`](../src/engine/hint-mark.test.ts)
-sweeps the `hint-games.ts` enrollment and asserts that no rect in a game's hint
-colors is cell-sized and thick in both directions, reading each game's palette
-indices out of its own `render.ts` exports so there is no second list to drift.
-Per-game, [`mark-shape.ts`](../src/engine/testing/mark-shape.ts) gives
-`expectRing` (four thin rects, none solid) and `expectContour` (`2w + 2` sides
-for a `w`-cell region, where a per-cell renderer would give `4w`).
-
-Exemplars: `markBand` plus the post-tile block of `redraw` in
-[`keen/render.ts`](../src/games/keen/render.ts) for a gutter game;
-[`filling/render.ts`](../src/games/filling/render.ts) for a tiling one;
-[`galaxies/render.ts`](../src/games/galaxies/render.ts) for the inset case.
-
-### Hatch the line the sentence names
-
-**A step whose sentence names a row or column hatches that line**: translucent
-diagonal bands over its squares and on through its clue slots, in the action
-color ([`engine/hatch.ts`](../src/engine/hatch.ts)). At most one line per
-step. That is "this row" or "this column", or, in a step about a single piece,
-the one line it names as "its column".
-
-**A region the sentence is about is hatched the same way**: Keen's cage, Solo's
-block, Filling's and Palisade's region, a galaxy, a Rome or Seismic area, a
-Crossing or Range run, Tracks' closed block. The sentence says "this cage" or
-"the striped area", never "the outlined …". Crossing's `crossRuns` names both
-runs through a square and hatches both, crossing at the ring. What stays
-outlined is a *piece* ("the outlined island", "this segment") and particular
-squares: a Seismic cull's placed number, Range's already-seen arms beside the
-striped run. Every mark then has one meaning, and the three roles (ring,
-outline, stripes) are the engine's: § "Bind the words to the marks" has them,
-and `engine/hint-words.ts` holds their words.
-
-**A recolored clue digit is an outline, not a role of its own.** A game may
-paint the count the sentence reads in the action color and a clue cited only
-as a reason in the evidence color, but both are what the step reasons from, so
-both are outline references, told apart by their nouns ("this row's clue",
-"the clue of the column beside it"). The color is the game's glyph for the
-outline on a clue; a clue slot outside the grid gets a kind of its own
-(`bind-the-remaining-hints`, design D1).
-
-**No line is named by a number the board does not draw.** "Row 3" sends the
-player counting; say "this row" over the hatch, or name a destination by the
-mark already on it ("the outlined square"). `hint-quality.test.ts`'s narration
-walk rejects `row 3` / `column 4` in any sentence.
-
-**Why the line is not an outline.** An outline of the line and an outline of the
-squares a reason rests on are the same mark, and the eye cannot tell them apart.
-In the owner's Magnets playtests (2026-09-22 and 23), a step saying "this column"
-outlined *the other* column, the met one it rested on, as a tall contour. It read
-as "this column" and made the sentence look wrong. Separately, an outline of a
-line's leftover squares joined halves of two dominoes into one shape that was
-not on the board. With the line hatched, an outline only ever marks particular
-things, so it joins a square to its **own piece** (a domino's partner) and never
-across two.
-
-**Several lines are hatched only as one counted set.** A value confined across
-lines says "these 3 columns" and hatches all three, because its claim is about
-every square of each: the player checks the value is gone from all but the
-outlined ones. The count in the words is what makes the stripes one thing, and
-the lines are parallel and play the same part. That is the whole exception: two
-lines in different parts are still the next paragraph's case.
-
-**A second line is named by where it lies, never as "this".** When a reason
-cites a met line beside the hatched one, the sentence says "the column beside
-it", and its clue takes the evidence color. Two parallel lines both called "a
-column" left the player to guess which one the hatch meant. A step about a single
-piece that names two lines ("its row" at one end, "its column" at the other)
-hatches neither and colors both clues as reasons, because a hatch means one line.
-
-**Why a hatch clears the bar a fill failed.** § "Why a fill cannot work,
-whatever color it is" still stands for a *flat* tint: at the lightness content
-needs, it is invisible on the dark board. The hatch is not on that axis. Half
-the surface keeps its own color, the content is drawn over the bands, and the
-edge every few pixels is what makes it show. Measured on Magnets at an opacity
-of 0.3, on the palettes the app paints:
-
-- **Stripe visibility:** 1.40 on the light board and 1.36 on the dark one, 1.16
-  over the green neutral domino.
-- **The weakest symbol**, a gray `?` on an empty domino: 1.97 → 1.56 in light,
-  1.80 → 1.55 in dark.
-
-Two guards bracket the opacity. `puzzle/hatch-contrast.test.ts` sets a floor
-(stripes visible on every hatching game's board in both schemes, about 0.27 and
-up). "Magnets under the hatch", in the same file, sets a ceiling (no symbol
-loses more than a quarter of its contrast unless it stays at 4.5:1, about 0.35
-and down). A game's legibility check lives there rather than beside its render
-tests because the app's palettes are built in `src/puzzle/`, which no game may
-import. The hatch is the one hint mark drawn *under* content, and
-`hint-mark.test.ts` does not see it, because it draws no rect.
-
-**Mechanics.** Call `dr.drawHatch(tileRect, COL_HINT, hatchPeriod(ts))` after
-the square's background and before its content. The bands are laid on the
-canvas, not the rect, so tiles hatched one at a time join into one strip. Put
-the flag in the tile's diff key. A clue slot on the line paints even when its
-clue was stripped, because a hatch can arrive on it and leave again. Exemplar:
-`drawTileCol` and `drawNum` in
-[`magnets/render.ts`](../src/games/magnets/render.ts). A game on
-`OverlaySidecar` puts the cells in its highlights' `hatch` list and calls
-`ds.hint.drawHatch(dr, i, rect, COL_HINT, ts)` after the background — the lane is
-already in the sidecar's diff key ([`rome/render.ts`](../src/games/rome/render.ts)).
-The cross-game guard, "a step that names a line or region draws it", reads the
-`hatch` list and a game's own `line` both, so a game is in by having either.
-
-### Group one firing into one step
-
-Quality-bar rule 2 has a second form beyond `continuesPrevious` legs: when a
-single deduction forces **several cells at once**, emit **one** `HintStep`
-whose `Move` fills *all* of them and highlight them all as targets. Filling's
-region-growth deduction is the exemplar — a region that can't reach its size
-pins *every* empty square on its completion at once, so the hint points at the
-whole group ("The shaded region of 5 fits exactly into these squares.")
-instead of dribbling them out one per request. Exemplar: `nextRegionGroup` in
-[`filling/solver.ts`](../src/games/filling/solver.ts), `deduceHintPlan` +
-`hintKeepTrack` in [`filling/index.ts`](../src/games/filling/index.ts):
-
-- **Find the whole forced set per firing.** Distinguish **exact** (the group
-  *completes* the region — "fits exactly into these squares") from **partial**
-  ("can't fully grow without these squares"); the count drives
-  singular/plural.
-- **Plan = apply a group, recompute, repeat**, on a working board so every
-  step's narration and shaded region reflect the board as it fires. Keep a
-  **single-cell fallback** so the plan still *completes the board* (verify
-  with a "every generated board's plan solves it" test). **Replanning from
-  the board is only as complete as the rules are monotone**, and Filling's
-  candidate elimination is not, so beneath that fallback the plan keeps the
-  solver's run from the clues
-  ([solver-and-generator.md](./solver-and-generator.md) § "No option switches
-  the generator's checks off").
-- **`hintKeepTrack` handles partial completion.** The move must set the hinted
-  value into a **subset** of the step's cells (and nothing else) →
-  `"completed"` when it fills the last one, else `"onTrack"` with the step
-  **shrunk in place** (`step.move` / `step.highlights` updated to the
-  remaining cells) so a later `executeHint` doesn't re-fill what's done. A
-  non-target cell, or the wrong value, is `"off"`. That verdict is
-  [`engine/hint-track.ts`](../src/engine/hint-track.ts)'s `trackTargets`:
-  hand it what the move changed, how a target is keyed, what it wants and
-  whether it holds after the move, and rebuild the shrunk move yourself. **Take
-  the changes from a board diff** (`executeMove` on the pre-move state), not
-  from the move's ops: a toggle that takes a mark back off, or an op that
-  changes nothing, then answers itself. A board with one value per cell diffs
-  with `changedCells` (Singles, Light Up, Filling); a game whose elements are
-  something else keys its own, and an element stored in two places must be
-  keyed once — Tracks names an edge from the square on its right or below
-  whichever side the move spelled it from.
-
-A clean seam for the `continuesPrevious`-legs form: when the solver fills a
-whole line through a shared helper (Unruly's `fillRow`), thread the recorder
-through it so its first cell opens a journey and the rest continue it;
-per-cell techniques emit independent steps. See
-[`unruly/solver.ts`](../src/games/unruly/solver.ts) `deduceHintPlan`.
-
-**Whether several forced squares are one step or a journey of legs is decided
-by the numbers in the narration** — Sticks' firings can pen the same clue into
-*different* amounts of room per square, which is what chose the per-leg-
-sentence journey over the one-sentence multi-square step. And **"one firing =
-one move" is a claim about the deduction — an early-returning solver cannot
-tell you whether it is true.** Sticks' `sticksTry` returns at its first
-success, which reads as "one contradiction decides one square"; a seed scan
-said 21% of firings decide more than one. Check the forced set is computed
-against the board **as handed in** (a set that only appears after applying the
-first is a *chain*, and chains stay separate steps).
-
-### A journey completes leg by leg
-
-The midend advances the plan on `"completed"` and **holds the same step** on
-`"onTrack"`. So a `hintKeepTrack` that asks "are all of this *journey's*
-squares placed?" makes leg 1 permanently incomplete: the plan never advances,
-and `executeHint` re-applies leg 1 on every tick. Judge the **leg** — the
-squares this step's own move asks for — and let the journey advance through
-its legs naturally. Boats derives the leg's squares from `step.move`'s
-rectangle plus its fill value, so nothing extra is stored; the journey's full
-`highlights` still ride on every leg, so the picture never shrinks mid-hint.
-Guard: walk a real journey and assert *each* leg verdicts `"completed"`
-(`boats-hint.test.ts`, "completes a journey leg by leg").
-
-### A move must not reach past the squares the step claimed
-
-Where a game's `Move` fills an *area* rather than a named set of cells —
-Boats' `fill` is a rectangle that sets every still-empty square in its span —
-a step that widens its span for convenience can silently decide squares the
-narration never mentioned, and decide them **wrongly**. Two rules:
-
-- **Widen the span only when every square in it is either a target or already
-  decided**, checked against the board *as this step fires* — each firing
-  carries its own grid snapshot (the evidence-area pattern, for the move and
-  not only the shading).
-- **Keep the plan's board and the player's board reconcilable.** Anything the
-  deduction decides as a side effect (Boats' never-touch water) is a square
-  the player's board *doesn't* have unless some step asked for it. Either emit
-  it as its own firing, or fold it into the step's move and require it for
-  completion — never let the deduction quietly know something the player was
-  never told. Guard with "never asks for a square the step did not claim":
-  apply each step and assert every square whose *decidedness* changed appears
-  in that step's targets. (Compare decidedness, not raw cell bytes — Boats'
-  `executeMove` rewrites a placed `SHIP_VAGUE` into its resolved shape; that
-  is a byte change, not a decision.)
-
-### Honest non-local evidence
-
-Three of Filling's four techniques have clean local evidence; the fourth —
-candidate elimination — reasons *globally* (a number is ruled out because an
-orthogonal neighbor equals it **or** because no region of that size can reach
-the cell). Don't fabricate a tidy area — state *both* mechanisms honestly
-("it would sit next to an equal number, or belong to a region that can't reach
-the right size here") and **assert the visible-evidence invariant only for the
-local techniques**, relaxing it (explanation + target) for the global one.
-Surfacing the step honestly beats omitting it (a gap would break the plan's
-path to the solution). See `filling-hint.test.ts` "every local-technique
-deduction carries evidence".
-
-### Re-derive the named technique
-
-A per-line solver like Pattern's (`doRow`/`doRecurse`) computes a line's
-forced cells by **intersecting every legal run placement** — it returns
-*which* cells are forced but carries **no reason**, so narrating "why" needs
-re-derivation, not a threaded recorder. Compute the recognizable named
-techniques directly from the line's **leftmost and rightmost feasible run
-packings**:
-
-- **Overlap → black.** A cell in run *i*'s leftmost∩rightmost span is covered
-  by run *i* in *every* placement → forced black. Narrate per run ("this run
-  of N can slide only K cells, so these must be black"); one run = one firing.
-- **Unreachable → white.** A cell covered by no run's possible span in any
-  placement is forced white. One firing per contiguous white segment.
-
-Both are **subsets** of what the full intersection solver forces, so keep the
-complete `doRow` solver as the **general single-line intersection** bottom
-rung for any cell the two elegant techniques miss. This is **not** a "just
-because" catch-all — every cell `doRow` forces is that color in *every*
-arrangement of the line's runs consistent with its marks, i.e. overlap
-generalized to the whole clue, so it is a real named technique. Narrate it in
-the necessity voice — *"Whichever way this row's runs fit, these cells must be
-black / must stay white."* — **never** the misleading *"only one arrangement
-fits"* (the deduction is all-arrangements-agree, not one-arrangement-only).
-**Measure before enriching:** the bottom rung is rare per step at the shipped
-sizes (0% at 10–15×15, ≤0.3% of steps at 30×30, though up to ~⅓ of 30×30
-*boards* touch it once) — that measurement is what justified *promoting* it
-over *rejecting* the boards that need it. Two things this shape buys:
-
-- **The generator untouched by construction.** The hint code
-  (`packLeft`/`packRight`/`analyzeLine`/`deduceHintPlan`) is *separate* from
-  the generator's `solvePuzzle`/`isSoluble` — the parallel-recorder shape, not
-  an `if (recorder)`-gated hot path — so the generator differential is
-  unaffected by construction.
-- **No new move type needed if you group by contiguity** — but Pattern added a
-  `fillCells` (arbitrary-cell-set) move anyway so a firing's white cells can
-  group even when non-contiguous and `hintKeepTrack` can shrink in place.
-  Exemplars: [`pattern/solver.ts`](../src/games/pattern/solver.ts),
-  [`pattern/index.ts`](../src/games/pattern/index.ts).
-
-*Narration gotcha:* the zero-slack extreme wants a *premise* verb, and a
-`\bis\b` conclusion-guard regex catches it — "run … **is** pinned" trips a
-test aimed at the conclusion clause. Word the premise without a flat
-state-of-being verb ("has nowhere to slide") rather than loosening the guard.
-
-### Read the reason off the validator
-
-When the solver forces a move by **contradiction** — tentatively set a cell,
-and if the board's validity oracle returns INVALID the cell is forced the
-other way — you often need *no separate recorder at all*, because the oracle
-**already localizes which rule broke and where**. Bricks' `bricksValidate` ORs
-a per-cell `FE_*` flag for each violation; the hint's `nextForcedMove` re-runs
-the rejected trial with an `errors` array and reads the flags back to build
-the reason — with the evidence cells falling straight out of the flagged
-positions. Two things make this clean:
-
-- **The reason is the rejected trial's flags, not the accepted move's.** The
-  move is "cell must be *unshaded*"; the *why* lives in what shading it broke.
-  Set the trial color, validate into `errors`, classify, restore. A fixed
-  priority (Bricks: three → gravity → count) picks the clearest when several
-  fire.
-- **The recording path stays out of the generator.**
-  `nextForcedMove`/`deduceBricksPlan` are hint-only functions beside the
-  untouched `solveGame`, so the generator differential can't drift.
-
-**The classifier must be TOTAL, and this is where it goes wrong (Boats).**
-Reading a reason off a validator only works if you enumerate *every* way that
-validator can say no — including the paths that set **no flag at all**.
-Boats' `validateFullState` reports INVALID from five places, but two of them
-mark nothing. The first cut returned `null` for those, the finder skipped the
-trial as unclassifiable — and the **entire Hard tier silently produced zero
-firings**, which showed up only as "Hard boards stall" in a convergence sweep,
-never as an error. Two habits that would have caught it:
-
-- **Mirror the oracle's own decision sequence** when writing the classifier,
-  rather than listing the flags you happen to know about; then every
-  `return INVALID` in the oracle has a matching branch.
-- **End in an honest catch-all, never in "no reason".** Boats' last branch is
-  `unfinishable` ("the rest of the fleet could no longer be placed legally") —
-  vaguer than the others, still true, and infinitely better than dropping a
-  sound deduction. Pair it with a per-technique coverage sweep over generated
-  boards so a rung that never fires is *visible*.
-
-**Name the flag by what it actually means.** `FE_FLEET` marks a *completed*
-boat of a size the fleet has no room for, so "the fleet would need a boat it
-doesn't have" was a mis-description of the very thing the classifier had just
-read. A reason lifted off a flag inherits the flag's exact meaning — go read
-it.
-
-For the recursive (lookahead) rung, the honest v1 is a proof-by-contradiction
-step: hypothesis on the target, contradiction ringed from the sub-solve's
-final INVALID `errors` — narrated, never an un-narrated "only one fits".
-Showing the whole what-if walk is the enrichment (§ "Show the what-if walk
-statically"). Exemplars:
-[`bricks/solver.ts`](../src/games/bricks/solver.ts) (`nextForcedMove` +
-`classify*Trial`), [`bricks/index.ts`](../src/games/bricks/index.ts). This
-is the shape for any game whose live-error/`findMistakes` validator already
-marks *which* rule each cell breaks — the same pass is a ready-made reason
-source.
-
-### Connectivity evidence (Slant)
-
-Slant's techniques reason over which grid points its diagonals join. These
-mechanics are worth carrying to the next connectivity game:
-
-- **Recorder + `seedFrom`, both gated, over the real solver.** Extend the
-  ported solver with an optional `record`/`seedFrom` (the generator passes
-  neither ⇒ byte-identical, differential green); `seedFrom` replays the
-  player's diagonals through the same `fillSquare` that syncs
-  connectivity/exits/equivalence, so the recorded plan continues from their
-  position — the seed has to walk the union-find, not just copy a grid.
-  Exemplar: [`slant/solver.ts`](../src/games/slant/solver.ts).
-- **Connectivity-chain evidence must add the points' *incident squares*, not
-  just the diagonal component.** A dead-end firing traps a point that may
-  carry **zero placed diagonals** — the diagonal-only component comes back
-  empty and the visible-evidence invariant fails. Outline the component **∪**
-  the ruled-out corners' incident squares, so the trapped points are always
-  located (`componentSquares` + `incidentSquares` in
-  [`slant/hint.ts`](../src/games/slant/hint.ts)).
-- **A clue firing groups as `continuesPrevious` legs**, each leg carrying the
-  necessity modal too, so the voice guard passes on *every* step, not just
-  openers.
-
-### Show the what-if walk statically
-
-Clusters (`add-clusters-hint`) has a **contradiction solver whose depth-1
-chains are frequent** (39–56% of boards — measured first): the whole
-hypothetical is displayed **statically in one step's highlights**. The target
-keeps its `COL_HINT` ring ("suppose this cell were blue"), each cell the
-hypothesis would force carries a **small center mark of its forced color**
-(deliberately tile-unlike in size, so it reads as hypothetical, not placed —
-this is NOT the "highlight, never perform" pre-placement, which governs the
-*target*), and the tile where the contradiction lands gets a **double danger
-ring**. Four transferable mechanics:
-
-- **The multi-leg "what-if walk" journey is mechanically closed** without an
-  engine change: `HintStep.move` is required, auto-play applies every leg's
-  move for real, and the no-op-plan guard forbids dummy moves — hypothetical
-  marks can never be journey legs. Static display via highlights is the
-  compliant shape; don't rediscover this. (`walk-tactic-hint-chains` re-derived
-  it, costed the engine widening that would open it, and the owner declined:
-  holding a *hypothesis* in mind is fine, holding the *chain* is not — so the
-  chain is numbered instead, see the next section.)
-- **Pick the shortest chain, not the first.** At a stall, evaluate every
-  candidate firing's propagation and take the shortest (tie-break scan order —
-  deterministic ⇒ recompute-stable). First-in-scan-order chains averaged 6–7
-  forced cells (max 32); shortest averaged ~3 (max 11), cheap enough that no
-  display cap was needed.
-- **Reject-at-generation has a price beyond generation time**: it changes
-  which descs the generator emits, so it breaks a byte-match differential and
-  every shared board ID. At a >⅓ incidence it is simply not on the table —
-  measure before assuming that fallback is available.
-- **One ring role only.** A read-through caught "the ringed tile" going
-  ambiguous with two ring hues on screen; when every premise tile is adjacent
-  to the target/danger cell, drop the premise ring entirely and let "ringed"
-  refer uniquely to the danger ring (double, so it can't be confused with a
-  single-frame live-error outline — deliberately the same visual language:
-  "would break" vs "breaks now"). Guard: assert "ringed" is uttered iff the
-  danger highlight is set (`clusters-hint.test.ts`).
-
-Exemplars: `deduceHintPlan`/`chainToContradiction` in
-[`clusters/solver.ts`](../src/games/clusters/solver.ts) (a parallel
-recorder re-deriving each firing's reason via a neighborhood-only error
-check), `narrate` in [`clusters/index.ts`](../src/games/clusters/index.ts).
-
-### Number the chain — the order is the fact the marks used to lose
-
-A statically-displayed chain is a **set** of marks, and a set is not a chain. The
-narration inevitably says "each forces the next" or "by the time you reach the
-end", and with nothing on the board saying which came first the player can only
-check that by redoing the deduction — which is the compressed-claim failure
-[§ "The forcing boundary"](#the-forcing-boundary) forbids, wearing a different
-costume.
-
-**Declare each link's position and let the shared mechanism draw it.** A link
-carries `order` (`OrderedCell`, `engine/overlay-sidecar.ts`), the sidecar keeps
-it in an ordinal lane of its own — an ordinal is a small integer rather than a
-flag — and `drawHintOrdinal` (`engine/hint-ordinal.ts`) puts it in the
-tile's bottom-right corner in the color the game passes, its evidence color
-(§ "Outline or wash: what the evidence cells carry"). Three things to know:
-
-- **Declare it as data, not as an array index.** The renderer reads `c.order`; a
-  positional convention two files have to agree about is one refactor from
-  silently renumbering the chain.
-- **Bottom-right is the only corner free in every game that draws one.** Keen and
-  Solo put a cage clue top-left, and the candidate games pack an empty cell's
-  pencil marks from the top-left too — and a chain cell has exactly two
-  candidates *by definition of the technique*, so its marks are always in the top
-  row. One corner across the collection beats a per-game best fit: the mark can
-  then be learned once.
-- **Wire it in your renderer.** The mechanism is shared but the wiring is not —
-  your tile painter has to take `ds.hint.order[i]` and pass it on. Forgetting
-  gives you a shaded chain, a sentence citing "cell 3", and no numbers at all.
-  `hint-ordinal.test.ts` guards this on one pinned position a game. A game
-  whose hint starts numbering a chain is told to add its pin by
-  `hint-quality.test.ts`, whose walk fails on a numbered chain from a game
-  with no entry in `testing/hint-chain-pins.ts`; run
-  `npm run hint-scan -- src/engine/hint-ordinal.test.ts` to find one.
-
-**An ordinal, never an arrow.** The obvious drawing is a path through the chain,
-and it was prototyped and rejected on measurement: an arrow claims *this link
-forces that one*, which is false in **34%** of Clusters' links (delete the
-predecessor and the successor is still forced — what forces it is its own
-neighborhood, not the cell before it in discovery order), and half its links are
-not adjacent, so the arrows crossed the board. A *true* implication chain like the
-Latin family's is not thereby entitled to arrows either: one mark should mean one
-thing collection-wide, so every game draws the weakest claim every chain can
-make. See `walk-tactic-hint-chains` design D5 for the numbers.
-
-**The corner is a tile's, so a game without tiles says where instead (Map).** A
-Map region is not a tile, and the one point every region already owns is the
-label point its number is drawn at when the player turns numbers on. Map draws
-the ordinal there, in the ordinal's color, and hides the region numbers while a
-chain is shown, so "region 1" can mean only one thing on the board.
-
-The numbering also **ties the deixis** — see § "Two marks on the board, one 'this
-cell'". Exemplars: `forcingChainArea` in
-[`engine/latin-hint.ts`](../src/engine/latin-hint.ts) and
-`forcingChainPremise` in [`engine/hint-text.ts`](../src/engine/hint-text.ts)
-(one sentence, six games, `LatinVocab` for heights/elements/letters), and Clusters'
-`buildHighlights`.
-
-### Give the facts a notation (Loopy)
-
-**A hint relies only on marks the player can make** (owner, 2026-09-15; quality-bar
-rule 6). If a tier's deductions need a kind of mark, the game gives the player that
-mark and the hint's steps make it. A hint never draws a fact the player has no way
-to record, however clearly it draws it, because the point of a hint is that the
-player can do the next one alone.
-
-**The fallback is the tier, not the hint** (owner, 2026-09-15). If the notation a
-deduction needs would genuinely be too hard to manage, the difficulty that needs it
-becomes `Unreasonable`: its boards may need trial and error, and its hint refuses
-with `DEDUCTION_EXHAUSTED` rather than teaching reasoning the player cannot record
-(§ "The forcing boundary", and `solver-and-generator.md` § "Check, Tactic,
-Search"). Try the notation first; say what made it unmanageable when you fall back.
-
-**A mark the game already has may be the notation (Rectangles).** The solver
-keeps a list of each clue's placements and strikes them one at a time; the
-player has lines. A line across a ruled-out placement records it, because every
-later step rereads the lines (`nextFiring` in
-[`rect/hint.ts`](../src/games/rect/hint.ts), the `line` rung). Two things
-follow. **A step that leaves nothing a later step reads is not a step**:
-Rectangles once drew a line wherever no fit crossed an edge, which cut no fit,
-so it fired only where the plan was already stuck. And **the notation's reach
-is the hint's reach**: a placement whose every inner edge some live fit still
-crosses cannot be recorded, and that is where the rungs stop short of the
-solver.
-
-**How to check a game against it.** `apply-markable-facts-rule` audited every
-hinting game this way, and its `audit.md` has the verdicts. Read what each sentence
-*cites*, not the words it uses, and ask whether an **earlier** deduction found
-that fact and nothing on the board records it. Two tells found every breach:
-
-- **An arm whose own comment says the notes lag the solver** breaks the rule by
-  definition. The Latin family's `forcedSingle` ("deeper combined deductions the
-  notes don't yet reflect") was one. `strike-before-forced-singles` removed it by
-  placing the strikes it skipped, and made the residue throw instead of speak
-  (§ "Re-derive a placement's why").
-- **A recorder state that persists across the plan and is not the board.** Slant's
-  equivalence union-find and Subsets' `cube` are each accumulated facts. Where the
-  game has a shallow, board-only derivation (Subsets' `candidateSets`), check each
-  firing's premise against it: a firing that does not follow from it rests on
-  something unmarked.
-- **Then find every arm that reads that state, not the arm whose sentence gave it
-  away.** The audit flagged Slant's equivalence step by its sentence and called it
-  the only arm. A clue firing that counts two equivalent squares as one line reads
-  the same union-find, fired five times as often, and its sentence was false as
-  well. `add-slant-notation` found it by grepping the solver for reads of `equiv`.
-- **A state field the solver writes and no player move does.** Bridges' stage 3
-  wrote a per-span maximum ("at most one bridge here") into `maxh`/`maxv`, which
-  every later rung reads through `possibles`, while the firing that wrote it
-  showed nothing. The audit missed it because no sentence *named* the maximum:
-  the steps that leaned on it were ordinary counting sentences ("room for exactly
-  one"), false only on the player's board. On 603 Tricky boards, 477 showed such a
-  step. `bridges-hint-cites-an-unwritable-cap` measured it by rebuilding each
-  step's board as the player sees it and re-running the premise there.
-
-**The guard that holds the rule, for any game whose hint runs on a working copy:
-replay only the shown steps onto a player's board through the real
-`executeMove`, and before each shown step compare that board with the one the
-deduction reasons from.** Any bridge, line, mark or limit the deduction holds and
-the player does not is a fact a sentence may lean on unseen, whichever sentence
-it is, so the guard needs no per-premise knowledge. `bridges-hint.test.ts`
-§ "every step stands on the board the player can see" is the exemplar.
-Where the solver already stores the fact in the state, the notation can be that
-field: Bridges' limit is the same `maxh`/`maxv` the solver wrote, set by a
-player's right-drag (which lowers the limit one step, down to the cross), so the
-hint's firing becomes a step that writes it and nothing else had to change.
-
-Loopy is where this was learned. From Normal its rungs reason about two things the
-game once gave players no way to mark: a **corner**, two edges meeting at a dot
-around one face and known to carry at least one line or at most one, and a
-**pair**, two edges known to match or to be opposites. `add-loopy-hint` first drew
-those facts in the hint, as wedges and connectors numbered in the order found; the
-owner withdrew that before it shipped, for exactly this reason, and
-`add-loopy-notation` gave players notes mode instead, with the hint placing each
-fact as a note. What transfers, in [`games/loopy/`](../src/games/loopy/):
-
-- **A chain the player cannot mark is a missing notation, not a display problem.**
-  The drawn chains ran to about 20 facts at p99 on Hard boards. Once each fact is a
-  mark the player can make, each is a step of its own with one sentence, which is
-  § "Cognitive load: one step per hint" applied to facts that had nowhere to live.
-- **Place a note beside the firing that cites it, and branch on the sentence rather
-  than the fact kind.** A fact only accumulates, so deferring a note can never make
-  it underivable — what can expire is the *sentence*, which quotes the board
-  ("only these two of this 3's edges are still open"). So `planSteps` slots each
-  fact at the first firing whose `closure` contains it, or — where
-  `sentenceExpires` says the narration can go stale — at the latest position
-  `sentenceHolds` still finds it true, walking forward from
-  `LoopyRecorder.tickOf`. The classification does **not** follow `fact.kind`:
-  `cornerFromClue` has an expiring branch, `pairAtCorner` is monotone, and an "at
-  most" bound reads like a live count while actually only loosening as the board
-  fills. Grouping by discovery instead put a note a median of 15 firings from the
-  deduction that used it, worst case 143, which is what makes a corner note on a
-  `1` read as an unmotivated triviality. A note never precedes a note it cites.
-- **A journey is one deduction, not one firing's worth of notes.** The notes
-  placed at one position are split by `deductions` into the separate derivations
-  they make — facts joined by what they cite — and each derivation is its own
-  journey, ordered a branch at a time so each leg follows from the one before. A
-  line resting on a single derivation arrives as its last leg; a line combining
-  several stands alone after them. Putting every note a line rests on into one
-  journey read as a tour of the board: on a 10×10 Hard replay, 23 of 154 notes
-  rode in a journey whose line did not cite them, and 28 legs jumped four or more
-  edges from the leg before; splitting took both to zero and the longest journey
-  from 55 legs to 16. `loopy-hint.test.ts` asserts each journey is one connected
-  derivation holding only what its line rests on (§ "A journey completes leg by
-  leg").
-- **Place only what some line rests on.** The recorder derives far more than any
-  line uses. The plan takes the union of every line firing's closure and places
-  nothing outside it, so a player is never asked to note something no later step
-  cites.
-- **Seed the player's notes as facts whose premise is "on the board".**
-  `seedNotes` sets the solver's corner bits and flip dsf from the player's notes,
-  each recorded with `why: note`, so a plan resumed from a noted board cites the
-  player's notes and never re-places one. The mistake check vouches for them as it
-  does for lines.
-- **Every fact carries its premise and its parents.** `record.ts` stores each
-  corner bit and each relation with why it holds and what it was derived from. A
-  relation's chain is a breadth-first search over the recorded merges, because the
-  flip dsf answers only *that* two edges are related.
-- **Read what a notation must express off the chains, not the links.** Every
-  relation the solver records joins two edges sharing a face or a dot, which
-  suggested a pair note need only link neighbors; but a step can rest on a chain of
-  up to 13, whose composed pairs join distant edges. A pair note links any two edges
-  (owner, 2026-09-15), and `chainPair` places a chain one link at a time, so no step
-  cites more than two pairs.
-- **A dot's edge order is not a direction.** It runs clockwise on screen on most
-  tilings and anticlockwise on floret and both Penrose tilings, and a hat has
-  corners wider than a half turn, so `notes.ts` picks which of a corner's two angles
-  is meant by the face the corner belongs to. `loopy-notes.test.ts` checks every
-  face corner of every tiling against points classified by the face polygon alone.
-- **The long tail is structural, so measure a shortener before keeping it.** Hard
-  boards give a step resting on more than eight facts once or twice a board, up to
-  28. Clusters' remedy, the shortest chain among a tier's firings, was built (set a
-  long firing's lines aside, freeze its edges, ask the tier again) and left every
-  tiling's p99 and count over eight unchanged, because a rung already returns the
-  shallowest line it can set. It was removed.
-- **A board need not carry its tier, and the hint does not need it to.** A shared
-  game ID omits the difficulty, so Loopy's hint cannot cap itself at the board's
-  tier. It tries Easy's rungs to exhaustion, then Normal's, and so on, which is also
-  the easiest-first order a hint wants; facts a higher tier derived stay recorded,
-  premises and all.
-- **Its soundness is Seismic's shape, on lines and notes.** `findMistakes` compares
-  every drawn line, ruled-out edge, corner note and pair note with the unique
-  solution, so the plan may take them as facts (§ "Deduce from the notes when the
-  mistake check vouches for them"). A notation the hint reads from has to be vouched
-  for the same way.
-
-Slant is the second game this was done for (`add-slant-notation`), with one mark:
-two squares sharing a side slant the same way. What it added, in
-[`games/slant/`](../src/games/slant/):
-
-- **Measure what the solver derives before designing the mark.** Every merge in
-  Slant's union-find joins two squares that share a side, and every one means
-  "the same slant", so the notation needed no opposite and no long-range pair. A
-  chain of marks is read by following it, as a chain of diagonals is.
-- **A fact inside a premise need not be a mark if every link is on the board.** A
-  v-shape merge rests on two ruled-out v-shapes, and the solver carries one across
-  a 2, sometimes along a line of 2s. Slant has no mark for half a pair, but each
-  link is a clue or a diagonal the player can see.
-- **Narrate the pattern the facts make, not the facts one by one.** The first cut
-  named each ruled-out v-shape and its cause, and ran to 275 characters. A census
-  of every v-shape mark found only three shapes, and the commonest through a 2 was
-  a straight line of 2s capped at both ends by the same kind of limit, which makes
-  every pair along it slant alike. Stated as that pattern, *"This 2 lies in a line
-  between two 1s"*, the longest sentence is 106, and the help teaches it by name.
-  The rule sits in the help (§ "Rules belong in the help"), and `vLine` refuses a
-  line that bends or is capped two ways, so the name is never spoken over a shape
-  it does not fit. Take the census before shortening: the pattern was invisible
-  in the clause-by-clause output.
-- **Record why each merge holds where it happens.** `SlantTrace` keeps each merge's
-  reason and each v-shape bit's, and the plan finds a firing's cited marks as the
-  shortest path through the merges before it, since the union-find answers only
-  *that* two squares are joined.
-- **A resumed plan may place a mark the first plan did not.** The solver counts
-  one equivalent pair per clue, so marks known from the start can change which pair
-  it counts. A mark is still placed only once and only where it is true, which is
-  what `slant-notes.test.ts` holds, rather than equality with the first plan.
-
-Subsets is the third (`add-subsets-notation`), with one mark: a set ruled out of
-a cell. What it added, in [`games/subsets/`](../src/games/subsets/):
-
-- **Start from the board's own reading, and record only what it cannot derive.**
-  Before designing anything, list every rule that reads the hidden state and ask
-  of each what the board already says about its conclusion. Four of Subsets' five
-  cube rules turned out to be the reference aid's shallow reading in disguise, so
-  the recorder now syncs its cube to that reading (`syncToBoard`) and keeps a
-  reason only for the fifth. One predicate (`canHold`) then answers "can this go
-  here?" for the aid, for the hint's premises and for "is this fact already on
-  the board?", so the three cannot disagree.
-- **Grow the reading before adding a mark.** A fact the board shows with no chain
-  behind it belongs in the reading, not in the notation. The empty and full sets'
-  rule (they need every horseshoe around the cell to point one way) was read by
-  nothing, so it was costing hint steps; it is now part of `whyCantPlace`, and the
-  help teaches it. Measure what is left after that, not before.
-- **Where the game already lists a location's values, make the list editable.**
-  Subsets' aid already showed a cell's possible sets in the tally, so a press on a
-  set there rules it out of the cell in focus. No mode was needed, because the
-  focus is already framed on the board and decides what a press means. Look for
-  that home before reaching for a notes mode and a new glyph.
-- **A monotone premise needs no expiry check.** Every rule-out's premise is "none
-  of the sets the neighbor can still hold fits", and the board's reading only
-  grows as it fills, so a premise true when found stays true. The plan computes a
-  firing's rule-outs on the board the firing is shown on, recursing into the
-  neighbor's, and places them just before it. Slant and Loopy classify each
-  sentence as monotone or expiring; check whether yours can expire at all first.
-- **Read every step against the plan's board at that step.** Subsets' `hint()`
-  built every firing's highlights and "why not" clause from the board the hint
-  was asked on, so a spotlight or an exclusion several firings in could describe
-  a board that no longer existed. Nothing caught it, because the first step, which
-  every test looked at, was always right. Walk a working copy while building the
-  steps, and test by walking whole plans (`subsets-notes.test.ts`), not by
-  checking step one.
-
-Magnets is the fourth (`add-magnets-hint`), and the first where the answer was
-**no new mark at all**. Its solver keeps three "cannot be" bits per square and
-the player can write one, the `?`. What settled it, in
-[`games/magnets/`](../src/games/magnets/):
-
-- **List the writers of the hidden bit before designing its mark.** Every
-  "cannot be +/−" comes from one primitive, reached from three places, and each
-  is a rule over things already drawn: a placed pole beside the square, a line
-  whose count is met, and the same fact about the domino's other end. So
-  `reading.ts` states that reading, and `magnets-reading.test.ts` holds every bit
-  the solver ever sets to it, firing by firing: 46,502 bits, none unreadable.
-  Only then does "the board already says it" license hiding the firings that set
-  those bits (§ "Show only what the board does not already say").
-- **Count the notes the reading leans on, and have the plan place them.** A met
-  count may need the `?` magnets along a line, one + and one − each. That makes
-  the `?` a premise, so the hint places every `?` its deductions rest on as a
-  move, seeds the player's own as facts, and `findMistakes` now vouches for a `?`
-  (a wrong one used to be silently accepted). The help teaches the counting
-  rule, which is what lets a sentence say "overfill its column" without a
-  counting clause.
-- **Read what a firing did off the board, and mask the scratch.** `advancedfull`
-  rewrites its `GS_MARK` scratch bit whether or not it fires, so a before/after
-  diff that included it reported a "firing" at the end of every plan. Decide
-  *whether* a rung fired from its return value, and *what* it did from the
-  masked diff.
-- **A cycle input needs an "on the way" verdict.** A leg asking for a − is two
-  presses from empty, through a +, and a `?` goes through neutral.
-  `magnetsKeepTrack` calls that press `"onTrack"`, which holds the leg; without
-  it the first press drops the plan, and the recomputed hint then refuses over
-  a neutral domino that is a mistake.
-
-Pearl is the fifth (`add-pearl-hint`), and the second with **no new mark**,
-by a different route from Magnets'. Its solver keeps a set of possible shapes
-per square, and one rung derives a genuine pair fact from them: "this square
-can't join those two line ends". That is exactly the fact Loopy's corners
-record. What settled it, in [`games/pearl/`](../src/games/pearl/):
-
-- **Ask whether the hidden fact is ever *needed*, not only whether it exists.**
-  Build the forgetful solver: it re-reads every square off its edges before
-  each firing and keeps nothing else. Compare its verdicts with the real one on
-  the boards the generator actually visits, a maximal clue set thinned one clue
-  at a time. Pearl's agreed on all 11,568. The pair fact is real and nothing
-  ever rests on it, because while it stays invisible its premise stays true, so
-  the rung finds it again whenever it would matter.
-- **Then make the hint forgetful by construction.** `pearlRecordingPass` resets
-  every square from its edges before each firing. A shape a rung strikes
-  counts only through the edges it settles at its own square in that same
-  firing; one that settles none is taken back. So a step is "strike and
-  settle", never "strike now, use later", and the corpus test that the hint
-  finishes every board is the guard on the bet.
-- **"Recomputing gives the same step" cannot see a leaked fact that the scan
-  re-derives.** The first guard written for this compared each step of a plan
-  with a fresh hint from the player's board. It stayed green with both
-  defenses removed, because the recompute's scan struck the same hidden shapes
-  on its way to the same firing. What catches it is the invariant itself:
-  every firing's `before` snapshot must equal the board re-read from its edges
-  (`pearl-hint.test.ts`). Removing the reset turns it red. The take-back
-  alone is covered by the reset, which wipes a kept strike before the next
-  firing reads it.
-
-Tents is the sixth (`add-tents-hint`), and Pearl's measurement came out the
-other way: its solver pairs each tent with a tree as it goes, and a solver that
-forgets the pairing lost up to half the boards at 15x15. What it added, in
-[`games/tents/`](../src/games/tents/):
-
-- **Measure in layers, not only "forget it or keep it".** Between forgetting the
-  hidden fact and keeping it lies what the board shows at a glance. Here that
-  reading (a tent touching only one free tree, a tree whose only open square
-  holds a tent) kept 90–99% of boards, and chaining it twice kept all but one in
-  a few hundred. That told the owner what a notation would carry (short chains,
-  rarely) before they chose one.
-- **The reading is the premise, and the notation extends it.** The recording
-  pass rebuilds the pairing before every firing from the links drawn plus the
-  glance reading of them (`TentsBoard.readLinks`), so a sentence may say "this
-  tree already has its tent" whenever the board shows it, drawn or not. Only a
-  pairing past that reading becomes a step that draws the link.
-- **Draw a note only when a step rests on it, and test that claim.** A link is
-  drawn when some rung that had stalled fires once it is drawn, trying the
-  easier rungs first (`drawLinkFor`). The guard is that the firing after a
-  link-only step could not have fired before it. Drawing the first pending link
-  instead turned it red, while every board still finished.
-- **Let the notation's gesture carry the placement it explains.** In
-  playtesting the owner asked that joining a tree to an empty square place the
-  tent too, and that the hint use that move. So "this tree's only open square"
-  is one step placing the tent joined. A player who clicks the tent in instead
-  is on track, and the step shrinks to the link.
-
-Ascent is the seventh (`add-ascent-hint`), and the first where the hidden
-state is a whole **candidate bitmap of numbers per square**, plus a second one
-of possible path links. It needed no notation, and the route there is the
-reusable part. In [`games/ascent/`](../src/games/ascent/):
-
-- **Measure the hint's own ladder, not only the solver's.** A forgetful solver
-  that re-read everything before each rung but placed every single it found at
-  once still needed path reasoning on Hard boards. The same readings run as the
-  hint runs them, one placement per step and easiest technique first, needed
-  none on any preset. The two differ because the order changes which facts are
-  in place when a technique is asked. Measure with the order the hint will
-  actually use.
-- **Then widen past the presets before trusting the answer.** Custom options no
-  preset carries (the ends hidden outside Edges mode) brought path reasoning
-  back, and the stalled boards showed one human pattern every time: a **dead
-  end**, a square the path can enter from one neighbor only, which must be an
-  end of the path. The solver reaches it through three path rungs. The hint
-  reads it off the numbers, and with it 320 of 320 boards across every mode,
-  tier and option finished.
-- **Each technique is a solver rung over a fresh reading.** `reading` builds the
-  candidate bitmap from the board through the solver's own reach rungs, and a
-  placing rung with the recorder standing (`SolverScratch.recording`) stops at
-  its first placement. Nothing survives between steps, so no step can rest on a
-  fact the board does not show.
-- **Order by the tier in the board's own mode.** Edges mode runs the route rung
-  from Normal, so a Normal Edges board otherwise got a Tricky step before the
-  Normal one that was waiting. `techniqueTier` states each technique's tier once,
-  and `ascent-hint.test.ts` holds every step to its board's tier.
-- **A hint that has to patch the solver's reading is a solver defect to fix.**
-  Upstream's rungs stopped one short of the last number, so "49 must sit next to
-  48" was a deduction no rung made, and one Tricky board in the census needed a
-  Hard route. The hint first patched its own reading; since that meant the
-  solver was grading some boards a tier too high, the solver was fixed instead
-  (`fix-ascent-last-number-reach`) and the hint's patch deleted. The board stays
-  pinned in `ascent-hint.test.ts`.
-- **"No other X can" is a claim over a population; find the unit the player
-  can check it in.** "No other missing number can reach this square" named
-  dozens of numbers and read as abstract (owner, 2026-09-27). Measured, 97% of
-  those steps rest on one fact per **run** of missing numbers (its two placed
-  ends must both be in reach), so the claim is over a handful of runs, and the
-  step now names the one run that reaches the square and hatches everything
-  that run can reach. The same measurement found the old sentence's "next to
-  16, so 17" was not a valid inference in general (18 could sit there too);
-  what forces the number within its run is reach again, and the sentence says
-  so.
-- **Name the one rival a player would think of, and say when there are more.**
-  The owner still found the striped run abstract on a board where the question
-  was "why not 42?" and "why not 45?". So when exactly one other run comes
-  within two steps, the step names it and why it fails, and gives the step
-  count that rules out the rest of the answer's run: *"Only 44 can fill this
-  square: the run between 41 and 43 can't, as this square doesn't touch 41, and
-  4 steps from 48 rules out anything higher."* With two or more close rivals,
-  naming one would imply it was the only contender; `ascent-hint.test.ts`
-  holds the named rival to being the only close one.
-- **When the roll call is too long, keep the part that is the reason.** Two to
-  seven runs commonly come within two steps of a square, so naming each one
-  does not fit at a glance. The striped run was the fallback, and on an 8x10
-  Hard board it striped a quarter of the board without saying why *70* of the
-  run and not 68 (owner, 2026-09-27). What singles the number out is the step
-  count to each end of its own run, and that is always short to say. So the
-  step says only that no other run can reach the square, gives the counts,
-  and outlines their ends: *"Only 70 can fill this square: no other run can
-  reach it, and 3 steps from 67 and 2 from 72 rule out the rest."* A run of
-  one number has no counts, and its striped reach is two or three squares,
-  which says more than an unnamed "no other run", so it keeps the stripes.
-  The general form: when a picture stands in for a sentence that ran long,
-  ask which clause of that sentence carried the deduction, and keep that one.
-- **Name only what the player can see.** A sentence names numbers on the board
-  and the one it places, never another missing number (owner, 2026-09-27, of a
-  sentence naming a missing 35: "the mention of 35 doesn't help"). A rival
-  is named as its run, the reason as the placed end it misses, and the count
-  as the side it rules out. `ascent-hint.test.ts` scans every sentence of a
-  sweep for a number that is neither on the board nor placed by the step.
-- **Follow a run the player has started as one journey, without raising the
-  bar.** Players write a forced run down in one go (owner, 2026-09-27). After a
-  step places a run's first number, the plan asks the same techniques about that
-  run alone, none harder than the one that began it, and when that fills the
-  run the placements become one journey of legs, each with its own sentence. It
-  took 39% of placements into journeys on the presets. The plan cap never cuts a
-  journey in half.
-- **When the run has one route, say so once, and prove it by counting.** The
-  owner found a six-leg journey still read as six deductions, when the player's
-  thought was one: squares no other run reaches must be on this run's route, and
-  only one route takes them all. So a run whose route is unique, with or
-  without those must-visit squares, is one step placing every number (a
-  hint-only `places` move), drawn as the game's own path line in the hint color,
-  and whenever a technique finds a placement, the plan first asks whether that
-  number's whole run is forced. The uniqueness is counted
-  (`runRoutes`), never inferred from the deductions that found the numbers, and
-  `ascent-hint.test.ts` recounts it by brute force. A run is named by its ends
-  ("the run between 13 and 20"): its numbers follow from them.
-- **A gap is a route count too.** The owner's reason for a run of three was
-  "only one placement doesn't leave a gap": of its six routes, five cut the
-  neighboring run off from one of its ends. `leavesRoom` counts, for each
-  route, the neighbor's routes through what is left, and the step fires when
-  exactly one route leaves the neighbor at least one. The owner's board is
-  pinned by rebuilding it from its seed with that run and its neighbor removed.
-- **A move with side effects ends the plan.** A line the player drew fills in
-  numbers when a number lands at its end. Those are the player's to vouch for, so
-  a step that fills more than its own square is the plan's last, and the next
-  hint reads the result after the mistake check has seen it.
-- **A mode that changes what is visible is a different game to narrate.**
-  Edges mode (1to25) gives every missing number a line the player can see, its
-  arrow's, and places few numbers, so the run techniques above read the right
-  facts in the wrong unit. The solver's `overlap` rung was deducing from the
-  arrows' lines, and the hint narrated it as "the run before 20 must step
-  through the outlined squares" with most of the board outlined (owner,
-  2026-09-27: "almost useless"). Measured over 30 boards per tier, a quarter of
-  the 5x5 Edges steps were that `route` step, and 85% of them marked more than
-  a third of the board. The fix was the unit the player sees, two techniques in
-  [`hint-edges.ts`](../src/games/ascent/hint-edges.ts), offered only in Edges
-  mode: `lines` (on its own line, within `k` steps of the line of the number `k`
-  away, and where those cross one square remains) and `pointers` (of the
-  missing numbers whose arrows point here, all but one are too far from a line
-  or number). They took `route` down to about 1% of Edges steps, and a line
-  premise is always a line on the board, so nothing needs a notation. **The
-  other modes are held to their old hints by construction** (the techniques are
-  not in their ladder) and were checked plan for plan against the previous
-  commit over every non-Edges shape. Proving the ladder unchanged is cheaper
-  than a census of its output, so do that first when adding to one mode.
-  **The two modes differ in narration, not in reasoning.** A premise is "within
-  `d` steps of where `m` stands", and `m` stands on a square or, in Edges, on
-  its line ([`premises.ts`](../src/games/ascent/premises.ts)). With no
-  arrows, the premise list is straight reach, so the run techniques and the
-  Edges techniques read one model. What differs is the unit a sentence groups
-  its rivals by: the run where the board shows only placed numbers, the line
-  where it shows arrows. A census of the regular modes found no step there
-  that the line reading would improve.
-
-### Measure what the recordable facts reach first (Net)
-
-**Before designing a notation, run the engine on the facts the player can
-already record, and measure how far it gets.** Net's players can record a lock
-and nothing else; an engine reasoning from locks and walls alone finished 25 of
-30 5×5 boards, 5 of 30 at 11×11, and never took a first step on a wrapping grid
-(`add-net-hint`'s design). Adding the one fact the solver derives beyond a lock
-— what crosses the side between two tiles — finished every bounded board and
-most wrapping ones. That table is what made the notation a decision for the
-owner rather than a guess, and it named the notation's size: one kind of note,
-because the engine rederives each tile's surviving turnings from the sides
-every step, so a narrowed set is never a fact a step leans on unsaid.
-
-**Where the recorded facts still fall short, the generator can close the gap
-instead of the notation.** Net's remaining wrapping boards need a bound on how
-many tiles lie behind a side, propagated tile to tile — a chain no note can
-hold. Its generator keeps only boards the hint's engine finishes
-(`finishes`), which is the one-engine-two-projections shape of
-`solver-and-generator.md` § "Guess-free generation", applied without a tier.
-
-**Lead with the hypothetical, and say why it fails.** Net's first cut said
-"this straight would seal off the striped squares pointing right and left", and
-the owner could not read it: the turning dangled onto the striped squares, a
-straight "pointing" is not how anyone describes one, the square across a
-wrapping edge looked unrelated, and "seal off" held only for a reason the
-sentence never gave. What reads: "Lying across, this straight would join the
-striped dead ends, which have no other wire, closing all three off from the
-rest." And when several hypotheticals share one sentence, check that every
-count and verb is true of **each** of them, not of their union.
-
-**A game whose input is the target-verb model spells its hint's moves through
-the declared verbs** (`docs/input.md` § "Targets and verbs"): Net's
-turn is whichever of its rotation verbs reaches the wiring, and its lock is
-the lock verb's move. The hint then needs no move of its own, and a step
-cannot ask for something the controls do not do.
-
-### Place the notes a fixpoint rests on (Crossing)
-
-When the notation already exists and only the plan skips it, the fix is in the
-plan: read the board's own marks as premises, and **trace a stronger engine's
-conclusion back to the marks it needs**. Crossing's hint used to fall back to the
-solver's narrowing fixpoint and say *"Once the crossing numbers rule the others
-out, …"*. That was true, and the player could not check it, because the rule-outs
-it rested on were digits struck from squares in the fixpoint's head and nowhere on
-the board.
-
-- **Read the notes as the board.** "Still fits" is the run's length, not written
-  in elsewhere, and agreeing with every square's entered digit **or notes**. That
-  is sound only because `findMistakes` flags a note that excludes the answer (the
-  Seismic premise, § "Deduce from the notes when the mistake check vouches for
-  them"). On a board the check cannot judge, the notes are the player's own
-  premises and the hint reasons from them as given.
-- **Record provenance per rule-out.** The fixpoint notes, for each (square,
-  digit), which narrowing removed it and how many narrowings came before that
-  run's numbers were judged. A number died at the square where one of its digits
-  went first. The narrowing that removed it rests on every number of its run
-  carrying that digit there having died earlier, and so on down. The board's own
-  rule-outs rest on nothing.
-- **A second kind of narrowing has a second kind of support.** The solver also
-  gives a number the one run it still fits. In the fixpoint that narrows the
-  run's squares to the number's digits, and it rests on something else: the
-  number having died in every other run. A narrowing records which kind it
-  is, and the trace follows that. Such a narrowing is never the oldest, since
-  one resting on the board alone is a placement the board already shows.
-- **Emit the oldest narrowing in the support, then recompute.** The oldest rests
-  only on the board, so its sentence is checkable as it stands. Every note step
-  narrows some square, so the recomputed walk ends at the placement read off the
-  notes. No recorded script is replayed; `support` in
-  [`crossing/hint-solver.ts`](../src/games/crossing/hint-solver.ts) is the
-  exemplar.
-- **Writing notes into an empty square needs its own move.** Crossing's
-  `pencilAdd` only ever adds, for the reason `pencilStrike` only ever removes:
-  a toggle is not idempotent. Its keep-track and refresh are game-side, because
-  the shared candidate helpers know only strikes.
-- **Measure the notes, not the steps.** The audit counted 4 affected steps on 3
-  of 40 boards. Placing the support instead writes up to ten notes in a row on
-  the largest symmetric presets, some eight digits long: 13 of 160 boards needed
-  any. Preferring the square left with the fewest digits instead of the earliest
-  was tried, and wrote about as many.
-
-### Rule-outs as board marks
-
-Most deductive hints only ever *place*; a game whose own move set includes a
-"this can't be filled" annotation (Dominosa's **barrier edge**) can
-externalize its rule-out deductions directly onto the board instead of
-cramming the reasoning into a placement's narration. Dominosa's hint emits
-**two kinds of step** off one recorder:
-
-- a **placement** step — the payoff "place the N–M domino here", narrated with
-  why the alternatives are gone;
-- a **barrier** step (the seven rule-out techniques) — "this can't be a domino
-  because …", whose move *draws the barrier*, so the deduction becomes a
-  visible mark the next placement can lean on.
-
-The recorder + driver shape that made it clean and resume-safe:
-
-- **`firstFiring` checks for a determined-but-unplaced piece first**, then
-  runs the deductions in solver order and returns after the *first* firing —
-  placements always take priority over rule-outs (the payoff leads).
-- **Persistent scratch across the plan build, seeded from placed pieces
-  only.** `hint()` builds the whole plan on one solver scratch
-  (`seedFromDominoes`), advanced after each emitted placement. Crucially it
-  does **not** seed the player's *annotations* (a wrong barrier must never
-  break the hint); the recorder re-derives every rule-out, and a barrier the
-  player already drew is skipped for **display** while still advancing the
-  scratch. Contrast Slant's `seedFrom` (which replays marks): Dominosa's
-  annotations carry no validity, so they are deliberately ignored, not
-  replayed.
-- **Trivial boards come out all-placements**, so barriers appear only when a
-  harder tier genuinely needs one — the barriers read as teaching, not
-  busywork. The `hint-resume.test.ts` walk covers every preset in the slow tier
-  and one per declared tier in the gate slice, so the Trivial board is one case
-  among them rather than the whole check; the game-local
-  `dominosa-hint.test.ts` still walks a *Hard* board because the barrier path is
-  worth asserting in the game's own voice.
-
-The recorder is **gated** (`this.recording`), so `runSolver` — the generator's
-path — is byte-identical and the differential is unaffected by construction.
-
-### A right mark is not yet a premise (Mines)
-
-The midend refuses a hint while `findMistakes` finds anything, so a hint never
-meets a wrong mark, and it writes no step to undo one. A hidden answer is no
-exception: Mines' check finds a flag with no mine under it, and Black Box's a
-guess with no ball or a known mark on a ball, exactly as every other game's
-check compares the board with its one answer. But a mark the check passes may
-still be one the player guessed rather than deduced, and a hint that reasoned
-from it would teach the guess. So Mines' hint **deduces from the opened numbers
-alone**: a flag counts only once a deduction proves a mine under it, and every
-mine a sentence cites is one the plan proved, flagged in an earlier step if the
-player had not. Exemplar: [`mines/hint.ts`](../src/games/mines/hint.ts), and
-"never cites a flag it has not proved" in `mines-hint.test.ts`.
-
-**Measure the ladder against the generator's certifier before trusting it.**
-A game without tiers cannot refuse on a board its generator promised solvable,
-and `hint-resume.test.ts` holds it to that. Mines' generator certifies with
-upstream's set solver, which chains derived regions without limit, so the
-narrated ladder was run beside it over 980 boards and widened rung by rung
-until it never stalled where the certifier finished. The two measures that
-moved it were not the obvious ones: a pair rule missing its subset case stalled
-on 8 of 60 boards at 9×9 with 10 mines, and a region could not be paired with
-another region, which one board in 980 needed. Record the sample in the change's design, since
-a ladder short of the certifier is a defect the walk will only find by luck.
-
-### A solver's silent bookkeeping is the player's work (Separate)
-
-**A fact a solver's data structure carries for free can be a move the player
-still has to make.** Separate's upstream solver keeps "these two components are
-different regions" in a matrix and ORs its rows on a merge, so a grown region
-inherits every separation silently. On the player's board, which knows only
-edges, that inheritance is visible work: the grown region's new boundary with
-its neighbor is still open, the wall-bounded DSF joins the two, and a plan that
-narrates only the solver's own firings ends with a board that is never solved.
-
-The fix was a rung, not a patch in the hint: `walled-apart` walls an open edge
-between two components already disconnected. It writes only the edge state, which
-the generator never reads, so it moves no board, and it narrates as a real
-deduction ("A wall already separates the hatched and outlined regions, so this
-edge between them must be a wall too"), which a player marking their own walls
-needs as often as the hint does. **Before seeding a recording pass from the
-player's marks, list what the solver's state implies that the marks do not
-say**; each item is a rung or a missing notation.
-
-**Two regions in one sentence take two mark shapes.** Outlining both reads as one
-blob, because the per-square outline draws no boundary between them. Separate
-hatches the first and outlines the second and says so ("the hatched and outlined
-regions"); a lone square is named by its letter instead. The border grid's hint
-layer (`engine/border-grid-hint.ts`, the render fold in `border-grid-render.ts`)
-carries both marks, so a third edge game gets them without drawing code.
-
-**A non-monotone rung owes a test from the player's positions.** Separate's
-`only-way` counts a region's neighboring squares, so a region that grows can
-gain choices and a board with more correct marks could say less. The cross-game
-resume walk follows only the hint's own moves; `separate-hint.test.ts` also walks
-from random correct partial boards (909 measured, no stall, a slice kept).
-Filling's candidate elimination is the same shape and did stall, from the
-hint's own positions as well as a player's; `filling-hint.test.ts` pins two
-such boards and walks from partial positions of them.
-
-### Notation and goal are different move sets (Galaxies)
-
-Most games' hints teach in the vocabulary the win condition is written in.
-Galaxies' are not the same thing: `checkComplete` reads **walls only**, while
-the deduction is entirely about **which dot owns which cell** — an association
-arrow, which is consequence-free notation the completion check never sees. A
-plan made of arrows alone would be sound, teachable, and would *never solve the
-board*, which the resume guard catches immediately. Three consequences worth
-copying to any game whose notation and whose goal are different move sets:
-
-- **The plan has to cash the notation in.** Galaxies' walls come from one rung
-  — "these two cells are settled on different dots, so a wall runs between
-  them" — and that rung is 62% of a plan's steps. The arrows are the reasoning;
-  the walls are the answer, and a plan that teaches only the first never
-  finishes.
-- **Rung *order* is a narration decision, and measurement picks it.** Upstream
-  runs its two wall rules as one function; in solver order the *mirror-the-wall*
-  half won every race and became **58%** of the plan, longest sentence and
-  hardest technique both. Split into two rungs with the mirror one demoted to
-  last, it fires 7% of the time — only where it actually unsticks the board —
-  and the walls it used to draw early get narrated later by the plainest
-  sentence the game has. The split is a parameter defaulted to "both", so the
-  generator's solver is byte-identical and the differential proves it.
-- **A rule that claims a cell's partner too will under-report what it did.**
-  `solverAddAssoc` associates the tile *and* its 180° image, so the image
-  returns "nothing to do" when its own turn comes and a firing built from the
-  progress flags lists half the cells its own move claims — a hint saying "this
-  cell" while filling two. Compute the claimed set from a **before/after
-  comparison**, not from the rules' return codes. This shipped past every
-  test and was caught by looking at the board in a browser.
-
-- **A cell the move *comes along to* is not the cell the words are about.**
-  The same move claims a cell and its 180° partner, and marking both alike
-  makes every "this cell" ambiguous. They are not equivalent moves in rule 3's
-  sense — one is deduced, the other follows by a symmetry the player already
-  knows — so the deduced cell is **ringed twice and the partner once**
-  (`galaxies/hint-marks.ts`): same fate, different weight. Dropping the partner's mark entirely was
-  the other candidate and is wrong for a different rule: the move decides that
-  cell, and a step may not change a square it never marked.
-- **Then leave the demoted mark's *background* alone** — the first cut also
-  filtered the partner out of the evidence area, so an outline sat on bare
-  board and read as loudly as the solid fill it was deferring to (owner
-  reported it a second time). It was false as well as loud: the partner is
-  inside the reach the sentence describes, so a shaded area that skipped it
-  was not "how far the galaxy stretches". Filter **only the acted-on cell**
-  out of its own evidence; a demotion that removes context makes the mark
-  *more* prominent, not less.
-- **A hairline is not a highlight.** `drawCircle` strokes one pixel wide, so
-  the concentric-ring trick for weight (borrowed from the drag preview) was
-  nearly invisible beside a solid cell fill. A **filled halo with the dot
-  repainted on top** carries weight and keeps the dot's own color, which the
-  narration names ("the ringed *white* dot") — filling the dot itself would
-  have cost the sentence its noun.
-
-- **Cap the plan by what the player can *do*, not by what the deduction
-  does.** Galaxies' plan cap counted *firings*, and a dot sitting inside its
-  own cell forces that cell while the game refuses to draw an arrow there — a
-  firing that re-derives on every recompute and can never be shown. On a 15x15
-  twenty of them in a row spent the whole budget, and the hint told the player
-  "No further move can be deduced" on a board with a hundred moves left
-  (owner-reported; reproduced exactly, stalling at move 25 with *20 firings, 0
-  showable*). Count the steps the plan will actually offer. The general shape:
-  **any bound on a plan must be a bound on its output, because a bound on its
-  input silently becomes a refusal.**
-- **A search is not a technique, so it is not a hint (owner, 2026-08-11).**
-  Galaxies shipped a rung for the top tier that hypothesized a cell's dot, ran
-  the whole deduction fixpoint from it, and concluded from the one alternative
-  that did not break the board. It was sound, it was narrated, it solved every
-  Unreasonable board — and it was **removed**, because "I tried them all and
-  this one survived" teaches nothing a player can carry to the next board. The
-  hint now refuses there, and says so in a way the player can act on ("save a
-  checkpoint, try one, undo if it breaks"). **A refusal that tells the truth
-  beats a step that reveals an answer.** The line is the same one
-  [`solver-and-generator.md`](./solver-and-generator.md) § "Check, Tactic,
-  Search" draws for tier names — and what puts this rung on the far side of it
-  is that the chain is **unbounded**: it ran the *whole* fixpoint and could
-  settle dozens of cells, so there is no walk to show the player. A *bounded*
-  chain is a Tactic and stays hintable; this was a Search.
-- **A deduction the player can run with an existing affordance is worth its
-  own rung.** Galaxies' cell→dot drag rings every dot a cell could legally
-  join; when exactly one lights up, the cell is forced — a sound deduction the
-  *player already has the gesture for*, and a shorter story than the reach
-  argument that otherwise covers those cases. It is hint-only (the generator
-  never calls it, so no board changes) and it fires on 6.8% of steps. Measure
-  before believing the affordance and the deduction agree, though: the drag's
-  predicate is deliberately more lenient than the solver's reach, so at a
-  *reach* firing a drag would still ring 2–5 dots in 63% of cases — telling
-  the player "only one dot lights up" there would have been false. Adding the
-  rung is what made the claim true wherever it is made: after it, every
-  remaining reach firing has ≥2 rings, measured.
-
-Two smaller ones, both from reading real frames rather than the data:
-
-- **Don't ring what you have just filled.** The action color on a dot standing
-  inside an action-colored cell is invisible. That firing's narration names the
-  dot by position instead ("the white dot between them"), and the renderer skips
-  a ring on any cell it has filled — the words and the picture change together.
-- **A cell that *holds* its dot shows no arrow**, so "these two cells point at
-  different dots" sends the player hunting for an arrow that was never drawn.
-  One word ("go with") covers both ways a cell can be settled.
-
-### Placement animation as hint motion
-
-A game with no upstream move animation (`animLength` 0) can still make
-auto-hint read as motion with a short **geometric** placement animation:
-`drawRect` takes a palette **index**, not RGB, so don't color-tween — grow
-the new color from the cell center over `animTime`, drawing the previous
-color beneath (animating cells bypass the cache via the Flip 255-sentinel
-idiom). Return a small base `animLength` for a single-cell change (0 for bulk
-`solve`/no-ops); because it's > 0 the midend stretches a hint-executed move to
-the uniform `HINT_ANIM_S`, so each auto-hint step plays as a visible fill with
-no frozen gap. Exemplar: Unruly's `animLength` + the grow branch in
-[`unruly/render.ts`](../src/games/unruly/render.ts).
-
-### Marks on tiles vs marks on cells
-
-**First ask: does the game mark moving pieces by *identity* or by
-*position*?** A mark keyed by a stable piece identity (Sixteen/Fifteen
-highlight tile *number N*, painted as the tile's own background wherever the
-tile is drawn) rides any animation for free and cannot get this wrong — both
-are structurally immune, pinned with mid-animation-frame tests
-(`sixteen.test.ts`, `fifteen-render.test.ts`). The class below exists only
-where pieces are **anonymous** (Netslide's wire-mask tiles) so the hint must
-mark a *cell index* — and a cell index is board-relative, which is what goes
-stale.
-
-Owner-reported on Netslide (2026-07-14): the hint's marks sat correctly on the
-still board, then **both jumped a cell the instant the slide began**, snapping
-back when it ended. Two different bugs wearing one symptom:
-
-- **A mark on a tile must ride the animation.** A moving tile is drawn
-  *offset* from its grid cell, so a highlight painted as part of that tile
-  travels with it — which is what you want, provided you paint it on **the
-  right cell**. Which brings the trap:
-- **Mid-animation, the displayed step's cell indices still refer to the board
-  you have just left.** The midend advances the plan when the animation
-  **ends** (`settleHint`), so while the hinted move plays, the displayed
-  step's "tile" field names the cell the tile set *off from*. Paint there and
-  you highlight whatever slid *into* the vacated cell — a different piece.
-  Resolve the tile's cell in the board actually being drawn (Netslide:
-  `landing` while this step's own move is animating, `tile` otherwise).
-- **A mark on a cell must NOT ride the animation.** A destination/target
-  outline marks a *cell*, and cells do not move. Drawing it inside the
-  per-tile paint routine makes it slide along whenever the target cell lies on
-  the moving line. Draw cell marks in their own pass **after** every tile, at
-  the cell's own unshifted position; painting last also stops a tile sliding
-  across the cell from covering the outline. Keep the mark's bit in the
-  render-cache word even so — that is what repaints the tile *under* a stale
-  outline once the hint moves on.
-
-Test it at a **mid-animation frame**, which the tier-2/2.5 harness reaches
-directly: call `redraw` with `(prev = pre-move state, current = post-move
-state, animTime = ANIM_TIME / 2)` and assert the *drawn coordinates* of each
-mark (seed:
-[`netslide-hint.test.ts`](../src/games/netslide/netslide-hint.test.ts)).
-A snapshot alone will not catch this — the still frames either side of the
-animation are correct, which is exactly why it survived to a player.
-
-## Non-deductive (heuristic) hints
-
-Not every game is deductive. Its hint still has to say something true, and the
-question to ask before writing a line is *what can I measure or prove about
-this move, that the player can check?* **Untangle** has no forced move, but it
-has a measurable one: a point's crossings before and after. **Inertia** has a
-consequence it can prove (a gem stranded for ever). Narrate the measurement or
-the proof. Untangle once shipped with an empty `explanation` on the theory that
-there was nothing to say; there was a number all along.
-
-**Untangle's pattern — narrate an objective.** Exemplar:
-[`untangle/hint.ts`](../src/games/untangle/hint.ts):
-
-- **Objective, not deduction.** Pick the move that most improves a scalar the
-  player can count (crossing pairs), and say the count: *"Moving this point
-  here cuts its crossings from 16 to 4."* One whole sentence, numerals
-  throughout — a sentence that says "16" and then "four" makes the player
-  reconcile two notations. Search in floats for speed, then **recount the
-  chosen move exactly, in the board's own pairing**: Untangle's `cross()` is not
-  symmetric when a point lies on a line, so a count that tests a pair the other
-  way round can differ by one from the red lines on screen (a snap-to-grid
-  start in the test is what exposes it). Claim no more than was searched: a
-  grid search is not exhaustive, so the sentence never says "the best move".
-- **Show the number on the board.** Ring each crossing the move removes, and
-  draw the moved point in the hint color, so "this point" and "16 crossings"
-  are both things the player can see and count — the quality bar's "a hint
-  relies only on marks the player can make", from the other side.
-- **Narrate the fallback by what the player can see, too.** A move toward the
-  solved layout cannot say so: the player has never seen that layout. It says
-  what the move does to the point's crossings and, when the next move removes
-  some, how many ("…keeps its crossings at 1, but frees a move that removes
-  2"), which the next hint shows them.
-- **Land in open space.** A suggested spot keeps a fraction of the typical
-  point spacing (`w/√n`) from every other point and line, and a margin from the
-  frame; being fractions of the spacing, they look alike at every board size.
-  When no roomy spot helps, search again slightly tighter before falling back —
-  a cramped move that removes crossings beats a rearrangement with no visible
-  reason, and that one step removed every payoff-less fallback in a
-  twelve-board sample.
-- **Search wide.** A handful of hand-picked candidate spots (neighbor centroid,
-  a few pushes outward) stalls on boards where an obvious move exists; a grid
-  over the whole board does not. Settle candidates one gain at a time, so the
-  expensive checks (clearance, spread, the exact recount) run only on the top
-  tier.
-- **Secondary objectives as a tie-break, not a second pass.** Among equal
-  gains, prefer the move that puts the point in its final place, then the
-  roomiest spot, counting the walls as crowding. Without the walls, "roomiest"
-  always means "against the frame". A tie-break beats an "untangle, then spread"
-  second pass, since the puzzle ends the instant the primary hits zero.
-- **Never refuse on a solvable board.** Greedy play genuinely runs out: from
-  realistic mid-game positions it did so on 20–40% of boards. The way out is the
-  solution itself (next paragraph). A refusal that tells the player to do what
-  the hint is for is the failure this pattern was rewritten to remove.
-- **Freeze what is placed, and orient to keep it placed.** Mixing greedy steps
-  with "move a point to its solved spot" cycles if greedy may move a placed
-  point off its spot again. So a point exactly in place is never moved, and the
-  solution's symmetry is re-chosen on each request as the one with the most
-  points already in place. Then every step either removes a crossing or places
-  one more point, and a hint recomputed after any step cannot loop.
-- **Finish a knot as one journey.** An objective that looks one move ahead
-  thrashes near the end: each move that clears one crossing makes another, and
-  Untangle's hint once took 31 moves on a board the owner finished in 20. A
-  person picks out the few points causing the trouble and puts each where its
-  lines cross nothing, so the hint does too
-  ([`untangle/endgame.ts`](../src/games/untangle/endgame.ts)). It lifts a
-  small culprit set off the board (a hitting set of one group of crossings),
-  places the culprits one at a time into the faces of what remains, and emits
-  the result as a multi-leg journey whose marked points wear a ring. Three
-  things made the search work, and each was worth more than extra budget:
-  **fail-first ordering** (place the culprit with fewest options next, and give
-  up on a branch as soon as any has none); **growing a failed set** by a
-  neighbor of the culprit left with nowhere to go, since moving that neighbor
-  is what makes room; and a **pull toward the settled neighbors** in the spot
-  score, because roominess alone sends each culprit to the emptiest corner,
-  where it walls in the next. Count the budget in work, not time, so a hint is
-  the same on every machine. And a journey keeps the freeze rule above: its
-  first leg cuts crossings without moving a placed point, and a journey that
-  leaves crossings behind moves no placed point at all. Three cycles were
-  found, all recomputing after every step, before that was the rule
-  (`shorten-the-untangle-endgame` design D8). Flipping a "mirrored" piece whole
-  was tried next and did not help (`unflip-a-mirrored-untangle-cluster`, in
-  `openspec/postmortems/`).
-- **Short plans.** Every step is a fresh measurement and the midend recomputes
-  when a plan runs out, so cap the plan (six steps) and keep each request cheap.
-  End it early, too, once the next request might find something better: here,
-  once few enough crossings are left for a journey.
-- **No `hintKeepTrack`.** The default `"off"` is correct: any deviation drops
-  the plan and the next request measures again.
-- **Highlight = the suggestion.** Carry a `{ vertex/cell, to }` highlight and
-  draw the move (a `COL_HINT` line from piece to destination + a marker). Read
-  the *source* from live state so an auto-hint slide shows the line shrink to
-  nothing. **Fold the hint signature into the redraw early-out** — a manual
-  hint moves no piece, so a full-frame game that early-outs on "nothing moved"
-  would otherwise skip the hint.
-- **Animation is often free.** A game that already animates its moves needs
-  nothing extra: a hint-executed move rides that pipeline and the midend
-  stretches it to `HINT_ANIM_S`.
-
-**Fall back on the solution — and don't depend on `aux` for it.** A local
-objective can stall at a local minimum. Walking the player to the solution from
-there is legitimate, but `aux` is absent for a resumed save and for a shared
-game ID, and those are exactly the games a player comes back to stuck. So derive
-the solution from the board where it can be done: Untangle computes a
-crossing-free layout from the edges alone
-([`untangle/solution.ts`](../src/games/untangle/solution.ts), over
-[`planar.ts`](../src/games/untangle/planar.ts)), prefers `aux` only because
-the generator's layout is tidier, and verifies every layout with the game's own
-exact test before a player sees it. Solve shares the same layout.
-
-### Judging an idea for a heuristic plan
-
-A deductive hint is right or wrong. A heuristic plan is better or worse, so an
-idea for one has to be measured, and Untangle's endgame work shows three ways
-the measurement lies.
-
-- **Reproduce the baseline first, on a fixed population, following hints to
-  the end.** Use named seeds and both kinds of start (the generator's board and
-  a scrambled one). Walk each board to solved by applying whole plans, as the
-  app does, and count moves. If today's code doesn't reproduce the recorded
-  figure, the instrument is wrong or the code has moved, and nothing measured
-  against it means anything. On Untangle's eight 25-point boards a change of
-  about half a move in the average was noise.
-- **Probe under the constraints the plan must ship with.** A feasibility probe
-  that leaves out a shipping constraint measures a different idea. Untangle's
-  probe for flipping a mirrored piece skipped the clearance gaps and suggested
-  many finishes. With the gaps in place, 3 of 111 placements survived and the
-  average did not move. The constraints that matter are usually the ones
-  already in the code: clearance and presentation rules, the termination rule
-  that keeps a recomputed plan from cycling (§ "Recompute-stable plans"), and
-  the per-request work budget. Put all of them in the probe from the start, or
-  measure how much each one filters and report it.
-- **Check a theorem's hypotheses on the boards the generator makes.** Untangle's
-  neighbor-order signal rests on a 3-connected planar graph having one embedding
-  up to mirroring. Generated graphs often are not 3-connected, so a point in
-  "mirror order" is often a legitimate alternative, and a design that treated
-  the signal as proof (move these points) failed twice. Use such a signal to
-  rank candidates. Before it can decide anything, measure how often its
-  hypothesis holds on generated boards.
-
-When an idea fails these tests, withdraw it with a postmortem that says what
-would reopen it, and fix any comment or doc that states the disproved cause.
-
-### A non-deductive game with plenty to say
-
-An empty `explanation` is the *floor*. **Inertia**
-([`inertia/hint.ts`](../src/games/inertia/hint.ts)) is the exemplar of the
-richer shape: no move is *forced* by logic, but every move has a concrete
-consequence, and the thing beginners get wrong — *you don't choose where you
-stop* — is exactly what a hint can say out loud. Its narration is organized as
-**verified claims**, one branch per claim it can actually check: forced (every
-other direction is a mine — a genuine necessity claim), collecting (what the
-slide sweeps up, and what brings it to a halt), stranding (grabbing that gem
-now would leave one unreachable *for ever* — the game's one provable verdict),
-positioning (nothing reachable from here; here's what this sets up).
-
-**Find the one thing your game can prove, and lead with it.** Inertia's is
-`unreachableGems`: flood the move graph and report the gems no sequence of
-moves even passes over. It proves in one direction only — a *reachable* gem
-may still be uncollectable — which is precisely why it is safe to lean on:
-when it speaks, it is right. It powers both the best narration in the game and
-an honest refusal ("a gem can no longer be reached — undo") in place of the
-solver's shrug.
-
-### An order turns a free move into a forced one (Flip)
-
-Flip's presses commute and undo themselves, so nothing on the board forces any
-one of them, and a hint that recites the solver's set teaches nothing. **Fixing
-an order makes most of the set a deduction.** Work through the squares in
-reading order and never return to one: a dark square whose every other flipper
-has been passed can only be lit by the one left, so that press is forced, and
-the player can check it against the diagrams
-([`flip/hint.ts`](../src/games/flip/hint.ts)). It is light chasing, said so
-that it also holds on a Random board, where "the square below" is not the rule
-and "the last square that flips it" is.
-
-What the order cannot decide, the step does not pretend to. A press whose every
-square a later press also flips has no reason of that kind, so its step offers
-it (`oneOf`) with the one fact the solver has that a player can count: *"The
-whole board can be lit in 5 presses, and no fewer. One of them: press this
-square."*, or "There is only one way to light the whole board" when the
-elimination knows there is no other. Its first wording explained the method
-instead (*"Whatever this square flips can still be flipped later, so no one
-square decides it. A shortest answer presses it."*) and the owner, meeting it
-as a board's first hint, found it extremely confusing: a sentence about why
-the method is silent is about the method, not the board. The last press says
-it is the last, whichever kind it is ("…and finishes the board"). Five things
-to take from it:
-
-- **Say the order on the step when the claim is false without it.** "Only this
-  square can still light the outlined squares" needs "row by row" in front of
-  it, because a player reads the hint before the help page. Three words of
-  convention is not the rulebook (§ "Rules belong in the help"); a definition
-  of "later" the sentence leans on and never gives is a missing premise.
-- **Mark everything the move changes, or the unmarked part reads as a
-  mistake.** The first cut outlined only the dark squares the press was the
-  last chance for, and the owner saw a third dark square, lit by the same
-  press, left bare. It is not part of the reason, so it could not join the
-  outline without making the sentence false. It is striped, with the other
-  squares the press flips, and the sentence says so ("It flips the striped
-  ones too."). Evidence and side effects take different roles; neither goes
-  unmarked.
-- **Look for the convention that makes a search's answer a chain.** The plan is
-  still the solver's shortest set; only the order and the words are the
-  hint's. Ask it of any game whose moves commute.
-- **The method belongs in the help**, once (§ "Rules belong in the help"): why
-  an order makes a press forced, and that Crosses is solved by getting the top
-  row right. The step carries only the order's name.
-- **Stability is argued from the solver, then walked.** Pressing a square of
-  the chosen answer leaves the rest of it chosen, because the press moves
-  every remaining answer's place in the solver's enumeration the same way
-  (`flip/solver.ts`). A tie-break added to make that true was removed when a
-  plant showed the walk green without it and the argument showed why.
-
-### Hold a stable subgoal
-
-Narrate every move by **the goal it serves**, and hold that goal *stable*
-across the run of moves that serves it — derive it once, from the plan, and
-carry it. Re-deriving it per step makes the banner flip-flop — "tile 8" →
-"tile 7" → "tile 8" — and read as though the hint has lost the plot.
-Fifteen's `index.ts` carries the scar in a comment; Inertia holds the gem its
-leg is going for. The sentence's `aim` part ("Working on tile N:",
-§ "A sentence has parts") and the shared `HINT_SETTING_UP`
-([`engine/hint-text.ts`](../src/engine/hint-text.ts)) keep Fifteen, Sixteen
-and Netslide reading as one voice.
-
-When the game has no *name* for the goal — Inertia's gems are anonymous — the
-board must carry the reference: mark it, and say "the marked gem". Watch the
-cache: a mark drawn **on a tile** must be in that tile's diff key, even in a
-game whose other overlays ride a sprite and are repainted every frame.
-
-### Recompute-stable plans
-
-The one that will bite you. A plan is recomputed from scratch whenever the
-player goes their own way — so a *correct* plan is not enough, it must also be
-**stable across recomputes**. Inertia's first cut narrated `solveRoute`'s
-tour, a heuristic TSP: two tours grown from *adjacent* positions disagreed
-about which gem to fetch first, and each opened by walking to the other's
-position. Hint says north-east; player follows; hint now says south-west. For
-ever, collecting nothing. `hint-resume.test.ts` caught it on the day Inertia
-was added to its list — which is the argument for adding your game to that
-list *first*, before polishing any narration.
-
-The fix is a **monotone potential**: make each step provably shrink some
-non-negative integer. Inertia goes for the *nearest* gem it can take, so every
-move shortens the distance to a still-valid goal by one. Greedy-nearest is the
-usual way to get this; if greedy is *unsafe* (Inertia's greedy grab can strand
-the ball), filter the candidates by a safety check — play the leg out and
-re-solve — rather than abandoning the monotonicity. Don't reach for "just
-cache the plan": carrying a plan hides the instability while the player
-follows it, and hands them the ping-pong the moment they don't.
-
-**Sixteen is the second worked example, and it says where the potential comes
-from when the game has no natural one.** A sliding-permutation game has no
-"nearest gem": the honest potential is the *true distance to the goal*, and the
-only way to have it is a search that returns a genuinely shortest plan, because
-then following the first move leaves a board exactly one move nearer. Two things
-generalize from getting it wrong:
-
-- **A cheap measure that correlates with "nearly finished" is not a potential,
-  and using one as a *gate* is the same error as using it as the potential.**
-  Sixteen ran its exact search only where the board looked nearly finished, and
-  a shortest plan walks uphill in every such measure on its way home — so the
-  gate switched off mid-descent and the heuristic walked the board back. See
-  § "Sliding-permutation games" lesson (b) for the numbers and the three gates
-  that were tried.
-- **A game with no difficulty tiers still has an axis, and the guard has to walk
-  it.** `hint-resume.test.ts`'s gate slice keyed on tier, which collapses every
-  preset of an untiered game to one — so it walked Sixteen's 3×3 (seven moves,
-  fine) and never its 5×5 (cycled for ever). An untiered game is now sliced by
-  size instead, first preset and last. When you add a hint, ask which axis your
-  game varies and check that the slice covers it.
-- **One measure, on every board.** Where a plan is steered by a measure of the
-  board, there must be exactly *one* such measure in play, because the walk
-  applies a plan's first move and recomputes. Two measures that take turns
-  ping-pong as surely as two plans do, and the alternation can be introduced by
-  something that reads like a pure addition: Sixteen's tangle term (below) was
-  first written as a *last resort* — the ordinary measure first, the sharper one
-  only where the ordinary one was helpless. Each recompute then swapped which
-  measure was steering, the board went out of the tangle and straight back into
-  it, and the walk ran 400 moves without solving. Making the sharper measure the
-  only measure solved the same board in sixteen. This is § "Recompute-stable
-  plans" applied one level down: the *measure* has to be as stable as the plan.
-
-**The tangle term, and what generalizes from it.** A hint that plans by
-searching gets steered by a heuristic, and a heuristic has local minima the
-searches above it cannot always reach past. Sixteen's is the worked example:
-"total distance the tiles must travel" prices two tiles in each other's cells at
-the two squares it looks like, and it is really nine moves — so a board made of
-four such tangles is a strict local minimum thirteen-odd moves from home, and
-the hint refused on it. The escape was not a deeper search (each further ply
-costs about 40× at a branching factor of 40) but **counting the structure the
-measure was blind to**: non-trivial cycles of the tile permutation, priced above
-what a slide out of one costs.
-
-Two things to take from it if you meet the same shape:
-
-- **Sharpening a measure moves every gate that reads it.** Sixteen's deep search
-  is gated on "the fallback found nothing better than standing still", which is a
-  statement *about the measure*. A sharper measure escapes the endgames that gate
-  exists for, so the gate stopped opening and a complete nine-move plan became a
-  five-move partial one — a regression in the change that was meant to be pure
-  gain. The fix is to make the sharper measure differ from the blunt one **only
-  where nothing else can help**: Sixteen prices tangles only past the number the
-  exact searches can unwind on their own, so every board those searches own is
-  measured exactly as before.
-- **The escape is the game's own knowledge, and belongs to the game.** Netslide
-  shares the whole planner and cannot have this term — its wire tiles are
-  interchangeable, so "tiles in each other's cells" means nothing there. That is
-  the [`doctrine.md`](./doctrine.md) test for a real per-game decision, answered.
-
-### Find with one search, prove with another (Pegs)
-
-A game whose hint is a search may need two searches that are good at
-different things, and only a measurement says so. Pegs'
-([`pegs/solver.ts`](../src/games/pegs/solver.ts)) depth-first search, with a
-memo of lost positions, could not solve the opening of three presets in two
-million positions, and move ordering only changed which boards it was lucky on.
-A beam search keeping the 300 most compact positions per level solved every
-opening in about 100 ms, and every position any method solved. But a beam can
-never say a position is lost. So the beam finds, and a budgeted exhaustive
-search only proves loss, which is what lets the hint say
-`NO_SOLUTION_FROM_HERE` honestly and `SEARCH_OUT_OF_REACH` past the budget
-(`add-pegs-hint` design D1).
-
-Three things carried over from that work:
-
-- **Narrate each claim only where its proof finished.** "Only it and the
-  jumps with arrows can still finish" needs every rival settled; where some
-  were not, the words claim nothing about the undrawn ones. The searches of
-  one request share an allowance counted in positions, never in time, so the
-  same board always gets the same sentence. The judging and what it lets the
-  step say are the engine's now (§ "Judge the rivals of a searched move");
-  Pegs keeps its judge (two beams, then a capped proof of loss), its traps,
-  its packages and its stranded-peg fallback.
-- **Teach the contrast, not the move.** The owner rejected the first cut's
-  narration of the hinted jump alone (*"none of these phrasings really
-  [teach]"*) and kept only the sentences that set it against a jump that
-  loses. A searching hint can do that by judging the *rivals* of the jump it
-  offers, so it plans one step per request and judges them on the board on
-  display (`add-pegs-hint` design D6, D7).
-- **A cheap sound check is both a refusal and a warning.** The frozen-peg
-  closure ("no peg can ever arrive beside this one") refuses a lost position
-  at a glance, and the same check run on each rival jump finds the peg a
-  careless jump would cut off. The step stripes that jump and outlines the
-  peg: the reason a player can see leads, ahead of anything only a search
-  knows.
-- **Read the plan for shapes a player can name.** A third of the beam's jumps
-  fall into Bell's packages (a line of three cleared by a spare peg, a block of
-  two by three), found on the plan by their net effect rather than searched for.
-  Narrated as one journey, they are what the middle game teaches.
-- **Measure where the budget buys nothing, then say something visible.** In
-  the middle of the larger boards most rivals stay unsettled even at many
-  times the allowance, and spending more would make the hint slower without
-  making it say more. "From there the board can still finish" was redundant
-  (the hint offers no other kind of jump); what the owner accepted instead is a
-  fact on the board, a **stranded** peg (no peg beside it) that the move goes
-  back for or that another jump would strand, kept apart from **cut off** (a
-  proof) by its own word, and never worded as a verdict.
-- **Link each part to the next.** A danger is answered by a move that answers
-  it: the same peg's other jump (*so … instead*), or *one way to save it* where
-  the striped jump is another peg's. "Move A is bad. Instead, do B" with no
-  stated link was rejected in playtest. And where the board makes the move
-  obvious, leave it to the rings: a ring on the whole jump can be named by
-  words like *go back for it* (`pegs/hint-text.ts`).
-- **A game whose every move shrinks something needs no stability work.** Each
-  jump removes a peg, so any plan recomputed after any move terminates.
-  Look for that potential before reaching for Inertia's nearest-goal machinery.
-
-### Judge the rivals of a searched move
-
-A search hint teaches by setting the move it offers against its rivals.
-[`engine/rival-judging.ts`](../src/engine/rival-judging.ts)'s `judgeRivals`
-owns the shared half: the game passes the rivals, one allowance counted in
-positions, and a judge that settles one rival (finishes, lost, or unsettled);
-it gets back the verdicts and the claim they allow, with the relation the
-sentence must use. The judge, the search behind it, the traps it leads with
-and what to say when nothing is settled stay the game's, because those are
-about the puzzle. Pegs and Sokoban are the two searching users; Black Box,
-Guess and Inertia judge rivals that a deduction or a rule rules out.
-
-What Sokoban's hint (`judge-rivals-for-search-hints`) added to the Pegs
-lessons:
-
-- **Choose the rivals the step is about.** Judging every push on a crowded
-  board drew arrows everywhere, and some other barrel's bad push was on nine
-  steps in ten; naming one each time taught nothing about the push offered.
-  The rivals are this barrel's other pushes, which is the choice the player
-  faces, and judging three of them is cheap. Decide the population of rivals
-  before the words: it sets what "only" means, and the sentence has to say
-  it ("No other push of this barrel can still finish").
-- **A best-first search needs its own potential.** Recomputing after every
-  push, the plan's first push once moved a barrel up and the next plan moved it
-  back down, for ever: best-first search is not shortest, so the line found
-  after a push need not be the rest of the line found before it. The fix keeps
-  the plan and adds a check: offer a push only if the line the search finds
-  after it is shorter than the one it finds now, else the first rival found
-  whose line is. The search is deterministic and its budget only truncates, so
-  the line's length is a function of the position.
-- **Give a rival's search the budget its question needs, and stop when it is
-  answered.** That check first searched every rival to a proof's budget and
-  took the shortest line. On the slowest requests the plan itself had cost
-  more than a proof allows, so 175 of 180 rivals came back unsettled and
-  200,000 positions bought nothing; and where rivals did settle, any shorter
-  line would have done. It now tries the plan's own later pushes first, each
-  to the plan's budget, and stops at the first that is shorter
-  (`strengthen-the-sokoban-solver` design D7). A budget below what the thing
-  being proved costs is a miss that still pays in full.
-- **Look at where the search stalls before naming the cure.** Sokoban's search
-  was thought to drown in lost positions it could not recognize. Its trace
-  showed both sides a few pushes from done, on a position that was not lost:
-  a barrel sent home early had to come off its target again, and every other
-  push on a board of sixty barrels raised the estimate by as much. Ranking a
-  push by its distance from the nearest barrel or target still out of place
-  took the largest preset from 8 of 30 openings in budget to 27, where the
-  pruning it was scoped for took it to 10 (design D2 to D4). In a game with
-  many pieces, most moves are beside the point, and an estimate that cannot
-  say which needs telling where the unfinished part of the board is.
-- **A potential holds only where some move lowers it, so count where none
-  does.** The rule above was written up as "every hinted push lowers it", on
-  36 boards. Over 57 boards one position in about three hundred had no push
-  that shortens the line, the hint fell back on the plan's first push, and on
-  one board that walked a barrel right and back left for ever
-  (`teach-sokoban-push-order` design D1). The line found after a push had come
-  straight back through the position it was pushed from, so its remainder was
-  a shorter line from there that the search had not found: the hint now takes
-  it. That removes the cycle found and proves nothing about the rest. A search
-  that is not shortest has no potential a rule this local can complete, so say
-  "measured" where that is what it is.
-- **Order is what a push game's hint has to teach, and it is checkable.**
-  Which push to make next is rarely the hard part of Sokoban; which barrel
-  goes first is. Three claims a search hint can check without searching the
-  whole board: a goal that filling another first would wall off (take the
-  other as a wall and ask whether anything can still be pushed in); a piece
-  that keeps another from any goal (search the pushes of that one piece with
-  the rest standing still, before the move, with the mover lifted off, and
-  after); and a run of one piece to its goal, told as one journey. The middle
-  one needs all three searches: "no way before, a way after" alone fired on
-  every move that merely let the player out.
-- **The walk is part of the step.** A push needs the player behind the barrel.
-  The step's move is the push itself (walk there, then push, which
-  `executeMove` applies, so the cross-game walks recompute once per push), its
-  gesture is the one a player makes (a drag of the barrel, which walks round
-  behind it; once a tap per square, before the game had that drag), and
-  `hintKeepTrack` answers `"onTrack"` to any walk, since walking changes no
-  barrel and so nothing the step said.
-- **Deal what the hint can see through.** A third of the largest preset's
-  generated levels were past the search from their first move. Every level is
-  soluble (it is made by playing backwards), so the generator now deals the
-  first level the search finishes within a smaller trial budget; the frozen
-  C differential pins the level before that check. A refusal from the opening
-  is a hint that never helps.
-- **Search the board you deal.** The generator first checked the level before
-  its untouched squares became walls, a roomier board than the one dealt, and
-  the cross-game overlay walk caught a dealt board the hint refused.
-
-### Read one plan out loud
-
-The cheapest test there is, and it found the sharpest bug in Inertia's hint:
-print a whole plan and read it as a player would. Step 19 promised *"slide
-south-west, and one more slide sweeps it up"*; step 20 then said *"the route
-comes at it from another side"* and went elsewhere. The plan was correct — the
-*narration* had made a promise about "some slide exists" when the only claim
-worth making is about **the plan's own next move**. A test that asserts "the
-plan solves the board" is blind to this. Reading it takes a minute.
-
-It earned its keep again on Netslide: the very first printed plan showed the
-slide that *finishes the board* narrated as **"(setting up)"**. Every test was
-green and the sentence was still a lie.
-
-### Sliding-permutation games
-
-Sixteen and Netslide are one family — a toroidal grid, a move slides
-a whole line — and the search is shared (Fifteen plans with its own
-`computeHint`):
-[`engine/slide-planner.ts`](../src/engine/slide-planner.ts). It owns the
-bucket-queue A\*, the exact bidirectional search and the partial-plan return. A
-game supplies its board, its finished board, its legal moves, **a
-`heuristic(board)`**, and a budget for the exact search — never *when* to spend
-it, which used to be a per-game decision and is the subject of lesson (b) below.
-Exemplar: [`netslide/hint.ts`](../src/games/netslide/hint.ts).
-
-Two lessons, both of which cost a full debugging cycle and generalize past
-this family:
-
-**(a) A distance measure must be recomputed against the board it is measuring
-— never frozen.** Netslide's tiles are wire masks and many are *identical*, so
-a tile has no single home. The obvious move is to settle it once — assign each
-tile to the nearest cell wanting its wires, then measure total travel. It is
-far cheaper and it is **wrong**, twice at once: *the search wanders* (the
-assignment is only cheapest for the board it was computed on; measured: a plan
-taking the wrong-cell count from 16 to 17 and carrying on), and *the narration
-lies* (the slide that actually finishes the board delivers tiles to
-mask-compatible cells the assignment never picked, so the winning move reads
-"(setting up)"). The fix is to measure the board in front of you: a min-cost
-matching **per node** (per mask group — tiny, allocation-free). And for the
-narration, **read each tile's home off the plan**: simulate it, and a tile's
-destination is where it ends up — true by construction.
-
-**(b) The endgame needs an exact *shortest* plan, and it must be paid for in
-the right place.** The monotone potential, in its sharpest form. Netslide's
-heuristic plan looped — but *not* in a two-move ping-pong the
-don't-undo-the-last-move guard could see (five slides of a 5-wide row are the
-identity). The culprit is the endgame Sixteen calls a **swapped pair**: two
-tiles want each other's cells, so the board reads as *two* cells from finished
-while really being ten moves away, and every single slide looks worse. A
-distance heuristic is helpless there by construction. Only an exact search
-crosses it — and a plan that is *shortest* is also what stops a recomputed
-plan cycling: its first move provably shortens the true distance home. Four
-load-bearing properties, **each got wrong first**:
-
-1. **It must actually return a shortest path.** Answering on the first meet
-   mid-level gives a path that can be one move too long — and one move too
-   long has *no* monotonicity. Finish the level; take the cheapest meet.
-2. **Enforce the budget *inside* the level, not between levels.** One level
-   expands to many times the frontier; a frontier near the cap balloons far
-   past it before anyone looks again — a single hint was measured at 13.7 s
-   against a cap it had long since blown through.
-3. **Prune commuting moves.** Slides of the same axis commute, so a plain BFS
-   generates every permutation of a run of row-slides. Restricting a same-axis
-   run to non-decreasing index order keeps one representative and loses
-   nothing.
-4. **Run it on every board.** Firing it only where the heuristic is helpless
-   saves its budget on every board it cannot reach, and cycles: Sixteen's 5×5
-   hint did for ever, period 4, seven tiles out of place down to four and back.
-
-   The reason is that **a shortest plan does not look like progress on the way
-   home.** Sixteen's own endgame is the counter-example: a 5×5 plan starting 9
-   tiles out of place, with the tiles a total of 9 slides from home, peaks at 17
-   and 30 on those two measures before it arrives. So *any* gate keyed on a
-   board measure switches off partway down the descent it just opened, the
-   heuristic takes back over, and it walks the board straight back where it came
-   from. Three gates were tried — `outOfPlace ≤ 8`, `outOfPlace ≤ 12`, total
-   travel `≤ 20` — and all three cycled. "Only when the heuristic is helpless"
-   is the same mistake wearing different clothes: the boards on a shortest
-   descent are exactly the ones the heuristic still thinks it can improve.
-
-   **The search that opens a descent must be the one that finishes it**, and the
-   only way to be sure of that is for it to be the one that always runs. Do not
-   split the difference with a small search plus a bigger one in reserve either;
-   that is the same defect with an extra budget.
-
-   What that costs is the failed searches, and the answer is to make them cheap
-   rather than rare: the packed, allocation-free storage in `slide-planner.ts`
-   took the same search from 4–6 s to under 1 s, which is what brought
-   always-on into range. **Pick the smallest budget that still crosses the
-   game's worst endgame**, not the largest one affordable — every extra state is
-   spent in full on every board out of reach.
-
-   Do not lean on the plan being carried, either. `hintKeepTrack` does keep it
-   while the player follows it, and that is exactly the path that hides this
-   defect: it appears the moment a player goes their own way, which is the
-   ordinary thing for a player to do.
-
-5. **When the search runs out of reach, change what is scarce, not how much of
-   it you spend.** Removing the gate above exposed the next wall: Sixteen's
-   swapped-pair endgames are **nine** moves from finished and a search that
-   stores every board it visits tops out at eight here. Nine costs 18–24 million
-   stored boards, some ten seconds and most of a gigabyte — so the hint gave up,
-   on twelve of forty walked 5×4 games and five of forty 5×5 ones.
-
-   Buying the ninth ply with memory is not available in a tab. But the two
-   halves of a bidirectional search are not alike: the **goal side** is the same
-   for every hint of a puzzle and can be built once and kept, while the **board
-   side** is what has to reach further. So keep four plies of the goal side as
-   an *endgame database* — 835 k boards, 0.3 s, tens of MB — and walk the board
-   side depth-first, sliding a line in place and sliding it back on the way out,
-   which holds one board however deep it goes. Memory stops being the binding
-   constraint and time becomes it, and time is the one you can spend once:
-   ~4 s, on the one hint per game that needs it. All 116 walked games across
-   every preset now finish. `deepSearch` in
-   [`slide-planner.ts`](../src/engine/slide-planner.ts) is the shape.
-
-   Two things that arrangement needs, and both are easy to get wrong:
-
-   - **A gated search is safe when an *ungated* one covers everything it hands
-     off to.** This one is gated (it only fires where the heuristic is helpless
-     too), which is the very thing item 4 says cycles — the difference is that it
-     reaches exactly *one* ply further than the ungated search, so the plan it
-     opens is one move longer than what the ungated search can finish. Play that
-     move and the rest is the ungated search's. Reach two plies further and the
-     cycle is back.
-   - **A hash table that narrows its key goes half blind rather than breaking.**
-     The database stores a Zobrist hash beside each board in an `Int32Array`,
-     which makes it signed; comparing that against an unsigned `>>> 0` copy of
-     the same hash fails for every value with the top bit set. Half of every
-     database was invisible, and the search *quietly returned no plan* on boards
-     it should have solved — indistinguishable from not reaching far enough. It
-     survived a full round of measurement and produced a confident wrong
-     conclusion. What caught it was asking a mechanism with no hash table in it
-     for the same answer.
-
-And a structural note: **the planner works on the board the player sees, not
-on labeled pieces.** For a game with identical pieces that is *necessary* —
-every slide on an odd-width torus is an even permutation, so a target that
-distinguishes identical tiles can sit in a coset the board cannot reach, while
-the finished *picture* is two moves away.
-
-**Test it both ways, and the strict one is the one that finds things.** A
-followed hint keeps its plan, so "ask, follow the whole plan, ask again"
-(`netslide-hint.test.ts`) is how the midend actually plays it. But the strict
-walk — ask, take one move, throw the plan away, ask again — is what a player who goes their own way gets, and it is the only walk that sees
-lesson (b)'s defect at all: the followed-plan walk is green on a game whose hint
-ping-pongs, because following the plan is the one path that never recomputes.
-`hint-resume.test.ts` runs the strict walk for every game, over one preset per
-axis the game varies (see § "Recompute-stable plans").
-
-### Recover the answer from the board
-
-Netslide has no solver: `solve` and `hint` both replay the generator's `aux`.
-A game arriving as a **descriptive id** (a shared link, a bookmark, a save)
-carries no `aux`, and both simply gave up: *"Solution not known for this
-puzzle"*, on a board a player was staring at. Owner-reported, and not
-acceptable — that is an ordinary way to play.
-
-The answer was recoverable all along, because the board constrains it savagely
-(`netslide/reconstruct.ts`): the tiles are the same tiles, the center tile
-cannot have moved, wires must meet and may not cross a barrier, and the
-network is a tree. Fill the grid **most-hemmed-in cell first** — every placed
-neighbor *forces* one of a tile's wires — and the search is under a
-millisecond on most boards. Two lessons generalize:
-
-- **The recovered answer is slide-invariant, and that is where its stability
-  comes from.** It turns only on the tile multiset, the barriers and the
-  center tile — none of which a slide changes — so it is the *same* grid for
-  the whole game. Free stability, by construction. The enumeration order must
-  not depend on the current board: picking "the finished grid nearest to where
-  the tiles are now" would hand the instability straight back.
-- **Check the answer is *reachable*, and check your reachability test against
-  brute force.** A slide of a line of length `k` is a `k`-cycle — even exactly
-  when `k` is odd — so on a 3×3 every move is even and only *half* the
-  arrangements exist at all. A repeated tile buys a parity flip for free —
-  **but only if both copies are movable**; a duplicate that merely matches the
-  *center* tile buys nothing, which is the bug the brute-force check caught.
-  Do not reason your way to a parity rule and trust it: enumerate a small
-  board's entire reachable set and assert the predicate agrees.
-
-### Two standards of proof in one plan (Guess)
-
-Guess is neither Palisade nor Inertia: its answer is hidden, some facts about it
-are forced and the next move almost never is. Its hint
-([`guess/hint.ts`](../src/games/guess/hint.ts), `add-guess-hint`) keeps the two
-halves apart rather than blending them into one voice.
-
-- **The forced half is marks, placed as moves.** Each one-row reading ("no black
-  pegs, so no color is where it stood") becomes a rule-out in the game's answer
-  row, which the same change gave the player (§ "Give the facts a notation"). A
-  sentence there is necessity, and a brute force over the whole answer space
-  holds every rule to it.
-- **The unforced half is a probe, and its sentence counts instead of arguing.**
-  It says only what was computed: that the guess fits every score so far, how
-  many answers still fit, and the most the guess can leave. No "because", no
-  "best", nothing a player could not recount. The necessity guard's `at most`
-  and `only` are what those claims are made of anyway.
-- **Measure the strategy before narrating it.** Upstream's row-filler (the first
-  answer that fits) came within one row of losing on both presets over every
-  answer; choosing the fewest-left among the answers that fit left four rows
-  spare. A hint-followed game that loses is a hint that lied by omission, and
-  only an exhaustive walk sees the worst case.
-- **A plan with no tier can never refuse**, so check that it never has to. The
-  probe always exists because the hidden answer fits; the census over the rules
-  (`Record<kind, true>`, as in § "Census the reasons, not only the rungs") found
-  one rule that never fired, because it was another rule in disguise.
-- **Changing a mark's shape falsifies the sentence naming it.** The probe said
-  "the ringed colors" while the answer row drew dots; when the dots became
-  square blocks (`enlarge-guess-answer-row`) the mark became a frame and every
-  probe sentence pointed at a shape the board no longer drew, with the suite
-  green. It was the owner who noticed. When a renderer change moves a hint mark, grep the
-  game's `hint-text.ts` for the old word in the same change.
-- **A hidden-information game cannot vouch for a player's marks**, so the hint
-  re-derives its own and skips what the board already shows, Dominosa's shape
-  rather than Seismic's (§ "Deduce from the notes when the mistake check vouches
-  for them"). A mistake check against the answer would leak it.
-
-### Follow one ray to the first unknown (Black Box)
-
-Black Box hides its answer and has the player gather evidence, so its hint
-(`src/games/blackbox/hint.ts`) has three kinds of step: settle a square, fire a
-laser, and, once every laser is fired, offer a layout found by trying. Three
-things transfer:
-
-- **One tracer for the truth and for partial knowledge.** The laser physics is
-  `traceLaser` over a function saying what a square holds, which may answer
-  "not known"; the game's own laser and the hint's hypothetical one are the
-  same code, and a trace that consults an unknown square stops there and names
-  it. A deduction is then "set that square each way and trace again": if one way
-  sends the laser where it did not go, the square is the other. That is a Check,
-  narratable in one sentence, and *only the first unknown on a path can ever be
-  settled this way*, since setting any later square leaves the trace stopped
-  where it was. A straight-through ray does not prove its neighbors empty, because
-  a ball beside the path can send it on a detour that comes back; the tracer
-  knows that, so the hint never claims it.
-- **A path read from either end.** A ray that came out at a numbered square is
-  the same path both ways, so the hint follows it from both ends and says "no
-  ray could run between them", which is true whichever end the reasoning
-  started from.
-- **Prove the hint cannot peek.** A hint over hidden information must not read
-  the hidden state. `blackbox-hint.test.ts` moves a hidden ball wherever every
-  fired laser still goes where it went and requires the same plan, at every
-  position along the hint's own path, with a floor on how many of those
-  positions were fire steps. A first cut compared only after three fixed
-  lasers, where deductions always come first, so a planted peek in the
-  laser choice passed it.
-
-The search is not a deduction and is not narrated as one: it offers balls that
-send every laser where it went, which is exactly what the check accepts, and
-names the squares it sets. Measured when it was written, no walk across every
-preset came near its budget; past it, the hint says the search is out of reach.
+Give a hinted game a `findMistakes`: it is a precondition of the hint.
+`Midend.computeHintPlan` asks it before the hint, puts what it finds on the
+overlay Check & Save uses, and says to fix the highlighted mistakes first, so
+a game with both hooks writes no line for this. `hint-resume.test.ts` asks
+`findMistakes` at every position its walk reaches and fails if it flags one.
+
+A refusal reaches the player in the transient banner on both the manual and
+the Auto-Hint path ([`src/puzzle/puzzle.ts`](../src/puzzle/puzzle.ts)), with
+or without a `statusbarText`; both are requirements of
+[`engine-hints`](../openspec/specs/engine-hints/spec.md). A refused Solve uses
+the same banner, so word a `solve` refusal as player-facing text.
 
 ## The cross-game guards
 
+A game enrolls in every cross-game hint guard by declaring `hint`, with no
+line of its own: the guards iterate the list
+[`testing/hint-games.ts`](../src/engine/testing/hint-games.ts) derives from
+the registry. They are
+[`hint-resume.test.ts`](../src/engine/hint-resume.test.ts) (resume, purity,
+plans whose every step changes the state and the frame, Latin naked-single
+honesty), [`hint-overlay.test.ts`](../src/engine/hint-overlay.test.ts) (the
+overlay reaches the render cache) and
+[`hint-quality.test.ts`](../src/engine/hint-quality.test.ts) (voice, length,
+binding, show-something). A game's own "the plan solves from empty" test is
+not a substitute for any of them.
+
 ### A hint must resume from any position
 
-The single most important behavioral guarantee, and the one most easily
-missed: **a hint asked from a board the player reached by their own play must
-still make progress and lead to a solved board** (as long as it's solvable
-with no mistakes). In the app a self-played move drops any stored plan, so the
-*next* hint **recomputes from the current state** — the plan-carrying
-machinery does not save you. Three shipped bugs, all invisible to "the plan
-solves the board" tests that only ran from the *empty* start:
+A hint asked from a board the player reached by their own play must make
+progress and lead to a solved board, wherever the board is solvable with no
+mistakes on it. A move of the player's own drops the stored plan, so the next
+hint is computed from the current state.
 
-- **Singles** — its deductive solver was a faithful port of upstream, which
-  only solves from empty; its cascade propagates only from cells it changes
-  *this run*, so resumed from the player's marks it stalled. Fix: prime the
-  cascade from existing marks (`primeCascadeFromMarks`). Lesson: **a recording
-  deductive solver written to run from empty is not automatically
-  resumable** — seed it from the current decided cells.
-- **Untangle** — its `aux`-walk re-suggested a *no-op* forever: a vertex sat
-  on its target *pixel*, but the unrounded target jittered between recomputes
-  by more than the fine tolerance. Lesson: **for
-  a heuristic/`aux` hint whose target is recomputed each call, the recompute
-  must converge** — never emit a move that doesn't change the board.
-- **Inertia** — the ping-pong (§ "Recompute-stable plans").
+- **A recording solver written to run from empty is not resumable as it is.**
+  Seed it from the cells already decided. Exemplar: `primeCascadeFromMarks`
+  in `singles/solver.ts`.
+- **A target recomputed on each call must converge.** Never emit a move that
+  does not change the board.
+- **A heuristic plan must not undo itself across recomputes**
+  (`hints-search.md` § "Recompute-stable plans").
 
-This is enforced for **every** hint-bearing game by
-[`hint-resume.test.ts`](../src/engine/hint-resume.test.ts): it walks a
-fresh board to solved one *freshly-recomputed* hint at a time (apply only
-`steps[0]`, recompute, repeat), asserting a hint never gives up before solved.
-
-**It walks every preset**, not just the first — the gate slice keeps one preset
-per *value* of every axis the game varies, derived by `axisSlice` from the
-game's own `paramConfig`, the slow tier takes them all, and both add a board
-for each value the Custom dialog offers that no preset holds. A walk of the
-first preset alone never sees a Hard board, an `Unreasonable` board or a mode
-variant, and one keyed on tier alone misses an untiered game's sizes and every
-mode that shares a tier with a plainer board. See
-[`testing.md`](testing.md) § "Slicing a preset sweep for the gate".
-
-**The one refusal it accepts** is running out of deduction on a board whose tier
-name promises search (`Unreasonable`), and only with
-`hint-refusal.ts`'s `DEDUCTION_EXHAUSTED`. Anywhere else — a deduction-complete
-tier, or a game with no difficulty contract at all — a refusal fails the walk.
-Permission is derived from the tier the game already declares; there is no
-roster.
-
-**Enrollment is no line at all, and it covers every cross-game guard at
-once.** The guards all iterate the list
-[`testing/hint-games.ts`](../src/engine/testing/hint-games.ts) derives from
-the registry, so a game that declares a `hint` is covered by
-`hint-resume.test.ts` (resume, purity, plans whose every step changes the
-state and the frame, Latin naked-single honesty),
-[`hint-overlay.test.ts`](../src/engine/hint-overlay.test.ts)
-(the overlay reaches the render cache — the paint-twice class), and
-[`hint-quality.test.ts`](../src/engine/hint-quality.test.ts) (voice,
-length, show-something). A per-game "plan solves from empty" test is *not* a
-substitute.
+[`hint-resume.test.ts`](../src/engine/hint-resume.test.ts) walks a fresh
+board to solved one freshly computed hint at a time, applying only
+`steps[0]`. It walks one preset for each value of every axis the game's
+`paramConfig` varies, and a board for each value the Custom dialog offers
+that no preset holds ([`testing.md`](./testing.md) § "Slicing a preset sweep
+for the gate"). The one refusal it accepts is `DEDUCTION_EXHAUSTED` on a
+board whose tier permits search; on any other tier, or in a game with no
+difficulty contract, a refusal fails.
 
 ### A hint carries on from an entry the player made first
 
-**The walk above reaches only positions the hint's own order makes.** It plays
-`steps[0]` and asks again, so every board it asks from is one the plan passes
-through. A player enters things in their own order, and a board that holds one
-right entry the plan would have reached later is a board no walk visits.
+Write every rule so that it concludes no less as cells are decided. Then
+what the rules reach from the opening they reach from any board with right
+entries added in any order. The resume walk does not check this: it visits
+only positions the plan's own order makes.
 
-Range's hint ran out on such a board, and on an Easy tier the midend throws
-there, which the player sees as the crash dialog. Its run-length rule, a
-faithful port, bounded how far a clue can see along an arm by the first gap
-alone: a run cannot fill a gap where that joins the white cells past it and
-overshoots the clue. One white mark inside a long gap leaves a first gap that
-fits, the bound goes, and the rule concludes **less from a board that says
-more**. A board certified from empty says nothing about that.
-
-**The property to hold is that a rule concludes no less as cells are
-decided.** Then whatever the rules reach from the opening they reach from any
-board with right entries added, in any order. The shape to look for is a bound
-taken from the nearest undecided thing (the first gap, the next empty cell,
-the first candidate) where the true bound reads the whole line. Ask the real
-question of the line: Range's rule now asks where an arm can *end* (before any
-cell not already white, within the clue), and that only tightens.
-
-**A rule that leans on another to stay monotone is fine, and say so.**
-Range's connectedness rule loses a cut vertex when the cell it cut off is
-shaded, and the adjacency rule then clears the same cell.
+The shape to look for is a bound taken from the nearest undecided thing (the
+first gap, the next empty cell, the first candidate) where the true bound
+reads the whole line. Ask the real question of the line: where an arm can
+end, not how long the first gap is. A rule that leans on another to stay
+monotone is fine; say so in a comment.
 
 [`wrong-entry-check.test.ts`](../src/engine/wrong-entry-check.test.ts) asks
-it of every game with `findMistakes`, `solve` and a hint: from a position with
-nothing wrong on it, the hint finishes. The positions are a blind gesture's,
-and steps of the opening plan played out of their order, each alone and a
-sample of pairs. Its header holds what each found with Range's rule put back,
-and why larger subsets of the plan were dropped: the steps around the one
-played early make up for it, so **the sharp probe is one entry on an
-otherwise untouched board**. A game's own exhaustive form is cheap where a
-move sets a cell: every cell marked alone as the answer has it
+it of every game with `findMistakes`, `solve` and a hint: from a position
+with nothing wrong on it, the hint finishes. The sharp probe is one right
+entry on an otherwise untouched board, and a game where a move sets a cell
+can afford the exhaustive form, every cell marked alone as the answer has it
 (`range-solver.test.ts`, "a board that says more").
 
 ### The step budget
 
-The resume test catches a hint that *gives up* or whose move-walk *loops*.
-What it can't catch cheaply is a hang **inside one `hint()` call** — a "repeat
-until no progress" fixpoint where a rule reports progress without changing the
-board never returns, and the only backstop is a wall-clock timeout (slow,
-opaque, load-sensitive). Tick a
-[`stepBudget`](../src/engine/step-budget.ts) once per fixpoint iteration so
-a non-terminating loop throws a labeled error in milliseconds. Make it
-**opt-in on the hint path** — gate it on the recorder/hint signal the function
-already carries — so the generator runs the same fixpoint *unguarded and
-byte-for-byte unchanged* (a budget that fired during generate-and-check would
-break board generation — never guard that path). The limit
-(`DEFAULT_HINT_STEP_LIMIT`) is generous: an honest fixpoint converges in ~one
-iteration per cell, so the guard only catches a future regression. Exemplars:
-`applyRules` in `range/solver.ts` (gated on `rec`), `deduceForcedEdges` in
-`palisade/solver.ts` (a hint-only function, so unconditional). Search-based
-hints (the slide planners, Flood's BFS) are bounded by their visited sets and
-need no budget.
+Tick a [`stepBudget`](../src/engine/step-budget.ts) once per iteration of
+any "repeat until no progress" loop on the hint path, so a rule that reports
+progress without changing the board throws a labeled error in milliseconds
+and does not hang inside one `hint()` call.
 
-If your solver/hint is an ordered rung ladder, don't hand-roll the loop: run
-it through
-[`runDeductionFixpoint`](../src/engine/deduction-fixpoint.ts)
-([`solver-and-generator.md`](./solver-and-generator.md)), which ticks the
-budget for you and takes it only on the recording path — pass
-`budget: stepBudget(...)` on the hint call, omit it on the generator call.
+- **Never guard the generator's path.** Gate the budget on the recorder or
+  hint signal the function already carries, so generation runs the same loop
+  unguarded. Exemplars: `applyRules` in `range/solver.ts` (gated),
+  `deduceForcedEdges` in `palisade/solver.ts` (hint-only, so unconditional).
+- **A rung ladder does not hand-roll the loop.**
+  [`runDeductionFixpoint`](../src/engine/deduction-fixpoint.ts) and
+  `singleFirings` tick the budget: pass `budget: stepBudget(...)` on the hint
+  call and omit it on the generator's.
+- **A search bounded by its visited set needs no budget.**
+
+The limit is `DEFAULT_HINT_STEP_LIMIT`, well above what an honest fixpoint
+needs.
 
 ### Stale plans and refreshHintStep
 
-A plan is computed **once** and *kept* while the player follows it. A followed
-move can have side effects the plan didn't author — most concretely, **the
-player toggling a preference mid-solve**: a Towers plan built with auto-pencil
-*off* bakes explicit dup-strike legs, but if the player then turns auto-pencil
-*on*, a placement silently strikes those same candidates, so the stored strike
-step names notes that are **already gone**. The midend re-displaying the
-stored step without re-checking it ⇒ a hint telling the player to remove
-something already removed (owner-reported, `fix-stale-hint-step`). The engine
-guarantee is **validate-at-display**: implement
-`Game.refreshHintStep(step, state)` — return the step with dead marks dropped
-(rebuild `highlights` to match; return the SAME object when nothing changed),
-or `null` when it is fully resolved. The `Midend` calls it before every
-(re-)display and advances past / recomputes resolved steps. Towers' is ~20
-lines. **Every candidate-elimination game with note-clearing side effects
-needs one.** Cross-game coverage: `hint-resume.test.ts` asserts no plan step
-is ever a no-op when reached (the intrinsic form);
-`towers-stale-hint.test.ts` drives the real `Midend` through an auto-pencil
-flip (the side-effect form).
+Implement `Game.refreshHintStep(step, state)` wherever a followed move or a
+preference change can settle part of a later step. Return the step with its
+dead marks dropped and `highlights` rebuilt to match, the same object when
+nothing changed, or `null` when the step is fully resolved. The `Midend`
+calls it before every display and moves past a resolved step.
+
+Every candidate game whose moves clear notes as a side effect needs one: a
+plan built with auto-pencil off holds explicit strike legs, and turning it on
+makes a placement strike those notes first. Exemplar: Towers, with
+`towers-stale-hint.test.ts` driving the real `Midend` through the preference
+flip. `hint-resume.test.ts` asserts no plan step is a no-op when reached.
 
 ### A plan's copy is the board, no further on and no further back
 
-A planner works on a copy of the board, and every way the copy differs from
-the board the player will have at that step is a sentence that is false when
-it is read. Three games shipped one, found by walking dealt boards and reading
-each step against the board as played
-(`hold-a-hint-step-to-the-board-the-player-sees`):
+Keep the planner's copy of the board equal to the board the player will have
+at each step. Every difference is a sentence that is false when it is read.
 
-- **Behind the board: the copy lacks what a move does by itself.** Signpost's
-  `executeMove` links every number to the next where the arrow points at it;
-  its plan applied only the step's own link, so it planned a step for each
-  link the board had already made. Apply to the copy what `executeMove`
-  applies, side effects included.
-- **Ahead of the board: the copy holds a fact no step put there.** Palisade's
-  solver joined two regions in its own bookkeeping where one could only grow
-  into the other, and later sentences counted the join. Undead's planner took
-  a placement from a recorder whose candidates had every strike already made.
-  The fix is § "A solver's silent bookkeeping is the player's work
-  (Separate)" each time: the fact becomes a step (Palisade's join marks every
-  edge between the two regions open), or the planner reads it off the
-  player's marks and waits until they show it (Undead's count).
+- **Not behind: apply to the copy what `executeMove` applies, side effects
+  included.** A copy that applies only the step's own change plans steps for
+  what the board has already done by itself.
+- **Not ahead: the copy holds no fact that no step put there.** A solver's
+  private bookkeeping (two regions joined, a candidate already struck) is the
+  player's work: make the fact a step, or read it off the player's marks and
+  wait until they show it (`hints-marks.md` § "A solver's silent bookkeeping
+  is the player's work").
 
-**The walk holds the first, for every game**: "a kept hint plan's every step
-changes what the board draws" in `hint-resume.test.ts`. The sibling block
-above it compares states, and a state holds more than is drawn; Signpost's
-step changed a chain count and nothing a player sees. **What a player sees is
-the frame with no hint on it, or with the step on it**: a mark shown only for
-the square in focus (Subsets' ruled-out set, struck through in the tally)
-changes no plain frame, and the step that makes it brings its square into
-focus. A step is convicted only when both frames stand still.
+`hint-resume.test.ts` ("a kept hint plan's every step changes what the board
+draws") holds the first for every game. A step fails only when both the plain
+frame and the frame with the step on it stand still, so a mark shown only for
+the square in focus is safe when the step brings its square into focus.
 
-**No walk holds the second from outside, and each game holds its own.**
-Whether a premise is on the board is in what the words mean: "this region",
-"can still hold". A hint asked afresh from the same board runs the same
-private bookkeeping and agrees with the kept plan, and comparing a kept step
-with the first step of a fresh hint fails for honest reasons in most games (a
-journey's later leg, a sweep's order). The candidate walk has the premise
-audit (§ "A premise names everything its deduction reads"); a game off that
-walk writes the property down for its own nouns, as
+No walk holds the second, so each game holds its own. The candidate walk has
+the premise audit (`hints-candidates.md` § "A premise names everything its
+deduction reads"). A game off that walk writes the property for its own nouns
+and sees it fail first; comparing a kept step with the first step of a fresh
+hint is not that test, since it fails for honest reasons (a journey's later
+leg, a sweep's order). The structural form is a plan loop that advances its
+copy with the game's own `executeMove` on the step's own move. Exemplars:
 `palisade.test.ts` ("speaks of no region the board's own no-wall marks do not
-make") and `undead-hint.test.ts` ("places by a count only where the board's
-own marks show the count") do, and sees it fail before the fix. The
-structural form is a plan loop that advances its copy with the game's own
-`executeMove` on the step's own move, which no planner here does yet.
+make"), `undead-hint.test.ts` ("places by a count only where the board's own
+marks show the count").
 
 ## Verifying a hint in-process
 
-Use the tier-2.5 render-scenario harness
+Test a hint's frame with the render-scenario harness
 ([`render-scenario.ts`](../src/engine/testing/render-scenario.ts)):
-`renderPinnedHint(game, pinned(kind))` drives a real `Midend` to the frame of
-a pinned position's step, whichever leg of its plan that is, then
-assert targeted ops (`COL_HINT` present, clues still drawn) **plus**
-`toMatchSnapshot`. Seed: `palisade-render-scenario.test.ts` reaches the
-`equivalentEdges` frame the browser harness couldn't. See
-[`testing.md`](./testing.md) for the tier definitions.
+`renderPinnedHint(game, pinned(rung))` drives a real `Midend` to the frame of
+a pinned position's step, whichever leg of its plan that is. Assert targeted
+ops (the hint color present, clues still drawn) and `toMatchSnapshot`.
+Exemplars: `src/skeleton/grid/skeleton-hint.test.ts`,
+`palisade-render-scenario.test.ts`. The tiers are in
+[`testing.md`](./testing.md).
 
-**Pin a position for every rung, through `describeHintPins`**
-([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts)):
-it requires a pin for each of the game's `hintRungs`, and
-`npm run hint-scan -- <the test file>` finds the positions and writes them.
-Do not write a scan of your own; the followable form is
-[`testing.md`](./testing.md) § "Pinning a hint's positions".
-
-Two testing gotchas worth internalizing:
-
+- **Pin a position for every rung through `describeHintPins`**
+  ([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts)).
+  It requires a pin for each of the game's `hintRungs`, and `npm run hint-scan
+  -- <the test file>` finds and writes them. Do not write a scan of your own
+  ([`testing.md`](./testing.md) § "Pinning a hint's positions").
 - **A hint frame is a pin's, never a walk down a plan on a board kept by
-  hand.** `renderPinnedHint(game, pinned("adjBlack"))` goes to the pin's step,
-  whichever leg of its plan it is, and the pin is found again by one command
-  when the board stops saying it. The pin is keyed on a rung, never on a
-  phrase: a phrase matches more than one deduction (several Singles narrations
-  share generic words), stops on the wrong frame, and goes blind when the
-  sentence is reworded.
-- **The easiest rule pre-empts hand-crafted boards.** A solver that tries
-  techniques easiest-first means a crafted board often fires a *different*
-  rule than intended (an alternating Unruly row is a three-in-a-row deduction,
-  not a count completion). Craft for the per-cell techniques, but validate
-  **grouping** on a *generated* board (scan a few seeds for a
-  `continuesPrevious` leg, then check it shares its predecessor's firing). See
-  `unruly-hint.test.ts`.
-
-## Candidate-elimination games
-
-A game whose signature techniques **narrow a cell's set of possible values**
-rather than directly forcing one teaches in **pencil-notes** terms: the hint
-sets and strikes notes, and a placement is the moment a cell's notes collapse
-to one. All the general narration rules, the engine mechanics and the
-stale-plan guard apply; this section is the pencil-note-*specific* machinery.
-Exemplar: [`towers/`](../src/games/towers/) +
-[`engine/latin.ts`](../src/engine/latin.ts).
-
-### The shared candidate-hint machinery
-
-**A game's `buildSteps` is one call to `runCandidatePlan`** — or, for a plain
-row/column Latin square, to `runLatinCandidatePlan` over it (§ "The row/column
-preset")
-([`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts)), and the
-pieces it composes live in
-[`engine/candidate-hint.ts`](../src/engine/candidate-hint.ts): the pure
-plan helpers (`nakedSingles`, `anyEmptyLacksNotes`,
-`availableFirings` — whole-firing strikes, dup-excluded, and the recorded
-placements the board supports — `nextPlace`, `joinNums`) and the generic
-`keepCandidateHintTrack` / `refreshCandidateHintStep` over the shared
-`CandidateMove` / `CandidateHighlights`. A game wires
-`hintKeepTrack`/`refreshHintStep` as one-line wrappers passing
-`state.pencil`/`state.grid` + the grid order. Exemplar:
-[`keen/index.ts`](../src/games/keen/index.ts)'s `buildSteps`, which is
-nothing but that call.
-
-**A cell's *uniqueness regions* are one definition per game — `regionsOf`.**
-Three sites ask "which cells share a uniqueness constraint with `(x, y)`, and
-which still note value `n`?" — the placement classifier, the bulk
-obvious-clean opening, and the placement dup-cull. A plan names it once, as its
-`regionsOf`, and the walk feeds all three from it, so they can never disagree. A row/column game does not pass one at all — the preset
-supplies `rowColRegions(x, y, w)` from
-[`latin-hint.ts`](../src/engine/latin-hint.ts); Solo writes its own
-(`[row, col, block, diag0, diag1]`, then the Killer cage). The culls de-dup a
-cell reachable via two regions. **A Keen cage is *not* a region** — it is an
-arithmetic constraint a digit may legally repeat under; `regionsOf` returns
-row+col only, and the cage logic stays its own deduction.
-
-**"Holds every value" and "forbids repeats" are two relations, and a region
-declares which it has.** The classifier needs the first: a value with one home
-left in a region must go there only if the region has to hold that value. The
-culls (dup strike, obvious clean, Mark-all, the player's auto-pencil) need the
-second. Holding every value implies forbidding repeats, so `regionsOf` returns
-every region a value may not repeat in, each a `CellRegion` flagged
-`holdsEvery`, and the classifier itself skips the ones that are `false`. A
-**Solo Killer cage** is the case: declared `holdsEvery: false`, and untagged,
-since only the whole regions need a name for a hidden single — so the type
-refuses a cage declared the other way. A region with neither property (the Keen
-cage) is not declared at all, because nothing would read it. Before the flag,
-Solo's culls read the classifier's list, the solver struck a placed digit from
-its cage-mates and the notes never did, so a later single rested on a strike
-the player never saw, and the hint threw on about one fresh Killer board in
-six.
-
-**Where a value's reach depends on the value, the culls read the game's
-`reach`.** A Seismic 3 rules out 3s three cells along its row and column, which
-no fixed region can say. So the culls ask a function, `reach(i, n)`: the cells
-an `n` at cell `i` rules `n` out of. The walk reads it everywhere it asks what
-a placed value rules out: the placement cull, the obvious clean, a note-less
-cell's implied candidates, and a fold's check of what an earlier fold placed.
-The default is `regionReach`, every cell of `regionsOf`, so a game whose rule
-is its regions passes nothing. `regionsOf` keeps the job that does not depend on
-a value: the regions a hidden single is found in (Seismic's area, declared
-`holdsEvery`). "Two equal values may not stand together" is symmetric, and the
-helpers rely on it: they read the reach outward from each placed value, which
-is the same as asking what reaches a cell. Exemplar:
-[`seismic/hint.ts`](../src/games/seismic/hint.ts), whose `reach` asks the
-game's own `clashes` of every cell once.
-
-**A region also carries the word a sentence calls it by.** Where narration
-cites *which kinds* of region a value may not repeat in — Solo's dup cull
-("it can't repeat in its row, column, block, diagonal or cage") and its
-opening clean — read those words off the regions, as a `name` on every arm of
-the game's own `CellRegion`, never from a second list. Solo held two
-statements of the same set twelve lines apart with nothing holding them
-together, and what drifts is a sentence a player is asked to trust. The word
-cannot ride the hidden-single tag: the Killer cage is untagged on purpose and
-still has to be named. Dedup on the **name**, not the region — a cell on both
-X diagonals says "diagonal" once — and where the sentence speaks for the whole
-board at once, take the union over the board, so a cell lying on neither
-diagonal is still told its notes were cleaned against them. Exemplar:
-[`solo/index.ts`](../src/games/solo/index.ts)'s `regionsOf` +
-`noRepeatRegionNames`, guarded by `solo-hint.test.ts`'s "solo no-repeat region
-names". The name stays the game's rather than joining `CellRegion`, because
-**Solo is the only game with several kinds of region to tell apart**: Rome and
-Seismic each supply a `regionsOf` of one kind, their areas, and every other
-candidate-elimination game takes the row/column preset, whose region phrase is
-a constant.
-
-**The walk and its steps are shared; the meaning is the game's.**
-`runCandidatePlan` owns the loop — the note-free opening, populate and the
-obvious clean, taking each next firing through the `HintFrontier`, telling the
-last rung when every earlier one came up empty, the budget and cap (§
-"Continue from the last step") — and it owns the steps too:
-
-- **The ladder is standard.** Naked singles, then the game's own `rungs`, then
-  the recorded strikes, then the recorded placements, in the note-free opening
-  and after it alike. The opening runs only while the setup is unfinished:
-  under the populate reading until the notes are penciled in, and under the
-  implicit reading only while a stale note waits for the obvious clean. A
-  fresh board under the implicit reading has no opening at all, because an
-  opening that held the strikes back while the singles and clue lines chained
-  from line to line passed over the strike continuing each placement
-  (`towers-implicit-strike-window`). Towers' clue lines, Group's leads and
-  Salad's markers are own rungs, as is every plan's `rungs`; each sits in the
-  same slot, which is why the slot is fixed rather than configured.
-- **A firing is data.** A rung returns firings as lists of **legs** — a
-  placement, a strike, or (Salad's markers) a step of the game's own with an
-  `apply`. The walk builds the step for each leg from the game's `placeWords`
-  / `strikeWords` (the sentence and the evidence) and adds the move, the
-  `targets` and the `marks` itself, so none of those can disagree with the
-  move.
-- **A strike's words are a premise; the walk writes its conclusion.**
-  `strikeWords` returns a `Premise` (`engine/hint-text.ts`), the clause saying
-  why the values go, and the walk ends it with the plan's `conclude` words for
-  the move the step turns out to make: "so we must cross out 2 and 4" as a
-  strike, and under the implicit reading "so this cell must be 3" or "so
-  pencil in only 1 and 5" (§ "Two readings of an unmarked cell"). The row/column
-  preset builds `conclude` from the game's `notes` vocabulary; Solo takes the
-  engine's `candidateConclusions` in its digits, and Rome writes its own, in the
-  ways a square points. Three optional fields say how the conclusion refers to
-  the struck notes: `where` for a strike that reaches past "this cell" ("from
-  the other cells they pass through"), `struck` where a list of values would
-  misstate them (Group's identity marks), and `named` where the premise already
-  named them, so the ending says "cross them out" rather than listing them
-  twice.
-- **The walk plays each leg on the working board**, and after a placement
-  strikes its value from every cell it reaches (`reach`, by default its
-  `regionsOf`): a leg
-  continuing the journey, or silent under auto-pencil, whose move carries the
-  same cull to the real board. Every such game used to write this as its own
-  `emitPlacement`, differing only in the words and the regions.
-- **A firing's later legs continue its journey.** A firing is emitted whole,
-  so no game tracks which firing it is in the middle of. Towers and Unequal
-  used to emit one height or one cell per turn and re-link the rest by
-  `group`, which let the frontier take something else in between and split one
-  deduction into two hints.
-- **A strike that rides as a later leg must also be on offer by itself.** The
-  board can reach the state the leg tidies without the leg: the player makes
-  the first move themselves, or takes the first leg and then goes their own
-  way, and the plan recomputes. Salad's circle firing strikes its squares'
-  empty-square notes as a second leg; a circle already on the board kept its
-  note for good, and the placement behind it threw. `circledEmptyNotes` is
-  that strike as a rung of its own (`salad-hint.test.ts` pins both routes).
-
-What a game genuinely decides: which rungs of its own it has, the strike-split
-axis (`strikeAxis` — by height, by cell, one leg for a digit confined to a
-region; dictated by what the narration names singular), its recording solver,
-its words, its regions **where they are a decision at all** (§ "The row/column
-preset" — for a plain Latin square they are not), a value's `reach` where it is
-not its regions, the cells a step's
-candidates rest on beyond those it outlines (`reads` on its words: a cage
-deduction hatches the cage and reads every cell of it), and the deviations the
-plan's optional hooks name (`singles`, `placeable`, `placed`, `placement`,
-`onPlace`), each of which states the one game-shaped fact that needs it. A driver was once
-declined as a callback shell over a six-line loop; the frontier made the loop
-the part every game got the same way, so it moved into the engine, and the
-steps followed once every game's emitters were read side by side and differed
-only in their words. The reason union is per-game; narration is *mostly*
-per-game — except:
-
-### The row/column preset
-
-**A plain Latin square answers no question about its regions, so it is not
-asked one.** `runLatinCandidatePlan` (same module) is `runCandidatePlan` with
-the row/column family's answers filled in, and a game on it supplies its
-recording solver, its rungs and its own words and nothing else. Exemplar:
-[`mathrax/index.ts`](../src/games/mathrax/index.ts)'s `buildSteps`.
-
-What it fills in, and why each one is not a parameter — the test being
-[`doctrine.md`](./doctrine.md) § "Convention over configuration"'s *can we say what a game would
-legitimately want to do differently?*, asked **per field** rather than per
-helper:
-
-| Field | Why the preset owns it |
-|---|---|
-| `regionsOf` | `rowColRegions(x, y, w)`. The one genuine choice, and making it is what the preset *is* |
-| `singleReason` | `singleReasonOf`. Once `Reg` is a `RowColRegion` it is the **only inhabitant** of that signature |
-| a hidden single's placement evidence | its own line, `hiddenSingleLine`. The game's `placeWords` still says *why*; the preset shades *where*, over whatever area the game returned, and the game's other placement arms are untouched |
-| the two setup sentences and the conclusions | built from the game's `notes: { noun, placedVerb, value?, cell? }`. The words are per-game ("height"/"standing", "element"/"placed"); the region phrase is not. A game with a setup of its own (Salad) still gives `notes`, for the conclusions |
-
-The strongest form of the test is the middle two rows: not "six games happen to
-agree" but "the question has one answer once `regionsOf` is known". Before the
-preset, six games answered each of them, and four spellings of `regionsOf` were
-in the tree because a copy is never called by the name of the thing it copies
-(Group's `regions`, Salad's `saladRegions`).
-
-**A game that genuinely differs is turned back by the checker, not by a
-convention.** The preset's parameter type carries `NarratesSingles<Reason>`, a
-conditional that collapses to `never` unless the game's reason union can hold
-the `SingleReason` the preset synthesizes. Solo's `hiddenSingle` names a block
-or a diagonal rather than a line, so the preset is simply unavailable to it and
-it calls `runCandidatePlan` — which every game may do, and which is what keeps
-the override first-class. A game taking the explicit form says why in its
-change.
-
-**Its population is derived, never declared.** A game joins by *calling* it;
-`hint-frontier.test.ts` finds the plan-walking games by reading their own
-source. That scan keyed on `runCandidatePlan(` and silently dropped six of its
-seven games the moment the preset arrived — `runLatinCandidatePlan` does not
-contain that string. It now keys on `CandidatePlan(`, the shape both entries
-share, and cross-checks against a second derivation (who imports the module).
-[`method.md`](./method.md) § "A scan that keys on a name", in the engine rather than in a game.
-
-**The `hint()` entry and the generic-Latin narration arms are shared.** (a)
-The `Game.hint` *entry* — the `autoPencil ?? false` and reading defaults, and
-the empty-plan refusal — is `candidateHint(state, ui, buildSteps)`; a game on
-the walk writes its `hint` as a one-line call to it. (b) The *generic Latin
-reason* narration arms (`single` / `hiddenSingle` / `dup` /
-`set` / `forcing`) read byte-identically across the **row/column** Latin
-games, so `narrateLatinReason(reason, ns)` in `hint-text.ts` owns them; Keen
-and Unequal narrate their game-specific arms then
-`default: return narrateLatinReason(reason, ns)`. **Solo and Towers keep
-their own `narrate`** — Solo's generic arms name "row, column **and block**",
-and Towers narrates in "height" vocabulary with a single value not an `ns`
-list; forcing either onto the shared narrator would mean per-game overrides
-for half its arms, which reads worse than the duplication. The rule that
-held: extract the entry/arms that are *verbatim* across ≥2 games, leave the
-ones that diverge local. (Normative:
-[`engine-candidate-hints`](../openspec/specs/engine-candidate-hints/spec.md) "A shared narrator for
-generic Latin placements and strike premises" — a recorded local-narrate decision is a
-conforming outcome.)
-
-**…and the *value vocabulary* is a parameter**, which brought Group and Salad
-onto the shared arms: `narrateLatinReason(reason, ns, vocab?)` takes an
-optional `LatinVocab { noun, value(n), cell? }`; omit it and you get plain
-numbers, byte-identical to before (the guardrail: Keen's and Unequal's
-assertions pass unedited). The shared `dup` arm picks **"a"/"an" by the
-rendered value** — which Group's local copy had reworded around ("already
-contain a" reads as an article for element `a`) and which also quietly fixed
-"a 8" for the digit games. One vocabulary cannot express a *per-arm*
-difference, so Towers and Solo still decline. Measured verdict, not assumed:
-extract when the only difference is the vocabulary; decline when an arm's
-*shape* differs.
-
-**The move *dialect* is a parameter — don't rename a game's moves to fit.**
-`keepCandidateHintTrack` / `refreshCandidateHintStep` used to read a
-hard-coded `type` discriminator and a `1 << n` pencil bit. That is the Latin
-family's dialect, not a property of the pattern: Crossing discriminates on
-`kind` and stores candidate `n` at bit `n − 1`; Group's `set`/`pencil` carry a
-*cell list*. Renaming either is not an option — the save format replays the
-**move log**, so a discriminator rename breaks every existing save — so both
-helpers take an optional `CandidateMoveAdapter<M>`: `read(m)` maps a game move
-onto the canonical `CandidateMove` (or `null` for "not one of these, so
-off-plan"), `strike(marks)` builds a strike in the game's own shape, an
-optional `bit(n)` supplies the mask encoding. Omit it and the Latin games'
-call sites are untouched. Crossing wires both hooks in ~10 lines; Group's
-hand-rolled ~78-line copy was deleted for a 12-line adapter (its tests passing
-unedited proved the extraction behavior-preserving).
-
-**The note *encoding* is a parameter too — and only the half that had a
-consumer.** The mark helpers take an optional
-`NoteEncoding { bit?(n), values? }`: `values` is the highest candidate a cell
-may note when that is *shorter* than the grid order (Salad notes `nums`
-symbols plus one "might be empty" mark on an `order`-strided grid).
-**`availableFirings`/`availablePlacements`/`nextPlace` also take a `placed`
-grid distinct from `grid`** — "which cells are already decided" versus "which
-cells can still take notes". They coincide everywhere but Salad, where a
-square the player settles with an *empty-square marker* stays blank in `grid`
-for ever — judging by `grid` alone leaves that op permanently unmade and holds
-back every firing whose premise reads that square. If your game can decide a
-cell without writing a value into the grid, you need this.
-
-**Not every candidate game fits, and Undead is the recorded no-go.** The
-shared helpers assume `0`-empty, `{x, y}` cells on a `w`-strided grid, and a
-plain `{...highlights, targets, marks}` shrink. Undead breaks all three at
-once (`MON_NONE = 7` empty sentinel, `{cell, monster}` marks over a 1-D
-border-ringed board, a highlight shrink that re-projects cell → x/y). It was
-re-evaluated when the adapter landed and **declined**: fitting it would mean
-an adapter method that rebuilds the highlights, at which point the game
-supplies the logic and the "helper keeps all the logic" property is gone. A
-documented non-migration is a fine outcome; don't contort a game onto the
-shared shape.
-
-### Continue from the last step
-
-A candidate board usually offers several firings at once (a median of three
-on the Latin family's harder presets; `sequence-hints-in-cell-games`
-`findings.md`), and a plan that takes whichever its scan reaches first walks
-the player across the board for no reason they can see. So
-`runCandidatePlan`
-([`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts)) takes each
-next firing through a `HintFrontier`
-([`engine/hint-frontier.ts`](../src/engine/hint-frontier.ts)). The frontier
-takes the candidate reading a cell the plan's latest step wrote, then the step
-before, three deep, and otherwise the ladder's own first choice, so a fresh
-plan opens exactly as the ladder says.
-
-**A firing reads exactly what its steps carry: their `area ∪ hatch ∪ reads ∪
-targets`.** The walk builds a firing's steps before choosing among them and
-reads the premise off those, the same steps it will push. The candidates used
-to carry a hand-built `reads` beside the steps they would push, and the two
-disagreed in three games without anything noticing: Towers' strikes read their
-clue's line but not the cells they struck, Unequal's link read one end, and
-Group's identity fill read one cell of the row and column it placed. Reading
-the steps cut the jumps `plan-continuity.ts` counts as avoidable in all four
-games whose plans moved (`candidate-plan-kit`).
-
-**A single in a cell with no notes rests on the values placed around it, and
-the walk says so.** "This cell's row, column and block already hold every other
-number" names no cell, yet it is true only because of particular placed ones.
-So the walk adds to a `regionsFull` single's `reads` every placed cell that
-rules one of its other values out, and to a hidden single's the placed cells
-that rule the value out of each note-less cell of its line. Nothing draws them.
-Without them the frontier could not see that a placement continues into the
-single it completes, and `plan-continuity.ts` could not either. Measured over
-every leaf preset at six seeds (`rome-implicit-continuity`, 2026-09-28), the
-instrument put 14.5% of Rome's implicit jumps past a continuing firing where
-6.3% were, and the same blind spot hid 14–22% in Solo's, Group's, Seismic's and
-Mathrax's implicit plans, their defaults, which it had read as 4–9%. With the
-walk reading the premise, all four came under the bound.
-
-**Offer only what you can vouch for, because the frontier takes whatever it
-is handed.** For the standard rungs the walk does it with the shared listers;
-a game's own rung carries the same duty:
-
-- `nakedSingles` — every cell whose notes are down to one.
-- `availableFirings` — every recorded firing whose premise the board already
-  shows, strikes and placements by one rule: nothing the board has yet to show
-  comes before it, or its premise reads none of it. The strikes are the live
-  teachable ones; the placements are those with a reason of their own (a clue,
-  a cage, Group's associativity), vouched by their evidence without the cells
-  they place.
-- `availablePlacements` — every recorded single the notes show as naked or
-  hidden, and every placement with a reason of its own that `availableFirings`
-  vouched for. Only at the last resort, the first unmade placement once every
-  earlier rung came up empty, does a single the notes do not show throw. That
-  `nothingElse` is the `nothingEarlier` the driver passes the rung, not merely
-  "nothing to strike", since a marker or a single on an earlier rung may be the
-  very premise it waits on (eight of Salad's own tests threw until that was so).
-- A game whose deductions are placements and should lead the strikes reads the
-  walk's own list, `RungContext.placements()`, from a rung of its own (Group's
-  `leads` is a filter over it), rather than deciding availability itself.
-
-The driver keeps the phases: the naked singles and the game's own rungs (the
-note-free ones) compete until its setup is done, and setup — lazy populate then
-the obvious clean, built from the plan's `notes` words, or a `setUp` of the
-game's own (Salad's populate knows about empty squares) — is bookkeeping
-outside the frontier. An own rung that reads the notes waits for
-`RungContext.populated`, which is the setup being done, clean included: it once
-meant "penciled in" under the populate reading, and Seismic's rungs then struck
-between the fill and the clean. A `setUp` says whether it is
-*done*, not only whether it did something: a driver that learned "done" by
-asking once more stayed an extra round in the opening, where a second
-empty-square marker beat the hidden single continuing the last step. Exemplars:
-Towers (a note-free rung of clue lines), Group (placement-first, with
-associativity placements available whenever their three products are on the
-board) and Salad (marker rungs, and a `stuck` check). Guard:
-`hint-frontier.test.ts`, which reads each plan from outside through
-`engine/testing/plan-continuity.ts` and bounds the jumps that passed over a
-firing that continued, under **every reading the game offers**: a player may
-pick either, so either plan ships. A reading known to be over the bound sits in
-the test's `OVER_BOUND` ledger with the change that owns it, and the walk
-asserts it is still over, so fixing it retires the entry.
-
-### The recorder and the soundness boundary
-
-- **Record off the candidate cube.** A Latin-style solver already carries
-  `cube[cubepos(x,y,n)]` ("can `n` still go here?"). Thread a
-  `DeductionRecorder` through the generic deductions **and** the game's
-  user-solvers so each *candidate cleared* (`elim`) and each *cell placed*
-  (`place`) is recorded in solver order with its reason + premise. Gate every
-  reason allocation and the strike-record on `solver.recorder` so the
-  generator/solve path is byte-for-byte unchanged (verify with the
-  differential). A `group` id, bumped once per top-level deduction attempt,
-  ties one firing's records together — beware bumping per *pass* not per
-  *firing* (§ "Recording the deduction").
-- **The soundness boundary is non-negotiable: seed the working cube from the
-  placed grid only — never the player's notes.** A note can be wrong (crossing
-  out the correct height is exactly what Check-&-Save flags), so feeding it
-  back as a fact would let the solver "prove" nonsense. The boundary is about a
-  *wrong* note, so it moves where the hint has already refused every wrong one:
-  see § "Deduce from the notes when the mistake check vouches for them". The notes are used
-  only to *diff* (which already-true elimination to surface next, what is
-  done) and to *render*. Run the recording solver at the board's own
-  difficulty, **deductive only** (cap below recursion — a guess isn't a
-  teachable note strike).
-
-### A premise names everything its deduction reads
-
-The walk offers a recorded firing once its premise shows nothing the board has
-yet to show (§ "Solve the way a human does"), so a step whose premise leaves
-out a cell the deduction read is offered while that cell may still say
-otherwise, and its sentence is false on the player's board. Every test stays
-green while it happens. Four did, found by the audit below
-(`guard-recorded-firing-premises`): an X-wing's lines, a Rome group's border,
-a Killer cage's filled cells, and Group's own products under the implicit
-reading.
-
-- **Absence is read too.** "4 can only go in these cells of these columns"
-  reads every *other* cell of the columns, where 4 is not. A naked set reads
-  only its own cells; a hidden set and a fish read the rest of their lines.
-  "Only this mark leads into the group" reads every square around the group.
-- **Where the words cannot say it, the solver does.** A recorded reason may
-  carry `reads`, the cells its deduction reads beyond what the game's words
-  outline, and the walk adds them to the step's premise (and under the
-  implicit reading writes their notes first). The solver is the one place that
-  knows what it read: Rome's `reach`, Solo's cage reasons. Words that already name the cells need nothing more.
-- **A read the player must check is drawn, not only carried.** `reads` makes
-  the walk sound and shows nothing, so a step that leans on it asks the player
-  to find those cells unaided. A value confined across several lines stripes
-  them for that reason, in every game, through one sentence
-  (`engine/hint-text.ts`'s `confinedPremise`); a new solver with such a rung
-  records the lines (`latin.ts`'s `ConfinedLines`) and calls it.
-- **A fish has two readings; name the smaller.** `k` columns holding a value in
-  only `k` rows is also the other rows holding it in only the other columns,
-  and either alone gives the same strikes. A solver searching one orientation
-  finds a two-row pattern as its many-column complement, so pick by count when
-  recording (`latin.ts`'s `confinedSet`, Solo's `confinedLines`), and test
-  each way round: a scan of 48 Solo boards met only one of them.
-- **Say what the sentence rests on, not what the solver's state is.** A Killer
-  cage the solver has shrunk by filling cells is still the cage the player
-  sees, so "the rest of this cage is filled in" rests on those cells.
-- **The audit holds it.** `engine/firing-replay.ts` takes the solver's state
-  at each firing the walk offers, returns every cell outside the step's premise
-  to where the recording started, and runs the firing's technique again: a
-  firing that no longer follows is the finding. `firing-replay.test.ts` runs it
-  over every candidate walk. A solver on `latinSolver` takes part with no code
-  of its own; a bespoke one writes a `ReplayAdapter` (Rome's, Solo's).
-- **The audit checks itself before it judges.** For each firing it first runs
-  the replay from the recorded state with nothing returned, and a replay that
-  does not make the recorded firing again is filed as `unreproduced`: a fault
-  in the instrument (a `ReplayAdapter` that does not rerun the technique the
-  recording ran), never a finding against the premise. The guard fails on one,
-  so a new adapter is proved to reproduce before any premise is tested with it.
-- **What it cannot see, it says.** A technique reading more to decide
-  *whether* to fire than its conclusion rests on (Mathrax's Easy gate, Rome's
-  `expand`) is flagged though its premise is honest, so the guard ledgers each
-  such gate against a pinned board. A cell the firing's own technique puts back
-  before reaching it is not tested (Salad tests none, the lowest Latin rung
-  few), and the audit counts what it tested. **A replay has to run one
-  technique, not the ladder**: Solo's used to rerun its whole loop for a pass,
-  whose lower rungs put a returned cell back before the firing's rung was
-  reached, so it tested 61 cells to 782 put back and a line-block intersection
-  stripped of its confined line passed. Run one rung at a time
-  (`solo-ladder-as-declared-techniques`), the same boards test about 1,160 to
-  440, and that plant is found. So a rung the replay runs must read nothing a
-  rung before it left behind in the same pass: work such state out from the
-  board inside the rung. The audit now finds a Killer cage's filled cell cut
-  from its reads, but misses either of the region rule's reads cut short on the
-  guard's boards, so a recording test in `solo-hint.test.ts` holds those
-  (`teach-solo-cage-splits`).
-- **A derived fact the solver keeps is a fact the hint must teach.** Upstream
-  Killer split a cage along a row for good and later treated the piece as a
-  cage, so the hint called it "this killer cage" and said its other cells were
-  filled when they were empty. Before narrating state a solver carries between
-  passes, ask whether the player could write it down. If not, derive it afresh
-  each pass so every use is one step from the board, and narrate it from where
-  it came from. What the solver loses by that goes to a tier the hint does not
-  teach (§ "Give the facts a notation (Loopy)"'s fallback); for Killer it was
-  1.5% of boards.
-
-### Persist, populate, and the moves
-
-- **Persist + populate.** Express the recorded script against the live notes
-  as steps: (1) a conditional **populate** (only when some empty cell lacks
-  notes) reusing the existing fill-all (`pencilAll`) move, so the hint's start
-  state is the fill-all button the player already knows; (2) **eliminate**
-  journeys; (3) **place** steps. Skip any operation already reflected on the
-  board so a fresh recompute resumes from any mid-game position.
-- **Open with a bulk obvious-candidate clean — one step, the Mark-all second
-  press.** The recording solver enables its recorder *after* the cube is
-  seeded from the givens (seeding isn't a teachable deduction) — but
-  `pencilAll` fills *every* candidate, so after populate a cell can show a
-  value the grid-seeded cube already excluded, and the recorded script never
-  strikes it. Don't bake it into a "smart" populate (keep `pencilAll` a plain
-  fill so the player sees the same notes Mark-all gives). Instead emit **one**
-  bulk cleanup step via the shared `emitObviousCleanStep(...)`: it strikes
-  every penciled value already placed in a region as one `pencilStrike`,
-  flagged `continuesPrevious` when it follows the populate fill and standalone
-  otherwise. It fires **once** and runs *as a step in the walk* — not inside
-  the populate — so it also cleans a **pre-noted board**: a clean tucked inside
-  the populate never runs when notes already exist, silently regressing that
-  case. `runCandidatePlan`'s default setup does exactly this
-  (`populateThenClean`); a game writing its own `setUp` must keep the order.
-  *Gotcha:* the clean
-  step is a multi-cell **and** multi-digit setup step, not a deductive
-  strike — exempt it (by its narration) from any per-firing test asserting "a
-  strike's marks share one cell or one digit" or "every step uses the
-  necessity voice."
-- **`pencilStrike` — the one-firing-one-step note move.** A `set { pencil }`
-  toggle is *one* cell and *not idempotent* (a re-applied strike would re-add
-  the candidate). So add a move that **clears** a list of candidate bits
-  atomically (`{ type: "pencilStrike"; marks }`): one firing forcing several
-  strikes is one multi-cell step, idempotent, resume-safe. Populate stays on
-  `pencilAll`; placement stays on the real `set`. `hintKeepTrack` treats a
-  pencil toggle that *clears* a subset of the step's marks as `onTrack`
-  (shrink in place) / `completed`, a placement of the hinted value as
-  `completed`, else `off`.
-- **A placement's own row/column eliminations continue its journey.** Record
-  those as `dup` strikes and emit them as a `continuesPrevious` strike step
-  after the placement ("a 5 now sits in this row and column, so strike it from
-  these notes"). On recompute after a real placement they bake into the cube
-  and drop out — so the resume walk sees mostly placements, while auto-hint
-  still teaches the cleanup.
-- **Notes are first-class markings in `findMistakes`.** Flag an empty cell
-  whose **non-empty** notes *exclude* the solution value (`kind: "note"`);
-  notes with merely *extra* candidates are ordinary mid-solve state.
-  Check-&-Save inherits the rejection through its existing `findMistakes`
-  gate.
-
-### Two readings of an unmarked cell
-
-**How a blank cell with no notes reads is the player's choice, and the walk owns
-both answers** (`CandidateReading` in
-[`candidate-hint.ts`](../src/engine/candidate-hint.ts), the `hint-notes`
-preference `candidateReadingPref` in
-[`pencil-prefs.ts`](../src/engine/pencil-prefs.ts)):
-
-- **`populate`**: not filled in yet. The plan pencils every candidate in first
-  (the Mark-all move), clears the obvious ones, and reads the notes alone from
-  then on. Everything above this section describes it.
-- **`implicit`**: every value its regions do not already hold, the way a player
-  who pencils nothing yet reads a sudoku. There is no populate step. A firing
-  first writes the notes of each blank, note-less cell it outlines as evidence
-  or `reads` (one `pencilAdd` leg each, continuing its journey, in the
-  engine's words: "Only 3 and 7 aren't already placed in this cell's row,
-  column or block, so pencil them in."), and a single needs no notes at all: a
-  note-less cell whose regions hold every other value is the `regionsFull`
-  single, narrated as exactly that.
-
-**A strike from a note-less cell is folded into its conclusion.** A note leg
-that writes candidates only for the next step to cross them out says one thing
-in two steps (three, when a single follows: Mathrax's "pencil in 1 to 5",
-"cross out 1, 3, 4 and 5", "it can only be 2"). So when a strike's marks lie in
-one blank, note-less cell, and its premise has no `where`, the step ends in the
-move the board calls for, as Map's narrowings always did (§ "A graph, not a
-grid (Map)"): "…differ by 3, so this cell must be 2", or "…puts 2 or 3 in this
-cell, so pencil in only 1 and 4". The limits, each a way the fold would claim
-something the player could not see:
-
-- **A cell an earlier leg reads is noted first, and struck as written.** Its
-  candidates are that leg's premise, so they must be on the board before the
-  fold could write them. A Keen cage's firing therefore notes the cage's other
-  cells, folds the first, and strikes the rest.
-- **A strike with a `where` never folds**: it speaks for cells other than "this
-  cell" (a placement's cull, Solo's intersection).
-- **A later fold sees an earlier fold's placement.** The view the walk reads is
-  taken before the firing, so a value placed by the firing's first leg is still
-  in it; `fold` takes it out of what a later leg leaves in the same region.
-  Missing this threw on a Rome board (`candidate-plan.test.ts` pins the shape).
-
-The populate reading never folds, because every cell a strike reaches has notes
-there. Its plans kept every move, highlight and journey flag through the change
-(`fold-notes-into-conclusions` compared 516 plans).
-
-**Premise duty is the implicit reading's price, and the walk pays it for every
-game.** Map's playtests found that a premise read off neighbors is fine for one
-region and too much for several (§ "A graph, not a grid (Map)"). So the note
-legs cover every cell a step's candidates rest on: the outlined area, the struck
-cells a fold does not write, and `reads` for a region the sentence names but whose cells it reads (a
-Keen or Killer cage, a Towers `arrangement` line). **A hatched line is not
-read**: a hidden single says no other cell of the line can take the value, and
-each of those shows it by its own row and column. A generic Latin `set` records
-its subset (`LatinReason`'s `cells`) and outlines it, which is what lets the
-note legs find it; before, the sentence said "other cells" and marked none.
-
-**A game joins by having the preference**: a `candidateReading` field in its
-`Ui`, `candidateReadingPref` in its `prefs`, the reading passed through
-`buildSteps` to the walk, `ui ?? newUi(state)` in its `hint` so a caller with no
-`Ui` gets the game's own default, and a `pencilAdd` arm in its move union and
-`executeMove`. `candidate-reading.test.ts` finds the population by the `Ui`
-field and walks every member's other reading, the one every other hint guard
-misses. It also holds, on the real board and under both readings, every blank
-cell a step outlines, `reads` or strikes from to showing notes when the step is
-spoken, which is why `reads` rides on the step's highlights as data. It cannot
-see a `reads` a new cage rule forgot to declare: that is the game's to state.
-It tells a fill from a note leg from a strike by **what the step does to the
-board** (notes added to several elements, to one, or only removed), not by the
-move's `type`, because a Map move is a list of ops with no discriminant; and it
-addresses Map's premise by region, from the step's `targets` and `evidence`.
-
-**The default is a per-game convention with an override, and it was measured,
-not argued.** Over every leaf preset at six seeds, the implicit plan against the
-populate plan, first without the fold (`examine-implicit-candidates`) and then
-with it (`fold-notes-into-conclusions`, both 2026-09-25):
-
-| Game | Steps, implicit ÷ populate, unfolded | Folded | Cells the folded plan writes notes into |
-|---|---|---|---|
-| Mathrax | 0.91 | 0.67 | 23% |
-| Rome | 1.18 | 0.70 | 38% |
-| Solo | 0.72 | 0.71 | 13% |
-| Unequal | 1.14 | 0.95 | 64% |
-| Towers | 1.11 | 1.03 | 69% |
-| Group | 1.02 | 1.04 | 13% |
-| Keen | 1.22 | 1.07 | 88% |
-| Map (on its own plan, which always folded) | 0.89 Easy, 0.98–1.03 Normal, 1.09–1.11 Tricky | | 0–18%, 34–51% Tricky |
-| Seismic (on the walk from `move-seismic-onto-the-candidate-walk`, folded only) | | 0.54–0.57 Easy, 0.79–1.14 Normal | 0% Easy, 26–67% Normal |
-
-The last column is not comparable with the first run's figures, which counted
-note legs rather than every cell a step writes notes into; a fold's "pencil in
-only …" counts here and had no counterpart there.
-
-Seismic's Easy figure is the whole board falling to singles the board shows, so
-the implicit plan writes no note and, with no notes to cull, has no cull leg
-after each placement either.
-
-Where the clues or cages drive the deductions, nearly every cell ends up needing
-notes, and writing them one cell at a time can still cost more than one
-populate. So the convention, `DEFAULT_CANDIDATE_READING`, is `populate`, and a
-game whose plan is shorter under the implicit reading overrides it in `newUi`
-and says why (Solo, Mathrax, Unequal, Seismic, Group for the few notes it
-writes, Rome, and Map, whose plan always read this way). Rome was held back a
-while by a continuity figure that turned out to be the instrument's (§
-"Continue from the last step"). `hint-frontier.test.ts` walks both readings, so
-**the continuity bound holds whichever a game defaults to**. A new game
-measures the same two numbers before choosing.
-
-**Salad walks the populate reading only**: its setup is its own (the "might be
-empty" note is a candidate no row or column rules out, so an implicit Salad
-would have to decide when to write it), and the walk refuses the implicit
-reading with a setup of the game's own. Nothing presses for more, so it stays
-populate-only by decision (2026-09-25), and its rung list says so (§ "Name the
-rung a step speaks"). Of the note games that plan without the
-walk, Crossing already writes a square's notes only when a narrowing needs them
-(§ "Place the notes a fixpoint rests on (Crossing)"), with a `pencilAdd` of its
-own that predates the shared one. **Undead
-stays populate-only by decision** (2026-09-25): a monster may repeat in any
-line, so no region rules a candidate out and a note-less cell reads as every
-monster. Its implicit reading would be a populate done one cell at a time, the
-shape that measured worst above.
-
-### Re-derive a placement's why
-
-The shared `latin.ts` records every forced placement under one reason,
-`{ kind: "single" }` — but its `elim` fires on **three** slice kinds: a *cell*
-slice (a genuine **naked single**), a *row* slice and a *column* slice (a
-**hidden single** — digit `n` fits only one cell of that line, while the cell
-itself still shows several candidates). Narrating all of them as "every other
-number has been ruled out in this cell" is **wrong for a hidden single**: the
-player is looking at a cell that visibly still has 1, 2, 3, 4 penciled
-(owner-flagged on Keen, 2026-06-23). A hidden single must instead name its
-line — *"Every other cell in this row rules out 3, so this cell must be 3"* —
-and shade the whole row/column as
-evidence, so the player can *see* that no other cell takes the digit.
-
-**Re-derive the placement reason from the working board at emit time; never
-trust the recorded `single`.** The shared classifier
-[`engine/latin-hint.ts`](../src/engine/latin-hint.ts)
-`classifyPlacement` returns **naked** (the cell's notes are exactly `{n}`) or
-**hidden** (no other *empty* cell of the row — or column — still has `n`;
-only empty cells compete); `singlePlacementReason` maps those to the `single` /
-`hiddenSingle` reasons every Latin game's narration and evidence shading share.
-`classifyPlacementInRegions` is the same classifier over arbitrary regions —
-pass the regions your game reasons over. Reclassify **only** when the recorded
-reason is `single` — Towers' clue-driven placements keep their own reasons.
-
-**It throws when the placement is neither.** The notes then still show a
-candidate the solver has ruled out, which means the plan skipped a strike the
-placement rests on, and a hint may not narrate a fact the board does not show
-(§ "The quality bar", rule 6). There used to be a third answer,
-`forcedSingle` (*"Working through this cell's row and column together, only …
-can still go here"*), which said exactly that unmarked fact out loud.
-`strike-before-forced-singles` traced its hits to two skipped strikes in
-Group and removed the arm; the throw means every cross-game hint walk now
-fails on a plan that skips one. What to check when it fires:
-
-- **Every placement strikes its value from its lines' notes.** Group's
-  identity fill placed a whole row and column without doing so, and the
-  placements after it read the stale notes.
-- **Obvious culls come before any placement the plan classifies**, including
-  those left by the player, who may place a value without striking it and in a
-  game with no auto-pencil usually will.
-- **A cell with no notes shows the values its lines leave it.** A plan
-  classifies on such a board under the implicit reading, and under the
-  populate reading before its populate (Group places first); read a note-less
-  cell as holding nothing and every placement passes as a hidden single in its
-  row, which is false wherever the value is open elsewhere in that row. The
-  walk classifies against `impliedNotes`, and hands the same view to a game's
-  own rungs as `RungContext.shown`.
-
-Shared, not per-game: this shipped for Towers, Unequal and Keen together
-(`fix-latin-hidden-single-narration`) — a probe had mis-narrated 37/96 Towers
-and 13/82 Unequal placements as naked singles; all three now route through the
-one classifier and read 0. Guards: `keen-hint.test.ts` "narrates a hidden
-single by its line", `latin-hint.test.ts`, and `hint-resume.test.ts` "a
-Latin-family placement never falsely claims a naked single".
-
-### Solve the way a human does
-
-The first cut emitted the raw recorded script and buried the player in trivial
-"strike this number from the rest of its row/column" steps. The fixes, all
-owner-driven and worth copying:
-
-- **An auto-pencil preference (default off)** that, on a real placement,
-  strikes the placed value from the rest of its row and column automatically.
-  Bake the decision into the *move* at `interpretMove` time
-  (`set { autoElim }` read off the Ui pref) so `executeMove` stays pure and
-  replay is deterministic. When on, the hint folds those trivial eliminations
-  into the placement (no step); when off, it teaches them as an explicit
-  `continuesPrevious` strike. The hint needs the pref, so `Game.hint` takes
-  the optional third `ui` arg, and `candidateHint` reads it into the plan's
-  `autoClean`.
-- **A naked-single-first plan builder.** Don't express the recorded script
-  verbatim — walk a *working copy* of the board (notes + grid) and at each
-  step take the most natural move: (1) a **naked single** (an empty cell whose
-  working notes have collapsed to one candidate — on a mistake-free board that
-  candidate is the truth, so placing it is sound and is what a person does
-  next); else (2) the next **clue elimination** (the deduction worth
-  teaching); else (3) a forced **placement**. Re-record from the working grid
-  after each placement; advance through strikes by filtering to still-live
-  marks. **A recorded firing is offered by its premise, never by its position
-  in the recording.** The recording ran on the solver's candidates, which
-  differ from the player's board by exactly the marks the board does not show
-  yet: a strike still live in the notes, and a placement whose cell is still
-  empty (that cell, and every cell its value rules out by the plan's `reach`
-  that still shows the value). A recorded strike, or a placement with a reason
-  of its own, is available when the cells its step reads hold none of them (a
-  placement's own cells aside, since it overwrites them). The cull is read off `reach` rather than the
-  recording because a solver need not record it: Solo's does not, and while
-  the rule read `dup` records, Solo's plans taught strikes resting on a cull
-  the board did not show. Two windows came
-  before this and both hid deductions that were true on the board: "strikes
-  before the first recorded placement" was empty, because the solver commits
-  Towers' facing-clue placement *first*; "strikes before the first *unmade*
-  placement" passed over a clue strike on the line a placement had just
-  finished, because the solver records the singles elsewhere ahead of it
-  (`towers-implicit-strike-window`). So a step's premise must name every cell
-  whose candidates *or placed value* it rests on — a clue rung reading the
-  heights along its line hatches that line — or it will be offered before the
-  board supports it (§ "A premise names everything its deduction reads").
-  `runCandidatePlan` does all of this; the rule is
-  `availableFirings` in
-  [`candidate-hint.ts`](../src/engine/candidate-hint.ts).
-- **Surface a *whole-line forcing* as one ordered placement journey, before
-  populate; pencil in notes lazily.** A clue at an extreme value can force a
-  whole line (or a single cell) outright, needing *no* notes. Emitting that as
-  the recorded per-cell elimination cascade buries an obvious move; detect it
-  directly in the plan builder and emit the forced cells as one journey
-  (first leg unflagged, the rest `continuesPrevious`, continuation legs
-  narrated tersely). Because these placements need no notes, make **populate
-  lazy**: do the note-free forced placements first and only emit the fill-all
-  step when an *elimination* first needs something to cross out. Detect it
-  off `state.clues` in the plan, not in the solver: the solver reaches the
-  same fact as a cascade of eliminations, and a note-free journey is a way of
-  *showing* it that the solver has no reason to know about. Exemplar:
-  `extremeClueLines`, Towers' own rung in
-  [`towers/index.ts`](../src/games/towers/index.ts); the walk's default
-  setup is the lazy populate. Guard: `towers-hint.test.ts` "populates before
-  the first elimination".
-- **The split axis is dictated by what the narration names singular.** A clue
-  firing that rules out *different* heights in different cells must not be one
-  `pencilStrike` step: the narration names a single height ("a tower of height
-  5…") but the cell would show 4 *and* 5 crossed out — a visible
-  contradiction. Group a firing's marks **by struck height**, one step per
-  height, further heights flagged `continuesPrevious` (Towers). Conversely a
-  **region/cage** firing whose premise is the whole region (Keen's per-cage
-  candidate pruning) splits **by cell**, one leg each, the shaded area — the
-  whole cage — constant across the journey; a value *list* within a leg is
-  fine because the cage narration never names a single value ("No way to make
-  this cage multiply to 120 leaves room for 1, 2 and 3 in this cell"). A plan
-  states its axis as `strikeAxis` and the walk splits and flags the legs:
-  `(op) => op.n` in [`towers/index.ts`](../src/games/towers/index.ts), the
-  cell in [`keen/index.ts`](../src/games/keen/index.ts);
-  guards: `towers-hint.test.ts` "a strike step never mixes heights",
-  `keen-hint.test.ts` "a cage-strike step's marks all lie in one cell".
-
-### A non-Latin candidate game (Undead)
-
-Undead is the first candidate-elimination hint that does **not** ride
-`engine/latin.ts`: its candidate state is the per-cell monster bitmask, and
-its deductions are mirror-bouncing **sightline** clues + monster **totals**.
-Everything else transfers unchanged — the soundness boundary, `pencilStrike`,
-the naked-single-first walk with lazy populate, `refreshHintStep`. What's
-specific:
-
-- **Write a parallel recorder, don't bolt one onto the grader.**
-  `recordUndeadDeductions(common, placed)` in
-  [`undead/solver.ts`](../src/games/undead/solver.ts) is *separate code*
-  from the grading/solve path, reusing the shared building blocks. Because the
-  generate/solve/`findMistakes` paths never call it, the differential stays
-  byte-identical *by construction* — no recorder flag to thread. Prefer this
-  to an `if (recorder)`-gated grader when the deduction logic is cheap to
-  re-run.
-- **One pass = one firing = one `group`.** Each ladder pass returns after its
-  first firing and bumps the group; the recorder loops to a fixpoint. The
-  planner splits a **sightline** firing **by cell** into a `continuesPrevious`
-  journey (the whole bounce path stays shaded, each leg names one cell), while
-  a **total** firing is one step striking one monster across every cell.
-- **Two deduction kinds beyond the cube games.** `total` (a monster type fully
-  placed ⇒ struck everywhere) and its dual `onlyCells` (exactly as many cells
-  can still hold a type as remain ⇒ each is forced) come straight from the
-  global count equality. Surface them **honestly** as their own narrated
-  steps — folding a total into a sightline narration would state a premise
-  that doesn't discriminate the move. The planner reads `onlyCells` off the
-  player's notes, never off the recorder, whose candidates are ahead of the
-  board by every strike not yet shown (§ "A plan's copy is the board, no
-  further on and no further back").
-- **The plan is deductive-only — no solution-walk.** The strengthened ladder
-  solves every shipped tier guess-free, so `buildSteps` always has a real
-  deduction ([`solver-and-generator.md`](./solver-and-generator.md)
-  § "Guess-free generation" carries the Undead strengthening story).
-
-### Narrate by what survives (Subsets)
-
-Subsets is another parallel-recorder game, but its cube is **doubly hidden**:
-the player sees per-*letter* tri-state marks, never the `cube[cell][value]` of
-candidate *set-values* the solver reasons over. The trap is narrating a
-collapse by its **evidence** (the eliminated candidates): measured, that set is
-large (avg 4.4, max 14), so enumerating it is both unreadable and dishonestly
-precise.
-
-Most of what the cube eliminates the board already says, through the shallow
-reading the reference aid makes (`canHold`), so the recorder syncs its cube to
-that reading and those eliminations are never steps. The one rule that derives
-more, the advanced-arrow rule, gives the player a **rule-out** to make: a set
-struck out of a cell in the aid's tally. The hint places each rule-out a firing
-needs as a step before it (`add-subsets-notation`, and § "Give the facts a
-notation (Loopy)" for what transferred).
-
-The resolution three rounds of owner review converged on — **one slot per
-step, and make the counting *visible***:
-
-1. **One slot per step, structured attention → deduction → action.** Decide
-   one letter per step with its own string ("The highlighted set contains C —
-   so mark C present"), never a lumped "mark A and C present and clear B" nor
-   a shared "for the same reason". A cell becoming a set is a **sub-goal
-   journey** (`continuesPrevious` legs), but each leg's string is about *its
-   own* slot — the reconciliation of "one slot at a time" with "one deduction
-   = one journey".
-2. **The set→placement spotlight — build it as a real player aid, and reuse it
-   in hints.** A Subsets set must be placed exactly once, so "where can this
-   set still go?" is the counting made visible. Compute candidate cells
-   **shallowly from the board** (`candidateCells` — no solver, no solution
-   leak), light them `COL_HINT_SPOT`, and make the tally band clickable so
-   the player can ask it directly. Because the aid is shallow, a
-   **hidden-single** hint ("this set can go nowhere but here") uses the *same*
-   computation and its "only this cell" claim is verifiable against the same
-   spotlight.
-3. **Prefer the crisp counting form, and measure.** The deduction has a dual:
-   a *hidden single* ("this set fits only one cell" — spotlight-shaped) vs a
-   collapse ("this cell fits only one set" — tally-shaped). Try the hidden
-   single **before** the collapse. Measured: it moved ≈38% of counting
-   deductions (319 of ~830) into the verifiable spotlight form, with
-   completeness unchanged. *Measure the shift* — the shallow test is weaker
-   than the cube's, so the win isn't obvious a priori.
-
-**The general lesson:** when a candidate-elimination collapse reads as "trust
-me, only this fits", look for the **dual counting deduction** ("this value has
-one place left"), which is usually cleaner to show, and give the game a
-**reference-aid affordance** that renders where a value can go — then both the
-player and the hint reason from the same visible picture. Where the collapse
-still fires, narrate it per-slot against the surviving set(s) highlighted in
-the tally.
-
-Refinements worth copying to any counting game with a reference aid: (a)
-**make the aid two-way** — value→locations *and* location→values, over one
-shared "can this go here?" predicate (`whyCantPlace`), as one
-mutually-exclusive UI focus, suppressed while a hint is on screen; (b) **when
-a collapse still fires, name one *excluded* competitor and why**
-(`pickExclusion`) — prefer the concrete "already placed elsewhere" reason and
-highlight the blocker so "the highlighted cell" has a referent; (c)
-**distinguish "is placed here" from "could go here"** with a separate color;
-(d) a **location→values inspect affordance must be a dedicated, touch-sized,
-inspect-only control**, not a side effect of an editing tap. And a cross-game
-narration note that bit here: **a continuation leg must name its referent in
-full** ("the highlighted set"), never a bare "them"/"it", and signal the
-sub-goal it continues ("Still filling this cell — …").
-
-Three Subsets-specific mechanics: the recorder's `cube` **and** its
-rule-out reasons (`why`) must both persist across fixpoint iterations
-(refilling the reasons loses why an earlier rule-out holds); a firing
-decides a cell's letters as one journey with per-slot legs; and each tally
-entry's look (its box, its strike, the keyboard cursor) plus the `HINT_SPOT`
-bit live in the game's overlay arrays and must each join their cache-miss test. Exemplars:
-[`subsets/solver.ts`](../src/games/subsets/solver.ts),
-[`subsets/index.ts`](../src/games/subsets/index.ts),
-[`subsets/render.ts`](../src/games/subsets/render.ts).
-
-### Thread the recorder (Solo)
-
-Solo is the first Latin-family hint whose solver is **bespoke** (a faithful
-port of `solo.c`, not `engine/latin.ts`). Two ways exist to record off a
-bespoke solver: thread a gated recorder through the live solver (this
-section), or write a *parallel* recorder (Undead). **Pick by whether the
-deduction logic is cheap to re-run.** Undead's was, so a separate recorder
-kept the differential byte-identical by construction. Solo's is **not** —
-~1200 lines with mutating killer cages, four region types and a recursion
-tier — so re-deriving it would risk diverging the byte-match. Thread instead,
-and lean on the gate:
-
-- **Gate every behavioral change on `this.recorder`, enabled only *after* the
-  givens are placed.** A nullable `recorder` field (promoted from a
-  `pendingRecorder` stash right after the given-clue placement loop) means the
-  generator/solve path runs the original code untouched (the existing
-  differential is the regression guard, and it MUST stay green). Seeding the
-  cube from the givens is *not* a teachable deduction, so recording starts
-  after it — the soundness boundary enforced by *when* the recorder turns on.
-- **The "return per firing" gate is usually already there.** Solo's main loop
-  already restarts after the first firing of most techniques — bump `group`
-  once at the top of the loop and every record of one firing shares it for
-  free. The only loops that *accumulate* across several regions before
-  continuing are the killer min/max and sums passes; make those `break` after
-  the first cage **when `this.recorder` is set** (gated, so the generate path
-  still sweeps every cage byte-identically).
-- **Record placements only; recompute dup strikes in the plan.** A `place`
-  records just the placement op — the region copies it rules out are
-  recomputed from the working notes via the shared `regionDuplicateMarks` +
-  the bulk `emitObviousCleanStep` opening over Solo's `regionsOf`.
-- **More region types ⇒ a richer reason union + a game-local placement
-  re-deriver.** Solo reasons over row, column, sub-block (rectangular or
-  jigsaw) and two diagonals, so it carries its own `regionsOf`, which the
-  walk's classifier (`classifyPlacementInRegions`) runs over. The
-  re-derive rule still holds — only the **killer** placements keep their
-  recorded reason, because the working board can't re-derive a cage-sum
-  forcing.
-- **The split axis follows the premise, and Solo has both shapes.** An
-  `intersect` firing crosses a *single digit* from several cells (premise
-  names the digit) → one multi-cell step; a cage or `set` firing strikes a
-  *cell's* candidates (premise names the region) → split by cell into a
-  `continuesPrevious` journey.
-- **Killer is heavy on the hint path.** A from-empty killer resume is ~0.8 s /
-  ~120 moves — fine for a single hint, slow-but-correct in a killer-walking
-  test. Do **not** give such a test its own timeout ([`testing.md`](./testing.md)
-  § "Seed-deterministic, never clock-gated"). `hint-resume.test.ts` walks one
-  Solo preset per declared tier in the gate slice and every one in the slow
-  tier, so Killer and Jigsaw are reached there; *variant* breadth that is not a
-  tier — X, Jigsaw, Killer against each other — still lives in
-  `solo-hint.test.ts`.
-
-### Placement-first letter games (Group)
-
-Group is the Latin family's odd corner, and each way it differs changes one
-decision:
-
-- **Placement-first, not elimination-first.** Group's signature deductions —
-  associativity (`(a·b)·c = a·(b·c)` forces the fourth product) and the
-  identity fill — are **placements**, not candidate culls. So the plan leads
-  with placements and only populates when an *elimination* is the next thing
-  to teach: its own rung offers `RungContext.placements()` — every recorded
-  placement whose premise the board supports, and before the notes are set up
-  every single the board shows — ahead of the strikes, and in the note-free
-  opening. **Don't gate populate on a strike being available** — a strike
-  counts only where its candidate is *present in the notes*, so with no notes
-  yet there is none and you deadlock. That chicken-and-egg was the one real bug
-  in the port. The placements need no notes to be vouched for: an
-  associativity placement reads three placed products, the identity fill its
-  witness cell (`offer-recorded-placements-by-premise`). Placing first means
-  classifying on a board with few notes or none, so the obvious-cull clean runs
-  ahead of the placement arm, and a note-less cell is read by what its lines
-  leave it (§ "Re-derive a placement's why").
-- **The identity fill is one firing → one multi-leg journey.** Learning the
-  identity forces its whole row and column at once; emit those as
-  `continuesPrevious` legs with the revealing cell shaded on every leg, not
-  `2w−1` disjoint hints.
-- **Letter values ⇒ the vocabulary parameter.** Group's values are the
-  elements a–z; it rides `narrateLatinReason`'s `LatinVocab` (see the shared
-  machinery above). Watch the a/an trap: an element `a` after "There's
-  already…" reads as the article.
-- **The game's move shape needn't match `CandidateMove`.** Group's interactive
-  `set`/`pencil` carry a *cell list* (for its diagonal multifill) and it had
-  no fill-all move. The hint **reuses the pure readers/mechanics** but **emits
-  placements as the native `set {cells:[{x,y}], n}`** (so a player following a
-  hint produces the exact move the plan expects), adding only
-  `pencilAll`/`pencilStrike` for the hint-execution path. Contorting the
-  game's moves to fit the shared contract is the wrong trade — reuse the
-  mechanics, keep the meaning; the `CandidateMoveAdapter` makes both hooks
-  one-line delegations over a 12-line adapter.
-- **Re-adding a dropped play move for the hint is fine (with owner
-  sign-off).** The populate step wants a fill-all a player can follow by hand,
-  so upstream's `'M'` (mark-all) was re-added as a real `pencilAll` move. Its
-  elements being letters, only **uppercase `'M'` (77)** is intercepted
-  (lowercase `'m'` is element 13 for `w ≥ 13`).
-
-### Non-uniform value sets (Salad)
-
-Salad is the first candidate-elimination game where several solver values
-collapse onto **one** player note, and the first where a deduction's
-conclusion is often not a placement at all. Five points a game shaped like it
-will hit:
-
-1. **Find where the game's values *are* uniform, and put the collapse only at
-   the edge.** In Salad's cube the empty square is one symbol like any other
-   — the cube's repeated symbol, `nums + 1` (`solver.ts`, `holeSymbol`) — so
-   **in the cube every value is a value**, and only the *player-facing
-   projection* differs: that symbol is an X note while undecided and a
-   cross/ball marker once settled, never an entry in the grid. That
-   observation is what kept the abstraction small: a proposed
-   `valuesFor(bit)` collapse arm found **no consumer**, because a shared helper
-   only ever asks "which note bit does this *placed* value occupy?" — and the
-   hole symbol is never placed on the player's grid. **Look for the uniform
-   view before generalizing the helper.**
-2. **A conclusion that writes no value into the grid is a fourth move
-   shape.** Salad settles a square's *emptiness* with a marker
-   (`set { value: "cross" | "circle" }`) — neither a placement nor a strike.
-   The `CandidateMoveAdapter` reads it as `null` (⇒ off-plan) and the game's
-   `hintKeepTrack` / `refreshHintStep` judge it in ~12 lines *before*
-   delegating — in particular `refreshHintStep` must resolve a marker step by
-   reading the **marker array**, because the shared placement arm waits for
-   `grid[cell] !== 0`, which for a cross never comes.
-3. **Re-derive a marker's *why* from the visible board, cheapest first, and
-   leave no weak arm to fall back on.** The plan re-derives marker conclusions
-   in order: a line's *counts* first (visible and countable), then the
-   square's own notes (only the X left is a cross; the X gone is a ball). A
-   marker the solver forces that neither explains rests on a
-   strike the plan skipped, so `assertEveryMarkerExplained` throws rather
-   than narrate it, in the same way the placement classifier does
-   (§ "Re-derive a placement's why"). The weak `forcedCross` / `forcedCircle`
-   arms that once stood there had fired zero times in every sweep, which is
-   what made retiring them safe. **Do the sweep; "there is a fallback" and
-   "the fallback is what the player sees" are very different situations.**
-
-   **Drop a recorded strike only for the rung that says the same thing, and
-   name that rung.** The plan once dropped *every* strike of the hole symbol,
-   on the reasoning that a marker step teaches each one. A count teaches only
-   the strike a full line makes (`repeatFull`). A set or a chain that rules a
-   square out as empty is no count's to say, and with it dropped the X stayed
-   in the notes, the row's last home for a symbol never showed as one, and the
-   classifier threw: on 71 of 1,195 boards dealt at Normal across both modes,
-   and on none at Easy, which is every preset and so every board the
-   cross-game walks deal. Those strikes are strikes of the X note now, and the
-   note's absence is what the ball rests on (`xNoteGone`). **A sweep's zero
-   covers the tiers it dealt**: the earlier sweeps were of presets, and a tier
-   only the Custom dialog offers was in none of them.
-4. **Only record the deduction whose *premise* you could not otherwise
-   recover.** Salad threads the recorder through the border scan **alone** —
-   the one deduction whose premise (which clue, how far its symbol reaches,
-   what shortened it) the working board can't reconstruct. Sync/count need no
-   recorder at all. That kept the gated surface to one function, and the
-   28-fixture byte-match differential green unedited.
-5. **The "group per firing, not per pass" trap bites hard here, and a
-   *highlight* test is what caught it.** Salad's whole rung is one
-   `usersolvers[0]` call doing sync + all `4·order` clue scans + the counts,
-   so one group covered every clue on the board — and a hint step gathered
-   strikes from unrelated clues under one clue's narration. The fix is the
-   gated early return at *both* levels, per clue and per sub-deduction. It was
-   invisible in the narration and in "does the plan solve the board"; what
-   surfaced it was a tier-1 assertion that **a step's targets lie inside the
-   area it shades**. Assert the premise/conclusion geometry, not just the
-   words.
-
-Also of note: Salad's "placed grid" for the soundness boundary is `grid`
-**plus** `holes` — a cross or ball is a real entry that Check & Save flags
-when wrong, so the working cube may assume it. Pencil notes still never seed
-it. Exemplars: [`salad/hint.ts`](../src/games/salad/hint.ts),
-[`salad/solver.ts`](../src/games/salad/solver.ts) (the gated border
-recorder).
-
-### Deduce from the notes when the mistake check vouches for them (Seismic)
-
-Seismic's hint deduces from the **player's own notes**, not from a cube seeded by
-the placed numbers, and it is sound because of one fact about its
-`findMistakes`: it flags any empty cell whose notes have crossed out that cell's
-answer, and the hint refuses on a flagged board. So wherever the hint runs, every
-cell's notes still contain its answer, and a naked single, a hidden single or a
-starved area read off such notes is as sound as one read off the solver's own
-candidates. It is also the deduction the player can check on their screen, with no
-recorded script to diff against. **Check the premise before copying the shape**:
-a game whose mistake check ignores notes has no such guarantee, and the boundary
-above holds there in full.
-
-What else carried over, and what did not:
-
-- **No recorder: the game's own rungs read the walk's candidates.** Seismic is on
-  the shared walk with `record` returning nothing, so the walk's recorded strikes
-  and placements never fire, and its rungs (a whole-area cell, a hidden single in
-  an area, a starved area) read `RungContext.shown`: the notes, or under the
-  implicit reading what a note-less cell's reach leaves it. That is the same
-  soundness argument, since a note-less cell's implied candidates always hold its
-  answer. ABCD's plan records nothing either, and its rungs read the same
-  candidates. The other walk games record: their solver is seeded from the
-  placed entries and never from the notes (`engine-candidate-hints`, "A
-  recording solve reads the placed entries and never the notes").
-- **Held to the solver's rungs by a test.** Seismic's three solver rungs are
-  sweeps that apply everything they find at once; each finder in `hint.ts` is the
-  one-firing form of one of them. `seismic-hint.test.ts` holds the trial finder to
-  what `placeNumber` + `regionsViable` reject at every point it is the next step,
-  and every note the plan writes into a note-less cell to what `placeNumber`
-  leaves there, which is what makes the re-derivation a projection rather than a
-  second solver.
-- **A harder tier's rung waits for `nothingEarlier`.** The frontier takes any
-  rung's firing that continues the last step, so a starved area (Normal's
-  technique) would be taken over a hidden single elsewhere, and an Easy board,
-  which the singles alone certify, would be taught it. A recorded strike cannot
-  do this, because the solver records the harder deduction only once the easier
-  ones are spent; an own rung has to say so, and the starve rung fires only when
-  every earlier rung came up empty.
-- **An own rung's single defers to the naked one.** A cell whose notes are down
-  to its area's last home for a number is both singles, and the frontier prefers
-  the hidden one, whose hatched area continues more. The shared classifier calls
-  it naked (the cell alone says so), so Seismic's hidden-single finder skips it.
-- **A trial rung can be a Check in disguise.** `attempt` places a candidate and
-  asks whether every area can still house its numbers. Placing `n` at `c` takes
-  `n` from other cells and other numbers from `c` alone, so the area left short is
-  either `c`'s own (a hidden single, found first) or another area that lost its
-  last `n` — every one of whose remaining homes clashes with `c`. That is one
-  placement and one look, a Check, and every cell clashing with all those homes is
-  ruled out by the same fact, so they are **one firing**. Read what the rung's
-  rejection can possibly *be* before classifying it by the fact that it trials.
-- **A placed value's reach can depend on the value**, which `regionsOf` cannot
-  express: a Seismic 3 rules out 3s three cells along its row and column. The walk
-  takes it as `reach` (§ "The shared candidate-hint machinery"), and Seismic's is
-  its own `clashes`, the rule `placeNumber` applies, asked of every cell once.
-  What kept Seismic off the walk until then was this and nothing else.
-- **Not every note-taking board is square.** The shared helpers used to scan
-  `w * w` cells, which on a Seismic board five wide and eight high stops three
-  rows short. They read `grid.length` now.
-- **A shared structure read through a mutating accessor breaks hint purity.**
-  Every Seismic state shares one region `Dsf`, and `canonify` compresses paths as
-  it reads, so the first hint rewrote the partition and `hint-resume.test.ts`'s
-  "hint() leaves the state unchanged" failed. The partition is compressed once
-  when it is built, after which every read is a read.
-
-### Candidates that are not values (Rome)
-
-Rome's candidates are the four **arrow directions**, its notes are direction
-*bits*, and its uniqueness regions come from a `Dsf` rather than from `y*w+x`
-arithmetic. It was taken on to find where the candidate machinery is secretly
-numeric. Most of it is not, and the parts that were are now fixed rather than
-worked around:
-
-- **A dsf region is a `CellRegion`, and `holdsEvery` is the whole translation.**
-  `romeRegions` is a member list per canonical root plus `holdsEvery:
-  cells.length === 4`, which is *`find4Position`'s own guard*, written years
-  earlier and arrived at independently: a four-square area must hold all four
-  arrows, so an arrow with one home left is forced there, and a smaller area
-  only forbids repeats. When a game's own solver already tests the predicate an
-  engine flag names, the adapter is a translation, not a design.
-- **A region's name belongs to the game, and that question is settled.**
-  `derive-solos-region-names` left `CellRegion.name` open for want of a second
-  game supplying its own `regionsOf`; Rome is it, and Rome does not want one.
-  Its sentences say "this area" because it has exactly one kind of region and
-  there is nothing to tell apart, so an engine `name` would carry the constant
-  `"area"` on every region Rome ever builds. Solo needs a name because it has
-  five kinds and its sentences must say *which*. **A region's name is a fact
-  about a game's narration, not about the region** — so it lives with whichever
-  game has several to distinguish, as `SoloCellRegion.name` does.
-- **`NoteEncoding` fits a game whose values *are* bits** — `bit` becomes a
-  lookup and `values` is 4. What the shared machinery still needs from such a
-  game is the **dense ordinal** its `for (v = 1; v <= values; v++)` scans and its
-  `Mark.n` carries, and saying how the two relate is what `NoteEncoding` is for.
-  Do **not** try to use the bits as values: `nakedSingles` would test
-  `pencil & 12` on its way past.
-- **What was missing is the *full* note set, and it is per cell.**
-  `lazyPopulate` filled `(1 << (w+1)) - 2` regardless of `enc`, because every
-  game on the plan until Rome had one board-wide answer. Rome's is bounded by
-  the grid edge (a top-row square can never point up) and Seismic's by its
-  region's size, so `NoteEncoding.all(i)` now says it. **The game's own
-  `pencilAll` move is the authority** — a populate that fills more than it
-  teaches strikes on notes the player's Mark-all never made, and the hint's
-  first job is to be reproducible by hand. The converse needs the input: a
-  note *outside* `all(i)` has no strike anywhere, so the game refuses it at
-  entry ([mechanics](./mechanics.md) § "Pencil marks: the full note-taking
-  UX").
-- **Three helpers spelled the populate move for themselves.** `lazyPopulate`,
-  `adaptiveMarkAll` and the plan's default setup all wrote
-  `{ type: "pencilAll" }` literally, while the obvious clean had always *read*
-  the same move through the dialect. `CandidateMoveAdapter.populate` is the
-  writing half, and a `kind`-keyed game is what needed it.
-- **Graph reachability is a premise, not a rung shape.** Rome's `loops`,
-  `expand` and `find-4-position` are "dsf reasoning" but all three write to
-  `pencil`, so all three are ordinary candidate eliminations whose *reason*
-  happens to be a fact about a walk. `plan.rungs` is unused in Rome. Before
-  reaching for the own-rungs slot, ask what the rung **writes**: the slot is for
-  a move the canonical shapes have no room for (Salad's markers), not for a
-  deduction that is merely unusual.
-- **A walk a sentence claims is a walk the code takes.** "Following the arrows
-  from the square above leads back here" is a claim, so `arrowPath` performs it
-  and throws if it does not arrive, with the termination argument beside it (an
-  arrow component is a forest, so a tree of `n` squares spends `n − 1` arrows
-  and at most one of them can be arrow-less). The same argument is what lets a
-  packed bit-field grid be projected onto the shared "`0` means undecided"
-  convention: an undecided Rome square is *exactly* `0`, because every `FE_*`
-  bit needs an arrow to be wrong about and `FD_TOGOAL` cannot reach a blank.
-- **A direction wants a word and a relation; it does not want a glyph.**
-  Measured against the arms rather than guessed: all of them want "up", four
-  additionally want the relation ("the square above", "point straight back"),
-  and none is improved by "↑", which is smaller in prose than on the board.
-  `LatinVocab` is **not** widened — and could not have helped anyway, because
-  Rome's generic-looking arms name an *area* where `narrateLatinReason` names a
-  row and a column, which is the same reason Solo and Towers write their own.
-
-**The precondition was a decision about what a mark means.** Rome's marks went
-unchecked by `findMistakes` on the strength of upstream's "can be used for any
-purpose", which leaves a note-taking game with no note semantics — and a
-candidate hint cannot read a note it cannot trust (`nakedSingles` would place
-from it). Adding Mark-all and a hint settles the question the same way the rest
-of the collection does: **a mark claims the arrow is still possible**, so a
-square whose marks rule out its answer is a `kind: "note"` mistake. If you are
-porting a note-taking game whose notes have no stated meaning, decide this
-*before* the hint, not during it.
-
-### A solver that sweeps (ABCD)
-
-ABCD's techniques each sweep every line and letter per call and apply all they
-find, and it was picked as the test of whether a hint plan must impose an order
-its solver does not have. **It does not have to: the plan already owns the
-order.** A rung returns every firing it can take now, and the `HintFrontier`
-chooses among them (§ "Continue from the last step"), so the order a solver
-sweeps in never reaches the player. What a sweeping technique owes the hint is
-the § "A rung is not a premise, so return per premise" shape one level up: a finder that yields **one
-line's firing at a time** (`satisfiedLines`, `packedLines` in
-[`abcd/hint.ts`](../src/games/abcd/hint.ts)). Nothing about ordering had to be
-added to the walk. The "sweeps before restarting" classification did not survive
-reading the loop either (`solver-and-generator.md` § "Where the fixpoint does not
-fit").
-
-What carried over, and what was new:
-
-- **Seismic's shape**: the plan records nothing and its rungs read the notes the
-  walk shows, which is sound because `findMistakes` refuses on a note that has
-  crossed out its cell's answer (§ "Deduce from the notes when the mistake check
-  vouches for them (Seismic)"). A game adopting this shape adds that half of
-  `findMistakes` in the same change.
-- **Share the arithmetic, not only the rule.** The runs technique's counting
-  lives in one function, `runsForce` in `abcd/solver.ts`, which both the
-  solver's rung and the hint's finder call, so the sentence a hint speaks about a
-  line is the one the solver acted on. Its claim ("the outlined cells fit only 3
-  apart, so each stretch is full") is checked against a brute-force enumeration
-  of every arrangement, not against itself (`abcd-hint.test.ts`).
-- **A counting argument fits in one step when the picture carries the parts.**
-  The line is hatched through its clue slots, the count the sentence reads is
-  drawn in the action color, and the cells that can still take the letter are
-  outlined, so the sentence says only the count and the conclusion: *"This row
-  needs 3 Ds, and the outlined cells fit only 3 apart, so each stretch is full:
-  this cell must be D."* The first cut named "with none touching" and ran to 130
-  characters; "apart" says the same over the outlines.
-- **A journey can outline the cells its later legs place.** A runs firing places
-  in several cells of the line it outlines, so under the implicit reading its
-  first step rests on cells the firing has not yet filled. The walk used to write
-  no notes for any cell the firing placed in; it now skips only the step that
-  places and the ones after, and `candidate-reading.test.ts` is what found it.
-- **Two engine exceptions went with the representation.** ABCD kept notes as a
-  candidate cube (`n` flags per cell) and an empty cell as `-1` with letter A
-  as `0`. The cube was a named exception in `mark-all.test.ts` and in
-  `adaptiveMarkAll`'s doc; the `-1` made `candidate-reading.test.ts` read every
-  placed A as blank. Both were memory layout, not facts about the puzzle, so
-  ABCD now stores a bitmask per cell and letter `i` as `i + 1`, and its moves keep
-  naming letters by index, which is what a save replays. **Before teaching the
-  walk a new layout, ask whether the game's layout is a decision about the
-  puzzle.**
-
-### A populate step never resets notes
-
-**A populate step must never *reset* the player's notes** (owner-reported
-2026-07-29). Resetting every fillable cell to the full candidate set throws
-away deductions already made on any board with some penciled cells and some
-blank ones, and the "populate is needed" latch (*some* cell lacks notes) makes
-one blank cell enough to trigger it.
-
-The rule, collection-wide (owner-directed 2026-07-30): an **additive**
-`pencilAll` (fill only cells with no mark yet), used by the opener *and* by
-the Mark-all press via the shared `adaptiveMarkAll`, so a press only ever adds
-or removes; the resetting move stays in the union for replay of saved move
-logs and is documented as unreachable from input. **The working copy must
-mirror the additive fill exactly**, or the plan goes on to teach strikes on
-candidates the player had already crossed out. Every game offering the
-press fills additively, as does the shared `lazyPopulate`; guarded by
-`engine/mark-all.test.ts`, which a game joins by declaring `markAll`. A fill
-that resets writes back exactly what was there unless some cell is genuinely
-**narrowed**, so a test for this class must narrow a cell by hand.
-
-**Known follow-up, not a defect:** Salad has no auto-pencil preference, so —
-like Group — its plan teaches every placement's row/column note cull as an
-explicit `continuesPrevious` strike. If Salad ever gains the pref, those legs
-fold away for free (the walk already honors `autoClean`).
-
-### One deduction body, several clues (Mathrax)
-
-Mathrax's solver is **one** user-solver wired at three difficulty rungs. For
-each cell it intersects the candidate set with the options of the (up to four)
-clues at that cell's corners, and commits what survives. That is the shape to
-watch for, and it needs three things the other Latin games did not.
-
-- **A conjunction is not a firing — split it before you narrate it.** The
-  eliminations a cell commits are forced by *several* clues at once, and a step
-  saying "the 7+ clue means…" while crossing out a value the `E` clue ruled out
-  is a lie the player can check. On the recording path the body therefore
-  attributes each elimination to the first incident clue that excludes it and
-  **returns after one clue**, so one `solver.group` is one clue acting on one
-  cell (Unequal's `solverLinks` does the same for one `>` sign). The cell's own
-  commit gate is untouched — the Normal-and-below rungs still wait on the
-  *intersection* across every clue — so this is a finer attribution of exactly
-  the same eliminations, not a different solver. `mathrax-hint.test.ts` asserts
-  both halves: one cell and one clue per group, and the same verdict and the
-  same grid at every cap with and without a recorder. The second is what keeps
-  the solver-gated generator out of it.
-- **Re-derive a sentence's claim about a *neighbor* from the working board too,
-  not just a placement's.** § "Re-derive a placement's why" says never to trust
-  a recorded `single`; the same reasoning reaches any sentence that describes
-  another cell. The solver reaches a clue elimination either from a partner
-  collapsed to one candidate or from its whole remaining set, but *what the
-  player can see* is whether a digit is written across the clue. So the reason
-  records only the clue and its intersection, and `narrate` reads the partner
-  off the working grid: "this cell and the 3 across it add to 7" exactly when a
-  3 is there, and "nothing open across the 7+ clue adds with 1 or 2 to make 7"
-  otherwise. Two recorded arms collapsed into one, and the guard is a walk
-  asserting the board really shows what the sentence names.
-- **Evidence for an off-board clue is the cells that identify it.** Mathrax's
-  clue sits on a grid *intersection*, which the board has no mark for and
-  `CandidateHighlights` has no field for. The shading is therefore the cells
-  the clue constrains — the diagonal pair for an arithmetic clue, the block of
-  four for `E`/`O` — and either set meets at exactly one intersection, so the
-  mark points at one clue without a new highlight role. The diagonal pair
-  deliberately comes out as **two rings** rather than one contour, because the
-  two cells share no edge and joining them would outline board the clue does
-  not constrain (`outlineSides`). Compare § "Off-board evidence", which is for
-  a clue that sits outside the grid rather than between its cells.
-
-### A graph, not a grid (Map)
-
-Map was the collection's first hinted **graph**: its elements are regions with
-no `(x, y)`, its only relation is adjacency, and its candidates are four colors.
-It was taken on to find out which of the shared hint machinery is secretly a
-square-grid convention. The answers, per piece:
-
-- **Map reads its candidates implicitly, and so can the grid games now.** A Map
-  region's colors are its dots when it has any, all four when it has none, less
-  every color a neighbor shows, and the hint places dots only where a deduction
-  removes a color no neighbor shows (`map/hint.ts`). That is the candidate
-  walk's **implicit reading** (§ "Two readings of an unmarked cell"), which every
-  grid candidate game now offers as a player preference; it was a choice about
-  how to read candidates, never a fact about Map. What still keeps Map off
-  `runCandidatePlan` is geometry: the walk indexes cells by `(x, y)` on a grid
-  of stride `w`, and Map's elements are regions of a graph. Map offers both
-  readings with the preference, on its own plan: under `populate` it opens
-  with its Mark-all press (`markAll`: dot all four colors into each dot-less
-  region, then remove the colors a neighbor shows) as one fill-and-clean
-  journey, after which the same rungs read the dots. Its default is implicit,
-  measured like the table in § "Two readings of an unmarked cell". Once it was
-  asked, nothing about a graph stood in the way of either: a move that is a
-  list of ops needed no new shape to be a fill.
-- **The frontier transfers once it stops naming cells.** Its rule (continue from
-  what the last steps wrote) never needed a geometry, only a way to tell two
-  mentions of one element apart, so `HintFrontier` now takes a key: `gridKey(w,
-  h)` for a grid, the region index for Map. Map drives it from its own plan, and
-  since `plan-continuity.ts` reads a square grid, `hint-frontier.test.ts`
-  derives the games that take the frontier directly and holds them to a ledger
-  naming each one's own continuity guard.
-- **The shared marks do not reach a region, and nothing was bent to make them.**
-  `hint-mark.ts` bands a cell's border box. Map already drew its selection as a
-  band inside the region's whole boundary, clipped piece by piece through
-  divided cells, so the hint's ring is that band in `COL_HINT` (§ "Echo the
-  move's shape in the hint color"), and the selection band nests just inside it
-  rather than vanishing under it.
-- **Marks on a shared border run together, so only one role may sit on it.**
-  The first cut outlined evidence with the same kind of band as the target,
-  one hue and a weight apart, and on the owner's first playtest a small target
-  surrounded by outlined neighbors could not be picked out: every border it
-  shared with them carried a blue band on one side and a teal one on the other,
-  which read as a single thick line. Two fixes, both general. **Mark only what
-  the board does not already show**: a single's premise is its neighbors'
-  colors, which their fills state, so it outlines nothing, and that is nine
-  steps in ten. **Where evidence must be marked, make it differ in form**: a
-  pair's or chain's regions take a thin dashed line set in from their border by
-  a band's width, so the target's solid band is the only mark on a boundary.
-  Hue and weight alone did not separate them; a solid band on the edge against a
-  dashed line inside does, and survives a player who cannot compare hues.
-- **The forcing-chain sentence stays Map's own.** `forcingChainPremise` is
-  written for a line ("this cell's row already has it"). Map's two
-  ends *touch* the target and its conclusion is one of three moves, so two of the
-  three clauses differ, which is the "decline when an arm's shape differs" rule
-  above. The ordinal is not declined: see § "Number the chain".
-- **A region is named by its mark, never by its number.** Region numbers sit
-  behind a preference that is off by default. "This region" is the ringed one,
-  "the outlined pair" the two outlined, and a chain's regions are "region 1" to
-  "region N" by the numbers the hint draws. A **color** is named by its word,
-  from `FOUR_NAMES` beside `FOUR_FILLS`, because in Map a color is the value,
-  not a hint role.
-
-- **Numbering a chain is not enough; its premises go on the board too.** The
-  first cut numbered the chain's regions and said "each numbered region has two
-  colors left and forces the next". The owner found it too much to follow
-  (playtest, 2026-09-25): every link asked the player to work out, from the
-  neighbors, which two colors that region had, and to hold them all through the
-  case split. That is § "The forcing boundary"'s compressed chain with the
-  order fixed and the premises still in the head. The fix is the notation the
-  game already has. The chain's journey first dots each numbered region with
-  its two colors, one short leg each ("Region 2 touches red and purple, so it
-  can only be teal or yellow: dot those."), then speaks the chain as something
-  to read off the dots: each region loses the color the one before it takes.
-  `map-hint.test.ts` asserts every numbered region shows exactly its two dots
-  when the chain step is spoken. **For any chain Tactic, ask whether each link's
-  premise is on the board when the chain is spoken**; if it is a sum the player
-  must compute, the journey owes a leg that writes it down. It is not only a
-  chain's problem: the pair rule below it had the same gap (one of the outlined
-  pair showing its two colors as dots, the other leaving them to be worked out)
-  and the owner found it in the next playtest. Both rungs now open their
-  journeys through one helper, `premiseDots`, and the test holds every premise
-  region of either to showing its two dots when its step is spoken. **Check
-  every rung for the gap once one has it**, rather than waiting for a player to
-  find each.
-- **And the chain step names what the dots show, never a rule to run.** With
-  the dots down, "each region loses the color the one before it takes" was
-  still too much (the owner's next playtest): it is a procedure, and following
-  it is the work the hint was meant to do. Two phrasings replaced it, chosen
-  by the chain's shape. When every numbered region has a dot of the struck
-  color (30 of 228 chain steps measured), the player sees a **pattern**, and the
-  sentence names it: red falls on every other region. Otherwise it **walks the
-  chain by color**: "If region 1 isn't red, it's teal, so region 2 is violet and
-  region 3 is red." Past five regions the listed walk stops being a glance (and
-  ran to 270 characters at eight), so it names the rule and where the chain
-  ends. **A walk a sentence names is checked the way Rome's arrow walk is**: the
-  plan throws if it does not end on the struck color, and the test holds every
-  named color to a dot of its region *and* to differing from the one before. The
-  first half alone passed an off-by-one walk, because each chain region's two
-  dots are the previous region's color and its own, so either one is "a dot of
-  it".
-
-**A color's name is checked against how it looks, in both schemes.** Map's
-fourth color was "purple" after its palette entry, and the owner found it read
-as neither: pale lavender in light mode, dusky violet in dark. The name is
-`FOUR_NAMES`'s, beside the fills, and is now "violet". A wash's hue name drifts
-with its lightness, so check a name against the swatch in both schemes before a
-sentence says it.
-
-Two rules of Map's own that another tiered game may want:
-
-- **Offer only the lowest rung that fires.** Map's tiers are exactly its rungs,
-  so the plan asks the frontier to choose within the easiest non-empty rung
-  rather than across all of them. An Easy board's plan then never shows a pair.
-  `map-hint.test.ts` holds it the strong way, against the board rather than the
-  labels: a pair is spoken only where no region anywhere is down to one color.
-  Its first cut asserted the labels per tier and passed with the rungs
-  reordered.
-- **A narrowing ends in whichever move the board calls for.** When a region
-  loses colors, one color left is a placement, a dotted region loses the struck
-  dots, and an undotted one gets dots for the colors left. The sentence names the
-  move ("…so it can't be either and must be yellow", "…: dot red and teal"),
-  and the next step may read those dots as its premise, which is exactly how a
-  player carries a fact forward.
+  hand**, and a pin is keyed on a rung, never on a phrase: a phrase matches
+  more than one deduction and goes blind when the sentence is reworded.
+- **Validate grouping on a generated board.** A solver that tries techniques
+  easiest first often fires another rule than a crafted board intended. Craft
+  for the per-cell techniques, and for grouping scan a few seeds for a
+  `continuesPrevious` leg and check it shares its predecessor's firing
+  (`unruly-hint.test.ts`).
 
 ## Probe before trusting a diagnosis
 
-Twice in one hint session a plausible mechanism diagnosis ("the second leg
-reads as off-plan", "the plan is being dropped") was wrong and dissolved by a
-~20-line probe test. When a hint misbehaves, write the smallest probe that
-observes the actual `activeHintStep()`/state rather than reasoning forward
-from the suspected cause.
+When a hint misbehaves, write the smallest probe test that observes the
+actual `activeHintStep()` and state before reasoning forward from a suspected
+cause. A plausible diagnosis of the mechanism ("the plan is being dropped") is
+often wrong, and a probe of about twenty lines settles it.

@@ -1,5 +1,5 @@
 /**
- * Inertia differential — the frozen C-reference check (docs/testing.md § "Fixture lifecycle", gated).
+ * Inertia differential — the frozen C-reference check (docs/testing.md § "The frozen differentials", gated).
  *
  * The fixtures in `__fixtures__/inertia-c-reference.json` were recorded from
  * upstream's C. The two halves of the game get two different bars:

@@ -537,7 +537,7 @@ function hint(
 
 /**
  * Classify a player move against the displayed step. `state` is the **pre-move**
- * board (docs/hints.md § "A journey completes leg by leg").
+ * board (docs/hints-marks.md § "A journey completes leg by leg").
  *
  * The whole-run step is the one shape the shared helper cannot read, and it
  * needs care: a player who types the number in digit by digit — which

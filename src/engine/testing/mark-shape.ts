@@ -1,6 +1,6 @@
 /**
  * Shape assertions for a hint's board marks — the guards behind
- * `docs/hints.md` § "Shade vs ring".
+ * `docs/hints-marks.md` § "Shade vs ring".
  *
  * **Shape, deliberately, and not color.** "Some rect carries the hint color"
  * is satisfied by exactly the thing these guards exist to forbid: a solid fill

@@ -12,7 +12,7 @@
  * only where they have drawn it or can read it off the board at a glance. So
  * the recording pass reads the links afresh before every firing, and a
  * pairing the solver needs beyond that is drawn by a step of its own
- * (docs/hints.md § "Give the facts a notation (Loopy)", and
+ * (docs/hints-marks.md § "Give the facts a notation", and
  * `add-tents-hint`'s design).
  */
 

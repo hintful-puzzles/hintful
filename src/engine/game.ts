@@ -299,6 +299,12 @@ export interface GameDrawing<Blitter = unknown> {
   blitterLoad(blitter: Blitter, origin: Point): void;
 }
 
+/**
+ * Every hook is declared with method syntax, never as a function-typed
+ * property. The registry holds a game with its type parameters erased, and a
+ * property's parameters are checked contravariantly, which the erased type
+ * fails; a method's are checked bivariantly.
+ */
 export interface Game<
   Params,
   State,

@@ -62,7 +62,7 @@ export const SOLVE_AMBIGUOUS = 2;
  * number, the intersection `(cx, cy)` plus the acted-on cell give the cell
  * diagonally across it, and whether that cell shows a digit is a fact about the
  * *working board* the hint re-derives at narration time rather than a fact the
- * solver could record (docs/hints.md § "Re-derive a placement's why"
+ * solver could record (docs/hints-candidates.md § "Re-derive a placement's why"
  * applies the same rule to a single).
  */
 export type MathraxReason =

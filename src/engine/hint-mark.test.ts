@@ -13,7 +13,7 @@
  * *cell-sized and thick in both directions*.
  *
  * The measurement behind the rule is in `hint-mark.ts`; the per-game calls are
- * in `docs/hints.md` § "Shade vs ring".
+ * in `docs/hints-marks.md` § "Shade vs ring".
  */
 import { describe, expect, it } from "vitest";
 import { HintMarks, type MarkCell } from "./hint-mark.ts";

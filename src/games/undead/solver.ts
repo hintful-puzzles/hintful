@@ -450,8 +450,8 @@ export function solveDeductive(
 // a board the ladder cannot crack without guessing yields a short plan, and
 // guess-free generation keeps such boards out of every tier below Unreasonable.
 
-/** Why a candidate was eliminated, or a cell forced (docs/hints.md
- * § "Candidate-elimination games"):
+/** Why a candidate was eliminated, or a cell forced (docs/hints-candidates.md
+ * § "What every game does"):
  * - `sightline` — one path's two count clues admit no legal beam arrangement
  *   leaving this cell the eliminated monster (the core mirror-sighting deduction);
  * - `total` — a monster type's full count is already placed, so it is struck from

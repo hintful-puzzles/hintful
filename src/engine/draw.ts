@@ -236,8 +236,8 @@ export function strokeScaledPolygon(
  * piece centered at `a` to just short of the center `b`, with a filled head, in
  * `color`. Sized by the tile `ts`, so it reads alike at every board size. A
  * move spanning several tiles is drawn by each of them under its own clip, so
- * every tile paints its own piece (docs/rendering.md § "A tile paints
- * only its own box, and tiles that share pixels repaint together").
+ * every tile paints its own piece (docs/rendering.md § "A warm frame
+ * must match a fresh one").
  */
 export function drawMoveArrow(
   dr: GameDrawing,

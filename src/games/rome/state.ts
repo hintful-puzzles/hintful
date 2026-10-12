@@ -266,7 +266,7 @@ export type RomeState = RomeBoard;
  * `pencilAll`, `pencilStrike` and `pencilAdd` are this fork's, for the Mark-all
  * press and the hint: a `pencil` toggle is one square and is not idempotent, so
  * neither a bulk fill nor a firing that rules out or writes several marks at
- * once can be built from it (docs/hints.md § "Persist, populate, and the
+ * once can be built from it (docs/hints-candidates.md § "Persist, populate, and the
  * moves").
  */
 export type RomeMove =

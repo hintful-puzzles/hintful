@@ -392,7 +392,7 @@ export type UndeadMove =
   | { type: "pencil"; cell: number; monster: number }
   /** Clear a list of candidate bits across cells at once, the hint's note move.
    * Idempotent, unlike `pencil`, so it is resume-safe in a kept plan
-   * (docs/hints.md § "Persist, populate, and the moves"). */
+   * (docs/hints-candidates.md § "Persist, populate, and the moves"). */
   | { type: "pencilStrike"; marks: { cell: number; monster: number }[] }
   /** Fill every undecided cell with all candidate notes (`M`). */
   | { type: "markAll" }

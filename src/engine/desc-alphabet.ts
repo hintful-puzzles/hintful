@@ -29,9 +29,10 @@
  * its grammar has run letters, which is why the pair sits beside the other one
  * rather than in `run-length.ts`: the contrast is the documentation.
  *
- * The four names are reserved: `decimal.test.ts` fails a game that declares
- * any of them, so a game's own codec (Unequal's `displayChar`/`charValue`,
- * Magnets' sentinel-aware `clueChar`) is named for what it does instead.
+ * The four names are reserved: `emittable-keys.test.ts` fails a game that
+ * declares any of them, so a game's own codec (Unequal's
+ * `displayChar`/`charValue`, Magnets' sentinel-aware `clueChar`) is named for
+ * what it does instead.
  */
 
 import { digitValue } from "./decimal.ts";

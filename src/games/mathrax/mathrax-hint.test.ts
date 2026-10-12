@@ -179,7 +179,7 @@ describe("mathrax recording solver", () => {
     // deduction intersects up to four clues per cell at once, and a hint step
     // that narrated one of them while striking marks another ruled out would be
     // a lie. `group` is what a hint step is built from, so the property has to
-    // hold per group (docs/hints.md § "A rung is not a premise").
+    // hold per group (docs/hints.md § "A rung is not a premise, so return per premise").
     let groups = 0;
     for (const p of [NORMAL, TRICKY]) {
       for (let s = 0; s < 6; s++) {

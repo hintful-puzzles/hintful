@@ -4,7 +4,7 @@
  * The board carries the references, so the sentences use three words for them
  * and nothing else, each a reference to the mark it names
  * (`engine/hint-words.ts`): the **striped row** is the scored guess a step
- * reads (the hint's line hatch, docs/hints.md § "Hatch the line the
+ * reads (the hint's line hatch, docs/hints-marks.md § "Hatch the line the
  * sentence names"), an **outlined answer slot** is one whose marks it leans on,
  * and the **framed colors** are the blocks in the answer row the step acts on,
  * which is the ring's role. They are called framed rather than ringed because

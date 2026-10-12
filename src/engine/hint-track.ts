@@ -7,7 +7,7 @@
  * gesture that spells the same result. So the move is judged by its effect,
  * not its ops: every element it changed must be one the step asks for, set the
  * way the step asks, and the step then shrinks to what is left
- * (docs/hints.md § "Group one firing into one step").
+ * (docs/hints-marks.md § "Group one firing into one step").
  *
  * The games supply only what is theirs: which elements the move changed and
  * to what (a board diff, or a move's own list of cells), how a target is keyed

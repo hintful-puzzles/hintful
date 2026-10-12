@@ -726,7 +726,7 @@ export type CrossingMove =
   /** Clear a list of notes atomically — the hint's rule-out move. A `pencil`
    * toggle is *one* candidate and is not idempotent (re-applying it would put
    * the note back), so one deduction ruling out several candidates needs a move
-   * that only ever removes (docs/hints.md § "Persist, populate, and the moves"). Players produce it only by
+   * that only ever removes (docs/hints-candidates.md § "Persist, populate, and the moves"). Players produce it only by
    * following a hint; typing produces `pencil` toggles. */
   | { kind: "pencilStrike"; marks: readonly { x: number; y: number; n: number }[] }
   /** Add a list of notes atomically — the hint's move for writing the digits a

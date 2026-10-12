@@ -222,6 +222,15 @@ node scripts/checks/change-citations.mjs
 # documentation-only commit.
 node scripts/checks/brief-size.mjs
 
+# --- 1b-iii-b. A guide's opening names its sections, and a citation lands. ~0s. ---
+#
+# A session reads a guide's opening and then the one section it needs, so a
+# section the opening does not name is one nobody is sent to. And a section is
+# cited by its heading's text, which nothing else resolves when the heading is
+# reworded. Here for the reason the guards above are: a guide edit is a
+# documentation-only commit.
+node scripts/checks/guide-sections.mjs
+
 # --- 1b-iv. No test's every assertion sits behind a condition. ~1s. ---
 #
 # A test that cannot fail passes forever while asserting nothing, and the suite

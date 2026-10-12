@@ -1,7 +1,7 @@
 /**
  * The shared plan-accumulation loop every recording deduction pass runs.
  *
- * A hint that is "a second projection of the solver" (docs/hints.md §
+ * A hint that is "a second projection of the solver" (docs/hints-marks.md §
  * "Re-derive the named technique") always ends up writing the same five lines:
  * from a working copy of the player's board, while the board is still
  * unfinished, ask for the *single* next forced firing, stop when there is none,

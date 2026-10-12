@@ -30,7 +30,7 @@
  * actually renders. **Rome and Map carried notes with no Marks key for their
  * whole lives**, with this file green over both (owner-reported, 2026-09-20,
  * on Rome, right after its hint shipped). docs/method.md § "A scan that keys on a
- * name finds only the games that were named that way".
+ * name".
  */
 
 import { beforeAll, describe, expect, it } from "vitest";

@@ -62,7 +62,7 @@ export type WholeRegion<R extends CellRegion> = R & { holdsEvery: true };
 /** Whether the forced placement of digit `n` at `cell` is a *naked* single (the
  * cell's notes are exactly `{n}`) or a *hidden* single in one of `regions` (no
  * other empty cell of that region still notes `n`). The generic core of
- * docs/hints.md § "Re-derive a placement's why" for any
+ * docs/hints-candidates.md § "Re-derive a placement's why" for any
  * candidate-elimination game: the Latin row/column games pass `[row, column]`;
  * Solo passes `[row, column, block, diag0, diag1]` and its Killer cage, which is
  * skipped because it need not hold every digit. Regions are tested in order,

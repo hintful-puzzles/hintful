@@ -230,7 +230,7 @@ export function solveGame(
 // --- hint plan --------------------------------------------------------------
 //
 // A *parallel recorder* over the same contradiction deduction
-// (docs/hints.md § "A non-Latin candidate game (Undead)"): separate code
+// (docs/hints-candidates.md § "A candidate game off the shared walk"): separate code
 // reusing this module's primitives, so the generator's `solveGame` path above
 // stays byte-identical by construction — no recorder flag threads through it.
 // Where the generator only needs *that* a coloring is refuted, the hint also

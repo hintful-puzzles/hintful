@@ -182,7 +182,7 @@ const COMPARISON =
  * key read as wired at every level and was dead at the last one.
  *
  * A `case` cannot call a predicate, so the correct form spells both codes
- * (`case BACKSPACE: case DELETE:` — exemplar `subsets/index.ts`). This finds
+ * (`case BACKSPACE: case DELETE:`). This finds
  * the ones that spell only one, by scanning the body of each `switch` whose
  * subject is a button for numeric `case` labels.
  */

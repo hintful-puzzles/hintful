@@ -80,7 +80,7 @@ export const COL_DONE = 6;
 // Fork addition: the yellow body of the pencil-mode indicator glyph (a classic
 // #2 school pencil). Appended past the upstream enum.
 export const COL_PENCIL_BODY = 7;
-// Fork additions: the explained-hint legend (see docs/hints.md § "The element-type color legend").
+// Fork additions: the explained-hint legend (see docs/hints-marks.md § "The element-type color legend").
 export const COL_HINT = 8; // the acted-on cell's ring (drawn once per frame in redraw)
 /** The driving clue's line of sight, outlined (same pass), **and** a forcing
  * chain's ordinal — one index, because the number indexes the evidence. */

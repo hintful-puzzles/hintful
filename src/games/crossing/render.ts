@@ -293,7 +293,7 @@ export interface CrossingHint {
    * number out of every run but one. Every other technique's reason is a
    * whole run, and leaves this empty. */
   area: Point[];
-  /** The run(s) the sentence names, hatched (docs/hints.md § "Hatch the
+  /** The run(s) the sentence names, hatched (docs/hints-marks.md § "Hatch the
    * line the sentence names"). */
   hatch: Point[];
   /** The square(s) the move writes into. */

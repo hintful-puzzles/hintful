@@ -167,7 +167,7 @@ for (const { id, game, contract, tiers } of tiered) {
       // `search` is read off the game's own top name, so this cannot tell a game
       // that has earned `Unreasonable` from one that merely claims it. That is
       // the Search classification, and `docs/solver-and-generator.md`
-      // § "Check / Tactic / Search" records that nothing can check it
+      // § "Check, Tactic, Search" records that nothing can check it
       // mechanically — "this rung is a Search" is a judgment about the code. So
       // the guard covers the shape of the list and not the promise its last word
       // makes; do not read a pass here as the promise being kept.

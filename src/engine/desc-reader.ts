@@ -87,7 +87,8 @@ export class DescReader {
   }
 
   /**
-   * Read a decimal number, which must lie in `[lo, hi]`.
+   * Read a decimal number, which must lie in `[lo, hi]`; one outside fails as
+   * {@link DESC_OUT_OF_RANGE}.
    *
    * The bound is required because a desc is a player's text: an unbounded
    * number reaches a typed array and wraps, and two games read a different
@@ -110,7 +111,8 @@ export class DescReader {
     return s;
   }
 
-  /** The desc must have been read to its end. */
+  /** The desc must have been read to its end; text left over fails as
+   * {@link DESC_TOO_LONG}. */
   end(): void {
     if (!this.done) this.fail(DESC_TOO_LONG);
   }

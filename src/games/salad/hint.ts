@@ -1,6 +1,6 @@
 /**
  * Salad's explained hint — a **candidate-elimination** plan
- * (docs/hints.md § "Candidate-elimination games").
+ * (docs/hints-candidates.md § "What every game does").
  *
  * Salad is the first candidate game whose value set is not uniform: the cube
  * reasons about the empty square as a symbol with a multiplicity (`solver.ts`,
@@ -141,7 +141,7 @@ export const SALAD_RUNGS = [
 ] as const;
 export type SaladRung = (typeof SALAD_RUNGS)[number];
 
-/** What a Salad hint step draws (docs/hints.md § "The element-type color
+/** What a Salad hint step draws (docs/hints-marks.md § "The element-type color
  * legend"): `area` is the deduction's evidence, `targets` the squares it acts
  * on, `marks` the notes it strikes, `clues` the border clues it reasons from,
  * and `ghost` the entry it is asking for, previewed in `COL_HINT` in the shape
@@ -690,7 +690,7 @@ function buildSteps(
   // Notes are needed once the note-free rungs are spent, so fill them in — as
   // the player's own Mark-all move, once — then bulk-clear the candidates a
   // placed symbol already rules out, in one step, so the walk teaches real
-  // deductions rather than N trivial row/column culls (docs/hints.md §
+  // deductions rather than N trivial row/column culls (docs/hints-candidates.md §
   // "Persist, populate, and the moves"). A setup of Salad's own, so the plan
   // always walks the populate reading: a square's "might be empty" note is a
   // candidate no row or column rules out, so the implicit reading would have

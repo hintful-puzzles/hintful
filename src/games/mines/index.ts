@@ -632,7 +632,10 @@ export const minesGame: Game<
   redraw,
 
   // The hint's own plan, played to its end. A board not laid out yet will be
-  // laid out to finish from whichever square is opened first.
+  // laid out to finish from whichever square is opened first. Mines deduces
+  // and has no tiers because its answer is hidden: a board the deductions
+  // stop on has several layouts that fit what is showing, so no search could
+  // prove it has one. The walk is the engine's, which passes a won board.
   finishesByDeduction(s: MinesState): boolean {
     return !s.mines || hintFinishes(minesGame, s);
   },

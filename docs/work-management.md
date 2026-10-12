@@ -167,6 +167,38 @@ consistency across the games and ease of keeping them.
 - **A session working in one game says what the engine would have had to
   offer for the work not to be needed**, and files that.
 
+## A cross-game refactor moves no bytes a player owns
+
+A change that re-expresses many games at once (a helper adopted across the
+collection, a vocabulary unified, a loop moved onto the shared runner) is
+held to four invariants, and a diff that moves one of them is wrong until the
+owner says otherwise:
+
+- **Game IDs and descs are player promises.** Hand-written codecs stay,
+  `random.ts` stays bit-identical, and no byte of any `params:desc` or
+  `params#seed` id changes. The frozen differentials are the net for this
+  ([`testing.md`](./testing.md) § "The frozen differentials").
+- **Narration is frozen through a re-expression.** Every hint suite's wording
+  assertions pass unedited, or the re-expression is wrong.
+- **Render output is stable where behavior is.** Tier-2.5 snapshots move only
+  where a change is intended, and every changed snapshot line is explained by
+  the declared change.
+- **A framework-scale pivot is never approval-free.** It needs real
+  downstream pressure, measured, and the owner's acceptance.
+
+Two rules make a sweep across the collection affordable:
+
+- **Two lanes.** A re-expression whose whole guard set passes unchanged
+  (differentials, narration and snapshots all byte-clean) is provably
+  invisible and takes spot acceptance for its batch. One that re-baselines a
+  single snapshot takes the full acceptance gate.
+- **A capability diff per game.** The risk of a sweep is silent capability
+  loss: a game stops having hints, mistakes, preferences, a keypad, a
+  reference aid or tiers. The set is derived from what the game is, its
+  optional `Game` members and the `Ui` its `newUi` returns, and never
+  declared; [`contract-surface.test.ts`](../src/contract-surface.test.ts)
+  reads the optional surface off the interface.
+
 ## Before archiving
 
 - Re-read every spec delta against the code. A delta written mid-change

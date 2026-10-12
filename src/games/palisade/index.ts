@@ -214,7 +214,7 @@ function hint(
       ...borderHintJourney(
         fe.rule,
         group,
-        // The one region a sentence is about is striped (docs/hints.md
+        // The one region a sentence is about is striped (docs/hints-marks.md
         // § "Hatch the line the sentence names"); a clue, a corner or the two
         // regions a join would merge are outlined. The words say which.
         (leg, left) =>

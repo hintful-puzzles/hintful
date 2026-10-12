@@ -55,6 +55,6 @@ tracked here. If the owner asks for reserve hints written ahead of a framework
 change, each such change says it was written for that reason, not as a check.
 
 The search games in it (Cube, Same Game, Slide) start with a short
-design pass on what the hint can *prove* (docs/hints.md §
-"Non-deductive (heuristic) hints": Inertia's unreachable gem is the shape),
+design pass on what the hint can *prove* (docs/hints-search.md §
+"What every game does": Inertia's unreachable gem is the shape),
 because a search may certify a position but never teach one.

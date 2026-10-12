@@ -4,7 +4,7 @@
  *
  * **Deduced from the player's notes, not from the givens alone.** A candidate game
  * normally re-solves from the placed numbers and only compares the result with the
- * notes, because a note can be wrong (docs/hints.md § "The recorder and the
+ * notes, because a note can be wrong (docs/hints-candidates.md § "The recorder and the
  * soundness boundary"). Seismic's `findMistakes` refuses the hint on any note that
  * has crossed out its cell's answer, so wherever this runs every cell's notes still
  * hold that answer, and a single or a starved area read off them is as sound as one

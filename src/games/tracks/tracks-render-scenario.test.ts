@@ -39,7 +39,7 @@ const pinned = describeHintKindPins({
   kinds: {
     namesLine: (step) => stepMarks(step).of("stripes", LINE).length === 1,
     // Half of several Tracks deductions lives in the margin rather than on the
-    // grid, so the clue has to be part of the picture (docs/hints.md
+    // grid, so the clue has to be part of the picture (docs/hints-marks.md
     // § "Off-board evidence").
     countsWithClue: (step) => cluesOf(step).length > 0,
   },
@@ -109,7 +109,7 @@ describe("Tracks render scenarios", () => {
     // blocked — so a step on sides can paint its whole action without a rect.
     // Hence "some op carries the action color", not "some rect does": a
     // rect-only check would read as healthy on exactly that frame
-    // (docs/hints.md § "Echo the move's shape in the hint color").
+    // (docs/hints-marks.md § "Echo the move's shape in the hint color").
     expect(
       recording.ops.some((o) => "color" in o && o.color === COL_HINT),
       "the hint painted nothing in the action color",
@@ -121,7 +121,7 @@ describe("Tracks render scenarios", () => {
 
     // …and no hint mark is a fill. The cross-game guard says this too, but a
     // frame-level assertion here is what survives a careless `vitest -u`
-    // (docs/hints.md § "Shade vs ring").
+    // (docs/hints-marks.md § "Shade vs ring").
     const cell = 33; // PREFERRED_TILE_SIZE
     for (const o of recording.ops) {
       if (o.op !== "rect") continue;

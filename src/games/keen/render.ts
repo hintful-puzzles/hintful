@@ -119,7 +119,7 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 /** Highlight payload a Keen hint step carries (built in `index.ts`). The
- * element-type legend (docs/hints.md § "The element-type color legend"): the driving cage's cells shaded
+ * element-type legend (docs/hints-marks.md § "The element-type color legend"): the driving cage's cells shaded
  * `COL_HINT_CELL`, the acted-on cell(s) **ringed** `COL_HINT`, the ruled-out
  * candidate(s) shown struck. */
 export interface KeenHint {
@@ -349,7 +349,7 @@ function drawTile(
           const cy = pt + (((fontsize * (2 * dy + 1)) / 2) | 0);
           dr.drawText({ x: cx, y: cy }, glyphFont(fontsize), COL_PENCIL, String(i));
           // A hint-ruled-out candidate keeps its normal pencil color with a
-          // same-color strikethrough — the "ruled out" cue (docs/hints.md § "The element-type color legend").
+          // same-color strikethrough — the "ruled out" cue (docs/hints-marks.md § "The element-type color legend").
           if (struck & (1 << i)) {
             const r = Math.max(2, (fontsize / 3) | 0);
             dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);

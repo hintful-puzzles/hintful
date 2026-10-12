@@ -11,7 +11,7 @@
  *
  * **What it cannot see is a rung that fires and is not needed.** Other rungs can
  * reach the same conclusion, and then silencing one leaves the board unchanged;
- * docs/solver-and-generator.md § "Proving an adoption" says how to find
+ * docs/solver-and-generator.md § "Proving an adoption: the fixtures are not enough" says how to find
  * out. Each adoption was once proved against the hand-written loop it replaced,
  * which git keeps; the census is what stays live.
  *

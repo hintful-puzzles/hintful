@@ -31,7 +31,7 @@
  * a placed arrow the solution disagrees with **and** a square whose marks have
  * crossed out its answer. So wherever this runs, every placed arrow is right
  * and every square's marks still hold its answer — which is what makes reading
- * a naked single off the player's own notes sound (docs/hints.md
+ * a naked single off the player's own notes sound (docs/hints-candidates.md
  * § "Deduce from the notes when the mistake check vouches for them").
  */
 
@@ -111,7 +111,7 @@ export type RomeHint = CandidateHighlights;
  * recorded — but the plan may reach a square before it has taken every strike
  * the solver took, and then the same placement is forced by its area instead.
  * Re-deriving which it is from the working board is the shared classifier's
- * whole job (docs/hints.md § "Re-derive a placement's why").
+ * whole job (docs/hints-candidates.md § "Re-derive a placement's why").
  */
 type RomeHintReason =
   | RomeReason
@@ -170,7 +170,7 @@ function premise(
       return { premise: say.dup(area, placed, reason.n), where: say.dupWhere };
     }
     // The walk back to this square *is* the premise, and its order is the fact
-    // the marks would otherwise lose (docs/hints.md § "Number the chain").
+    // the marks would otherwise lose (docs/hints-marks.md § "Number a chain's cells in order").
     case "loop": {
       const path = reason.path.map((i, k) => ({
         x: i % w,

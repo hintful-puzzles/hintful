@@ -26,7 +26,7 @@
  * answer, and the hint refuses on either. So wherever this runs, every color on
  * the board is right and every dotted region's dots hold its answer: the
  * colors computed here contain the truth, and each rung is sound on any such
- * superset (docs/hints.md § "Deduce from the notes when the mistake check
+ * superset (docs/hints-candidates.md § "Deduce from the notes when the mistake check
  * vouches for them").
  *
  * ## The ladder is the tiers

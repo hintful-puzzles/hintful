@@ -399,6 +399,12 @@ function discountClue(
 
 // --- the solve loop -----------------------------------------------------------------
 
+/**
+ * Not a `runDeductionFixpoint` ladder: the two techniques are interleaved per
+ * cell inside one grid scan, and a pass sweeps the whole grid before it
+ * restarts. Wrapped as one technique the scan would be a ladder of one rung,
+ * with no tier, no cap and nothing to restart.
+ */
 function solveSub(
   state: LightupState,
   solveFlags: number,

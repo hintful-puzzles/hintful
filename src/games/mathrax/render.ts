@@ -103,7 +103,7 @@ export const COL_PENCIL_BODY = 8;
 export const COL_FLASH = 9;
 export const COL_FLASH_LEAD = 14;
 export const COL_CURSOR = 10;
-/** The hint's two marks (docs/hints.md § "The element-type color
+/** The hint's two marks (docs/hints-marks.md § "The element-type color
  * legend"): a ring around the cell the deduction acts on, and an outline around
  * the cells it reasons from. Both replace a cell's own border rather than its
  * background, so neither has to be read through the digits it surrounds. */
@@ -138,7 +138,7 @@ export function colors(background: Color): Color[] {
 }
 
 /** Highlight payload a Mathrax hint step carries (built in `index.ts`). The
- * element-type legend (docs/hints.md § "The element-type color legend"):
+ * element-type legend (docs/hints-marks.md § "The element-type color legend"):
  * the clue's cells shaded `COL_HINT_CELL`, the acted-on cell ringed `COL_HINT`,
  * the ruled-out candidates struck through among the pencil marks. */
 export interface MathraxHint {
@@ -403,7 +403,7 @@ function drawPencilMarks(
     const cy = ty + ((((4 * hy + 3) * ts) / (4 * hh + 2)) | 0);
     // A struck candidate keeps its pencil color, so it still reads as the
     // player's note; the same-color strikethrough is what says the hint rules it
-    // out (docs/hints.md § "The element-type color legend").
+    // out (docs/hints-marks.md § "The element-type color legend").
     dr.drawText({ x: cx, y: cy }, glyphFont(fontsz), COL_PENCIL, String(n));
     if (struck & (1 << n)) {
       const r = Math.max(2, (fontsz / 3) | 0);

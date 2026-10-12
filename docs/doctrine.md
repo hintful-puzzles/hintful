@@ -60,7 +60,7 @@ form and its change says why.
   defect for a long time: Boats declared its solver non-monotone for as long
   as one wrong read went unlooked for
   ([`solver-and-generator.md`](./solver-and-generator.md) §
-  "Cap-monotonicity, and the game that broke it").
+  "A capped solver must be monotone in its cap").
 
 **The framework owns a shared idiom.** When several games write the same
 loop, the same sequence of helper calls or the same bookkeeping, even

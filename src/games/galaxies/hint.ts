@@ -38,7 +38,7 @@ import {
 } from "./state.ts";
 
 /**
- * What a step paints, in two roles (docs/hints.md § "The element-type
+ * What a step paints, in two roles (docs/hints-marks.md § "The element-type
  * color legend"):
  *
  *  - the **action** — the cells the association claims, the walls it draws,
@@ -72,7 +72,7 @@ export interface GalaxiesHint {
   /** Particular cells the deduction reasons from, outlined. */
   area: Point[];
   /** The galaxy or piece of one the sentence is about ("the striped galaxy"),
-   * hatched (docs/hints.md § "Hatch the line the sentence names"). */
+   * hatched (docs/hints-marks.md § "Hatch the line the sentence names"). */
   hatch: Point[];
   /** Walls the deduction reasons over. */
   walls: Point[];
@@ -161,8 +161,8 @@ function soleOwnerFiring(s: GalaxiesState): GalaxiesFiring | null {
 
 /**
  * The ladder, in the order the *player* is best served by, which is not the
- * order the solver happens to use (`docs/hints.md` § "Notation and goal
- * are different move sets (Galaxies)"). Every rule is run to a fixpoint
+ * order the solver happens to use (`docs/hints-marks.md` § "Notation and goal
+ * are different move sets"). Every rule is run to a fixpoint
  * regardless, so this decides which explanation is offered first and nothing
  * about what can be deduced.
  */

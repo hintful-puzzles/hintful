@@ -22,6 +22,11 @@
  *    are how the *table* builds one color out of others; a game reaching for
  *    them is a game deciding a color.
  *
+ * A fourth rule holds the table to the games: a token in `palette-games.ts`
+ * is imported only by the game its prefix names, and by some game. An array
+ * of three numbers that is not a color is declared in `NOT_COLORS` with its
+ * reason.
+ *
  * What it deliberately does not attempt: a game could still compute a color from
  * variables the rules do not name. That is a review matter, and the rules above
  * cover every spelling the collection actually used across 57 games. A game is
