@@ -12,6 +12,7 @@ The Purpose is unchanged.
 | Hint: Three readings come from one scored row alone | last sentence ("Each SHALL stripe the row and frame the colors it rules out.") cut; the rest and the scenario untouched | `hintMarks.roles.stripes` and `.ring`, as above |
 | Hint: A score the settled slots account for rules out the rest | last sentence ("Each SHALL stripe the row and outline the settled slots.") cut; the rest and the scenario untouched | `hintMarks.roles.stripes` and `.outline`, as above |
 | Look: Guess's win flash sweeps the whole board | title kept. "SHALL sweep … diagonally" reworded to "SHALL light", over the game's own positions; sentence 2 (a lit position's box is filled with a flash color, an empty hole with it and a peg keeping its color) cut. Kept: which positions, the answer's row, why empty holes light, the feedback pegs. Scenario untouched | the diagonal: `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep` of the position, asked at `src/games/guess/render.ts:607`). The fill: `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground is filled with the role's color and keeps what it holds) |
+| Controls: Guess's pointer acts on the release | third pass: title kept. From sentence 2, "An unconsumed press is answered with a release at the press point, so a press that slides off before it lifts SHALL still act where it started" cut; its last clause stands as a sentence of its own ("A press the touch hold promoted to the right button SHALL therefore still act as itself."). Sentence 1 and the scenario untouched | `engine-input`, "A press the game declines is answered with its release where it was pressed". `src/puzzle/components/view-interactive.ts:450`-`452` |
 
 ## Kept, and why
 
@@ -27,9 +28,8 @@ The Purpose is unchanged.
   `ignoresSecondaryButton`". A decision with its reason; the flag's absence
   says nothing of why.
 - **Controls: Guess's pointer acts on the release**, "An unconsumed press is
-  answered with a release at the press point". It is how the app answers a
-  declined press, said here as the reason the next clause holds; no engine
-  requirement was found that states it.
+  answered with a release at the press point". Kept until the third pass,
+  which cut it (see its row).
 - **Controls: Notes mode is the engine's pencil mode.** The first sentence
   names the engine field; everything after it is a departure (the frame moves
   rows, the Marks key shows no hidden cursor).
@@ -59,6 +59,8 @@ The Purpose is unchanged.
   beside "A game declines a button it did not act on". The app does it, in
   `src/puzzle/components/view-interactive.ts:452` (a press the game did not
   consume is sent its release at the press's own location).
+  **Answered:** `engine-input`, "A press the game declines is answered with
+  its release where it was pressed".
 
 ## Found
 
@@ -130,3 +132,29 @@ Checked and found sound:
   key in arms of its own, so it needs no pointer.
 - Every title under "Kept, and why" exists, and the line citations were
   opened.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Guess: 1. Engine requests
+of its own: 1, answered. Sentences cut: 1 (two clauses of one sentence).
+Clauses kept: 3.
+
+- **"Controls: Guess's pointer acts on the release"**: that an unconsumed
+  press is answered with a release at the press point, and that a press
+  which slides off still acts where it started, went to `engine-input`, "A
+  press the game declines is answered with its release where it was pressed"
+  (its last sentence is the second clause). Kept: that the action is keyed
+  on the button class and its press declined, the hold toggle's press, and
+  that a press promoted to the right button acts as itself, which follows
+  from the button class and is the game's.
+- **Kept: "and nothing once the game is over"** in "Rules: Guess checks the
+  answer row's rule-outs against the code". `ts-engine`, "A mistake check
+  compares with the one answer, hidden or not" speaks of a board with no one
+  answer established; Guess always has its code.
+- **Kept: "on a board so large that its search finds no fitting answer within
+  its budget"** in "Hint: Following the hint wins, and the hint refuses only
+  a dead end". `engine-hints`, "A search that can prove a position lost says
+  which of its two ends it met" is of a search for a finishing line that can
+  prove a loss; this search is for a fitting answer and proves none.
+- No "no departure" sentence, none of the form "What a pasted game ID opens
+  as" and none citing `engine-difficulty`.

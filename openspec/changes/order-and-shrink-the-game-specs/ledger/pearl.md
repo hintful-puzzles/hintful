@@ -5,7 +5,11 @@ The Purpose was corrected: it named "its description and params encodings" and
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Pearl's findMistakes compares the board with its one solution | retitled "Rules: A Pearl mistake is a line the solution lacks or a cross on an edge it uses". "Because boards are uniquely solvable, the game SHALL implement `findMistakes`:" and "each a definite mistake" cut from the first sentence; the rest and the three scenarios kept | `ts-engine`, "The engine supports an ephemeral, opt-in mistake-checking hook" (the hook returns what contradicts the unique solution) and "A mistake check compares with the one answer, hidden or not" |
+| Rules: Pearl's findMistakes compares the board with its one solution | retitled "Rules: A Pearl mistake is a line the solution lacks or a cross on an edge it uses". "Because boards are uniquely solvable, the game SHALL implement `findMistakes`:" and "each a definite mistake" cut from the first sentence; the rest and the three scenarios kept. Third pass: the last clause (", and a board the solver cannot finish SHALL yield no mistakes") cut | `ts-engine`, "The engine supports an ephemeral, opt-in mistake-checking hook" (the hook returns what contradicts the unique solution) and "A mistake check compares with the one answer, hidden or not" (no mark flagged where the solver did not establish exactly one answer) |
+| Description: Pearl descriptions use the upstream run-length encoding | third pass: gains the second sentence of "Description: A Pearl run letter counts its unclued squares from a" (the unclued squares after the last pearl are written too) and its scenario "A dealt 6×6 board", unchanged; its own sentences and scenarios kept | |
+| Description: A Pearl run letter counts its unclued squares from a | third pass: removed. Its first sentence (`a` through `z` for a run of 1 to 26 unclued squares, a longer run as several letters) cut; its second sentence and its scenario move, unchanged, to "Description: Pearl descriptions use the upstream run-length encoding" | `engine-params`, "The engine provides the run-letter description grammar" (`encodeRunLength` and `scanRunLength`, called at `src/games/pearl/state.ts:155` and `:169`); the trailing run is Pearl's `keepTrailingBlanks`, `:158` |
+| Solver: Pearl's solver is a certified deduction ladder | third pass: last sentence ("A firing census SHALL assert that every rung fires, at both caps") cut; both scenarios kept | `testing`, "A firing census certifies a solver's ladder" (the ladder walked at each of its caps, failing unless the rungs that never fired are exactly those the game records as unreached); the boards and the caps are `src/games/pearl/pearl-ladder.test.ts:49` |
+| Hint: Pearl's hint follows a step made one edge at a time | third pass: removed, with its scenario "One of a step's two edges is made" | `engine-hints`, "A step asking for several elements is followed one element at a time" (a move judged by what it changed, the step held and shrunk to the targets left; scenario "Two of three squares in one drag"); `trackTargets`, called at `src/games/pearl/hint.ts:456` |
 | Params: Pearl's parameters | replaced by the pointer requirement "Params: A Pearl params string with no difficulty letter is Easy" (rule 2). The field list and the encoding cut, with scenario "Params round-trip". The sentence about upstream's `n` cut, with scenario "Upstream's unchecked-board letter" | `paramConfig`, `src/games/pearl/state.ts:115`, and the `paramsCodec` field list, `:127` (`dims`, `choice "d"` over `DIFF_CHARS`, `unusedLetter("n")`); `engine-params`, "A letter upstream writes is read by name" (read, changes nothing, never written; its first scenario is Pearl's `6x6den`); `src/engine/params-read-whole.test.ts` holds `12x8dtn` and `6x6den`, and `src/games/pearl/pearl.test.ts` decodes `12x8dtn` |
 | Params: Pearl's parameter bounds | retitled "Params: Pearl refuses a Normal board whose width and height sum under 11". First sentence (each of `w` and `h` at least 5) and scenario "A board narrower than the minimum" cut | `bounds: { min: 5 }` on the dimensions, `src/games/pearl/state.ts:118`; `engine-params`, "Params validity is the engine's check" |
 | Params: Pearl's difficulty letters are e and t | removed. Its second sentence's first half (no letter decodes as Easy, whatever the default preset's difficulty) and scenario "A string with no letter" joined "Params: A Pearl params string with no difficulty letter is Easy". Cut: the letters, that the short form leaves them out, the refusal of another letter, and scenario "The Normal preset" | `choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true })`, `src/games/pearl/state.ts:130`, with `DIFF_CHARS = "et"`, `:82`; `engine-params`, "A params string is read whole or refused" (a letter the tag does not list is refused); `src/engine/__snapshots__/params-stability.test.ts.snap` holds `6x6dt` with its short form `6x6` |
@@ -15,8 +19,8 @@ The Purpose was corrected: it named "its description and params encodings" and
 ## Kept, and why
 
 - **Rules: A Pearl mistake is a line the solution lacks or a cross on an edge
-  it uses.** The two kinds, that a missing segment is none, and the empty
-  answer on a board the solver cannot finish are in no shared requirement.
+  it uses.** The two kinds, and that a missing segment is none, are in no
+  shared requirement.
 - **Params, "a string with no difficulty letter SHALL give Easy, whatever the
   default preset's difficulty".** A departure from the declared codec's
   ordinary reading (`engine-params`, "A params string is read whole or
@@ -26,9 +30,8 @@ The Purpose was corrected: it named "its description and params encodings" and
 - **Params: Pearl refuses a Normal board whose width and height sum under
   11.** `validateParams`; the overflow ceiling is the game's (`engine-params`,
   "A grid too large for a game is refused in one sentence").
-- **Description, both requirements.** `parseDesc` is the game's; the run
-  letters are the engine's helper, which no engine requirement states (see the
-  engine requests).
+- **Description.** `parseDesc` is the game's: the two pearl letters, the
+  refusals and the trailing run that is written.
 - **Preferences: Pearl's appearance preference.** Untouched. It holds the
   key, the order of the two choices and the default, which a stored
   preference depends on, and neither the label nor the preference's
@@ -47,14 +50,18 @@ The Purpose was corrected: it named "its description and params encodings" and
 
 ## Engine requests
 
-- The verdict rule of `trackTargets` (completed, on track with the step
+- Answered: `engine-hints`, "A step asking for several elements is followed
+  one element at a time".
+  The verdict rule of `trackTargets` (completed, on track with the step
   shrunk to what is left, off) → `engine-hints`. The sentence is
   "`hintKeepTrack` SHALL judge a move by the edges it changes, holding a step
   whose edges are only partly made and shrinking it to what is left", in
   "Hint: Pearl's hint follows a step made one edge at a time"; the code is
   `trackTargets`, `src/engine/hint-track.ts:40`, which `pearlKeepTrack` calls
   (`src/games/pearl/hint.ts:456`).
-- The run-letter clue grammar of `encodeRunLength` and `scanRunLength` (`a`–`z`
+- Answered: `engine-params`, "The engine provides the run-letter description
+  grammar".
+  The run-letter clue grammar of `encodeRunLength` and `scanRunLength` (`a`–`z`
   for 1–26 blanks) → `engine-params`. The sentence is "the letters `a` through
   `z` SHALL each stand for a run of 1 to 26 unclued squares, a longer run
   being written as several letters", in "Description: A Pearl run letter
@@ -137,3 +144,35 @@ Checked and found sound:
   `12x8dtn` and `6x6den` decode as `12x8dt` and `6x6de`.
 - The spec read whole, subject by subject: none hollow, no dangling
   antecedent, every title fits its body.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Pearl: 4 to act on (the
+mistake check, by the review; the run-letter grammar; the firing census; a
+step followed one element at a time), one that names a sentence that stays
+(the cancel keys) and one that reads its code only (every step before it
+refuses). Engine requests of its own: 2, both answered. Sentences cut: 4,
+two requirements and one scenario with them. Clauses kept: 5.
+
+- **Cut**: the empty mistake check; the run letter's `a` to `z` for 1 to 26;
+  the firing census; the whole of `hintKeepTrack`'s requirement.
+- **Kept: "The unclued squares after the last pearl SHALL be written too"**,
+  Pearl's `keepTrailingBlanks`, which the review of the round says stays. It
+  joined the other `Description` requirement with the scenario of the dealt
+  6×6 board, being one sentence alone.
+- **Kept: `B` and `W`, and the two refusals**, the game's by the engine
+  requirement's last sentence.
+- **Kept: "A missing solution segment SHALL NOT be a mistake"** and the two
+  kinds of mistake.
+- **Kept: "Space, Escape, Backspace or Delete SHALL abandon it"**, in
+  "Controls: Pearl's Enter key traces a path the arrows extend": it says what
+  is abandoned, and Space is no cancel key of the engine's.
+- **Kept: the scenario "A silenced rung fails"**, which names the census and
+  the frozen differential as what fails: a case of this ladder, where the
+  engine's is of any.
+- The spec never says when the hint refuses, so "A hint gives every step
+  deduction still forces before it refuses" had nothing to take.
+- "Generation: Pearl's generator gates every board on the solver" cites
+  `engine-difficulty` and is no "no departure" sentence: it is the subject's
+  one requirement and says what is gated (the full set of pearls) before the
+  clues are minimized. Left. None on what a pasted game ID opens as.

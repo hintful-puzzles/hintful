@@ -37,8 +37,7 @@ Separately from the rule violations, mistake-checking SHALL make the
 collection's check of entries and notes (`ts-engine`, "A mistake check
 compares with the one answer, hidden or not" and "A candidate note that
 excludes the answer is a mistake"), against the solution Rome's solver derives
-from the fixed clues alone. When the board is not deducible from those clues
-no contradiction SHALL be reported.
+from the fixed clues alone.
 
 #### Scenario: A legal-looking arrow that contradicts the solution is flagged
 
@@ -85,27 +84,11 @@ of the game's own. Decoding a string with no `d` SHALL give Easy.
 - **WHEN** `4x4` is decoded
 - **THEN** the board is Easy, and its full encoding is `4x4de`
 
-### Requirement: Description: Rome descriptions use the region-border and clue encoding
-
-A Rome description SHALL encode the outlined-region layout as a run-length
-list over the inter-cell edges: a decimal number for a run of walls and a
-letter for a run of non-walls, with the letter `z` denoting a maximal run with
-no trailing wall. The clue grid SHALL follow as a run-length sequence in which
-a letter denotes a run of empty squares and the characters `U`, `D`, `L`, `R`
-and `X` denote fixed up, down, left and right arrows and goals.
-
-#### Scenario: A generated description round-trips
-
-- **WHEN** a description is generated and then decoded into a board and
-  re-encoded
-- **THEN** the resulting description is identical
-
 ### Requirement: Description: Rome rejects a description that breaks its shape
 
-Validation SHALL reject a description that uses invalid region-border
-characters, that uses invalid clue characters, that contains a region larger
-than four cells, or that places a goal in a region whose size is not exactly
-one.
+Validation SHALL reject a description that uses invalid clue characters, that
+contains a region larger than four cells, or that places a goal in a region
+whose size is not exactly one.
 
 #### Scenario: A goal in an oversized region is rejected
 
@@ -115,12 +98,18 @@ one.
 
 ### Requirement: Description: A Rome description is the walls, a comma, then the clues
 
-The wall list SHALL cover the borders between side-by-side squares, row by
-row, then the borders between rows, each in reading order. A letter `a`–`y`
-SHALL be that many open borders followed by one wall. A `,` SHALL follow the
-list, and then the clue grid, in which `a`–`z` is a run of 1 to 26 empty
-squares. A missing comma, and either part running past its count, SHALL be
-refused.
+A Rome description SHALL be its outlined areas as the engine's wall list
+(`engine-params`, "The engine provides the wall-list description grammar"), a
+`,`, and then the clue grid in reading order, in which `a`–`z` is a run of 1
+to 26 empty squares and `U`, `D`, `L`, `R` and `X` are a fixed up, down, left
+and right arrow and a goal. A missing comma, and a clue grid running past its
+count, SHALL be refused.
+
+#### Scenario: A generated description round-trips
+
+- **WHEN** a description is generated and then decoded into a board and
+  re-encoded
+- **THEN** the resulting description is identical
 
 #### Scenario: A dealt 4×4 board
 
@@ -136,18 +125,6 @@ refused.
 - **WHEN** the `,` of that description is taken out
 - **THEN** the board is refused, naming the `c` as a character the game ID
   cannot have there
-
-### Requirement: Generation: A Rome board keeps the collection's promise at its tier
-
-What a board dealt at a tier promises SHALL be the collection's
-(`engine-difficulty`, "Every tier promises one solution found at its cap" and
-"A difficulty tier binds the board it generates"), with no departure.
-
-#### Scenario: A Tricky board needs the Tricky rule
-
-- **WHEN** a board dealt at Tricky is solved with the Easy and Normal rules
-  alone
-- **THEN** the solver does not finish it, and with the Tricky rule it does
 
 ### Requirement: Generation: Rome's rules are met in one order, Easy first
 

@@ -66,8 +66,7 @@ real numbers only where one of its cells holds a given number.
 `findMistakes(state)` SHALL flag every cell whose player `next` link
 disagrees with the board's one chain. A flagged cell, a given's included,
 SHALL be drawn with its number in the error color. A cell with no outgoing
-player link SHALL never be flagged. Where the search did not prove exactly
-one chain, `findMistakes` SHALL return no mistakes.
+player link SHALL never be flagged.
 
 #### Scenario: A wrong link out of a given
 
@@ -353,21 +352,17 @@ edges.
   points at, and Space is pressed
 - **THEN** the first square is linked to the second as the one before it
 
-### Requirement: Hint: Signpost's hint stops where the solver does
+### Requirement: Hint: Signpost's hint finishes an Unreasonable board from links tried rightly
 
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the links forced from the player's own and no others, and where none is
-forced it SHALL refuse with the collection's sentence that deduction has run
-out. It SHALL go on from the links the player then makes.
+On an Unreasonable board the hint's steps SHALL be the links forced from the
+player's own, and with a link made as the solution has it wherever the hint
+stops, the hint SHALL finish the board.
 
-#### Scenario: The hint stops, and goes on from a link tried rightly
+#### Scenario: The hint goes on from a link tried rightly
 
-- **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** a link made wrongly there is reported by the mistake check
-- **AND** with a link made as the solution has it wherever the hint stops,
-  the hint finishes the board
+- **WHEN** the hint is followed on an Unreasonable board until it refuses, and
+  a link is made as the solution has it wherever the hint stops
+- **THEN** the hint finishes the board
 
 ### Requirement: Hint: A Signpost hint asks for no link the board already holds
 

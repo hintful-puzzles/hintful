@@ -182,7 +182,7 @@ engine owns a declaring game's press and select keys").
 ### Requirement: Controls: The Twiddle cursor moves over the rotation origins
 
 Cursor keys SHALL move a cursor over the `(w−n+1)×(h−n+1)` space of rotation
-origins, clamped at the edges without wrapping. When the cursor is visible, its
+origins. When the cursor is visible, its
 `n×n` block SHALL be outlined with cursor-colored bevel edges.
 
 #### Scenario: The cursor's block is outlined
@@ -289,8 +289,8 @@ keeps its bevel: it is an object the player moves. Color 0 stays the board.
 
 ### Requirement: Look: The Twiddle completion flash lights each tile's face
 
-A tile the completion flash lights SHALL have its face filled with a flash
-color inside its bevel, and SHALL keep its number and its orientation mark.
+Twiddle's completion flash SHALL light its tiles, and a tile the flash has
+left SHALL alone be repainted, with its own face.
 
 #### Scenario: The flash leaves a tile
 

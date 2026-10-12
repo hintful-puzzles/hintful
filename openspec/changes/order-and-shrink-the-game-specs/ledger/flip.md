@@ -149,3 +149,29 @@ Checked and found sound:
 - The two reports asked for are under `## Found`, read from the code.
 - Every kept requirement read by sentence: none is a copy. The 12 engine
   titles the ledger cites are exact.
+
+## Third pass
+
+Nothing cut: the spec is as the earlier passes left it. 0 rows of the
+third-round tables and their reviews name Flip, and this ledger filed no
+request.
+
+Read for the round's rules in other words, and for the two sentences of the
+brief's section 2: 1 found, and it stays. Kept, 2 clauses:
+
+- "with no departure from the codec grammar", in "Params: A Flip params
+  string is its declared codec's, and one with no ruleset letter is Crosses".
+  Section 2 keeps such a clause as the one pointer of an owed subject that
+  would otherwise say nothing of its ordinary case: the rest of `Params` is
+  the missing ruleset letter and one refusal, and not what the params or
+  their encoding are.
+- "Hint: The hint's plan is the same plan after each of its presses".
+  `engine-hints`, "A recomputed plan continues the plan it replaces" is of a
+  game on `deduceHintPlan`; Flip's plan is its solver's shortest answer and
+  calls none of it.
+
+Flip is on `squareGrid` (`src/games/flip/index.ts:112`) and its spec says
+nothing of an arrow at the edge, so `engine-input`, "The engine provides the
+geometry of a grid of squares" takes nothing from it.
+
+Each subject read alone: none hollow, no fragment, every title fits.

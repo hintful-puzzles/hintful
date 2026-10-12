@@ -4,7 +4,7 @@ The Purpose was left as it stood: it names nothing the cut removed.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Dominosa flags a domino the unique solution lacks | "The game SHALL implement `findMistakes`, since a generated Dominosa board is uniquely solvable" reworded out, the sentence now led by what `findMistakes` returns; "and Check & Save refuses to save" cut from the scenario | the `Game` type (`findMistakes`); `engine-params`, "A board with a mistake check loads only with exactly one answer"; `quick-save`, "Check & save gates the checkpoint on a clean board" (a flagged board is not saved) |
+| Rules: Dominosa flags a domino the unique solution lacks | "The game SHALL implement `findMistakes`, since a generated Dominosa board is uniquely solvable" reworded out, the sentence now led by what `findMistakes` returns; "and Check & Save refuses to save" cut from the scenario. Third pass: "A board that is not uniquely solvable SHALL yield no mistakes" reworded out; that blank squares and barrier edges are never flagged kept | `ts-engine`, "A mistake check compares with the one answer, hidden or not" (no mark flagged against an answer where the solver did not establish exactly one; Dominosa reports no broken rule besides, `src/games/dominosa/index.ts:356`); the `Game` type (`findMistakes`); `engine-params`, "A board with a mistake check loads only with exactly one answer"; `quick-save`, "Check & save gates the checkpoint on a clean board" (a flagged board is not saved) |
 | Params: Dominosa refuses params outside its bounds | first sentence ("Params with `n` below 1 SHALL be refused.") cut; the two `validateParams` refusals and the title kept. Scenario "Invalid params are rejected" dropped; "A tier the smallest set cannot reach is refused" kept | `bounds: { min: 1 }`, `src/games/dominosa/index.ts:677`; `engine-params`, "Params validity is the engine's check" and "A params refusal is a sentence" |
 | Controls: Dominosa input places dominoes and barrier edges | which button or select key toggles which mark cut; what placing a domino erases, that a barrier edge never affects the win and that one is refused beside a placed domino kept. Both scenarios kept | `targetVerbs`, `src/games/dominosa/index.ts:234` (`primary`: "place or remove a domino covering them"; `secondary`: "place or remove a line between them"); `engine-input`, "The engine owns a declaring game's press and select keys" (Enter the left-click verb, Space the right-click verb) |
 | Controls: Dominosa provides a domino reference with pair-occurrence highlight | "Dominosa SHALL implement the engine reference-aid hooks so the app shows a domino reference" reworded to "Dominosa's `reference` SHALL be a domino reference"; nothing else | `ts-engine`, "The engine surface exposes an opt-in per-game reference-aid capability" (the two hooks, and that the app shows the model) |
@@ -20,10 +20,6 @@ The Purpose was left as it stood: it names nothing the cut removed.
   `decodeParams` are written out (`src/games/dominosa/state.ts:115`, `:121`):
   no `paramsCodec` declares the `t`, the `d` letters `tbhe` or what `da`
   reads as.
-- **Rules, "A board that is not uniquely solvable SHALL yield no mistakes".**
-  Dominosa is not on the search's tiers; its `findMistakes` asks its own
-  solver, and no shared requirement says what it returns where that proves
-  nothing.
 - **Hint, "seeded from the placed dominoes"** and **"a barrier the player has
   already drawn SHALL be skipped for display while still advancing the
   deduction".** `engine-hints`, "A hint is deduced from the board in play",
@@ -117,3 +113,30 @@ Checked and found sound:
 - The codec is hand-written (`state.ts:115`, `:121`), so the three Params
   requirements above the refusal stay whole.
 - Each subject read alone: none hollow, no dangling antecedent.
+
+## Third pass
+
+What the engine's third round states, removed. 1 row of the third-round
+tables names Dominosa (the mistake check, added by "Found"), and the review
+of the hints round names it once, as a game that refuses a board with no one
+answer before it plans. This ledger filed no request.
+
+Cut, 1 clause: **"A board that is not uniquely solvable SHALL yield no
+mistakes"**, in "Rules: Dominosa flags a domino the unique solution lacks":
+`ts-engine`, "A mistake check compares with the one answer, hidden or not".
+
+Kept, 2 clauses:
+
+- "Blank squares and barrier edges SHALL never be flagged": which marks are
+  flagged is the game's, by the review's word.
+- "Hint: A hint is refused on an ambiguous board", whole. `engine-hints`, "A
+  hint gives every step deduction still forces before it refuses", is bound
+  to a board with one answer and says nothing of one without.
+
+No sentence of the brief's section 2 stood in the spec, and a search for the
+round's other rules in other words (the search never run, the steps before a
+refusal, a recomputed plan) found none: "Hint: The forcing chain grades
+boards and is never narrated" is which deduction is Dominosa's search.
+
+Each subject read alone: none hollow, no fragment, every title fits. The
+Purpose names nothing that went.

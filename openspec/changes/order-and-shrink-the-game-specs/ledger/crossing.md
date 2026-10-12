@@ -4,7 +4,7 @@ The Purpose is unchanged: each thing it names the spec still holds.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Crossing's findMistakes compares the board with the unique solution | title and scenario kept. The clause "from the search that counts its answers, at either difficulty" cut, and no citation stands in its place (second pass); what is flagged and the empty result where no one answer was proved kept | `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` among what asks; `answerOf`, `src/games/crossing/solver.ts:309`) |
+| Rules: Crossing's findMistakes compares the board with the unique solution | title and scenario kept. The clause "from the search that counts its answers, at either difficulty" cut, and no citation stands in its place (second pass). "It SHALL return nothing when the search did not prove the board has exactly one answer" cut (third pass). What is flagged kept | `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` among what asks; `answerOf`, `src/games/crossing/solver.ts:309`); the empty result is `ts-engine`, "A mistake check compares with the one answer, hidden or not" |
 | Rules: Crossing is complete when every clue is placed exactly once | "and SHALL flash on that completion" cut, and "and flashes" from the scenario | `ts-engine`, "The win flash plays on a forward move that solves the board" |
 | Params: Crossing's parameters | replaced by "Params: A Crossing params string may leave out its height and its difficulty" (the pointer, rule 2, with the two missing-field sentences) and "Params: Crossing refuses a board with no side of 4" (the `validateParams` sentence, standing alone). The field list, the lower bound of 2 and the `S`, `de`, `du` letters cut. Scenario "A game ID round-trips through the parameters" and "The difficulty is in the full encoding only" replaced by "A string that leaves a field out", made of their two missing-field lines; "A dimension below the minimum is rejected" kept without its bound line as "Both sides below the minimum" | `paramConfig`, `src/games/crossing/state.ts:94` (`bounds: { min: 2 }` at `:97`), and the `paramsCodec` field list, `:130` (`dims`, `flag "S"` full only, `searchTierSegment`); `engine-difficulty`, "A game that searches has a tier for each deduction and Unreasonable above them" (`d` and the tier's letter, in the full form only); `engine-params`, "Params validity is the engine's check" (the bound's refusal); `src/engine/__snapshots__/params-stability.test.ts.snap` holds `5x5de`/`5x5`, `5x5Sde` and every preset |
 | Params: Crossing rejects board sizes it cannot generate | third sentence (no ceiling when a description is supplied) cut whole (second pass: the first sentence already says "when validating for generation"); scenario "An existing large description still loads" dropped | `engine-params`, "A generation-only bound is gated on full" and "Param validation distinguishes generating a board from loading one" (scenario "A generation-only bound does not refuse the descriptive form") |
@@ -24,7 +24,8 @@ The Purpose is unchanged: each thing it names the spec still holds.
 | Hint: Every Crossing hint step is narrated | removed. Its sentence joins "Hint: Crossing's marks are its legend's, on the clue list as on the grid" as "Every step's explanation SHALL name the run its deduction reasons over"; its scenario, which restated it, dropped | this spec; that a step carries an explanation at all is `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" |
 | Hint: The hint's evidence includes the listed numbers it reasons over | retitled "Hint: Crossing's marks are its legend's, on the clue list as on the grid". Its sentence went but for what the legend's words do not make a rule: that a role of `hintMarks` marks a number in the clue list as it marks a square. The pointer sentence that opened it ("A step's marks SHALL be the roles `hintMarks` declares, painted from the step's words", with its citation) went in the second pass. Scenario kept | `hintMarks.roles`, `src/games/crossing/index.ts:746` (`outline`: "the numbers in the list that still fit the run, boxed"; `stripes`: "the run the sentence names"); `engine-hints`, "A bound hint step's words SHALL name exactly the marks it draws" |
 | Hint: Crossing refuses to hint a board it cannot honestly advise | removed, with its scenario "A note that rules out the right digit is refused rather than reasoned from" (second pass: it had moved to "Hint: Crossing's hint stops where the solver does" under a pointer sentence, and both went) | `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong board before asking the game" (solved; a mistake, shown on the overlay) and "Deduction running out on a sound board SHALL have one wording"; that a note excluding the solution's digit is a mistake is this spec's "Rules: Crossing's findMistakes compares the board with the unique solution" and `ts-engine`, "A candidate note that excludes the answer is a mistake" |
-| Hint: Crossing's hint stops where the solver does | "as it does from any position" cut. Nothing else changed | `engine-hints`, "A hint is deduced from the board in play" |
+| Hint: Crossing's hint stops where the solver does | retitled "Hint: Crossing's hint finishes an Unreasonable board from digits tried rightly". "as it does from any position" cut. Third pass: "The hint SHALL never run the search", "and no others, and where none forces anything it SHALL refuse with the collection's sentence that deduction has run out" and "It SHALL go on from the digits the player then enters" cut; kept, reworded to stand, that the steps are forced from the player's digits and notes, and, from the scenario's last line, that a digit entered rightly wherever the hint stops lets it finish the board. The scenario cut to that line and retitled "The hint goes on from a digit tried rightly" | `engine-hints`, "A hint is deduced from the board in play"; `engine-hints`, "The hint of a game on the search's tiers never searches" (and its scenario "A value tried wrongly"); `engine-hints`, "A hint gives every step deduction still forces before it refuses"; the wording of the refusal is `engine-hints`, "Deduction running out on a sound board SHALL have one wording" |
+| Look: A wash replaces a square's surface, empty or filled | third pass: "The selected square's wash SHALL replace the surface of an empty square and of a square holding a digit alike" cut; the run's direction wash now carries the clause itself. Title, the paper digit, the wall's brackets and the scenario kept | `engine-notes`, "The highlight is part of the cell's background" ("The wash SHALL replace whichever surface the game gives the cell"); `drawCellBackground`, `src/games/crossing/render.ts:509` |
 | Look: Selecting a cell shows which clues fit its runs | "Each of the two aids is a preference, on by default." cut | this spec, "Preferences: The board marking and the list coloring are separate preferences" |
 | Look: The grid lines are the collection's surface grid line | removed | the palette, `out[COL_GRID] = surfaceGrid(background)`, `src/games/crossing/render.ts:184`; the one color for frame and inner lines is `drawRectOutline(…, COL_GRID)`, `:616` |
 | Look: The completion flash sweeps the squares holding digits | retitled "Look: The completion flash lights the squares holding digits and never a wall". "diagonally" and "a lit square SHALL be filled with a flash color and SHALL keep its digit" cut for a citation; which squares are lit, the wall and the hidden selection kept. Scenario kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep`, `src/games/crossing/render.ts:943`); `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground filled, what it holds kept) |
@@ -35,10 +36,6 @@ The Purpose is unchanged: each thing it names the spec still holds.
   difficulty letter decodes as Easy".** `dims` and `searchTierSegment` say
   both; kept as what a missing field decodes to, which an old link depends on
   (upstream's IDs carry no tier).
-- **Rules, "It SHALL return nothing when the search did not prove the board
-  has exactly one answer".** "One search answers a board for everything that
-  asks" says `findMistakes` reads the search and not what it returns where
-  the search proved nothing (see the engine requests).
 - **Generation: Crossing's generator keeps every board uniquely solvable.**
   Its first sentence is what Easy means here (the solver's verdict), the rest
   the shape of a board and the difference from upstream's deal.
@@ -61,9 +58,10 @@ The Purpose is unchanged: each thing it names the spec still holds.
   the three surfaces; which square takes which is `redraw`'s.
 - **Preferences, the three keys.** No test outside the game holds a
   preference's key, and a stored preference is read back by it.
-- **Hint: Crossing's hint stops where the solver does.** As in Palisade: that
-  the hint runs no search, and goes on from a digit entered rightly on an
-  Unreasonable board, is no shared requirement's (see the engine requests).
+- **Hint: Crossing's hint finishes an Unreasonable board from digits tried
+  rightly.** The engine's scenario "A value tried rightly" says the hint holds
+  what the value forces or refuses again; that right digits carry Crossing's
+  hint to the end of the board is the game's.
 
 ## Engine requests
 
@@ -72,7 +70,8 @@ The three are stated, each under the same bold name, in `crossing.md`,
 sentences.
 
 - **`findMistakes` returns nothing where the search proved no single
-  answer.** Here: "It SHALL … return nothing when the search did not prove
+  answer.** Answered: `ts-engine`, "A mistake check compares with the one
+  answer, hidden or not"; the sentence is cut. As filed: "It SHALL … return nothing when the search did not prove
   the board has exactly one answer", in "Rules: Crossing's findMistakes
   compares the board with the unique solution". Belongs in
   `engine-difficulty`, "One search answers a board for everything that asks",
@@ -81,7 +80,9 @@ sentences.
   it: each game's `findMistakes` returns early
   (`src/games/crossing/solver.ts:338`).
 - **A board counts as Easy where the solver and the hint both finish it.**
-  Here: "A board SHALL count as Easy where the solver and the hint finish
+  Left the game's own: `deductionFinishes` is a hook each game writes, and
+  nothing requires that it ask the solver and the hint both
+  (`ledger/_engine.md`, "Third round: the rest", Not written). Here: "A board SHALL count as Easy where the solver and the hint finish
   it", in "Generation: A Crossing board is Easy where the solver and the hint
   both finish it". Belongs in `engine-difficulty`, "A game that searches has
   a tier for each deduction and Unreasonable above them", which says the
@@ -91,7 +92,10 @@ sentences.
   (`src/games/crossing/index.ts:368`).
 - **The hint never runs the search; on an Unreasonable board it holds only
   what deduction forces from the player's board, and goes on from what the
-  player then enters.** Here: "The hint SHALL never run the search. On an
+  player then enters.** Answered: `engine-hints`, "The hint of a game on the
+  search's tiers never searches" and "A hint gives every step deduction still
+  forces before it refuses"; the three sentences are cut but for the game's
+  own. As filed: "The hint SHALL never run the search. On an
   Unreasonable board its plan SHALL hold the steps its deductions force from
   the player's digits and notes and no others … It SHALL go on from the
   digits the player then enters", in "Hint: Crossing's hint stops where the
@@ -235,3 +239,35 @@ Preferences: the cut removed no key. `auto-advance`, `highlight-runs` and
 Each subject read alone after the edits: `Rules` speaks of "the search" in
 its second requirement with no citation, and the search is the Solver
 subject's; no fragment, no dangling "it", every title fits its body.
+
+## Third pass
+
+Four rows of the engine tables name Crossing, one of them only in the review
+(the highlight's wash); a fifth, the bare flag letter, names it as saying
+nothing, and the spec says nothing of `S` left out.
+
+- **Rules**, "It SHALL return nothing when the search did not prove the board
+  has exactly one answer": cut. Crossing reports no broken rule from
+  `findMistakes`, so nothing of it stays.
+- **Hint**, "Hint: Crossing's hint stops where the solver does": three
+  sentences cut to one and retitled; the scenario cut to its last line.
+- **Look**, "Look: A wash replaces a square's surface, empty or filled": the
+  selected square's clause cut.
+
+Sentences cut: 5 (one in Rules, three in Hint, one clause in Look), and three
+lines of one scenario. Clauses kept: "from the player's digits and notes"
+(what Crossing's deductions read, which the engine leaves to the game); that
+a digit tried rightly lets the hint finish the board (the review keeps the
+scenario's last clause, and the sentence is its antecedent); the run's
+direction wash and its paper digit (the review keeps them: they are
+`redraw`'s, not the highlight's). "A board SHALL count as Easy where the
+solver and the hint finish it" stays as the game's own.
+
+Section 2 of the brief: no "no departure" sentence in the spec, and the
+pasted-ID sentence went in the second pass. The scenario "A board that needs
+search opens as Unreasonable" stays under the sentence that says which boards
+count as which tier.
+
+Each subject read alone: `Rules` no longer speaks of the search; `Hint` holds
+its techniques, their order and its marks, and the retitled requirement
+stands without the sentences that went.

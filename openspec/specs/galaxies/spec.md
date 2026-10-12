@@ -55,9 +55,7 @@ wall-only board pass as clean.
 ### Requirement: Rules: What is incomplete is not flagged
 
 A tile the player has not associated and a wall the player has not drawn SHALL
-NOT be flagged: they are incomplete, not mistaken. If the cleared copy does not
-solve to a unique solution, which is possible only for a hand-entered board
-that is not unique, Galaxies SHALL flag nothing.
+NOT be flagged: they are incomplete, not mistaken.
 
 #### Scenario: A correct partial board is clean
 
@@ -435,10 +433,9 @@ advance.
 ### Requirement: Hint: The Galaxies hint stops where its deductions do
 
 The hint has no step that tries a square's dot and follows it until something
-breaks. Where none of its deductions applies it SHALL refuse with the
-collection's sentence that deduction has run out. That refusal SHALL be
-reached on an Unreasonable board only: an Easy board SHALL be carried all the
-way to solved by deduction alone.
+breaks. An Easy board SHALL be carried all the way to solved by deduction
+alone, so the hint's refusal that deduction has run out SHALL be reached on an
+Unreasonable board only.
 
 #### Scenario: Deduction running out is said plainly, not guessed past
 

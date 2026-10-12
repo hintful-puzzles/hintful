@@ -43,8 +43,7 @@ a line with no reciprocal line in the neighboring square SHALL be refused.
 `findMistakes` SHALL re-solve from the clues to the unique solution's line
 grid and return every line segment the player has drawn that the solution does
 not contain, and every no-line cross the player has placed on an edge the
-solution does contain. A missing solution segment SHALL NOT be a mistake, and a
-board the solver cannot finish SHALL yield no mistakes.
+solution does contain. A missing solution segment SHALL NOT be a mistake.
 
 #### Scenario: A line the solution does not contain is flagged
 
@@ -92,8 +91,10 @@ Normal board has `w + h ≥ 11`.
 
 The desc SHALL encode the clue grid row-major as a run-length string: lowercase
 letters compress runs of unclued cells, `B` marks a black pearl and `W` marks a
-white pearl. `validateDesc` SHALL reject an unknown character and a description
-whose decoded cell count does not exactly fill the grid.
+white pearl. The unclued squares after the last pearl SHALL be written too, so
+that the description covers the grid exactly. `validateDesc` SHALL reject an
+unknown character and a description whose decoded cell count does not exactly
+fill the grid.
 
 #### Scenario: A description round-trips
 
@@ -105,13 +106,6 @@ whose decoded cell count does not exactly fill the grid.
 - **WHEN** `validateDesc` is given a desc with too much or too little data to
   fill the grid
 - **THEN** it returns a non-null error string
-
-### Requirement: Description: A Pearl run letter counts its unclued squares from a
-
-In a description, the letters `a` through `z` SHALL each stand for a run of 1
-to 26 unclued squares, a longer run being written as several letters. The
-unclued squares after the last pearl SHALL be written too, so that the
-description covers the grid exactly.
 
 #### Scenario: A dealt 6×6 board
 
@@ -152,7 +146,7 @@ Pearl's solver SHALL deduce only, with no guessing or recursion, as a
 edges from surviving shapes, the pearl clue deductions, and a closed-loop rung,
 all at Easy; and the shortcut-loop rule at Normal. The closed-loop rung SHALL
 end the ladder through `settled` once a loop has closed and everything off it
-is blank. A firing census SHALL assert that every rung fires, at both caps.
+is blank.
 
 #### Scenario: A mis-tiered shortcut rung fails
 
@@ -299,16 +293,6 @@ lines.
 - **WHEN** a step's deduction rules out an edge of a square that already has
   two lines
 - **THEN** the step does not ask the player to cross that edge
-
-### Requirement: Hint: Pearl's hint follows a step made one edge at a time
-
-`hintKeepTrack` SHALL judge a move by the edges it changes, holding a step
-whose edges are only partly made and shrinking it to what is left.
-
-#### Scenario: One of a step's two edges is made
-
-- **WHEN** a displayed step asks for two edges and the player makes one of them
-- **THEN** the step stays, and asks for the other edge alone
 
 ### Requirement: Hint: Pearl's hint draws a black pearl's arm whole
 

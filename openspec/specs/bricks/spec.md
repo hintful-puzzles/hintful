@@ -260,17 +260,6 @@ where it did not.
 - **THEN** the game declines the key, and the board and the cursor are as
   they were
 
-### Requirement: Hint: A Bricks hint plan is recompute-stable
-
-The hint plan SHALL be recompute-stable: it SHALL scan in a deterministic order,
-so a hint recomputed after a followed move continues where the previous plan left
-off.
-
-#### Scenario: A hint after a followed step continues the plan
-
-- **WHEN** the first step of a plan is followed and a hint is asked for again
-- **THEN** the new plan begins with the old plan's second step
-
 ### Requirement: Hint: A Bricks hint step explains why the move is forced
 
 For a single-cell contradiction a hint step SHALL name the concrete rule the
@@ -304,8 +293,7 @@ The recursive lookahead rung SHALL NOT be narrated at all: it commits a cell by
 solving the rest of the board from a hypothesis, which is a search, and no hint
 narrates a search on any tier. The recorder SHALL omit it while the solver
 retains it, so that grading and generation are unchanged and no description
-moves. Where the single-cell rung runs out, the hint SHALL refuse rather than
-reach for it.
+moves.
 
 #### Scenario: The lookahead rung never reaches a narration
 

@@ -93,3 +93,27 @@ against the three classes; none cut.
 - **Kept and checked**: the status bar's "are the engine's and the same in
   every game" is the subject's one pointer and its last scenario leans on it;
   `hintKeepTrack`'s second sentence is its one sentence of reason.
+
+## Third pass
+
+Nothing changed in the spec. Rows of the engine's third-round tables that
+name Inertia: 0. Engine requests of its own: 0. Sentences cut: 0. Clauses
+kept: 3.
+
+- **Kept: both refusals of "Hint: The hint refuses honestly when the move to
+  make is undo", and the refusal of "Hint: Inertia's hint refuses in Solve's
+  words where no route is found".** `engine-hints`, "A search that can prove a
+  position lost says which of its two ends it met" binds a search that can
+  meet either end; Inertia's route solver has one way to fail and the game
+  chooses its sentence itself, as the review of that requirement says.
+- **Kept: "with no departure from the codec grammar"** in "Params: Inertia's
+  params are its declared codec's, and a grid under six squares is refused".
+  It is the one pointer of an owed subject whose only other statement is a
+  corner case.
+- **Kept: "The words that open the bar … are the engine's"** in the status
+  bar: the subject's one pointer, and its last scenario leans on it.
+- No sentence of the form "What a pasted game ID opens as" and none citing
+  `engine-difficulty`: Inertia has no tiers.
+- The spec was searched for the third round's other rules in other words (a
+  hatch under content, the release of a declined press, the cancel keys, a
+  lit beveled tile, a mistake check without an answer): none is stated.

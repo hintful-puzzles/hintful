@@ -46,8 +46,7 @@ only one another while other islands are left out.
 every span whose player marks that solution contradicts: a bridge where the
 solution has none, a count exceeding the solution's, or a limit below the
 solution's count, the cross included. It SHALL also return every island marked
-complete short of its count. A board that is not uniquely solvable SHALL yield
-no mistakes.
+complete short of its count.
 
 #### Scenario: A wrong bridge is flagged
 
@@ -167,7 +166,7 @@ that arrives with its description alike.
 
 The desc SHALL encode the island positions and their bridge counts row-major: a
 digit or letter gives an island with that count at the current cell, and a
-run-length letter skips that many empty cells.
+run letter skips the empty cells between.
 
 #### Scenario: A description round-trips
 
@@ -188,10 +187,9 @@ than two islands.
 
 ### Requirement: Description: A Bridges description writes a count above nine as a capital letter
 
-An island's count SHALL be written `1` to `9`, then `A` to `G` for 10 to 16,
-and a run of empty squares as a lowercase letter, `a` for one to `z` for
-twenty-six. The description SHALL cover every square of the grid, the empty
-ones after the last island included.
+An island's count SHALL be written `1` to `9`, then `A` to `G` for 10 to 16.
+The description SHALL cover every square of the grid, the empty ones after
+the last island included.
 
 #### Scenario: A dealt 7×7 board
 
@@ -574,8 +572,8 @@ SHALL take the islands in the order the description lists them.
 ### Requirement: Hint: A Bridges hint refuses where its deduction contradicts itself
 
 Where the deduction contradicts itself on a board `findMistakes` finds nothing
-wrong with, `hint` SHALL refuse with the collection's unlocalized-contradiction
-wording.
+wrong with, `hint` SHALL refuse outright and SHALL show no step it derived on
+the way.
 
 #### Scenario: A contradiction with no entry to blame
 

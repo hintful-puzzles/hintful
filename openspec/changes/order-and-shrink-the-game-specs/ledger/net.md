@@ -4,9 +4,11 @@ The Purpose was left as it stood: it names nothing the cut removed.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
+| Rules: Net's board and what counts as solved | third pass: the clause "each a 4-bit mask of connections (`R=1`, `U=2`, `L=4`, `D=8`)" reworded out; the rest and the scenario kept | `engine-helpers`, "A wire tile is four bits, one for each side its wire leaves by" |
 | Rules: Jumble is deterministic on replay | last sentence ("The keypad SHALL offer a Jumble key, making the same move as `J`.") and scenario "The Jumble key jumbles" cut | `requestKeys`, `src/games/net/index.ts:847` (`{ label: "Jumble", button: KEY_JUMBLE }`, the code `J` sends); `engine-input`, "Every on-screen key a game offers reaches that game" |
-| Rules: Net flags wrong locks and notes | "Net SHALL implement `findMistakes`" and the clause "taking the board's one answer from the search that counts its answers, at either difficulty" reworded out; what is flagged, what is not, the empty result where no one answer was proved and how a flag is drawn kept; both scenarios kept | the `Game` type (`findMistakes`); `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` among what asks; `answerOf`, `src/games/net/solver.ts:430`, read at `src/games/net/mistakes.ts:28`) |
+| Rules: Net flags wrong locks and notes | "Net SHALL implement `findMistakes`" and the clause "taking the board's one answer from the search that counts its answers, at either difficulty" reworded out; what is flagged, what is not and how a flag is drawn kept; both scenarios kept. Third pass: "Where the search did not prove exactly one answer it SHALL flag nothing." cut | `ts-engine`, "A mistake check compares with the one answer, hidden or not" (no mark flagged against an answer where none was established; Net reports no broken rule besides); the `Game` type (`findMistakes`); `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` among what asks; `answerOf`, `src/games/net/solver.ts:430`, read at `src/games/net/mistakes.ts:28`) |
 | Params: Net's menu offers each size at the difficulties it deals | removed, with its scenario | `BOARDS` and `VARIANTS`, `src/games/net/index.ts:129` and `:136`, `presets`, `:785` (the `tiers` option leaves 5×5 at Easy alone), `defaultParams`, `src/games/net/state.ts:64`; `engine-params`, "The preset menu is a grid" (each board at the tiers it is offered at, then one board for what is neither a size nor a tier) and "A board's tiers are one run of lines, and every tier is offered"; why 5×5 has no Unreasonable line is this spec's "Params: Net refuses Unreasonable without wrapping where it is too rare"; `src/engine/params-stability.test.ts` lists the ten lines |
+| Description: Net descriptions are a hex digit a tile, with its barriers | third pass: retitled "Description: A Net description is the shared wire grid, read under the params' wrap". All three sentences cut (the grammar, the unwritten border, the refusals) and one pointer put in their place, `Description` being owed: it names the writer, the reader and the wrap, says Net adds no refusal, and states what the kept scenario shows, that a wrapping description walled all round does not wrap in play (`newState`, `src/games/net/state.ts:315`). Scenario "Each refusal" dropped; the other two kept | `engine-helpers`, "The engine provides the wire-grid description grammar" and "The wire-grid reader refuses what its writer never writes" (too short, too long, any other character named, a `v` after its tile's `h`: its two scenarios hold the dropped one's three cases) |
 | Generation: Every Easy Net board is uniquely solvable without guessing | scenario "A generated board is hinted to the end" dropped; the sentences and the other scenario kept | `engine-hints`, "The hint walk SHALL cover every preset a game offers" (following hints solves a dealt board, at every preset) |
 | Generation: A pasted Net board opens at the difficulty it needs | retitled "Generation: A Net board is Easy where the hint finishes it". Kept: what makes a board Easy and what Unreasonable. The loading rule (that a board arriving as a game ID opens at that tier "whatever lower difficulty its ID states", and the two refusals) cut. Scenario "A board with several answers or none is refused" dropped; the other two kept | `engine-difficulty`, "A loaded board whose id states no tier takes the lowest tier that solves it" and "A pinned tier is kept or raised and never lowered"; `engine-params`, "A board with a mistake check loads only with exactly one answer". The dropped scenario's two boards are in this spec, "Solver: Net's search assumes each turning of the tile with the fewest left", scenario "The search tells one answer from several and from none"; `src/games/net/net-tier.test.ts` ("a pasted Net board") holds the refusals |
 | Solver: Net counts a board's answers by a bounded search | retitled "Solver: Net's search assumes each turning of the tile with the fewest left". Kept: that the search is trial and error over the solver, what it assumes where that stops, and that Solve on a dealt board takes the network it was drawn as. Cut: counting up to two, the four verdicts, the budget in positions and "Solve SHALL take the answer from it at either difficulty". Scenario "An Easy board takes one position" dropped; "A spent budget is neither answer" kept whole and retitled "The search does not read how the tiles are turned"; the other two kept | `engine-difficulty`, "The engine counts a searching game's answers up to two, within a budget of positions" (its scenario "A board the deduction finishes" is the dropped one) and "Solve from the search shows the one answer or says which it lacks"; `searchAnswers`, `src/games/net/solver.ts:381`, and `solve`, `src/games/net/index.ts:672` |
@@ -15,7 +17,8 @@ The Purpose was left as it stood: it names nothing the cut removed.
 | Controls: Net's view controls and jumble have pointer routes | first sentence reworded: the collection's rule that every keyboard action has a pointer route cut, and the sentence now names the three routes (the keypad's two keys, the margin drag). Second sentence and the scenario kept | `engine-input`, "Every action is reachable with the two buttons alone"; `requestKeys`, `src/games/net/index.ts:847` |
 | Preferences: Net's one preference keeps loop highlighting to locked squares | the name "Highlight loops involving unlocked squares" cut; the key `unlocked-loops`, the default and what the preference changes kept | `prefs`, `src/games/net/index.ts:711` (`name`); `ts-engine`, "The engine supports per-game user preferences" |
 | Hint: Net's hint reasons from notes, locks and walls | "Net SHALL provide an explained `hint` that reasons" reworded to "Net's hint SHALL reason"; nothing else | `engine-hints`, "The engine supports an ephemeral Hint System"; the `Game` type (`hint`) |
-| Look: The completion flash spreads from the source along the wires | second sentence ("A lit tile's ground SHALL be filled with a flash color, locked or not, and the tile SHALL keep its wires.") cut, and the last sentence given "a flash color included" so the rings' claim still covers a lit tile. Scenarios "The ripple reaches an unlocked tile" and "The ripple reaches a locked tile" dropped; "A neighbor the wires do not join" kept | `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground of a tile filled and keeping what it holds; no surface lifted or swapped; its scenario "A board that lifts its cells"); `COL_FLASH` and `COL_FLASH_LEAD`, `src/games/net/render.ts:99`, chosen ahead of `COL_LOCKED` at `:309` |
+| Hint: Net's hint stops where its deductions do | third pass: "The hint SHALL never run the search.", "and no others, and where none is forced it SHALL refuse with the collection's sentence that deduction has run out" and "It SHALL go on from the squares the player then locks." cut; kept, reworded to stand, that on an Unreasonable board the steps are the notes and locks the four reasons force from the player's locks, notes and the walls. The scenario cut to its last line (a square locked rightly wherever the hint stops lets it finish the board) and retitled "The hint goes on from a square locked rightly" | `engine-hints`, "The hint of a game on the search's tiers never searches"; `engine-hints`, "A hint gives every step deduction still forces before it refuses" (the steps forced and no refusal while one remains; asked again it deduces from the board as it then stands; its scenario "A board that stalls part-way") |
+| Look: The completion flash spreads from the source along the wires | third pass: how the distance is measured ("in tiles along the connections, through the wrap of a wrapping board and never through a barrier") reworded out, the sentence now naming `wireDistance`; scenario "A neighbor the wires do not join" dropped and "The cursor on a tile the flash lights" written for the rings' sentence, which had no case of its own. Earlier: second sentence ("A lit tile's ground SHALL be filled with a flash color, locked or not, and the tile SHALL keep its wires.") cut, and the last sentence given "a flash color included" so the rings' claim still covers a lit tile. Scenarios "The ripple reaches an unlocked tile" and "The ripple reaches a locked tile" dropped; "A neighbor the wires do not join" kept | `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground of a tile filled and keeping what it holds; no surface lifted or swapped; its scenario "A board that lifts its cells"); `COL_FLASH` and `COL_FLASH_LEAD`, `src/games/net/render.ts:99`, chosen ahead of `COL_LOCKED` at `:309`; `engine-helpers`, "A wire distance is counted in tiles along the wires" (its scenario is the dropped one) |
 
 ## Kept, and why
 
@@ -30,10 +33,6 @@ The Purpose was left as it stood: it names nothing the cut removed.
 - **Params, "one of more than 1,000,000 squares".** `engine-params`, "A grid
   too large for a game is refused in one sentence", leaves the ceiling to the
   game.
-- **Rules, "SHALL flag nothing where the search did not prove exactly one
-  answer".** "One search answers a board for everything that asks" says
-  `findMistakes` reads the search and not what it returns where the search
-  proved nothing.
 - **Generation: An Unreasonable Net board has one answer that the hint does
   not reach.** `engine-difficulty`, "The engine deals the Unreasonable board
   of a game that searches", says a candidate is kept where the game's
@@ -52,16 +51,18 @@ The Purpose was left as it stood: it names nothing the cut removed.
 - **Hint: Net's hint takes the easiest step first.** `hintRungs` lists four
   rungs in the same order, and nothing reads it for order: the choice is
   `nextStep`'s rank over six grades, `src/games/net/deduce.ts:446`.
-- **Hint: Net's hint stops where its deductions do.** As Palisade's: that the
-  hint goes on from a right lock on an Unreasonable board is promised by no
-  shared requirement.
+- **Hint: Net's hint stops where its deductions do.** That a square locked
+  rightly wherever the hint stops lets it finish an Unreasonable board is
+  more than `engine-hints`, "A hint gives every step deduction still forces
+  before it refuses", whose scenario allows a second refusal.
 - **Look: Net draws its tiles on a quiet surface and lifts a locked one.**
   Net's renderer is its own, so which surface a tile takes is a choice in
   `redraw` and no palette entry a shared painter reads.
-- **Look, "its distance from the source in tiles along the connections,
-  through the wrap ... and never through a barrier".** `ts-engine`, "A game
-  gives each element a position, and the route is which position it gives",
-  says "its distance from the source" and not how Net measures it.
+- **Look, "The completion flash SHALL spread from the source along the
+  wires".** `engine-helpers`, "A wire distance is counted in tiles along the
+  wires", binds "a game whose win flash spreads along the wires" and does not
+  say Net is one: the position is chosen in `redraw`
+  (`src/games/net/render.ts:634`).
 
 ## Engine requests
 
@@ -70,9 +71,13 @@ The Purpose was left as it stood: it names nothing the cut removed.
   The sentence is "Where the search did not prove exactly one answer it SHALL
   flag nothing", in "Rules: Net flags wrong locks and notes"; the code is each
   game's `findMistakes` reading `answerOf` (`src/games/net/mistakes.ts:30`).
+  Answered: `ts-engine`, "A mistake check compares with the one answer,
+  hidden or not".
 - The description format of "Description: Net descriptions are a hex digit a
   tile, with its barriers" is `parseWireDesc` and `encodeWireDesc` of
   `src/engine/wires.ts`, which Netslide calls too: see `netslide.md`.
+  Answered: `engine-helpers`, "The engine provides the wire-grid description
+  grammar" and "The wire-grid reader refuses what its writer never writes".
 
 ## Found
 
@@ -136,3 +141,49 @@ Checked and found sound:
   board".
 - Each subject read alone: none hollow, no dangling antecedent, every title
   fits its body.
+
+## Third pass
+
+What the engine's third round states, removed. 7 rows of the third-round
+tables name Net (the mistake check, the wire tile, the wire-grid grammar, its
+reader's refusals, the wire distance, the steps before a refusal, the hint
+that never searches), and both of this ledger's requests were answered.
+
+Cut, 9 sentences or clauses and 2 scenarios:
+
+- **The tile's mask**, in "Rules: Net's board and what counts as solved".
+- **"Where the search did not prove exactly one answer it SHALL flag
+  nothing."**, in "Rules: Net flags wrong locks and notes".
+- **The three sentences of the Description requirement**, and its scenario
+  "Each refusal". One pointer stands in their place, the subject being owed.
+- **Three clauses of "Hint: Net's hint stops where its deductions do"**: the
+  search never run, the refusal where nothing is forced, and going on from
+  what the player then locks. Its scenario lost the lines the engine's
+  scenario has.
+- **How the flash's distance is measured**, and the scenario "A neighbor the
+  wires do not join", in "Look: The completion flash spreads from the source
+  along the wires".
+
+Kept, 4 clauses:
+
+- That a wrapping description walled all round does not wrap in play, with
+  its scenario: the review of the round names it Net's.
+- What Net's deductions are (the notes and locks its four reasons force),
+  and that a right lock wherever the hint stops lets it finish: the review
+  keeps both in each of the twelve games.
+- That Net's flash spreads from the source along the wires: the engine
+  requirement is conditioned on it and does not say it of Net.
+- "Solve on a board Net dealt SHALL take the network the board was drawn
+  as", which the round did not touch.
+
+Not Net's to cut: `engine-input`, "Escape and the erase keys are the cancel
+keys" names no sentence of Net, whose "Escape SHALL let go of the picked
+tile" says what is put down; "Controls: Net's cursor wraps round the grid" is
+the game's `wrap`. No sentence of the brief's section 2 stood in the spec:
+"Generation: A Net board is Easy where the hint finishes it" says which
+boards count as which tier, and its two scenarios of a pasted ID stand under
+that.
+
+Each subject read alone: `Description` is one pointer with two cases of Net;
+no fragment, no dangling antecedent, every title fits. The Purpose names
+nothing that went.

@@ -5,14 +5,15 @@ The Purpose stands: it names nothing the spec no longer holds.
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
 | Rules: Tracks judges completion from the board | retitled "Rules: A Tracks board is solved while one track meets every clue". The clause ", judged from the board however it was reached" cut from the second sentence; the scenario's last line ("a later move that breaks the track or a clue reports it unsolved again") cut and the scenario renamed "A whole track that meets its clues" | `ts-engine`, "A game's status is judged from the board alone" (from the position alone, "never from how it was reached") |
-| Rules: Tracks ships findMistakes | retitled "Rules: A Tracks mistake is a mark on a square or its edges that the solution contradicts"; body kept whole. "and rendered red" cut from the scenario | `ts-engine`, "The midend shows mistakes until the next transition" (the midend passes the result to `redraw`, which draws the cells highlighted) |
-| Params: Tracks' parameters | replaced by the pointer requirement "Params: A Tracks params string may leave out its difficulty and its `o`" (rule 2). The field list, the encoding and "a bare `{n}` decodes as an `n × n` grid" cut, with scenario "Params round-trip" | `paramConfig`, `src/games/tracks/state.ts:287`, and the `paramsCodec` field list, `:312` (`dims`, `choice "d"` over `DIFF_CHARS`, `:43`, with the tier names of `difficultyItem(DIFF_NAMES)`, `:293`; `flag "o"` with `means: false`, both `full`); `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters" (`dims`, "with the square fallback when decoding") and "A game declares its params encoding once, and both codec halves are derived"; `src/engine/__snapshots__/params-stability.test.ts.snap` holds `8x8dt`, every preset and `8x8dto` |
+| Rules: Tracks ships findMistakes | retitled "Rules: A Tracks mistake is a mark on a square or its edges that the solution contradicts"; body kept whole. "and rendered red" cut from the scenario. Third pass: last sentence ("It SHALL return an empty list when the board is not uniquely solvable") cut | `ts-engine`, "The midend shows mistakes until the next transition" (the midend passes the result to `redraw`, which draws the cells highlighted); `ts-engine`, "A mistake check compares with the one answer, hidden or not" (no mark flagged where the solver did not establish exactly one answer) |
+| Params: Tracks' parameters | replaced by the pointer requirement "Params: A Tracks params string may leave out its difficulty and its `o`" (rule 2). The field list, the encoding and "a bare `{n}` decodes as an `n × n` grid" cut, with scenario "Params round-trip" | `paramConfig`, `src/games/tracks/state.ts:287`, and the `paramsCodec` field list, `:312` (`dims`, `choice "d"` over `DIFF_CHARS`, `:43`, with the tier names of `difficultyItem(DIFF_NAMES)`, `:293`; `flag "o"` with `means: false`, both `full`); `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters" (`dims`, "with the square fallback when decoding") and "A game declares its params encoding once, and both codec halves are derived"; `src/engine/__snapshots__/params-stability.test.ts.snap` holds `8x8dt`, every preset and `8x8dto`. Third pass: nothing cut. "with consecutive 1 clues disallowed unless it carries the `o`" reworded to say both things apart: what the letter means ("Its `o` SHALL allow consecutive 1 clues") and what a string without it decodes to, the short form included ("a string without it, which the short form always is, SHALL decode with them disallowed"); "their bounds, their encoding and their label words" shortened to "their bounds, encoding and label words" to hold the 500 characters; title kept. The flag is `full: true`, `means: false`, `src/games/tracks/state.ts:315`; what a missing field decodes to stays in the game's spec though `engine-params`, "A bare flag letter left out is read as the opposite of its meaning" also gives it |
 | Params: Tracks refuses a grid under 4×4, and a 4×4 above Easy | retitled "Params: Tracks refuses a 4×4 above Easy". First sentence (the bound of 4) and scenario "Invalid params are rejected" cut; the kept sentence now says a 4×4 is the smallest the bounds allow | `bounds: { min: 4 }` on the dimensions, `src/games/tracks/state.ts:291`; `engine-params`, "Params validity is the engine's check" |
 | Params: Tracks params that name no difficulty are Normal | joined to the pointer requirement "Params: A Tracks params string may leave out its difficulty and its `o`", with its scenario. The clause "or whose `d` is followed by a letter that names no tier" cut: it is false of the code (see Found) | `engine-params`, "A params string is read whole or refused" ("a letter after a tag that the tag does not list … SHALL each be refused") |
 | Params: Tracks refuses a grid whose area cannot be counted | the clause "in the engine's sentence that the width times the height must not be unreasonably large" cut; the scenario keeps the sentence | `engine-params`, "A grid too large for a game is refused in one sentence" |
 | Params: A Tracks title says when adjacent 1 clues are allowed | removed, with its scenario; the pointer requirement names the label words as `paramConfig`'s | `label: { slot: "tail", words: … "allow adjacent 1’s" }` on the `disallow-consecutive-1-clues` item, `src/games/tracks/state.ts:299`; `engine-params`, "One describer labels every params set" (`size[ tier][, tail…]`) |
 | Description: newState parses a Tracks description and refuses a malformed one | the clause "as a desc error the engine's `validateDesc` reports" cut | `engine-params`, "The engine derives a description's verdict from newState" |
 | Controls: The Tracks keyboard cursor walks a half-grid | reworded: what select and select2 toggle cut; the half-grid and its two kinds of stop kept. The scenario says "shows" and "Enter" for "stands" and "select" | `engine-input`, "The engine owns a declaring game's press and select keys" (Enter the left-click verb, Space the right-click verb); the verbs are `primary: trackVerb` and `secondary: noTrackVerb`, `src/games/tracks/index.ts:293` |
+| Hint: One Tracks firing is one hint step | third pass: the clause "and `hintKeepTrack` SHALL then verdict `"onTrack"` and shrink the step in place until the last of them is placed" cut; that one firing is one step whose move carries every op, and the scenario, kept | `engine-hints`, "A step asking for several elements is followed one element at a time" (`trackTargets`, called at `src/games/tracks/hint.ts:411`) |
 | Hint: Tracks explains the next deduction | removed, with both scenarios. "from the player's current marks" joined "Hint: The Tracks hint starts from the player's marks and is capped at the board's own tier" | `engine-hints`, "A hint is deduced from the board in play" (scenario "A hint runs from the player's own marks"), "A hint step always names a technique, with no un-narrated fallback", and "The hint walk SHALL cover every preset a game offers" with "Deduction runs out only where the tier permits search" (scenario "Following the plan solves the board at every tier": no Tracks tier is Unreasonable) |
 | Hint: The Tracks hint is capped at the board's own tier | retitled "Hint: The Tracks hint starts from the player's marks and is capped at the board's own tier"; gains a first sentence, from "Hint: Tracks explains the next deduction": the plan is deduced from the player's marks, on squares and on edges | |
 | Hint: A firing the board already shows is hidden | second sentence reworded: "Through the shared plan loop's `showable` hook, the plan SHALL hide (apply to its working board, but not show)" became "Tracks' `showable` judgment SHALL hide", the loop's mechanism cut. Scenario "A narrated rule the board already shows is not a step" dropped, and "A blocked side on the rim is not a step" written in its place | `engine-hints`, "A hint SHALL show only steps the player's board does not already decide" (a firing not showable still advances the working board; its scenario is the dropped one, set in Tracks). The new scenario is `closed` in `evident`, `src/games/tracks/hint.ts` (`!inGrid` is closed) |
@@ -24,12 +25,13 @@ The Purpose stands: it names nothing the spec no longer holds.
 - **Rules: A Tracks mistake is a mark on a square or its edges that the
   solution contradicts.** `ts-engine`, "A mistake check compares with the one
   answer, hidden or not", names neither that an edge's mark is reported by its
-  square, nor the two kinds, nor the empty answer on a board the solver does
-  not finish.
-- **Params, "a string with no `d` decodes as Normal" and "disallowed unless it
-  carries the `o`".** Both are the declaration's (`defaultParams` and the
-  flag's `means: false`); kept as what a missing field decodes to. An Easy
-  preset's short form deals a Normal board, which only this sentence says.
+  square nor the two kinds.
+- **Params, "a string with no `d` decodes as Normal" and "a string without
+  [the `o`] SHALL decode with them disallowed".** Both are the declaration's
+  (`defaultParams` and the flag's `means: false`); kept as what a missing
+  field decodes to. An Easy preset's short form deals a Normal board, and a
+  board that allows consecutive 1 clues reads back from its short form as
+  one that does not, which only this requirement says of Tracks.
 - **Params: Tracks refuses a grid whose area cannot be counted.** The engine
   requirement leaves the ceiling to the game.
 - **Generation: Each Tracks difficulty adds its rungs.** What each tier means
@@ -50,7 +52,9 @@ The Purpose stands: it names nothing the spec no longer holds.
 
 ## Engine requests
 
-- The verdict rule of `trackTargets` (completed, on track with the step
+- Answered: `engine-hints`, "A step asking for several elements is followed
+  one element at a time".
+  The verdict rule of `trackTargets` (completed, on track with the step
   shrunk to what is left, off) → `engine-hints`. The sentence is
   "`hintKeepTrack` SHALL then verdict `"onTrack"` and shrink the step in place
   until the last of them is placed", in "Hint: One Tracks firing is one hint
@@ -126,3 +130,34 @@ Checked and found sound:
   game presses Enter on an edge.
 - The spec read whole, subject by subject: none hollow, no dangling
   antecedent.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Tracks: 3 to act on (the
+mistake check, by the review; the bare flag; a step followed one element at
+a time), one that names it as no user (the run-letter grammar) and one that
+reads its code only (every step before it refuses). Engine requests of its
+own: 1, answered. Sentences cut: 2. Clauses kept: 5.
+
+- **Cut**: the empty mistake check; `hintKeepTrack`'s verdict and the step
+  shrunk in place.
+- **Kept: what the `o` means and what a string without it decodes to**
+  (consecutive 1 clues disallowed), though the bare-flag row names this
+  requirement: what a missing field or flag decodes to stays in the game's
+  spec even where a declaration or an engine requirement gives it
+  (`brief.md`, rule 3). The sentence now also says the short form never
+  carries the `o`, the full-form-only case the review of the round found, so
+  a board that allows them reads back from its short form as one that does
+  not. No citation.
+- **Kept: "and, when one exists"** in the mistake check, the qualifier of
+  "report every square", and which marks are flagged.
+- **Kept: "Where one premise forces several ops, the step's move SHALL carry
+  them all"**, the departure from a firing as a run of legs.
+- **Kept: "Description: Tracks descriptions use the upstream encoding",
+  whole.** Tracks reads its letter runs by hand; the engine ledger names it
+  as no user of `encodeRunLength`.
+- **Kept: the ladder capped at the board's own tier.** The engine ledger
+  finds it seven games' agreement and two games' opposite, and wrote no rule.
+- The spec never says when the hint refuses, so "A hint gives every step
+  deduction still forces before it refuses" had nothing to take.
+- No "no departure" sentence and none on what a pasted game ID opens as.

@@ -60,8 +60,7 @@ its number, or a white cell cut off from the main white component.
 `findMistakes` SHALL return every player-marked non-clue cell whose mark
 contradicts the board's one answer: black where the solution is white, or
 marked white where the solution is black. It SHALL return none when the marks
-are consistent or undecided, and none where the game's search did not prove
-exactly one answer.
+are consistent or undecided.
 
 #### Scenario: findMistakes flags a wrong black
 
@@ -385,8 +384,7 @@ follows the plan. It SHALL never include the target cell itself.
 ### Requirement: Hint: A shaded premise of a Range hint takes a color of its own
 
 The doubled outline of a cited shaded square, the adjacent one in an
-`adjacency` deduction, SHALL be drawn in `COL_HINT_SHADEDREF`, not `COL_HINT`,
-so a shaded premise and the forced cell are not drawn in the same color.
+`adjacency` deduction, SHALL be drawn in `COL_HINT_SHADEDREF`.
 
 #### Scenario: A cited black square rings distinct from the forced cell
 
@@ -398,18 +396,13 @@ so a shaded premise and the forced cell are not drawn in the same color.
 
 ### Requirement: Hint: Range's hint stops where its rules do
 
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the cells the three rules force from the player's marks and no others,
-and where none is forced it SHALL refuse with the collection's sentence that
-deduction has run out. It SHALL go on from the cells the player then fills.
+On an Unreasonable board as on any other, the steps of Range's hint SHALL be
+the cells the three rules force from the player's marks.
 
 #### Scenario: The hint stops, and goes on from a cell filled rightly
 
 - **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** a cell filled wrongly there is reported by the mistake check
-- **AND** with a cell filled as the solution has it wherever the hint stops,
+- **THEN** with a cell filled as the solution has it wherever the hint stops,
   the hint finishes the board
 
 ### Requirement: Hint: Range's hint takes the clue rule first in each pass

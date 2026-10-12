@@ -68,9 +68,7 @@ one error Separate draws itself.
 
 `findMistakes` SHALL return every player edge whose state contradicts the
 board's one partition: a wall where the solution has none, or a no-wall mark
-where the solution has a wall. It SHALL take the partition from the search
-that counts the board's answers, and where that did not prove exactly one
-partition it SHALL return an empty list.
+where the solution has a wall.
 
 #### Scenario: A contradicting wall is flagged
 
@@ -354,6 +352,12 @@ either side of a wall the player drew are disconnected already.
 - **WHEN** hints are followed one recomputed step at a time from a fresh board or from a board revealing a random share of the solution's edges
 - **THEN** the board is solved and no hint refuses
 
+#### Scenario: The hint goes on from an edge decided rightly
+
+- **WHEN** the hint is followed on an Unreasonable board, and an edge is
+  decided as the solution has it wherever the hint stops
+- **THEN** the hint finishes the board
+
 ### Requirement: Hint: A hint sentence rests on the player's own marks
 
 Every hint sentence SHALL rest only on letters, walls and regions joined by the
@@ -398,23 +402,6 @@ is completed by the edit that sets it". Separate SHALL depart from neither.
 - **WHEN** the first step of a dealt board's hint is displayed, and the player
   sets its edge to the state the step forces, or to the other button's
 - **THEN** the first completes the step and the second is off the plan
-
-### Requirement: Hint: Separate's hint stops where the solver does
-
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the edges its rungs force from the player's walls and marks and no
-others, and where none is forced it SHALL refuse with the collection's
-sentence that deduction has run out. It SHALL go on from the edges the player
-then decides.
-
-#### Scenario: The hint stops, and goes on from an edge tried rightly
-
-- **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** an edge decided wrongly there is reported by the mistake check
-- **AND** with an edge decided as the solution has it wherever the hint
-  stops, the hint finishes the board
 
 ### Requirement: Hint: A Separate hint says why its edge is forced
 

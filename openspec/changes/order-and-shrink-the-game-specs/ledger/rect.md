@@ -7,13 +7,14 @@ restated.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Rectangles flags a drawn edge the solution lacks | title kept. "The game SHALL implement `findMistakes`" and "from the search that counts its answers, at either difficulty" reworded out (the second pass took the engine citation off the search: it is "the search that counts the board's answers"). Which edge is flagged, that a missing edge is none, and the empty answer kept; scenario kept | the `Game` type (`findMistakes`); `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` reads the one search, which answers at any tier); `answerOf` called at `src/games/rect/index.ts:363` |
+| Rules: Rectangles flags a drawn edge the solution lacks | title kept. "The game SHALL implement `findMistakes`" and "from the search that counts its answers, at either difficulty" reworded out (the second pass took the engine citation off the search: it is "the search that counts the board's answers"). Which edge is flagged and that a missing edge is none kept; scenario kept. Third pass: the last sentence cut whole ("It SHALL take the answer from the search that counts the board's answers, and a board that search did not prove has exactly one answer SHALL yield no mistakes.") | no mistakes without one answer: `ts-engine`, "A mistake check compares with the one answer, hidden or not". The `Game` type (`findMistakes`); `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` reads the one search, which answers at any tier); `answerOf` called at `src/games/rect/index.ts:363` |
 | Params: Rectangles' menu offers its sizes at both difficulties, the largest two at Easy | retitled "Params: Rectangles' menu offers its two largest sizes at Easy alone". The list of sizes at both difficulties and the default cut; a sentence sends the reader to `presets`, and the departure (17×17 and 19×19 at Easy alone) kept. Scenario kept | `BOARDS`, `src/games/rect/state.ts:128`, `defaultParams`, `:123`, and `presets`, `src/games/rect/index.ts:398` (`presetGrid` with its `tiers` option); `engine-params`, "The preset menu is a grid" (each board at the tiers it is offered at, easiest first); `src/engine/__snapshots__/params-stability.test.ts.snap` lists the default and the menu's lines |
 | Generation: A pasted Rectangles board opens at the difficulty it needs | removed (second pass; the first cut kept it as two pointers). "whatever lower difficulty its ID states" and the second sentence (the two refusals and their words) cut; what opens as Easy and what as Unreasonable is "Generation: An Easy Rectangles board is one the hint finishes" and "Generation: An Unreasonable Rectangles board has one answer that the hint does not reach". Scenario "A board with several answers or none is refused" dropped; "A board that needs search opens as Unreasonable" moves, unchanged, to "Generation: An Easy Rectangles board is one the hint finishes" | `engine-difficulty`, "A loaded board whose id states no tier takes the lowest tier that solves it" and "A pinned tier is kept or raised and never lowered"; `engine-params`, "A board with a mistake check loads only with exactly one answer" (`DESC_NOT_UNIQUE`, `DESC_CONTRADICTORY`). The dropped scenario's two boards are in this spec, "Solver: Rectangles' search tries the number with the fewest placements left", scenario "The search tells one answer from several and from none"; `src/games/rect/rect-tier.test.ts:364` ("with several answers, or none, is refused") holds the refusals and the board `2b2_2a2b2b2a2_2` |
 | Generation: An Easy Rectangles board is one the hint finishes | gains scenario "A board that needs search opens as Unreasonable" from "Generation: A pasted Rectangles board opens at the difficulty it needs"; sentence and its two scenarios unchanged | |
 | Solver: Rectangles' Solve returns the unique solution's edges | title kept. "take the board's answer from the search that counts its answers, at either difficulty, and return its edges, or an error when the numbers admit no division or more than one" cut to "made from the answer of the game's search, as its edges" (the engine citation beside it went in the second pass); that a dealt board's Solve is the generator's `aux` kept. Scenario kept | `engine-difficulty`, "Solve from the search shows the one answer or says which it lacks" (the solve move of the one answer at any tier; the refusals for several and for none) and "One search answers a board for everything that asks" ("but where the game kept the answer its deal drew"); `solveFromAnswer` called at `src/games/rect/index.ts:348` |
 | Solver: Rectangles counts a board's answers by a bounded search | retitled "Solver: Rectangles' search tries the number with the fewest placements left". Kept: what the search assumes where the solver stops, and what makes a position impossible. "count … up to two by trial and error over the solver" became a pointer, and "It SHALL report one answer, several, none, or that it stopped at its budget, which SHALL be counted in positions and never in time" was cut. Scenarios "A spent budget is neither answer" and "An Easy board takes one position" dropped; the other two kept | `engine-difficulty`, "The engine counts a searching game's answers up to two, within a budget of positions" (the four verdicts, positions and never time; scenarios "The budget runs out with one answer in hand" and "A board the deduction finishes"); `searchBoard` called at `src/games/rect/solver.ts:163`; the dropped cases are `src/games/rect/rect-tier.test.ts:148` and `:161` |
-| Hint: Rectangles offers an explained hint that reads only the board | retitled "Hint: A Rectangles hint step draws one rectangle or one line, and reads only the board". "Rectangles SHALL offer a hint" and "and says why it is forced" reworded out of the first sentence; what a step draws, what it reasons from and what a fit is kept; both scenarios kept | the `Game` type (`hint`); `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" ("SHALL always explain why its move is forced by a named technique") |
+| Hint: Rectangles offers an explained hint that reads only the board | retitled "Hint: A Rectangles hint step draws one rectangle or one line, and reads only the board". "Rectangles SHALL offer a hint" and "and says why it is forced" reworded out of the first sentence; what a step draws, what it reasons from and what a fit is kept; both scenarios kept. Third pass: gains the scenario "The hint goes on from a rectangle drawn rightly", the last clause of the scenario of "Hint: Rectangles' hint stops where its steps do" | the `Game` type (`hint`); `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" ("SHALL always explain why its move is forced by a named technique") |
+| Hint: Rectangles' hint stops where its steps do | removed in the third pass. Sentence 1 ("The hint SHALL never run the search."), sentence 2 (on an Unreasonable board the plan holds what the five deductions force and no others, and refuses where none is forced) and sentence 3 (it goes on from the rectangles the player then draws) cut. Of its scenario, "The hint stops, and goes on from a rectangle drawn rightly", the last clause (the solution's rectangle drawn wherever the hint stops, and the hint finishes the board) moves to "Hint: A Rectangles hint step draws one rectangle or one line, and reads only the board" as the scenario "The hint goes on from a rectangle drawn rightly"; the rest dropped | `engine-hints`, "The hint of a game on the search's tiers never searches" (sentence 1, and the wrong rectangle reported by the mistake check: scenario "A value tried wrongly"); `engine-hints`, "A hint gives every step deduction still forces before it refuses" (sentences 2 and 3, and the scenario's refusal); that the steps are the five deductions' is this spec's "Hint: A Rectangles hint step is one of five deductions" |
 | Look: A finished rectangle fills whole with the finished-region role | ", a wash of the theme pair's first hue, so it is told by hue from an unfinished square and from a number's lifted square in both schemes" cut from the first sentence; scenario kept | the palette, `out[COL_CORRECT] = REGION_DONE`, `src/games/rect/render.ts:93`; `engine-colors`, "The pair's hues carry what a player moves, seeks and finishes" (`REGION_DONE` carries the first pair member's hue and is distinct from the lifted surface under a given, in either scheme) |
 
 ## Kept, and why
@@ -43,9 +44,9 @@ restated.
   Rectangles draws its ring in a pass of its own
   (`src/games/rect/render.ts:291`), so the requirement states what a
   hand-written function does.
-- **Hint: Rectangles' hint stops where its steps do.** As in Palisade: no
-  shared requirement promises that the hint goes on to finish an Unreasonable
-  board from a rectangle drawn rightly.
+- **Hint, scenario "The hint goes on from a rectangle drawn rightly".** As in
+  Palisade: no shared requirement promises that the hint goes on to finish an
+  Unreasonable board from a rectangle drawn rightly.
 - **Hint: Rectangles' hint tries its five deductions plainest first.**
   `hintRungs` lists the same five, and nothing reads it for order.
 - **Look: Rectangles rendering** and **Rectangles draws its squares on the
@@ -135,3 +136,46 @@ surface in `Look`.
 Preferences: `prefs` is not declared (`expansion-factor` is a field of
 `paramConfig`). Each subject read alone after the edits: none hollow, no
 fragment, every title fits.
+
+## Third pass
+
+What the engine's third round states, removed. 3 rows of the third-round
+tables name Rectangles: the mistake check, the hint that never searches (with
+the every-step row that leans on it), and the cancel keys, whose review says
+the game's sentence stays. This ledger filed no engine request.
+
+Cut, 4 sentences, 1 requirement gone:
+
+- **Rules, the flagged edge**: its last sentence, whole. Where the answer
+  comes from is `engine-difficulty`, "One search answers a board for
+  everything that asks"; no mistakes without one answer is `ts-engine`, "A
+  mistake check compares with the one answer, hidden or not".
+- **"Hint: Rectangles' hint stops where its steps do"**, its three sentences:
+  `engine-hints`, "The hint of a game on the search's tiers never searches"
+  and "A hint gives every step deduction still forces before it refuses".
+
+Kept, 5 clauses:
+
+- **Hint, the scenario's last clause**, now "The hint goes on from a
+  rectangle drawn rightly": the review of the third round keeps it.
+- **Controls, "Escape, Backspace or Delete SHALL cancel that drag, or else
+  hide the cursor."** `engine-input`, "Escape and the erase keys are the
+  cancel keys" says what a cancel puts down is the game's, and its review
+  keeps the sentence: it names the keys in saying what is abandoned.
+- **Params, "an ID with no difficulty letter SHALL decode as Easy"**, and
+  `de`/`du` in the full form only. `engine-difficulty`, "A game that searches
+  has a tier for each deduction and Unreasonable above them" says
+  `searchTierSegment` leaves a string with no `d` at the tier decoding began
+  with; that Rectangles' hand-written `decodeParams` begins from
+  `defaultParams` and where it places the segment (after the `e` suffix and
+  upstream's `a`) is the game's (`src/games/rect/state.ts:146`).
+- **Description**, whole. Rectangles reads its letter runs by hand and is no
+  user of the run-letter grammar (`_engine.md`, the row's "Not users").
+- **"Generation: An Easy Rectangles board is one the hint finishes"**, with
+  its three scenarios of a pasted ID: which boards count as which tier is the
+  game's (`deductionFinishes`; "Not written"). The scenario "A board past the
+  menu is dealt and opens" stays under the `Params` sentence it is the case
+  of: no board is refused for its size, and one so large still opens.
+
+Each subject read alone after the edits: none hollow, no fragment, every
+title fits; the Purpose names nothing that went.

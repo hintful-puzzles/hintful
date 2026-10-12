@@ -151,18 +151,12 @@ deal ends at every size.
   search finishes no level
 - **THEN** the board dealt is a later level of the seed's stream than the eighth
 
-### Requirement: Solver: Sokoban's Solve finishes from the player's position, or else from the dealt board
+### Requirement: Solver: Sokoban's Solve move carries the finished board, a labeled barrel's letter with it
 
-Sokoban's Solve SHALL search for a line from the player's position and, failing that, from the
-board as dealt, and SHALL leave the finished board that line reaches. Its move SHALL carry the
-finished board as `encodeBoard` writes it: a game ID's letters, and for a labeled barrel on a
+The move Sokoban's Solve makes of a line SHALL carry the board the line finishes on as
+`encodeBoard` writes it: a game ID's letters, and for a labeled barrel on a
 target the control character the board stores, which a game ID cannot carry and only this
 move's board may. The move SHALL be refused on a board whose walls differ.
-
-#### Scenario: A lost position is solved from the dealt board
-
-- **WHEN** Solve is asked on a position a pushed-in barrel has lost
-- **THEN** it leaves a solved board, found from the board as dealt
 
 #### Scenario: A level with a labeled barrel is solved
 
@@ -352,11 +346,10 @@ many squares to the player as they could walk to.
   gives the step anything to say
 - **THEN** the step says the push puts the barrel on a target
 
-### Requirement: Hint: Sokoban's hint refuses a position it cannot finish
+### Requirement: Hint: Sokoban's hint refuses, outlining the barrel, where a barrel is stuck for good
 
 The hint SHALL refuse, outlining the barrel, when a barrel off its target is already
-stuck for good, and SHALL refuse with `NO_SOLUTION_FROM_HERE` when the search proves no
-line finishes and with `SEARCH_OUT_OF_REACH` past its reach.
+stuck for good.
 
 #### Scenario: A stuck barrel is outlined as the reason to undo
 

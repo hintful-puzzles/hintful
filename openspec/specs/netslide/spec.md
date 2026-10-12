@@ -13,10 +13,8 @@ it proposes.
 
 ### Requirement: Rules: Netslide's board, its source and the lines that never slide
 
-Netslide SHALL be played on a
-`w × h` grid of Net wire tiles, each a 4-bit mask of connections `R=1`, `U=2`,
-`L=4`, `D=8`, whose solved configuration is a spanning tree rooted at the
-source, the tile at `⌊w/2⌋, ⌊h/2⌋`, scrambled by toroidal row and column
+Netslide SHALL be played on a `w × h` grid of Net wire tiles whose solved
+configuration is a spanning tree rooted at the source, the tile at `⌊w/2⌋, ⌊h/2⌋`, scrambled by toroidal row and column
 slides. The player SHALL slide rows and columns, never the source's row or the
 source's column, until every tile is connected to the source.
 
@@ -39,9 +37,8 @@ direction, or the solve move.
 
 ### Requirement: Rules: Netslide slides rows and columns, and powers the connected tiles
 
-The game SHALL compute the set of active, powered tiles as those reachable
-from the source through mutually connected wires not separated by a barrier. A
-row or column that is mid-slide SHALL be treated as unpowered, so the
+The active, powered tiles SHALL be those `computeActive` reaches from the
+source. A row or column that is mid-slide SHALL be treated as unpowered, so the
 highlight does not appear to jump across a line in motion. The game SHALL be
 complete when every tile is active.
 
@@ -100,29 +97,17 @@ dealt the same way, and a board is harder only for showing fewer walls.
 - **THEN** "3x3 easy" is `3x3b1`, "3x3 medium" is `3x3` and "3x3 hard" is
   `3x3w`
 
-### Requirement: Description: Netslide descriptions encode wires and barriers
+### Requirement: Description: A Netslide description is the shared wire grid, read under the params' wrap
 
-The desc SHALL encode the grid row-major: one hexadecimal digit per tile
-giving its wire mask, each optionally followed by `v`, a barrier to the right
-of that tile, and/or `h`, a barrier below it. A desc holding an unexpected
-character, or one shorter or longer than `w × h` tiles, SHALL be refused. A
-game that is not wrapping SHALL be walled around its whole border, which the
-desc does not write.
+A Netslide description SHALL be its tiles and barriers as `encodeWireDesc`
+writes them and `parseWireDesc` reads them under the params' wrap
+(`engine-helpers`, "The engine provides the wire-grid description grammar"),
+with that reader's refusals and none of Netslide's own.
 
 #### Scenario: A description round-trips
 
 - **WHEN** a generated desc is parsed by `newState`
 - **THEN** the wire grid and barrier positions match those the generator built
-
-#### Scenario: A description one tile short
-
-- **WHEN** a desc of `w × h − 1` tiles is offered for a `w × h` grid
-- **THEN** it is refused
-
-#### Scenario: A non-wrapping game is walled in
-
-- **WHEN** `newState` builds a non-wrapping game
-- **THEN** every tile on the outer edge carries a barrier on its outward side
 
 ### Requirement: Generation: The solved grid is grown from the source as a spanning tree
 
@@ -504,21 +489,14 @@ board, outlined in ink.
 
 A slide SHALL be animated by offsetting the moving line, drawing the wrapping
 tile in its off-grid position for the duration. The completion flash SHALL
-spread from the source along the wires: a tile's position SHALL be its
-distance from the source in tiles along the connections, through the wrap of a
-wrapping board and never through a barrier.
+spread from the source along the wires, a tile's position being its
+`wireDistance` from the source.
 
 #### Scenario: A slide is animated
 
 - **WHEN** a frame is captured partway through a row slide
 - **THEN** that row's tiles are drawn offset from their grid positions and the
   tile wrapping around is also drawn beyond the far edge
-
-#### Scenario: A neighbor the wires do not join
-
-- **WHEN** a board is won and a tile beside the source has no wire into it
-- **THEN** it lights when the highlight has traveled the wires that do reach
-  it, later than the tiles the source is wired to
 
 ### Requirement: Look: Netslide draws its tiles on a quiet surface
 

@@ -308,7 +308,28 @@ A spec does not hold a second copy of something stated elsewhere:
 
 What a hand-written function does (`interpretMove`, a codec written out, the
 round a solver runs its deductions in) is not declared, and the spec states
-it.
+it. So is a promise a save or a link depends on that no test pins: what a
+params string that leaves a field out decodes to, and a preference's key and
+the order of its choices.
+
+**No subject a game owes is left hollow.** Where everything the game would
+say under one is a declaration's or the collection's, the subject keeps one
+requirement that names the declaration or the shared requirement and states
+each departure, or that there is none, so a reader of that subject alone
+knows where to look. That pointer is for that case only. Where the subject
+already says something of the game's own, a sentence that says a shared rule
+applies, with its citation, is the copy again
+([`repo-layout`](../openspec/specs/repo-layout/spec.md), "A subject a game
+owes says what the game does there or where it is said").
+
+**Specs to copy.** [`clusters`](../openspec/specs/clusters/spec.md) for a
+cell-state game on the declared codec and `targetVerbs`;
+[`palisade`](../openspec/specs/palisade/spec.md) for a game that takes its
+input from a shared layer and has a search tier, with its `Controls` and
+`Hint` pointers; [`keen`](../openspec/specs/keen/spec.md) for a Latin game
+with notes and a hand-written codec;
+[`inertia`](../openspec/specs/inertia/spec.md) for a game of movement and
+search, which declares little and so states most of itself.
 
 A requirement is one behavior in `SHALL` sentences, within the 500 characters
 the validator allows before the first scenario, with no date, no change id and

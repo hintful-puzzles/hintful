@@ -4,7 +4,9 @@ The Purpose stands as it was: everything it names is still in the spec.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Loopy checks notes against its solution | the clause "and the hint SHALL refuse while one stands" cut from the last sentence, and "and a hint asks for the mistakes to be fixed first" from its scenario | `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong board before asking the game" (`FIX_MISTAKES_FIRST` when `findMistakes` reports anything; a note is reported by `findMistakes`, `src/games/loopy/index.ts:832`) |
+| Rules: Loopy checks the board against its solution | third pass: the clause "and a board whose clues admit no solution the solver can prove unique SHALL report no mistakes" cut from the second sentence. What is a mistake on an edge, that the solution is solved from the clues alone at the top tier, and the `checkCompletion` sentence kept; both scenarios kept | `ts-engine`, "A mistake check compares with the one answer, hidden or not" ("Where the game's solver or search did not establish exactly one answer, no mark SHALL be flagged against an answer … the result is empty without an answer where its spec states none"); the early return is in `findMistakes`, `src/games/loopy/index.ts` |
+| Description: Loopy descriptions use the upstream run-length encoding | third pass: "Runs longer than 26 SHALL be split." cut, the writer's half of the grammar. The entry for a clue, the letter for a run of 1–26 unclued faces (which Loopy's own reader reads), and the grid part kept; scenario kept | `engine-params`, "The engine provides the run-letter description grammar" (`encodeRunLength` writes "a longer run as a `z` for every twenty-six and a letter for the rest"); `encodeClues`, `src/games/loopy/state.ts:130` |
+| Rules: Loopy checks notes against its solution | the clause "and the hint SHALL refuse while one stands" cut from the last sentence, and "and a hint asks for the mistakes to be fixed first" from its scenario. Third pass: "and SHALL report none on a board with no provably unique solution" cut from the first sentence (`ts-engine`, "A mistake check compares with the one answer, hidden or not") | `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong board before asking the game" (`FIX_MISTAKES_FIRST` when `findMistakes` reports anything; a note is reported by `findMistakes`, `src/games/loopy/index.ts:832`) |
 | Params: Loopy's params are a size, t with a grid index, and d with a tier letter | retitled "Params: A Loopy params string may leave out its height, its tiling and its tier". The encoding (order, `x`, `t`, `d`, the four tier letters, the tier in the full form only) cut for a sentence that names `paramConfig` and the declared codec (rule 2); the refusal of a `d` letter that is none of the four cut; the three missing-piece clauses kept. Scenarios "The Hats preset" and "Hard is h, and Tricky is t" dropped; "A part left out keeps its default" kept | the `paramsCodec` field list, `src/games/loopy/params.ts:191` (`dims`, `num "t"`, `choice "d"` over `LOOPY_DIFF_CHARS = "enth"`, `:100`, `full: true`); `engine-params`, "A params string is read whole or refused" (a letter after a tag that the tag does not list is refused). `src/engine/__snapshots__/params-stability.test.ts.snap` holds `9x11t16dh` with its brief `9x11t16`, and `7x7t0dt` and `7x7t0dh` under their preset titles |
 | Generation: Loopy generation recovers from a degenerate grid patch | last sentence cut ("Exhausting the bound SHALL raise an error rather than return a fallback board.") | `engine-difficulty`, "Every generate-until-success loop is bounded by the shared retry limit" (it throws `RetryLimitExceeded`) and "An exhausted retry limit throws, or hands over to a bounded recovery"; the throw is `src/games/loopy/grid-build.ts:123` |
 | Generation: Where no patch reaches its size, Loopy deals the largest drawn | last sentence cut ("A deal that runs its bound on patches out SHALL throw `RetryLimitExceeded`, as any generator does."), and scenario "Every patch drawn is one that cannot carry the tier" dropped | `engine-difficulty`, "Every generate-until-success loop is bounded by the shared retry limit" (params that admit no puzzle throw `RetryLimitExceeded`) and "A generator that runs out of tries is answered, not thrown" (what the engine's `generate` answers); the bound is `retryLimit("loopy: unfavorable grid patch", …)`, `src/games/loopy/generator.ts:139` |
@@ -27,8 +29,8 @@ The Purpose stands as it was: everything it names is still in the spec.
 - **Rules: Loopy checks the board against its solution.** Reads as the
   collection's "flags mistakes against the one answer" (`ts-engine`, "A
   mistake check compares with the one answer, hidden or not"). What is a
-  mistake on an edge, that the answer is solved from the clues at the top
-  tier, and that a board with no provable answer reports nothing are Loopy's.
+  mistake on an edge, and that the answer is solved from the clues at the top
+  tier, are Loopy's.
 - **Params: Loopy offers every tiling the geometry module provides**, and
   **Solver: Loopy grades boards with a four-tier deductive solver.** Each
   scenario reads as `engine-difficulty`, "A difficulty tier binds the board it
@@ -207,3 +209,50 @@ reads `auto-follow` by its key is out of date.
 
 Each subject read alone after the edits: none hollow, no fragment, every
 title fits.
+
+## Third pass
+
+What the engine's third round states, removed. 1 row of the third-round
+tables names Loopy with a sentence to cut (the run-letter grammar, the
+writer's half) and 3 name it as stating none (the unlocalized contradiction,
+the steps before a refusal, the cancel keys). The mistake check's row does
+not name Loopy; its sentence stood here in other words, twice. This ledger
+filed no engine request.
+
+Cut, 3 clauses:
+
+- **Rules, the board's mistake check**: "and a board whose clues admit no
+  solution the solver can prove unique SHALL report no mistakes".
+- **Rules, the notes' mistake check**: "and SHALL report none on a board with
+  no provably unique solution". Both are `ts-engine`, "A mistake check
+  compares with the one answer, hidden or not".
+- **Description**: "Runs longer than 26 SHALL be split.", which is
+  `encodeRunLength`'s and is `engine-params`, "The engine provides the
+  run-letter description grammar".
+
+Kept, 5 clauses:
+
+- **Description, "a run of 1–26 unclued faces as a single letter `a`–`z`"**:
+  Loopy reads its clue string by hand and not with `scanRunLength`
+  (`src/games/loopy/state.ts:30` imports the writer alone), so the sentence
+  stays for the reader, as the engine ledger's row says. The scenario "A
+  generated description round-trips" stays: no engine requirement states a
+  round trip of this grammar.
+- **Rules, "solved from the clues alone at the top tier"** and the
+  `checkCompletion` sentence: where the answer is solved from, and a broken
+  rule shown without one, are the game's.
+- **Params, "Squares where `t` is absent and Easy where `d` is absent"**:
+  left the game's own, the tier being a `choice` and not `searchTierSegment`.
+- **Controls, "A pointer press or Escape SHALL hide the cursor"** and "Escape
+  SHALL release a pin before it hides the cursor": what a cancel puts down is
+  the game's (`engine-input`, "Escape and the erase keys are the cancel
+  keys"), and Loopy cancels on Escape alone, its erase key being a verb.
+- **Hint, "and Loopy makes no departure"**, in "Hint: A Loopy hint step's
+  marks are its legend's": the one pointer of the marks, which the second
+  pass kept; the sentences after it need its "role".
+
+The hint's two refusals are still stated nowhere in the spec (see Found), so
+`engine-hints`, "A contradiction no entry can be blamed for is refused as one
+to undo" and "A hint gives every step deduction still forces before it
+refuses" took nothing from it. Each subject read alone after the edits: none
+hollow, no fragment, every title fits; the Purpose names nothing that went.

@@ -103,9 +103,47 @@ is the next session's, starting at 3.1.**
       cube flip) (inertia sokoban slide pegs samegame) (mines blackbox guess
       untangle flood).
 - [ ] 3.4a Read `## Found` in every ledger
-      (`grep -n -A30 '^## Found' ledger/*.md`): fix what is quick and safe, a
-      spec sentence the code contradicts above all, and raise the rest in
-      `design.md` under "Found, and the owner's to decide".
+      (`grep -n -A30 '^## Found' ledger/*.md`, and the Found lists of
+      `ledger/_engine.md`): fix what is quick and safe, a spec sentence the
+      code contradicts above all, and raise the rest in `design.md` under
+      "Found, and the owner's to decide". Done so far: Flip's second
+      too-large sentence is the engine's (16867030; **its Custom dialog is
+      still to be looked at in the running app**, a 300×300 board). Known
+      from the reviewers' reports, each verified from the code or by a run
+      and each in its game's ledger:
+      - the same defect as Flip's in Mosaic ("Width times height must be at
+        most 10000.") and Undead (its over-54 refusal): check each is a hold
+        limit and not the refusal of a board the game cannot work, then fix;
+      - Untangle: a played hint step lands at once (`animLength` answers 0
+        because the hint's release sets `justDragged`), against
+        `engine-hints`, "A hint-executed move plays its animation at one
+        duration". A defect a player meets;
+      - Seismic: `validateParams` never reads `full`, so a pasted ID above
+        64 cells (100 in Tectonic) is refused at load, against
+        `engine-params`, "A generation-only bound is gated on full"; the
+        code's comment gives a reason that no longer holds. Upstream has no
+        bound, so this refuses a desc upstream's generator writes. Whether a
+        board that size loads in reasonable time is unmeasured: measure,
+        then fix or raise;
+      - Magnets and Undead decode a params string with no `d` as Normal and
+        say so nowhere; Keen and Unequal likewise; five games' short form
+        reads back differently from the full form through a full-form-only
+        flag (ABCD, Crossing, Magnets, Signpost, Tracks), and only
+        Signpost's differs from its default. Find whether a player is ever
+        handed a short form before calling any of it a defect;
+      - Solo's `decodeParams` accepts a malformed symmetry code (`3x3m3`),
+        against "A params string is read whole or refused";
+      - Boats' ring role draws a filled segment or waves and no ring, which
+        `engine-hints`, "A hint marks beside the content, never behind it"
+        forbids as worded and `docs/hints-marks.md` § "Echo the move's shape
+        in the hint color" asks for: the guide and the requirement disagree;
+      - `searchTierSegment` games' default tier "SHALL be Easy" and nothing
+        asserts it; `src/store/settings.ts` holds a second copy of the
+        `pencil-keep-highlight` default; stale comments at
+        `src/games/filling/solver.ts` (above `deduceHintPlan`),
+        `src/games/flip/hint.ts:41` and `src/games/slant/render.ts`
+        ("teal"); `docs/` names a `"broken"` status of `deduceHintPlan` that
+        does not exist.
 - [ ] 3.5 Where a removed requirement held the only statement of a promise
       to a player (a save or link format), the ledger names the test that
       holds the promise now, or the requirement stays.

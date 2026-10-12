@@ -92,9 +92,10 @@ a sentence of the game's own.
 - **THEN** the board is refused with "This game ID has no empty hole for a peg
   to jump into."
 
-### Requirement: Solver: Pegs' Solve finishes from the player's position, or else from the dealt board
+### Requirement: Solver: Pegs' Solve move leaves one peg where the search's line of jumps ends
 
-Pegs' Solve move SHALL leave one peg on the square the search's line of jumps ends on. It SHALL search from the player's position first and, when that position is lost or past the search's reach, from the dealt board. It SHALL refuse with `NO_SOLUTION` only when the search proved the dealt board has no finish, and with `PUZZLE_NOT_REASONABLE` otherwise.
+Pegs' Solve move SHALL leave one peg on the square where the line of jumps
+that Solve's search found ends.
 
 #### Scenario: A lost position
 
@@ -231,13 +232,11 @@ jump loses.
 - **WHEN** nothing about the other jumps is settled, a peg has no peg beside it, and the offered jump lands beside it
 - **THEN** the step outlines that peg, calls it stranded, and asks the player to go back for it
 
-### Requirement: Hint: Pegs' hint refuses a position it cannot finish from
+### Requirement: Hint: Pegs' hint refuses, outlining them, where pegs are cut off for good
 
 Where the board holds pegs no jump can ever involve again and more than one peg
 is left, the hint SHALL refuse, outlining those pegs, with a sentence that says
-they are cut off and asks the player to undo. Otherwise it SHALL refuse with
-`NO_SOLUTION_FROM_HERE` when the search proved no line finishes, and with
-`SEARCH_OUT_OF_REACH` when the search could not settle the position.
+they are cut off and asks the player to undo.
 
 #### Scenario: A peg cut off
 
@@ -296,9 +295,9 @@ gray.
 The keyboard cursor SHALL be drawn at the corners of its cell, beside the peg
 or the hole, and SHALL NOT recolor either. A peg picked up from the keyboard
 SHALL keep its own color inside a ring in the held color. A hint's rings and
-outline SHALL be drawn in the margin beside the peg, and its stripes on the
-cell's face under the peg. A hint's arrow SHALL be laid over the pegs, from
-the edge of the peg that jumps, across the peg it jumps, toward the hole.
+outline SHALL be drawn in the margin beside the peg. A hint's arrow SHALL be
+laid over the pegs, from the edge of the peg that jumps, across the peg it
+jumps, toward the hole.
 
 #### Scenario: The cursor is beside the peg
 

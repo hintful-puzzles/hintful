@@ -3,6 +3,8 @@
 The Purpose was corrected: it named "the params and description encodings",
 and the spec now holds what the params refuse and what a short string means;
 it also names the search, which the spec states and the Purpose left out.
+Third pass: "what the explained deductive hint says and marks" is "says and
+in what order", the spec holding none of the hint's marks now.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
@@ -14,9 +16,12 @@ it also names the search, which the spec states and the Purpose left out.
 | Controls: Pattern's keyboard paints and cycles as the pointer does | retitled "Controls: Pattern's keyboard stroke paints as the pointer's drag does". Last sentence ("The cursor-select keys SHALL cycle the cursor's cell: Enter as a left press does, Space as a right press does.") cut; scenario "A click and Enter agree" moves, unchanged, to "Controls: A Pattern press cycles the pressed cell and begins a drag", whose first sentence says a press cycles the cell as the cursor-select keys do; the other three scenarios kept | `targetVerbs` (`primary: shadeVerb`, `secondary: clearVerb`), `src/games/pattern/index.ts:148`; `engine-input`, "The engine owns a declaring game's press and select keys" (Enter the left-click verb, Space the right-click verb) and "A verb is the game's function, and other input is the game's own arm" (the release arm calls the same verb) |
 | Controls: A Pattern press cycles the pressed cell and begins a drag | gains scenario "A click and Enter agree" from "Controls: Pattern's keyboard paints and cycles as the pointer does"; sentences untouched | |
 | Hint: Pattern provides an explained, deductive hint | removed, with its scenario | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback"; the four techniques are this spec's "Hint: A Pattern run's overlap is shaded, and a cell no run reaches is clear" (overlap, out of reach, a line with no clues) and "Hint: The single-line intersection is Pattern's bottom rung" |
-| Hint: A Pattern hint never reveals the solution or searches | second sentence (every Easy board is line-solvable, so its plan completes with no un-narrated step) and scenario "The plan solves the board" cut; "as it does from any position" cut | this spec, "Generation: An Easy Pattern board is one the per-line solver solves"; `engine-hints`, "The hint walk SHALL cover every preset a game offers", "A hint step always names a technique, with no un-narrated fallback" and "A hint is deduced from the board in play"; `src/games/pattern/pattern-hint.test.ts:81` holds the plan that solves the board |
+| Hint: A Pattern hint never reveals the solution or searches | second sentence (every Easy board is line-solvable, so its plan completes with no un-narrated step) and scenario "The plan solves the board" cut; "as it does from any position" cut | this spec, "Generation: An Easy Pattern board is one the per-line solver solves"; `engine-hints`, "The hint walk SHALL cover every preset a game offers", "A hint step always names a technique, with no un-narrated fallback" and "A hint is deduced from the board in play"; `src/games/pattern/pattern-hint.test.ts:81` holds the plan that solves the board. Third pass: retitled "Hint: Pattern's hint stops where the lines do" and cut to what its deductions are, reworded to stand ("the steps of Pattern's hint SHALL be those a line forces from its own clue and marks"). Cut: "The hint SHALL never reveal the stored solution or run a search", "and no others, and where no line forces a cell the hint SHALL refuse with the collection's sentence that deduction has run out", "It SHALL go on from the marks the player then makes". The scenario cut to its last clause (a cell marked rightly, and the hint has a step again): `engine-hints`, "The hint of a game on the search's tiers never searches" (never runs the search nor reads the answer kept from it) and "A hint gives every step deduction still forces before it refuses" (scenario "A board that stalls part-way") |
+| Hint: Pattern's narration leads with the indication and concludes by necessity | third pass: "SHALL lead with the indication" cut; what the indication is (the clue and the spotted pattern in board terms) and the necessity voice kept; retitled "Hint: Pattern's narration names the clue and what was spotted, and concludes by necessity"; scenario kept | `engine-hints`, "A step's sentence opens with what the player can spot" |
+| Hint: Pattern's hintKeepTrack follows partial progress | third pass: removed, with its scenario "Part of a step is filled by hand" | `engine-hints`, "A step asking for several elements is followed one element at a time" (the three verdicts and the step shrunk to the targets left; scenario "Two of three squares in one drag"); `trackTargets`, called at `src/games/pattern/index.ts:418` |
 | Hint: Pattern hint color legend | removed, with its scenario "Forced cells are highlighted, not pre-filled" | `hintMarks.roles.ring`, `src/games/pattern/index.ts:487` ("the cells the step decides; the sentence says whether they must be …"); `engine-hints`, "A hint marks beside the content, never behind it" (ringed and not filled, in every game) and "Requesting a hint never mutates the board" |
-| Hint: Pattern's hint premises follow the element-type legend | cut to its third sentence, which color outlines a cited `Full` cell and which an `Empty` one, reworded to stand ("Of the cells a step cites"); retitled "Hint: A cell a Pattern hint cites is outlined by what it holds"; scenario kept. First sentence (the stable legend, a non-color cue, no color named), second (the line's clue in the hint color, its line hatched) and "each outline at the cell's edge, beside the piece or the cross" cut | `engine-hints`, "A hint naming several kinds of element colors them by a stable legend", "A legend color is never the only cue", "A narration never identifies an element by its color", "A hint hatches the one line its sentence names" (the line and the clue slot at its end) and "A hint mark is drawn on the cell's border"; `hintMarks.roles.outline` and `.stripes`, `src/games/pattern/index.ts:490` |
+| Hint: Pattern's hint premises follow the element-type legend | cut to its third sentence, which color outlines a cited `Full` cell and which an `Empty` one, reworded to stand ("Of the cells a step cites"); retitled "Hint: A cell a Pattern hint cites is outlined by what it holds"; scenario kept. First sentence (the stable legend, a non-color cue, no color named), second (the line's clue in the hint color, its line hatched) and "each outline at the cell's edge, beside the piece or the cross" cut | `engine-hints`, "A hint naming several kinds of element colors them by a stable legend", "A legend color is never the only cue", "A narration never identifies an element by its color", "A hint hatches the one line its sentence names" (the line and the clue slot at its end) and "A hint mark is drawn on the cell's border"; `hintMarks.roles.outline` and `.stripes`, `src/games/pattern/index.ts:490`. Third pass: "Hint: A cell a Pattern hint cites is outlined by what it holds" removed, with its scenario "Premise marks are ringed by their color": `engine-colors`, "The two premise references each cite one state of a cell" (a cell cited for being full takes `HINT_BLACKREF`, one cited for being marked empty `HINT_WHITEREF`, each an outline or a band and never a fill); that Pattern's is an outline is `hintMarks.roles.outline` ("any squares already marked … that hold a run in place, outlined in a color of their own"), `src/games/pattern/index.ts:490`; `engine-hints`, "A hint mark is drawn on the cell's border" (the content left visible) |
+| Look: Pattern draws a full cell as a piece and an empty one as the clear square | third pass: last sentence ("A hint's line hatch SHALL be drawn over a cell's surface, the clear square's included") cut; scenario kept | `engine-hints`, "A hatch lies over the square's ground and under what it holds" (the ground includes the clear square's cross; scenario "A hatched clear square") |
 | Look: Pattern's grid lines are the surface's quiet grid color | retitled "Look: Pattern doubles every fifth grid line, and its frame is one line thick". "SHALL be the surface's quiet grid color" and "The clue numbers SHALL stay in the ink color" cut; the frame's weight and the doubled fifth line kept. Scenario kept | the palette, `out[COL_GRID] = surfaceGrid(defaultBackground)` and `out[COL_TEXT] = INK`, `src/games/pattern/render.ts:80` and `:82` |
 
 ## Kept, and why
@@ -39,29 +44,27 @@ it also names the search, which the spec states and the Purpose left out.
 - **Hint: One Pattern line deduction is one multi-cell step.** `engine-hints`,
   "One deduction firing is one journey", makes a several-move deduction
   several legs; Pattern makes it one step with one move.
-- **Hint: Pattern's narration leads with the indication and concludes by
-  necessity.** The necessity-voice requirements say who is checked, not
-  Pattern's three endings.
-- **Hint: Pattern's hintKeepTrack follows partial progress.** Hand-written,
-  `src/games/pattern/index.ts:410`.
+- **Hint: Pattern's narration names the clue and what was spotted, and
+  concludes by necessity.** The necessity-voice requirements say who is
+  checked, not Pattern's three endings.
 - **Hint: Pattern's hint takes the first line a named technique decides.**
   `hintRungs` lists the four rungs, and nothing reads it for order: the order
   is the two techniques of `deduceHintPlan`, `src/games/pattern/solver.ts:763`.
-- **Hint, "a cited `Full` cell `COL_HINT_BLACKREF`, an `Empty` cell
-  `COL_HINT_WHITEREF`".** The legend says "outlined in a color of their own"
-  and not which; `engine-colors` names the two roles and not what each cites.
 - **Look: Pattern draws a full cell as a piece and an empty one as the clear
   square.** The shared requirements say what the piece and the clear square
-  are; that Pattern is a half-and-half board, and that the hatch is drawn
-  over the clear square's surface, is the game's.
+  are; that Pattern is a half-and-half board is the game's.
 
 ## Engine requests
 
-- `findMistakes` returns nothing where the search proved no single answer →
+- Answered: `ts-engine`, "A mistake check compares with the one answer,
+  hidden or not".
+  `findMistakes` returns nothing where the search proved no single answer →
   `engine-difficulty`, "One search answers a board for everything that asks".
   Pattern's spec holds no sentence of it (see Found); the code is
   `findMistakes`, `src/games/pattern/solver.ts:806`.
-- What `HINT_BLACKREF` and `HINT_WHITEREF` cite → `engine-colors`, "The hint
+- Answered: `engine-colors`, "The two premise references each cite one state
+  of a cell".
+  What `HINT_BLACKREF` and `HINT_WHITEREF` cite → `engine-colors`, "The hint
   emphases stay distinguishable in both schemes", which names them only as
   "the two premise references". The sentence is "an already-placed `Full`
   cell SHALL be outlined `COL_HINT_BLACKREF` and an already-placed `Empty`
@@ -146,3 +149,37 @@ Checked and found sound:
   and `secondary: clearVerb`, `deductionFinishes`, `dealUnreasonable`'s
   `deduced`, `COL_GRID` and `COL_TEXT`.
 - Every engine title the spec and the ledger cite is exact (23 citations).
+
+## Third pass
+
+Rows of the engine's third-round tables that name Pattern: 7 (the mistake
+check, a step followed one element at a time, every step before it refuses,
+never searches, the indication first, the hatch, the premise references).
+Engine requests of its own: 2, both answered. Sentences cut: 7, two
+requirements and two scenarios with them. Clauses kept: 4.
+
+- **Cut**: "never reveal the stored solution or run a search"; the plan's
+  "and no others" and its refusal; "It SHALL go on from the marks the player
+  then makes"; "SHALL lead with the indication"; the whole of
+  `hintKeepTrack`'s requirement; the two premise outlines; the hatch over the
+  clear square.
+- **Kept: what the hint's deductions are** (a line read from its own clue and
+  marks), and the scenario's last clause, that a cell marked rightly gives
+  the hint a step again: the engine's "A value tried rightly" allows a second
+  refusal.
+- **Kept: what Pattern's indication is** (the clue and the spotted pattern)
+  and its three necessity endings.
+- **Kept: nothing of the premise outlines.** The review of the round leaves a
+  game its slot name and its mark's shape. Pattern's slots are the engine's
+  two under a `COL_` prefix, and the shape is the legend's (`hintMarks`,
+  `outline`: "outlined in a color of their own"), so no clause was left that
+  neither states. Unsure of this one: restore "an already-placed cell a step
+  cites SHALL be outlined" if the legend's words are not to be leaned on.
+- **The mistake check**: Pattern's spec never held the empty-result sentence,
+  so nothing went.
+- **Left the game's own**: "Easy where the per-line solver and the hint
+  finish it" (the engine ledger's "Not written": `deductionFinishes` is each
+  game's).
+- No "no departure" sentence and none on what a pasted game ID opens as. The
+  scenario "A board that needs search opens as Unreasonable" sits under the
+  sentence that says what counts as which tier.

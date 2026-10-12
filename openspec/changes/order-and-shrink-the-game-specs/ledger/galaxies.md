@@ -5,14 +5,14 @@ The Purpose stands as it was: everything it names is still in the spec.
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
 | Rules: Galaxies detects mistakes against the unique solution | first sentence cut ("Galaxies SHALL implement the engine's `findMistakes` hook."); the second now names `findMistakes` as its subject | the `Game` type (`findMistakes`, `src/games/galaxies/index.ts:1220`); `ts-engine`, "The engine supports an ephemeral, opt-in mistake-checking hook" |
-| Rules: What is incomplete is not flagged | scenario "A solved board is clean" dropped | `ts-engine`, "The midend shows mistakes until the next transition" (a move clears the display); that a right board reports nothing is the requirement's own first sentence and its scenario "A correct partial board is clean" |
+| Rules: What is incomplete is not flagged | scenario "A solved board is clean" dropped. Third pass: the last sentence cut ("If the cleared copy does not solve to a unique solution, which is possible only for a hand-entered board that is not unique, Galaxies SHALL flag nothing."); the first sentence and the two scenarios left kept | the last sentence: `ts-engine`, "A mistake check compares with the one answer, hidden or not" ("Where the game's solver or search did not establish exactly one answer, no mark SHALL be flagged against an answer"). `ts-engine`, "The midend shows mistakes until the next transition" (a move clears the display); that a right board reports nothing is the requirement's own first sentence and its scenario "A correct partial board is clean" |
 | Params: Galaxies parameter strings round-trip, and a bare size is a square board | retitled "Params: A Galaxies params string may leave out its height and its tier". The field list, the `WxH` form, the `dn` and `du` letters and the round trip cut for a sentence that names `paramConfig` and the declared codec (rule 2); the bare size kept, and the absent tier and the short form joined from "Params: Galaxies' short params form is the size alone". Scenario "The lenient forms decode" kept; gains scenario "An Unreasonable preset in the short form" | `paramConfig`, `src/games/galaxies/index.ts:1090`, and the `paramsCodec` field list, `:1099` (`dims`, `choice "d"` over `"nu"`, `full: true`); `engine-params`, "A game declares its params encoding once, and both codec halves are derived" (the round trip); `src/engine/__snapshots__/params-stability.test.ts.snap` holds `7x7dn`, `7x7du` and the brief `7x7` |
 | Params: Galaxies' short params form is the size alone | removed. That a string with no `d` segment is Easy, and that the short form is the size alone, joined "Params: A Galaxies params string may leave out its height and its tier"; the letters `n` and `u`, and `WxH` for a square board, cut. Scenario "An Unreasonable preset in the short form" moves, unchanged, to that requirement | `choice(paramConfig, "d", "difficulty", "nu", { full: true })` and `dims`, `src/games/galaxies/index.ts:1099`; the snapshot's `full=7x7du  brief=7x7` |
 | Params: Galaxies refuses a size it cannot deal | retitled "Params: Galaxies refuses to deal a 3×3 at Unreasonable". First sentence (a width and a height of 3 to 100, refused by the engine) replaced by a closing one that names `paramConfig`; the 3×3 refusal and its two qualifiers kept. Scenario "A width of 2" dropped; "A 3×4 has Unreasonable boards" kept | `bounds: { min: 3, max: 100 }`, `src/games/galaxies/index.ts:1093`; `engine-params`, "Params validity is the engine's check" (its scenario gives "Width must be at least N.") |
 | Generation: Galaxies generates uniquely-solvable boards at the requested difficulty | retitled "Generation: A Galaxies board is Easy where the deduction chain finishes it and Unreasonable where only recursion does". The promise of one answer at the requested tier cut (the pointer that first replaced it went in the second pass, the requirement saying what each tier is); what the solver's diagnosis must be is kept and says what each tier is, in the words of "Solver: The Galaxies solver grades by deduction, then bounded recursion". "For every preset" cut. Scenario kept | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates"; the gate is `solverState(probe, params.diff) !== params.diff`, `src/games/galaxies/generator.ts:388` |
 | Hint: Galaxies explains its deductions in association vocabulary | removed, with its scenario "A forced association is taught as one step" | `engine-hints`, "The solver and the hint are two projections of one deduction engine" (the same chain with the recorder on), "One deduction firing is one journey" and "A hint relies only on marks the player can make"; that a step says why and never merely what to do is "A hint step always names a technique, with no un-narrated fallback"; why each association is forced is this spec's technique requirements, and that one move brings the partner is "Hint: A hint step's action is a move the game already has", scenario "The partner comes in the same step" |
 | Hint: The hint plan finishes the board with walls | second sentence cut ("Followed from any position it is asked from, the hints SHALL reach a solved board, or, on an Unreasonable board only, the refusal that deduction has run out.") | `engine-hints`, "A hint finishes a board from a right entry made out of order" and "Deduction runs out only where the tier permits search"; this spec, "Hint: The Galaxies hint stops where its deductions do" |
-| Hint: The Galaxies hint never guesses | retitled "Hint: The Galaxies hint stops where its deductions do". Its sentences (every step a deduction, no guess, the refusal and what it says) replaced by two that keep what a guess is here and that the refusal is the collection's sentence (the two engine citations beside it went in the second pass) (trying a square's dot and following it until something breaks) and takes the two sentences of "Hint: An Easy board is finished by deduction alone". Scenario kept | `engine-hints`, "A Search is refused and never narrated" (no survivor of a search reported, the refusal says deduction has run out) and "Deduction running out on a sound board SHALL have one wording" (what the player can do); `DEDUCTION_EXHAUSTED`, `src/games/galaxies/index.ts:994` |
+| Hint: The Galaxies hint never guesses | retitled "Hint: The Galaxies hint stops where its deductions do". Its sentences (every step a deduction, no guess, the refusal and what it says) replaced by two that keep what a guess is here and that the refusal is the collection's sentence (the two engine citations beside it went in the second pass) (trying a square's dot and following it until something breaks) and takes the two sentences of "Hint: An Easy board is finished by deduction alone". Scenario kept. Third pass: "Where none of its deductions applies it SHALL refuse with the collection's sentence that deduction has run out." cut, and the sentence after it reworded to stand without "That refusal" (an Easy board is carried to solved by deduction alone, so the hint's refusal that deduction has run out is reached on an Unreasonable board only) | the cut sentence: `engine-hints`, "A hint gives every step deduction still forces before it refuses" (refuses with `DEDUCTION_EXHAUSTED` only where it forces none). `engine-hints`, "A Search is refused and never narrated" (no survivor of a search reported, the refusal says deduction has run out) and "Deduction running out on a sound board SHALL have one wording" (what the player can do); `DEDUCTION_EXHAUSTED`, `src/games/galaxies/index.ts:994` |
 | Hint: An Easy board is finished by deduction alone | removed. Both sentences joined "Hint: The Galaxies hint stops where its deductions do"; scenario "An Easy board is always finished by deduction" dropped | `engine-hints`, "The hint walk SHALL cover every preset a game offers" and "Deduction runs out only where the tier permits search"; `src/games/galaxies/galaxies-hint.test.ts` ("an Easy board is always carried all the way to solved") |
 | Look: Galaxies' win flash sweeps the cells | retitled "Look: A lit cell of a black dot's region is drawn as a white dot's is". The diagonal sweep, and that a lit cell is filled with a flash color and keeps what it holds, cut (the two citations that first replaced them went in the second pass); the black region's case is kept as the sentence, opening "A cell of a black dot's region that the win flash lights", with what its scenario said of the grid lines. Scenario kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep`, `src/games/galaxies/render.ts:815`); `engine-colors`, "A solved flash drawn as a color takes a shared color"; the grid line is `flags & DRAW_BLACK && !lit`, `src/games/galaxies/render.ts:382` |
 | Hint: Hint marks name what the player can see | first clause cut ("Evidence SHALL be highlighted in the hint color legend, and"), the rest of that sentence now led by "A hint's words"; last sentence cut ("Equivalent moves SHALL share a color."). Scenario kept | `engine-hints`, "A hint naming several kinds of element colors them by a stable legend" (each kind one legend color, equivalent forced moves the one target color) and "A bound hint step's words SHALL name exactly the marks it draws"; the legend is `hintMarks.roles`, `src/games/galaxies/index.ts:1226` |
@@ -35,9 +35,10 @@ The Purpose stands as it was: everything it names is still in the spec.
 - **Preferences: Candidate dots are ringed during a cell-to-dot drag, by
   preference.** The key and the default are a declaration and `newUi`; no test
   reads `galaxies-show-drag-candidates`, so the key stays where it is stated.
-- **Hint: The Galaxies hint stops where its deductions do**, "That refusal
-  SHALL be reached on an Unreasonable board only: an Easy board SHALL be
-  carried all the way to solved by deduction alone". Reads as `engine-hints`,
+- **Hint: The Galaxies hint stops where its deductions do**, "An Easy board
+  SHALL be carried all the way to solved by deduction alone, so the hint's
+  refusal … SHALL be reached on an Unreasonable board only". Reads as
+  `engine-hints`,
   "Deduction runs out only where the tier permits search", which says where
   the refusal may be shown. That the hint's own deductions finish every Easy
   board is what Easy means here, beside the solver's meaning in `Generation`.
@@ -163,3 +164,35 @@ surface in `Look`, which cite nothing.
 Preferences: the cut did not touch "Preferences: Candidate dots are ringed
 during a cell-to-dot drag, by preference". Each subject read alone after the
 edits: none hollow, no fragment, every title fits.
+
+## Third pass
+
+What the engine's third round states, removed. 2 rows name Galaxies, both
+added by the reviews: the mistake check and the hint that gives every step
+before it refuses. This ledger filed no engine request.
+
+Cut, 2 sentences:
+
+- **Rules, "What is incomplete is not flagged"**: its last sentence, that
+  nothing is flagged where the cleared copy has no unique solution:
+  `ts-engine`, "A mistake check compares with the one answer, hidden or not".
+- **Hint, where the hint stops**: "Where none of its deductions applies it
+  SHALL refuse with the collection's sentence that deduction has run out":
+  `engine-hints`, "A hint gives every step deduction still forces before it
+  refuses".
+
+Kept, 4 clauses:
+
+- **Rules, "solving a cleared copy of the state, dots only"**: where the
+  answer is solved from, which the review leaves to the game.
+- **Hint, that no step tries a square's dot**, and **that an Easy board is
+  carried to solved by deduction alone**: the review of the third round names
+  both as staying. The scenario "Deduction running out is said plainly, not
+  guessed past" stays as the case of the first.
+- **Params, "a string with no `d` segment as Easy"**: left the game's own.
+  Galaxies' tier is a `choice` and not `searchTierSegment`, and the engine
+  fixes no tier for it (`_engine.md`, second round, "Not written").
+
+Each subject read alone after the edits: none hollow, no fragment, no "That
+refusal" without the refusal it names, every title fits; the Purpose names
+nothing that went.

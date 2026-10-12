@@ -395,8 +395,7 @@ the error color.
 collection's cell surface, and every cell holding a given element on the
 collection's lifted surface of a given, so that a given is told by the cell
 under it as well as by its ink. The legend SHALL stay on the board, outside
-the surface. The selection's wash and its pencil-mode corner SHALL be drawn
-over whichever surface the cell has.
+the surface.
 
 #### Scenario: A given is told by the cell under it
 

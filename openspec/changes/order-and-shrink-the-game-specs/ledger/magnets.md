@@ -144,3 +144,31 @@ Checked and found sound:
   fits its body.
 - Every requirement left untouched was read for a copy by the three classes.
   Fifteen of the 25 are the hint's techniques, sentences and marks.
+
+## Third pass
+
+No row of the engine tables names a sentence of Magnets'. One names it as
+saying nothing (`engine-params`, "A bare flag letter left out is read as the
+opposite of its meaning": the spec gives `10x9dtS` and says nothing of `S`
+left out), and the hints' Found names its hatch, drawn over a tile's body and
+under its symbol, which the spec does not state. The ledger filed no engine
+request. The spec is unchanged.
+
+Read against the third round's requirements, and each kept:
+
+- "Rules: Magnets flags mistakes against the unique solution" states no
+  result for a board without one answer.
+- "Hint: A Magnets hint hatches the line its sentence names" says which line
+  and that both clue slots are hatched with it, and not where the hatch lies.
+- "Hint: Following a Magnets leg through its press cycle keeps the plan" is
+  the game's own `hintKeepTrack`, which does not call `trackTargets`.
+- No sentence of a refusal where deduction runs out, of a search, or of what
+  a step's sentence opens with.
+
+Sentences cut: 0. Clauses kept: 1, under section 2 of the brief: "with no
+departure from the codec grammar", in "Params: A Magnets params string is
+its declared codec's, and a board too small for its tier is refused". It is
+a clause of the one pointer `Params` has to its declaration, in the
+subject's only requirement, whose other sentences are bounds and refusals.
+`Generation` says what each tier's deductions are and holds no sentence of
+what a dealt board promises; the spec has no pasted-ID sentence.

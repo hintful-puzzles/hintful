@@ -1,7 +1,8 @@
 # spokes
 
 The Purpose was corrected: it named "its parameters", and now says what of the
-params the spec holds.
+params the spec holds. Third pass: ", and refuses a position it cannot vouch
+for" went, the spec holding no refusal of the hint's now.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
@@ -15,6 +16,8 @@ params the spec holds.
 | Preferences: The satisfied-hub preference is mark-satisfied and starts on | removed. The key, "SHALL start on" and its scenario joined "Preferences: The satisfied-hub marking is visual only and can be turned off"; the type and the name cut | `prefs`, `src/games/spokes/index.ts:571` (the name, `type: "boolean"`). The default is `newUi`'s, `src/games/spokes/state.ts:525` |
 | Hint: Spokes explains why each hinted move is forced | "Spokes SHALL implement the hint hooks, and" cut. Gains scenario "A saturated hub is explained by the count that forces it" from "Hint: A deduction that forces several spokes is one journey", less its last line | the `Game` type (`hint`, `hintKeepTrack`) |
 | Hint: Spokes' hint is a projection of its solver | removed, with its scenario | `engine-hints`, "The solver and the hint are two projections of one deduction engine"; `engine-difficulty`, "Narratable-deduction generation policy" (every board below `Unreasonable` is solvable by the techniques the hint teaches) and "An Unreasonable tier is the one exemption from the narratable policy"; the unbounded rung is this spec's "Hint: Spokes' hint stops at bounded reasoning". The scenario is `engine-hints`, "The hint walk SHALL cover every preset a game offers" and "The hint walk asks findMistakes at every position" |
+| Hint: A Spokes hint plan is stable across recomputation | third pass: its sentence (a plan stable across recomputation, the same line of reasoning continued and nothing different or contradictory proposed) cut, and replaced by what its scenario says more, reworded to stand ("A plan computed again after the player has followed one leg of a journey SHALL still hold that journey's remaining legs, and nothing that contradicts the leg followed"); retitled "Hint: A recomputed Spokes plan resumes a journey part-way"; scenario kept | `engine-hints`, "A recomputed plan continues the plan it replaces" (`deduceHintPlan`, which `src/games/spokes/solver.ts` calls; a plan made again after a whole firing begins with the next and proposes nothing that contradicts a step followed) |
+| Hint: Spokes' hint stops at bounded reasoning | third pass: last sentence ("Where deduction and the bounded look-ahead run out, the hint SHALL refuse with a message saying no further move can be deduced") cut; scenario kept | `engine-hints`, "A hint gives every step deduction still forces before it refuses" (`DEDUCTION_EXHAUSTED` only where no step is forced; `src/games/spokes/index.ts:473`) and "Deduction running out on a sound board SHALL have one wording" |
 | Hint: A deduction that forces several spokes is one journey | removed. Scenario "A saturated hub is explained by the count that forces it" moves to "Hint: Spokes explains why each hinted move is forced", its last line ("all of those spokes are presented as one hint in one color") cut | `engine-hints`, "One deduction firing is one journey" (legs, the first with the full explanation) and "A hint naming several kinds of element colors them by a stable legend" ("equivalent forced moves SHALL still share the single target color"); the code is `stepsOfFiring`, `src/games/spokes/index.ts` |
 | Hint: A Spokes hint shows a line to draw and marks a dot to rule out | the line in the hint color, the ring round a dot and the evidence color cut. Kept: marks only on what the step has still to decide, the dot left unmarked inside its ring, the outline just outside the rim, and no mark on a spoke an earlier leg settled. Title and scenario kept | the legend, `hintMarks.roles`, `src/games/spokes/index.ts:593` (`ring`: a line in the hint color to draw, a ring round a dot to rule out; `outline`: the hubs the step reasons from, in a second color) |
 | Look: What Spokes draws | last sentence ("There SHALL be no interpolated line-drawing animation.") cut | `animLength: () => 0`, `src/games/spokes/index.ts:611` |
@@ -39,12 +42,11 @@ params the spec holds.
   them all (premises before the conclusion is in none); its scenarios are the
   only place the spec says what the two-ones, the saturation and the
   look-ahead steps tell the player.
-- **Hint: A Spokes hint plan is stable across recomputation.** See the engine
-  requests.
+- **Hint: A recomputed Spokes plan resumes a journey part-way.** The engine's
+  rule is of a whole firing followed; this is of one leg of one.
 - **Hint: Spokes' hint stops at bounded reasoning.** A departure from the
   hint's being as strong as the board's tier: the top rung never fires in a
-  plan. Its refusal clause is `engine-hints`, "Deduction running out on a
-  sound board SHALL have one wording", and stays as where the stop leads.
+  plan.
 - **Hint: Spokes' hint tries its techniques in one order.** The order is the
   hand-written chain of the plan's next firing
   (`src/games/spokes/solver.ts:641`), not `hintRungs`, which lists the two-ones
@@ -52,7 +54,9 @@ params the spec holds.
 
 ## Engine requests
 
-- A plan is stable across recomputation → `engine-hints`. The sentence is "A
+- Answered: `engine-hints`, "A recomputed plan continues the plan it
+  replaces".
+  A plan is stable across recomputation → `engine-hints`. The sentence is "A
   hint plan SHALL be stable across recomputation: re-requesting a hint after
   the player has followed a step SHALL continue the same line of reasoning
   rather than propose a different or contradictory one", in "Hint: A Spokes
@@ -137,3 +141,31 @@ Checked and found sound:
   the step's ring". No subject is hollow and every title fits its body.
 - The scenario strings run through the codec: `4x4dt` decodes at Normal and
   `4x4` at Easy, each with the short form `4x4`.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Spokes: 2 (a recomputed
+plan; every step before it refuses, added by the review). Engine requests of
+its own: 1, answered. Sentences cut: 2. Clauses kept: 3.
+
+- **Cut**: the plan stable across recomputation; the refusal where deduction
+  and the bounded look-ahead run out.
+- **Kept: the scenario "A journey resumes where the player left it"**, as the
+  review of the round says: it is of one leg of a journey followed, and the
+  engine's of a whole firing. The requirement's sentence is now that case,
+  since the scenario cannot stand under none.
+- **Kept: the look-ahead narrated at its bounded strength alone, and the
+  unbounded rung in no plan on any tier**, with the scenario of the two
+  plans.
+- **Kept: "Rules: A Spokes mistake is a line the solution forbids or a mark
+  where it needs a line", whole.** It never held the empty-result sentence.
+- The Purpose named a refusal of "a position it cannot vouch for"; the spec
+  never stated that one (`PUZZLE_NOT_REASONABLE`, `src/games/spokes/index.ts:468`,
+  in this ledger's Found) and no longer states the other, so the words went.
+- The spec was searched for the round's other rules in other words (the
+  indication first, the hatch, the premise references, a step followed one
+  element at a time, the firing census): none is stated. "Hint: Spokes
+  explains why each hinted move is forced" says the premises come before the
+  conclusion, which is of the whole narration and wider than the engine's
+  sentence on a step's opening; left.
+- No "no departure" sentence and none on what a pasted game ID opens as.

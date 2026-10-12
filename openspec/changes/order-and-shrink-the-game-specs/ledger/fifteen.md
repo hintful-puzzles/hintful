@@ -8,7 +8,7 @@ Purpose: "the params encoding" reworded to "where its params are declared".
 | Generation: A generated Fifteen board is solvable and starts unsolved | retitled "Generation: A generated Fifteen board is one slides can solve". Sentence 1 kept; sentence 2 ("It SHALL NOT deal the solved arrangement.") cut. The scenario is renamed "A generated board is solvable" and loses its AND clause (the initial state is not solved) | `engine-difficulty`, "A board that comes solved is dealt again" (`generate`, `src/engine/deal.ts:51`) |
 | Hint: Fifteen offers a greedy full-solution hint plan | title kept. "highlighting the tile it slides" cut from sentence 2. Scenario "Hint highlights the tile it moves" dropped; "Hint plan solves a solvable board" kept | `hintMarks.roles.ring` ("what the step decides: the tile to slide, filled in the hint's color."), `src/games/fifteen/index.ts:300`-`304`; that the slide is one cell from the gap is the kept sentence's "single-cell gap slide" and the kept scenario's "legal single-cell gap slides" |
 | Status bar: Fifteen's status bar shows the move count | title kept. "after the engine's completion words" reworded out, and the two sentences joined. Scenario untouched | `ts-engine`, "The status bar's completion words come from the engine" ("The midend SHALL prefix them to whatever the game's `statusbarText` returns") |
-| Look: A genuine Fifteen completion sweeps the tiles | retitled "Look: Fifteen's win flash lights its tiles and never the gap". Sentence 1 ("A genuine completion's flash SHALL sweep the tiles diagonally, a tile's position being its cell's place in the grid") cut. Sentence 2 reworded to stand without it ("A tile the win flash lights SHALL have its face filled" for "A lit tile's face SHALL be filled"). Sentence 3 and the scenario untouched | "genuine": `ts-engine`, "The win flash plays on a forward move that solves the board"; the diagonal and the position: `ts-engine`, "A game gives each element a position, and the route is which position it gives" ("`sweepStep` of its center otherwise: a diagonal from the bottom left to the top right"). `flash.win(sweepStep(…))`, `src/games/fifteen/render.ts:203` |
+| Look: A genuine Fifteen completion sweeps the tiles | retitled "Look: Fifteen's win flash lights its tiles and never the gap". Sentence 1 ("A genuine completion's flash SHALL sweep the tiles diagonally, a tile's position being its cell's place in the grid") cut. Sentence 2 reworded to stand without it ("A tile the win flash lights SHALL have its face filled" for "A lit tile's face SHALL be filled"). Sentence 3 and the scenario untouched. Third pass: sentence 2 (the face filled inside the bevel, the bevel and the number kept) cut, and sentence 3 reworded to stand as the requirement, "Fifteen's win flash SHALL light its tiles and SHALL never light the gap."; scenario untouched | the lit face: `engine-colors`, "A lit beveled tile is lit on its face and keeps its bevel"; "genuine": `ts-engine`, "The win flash plays on a forward move that solves the board"; the diagonal and the position: `ts-engine`, "A game gives each element a position, and the route is which position it gives" ("`sweepStep` of its center otherwise: a diagonal from the bottom left to the top right"). `flash.win(sweepStep(…))`, `src/games/fifteen/render.ts:203` |
 
 ## Kept, and why
 
@@ -31,13 +31,8 @@ Purpose: "the params encoding" reworded to "where its params are declared".
 - **Look: A Fifteen slide animates…**, "over the animation duration". The
   length is `animLength` (`index.ts:321`), which the sentence does not give;
   the interpolation is `redraw`'s.
-- **Look: Fifteen's win flash…**, "A tile the win flash lights SHALL have its
-  face filled with a flash color inside its bevel, and SHALL keep its bevel
-  and its number."
-  `engine-colors`, "A solved flash drawn as a color takes a shared color"
-  says a tile's ground is filled and keeps what it holds; "inside its bevel"
-  and "keep its bevel" it gives only by a scenario ("a game whose pieces are
-  beveled tiles"). That the gap never lights is the game's.
+- **Look: Fifteen's win flash…**, "SHALL never light the gap". The gap is
+  no element the flash is given, which is the game's choice in `redraw`.
 
 ## Engine requests
 
@@ -49,6 +44,8 @@ Purpose: "the params encoding" reworded to "where its params are declared".
   keeps what it holds, and says the bevel stays only by its scenario "A flash
   that is not a color". The code is each game's `redraw` passing a flash
   color as the face to `drawRaisedTile` (`src/games/fifteen/render.ts:255`).
+  Answered: `engine-colors`, "A lit beveled tile is lit on its face and keeps
+  its bevel".
 
 ## Found
 
@@ -98,3 +95,26 @@ Checked and found sound:
 - Every kept requirement read by sentence: none is a copy. The 6 engine
   titles the ledger cites are exact, and its 12 line citations are where it
   says.
+
+## Third pass
+
+What the engine's third round states, removed. 1 row of the third-round
+tables names Fifteen (the lit beveled tile), and this ledger's one request
+was answered by it.
+
+Cut, 1 sentence: **"A tile the win flash lights SHALL have its face filled
+with a flash color inside its bevel, and SHALL keep its bevel and its
+number."**, in "Look: Fifteen's win flash lights its tiles and never the
+gap": `engine-colors`, "A lit beveled tile is lit on its face and keeps its
+bevel".
+
+Kept, 1 clause: "The gap SHALL never be lit", by the engine table's word,
+reworded to stand as the requirement ("Fifteen's win flash SHALL light its
+tiles and SHALL never light the gap."); the title and the scenario fit it
+as they stood.
+
+No sentence of the brief's section 2 stood in the spec, and a search for the
+round's other rules in other words found none.
+
+Each subject read alone: none hollow, no fragment, every title fits. The
+Purpose names nothing that went.

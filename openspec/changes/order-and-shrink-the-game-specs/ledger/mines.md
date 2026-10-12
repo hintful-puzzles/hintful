@@ -128,3 +128,28 @@ Checked and found sound:
   every refusal the `Params` subject states but `1 ≤ n`, which is the mines
   field's bound (`index.ts`, `bounds: { min: 1 }`) and was left as half of
   the one inequality.
+
+## Third pass
+
+Nothing changed in the spec. Rows of the engine's third-round tables that
+name Mines: 0. Engine requests of its own: 0. Sentences cut: 0. Clauses kept:
+3, each read against the third-round requirement it resembles.
+
+- **Kept: "and nothing before the first click lays the mines out"** in
+  "Rules: Mines checks flags against its mines". `ts-engine`, "A mistake
+  check compares with the one answer, hidden or not" says nothing is flagged
+  where "the game's solver or search did not establish exactly one answer".
+  Mines' answer is the layout and no solver's; that there is none until the
+  first click is the game's (`findMistakes`, `src/games/mines/index.ts:520`).
+- **Kept: "The left button SHALL act on its release"** in "Controls: A Mines
+  press opens on its release, and the secondary button flags".
+  `engine-input`, "A press the game declines is answered with its release
+  where it was pressed" is of a declined press; Mines consumes its press and
+  acts where the pointer lifts, which its scenario shows.
+- **Kept: "it SHALL refuse with the collection's deduction-exhausted words"**
+  in "Hint: The Mines hint opens the first square, and refuses a dead or
+  exhausted board". `engine-hints`, "A hint gives every step deduction still
+  forces before it refuses" binds a board "whose tier permits search"; Mines
+  has no tiers, so which refusal it gives is still the game's to say.
+- No "no departure" sentence, none of the form "What a pasted game ID opens
+  as" and none citing `engine-difficulty`.

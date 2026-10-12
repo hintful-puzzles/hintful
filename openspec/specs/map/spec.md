@@ -15,7 +15,7 @@ decisions about how the map is drawn.
 The board SHALL be completed when every region is colored and no two adjacent
 regions share a color. `findMistakes` SHALL re-solve from the immutable clues
 to the unique solution and return every region whose player-assigned color
-differs from it. A non-uniquely-solvable board SHALL yield no mistakes.
+differs from it.
 
 #### Scenario: A partially-colored but correct board has no mistakes
 

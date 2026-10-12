@@ -7,6 +7,8 @@ which piece, and how a board's clues are winnowed.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
+| Rules: Unruly checks player marks against the unique solution | third pass. Title and scenario kept. "It SHALL return none when the clues do not deduce a complete solution (a foreign or non-unique board) or when the player's marks are all consistent" cut; that the answer is re-solved from the clues alone with the full solver, and which cells are returned, kept | `ts-engine`, "A mistake check compares with the one answer, hidden or not" ("Where the game's solver or search did not establish exactly one answer, no mark SHALL be flagged against an answer"); the early return is `src/games/unruly/solver.ts:667`. That consistent marks are not returned is the kept sentence's own |
+| Hint: The named line is hatched under its pieces | third pass. Retitled "Hint: The named line is hatched in the color of the move". "under the pieces it holds" cut, and the scenario's last line, "each piece on that line is drawn over the hatch"; that the hatch is `COL_HINT` kept | `engine-hints`, "A hatch lies over the square's ground and under what it holds"; `dr.drawHatch` before the piece, `src/games/unruly/render.ts:198` |
 | Params: Unruly's params are a size, the unique variant and a difficulty | retitled "Params: An Unruly params string is its declared codec's, and one with no difficulty is Easy". Its one sentence (the four fields, "both even and at least 6", the `{w2}x{h2}`, `u` and `d{c}` encoding) replaced by one that sends the reader to the declaration and says the game departs nowhere (rule 2); it gains "A params string with no `d` SHALL decode as Easy." from the letters requirement below. Scenario "Params round-trip" dropped; it takes "The unique board of the Type menu" from the letters requirement | the fields and "at least 6": `paramConfig`, `src/games/unruly/state.ts:96`-`119` (`bounds: { min: 6 }`); the encoding: `paramsCodec(defaultParams, [dims, flag "u", choice "d" … { full: true }])`, `state.ts:122`; "both even" is kept in "Params: Unruly refuses params no board can be dealt for"; the round trip: `engine-params`, "A game declares its params encoding once, and both codec halves are derived"; the bare `8x8` as a square with `unique` false: `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters" and "A params string is read whole or refused" (a piece left out is as `defaultParams` has it). `src/games/unruly/unruly.test.ts:48` and `:76` hold the strings |
 | Params: Unruly's difficulty letters are t, e and n | removed. Sentence 1 (the three letters) and sentence 3 (any other character after `d`, or nothing, is refused) go; sentence 2 moves, unchanged, to "Params: An Unruly params string is its declared codec's, and one with no difficulty is Easy", as does its scenario "The unique board of the Type menu". Scenario "A letter that names no tier" dropped | the letters: `DIFF_CHARS = "ten"`, `src/games/unruly/constants.ts:31`, read by `choice(…, "d", "difficulty", DIFF_CHARS, …)`, `state.ts:125`; the refusals and the dropped scenario: `engine-params`, "A params string is read whole or refused" (its first two scenarios). The `unruly` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `8x8dt`, `8x8de`, `8x8dn`, `8x8ude` and `8x8u` |
 | Params: An Unruly title says unique when rows and columns must differ | removed, with its scenario | `modifierItem({ …, words: "unique", slot: "tail" })`, `state.ts:105`-`118`; `engine-params`, "One describer labels every params set" (size, tier, then the tail) and "The engine builds a modifier's help entry and label words" (the words are said exactly when the rule applies). The snapshot above holds "8x8 Normal, unique" for `8x8ude`; `unruly.test.ts:99` |
@@ -29,10 +31,9 @@ which piece, and how a board's clues are winnowed.
   the game's own refusal (`executeMove`, `state.ts:208`-`210`).
 - **Rules: Unruly checks player marks against the unique solution.**
   `ts-engine`, "A mistake check compares with the one answer, hidden or not"
-  does not say the answer is the full deduction from the clues alone, nor
-  that nothing is reported where the clues deduce no answer. Its opening
-  clause ("the mistake check Check & Save hard-blocks on") is in no engine
-  requirement's sentences, so the requirement is untouched.
+  does not say the answer is the full deduction from the clues alone. Its
+  opening clause ("the mistake check Check & Save hard-blocks on") is in no
+  engine requirement's sentences and stays as the antecedent of the rest.
 - **Params: … one with no difficulty is Easy.** `engine-params`, "A params
   string is read whole or refused" hands it back ("at the tier of the game's
   `defaultParams`").
@@ -47,10 +48,10 @@ which piece, and how a board's clues are winnowed.
   (`index.ts:126`-`130`), not a declared verb.
 - **Hint: hintKeepTrack completes on the hinted cell and value.** A
   hand-written `hintKeepTrack` (`index.ts:248`); see Engine requests.
-- **Hint: The named line is hatched under its pieces.** `engine-hints`, "A
-  hint hatches the one line its sentence names" says the line is hatched; no
-  requirement says the hatch lies under the pieces, and the one sentence
-  holds both.
+- **Hint: The named line is hatched in the color of the move.**
+  `engine-hints`, "A hint hatches the one line its sentence names" says the
+  line is hatched and not in which color; that Unruly's hatch is `COL_HINT`
+  and its premise ring another is the game's.
 - **Hint: A cited premise is ringed apart from the move.** The legend's
   `outline` entry lists the four kinds of premise, but not the piece beside
   a reserved window, and "an empty reserved-window cell stays empty" is given
@@ -68,7 +69,12 @@ which piece, and how a board's clues are winnowed.
 
 ## Engine requests
 
-- "`hintKeepTrack` SHALL report `"completed"` when the player's move sets the
+- Left the game's own: Unruly's `hintKeepTrack` is three lines of its own
+  that compare the move with the step's one target and do not call
+  `trackTargets`, so `engine-hints`, "A step asking for several elements is
+  followed one element at a time" does not state it (`ledger/_engine.md`,
+  "Third round: hints and colors", Not written). As filed:
+  "`hintKeepTrack` SHALL report `"completed"` when the player's move sets the
   hinted cell to the hinted value and `"off"` otherwise.", the whole of "Hint:
   hintKeepTrack completes on the hinted cell and value". It would read the
   same of any game whose step sets one cell to one value. Unruly writes the
@@ -79,7 +85,9 @@ which piece, and how a board's clues are winnowed.
   the request: the verdict rule of `trackTargets`). Belongs in
   `engine-hints`, beside "A completed verdict vouches for the rest of the
   plan".
-- "under the pieces it holds", in "Hint: The named line is hatched under its
+- Answered: `engine-hints`, "A hatch lies over the square's ground and under
+  what it holds"; the clause is cut. As filed:
+  "under the pieces it holds", in "Hint: The named line is hatched under its
   pieces". The same request as Singles' "stripes under the cell's content"
   (`singles.md`, § "Engine requests"): that a line's hatch lies under what
   its cells hold. Belongs in `engine-hints`, "A hint hatches the one line its
@@ -169,3 +177,34 @@ Checked and found sound:
   it" speaks of the ring and the outline, so the game's sentence stays.
 - The new scenario "Two clues of the two kinds" is `unruly.test.ts:139`.
 - Each subject read alone: none hollow, no dangling antecedent.
+
+## Third pass
+
+One row of the engine tables names Unruly as keeping a sentence (the hatch);
+"Not written" names its `hintKeepTrack` as its own. The mistake row does not
+name it, and the spec held the rule in other words.
+
+- **Rules**, "Rules: Unruly checks player marks against the unique
+  solution": the sentence of what is returned where the clues deduce no
+  complete solution cut.
+- **Hint**, "Hint: The named line is hatched under its pieces": "under the
+  pieces it holds" cut, with the scenario's line that restated it; retitled.
+
+Sentences cut: 1, and 1 clause; one line of a scenario. Clauses kept: "The
+line the sentence names SHALL be hatched `COL_HINT`" (no requirement says
+which color a hatch takes; the next requirement turns on the premise ring
+not being that color); "Hint: hintKeepTrack completes on the hinted cell and
+value", whole (Unruly's own code, by the engine ledger); in `Rules`, that
+the answer is solved from the clues alone with the full solver.
+
+Section 2 of the brief: "with no departure from the codec grammar" stands in
+"Params: An Unruly params string is its declared codec's, and one with no
+difficulty is Easy". It is a clause of the one pointer `Params` has to its
+declaration, which is where the ordinary case of an owed subject is said;
+the subject's other requirement speaks only of what is refused. Kept. The
+sentence of `Generation` went in the review, and the spec has no pasted-ID
+sentence.
+
+Each subject read alone: `Hint`'s two color requirements still read
+together (the hatch in `COL_HINT`, the premise ring in `COL_HINT_REF`); no
+fragment, every title fits its body.

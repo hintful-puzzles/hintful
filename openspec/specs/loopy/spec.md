@@ -117,10 +117,9 @@ no loop closed nothing SHALL be flagged, however many paths lie apart.
 `findMistakes(state)` SHALL report every edge the player has marked against the
 board's unique solution: a line the loop does not run along, and an edge ruled
 out that the loop does run along. The solution SHALL be solved from the clues
-alone at the top tier, and a board whose clues admit no solution the solver can
-prove unique SHALL report no mistakes. The highlighting `checkCompletion`
-does, of a rule broken on the board as drawn without knowing the answer, is
-distinct and SHALL remain.
+alone at the top tier. The highlighting `checkCompletion` does, of a rule
+broken on the board as drawn without knowing the answer, is distinct and SHALL
+remain.
 
 #### Scenario: A line the loop does not use is a mistake
 
@@ -152,9 +151,8 @@ them and a save replays them. A save holding only line moves SHALL still load.
 `findMistakes(state)` SHALL report, beside the edges it reports, every corner note
 the solution breaks (at least one line where the solution has neither edge, at most
 one where it has both) and every pair note it breaks (a match where the solution's
-two edges differ, opposites where they agree), and SHALL report none on a board with
-no provably unique solution. The renderer SHALL draw a mistaken note in the mistake
-color.
+two edges differ, opposites where they agree). The renderer SHALL draw a mistaken
+note in the mistake color.
 
 #### Scenario: A wrong note is a mistake
 
@@ -277,9 +275,9 @@ reached through the Custom dialog's "Grid type".
 
 A Loopy description SHALL encode one entry per face in face order: a clue as a
 digit `0`–`9` or a letter `A`–`Z` for values 10 and above, and a run of 1–26
-unclued faces as a single letter `a`–`z`. Runs longer than 26 SHALL be split.
-Where the grid type carries its own description, the game description SHALL be
-the grid description, a separator, and the clue string.
+unclued faces as a single letter `a`–`z`. Where the grid type carries its own
+description, the game description SHALL be the grid description, a separator,
+and the clue string.
 
 #### Scenario: A generated description round-trips
 

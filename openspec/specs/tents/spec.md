@@ -73,8 +73,6 @@ the top-difficulty solver and, when a unique solution exists, return one
 mistake per placed square that contradicts it: a tent where the solution has
 none, or a non-tent where the solution has a tent. Blank squares SHALL never be
 mistakes. Such a square SHALL be rendered with a distinct inset red overlay.
-`findMistakes` SHALL return an empty list when the board is not uniquely
-solvable.
 
 #### Scenario: A wrong tent blocks Check & Save
 
@@ -245,10 +243,10 @@ writes only what its Normal half deduces.
 ### Requirement: Solver: Tents' solver is a certified deduction ladder
 
 Tents' solver SHALL run its deductions as a `runDeductionFixpoint` ladder,
-each deduction a rung of its own. A firing census SHALL walk boards generated
-at every preset, read from `presets`, and at a non-square size, at every cap
-the generator uses, and assert that every rung fires on the corpus. The solver
-SHALL NOT keep a hand-written loop beside the ladder.
+each deduction a rung of its own. The boards of its firing census SHALL be
+those generated at every preset, read from `presets`, and at a non-square
+size, at every cap the generator uses, and every rung SHALL fire on them. The
+solver SHALL NOT keep a hand-written loop beside the ladder.
 
 #### Scenario: A Normal rung nothing depends on is still certified
 
@@ -381,10 +379,11 @@ outline and its stripes stand for SHALL be the legend's (`hintMarks`).
 - **THEN** the row is hatched, its clue is in the action color and the squares
   the step decides are ringed
 
-### Requirement: Hint: Tents' hintKeepTrack judges a move by what it changes
+### Requirement: Hint: A Tents step's links are followed as its squares are
 
-`hintKeepTrack` SHALL judge a move by the squares and links it changes, holding
-a step that is only partly made and shrinking it to what is left.
+What `hintKeepTrack` judges a move by SHALL be the links it changes as well as
+the squares, so a step that places a tent joined to a tree is only partly made
+by the tent.
 
 #### Scenario: Placing a tree's tent by a click is progress
 

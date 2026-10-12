@@ -18,7 +18,9 @@ techniques and the test its generator adds, and its own colors of marks.
 | Hint: Singles provides an explained deduction hint | removed, with its scenario | a plan of narrated steps: `engine-hints`, "The engine supports an ephemeral Hint System" and "A hint step always names a technique, with no un-narrated fallback"; the plan advances as it is followed: `engine-hints`, "A player move is classified against the stored plan"; from the player's current marks, in deduction order: `engine-hints`, "A hint is deduced from the board in play", and this spec's "Hint: Singles' hint takes the number patterns once and the joining rules last" ("Its plan SHALL open with what the player's own shaded and circled squares force"); "the remaining solution" and the scenario's last clause: `engine-hints`, "A hint finishes a board from a right entry made out of order" |
 | Hint: A Singles hint outlines its evidence | retitled "Hint: Every Singles step shows the evidence it rests on". Sentence 1 (`redraw` outlines the step's evidence at the cell's edge) cut; sentence 2 kept, and is the whole of it. Scenario kept | `hintMarks.roles.outline`, `index.ts:521`-`528`; `engine-hints`, "The engine SHALL own the hint mark roles and the words for them" and "A hint mark is drawn on the cell's border"; the cell's edge is also this spec's "Look: Singles edge marks land beside the piece and the ring" |
 | Hint: Distinct premise roles in a Singles hint take distinct colors | title kept. Sentence 1 (premise cells in distinct roles are rendered in distinct colors) cut, its reason ("so the highlight does not imply cells share a role they do not") moved onto sentence 2; the corner deduction's two roles and the disjointness kept. Scenario kept | `engine-hints`, "A hint naming several kinds of element colors them by a stable legend" (the kinds a narration names are told apart, each in one color) |
-| Hint: Singles hint roles are bands and stripes, never fills | title kept. Sentence 1 (`redraw` distinguishes the element types by a stable color legend) and sentence 3 (the legend is consistent across deductions) cut; sentence 2 kept. Scenario kept | `engine-hints`, "A hint naming several kinds of element colors them by a stable legend" (each kind takes one highlight color in all that game's hints; its second scenario is the shaded-square premise) |
+| Hint: Singles hint roles are bands and stripes, never fills | title kept. Sentence 1 (`redraw` distinguishes the element types by a stable color legend) and sentence 3 (the legend is consistent across deductions) cut; sentence 2 kept, without "under the cell's content" (third pass). Scenario kept | `engine-hints`, "A hint naming several kinds of element colors them by a stable legend" (each kind takes one highlight color in all that game's hints; its second scenario is the shaded-square premise); where the stripes lie is `engine-hints`, "A hatch lies over the square's ground and under what it holds" (`dr.drawHatch` before the cell's content, `src/games/singles/render.ts:197`) |
+| Hint: Singles hint tracking follows a step cell by cell | removed (third pass), with its scenario "Following the hint advances the plan", which restated it | `engine-hints`, "A step asking for several elements is followed one element at a time"; `trackTargets`, called from `hintKeepTrack`, `src/games/singles/index.ts:453` |
+| Hint: A decided premise in a Singles hint takes the color of its state | third pass. Title and both scenarios kept. "a cited shaded premise SHALL be banded `COL_HINT_BLACKREF` and a cited circled premise `COL_HINT_WHITEREF`" and "The band's color SHALL be chosen from the cell's own decided state" cut to one clause that names the game's two slots and its mark, a band; that the forced cell is another color and that the piece or ring stays drawn kept | `engine-colors`, "The two premise references each cite one state of a cell" (`HINT_BLACKREF` for a cell cited for being shaded, `HINT_WHITEREF` for one cited for being circled); the slots are `out[COL_HINT_BLACKREF] = HINT_BLACKREF` and `out[COL_HINT_WHITEREF] = HINT_WHITEREF`, `src/games/singles/render.ts:100`-`101` |
 | Hint: The forced cell, the number premises and the corner have their own colors | title kept. "and drawn without the forced mark: the narration says whether to shade or circle" reworded out of sentence 1, and the paragraph rewrapped. All three scenarios kept; "A cell a hint says to shade is drawn empty" is now the game's case of the legend's sentence | `hintMarks.roles.ring` ("It is drawn empty: the sentence says whether to shade it or circle it."), `index.ts:523` |
 | Look: Singles completion flash | title kept. "The completion flash SHALL sweep every cell of the board." cut, and the next sentence reworded to stand ("The ground of a cell the completion flash is on"). Scenario kept | `ts-engine`, "The win flash is one traveling highlight in every game" (it lights every element once) and "A game gives each element a position, and the route is which position it gives"; the game's call is `flash.win(sweepStep(x, y))`, `src/games/singles/render.ts:316` |
 
@@ -48,13 +50,13 @@ techniques and the test its generator adds, and its own colors of marks.
 - **Hint: Distinct premise roles … (its last two sentences), The forced cell, the number premises and
   the corner …, A decided premise … takes the color of its state.** The
   legend says a shaded premise, a circled one and the corner each have "a
-  color of its own"; which palette role each takes, that the three roles are
-  disjoint, and that the band is chosen from the cell's own state are
-  `redraw`'s, written by hand.
+  color of its own"; which palette slot each takes and that the three roles
+  are disjoint are `redraw`'s, written by hand.
 - **Hint: Singles hint roles are bands and stripes, never fills.**
   `engine-hints`, "A hint marks beside the content, never behind it" says
-  evidence with content is outlined; "stripes under the cell's content" is in
-  no shared requirement.
+  evidence with content is outlined; that in Singles every role is a band or
+  stripes, the ring's included, since every cell carries a number, is the
+  game's.
 - **Hint: Singles' hint takes the number patterns once and the joining rules
   last.** The order is `solveSpecific`'s (`solver.ts:740`): four passes by
   hand, then a ladder of three; `hintRungs` lists ten reason kinds in another
@@ -65,7 +67,9 @@ techniques and the test its generator adds, and its own colors of marks.
 
 ## Engine requests
 
-- "`hintKeepTrack` SHALL report `"completed"` when the player's move sets
+- Answered: `engine-hints`, "A step asking for several elements is followed
+  one element at a time"; the requirement is removed. As filed:
+  "`hintKeepTrack` SHALL report `"completed"` when the player's move sets
   exactly the hinted cell(s) to the hinted value, `"onTrack"` (shrinking a
   multi-cell step in place to the cells still outstanding) when the move fills
   a strict subset of a multi-cell step's cells with the hinted value and
@@ -77,7 +81,9 @@ techniques and the test its generator adds, and its own colors of marks.
   in `engine-hints`, beside "A completed verdict vouches for the rest of the
   plan". Light Up and Tents state it of themselves in nearly these words
   (`lightup.md`, `tents.md`): the strongest kind of request.
-- "stripes under the cell's content", in "Hint: Singles hint roles are bands
+- Answered: `engine-hints`, "A hatch lies over the square's ground and under
+  what it holds"; the clause is cut. As filed:
+  "stripes under the cell's content", in "Hint: Singles hint roles are bands
   and stripes, never fills" (and Unruly's "Hint: The named line is hatched
   under its pieces"). Belongs in `engine-hints`, "A hint hatches the one line
   its sentence names", which says the line is hatched and not that the hatch
@@ -152,3 +158,45 @@ Checked and found sound:
   (`state.ts:121`; `singles.test.ts:32`), and `8x8dk` is the snapshot's.
 - Each subject read alone: none hollow, no dangling antecedent, every title
   fits its body.
+
+## Third pass
+
+Three rows of the engine tables name Singles: the step followed one element
+at a time, the hatch, and the two premise references. The geometry row names
+its wrap as staying, and "Not written" its cursor on completion, which the
+spec does not state.
+
+- **Hint**, "Hint: Singles hint tracking follows a step cell by cell":
+  removed whole, with its scenario.
+- **Hint**, "Hint: Singles hint roles are bands and stripes, never fills":
+  "under the cell's content" cut.
+- **Hint**, "Hint: A decided premise in a Singles hint takes the color of its
+  state": which reference cites which state, and that the band's color is
+  chosen from the cell's state, cut.
+
+Sentences cut: 2 (one a requirement of one sentence), and 2 clauses; 1
+scenario dropped. Clauses kept: the slot names `COL_HINT_BLACKREF` and
+`COL_HINT_WHITEREF` and that the mark is a band (the review keeps each
+game's slot name and mark shape); that the forced cell is another color and
+the piece or ring stays drawn; both scenarios of that requirement, which say
+which of Singles' techniques cites a shaded square and which a circled one;
+"Controls: Singles' keyboard cursor wraps at the grid's edges" (the game's
+`wrap`, by the review).
+
+Section 2 of the brief, two sentences kept, each the one pointer of an owed
+subject that would otherwise say nothing of its ordinary case:
+
+- "with no departure from the codec grammar", in "Params: A Singles params
+  string is its declared codec's": the other two `Params` requirements speak
+  only of what is refused.
+- "What a Singles board dealt at a tier promises SHALL be the collection's
+  (…), with one addition: …", in "Generation: Singles tests a board one
+  level below with the sneaky deduction": it is the whole of `Generation`,
+  and without the pointer the subject would hold a corner case alone. What
+  the tiers' techniques are is said under `Solver`, not there.
+
+The spec has no pasted-ID sentence. "Rules: Singles mistake-checking" does
+not state the empty result, so the mistake row cut nothing.
+
+Each subject read alone: `Hint` says nothing of how a partly followed step
+is tracked, which is the engine's; no fragment, every title fits its body.

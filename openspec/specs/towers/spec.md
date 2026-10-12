@@ -38,8 +38,7 @@ clue and no Latin constraint.
 
 Towers' `findMistakes` SHALL judge the board against the answer it re-solves
 from the clues and givens. A wrong tower and a note set that lacks its height
-SHALL render as the same red cell overlay. When the clues and givens do not
-solve to exactly one answer the result SHALL be empty.
+SHALL render as the same red cell overlay.
 
 #### Scenario: A wrong tower that breaks no rule
 
@@ -102,12 +101,9 @@ a length other than `w²`, and a `_` anywhere but between two adjacent givens.
 
 ### Requirement: Generation: An Easy Towers board keeps every clue
 
-What a board dealt at a tier promises SHALL be the collection's
-(`engine-difficulty`, "Every tier promises one solution found at its cap" and
-"A difficulty tier binds the board it generates"), with no departure. An Easy
-board SHALL keep every one of its `4w` edge clues; above Easy the generator
-SHALL remove clues as well as grid givens, for as long as the board stays
-solvable at that difficulty.
+An Easy board SHALL keep every one of its `4w` edge clues; above Easy the
+generator SHALL remove clues as well as grid givens, for as long as the board
+stays solvable at that difficulty.
 
 #### Scenario: An Easy board and a Normal one
 
@@ -162,9 +158,7 @@ choice of 2D or 3D in that order, defaulting to 3D.
 ### Requirement: Preferences: Towers auto-pencils row/column eliminations on placement
 
 With auto-pencil on, a placement SHALL strike its height from the pencil marks
-of every other cell in the same row and column. The decision SHALL be fixed at
-move-creation time, recorded on the move, so that replaying a saved game is
-deterministic regardless of the preference's later value.
+of every other cell in the same row and column.
 
 #### Scenario: Placing a tower clears matching notes in its line
 
@@ -295,7 +289,7 @@ after each: first every facing pair; then, for each clue in turn, those above
 the grid, below it, to its left and to its right, the clue one short of its
 count and then the heights too near it; the row and column singles; and only
 then, on a board above Easy, a clue's arrangements, ahead of the sets. `hint`
-SHALL use no deduction above the board's own tier, and never a search.
+SHALL use no deduction above the board's own tier.
 
 #### Scenario: An Easy board never hears of arrangements
 
@@ -377,8 +371,8 @@ be that line. The clue ring SHALL stay on the board, outside the surface.
 
 ### Requirement: Look: The selection's wash and the hint's marks keep to the cell
 
-The selection's wash SHALL be drawn over whichever surface the cell has, on a
-tower's faces as on its top. The hint's marks SHALL stay on the cell's border.
+The selection's wash SHALL be drawn on a tower's faces as on its top. The
+hint's marks SHALL stay on the cell's border.
 
 #### Scenario: A tower the player entered is selected
 

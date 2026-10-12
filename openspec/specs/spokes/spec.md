@@ -6,8 +6,7 @@ that each hub starts as many lines as its number and all hubs join one connected
 group. This capability specifies what is the game's own: the params it refuses
 and what a short params string means, its descriptions, its honestly graded
 tiers, diagonals that rule out their crossing, and a hint that
-explains why each move is forced, stops at bounded reasoning, and refuses a
-position it cannot vouch for.
+explains why each move is forced and stops at bounded reasoning.
 
 ## Requirements
 
@@ -302,11 +301,11 @@ checked.
 - **THEN** the hint states that the hub's remaining count and its remaining places
   are equal, and concludes that every one of those spokes is a line
 
-### Requirement: Hint: A Spokes hint plan is stable across recomputation
+### Requirement: Hint: A recomputed Spokes plan resumes a journey part-way
 
-A hint plan SHALL be stable across recomputation: re-requesting a hint after the
-player has followed a step SHALL continue the same line of reasoning rather than
-propose a different or contradictory one.
+A plan computed again after the player has followed one leg of a journey SHALL
+still hold that journey's remaining legs, and nothing that contradicts the leg
+followed.
 
 #### Scenario: A journey resumes where the player left it
 
@@ -339,8 +338,7 @@ satisfied advances nothing and SHALL NOT be hinted.
 The Spokes hint SHALL narrate the contradiction look-ahead only at its bounded
 strength. The unbounded rung, the one the `Unreasonable` tier is named for, SHALL
 NOT contribute a firing to a hint plan on any tier, including boards generated
-below that tier. Where deduction and the bounded look-ahead run out, the hint
-SHALL refuse with a message saying no further move can be deduced.
+below that tier.
 
 #### Scenario: Planning at the top tier buys the plan nothing
 

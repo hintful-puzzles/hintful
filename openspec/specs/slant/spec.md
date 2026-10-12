@@ -31,10 +31,9 @@ SHALL be reported solved exactly while no errors exist and no square is blank.
 ### Requirement: Rules: Slant ships findMistakes
 
 `findMistakes(state)` SHALL re-solve the board's clues with the Normal solver
-and, when a unique solution exists, return one mistake per square whose placed
-diagonal differs from that solution. A blank square SHALL never be a mistake.
-It SHALL return an empty list when the board is not uniquely solvable. A
-mistaken square SHALL be marked in the error color.
+and return one mistake per square whose placed diagonal differs from the
+unique solution. A blank square SHALL never be a mistake. A mistaken square
+SHALL be marked in the error color.
 
 #### Scenario: A wrong diagonal blocks Check & Save
 
@@ -49,9 +48,9 @@ mistaken square SHALL be marked in the error color.
 
 ### Requirement: Rules: A same-slant mark the solution contradicts is a mistake
 
-When the board has a unique solution, `findMistakes` SHALL also return one
-mistake, carrying the side it sits on, per same-slant mark joining two squares
-whose solution slants differ. Such a mark SHALL be drawn in the mistake color.
+`findMistakes` SHALL also return one mistake, carrying the side it sits on,
+per same-slant mark joining two squares whose solution slants differ. Such a
+mark SHALL be drawn in the mistake color.
 
 #### Scenario: A wrong mark is a mistake
 
@@ -113,11 +112,12 @@ the collection's sentence "Width times height must not be unreasonably large."
 
 ### Requirement: Description: Slant descriptions are run-length clue grids
 
-The desc SHALL encode the `(w+1) × (h+1)` vertex-clue grid row-major, one
-digit `0`–`4` per clue, with maximal runs of clueless vertices compressed as
-`a`–`z` (a run of 1–26, a longer run emitting `z` chunks). Validating a desc
-SHALL reject an unknown character, a desc too short to fill the grid and a
-desc that overruns it.
+The desc SHALL be the `(w+1) × (h+1)` vertex-clue grid row-major, in the
+engine's run-letter grammar (`engine-params`, "The engine provides the
+run-letter description grammar"): one digit `0`–`4` per clue, and the
+grammar's letters for the clueless vertices. Validating a desc SHALL reject an
+unknown character, a desc too short to fill the grid and a desc that overruns
+it.
 
 #### Scenario: A description round-trips
 
@@ -280,12 +280,11 @@ the diagonals that could still close a loop stand out.
 
 ### Requirement: Hint: Each Slant technique is narrated by its own reason
 
-Each step SHALL lead with the recognizable indication. A clue-counting step
-SHALL name the clue and say why its count forces the slants, and SHALL fill
-every square the clue forces in one journey. A loop-avoidance step SHALL say
-that the ruled-out slant would close a loop, and a dead-end step that it would
-seal points off from the grid's edge; each SHALL shade the chain or the
-trapped components involved.
+A clue-counting step SHALL name the clue and say why its count forces the
+slants, and SHALL fill every square the clue forces in one journey. A
+loop-avoidance step SHALL say that the ruled-out slant would close a loop, and
+a dead-end step that it would seal points off from the grid's edge; each SHALL
+shade the chain or the trapped components involved.
 
 #### Scenario: A clue-counting firing is explained and grouped
 

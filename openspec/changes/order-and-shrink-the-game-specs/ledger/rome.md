@@ -3,11 +3,14 @@
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
 | Rules: Rome is complete when every arrow leads to a goal | sentence untouched; "and flashes" reworded out of the scenario | `ts-engine`, "The win flash plays on a forward move that solves the board"; Rome declares no `flashLength` |
-| Rules: Rome mistake-checking covers arrows and marks that break no rule | title kept. Sentence 1 (an arrow that contradicts the unique solution though it breaks no rule) and the first half of sentence 2 (re-derived from the fixed clues alone) replaced by one that names the two shared requirements and keeps "separately from the rule violations" and that the solution is the solver's from the fixed clues; the last clause (nothing reported where the board is not deducible) kept as a sentence. Scenario untouched | `ts-engine`, "A mistake check compares with the one answer, hidden or not"; `engine-hints`, "Check & Save names a wrong entry in every game" ("whether or not the entry breaks a rule"); `ts-engine`, "A candidate note that excludes the answer is a mistake" ("never from anything the player has entered") |
+| Rules: Rome mistake-checking covers arrows and marks that break no rule | title kept. Sentence 1 (an arrow that contradicts the unique solution though it breaks no rule) and the first half of sentence 2 (re-derived from the fixed clues alone) replaced by one that names the two shared requirements and keeps "separately from the rule violations" and that the solution is the solver's from the fixed clues; the last clause (nothing reported where the board is not deducible) cut (third pass). Scenario untouched | `ts-engine`, "A mistake check compares with the one answer, hidden or not" (a wrong entry; no mark flagged against an answer where the solver did not establish exactly one; a broken rule reported besides is the game's to state, which "Rules: Mistake-checking reports the rule violations the board shows" does); `engine-hints`, "Check & Save names a wrong entry in every game" ("whether or not the entry breaks a rule"); `ts-engine`, "A candidate note that excludes the answer is a mistake" ("never from anything the player has entered") |
 | Rules: Marks that rule out the answer are a mistake | removed | `ts-engine`, "A candidate note that excludes the answer is a mistake" (a non-empty set that excludes the answer is reported; its first scenario is the dropped one). The `note` kind and the empty set left alone: `entryMistakes`, `src/engine/entry-mistakes.ts:46`, called at `src/games/rome/index.ts:640`. The requirement above now names the shared one |
 | Params: Rome's parameters | removed; one sentence that sends the reader to `paramConfig` and the codec, and says what the params are, joins "Params: A Rome params string is its declared codec's, and one with no difficulty letter is Easy". Scenario "A game ID round-trips through the parameters" dropped | the fields and the bounds (width and height at least 3): `paramConfig`, `src/games/rome/state.ts:356`-`362`; a difficulty within range: `engine-params`, "Params validity is the engine's check" (Rome has no `validateParams`); the encoding: `paramsCodec(defaultParams, [dims, choice "d" over "ent", full])`, `state.ts:365`-`368`; the square fallback: `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters"; the round trip: `engine-params`, "A game declares its params encoding once, and both codec halves are derived" |
 | Params: A Rome params string with no difficulty letter is Easy | retitled "Params: A Rome params string is its declared codec's, and one with no difficulty letter is Easy". Gains the pointer sentence; sentence 1 kept; sentence 2 (a `d` with another letter is refused) cut. Scenario "A string with no letter" untouched; "A letter that is no difficulty" dropped | `engine-params`, "A params string is read whole or refused" and "The engine makes the one refusal of a params string" (its first scenario is the dropped one with another game's string). The `rome` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `4x4de`, `4x4dn`, `4x4dt` and `4x4` |
-| Generation: Rome's generator keeps every board soluble at its tier | retitled "Generation: A Rome board keeps the collection's promise at its tier". Its sentence replaced by one that names the two shared requirements and says the game departs from neither (rule 2: the subject's other requirement gives the rules of each tier and not what a dealt board promises). Scenario "Every preset produces a soluble board" dropped; "A Tricky board needs the Tricky rule" written in words | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (both directions). The gate: `src/games/rome/generator.ts:212` |
+| Description: Rome descriptions use the region-border and clue encoding | third pass: removed. Sentence 1 (the wall list: a number for a run of walls, a letter for a run of non-walls, `z` with no trailing wall) cut; sentence 2 (the clue grid's letters, and `U`, `D`, `L`, `R`, `X`) joins "Description: A Rome description is the walls, a comma, then the clues"; its scenario "A generated description round-trips" moves, unchanged, to that requirement | `engine-params`, "The engine provides the wall-list description grammar". Rome's calls: `encodeRegionWalls` and `readRegionWalls`, `src/games/rome/state.ts:468`, `:440` |
+| Description: Rome rejects a description that breaks its shape | third pass: "that uses invalid region-border characters" reworded out of the one sentence; the clue characters, the region of more than four cells and the goal's region kept. Scenario untouched | `engine-params`, "The wall-list reader refuses a run that passes the last border" (a character that is neither a digit nor a lowercase letter, naming it) |
+| Description: A Rome description is the walls, a comma, then the clues | third pass: title kept. Sentences 1 and 2 (which borders the list covers and in what order; `a`–`y` as open borders and a wall) replaced by a pointer to the engine's wall list (the subject's one statement of how the areas are written); the comma and the clue grid kept, with the clue characters from the requirement above; "either part running past its count" cut to the clue grid's half. Gains the scenario "A generated description round-trips"; its own two scenarios untouched | the list: `engine-params`, "The engine provides the wall-list description grammar"; a wall run past the last border: `engine-params`, "The wall-list reader refuses a run that passes the last border". The clue grid's overrun is Rome's: `readBoard`, `state.ts:450` |
+| Generation: Rome's generator keeps every board soluble at its tier | removed. Retitled "Generation: A Rome board keeps the collection's promise at its tier" by the cut, its sentence replaced by one that named the two shared requirements and said the game departs from neither; the third pass removed that requirement, "Generation: Rome's rules are met in one order, Easy first" saying which rules each of Rome's tiers holds. Scenario "Every preset produces a soluble board" dropped; "A Tricky board needs the Tricky rule", written in words for the pointer, dropped with it | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (both directions). The gate: `src/games/rome/generator.ts:212` |
 | Hint: Rome explains its next deduction | retitled "Hint: Rome's hint is the candidate walk's, started on the implicit reading". "SHALL provide an explained `hint()` that narrates the next forced move by the premise that forces it" replaced by a pointer to the walk and the legend; "in Rome's own vocabulary of arrows, squares and areas" kept. Gains the implicit-reading sentence and the scenario "A board with no marks and no stored preference" from "Hint: Rome's hint pencils marks in only as a step needs them". Scenario "A hint can be followed to a finished board" dropped | `engine-candidate-hints`, "A shared candidate-elimination hint plan"; `engine-hints`, "A hint step always names a technique, with no un-narrated fallback". The scenario: `engine-hints`, "The hint walk SHALL cover every preset a game offers" (following hints solves the board from any reached position) and "A displayed hint step never references already-resolved state" |
 | Hint: A Rome hint rests on what the player can see or mark | removed | `engine-hints`, "A hint relies only on marks the player can make" (sentence 1), "The engine SHALL own the hint mark roles and the words for them" (outline for what a step reasons from, stripes for a region named) and "A hint marks beside the content, never behind it" (ringed and not filled; its first scenario is the dropped one). Rome's legend: `hintMarks`, `index.ts:706`-`714` |
 | Hint: A walk in a Rome hint is numbered square by square | title kept. "the chain SHALL be outlined in order, numbered, so the claim the sentence makes is one the player can follow square by square" and "The chain SHALL be computed rather than assumed." replaced by a citation; what is Rome's (the premise is an arrow chain leading back to the square being struck) kept. Scenario untouched | `engine-candidate-hints`, "A premise that asserts a walk is computed and numbered" |
@@ -21,9 +24,6 @@
 - **Rules: Mistake-checking reports the rule violations the board shows.** A
   departure: the shared check compares with the answer, and Rome's reports
   what the board already draws as well.
-- **Rules: … arrows and marks that break no rule**, "no contradiction SHALL
-  be reported". No shared requirement says what a check does where the
-  solver does not finish the board.
 - **Params: … one with no difficulty letter is Easy**, "SHALL give Easy". It
   is what `defaultParams` holds (`state.ts:344`) and the promise an old link
   depends on.
@@ -57,12 +57,19 @@
 
 ## Engine requests
 
-- "When the board is not deducible from those clues no contradiction SHALL
+- Answered: `ts-engine`, "A mistake check compares with the one answer,
+  hidden or not". The sentence is cut; it was also wider than the code, which
+  reports a broken rule whether or not the board deduces, as the rule
+  requirement says.
+  "When the board is not deducible from those clues no contradiction SHALL
   be reported.", in "Rules: Rome mistake-checking covers arrows and marks
   that break no rule". Solo says the same of an ambiguous board. Belongs in
   `ts-engine`, beside "A mistake check compares with the one answer, hidden
   or not". Each game returns early itself (`index.ts:635`).
-- The wall list: "a decimal number for a run of walls and a letter for a run
+- Answered: `engine-params`, "The engine provides the wall-list description
+  grammar" and "The wall-list reader refuses a run that passes the last
+  border". The sentences are cut.
+  The wall list: "a decimal number for a run of walls and a letter for a run
   of non-walls, with the letter `z` denoting a maximal run with no trailing
   wall", in "Description: Rome descriptions use the region-border and clue
   encoding", and the first two sentences of "Description: A Rome description
@@ -165,3 +172,60 @@ clause. Kept as the subject's one pointer: 6. Kept as a departure: 1 clause.
   spec.
 - Each subject read alone after the edit: none is a fragment, and every
   title fits its body.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Rome: 3 (the mistake
+check, the wall-list grammar, the wall-list reader's refusal). Engine
+requests of its own: 2. Cut: 5 sentences, 2 clauses and 1 scenario, in 5
+requirements, 2 of which are gone. Clauses kept: 6.
+
+Cut (the rows above say where each is stated):
+
+- **"Rules: Rome mistake-checking covers arrows and marks that break no
+  rule"**: "When the board is not deducible from those clues no contradiction
+  SHALL be reported."
+- **"Description: Rome descriptions use the region-border and clue
+  encoding"**: the wall list's sentence. The requirement is gone, its clue
+  sentence and its scenario joined to the one below.
+- **"Description: A Rome description is the walls, a comma, then the
+  clues"**: its first two sentences, and the wall half of "either part
+  running past its count".
+- **"Description: Rome rejects a description that breaks its shape"**: "that
+  uses invalid region-border characters". The engine's table does not name
+  this clause; the reader's requirement states the refusal of a character
+  that is neither a digit nor a lowercase letter.
+- **"Generation: A Rome board keeps the collection's promise at its tier"**,
+  whole, with the scenario written for it. The second pass kept it as the
+  subject's pointer; under the third pass's one rule it goes, the subject's
+  other requirement saying which rules each of Rome's tiers holds.
+
+Kept:
+
+- **The pointer to the engine's wall list** in "Description: A Rome
+  description is the walls, a comma, then the clues": `Description` is owed,
+  and without it the subject says nothing of how the areas are written. One
+  pointer, for the one concern.
+- **The comma, the clue grid's characters and runs, and the refusal of a
+  missing comma and of a clue grid past its count**: what follows the list is
+  the game's to read.
+- **The scenario "A dealt 4×4 board"**, which reads a wall list: a case of
+  this game's description, both halves.
+- **"Rules: Mistake-checking reports the rule violations the board shows"**:
+  the broken rules Rome reports with an answer or without, which the engine
+  requirement leaves to the game.
+- **The first sentence of the answer check**, with "separately from the rule
+  violations": Rome's, as the second pass found.
+- **"with no departure from the codec grammar and no refusal of the game's
+  own"** in `Params`: the subject's one pointer, the rest being what a string
+  with no `d` decodes to.
+
+Rome records at every tier whatever the board states, and its spec says
+nothing of a cap, so the recording-solve row has nothing here. No sentence of
+the form "What a pasted game ID opens as". The spec was searched for the
+third round's other rules in other words (the wash over a square's surface,
+an arrow moving the highlight, where Rome's arrows are actions of its own, a
+sentence that leads with the indication): none is stated as a copy.
+
+Each subject read alone: no fragment, no dangling pronoun, every title fits
+its body, and the Purpose names nothing that went.

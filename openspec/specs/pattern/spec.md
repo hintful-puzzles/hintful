@@ -6,7 +6,7 @@ squares in each row and column match its clue list: what counts as solved,
 what its params refuse and what a short params string means, the description
 encoding, what the generator promises, what the search assumes, what a press, a
 drag and the keyboard do, how the picture and its errors look, and what the
-explained deductive hint says and marks.
+explained deductive hint says and in what order.
 
 ## Requirements
 
@@ -257,20 +257,15 @@ clears SHALL NOT.
   squares
 - **THEN** both become `Unknown`
 
-### Requirement: Hint: A Pattern hint never reveals the solution or searches
+### Requirement: Hint: Pattern's hint stops where the lines do
 
-The hint SHALL never reveal the stored solution or run a search. On an
-Unreasonable board the plan SHALL hold the steps the lines force and no
-others, and where no line forces a cell the hint SHALL refuse with the
-collection's sentence that deduction has run out. It SHALL go on from the
-marks the player then makes.
+On an Unreasonable board as on any other, the steps of Pattern's hint SHALL be
+those a line forces from its own clue and marks.
 
 #### Scenario: The hint stops where the lines do
 
 - **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** once the player has marked a cell the lines did not decide as the
+- **THEN** once the player has marked a cell the lines did not decide as the
   solution has it, the hint has a step again
 
 ### Requirement: Hint: One Pattern line deduction is one multi-cell step
@@ -286,10 +281,10 @@ understandable at a glance.
 - **THEN** the plan holds that deduction as one step whose move sets all three
   to `Full`
 
-### Requirement: Hint: Pattern's narration leads with the indication and concludes by necessity
+### Requirement: Hint: Pattern's narration names the clue and what was spotted, and concludes by necessity
 
-The narration SHALL lead with the indication, the clue and the spotted pattern
-in board terms, and SHALL conclude in the necessity voice (`must be`, `must
+A step's indication SHALL be the clue and the spotted pattern in board terms,
+and the narration SHALL conclude in the necessity voice (`must be`, `must
 stay` or `are always`), never with a bare state-of-being verb.
 
 #### Scenario: An overlap is narrated
@@ -313,33 +308,6 @@ one arrangement fits".
 - **THEN** every step carries a named line technique (overlap, unreachable, a
   line with no clues, or the single-line intersection bottom rung)
 - **AND** no step carries a generic "only one arrangement fits" explanation
-
-### Requirement: Hint: Pattern's hintKeepTrack follows partial progress
-
-`hintKeepTrack` SHALL return `"completed"` when the player fills the last
-forced cell of the displayed step with the correct value, `"onTrack"` on
-partial progress, shrinking the step to the remaining cells, and `"off"`
-otherwise.
-
-#### Scenario: Part of a step is filled by hand
-
-- **WHEN** a step forces three cells and the player sets one of them to the
-  hinted value
-- **THEN** the verdict is `"onTrack"` and the step's move and ring cover the
-  other two cells
-
-### Requirement: Hint: A cell a Pattern hint cites is outlined by what it holds
-
-Of the cells a step cites, an already-placed `Full` cell SHALL be outlined
-`COL_HINT_BLACKREF` and an already-placed `Empty` cell `COL_HINT_WHITEREF`.
-
-#### Scenario: Premise marks are ringed by their color
-
-- **WHEN** a hint cites an already-placed full cell and an already-placed empty
-  cell as evidence
-- **THEN** the full cell is outlined in the black-reference color and the empty
-  cell in the white-reference color, each leaving the cell's own content
-  visible
 
 ### Requirement: Hint: A Pattern run's overlap is shaded, and a cell no run reaches is clear
 
@@ -394,8 +362,7 @@ line between cells SHALL be doubled every fifth cell.
 `redraw` SHALL draw a `Full` cell as the collection's shaded piece, inset on
 the plain cell surface, a cell marked `Empty` as the collection's clear
 square with its faint cross, and an `Unknown` cell as plain surface holding
-nothing. A hint's line hatch SHALL be drawn over a cell's surface, the clear
-square's included.
+nothing.
 
 #### Scenario: The three states are a piece, a clear square and nothing
 

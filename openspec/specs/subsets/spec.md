@@ -487,8 +487,7 @@ are tried with it.
 ### Requirement: Hint: A Subsets hint refuses a letter the answer does not have
 
 Where a letter the player has marked present or cleared differs from the
-board's solution, or the hint's own deduction from the player's marks ends in
-a contradiction, `hint` SHALL refuse with the collection's sentence that the
+board's solution, `hint` SHALL refuse with the collection's sentence that the
 entries contradict each other.
 
 #### Scenario: A letter marked where the answer has none

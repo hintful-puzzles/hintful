@@ -8,7 +8,8 @@
 | Params: Twiddle's block is at least two squares wide | removed, with its scenario "A block of one square" | `bounds: { min: 2 }` on the block-size item and `bounds: { min: 0 }` on the shuffle item, `index.ts:235` and `:273`; `engine-params`, "Params validity is the engine's check" (each item's `bounds`, named by the label its dialog shows). `src/games/twiddle/twiddle.test.ts:107` holds "Rotating block size must be at least 2." |
 | Params: A Twiddle title names what departs from the basic game | removed, with its scenarios "The Type menu's boards" and "A shuffle target" | the words and their slots: `label` on the block-size item (`index.ts:236`-`239`) and on the shuffle item (`:274`-`277`), `words: "rows only"` and `words: "orientable"` with `slot: "kind"` on the two `modifierItem`s (`:246`, `:259`); the order: `engine-params`, "One describer labels every params set", and "The engine builds a modifier's help entry and label words" (said exactly when the rule applies). The `twiddle` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds "3x3 rows only", "3x3 orientable" and "4x4, rotating 3x3 blocks", and `twiddle.test.ts:135` "5x5, 12 shuffles" |
 | Controls: A click rotates the block centered on it | title kept. "`interpretMove` SHALL convert a left or right click to a rotation" and the last sentence (left anticlockwise, right clockwise) cut. The offset and the refusal of a block off the grid kept, reworded to stand alone ("A click SHALL be offset", "make no move" for "reject"); "and mapping the result to grid coordinates" cut with the clause it explained. Scenario untouched | `targetVerbs.primary` ("rotate it anticlockwise") and `.secondary` ("rotate it clockwise"), `index.ts:98`-`105`; `engine-input`, "The engine owns a declaring game's press and select keys". That anticlockwise is `dir +1` stays in "Controls: Letter and numpad keys rotate fixed blocks" |
-| Look: The Twiddle completion flash lights each tile's face | title kept. Sentence 1 ("The completion flash SHALL sweep the tiles diagonally, a tile's position being its place in the grid") cut. Sentence 2 reworded to stand without it ("A tile the completion flash lights SHALL have its face filled" for "A lit tile's face SHALL be filled"). Scenario untouched | `ts-engine`, "A game gives each element a position, and the route is which position it gives" ("`sweepStep` of its center otherwise: a diagonal from the bottom left to the top right"). `flash.win(sweepStep(tx, ty))`, `src/games/twiddle/render.ts:348` |
+| Controls: The Twiddle cursor moves over the rotation origins | third pass: "clamped at the edges without wrapping" reworded out; that the cursor's squares are the rotation origins, how its block is outlined and the scenario kept | `engine-input`, "The engine provides the geometry of a grid of squares" (an arrow stops at the grid's edge unless the game declares `wrap`; its scenario "A grid that is not the board's cells" is Twiddle's); `squareGrid` with no `wrap`, `src/games/twiddle/index.ts:92` |
+| Look: The Twiddle completion flash lights each tile's face | title kept. Third pass: the sentence as the first cut left it (the face filled inside the bevel, the number and the orientation mark kept) cut, and one written for what the kept scenario says: the flash lights the tiles, and a tile it has left is alone repainted, with its own face; `engine-colors`, "A lit beveled tile is lit on its face and keeps its bevel" (the number "and any mark on it" drawn as on any other frame) states what went. Earlier: Sentence 1 ("The completion flash SHALL sweep the tiles diagonally, a tile's position being its place in the grid") cut. Sentence 2 reworded to stand without it ("A tile the completion flash lights SHALL have its face filled" for "A lit tile's face SHALL be filled"). Scenario untouched | `ts-engine`, "A game gives each element a position, and the route is which position it gives" ("`sweepStep` of its center otherwise: a diagonal from the bottom left to the top right"). `flash.win(sweepStep(tx, ty))`, `src/games/twiddle/render.ts:348` |
 
 ## Kept, and why
 
@@ -24,10 +25,6 @@
 - **Controls: A click rotates the block centered on it**, the offset and the
   bounds. They are the `size` and `border` functions Twiddle hands
   `squareGrid` (`index.ts:93`-`94`), and the `does` strings say only "it".
-- **Controls: The Twiddle cursor moves over the rotation origins**, "clamped
-  at the edges without wrapping". `engine-input`, "A bounded-grid cursor is
-  driven through `moveCursor`" says the clamp or the wrap is the helper's and
-  not which one a `squareGrid` game gets.
 - **Controls: Each Twiddle letter and keypad digit has its block**, "Each of
   these keys SHALL act wherever the cursor is, shown or not". They are an arm
   of `interpretMove` tried before the model (`fixedBlockKey`, `index.ts:126`),
@@ -40,11 +37,11 @@
   completion words are not restated.
 - **Look: A rotation animates…**, "proportional to `sqrt(n−1)`": `animLength`
   is a function of the block size (`render.ts:82`), not a constant.
-- **Look: The Twiddle completion flash lights each tile's face**, its one
-  sentence. `engine-colors`, "A solved flash drawn as a color takes a shared
-  color" says a tile's ground is filled and keeps what it holds; "inside its
-  bevel" it gives only by a scenario, and that the orientation mark is among
-  what stays is the game's.
+- **Look: The Twiddle completion flash lights each tile's face**, "a tile the
+  flash has left SHALL alone be repainted, with its own face". `engine-colors`,
+  "A lit beveled tile is lit on its face and keeps its bevel" says how a lit
+  tile is drawn and not which tiles a frame repaints once the flash has
+  passed.
 
 ## Engine requests
 
@@ -54,12 +51,14 @@
   nearly the same words. Belongs in `engine-colors`, "A solved flash drawn as
   a color takes a shared color", which says the bevel stays only by its
   scenario "A flash that is not a color". `redraw`,
-  `src/games/twiddle/render.ts`.
+  `src/games/twiddle/render.ts`. Answered: `engine-colors`, "A lit beveled
+  tile is lit on its face and keeps its bevel".
 - "clamped at the edges without wrapping", in "Controls: The Twiddle cursor
   moves over the rotation origins". Belongs in `engine-input`, "A target and
   its cursor belong to the geometry" or beside it: what the arrows do to the
   cursor of a game on `squareGrid`. No spec names `squareGrid`
-  (`src/engine/target-verb.ts`).
+  (`src/engine/target-verb.ts`). Answered: `engine-input`, "The engine
+  provides the geometry of a grid of squares".
 
 ## Found
 
@@ -136,3 +135,35 @@ Checked and found sound:
   Found that `Controls` then said nowhere which button turns which way: an
   owed subject that does not say where its ordinary case is stated is what
   the pointer is for. That Found line is answered by this.
+
+## Third pass
+
+What the engine's third round states, removed. 2 rows of the third-round
+tables name Twiddle (the geometry of a grid of squares, the lit beveled
+tile), and both of this ledger's requests were answered by them.
+
+Cut, 1 clause and 1 sentence:
+
+- **"clamped at the edges without wrapping"**, in "Controls: The Twiddle
+  cursor moves over the rotation origins": `engine-input`, "The engine
+  provides the geometry of a grid of squares".
+- **"A tile the completion flash lights SHALL have its face filled with a
+  flash color inside its bevel, and SHALL keep its number and its
+  orientation mark."**, in "Look: The Twiddle completion flash lights each
+  tile's face": `engine-colors`, "A lit beveled tile is lit on its face and
+  keeps its bevel".
+
+Kept, 2 clauses:
+
+- That the cursor's squares are the rotation origins, by the engine table's
+  word: it is the `size` Twiddle hands `squareGrid`.
+- The scenario "The flash leaves a tile", by the review's word. Its
+  requirement had no sentence left, so one was written for it: that the
+  flash lights the tiles, and that a tile it has left is alone repainted,
+  with its own face. It claims what the scenario claimed and no more.
+
+No sentence of the brief's section 2 stood in the spec. `Controls` keeps its
+one pointer, to `targetVerbs`, from the second pass.
+
+Each subject read alone: none hollow, no fragment, every title fits. The
+Purpose names nothing that went.

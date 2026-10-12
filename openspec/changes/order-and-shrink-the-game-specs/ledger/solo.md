@@ -2,20 +2,22 @@
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Solo flags mistakes against its unique solution | retitled "Rules: Solo checks entries and notes against the answer its givens and cage sums fix". Sentence 1 (implement `findMistakes`; a wrong digit is `"cell"`, a note set that crossed out the answer is `"note"`) replaced by one that names the two shared requirements and keeps what they leave to the game: the answer is the solver's from the givens and, on a killer board, the cage sums. Sentence 2 (an ambiguous board reports nothing) kept. Scenario "A wrong digit and a wrong note are flagged" dropped; "A killer board, which has no givens" written in words | `ts-engine`, "A mistake check compares with the one answer, hidden or not" (a wrong entry) and "A candidate note that excludes the answer is a mistake" (the note rule, extra candidates not flagged, the answer from what the puzzle fixes; its first scenario is the dropped one). The two kinds are `entryMistakes`, `src/engine/entry-mistakes.ts:46`, called at `src/games/solo/index.ts:341` |
+| Rules: Solo flags mistakes against its unique solution | retitled "Rules: Solo checks entries and notes against the answer its givens and cage sums fix". Sentence 1 (implement `findMistakes`; a wrong digit is `"cell"`, a note set that crossed out the answer is `"note"`) replaced by one that names the two shared requirements and keeps what they leave to the game: the answer is the solver's from the givens and, on a killer board, the cage sums. Sentence 2 (an ambiguous board reports nothing) cut (third pass). Scenario "A wrong digit and a wrong note are flagged" dropped; "A killer board, which has no givens" written in words | `ts-engine`, "A mistake check compares with the one answer, hidden or not" (a wrong entry; no mark flagged against an answer where the solver did not establish exactly one) and "A candidate note that excludes the answer is a mistake" (the note rule, extra candidates not flagged, the answer from what the puzzle fixes; its first scenario is the dropped one). The two kinds are `entryMistakes`, `src/engine/entry-mistakes.ts:46`, called at `src/games/solo/index.ts:341` |
 | Params: Solo reads the legacy jigsaw form and a single leading number | title kept. "and SHALL round-trip the preset list" reworded out of sentence 1; the last sentence (a `d` with no tier letter and a character the encoding does not use are refused) cut. Both scenarios untouched | the round trip: `engine-params`, "Encode and decode are mutual inverses over the corpus", and the `solo` entry of `src/engine/__snapshots__/params-stability.test.ts.snap`. The refusals: `engine-params`, "A params string is read whole or refused" ("a tag with nothing after it, and any character no piece of the game's grammar reads", of every game's `decodeParams`) and "The engine makes the one refusal of a params string"; `paramsLetter` and `unreadParams` at `src/games/solo/state.ts:242` and `:245` |
 | Params: Solo refuses parameters outside its bounds | title kept. The last sentence (a single field's limit is its Custom-dialog bound, the difficulty a choice among the tiers, the engine refuses outside either) reworded shorter and given its citation. Scenarios untouched | |
 | Look: Solo draws its cages, digits, pencil marks and live errors | title kept. "and a completion flash" reworded out of the sentence. Scenario untouched | `ts-engine`, "The win flash plays on a forward move that solves the board"; `engine-colors`, "A solved flash drawn as a color takes a shared color" (a lit cell's ground is `FLASH` or `FLASH_LEAD`, which is all Solo gives it: `src/games/solo/render.ts:118`-`119`) |
 | Generation: Solo generates boards uniquely solvable at exactly the requested difficulty | retitled "Generation: Solo builds a full grid under every active constraint". Sentence 1 (the full grid, `divvy`) untouched. Sentence 2 (kept only when uniquely solvable at exactly the requested difficulty) cut (second pass: the pointer that had replaced it went, the subject's next requirement saying which boards Solo keeps). Scenario "Generated board is uniquely solvable at its difficulty" dropped; "A board with the diagonals and cages both" written in words | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (its first scenario is the dropped one). The gate: `src/games/solo/generator.ts:433` and `:485` |
-| Controls: Solo interprets digit, pencil, and mark-all input | gains "The on-screen keypad SHALL be the one `requestKeys` declares for the grid's size." (rule 2: the keypad's own requirement goes) | |
-| Controls: Solo provides on-screen key labels | removed | `requestKeys: (p) => digitKeys(p.c * p.r)`, `src/games/solo/index.ts:794`; `digitKeys` and `clearKey` in `src/engine/key-labels.ts` (`1` to `9`, then `a` on, then Clear on button 8). That the letters type what they label stays in "Controls: Solo types the numbers past 9 as letters" |
+| Controls: Solo provides on-screen key labels | removed. The pointer sentence it left in "Controls: Solo interprets digit, pencil, and mark-all input" ("The on-screen keypad SHALL be the one `requestKeys` declares for the grid's size.") went in the third pass, so that requirement stands as it did | `requestKeys: (p) => digitKeys(p.c * p.r)`, `src/games/solo/index.ts:794`; `engine-input`, "The digit keypad has one key for each value, a letter past nine" (`digitKeys`: `1` to `9`, then `a` on, then the clear key). That the letters type what they label stays in "Controls: Solo types the numbers past 9 as letters" |
 | Preferences: Solo exposes pencil-mark preferences | removed | `prefs`, `index.ts:796`-`806`; `engine-notes`, "The pencil preferences have one key each, which a saved preference depends on" (the three preferences) and "Every member offers the keep-highlight preference, defaulted the same way" (keep-highlight on, sticky on, auto-pencil off, "which leaves cleaning the notes to the Mark-all press and the hint"). The defaults: `newUi`, `state.ts:699` |
 | Hint: Solo provides an explained deduction hint | removed; one sentence that sends the reader to the walk and the legend joins "Hint: Solo's hint is the candidate walk's, started on the implicit reading". Scenario "A region elimination is taught as a note strike" dropped | `engine-candidate-hints`, "A shared candidate-elimination hint plan" (the walk on a working board, for a pencil-notes game; its scenario: a strike's move is the game's strike move and its marks the candidates it strikes) and "A shared candidate-elimination hint entry" (`hint` is one call); `engine-hints`, "A hint is deduced from the board in play" |
 | Hint: Solo's hint starts on the implicit reading | retitled "Hint: Solo's hint is the candidate walk's, started on the implicit reading". Gains the pointer sentence to the walk and the legend. "Solo SHALL start its hint on the implicit reading of a cell with no notes" kept, with a citation; "and under it the plan SHALL emit no fill-all step" cut. Scenario untouched | `engine-candidate-hints`, "A candidate hint plan reads an unmarked cell the way the player chose" ("Under `implicit` … the plan SHALL emit no fill-all step") |
 | Hint: Solo's hint marks pair each color with a shape | removed | `hintMarks.roles` (`ring`, `outline`, `stripes`, the ring's "pencil marks to cross out, which are shown with a line through them"), `index.ts:770`-`778`; `engine-hints`, "The engine SHALL own the hint mark roles and the words for them", "A hint naming several kinds of element colors them by a stable legend" and "A legend color is never the only cue" |
-| Hint: Solo's hint never narrates a guess | removed; its scenario "The hint declines when only a guess remains" moves, unchanged, to "Hint: Solo's hint uses no technique above the board's tier" | the cap below recursion: this spec's "Hint: Solo's hint uses no technique above the board's tier" ("and at Extreme on an Unreasonable board"; `Math.min(state.params.diff, DIFF_EXTREME)`, `index.ts:578`). That the hint then says it cannot deduce: `engine-hints`, "A Search is refused and never narrated", and `engine-candidate-hints`, "A shared candidate-elimination hint entry" (an empty plan refuses) |
+| Hint: Solo's hint never narrates a guess | removed; its scenario "The hint declines when only a guess remains" moved to "Hint: Solo's hint uses no technique above the board's tier" and was dropped there in the third pass | the cap below recursion and the dropped scenario: `engine-candidate-hints`, "A recording solve stops below the tier that searches" (capped beneath `Unreasonable` on every board; refuses with `DEDUCTION_EXHAUSTED` only where the capped plan holds no step; scenario "Nothing left to record"). Solo's call: `Math.min(state.params.diff, DIFF_EXTREME)`, `index.ts:578`. `engine-hints`, "A Search is refused and never narrated" |
 | Hint: A single-digit pattern step names the fewer lines | removed | `engine-candidate-hints`, "The solver says which lines confine a value" (the two readings; "a solver without repeated values SHALL record whichever is fewer lines") and "A value confined across several lines shows the lines" (the lines are striped and named). Solo's: `confinedLines`, `src/games/solo/solver.ts:1014`, and `say.confined`, `src/games/solo/hint-text.ts:177` |
-| Hint: Solo's hint uses no technique above the board's tier | gains the scenario "The hint declines when only a guess remains", from "Hint: Solo's hint never narrates a guess"; sentences untouched | |
+| Hint: Solo's hint uses no technique above the board's tier | title kept. Third pass: "and at Extreme on an Unreasonable board" reworded out, the cap at the board's tier now said of a board below Unreasonable; the scenario "The hint declines when only a guess remains", gained from "Hint: Solo's hint never narrates a guess", dropped; "An Easy board is hinted with Easy's techniques" untouched | `engine-candidate-hints`, "A recording solve stops below the tier that searches" |
+| Solver: A census certifies that every rung fires | third pass: title kept. "A firing census SHALL walk … and assert that every rung fires on the corpus" reworded to what is Solo's: which boards, at which caps, and that every rung fires on them (Solo records no rung as unreached, `unreached: {}`, `src/games/solo/solo-ladder.test.ts:147`). Scenario untouched | what a census is and when it fails: `testing`, "A firing census certifies a solver's ladder" |
+| Hint: Solo's narration leads with what was spotted | third pass: retitled "Hint: A Solo step's indication is its firing region, or what the player looks at". "SHALL lead with … then give the reasoning, then conclude in the necessity voice" reworded out of sentence 1 and "SHALL lead with" out of sentence 2; kept: what the indication of each kind of step is, and the words of the conclusions. The six scenarios untouched | the order: `engine-hints`, "A step's sentence opens with what the player can spot"; the necessity voice: `engine-hints`, "The necessity-voice rule applies to every hinting game not ledgered as narrating moves" |
+| Look: Solo draws its digits on a quiet surface, with a given's cell lifted | third pass: last sentence ("The selection's wash and its pencil-mode corner SHALL be drawn over whichever surface the cell has.") cut; the first sentence and the scenario untouched | `engine-notes`, "The highlight is part of the cell's background" (the wash replaces whichever surface the game gives the cell, a given's lifted one included; the triangle lies over it) |
 
 ## Kept, and why
 
@@ -29,12 +31,9 @@
   engine's check" states it; the sentence is the pointer that tells a reader
   of this requirement why `validateParams` holds no per-field limit, and it
   names that requirement.
-- **Solver: A census certifies that every rung fires**, and **Look: Solo
-  draws its digits on a quiet surface…**, last sentence: see Engine requests.
-- **Rules: … the answer its givens and cage sums fix**, "the result SHALL be
-  empty". No shared requirement says what a check does on a board with
-  several answers; `engine-params`, "A board with a mistake check loads only
-  with exactly one answer" keeps a player from one.
+- **Solver: A census certifies that every rung fires**: which boards, which
+  caps, and that no rung goes unfired, which `testing`, "A firing census
+  certifies a solver's ladder" leaves to the game.
 - **Controls: Solo types the numbers past 9 as letters**, the `M` sentence.
   `engine-notes`, "The letter M is Mark-all where the board has no M key"
   gives the rule by the keypad; that Solo's keypad has an M key from 22
@@ -67,7 +66,9 @@
 
 ## Engine requests
 
-- "When the board is not uniquely solvable from those the result SHALL be
+- Answered: `ts-engine`, "A mistake check compares with the one answer,
+  hidden or not". The sentence is cut.
+  "When the board is not uniquely solvable from those the result SHALL be
   empty.", in "Rules: Solo checks entries and notes against the answer its
   givens and cage sums fix". Belongs in `ts-engine`, beside "A mistake check
   compares with the one answer, hidden or not": what a check reports where
@@ -75,21 +76,28 @@
   itself (`src/games/solo/index.ts:340`); `entryMistakes`
   (`src/engine/entry-mistakes.ts`) is handed an answer and never the lack of
   one.
-- "The on-screen keypad SHALL be the one `requestKeys` declares for the
+- Answered: `engine-input`, "The digit keypad has one key for each value, a
+  letter past nine". The sentence is cut.
+  "The on-screen keypad SHALL be the one `requestKeys` declares for the
   grid's size.", in "Controls: Solo interprets digit, pencil, and mark-all
   input". No capability states what `digitKeys` builds (`1` to `9`, then
   `a` on, then Clear): `engine-input`, "Games may expose on-screen key
   labels" states the hook only, and "A key label carries its resolved text"
   the labels of a keypad of three, with nothing of the letters past 9.
   Belongs in `engine-input`. `src/engine/key-labels.ts`, `digitKeys`.
-- "The selection's wash and its pencil-mode corner SHALL be drawn over
+- Answered: `engine-notes`, "The highlight is part of the cell's
+  background". The sentence is cut.
+  "The selection's wash and its pencil-mode corner SHALL be drawn over
   whichever surface the cell has.", in "Look: Solo draws its digits on a
   quiet surface, with a given's cell lifted". Salad says it in the same
   words. Belongs in `engine-notes`, "The highlight is part of the cell's
   background", which says the picture is drawn with the background and before
   the content, and not that a lifted given keeps its surface under it.
   `src/engine/note-taking-cell.ts`.
-- "A firing census SHALL walk pinned boards … and assert that every rung
+- Answered: `testing`, "A firing census certifies a solver's ladder" (in
+  `testing` and not `engine-helpers`, the census being a test helper). The
+  sentence is cut to which boards and caps, and that every rung fires.
+  "A firing census SHALL walk pinned boards … and assert that every rung
   fires on the corpus.", the whole of "Solver: A census certifies that every
   rung fires". ABCD says it of itself and no engine capability names the
   census. Belongs in `engine-helpers`, beside the deduction fixpoint; which
@@ -206,3 +214,57 @@ Kept as a departure: 1.
   the spec.
 - Each subject read alone after the edit: none is a fragment, and every
   title fits its body.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Solo: 7. Engine requests of
+its own: 4. Cut: 3 sentences, 3 clauses and 1 scenario, in 6 requirements.
+Clauses kept: 6.
+
+Cut (the rows above say where each is stated):
+
+- **"Rules: Solo checks entries and notes against the answer its givens and
+  cage sums fix"**: "When the board is not uniquely solvable from those the
+  result SHALL be empty."
+- **"Controls: Solo interprets digit, pencil, and mark-all input"**: "The
+  on-screen keypad SHALL be the one `requestKeys` declares for the grid's
+  size." The requirement is again as it stood at the base, so its row is
+  gone and the sentence is accounted for in the row of "Controls: Solo
+  provides on-screen key labels".
+- **"Solver: A census certifies that every rung fires"**: "A firing census
+  SHALL walk … and assert", what a census is.
+- **"Hint: Solo's narration leads with what was spotted"**: "SHALL lead with
+  … then give the reasoning, then conclude in the necessity voice", twice;
+  retitled.
+- **"Hint: Solo's hint uses no technique above the board's tier"**: "and at
+  Extreme on an Unreasonable board", and the scenario "The hint declines when
+  only a guess remains", which is the engine requirement's "Nothing left to
+  record".
+- **"Look: Solo draws its digits on a quiet surface, with a given's cell
+  lifted"**: its last sentence.
+
+Kept:
+
+- **The census's boards and caps, and that every rung fires on them**, and
+  its scenario, which names the frozen differential beside the census.
+- **What each kind of step's indication is**, and the words of the three
+  conclusions: Solo's.
+- **"capped at the tier in the board's params"**, now said of a board below
+  Unreasonable.
+- **"Preferences: Auto-pencil strikes a placed digit from its no-repeat
+  regions"**, whole: the regions, and nothing of when the strike is decided.
+- **"Controls: Solo types the numbers past 9 as letters"**: what a typed
+  letter enters, in either case, and `M` from 22 numbers, are `interpretMove`'s
+  (`engine-input`, "The meaning of a digit key stays with the game"); the
+  engine's keypad requirement is of the keys offered.
+- **The first sentence of the mistake check**, with its two citations: the
+  second pass kept it as the one word of `Rules` on what a mistake is, and
+  the third round does not touch it.
+
+No "no departure" sentence, and none of the form "What a pasted game ID opens
+as". The spec was searched for the third round's other rules in other words
+(an arrow moving the highlight, an auto-pencil decision, a search the hint
+never runs): none is stated.
+
+Each subject read alone: no fragment, no dangling pronoun, every title fits
+its body, and the Purpose names nothing that went.

@@ -11,6 +11,9 @@ and its painting arrows.
 | Params: Tents params that name no difficulty are Easy | removed. "A params string with no `d` … SHALL decode as Easy" and the scenario "A bare size" move to "Params: A Tents params string is its declared codec's, and one with no difficulty is Easy". The clause "or whose `d` is followed by a letter that names no tier" is dropped: it is false of the code (see Found) | what an unknown letter does: `engine-params`, "A params string is read whole or refused" (refused, and never read as a default) |
 | Controls: Tents takes a cursor and direct keys | retitled "Controls: An arrow with Shift or Ctrl grasses the squares the cursor leaves and enters". Sentence 1 (Select a tent, select2 a non-tent, or clear) and sentence 2 (`T`, `N` and `B`) cut; sentence 3 (Shift or Ctrl with an arrow) untouched, and is the whole of it. Scenario "A letter sets the cursor square" dropped; "A shifted arrow paints grass" kept | `targetVerbs.primary`, `.secondary` and `.keyOnly` with their `does` strings and keys, `src/games/tents/index.ts:123`-`155`; `engine-input`, "The engine owns a declaring game's press and select keys" (Enter the left-click verb, Space the right-click one, a verb's own keys that verb, key-only verbs included) |
 | Hint: Tents explains the next deduction | retitled "Hint: A Tents hint step has one premise". "The game SHALL implement `hint` as a recording projection of its own solver rungs, one premise per step" reworded to "Each step … SHALL rest on one premise, a rung of the game's own solver"; the list of premises and the last sentence untouched. Scenario kept | `engine-hints`, "The solver and the hint are two projections of one deduction engine" (the hint runs the solver's techniques with the recorder on) |
+| Rules: Tents ships findMistakes | third pass. "`findMistakes` SHALL return an empty list when the board is not uniquely solvable" cut; which squares are mistakes, the blank and the overlay kept. Both scenarios kept | `ts-engine`, "A mistake check compares with the one answer, hidden or not" |
+| Solver: Tents' solver is a certified deduction ladder | third pass. Title and scenario kept. "A firing census SHALL walk boards … and assert that every rung fires on the corpus" reworded to what is the game's: which boards the census has, at which caps, and that every rung fires on them (it records none as unreached) | `testing`, "A firing census certifies a solver's ladder" (the walk at each cap, one tally, and the failure unless the rungs that never fired are exactly those recorded); `describeLadderCensus`, called with `unreached: {}`, `src/games/tents/tents-ladder.test.ts:51` |
+| Hint: Tents' hintKeepTrack judges a move by what it changes | third pass. Retitled "Hint: A Tents step's links are followed as its squares are". "SHALL judge a move by … it changes, holding a step that is only partly made and shrinking it to what is left" cut; kept, reworded to stand, that the links a move changes count with the squares, which is the antecedent of the scenario. Scenario "Placing a tree's tent by a click is progress" kept | `engine-hints`, "A step asking for several elements is followed one element at a time"; `trackTargets`, `src/games/tents/hint.ts:421`, handed `changesBetween`, `:390`, which lists a tent's tree with its square |
 | Hint: A Tents hint step says why and marks what it uses | title kept. "ring what it decides, outline what it reasons from, hatch the row or column it counts with, color that clue in the action color, and draw a link it asks for in the action color" replaced by a sentence that sends the reader to the legend; "in one sentence" kept. Scenario kept | `hintMarks.roles` (`ring`: "…the link is drawn between them in the hint color"; `outline`: "…the number of the row or column it counts with, which is shown in the hint's color"; `stripes`), `index.ts:462`-`469`; `engine-hints`, "The engine SHALL own the hint mark roles and the words for them" and "A hint hatches the one line its sentence names" |
 | Look: The Tents completion flash fills each square and keeps its pieces | title kept. "The completion flash SHALL sweep the squares diagonally, a square's position being its place in the grid." cut, and the next sentence reworded to stand ("A square the completion flash is on"). Scenario kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives"; the game's call is `flash.win(sweepStep(x, y))`, `src/games/tents/render.ts:643` |
 
@@ -32,8 +35,8 @@ and its painting arrows.
   `engine-difficulty`, "A difficulty tier binds the board it generates" does
   not ask of the easiest tier.
 - **Solver: Tents' solver is a certified deduction ladder.** It says how the
-  solver is built and how it is tested, which the guide says a spec does not
-  hold, but the brief's three classes do not name it. Left; see Found.
+  solver is built and which boards and caps its census has, which the
+  census's requirement leaves to the game. See Found.
 - **Controls: Tents places tents and grass by click and drag.** The two
   clicks are the verbs' `does` strings, but the press, the drag along one
   line and the release are an arm of the game's own `interpretMove`
@@ -50,7 +53,9 @@ and its painting arrows.
 
 ## Engine requests
 
-- "`hintKeepTrack` SHALL judge a move by the squares and links it changes,
+- Answered: `engine-hints`, "A step asking for several elements is followed
+  one element at a time"; the sentence is cut but for the links. As filed:
+  "`hintKeepTrack` SHALL judge a move by the squares and links it changes,
   holding a step that is only partly made and shrinking it to what is left.",
   the whole of "Hint: Tents' hintKeepTrack judges a move by what it changes".
   It is the verdict rule of `trackTargets`, `src/engine/hint-track.ts:40`,
@@ -132,3 +137,38 @@ Checked and found sound:
   solve at exactly their difficulty" are the collection's promises, each the
   one scenario, or one of two, of a requirement that states the game's own;
   left.
+
+## Third pass
+
+Three rows of the engine tables name Tents: the mistake check (in the
+review), the firing census, and the step followed one element at a time,
+which the review corrects for Tents.
+
+- **Rules**, "`findMistakes` SHALL return an empty list when the board is not
+  uniquely solvable": cut.
+- **Solver**, the census sentence: what the census does and that it fails on
+  a rung that never fires cut; which boards, which caps and that every rung
+  fires kept.
+- **Hint**, "Hint: Tents' hintKeepTrack judges a move by what it changes":
+  the verdict rule cut; retitled for what is left.
+
+Sentences cut: 2, and the half of a third. Clauses kept: "when a unique
+solution exists", twice in `Rules`, as the condition its sentence opens on
+and not a statement of the empty result; the census's boards and caps (the
+engine's row keeps them in each game); the links counted with the squares
+and the scenario of a tent placed by a click, which the review keeps. The
+review also says a step of links is not rewritten; the spec never said so
+and the pass adds nothing.
+
+Section 2 of the brief: "with no departure from the codec grammar" stands in
+"Params: A Tents params string is its declared codec's, and one with no
+difficulty is Easy", a clause of the one pointer `Params` has to its
+declaration; the subject's other two requirements speak only of what is
+refused. Kept. `Generation` has no sentence of what a dealt board promises,
+and the spec has no pasted-ID sentence. "Description: Tents descriptions use
+the upstream run-length encoding" was read against the two description
+grammars of `engine-params`: Tents writes and reads its tree runs by hand
+(`_`, `a` to `y` a run and a tree, `z` twenty-five blanks), which is neither
+grammar, so it stays.
+
+Each subject read alone: no fragment, every title fits its body.

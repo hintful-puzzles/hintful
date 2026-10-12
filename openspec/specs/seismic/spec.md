@@ -114,38 +114,16 @@ once, and both codec halves are derived"), and its menu SHALL be what
 
 ### Requirement: Description: Seismic descriptions use the run-length wall and clue encoding
 
-A Seismic description SHALL encode two comma-separated parts: a run-length
-list of the region walls, over the borders between the cells of each row first
-and then the borders between rows, and a run-length list of the clue numbers
-in row-major order. Runs of walls SHALL be written as decimal counts and runs
-of non-walls as letters, and runs of empty clue cells SHALL be abbreviated
-with letters; a clue cell SHALL carry its digit.
+A Seismic description SHALL be two comma-separated parts: the region walls,
+as the engine's wall list (`engine-params`, "The engine provides the
+wall-list description grammar"), and the clue numbers in row-major order. In
+the clue list a letter SHALL be a run of empty cells, `a` for 1 to `z` for 26,
+and a digit `1` to `9` one given.
 
 #### Scenario: A generated description round-trips
 
 - **WHEN** a description is generated and then decoded into a board
 - **THEN** re-encoding that board yields the identical description
-
-### Requirement: Description: A Seismic description is validated against its regions
-
-Validation SHALL reject a description that uses an unknown wall or clue
-character, that forms a region larger than nine cells, or that places a clue
-larger than its region's size. It SHALL also reject a clue of 0, and a wall
-list or a clue list that does not cover the board exactly, and SHALL otherwise
-accept a description of the two comma-separated parts.
-
-#### Scenario: An over-large clue is rejected
-
-- **WHEN** a description whose clue exceeds the size of its region is validated
-- **THEN** it is rejected as an over-large clue
-
-### Requirement: Description: A wall-list letter is a run of open borders and the wall that ends it
-
-In a description's wall list a number SHALL be that many walls in a row, a
-letter `a` to `y` a run of 1 to 25 borders with no wall followed by one wall,
-and `z` 26 borders with no wall and none after them. The wall a final letter
-ends on MAY fall past the end of the list. In the clue list a letter SHALL be a
-run of empty cells, `a` for 1 to `z` for 26, and a digit `1` to `9` one given.
 
 #### Scenario: The 4×4 description 1a6df3,f1h1
 
@@ -156,12 +134,18 @@ run of empty cells, `a` for 1 to `z` for 26, and a digit `1` to `9` one given.
 - **AND** its clue list is six empty cells, a 1, eight empty cells and a 1, so
   the givens are the third cell of the second row and the last cell
 
-#### Scenario: A run past the end of the list
+### Requirement: Description: A Seismic description is validated against its regions
 
-- **WHEN** the wall list of `1a6df3,f1h1` is replaced by `z`, 26 open borders
-  on a board that has 24
-- **THEN** the description is refused with "This game ID is too long for its
-  board."
+Validation SHALL reject a description that uses an unknown clue character,
+that forms a region larger than nine cells, or that places a clue larger than
+its region's size. It SHALL also reject a clue of 0, and a clue list that
+does not cover the board exactly, and SHALL otherwise accept a description of
+the two comma-separated parts.
+
+#### Scenario: An over-large clue is rejected
+
+- **WHEN** a description whose clue exceeds the size of its region is validated
+- **THEN** it is rejected as an over-large clue
 
 ### Requirement: Generation: Seismic solves by candidate elimination, graded Easy or Normal
 

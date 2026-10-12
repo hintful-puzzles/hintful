@@ -29,9 +29,7 @@ correct.
 ### Requirement: Rules: Rectangles flags a drawn edge the solution lacks
 
 `findMistakes` SHALL return every edge the player has drawn that the board's
-one answer does not contain. A missing edge SHALL NOT be a mistake. It SHALL
-take the answer from the search that counts the board's answers, and a board
-that search did not prove has exactly one answer SHALL yield no mistakes.
+one answer does not contain. A missing edge SHALL NOT be a mistake.
 
 #### Scenario: A wall the solution does not contain is flagged
 
@@ -389,6 +387,12 @@ drawn line.
 - **THEN** it finishes the board, one of its steps a line, and the generator
   returns that board for upstream's seed
 
+#### Scenario: The hint goes on from a rectangle drawn rightly
+
+- **WHEN** the hint is followed on an Unreasonable board, and the solution's
+  rectangle is drawn wherever the hint stops
+- **THEN** the hint finishes the board
+
 ### Requirement: Hint: A Rectangles hint step is one of five deductions
 
 A step SHALL be one of: a clue with one fit; a square only one clue's fits
@@ -429,24 +433,6 @@ The rectangle a step draws SHALL be ringed as the contour of its squares.
 - **WHEN** the displayed step draws a rectangle of several squares
 - **THEN** each square carries the ring on those of its sides that lie on the
   rectangle's edge, and on no side shared with another of its squares
-
-### Requirement: Hint: Rectangles' hint stops where its steps do
-
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the rectangles and lines its five deductions force from the player's
-lines and no others, and where none is forced it SHALL refuse with the
-collection's sentence that deduction has run out. It SHALL go on from the
-rectangles the player then draws.
-
-#### Scenario: The hint stops, and goes on from a rectangle drawn rightly
-
-- **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** a rectangle drawn a square too narrow there is reported by the
-  mistake check
-- **AND** with the solution's rectangle drawn wherever the hint stops, the
-  hint finishes the board
 
 ### Requirement: Hint: A Rectangles hint plan is the firings its boards give
 

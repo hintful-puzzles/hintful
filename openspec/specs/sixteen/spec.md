@@ -248,13 +248,12 @@ journey's first leg; a `continuesPrevious` leg SHALL NOT repeat it.
   previewed second leg lands the tile there
 - **THEN** the first step reads as a home move
 
-### Requirement: Hint: The hint gives the move home even when it undoes the player's slide
+### Requirement: Hint: Sixteen's hint does not open by undoing the player's slide, unless that is the shortest way home
 
-A hint SHALL give the move that gets the board home even when that move undoes
-the slide the player just made. The don't-undo veto SHALL NOT be applied to
-the exact search's shortest plan, because it would destroy the property that
-makes the plan converge. The veto SHALL remain available to the heuristic
-search, which carries no such property.
+Where the player's last move was a slide, Sixteen SHALL veto, as a plan's
+first move, a slide of the same line that undoes that slide or part of it. A
+hint SHALL still give the move that gets the board home where the shortest
+plan the exact search finds opens with such a slide.
 
 #### Scenario: One slide off a finished board
 

@@ -10,6 +10,8 @@
 | Hint: Undead explained deduction hint | retitled "Hint: Undead's hint is a plan of the game's own". Sentence 1 (purely deductive, no solution reveal, no narrated guess) cut (second pass: the pointer to the two shared requirements that had replaced it went); sentence 2 (below Unreasonable a plan solves the board, and hints followed one at a time reach a solved board) cut; one sentence added that the plan is the game's own and what it is built from (rule 2: the subject's other requirements each give one technique or one refusal). Scenario "The plan reaches a solved board from any mistake-free position" dropped; "Naked single is surfaced first as a placement" and "Total exhaustion is narrated honestly, not as a sightline" untouched | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" and "A Search is refused and never narrated"; the dropped scenario: `engine-hints`, "The hint walk SHALL cover every preset a game offers" and "Deduction runs out only where the tier permits search". The added sentence: `buildSteps`, `index.ts:660` |
 | Hint: Undead's hint marks follow the element-type color legend | retitled "Hint: A ringed Undead cell shows no monster ahead of the move". The two colors by constant, "following the element-type color legend", the outline of the sightline evidence and "Both marks SHALL sit on the cell's edge, over the grid line" replaced by one sentence that sends the reader to the legend; "ringed … with no pre-rendered monster glyph" kept. Scenario untouched | `hintMarks.roles.ring` ("in the hint color") and `.outline` ("the *sightline* the step reasons from, in a second color: the squares, mirrors included…"), `index.ts:946`-`953`; `engine-hints`, "A hint naming several kinds of element colors them by a stable legend", "The engine SHALL own the hint mark roles and the words for them" and "A hint mark is drawn on the cell's border" |
 | Hint: A struck candidate stays legible | removed, with its scenario "A hint is dismissed" | `engine-hints`, "A highlight on a board element stays legible against its cell" (a struck candidate stays among its cell's notes in the note's own ink with a line through it, never on a fill of the highlight's color) and "A hint marks beside the content, never behind it" (the acted-on cell is ringed and not filled, whether the step places or strikes). The dismissal: `engine-hints`, "A mark outside the content box is driven by the drawstate" (a mark inside the box is undone by the cell's own repaint). The drawing: `src/games/undead/render.ts:568`-`577` |
+| Controls: Undead's first arrow selects the top-left square | third pass: title kept. "an arrow SHALL move the highlight one square and" reworded out of sentence 2, which keeps that the highlight stops at the grid's edge; sentence 1 (where the first arrow lands) and sentence 3 untouched but for "The highlight" reworded "It". Scenario untouched | `engine-notes`, "The highlight is the game's keyboard cursor" (an arrow reveals and moves the highlight; where the arrows may take it is the game's). Undead's arm: `src/games/undead/index.ts:230`-`241` |
+| Hint: An Unreasonable board's hint stops where deduction stops | third pass: retitled "Hint: An Unreasonable Undead board's plan is neither empty nor complete". Sentence 1 (the plan stops where deduction stops, and the hint then refuses with a message saying so, stating the consequence) cut; sentence 2 (the tests assert both bounds) kept, reworded to name the plan it speaks of. The scenario loses "the hints continue while deduction does, and then refuse with a message saying deduction has run out" and keeps its last clause | `engine-hints`, "A hint gives every step deduction still forces before it refuses" (the steps forced, then `DEDUCTION_EXHAUSTED` only where none is; its scenario "A board that stalls part-way"); the refusal's one wording: `engine-hints`, "Deduction running out on a sound board SHALL have one wording" |
 
 ## Kept, and why
 
@@ -25,11 +27,10 @@
   A copy of `prefs` (`index.ts:969`-`988`), kept: `count-style` and
   `monsters` are the keys a stored preference is read back by, and no test
   holds them. The `A` key is `interpretMove`'s.
-- **Hint: An Unreasonable board's hint stops where deduction stops.**
-  `engine-hints`, "Deduction runs out only where the tier permits search" and
-  "Deduction running out on a sound board SHALL have one wording" allow and
-  word the refusal; that Undead's plan stops there and never runs its forcing
-  rung is the game's.
+- **Hint: An Unreasonable Undead board's plan is neither empty nor
+  complete.** What Undead's tests assert of such a plan, both bounds, which
+  no shared requirement states; that the forcing rung never reaches a hint
+  is the requirement before it.
 - **Hint: Undead's hint conclusions use the necessity voice.** The rule is
   `engine-hints`, "The necessity-voice rule applies to every hinting game not
   ledgered as narrating moves"; the two phrases are Undead's own words, its
@@ -149,3 +150,47 @@ Kept as a departure: 0.
   `count-style`, `monsters` and the four count styles stand in the spec.
 - Each subject read alone after the edit: none is a fragment, and every
   title fits its body.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Undead: 2 (the highlight
+as the keyboard cursor; every step before the refusal, added by the review).
+Engine requests of its own: 0, so none to mark. Cut: 1 sentence, 1 clause
+and 1 line of a scenario, in 2 requirements. Clauses kept: 5.
+
+Cut (the rows above say where each is stated):
+
+- **"Controls: Undead's first arrow selects the top-left square"**: "an
+  arrow SHALL move the highlight one square".
+- **"Hint: An Unreasonable board's hint stops where deduction stops"**: "On
+  an `Unreasonable` board the plan SHALL stop where deduction stops, and the
+  hint SHALL then refuse with a message saying so, stating the consequence
+  and not hiding it.", and the scenario's line that says the same; retitled
+  for the two bounds it keeps.
+
+Kept:
+
+- **Where the first arrow lands, that the highlight stops at the edge, and
+  that it rests on a mirror or a given**: where the arrows may take the
+  highlight is the game's.
+- **What the tests assert of an Unreasonable board's plan**, as the review of
+  the engine's round says.
+- **"Hint: The forcing rung never reaches an Undead hint"**: Undead is not on
+  the search's tiers (`searchTiers`), so "The hint of a game on the search's
+  tiers never searches" does not bind it, and the forcing rung is Undead's.
+- **"with no departure from the codec grammar"** in `Params`: the subject's
+  one pointer to what the params are and how they are written.
+- **The mistake check's sentence**, with its citations and what the answer
+  is re-solved from: the second pass kept it, and it states nothing of a
+  board with no one answer.
+
+No sentence of the form "What a pasted game ID opens as", and none in
+`Generation` citing `engine-difficulty` with "no departure". The spec was
+searched for the third round's other rules in other words (the wash over a
+cell's surface, a hatch under content, a sentence that leads with the
+indication, a recomputed plan): none is stated.
+
+Each subject read alone: no fragment, no dangling pronoun, every title fits
+its body, and the Purpose names nothing that went: its "hint that stops,
+rather than searches, where deduction runs out" is the forcing rung's
+requirement.

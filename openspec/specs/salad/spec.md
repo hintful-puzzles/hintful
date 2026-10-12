@@ -4,8 +4,8 @@
 Salad, the Latin-square puzzle in which some squares stay empty, clued mainly by
 the letter seen first from each edge in ABC End View mode, or by balls and
 crosses in Number Ball mode. This spec holds its two modes, its parameters and
-description format, its controls, what its two difficulties and its generator
-promise, the decision that its solver reasons about the empty square in the
+description format, its controls, what its two difficulties hold, the
+decision that its solver reasons about the empty square in the
 shared Latin cube, its look, and what its hint teaches and says.
 
 ## Requirements
@@ -172,10 +172,7 @@ refused.
 Salad SHALL offer two tiers. To the shared Latin deductions its solver SHALL
 add the border-clue deduction, in ABC End View mode. Easy SHALL be that
 deduction and the shared positional and numeric eliminations, and Normal
-SHALL add the shared set elimination and forcing chains. What a board dealt
-at either promises SHALL be the collection's (`engine-difficulty`, "Every
-tier promises one solution found at its cap" and "A difficulty tier binds the
-board it generates"), with no departure.
+SHALL add the shared set elimination and forcing chains.
 
 #### Scenario: A Normal board genuinely needs the Normal tier
 
@@ -221,8 +218,7 @@ as an on-screen keypad.
 
 Salad SHALL be played by selecting a cell, through the engine's note-taking
 cell (`engine-notes`, "The note-taking cell is one shared mechanic"), and
-entering a symbol, an empty marker, or a not-empty marker. The arrow keys
-SHALL move a keyboard cursor.
+entering a symbol, an empty marker, or a not-empty marker.
 
 #### Scenario: Entering a symbol places it in the selected cell
 
@@ -509,16 +505,15 @@ SHALL stay on the board, outside the surface.
 - **AND** every other square is the cell surface, bordered by the surface grid
   line
 
-### Requirement: Look: Salad's selection and hint marks keep the square's surface
+### Requirement: Look: A Salad ball shows its square's surface, and the hint's marks stay on the border
 
-The selection's wash and its pencil-mode corner SHALL be drawn over whichever
-surface the square has. In ABC End View mode a ball SHALL show that surface
-through it; in Number Ball mode a given ball's inside SHALL be paper and the
-player's the entry color as a wash. The hint's marks SHALL stay on the square's
-border.
+In ABC End View mode a ball SHALL show its square's surface through it; in
+Number Ball mode a given ball's inside SHALL be paper and the player's the
+entry color as a wash. The hint's marks SHALL stay on the square's border.
 
-#### Scenario: A blank square is selected beside a given
+#### Scenario: A ball the player marked, in each mode
 
-- **WHEN** a blank square is selected for entry, next to a given square
-- **THEN** the selection's wash is drawn on the blank square, and the given
-  square keeps the lifted surface
+- **WHEN** a blank square that is not selected, and that the player has marked
+  as holding a symbol, is drawn
+- **THEN** in ABC End View mode the inside of its ball is the cell surface
+- **AND** in Number Ball mode it is the entry color's wash

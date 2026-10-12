@@ -24,8 +24,7 @@ error highlight, independently of `findMistakes`.
 
 `findMistakes` SHALL flag every placed digit that contradicts the board's one
 answer and every empty cell whose pencil notes have crossed out its solution
-digit. It SHALL return nothing when the search did not prove the board has
-exactly one answer.
+digit.
 
 #### Scenario: Entering the wrong digit is caught by Check & Save
 
@@ -584,22 +583,17 @@ remains legible against the hint's own colors.
 - **THEN** the hint remains displayed, and the selected square shows a cursor cue
   that is legible against the hint's highlight
 
-### Requirement: Hint: Crossing's hint stops where the solver does
+### Requirement: Hint: Crossing's hint finishes an Unreasonable board from digits tried rightly
 
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the steps its deductions force from the player's digits and notes and no
-others, and where none forces anything it SHALL refuse with the collection's
-sentence that deduction has run out. It SHALL go on from the digits the player
-then enters.
+On an Unreasonable board the hint's steps SHALL be those its deductions force
+from the player's digits and notes, and with a digit entered as the solution
+has it wherever the hint stops, the hint SHALL finish the board.
 
-#### Scenario: The hint stops, and goes on from a digit tried rightly
+#### Scenario: The hint goes on from a digit tried rightly
 
-- **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** a digit entered wrongly there is reported by the mistake check
-- **AND** with a digit entered as the solution has it wherever the hint stops,
-  the hint finishes the board
+- **WHEN** the hint is followed on an Unreasonable board until it refuses, and
+  a digit is entered as the solution has it wherever the hint stops
+- **THEN** the hint finishes the board
 
 ### Requirement: Hint: A number's one run is shown by the squares that rule it out elsewhere
 
@@ -779,11 +773,11 @@ flat, strong fill that is told from both surfaces in both schemes.
 
 ### Requirement: Look: A wash replaces a square's surface, empty or filled
 
-The selected square's wash SHALL replace the surface of an empty square and of
-a square holding a digit alike, and a run's direction wash SHALL do the same. A
-digit on a run's direction wash SHALL be drawn in the paper color, which reads
-on that wash in both schemes where ink does not. The keyboard cursor on a wall
-SHALL be corner brackets in a color that stands off the wall in both schemes.
+A run's direction wash SHALL replace the surface of an empty square and of a
+square holding a digit alike. A digit on it SHALL be drawn in the paper color,
+which reads on that wash in both schemes where ink does not. The keyboard
+cursor on a wall SHALL be corner brackets in a color that stands off the wall
+in both schemes.
 
 #### Scenario: A filled square in a marked run takes the run's wash
 

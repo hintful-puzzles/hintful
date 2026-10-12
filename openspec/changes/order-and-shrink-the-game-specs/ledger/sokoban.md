@@ -5,6 +5,8 @@
 | Rules: Sokoban is complete when the board cannot become more complete | sentence untouched. In the scenario "The last barrel onto a target completes the level", "and flashes" cut | `ts-engine`, "The win flash plays on a forward move that solves the board" |
 | Params: Sokoban's parameters are a width and a height | retitled "Params: Sokoban's params are its declared codec's". Both sentences (width and height, both at least 4; the string encodes them; a bare number is a square) replaced by one that sends the reader to the declaration and says the game departs nowhere (rule 2). Scenario "Parameters round-trip" dropped; scenario "The default board" written from the params snapshot | the fields and the floor of 4: `paramConfig` (`dimensionParamConfig({ bounds: { min: 4 } })`), `src/games/sokoban/state.ts:106`, refused by `engine-params`, "Params validity is the engine's check"; the encoding: `paramsCodec(defaultParams, [dims(paramConfig)])`, `state.ts:119`; the bare number: `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters" (scenario "A square board's params"); the round trip: `engine-params`, "A game declares its params encoding once, and both codec halves are derived" and "Encode and decode are mutual inverses over the corpus". The `sokoban` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `10x12`, and `presets`, `state.ts:123`, puts it first |
 | Params: Sokoban deals no level past the area its search can open | title kept. Sentence 1 untouched. Sentence 2 (applies only when a level is to be dealt; a board that arrives with its description loads at any size) cut to "The refusal SHALL bind dealing only." Scenario "A board past the limit loads from its description" dropped; "A board past the limit is refused when dealing" kept | `engine-params`, "Param validation distinguishes generating a board from loading one" (the `<params>:<desc>` form is checked with `full: false`; its scenario "A generation-only bound does not refuse the descriptive form" is the dropped one) and "A generation-only bound is gated on full". The game's gate: `validateParams`, `state.ts:112`; `src/games/sokoban/sokoban.test.ts:145` holds both halves |
+| Solver: Sokoban's Solve finishes from the player's position, or else from the dealt board | third pass: retitled "Solver: Sokoban's Solve move carries the finished board, a labeled barrel's letter with it". Sentence 1 (the search from the player's position, then from the board as dealt; that it leaves the finished board the line reaches) cut. Sentence 2 reworded to stand without it ("The move Sokoban's Solve makes of a line SHALL carry the board the line finishes on as `encodeBoard` writes it"), the rest word for word. Sentence 3 untouched. Scenario "A lost position is solved from the dealt board" dropped; "A level with a labeled barrel is solved" kept | `ts-engine`, "Solve by search finishes from the player's position, or else from the board as dealt" (the order of the two searches; its scenario "A position the player has lost" is the dropped one); that the board left is solved: the same scenario and `ts-engine`, "Solve leaves a solved board". `solve`, `src/games/sokoban/index.ts:304` |
+| Hint: Sokoban's hint refuses a position it cannot finish | third pass: retitled "Hint: Sokoban's hint refuses, outlining the barrel, where a barrel is stuck for good". The second half of its sentence ("and SHALL refuse with `NO_SOLUTION_FROM_HERE` when the search proves no line finishes and with `SEARCH_OUT_OF_REACH` past its reach") cut. The stuck barrel's refusal and its scenario kept | `engine-hints`, "A search that can prove a position lost says which of its two ends it met". `searchRefusal(plan)`, `src/games/sokoban/hint.ts:184` |
 
 ## Kept, and why
 
@@ -15,8 +17,8 @@
   like a rule of the collection and is not one: Sokoban has no tiers, and how
   its boards come to be solvable is the generator's.
 - **Solver: Sokoban's Solve finishes from the player's position, or else from
-  the dealt board**, first sentence. No capability states `solveBySearch` (see
-  Engine requests).
+  the dealt board**, first sentence. Kept until the third pass, which cut it
+  (see its row).
 - **Controls: Sokoban's keys step the player one cell at a time.** A
   hand-written arm of `interpretMove`. It names no layout; that the bare
   digits are read as the pad's is a departure from `engine-input`, "The engine
@@ -26,9 +28,9 @@
   move that leaves the board as it was is no step of the history" is about a
   move that is made; here `interpretMove` makes none.
 - **Hint: Sokoban's hint refuses a position it cannot finish**, second half.
-  `engine-hints`, "A hint that plans by searching SHALL refuse honestly past
-  its reach" states the out-of-reach refusal and not the lost one (see Engine
-  requests).
+  Kept until the third pass, which cut it (see its row). The first half, the
+  stuck barrel outlined, is the game's `hasNoSolution`: the engine's
+  requirement leaves the cause a game can name to the game.
 - **Hint: A barrel's run of pushes onto a target is one journey.**
   `engine-hints`, "One deduction firing is one journey" says what a journey
   is; when Sokoban makes one is the game's.
@@ -53,6 +55,8 @@
   leaves a solved board". `solveBySearch`, `src/engine/search-outcome.ts:58`.
   Stated of themselves by `pegs` and `sokoban`, the two games that call it;
   Sokoban's spec does not state the two failures.
+  **Answered:** `ts-engine`, "Solve by search finishes from the player's
+  position, or else from the board as dealt".
 - **A searching hint's two refusals.** "SHALL refuse with
   `NO_SOLUTION_FROM_HERE` when the search proves no line finishes and with
   `SEARCH_OUT_OF_REACH` past its reach", in "Hint: Sokoban's hint refuses a
@@ -63,6 +67,8 @@
   by searching SHALL refuse honestly past its reach", which states the second
   only. `searchRefusal`, `src/engine/search-outcome.ts:35`. Stated of
   themselves by `pegs` and `sokoban`, the two games that call it.
+  **Answered:** `engine-hints`, "A search that can prove a position lost says
+  which of its two ends it met".
 
 ## Found
 
@@ -113,3 +119,29 @@ against the three classes; none cut.
   redraws without a history entry" says only a move enters the history; that
   a step into a wall is no move is `interpretMove`'s, and its scenario is the
   only statement of that case.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Sokoban: 2. Engine requests
+of its own: 2, both answered. Sentences cut: 2 (one whole, one the second half
+of a sentence), and 1 scenario. Clauses kept: 3.
+
+- **"Solver: Sokoban's Solve finishes from the player's position, or else
+  from the dealt board"**: the first sentence and the scenario that restated
+  it went to `ts-engine`, "Solve by search finishes from the player's
+  position, or else from the board as dealt". Kept, as the engine's row says:
+  what the move carries (the engine's last sentence leaves the move made of a
+  line to the game) and that it is refused on a board whose walls differ.
+  Retitled for those.
+- **"Hint: Sokoban's hint refuses a position it cannot finish"**: the two
+  refusals of the search went to `engine-hints`, "A search that can prove a
+  position lost says which of its two ends it met". Kept: the stuck barrel
+  outlined, the marked dead end the engine's row leaves the game. Retitled
+  for it. Nothing of the search's refusals is left as a pointer: the Hint
+  subject says plenty of the game's own.
+- **Kept: "with no departure from the codec grammar"** in "Params: Sokoban's
+  params are its declared codec's": the one pointer of an owed subject whose
+  only other statement is the 1200-square refusal.
+- No sentence of the form "What a pasted game ID opens as" and none citing
+  `engine-difficulty`: Sokoban has no tiers.
+- The Purpose still fits ("the hint and Solve with the search beneath them").

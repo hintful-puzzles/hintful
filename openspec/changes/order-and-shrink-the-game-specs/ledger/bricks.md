@@ -17,6 +17,8 @@ The Purpose was left as it stood: it names nothing the cut removed.
 | Controls: Bricks' keys paint the cell under the cursor | retitled "Controls: Ctrl or Shift with a Bricks move paints the cells the cursor leaves and enters". The keys `1`, `0`, `2`, Backspace and Delete and what each paints cut; the number pad's eight directions cut, and "of its digits only 0 paints" moves to "Controls: The Bricks keyboard cursor follows the hexagonal grid"; the Ctrl and Shift sentence and the scenario kept | `targetVerbs.keyOnly`, `src/games/bricks/index.ts:234`; `engine-input`, "The engine reads a number-pad digit as a direction, once" (8, 2, 4, 6 as the arrows, 7, 9, 1, 3 the diagonals) and "A cursor step on a sheared hexagonal board is the engine's" (which diagonal each is on this board) |
 | Solver: The Bricks solver places cells by contradiction | last sentence corrected (see `## Review`): "Every difficulty tier SHALL be solvable by pure deduction; the solver SHALL NOT rely on guessing." became that each cell placed is proved by contradiction at every tier, and that the harder tier's lookahead only refutes a trial | |
 | Hint: Bricks provides an explained deduction hint | removed, with its scenario | the `Game` type (`hint`, `hintKeepTrack`); `engine-hints`, "The solver and the hint are two projections of one deduction engine" and "A hint is deduced from the board in play"; the scenario is "The hint walk SHALL cover every preset a game offers" |
+| Hint: A Bricks hint plan is recompute-stable | third pass: removed, with its scenario "A hint after a followed step continues the plan" | `engine-hints`, "A recomputed plan continues the plan it replaces" (a `next` found by a scan in a fixed order, and a plan made again beginning with the old one's second firing, of every game on `deduceHintPlan`; Bricks calls it at `src/games/bricks/solver.ts:486`) |
+| Hint: The recursive lookahead rung is never narrated | third pass: last sentence ("Where the single-cell rung runs out, the hint SHALL refuse rather than reach for it.") cut; that the rung is not narrated, why, and that the solver keeps it stay, with the scenario | `engine-hints`, "A hint gives every step deduction still forces before it refuses" (refused with `DEDUCTION_EXHAUSTED` where it forces none); `engine-hints`, "A Search is refused and never narrated" |
 | Hint: A Bricks hint step explains why the move is forced | first sentence ("Each hint step SHALL explain why the move is forced, not merely which cell to act on.") cut; the rest kept; the scenario's "the forced cell is highlighted as the target, its evidence cells are marked" and "without pre-placing the forced color" cut, leaving the rule the explanation names | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback"; for the scenario, `hintMarks.roles`, `src/games/bricks/index.ts:545`, and `engine-hints`, "Requesting a hint never mutates the board" |
 | Hint: A Bricks hint marks the forced cell and its evidence, and places nothing | retitled "Hint: A Bricks hint step is one journey of one cell". The two marks and "The hint SHALL NOT pre-place the forced color." cut; the one-journey sentence and the scenario kept | `hintMarks.roles`, `src/games/bricks/index.ts:545` (ring: the cell the step decides; outline: what it reasons from); `engine-hints`, "Requesting a hint never mutates the board" (only highlighting is added) |
 
@@ -40,9 +42,6 @@ The Purpose was left as it stood: it names nothing the cut removed.
 - **Controls, "a drag SHALL paint the cells it crosses in one move".** The
   drag is `interpretMove`'s own arm (`src/games/bricks/index.ts:291`), not the
   model's sweep.
-- **Hint: A Bricks hint plan is recompute-stable.** No shared requirement
-  promises that the plan after a followed step begins with the old plan's
-  second step.
 - **Hint: A Bricks hint takes the first empty cell one color breaks a rule
   in.** `hintRungs` lists five reasons in another order (`three`,
   `unsupported`, `overcount`, `strandSupport`, `undercount`); the order tried
@@ -122,3 +121,41 @@ Checked and found sound:
   its other digits but 5 are taken by the move arm first (`index.ts:272`).
 - Each subject read alone: none hollow, no dangling antecedent, every title
   fits its body.
+
+## Third pass
+
+What the engine's third round states, removed. 3 rows of the third-round
+tables and their reviews name Bricks (the mistake check, as a game that
+keeps its sentence; the recomputed plan; the steps before a refusal, added
+by the review). This ledger filed no request.
+
+Cut, 2 sentences and 1 scenario, 1 requirement gone:
+
+- **"Hint: A Bricks hint plan is recompute-stable"**, whole, with its
+  scenario: `engine-hints`, "A recomputed plan continues the plan it
+  replaces".
+- **"Where the single-cell rung runs out, the hint SHALL refuse rather than
+  reach for it."**, in "Hint: The recursive lookahead rung is never
+  narrated": `engine-hints`, "A hint gives every step deduction still forces
+  before it refuses".
+
+Kept, 2 clauses:
+
+- "`findMistakes` SHALL report every cell the rule pass flags": `ts-engine`,
+  "A mistake check compares with the one answer, hidden or not", leaves a
+  broken rule reported besides to the game's spec, and the review names this
+  sentence. The spec never said the result is empty without an answer, so
+  nothing went.
+- The scenario line "where only that rung could progress the hint refuses
+  instead": a case of the kept sentence that the rung is never narrated.
+
+`engine-colors`, "A clear square whose middle is taken carries no cross",
+names Bricks as a caller of `drawClearSquare` and no sentence of its spec:
+"Look: Bricks draws a shaded cell as a piece and a ruled-out one as the clear
+square" says which of the shared pieces Bricks takes. Of the brief's section
+2 nothing stood in the spec: Generation says what the two tiers mean, and
+Params keeps its one pointer, the codec being declared.
+
+Each subject read alone: none hollow, no fragment, every title fits. The
+Purpose's "its explained hint and when it refuses" still holds: the hint's
+subject keeps the lookahead rung never narrated.

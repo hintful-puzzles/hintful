@@ -93,11 +93,6 @@ dot-run description grammar") over the cells in row-major order: a lowercase
 letter is a red dot and an uppercase letter a blue one. The parser SHALL
 refuse what `readDotRuns` refuses and nothing of its own.
 
-#### Scenario: A generated description round-trips
-
-- **WHEN** a description is generated and then decoded into a board
-- **THEN** re-encoding that board yields the identical description
-
 #### Scenario: The board the first preset deals
 
 - **WHEN** `DceclHbAacAg` is read for `7x7`
@@ -143,8 +138,7 @@ SHALL never be overwritten.
 
 Each key-only verb of `targetVerbs` SHALL set the cursor's square to its state
 whatever the square held, where a click cycles it, and SHALL make no move on a
-given dot or on a square already in that state. With the cursor hidden, its
-key SHALL only show the cursor.
+given dot or on a square already in that state.
 
 #### Scenario: A key does not cycle
 
@@ -199,16 +193,6 @@ nonetheless need no lookahead step at all.
 
 - **WHEN** a board generated at Easy is followed hint by hint from its start
 - **THEN** every step is a single-cell deduction and the board ends solved
-
-### Requirement: Hint: A recomputed Clusters plan continues where the last one left off
-
-The scan order of a hint's plan SHALL be deterministic, so that a hint
-recomputed after a followed move continues where the previous plan left off.
-
-#### Scenario: A plan recomputed after its first step
-
-- **WHEN** the first step of a plan is followed and the hint is asked again
-- **THEN** the new plan's first step is the earlier plan's second
 
 ### Requirement: Hint: A Clusters hint step names the rule the other color would break
 

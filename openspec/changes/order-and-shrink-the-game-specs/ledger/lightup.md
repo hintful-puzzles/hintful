@@ -8,7 +8,12 @@
 | Hint: Light Up ships an explained deductive hint | removed, with its scenario "The plan completes deductive boards". "The game SHALL implement `hint()` returning a plan of narrated steps computed by the game's own solver techniques from the player's current position, honoring the bulbs" cut; that the impossible-marks already placed are honored as the bulbs are joins "Hint: A hint step that rules a square out places the impossible-mark" | `engine-hints`, "The engine supports an ephemeral Hint System", "The solver and the hint are two projections of one deduction engine" and "A hint is deduced from the board in play" (an entry the player placed is never a step and a step may rest on it; which marks a step may rest on it leaves to the game, so the impossible-marks stay); the scenario: `engine-hints`, "A hint finishes a board from a right entry made out of order" and "A hint step always names a technique, with no un-narrated fallback" |
 | Hint: A hint step that rules a square out places the impossible-mark | gains "The hint SHALL honor the impossible-marks the player has placed as it does the bulbs.", from the requirement above | |
 | Hint: Light Up hint rendering follows the element-type legend | retitled "Hint: A Light Up hint target is ringed with no bulb or mark previewed", which is what its body says. Sentence 1 ("The displayed hint SHALL highlight, not perform") cut; the rest and the scenario untouched | `engine-hints`, "Requesting a hint never mutates the board" (a hint displays a plan through highlights, and the player applies a step only by following it or by an explicit apply) |
-| Hint: A Light Up hint step names its technique and says why | retitled "Hint: A Light Up hint step leads with what to look for, and one firing is one step". Sentence 1 ("Each step SHALL name its technique") cut; "and conclude in the necessity voice" reworded out of sentence 2; sentence 3 untouched. Both scenarios kept | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" and "The necessity-voice rule applies to every hinting game not ledgered as narrating moves" (a forced step is required to carry necessity) |
+| Hint: A Light Up hint step names its technique and says why | retitled "Hint: One Light Up firing is one step" (third pass; it stood as "Hint: A Light Up hint step leads with what to look for, and one firing is one step" after the first). Sentence 1 ("Each step SHALL name its technique") cut; sentence 2, that the narration leads with the recognizable indication, concludes in the necessity voice and states why the move is forced, cut (its last part in the third pass); sentence 3 untouched, and is the whole of it. Scenario "A satisfied clue groups its marks" kept; "A forced bulb is explained" moves, unchanged, to "Hint: Light Up narrates each of its deductive techniques" | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback", "The necessity-voice rule applies to every hinting game not ledgered as narrating moves" (a forced step is required to carry necessity) and "A step's sentence opens with what the player can spot" (the look ahead of the move, "so a step reads from indication through reasoning to conclusion") |
+| Hint: Light Up narrates each of its deductive techniques | gains scenario "A forced bulb is explained", from "Hint: A Light Up hint step names its technique and says why" (third pass). Nothing cut | |
+| Hint: A partly followed hint step shrinks in place | removed (third pass), with its scenario "One of three marks is placed by hand", which restated it | `engine-hints`, "A step asking for several elements is followed one element at a time" (its scenario "Two of three squares in one drag"); `trackTargets`, called from `hintKeepTrack`, `src/games/lightup/index.ts:420` |
+| Hint: On an Unreasonable board the hint stops at the guess point | removed (third pass), with its scenario "Deduction runs dry" | `engine-hints`, "A hint gives every step deduction still forces before it refuses" (the steps forced from the board in play, and the refusal only where none is; scenario "A board that stalls part-way") and "Deduction running out on a sound board SHALL have one wording"; `if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED }`, `src/games/lightup/index.ts:388` |
+| Rules: Light Up ships findMistakes | third pass. "A board without a unique solution SHALL yield `[]`" cut; the two kinds of mistake and the overlay kept. Both scenarios kept | `ts-engine`, "A mistake check compares with the one answer, hidden or not" |
+| Description: Light Up descriptions use the upstream run-length encoding | third pass. "with maximal runs of open squares compressed as `a`–`z` (a run of 1 to 26)" cut for the one pointer the subject has to the grammar; the wall characters and the three refusals kept. Both scenarios kept | `engine-params`, "The engine provides the run-letter description grammar"; `encodeRunLength` and `scanRunLength`, `src/games/lightup/state.ts:381` and `:397` |
 | Look: Light Up's cursor and completion flash | title kept. "SHALL sweep the open squares diagonally" reworded to "SHALL light the open squares only", which keeps what is the game's (which squares are elements of the flash) and drops the route. Both scenarios kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep` of its center, a diagonal from the bottom left); the game's call is `flash.win(sweepStep(x, y))`, `src/games/lightup/render.ts:189` |
 
 ## Kept, and why
@@ -29,8 +34,8 @@
 - **Params: Light Up refuses a grid too large to count.** `engine-params`, "A
   grid too large for a game is refused in one sentence" leaves the ceiling to
   the game.
-- **Description.** `parseDesc` is the game's own (`state.ts:393`): the
-  engine's run-length scanner has no requirement that states the grammar.
+- **Description.** The wall characters and the refusals are `parseDesc`'s
+  own (`state.ts:393`), which the run-letter grammar leaves to the game.
 - **Generation: Light Up generates solver-gated boards.** "accept the grid
   only when the solver solves it at the target difficulty" and "reject a
   board that is then still solvable one difficulty lower" are
@@ -45,10 +50,6 @@
   the three ways evidence is drawn in the player's words; the palette roles,
   the white line inside the clue's ring and "a bulb target and a mark target
   SHALL look identical" are `redraw`'s.
-- **Hint: On an Unreasonable board the hint stops at the guess point.**
-  `engine-hints`, "A Search is refused and never narrated" states the
-  refusal; that the deductions before it are still narrated is in no shared
-  requirement.
 - **Hint: Light Up's hint steps come in the solver's scan order.** The order
   is the solver's loop (`src/games/lightup/solver.ts`), not `hintRungs`.
 - **Look: The impossible-mark is the ruled-out cross.** What the preference
@@ -56,7 +57,9 @@
 
 ## Engine requests
 
-- "`hintKeepTrack` SHALL classify a player's partial completion of a
+- Answered: `engine-hints`, "A step asking for several elements is followed
+  one element at a time"; the requirement is removed. As filed:
+  "`hintKeepTrack` SHALL classify a player's partial completion of a
   multi-cell step as on-track, and SHALL shrink the step in place to the
   squares that remain.", the whole of "Hint: A partly followed hint step
   shrinks in place". It is the verdict rule of `trackTargets`,
@@ -64,13 +67,18 @@
   in the same terms (`singles.md`, § "Engine requests", has the full
   request). Belongs in `engine-hints`, beside "A completed verdict vouches
   for the rest of the plan".
-- "Completing the board SHALL hide the keyboard cursor.", the whole of
+- Left the game's own: it is each game's `changedState`, Light Up's and
+  Singles' differ, and no engine code, type or guard asks it
+  (`ledger/_engine.md`, "Third round: the rest", Not written). As filed:
+  "Completing the board SHALL hide the keyboard cursor.", the whole of
   "Controls: Completing a Light Up board hides the cursor". Singles does the
   same in its own `changedState` (`src/games/singles/index.ts:103`) and its
   spec does not say so. Belongs in `engine-input`, beside "One arrow press
   reveals the cursor and moves it", if it is to be the collection's rule; no
   engine code does it today, each game writes the line.
-- "On a board of the `Unreasonable` tier the hint SHALL narrate the
+- Answered: `engine-hints`, "A hint gives every step deduction still forces
+  before it refuses"; the requirement is removed. As filed:
+  "On a board of the `Unreasonable` tier the hint SHALL narrate the
   deductions that remain from the player's position", in "Hint: On an
   Unreasonable board the hint stops at the guess point". Belongs in
   `engine-hints`, beside "A Search is refused and never narrated": that a
@@ -154,3 +162,48 @@ Checked and found sound:
 - Every requirement left untouched was read for a copy by the three classes.
   What they hold is a hand-written codec, parser, generator or solver, a hint
   technique, its wording or its colors, and the look.
+
+## Third pass
+
+Six rows of the engine tables name Light Up: the mistake check (in the
+review), the run-letter grammar, the step followed one element at a time,
+every step before a refusal, the sentence that opens with what the player
+can spot, and the two premise references. "Not written" names the cursor
+hidden on completion as its own.
+
+- **Rules**, "A board without a unique solution SHALL yield `[]`": cut.
+- **Description**: the run clause cut for a pointer.
+- **Hint**, "Hint: A partly followed hint step shrinks in place" and "Hint:
+  On an Unreasonable board the hint stops at the guess point": removed
+  whole, each with its scenario.
+- **Hint**, "A step's narration SHALL lead with the recognizable indication
+  and then state why the move is forced": cut; the requirement is retitled
+  for the sentence left, and its scenario of the forced light's narration
+  moves to the requirement that lists the techniques.
+
+Sentences cut: 4, and 1 clause; 2 requirements removed, 2 scenarios dropped.
+Clauses kept: the one pointer to the run-letter grammar (`Description` is
+one requirement, and without it would not say how open squares are
+written); the wall characters and the refusals; "One deduction firing SHALL
+be one step"; "Controls: Completing a Light Up board hides the cursor"
+(left the game's own).
+
+**"Hint: Light Up draws a hint's evidence by what it is" is unchanged, and I
+am not sure it should be.** The engine row brackets "which color cites which
+state" as now stated (`engine-colors`, "The two premise references each cite
+one state of a cell"), with each game's slot name and mark shape staying.
+Light Up's two sentences give the color only by the slot's name: "A lit one
+SHALL keep its lit fill and take a doubled ring in `COL_HINT_LITERF`" and
+"The unlit square the deduction is about SHALL take a doubled ring in
+`COL_HINT_DARKREF`". Taken apart, each is which square, its shape (a doubled
+ring) and its slot, and none of them names `HINT_BLACKREF` or
+`HINT_WHITEREF`; that the slots hold those two is the palette
+(`src/games/lightup/render.ts:110` and `:113`). Nothing in either sentence
+is the engine's alone, so both stay.
+
+Section 2 of the brief: the spec has no "no departure" sentence and no
+pasted-ID sentence.
+
+Each subject read alone: `Hint` no longer speaks of an Unreasonable board or
+of a partly followed step, both the engine's; no fragment, every title fits
+its body, and the Purpose names nothing that went.

@@ -23,8 +23,7 @@ the size of its region, and not before.
 ### Requirement: Rules: Filling reports mistakes for Check & Save
 
 `findMistakes(state)` SHALL return every player-filled cell whose number
-contradicts the board's one answer. It SHALL return an empty result when the
-search did not prove exactly one answer.
+contradicts the board's one answer.
 
 #### Scenario: A wrong fill is flagged and clears
 
@@ -80,10 +79,10 @@ maximum.
 
 ### Requirement: Description: Filling descriptions are run-length number grids
 
-The desc SHALL encode the immutable clue cells in scan order: a lowercase letter
-`a`–`z` advances past a run of `1`–`26` empty (unclued) cells, and a digit
-places a clue of that value. A clue SHALL be immutable, and every other cell
-SHALL start empty and player-editable.
+The desc SHALL encode the cells in scan order in the engine's run letters
+(`engine-params`, "The engine provides the run-letter description grammar"),
+where a digit places a clue of that value. A clue SHALL be immutable, and
+every other cell SHALL start empty and player-editable.
 
 #### Scenario: Description decodes to the clued board
 
@@ -290,22 +289,6 @@ the survivor; or a region's single flood-reachable growth square.
 - **THEN** the step fills that single cell with a 1, and its narration says it
   can only be a 1
 
-### Requirement: Hint: hintKeepTrack follows a Filling step square by square
-
-`hintKeepTrack` SHALL report `"completed"` when the player's move fills all of
-the step's squares with the hinted value, `"onTrack"`, shrinking the step to
-the still-empty squares, when it fills only some of them, and `"off"` when it
-touches any other cell or uses the wrong value.
-
-#### Scenario: Following a multi-square hint advances or shrinks the plan
-
-- **WHEN** the player fills all of the current step's squares with its value
-- **THEN** `hintKeepTrack` returns `"completed"`
-- **AND** filling only some of them returns `"onTrack"` with the step shrunk to
-  the squares still to fill
-- **AND** a move touching any other cell, or using a different value, returns
-  `"off"`
-
 ### Requirement: Hint: A Filling target is ringed empty, and is never its own evidence
 
 Each target square of a displayed step SHALL be ringed with no digit drawn in
@@ -343,22 +326,17 @@ whatever order its squares were filled in.
 - **WHEN** any share of that board's answer is filled in and `hint` is asked
 - **THEN** the plan fills every empty square with the answer's number
 
-### Requirement: Hint: Filling's hint stops where the solver does
+### Requirement: Hint: Filling's hint finishes an Unreasonable board from numbers tried rightly
 
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the steps its deductions force from the player's numbers and no others,
-and where none forces anything it SHALL refuse with the collection's sentence
-that deduction has run out. It SHALL go on from the numbers the player then
-enters.
+On an Unreasonable board the hint's steps SHALL be those its deductions force
+from the player's numbers, and with a number entered as the solution has it
+wherever the hint stops, the hint SHALL finish the board.
 
-#### Scenario: The hint stops, and goes on from a number tried rightly
+#### Scenario: The hint goes on from a number tried rightly
 
-- **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** a number entered wrongly there is reported by the mistake check
-- **AND** with a number entered as the solution has it wherever the hint
-  stops, the hint finishes the board
+- **WHEN** the hint is followed on an Unreasonable board until it refuses, and
+  a number is entered as the solution has it wherever the hint stops
+- **THEN** the hint finishes the board
 
 ### Requirement: Look: Filling rendering shows regions, errors, and completion
 

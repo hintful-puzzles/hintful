@@ -5,7 +5,8 @@ explained hint", and now says what of each the spec holds.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Sticks findMistakes flags only lines that contradict the solution | first sentence reworded: "SHALL take the board's one fill from the search that counts its answers, at either difficulty" cut, and "the search" of the last sentence named in full. What is flagged, what is not, and the empty answer kept; scenario kept | `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` reads the one kept answer, at any tier) |
+| Rules: Sticks findMistakes flags only lines that contradict the solution | first sentence reworded: "SHALL take the board's one fill from the search that counts its answers, at either difficulty" cut, and "the search" of the last sentence named in full. What is flagged, what is not, and the empty answer kept; scenario kept. Third pass: last sentence ("Where the search that counts the board's fills did not prove exactly one it SHALL flag nothing") cut | `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` reads the one kept answer, at any tier); `ts-engine`, "A mistake check compares with the one answer, hidden or not" (no mark flagged where the search did not establish exactly one answer) |
+| Hint: Sticks' hint stops where the solver does | third pass: cut to what its deduction is, reworded to stand ("On an Unreasonable board as on any other, the steps of Sticks' hint SHALL be the squares in which a line one way would break a clue at once"). Cut: "The hint SHALL never run the search", "and no others, and where none is forced it SHALL refuse with the collection's sentence that deduction has run out", "It SHALL go on from the lines the player then places". The scenario cut to its last clause (a line placed rightly wherever the hint stops, and the hint finishes the board) | `engine-hints`, "The hint of a game on the search's tiers never searches" (and its scenario "A value tried wrongly"); `engine-hints`, "A hint gives every step deduction still forces before it refuses" (scenario "A board that stalls part-way") |
 | Rules: Sticks completion flashes once and nothing is animated | retitled "Rules: A Sticks board is solved when every blank cell carries a line that meets the clues". "and SHALL flash once on completion" and "There SHALL be no interpolated animation of line placement" cut, with "and flashes" from the scenario | `ts-engine`, "The win flash plays on a forward move that solves the board"; `animLength: () => 0`, `src/games/sticks/index.ts:570` |
 | Params: Sticks parameters and what each check refuses | retitled "Params: Sticks refuses, for a deal only, a block percentage outside 5 to 100 and a quarter-turn symmetry off a square". First two sentences (the field list, the bound of 2 and the known symmetry, "declared on `paramConfig`") cut; the `validateParams` sentence and both scenarios kept | `paramConfig`, `src/games/sticks/state.ts:141` (`bounds: { min: 2 }`, `:144`; the symmetry is a `choices` field); `engine-params`, "Params validity is the engine's check" (each item's bounds, each choice inside its list) |
 | Params: Sticks parameters round-trip through their encoding | replaced by the pointer requirement "Params: A Sticks params string may leave out its blocks, its symmetry and its difficulty" (rule 2). Cut: what the full and the short encoding carry, `de` and `du`, the round trip, with scenarios "A game ID round-trips through the parameters" and "A bare size decodes". Kept: no difficulty letter decodes as Easy. Scenario "The difficulty is in the full encoding only" became "A string that leaves a field out", made of its missing-field line and of `7x7` decoded | the `paramsCodec` field list, `src/games/sticks/state.ts:184` (`dims`, `num "b"`, `num "s"`, `searchTierSegment`, the last three in the full form only); `engine-difficulty`, "A game that searches has a tier for each deduction and Unreasonable above them" (`d` and the tier's first letter, in the full form only); `src/engine/__snapshots__/params-stability.test.ts.snap` holds `7x7b20s2du` with its short form `7x7`, and `src/engine/params-read-whole.test.ts` holds `7x7b20s2` |
@@ -23,10 +24,6 @@ explained hint", and now says what of each the spec holds.
 
 ## Kept, and why
 
-- **Rules, "Where the search did not prove exactly one fill it SHALL flag
-  nothing".** `engine-difficulty`, "One search answers a board for everything
-  that asks", says the mistake check reads the search and not what it does
-  with several, none or a spent budget.
 - **Params, the three missing fields.** `whenAbsent` is not used: each is as
   `defaultParams` has it, and the tier is `engine-difficulty`'s to hold at
   Easy. Kept as what a missing field decodes to; every 7×7 board's short form
@@ -50,9 +47,9 @@ explained hint", and now says what of each the spec holds.
 - **Hint: A Sticks hint concludes in the necessity voice and names a clue by
   its number.** The engine's necessity-voice requirements say who is checked;
   "this 2 must be vertical" is the game's wording.
-- **Hint: Sticks' hint stops where the solver does.** That the hint goes on to
-  finish an Unreasonable board from a right line is promised by no shared
-  requirement.
+- **Hint: Sticks' hint stops where the solver does.** What is left is what its
+  deduction is, and the scenario's clause that the hint goes on to finish an
+  Unreasonable board from a right line, promised by no shared requirement.
 - **Hint: The Sticks hint takes the first forced square in reading order.**
   The order is `deduceSticksPlan`'s scan and its ranking of contradictions
   (`src/games/sticks/solver.ts`), not `hintRungs`.
@@ -136,3 +133,29 @@ Checked and found sound:
   search opens as Unreasonable" now stands under a sentence that says what
   counts as each tier and not how an ID is loaded; it is a case of the first
   and was left.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Sticks: 3 (the mistake
+check, every step before it refuses, never searches), and the run-letter row
+names it as no user. Engine requests of its own: none. Sentences cut: 4, no
+requirement and no scenario with them. Clauses kept: 4.
+
+- **Cut**: the empty mistake check; "The hint SHALL never run the search";
+  the plan's "and no others" and its refusal; "It SHALL go on from the lines
+  the player then places".
+- **Kept: which lines are flagged, and that a missing line is none.**
+- **Kept: what the hint's deduction is** (a square in which a line one way
+  would break a clue at once), **and the scenario's last clause** (a line
+  placed rightly wherever the hint stops, and the hint finishes the board).
+- **Kept: "Description: Sticks descriptions use the run-length blank
+  encoding", whole.** Sticks reads and writes its letters by hand and does
+  not call `encodeRunLength`; the engine ledger names it as no user.
+- **Left the game's own**: "Easy where the solver and the hint finish it"
+  (`deductionFinishes` is each game's).
+- The spec was searched for the round's other rules in other words (a
+  recomputed plan, the indication first, the hatch, the premise references,
+  a step followed one element at a time): none is stated.
+- No "no departure" sentence and none on what a pasted game ID opens as. The
+  scenario "A board that needs search opens as Unreasonable" sits under the
+  sentence that says what counts as which tier.

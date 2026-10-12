@@ -65,8 +65,7 @@ cell of its neighborhood unmarked.
 
 `findMistakes` SHALL return every cell the player has determined whose mark
 contradicts the board's one answer, and each SHALL be drawn with an
-error-colored outline overlay. It SHALL return no mistakes when the game's
-search did not prove exactly one answer or when the marks are consistent.
+error-colored outline overlay.
 
 #### Scenario: findMistakes flags a wrong mark
 
@@ -146,7 +145,7 @@ aggressive generation except the largest, 50×50, where it is too slow.
 ### Requirement: Description: Mosaic descriptions are run-length clue grids
 
 The desc SHALL encode the board in scan order: a digit `0`-`9` for each shown
-clue and a letter `a`-`z` for each run of 1-26 hidden cells. A desc holding
+clue and a run letter for each run of hidden cells. A desc holding
 any other character, or one whose decoded length differs from `width*height`,
 SHALL be refused.
 
@@ -362,19 +361,13 @@ board is complete, the game SHALL accept only cursor movement.
 
 ### Requirement: Hint: Mosaic's hint stops where the rule does
 
-The hint SHALL never run the search. Its plan SHALL hold the steps the
-deduction forces from the player's marks, one number at a time and then two
-numbers compared, and no others, and where nothing is forced it SHALL refuse
-with the collection's sentence that deduction has run out. It SHALL go on from
-the squares the player then marks.
+On an Unreasonable board as on any other, the steps of Mosaic's hint SHALL be
+those one number at a time forces and then those two numbers compared force.
 
 #### Scenario: The hint stops, and goes on from a square tried rightly
 
 - **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** a square marked wrongly there is reported by the mistake check
-- **AND** with a square marked as the solution has it wherever the hint
+- **THEN** with a square marked as the solution has it wherever the hint
   stops, the hint finishes the board
 
 ### Requirement: Hint: Mosaic's hint says a comparison of two numbers
@@ -483,23 +476,6 @@ in the error color under the number.
   value
 - **THEN** a disc in the error color is drawn on the clear square, and the
   number over the disc
-
-### Requirement: Look: A blank Mosaic cell's number has the clear square to itself
-
-A blank cell that has no number SHALL carry the clear square's faint cross in
-its middle. A blank cell that has a number SHALL carry no cross.
-
-#### Scenario: A blank cell with a number
-
-- **WHEN** a blank cell that has a number is drawn
-- **THEN** it is the clear square with its number in the middle, and no cross
-  is drawn in it
-
-#### Scenario: A blank cell with no number
-
-- **WHEN** a blank cell that has no number is drawn
-- **THEN** a cross in the clear square's faint color is drawn about the
-  middle of the cell
 
 ### Requirement: Look: Mosaic's win flash takes the place of a blank cell's clear surface
 

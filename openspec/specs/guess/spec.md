@@ -373,10 +373,8 @@ across a mark, which is a move too.
 
 A pointer action SHALL happen on the release, keyed on the button class rather
 than the left button specifically, and its press SHALL be declined; the hold
-toggle alone SHALL act on the secondary button's press. An unconsumed press is
-answered with a release at the press point, so a press that slides off before it
-lifts SHALL still act where it started, and a press the touch hold promoted to
-the right button SHALL still act as itself.
+toggle alone SHALL act on the secondary button's press. A press the touch hold
+promoted to the right button SHALL therefore still act as itself.
 
 #### Scenario: A held finger over the feedback pegs still submits
 

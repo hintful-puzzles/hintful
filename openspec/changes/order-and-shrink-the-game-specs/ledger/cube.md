@@ -88,3 +88,20 @@ Checked and found sound:
   "The right button SHALL do nothing" stays: `engine-input`, "A game with no
   secondary meaning is not given a synthetic one" is about a touch's
   promotion and not a mouse's right button.
+
+## Third pass
+
+Nothing cut: the spec is as the review left it. 0 rows of the third-round
+tables and their reviews name Cube, and this ledger filed no request.
+
+Read for the round's rules in other words, and for the two sentences of the
+brief's section 2: 0 found. What reads nearest, and stays, 1 clause: "The
+solid SHALL be drawn over the arena as on any other frame", in "Look: Cube's
+win flash sweeps the squares of the arena". `engine-colors`, "A lit beveled
+tile is lit on its face and keeps its bevel" is of a tile the flash lights;
+Cube's flash lights the arena's squares and never the solid, which is what
+the sentence says. Cube declares no `targetVerbs`, so the geometry of a grid
+of squares is not its, and it has no hint, mistake check or tiers for the
+other rows to bind.
+
+Each subject read alone: none hollow, no fragment, every title fits.

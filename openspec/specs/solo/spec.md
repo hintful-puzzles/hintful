@@ -45,8 +45,7 @@ Solo's `findMistakes` SHALL be the collection's check of entries and notes
 (`ts-engine`, "A mistake check compares with the one answer, hidden or not"
 and "A candidate note that excludes the answer is a mistake"), against the
 answer its solver reaches from the given cells and, on a killer board, the
-cage sums. When the board is not uniquely solvable from those the result SHALL
-be empty.
+cage sums.
 
 #### Scenario: A killer board, which has no givens
 
@@ -338,9 +337,9 @@ its own scale's grade.
 
 ### Requirement: Solver: A census certifies that every rung fires
 
-A firing census SHALL walk pinned boards covering every variant at every pair
-of deduction caps and at search, and assert that every rung fires on the
-corpus.
+The boards of Solo's firing census SHALL be pinned ones covering every
+variant, walked at every pair of deduction caps and at search, and every rung
+SHALL fire on them.
 
 #### Scenario: A mis-tiered or reordered rung fails
 
@@ -363,8 +362,7 @@ cells SHALL be a contradiction.
 
 A digit key `1..cr` SHALL enter that digit in the highlighted non-given cell
 or, in pencil mode, toggle that pencil mark in the highlighted empty cell;
-backspace or space SHALL clear the cell. The on-screen keypad SHALL be the one
-`requestKeys` declares for the grid's size.
+backspace or space SHALL clear the cell.
 
 #### Scenario: Placing and penciling digits
 
@@ -477,15 +475,15 @@ sum-combination, or a deduced extra-cage.
 - **THEN** the hint returns a `pencilStrike` step naming the cage by the total
   it must make and concluding in the necessity voice
 
-### Requirement: Hint: Solo's narration leads with what was spotted
+### Requirement: Hint: A Solo step's indication is its firing region, or what the player looks at
 
-A step that fires on a region SHALL lead with that region, named by its kind
-(a killer cage with its clue or the sum the clue leaves), then give the
-reasoning, then conclude in the necessity voice: "we must cross out" what an
-elimination strikes, and "must be" or "can only be" the number a placement
-enters. A step with no firing region SHALL lead with what the player looks
-at: the cell for a single, the number just placed for the cull after it, and
-the notes for a step that sets them up.
+The indication of a step that fires on a region SHALL be that region, named
+by its kind (a killer cage with its clue or the sum the clue leaves), and its
+conclusion SHALL be "we must cross out" what an elimination strikes, and "must
+be" or "can only be" the number a placement enters. The indication of a step
+with no firing region SHALL be what the player looks at: the cell for a
+single, the number just placed for the cull after it, and the notes for a step
+that sets them up.
 
 #### Scenario: A strike's sentence names its region and ends in necessity
 
@@ -562,22 +560,15 @@ positions across several lines.
 
 ### Requirement: Hint: Solo's hint uses no technique above the board's tier
 
-The hint's deduction SHALL be capped at the tier in the board's params, and
-at Extreme on an Unreasonable board, so that a step is always one the board's
-tier promises the player.
+On a board below Unreasonable the hint's deduction SHALL be capped at the tier
+in the board's params, so that a step is always one the board's tier promises
+the player.
 
 #### Scenario: An Easy board is hinted with Easy's techniques
 
 - **WHEN** a hint is asked on a board dealt at Easy, at any position without
   a mistake
 - **THEN** no step of the plan is an intersection, a set or a chain
-
-#### Scenario: The hint declines when only a guess remains
-
-- **WHEN** a hint is requested on a board whose next move requires the recursion
-  (Unreasonable) tier
-- **THEN** the hint reports that it cannot deduce the next move rather than
-  narrating a guess
 
 ### Requirement: Look: Solo draws its cages, digits, pencil marks and live errors
 
@@ -599,8 +590,7 @@ empty cell; and live rule-violation errors.
 `redraw` SHALL draw every cell the player fills on the collection's cell
 surface, and every cell holding a given digit on the collection's lifted
 surface of a given, so that a given is told by the cell under it as well as by
-its ink. The selection's wash and its pencil-mode corner SHALL be drawn over
-whichever surface the cell has.
+its ink.
 
 #### Scenario: A given is told by the cell under it
 

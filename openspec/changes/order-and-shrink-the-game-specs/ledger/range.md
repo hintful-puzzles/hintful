@@ -8,7 +8,7 @@ what the two verbs and a shifted arrow do, and the rules and the search.
 | --- | --- | --- |
 | Rules: Range is solved exactly while it has no error | "and a flash plays" cut from scenario "Completing the board is detected"; sentences untouched | `ts-engine`, "The win flash plays on a forward move that solves the board" |
 | Rules: Range's move is a list of cell-sets | "`executeMove` SHALL be pure and" cut; that it throws on an out-of-bounds or clue-cell target kept; scenario kept | `ts-engine`, "Applying a move returns a new state" |
-| Rules: Range checks mistakes against the solution | the clause "from the search that counts its answers, at either difficulty" cut, and "the search" of the last sentence reworded to "the game's search" so it stands without it; what is returned and the two empty results kept; scenario kept | `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` among what asks; `answerOf`, `src/games/range/solver.ts:555`) |
+| Rules: Range checks mistakes against the solution | the clause "from the search that counts its answers, at either difficulty" cut, and "the search" of the last sentence reworded to "the game's search" so it stands without it; what is returned and the two empty results kept; scenario kept. Third pass: "and none where the game's search did not prove exactly one answer" cut; "none when the marks are consistent or undecided" kept | `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` among what asks; `answerOf`, `src/games/range/solver.ts:555`); `ts-engine`, "A mistake check compares with the one answer, hidden or not" (no mark flagged where the search did not establish exactly one answer) |
 | Params: Range params are a width and a height | replaced by the pointer requirement "Params: A Range params string may leave out its height and its difficulty" (rule 2). The field list and the encoding (`{w}x{h}d{e\|u}`, the difficulty in the full form only) cut; the two missing-field sentences kept. Scenario "Params round-trip" cut to its two missing-field lines as "A string that leaves a field out" | `paramConfig`, `src/games/range/state.ts:117`, and the `paramsCodec` field list, `:128` (`dims`, `searchTierSegment`); `engine-difficulty`, "A game that searches has a tier for each deduction and Unreasonable above them" (`de` and `du`, in the full form only); `src/engine/__snapshots__/params-stability.test.ts.snap` holds `6x9de`/`6x9` and every preset; `src/games/range/range-tier.test.ts:429` ("is written in the full form only") |
 | Params: Range's menu offers each size at both difficulties | removed; the `Params` pointer names `presets` | `BOARDS`, `defaultParams` and `presets`, `src/games/range/state.ts:99`, `:106`, `:110`; `engine-params`, "The preset menu is a grid" (each board at every tier, easiest first); the snapshot lists the eight lines |
 | Generation: An Unreasonable Range board has one answer that the rules do not reach | retitled "Generation: An Unreasonable Range board is an Easy one stripped further, a symmetric pair at a time". "SHALL keep the board only when the three rules then stop short" and "within a budget of its own, well under the search's" cut; that it starts from an Easy board, what the strip takes and the symmetry kept. Both scenarios kept | `engine-difficulty`, "The engine deals the Unreasonable board of a game that searches" and "A strip is asked within the engine's dealing budget" ("one budget of positions, the same in every game and well under any game's own"); `dealUnreasonable`, `src/games/range/solver.ts:762`, and `stripFurther`, `:729` |
@@ -23,7 +23,8 @@ what the two verbs and a shifted arrow do, and the rules and the search.
 | Hint: Range's hintKeepTrack follows the hinted cell and value | first sentence ("The game SHALL implement `hintKeepTrack` so the plan advances as the player follows it.") cut; the verdict and the scenario kept | the `Game` type (`hintKeepTrack`); `engine-hints`, "A player move is classified against the stored plan" |
 | Hint: Range hint color legend | removed. Its three sentences went; its scenario "A cited black square rings distinct from the forced cell" moves, unchanged, to "Hint: A shaded premise of a Range hint takes a color of its own" | `engine-hints`, "A hint naming several kinds of element colors them by a stable legend", "A hint marks beside the content, never behind it" and "A bound hint step's words SHALL name exactly the marks it draws" (painted from the step's words and nothing else); `hintMarks.roles`, `src/games/range/index.ts:441` |
 | Hint: The forced cell and its premises take different marks | removed, with its scenario | `hintMarks.roles`, `src/games/range/index.ts:441` (`ring`: the cell the step decides; `outline`: the cells a clue already sees, the cells around one a shaded square would cut off); `engine-hints`, "A hint marks beside the content, never behind it" (the acted-on cell ringed, the same mark whatever the step places) and "A hint mark is drawn on the cell's border"; the palette, `out[COL_HINT_CELL] = HINT_EVIDENCE`, `src/games/range/render.ts:92` |
-| Hint: A shaded premise, a run and a clue each take their own mark | cut to its first sentence, less "SHALL keep its shaded piece"; retitled "Hint: A shaded premise of a Range hint takes a color of its own"; the second and third sentences (the run striped, the clue's number in the hint color) and scenario "A reach step stripes the run short of its target" cut; gains scenario "A cited black square rings distinct from the forced cell" from "Hint: Range hint color legend" | `hintMarks.roles`, `src/games/range/index.ts:441` (`outline`: "a … square beside it, which takes a doubled outline. The clue the step counts from has its number drawn in the hint color"; `stripes`: "the run a clue has to see along, from the clue as far as the ringed cell"); `engine-hints`, "A hint marks beside the content, never behind it" (the content drawn as without the hint); that the run stops short of the forced cell is this spec's "Hint: A Range hint outlines its evidence as an area", scenario "Every hint step shows visible evidence" |
+| Hint: A shaded premise, a run and a clue each take their own mark | cut to its first sentence, less "SHALL keep its shaded piece"; retitled "Hint: A shaded premise of a Range hint takes a color of its own"; the second and third sentences (the run striped, the clue's number in the hint color) and scenario "A reach step stripes the run short of its target" cut; gains scenario "A cited black square rings distinct from the forced cell" from "Hint: Range hint color legend" | `hintMarks.roles`, `src/games/range/index.ts:441` (`outline`: "a … square beside it, which takes a doubled outline. The clue the step counts from has its number drawn in the hint color"; `stripes`: "the run a clue has to see along, from the clue as far as the ringed cell"); `engine-hints`, "A hint marks beside the content, never behind it" (the content drawn as without the hint); that the run stops short of the forced cell is this spec's "Hint: A Range hint outlines its evidence as an area", scenario "Every hint step shows visible evidence". Third pass: ", not `COL_HINT`, so a shaded premise and the forced cell are not drawn in the same color" cut; the slot's name, the doubled outline and the scenario kept: `engine-colors`, "The two premise references each cite one state of a cell" (a cell cited for being shaded takes a reference color, the cell acted on the acted-on color; scenario "A step that cites both states") |
+| Hint: Range's hint stops where its rules do | third pass: cut to what its deductions are, reworded to stand ("On an Unreasonable board as on any other, the steps of Range's hint SHALL be the cells the three rules force from the player's marks"). Cut: "The hint SHALL never run the search", "and no others, and where none is forced it SHALL refuse with the collection's sentence that deduction has run out", "It SHALL go on from the cells the player then fills". The scenario cut to its last clause (a cell filled rightly wherever the hint stops, and the hint finishes the board) | `engine-hints`, "The hint of a game on the search's tiers never searches" (and its scenario "A value tried wrongly"); `engine-hints`, "A hint gives every step deduction still forces before it refuses" (scenario "A board that stalls part-way") |
 | Hint: Range's hint takes the clue rule first in each pass | first sentence gains "one narrated step for each cell", from "Hint: Range provides an explained deduction hint" | |
 | Look: A Range clue sits on the lifted surface of a given | second sentence ("The line between cells and the frame round the grid SHALL be the surface's grid line.") cut; scenario kept | the palette, `out[COL_GRID] = surfaceGrid(defaultBackground)`, `src/games/range/render.ts:79` |
 
@@ -35,9 +36,6 @@ what the two verbs and a shifted arrow do, and the rules and the search.
 - **Params: Range params are refused outside their bounds**, whole. Both
   refusals are `validateParams`' with their reasons, and "It SHALL refuse no
   size for the time its deal takes" is a promise no declaration makes.
-- **Rules, "none where the search did not prove exactly one answer".** "One
-  search answers a board for everything that asks" says `findMistakes` reads
-  the search and not what it returns where the search proved nothing.
 - **Generation: Every Easy Range board is uniquely solvable without search.**
   Reads like the collection's rule by its title; its sentences are the
   symmetry, the clue opposite a black square, and the minimal strip.
@@ -51,8 +49,9 @@ what the two verbs and a shifted arrow do, and the rules and the search.
 - **Hint: Range's hint takes the clue rule first in each pass.** `hintRungs`
   lists adjacency first, and the plan takes the clue rule first: the order is
   the loop of `deduceHintPlan`, `src/games/range/solver.ts:389`.
-- **Hint, "`COL_HINT_SHADEDREF`, not `COL_HINT`".** The legend says the
-  shaded premise's outline is doubled and not that it is a color of its own.
+- **Hint, "SHALL be drawn in `COL_HINT_SHADEDREF`".** The legend says the
+  shaded premise's outline is doubled and not which slot colors it; the slot's
+  name is the game's.
 - **Look: Range draws a shaded cell as the collection's shaded piece.** That a
   cell marked not shaded holds the bare cross and no fill is the game's
   choice between the two the collection offers (`engine-colors`, "A board
@@ -60,13 +59,18 @@ what the two verbs and a shifted arrow do, and the rules and the search.
 
 ## Engine requests
 
-- `findMistakes` returns nothing where the search proved no single answer →
+- Answered: `ts-engine`, "A mistake check compares with the one answer,
+  hidden or not".
+  `findMistakes` returns nothing where the search proved no single answer →
   `engine-difficulty`, "One search answers a board for everything that asks".
   The sentence is "It SHALL return … none where the game's search did not
   prove exactly one answer", in "Rules: Range checks mistakes against the
   solution"; the code is each game's `findMistakes` reading
   `answerOf(state).kind` (`src/games/range/index.ts:194`).
-- What `HINT_BLACKREF` and `HINT_WHITEREF` cite → `engine-colors`, "The hint
+- Answered: `engine-colors`, "The two premise references each cite one state
+  of a cell"; the slot name `COL_HINT_SHADEDREF` is left the game's own, as
+  the engine ledger's "Not written" says.
+  What `HINT_BLACKREF` and `HINT_WHITEREF` cite → `engine-colors`, "The hint
   emphases stay distinguishable in both schemes", which names them only as
   "the two premise references". The sentence is "The doubled outline of a
   cited shaded square … SHALL be drawn in `COL_HINT_SHADEDREF`", in "Hint: A
@@ -151,3 +155,33 @@ Checked and found sound:
   `presets`, the two codec segments, the two verbs and the sweep, the three
   legend roles, `COL_HINT_CELL`, `COL_GRID`, and the two tests of positions.
 - Every engine title the spec and the ledger cite is exact (31 citations).
+
+## Third pass
+
+Rows of the engine's third-round tables that name Range: 4 (the mistake
+check, every step before it refuses, never searches, the premise
+references), and the run-letter row names it as no user. Engine requests of
+its own: 2, both answered. Sentences cut: 5, no requirement and no scenario
+with them. Clauses kept: 5.
+
+- **Cut**: the empty mistake check; "The hint SHALL never run the search";
+  the plan's "and no others" and its refusal; "It SHALL go on from the cells
+  the player then fills"; "not `COL_HINT`, so a shaded premise and the forced
+  cell are not drawn in the same color".
+- **Kept: which marks are flagged, and none for a consistent or an undecided
+  cell**, as the review of the round says.
+- **Kept: what the hint's deductions are, and the scenario's last clause**
+  (a cell filled rightly wherever the hint stops, and the hint finishes the
+  board).
+- **Kept: the slot name `COL_HINT_SHADEDREF` and the doubled outline**, the
+  game's by the engine ledger.
+- **Kept: "Description: Range descriptions are run-length clue grids",
+  whole.** Range reads and writes its letters by hand, with the `_`
+  separator, and does not call `encodeRunLength`: the engine ledger names it
+  as no user.
+- **Kept: "Hint: Range's hintKeepTrack follows the hinted cell and value".**
+  Its own code, one cell and one value, and not `trackTargets`
+  (`src/games/range/index.ts:391`).
+- **Left the game's own**: "Easy where the three rules finish it"
+  (`deductionFinishes` is each game's).
+- No "no departure" sentence and none on what a pasted game ID opens as.

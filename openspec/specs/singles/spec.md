@@ -287,27 +287,10 @@ for that state.
 - **THEN** each italic word of the shape is the collection's word for that
   state, and the numbers are the board's
 
-### Requirement: Hint: Singles hint tracking follows a step cell by cell
-
-`hintKeepTrack` SHALL report `"completed"` when the player's move sets exactly
-the hinted cell(s) to the hinted value, `"onTrack"` (shrinking a multi-cell step
-in place to the cells still outstanding) when the move fills a strict subset of a
-multi-cell step's cells with the hinted value and nothing else, and `"off"`
-otherwise.
-
-#### Scenario: Following the hint advances the plan
-
-- **WHEN** the player makes the move the current hint step describes
-- **THEN** `hintKeepTrack` returns `"completed"` (or `"onTrack"` when a
-  multi-cell step is filled one cell at a time)
-- **AND** a move that sets a different cell, or the hinted cell to a different
-  value, returns `"off"`
-
 ### Requirement: Hint: Singles hint roles are bands and stripes, never fills
 
 Every cell carries a number, so no hint role SHALL be a fill: each SHALL be a
-band at the cell's edge, beside the piece and the ring, or stripes under the
-cell's content.
+band at the cell's edge, beside the piece and the ring, or stripes.
 
 #### Scenario: A premise's digit stays readable
 
@@ -343,11 +326,10 @@ premise (the matching numbers a deduction reasons over) SHALL be banded
 
 Where the evidence is an already-decided cell whose black or circled state is
 itself the reason (an adjacent shaded square; a circled cell using up a
-number), a cited shaded premise SHALL be banded `COL_HINT_BLACKREF` and a
-cited circled premise `COL_HINT_WHITEREF`, so a decided premise and the forced
-cell are not drawn in the same color. The band's color SHALL be chosen from
-the cell's own decided state, and the cell's own piece or ring SHALL stay
-drawn as the cue that is not a color.
+number), it SHALL be banded in the palette's reference slot for that state,
+`COL_HINT_BLACKREF` or `COL_HINT_WHITEREF`, so a decided premise and the
+forced cell are not drawn in the same color. The cell's own piece or ring
+SHALL stay drawn as the cue that is not a color.
 
 #### Scenario: A cited shaded square rings distinct from the forced cell
 

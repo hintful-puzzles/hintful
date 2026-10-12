@@ -280,10 +280,9 @@ SHALL toggle that monster's mark like its letter.
 ### Requirement: Controls: Undead's first arrow selects the top-left square
 
 While no square has yet been selected, an arrow key SHALL show the highlight on
-the top-left square of the grid, whichever arrow it is. After that an arrow
-SHALL move the highlight one square and stop at the grid's edge. The highlight
-SHALL rest on a mirror or a given monster as on any square, where no key places
-or clears.
+the top-left square of the grid, whichever arrow it is. After that the
+highlight SHALL stop at the grid's edge. It SHALL rest on a mirror or a given
+monster as on any square, where no key places or clears.
 
 #### Scenario: Down on a board just opened
 
@@ -350,20 +349,16 @@ generation are the same with the hint as without.
 - **WHEN** hint plans are recorded across every tier and many seeds
 - **THEN** no recorded deduction is a forcing one, on any tier
 
-### Requirement: Hint: An Unreasonable board's hint stops where deduction stops
+### Requirement: Hint: An Unreasonable Undead board's plan is neither empty nor complete
 
-On an `Unreasonable` board the plan SHALL stop where deduction stops, and the
-hint SHALL then refuse with a message saying so, stating the consequence and
-not hiding it. The game's tests SHALL assert both bounds, that such a plan
-never reaches a solved board and that it is not empty from the first move, so
-neither failure passes quietly.
+The game's tests SHALL assert both bounds of the hint's plan on an
+`Unreasonable` board, that it never reaches a solved board and that it is not
+empty from the first move, so neither failure passes quietly.
 
 #### Scenario: An Unreasonable board's hint stops rather than searching
 
 - **WHEN** a player follows hints one move at a time on an `Unreasonable` board
-- **THEN** the hints continue while deduction does, and then refuse with a
-  message saying deduction has run out
-- **AND** the plan neither reaches a solved board nor is empty from the start
+- **THEN** the plan neither reaches a solved board nor is empty from the start
 
 ### Requirement: Hint: A sightline step speaks of the line and its two clues
 

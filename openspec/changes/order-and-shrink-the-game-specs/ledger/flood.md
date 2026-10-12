@@ -91,3 +91,25 @@ Checked and found sound:
   declaration or a shared requirement states whole. The params codec and the
   preset titles are functions; the generator, `hintKeepTrack`, `hasNoSolution`
   and the status bar are the game's.
+
+## Third pass
+
+Nothing changed in the spec. Rows of the engine's third-round tables that
+name Flood: 0. Engine requests of its own: 0. Sentences cut: 0. Clauses kept:
+2, each read against the third-round requirement it resembles.
+
+- **Kept: "Solve SHALL refuse, saying no solution can be found from this
+  position"** in "Solver: Flood's Solve refuses a finish past the move
+  limit", and **the refusal of "Hint: Flood's hint refuses a grid flooded
+  after the limit"**. `engine-hints`, "A search that can prove a position
+  lost says which of its two ends it met" binds a search that can meet
+  either end; Flood's solver has one way to fail and the game chooses its
+  sentence itself, as the review of that requirement says. `ts-engine`,
+  "Solve by search finishes from the player's position, or else from the
+  board as dealt" is of `solveBySearch`, which Flood does not call, and
+  `ts-engine`, "A Solve installs no route and reveals no loss" gives Flood's
+  refusal as a scenario and not as its rule.
+- No "no departure" sentence and none of the form "What a pasted game ID
+  opens as". The one mention of `engine-difficulty` is in this ledger and
+  not in the spec: Flood's Easy, Medium and Hard are no tier, which "Params:
+  Flood's Easy, Medium and Hard name the extra moves" says.

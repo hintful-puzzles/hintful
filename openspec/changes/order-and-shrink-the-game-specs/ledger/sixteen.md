@@ -6,6 +6,7 @@
 | Params: Sixteen writes its shuffle count wherever it is not zero | removed, but for "a string with no `m` as no shuffling moves" and the scenario "A board shuffled by ten moves", which moves, unchanged, to "Params: Sixteen's params are its declared codec's, and choose how the board is scrambled". Scenario "A strip is refused" dropped | written when not zero, in both encodings: `omitWhen: (p) => !p.movetarget` on a `num` segment with no `full` option, `state.ts:94`-`96`; the bare number: `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters"; below 2: `bounds: { min: 2 }`, `state.ts:67`, refused by `engine-params`, "Params validity is the engine's check" (whose first scenario gives the sentence's form). `src/games/sixteen/sixteen.test.ts:103`-`108` holds `4x4m10` and "Width must be at least 2."; the `sixteen` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `4x4m1` with no separate short form |
 | Params: A shuffled Sixteen board's title counts its shuffles | removed, with its scenario "Ten shuffling moves" | `label: { slot: "tail", words: (p) => (p.movetarget ? … shuffles : null) }` on the shuffle item, `state.ts:76`-`79`; `engine-params`, "One describer labels every params set" (size, then the tail's words). No test of Sixteen holds "4x4, 10 shuffles"; `src/games/netslide/netslide.test.ts:156` holds the same label words in Netslide |
 | Hint: Sixteen draws the hinted tile, its landing cell and its arrow | removed, with its scenario "The current step is drawn" | `hintMarks.roles.ring`, `src/games/sixteen/index.ts:726`-`730`: the tile filled in the hint's color, the arrow to click in the same color, the landing square outlined (and the two-leg journey's dashed and solid outlines, which the requirement never gave) |
+| Hint: The hint gives the move home even when it undoes the player's slide | third pass: retitled "Hint: Sixteen's hint does not open by undoing the player's slide, unless that is the shortest way home". Sentences 2 and 3 (the veto not applied to the exact search's shortest plan, and why; the veto left to the heuristic search) cut. Sentence 1 kept, reworded to the game's own: that Sixteen vetoes, after a slide, a first move that undoes that slide or part of it (`rejectFirstMove`, `src/games/sixteen/index.ts:496`), and that the hint still gives the move home where the exact search's shortest plan opens with one. Scenario "One slide off a finished board" kept | `engine-hints`, "The slide planner's first-move veto binds the heuristic search alone" (the veto applied in the heuristic forward search only; a plan the exact search returns given as found though it open with a vetoed move, and why; its first scenario is the dropped one) |
 | Look: Sixteen's slide arrows are Netslide's | title kept. "and the arrow a hint names in the hint's" cut from the last sentence. Scenario untouched | `hintMarks.roles.ring` ("with the arrow to click drawn in the same color"), `index.ts:728` |
 
 ## Kept, and why
@@ -32,9 +33,6 @@
   slide planner is parameterized on what differs between games" says a game
   supplies its move set; that Sixteen's is a slide of any distance is the
   game's.
-- **Hint: The hint gives the move home even when it undoes the player's
-  slide.** No `engine-hints` requirement states that the planner applies a
-  game's first-move veto to the heuristic search only.
 - **Hint: A journey's second leg keeps its tile**, "so the midend keeps the
   hint displayed across the legs". `engine-hints`, "A player move is
   classified against the stored plan" gives it by a scenario; it is one
@@ -55,7 +53,8 @@
   the planner's behavior for any game that passes `rejectFirstMove`, and
   belongs in `engine-hints` beside "Sliding-permutation games share one slide
   planner whose exact search always runs". `planSlides`,
-  `src/engine/slide-planner.ts`.
+  `src/engine/slide-planner.ts`. Answered: `engine-hints`, "The slide
+  planner's first-move veto binds the heuristic search alone".
 
 ## Found
 
@@ -123,3 +122,38 @@ Checked and found sound:
 - Every kept requirement read by sentence: none is a copy. The 5 engine
   titles the ledger cites are exact, and its line citations are where it
   says.
+
+## Third pass
+
+What the engine's third round states, removed. 1 row of the third-round
+tables names a sentence of Sixteen (the planner's first-move veto), and this
+ledger's one request was answered by it. Two more name Sixteen and take
+nothing: the lit beveled tile ("`sixteen` does the same and states none"),
+and the journey of several slides, under "Not written".
+
+Cut, 2 sentences: the second and third of **"Hint: The hint gives the move
+home even when it undoes the player's slide"** (the veto not applied to the
+exact search's shortest plan, and left to the heuristic search), which are
+the engine requirement's second and third sentences.
+
+Kept, 3 clauses:
+
+- That Sixteen passes a veto, which first move it vetoes and when, and that
+  the hint still gives the slide back where the exact search finds it
+  shortest, with the scenario "One slide off a finished board". The engine
+  requirement says what a veto binds and that a game MAY hand one; that
+  Sixteen does is in no declaration. The requirement is retitled for it and
+  cites nothing.
+
+- "Hint: A journey's second leg keeps its tile", left the game's own: the
+  planner makes no step, and Sixteen and Netslide group the legs by
+  different rules.
+- "with no departure from the codec grammar", in "Params: Sixteen's params
+  are its declared codec's, and choose how the board is scrambled". The
+  brief's section 2 keeps such a clause as the one pointer of an owed
+  subject that would otherwise say nothing of its ordinary case: the rest of
+  the requirement is the missing `m` and what the number selects, and not
+  what the params or their encoding are.
+
+Each subject read alone: none hollow, no fragment, every title fits. The
+Purpose names nothing that went.

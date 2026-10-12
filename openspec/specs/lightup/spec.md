@@ -45,9 +45,8 @@ every numbered wall has exactly that many orthogonally adjacent bulbs.
 The game SHALL implement `findMistakes(state)`: re-solve the clues to the
 unique solution and flag every player bulb on a square the solution leaves
 bulb-less (`kind: "light"`) and every impossible-mark sitting on a solution
-bulb position (`kind: "mark"`). A board without a unique solution SHALL yield
-`[]`. A flagged square SHALL render with a distinct error overlay that
-repaints on the frame it is computed.
+bulb position (`kind: "mark"`). A flagged square SHALL render with a distinct
+error overlay that repaints on the frame it is computed.
 
 #### Scenario: Check & Save flags a wrong bulb
 
@@ -182,9 +181,10 @@ Custom dialog, and as `no symmetry` for none.
 ### Requirement: Description: Light Up descriptions use the upstream run-length encoding
 
 The desc SHALL encode the grid row-major, one character per wall
-(`B` unnumbered, `0`–`4` numbered) with maximal runs of open squares
-compressed as `a`–`z` (a run of 1 to 26). `validateDesc` SHALL reject unknown
-characters, short descs and over-long descs.
+(`B` unnumbered, `0`–`4` numbered) with the open squares between them in the
+engine's run letters (`engine-params`, "The engine provides the run-letter
+description grammar"). `validateDesc` SHALL reject unknown characters, short
+descs and over-long descs.
 
 #### Scenario: A description round-trips
 
@@ -319,18 +319,10 @@ Completing the board SHALL hide the keyboard cursor.
   places it, leaving the grid correct
 - **THEN** the board is solved and no cursor is drawn on it
 
-### Requirement: Hint: A Light Up hint step leads with what to look for, and one firing is one step
+### Requirement: Hint: One Light Up firing is one step
 
-A step's narration SHALL lead with the recognizable indication and then state
-why the move is forced. One deduction firing SHALL be one step: a clue firing
-that forces several squares is one grouped multi-cell step.
-
-#### Scenario: A forced bulb is explained
-
-- **WHEN** the plan reaches a square with exactly one remaining way to be lit
-- **THEN** the step's move places that bulb, and its narration names the
-  unlit square and why every other candidate is gone, concluding with a
-  necessity modal
+One deduction firing SHALL be one step: a clue firing that forces several
+squares is one grouped multi-cell step.
 
 #### Scenario: A satisfied clue groups its marks
 
@@ -352,6 +344,13 @@ that would extinguish every way to satisfy an unlit square or a clue).
 - **WHEN** a clue needs as many more bulbs as it has free neighbors
 - **THEN** one step places a bulb on each of them, narrated from that clue
 
+#### Scenario: A forced bulb is explained
+
+- **WHEN** the plan reaches a square with exactly one remaining way to be lit
+- **THEN** the step's move places that bulb, and its narration names the
+  unlit square and why every other candidate is gone, concluding with a
+  necessity modal
+
 ### Requirement: Hint: A hint step that rules a square out places the impossible-mark
 
 A step that rules squares out SHALL emit the game's own impossible-mark move,
@@ -364,18 +363,6 @@ placed as it does the bulbs.
 - **WHEN** a discount step is applied
 - **THEN** the square it rules out carries the impossible-mark, as if the
   player had right-clicked it
-
-### Requirement: Hint: A partly followed hint step shrinks in place
-
-`hintKeepTrack` SHALL classify a player's partial completion of a multi-cell
-step as on-track, and SHALL shrink the step in place to the squares that
-remain.
-
-#### Scenario: One of three marks is placed by hand
-
-- **WHEN** a step marks three squares impossible and the player marks one of
-  them
-- **THEN** the move is on-track and the step now marks the other two
 
 ### Requirement: Hint: A discount narration describes the set as the deduction counts it
 
@@ -425,18 +412,6 @@ line in the digit's white inside the ring.
 
 - **WHEN** any grouped clue step is displayed
 - **THEN** every target square lies within the narrated clue's neighbor set
-
-### Requirement: Hint: On an Unreasonable board the hint stops at the guess point
-
-On a board of the `Unreasonable` tier the hint SHALL narrate the deductions
-that remain from the player's position and SHALL refuse honestly at the guess
-point, where none remains.
-
-#### Scenario: Deduction runs dry
-
-- **WHEN** a hint is asked for on an `Unreasonable` board where no narrated
-  technique fires
-- **THEN** it refuses, saying that deduction has run out
 
 ### Requirement: Hint: Light Up's hint steps come in the solver's scan order
 

@@ -62,7 +62,13 @@ The Purpose is unchanged: each thing it names the spec still holds.
 
 ## Engine requests
 
-- Solve and the mistake check solve once at the top cap, whatever tier the
+- Left the game's own: the cap is a default argument of the game's solver,
+  and no engine code, type or guard asks at which cap `solve` or
+  `findMistakes` runs; monotonicity, which makes it sound, is stated, and
+  Subsets says the same of its hint where the Latin games' hints run at the
+  board's tier, so the collection has no one rule (`ledger/_engine.md`,
+  "Third round: the rest", "Not written").
+  Solve and the mistake check solve once at the top cap, whatever tier the
   board states → `engine-difficulty`, beside "A difficulty-capped solver is
   monotone in its cap at every tier", which says a board solved at one cap
   solves at every cap above and not what a consumer of an unknown tier asks.
@@ -153,3 +159,27 @@ Checked and found sound:
   both the width and the height" is the test there.
 - Every engine title the spec and the ledger cite is exact (21 citations).
 - `Found`: the ring item is verified above, with what is drawn.
+
+## Third pass
+
+Nothing changed in the spec. Rows of the engine's third-round tables that
+name Boats: 0. Engine requests of its own: 1, left the game's own. Sentences
+cut: 0. Clauses kept: 3.
+
+- **Kept: "Solver: Boats' Solve and mistake check solve once, at the highest
+  cap"**, the request the engine round did not write.
+- **Kept: "Hint: A Boats hint marks a boat and water each in its own
+  shape".** The review of the round finds it forbidden by `engine-hints`, "A
+  hint marks beside the content, never behind it", and recommends the engine
+  requirement take the echo as an exception in a change of its own; no engine
+  requirement states the echo, so the game's sentence is the only statement.
+- **Kept: "`hintKeepTrack` SHALL judge a leg by the squares its own move asks
+  for".** Boats' own code (`src/games/boats/index.ts:523`), not
+  `trackTargets`, and it does not shrink the step.
+- The spec was searched for the round's other rules in other words: the
+  empty mistake check (its "On a board the puzzle's solver completes" clause
+  is of the live flags, not of the check's result), the run-letter grammar
+  (Boats reads and writes its letters by hand and drops the trailing run),
+  the indication first, the hatch, the premise references, a recomputed
+  plan, the refusals: none is stated.
+- No "no departure" sentence and none on what a pasted game ID opens as.

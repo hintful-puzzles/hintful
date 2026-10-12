@@ -26,8 +26,7 @@ SHALL connect to the stated number of lines.
 ### Requirement: Rules: Sticks findMistakes flags only lines that contradict the solution
 
 `findMistakes` SHALL flag every cell whose player-drawn line contradicts the
-board's one fill; a merely missing line SHALL NOT be flagged. Where the search
-that counts the board's fills did not prove exactly one it SHALL flag nothing.
+board's one fill; a merely missing line SHALL NOT be flagged.
 
 #### Scenario: A contradicting line is flagged as a mistake
 
@@ -398,18 +397,13 @@ cell a block, never a black cell.
 
 ### Requirement: Hint: Sticks' hint stops where the solver does
 
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the squares its deduction forces from the player's lines and no others,
-and where none is forced it SHALL refuse with the collection's sentence that
-deduction has run out. It SHALL go on from the lines the player then places.
+On an Unreasonable board as on any other, the steps of Sticks' hint SHALL be
+the squares in which a line one way would break a clue at once.
 
 #### Scenario: The hint stops, and goes on from a line tried rightly
 
 - **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** a line placed wrongly there is reported by the mistake check
-- **AND** with a line placed as the solution has it wherever the hint stops,
+- **THEN** with a line placed as the solution has it wherever the hint stops,
   the hint finishes the board
 
 ### Requirement: Hint: The Sticks hint takes the first forced square in reading order

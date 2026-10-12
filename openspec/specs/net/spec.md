@@ -10,9 +10,8 @@ and its player can note the sides of tiles.
 
 ### Requirement: Rules: Net's board and what counts as solved
 
-A Net board SHALL be a `w × h` grid of wire tiles, each a 4-bit mask of
-connections (`R=1`, `U=2`, `L=4`, `D=8`), whose solved configuration is a
-spanning tree rooted at a source square. The player SHALL rotate tiles, and
+A Net board SHALL be a `w × h` grid of wire tiles whose solved configuration
+is a spanning tree rooted at a source square. The player SHALL rotate tiles, and
 the game SHALL be solved when every tile is connected to the source and
 powered.
 
@@ -50,8 +49,7 @@ side with a wall on it SHALL take no note.
 
 `findMistakes` SHALL flag a locked tile the board's one answer turns
 differently and a side note the answer contradicts. A tile turned wrong but
-unlocked SHALL NOT be flagged. Where the search did not prove exactly one
-answer it SHALL flag nothing. A flagged note SHALL be drawn in the error
+unlocked SHALL NOT be flagged. A flagged note SHALL be drawn in the error
 color, and a flagged lock SHALL be ringed in it.
 
 #### Scenario: A wrong note is flagged
@@ -174,15 +172,13 @@ grid one square wide and longer SHALL be admitted at Easy.
 - **THEN** the 1×1 is refused with "At least one of width and height must be
   greater than one.", the 1000×1001 as too large, and the other two admitted
 
-### Requirement: Description: Net descriptions are a hex digit a tile, with its barriers
+### Requirement: Description: A Net description is the shared wire grid, read under the params' wrap
 
-The desc SHALL give the tiles in reading order, each as one lowercase hex
-digit of its wire mask, followed by `v` where a barrier stands on its right
-side and then `h` where one stands below it. The last column SHALL take no
-`v` and the last row no `h` unless the params wrap: a board that does not
-wrap is walled round its border, which the desc does not write. A desc with
-any other character, an `h` before its tile's `v`, or more or fewer than
-`w·h` tiles SHALL be refused.
+A Net description SHALL be its tiles and barriers as `encodeWireDesc` writes
+them and `parseWireDesc` reads them under the params' wrap (`engine-helpers`,
+"The engine provides the wire-grid description grammar"), with that reader's
+refusals and none of Net's own. A wrapping description that walls every
+border side SHALL open as a board that does not wrap in play.
 
 #### Scenario: A dealt board with no barrier inside it
 
@@ -195,14 +191,6 @@ any other character, an `h` before its tile's `v`, or more or fewer than
 - **WHEN** `000v000v0h0h0vh` is opened on a wrapping 3×3 grid
 - **THEN** every tile of the last column has a wall on its right and every
   tile of the last row one below it, and the board does not wrap in play
-
-#### Scenario: Each refusal
-
-- **WHEN** `843886bbb66dae95ceda11112` is offered on a 5×5 grid with its last
-  digit dropped, with its first digit changed to `g`, and with `hv` put after
-  its first digit
-- **THEN** the first is refused as too short, the second for its `g` and the
-  third for its `v`
 
 ### Requirement: Generation: Every Easy Net board is uniquely solvable without guessing
 
@@ -514,19 +502,14 @@ the known wires already join.
 
 ### Requirement: Hint: Net's hint stops where its deductions do
 
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the notes and locks its four reasons force from the player's locks,
-notes and the walls, and no others, and where none is forced it SHALL refuse
-with the collection's sentence that deduction has run out. It SHALL go on
-from the squares the player then locks.
+On an Unreasonable board the steps of Net's hint SHALL be the notes and locks
+its four reasons force from the player's locks, notes and the walls.
 
-#### Scenario: The hint stops, and goes on from a square locked rightly
+#### Scenario: The hint goes on from a square locked rightly
 
-- **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** with a square locked as the solution has it wherever the hint stops,
-  the hint finishes the board
+- **WHEN** the hint is followed on an Unreasonable board, and a square is
+  locked as the solution has it wherever the hint stops
+- **THEN** the hint finishes the board
 
 ### Requirement: Hint: A way of turning is ruled out for four reasons only
 
@@ -623,14 +606,13 @@ step of gray of the game's own.
 
 ### Requirement: Look: The completion flash spreads from the source along the wires
 
-The completion flash SHALL spread from the source along the wires: a tile's
-position SHALL be its distance from the source in tiles along the connections,
-through the wrap of a wrapping board and never through a barrier. The keyboard
-cursor, the note pin and a hint's ring SHALL stay rings inside the tile's
-edge, over whichever ground the tile has, a flash color included.
+The completion flash SHALL spread from the source along the wires, a tile's
+position being its `wireDistance` from the source. The keyboard cursor, the
+note pin and a hint's ring SHALL stay rings inside the tile's edge, over
+whichever ground the tile has, a flash color included.
 
-#### Scenario: A neighbor the wires do not join
+#### Scenario: The cursor on a tile the flash lights
 
-- **WHEN** a tile beside the source has no wire into it
-- **THEN** it lights when the highlight has traveled the wires that do reach
-  it, later than the tiles the source is wired to
+- **WHEN** the completion flash lights the tile the keyboard cursor is on
+- **THEN** the cursor is still a ring inside the tile's edge, over the flash
+  color

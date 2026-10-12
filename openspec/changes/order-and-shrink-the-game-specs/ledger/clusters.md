@@ -6,14 +6,14 @@
 | Params: Clusters' parameters are a width, a height and a difficulty | retitled "Params: A Clusters params string is its declared codec's, and one with no difficulty is Easy". Sentences 1, 2 and 4 (the three fields; width, height, square fallback, full-form difficulty and the round trip; the unknown tier letter) replaced by one sentence that sends the reader to the declaration and says the game departs nowhere (rule 2). Sentence 3 kept, reworded to say "params string" for "ID". All three scenarios dropped; it takes "The Normal preset's two forms" from the `de`/`dt` requirement below | the fields: `paramConfig`, `src/games/clusters/state.ts:117`; the encoding: `paramsCodec(defaultParams, [dims(paramConfig), choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true })])`, `state.ts:130`; the square fallback: `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters"; the round trip: `engine-params`, "A game declares its params encoding once, and both codec halves are derived" and "Encode and decode are mutual inverses over the corpus"; the unknown letter and its scenario: `engine-params`, "A params string is read whole or refused", whose first scenario is a game with tiers `e` and `t`. Scenario "An older game ID still resolves" restated the kept sentence and is wrong of an ID that carries a board (see Found); `src/games/clusters/clusters.test.ts:133` ("reads a pre-tier game ID as Easy") and the `clusters` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` hold the strings |
 | Params: Clusters refuses to generate Normal on a board too small for it | title kept. Sentence 1 kept, carrying its qualifier itself: "Validation SHALL refuse Normal, when a board is to be generated, on a board of…". Sentence 2 (reported through validation with `full` set, so a saved game or an ID with its description loads) cut; the sentence with a citation that first replaced it went in the second pass. Scenario "A board too small for the harder tier refuses it" dropped; scenario "The boundary, in both of its shapes" written from the game's test | `engine-difficulty`, "An unbindable tier is refused, not silently downgraded" (states the validation route, generation only, and the dropped scenario with no game named). The new scenario's sizes and its sentence: `src/games/clusters/clusters.test.ts:158`, `validateParams` at `state.ts:157` |
 | Params: Clusters writes its difficulty as `de` or `dt` | removed; its scenario "The Normal preset's two forms" moves, unchanged, to "Params: A Clusters params string is its declared codec's, and one with no difficulty is Easy" | `DIFF_CHARS = "et"`, `state.ts:32`, and `choice(…, "d", …, { full: true })`, `state.ts:132`; the snapshot above holds `7x7de`, `7x7dt` and `7x7` |
-| Description: Clusters descriptions use the upstream run-length dot encoding | title kept. The letter grammar (run before a dot, `z`/`Z` for twenty-five, the total of area plus one) replaced by one citation, the subject's pointer, and the refusals by "The parser SHALL refuse what `readDotRuns` refuses and nothing of its own" (its second citation went in the second pass); kept as the game's own: that the marks are the given dots and nothing else, the row-major cell order, and which case is which color. Scenario "A description with the wrong number of cells is rejected" dropped; "A generated description round-trips" kept; it takes "The board the first preset deals" from the requirement below | `engine-params`, "The engine provides the dot-run description grammar" (letter, offset, case, skip, closing letter) and "The dot-run reader refuses what its writer never writes" (too short, too long, a character that cannot appear). The game's calls: `writeDotRuns`, `state.ts:185`, and `readDotRuns`, `state.ts:198` |
+| Description: Clusters descriptions use the upstream run-length dot encoding | title kept. The letter grammar (run before a dot, `z`/`Z` for twenty-five, the total of area plus one) replaced by one citation, the subject's pointer, and the refusals by "The parser SHALL refuse what `readDotRuns` refuses and nothing of its own" (its second citation went in the second pass); kept as the game's own: that the marks are the given dots and nothing else, the row-major cell order, and which case is which color. Scenario "A description with the wrong number of cells is rejected" dropped; "A generated description round-trips" dropped in the third pass; it takes "The board the first preset deals" from the requirement below | `engine-params`, "The engine provides the dot-run description grammar" (letter, offset, case, skip, closing letter) and "The dot-run reader refuses what its writer never writes" (too short, too long, a character that cannot appear); the round trip: `engine-params`, "The dot-run reader reads back what its writer wrote" (last sentence: a game whose description is this grammar alone reads back every description it writes). The game's calls: `writeDotRuns`, `state.ts:185`, and `readDotRuns`, `state.ts:198` |
 | Description: A Clusters description closes in lowercase and keeps a skip in its dot's case | removed; its scenario "The board the first preset deals" moves, unchanged, to "Description: Clusters descriptions use the upstream run-length dot encoding" | lowercase close and the skip's case: `engine-params`, "The engine provides the dot-run description grammar" (last two sentences); the two refusals: "The dot-run reader refuses what its writer never writes" ("a skip followed by a letter of the other case, and an uppercase closing letter"). `src/games/clusters/clusters.test.ts:250` holds the game's case |
 | Generation: Clusters offers difficulty tiers over its two deduction levels | title kept. Last two sentences (one solution; Easy soluble by the single-cell rule; Normal not) cut; the sentence naming the two shared requirements that first replaced them went in the second pass, the requirement saying what each tier is. Scenario "The easier tier needs only the single-cell rule" dropped; "The harder tier needs the deeper reasoning" kept as the game's one case | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates". The Easy case stays in this spec as the scenario "An Easy board is hinted to the end without a chain" |
 | Generation: Every generated Clusters board is solvable by narratable deduction | removed, but for its last clause (an Easy board needs no lookahead step), which joins "Hint: Solve and the hint use the deeper rung at every tier" with the scenario "An Easy board is hinted to the end without a chain" | `engine-difficulty`, "Narratable-deduction generation policy"; "no nested speculation" is this spec's "Normal is the same reasoning one hypothetical level deep" |
 | Controls: Clusters is painted by click, drag and keyboard cursor | title kept. Sentence 1 (overview), the click half of sentence 2 (left cycles toward blue, right toward red, each able to clear) and sentence 4 (the dedicated keys) replaced by one that sends the reader to `targetVerbs`. The drag half is reworded to stand alone and to say what `interpretMove` does: the press picks the state, the release paints every square passed, whatever it held, as one move. "Given dot cells SHALL never be overwritten" kept. Both scenarios kept | `targetVerbs.primary`, `.secondary` and `.keyOnly` with their `does` strings, `src/games/clusters/index.ts:139`-`177`; `engine-input`, "The engine owns a declaring game's press and select keys" (press parks the cursor, Enter and Space, a verb's own keys). Which color the left button gives first is kept, in "Look: Clusters draws its two colors as the collection's two-state pair" |
-| Controls: Clusters' number keys set the cursor's square outright | title kept. Sentence 1 (the key list) cut; sentences 2 and 3 reworded to stand without it ("Each key-only verb of `targetVerbs`", "its key") | `targetVerbs.keyOnly[].keys`, `index.ts:158`-`177` |
+| Controls: Clusters' number keys set the cursor's square outright | title kept. Sentence 1 (the key list) cut; sentence 2 reworded to stand without it ("Each key-only verb of `targetVerbs`"); sentence 3 (a key on a hidden cursor only shows it) cut in the third pass | `targetVerbs.keyOnly[].keys`, `index.ts:158`-`177`; the hidden cursor: `engine-input`, "The engine owns a declaring game's press and select keys" ("and each such key on a hidden cursor only shows it", with the scenario "A verb's own key on a hidden cursor", which is Clusters' `1`) |
 | Hint: Solve and the hint use the deeper rung at every tier | gains "The hint of a board dealt at Easy SHALL nonetheless need no lookahead step at all." and the scenario "An Easy board is hinted to the end without a chain", both from "Generation: Every generated Clusters board is solvable by narratable deduction" | |
-| Hint: Clusters provides an explained deduction hint | retitled "Hint: A recomputed Clusters plan continues where the last one left off". Sentence 1 cut (the first cut kept "deduced from the player's current position by the game's own contradiction solver" with a citation; the second pass took it, the engine now stating it); sentence 2 kept, opening "The scan order of a hint's plan". Scenario "A hinted move is one the solver makes" dropped | `engine-hints`, "The solver and the hint are two projections of one deduction engine" and "A hint is deduced from the board in play" (the midend hands `hint` the state in play and the plan is made from it) |
+| Hint: Clusters provides an explained deduction hint | removed. The first cut retitled it "Hint: A recomputed Clusters plan continues where the last one left off" and kept sentence 2; the third pass took that sentence and its scenario "A plan recomputed after its first step". Sentence 1 cut (the first cut kept "deduced from the player's current position by the game's own contradiction solver" with a citation; the second pass took it, the engine now stating it); sentence 2 kept, opening "The scan order of a hint's plan". Scenario "A hinted move is one the solver makes" dropped | `engine-hints`, "The solver and the hint are two projections of one deduction engine" and "A hint is deduced from the board in play" (the midend hands `hint` the state in play and the plan is made from it); sentence 2 and its scenario: `engine-hints`, "A recomputed plan continues the plan it replaces" (a game on `deduceHintPlan` gives a `next` found by a scan in a fixed order, and a plan made again begins with the last one's second firing). Clusters is on it: `src/games/clusters/solver.ts:32`, `:437` |
 | Hint: A Clusters hint step names the rule the other color would break | sentence 1 ("explain why the move is forced, not merely which cell") cut and "Each hint step" moved onto sentence 2; "in the necessity voice" reworded out of sentence 3. Scenario untouched | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" and "The necessity-voice rule applies to every hinting game not ledgered as narrating moves" (its second scenario: a forced step is required to carry necessity) |
 | Hint: A Clusters hint shows its reasoning on the board | retitled "Hint: The tile the other color would break is outlined, in a hue the error frame does not use". Sentence 1 (the target is ringed) and sentence 3 (the forced color is not pre-placed) replaced by one that sends the reader to the legend. Sentence 2 kept without "which the narration's 'outlined' refers to uniquely, so the reasoning is visible on the board and not only in prose"; the case the legend does not give is added from the code (no tile is outlined when the contradiction is on the target). Scenario "The target stays empty under its hint" dropped; "The word and the ring go together" kept | `hintMarks.roles.ring` ("the square the step colors. It is drawn empty…") and `.outline`, `index.ts:491`-`496`; `engine-hints`, "The engine SHALL own the hint mark roles and the words for them" (ring, outline) and "A bound hint step's words SHALL name exactly the marks it draws" (the word and the mark agree). `buildHighlights`, `index.ts:367`, for the target case |
 | Hint: A lookahead deduction is one step showing its whole forcing chain | title kept. "displays the whole forcing chain statically on the board" and "numbered in order" reworded out (the citation that first stood in their place went in the second pass); kept: one step, the hypothesis cell is the target, the what-if piece and its size, the contradiction's tile. Scenario "A lookahead deduction shows its whole forcing chain" dropped; "A what-if piece cannot be taken for a placed one" kept | `engine-hints`, "A Tactic's chain is shown on the board" (every link marked in order, both ends anchored), "A chain's order is declared and drawn as an ordinal" (the numbers) and "A Tactic's narration names the ends, the links and the rule" (the dropped scenario's narration clause) |
@@ -34,9 +34,6 @@
 - **Params: Clusters refuses a board size that has no puzzle**, "as too
   large". `engine-params`, "A grid too large for a game is refused in one
   sentence" leaves where the ceiling sits to the game.
-- **Description: "A generated description round-trips".** No shared
-  requirement says a description `encodeDesc` writes is read back to the same
-  board; the two dot-run requirements state each half and never the pair.
 - **Controls: … number keys**, "SHALL make no move on a given dot or on a
   square already in that state": `paintWith`, `index.ts:126`, a hand-written
   function. "whatever the square held, where a click cycles it": the `does`
@@ -62,7 +59,9 @@
 
 ## Engine requests
 
-- "With the cursor hidden, its key SHALL only show the cursor.", in
+- (Answered: `engine-input`, "The engine owns a declaring game's press and
+  select keys"; the third pass cut the sentence.) "With the cursor hidden,
+  its key SHALL only show the cursor.", in
   "Controls: Clusters' number keys set the cursor's square outright". Belongs
   in `engine-input`, "The engine owns a declaring game's press and select
   keys", which says it of the first *select* key only and of a verb's own
@@ -79,7 +78,9 @@
   `Game.hint` the current state (`src/engine/midend.ts`); each game's
   recorder then starts there (here `deduceHintPlan`,
   `src/games/clusters/solver.ts:437`).
-- "A generated description round-trips" (the scenario, in "Description:
+- (Answered: `engine-params`, "The dot-run reader reads back what its writer
+  wrote"; the third pass cut the scenario.) "A generated description
+  round-trips" (the scenario, in "Description:
   Clusters descriptions use the upstream run-length dot encoding"). Belongs
   in `engine-params`, "The engine provides the dot-run description grammar":
   that `readDotRuns` reads back what `writeDotRuns` wrote.
@@ -188,3 +189,47 @@ which of blue and red is the pair's first member.
 
 No preference: `prefs` is not declared. Each subject read alone after the
 edits: none hollow, no fragment, every title fits.
+
+## Third pass
+
+What the engine's second and third rounds state, removed. 3 rows of the
+third-round tables and their reviews name Clusters (the mistake check, the
+recomputed plan, the unlocalized contradiction), and 2 of this ledger's own
+requests were answered in the second round and still stood in the spec.
+
+Cut, 2 sentences and 2 scenarios, 1 requirement gone:
+
+- **"Hint: A recomputed Clusters plan continues where the last one left
+  off"**, whole, with its scenario: `engine-hints`, "A recomputed plan
+  continues the plan it replaces" states the fixed scan order and that the
+  new plan begins with the old one's second firing, of every game on
+  `deduceHintPlan`.
+- **"With the cursor hidden, its key SHALL only show the cursor."**, in
+  "Controls: Clusters' number keys set the cursor's square outright":
+  `engine-input`, "The engine owns a declaring game's press and select keys".
+- **Scenario "A generated description round-trips"**: `engine-params`, "The
+  dot-run reader reads back what its writer wrote". The requirement keeps
+  "The board the first preset deals".
+
+Kept, 3 clauses:
+
+- **"On any other board it SHALL report the cells that break a rule"**
+  (`Rules`): the review of `ts-engine`, "A mistake check compares with the
+  one answer, hidden or not" leaves a broken rule reported without an answer
+  to the game. The spec has no sentence saying the check is empty without an
+  answer, so nothing went.
+- **"A hint SHALL be refused, and SHALL NOT deduce onward, when the deduction
+  runs into a contradiction"** and where that refusal is reached (`Hint`):
+  `engine-hints`, "A contradiction no entry can be blamed for is refused as
+  one to undo" binds "a hint that refuses" and says whether the steps deduced
+  first are given is the game's. Clusters' sentence names no refusal code; it
+  says only that the game refuses outright, which is the game's.
+- **"with no departure from the codec grammar"** (`Params`): the one pointer
+  of an owed subject, which otherwise states two refusals and the absent
+  tier and never what the params are.
+
+`engine-hints`, "A hint gives every step deduction still forces before it
+refuses" does not bind Clusters, which has no tier that permits search; the
+spec's mention of `DEDUCTION_EXHAUSTED` is where it is reached and stays.
+Each subject read alone after the edits: none hollow, no fragment, every
+title fits; the Purpose names nothing that went.

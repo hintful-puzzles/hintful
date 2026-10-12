@@ -5,7 +5,7 @@ spec still holds "its params and description encodings".
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Map reports completion and mistakes | "Because boards are uniquely solvable, the game SHALL implement `findMistakes`:" and the parenthesis "(a definite mistake)" reworded out; the completion rule, the re-solve from the clues and the empty result on a board with no one solution kept. Scenario "A region colored against the unique solution is flagged" dropped; "A partially-colored but correct board has no mistakes" kept | `ts-engine`, "The engine supports an ephemeral, opt-in mistake-checking hook" (the cells that contradict the unique solution) and "A mistake check compares with the one answer, hidden or not"; `engine-hints`, "Check & Save names a wrong entry in every game" |
+| Rules: Map reports completion and mistakes | "Because boards are uniquely solvable, the game SHALL implement `findMistakes`:" and the parenthesis "(a definite mistake)" reworded out; the completion rule and the re-solve from the clues kept. "A non-uniquely-solvable board SHALL yield no mistakes" cut (third pass). Scenario "A region colored against the unique solution is flagged" dropped; "A partially-colored but correct board has no mistakes" kept | `ts-engine`, "The engine supports an ephemeral, opt-in mistake-checking hook" (the cells that contradict the unique solution) and "A mistake check compares with the one answer, hidden or not" (which also states the empty result where no one answer was established); `engine-hints`, "Check & Save names a wrong entry in every game" |
 | Params: Map's grid is at least two squares each way and holds at least five regions | removed, with its scenario | `bounds: { min: 2 }` and `bounds: { min: 5 }` in `paramConfig`, `src/games/map/index.ts:523` and `:527`; `engine-params`, "Params validity is the engine's check" (a bound refuses whatever `full` says, in the engine's words, "Regions must be at least 5.") and "A generation-only bound is gated on full" (a bound applies to a loaded ID too) |
 | Generation: Map's generator is gated on the solver | retitled "Generation: Map's generator never removes the last clue of a color". Second sentence kept, and is the requirement. First sentence (one solution, found at the requested difficulty and not below) cut whole (second pass: the pointer that stood for it went too), with scenario "Generated boards are uniquely solvable at their difficulty", which was its case; scenario "The only clue of a color stays" written in words for the kept sentence, from `if (cfreq[coloring[j]] === 1) continue`, `src/games/map/generator.ts:324` | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates"; the gate is `src/games/map/generator.ts:336` |
 | Controls: A Map selection follows the note-taking cell's rule | gains the capability and title of the rule it points at. Nothing cut | |
@@ -179,3 +179,31 @@ it.
 
 Each subject read alone after the edits: no fragment, no dangling "it",
 every owed subject says what the game does there, every title fits its body.
+
+## Third pass
+
+Two rows of the engine tables name Map, both in the review of "Third round:
+the rest"; the ledger filed no engine request.
+
+- **Rules**, "Rules: Map reports completion and mistakes": "A
+  non-uniquely-solvable board SHALL yield no mistakes" cut (`ts-engine`, "A
+  mistake check compares with the one answer, hidden or not"). `findMistakes`
+  reports no broken rule of its own, `src/games/map/index.ts:454`; the red
+  adjacency markers are `redraw`'s and stated in `Look`.
+- **Description**, "Description: Map's clue list runs over the regions": kept
+  whole, as the review says. `engine-params`, "The engine provides the
+  run-letter description grammar" states `encodeRunLength`, which Map's writer
+  calls (`src/games/map/map-data.ts:419`), and `scanRunLength`, which Map's
+  reader does not: it reads the list by hand, and the sentence is what says
+  how.
+
+Sentences cut: 1. Clauses kept: 1 requirement (the clue list, for the
+reader).
+
+Section 2 of the brief: the spec has no "no departure" sentence and no
+pasted-ID sentence. The hint requirements were read against the third
+round's hint rows: Map states no refusal, no never-search sentence and no
+`hintKeepTrack` sentence.
+
+Each subject read alone: unchanged but for `Rules`, whose first requirement
+still says what completes the board and what the check flags.

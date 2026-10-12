@@ -38,9 +38,8 @@ value.
 ### Requirement: Rules: Dominosa flags a domino the unique solution lacks
 
 `findMistakes` SHALL re-solve the board to its unique solution and return both
-cells of every player-placed domino the solution does not contain. A board
-that is not uniquely solvable SHALL yield no mistakes, and blank squares and
-barrier edges SHALL never be flagged.
+cells of every player-placed domino the solution does not contain. Blank
+squares and barrier edges SHALL never be flagged.
 
 #### Scenario: A wrong placement is flagged
 

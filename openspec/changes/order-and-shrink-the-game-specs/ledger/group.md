@@ -15,6 +15,7 @@ requirement says where), and says where the note-taking part is stated.
 | Solver: Group's solver accepts only an associative grid and grades a board at its tier | retitled "Solver: Group's solver accepts only an associative grid". Sentence 2 (solvable at its tier and not at the tier below) cut. Scenario "The solver grades a board at the intended difficulty" dropped; scenario "A Latin square that is no group" written | `engine-difficulty`, "A difficulty tier binds the board it generates" (the dropped scenario is its first). The validity check: `groupValid`, `src/games/group/solver.ts:322` |
 | Hint: Group's own placements lead the eliminations | title kept. The order (a naked single first, Group's placements next, then the eliminations, last a forced generic placement) cut to what is Group's: its own rung of the walk's ladder, with the citation, and a clause that says where the rest of the hint is stated (rule 2). The reading it starts on and the scenario untouched | `engine-candidate-hints`, "The walk owns the ladder" (naked singles, the game's own rungs, the recorded strikes, the recorded placements; the note-free opening). Group's rung: `leads`, `index.ts:628`, handed over at `index.ts:648` |
 | Controls: Group selects a cell through the shared note-taking cell | added (rule 2): the subject began at "a cell selected for entry" and said nowhere how a cell is selected. Its two answers and its scenario are from `pressNoteTakingCell`'s call, `index.ts:199`-`202`, and `prefs`, `index.ts:821` | |
+| Look: Group draws its table on a quiet surface, with a given's cell lifted | third pass: last sentence ("The selection's wash and its pencil-mode corner SHALL be drawn over whichever surface the cell has.") cut; the surfaces, the legend's sentence and the scenario untouched | `engine-notes`, "The highlight is part of the cell's background" (the wash replaces whichever surface the game gives the cell, a given's lifted one included; the triangle lies over it) |
 | Look: Group draws its legend, marks and errors | "highlight the selection" and "and flash on completion" reworded out of the one sentence; the legend, the pencil-mark grid and the error annotation, the title and the scenario untouched | the highlight: `engine-notes`, "The note-taking cell's highlight has one picture, drawn by the engine" (`cellHighlight`, `src/games/group/render.ts:548`); the flash: `ts-engine`, "The win flash plays on a forward move that solves the board" and "The win flash is one traveling highlight in every game" (`winHighlight`, `render.ts:551`) |
 
 ## Kept, and why
@@ -49,7 +50,11 @@ The five Latin games' requests go under five names, the same in `keen.md`,
 line, the rule as the engine would state it and the home, is the same in every
 ledger that has it; what follows is this game's sentence and code.
 
-- **The entry arm of a note-taking game.** With a cell highlighted, a value's
+- **The entry arm of a note-taking game.** Left the game's own: no shared
+  code decodes a key, tests a given or builds the move, and lifting it was
+  evaluated and declined, since it would need a shared move type
+  (`src/engine/note-taking-cell.ts`); no guard holds it. The sentences stay.
+  With a cell highlighted, a value's
   key enters that value, or in pencil mode toggles its pencil mark; Backspace
   and Space clear the cell; in pencil mode no key changes a cell that holds a
   value; a given takes no entry. Home: `engine-notes`, beside "The engine owns
@@ -64,14 +69,19 @@ ledger that has it; what follows is this game's sentence and code.
   identity-dependent lettering; a run of cells entered at once; and a given
   that already holds the element being part of the move.
 - **A mistake check reports nothing where the puzzle does not solve to one
-  answer.** Group's spec does not state it (see Found); its `findMistakes`
-  does it (`index.ts:480`). See `keen.md`.
+  answer.** Answered: `ts-engine`, "A mistake check compares with the one
+  answer, hidden or not". Group's spec does not state it (see Found); its
+  `findMistakes` does it (`index.ts:480`). See `keen.md`.
 - **A candidate hint's recording solve runs at the board's tier, and no higher
-  than the top tier below Unreasonable.** Group's spec does not state it (see
+  than the top tier below Unreasonable.** Answered for the cap:
+  `engine-candidate-hints`, "A recording solve stops below the tier that
+  searches"; that the solve runs at the board's own tier is left the games'
+  own, not being the collection's rule. Group's spec does not state it (see
   Found); its `buildSteps` does it (`index.ts:606`). See `keen.md`.
 - **Auto-pencil strikes a placed value from the other cells of its no-repeat
-  regions**, and **the auto-pencil decision is recorded on the move.** Not
-  Group's: it offers no auto-pencil (`prefs`, `index.ts:821`).
+  regions**, and **the auto-pencil decision is recorded on the move.**
+  Answered: `engine-notes`, "An auto-pencil strike is decided when the
+  placement is made". Not Group's: it offers no auto-pencil (`prefs`, `index.ts:821`).
 
 ## Found
 
@@ -181,3 +191,34 @@ Each subject read alone after the edits: no fragment, no dangling pronoun,
 every title fits its body. The Review's line that `Generation` names where
 the tier's promise is stated no longer holds of `Generation`; the row says
 where.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Group: 1 (and a mention in
+the mistake check's row, as a game that does it and does not say it). Engine
+requests of its own: 4. Cut: 1 sentence, in 1 requirement. Clauses kept: 3.
+
+Cut: the last sentence of **"Look: Group draws its table on a quiet surface,
+with a given's cell lifted"**, "The selection's wash and its pencil-mode
+corner SHALL be drawn over whichever surface the cell has."; the row above
+says where it is stated.
+
+Kept:
+
+- **The entry sentences** of "Controls: Backspace, Space and Clear empty the
+  selected Group cells" and "Controls: A letter key enters its element": the
+  entry arm, left the games' own.
+- **"On a hidden cursor the first such press SHALL only show it"**, in
+  "Controls: Shift and an arrow move the cursor's row or column": an arrow
+  that is an action of the game's own, which `engine-notes`, "The highlight
+  is the game's keyboard cursor" hands to the game.
+- **The first sentence of "Hint: Group's own placements lead the
+  eliminations"**: the subject's one pointer to the shared plan.
+
+No "no departure" sentence, and none of the form "What a pasted game ID opens
+as". The spec was searched for the third round's other rules in other words
+(an empty mistake check, the hint's cap beneath Unreasonable, a sentence that
+leads with the indication, an auto-pencil decision): none is stated.
+
+Each subject read alone: no fragment, no dangling pronoun, every title fits
+its body, and the Purpose names nothing that went.

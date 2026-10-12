@@ -4,13 +4,13 @@
 Palisade, the puzzle of dividing a grid along its edges into connected regions
 of one given size `k`, each numbered square having that many of its edges
 walled. This capability specifies what is the game's own: what its params
-refuse and what a short params string means, its description encoding, how
-its three-valued edges are stored, what counts as solved and as a mistake,
-what the generator promises, the search that counts a board's answers, how a
-clue and a finished region look, and the deduction hint that sets this
-collection's bar for what an explained hint is. What the buttons, the drag and
-the cursor do to an edge, which edges redden and how a hint's marks are drawn
-are `border-grid`'s to state, and what every game does the same way (Solve,
+refuse and what a short params string means, its description encoding, what
+counts as solved and as a mistake, what the generator promises, what the
+search that counts a board's answers assumes, how a clue and a finished region
+look, and the deduction hint that sets this collection's bar for what an
+explained hint is. How an edge is stored, what the buttons, the drag and the
+cursor do to it, which edges redden and how a hint's marks are drawn are
+`border-grid`'s to state, and what every game does the same way (Solve,
 the win flash, the mistake overlay, the midend's hint refusals) the other
 engine capabilities'.
 
@@ -26,18 +26,6 @@ walls set and all interior edges unknown.
 - **WHEN** `newState` builds a board from a valid desc
 - **THEN** every edge on the grid's rim is a wall
 - **AND** every edge between two cells is unknown
-
-### Requirement: Rules: Palisade edges are three-valued and shared between cells
-
-Each edge SHALL be wall, no-wall-mark, or unknown, stored as one byte per cell:
-the low nibble the walls U/R/D/L, the high nibble the no-wall marks. A wall or
-mark SHALL be recorded on both cells sharing the edge.
-
-#### Scenario: A wall toggle records both sides
-
-- **WHEN** the player toggles a wall on the right edge of an interior cell `i`
-- **THEN** `executeMove` sets the right-wall bit of `i` and the left-wall bit
-  of the cell to its right
 
 ### Requirement: Rules: The grid rim cannot be edited
 
@@ -79,11 +67,9 @@ walls than the clue, or too few edges free of a no-wall mark to reach it.
 
 ### Requirement: Rules: Palisade checks mistakes against the unique solution
 
-`findMistakes(state)` SHALL take the board's one division from the search
-that counts its answers, at either difficulty, and flag every edge where the
-player has drawn a wall the solution lacks or set a no-wall mark where the
-solution has a wall. Where the search did not prove exactly one division it
-SHALL return an empty result, never a false positive.
+`findMistakes(state)` SHALL flag every edge where the player has drawn a wall
+the board's one division lacks or set a no-wall mark where that division has
+a wall.
 
 #### Scenario: A wrong wall is flagged
 
@@ -152,10 +138,12 @@ divides one way whatever its clues, and the solver finds that way with none.
 
 ### Requirement: Description: Palisade descriptions are run-length clue grids
 
-The desc SHALL encode the clue grid in scan order: a digit `0`–`4` for each
-clue and a letter `a`–`z` for each run of 1–26 clueless cells. Validating a
-desc SHALL reject a digit above `4`, any other character that is neither a clue
-nor a run letter, and a desc describing more than `w·h` squares.
+The desc SHALL be the clue grid in scan order, in the engine's run-letter
+grammar (`engine-params`, "The engine provides the run-letter description
+grammar"): a digit `0`–`4` for each clue, and the grammar's letters for the
+clueless cells. Validating a desc SHALL reject a digit above `4`, any other
+character that is neither a clue nor a run letter, and a desc describing more
+than `w·h` squares.
 
 #### Scenario: A description round-trips
 
@@ -230,11 +218,8 @@ Unreasonable where it has exactly one division that they do not reach.
 
 ### Requirement: Solver: Palisade counts a clue set's answers by a bounded search
 
-The game SHALL count a clue set's divisions up to two by trial and error over
-the solver, assuming an undecided edge a wall and then not where the solver
-stops. It SHALL report one answer, several, none, or that it stopped at its
-budget, which SHALL be counted in positions and never in time. Solve SHALL
-take the answer from it at either difficulty.
+Where the solver stops, the search that counts a clue set's divisions SHALL
+assume an undecided edge a wall and then not.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -243,11 +228,6 @@ take the answer from it at either difficulty.
   only clue is a 4
 - **THEN** it reports one answer for the first two, several for the third and
   none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given fewer positions than a board needs
-- **THEN** it reports that it stopped, and neither one answer nor several
 
 #### Scenario: The search agrees with a count that has no search in it
 
@@ -300,6 +280,12 @@ next deduction with all its legs and auto-hint can play the whole chain.
 - **THEN** that edge does not appear as a step in the returned plan, since its
   fact is part of what the solver starts from
 
+#### Scenario: The hint goes on from an edge decided rightly
+
+- **WHEN** the hint is followed on an Unreasonable board, and an edge is
+  decided as the solution has it wherever the hint stops
+- **THEN** the hint finishes the board
+
 ### Requirement: Hint: A hint sentence is advice that has not been applied
 
 Each leg's explanation SHALL name the rule that fired, phrased as advice that
@@ -340,23 +326,6 @@ is completed by the edit that sets it". Palisade SHALL depart from neither.
 - **WHEN** a `notTooBig` step is displayed
 - **THEN** every cell of the two regions is outlined in `COL_HINT_CELL`, a
   different color from the forced edge's `COL_HINT`
-
-### Requirement: Hint: Palisade's hint stops where the solver does
-
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the edges its deductions force from the player's walls and marks and no
-others, and where none is forced it SHALL refuse with the collection's
-sentence that deduction has run out. It SHALL go on from the edges the player
-then decides.
-
-#### Scenario: The hint stops, and goes on from an edge tried rightly
-
-- **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** an edge decided wrongly there is reported by the mistake check
-- **AND** with an edge decided as the solution has it wherever the hint
-  stops, the hint finishes the board
 
 ### Requirement: Hint: Two Palisade clues side by side are walled apart where their region would be the wrong size
 

@@ -238,9 +238,7 @@ schemes. The tile SHALL keep its bevel: it is an object the player moves.
 
 ### Requirement: Look: Fifteen's win flash lights its tiles and never the gap
 
-A tile the win flash lights SHALL have its face filled with a flash color
-inside its bevel, and SHALL keep its bevel and its number. The gap SHALL never
-be lit.
+Fifteen's win flash SHALL light its tiles and SHALL never light the gap.
 
 #### Scenario: The last slide flashes
 

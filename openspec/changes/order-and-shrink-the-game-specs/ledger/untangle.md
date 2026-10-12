@@ -137,3 +137,23 @@ Checked and found sound:
   misses.
 - Every title under "Kept, and why" exists, and the line citations were
   opened.
+
+## Third pass
+
+Nothing changed in the spec. Rows of the engine's third-round tables that
+name Untangle: 0. Engine requests of its own: 0. Sentences cut: 0. Clauses
+kept: 1.
+
+- **Kept: "`hint` SHALL refuse with the collection's no-move-worth-making
+  wording"** in "Hint: Untangle's hint refusals". None of the third round's
+  refusal requirements is of this one (`engine-hints`, "A search that can
+  prove a position lost says which of its two ends it met" is of a game that
+  can be lost, and "A hint gives every step deduction still forces before it
+  refuses" of `DEDUCTION_EXHAUSTED` on a board whose tier permits search);
+  which refusal Untangle gives and when is the game's.
+- No "no departure" sentence, none of the form "What a pasted game ID opens
+  as" and none citing `engine-difficulty`: Untangle has no tiers.
+- The spec was searched for the third round's other rules in other words
+  (the cancel keys, the release of a declined press, a hatch under content,
+  a mistake check without an answer): none is stated. Untangle asks no
+  `isCancelKey` and has no mistake check.

@@ -7,6 +7,9 @@ The Purpose is unchanged: each thing it names the spec still holds.
 | Rules: A region holds each number once and equal numbers keep apart | gains the sentence that says when the game is solved, and the scenario "Completing the grid wins" without "and flashes", both from "Controls: Seismic input, note-taking and completion" | the flash: `ts-engine`, "The win flash plays on a forward move that solves the board" |
 | Params: Seismic's parameters | removed. That a bare number decodes as a square grid joins "Params: A Seismic params string with no mode is Seismic, and with no difficulty Easy", which also names the three fields in a clause. The bound of 4, the unknown difficulty and the round trip cut, with scenario "A game ID round-trips through the parameters" | `paramConfig`, `src/games/seismic/state.ts:133` (`bounds: { min: 4 }` at `:136`, `difficultyItem`, `rulesetItem`); `engine-params`, "Params validity is the engine's check" (a bound and a choice outside its list) and "Encode and decode are mutual inverses over the corpus"; `src/engine/__snapshots__/params-stability.test.ts.snap` holds `6x6de`/`6x6` and every preset |
 | Params: Seismic's game ID writes Tectonic as T and the difficulty as de or dh | retitled "Params: A Seismic params string with no mode is Seismic, and with no difficulty Easy" (the pointer, rule 2). The letters (`T` or nothing, `de`/`dh` in the full form only) and the refusal of a `d` with another letter or none cut; the three missing-field sentences kept. The pointer names `presets` for the menu (added in review). Scenarios "A Tectonic preset" and "A letter that names no difficulty" dropped; "A Seismic preset" kept | the `paramsCodec` field list, `src/games/seismic/state.ts:146` (`dims`, `letters(…, ["", "T"])`, `choice(…, "d", …, "eh", { full: true })`, `DIFF_CHARS` at `:55`); `engine-params`, "A params string is read whole or refused" (a letter the tag does not list, a tag with nothing after it) and "The engine makes the one refusal of a params string" (the sentence the dropped scenario quoted); the snapshot holds `4x4Tde`/`4x4T` and `4x4dh`/`4x4` |
+| Description: Seismic descriptions use the run-length wall and clue encoding | third pass. Title and scenario kept. The order of the borders ("over the borders between the cells of each row first and then the borders between rows") and "Runs of walls SHALL be written as decimal counts and runs of non-walls as letters" cut for the one pointer the subject has to the wall list. "runs of empty clue cells SHALL be abbreviated with letters; a clue cell SHALL carry its digit" replaced by the clue-list sentence of "Description: A wall-list letter is a run of open borders and the wall that ends it", which says the same with its letters. Gains that requirement's scenario "The 4×4 description 1a6df3,f1h1" | `engine-params`, "The engine provides the wall-list description grammar"; `encodeRegionWalls` and `readRegionWalls`, `src/games/seismic/state.ts:339` and `:363` |
+| Description: A Seismic description is validated against its regions | third pass. "an unknown wall or clue character" cut to "an unknown clue character", and "a wall list or a clue list that does not cover the board exactly" to "a clue list …". Scenario kept | `engine-params`, "The wall-list reader refuses a run that passes the last border" (a character that is neither a digit nor a lowercase letter, a letter whose open borders pass the last one, a list that ends early); the clue half is `parseDesc`, `src/games/seismic/state.ts:372` |
+| Description: A wall-list letter is a run of open borders and the wall that ends it | removed (third pass). The three wall-list sentences cut; the clue-list sentence joins "Description: Seismic descriptions use the run-length wall and clue encoding". Scenario "The 4×4 description 1a6df3,f1h1" moves, unchanged, to that requirement; "A run past the end of the list" dropped | `engine-params`, "The engine provides the wall-list description grammar" (a number, a letter `a` to `y`, `z`, and "A last letter's wall MAY fall past the end of the list") and "The wall-list reader refuses a run that passes the last border" ("a letter whose open borders pass the last one, as too long") |
 | Generation: The generator strips clues and accepts only a board of its tier | retitled "Generation: The generator strips clues while the board stays soluble at its tier". The second half of its sentence (accepted only when soluble at the difficulty and not below) cut whole (second pass: the pointer that stood for it went too). Scenario kept | `engine-difficulty`, "A difficulty tier binds the board it generates"; the gate is `src/games/seismic/generator.ts:342`-`:347` |
 | Controls: Seismic input, note-taking and completion | retitled "Controls: Seismic is played by the note-taking cell's rules" (the pointer, rule 2): gains the capability and title, that the game departs nowhere, and its two answers to the mechanic. "SHALL offer a sticky pencil mode preference" cut. The solved sentence and scenario "Completing the grid wins" move to "Rules: A region holds each number once and equal numbers keep apart"; scenario "A press on a given" written in words from `interpretMove` | `prefs`, `src/games/seismic/index.ts:346` (`stickyPencilPref`); `engine-notes`, "The pencil preferences have one key each, which a saved preference depends on". The new scenario is `canEnter: !(flags & FM_FIXED)` and `canMark: grid === 0`, `src/games/seismic/index.ts:135`, with `engine-notes`, "The highlight is shown only where its mode could write" |
 | Controls: Seismic's Mark-all fills, then strikes what a placed number rules out | title kept. The two phases, "never strike a cell's last note" and "no move when nothing is left to strike" cut for a citation; kept as the game's own: what a note-less cell is filled with and what an obvious candidate is. Scenario "Mark-all leaves a narrowed cell alone" dropped; "A second press on a filled board" kept | `engine-notes`, "Mark-all is adaptive in a game with an obvious-candidate rule" (its scenario "A narrowed cell beside a note-less one"), "Repeated Mark-all presses converge" ("A clean SHALL NOT empty a cell of its last note") and "The Mark-all cleanup is one move, or none"; `markAll`, `src/games/seismic/hint.ts:157`, is `adaptiveMarkAll` |
@@ -191,3 +194,37 @@ no key of the game's.
 Each subject read alone after the edits: no fragment, no dangling "it",
 every owed subject says what the game does there or where to look, but
 `Rules` on mistakes, as `## Found` records; every title fits its body.
+
+## Third pass
+
+Two rows of the engine tables name Seismic (the wall-list grammar and its
+reader's refusals), over three requirements; the ledger filed no engine
+request. `engine-candidate-hints`, "A recording solve stops below the tier
+that searches" does not bind it: Seismic has no Unreasonable tier.
+
+- **Description**, the wall list: four sentences cut (the order of the
+  borders, counts and letters, what a number, a letter and `z` are, the last
+  letter's wall), and the scenario of a `z` past the last border. One
+  requirement removed, its clue-list sentence and its worked description kept
+  in the requirement before it.
+- **Description**, the refusals: two wall clauses cut from the validation
+  sentence, found by reading the spec for the reader's rule in other words;
+  the table named only the scenario.
+
+Sentences cut: 4, and 2 clauses; 1 scenario dropped. Clauses kept: the one
+pointer to the wall-list grammar (`Description` is owed, and without it the
+subject would say nothing of how the first part of a description is
+written); the clue list's letters and digits (Seismic writes and reads its
+clue list by hand, `encodeClues` and `parseDesc`, and does not call the
+run-letter grammar); the clue refusals, the nine-cell region and the
+over-large clue; the scenario `1a6df3,f1h1`, a description of this game read
+whole.
+
+Section 2 of the brief: no "no departure" sentence and no pasted-ID
+sentence. "Controls: Seismic is played by the note-taking cell's rules …
+and SHALL depart from them nowhere" is the one pointer of `Controls` for how
+a cell is selected and stays.
+
+Each subject read alone: `Description` says the two parts, where the wall
+list is stated, the clue list and what is refused; no fragment, every title
+fits its body.

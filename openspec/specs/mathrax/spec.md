@@ -42,8 +42,7 @@ even clue SHALL require all four digits to be even and an odd clue all four to b
 ### Requirement: Rules: Mathrax's mistake check re-solves from its givens and clues
 
 Mathrax's `findMistakes` SHALL judge the board against the answer it re-solves
-from the given digits and the clues. When they do not solve to exactly one
-answer, no cell SHALL be flagged.
+from the given digits and the clues.
 
 #### Scenario: A wrong digit that breaks no rule
 
@@ -356,9 +355,8 @@ intersection.
 
 ### Requirement: Hint: Mathrax's hint deduces at the tier of the board's params
 
-The recording solve SHALL run at the tier the board's params name, and at
-Tricky where they name `Unreasonable`, so a hint uses no deduction its board's
-tier does not.
+Where the board's params name a tier below `Unreasonable`, the recording solve
+SHALL run at that tier, so a hint uses no deduction its board's tier does not.
 
 #### Scenario: A board whose params say Easy
 
@@ -366,11 +364,6 @@ tier does not.
 - **THEN** the recording solve runs at Easy, so no step is a set elimination
   or a chain, and an arithmetic clue is read only where one digit is left
   across it
-
-#### Scenario: A board at the top tier is hinted by deduction alone
-
-- **WHEN** a hint is requested on a board generated at `Unreasonable`
-- **THEN** the recording solve runs no higher than Tricky
 
 ### Requirement: Look: Mathrax draws its cells on a quiet surface and lifts a given
 

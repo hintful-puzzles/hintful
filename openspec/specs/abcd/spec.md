@@ -52,8 +52,7 @@ is disallowed, whether clues are removed, and a difficulty), their bounds and
 their encoding SHALL be those its `paramConfig` and its declared codec give
 (`engine-params`, "A game declares its params encoding once, and both codec
 halves are derived"), with no departure from the codec grammar. A string with
-no `D` SHALL decode as a board that allows diagonal touching, and one with no
-difficulty letter as Easy.
+no difficulty letter SHALL decode as Easy.
 
 #### Scenario: The difficulty is in the full encoding only
 
@@ -240,28 +239,16 @@ search still proves one answer.
   search in it
 - **AND** a board has a hidden clue exactly when "remove clues" was set
 
-### Requirement: Generation: A pasted ABCD board opens at the difficulty it needs
+### Requirement: Generation: An ABCD board is Easy where the ladder and the hint both finish it
 
-A board SHALL be Easy where the ladder and the hint finish it, and
-Unreasonable where it has exactly one answer that they do not reach. What a
-pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A loaded
-board whose id states no tier takes the lowest tier that solves it" and "A
-pinned tier is kept or raised and never lowered"), and one with several
-answers or none SHALL be refused (`engine-params`, "A board with a mistake
-check loads only with exactly one answer").
+A board SHALL count as Easy where the ladder and the hint finish it, and as
+Unreasonable where it has exactly one answer that they do not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
 - **WHEN** a 4×4 ID whose board has one answer the ladder does not reach is
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `4x4n4du`
-
-#### Scenario: A board with several answers or none is refused
-
-- **WHEN** a 3×3 ID with every clue hidden, and a 2×2 ID whose top row may
-  hold none of its letters, are entered
-- **THEN** the first is refused as having more than one solution and the
-  second as contradictory
 
 ### Requirement: Solver: ABCD's solver classifies a clue set by deduction alone
 
@@ -270,20 +257,14 @@ contradictory. It SHALL apply, to a fixpoint and without backtracking, three
 techniques: satisfied clue, striking a letter from a line whose count is met;
 single possibility, placing a cell's one remaining candidate; and runs,
 forcing letters when the most a line can still take equals the count it needs.
-A firing census SHALL walk boards generated at every preset on the menu and
-assert that every technique fires.
+The boards of its firing census SHALL be ones generated at every preset on the
+menu, and every technique SHALL fire on them.
 
 #### Scenario: The solver classifies a puzzle
 
 - **WHEN** the solver is run on a clue set
 - **THEN** it reports uniquely solvable, ambiguous, or contradictory, and for a
   uniquely solvable set it yields the solution grid
-
-#### Scenario: A technique the corpus never reaches fails the census
-
-- **WHEN** a technique is removed from the ladder
-- **THEN** the census reports it as never fired, even though the generator, gated
-  on the same solver, deals only boards the weakened ladder finishes
 
 #### Scenario: A preset is added to the menu
 
@@ -425,19 +406,13 @@ the solver tries the runs technique only when the cheaper techniques are spent.
 
 ### Requirement: Hint: ABCD's hint stops where the ladder does
 
-The hint SHALL never run the search. On an Unreasonable board its plan SHALL
-hold the steps the three techniques force from the player's marks and no
-others, and where none forces anything it SHALL refuse with the collection's
-sentence that deduction has run out. It SHALL go on from the letters the
-player then enters.
+On an Unreasonable board as on any other, the steps of ABCD's hint SHALL be
+those the three techniques force from the player's marks.
 
 #### Scenario: The hint stops, and goes on from a letter tried rightly
 
 - **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** a letter entered wrongly there is reported by the mistake check
-- **AND** with a letter entered as the solution has it wherever the hint
+- **THEN** with a letter entered as the solution has it wherever the hint
   stops, the hint finishes the board
 
 ### Requirement: Hint: ABCD's hint reads a line only once the notes are set up

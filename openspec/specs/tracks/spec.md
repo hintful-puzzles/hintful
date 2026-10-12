@@ -29,8 +29,7 @@ matches.
 and, when one exists, report every square holding a player's mark, on itself
 or on one of its edges, that contradicts that solution: a track where the
 solution has none, or a no-track where the solution lays track. Unmarked cells
-SHALL never be mistakes. It SHALL return an empty list when the board is not
-uniquely solvable.
+SHALL never be mistakes.
 
 #### Scenario: A wrong mark blocks Check & Save
 
@@ -64,11 +63,12 @@ path exists and no cell is in error.
 ### Requirement: Params: A Tracks params string may leave out its difficulty and its `o`
 
 Tracks' params (a size, a tier and whether consecutive 1 clues are
-disallowed), their bounds, their encoding and their label words SHALL be
+disallowed), their bounds, encoding and label words SHALL be
 those its `paramConfig` and its declared codec give (`engine-params`, "A game
 declares its params encoding once, and both codec halves are derived"), and
-its menu what `presets` builds. A params string with no `d` SHALL decode as
-Normal, with consecutive 1 clues disallowed unless it carries the `o`.
+its menu what `presets` builds. A string with no `d` SHALL decode as Normal.
+Its `o` SHALL allow consecutive 1 clues, and a string without it, which the
+short form always is, SHALL decode with them disallowed.
 
 #### Scenario: An Easy preset's short form
 
@@ -322,9 +322,7 @@ soluble at.
 One firing SHALL be one step: with a recorder attached, a rung SHALL return at
 its first premise that changed the board, so that a rung that scans the whole
 grid cannot pile several independent deductions into one step. Where one
-premise forces several ops, the step's move SHALL carry them all, and
-`hintKeepTrack` SHALL then verdict `"onTrack"` and shrink the step in place
-until the last of them is placed.
+premise forces several ops, the step's move SHALL carry them all.
 
 #### Scenario: A hint explains a clue that is already met
 

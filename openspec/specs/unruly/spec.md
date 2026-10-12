@@ -52,9 +52,7 @@ of bounds or an immutable clue cell.
 The `unruly` game SHALL implement `findMistakes(state)`, the mistake check
 Check & Save hard-blocks on: re-solve the board from its immutable clues alone with
 the full deductive solver and return every player-placed (non-immutable) cell
-whose color contradicts that unique solution. It SHALL return none when the
-clues do not deduce a complete solution (a foreign or non-unique board) or when
-the player's marks are all consistent.
+whose color contradicts that unique solution.
 
 #### Scenario: A wrong mark is flagged and a correct one is not
 
@@ -239,16 +237,14 @@ a bare conclusion.
 - **THEN** every step carries an outlined premise cell or a striped line, never
   a bare conclusion
 
-### Requirement: Hint: The named line is hatched under its pieces
+### Requirement: Hint: The named line is hatched in the color of the move
 
-The line the sentence names SHALL be hatched `COL_HINT`, under the pieces it
-holds.
+The line the sentence names SHALL be hatched `COL_HINT`.
 
 #### Scenario: A completed-count hint hatches its line
 
 - **WHEN** a `complete` hint is displayed
 - **THEN** every cell of the row or column it names is hatched `COL_HINT`
-- **AND** each piece on that line is drawn over the hatch
 
 ### Requirement: Hint: A cited premise is ringed apart from the move
 

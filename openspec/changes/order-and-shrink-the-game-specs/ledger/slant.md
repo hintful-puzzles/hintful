@@ -7,9 +7,11 @@ hint is the game's own, and that the clicks, keys and params are declared.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: A same-slant mark the solution contradicts is a mistake | the scenario's "and the hint refuses" reworded out; sentences unchanged | `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong board before asking the game" (`FIX_MISTAKES_FIRST` when `findMistakes` reports anything) |
+| Rules: Slant ships findMistakes | third pass: "It SHALL return an empty list when the board is not uniquely solvable." cut, and "when a unique solution exists" reworded out of the first sentence ("differs from the unique solution"). Kept: the Normal solver re-solves the clues, one mistake a square, a blank square is none, the error color. Both scenarios kept | `ts-engine`, "A mistake check compares with the one answer, hidden or not" ("Where the game's solver or search did not establish exactly one answer, no mark SHALL be flagged against an answer … the result is empty without an answer where its spec states none"); `findMistakes`, `src/games/slant/index.ts:322` |
+| Rules: A same-slant mark the solution contradicts is a mistake | the scenario's "and the hint refuses" reworded out. Third pass: the opening "When the board has a unique solution," cut | `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong board before asking the game" (`FIX_MISTAKES_FIRST` when `findMistakes` reports anything); the opening clause: `ts-engine`, "A mistake check compares with the one answer, hidden or not" |
 | Params: Slant's parameters are a size and a difficulty | removed. A sentence in "Params: A Slant string with no difficulty letter reads as Easy" sends the reader to `paramConfig`, the declared codec and `presets` (rule 2), and keeps the tie its first scenario held: Normal is the letter `h`. Scenarios "Params round-trip" and "Invalid params are rejected" dropped | `paramConfig`, `src/games/slant/state.ts:131` (`bounds: { min: 2 }`, `:135`; `difficultyItem`, `:137`) and the `paramsCodec` field list, `:141` (`dims`, `choice "d"` over `eh`, full form only); `engine-params`, "Params validity is the engine's check" (a bound's refusal); `src/engine/__snapshots__/params-stability.test.ts.snap` holds `5x5dh` / `5x5` and the other presets; `src/games/slant/slant.test.ts:111` and `:126` |
 | Params: A Slant string with no difficulty letter reads as Easy | title kept. Gains the pointer sentence and "Normal SHALL keep the letter `h`" (see the row above). "and SHALL refuse one whose `d` is followed by a letter other than `e` or `h`" cut, with the scenario's line "AND `5x5dh` with its `h` written `x` is refused"; the missing-field sentence kept | `engine-params`, "A params string is read whole or refused" ("A letter after a tag that the tag does not list … SHALL each be refused"; scenario "A difficulty letter the game does not have"); the letters are `DIFF_CHARS`, `src/games/slant/state.ts:38` |
+| Description: Slant descriptions are run-length clue grids | third pass: "with maximal runs of clueless vertices compressed as `a`–`z` (a run of 1–26, a longer run emitting `z` chunks)" replaced by the subject's one pointer to the run-letter grammar; the point grid, the row-major order, the digits and the three refusals kept. Both scenarios kept | `engine-params`, "The engine provides the run-letter description grammar" (a lowercase letter for each run of blanks, `a` for one up to `z` for twenty-six, a longer run as a `z` for every twenty-six and a letter for the rest; it leaves the value characters, the refusals and the trailing run to the game). The game's calls: `scanRunLength`, `src/games/slant/state.ts:164`, and `encodeRunLength`, `:190` |
 | Generation: Slant generates solver-gated boards | retitled "Generation: Slant strips clues while its difficulty's solver still solves the board". First sentence (a unique solution its difficulty's solver finds, and not solvable one level down) cut (the pointer that first replaced it went in the second pass); the stripping sentence kept, with "that solver" written out as "the solver of the board's difficulty". Scenario kept | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (solvable at the requested tier and not one tier down); the gate is `src/games/slant/generator.ts:121` |
 | Solver: Slant solves with a graded deductive solver | scenario "Generated boards solve at exactly their difficulty" dropped; the sentences and "Solve recovers from a wrong mid-game state" kept | `engine-difficulty`, "A difficulty tier binds the board it generates", scenario "A board generated above the easiest tier needs that tier"; `src/games/slant/slant.test.ts:330` holds it for Slant |
 | Controls: A click cycles a square through its three states | retitled "Controls: Slant's clicks and keys are its declared verbs, and a preference swaps the buttons". "`interpretMove` SHALL cycle" replaced by a sentence that sends the reader to `targetVerbs` and keeps the two cycles in the game's own symbols as the antecedent of the kept swap sentence. Scenario "Left-click cycles a square" dropped: it repeats the kept sentence and the `does` string. "Swapped button order" kept | `targetVerbs.primary` and `.secondary` with their `does` strings, `src/games/slant/index.ts:140`-`147`; `engine-input`, "The engine owns a declaring game's press and select keys" |
@@ -17,8 +19,7 @@ hint is the game's own, and that the clicks, keys and params are declared.
 | Controls: Slant's keys cycle the cursor square or set it outright | retitled "Controls: Slant's own keys set the cursor square outright". First sentence (the arrows move and reveal the cursor) and second (the select keys cycle, one each way) cut; the key list of the third cut, and what it says of the keys (they set the square directly, with no cycle) reworded to stand on "Each key-only verb of `targetVerbs`". Scenario kept | `engine-input`, "One arrow press reveals the cursor and moves it" and "The engine owns a declaring game's press and select keys" (Enter the left-click verb, Space the right-click verb, a verb's own keys that verb); `targetVerbs.keyOnly[].keys` and `.does`, `src/games/slant/index.ts:148`-`167`; `squareGrid`, `:139` |
 | Preferences: Slant exposes its two upstream preferences | retitled "Preferences: Slant's two preferences swap the buttons and fade grounded diagonals". "SHALL expose via the `Game.prefs` hook", the choice labels and "(boolean …)" cut; both keys and the order of `left-button`'s two choices kept (the order restored in the second pass: no test of the game reads `left-button` or its choices); what each preference changes kept, and "default off" kept as "off unless set". Scenario kept | `prefs`, `src/games/slant/index.ts:428`-`448` (`kw`, `name`, `type`, `choices`); `ts-engine`, "The engine supports per-game user preferences". That the first choice is `\`-first is this spec's "Controls: Slant's clicks and keys are its declared verbs, and a preference swaps the buttons" |
 | Hint: Slant ships an explained deductive hint | removed. Its one clause of the game's own (the solver is seeded with the placed diagonals and the player's same-slant marks) joins "Hint: Slant's hint uses every technique at either difficulty", whose scenario is a case of it. Scenario "The plan completes deductive boards" dropped | the `Game` type (`hint`); `engine-hints`, "A hint is deduced from the board in play", "The hint walk SHALL cover every preset a game offers" (following hints solves a board of every preset) and "A hint step always names a technique, with no un-narrated fallback" |
-| Hint: Each hint step names its technique and says why the move is forced | removed. "lead with the recognizable indication", the one clause with no shared home, joins "Hint: Each Slant technique is narrated by its own reason". "name its technique", "state why the move is forced" and "conclude in the necessity voice" cut; scenario "Loop and dead-end firings name the connectivity reason" dropped | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" ("SHALL always explain why its move is forced by a named technique") and "The necessity-voice rule applies to every hinting game not ledgered as narrating moves". The dropped scenario is the second sentence of "Hint: Each Slant technique is narrated by its own reason" |
-| Hint: Each Slant technique is narrated by its own reason | gains the sentence "Each step SHALL lead with the recognizable indication."; its own sentences and scenario unchanged | |
+| Hint: Each hint step names its technique and says why the move is forced | removed. "lead with the recognizable indication", the one clause that then had no shared home, joined "Hint: Each Slant technique is narrated by its own reason" and was cut there in the third pass, which leaves that requirement as it stood at the base (`engine-hints`, "A step's sentence opens with what the player can spot": the look a game hands `sentence` is the indication, and the engine writes it ahead of the move in every form; Slant's sentences are built with `sentence` and `so`, `src/games/slant/hint-text.ts:85`, `:107`). "name its technique", "state why the move is forced" and "conclude in the necessity voice" cut; scenario "Loop and dead-end firings name the connectivity reason" dropped | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" ("SHALL always explain why its move is forced by a named technique") and "The necessity-voice rule applies to every hinting game not ledgered as narrating moves". The dropped scenario is the second sentence of "Hint: Each Slant technique is narrated by its own reason" |
 | Hint: The hint's recorder leaves the generator's solve unchanged | removed | `engine-hints`, "The solver and the hint are two projections of one deduction engine" ("The generator runs the techniques to a fixpoint with the recorder off … the hint runs the same techniques with the recorder on"). That the seed too is an option is how the solver is built (`SlantSolveOpts`, `src/games/slant/solver.ts:64`): a seed is a player's board, and the generator has none |
 | Hint: Slant hint rendering follows the element-type legend | replaced, with "Hint: A hint's evidence is drawn in the evidence color", by the pointer requirement "Hint: Slant's hint marks are its legend's, with no slash drawn in a ringed square" (rule 2). "SHALL highlight, not perform", the ring in `COL_HINT` and the placed mark in `COL_HINT` went; "no slash preview: the diagonal is drawn only once the move is made" kept. Scenario "A target is ringed and left empty" kept | `hintMarks.roles.ring`, `src/games/slant/index.ts:384`; `colors`, `src/games/slant/render.ts:99`; `engine-hints`, "The engine SHALL own the hint mark roles and the words for them" (a ring marks what the step decides) and "Requesting a hint never mutates the board" |
 | Hint: A hint's evidence is drawn in the evidence color | joined into "Hint: Slant's hint marks are its legend's, with no slash drawn in a ringed square". The list of what is outlined, and the three colors, went; "computed against the board as that step fires" kept. Scenario "Evidence is visible as an area" dropped; "Every step carries visible evidence" kept | `hintMarks.roles.outline`, `src/games/slant/index.ts:385` (the clues it reads in the hint color, the diagonals round them, the chain, the pairs along a line of 2s, the marks it relies on, the doubled square); `colors`, `src/games/slant/render.ts:99`-`101`; that a dead-end step shades the trapped components is this spec's "Hint: Each Slant technique is narrated by its own reason" |
@@ -33,9 +34,11 @@ hint is the game's own, and that the clicks, keys and params are declared.
 - **Params: Slant refuses a grid too large to count.** `engine-params`, "A
   grid too large for a game is refused in one sentence", leaves where the
   ceiling sits to the game.
-- **Description: Slant descriptions are run-length clue grids.** The reader
-  is the engine's `scanRunLength`, and no capability states the grammar; see
-  the engine requests.
+- **Description: Slant descriptions are run-length clue grids**, the digits
+  and the refusals. `engine-params`, "The engine provides the run-letter
+  description grammar", leaves the value characters, their bounds and the
+  refusals to the game; that a description too short is refused says the last
+  run is written.
 - **The four `Generation` requirements that say what each solver uses.** What
   a tier means for this game.
 - **Solver, "The solver SHALL be reused by `solve()` and `findMistakes`".**
@@ -48,9 +51,6 @@ hint is the game's own, and that the clicks, keys and params are declared.
 - **Controls: Slant's own keys set the cursor square outright**, as Clusters
   keeps the same of its number keys: the `does` strings say "draw", and not
   that a key does not cycle.
-- **Hint, "Each step SHALL lead with the recognizable indication"**, in
-  "Hint: Each Slant technique is narrated by its own reason". No shared
-  requirement states it (see the engine requests).
 - **Hint: Slant's hint steps come in the order its solver finds them.**
   `hintRungs` lists the techniques, and nothing reads it for order: the order
   is the solver's loop.
@@ -68,7 +68,8 @@ hint is the game's own, and that the clicks, keys and params are declared.
   un-narrated fallback") and the necessity voice, and names the arc "from
   indication through reasoning to conclusion" only in passing ("Removing an
   em-dash keeps the sentence's substance"). Belongs in `engine-hints`; the
-  code is the sentence builders of `src/engine/hint-words.ts`.
+  code is the sentence builders of `src/engine/hint-words.ts`. Answered:
+  `engine-hints`, "A step's sentence opens with what the player can spot".
 - The run-length clue grammar: "one digit … per clue, with maximal runs of
   clueless vertices compressed as `a`–`z` (a run of 1–26, a longer run
   emitting `z` chunks)", in "Description: Slant descriptions are run-length
@@ -76,7 +77,8 @@ hint is the game's own, and that the clicks, keys and params are declared.
   `engine-params`, beside the dot-run grammar; the code is `scanRunLength` and
   `encodeRunLength`, `src/engine/run-length.ts`. What a game's digits mean,
   and whether a short description is refused (Slant) or padded (Palisade),
-  stay the game's.
+  stay the game's. Answered: `engine-params`, "The engine provides the
+  run-letter description grammar".
 
 ## Found
 
@@ -166,3 +168,43 @@ restored: "whose choices are in order `\`-first, the default, and `/`-first"
 
 Each subject read alone after the edits: none hollow, no fragment, every
 title fits.
+
+## Third pass
+
+What the engine's third round states, removed. 3 rows of the third-round
+tables name Slant with a sentence to cut (the mistake check, the run-letter
+grammar, the sentence that opens with what the player can spot) and 2 name it
+as stating none (the cancel keys, the premise references). Both of this
+ledger's requests were answered.
+
+Cut, 4 sentences or clauses:
+
+- **Rules, the mistake check**: "It SHALL return an empty list when the board
+  is not uniquely solvable", and the same condition where it opened two other
+  sentences ("when a unique solution exists", "When the board has a unique
+  solution,"): `ts-engine`, "A mistake check compares with the one answer,
+  hidden or not".
+- **Description**: how a run of clueless vertices is written, for the
+  subject's one pointer.
+- **Hint**: "Each step SHALL lead with the recognizable indication."
+
+Kept, 4 clauses:
+
+- **Rules, "re-solve the board's clues with the Normal solver"** and "A blank
+  square SHALL never be a mistake": the review of the third round leaves
+  where the answer is solved from and that an absent mark is no mistake to
+  the game.
+- **Description, the digits and the three refusals**, and the scenario "A
+  description round-trips": the engine requirement leaves them to the game
+  and states no round trip.
+- **Params, "a string with no `d` segment as the default difficulty, Easy".**
+  Left the game's own: Slant's tier is a `choice` and not
+  `searchTierSegment`, and the engine fixes no tier for it (`_engine.md`,
+  second round, "Not written").
+- **Controls, "Escape SHALL let go of a pin."** `engine-input`, "Escape and
+  the erase keys are the cancel keys" says what a cancel puts down is the
+  game's, and that Slant cancels on Escape alone is its own choice among the
+  two the requirement allows.
+
+Each subject read alone after the edits: none hollow, no fragment, every
+title fits; the Purpose names nothing that went.

@@ -38,8 +38,7 @@ the grid with no errors completes the game.
 ### Requirement: Rules: Keen's mistake check re-solves from the cage clues
 
 Keen's `findMistakes` SHALL judge the board against the answer it re-solves
-from the cage clues alone. When the clues do not solve to exactly one answer
-the result SHALL be empty.
+from the cage clues alone.
 
 #### Scenario: A wrong digit its cage allows
 
@@ -241,7 +240,7 @@ mix of cage operations and values that avoids low-quality clues.
 Keen SHALL take its selection from the engine's note-taking cell
 (`engine-notes`, "The note-taking cell is one shared mechanic"). Every cell
 SHALL take an entry, since Keen has no givens, and only an empty cell SHALL
-take a pencil mark. The cursor keys SHALL move the highlight.
+take a pencil mark.
 
 #### Scenario: A right press on a filled cell without sticky mode
 
@@ -325,9 +324,8 @@ mixes cages.
 
 ### Requirement: Hint: A cage deduction's sentence names the cage by its clue
 
-A cage step's narration SHALL lead with the spotted indication, the cage named
-by its clue's goal ("sum to N", "multiply to N", "differ by N", "have a ratio
-of N"), then give the reasoning.
+A cage step's narration SHALL name the cage by its clue's goal ("sum to N",
+"multiply to N", "differ by N", "have a ratio of N").
 
 #### Scenario: A sum cage rules two digits out of a cell
 
@@ -343,21 +341,15 @@ of N"), then give the reasoning.
 
 ### Requirement: Hint: Keen's hint deduces at the tier of the board's params
 
-The hint's recording solve SHALL run at the tier of the board's own params,
-capped at Hard, so a hint step on a board never rests on a deduction above
-the tier the board was dealt at.
+On a board below Unreasonable the hint's recording solve SHALL run at the tier
+of the board's own params, so a hint step never rests on a deduction above the
+tier the board was dealt at.
 
 #### Scenario: A hint on a Normal board
 
 - **WHEN** a hint is asked for on a board of `6dn`
 - **THEN** the recording solver runs with its cap at Normal
 - **AND** no step it records is a set deduction or a forcing chain
-
-#### Scenario: A hint on an Unreasonable board
-
-- **WHEN** a hint is asked for on a board of the Unreasonable tier
-- **THEN** the recording solver runs with its cap at Hard, and no step rests on
-  a trial
 
 ### Requirement: Look: Keen draws a cell's digit or its pencil marks
 

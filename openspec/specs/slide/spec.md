@@ -338,11 +338,10 @@ button, still moves its block.
 
 ### Requirement: Controls: Escape, Backspace and Delete each cancel in Slide
 
-Escape, Backspace and Delete SHALL each be a cancel key. With a block
-grabbed, each SHALL hand it back to where it started, as "The keyboard select
-grabs with the pointer's grab" says of canceling. With no block grabbed, each
-SHALL hide the keyboard cursor when it shows, and SHALL do nothing when it
-does not.
+With a block grabbed, Escape, Backspace and Delete SHALL each hand it back to
+where it started, as "The keyboard select grabs with the pointer's grab" says
+of canceling. With no block grabbed, each SHALL hide the keyboard cursor when
+it shows, and SHALL do nothing when it does not.
 
 #### Scenario: Backspace with a block held
 

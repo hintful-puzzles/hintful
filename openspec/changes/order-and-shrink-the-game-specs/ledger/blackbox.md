@@ -106,3 +106,23 @@ Checked and found sound:
   opened.
 - The 40 requirements left untouched: none holds a sentence a declaration or
   a shared requirement states whole.
+
+## Third pass
+
+Nothing changed in the spec. Rows of the engine's third-round tables that
+name Black Box: 0. Engine requests of its own: 0. Sentences cut: 0. Clauses
+kept: 2, each read against the third-round requirement it resembles.
+
+- **Kept: "Past the search's budget it SHALL refuse with
+  `SEARCH_OUT_OF_REACH`"** in "Hint: With every laser fired, the hint offers
+  a layout it searched for". `engine-hints`, "A search that can prove a
+  position lost says which of its two ends it met" binds a game that can be
+  lost and searches for a finishing line; Black Box's search is for a layout
+  and has the one refusal, which the game gives itself.
+- **Kept: "and nothing once the answer is revealed"** in "Rules: Black Box
+  checks marks against its answer". `ts-engine`, "A mistake check compares
+  with the one answer, hidden or not" speaks of a board with no one answer
+  established; a revealed board has one, and reporting nothing there is the
+  game's.
+- No "no departure" sentence, none of the form "What a pasted game ID opens
+  as" and none citing `engine-difficulty`.

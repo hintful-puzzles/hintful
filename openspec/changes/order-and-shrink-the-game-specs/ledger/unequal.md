@@ -3,7 +3,7 @@
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
 | Rules: Unequal is a Latin square with clues between neighbors | last sentence (provides `solve` and `textFormat`, no `statusbarText`) cut; the rest and the scenario untouched | the hooks on the game object, `src/games/unequal/index.ts:622` and `:654`; `ts-engine`, "Solve, the status bar and text export follow from the game's methods" |
-| Rules: Unequal checks for mistakes against the unique solution | retitled "Rules: Unequal's mistake check re-solves from its givens and clues". Sentence 1 (a wrong number, and notes that have crossed out the answer) cut to what the answer is re-solved from (second pass: the sentence no longer names the two shared requirements); sentence 2 (empty when not uniquely solvable) kept, reworded to stand. Scenario "A wrong number is flagged, ordinary notes are not" dropped; "An ambiguous board" kept | a wrong entry: `engine-hints`, "Check & Save names a wrong entry in every game"; the notes, extra candidates not reported, the answer from clues and givens: `ts-engine`, "A candidate note that excludes the answer is a mistake" (its first scenario is the dropped one). The check: `index.ts:403` |
+| Rules: Unequal checks for mistakes against the unique solution | retitled "Rules: Unequal's mistake check re-solves from its givens and clues". Sentence 1 (a wrong number, and notes that have crossed out the answer) cut to what the answer is re-solved from (second pass: the sentence no longer names the two shared requirements); sentence 2 (empty when not uniquely solvable) cut (third pass). Scenario "A wrong number is flagged, ordinary notes are not" dropped; "An ambiguous board", which restated sentence 2, dropped with it (third pass); scenario "A wrong number that breaks no rule" written as the game's case | nothing flagged where the givens and clues do not solve to one answer, and the dropped scenario: `ts-engine`, "A mistake check compares with the one answer, hidden or not" (scenario "A board whose solver finds two answers"); a wrong entry: `engine-hints`, "Check & Save names a wrong entry in every game"; the notes, extra candidates not reported, the answer from clues and givens: `ts-engine`, "A candidate note that excludes the answer is a mistake" (its first scenario is the dropped one). The check: `index.ts:403` |
 | Params: Unequal's parameters and their encoding | sentence 1 gains "which are the tiers Easy, Normal, Tricky, Hard and Unreasonable in that order", from "Params: Unequal's top tier is named Unreasonable and keeps its character"; nothing else changes | |
 | Params: Unequal's top tier is named Unreasonable and keeps its character | removed, but for the tie between the five values and the five tier names (sentence 1), which joins "Params: Unequal's parameters and their encoding". Sentence 2 (named Unreasonable because it branches and backtracks), sentence 3 (its character stays `r`) and the scenario "The top tier keeps its difficulty character" go | the name: `DIFF_NAMES = tierNames(5, { search: true })`, `src/games/unequal/state.ts:49`, and `engine-difficulty`, "Unreasonable is declared and never issued by position"; the character: this spec's "Params: Unequal's parameters and their encoding" (`r` is the fifth letter) and `engine-difficulty`, "A tier's name is not part of any encoding". The `unequal` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `7dr` and `7adr` |
 | Params: Unequal refuses the parameters it cannot deal | title kept. Sentence 1 (the bounds, 3 to `MAX_CANDIDATE_VALUE`, an order of 32 refused) cut (second pass: "The range of the order itself SHALL be the one its `paramConfig` item declares", which stood in its place, went too); sentence 2 (an unknown difficulty letter) cut; sentence 3 kept. Scenarios "Invalid params are rejected" and "A difficulty letter that names no tier" dropped; "A small Adjacent puzzle has no upper tiers" kept | `bounds: { min: 3, max: MAX_CANDIDATE_VALUE }`, `index.ts:601`, and `engine-params`, "Params validity is the engine's check"; the letter: `engine-params`, "A params string is read whole or refused" and "The engine makes the one refusal of a params string". `src/games/unequal/unequal.test.ts:95`-`98` holds both bound refusals |
@@ -13,10 +13,11 @@
 | Hint: Unequal provides an explained deduction hint | retitled "Hint: Unequal's hint is the shared candidate plan over rows and columns". Its sentence replaced by a pointer to the shared plan and its preset, saying what Unequal supplies, where it departs and that its marks are the legend's (rule 2). Scenarios "An inequality bound is taught as a note strike" and "An adjacency clue is taught in Adjacent mode" move, unchanged, to "Hint: A clue elimination is one firing of one clue"; scenario "A single on an Unequal board" written | `engine-candidate-hints`, "A shared candidate-elimination hint plan". Unequal's call: `runLatinCandidatePlan`, `index.ts:487`; the single: `narrateLatinReason`, `index.ts:461` |
 | Hint: The hint prefers a single, then a strike, then a placement | removed | `engine-candidate-hints`, "The walk owns the ladder" (naked singles, the game's rungs, recorded strikes, recorded placements), "A placement's cull continues its journey" and "Candidate-elimination hints clean obvious candidates at populate" (the row and column eliminations a placed value implies); the moves: "The walk builds every step from the game's words" |
 | Hint: A clue elimination is one firing of one clue | gains the scenarios "An inequality bound is taught as a note strike" and "An adjacency clue is taught in Adjacent mode" from "Hint: Unequal provides an explained deduction hint" | |
-| Hint: Unequal's hint narration meets the hint quality bar | retitled "Hint: Unequal's clue sentences read correctly at the ends of the range". Cut: "meeting the hint quality bar", "then the reasoning, then a necessity-voice conclusion", and the two conclusions quoted. Kept: a clue step leads with the inequality or adjacency pattern, and the rule for the value extremes. Scenario untouched | `engine-hints`, "A hint step's words SHALL be built from their parts" and "The engine writes the words that join a sentence's parts"; the necessity voice: `engine-hints`, "The necessity-voice rule applies to every hinting game not ledgered as narrating moves"; the conclusions: `engine-candidate-hints`, "A candidate strike SHALL end in the walk's conclusion" ("so we must cross out…") and "A naked single shades its cell and a hidden single its region" ("it can only be N") |
+| Hint: Unequal's hint narration meets the hint quality bar | retitled "Hint: Unequal's clue sentences read correctly at the ends of the range". Cut: "meeting the hint quality bar", "then the reasoning, then a necessity-voice conclusion", and the two conclusions quoted. Kept: the rule for the value extremes, and that a clue step's indication is the inequality or adjacency pattern (third pass: "SHALL lead with" reworded out, the pattern kept as what the indication is). Scenario untouched | the order: `engine-hints`, "A step's sentence opens with what the player can spot"; `engine-hints`, "A hint step's words SHALL be built from their parts" and "The engine writes the words that join a sentence's parts"; the necessity voice: `engine-hints`, "The necessity-voice rule applies to every hinting game not ledgered as narrating moves"; the conclusions: `engine-candidate-hints`, "A candidate strike SHALL end in the walk's conclusion" ("so we must cross out…") and "A naked single shades its cell and a hidden single its region" ("it can only be N") |
 | Hint: A hint's marks ring the struck cell and outline the clue's pair | removed; "Hint: Unequal's hint is the shared candidate plan over rows and columns" says the marks are the legend's | `hintMarks.roles` (`ring`: "the cell the step is about"; `outline`: "the two cells either side of a sign or bar (the ringed one, and \"the cell across\" it)"), `index.ts:626`; `engine-hints`, "A bound hint step's words SHALL name exactly the marks it draws"; the strikes of one firing sharing the ring: `engine-hints`, "A hint marks beside the content, never behind it" (the acted-on cell is ringed whether the step places or strikes) |
-| Hint: The hint's deduction is capped below recursion | removed; its scenario "An Unreasonable board" moves, unchanged, to "Hint: Unequal's hint reasons no harder than the board's tier" | this spec's "Hint: Unequal's hint reasons no harder than the board's tier" ("at Hard on an Unreasonable board"); the reason: `engine-hints`, "A Search is refused and never narrated" |
-| Hint: Unequal's hint reasons no harder than the board's tier | gains the scenario "An Unreasonable board" from "Hint: The hint's deduction is capped below recursion" | |
+| Hint: The hint's deduction is capped below recursion | removed; its scenario "An Unreasonable board" moved to "Hint: Unequal's hint reasons no harder than the board's tier" and was dropped there in the third pass | `engine-candidate-hints`, "A recording solve stops below the tier that searches" (its first scenario is the dropped one); the reason: `engine-hints`, "A Search is refused and never narrated" |
+| Hint: Unequal's hint reasons no harder than the board's tier | title kept. Third pass: "and at Hard on an Unreasonable board" reworded out, the cap at the board's own tier now said of a board below Unreasonable; the scenario "An Unreasonable board", gained from "Hint: The hint's deduction is capped below recursion", dropped; the order of techniques, which tier offers which, and the other two scenarios untouched | `engine-candidate-hints`, "A recording solve stops below the tier that searches". Unequal's call: `Math.min` of the board's tier and `DIFF_EXTREME`, `index.ts:486` |
+| Hint: The selection is drawn over the box and the hint's marks beside it | third pass: retitled "Hint: The hint's marks are drawn in the gap beside the box". Sentence 1 (the wash and the pencil-mode corner over whichever surface the box has) cut; sentence 2 and the scenario untouched | `engine-notes`, "The highlight is part of the cell's background" (the wash replaces whichever surface the game gives the cell, a given's lifted one included; the triangle lies over it) |
 
 ## Kept, and why
 
@@ -46,7 +47,11 @@ The five Latin games' requests go under five names, the same in `keen.md`,
 line, the rule as the engine would state it and the home, is the same in every
 ledger that has it; what follows is this game's sentence and code.
 
-- **The entry arm of a note-taking game.** With a cell highlighted, a value's
+- **The entry arm of a note-taking game.** Left the game's own: no shared
+  code decodes a key, tests a given or builds the move, and lifting it was
+  evaluated and declined, since it would need a shared move type
+  (`src/engine/note-taking-cell.ts`); no guard holds it. The sentences stay.
+  With a cell highlighted, a value's
   key enters that value, or in pencil mode toggles its pencil mark; Backspace
   and Space clear the cell; in pencil mode no key changes a cell that holds a
   value; a given takes no entry. Home: `engine-notes`, beside "The engine owns
@@ -59,27 +64,38 @@ ledger that has it; what follows is this game's sentence and code.
   the bound `order`, a letter for 11 and above, and `0` as a clear only below
   order 10.
 - **A mistake check reports nothing where the puzzle does not solve to one
-  answer.** Where the game's solver, asked from the clues and givens, finds no
+  answer.** Answered: `ts-engine`, "A mistake check compares with the one
+  answer, hidden or not". The sentence is cut. Where the game's solver, asked from the clues and givens, finds no
   answer or more than one, `findMistakes` reports nothing. Home: `ts-engine`,
   beside "A mistake check compares with the one answer, hidden or not".
   Unequal's sentence: "When they do not solve to exactly one answer it SHALL
   return an empty result.", in "Rules: Unequal's mistake check re-solves from
   its givens and clues". Code: `index.ts:408`.
 - **A candidate hint's recording solve runs at the board's tier, and no higher
-  than the top tier below Unreasonable.** Home: `engine-candidate-hints`,
+  than the top tier below Unreasonable.** Answered for the cap:
+  `engine-candidate-hints`, "A recording solve stops below the tier that
+  searches"; "and at Hard on an Unreasonable board" is cut. Left the game's
+  own: that the solve runs at the board's own tier, which is not the
+  collection's rule (Rome records at every tier, Subsets at the top one), so
+  that clause stays. Home: `engine-candidate-hints`,
   beside "A recording solve reads the placed entries and never the notes".
   Unequal's sentence: "The hint's recording solver SHALL be capped at the
   board's own tier, and at Hard on an Unreasonable board", in "Hint: Unequal's
   hint reasons no harder than the board's tier". Code: `index.ts:486`.
 - **Auto-pencil strikes a placed value from the other cells of its no-repeat
-  regions.** In these four games the regions are the row and the column.
+  regions.** Answered: `engine-notes`, "An auto-pencil strike is decided when
+  the placement is made", which leaves which regions to the game; Unequal's
+  sentence states the regions alone and stays whole.
+  In these four games the regions are the row and the column.
   Home: `engine-notes`, beside "The pencil preferences have one key each,
   which a saved preference depends on", which leaves the reach to the game.
   Unequal's sentence: "With auto-pencil on, placing a number SHALL strike it
   from the pencil marks of the other cells of its row and column.", the whole
   of "Preferences: Auto-pencil strikes a placed number from its row and
   column". Code: `index.ts:338`.
-- **The auto-pencil decision is recorded on the move.** Unequal's spec does
+- **The auto-pencil decision is recorded on the move.** Answered:
+  `engine-notes`, "An auto-pencil strike is decided when the placement is
+  made". Unequal's spec does
   not state it; its `set` move carries `autoElim` (`index.ts:309`). See
   `towers.md`.
 
@@ -191,3 +207,54 @@ no key or choice order; the spec never named a key.
 Each subject read alone after the edits: no fragment, no dangling pronoun
 ("they" and "it" in the mistake check's second sentence are still the givens
 and clues and `findMistakes`), every title fits its body.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Unequal: 5. Engine requests
+of its own: 5. Cut: 2 sentences, 2 clauses and 2 scenarios, in 4
+requirements. Clauses kept: 7.
+
+Cut (the rows above say where each is stated):
+
+- **"Rules: Unequal's mistake check re-solves from its givens and clues"**:
+  "When they do not solve to exactly one answer it SHALL return an empty
+  result.", and the scenario "An ambiguous board", which only restated it.
+  The scenario written in its place is `entryMistakes`' comparison with the
+  re-solved answer (`src/games/unequal/index.ts:403`-`416`).
+- **"Hint: Unequal's clue sentences read correctly at the ends of the
+  range"**: "SHALL lead with".
+- **"Hint: The selection is drawn over the box and the hint's marks beside
+  it"**: its first sentence; retitled for the one it keeps.
+- **"Hint: Unequal's hint reasons no harder than the board's tier"**: "and at
+  Hard on an Unreasonable board", and the scenario "An Unreasonable board",
+  which is the engine requirement's own first scenario.
+
+Kept:
+
+- **The inequality or adjacency pattern** as a clue step's indication: what
+  the indication is stays the game's.
+- **"capped at the board's own tier"**, now said of a board below
+  Unreasonable, and which tier offers which technique.
+- **"Preferences: Auto-pencil strikes a placed number from its row and
+  column"**, whole: the regions, and nothing of when the strike is decided.
+- **"Controls: The keypad is zero-based from order 10"** and **"Controls:
+  Unequal provides on-screen key labels"**: a keypad of its own, as
+  `engine-input`, "The digit keypad has one key for each value, a letter
+  past nine" says of a game that counts past nine another way.
+- **The entry sentences** of "Controls: Unequal accepts digit, pencil,
+  clue-spent, and solve moves": left the games' own.
+- **"Generation: What an Unequal board promises at its tier is the
+  collection's"**, whole, "with no departure" included. The subject's other
+  requirement is of Adjacent boards only, so without the pointer `Generation`
+  says nothing of a board in Unequal mode, the ordinary case. Unsure: if a
+  sentence of one mode counts as "what the game does there", it goes.
+- **"departing only in the reading it starts on"** in "Hint: Unequal's hint
+  is the shared candidate plan over rows and columns": the subject's one
+  pointer, and it states a departure.
+
+No sentence of the form "What a pasted game ID opens as". The spec was
+searched for the third round's other rules in other words (an arrow moving
+the highlight, a search the hint never runs): none is stated.
+
+Each subject read alone: no fragment, no dangling pronoun, every title fits
+its body, and the Purpose names nothing that went.

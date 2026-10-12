@@ -4,7 +4,9 @@ The Purpose stands: it names nothing the spec no longer holds.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Bridges findMistakes reports every span the unique solution contradicts | "Because a generated board is uniquely solvable, the game SHALL implement `findMistakes`:" cut from the first sentence; "and Check & Save refuses to save" cut from scenario "A wrong bridge is flagged" | `ts-engine`, "The engine supports an ephemeral, opt-in mistake-checking hook" and "`canCheck` and `check()` reach the mistake hook" |
+| Rules: Bridges findMistakes reports every span the unique solution contradicts | "Because a generated board is uniquely solvable, the game SHALL implement `findMistakes`:" cut from the first sentence; "and Check & Save refuses to save" cut from scenario "A wrong bridge is flagged". Third pass: last sentence ("A board that is not uniquely solvable SHALL yield no mistakes") cut | `ts-engine`, "The engine supports an ephemeral, opt-in mistake-checking hook" and "`canCheck` and `check()` reach the mistake hook"; `ts-engine`, "A mistake check compares with the one answer, hidden or not" (no mark flagged against an answer where the solver did not establish exactly one, and the result empty where the game's spec states no broken rule it reports besides; `solveFromScratch(…) === 0`, `src/games/bridges/index.ts:481`) |
+| Description: Bridges descriptions encode the island clue grid | third pass: "a run-length letter skips that many empty cells" reworded to "a run letter skips the empty cells between"; scenario kept | `engine-params`, "The engine provides the run-letter description grammar" |
+| Description: A Bridges description writes a count above nine as a capital letter | third pass: the clause "and a run of empty squares as a lowercase letter, `a` for one to `z` for twenty-six" cut; the count's characters, the trailing empty squares written, and the scenario kept | `engine-params`, "The engine provides the run-letter description grammar" (`encodeRunLength`, `scanRunLength`, `src/games/bridges/state.ts:759`, `:787`) |
 | Params: Bridges params are size, bridge limit, density, expansion, loops and difficulty | replaced by the pointer requirement "Params: Bridges takes its params, their encoding and its label words from its declarations" (rule 2). The field list and the encoding cut, with scenario "Params round-trip". Gains a sentence: what a string that leaves out the tier, the island percentage or the expansion decodes to. Scenario "Invalid params are rejected" moves, unchanged, to "Params: Bridges refuses a tier that so few islands cannot need". Scenario "A short form drops the tier" written | `paramConfig`, `src/games/bridges/state.ts:105`, and the `paramsCodec` field list, `:191` (`dims`, `num` `i` and `e` in the full form, `num "m"`, `flag "L"` with `means: false`, `num "d"` in the full form); `src/engine/__snapshots__/params-stability.test.ts.snap` holds the default, every preset and each field, `15x15i30e10m2d2` and `10x10m2L` among them |
 | Params: Bridges refuses to generate Tricky with one bridge per line | reworded: "Generating a Tricky board with `maxb` 1 SHALL be refused with a reason" became "SHALL deal no Tricky board"; "A board already dealt that way SHALL still load" cut. The reason and the scenario kept | `only: { 0: { difficulty: [0, 1] } }` on the `max-bridges-per-direction` item, `src/games/bridges/state.ts:134`; `engine-params`, "The engine refuses a deal that asks for what a deciding field does not leave" ("A board that arrives already written … SHALL NOT be held to it") |
 | Params: Bridges refuses a tier that so few islands cannot need | gains scenario "Invalid params are rejected", from "Params: Bridges params are size, bridge limit, density, expansion, loops and difficulty" | |
@@ -18,14 +20,13 @@ The Purpose stands: it names nothing the spec no longer holds.
 | Hint: Bridges marks a hint in its own vocabulary | "`redraw` SHALL draw the displayed step's marks from `BridgesHighlights` as the game's own shapes recolored" became "A step's marks SHALL be drawn as the game's own shapes recolored": the marks are painted from the step's words and not from the highlights (see Review); the departure (no mark from `engine/hint-mark.ts`, and why) kept. Scenario "No hint mark is a fill" dropped; scenario "Raising a span leaves the bridges already there in board ink" joined from "Hint: A Bridges hint draws a span as what the step makes of it" | `engine-hints`, "A hint marks beside the content, never behind it" (no primitive fills with a hint color) and "A bound hint step's words SHALL name exactly the marks it draws" |
 | Hint: A Bridges hint draws a span as what the step makes of it | removed. Its scenario moves, unchanged, to "Hint: Bridges marks a hint in its own vocabulary" | the legend's `ring` role, `src/games/bridges/index.ts:567` (bridges to add in the hint color, a bridge already there in the board's ink, the pair of crosses, the `≤1`); the palette's `COL_HINT`, `src/games/bridges/render.ts` |
 | Hint: A Bridges hint recolors an island's rim and clue digit | gains scenario "A hint explains an island with exactly enough room left", from "Hint: Bridges explains each forced deduction" | |
-| Hint: Bridges explains each forced deduction | retitled "Hint: A Bridges hint refuses where its deduction contradicts itself". First sentence cut; the refusal kept. Scenario "A hint explains an island with exactly enough room left" moves, unchanged, to "Hint: A Bridges hint recolors an island's rim and clue digit"; scenario "A contradiction with no entry to blame" written | `engine-hints`, "A hint is deduced from the board in play" and "A hint step always names a technique, with no un-narrated fallback". The new scenario is `pass.impossible()` in `bridgesHint`, `src/games/bridges/hint.ts`, and the comment above it |
+| Hint: Bridges explains each forced deduction | retitled "Hint: A Bridges hint refuses where its deduction contradicts itself". First sentence cut; the refusal kept. Scenario "A hint explains an island with exactly enough room left" moves, unchanged, to "Hint: A Bridges hint recolors an island's rim and clue digit"; scenario "A contradiction with no entry to blame" written | `engine-hints`, "A hint is deduced from the board in play" and "A hint step always names a technique, with no un-narrated fallback". The new scenario is `pass.impossible()` in `bridgesHint`, `src/games/bridges/hint.ts`, and the comment above it. Third pass: "SHALL refuse with the collection's unlocalized-contradiction wording" cut to what is Bridges' own, taken from its scenario and reworded to stand ("`hint` SHALL refuse outright and SHALL show no step it derived on the way"); scenario kept: `engine-hints`, "A contradiction no entry can be blamed for is refused as one to undo" (the refusal is `CONTRADICTION_UNLOCALIZED`; whether the steps deduced first are given is the game's) |
 
 ## Kept, and why
 
 - **Rules: Bridges findMistakes reports every span the unique solution
-  contradicts.** The three ways a span is wrong, the island marked too soon
-  and the empty answer on a board the solver cannot finish are in no shared
-  requirement.
+  contradicts.** The three ways a span is wrong, and the island marked too
+  soon, are in no shared requirement.
 - **Params: Bridges refuses to generate Tricky with one bridge per line.** The
   refusal is the declaration's and the engine's; why no such tier exists is in
   no declaration but a comment.
@@ -58,7 +59,12 @@ The Purpose stands: it names nothing the spec no longer holds.
 
 ## Engine requests
 
-- A deduction that contradicts itself on a board `findMistakes` passes is
+- Answered: `engine-hints`, "A contradiction no entry can be blamed for is
+  refused as one to undo". Tracks' `PUZZLE_NOT_REASONABLE` is another
+  situation, which no requirement states, and `deduceHintPlan` has no
+  `"broken"` status: Bridges reads its recording pass's `impossible()`
+  (`ledger/_engine.md`, "Third round: hints and colors", "Found").
+  A deduction that contradicts itself on a board `findMistakes` passes is
   refused with the unlocalized-contradiction wording → `engine-hints`. The
   sentence is "Where the deduction contradicts itself on a board
   `findMistakes` finds nothing wrong with, `hint` SHALL refuse with the
@@ -155,3 +161,36 @@ Checked and found sound:
   `10x10i30e10m2Ld1` has the short form `10x10m2L`.
 - The spec read whole, subject by subject: none hollow, no dangling
   antecedent, every title fits its body.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Bridges: 3 to act on (the
+mistake check, the run-letter grammar, the unlocalized contradiction), and
+two that read its code only (every step before it refuses; the bare flag,
+which Bridges was not found to state). Engine requests of its own: 1,
+answered. Sentences cut: 4. Clauses kept: 5.
+
+- **Cut**: the empty mistake check; "that many" of the run letter in one
+  `Description` requirement and "`a` for one to `z` for twenty-six" in the
+  other; the unlocalized-contradiction wording.
+- **Kept: "shows no step it derived on the way"**, raised from the scenario
+  into the sentence: the engine requirement leaves to the game whether the
+  steps deduced before the contradiction are given, and the review of the
+  round says the clause stays. Where the refusal is reached (a board
+  `findMistakes` finds nothing wrong with) stays as its condition.
+- **Kept: the counts' characters, `1` to `9` and `A` to `G`, the refusals,
+  and that the empty squares after the last island are written**
+  (`keepTrailingBlanks`, `src/games/bridges/state.ts:766`).
+- **Kept: the three ways a span is wrong and the island marked complete too
+  soon.** The island's mark is compared with the solved board like a span's
+  and is not reported without an answer, so it is no broken rule reported
+  besides.
+- **Kept: "Hint: A Bridges hint step is followed one drag at a time".**
+  `bridgesKeepTrack` is the game's own and not `trackTargets`: a count is
+  progress toward the step's, a span is taken from either end.
+- **Kept: the ladder capped at the board's own difficulty**, which the engine
+  ledger finds no rule of the collection.
+- The spec never says the hint refuses where deduction runs out, so "A hint
+  gives every step deduction still forces before it refuses" had nothing to
+  take.
+- No "no departure" sentence and none on what a pasted game ID opens as.

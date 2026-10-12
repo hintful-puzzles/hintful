@@ -2,26 +2,21 @@
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Keen flags mistakes against its unique solution | retitled "Rules: Keen's mistake check re-solves from the cage clues". Sentence 1 (implement `findMistakes`; a wrong digit is a `"cell"`, notes that cross out the answer a `"note"`) cut to what is Keen's: the board is judged against the answer re-solved from the cage clues alone (second pass: the sentence no longer names the two shared requirements). Sentence 2 (empty when the clues do not solve to one answer) kept, reworded to stand. Scenario "A wrong digit and a wrong note are flagged" dropped; scenario "A wrong digit its cage allows" written as the game's case | a wrong entry: `engine-hints`, "Check & Save names a wrong entry in every game"; a note set that leaves out the answer, extra candidates not reported, the answer never taken from what the player entered: `ts-engine`, "A candidate note that excludes the answer is a mistake" (its first scenario is the dropped one). The two kinds are `KeenMistake`, `src/games/keen/index.ts:119`; the check, `index.ts:292` |
+| Rules: Keen flags mistakes against its unique solution | retitled "Rules: Keen's mistake check re-solves from the cage clues". Sentence 1 (implement `findMistakes`; a wrong digit is a `"cell"`, notes that cross out the answer a `"note"`) cut to what is Keen's: the board is judged against the answer re-solved from the cage clues alone (second pass: the sentence no longer names the two shared requirements). Sentence 2 (empty when the clues do not solve to one answer) cut (third pass). Scenario "A wrong digit and a wrong note are flagged" dropped; scenario "A wrong digit its cage allows" written as the game's case | a wrong entry: `engine-hints`, "Check & Save names a wrong entry in every game"; a note set that leaves out the answer, extra candidates not reported, the answer never taken from what the player entered: `ts-engine`, "A candidate note that excludes the answer is a mistake" (its first scenario is the dropped one); nothing flagged where the clues do not solve to one answer: `ts-engine`, "A mistake check compares with the one answer, hidden or not" (its second scenario is a Keen board whose clues solve two ways). The two kinds are `KeenMistake`, `src/games/keen/index.ts:119`; the check, `index.ts:292` |
 | Params: Keen's parameters | title kept. Sentence 1 kept as the three params (second pass: without the clause that they are fields of `paramConfig`, which declares the size's range); sentence 2 (the tier keys) kept; sentence 3 (refused outside `3 ≤ w ≤ 9`) cut. Scenario "Invalid params are rejected" dropped; scenario "The Tricky preset" written from the params snapshot | `bounds: { min: 3, max: 9 }` on the `grid-size` item, `index.ts:424`; `engine-params`, "Params validity is the engine's check" (each item's bounds, the refusal names the field; its first scenario is the dropped one). `6dh` and "6x6 Tricky": the `keen` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` |
 | Params: Keen's params encoding | sentence 2 (a `d` followed by a letter that is none of the five, or by nothing, is refused) cut. Scenario "A difficulty letter that names no tier" dropped; "Params round-trip" kept | `engine-params`, "A params string is read whole or refused" (a letter the tag does not list, a tag with nothing after it; its first two scenarios) and "The engine makes the one refusal of a params string" (the sentence, through `paramsLetter`). Keen's call: `paramsLetter(s, i + 1, DIFF_CHARS)`, `src/games/keen/state.ts:129` |
 | Params: A Keen label ends in multiplication only for a product-only puzzle | removed | `label: { slot: "tail", words: … "multiplication only" }` on the `multiplication-only` item, `index.ts:438`; `engine-params`, "One describer labels every params set" (`size[ tier][, tail…]`). The snapshot above holds "6x6 Normal, multiplication only" |
 | Generation: Keen generates boards uniquely solvable at exactly the requested difficulty | retitled "Generation: A Keen cage has at most six cells and a balanced mix of clues". Sentence 1 (solvable at `diff` and not at `diff − 1`) cut (second pass: the sentence that named the two shared requirements in its place went too, the subject's other two requirements saying what Keen's tiers and cages are); sentence 2 (cage area, the mix of clues) kept; sentence 3 (regenerates under a capped backstop that throws) cut. The scenario keeps its last clause as "The cages of a dealt board" and loses its first two | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (both directions, and the dropped clauses as its first scenario); the bounded loop: `engine-difficulty`, "Every generate-until-success loop is bounded by the shared retry limit", and `retryLimit` at `src/games/keen/generator.ts:108` |
-| Controls: Keen selects a cell through the shared note-taking cell | the first sentence gains the citation of the requirement it sends the reader to; nothing else changes | |
+| Controls: Keen selects a cell through the shared note-taking cell | the first sentence gains the citation of the requirement it sends the reader to. Last sentence ("The cursor keys SHALL move the highlight.") cut (third pass); the scenario untouched | `engine-notes`, "The highlight is the game's keyboard cursor" (an arrow key reveals and moves the highlight). Keen's arrows take it over every cell and are no action of its own: `moveCursor`, `src/games/keen/index.ts:176` |
 | Controls: Keen provides on-screen key labels | removed | `requestKeys: (p) => digitKeys(p.w)`, `index.ts:491`; `engine-input`, "Games may expose on-screen key labels" and "A key label carries its resolved text" (whose scenario is `digitKeys(3)`: the digits, then `"Clear"` on `CLEAR_BUTTON`) |
-| Hint: Keen provides an explained deduction hint | retitled "Hint: Keen's hint is the shared candidate plan over rows and columns". Sentence 1 (teaches the next deduction in pencil-notes terms) replaced by a pointer to the shared plan and its row/column preset, saying what Keen supplies (rule 2: the subject's ordinary case was stated nowhere). Sentence 2 (capped below recursion, because a guess is not a teachable strike) cut. Scenario "A hint on an Unreasonable board" moves, unchanged, to "Hint: Keen's hint deduces at the tier of the board's params"; scenario "A single on a Keen board" written | pencil-notes terms: `engine-candidate-hints`, "A shared candidate-elimination hint plan"; the cap: this spec's "Hint: Keen's hint deduces at the tier of the board's params" ("capped at Hard"), and its reason `engine-hints`, "A Search is refused and never narrated". Keen's call: `runLatinCandidatePlan`, `index.ts:368`; the single's sentence: `narrateLatinReason`, `index.ts:341` |
+| Hint: Keen provides an explained deduction hint | retitled "Hint: Keen's hint is the shared candidate plan over rows and columns". Sentence 1 (teaches the next deduction in pencil-notes terms) replaced by a pointer to the shared plan and its row/column preset, saying what Keen supplies (rule 2: the subject's ordinary case was stated nowhere). Sentence 2 (capped below recursion, because a guess is not a teachable strike) cut. Scenario "A hint on an Unreasonable board" moved to "Hint: Keen's hint deduces at the tier of the board's params" and was dropped there in the third pass; scenario "A single on a Keen board" written | pencil-notes terms: `engine-candidate-hints`, "A shared candidate-elimination hint plan"; the cap and the dropped scenario: `engine-candidate-hints`, "A recording solve stops below the tier that searches" (its first scenario is the dropped one), and its reason `engine-hints`, "A Search is refused and never narrated". Keen's call: `runLatinCandidatePlan`, `index.ts:368`; the single's sentence: `narrateLatinReason`, `index.ts:341` |
 | Hint: A cage elimination is one firing, struck as one journey | retitled "Hint: A cage elimination is one firing, and a firing is one cage's". Sentence 3 (struck through `pencilStrike` moves linked as one journey, every struck cell in the acted-on color) cut; sentences 1 and 2 and both scenarios untouched | the move and the journey: `engine-candidate-hints`, "The walk builds every step from the game's words" (the walk adds the move) and "A firing is emitted whole" (later legs `continuesPrevious`; its scenario names Keen's cage); the mark: `engine-hints`, "A hint marks beside the content, never behind it" (the acted-on cell is ringed whether the step places or strikes) |
-| Hint: A cage deduction's sentence names the cage by its clue | ", then end in a necessity-voice conclusion" reworded out of the one sentence; both scenarios untouched | `engine-candidate-hints`, "A candidate strike SHALL end in the walk's conclusion" (a game gives a premise and the walk ends the sentence) |
-| Hint: Keen's hint deduces at the tier of the board's params | gains the scenario "A hint on an Unreasonable board" from "Hint: Keen provides an explained deduction hint" | |
+| Hint: A cage deduction's sentence names the cage by its clue | ", then end in a necessity-voice conclusion" reworded out of the one sentence; third pass: "SHALL lead with the spotted indication, … then give the reasoning" reworded out, leaving that the cage is named by its clue's goal; both scenarios untouched | `engine-candidate-hints`, "A candidate strike SHALL end in the walk's conclusion" (a game gives a premise and the walk ends the sentence); the order: `engine-hints`, "A step's sentence opens with what the player can spot" (the walk hands the cage premise to `so` as its look, `src/engine/hint-words.ts:1098`, `:1209`) |
+| Hint: Keen's hint deduces at the tier of the board's params | title kept. Third pass: "capped at Hard" reworded out, the sentence now bound to a board below Unreasonable, where the tier is the board's own; the scenario "A hint on an Unreasonable board", gained from "Hint: Keen provides an explained deduction hint", dropped; "A hint on a Normal board" untouched | `engine-candidate-hints`, "A recording solve stops below the tier that searches" (capped beneath `Unreasonable` on every board; its first scenario is the dropped one). Keen's call: `Math.min` of the board's tier and `DIFF_EXTREME`, `index.ts:367` |
 | Look: The selection is drawn under the clue, and the hint's ring in the gutter | retitled "Look: The hint's ring and its outline are drawn in the gutter". Sentence 1 (the wash and the pencil-mode corner over the cell's surface, under the cage's clue) cut; sentence 2 kept. Scenario "A cage's minimal cell is selected for a pencil mark" dropped; scenario "A hint rings a cell inside a cage" written | `engine-notes`, "The highlight is part of the cell's background" (drawn with the background and before any content, "so a clue, a mark or a divider in the same corner stays on top of it", which is the dropped scenario). Keen's call: `cellHighlight`, `src/games/keen/render.ts:41`; the new scenario: `markBand`, `render.ts:423` |
 
 ## Kept, and why
 
-- **Rules: … re-solves from the cage clues**, "the result SHALL be empty". No
-  shared requirement says what a check reports of a board its solver does not
-  finish to one answer; `engine-params`, "A board with a mistake check loads
-  only with exactly one answer" keeps such a board from loading and says
-  nothing of the check.
 - **Params: Keen's parameters**, the tier keys. The codec is hand-written
   (`DIFFS`, `state.ts:47`), and the scenarios of four requirements write
   `diff: "hard"` for Tricky.
@@ -55,7 +50,11 @@ The five Latin games' requests go under five names, the same in `keen.md`,
 line, the rule as the engine would state it and the home, is the same in every
 ledger that has it; what follows is this game's sentence and code.
 
-- **The entry arm of a note-taking game.** With a cell highlighted, a value's
+- **The entry arm of a note-taking game.** Left the game's own: no shared
+  code decodes a key, tests a given or builds the move, and lifting it was
+  evaluated and declined, since it would need a shared move type
+  (`src/engine/note-taking-cell.ts`); no guard holds it. The sentences stay.
+  With a cell highlighted, a value's
   key enters that value, or in pencil mode toggles its pencil mark; Backspace
   and Space clear the cell; in pencil mode no key changes a cell that holds a
   value; a given takes no entry. Home: `engine-notes`, beside "The engine owns
@@ -69,7 +68,8 @@ ledger that has it; what follows is this game's sentence and code.
   Keen's: the bound `w`, and `0` as a clear (`engine-input`, "The meaning of a
   digit key stays with the game").
 - **A mistake check reports nothing where the puzzle does not solve to one
-  answer.** Where the game's solver, asked from the clues and givens, finds no
+  answer.** Answered: `ts-engine`, "A mistake check compares with the one
+  answer, hidden or not". The sentence is cut. Where the game's solver, asked from the clues and givens, finds no
   answer or more than one, `findMistakes` reports nothing. Home: `ts-engine`,
   beside "A mistake check compares with the one answer, hidden or not".
   Keen's sentence: "When the clues do not solve to exactly one answer the
@@ -77,27 +77,38 @@ ledger that has it; what follows is this game's sentence and code.
   cage clues". Code: `index.ts:299`, before `entryMistakes`
   (`src/engine/entry-mistakes.ts`).
 - **A candidate hint's recording solve runs at the board's tier, and no higher
-  than the top tier below Unreasonable.** Home: `engine-candidate-hints`,
+  than the top tier below Unreasonable.** Answered for the cap:
+  `engine-candidate-hints`, "A recording solve stops below the tier that
+  searches"; "capped at Hard" is cut. Left the game's own: that the solve
+  runs at the board's own tier, which is not the collection's rule (Rome
+  records at every tier, Subsets at the top one), so that clause stays.
+  Home: `engine-candidate-hints`,
   beside "A recording solve reads the placed entries and never the notes".
   Keen's sentence: "The hint's recording solve SHALL run at the tier of the
   board's own params, capped at Hard", in "Hint: Keen's hint deduces at the
   tier of the board's params". Code: `index.ts:367`.
 - **Auto-pencil strikes a placed value from the other cells of its no-repeat
-  regions.** In these four games the regions are the row and the column.
+  regions.** Answered: `engine-notes`, "An auto-pencil strike is decided when
+  the placement is made", which leaves which regions to the game; Keen's
+  sentence states the regions alone and stays whole.
+  In these four games the regions are the row and the column.
   Home: `engine-notes`, beside "The pencil preferences have one key each,
   which a saved preference depends on", which leaves the reach to the game.
   Keen's sentence: "With auto-pencil enabled, a real placement SHALL
   additionally strike that digit from the pencil marks of every other cell in
   its row and column.", the whole of "Preferences: Auto-pencil strikes a
   placed digit from its row and column". Code: `index.ts:233`-`239`.
-- **The auto-pencil decision is recorded on the move.** Keen's spec does not
+- **The auto-pencil decision is recorded on the move.** Answered:
+  `engine-notes`, "An auto-pencil strike is decided when the placement is
+  made". Keen's spec does not
   state it; its `set` move carries `autoElim` (`index.ts:204`). See
   `towers.md`.
 
 One more, Keen's alone among the five:
 
 - "The cursor keys SHALL move the highlight.", in "Controls: Keen selects a
-  cell through the shared note-taking cell". `engine-input`, "One arrow press
+  cell through the shared note-taking cell". Answered: `engine-notes`, "The
+  highlight is the game's keyboard cursor". The sentence is cut. `engine-input`, "One arrow press
   reveals the cursor and moves it" says it of the cursor, and no requirement
   of `engine-notes` says the arrows move the note-taking highlight, which is
   that cursor. Belongs in `engine-notes`, beside "The select key on a showing
@@ -220,3 +231,44 @@ spec never named one).
 
 Each subject read alone after the edits: no fragment, no dangling pronoun,
 every title fits its body.
+
+## Third pass
+
+Rows of the engine's third-round tables that name Keen: 5. Engine requests of
+its own: 6. Cut: 2 sentences, 2 clauses and 1 scenario, in 4 requirements.
+Clauses kept: 5.
+
+Cut (the rows above say where each is stated):
+
+- **"Rules: Keen's mistake check re-solves from the cage clues"**: "When the
+  clues do not solve to exactly one answer the result SHALL be empty."
+- **"Controls: Keen selects a cell through the shared note-taking cell"**:
+  "The cursor keys SHALL move the highlight."
+- **"Hint: A cage deduction's sentence names the cage by its clue"**: "SHALL
+  lead with the spotted indication, … then give the reasoning".
+- **"Hint: Keen's hint deduces at the tier of the board's params"**: "capped
+  at Hard", and the scenario "A hint on an Unreasonable board", which is the
+  engine requirement's own first scenario.
+
+Kept:
+
+- **"at the tier of the board's own params"**, now said of a board below
+  Unreasonable. The engine requirement leaves how far beneath a game caps to
+  the game.
+- **The cage named by its clue's goal**: Keen's words.
+- **"Preferences: Auto-pencil strikes a placed digit from its row and
+  column"**, whole: it states the regions and nothing of when the strike is
+  decided, and the engine requirement hands the regions to the game.
+- **"Controls: Keen interprets digit, pencil, and mark-all input"**: the
+  entry arm, left the games' own.
+- **"with no departure"** in "Hint: Keen's hint is the shared candidate plan
+  over rows and columns": the one pointer of `Hint` to its ordinary case,
+  without which the subject holds two cage deductions and a tier.
+
+No sentence of the form "What a pasted game ID opens as", and none in
+`Generation` citing `engine-difficulty`. The spec was searched for the third
+round's other rules in other words (the wash over a cell's surface, a search
+the hint never runs, a keypad's keys): none is stated.
+
+Each subject read alone: no fragment, no dangling pronoun, every title fits
+its body, and the Purpose names nothing that went.

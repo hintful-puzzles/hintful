@@ -5,7 +5,8 @@ the spec no longer holds (the legend is `hintMarks`).
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Filling reports mistakes for Check & Save | title and scenario kept. "The game SHALL implement `findMistakes(state)` by taking the board's one answer from the search that counts its answers, at either difficulty" cut, and no citation stands in its place (second pass); what is returned, and the empty result where no one answer was proved, kept | `engine-difficulty`, "One search answers a board for everything that asks"; `answerOf`, `src/games/filling/index.ts:214` |
+| Rules: Filling reports mistakes for Check & Save | title and scenario kept. "The game SHALL implement `findMistakes(state)` by taking the board's one answer from the search that counts its answers, at either difficulty" cut, and no citation stands in its place (second pass). "It SHALL return an empty result when the search did not prove exactly one answer" cut (third pass). What is returned kept | `engine-difficulty`, "One search answers a board for everything that asks"; `answerOf`, `src/games/filling/index.ts:214`; the empty result is `ts-engine`, "A mistake check compares with the one answer, hidden or not" |
+| Description: Filling descriptions are run-length number grids | third pass. Title and scenario kept. "a lowercase letter `a`–`z` advances past a run of `1`–`26` empty (unclued) cells" cut for the one pointer the subject has to the grammar; that a digit places a clue of its value, that a clue is immutable and every other cell starts empty kept | `engine-params`, "The engine provides the run-letter description grammar"; `scanRunLength` and `encodeRunLength`, `src/games/filling/state.ts:177` and `:213` |
 | Params: Filling's parameters | retitled "Params: A Filling params string may leave out its height and its difficulty" (the pointer, rule 2). The field list, the bound of 1 and the `{w}x{h}`, `de`, `du` encoding cut; "no difficulty letter decodes as Easy" kept, and the square fallback, which stood only in a scenario, said as a sentence. Scenarios "Params round-trip" and "The difficulty is in the full encoding only" replaced by "A string that leaves a field out", made of their two missing-field lines | `paramConfig`, `src/games/filling/state.ts:90` (`bounds: { min: 1 }` at `:93`), and the `paramsCodec` field list, `:108` (`dims`, `searchTierSegment`); `engine-difficulty`, "A game that searches has a tier for each deduction and Unreasonable above them" (`d` and the tier's letter, in the full form only); `engine-params`, "Params validity is the engine's check"; `src/engine/__snapshots__/params-stability.test.ts.snap` holds `9x13de`/`9x13` and every preset |
 | Params: Filling rejects board sizes it cannot generate | "A description that is supplied SHALL NOT be held to the bound." cut, with scenario "An existing large description still loads"; the kept sentence already says "when a board is to be dealt" | `engine-params`, "A generation-only bound is gated on full" and "Param validation distinguishes generating a board from loading one" (scenario "A generation-only bound does not refuse the descriptive form"); `if (!full) return null`, `src/games/filling/state.ts:143` |
 | Params: Filling's menu offers each size at both difficulties | removed; the `Params` pointer names `presets` and `defaultParams` | `BOARDS`, `defaultParams` and `presets`, `src/games/filling/state.ts:83`, `:85`, `:101`; `engine-params`, "The preset menu is a grid" (each board at every tier, easiest first); the snapshot lists the default and the five other lines |
@@ -15,6 +16,8 @@ the spec no longer holds (the legend is `hintMarks`).
 | Controls: Filling provides on-screen key labels | removed, with its scenario | `requestKeys: digitKeys(9)`, `src/games/filling/index.ts:401`, which takes no params and so is the same on every board |
 | Hint: Filling provides an explained deduction hint | removed. "A step's narration SHALL avoid repeating the region's number" joins "Hint: One region-growth firing is one hint step". Scenario "Hint explains the next forced move and solves the board" dropped | `engine-hints`, "A hint is deduced from the board in play" (true of the plan's first resort only; the departure is kept, see below), "A hint step always names a technique, with no un-narrated fallback", "A player move is classified against the stored plan" and "A hint finishes a board from a right entry made out of order"; that the plan finishes every mistake-free position of a board that loads is this spec's "Hint: Filling's hint keeps what the solver deduces from the clues alone"; the scenario is "The hint walk SHALL cover every preset a game offers" |
 | Hint: One region-growth firing is one hint step | gains "A step's narration SHALL avoid repeating the region's number.", from "Hint: Filling provides an explained deduction hint" | |
+| Hint: hintKeepTrack follows a Filling step square by square | removed (third pass), with its scenario "Following a multi-square hint advances or shrinks the plan", which restated it | `engine-hints`, "A step asking for several elements is followed one element at a time" (`"completed"` once every target holds, `"onTrack"` with the step shrunk to the targets left, `"off"` for any other element or value); `trackTargets`, called from `hintKeepTrack`, `src/games/filling/index.ts:326` |
+| Hint: Filling's hint stops where the solver does | third pass. Retitled "Hint: Filling's hint finishes an Unreasonable board from numbers tried rightly". "The hint SHALL never run the search", "and no others, and where none forces anything it SHALL refuse with the collection's sentence that deduction has run out" and "It SHALL go on from the numbers the player then enters" cut; kept, reworded to stand, that the steps are forced from the player's numbers, and, from the scenario's last line, that a number entered rightly wherever the hint stops lets it finish the board. The scenario cut to that line and retitled "The hint goes on from a number tried rightly" | `engine-hints`, "The hint of a game on the search's tiers never searches" (and its scenario "A value tried wrongly") and "A hint gives every step deduction still forces before it refuses"; the wording of the refusal is `engine-hints`, "Deduction running out on a sound board SHALL have one wording" |
 | Hint: Filling draws the displayed step's target and evidence | retitled "Hint: A Filling target is ringed empty, and is never its own evidence". "`redraw` SHALL render the displayed step", "The deduction's evidence SHALL be marked too, so the picture the narration names is visible" and "The evidence cells' digits SHALL remain readable" cut (the sentence naming `hintMarks` that stood for them went in the second pass); kept: the ring holds no digit, what the evidence is, and that it never includes a target. Scenario kept | `hintMarks.roles`, `src/games/filling/index.ts:387` (`ring`, `outline`, `stripes`); `engine-hints`, "A hint marks beside the content, never behind it" (the digits stay readable) and "A bound hint step's words SHALL name exactly the marks it draws" |
 | Hint: Filling hint color legend | removed, with both scenarios | `hintMarks.roles`, `src/games/filling/index.ts:387`; the palette, `out[COL_HINT] = HINT_ACTION` and `out[COL_HINT_CELL] = HINT_EVIDENCE`, `src/games/filling/render.ts:86` and `:96`; `engine-hints`, "A hint naming several kinds of element colors them by a stable legend" (equivalent forced moves share the one target color) and "A legend color is never the only cue". That the target's ring holds no digit is kept in "Hint: A Filling target is ringed empty, and is never its own evidence" |
 | Hint: Filling's hint keeps what the solver deduces from the clues alone | title and both scenarios kept. Its first sentence now opens by naming the rule the fallback departs from ("The plan SHALL depart in one thing from `engine-hints`, "A hint is deduced from the board in play""), which is also the Hint subject's pointer to where the ordinary case, a plan from the player's board, is stated (rule 2; added in review). Its last sentence is corrected (second pass): the plan finishes every mistake-free position "of a board the solver finishes from its clues", where it said "of a board that loads", which is false of an Unreasonable board. Nothing cut | |
@@ -25,9 +28,6 @@ the spec no longer holds (the legend is `hintMarks`).
 - **Params, the square fallback and "no difficulty letter decodes as Easy".**
   `dims` and `searchTierSegment` say both; kept as what a missing field
   decodes to (upstream's IDs carry no tier).
-- **Rules, "It SHALL return an empty result when the search did not prove
-  exactly one answer".** No shared requirement says what `findMistakes`
-  returns there (see the engine requests).
 - **Generation: Filling generates uniquely solvable boards.** The cap on a
   region's size, what Easy means here, and that an Easy board is upstream's
   from the same seed.
@@ -39,9 +39,6 @@ the spec no longer holds (the legend is `hintMarks`).
 - **Controls**, the three kept. `interpretMove`,
   `src/games/filling/index.ts:101`, is hand-written; the game declares no
   `targetVerbs`.
-- **Hint: hintKeepTrack follows a Filling step square by square.**
-  `hintKeepTrack`, `src/games/filling/index.ts:318`, is hand-written and
-  shrinks the step, which no shared verdict does for it.
 - **Hint: Filling's hint keeps what the solver deduces from the clues
   alone.** It is Filling's departure from `engine-hints`, "A hint is deduced
   from the board in play", and now says so: where no rule forces a square on
@@ -50,9 +47,10 @@ the spec no longer holds (the legend is `hintMarks`).
   lacks. That step's deduction does not rest on the player's entries, which
   the engine requirement leaves to the game ("a step drawn from the clues
   alone [is] the game's to state").
-- **Hint: Filling's hint stops where the solver does.** As in Palisade: the
-  promise to go on from a number entered rightly on an Unreasonable board is
-  no shared requirement's.
+- **Hint: Filling's hint finishes an Unreasonable board from numbers tried
+  rightly.** The engine's scenario "A value tried rightly" says the hint holds
+  what the value forces or refuses again; that right numbers carry Filling's
+  hint to the end of the board is the game's.
 - **Look: Filling rendering shows regions, errors, and completion.** A list,
   and the one place the error shade's two cases are said.
 
@@ -63,7 +61,8 @@ The three are stated, each under the same bold name, in `crossing.md`,
 sentences.
 
 - **`findMistakes` returns nothing where the search proved no single
-  answer.** Here: "It SHALL return an empty result when the search did not
+  answer.** Answered: `ts-engine`, "A mistake check compares with the one
+  answer, hidden or not"; the sentence is cut. As filed: "It SHALL return an empty result when the search did not
   prove exactly one answer", in "Rules: Filling reports mistakes for Check &
   Save". Belongs in `engine-difficulty`, "One search answers a board for
   everything that asks", which names `findMistakes` among what reads the
@@ -71,7 +70,9 @@ sentences.
   answer. No engine code does it: each game's `findMistakes` returns early
   (`src/games/filling/index.ts:215`).
 - **A board counts as Easy where the solver and the hint both finish it.**
-  Here: "A board SHALL count as Easy where the solver and the hint finish
+  Left the game's own: `deductionFinishes` is a hook each game writes, and
+  nothing requires that it ask the solver and the hint both
+  (`ledger/_engine.md`, "Third round: the rest", Not written). Here: "A board SHALL count as Easy where the solver and the hint finish
   it", in "Generation: A Filling board is Easy where the solver and the hint
   both finish it". Belongs in `engine-difficulty`, "A game that searches has
   a tier for each deduction and Unreasonable above them", which says the
@@ -81,7 +82,10 @@ sentences.
   (`src/games/filling/index.ts:203`).
 - **The hint never runs the search; on an Unreasonable board it holds only
   what deduction forces from the player's board, and goes on from what the
-  player then enters.** Here: "The hint SHALL never run the search. On an
+  player then enters.** Answered: `engine-hints`, "The hint of a game on the
+  search's tiers never searches" and "A hint gives every step deduction still
+  forces before it refuses"; the three sentences are cut but for the game's
+  own. As filed: "The hint SHALL never run the search. On an
   Unreasonable board its plan SHALL hold the steps its deductions force from
   the player's numbers and no others … It SHALL go on from the numbers the
   player then enters", in "Hint: Filling's hint stops where the solver does".
@@ -243,3 +247,43 @@ Preferences: Filling has no `prefs` and the cut touched none.
 
 Each subject read alone after the edits: no fragment, no dangling "it",
 every owed subject says what the game does there, every title fits its body.
+
+## Third pass
+
+Five rows of the engine tables name Filling: the mistake check, the
+run-letter grammar, the step followed one element at a time, every step
+before a refusal, and the hint that never searches.
+
+- **Rules**, "It SHALL return an empty result when the search did not prove
+  exactly one answer": cut. `findMistakes` reports no broken rule.
+- **Description**, "Description: Filling descriptions are run-length number
+  grids": the letter clause cut for a pointer.
+- **Hint**, "Hint: hintKeepTrack follows a Filling step square by square":
+  removed whole, with its scenario.
+- **Hint**, "Hint: Filling's hint stops where the solver does": three
+  sentences cut to one and retitled; the scenario cut to its last line.
+
+Sentences cut: 6 (one in Rules, one clause in Description, one requirement of
+one sentence, three in Hint), 1 scenario dropped and three lines of another.
+Clauses kept: the one pointer to the run-letter grammar (`Description` is
+owed, and its other requirement speaks only of what is refused); a digit as
+the clue's value character, and the refusals, which the grammar leaves to
+the game; "from the player's numbers", and that a number tried rightly lets
+the hint finish the board (the review keeps the scenario's last clause).
+"Hint: Filling's hint keeps what the solver deduces from the clues alone",
+the game's departure from `engine-hints`, "A hint is deduced from the board
+in play", stays whole. "A board SHALL count as Easy where the solver and the
+hint finish it" stays as the game's own. "Look: A shade replaces the cell's
+surface, and four kinds of cell are told apart" was read against
+`engine-notes`, "The highlight is part of the cell's background": Filling's
+selection is its own and not the note-taking cell's, so the sentence stays.
+
+Section 2 of the brief: no "no departure" sentence, and the pasted-ID
+sentence went in the second pass; the scenario "A board that needs search
+opens as Unreasonable" stays under the sentence that says which boards count
+as which tier.
+
+Each subject read alone: `Hint` holds its two kinds of step, its marks, its
+departure and the retitled requirement, and says nothing of how a partly
+followed step is tracked, which is the engine's; no fragment, every title
+fits its body.

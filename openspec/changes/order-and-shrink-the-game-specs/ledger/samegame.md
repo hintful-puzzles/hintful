@@ -89,3 +89,18 @@ against the three classes; none cut.
   3 colors, alt. scoring".
 - **Kept and checked**: the status bar's "which the engine's completion words
   precede" is the subject's one pointer and gives the string a player reads.
+
+## Third pass
+
+Nothing changed in the spec. Rows of the engine's third-round tables that
+name Same Game: 0. Engine requests of its own: 0. Sentences cut: 0. Clauses
+kept: 1.
+
+- **Kept: "which the engine's completion words precede"** in the status bar:
+  the subject's one pointer.
+- No "no departure" sentence, none of the form "What a pasted game ID opens
+  as" and none citing `engine-difficulty`: Same Game has no tiers.
+- The spec was searched for the third round's rules in other words (the
+  cancel keys, the release of a declined press, a lit beveled tile, a hatch
+  under content, a mistake check without an answer): none is stated. Same
+  Game has no hint, no Solve and no mistake check.

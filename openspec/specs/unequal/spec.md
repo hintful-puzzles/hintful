@@ -40,14 +40,13 @@ by exactly 1, and the absence of a bar between two cells means they do not.
 ### Requirement: Rules: Unequal's mistake check re-solves from its givens and clues
 
 Unequal's `findMistakes` SHALL judge the board against the answer it re-solves
-from the givens and clues. When they do not solve to exactly one answer it
-SHALL return an empty result.
+from the givens and clues.
 
-#### Scenario: An ambiguous board
+#### Scenario: A wrong number that breaks no rule
 
-- **WHEN** `findMistakes` is asked about a board whose givens and clues admit
-  two solutions
-- **THEN** it returns an empty result, whatever the player has entered
+- **WHEN** the player enters a number that repeats nothing in its row or
+  column, breaks no sign or bar as the board stands, and is not the answer's
+- **THEN** `findMistakes` includes that cell
 
 ### Requirement: Params: Unequal's parameters and their encoding
 
@@ -258,9 +257,10 @@ a sign strikes from one cell at a time.
 
 ### Requirement: Hint: Unequal's clue sentences read correctly at the ends of the range
 
-A clue step's sentence SHALL lead with the inequality or adjacency pattern,
-and SHALL read correctly at the degenerate value extremes: the differ-by-1
-clue SHALL speak of being one away from N and SHALL NOT say "N−1 or N+1".
+A clue step's indication SHALL be the inequality or adjacency pattern, and its
+sentence SHALL read correctly at the degenerate value extremes: the
+differ-by-1 clue SHALL speak of being one away from N and SHALL NOT say "N−1
+or N+1".
 
 #### Scenario: A bound at the edge of the range
 
@@ -269,10 +269,9 @@ clue SHALL speak of being one away from N and SHALL NOT say "N−1 or N+1".
 - **THEN** the narration says the larger side cannot hold the smallest number,
   and does not say the other cell is "at least 1"
 
-### Requirement: Hint: The selection is drawn over the box and the hint's marks beside it
+### Requirement: Hint: The hint's marks are drawn in the gap beside the box
 
-The selection's wash and its pencil-mode corner SHALL be drawn over whichever
-surface the box has. The hint's marks SHALL stay in the gap beside the box.
+The hint's marks SHALL stay in the gap beside the box.
 
 #### Scenario: A selected box a hint rings
 
@@ -305,9 +304,9 @@ joins this cell to a neighbor whose every open number clashes with" them.
 
 ### Requirement: Hint: Unequal's hint reasons no harder than the board's tier
 
-The hint's recording solver SHALL be capped at the board's own tier, and at
-Hard on an Unreasonable board, trying a lower tier's technique before a
-higher one's. So a sign's bound and a bar beside a placed number SHALL be
+The hint's recording solver SHALL try a lower tier's technique before a
+higher one's and, on a board below Unreasonable, SHALL be capped at the
+board's own tier. So a sign's bound and a bar beside a placed number SHALL be
 offered from Normal up, a bar read against an undecided neighbor and a set
 within one row or column from Tricky up, and one number's places across
 several rows and columns, and the chain, at Hard.
@@ -325,12 +324,6 @@ several rows and columns, and the chain, at Hard.
 - **THEN** no step reasons from a sign: each one places a number, as the last
   its row and column leave the cell or in the last cell of a row or column
   left for it
-
-#### Scenario: An Unreasonable board
-
-- **WHEN** a hint is asked on a board dealt at Unreasonable
-- **THEN** the recording solver runs no higher than Hard, and no step rests on a
-  guess
 
 ### Requirement: Look: Unequal renders greater-than signs or adjacency bars between cells
 

@@ -4,7 +4,10 @@ The Purpose was left as it stood: it names nothing the cut removed.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Netslide slides rows and columns, and powers the connected tiles | "and plays a completion flash" cut from the scenario's last line; the sentences kept | `ts-engine`, "The win flash plays on a forward move that solves the board" |
+| Rules: Netslide's board, its source and the lines that never slide | third pass: the clause "each a 4-bit mask of connections `R=1`, `U=2`, `L=4`, `D=8`" reworded out; the rest and the scenario kept | `engine-helpers`, "A wire tile is four bits, one for each side its wire leaves by" |
+| Rules: Netslide slides rows and columns, and powers the connected tiles | "and plays a completion flash" cut from the scenario's last line; the sentences kept. Third pass: "reachable from the source through mutually connected wires not separated by a barrier" reworded out, the sentence now naming `computeActive`; the line in motion, its reason and what counts as complete kept | `ts-engine`, "The win flash plays on a forward move that solves the board"; `engine-helpers`, "Power floods from the source along wires joined from both sides" |
+| Description: Netslide descriptions encode wires and barriers | third pass: retitled "Description: A Netslide description is the shared wire grid, read under the params' wrap". All three sentences cut (the grammar, the refusals, the unwritten border) and one pointer put in their place, `Description` being owed: it names the writer, the reader and the wrap, and says Netslide adds no refusal (`newState`, `src/games/netslide/state.ts:241`). Scenarios "A description one tile short" and "A non-wrapping game is walled in" dropped; "A description round-trips" kept | `engine-helpers`, "The engine provides the wire-grid description grammar" (the border not written, and `addBorderBarriers` fencing it) and "The wire-grid reader refuses what its writer never writes" (its scenario "One row of two tiles, not wrapping" has a description one tile short) |
+| Look: A slide is animated, and completion flashes outward | third pass: how the flash's distance is measured ("in tiles along the connections, through the wrap of a wrapping board and never through a barrier") reworded out, the sentence now naming `wireDistance`; scenario "A neighbor the wires do not join" dropped; the slide's animation and its scenario kept | `engine-helpers`, "A wire distance is counted in tiles along the wires" (its scenario is the dropped one) |
 | Solver: Netslide solves from the generator's grid when it has one | "and is reported solved-with-help" cut from the last line of scenario "Solve on a freshly generated game"; the sentences and the other two scenarios kept | `ts-engine`, "Only the Solve command sets the solver record", and "The win flash plays on a forward move that solves the board", scenario "The Solve command does not celebrate" (the status is solved-with-help) |
 | Hint: Netslide can be solved from any position | last sentence ("The hint's searches are bounded: where they return no plan the hint SHALL refuse as out of reach, and SHALL NOT narrate a move it cannot justify.") cut; the promise that the hint finishes from any position and never circles kept, with the scenario | `engine-hints`, "A hint that plans by searching SHALL refuse honestly past its reach" (`SEARCH_OUT_OF_REACH`, `src/games/netslide/hint.ts:409`) |
 | Hint: An endgame the heuristic cannot see past is searched exactly | cut after "an exact shortest search": "so that the plan's first move provably shortens the distance to a finished board. A heuristic plan carries no such guarantee, and loops." Title and scenario kept | `engine-hints`, "Sliding-permutation games share one slide planner whose exact search always runs" (scenario "The exact search returns a shortest plan": playing its first move leaves the board strictly nearer the goal) and "The slide planner's exact search runs on every board" (why a gated search cycles); `exactSearch`, `src/games/netslide/hint.ts:394` |
@@ -82,6 +85,13 @@ any of it:
 These belong in `engine-helpers`, or a capability for the wire grid as
 `border-grid` is for edges.
 
+All four answered, in `engine-helpers`: the tile by "A wire tile is four
+bits, one for each side its wire leaves by"; the description by "The engine
+provides the wire-grid description grammar" and "The wire-grid reader refuses
+what its writer never writes"; the flood by "Power floods from the source
+along wires joined from both sides"; the flash by "A wire distance is counted
+in tiles along the wires".
+
 One more, of the slide planner's games:
 
 - "A subgoal that takes several slides SHALL be emitted as one multi-leg
@@ -92,7 +102,11 @@ One more, of the slide planner's games:
   binds only a plan derived from a deduction; the planner's games have no
   shared statement. Each game groups the legs itself (`narratePlan` in
   `src/games/netslide/hint.ts`), so the home is a rule in `engine-hints`
-  beside the planner's requirements.
+  beside the planner's requirements. Left the game's own: the planner
+  returns moves and makes no step, and the two games group by different
+  rules (Sixteen flags a second leg only, where the first step previewed it;
+  Netslide flags every later slide while the tile it follows stays the
+  same), so no one sentence is true of both.
 
 ## Found
 
@@ -151,3 +165,42 @@ Checked and found sound:
   (`state.ts:95`, `:108`; `index.ts:165`), so Params and Controls stay whole.
   `narrateStep` is at `hint.ts:615`, not `:648`.
 - Each subject read alone: none hollow, no dangling antecedent.
+
+## Third pass
+
+What the engine's third round states, removed. 5 rows of the third-round
+tables name Netslide (the wire tile, the wire-grid grammar, its reader's
+refusals, the power flood, the wire distance). Four of this ledger's five
+requests were answered and one was left the game's own.
+
+Cut, 6 sentences or clauses and 3 scenarios:
+
+- **The tile's mask**, in "Rules: Netslide's board, its source and the lines
+  that never slide".
+- **How power floods**, in "Rules: Netslide slides rows and columns, and
+  powers the connected tiles".
+- **The three sentences of the Description requirement**, and its scenarios
+  "A description one tile short" and "A non-wrapping game is walled in". One
+  pointer stands in their place, the subject being owed.
+- **How the flash's distance is measured**, and the scenario "A neighbor the
+  wires do not join", in "Look: A slide is animated, and completion flashes
+  outward".
+
+Kept, 3 clauses:
+
+- "A row or column that is mid-slide SHALL be treated as unpowered, so the
+  highlight does not appear to jump across a line in motion." The engine
+  requirement says a game with a line in motion names it; that Netslide has
+  one, and why, is the game's.
+- That Netslide's flash spreads from the source along the wires: the engine
+  requirement is conditioned on it and does not say it of Netslide
+  (`src/games/netslide/render.ts:720`).
+- "Hint: A subgoal of several slides is one journey", left the game's own.
+
+`engine-hints`, "The slide planner's first-move veto binds the heuristic
+search alone" names no sentence of Netslide: the spec states none of the
+veto (see Found). No sentence of the brief's section 2 stood in the spec.
+
+Each subject read alone: `Description` is one pointer with a case of
+Netslide; no fragment, no dangling antecedent, every title fits. The Purpose
+names nothing that went.

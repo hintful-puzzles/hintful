@@ -127,3 +127,31 @@ Checked and found sound:
 - `numpadDirection` and `shearedHexStep` are called at `ui.ts:749` and
   `:754`; the codec is hand-written (`index.ts:302`, `:317`).
 - Each subject read alone: none hollow, no dangling antecedent.
+
+## Third pass
+
+Nothing cut: the spec is as the review left it. 0 rows of the third-round
+tables and their reviews name Ascent, and this ledger filed no request.
+
+Read for the round's rules in other words, and for the two sentences of the
+brief's section 2 (`grep` for "no departure", "departs from", "pasted", "did
+not prove", "exactly one", "never run the search", "go on from"): 0 found.
+What reads nearest, and stays, 3 clauses:
+
+- "Rules: findMistakes compares the board with its one solution" says which
+  marks are flagged and never that the result is empty without an answer
+  (see Found), so `ts-engine`, "A mistake check compares with the one answer,
+  hidden or not" takes nothing from it.
+- "A player placing the run's numbers one at a time SHALL stay on the step,
+  which shrinks to what is left", in "Hint: A whole-run step draws its route
+  and shrinks as it is followed". `engine-hints`, "A step asking for several
+  elements is followed one element at a time" is of `trackTargets`' callers;
+  Ascent's verdict is `ascentKeepTrack`'s own and calls none of it.
+- "The reading the techniques reason from SHALL be rebuilt from the player's
+  board … before every step", in "Hint: Ascent explains the next number":
+  how Ascent's `next` reads its board, where `engine-hints`, "A recomputed
+  plan continues the plan it replaces" states what follows of the plan.
+  Ascent has no tier that permits search, so "A hint gives every step
+  deduction still forces before it refuses" does not bind it.
+
+Each subject read alone: none hollow, no fragment, every title fits.
