@@ -10,10 +10,10 @@
  *    after each placement so the partial board stays consistent. A
  *    cluster-avoidance pass steers away from growing runs of three or more
  *    identical arrows.
- * 2. {@link generateRegions} — from single-square regions, shuffle the
- *    inter-square edges once and merge across an edge whenever the two regions
- *    share no arrow and neither is a goal (so a region can never exceed the
- *    four distinct arrows).
+ * 2. {@link generateRegions} — from single-square regions, join neighboring
+ *    regions in a shuffled order (the engine's `mergeNeighbors`) wherever the
+ *    two share no arrow and neither is a goal, so a region can never exceed
+ *    the four distinct arrows.
  * 3. {@link generateClues} — blank each non-goal clue in shuffled order, and
  *    keep it blanked only while the board still solves at the target
  *    difficulty.
@@ -27,6 +27,7 @@
  * draw order and the iteration order here are both fixed.
  */
 
+import { mergeNeighbors } from "../../engine/divide.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -139,43 +140,17 @@ function generateArrows(board: RomeState, rng: RandomState): boolean {
   return validateGame(board, false) === STATUS_COMPLETE;
 }
 
-/** Stage 2: grow the outlined regions by removing borders at random. */
-function generateRegions(board: RomeState, rng: RandomState): void {
-  const { w, h, grid, regions } = board;
-  const s = w * h;
-
-  // A horizontal merger is encoded as its left square's index; a vertical one
-  // as that index plus `w*h`.
-  const spaces: number[] = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w - 1; x++) spaces.push(y * w + x);
-  }
-  for (let y = 0; y < h - 1; y++) {
-    for (let x = 0; x < w; x++) spaces.push(s + y * w + x);
-  }
-
-  // Every square is its own region at this point, so each entry is both the
-  // square's index and its region's canonical root.
-  const cells = grid.slice();
-
-  shuffle(spaces, rng);
-
-  for (const merger of spaces) {
-    const i1 = merger % s;
-    const i2 = merger >= s ? i1 + w : i1 + 1;
-
-    const c1 = cells[regions.canonify(i1)];
-    const c2 = cells[regions.canonify(i2)];
-
-    // Two regions holding the same arrow cannot merge; nor can a goal, which
-    // must stay alone in a single-square region.
-    if (c1 & c2) continue;
-    const c = c1 | c2;
-    if (c & FM_GOAL) continue;
-
-    regions.merge(i1, i2);
-    cells[regions.canonify(i1)] |= c;
-  }
+/**
+ * Stage 2: grow the outlined regions by removing borders at random. Two
+ * regions holding the same arrow cannot join, and nor can a goal, which stays
+ * alone in a region of one square.
+ */
+function generateRegions(board: RomeState, rng: RandomState): Dsf {
+  const { grid } = board;
+  return mergeNeighbors(board, rng, {
+    of: (square) => grid[square],
+    join: (a, b) => (a & b || (a | b) & FM_GOAL ? null : a | b),
+  });
 }
 
 /** Stage 3: blank every clue the puzzle can be solved without. */
@@ -200,31 +175,40 @@ function generateClues(board: RomeState, rng: RandomState, diff: number): void {
   }
 }
 
-/** One generation attempt: the three stages plus the exact-difficulty gate. */
-function romeGenerate(board: RomeState, rng: RandomState, diff: number): boolean {
-  if (!generateArrows(board, rng)) return false;
-  generateRegions(board, rng);
+/**
+ * One generation attempt: the three stages plus the exact-difficulty gate.
+ * `blank` is a board of one-square regions, which the arrows are laid on, and
+ * the board returned is the same squares under the regions of stage 2.
+ */
+function romeGenerate(
+  blank: RomeState,
+  rng: RandomState,
+  diff: number,
+): RomeState | null {
+  if (!generateArrows(blank, rng)) return null;
+  const board = { ...blank, regions: generateRegions(blank, rng) };
   generateClues(board, rng, diff);
 
   // It must solve at the target difficulty...
-  if (romeSolve(cloneState(board), diff) !== STATUS_COMPLETE) return false;
+  if (romeSolve(cloneState(board), diff) !== STATUS_COMPLETE) return null;
   // ...and must NOT solve one tier easier, so the tier is exactly right.
-  return diff === 0 || romeSolve(cloneState(board), diff - 1) !== STATUS_COMPLETE;
+  if (diff !== 0 && romeSolve(cloneState(board), diff - 1) === STATUS_COMPLETE)
+    return null;
+  return board;
 }
 
 /** Upstream `new_game_desc`. Retries the whole pipeline until an attempt
  * passes the gate; Rome carries no `aux`, so `solve` re-derives the solution
  * from the clues. */
 export function newRomeDesc(p: RomeParams, rng: RandomState): { desc: string } {
-  const board = newBoard(p.w, p.h);
+  const blank = newBoard(p.w, p.h);
   const attempt = retryLimit("rome: generation");
 
-  do {
+  for (;;) {
     attempt();
-    board.regions.reinit();
-    board.grid.fill(EMPTY);
-    board.pencil.fill(EMPTY);
-  } while (!romeGenerate(board, rng, p.diff));
-
-  return { desc: encodeDesc(p.w, p.h, board.regions, board.grid) };
+    blank.grid.fill(EMPTY);
+    blank.pencil.fill(EMPTY);
+    const board = romeGenerate(blank, rng, p.diff);
+    if (board) return { desc: encodeDesc(p.w, p.h, board.regions, board.grid) };
+  }
 }

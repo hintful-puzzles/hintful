@@ -59,6 +59,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `retry-limit.ts` — a bound on generate-until-it-works | a generator retries until a board passes |
 | – `divvy.ts` — random equal-omino partition | a generator divides a rectangle into equal regions |
 | – `redivide.ts` — divide a few regions of a partition again | a generator mends a division where it fails |
+| – `divide.ts` — regions of unequal size | a generator divides a grid into regions that differ in size |
 | – `laydomino.ts` — random domino tiling | a generator tiles a board with dominoes |
 | – `symmetric-blacks.ts` — symmetric black-square placement | a generator places black squares symmetrically |
 | – `loopgen.ts` — random loop generation | a generator needs a random closed loop |
@@ -404,6 +405,21 @@ impossible, and load-bearing validation"). `redivide` divides the cells of
 some neighboring regions among them again at random, `regionsBeside` names
 the neighbors to widen it by, and `ringless` grows each piece as a tree.
 Exemplar: `separate/generator.ts`.
+
+### `divide.ts` — regions of unequal size
+
+Reach for it in a generator whose regions differ in size: the game supplies
+its rule and the module walks. `mergeNeighbors` joins neighboring regions
+wherever the rule allows, `mergeToCount` joins them toward a number of
+regions and returns `null` where the rule cannot be met, `growFromSeeds`
+grows a region round each cell it is given (`scatterSeeds` draws them), and
+`growToSize` grows one region at a time to a size the game draws.
+`regionNumbers` reads any division as a number for each cell. Which walk
+suits which rule is
+[`solver-and-generator.md`](./solver-and-generator.md) § "A division into
+regions is the engine's". Byte-match critical: `mergeNeighbors` and
+`growFromSeeds` are upstream's draws, which Rome's and Map's fixtures pin.
+Exemplars: `rome/generator.ts`, `map/generator.ts`, `seismic/generator.ts`.
 
 ### `laydomino.ts` — random domino tiling
 

@@ -76,6 +76,7 @@ In this order, each step as the skeleton
 | – Every retry loop is bounded | your generator has a loop that draws from the RNG until something works |
 | – Unlucky, impossible, and load-bearing validation | a generator fails on some params, or `validateParams` does more than check bounds |
 | – A draw that fails often is mended, not retried | most of a generator's tries are thrown away, and more so as the board grows |
+| – A division into regions is the engine's | your board is divided into regions, of one size or of several |
 | – Bound a generator by its tail, not its median | you set or raise a size bound, or pick the sizes of a preset menu |
 | – A Custom size is not refused for its wait | a large Custom size deals slowly and you are about to refuse it |
 | – Solver-gated generation | your generator keeps or strips clues by running the solver, or you refactor such a solver |
@@ -1209,6 +1210,38 @@ Rules for any of them:
   unit the count follows.
 - **Try a neighboring game's mend, and say when it does not carry.**
 - **Measure and say which boards the change deals.**
+
+### A division into regions is the engine's
+
+**A generator that divides its grid into regions takes the division from
+`src/engine/` and supplies only its rule.** Regions of one size come from
+`divvyRectangle`. Regions of unequal size come from
+[`divide.ts`](../src/engine/divide.ts), which has a walk for each way a game
+states what it wants:
+
+| The game knows | The walk | Exemplar |
+| --- | --- | --- |
+| Which neighboring regions may join | `mergeNeighbors`, with what a region holds and how two holdings join | [`rome/generator.ts`](../src/games/rome/generator.ts) |
+| That, and how many regions there are to be | `mergeToCount`, which returns `null` where the rule cannot be met | none yet |
+| Where each region starts, or how many there are | `growFromSeeds`, over cells the game places or `scatterSeeds` draws | [`map/generator.ts`](../src/games/map/generator.ts) |
+| How large a region may be | `growToSize`, with a size the game draws for each | [`seismic/generator.ts`](../src/games/seismic/generator.ts) |
+
+- **The rule is a value and a function, never a walk.** A merge rule is what
+  a region holds (`of`) and what two hold as one, or `null` (`join`). A rule
+  that needs the division itself to answer is a sign that the game is
+  writing the walk.
+- **A walk may follow another**: a rule names the division to start `from`.
+  Regions that must each hold a number of placed things are grown one to a
+  thing and then joined toward the count.
+- **A game keeps a division of its own only where its rule cannot be said
+  as one of these, and says so at the division.** Three do: Filling's rule
+  obliges a join where these permit one, Galaxies grows a cell and its
+  mirror image together, and Keen and Solo's Killer lay dominoes before they
+  fold single cells in, because they want pairs and a merge under a largest
+  size deals regions at that size.
+- **Moving a division onto a walk here keeps its boards only if the draws
+  and their order are kept**, and a move that changes them is a divergence
+  like any other (§ "Divergence and what it costs").
 
 ### Bound a generator by its tail, not its median
 

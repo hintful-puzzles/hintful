@@ -39,6 +39,8 @@
  * (docs/solver-and-generator.md § "Solver-gated generation").
  */
 
+import { growToSize } from "../../engine/divide.ts";
+import type { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
@@ -126,99 +128,19 @@ export function maxGeneratedRegionSize(mode: number): number {
 }
 
 /**
- * **Stage 1 (new): partition the grid into connected regions**, sizes drawn from
- * {@link drawRegionSize}, writing the partition into `board.dsf`.
+ * **Stage 1 (new): partition the grid into connected regions**, each grown to
+ * a size drawn from {@link drawRegionSize} by the engine's `growToSize`.
  *
- * This always succeeds — no number constraints are in play yet, and every pocket
- * it could strand is itself a legal region (any size from 1 up to the mode's
- * maximum is legal, and a pocket larger than the maximum is simply partitioned
- * by a later pass of the same loop). That is the whole reason the pipeline is
+ * This always succeeds — no number constraints are in play yet, and every
+ * pocket the growth could strand is itself a legal region (any size from 1 up
+ * to the mode's maximum is legal). That is the whole reason the pipeline is
  * inverted: upstream's stage 2 could fail, this cannot.
  *
- * Two heuristics keep the shapes reasonable:
- *  - **Seed at the most constrained free cell** (fewest free neighbors, ties
- *    broken randomly). Consuming awkward cells — corners, and the necks left
- *    behind by earlier regions — before they are surrounded is what keeps the
- *    board from filling up with stranded singletons.
- *  - **Grow into a uniformly random frontier cell**, which gives organic blobs
- *    rather than the rigid combs a min-degree growth rule produces.
- *
- * A region that runs out of frontier before reaching its target simply ends
- * short; that is legal, and it is where the small tail of the realized size
- * distribution comes from.
+ * A region that runs out of room before reaching its size ends short, which
+ * is where the small tail of the realized size distribution comes from.
  */
-function growRegions(board: SeismicBoard, rng: RandomState): void {
-  const { w, h, dsf } = board;
-  const s = w * h;
-  dsf.reinit();
-
-  /** Cells not yet claimed by a region. */
-  const free = new Uint8Array(s).fill(1);
-  let remaining = s;
-
-  const nb: number[] = [];
-  const neighbors = (i: number): number[] => {
-    nb.length = 0;
-    const x = i % w;
-    const y = (i / w) | 0;
-    if (x > 0) nb.push(i - 1);
-    if (x < w - 1) nb.push(i + 1);
-    if (y > 0) nb.push(i - w);
-    if (y < h - 1) nb.push(i + w);
-    return nb;
-  };
-  const freeDegree = (i: number): number => {
-    let n = 0;
-    for (const j of neighbors(i)) if (free[j]) n++;
-    return n;
-  };
-
-  const frontier: number[] = [];
-
-  while (remaining > 0) {
-    // Seed: fewest free neighbors, ties broken by reservoir sampling so the
-    // choice is uniform among equally-constrained cells.
-    let seed = -1;
-    let bestDegree = 5;
-    let ties = 0;
-    for (let i = 0; i < s; i++) {
-      if (!free[i]) continue;
-      const d = freeDegree(i);
-      if (d < bestDegree) {
-        bestDegree = d;
-        seed = i;
-        ties = 1;
-      } else if (d === bestDegree) {
-        ties++;
-        if (randomUpto(rng, ties) === 0) seed = i;
-      }
-    }
-
-    const target = Math.min(drawRegionSize(board.mode, rng), remaining);
-    let size = 1;
-    free[seed] = 0;
-    remaining--;
-    frontier.length = 0;
-    for (const j of neighbors(seed)) if (free[j]) frontier.push(j);
-
-    while (size < target && frontier.length > 0) {
-      // Swap-remove a uniformly random frontier entry. Entries can be stale
-      // (claimed by this same region via another neighbor) or duplicated;
-      // both are filtered here rather than kept unique, which would cost a set
-      // lookup per push for no behavioral difference.
-      const k = randomUpto(rng, frontier.length);
-      const cell = frontier[k];
-      frontier[k] = frontier[frontier.length - 1];
-      frontier.pop();
-      if (!free[cell]) continue;
-
-      free[cell] = 0;
-      remaining--;
-      dsf.merge(seed, cell);
-      size++;
-      for (const j of neighbors(cell)) if (free[j]) frontier.push(j);
-    }
-  }
+function growRegions(p: SeismicParams, rng: RandomState): Dsf {
+  return growToSize(p, rng, () => drawRegionSize(p.mode, rng));
 }
 
 /**
@@ -362,7 +284,6 @@ function scratchCopy(board: SeismicBoard): SeismicBoard {
 }
 
 function genPuzzle(board: SeismicBoard, rng: RandomState, diff: number): boolean {
-  growRegions(board, rng);
   // A budget-exhausted fill means "this partition was awkward"; returning
   // false sends the caller round for a fresh one.
   if (!fillRegions(board, rng)) return false;
@@ -377,15 +298,13 @@ function genPuzzle(board: SeismicBoard, rng: RandomState, diff: number): boolean
  * preset and never more than low hundreds.
  */
 export function newSeismicDesc(p: SeismicParams, rng: RandomState): { desc: string } {
-  const board = blankBoard(p.w, p.h, p.mode);
+  const blank = blankBoard(p.w, p.h, p.mode);
   const attempt = retryLimit(`seismic: ${p.w}x${p.h} generation`);
 
   for (;;) {
     attempt();
-    board.grid.fill(0);
-    board.dsf.reinit();
-    if (genPuzzle(board, rng, p.diff)) break;
+    blank.grid.fill(0);
+    const board = { ...blank, dsf: growRegions(p, rng) };
+    if (genPuzzle(board, rng, p.diff)) return { desc: encodeDesc(board) };
   }
-
-  return { desc: encodeDesc(board) };
 }

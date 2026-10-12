@@ -44,7 +44,12 @@ after it.
 - **Regions**: as many as the grid is wide, of unequal sizes, taken from the
   engine's division (`own-region-division-in-the-engine`) with Star Battle's
   rule: no region holds more stars than the board's number. The game writes
-  no division of its own.
+  no division of its own. That change is archived, and its `design.md` §
+  "How Star Battle says its rule" has the call (`growFromSeeds` on the stars,
+  then `mergeToCount`), how often it is met (86% of tries at 8x8 with two
+  stars, 61% at 14x14 with three, measured 2026-10-12) and what it left for
+  this change to measure: the spread of region sizes, which a rule that
+  holds a size as well can narrow.
 - **Marks**: a star and a cross for "no star here", the cross being the
   player's own notation and the hint's.
 - **Deductions**, each a named rung that grades and narrates: a unit with

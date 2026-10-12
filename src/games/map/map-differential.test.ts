@@ -1,8 +1,8 @@
 /**
  * Gated C-vs-TS byte-match differential for Map.
  *
- * The generator is RNG-draw-order-critical (genmap's cumulative-frequency
- * draws, fourcolor's shuffle + random-most-constrained pick, the clue-reduction
+ * The generator is RNG-draw-order-critical (the cumulative-frequency draws of
+ * the engine's `growFromSeeds`, fourcolor's shuffle + random-most-constrained pick, the clue-reduction
  * shuffle) and solver-gated (the desc depends on `map_solver`'s uniqueness
  * verdict on every intermediate board). So we assert two things per fixture:
  *   1. `newMapDesc(p, randomNew(seed))` reproduces the C desc AND aux exactly;

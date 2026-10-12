@@ -123,7 +123,9 @@ guides is for a game that is not yours.
   `solver-and-generator.md` § "Guess-free generation", without its parts;
   `solver-and-generator.md` § "The difficulty contract";
   `solver-and-generator.md` § "A tier means exactly its rung";
-  `solver-and-generator.md` § "The solvable-game contract".
+  `solver-and-generator.md` § "The solvable-game contract";
+  `solver-and-generator.md` § "A division into regions is the engine's",
+  only where the board is divided into regions.
 - `mechanics.md` § "Difficulty is a declared contract"; `mechanics.md` §
   "Mistake checking is part of done".
 - `hints.md` § "Cognitive load: one step per hint"; `hints-marks.md` § "Group

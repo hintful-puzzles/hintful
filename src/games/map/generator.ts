@@ -1,13 +1,15 @@
 /**
  * Map's board generator (upstream `new_game_desc` and its helpers). Byte-faithful
  * to the C RNG draw order so a seed reproduces the exact desc + aux:
- *   1. `genmap` — voronoi-style region growth over a cumulative-frequency table;
+ *   1. the regions, grown from seeds scattered at random (upstream `genmap`,
+ *      which is the engine's `growFromSeeds`);
  *   2. `gengraph` — the adjacency graph (see graph.ts);
  *   3. `fourcolor` — a recursive four-coloring;
  *   4. solver-gated clue reduction (never removing the last region of a color);
  *   5. the difficulty-floor retry loop.
  */
 
+import { growFromSeeds, regionNumbers, scatterSeeds } from "../../engine/divide.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
@@ -18,181 +20,6 @@ import type { MapParams } from "./state.ts";
 
 const FOUR = 4;
 const FIVE = 5;
-
-const WEIGHT_INCREASED = 2;
-const WEIGHT_DECREASED = 4;
-const WEIGHT_UNCHANGED = 3;
-
-// --- cumulative-frequency (Fenwick-like) table -----------------------
-
-function cfAdd(table: Int32Array, sym: number, count: number): void {
-  let bit = 1;
-  while (sym !== 0) {
-    if (sym & bit) {
-      table[sym] += count;
-      sym &= ~bit;
-    }
-    bit <<= 1;
-  }
-  table[0] += count;
-}
-
-/** Total count of symbols with value less than `sym`. */
-function cfClookup(table: Int32Array, n: number, sym: number): number {
-  if (sym === 0) return 0;
-  let count = table[0];
-  let bit = 1;
-  while (bit < n) bit <<= 1;
-  let limit = n;
-  while (bit > 0) {
-    const index = ((sym + bit - 1) & ~(bit * 2 - 1)) + bit;
-    if (index < limit) {
-      count -= table[index];
-      limit = index;
-    }
-    bit >>= 1;
-  }
-  return count;
-}
-
-/** Count of symbol `sym`. */
-function cfSlookup(table: Int32Array, n: number, sym: number): number {
-  let count = table[sym];
-  for (let bit = 1; sym + bit < n && !(sym & bit); bit <<= 1) count -= table[sym + bit];
-  return count;
-}
-
-/** Largest symbol whose cumulative frequency is <= `count`. */
-function cfWhichsym(table: Int32Array, n: number, count: number): number {
-  let bit = 1;
-  while (bit < n) bit <<= 1;
-  let sym = 0;
-  let top = table[0];
-  while (bit > 0) {
-    if (sym + bit < n) {
-      if (count >= top - table[sym + bit]) sym += bit;
-      else top -= table[sym + bit];
-    }
-    bit >>= 1;
-  }
-  return sym;
-}
-
-// --- map generation --------------------------------------------------
-
-/** Reused neighbor buffer for {@link extendOptions} (hot path). */
-const col = new Int32Array(8);
-
-/**
- * Which region colors can extend into square `(x, y)`, and by what weight.
- * With `index < 0` returns the total weight; with `index >= 0` returns the
- * `index`-th selectable color (weighted). Upstream `extend_options`.
- */
-function extendOptions(
-  w: number,
-  h: number,
-  n: number,
-  map: Int32Array,
-  x: number,
-  y: number,
-  index: number,
-): number {
-  if (map[y * w + x] >= 0) return 0; // already a region
-
-  // The eight neighbors in order around the square.
-  for (let dy = -1; dy <= 1; dy++)
-    for (let dx = -1; dx <= 1; dx++) {
-      const idx = dy < 0 ? 6 - dx : dy > 0 ? 2 + dx : 2 * (1 + dx);
-      if (x + dx >= 0 && x + dx < w && y + dy >= 0 && y + dy < h)
-        col[idx] = map[(y + dy) * w + (x + dx)];
-      else col[idx] = -1;
-    }
-
-  let total = 0;
-  for (let c = 0; c < n; c++) {
-    // Must be orthogonally adjacent to region c.
-    let neighbors = 0;
-    for (let i = 0; i < 8; i += 2) if (col[i] === c) neighbors++;
-    if (!neighbors) continue;
-
-    // Extending must not make the region non-simply-connected: only one run.
-    let runs = 0;
-    for (let i = 0; i < 8; i++) if (col[i] === c && col[(i + 1) & 7] !== c) runs++;
-    if (runs > 1) continue;
-
-    const count =
-      neighbors === 1
-        ? WEIGHT_INCREASED
-        : neighbors === 2
-          ? WEIGHT_UNCHANGED
-          : WEIGHT_DECREASED;
-
-    total += count;
-    if (index >= 0 && index < count) return c;
-    index -= count;
-  }
-
-  return total;
-}
-
-/** Upstream `genmap`: fill `map` (`wh` region indices) with `n` regions. */
-function genmap(
-  w: number,
-  h: number,
-  n: number,
-  map: Int32Array,
-  rs: RandomState,
-): void {
-  const wh = w * h;
-  const tmp = new Int32Array(wh);
-
-  for (let i = 0; i < wh; i++) {
-    map[i] = -1;
-    tmp[i] = i;
-  }
-
-  // Place the region seeds.
-  let k = wh;
-  for (let i = 0; i < n; i++) {
-    const j = randomUpto(rs, k);
-    map[tmp[j]] = i;
-    tmp[j] = tmp[--k];
-  }
-
-  // Reuse tmp as the cumulative-frequency table of extend options per square.
-  tmp.fill(0);
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++)
-      cfAdd(tmp, y * w + x, extendOptions(w, h, n, map, x, y, -1));
-
-  // Grow the regions.
-  while (tmp[0] > 0) {
-    const kk = randomUpto(rs, tmp[0]);
-    const sq = cfWhichsym(tmp, wh, kk);
-    const rem = kk - cfClookup(tmp, wh, sq);
-    const x = sq % w;
-    const y = Math.floor(sq / w);
-    const color = extendOptions(w, h, n, map, x, y, rem);
-
-    map[sq] = color;
-
-    for (let yy = Math.max(y - 1, 0); yy < Math.min(y + 2, h); yy++)
-      for (let xx = Math.max(x - 1, 0); xx < Math.min(x + 2, w); xx++)
-        cfAdd(
-          tmp,
-          yy * w + xx,
-          -cfSlookup(tmp, wh, yy * w + xx) + extendOptions(w, h, n, map, xx, yy, -1),
-        );
-  }
-
-  // Renumber regions into scan order so indistinguishable maps are identical.
-  for (let i = 0; i < n; i++) tmp[i] = -1;
-  let np = 0;
-  for (let i = 0; i < wh; i++) {
-    if (tmp[map[i]] < 0) tmp[map[i]] = np++;
-    map[i] = tmp[map[i]];
-  }
-}
 
 // --- four-coloring --------------------------------------------------
 
@@ -289,7 +116,6 @@ export function newMapDesc(
   const { w, h, n } = p;
   const wh = w * h;
 
-  const map = new Int32Array(wh);
   const coloring = new Int32Array(n);
   const coloring2 = new Int32Array(n);
   const cfreq = new Int32Array(FOUR);
@@ -298,7 +124,9 @@ export function newMapDesc(
   for (;;) {
     attempt();
 
-    genmap(w, h, n, map, rs);
+    // Numbered in reading order, so that maps no player could tell apart are
+    // the same description.
+    const map = regionNumbers(growFromSeeds(p, scatterSeeds(p, n, rs), rs), wh);
     const { graph, ngraph } = gengraph(w, h, n, map);
     fourcolor(graph, n, ngraph, coloring, rs);
 

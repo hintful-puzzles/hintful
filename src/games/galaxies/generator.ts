@@ -104,7 +104,8 @@ function moveDotAssociations(
 /** Grow the dot's region to cover `toAdd`, each tile with its 180° image; if
  * that is impossible, try moving the dot to the center of mass of its old and
  * new tiles instead. Upstream's `dot_expand_or_move`; mutates `s` only on
- * success. */
+ * success. No walk of the engine's `divide.ts` grows a region this way, two
+ * tiles at once about a dot that may move. */
 function dotExpandOrMove(
   s: GalaxiesState,
   dx: number,

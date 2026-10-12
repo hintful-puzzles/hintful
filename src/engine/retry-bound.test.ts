@@ -69,6 +69,12 @@ function sources(): Record<string, string> {
  * free square in 1,600 is refused 10,000 times running about once in 500.
  */
 const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
+  "engine/divide.ts › growFromSeeds": ["a region takes a free cell each pass"],
+  "engine/divide.ts › growToSize": [
+    "claims a free cell each pass",
+    "pops a frontier entry each pass",
+  ],
+  "engine/divide.ts › mergeToCount": ["joins two regions each pass or returns null"],
   "engine/divvy.ts › divvyRectangleAttempt": [
     "each pass grows an omino by a square or returns null, and divvyRectangle counts the attempts",
   ],
@@ -126,7 +132,6 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
     "rejection sampling over colors, and validateParams keeps the pegs no more than the colors",
   ],
   "games/map/generator.ts › fourcolorRecurse": ["counts down the colors left to try"],
-  "games/map/generator.ts › genmap": ["colors a square each pass"],
   "games/mines/generator.ts › minegen": ["counts down the mines to lay"],
   "games/mines/solver.ts › minesolve": [
     "each pass deduces a square or perturbs, and a perturbation settles the set it was asked about or gives up",
@@ -151,10 +156,6 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
   "games/samegame/state.ts › genGrid": [
     "each pass fills cells, and one that can fill none leaves",
     "counts down the insertion points",
-  ],
-  "games/seismic/generator.ts › growRegions": [
-    "claims a free cell each pass",
-    "pops a frontier entry each pass",
   ],
   "games/separate/generator.ts › placedLetters": [
     "a swap of unread letters walls an edge, and any other counts `stalled` up to STALLED_SWAPS",

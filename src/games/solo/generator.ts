@@ -220,7 +220,9 @@ function mergeBlocks(b: BlockStructure, n1: number, n2: number): void {
 }
 
 /** `gen_killer_cages`: lay out cages by a left/down random walk, optionally
- *  folding away singletons by merging each into a neighbor. */
+ *  folding away singletons by merging each into a neighbor. Not the engine's
+ *  `mergeNeighbors` under a largest size, which deals cages at that size:
+ *  the cages are to be mostly pairs, so the dominoes are laid first. */
 function genKillerCages(
   cr: number,
   rng: RandomState,

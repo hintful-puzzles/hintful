@@ -120,7 +120,9 @@ export function newKeenDesc(
     dsf.reinit();
 
     // Place dominoes at random (prob 3/4), preferring the lowest-revorder
-    // available neighbor.
+    // available neighbor. The cages are not the engine's `mergeNeighbors`
+    // under a largest size, which deals cages at that size: subtraction and
+    // division clues need cages of two, so the dominoes are laid first.
     for (let i = 0; i < a; i++) {
       if (!singletons[i]) continue;
       const best = bestNeighbor(i, (j) => singletons[j] !== 0);

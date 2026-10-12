@@ -1,9 +1,12 @@
 # own-region-division-in-the-engine
 
-**Status: scaffolded 2026-10-12, not started.** Filed on the owner's word the
-same day: dividing a grid into regions of unequal size is a shared concern,
-and the engine is to own it. It comes before `add-starbattle`, which is its
-first new user.
+**Status: done 2026-10-12.** Filed on the owner's word the same day: dividing
+a grid into regions of unequal size is a shared concern, and the engine is to
+own it. It comes before `add-starbattle`, which is its first new user.
+`design.md` holds what was decided, and departs from the text below in two
+places: the shapes are three walks and a merge toward a count, not two, and a
+game moved only where its boards stayed the same, so three of the six moved
+and no fixture was retired.
 
 ## Why
 
