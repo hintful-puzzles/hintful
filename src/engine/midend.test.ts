@@ -23,6 +23,7 @@ import {
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { endParams } from "./params.ts";
 import {
+  CURSOR_SELECT,
   CURSOR_UP,
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -324,6 +325,59 @@ describe("Midend completion: the status is the position's, the history is the en
     const told = frame(0.2);
     expect(told.time).toBeCloseTo(0.2);
     expect(told.lit).not.toContain(true);
+  });
+
+  it("plays on through an input that changes only the Ui", () => {
+    // The release after the winning press is such an input wherever a game
+    // tidies its `Ui` on it, and so is a cursor key pressed while it plays.
+    const { h, frame, win } = watching({
+      interpretMove: (s, ui, ds, p, button) =>
+        button === CURSOR_SELECT
+          ? UI_UPDATE
+          : fakeGame.interpretMove(s, ui, ds, p, button),
+    });
+    win();
+    expect(frame(0.01).lit).toEqual([true, false, false, false, false]);
+    expect(h.m.processInput(0, 0, CURSOR_SELECT)).toBe(true);
+    expect(h.timerActive()).toBe(true);
+    expect(frame(0.01).lit).toEqual([true, false, false, false, false]);
+  });
+
+  it("plays on through a hover and a change of reference", () => {
+    const { h, frame, win } = watching({
+      hover: () => UI_UPDATE,
+      selectReference: () => true,
+    });
+    win();
+    expect(h.m.processHover({ x: 0, y: 0 })).toBe(true);
+    expect(frame(0.01).lit).toEqual([true, false, false, false, false]);
+    h.m.selectReference(null);
+    expect(h.timerActive()).toBe(true);
+    expect(frame(0.01).lit).toEqual([true, false, false, false, false]);
+  });
+
+  it("leaves a move's own animation running under a Ui-only input", () => {
+    const times: number[] = [];
+    const h = harness({
+      ...fakeGame,
+      animLength: () => 1,
+      interpretMove: (s, ui, ds, p, button) =>
+        button === CURSOR_SELECT
+          ? UI_UPDATE
+          : fakeGame.interpretMove(s, ui, ds, p, button),
+      redraw: (_dr, _ds, _prev, _s, _dir, _ui, animTime) => {
+        times.push(animTime);
+      },
+    });
+    h.m.newGame();
+    h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
+    const { dr } = recordingDrawing();
+    inc(h);
+    h.m.timer(0.4);
+    h.m.processInput(0, 0, CURSOR_SELECT);
+    h.m.redraw(dr);
+    expect(times.at(-1)).toBeCloseTo(0.4);
+    expect(h.timerActive()).toBe(true);
   });
 
   it("ends a win flash that the game asked nothing of", () => {

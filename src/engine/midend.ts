@@ -857,7 +857,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (this.drawState === null || this.game.hover === undefined) return false;
     const update = this.game.hover(this.state, this.ui, this.drawState, p);
     if (update === null) return false;
-    this.clearAnimation();
     this.afterTransition();
     return true;
   }
@@ -1046,14 +1045,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return !sameShown(uiBefore, this.ui);
   }
 
-  /** The `Ui` changed in place: redraw and notify, with no history entry and
-   * no animation. A game whose change is an alternative display (Subsets'
+  /** The `Ui` changed in place: redraw and notify, with no history entry. An
+   * animation or flash in flight plays on, since the move it belongs to
+   * still stands: the release after a winning press is such a change in a
+   * game that tidies its `Ui` there, and must not end the win's highlight.
+   * A game whose change is an alternative display (Subsets'
    * reference aid) dismisses any displayed hint here, so the aid is not
    * suppressed by a still-active hint; `afterTransition` re-emits the status
    * bar without the hint text. */
   private uiUpdated(): void {
     if (this.uiUpdateDismisses()) this.clearHint();
-    this.clearAnimation();
     this.afterTransition();
   }
 
@@ -1326,7 +1327,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (!this.game.selectReference) return;
     this.press = null;
     if (this.game.selectReference(this.ui, key)) {
-      this.clearAnimation();
       this.afterTransition();
     }
   }
