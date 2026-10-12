@@ -126,3 +126,13 @@ Checked and found sound:
   the clamp or the wrap is the helper's and not which.
 - Every kept requirement read by sentence: none is a copy. The 9 engine
   titles the ledger cites are exact.
+
+## Second pass
+
+- "Controls: A click rotates the block centered on it" gains one sentence
+  naming `targetVerbs` and `engine-input`, "The engine owns a declaring
+  game's press and select keys", as where the direction each button turns a
+  block is stated. The review had removed the pointer and recorded under
+  Found that `Controls` then said nowhere which button turns which way: an
+  owed subject that does not say where its ordinary case is stated is what
+  the pointer is for. That Found line is answered by this.

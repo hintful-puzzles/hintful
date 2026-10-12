@@ -384,6 +384,28 @@ deliberately let through.
 - **THEN** its test file says the differential holds that guarantee
 - **AND** the differential has been seen to fail on that defect
 
+### Requirement: A firing census certifies a solver's ladder
+
+`describeLadderCensus` SHALL walk a game's ladder over the game's boards at
+each of its caps, with one tally of firings across them all, and SHALL fail
+unless the rungs that never fired are exactly those the game records as
+unreached, each with its reason. It SHALL also fail on a recorded rung the
+ladder lacks, on a fired id the ladder does not declare, and on a ladder with
+no rungs. The boards and the caps are the game's, whose solver forwards the
+tally to the runner.
+
+#### Scenario: A rung the boards never reach
+
+- **WHEN** one rung of a ladder fires on none of the census's boards at any
+  cap, and the game has recorded nothing for it
+- **THEN** the census fails and lists the rung, though every board solved
+
+#### Scenario: A recorded rung that fires after all
+
+- **WHEN** a rung the game records as unreached fires on a board added to the
+  census
+- **THEN** the census fails until the record is taken out
+
 ### Requirement: An assertion's two sides do not derive from the same value
 
 A test SHALL NOT compare a quantity against the thing that produced it:

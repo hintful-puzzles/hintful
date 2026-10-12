@@ -167,6 +167,30 @@ placement).
   key is pressed
 - **THEN** the color is picked up and pencil mode is as it was
 
+### Requirement: The highlight is the game's keyboard cursor
+
+A member's highlight SHALL be the keyboard cursor its `Ui` holds as `cursor`,
+and no second position. An arrow key SHALL therefore reveal and move the
+highlight as `engine-input`, "One arrow press reveals the cursor and moves
+it", has a cursor move, and SHALL hand the highlight to the keyboard
+(`cursorFromKeyboard`), so that the entry typed next leaves it showing. Where
+the arrows may take it, and an arrow that is an action of the game's own, are
+the game's.
+
+#### Scenario: An arrow after a pointer selection
+
+- **WHEN** the pointer has selected a cell, an arrow key is pressed and a value
+  is then typed
+- **THEN** the highlight has moved one cell, the value is entered there, and
+  the highlight stays, where the pointer's own selection would have been put
+  away
+
+#### Scenario: An arrow resumes from a hidden highlight
+
+- **WHEN** a value entry has put the pointer's highlight away and an arrow key
+  is pressed
+- **THEN** the highlight shows one cell on from where it was
+
 ### Requirement: The mechanic's Ui fields have one spelling and one polarity
 
 The mechanic's `Ui` fields SHALL have one spelling and one polarity across the
@@ -235,6 +259,35 @@ the highlight on its cell.
   the game, which starts with the sticky preference on, is opened
 - **THEN** a secondary press selects one cell for pencil marks and latches
   nothing
+
+### Requirement: An auto-pencil strike is decided when the placement is made
+
+A game that offers `auto-pencil` SHALL put on each placement's move whether
+the preference was on when it was made, and `executeMove` SHALL strike by the
+move and never by the preference: it is handed no `Ui`, and a save holds no
+preferences. Such a placement SHALL strike its value from the pencil marks of
+the other cells of each no-repeat region its cell is in; a pencil entry or a
+clear strikes nothing. Which regions is the game's to state.
+
+#### Scenario: A saved game replayed with the preference changed
+
+- **WHEN** a placement was made with auto-pencil on, the game is saved, and
+  the save is opened with auto-pencil off
+- **THEN** replaying the placement strikes the marks it struck when it was
+  made
+
+#### Scenario: Two games with different regions
+
+- **WHEN** a value is placed with auto-pencil on in a game whose no-repeat
+  regions are the row and the column, and in one that adds a block
+- **THEN** the first strikes the value from the rest of the row and column,
+  and the second from the rest of the block as well
+
+#### Scenario: A hint's placement
+
+- **WHEN** a candidate hint plans a placement while auto-pencil is on
+- **THEN** the planned move carries the preference as the player's own would,
+  through the dialect's `place`
 
 ### Requirement: An unoffered pencil preference is read from its absence
 
@@ -602,12 +655,23 @@ The picture SHALL be part of the cell's background: it is drawn with the cell's
 background and before any of the cell's content, so a clue, a mark or a divider
 in the same corner stays on top of it. The game SHALL fold the highlight's
 state into its per-cell repaint key, so the cell repaints when the highlight
-arrives, changes mode or leaves.
+arrives, changes mode or leaves. The wash SHALL replace whichever surface the
+game gives the cell, a given's lifted one included; the triangle SHALL lie
+over it.
 
 #### Scenario: The highlight leaves
 
 - **WHEN** the highlight is put away
 - **THEN** the cell repaints, with neither the wash nor the triangle
+
+#### Scenario: A cell whose surface is a given's
+
+- **WHEN** a game hands the painter a given's lifted surface for a cell, first
+  selected for entry and then for notes
+- **THEN** the entry frame fills the cell with the wash and none of the lifted
+  surface
+- **AND** the notes frame fills it with the lifted surface and draws the
+  triangle over that
 
 ### Requirement: A game keeps what is its puzzle's in the highlight's picture
 

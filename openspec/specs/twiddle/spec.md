@@ -169,7 +169,9 @@ every orientation, and SHALL count as one move.
 
 A click SHALL be offset by `(n−1)/2` tiles, so that it selects the block
 centered on the click, and a click whose block falls outside `0 ≤ x ≤ w−n`,
-`0 ≤ y ≤ h−n` SHALL make no move.
+`0 ≤ y ≤ h−n` SHALL make no move. Which way each button and the select keys
+turn a block SHALL be what `targetVerbs` declares (`engine-input`, "The
+engine owns a declaring game's press and select keys").
 
 #### Scenario: Click geometry constrains legal rotations
 

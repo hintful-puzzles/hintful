@@ -498,6 +498,28 @@ to make and when each is offered, and never what is recorded.
 - **THEN** the solver records the same firings for both, and the notes decide
   which of them each plan still has to make
 
+### Requirement: A recording solve stops below the tier that searches
+
+A game with an `Unreasonable` tier whose plan records SHALL cap its recording
+solver beneath that tier on every board, so no recorded firing is a trial
+(`engine-hints`, "A Search is refused and never narrated"). `candidateHint`
+SHALL give the plan the capped solve yields, and SHALL refuse with
+`DEDUCTION_EXHAUSTED` only where that plan holds no step. How far beneath a
+game caps is its own: at the board's own tier, where a step is to be one that
+tier promises.
+
+#### Scenario: A hint on an Unreasonable board
+
+- **WHEN** a hint is asked for on a board of the `Unreasonable` tier
+- **THEN** the recording solver runs no higher than the highest tier beneath
+  it, and the plan holds what it records up to where a trial would be needed
+
+#### Scenario: Nothing left to record
+
+- **WHEN** the capped solve records nothing from the player's board and the
+  plan has no setup step to make
+- **THEN** `candidateHint` refuses with `DEDUCTION_EXHAUSTED`
+
 ### Requirement: A placement's bookkeeping is not a firing to teach
 
 The recorded strike firings a plan could take now (`availableFirings`) SHALL

@@ -59,21 +59,43 @@ is the next session's, starting at 3.1.**
       play), `engine-difficulty` (the bounded answer search, Solve from it,
       the tier a string with no `d` decodes to), `border-grid` (the edge
       byte), `engine-params` (the dot-run round trip).
-- [ ] 3.2a **A last engine round**, when every batch is written: gather
-      `## Engine requests` from all the ledgers
-      (`grep -n -A30 '^## Engine requests' ledger/*.md`), give a home to each
-      sentence more than one game states, review it, then remove that
-      sentence from the games that kept it, with a ledger row each.
+- [x] 3.2a **A last engine round**, when every batch is written: the
+      `## Engine requests` of all the ledgers gathered and given a home, in
+      two halves, each written and then reviewed: `ledger/_engine.md`,
+      "Third round: the rest" and "Third round: hints and colors", with what
+      was deliberately not written (the games' own, no shared code or guard
+      behind it) and why.
+- [ ] 3.2b **Remove from the games what the third round now states.** Each
+      third-round table's last column names the games that keep the sentence
+      and the requirement in each that holds it, as corrected by that
+      round's review section. For each game: cut the sentence (keeping any
+      clause the review says must stay), with a ledger row, under a
+      `## Third pass` heading; a writer per batch of games and then
+      `cut-check`, the validator, `spec-subjects.mjs` and `spec-form.mjs`.
+      Read what is left of each touched subject alone: the cut must not
+      leave it hollow (`brief.md`, rule 2).
+- [ ] 3.2c **One rule for the Generation pointer, across all 57.** The second
+      pass removed "what a dealt board promises is the collection's … with
+      no departure" from some specs and kept it in others
+      (`git grep -n 'no departure\|departs from n' -- openspec/specs`). Where
+      the subject already says what the game's tiers mean, it goes; where
+      the subject would say nothing else, it stays. Same for the sentence
+      "What a pasted game ID opens as SHALL follow from that", which
+      Palisade keeps and Crossing, Filling and Signpost lost.
 - [x] 3.3 Redo Clusters and Palisade under the three rules, and read the two
       results whole as specs before starting the rest. Clusters 17,754 to
       14,166 bytes, Palisade 31,602 to 25,015; both read whole and reviewed.
-- [ ] 3.4 The other 55, a writer then a reviewer a batch. Each game: its
-      spec cut in place, and its ledger. A game is done when it has a
-      `## Review` section in its ledger and `cut-check` passes; run
-      `node openspec/changes/order-and-shrink-the-game-specs/tools/cut-check.mjs`
-      for the games that have no ledger yet, and
-      `grep -L '^## Review' ledger/*.md` for those written and not reviewed.
-      The batches: (separate slant rect) (loopy galaxies) (keen towers
+- [x] 3.4 The other 55, a writer then a reviewer a batch. Each game: its
+      spec cut in place, and its ledger with a `## Review` section. All 57
+      are written and reviewed, and the 27 reviewed before the brief said "A
+      pointer is for that case only" had a second pass for it
+      (`## Second pass` in their ledgers). Two sweeps over all 57 after
+      that: each owed subject measured before and after (Twiddle's
+      `Controls` was the one left without its ordinary case, mended), and
+      every declared `kw` looked for in the spec before and after (75 keys,
+      one gone, Magnets' `strip-clues`, a Custom-dialog field and not a
+      stored preference). `cut-check` with no argument gives the measure.
+      The batches were: (separate slant rect) (loopy galaxies) (keen towers
       unequal group mathrax) (solo salad rome abcd undead) (crossing map
       seismic filling signpost) (unruly singles lightup tents magnets)
       (mosaic pattern range boats subsets) (tracks pearl bridges spokes

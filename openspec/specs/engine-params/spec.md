@@ -437,6 +437,70 @@ back every description it writes.
 - **WHEN** no cells are written
 - **THEN** the description is `a`, and reading it for no cells places nothing
 
+### Requirement: The engine provides the run-letter description grammar
+
+`encodeRunLength` SHALL write cells as one value character for each that
+holds a value and a lowercase letter for each run of blanks, `a` for one up
+to `z` for twenty-six, a longer run as a `z` for every twenty-six and a
+letter for the rest. `scanRunLength` SHALL read a letter as its blanks and
+hand back any other character unread. The value characters, their bounds, the
+refusals, and whether a run reaching the last cell is written
+(`keepTrailingBlanks`) are the game's.
+
+#### Scenario: Thirty blanks before a value
+
+- **WHEN** thirty blank cells, a cell the game writes as `3` and one more
+  blank cell are written
+- **THEN** the description is `zd3`, and `zd3a` where the game keeps the
+  trailing run
+- **AND** scanning `zd3a` gives 26 blanks, 4 blanks, the character `3` and 1
+  blank
+
+#### Scenario: A character the game will refuse
+
+- **WHEN** `b?` is scanned
+- **THEN** the scanner gives 2 blanks and hands back `?`, and refusing it is
+  the game's
+
+### Requirement: The engine provides the wall-list description grammar
+
+`encodeRegionWalls` SHALL write, and `readRegionWalls` read, a grid's regions
+as a list of the borders between orthogonally adjacent cells: those between
+side-by-side cells first, row by row, then those between rows, each in
+reading order. A decimal number SHALL be that many walls in a row; a letter
+`a` to `y` one to twenty-five open borders and the wall that ends them; `z`
+twenty-six open borders and no wall. A last letter's wall MAY fall past the
+end of the list.
+
+#### Scenario: A 2 by 2 grid split into its two columns
+
+- **WHEN** a 2 by 2 grid whose regions are its left and right columns is
+  written
+- **THEN** the list is `2b`: a wall inside each row, then the two open borders
+  between the rows, whose letter's wall falls past the end
+- **AND** reading `2b` for a 2 by 2 grid gives those two regions
+
+#### Scenario: Twenty-six open borders and a wall
+
+- **WHEN** `encodeWallRuns` writes twenty-six open borders and then a wall
+- **THEN** it writes `z1`, where twenty-five and then a wall is `y` alone
+
+### Requirement: The wall-list reader refuses a run that passes the last border
+
+`readRegionWalls` SHALL read exactly the borders of its grid and refuse, in
+the collection's description error kinds: a number of walls that is zero or
+more than the borders left, as out of range; a letter whose open borders pass
+the last one, as too long; a character that is neither a digit nor a
+lowercase letter, naming it; and a list that ends early, as too short. What
+follows the list is the game's to read.
+
+#### Scenario: Four borders read four ways
+
+- **WHEN** a wall list is read for a 2 by 2 grid, which has four borders
+- **THEN** `5` is refused as out of range, `e` as too long, `2B` naming `B`,
+  and `2` as too short
+- **AND** `c` is read as three open borders and a wall on the fourth
+
 ### Requirement: Choosing params changes the next board, not the one on screen
 
 The midend SHALL keep the params of the board on screen apart from the params
@@ -1379,6 +1443,28 @@ tagged field as `defaultParams` has it, or as a `whenAbsent` sets it.
 - **WHEN** a string without the letter of a `flag` segment is decoded
 - **THEN** the field is set to the opposite of what the letter means, whatever
   `defaultParams` holds, since a bare letter has no other way to say so
+
+### Requirement: A bare flag letter left out is read as the opposite of its meaning
+
+A `flag` segment SHALL write its letter where the field holds what the letter
+means, and nothing otherwise; one declared for the full form only SHALL write
+nothing in the short form. Decoding SHALL set the field to that meaning where
+the letter stands next, and to its opposite where it does not, whatever
+`defaultParams` holds and whichever form was written. Which value the letter
+means is the game's to declare, and is on where it declares none.
+
+#### Scenario: A letter that means off
+
+- **WHEN** a game declares `D` to mean that diagonal touching is not allowed,
+  and decodes `5x5n5`
+- **THEN** the board allows diagonal touching, and `5x5n5D` does not
+
+#### Scenario: A flag written in the full form only
+
+- **WHEN** a flag declared for the full form only holds its letter's meaning,
+  and the params are written in the short form and decoded again
+- **THEN** the short form has no letter, and the field decodes as the
+  opposite, whatever `defaultParams` holds
 
 ### Requirement: The engine makes the one refusal of a params string
 

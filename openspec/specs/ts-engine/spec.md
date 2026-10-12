@@ -1031,7 +1031,8 @@ The search, its budget and the move made of a line are the game's.
 
 A Solve SHALL never install a route or marks for the player to follow, nor
 reveal an answer as a loss. A game whose solver finds no finish from the
-player's position SHALL refuse. A game whose answer is fixed SHALL replace the
+player's position SHALL refuse, or finish from the board as dealt where its
+Solve is `solveBySearch`'s. A game whose answer is fixed SHALL replace the
 player's mistakes with it, as it replaces a wrong entry.
 
 #### Scenario: No finish within the rules is a refusal
@@ -1285,9 +1286,10 @@ of.
 A game's `findMistakes` SHALL compare the player's marks with the board's one
 answer, including where the answer is hidden from the player. A hidden answer
 SHALL NOT be a reason in `notApplicable.findMistakes`. Where the game's solver
-or search did not establish exactly one answer, no mark SHALL be flagged for
-differing from one, and the result SHALL be empty but for a broken rule the
-game's spec says it reports without an answer.
+or search did not establish exactly one answer, no mark SHALL be flagged
+against an answer. A broken rule a game reports besides, with an answer or
+without one, is the game's to state, and the result is empty without an answer
+where its spec states none.
 
 #### Scenario: A hidden answer is checked
 

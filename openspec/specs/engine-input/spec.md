@@ -99,6 +99,25 @@ renders. The engine SHALL NOT re-derive a label from a button code.
 - **THEN** the entries are labeled `"1"`, `"2"`, `"3"` and `"Clear"`, the last
   with `CLEAR_BUTTON` as its button
 
+### Requirement: The digit keypad has one key for each value, a letter past nine
+
+`digitKeys(n)` SHALL build the keypad of a game that types the values 1 to
+`n`: one key for each in order, the digits `1` to `9` and then the lowercase
+letters from `a` for ten on, each labeled with its own character, and the
+clear key last. `digitKeyCode` SHALL give the key that types a value. Which
+values a board takes, and a keypad in another order, are the game's.
+
+#### Scenario: A keypad of twelve
+
+- **WHEN** a game builds its keypad with `digitKeys(12)`
+- **THEN** its keys are `1` to `9`, `a`, `b`, `c` and Clear, and `a` types
+  the value ten
+
+#### Scenario: A game that counts past nine another way
+
+- **WHEN** a game types its tenth value with `0` and not with `a`
+- **THEN** it builds that keypad itself, and its spec states the keys
+
 ### Requirement: The midend serves a game's key labels
 
 The `EngineCore` surface SHALL expose `requestKeys(): KeyLabel[]`. The midend
@@ -410,6 +429,27 @@ vacuously and takes the app's bare-letter shortcuts away from its own players.
   handling removed
 - **THEN** the keyboard-reachability guard fails for that game
 
+### Requirement: A press the game declines is answered with its release where it was pressed
+
+Where a game does not consume a pointer press, the view SHALL send it that
+button's release at once, at the point of the press, and SHALL follow that
+pointer no further: no drag is sent, and no release where it lifts. A game
+that declines a press and acts on its release SHALL thereby act where the
+press landed, wherever the pointer goes before it lifts.
+
+#### Scenario: A declined press that slides before it lifts
+
+- **WHEN** a game declines a press on one square, and the pointer moves to
+  another square and lifts
+- **THEN** the game was sent the press and the release, both at the first
+  square, and nothing at the second
+
+#### Scenario: A consumed press is followed
+
+- **WHEN** a game consumes a press, and the pointer moves and lifts
+- **THEN** the game is sent the drag and the release where the pointer was
+  for each
+
 ### Requirement: The collection's input guards share one behavioral probe
 
 The questions the collection-wide input guards ask of a game SHALL live in one
@@ -710,6 +750,28 @@ Backspace (`DELETE`) SHALL also reach that game.
 - **THEN** a `DELETE` keypress is consumed by that game under the same probe
   that reaches its panel keys
 
+### Requirement: Escape and the erase keys are the cancel keys
+
+`isCancelKey` SHALL answer yes for Escape and for either erase code
+(`isEraseKey`), which Backspace, Delete and the panel's Clear arrive as, and
+no for every other button. It is the question of a game with a drag or a
+held selection to put down. A game MAY cancel on Escape alone, and SHALL
+where its erase keys rub something out: it tests `isEraseKey` apart. What a
+cancel puts down is the game's.
+
+#### Scenario: A held piece is put down by any of the three
+
+- **WHEN** a game that asks `isCancelKey` holds a piece from the keyboard, and
+  Escape, Backspace or Delete is pressed
+- **THEN** each puts the piece down where it was picked up, with no move
+
+#### Scenario: A game whose Backspace erases
+
+- **WHEN** a game that erases with Backspace has a note pinned, and Escape and
+  then Backspace are pressed
+- **THEN** Escape unpins the note and erases nothing, and Backspace is the
+  erase
+
 ### Requirement: Click-game input is declared as targets and verbs
 
 The engine SHALL support an optional `Game.targetVerbs` declaration for a game
@@ -760,6 +822,30 @@ keys, with no button.
   cursor on a square, and the player presses in the margin outside the grid
 - **THEN** no verb is applied, the cursor stays shown on that square, and undo
   offers no step for the press
+
+### Requirement: The engine provides the geometry of a grid of squares
+
+`squareGrid` SHALL give a declaring game whose targets are the squares of a
+grid its geometry, from the grid's size and the board's border, which the
+game supplies: a press addresses the square under it and nothing in the
+margin, the cursor rests on the square it is at, and an arrow moves it
+through `moveCursor`, stopping at the grid's edge, or wrapping where the game
+declares `wrap`. The point to press for a square SHALL be its middle.
+
+#### Scenario: An arrow at the edge
+
+- **WHEN** a game on `squareGrid` with no `wrap` shows its cursor in the last
+  column and the right arrow is pressed
+- **THEN** the cursor stays where it is
+- **AND** in a game that declares `wrap`, it goes to the first column of the
+  same row
+
+#### Scenario: A grid that is not the board's cells
+
+- **WHEN** a game's targets are the top-left corners of the blocks it turns,
+  one fewer a side than the cells for a block of two
+- **THEN** it gives that size, and the cursor stops at the last corner and
+  not at the last cell
 
 ### Requirement: The engine owns a declaring game's press and select keys
 

@@ -303,6 +303,29 @@ two premise references (`HINT_BLACKREF`, `HINT_WHITEREF`) SHALL stay more than
 - **WHEN** a color edit brings two hint roles within 0.12 in either scheme
 - **THEN** the palette guard fails, naming the pair and the scheme
 
+### Requirement: The two premise references each cite one state of a cell
+
+`HINT_BLACKREF` SHALL color a hint's reference to a cell cited as a reason
+for being in the game's filled state: shaded, full, lit, or holding a line.
+`HINT_WHITEREF` SHALL color a reference to a cell cited for being in the
+other: marked empty, circled, unlit. A game SHALL draw each as an outline or
+a band, never a fill; a game whose hints cite one state takes that color alone.
+`HINT_WHITEREF` SHALL NOT be the hue of the shaded piece.
+
+#### Scenario: A step that cites both states
+
+- **WHEN** a step's reason rests on a cell already full and a cell already
+  marked empty
+- **THEN** the full cell's outline is `HINT_BLACKREF`, the empty cell's is
+  `HINT_WHITEREF`, and the cell the step acts on is ringed in the acted-on
+  color
+
+#### Scenario: A cell cited for something other than its state
+
+- **WHEN** a step cites a cell for where it lies and not for a state it is in,
+  as it cites an undecided cell beside a clue
+- **THEN** it is marked in the evidence color, and in neither reference
+
 ### Requirement: The acted-on hint color outweighs the evidence fill
 
 The acted-on hint color SHALL carry more than twice the chroma of the evidence
@@ -446,6 +469,26 @@ holds, or moving it.
 - **WHEN** a game's flash runs along ink lines over a bed in a hue of the pair
 - **THEN** the lit lines are the flash colors, which read against the ink and
   the bed in both schemes
+
+### Requirement: A lit beveled tile is lit on its face and keeps its bevel
+
+Where the element the flash lights is a beveled tile, the game SHALL fill the
+tile's face with the flash role's color inside the bevel, and SHALL draw the
+bevel's edges, the tile's number and any mark on it as on any other frame. The
+face is the tile's ground; the bevel says the tile is a thing the player
+moves, and a tile that lost it for a tone would read as part of the board.
+
+#### Scenario: A tile under the highlight's leading edge
+
+- **WHEN** the leading edge of the flash is on a beveled tile
+- **THEN** the tile's face is `FLASH_LEAD`, and its lit and shadowed edges are
+  the colors they are on a tile the flash has not reached
+
+#### Scenario: A lit tile that carries a mark
+
+- **WHEN** a lit tile carries an orientation mark beside its number
+- **THEN** the mark and the number are drawn over the lit face in their own
+  colors
 
 ### Requirement: A departure from a shared role is stated at the assignment
 
@@ -779,3 +822,25 @@ keep the bare cross.
 
 - **WHEN** a game draws the clear square of a cell that holds a number
 - **THEN** the surface is drawn and no cross is
+
+### Requirement: A clear square whose middle is taken carries no cross
+
+`drawClearSquare` SHALL fill the whole cell with the surface, and SHALL draw
+the cross in the middle of the content box it is handed, or no cross where it
+is handed none. A game SHALL hand it none for a cell whose middle holds
+something else, a number for one, so that what the cell holds has the square
+to itself and is never crossed through. With no box named, the box is the
+cell.
+
+#### Scenario: A numbered square beside a bare one
+
+- **WHEN** a game clears two squares, one holding a number and one holding
+  nothing
+- **THEN** both are the clear surface, the bare one carries the faint cross
+  in its middle, and the numbered one carries its number and no cross
+
+#### Scenario: A lit clear square
+
+- **WHEN** the win flash lights a clear square that holds nothing
+- **THEN** the game hands the helper a flash color for the surface, and the
+  square keeps its cross

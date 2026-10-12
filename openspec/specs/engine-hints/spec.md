@@ -124,6 +124,34 @@ it only where that holds.
 - **WHEN** a player's move leaves a state the plan's later steps do not expect
 - **THEN** the game does not answer `"completed"` for it
 
+### Requirement: A step asking for several elements is followed one element at a time
+
+`trackTargets` SHALL judge a move against a step's targets by the changes the
+game hands it: what the move changed on the board, never its ops. It SHALL
+answer `"off"` where the move changed nothing, or changed any element but to
+the value a target asks of it; otherwise `"completed"` once every target
+holds, else `"onTrack"` with the targets that do not yet. On `"onTrack"` the
+game SHALL shrink the step's move, marks and words to those left.
+
+#### Scenario: Two of three squares in one drag
+
+- **WHEN** a step asks three squares to take one mark, and the player's drag
+  sets two of them and changes nothing else
+- **THEN** the verdict is `"onTrack"`, and the step's move, its ring and its
+  words are of the third square alone
+
+#### Scenario: A right square and another beside it
+
+- **WHEN** a move sets one of a step's squares as the step asks and also
+  changes a square the step does not name
+- **THEN** the verdict is `"off"`, and the plan is dropped
+
+#### Scenario: The last of them by another gesture
+
+- **WHEN** a step's move is a drag over its squares, and the player sets the
+  only square still outstanding with a click
+- **THEN** the verdict is `"completed"`
+
 ### Requirement: A stored plan is cleared when play leaves it
 
 The stored plan SHALL be cleared on undo, redo, restart, new game and solve,
@@ -460,12 +488,12 @@ remember.
 
 ### Requirement: A hint marks beside the content, never behind it
 
-A hint's marks SHALL NOT be drawn underneath anything the player has to read.
-The acted-on cell SHALL be ringed and not filled, in every game and with no
-exceptions, even where a fill would hide nothing: one mark means one thing
-across the collection. An evidence area whose cells carry content (entered
-digits, pencil marks, clue glyphs, a placed mark, or a background the deduction
-is reading) SHALL be outlined and not washed.
+A hint's marks, the hatch apart, SHALL NOT be drawn underneath anything the
+player has to read. The acted-on cell SHALL be ringed and not filled, in every
+game and with no exceptions, even where a fill would hide nothing: one mark
+means one thing across the collection. An evidence area whose cells carry
+content (entered digits, pencil marks, clue glyphs, a placed mark, or a
+background the deduction is reading) SHALL be outlined and not washed.
 
 #### Scenario: The acted-on cell is ringed, not filled
 
@@ -784,6 +812,27 @@ contain no game-specific narration or rendering.
   on the one its generator drew
 - **THEN** it supplies its own goal test, and the planner stops when that holds
 
+### Requirement: The slide planner's first-move veto binds the heuristic search alone
+
+A game MAY hand the planner a veto on a plan's first move (`rejectFirstMove`),
+which a sliding game uses to refuse the slide that undoes the player's last.
+The planner SHALL apply it in the heuristic forward search only. A plan the
+exact search or the last resort returns SHALL be given as found, though it
+open with a vetoed move: a shortest plan's first move is what makes a
+recomputed plan converge, and a veto on it would undo that.
+
+#### Scenario: One slide off a finished board
+
+- **WHEN** the player slides a row of a solved board and asks for a hint, in a
+  game that vetoes the slide back
+- **THEN** the exact search finds the one move home, and the hint is that move
+
+#### Scenario: A board past the exact search
+
+- **WHEN** the exact search's ends do not meet and the heuristic search plans
+- **THEN** its plan does not open with the vetoed slide, though that slide
+  lowers the game's measure most
+
 ### Requirement: The slide planner's exact search runs on every board
 
 The exact search SHALL run on every board, before the heuristic search. A game
@@ -885,6 +934,35 @@ nothing about the board, only about itself.
   closer
 - **THEN** the walk fails, because that sentence asserts something the search
   never checked
+
+### Requirement: A search that can prove a position lost says which of its two ends it met
+
+The engine SHALL provide `searchRefusal`, the refusal of a hint whose budgeted
+search for a finishing line found none: `NO_SOLUTION_FROM_HERE` where the
+search proved that no line finishes from the position, a dead end, and
+`SEARCH_OUT_OF_REACH` where its budget ran out with nothing proved. A game that
+can be lost and plans by a search that can meet either end SHALL hand it the
+search's outcome and choose neither sentence itself.
+
+#### Scenario: A position proved lost
+
+- **WHEN** the search has tried every line from the position within its budget
+  and none finishes
+- **THEN** the hint is refused: "No solution can be found from this position.
+  Undo, and try from an earlier one."
+
+#### Scenario: A budget spent on a position nothing was proved of
+
+- **WHEN** the budget runs out before a line is found or every line is tried
+- **THEN** the refusal is the one for a search out of reach, and `isDeadEnd`
+  answers no of it
+
+#### Scenario: A lost position whose cause the game can name
+
+- **WHEN** the game's `hasNoSolution` proves the position lost and names its
+  cause, a piece that can never move again
+- **THEN** the midend refuses with that marked dead end, and the search is not
+  asked
 
 ### Requirement: The search refusal names what still works
 
@@ -1327,6 +1405,53 @@ that produces the verdict continues.
 - **THEN** the trial runs to produce that verdict, and the plan the player is
   shown contains only the steps up to the first point the trial was needed
 
+### Requirement: A hint gives every step deduction still forces before it refuses
+
+On a board with one answer whose tier permits search, a deducing hint whose
+deduction meets no contradiction SHALL give the steps it forces from the board
+in play, as far as its plan's cap, and SHALL refuse with `DEDUCTION_EXHAUSTED`
+only where it forces none: the refusal says nothing further follows, which is
+false while a step remains. Asked again after the player has entered
+something, it SHALL deduce from the board as it then stands ("A hint is
+deduced from the board in play").
+
+#### Scenario: A board that stalls part-way
+
+- **WHEN** the deductions of an `Unreasonable` board fire from its opening and
+  stop short of solving it
+- **THEN** the first hint's plan opens with those steps, and the refusal comes
+  only at a hint asked once all of them are on the board
+
+#### Scenario: A value tried rightly
+
+- **WHEN** a hint has been refused, and the player enters a value that is
+  right and asks again
+- **THEN** the hint holds the steps that value now forces, or is refused in the
+  same words where it forces none
+
+### Requirement: The hint of a game on the search's tiers never searches
+
+The `hint` of a game on the search's tiers (`searchTiers`) SHALL never run the
+game's search nor read the answer kept from it, on any tier: every step comes
+from its deductions. Solve and the mistake check read the search
+(`engine-difficulty`, "One search answers a board for everything that asks"),
+and the midend has asked the mistake check before it asks for a hint, so the
+hint has no position left to certify.
+
+#### Scenario: The answer is known and the hint still stops
+
+- **WHEN** the search has proved an `Unreasonable` board's one answer, and no
+  deduction fires on the player's board
+- **THEN** the hint refuses with `DEDUCTION_EXHAUSTED`, and Solve on the same
+  board shows the answer
+
+#### Scenario: A value tried wrongly
+
+- **WHEN** the player enters a value the one answer does not have, and asks
+  for a hint
+- **THEN** the mistake check names the entry from the search's answer, and the
+  midend refuses before the game's `hint` is asked
+
 ### Requirement: A rung is classified by the bound it guarantees
 
 A rung SHALL be classified by the bound it guarantees, not by the depth it
@@ -1497,6 +1622,32 @@ line to hatch SHALL draw the hatch, and no other step SHALL draw one.
   repaint
 - **THEN** a step naming a line draws hatch operations, and a step naming none
   draws no hatch
+
+### Requirement: A hatch lies over the square's ground and under what it holds
+
+A hatch SHALL be drawn after its square's ground and before what the square
+holds: a piece, a number, a clue, pencil marks. The ground is the background,
+a tile's face, and any faint mark of the surface, the clear square's cross for
+one. Its bands are translucent and cover half the square, so the content is
+drawn whole over them. It is the one hint mark that lies under content.
+`GameDrawing.drawHatch` and `OverlaySidecar.drawHatch` draw the same bands.
+
+#### Scenario: A hatched square that holds a piece
+
+- **WHEN** the line a step names runs through a square holding a piece
+- **THEN** the piece is drawn whole, in its own color, over the bands, and the
+  bands show on the square's surface round it
+
+#### Scenario: A hatched clear square
+
+- **WHEN** the line runs through a square drawn as the clear square
+- **THEN** the bands are drawn over its surface and its faint cross
+
+#### Scenario: A hatched tile
+
+- **WHEN** the line runs through a square that holds a tile or half a domino
+- **THEN** the bands are drawn over the tile's face, in whatever color the
+  face is, and under the symbol or the wire drawn on it
 
 ### Requirement: The row/column candidate preset hatches a hidden single's line
 
@@ -1910,6 +2061,36 @@ puzzle.
 - **THEN** the game's `hint` refuses with the message that asks the player to
   undo, not with one pointing at a highlight
 
+### Requirement: A contradiction no entry can be blamed for is refused as one to undo
+
+Where a hint's deduction contradicts itself on the board it is handed, which
+the mistake check has passed, and that check has no answer to say which entry
+is wrong, a hint that refuses SHALL refuse with `CONTRADICTION_UNLOCALIZED`,
+and never `DEDUCTION_EXHAUSTED`: the board is not sound, no highlight will
+come, and the player can only undo or clear what they are unsure of. Whether
+the steps deduced before the contradiction are given first is the game's.
+
+#### Scenario: A board the game's solver does not finish
+
+- **WHEN** the player's entries contradict each other on a board the game's
+  solver does not finish from its clues, so that `findMistakes` has no answer
+  to compare them with and flags nothing
+- **THEN** a hint that gives no step is refused: "These entries contradict
+  each other, so one of them must be wrong. Undo, or clear the ones you are
+  unsure of."
+
+#### Scenario: Steps deduced on the way to the contradiction
+
+- **WHEN** a game's deduction forces steps from such a board before it
+  contradicts itself
+- **THEN** the game gives those steps or refuses outright, as its own spec
+  says, and where it refuses the refusal is this one
+
+#### Scenario: Check & Save at such a position
+
+- **WHEN** the check asks the hint whether that position is a dead end
+- **THEN** `isDeadEnd` answers yes of the refusal
+
 ### Requirement: Every refusal says whether it is a dead end
 
 Every refusal SHALL say whether it is a dead end (`isDeadEnd`): whether its
@@ -2057,6 +2238,32 @@ relation:
 - **WHEN** a searching game offers a move other moves would serve as well
 - **THEN** its relation is one of several, or answers a danger, and its words do
   not join the move with "so"
+
+### Requirement: A step's sentence opens with what the player can spot
+
+The look a game hands `sentence` SHALL be the indication: what a player can
+spot on the board that the reasoning starts from. A move that is forced, one
+of several, or the answer to a danger SHALL have one. The engine SHALL write
+it ahead of the move in every form, behind only a subgoal's prefix and a
+sequence's "Next" or "Last", so a step reads from indication through reasoning
+to conclusion. The *again* relation, a journey's later leg, takes none: its
+indication is its first leg's.
+
+#### Scenario: A forced step handed no look
+
+- **WHEN** a game hands `so` a move and no look
+- **THEN** `sentence` throws, and no step is made of it
+
+#### Scenario: A later leg handed a look of its own
+
+- **WHEN** a game hands the *again* relation a look
+- **THEN** `sentence` throws: the leg's words are its move and what it is for
+
+#### Scenario: A forced step that carries a subgoal
+
+- **WHEN** a forced step also carries a subgoal
+- **THEN** its words open "Working on" the subgoal, and the look is the first
+  thing after the colon
 
 ### Requirement: A subgoal prefixes any form of sentence
 
@@ -2235,6 +2442,27 @@ entries and never the notes".
 - **WHEN** the player sets a mark their game's hint does not take on trust, as
   a Mines flag is, and asks for a hint
 - **THEN** the hint's first step reads as it would without the mark
+
+### Requirement: A recomputed plan continues the plan it replaces
+
+`deduceHintPlan` SHALL keep nothing between calls and SHALL ask the game for
+one firing at a time from the working board, so a plan is a function of the
+board it is handed. A game on it SHALL give a `next` whose firing depends on
+that board alone, found by a scan in a fixed order. A plan made again once the
+board holds what the last one's first firing made then begins with its second,
+and proposes nothing that contradicts a step already followed.
+
+#### Scenario: A step followed, undone and made again
+
+- **WHEN** the player follows a plan's first step, undoes it, which clears the
+  plan, makes the same move again and asks for a hint
+- **THEN** the new plan's first step is the earlier plan's second
+
+#### Scenario: A plan cut at its cap
+
+- **WHEN** a plan was cut at the game's plan cap, its steps are played, and a
+  hint is asked again
+- **THEN** the new plan begins with the firing the cap cut off
 
 ### Requirement: The hint-resume walk excuses the games that can say a search ran out
 

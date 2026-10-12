@@ -567,3 +567,103 @@ skipped such firings would hide them where nothing counts them.
 - **WHEN** a technique fires but records no move the player could make
 - **THEN** the driver returns it like any other firing
 - **AND** the plan loop's `showable` hides it and counts it as hidden
+
+### Requirement: A wire tile is four bits, one for each side its wire leaves by
+
+`src/engine/wires.ts` SHALL give the games played on a grid of wire tiles one
+tile: four bits, `R` 1, `U` 2, `L` 4 and `D` 8, each set where a wire leaves
+the tile by that side, the same four naming a direction. It SHALL define no
+higher bit: each game keeps those for flags of its own. A step off an edge
+SHALL arrive at the opposite edge (`offset`), on every board: one that does
+not wrap is fenced by barriers on its border and not by the arithmetic.
+
+#### Scenario: A tile turned a quarter clockwise
+
+- **WHEN** a tile with wires right and up, 3, is turned with `clockwise`
+- **THEN** it is 9, wires down and right
+
+#### Scenario: A step off the right edge
+
+- **WHEN** `offset` steps right from a tile of the last column
+- **THEN** it arrives at the first column of the same row, whether or not the
+  game's board wraps
+
+### Requirement: The engine provides the wire-grid description grammar
+
+`encodeWireDesc` SHALL write, and `parseWireDesc` read, a wire grid as its
+tiles in reading order: one lowercase hexadecimal digit for a tile's wire
+bits, then `v` where a barrier stands on its right side, then `h` where one
+stands below it. On a board that does not wrap the last column SHALL take no
+`v` and the last row no `h`: its border is not written, and
+`addBorderBarriers` fences it. A barrier read SHALL stand on both tiles it
+parts.
+
+#### Scenario: Two tiles with a barrier between them
+
+- **WHEN** a board of one row and two columns, a wire right on the first tile
+  and left on the second with a barrier between, is written
+- **THEN** the description is `1v4`, and reading it puts the barrier on the
+  first tile's right side and the second's left
+
+#### Scenario: The same row on a board that wraps
+
+- **WHEN** `1v4v` is read for one row of two columns that wraps
+- **THEN** the second `v` is a barrier between the last tile and the first,
+  and each tile has one on both its sides
+
+### Requirement: The wire-grid reader refuses what its writer never writes
+
+`parseWireDesc` SHALL read to the end of the description and refuse, in the
+collection's description error kinds: one that ends before its last tile, as
+too short; one that goes on after it, as too long; and anything but a
+lowercase hexadecimal digit where a tile is due, naming it. A `v` after its
+tile's `h`, and a `v` or an `h` the board's edge does not take, SHALL thereby
+be refused, as that character or, after the last tile, as too long.
+
+#### Scenario: One row of two tiles, not wrapping
+
+- **WHEN** a description is read for one row of two columns that does not
+  wrap
+- **THEN** `14` is read, `1` is refused as too short, `145` and `14v` as too
+  long, `1h4` naming `h` and `1V4` naming `V`
+
+#### Scenario: A barrier below written before the one beside
+
+- **WHEN** `1hv234` is read for a 2 by 2 board that does not wrap
+- **THEN** it is refused naming `v`, where `1vh234` is read
+
+### Requirement: Power floods from the source along wires joined from both sides
+
+`computeActive` SHALL mark as powered the source tile and every tile reached
+from it by steps between neighbors that each have a wire toward the other,
+with no barrier between them, through the wrap of the board. The flag it
+marks a powered tile with is the game's. A game with a line in motion SHALL
+name its row or column, and no step SHALL enter a tile of that line.
+
+#### Scenario: A wire that meets a blank side
+
+- **WHEN** the source has a wire toward a neighbor that has none toward it
+- **THEN** the neighbor is not powered through that side
+
+#### Scenario: A barrier between two joined wires
+
+- **WHEN** two neighbors each have a wire toward the other and a barrier
+  stands between them
+- **THEN** power does not cross, and the second is powered only if another
+  route reaches it
+
+### Requirement: A wire distance is counted in tiles along the wires
+
+`wireDistance` SHALL give each tile its distance from the source in steps
+along joined wires, as `computeActive` powers: joined from both sides, through
+the wrap of the board and never through a barrier. It SHALL give the shortest
+such distance where two routes reach a tile, and -1 for a tile the wires do
+not reach. A game whose win flash spreads along the wires SHALL take each
+tile's position from it.
+
+#### Scenario: A neighbor the wires do not join
+
+- **WHEN** a tile beside the source has no wire into it from the source, and
+  the wires reach it by way of three other tiles
+- **THEN** its distance is 4 and not 1, so the flash lights it later than the
+  tiles the source is wired to
