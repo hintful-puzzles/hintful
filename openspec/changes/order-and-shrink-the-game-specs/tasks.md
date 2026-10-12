@@ -1,8 +1,9 @@
 # Tasks
 
 **Where this stands (2026-10-12): the order is done, held by the gate and
-pushed. Task 3, the cut, waits for the owner's answer to `design.md` § "The
-question for the owner". The change is not archived until that is answered.**
+pushed. The owner answered the question of the cut: option C, amended
+(`design.md` § "The owner's answer: C, amended"). Task 3 is that cut, and it
+is the next session's, starting at 3.1.**
 
 ## 1. Decide, on a sample
 
@@ -36,13 +37,37 @@ question for the owner". The change is not archived until that is answered.**
 
 ## 3. Shrink, once the owner has accepted the rule
 
-- [ ] 3.0 **The owner answers A, B or C** (`design.md` § "The question for
-      the owner"). On A: strike 3.1 and 3.2, delete `sample/`, archive.
-- [ ] 3.1 Remove or rewrite the requirements the rule names, by delta. The
-      three sentences with no other home become engine requirements first
-      (`design.md` § "The sample", last bullet).
-- [ ] 3.2 Where a removed requirement held the only test of a promise to a
-      player (a save or link format), say what holds the promise now.
+- [x] 3.0 **The owner answers A, B or C** (`design.md` § "The question for
+      the owner"). Answered 2026-10-12: C, amended (`design.md` § "The
+      owner's answer: C, amended", which every task below follows).
+- [ ] 3.1 Write the brief for a batch's writer and the one for its reviewer
+      from that section, the guide, and the two ledgers in `sample/` (what
+      the first draft did badly is the list of traps). Batch the 57 by kind,
+      so a batch leans on the same engine capabilities.
+- [ ] 3.2 The engine amendments of rule 1, as deltas, before any batch that
+      leans on them: the three homeless sentences, `border-grid` (what each
+      button does, the sweep drag, how under-size is measured and reddened,
+      the keep-track verdict on a wrong-button click). Each read against the
+      engine code and reviewed. Add to this list as the batches report a
+      sentence several games state of themselves.
+- [ ] 3.3 Redo Clusters and Palisade under the three rules, as deltas, and
+      read the two results whole as specs before starting the rest: they are
+      the proof the rules give a spec a new game's author can copy.
+- [ ] 3.4 The other 55, a writer then a reviewer a batch. Each game: its
+      delta, and its ledger rows (requirement, what happens, where it is
+      stated instead).
+- [ ] 3.5 Where a removed requirement held the only statement of a promise
+      to a player (a save or link format), the ledger names the test that
+      holds the promise now, or the requirement stays.
+- [ ] 3.6 `repo-layout` gains the rule as a requirement ("A game's spec does
+      not restate what its game declares or what the collection states"),
+      with the hollow-subject rule; `docs/new-game.md` § "What a game's spec
+      holds" gains the hollow-subject rule and names one spec of each kind
+      as the example to copy.
+- [ ] 3.7 Measure: bytes, requirements and scenarios of the 57 before and
+      after, by subject; `sample/` deleted; `spec-subjects.mjs`, the
+      validator and `spec-form.mjs` green; `spec-subjects.mjs --fix` after
+      the archive.
 
 ## 4. Hold it
 
@@ -52,5 +77,5 @@ question for the owner". The change is not archived until that is answered.**
       planted failures are in `design.md`.
 - [x] 4.2 `docs/new-game.md` § "What a game's spec holds" states the
       rule and the order.
-- [ ] 4.3 Gate, commit, archive, push. Committed and pushed; the archive
-      waits for 3.0.
+- [ ] 4.3 Gate, commit, archive, push. Tasks 1, 2 and 4 are committed and
+      pushed; the archive follows task 3.

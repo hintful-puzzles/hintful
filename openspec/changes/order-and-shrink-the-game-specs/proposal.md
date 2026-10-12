@@ -1,7 +1,8 @@
 # order-and-shrink-the-game-specs
 
-**Status (2026-10-12): the order is done and held by the gate. The cut waits
-for the owner's answer to `design.md` § "The question for the owner".** Fourth
+**Status (2026-10-12): the order is done and held by the gate. The owner has
+chosen the cut, option C amended (`design.md` § "The owner's answer: C,
+amended"), and it is task 3, not yet started.** Fourth
 of the pieces of `fit-a-new-game-in-one-session`. Figures were measured
 2026-10-12; `design.md` corrects two of this page's: the share of a spec that
 is a second copy is about a quarter, and the order of a hint's rungs is not

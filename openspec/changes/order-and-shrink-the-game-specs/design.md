@@ -8,8 +8,10 @@ measured that day; the query is given where there is one.
 - **The order is done and held.** Every requirement of the 57 game specs has
   its subject in its title, the specs are sorted into one order, and the gate
   refuses a spec that is not (`scripts/checks/spec-subjects.mjs`).
-- **The cut is not made. It waits for the owner**: § "The question for the
-  owner" below, with two specs to read before and after.
+- **The cut is decided and not yet made.** The owner chose option C on
+  2026-10-12, amended: § "The owner's answer" below is what task 3 follows.
+  § "The question for the owner" is kept as what was asked, and its
+  recommendation of A is superseded.
 
 ## The order
 
@@ -251,6 +253,55 @@ If the answer is B or C, the work is this change's task 3, and it starts by
 adding the three engine requirements. If it is A, task 3 is struck, the
 `sample/` directory is deleted, and the change is archived as it stands.
 
+## The owner's answer: C, amended
+
+The owner's word (2026-10-12): "I want consistency across the catalog, with
+the existing games being exemplars of how to implement new ones." The
+skeleton stamps no spec, so the 57 are the only examples a new game's author
+has, and a guide that says "do not restate" beside 57 specs that do is the
+half-adopted convention this series exists to end. A leaves that; B leaves
+the commoner kind of copy, the requirement that is one but for a sentence.
+
+So the 57 are cut to the rule of `docs/new-game.md` § "What a game's spec
+holds". The two samples showed a cut that only deletes makes a worse
+example in places, so the cut is made under three rules of its own:
+
+1. **The engine capability says it first.** A game's requirement, sentence or
+   scenario is removed as a copy only when the declaration or the shared
+   requirement named in the ledger states all of it. Where the shared
+   requirement states it by a parenthesis, by another game's scenario, or not
+   at all, the engine capability is amended first, in this change: the three
+   homeless sentences of § "The sample", `border-grid`'s account of what the
+   buttons do and of the under-size reddening, and whatever else the batches
+   find. A sentence several games each state of themselves in the same words
+   is the sign.
+2. **No subject is left hollow.** Where a game owes a subject
+   (`spec-subjects.mjs`) and everything it would say there is the
+   collection's, the subject keeps one requirement that says the game follows
+   the shared rule, names the capability and the requirement, and states any
+   departure. A reader of the spec alone then knows where to look. The check
+   holds the subject present, so this is also what keeps it green.
+3. **A requirement is reworded, not only cut.** A kept sentence keeps its
+   qualifier (Clusters' Normal refusal binds generation only), a title is
+   rewritten when its body no longer matches it, and a copied clause inside a
+   sentence that also says something of the game's own is reworded out.
+   Every such requirement is a `MODIFIED` entry restated whole.
+
+**How it is carried out**, as the census of
+`state-what-a-games-spec-never-did` was: batches of games, a writer and then
+a reviewer who has not seen the writer's reasoning, each removal read against
+the thing said to state it and each quoted string run through the game. A
+game's delta is `REMOVED`, `MODIFIED` and `RENAMED` entries under
+`specs/<game>/spec.md`, and a ledger row for each says where the thing is
+stated instead. The engine amendments of rule 1 are written and reviewed
+before the batches that lean on them. `sample/` is the first draft of two
+games and is redone under these rules, then deleted when the deltas exist.
+
+**What is not cut**: what a hand-written function does; a hint technique by
+what it concludes and from what; the order techniques are tried in where a
+loop and not `hintRungs` fixes it; a promise a save or a shared link depends
+on that a declaration does not make (what a missing field decodes to).
+
 ## Found by the readers, and fixed at the owner's word
 
 - **Clusters and Ascent refused a grid too large in a sentence of their
@@ -290,8 +341,10 @@ adding the three engine requirements. If it is A, task 3 is struck, the
   change three things a player meets in Inertia: a mouse's right click on a
   square would stop sending the ball there; the bar's "Right click" toggle,
   which does nothing in this game, would go; and a held finger would act at
-  once and not after the hold is detected. The recommendation is to take the
-  flag in both.
+  once and not after the hold is detected. A census of all 57 then found
+  Untangle to be a third such game, and the owner asked for the engine to
+  manage it: `own-the-secondary-button-in-the-engine` holds the census and
+  the one question left.
 - **Three preference keys are stated in no spec**: `auto-pencil`,
   `sticky-pencil-mode` and `pencil-keep-highlight` are strings in
   `src/engine/pencil-prefs.ts` alone, and a saved preference depends on them.

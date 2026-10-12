@@ -1,0 +1,5 @@
+# No delta at filing: the first task writes the `engine-input` delta once the
+# owner has answered the proposal's question, and removes this line.
+schema: spec-driven
+created: 2026-10-12
+skip_specs: true
