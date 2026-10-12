@@ -1,13 +1,17 @@
 # mathrax
 
+The Purpose's "what its generator promises of a board at each tier" became
+"what separates its tiers" (second pass): the promise is the collection's and
+the spec no longer points at it.
+
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Mathrax flags mistakes against the unique solution | retitled "Rules: Mathrax's mistake check re-solves from its givens and clues". Sentences 1 to 3 (provides `findMistakes`; a wrong digit and notes that have crossed out the answer; extra candidates not flagged) replaced by one that names the two shared requirements and says what the answer is re-solved from. Sentence 4 (nothing flagged when not uniquely deducible) kept, reworded to stand. Scenario "A wrong placed digit is flagged" dropped; scenario "A wrong digit that breaks no rule" written as the game's case | `engine-hints`, "Check & Save names a wrong entry in every game"; `ts-engine`, "A candidate note that excludes the answer is a mistake" (notes, extra candidates, the answer from clues and givens; its first scenario is the dropped one). The check: `src/games/mathrax/index.ts:338` |
+| Rules: Mathrax flags mistakes against the unique solution | retitled "Rules: Mathrax's mistake check re-solves from its givens and clues". Sentences 1 to 3 (provides `findMistakes`; a wrong digit and notes that have crossed out the answer; extra candidates not flagged) cut to what the answer is re-solved from (second pass: the sentence no longer names the two shared requirements). Sentence 4 (nothing flagged when not uniquely deducible) kept, reworded to stand. Scenario "A wrong placed digit is flagged" dropped; scenario "A wrong digit that breaks no rule" written as the game's case | `engine-hints`, "Check & Save names a wrong entry in every game"; `ts-engine`, "A candidate note that excludes the answer is a mistake" (notes, extra candidates, the answer from clues and givens; its first scenario is the dropped one). The check: `src/games/mathrax/index.ts:338` |
 | Params: Mathrax's parameters are a size, a difficulty and a set of clue types | removed | the three params and the six clue types: `paramConfig`, `index.ts:560`, with `CLUE_OPTIONS`, `index.ts:466`; the top tier's name: `DIFF_NAMES = tierNames(4, { search: true })`, `src/games/mathrax/state.ts:50`, and `engine-difficulty`, "Unreasonable is declared and never issued by position"; its character `r`, the encoding and the empty clue set: this spec's "Params: Mathrax's params are the size, a tier letter and the clue-type letters"; the round trip: `engine-params`, "Encode and decode are mutual inverses over the corpus". The `mathrax` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `5dr` and `6dr` |
-| Params: Mathrax refuses a size, a difficulty or a clue-type set it cannot play | retitled "Params: Mathrax refuses to deal with no clue type enabled". Sentence 1 (sizes 3 to 9, a size outside refused) cut to a clause that sends the reader to the declaration; sentence 2 kept. Scenario "A size below the bound is refused" dropped; scenario "Every clue type unchecked" written from the code's sentence | `bounds: { min: 3, max: 9 }`, `index.ts:564`, and `engine-params`, "Params validity is the engine's check" (whose first scenario is the dropped one). The refusal's sentence: `validateParams`, `state.ts:234` |
-| Params: Mathrax offers only the difficulties a size can support | title kept. Sentence 2 (rejected for a full parameter set and accepted otherwise, so a saved game or an ID with its description loads) cut to "The refusal SHALL bind generation only, as the collection's does", with the citation, and joined to sentence 3. Sentences 1 and 4 and the scenario untouched | `engine-difficulty`, "An unbindable tier is refused, not silently downgraded" (reported through validation, generation only, a saved game or an ID with its description still loads) |
-| Generation: Mathrax grades its difficulty tiers honestly | retitled "Generation: What a Mathrax board promises at its tier is the collection's". Both sentences (not soluble a tier below; a bounded retry) replaced by one that names the two shared requirements and says Mathrax departs from neither, at `Unreasonable` too. It takes the second sentence and the scenario of "Generation: A Mathrax board has one solution at every difficulty". Scenario "A Tricky board genuinely needs the Tricky tier" kept as the game's case | `engine-difficulty`, "A difficulty tier binds the board it generates" and "Every tier promises one solution found at its cap"; the bounded loop: `engine-difficulty`, "Every generate-until-success loop is bounded by the shared retry limit", and `retryLimit` at `src/games/mathrax/generator.ts:176` |
-| Generation: A Mathrax board has one solution at every difficulty | removed. Sentence 1 (uniqueness at every difficulty, `Unreasonable` included) goes; sentence 2 (an ambiguous verdict is no ground to keep removing) and the scenario "Even the guess-and-verify tier yields a unique solution" move, unchanged, to "Generation: What a Mathrax board promises at its tier is the collection's" | `engine-difficulty`, "Every tier promises one solution found at its cap" ("No tier SHALL promise anything but a board with one solution") and `engine-params`, "A board with a mistake check loads only with exactly one answer" |
+| Params: Mathrax refuses a size, a difficulty or a clue-type set it cannot play | retitled "Params: Mathrax refuses to deal with no clue type enabled". Sentence 1 (sizes 3 to 9, a size outside refused) cut (second pass: "The range of the size SHALL be the one its `paramConfig` item declares", which stood in its place, went too); sentence 2 kept. Scenario "A size below the bound is refused" dropped; scenario "Every clue type unchecked" written from the code's sentence | `bounds: { min: 3, max: 9 }`, `index.ts:564`, and `engine-params`, "Params validity is the engine's check" (whose first scenario is the dropped one). The refusal's sentence: `validateParams`, `state.ts:234` |
+| Params: Mathrax offers only the difficulties a size can support | title kept. Sentence 2 (rejected for a full parameter set and accepted otherwise, so a saved game or an ID with its description loads) cut (second pass: "The refusal SHALL bind generation only, as the collection's does", with its citation, went too; sentence 1 says "refuse to *generate*" and the scenario's last clause gives the load). Sentences 1, 3 and 4 and the scenario untouched | `engine-difficulty`, "An unbindable tier is refused, not silently downgraded" (reported through validation, generation only, a saved game or an ID with its description still loads) |
+| Generation: Mathrax grades its difficulty tiers honestly | retitled "Generation: An ambiguous verdict does not let Mathrax's generator keep removing". Both sentences (not soluble a tier below; a bounded retry) cut; the second pass also removed the sentence that named the two shared requirements in their place, and the scenario "A Tricky board genuinely needs the Tricky tier". The requirement now holds the second sentence and the scenario of "Generation: A Mathrax board has one solution at every difficulty" | `engine-difficulty`, "A difficulty tier binds the board it generates" (its scenario "A board generated above the easiest tier needs that tier" is the dropped one) and "Every tier promises one solution found at its cap"; the bounded loop: `engine-difficulty`, "Every generate-until-success loop is bounded by the shared retry limit", and `retryLimit` at `src/games/mathrax/generator.ts:176` |
+| Generation: A Mathrax board has one solution at every difficulty | removed. Sentence 1 (uniqueness at every difficulty, `Unreasonable` included) goes; sentence 2 (an ambiguous verdict is no ground to keep removing) and the scenario "Even the guess-and-verify tier yields a unique solution" move to "Generation: An ambiguous verdict does not let Mathrax's generator keep removing", the scenario unchanged and the sentence with "While it removes givens and clues from a board" put before it so that it stands alone (`stripGridClues` and `stripMathClues`, `src/games/mathrax/generator.ts:115` and `:140`) | `engine-difficulty`, "Every tier promises one solution found at its cap" ("No tier SHALL promise anything but a board with one solution") and `engine-params`, "A board with a mistake check loads only with exactly one answer" |
 | Controls: Mathrax input and keypad | retitled "Controls: Mathrax enters digits through the shared note-taking cell". "The Solo-style control scheme: a cell is selected by left-click or cursor, for ink outside pencil mode and for pencil marks in it" replaced by one sentence that says where the selection is stated; the entry and clear keys reworded to stand as their own sentence; the pencil-mode and given sentences kept; the keypad sentence cut. All three scenarios untouched | the selection: `engine-notes`, "The note-taking cell is one shared mechanic" and the requirements after it (`pressNoteTakingCell`, `index.ts:189`); the keypad: `requestKeys: (p) => digitKeys(p.o)`, `index.ts:631`, and `engine-input`, "A key label carries its resolved text" |
 | Preferences: Mathrax offers the sticky pencil and auto-pencil preferences | retitled "Preferences: Auto-pencil strikes a placed digit from its row and column". Sentence 1 (offers the two preferences) cut; sentence 2 kept without "both on the board and in the hint's plan". Scenario untouched | `autoPencilPref`, `stickyPencilPref`, `index.ts:634`-`637`; `engine-notes`, "The pencil preferences have one key each, which a saved preference depends on"; the hint's plan: `engine-candidate-hints`, "A placement's cull continues its journey" (with auto-pencil on no cull step is emitted and the placement's move carries it) |
 | Hint: Mathrax's hint plan is the shared candidate-elimination walk | the first sentence gains the citation of the requirement it sends the reader to; nothing else changes | |
@@ -25,8 +29,9 @@
 - **Params: Mathrax offers only the difficulties…**, "SHALL name the tiers
   from the game's tier list". The sentence is Mathrax's own and not the
   collection's `noSuchTier` (see Found).
-- **Generation: …**, scenario "A Tricky board genuinely needs the Tricky
-  tier". The game's one case of the shared rule.
+- **Generation: An ambiguous verdict…**, its one sentence. No shared
+  requirement says what a strip loop does with a solver verdict of more than
+  one answer.
 - **Controls: … through the shared note-taking cell**, the entry sentences.
   `interpretMove` is hand-written (`index.ts:213`-`240`).
 - **Hint: Recording does not change what the Mathrax solver commits.**
@@ -137,3 +142,44 @@ Checked and found sound:
   its third requirement, which the subject's order leaves as it stood.
 - Left: the hand-written codec and the label's function (`clueWords`,
   `index.ts:520`).
+
+## Second pass
+
+Applied the brief's "A pointer is for that case only". 6 citing sentences or
+clauses read: 4 removed, 2 kept as the subject's one pointer, 0 kept as a
+departure.
+
+Removed, each a copy with a citation in a subject that says plenty of
+Mathrax's own (the rows above say where each is stated):
+
+- **"Rules: Mathrax's mistake check re-solves from its givens and clues"**:
+  "SHALL report what the collection's check reports (`engine-hints`, …, and
+  `ts-engine`, …), against" reworded out; the sentence keeps what the answer
+  is re-solved from.
+- **"Params: Mathrax refuses to deal with no clue type enabled"**: "The range
+  of the size SHALL be the one its `paramConfig` item declares." removed.
+- **"Params: Mathrax offers only the difficulties a size can support"**: "The
+  refusal SHALL bind generation only, as the collection's does
+  (`engine-difficulty`, "An unbindable tier is refused, not silently
+  downgraded"), and" reworded out. The first sentence already says the
+  refusal is of generating, and the scenario that the same params load with
+  a description.
+- **"Generation: What a Mathrax board promises at its tier is the
+  collection's"**: its pointer sentence and the scenario "A Tricky board
+  genuinely needs the Tricky tier" removed, and the requirement retitled for
+  the one sentence left, which gained an opening clause so that "keep
+  removing" has its object. `Generation` says what separates the tiers in the
+  requirement after it. The Purpose follows.
+
+Kept as a pointer: "Mathrax SHALL take its selection from the engine's
+note-taking cell (`engine-notes`, …)", the one place `Controls` says how a
+cell is selected; and the first sentence of "Hint: Mathrax's hint plan is the
+shared candidate-elimination walk", the one place `Hint` says where the plan
+is stated.
+
+Preferences: the cut removed "SHALL offer the collection's sticky pencil
+preference and its auto-pencil preference", which named no key or choice
+order.
+
+Each subject read alone after the edits: no fragment, no dangling pronoun,
+every title fits its body.

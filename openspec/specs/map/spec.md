@@ -54,8 +54,7 @@ hint names a color by that word.
 
 Params SHALL be `w`, `h`, `n` (the number of regions) and `diff` (one of Easy,
 Normal, Tricky, Unreasonable), encoded `{w}x{h}n{n}` with a full-form
-`d{char}` difficulty suffix (chars `e`/`n`/`h`/`u`). The width, the height
-and the region count SHALL be bounded below as `paramConfig` declares.
+`d{char}` difficulty suffix (chars `e`/`n`/`h`/`u`).
 
 #### Scenario: Params round-trip
 
@@ -194,16 +193,14 @@ additionally recurse (guess and verify).
 ### Requirement: Generation: Map's generator never removes the last clue of a color
 
 The clues of a generated board SHALL be reduced without ever removing the
-last clue of a color, so every color is on the board to be picked up. That
-the board has one solution, found at the requested difficulty and not at the
-one below, is the collection's (`engine-difficulty`, "Every tier promises one
-solution found at its cap" and "A difficulty tier binds the board it
-generates"), and Map SHALL depart from neither.
+last clue of a color, so every color is on the board to be picked up.
 
-#### Scenario: Generated boards are uniquely solvable at their difficulty
+#### Scenario: The only clue of a color stays
 
-- **WHEN** a board is generated for a given difficulty and graded by the solver
-- **THEN** the grading is a unique solution at exactly the requested difficulty
+- **WHEN** the reduction comes to a clue that is the last still given of its
+  color
+- **THEN** that clue stays given, whether or not the board would have one
+  solution without it
 
 ### Requirement: Solver: Solve uses the generator's answer when it has one
 
@@ -423,8 +420,7 @@ whatever the notes mode.
 
 ### Requirement: Preferences: The `l` key shows and hides the region numbers
 
-The `l`/`L` key SHALL toggle the `show-numbers` preference in play. It and
-`stipple-style` are the preferences of the game's own in its `prefs`.
+The `l`/`L` key SHALL toggle the `show-numbers` preference in play.
 
 #### Scenario: A key shows and hides the region numbers
 
@@ -479,22 +475,13 @@ be that color.
 
 The plan SHALL offer the lowest rung that fires anywhere on the board and
 choose within it by continuing from its latest steps, so an Easy board's plan
-never shows a pair and a Normal board's never shows a chain. Where no rung
-fires, which only an Unreasonable board allows, the hint SHALL refuse as
-`engine-hints`, "Deduction running out on a sound board SHALL have one
-wording" says.
+never shows a pair and a Normal board's never shows a chain.
 
 #### Scenario: A single elsewhere comes before a pair nearby
 
 - **WHEN** a pair fires beside the last step's region and a region somewhere
   else has one color left
 - **THEN** the next step colors the region with one color left
-
-#### Scenario: A board that needs a guess is refused
-
-- **WHEN** a hint is requested on an Unreasonable board where no deduction
-  fires
-- **THEN** `hint` refuses with `DEDUCTION_EXHAUSTED`
 
 ### Requirement: Hint: A narrowing step says what it does
 
@@ -566,10 +553,9 @@ on the struck color.
 
 ### Requirement: Hint: A hint step rings the region it acts on
 
-A step's marks SHALL be the roles `hintMarks` declares. The ring's band on the
-region a step acts on SHALL be the only hint mark on any region boundary. A
-region with one color left SHALL outline nothing else, because its neighbors'
-fills are its premise.
+The ring's band on the region a step acts on SHALL be the only hint mark on
+any region boundary. A region with one color left SHALL outline nothing else,
+because its neighbors' fills are its premise.
 
 #### Scenario: A single's neighbors carry no mark
 

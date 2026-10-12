@@ -64,12 +64,10 @@ real numbers only where one of its cells holds a given number.
 ### Requirement: Rules: Signpost reports mistakes for Check & Save
 
 `findMistakes(state)` SHALL flag every cell whose player `next` link
-disagrees with the board's one chain, which it SHALL take from the search as
-`engine-difficulty`, "One search answers a board for everything that asks"
-says. A flagged cell, a given's included, SHALL be drawn with its number in
-the error color. A cell with no outgoing player link SHALL never be flagged.
-Where the search did not prove exactly one chain, `findMistakes` SHALL return
-no mistakes.
+disagrees with the board's one chain. A flagged cell, a given's included,
+SHALL be drawn with its number in the error color. A cell with no outgoing
+player link SHALL never be flagged. Where the search did not prove exactly
+one chain, `findMistakes` SHALL return no mistakes.
 
 #### Scenario: A wrong link out of a given
 
@@ -226,8 +224,7 @@ Signpost's Unreasonable boards SHALL be dealt by the engine's deal
 (`engine-difficulty`, "The engine deals the Unreasonable board of a game that
 searches"), from an Easy board, with a strip of the game's own: further given
 numbers are taken away, never the first or the last, each only while the
-search still proves one chain, within the budget of "A strip is asked within
-the engine's dealing budget".
+search still proves one chain.
 
 #### Scenario: The smallest boards and the largest carry the tier
 
@@ -239,12 +236,7 @@ the engine's dealing budget".
 ### Requirement: Generation: A Signpost board is Easy where the solver and the hint both finish it
 
 A board SHALL count as Easy where the solver and the hint finish it, and as
-Unreasonable where it has exactly one chain that they do not reach. What a
-pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A loaded
-board whose id states no tier takes the lowest tier that solves it" and "A
-pinned tier is kept or raised and never lowered"), and one with several
-chains or none SHALL be refused (`engine-params`, "A board with a mistake
-check loads only with exactly one answer").
+Unreasonable where it has exactly one chain that they do not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
@@ -269,13 +261,9 @@ would bridge. The solver SHALL report the board solved, stuck, or impossible.
 
 ### Requirement: Solver: Signpost's search assumes each link of the cell with the fewest, nearest first
 
-Signpost SHALL count a board's chains by the engine's search
-(`engine-difficulty`, "The engine counts a searching game's answers up to
-two, within a budget of positions"), over the solver: where the solver stops,
-it SHALL take the cell with the fewest cells it could link to and assume each
-in turn, nearest first. Solve SHALL be the search's, by "Solve from the
-search shows the one answer or says which it lacks", and Signpost SHALL
-depart from neither.
+Signpost's search for a board's chains SHALL run over the solver: where the
+solver stops, it SHALL take the cell with the fewest cells it could link to
+and assume each in turn, nearest first.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -370,10 +358,7 @@ edges.
 The hint SHALL never run the search. On an Unreasonable board its plan SHALL
 hold the links forced from the player's own and no others, and where none is
 forced it SHALL refuse with the collection's sentence that deduction has run
-out. It SHALL go on from the links the player then makes. A finished board,
-or one with a mistake, is refused before `hint` is asked: `engine-hints`,
-"The midend SHALL refuse a hint on a finished or wrong board before asking
-the game".
+out. It SHALL go on from the links the player then makes.
 
 #### Scenario: The hint stops, and goes on from a link tried rightly
 
@@ -470,12 +455,10 @@ lead in, the first in reading order.
   an earlier square in reading order has a single arrow that can lead into it
 - **THEN** the step is the arrow with one square that can come next
 
-### Requirement: Hint: A Signpost hint step marks both ends of its link
+### Requirement: Hint: A Signpost hint step stripes the squares ahead of its arrow only where there are several
 
-A step's marks SHALL be the roles `hintMarks` declares, the ring at both ends
-of its link: the arrow it leaves by and the square it arrives at. A step for
-the one square that can come next SHALL stripe the squares its arrow points
-at only where there are several.
+A step for the one square that can come next SHALL stripe the squares its
+arrow points at only where there are several.
 
 #### Scenario: An arrow with one square ahead of it stripes nothing
 

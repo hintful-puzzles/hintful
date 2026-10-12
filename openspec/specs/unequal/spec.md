@@ -39,11 +39,9 @@ by exactly 1, and the absence of a bar between two cells means they do not.
 
 ### Requirement: Rules: Unequal's mistake check re-solves from its givens and clues
 
-Unequal's `findMistakes` SHALL report what the collection's check reports
-(`engine-hints`, "Check & Save names a wrong entry in every game", and
-`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
-the answer it re-solves from the givens and clues. When they do not solve to
-exactly one answer it SHALL return an empty result.
+Unequal's `findMistakes` SHALL judge the board against the answer it re-solves
+from the givens and clues. When they do not solve to exactly one answer it
+SHALL return an empty result.
 
 #### Scenario: An ambiguous board
 
@@ -72,8 +70,7 @@ order of the values.
 
 `validateParams` SHALL refuse an Adjacent puzzle of Tricky difficulty or
 harder below order 5, and SHALL refuse, when a board is to be dealt, an order
-of 3 at Tricky or Unreasonable, which no 3×3 board needs. The range of the
-order itself SHALL be the one its `paramConfig` item declares.
+of 3 at Tricky or Unreasonable, which no 3×3 board needs.
 
 #### Scenario: A small Adjacent puzzle has no upper tiers
 

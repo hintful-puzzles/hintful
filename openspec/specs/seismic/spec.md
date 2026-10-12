@@ -178,13 +178,10 @@ candidates.
 - **THEN** the solver reports the lowest difficulty at which its deductions
   complete the grid
 
-### Requirement: Generation: The generator strips clues and accepts only a board of its tier
+### Requirement: Generation: The generator strips clues while the board stays soluble at its tier
 
 After the fill the generator SHALL strip clues while the puzzle stays soluble
-at the target difficulty. That it accepts a puzzle only when it is soluble at
-that difficulty and not at the difficulty below is the collection's
-(`engine-difficulty`, "A difficulty tier binds the board it generates"), and
-Seismic SHALL NOT depart from it.
+at the target difficulty.
 
 #### Scenario: Every preset produces a soluble board
 

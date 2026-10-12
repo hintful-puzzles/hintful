@@ -6,15 +6,13 @@ spec still holds "its params and description encodings".
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
 | Rules: Map reports completion and mistakes | "Because boards are uniquely solvable, the game SHALL implement `findMistakes`:" and the parenthesis "(a definite mistake)" reworded out; the completion rule, the re-solve from the clues and the empty result on a board with no one solution kept. Scenario "A region colored against the unique solution is flagged" dropped; "A partially-colored but correct board has no mistakes" kept | `ts-engine`, "The engine supports an ephemeral, opt-in mistake-checking hook" (the cells that contradict the unique solution) and "A mistake check compares with the one answer, hidden or not"; `engine-hints`, "Check & Save names a wrong entry in every game" |
-| Params: Map's parameters | gains "The width, the height and the region count SHALL be bounded below as `paramConfig` declares." (rule 2; added in review): with the requirement below gone, nothing under `Params` said where the lower bounds are. Nothing cut | |
-| Params: Map's grid is at least two squares each way and holds at least five regions | removed, with its scenario; "Params: Map's parameters" now names where the bounds are | `bounds: { min: 2 }` and `bounds: { min: 5 }` in `paramConfig`, `src/games/map/index.ts:523` and `:527`; `engine-params`, "Params validity is the engine's check" (a bound refuses whatever `full` says, in the engine's words, "Regions must be at least 5.") and "A generation-only bound is gated on full" (a bound applies to a loaded ID too) |
-| Generation: Map's generator is gated on the solver | retitled "Generation: Map's generator never removes the last clue of a color". Second sentence kept and put first. First sentence (one solution, found at the requested difficulty and not below) became a pointer that says Map departs from neither. Scenario kept as the game's one case | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates"; the gate is `src/games/map/generator.ts:336` |
+| Params: Map's grid is at least two squares each way and holds at least five regions | removed, with its scenario | `bounds: { min: 2 }` and `bounds: { min: 5 }` in `paramConfig`, `src/games/map/index.ts:523` and `:527`; `engine-params`, "Params validity is the engine's check" (a bound refuses whatever `full` says, in the engine's words, "Regions must be at least 5.") and "A generation-only bound is gated on full" (a bound applies to a loaded ID too) |
+| Generation: Map's generator is gated on the solver | retitled "Generation: Map's generator never removes the last clue of a color". Second sentence kept, and is the requirement. First sentence (one solution, found at the requested difficulty and not below) cut whole (second pass: the pointer that stood for it went too), with scenario "Generated boards are uniquely solvable at their difficulty", which was its case; scenario "The only clue of a color stays" written in words for the kept sentence, from `if (cfreq[coloring[j]] === 1) continue`, `src/games/map/generator.ts:324` | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates"; the gate is `src/games/map/generator.ts:336` |
 | Controls: A Map selection follows the note-taking cell's rule | gains the capability and title of the rule it points at. Nothing cut | |
 | Controls: Map's Mark-all press is adaptive | title and scenario kept. "SHALL declare `canMarkAll` and answer the `M` key" and the two phases cut for a citation; kept as the game's own: what the fill is (all four colors) and what an obvious candidate is (the dot of a color a neighbor shows) | `engine-notes`, "Mark-all is adaptive in a game with an obvious-candidate rule" (fill every note-less cell and change no other, otherwise remove the obvious candidates; "a rule of its own") and "The Mark-all press is the engine's, from the game's hook"; `markAll`, `src/games/map/index.ts:509` and `src/games/map/hint.ts:145` |
-| Preferences: Map's preferences | retitled "Preferences: The `l` key shows and hides the region numbers". First sentence (the two preferences are exposed through `prefs` under two keywords) cut to a clause naming the two keys; second sentence kept. Scenario kept | `prefs`, `src/games/map/index.ts:558` (`show-numbers` at `:560`, `stipple-style` at `:569`); `ts-engine`, "The engine supports per-game user preferences" |
-| Hint: Map explains the next deduction | removed. That the hint refuses where no rung fires, which only an Unreasonable board allows, joins "Hint: The plan offers the lowest rung that fires" with the scenario "A board that needs a guess is refused", which moves unchanged | `engine-hints`, "A hint is deduced from the board in play" (the forced steps from the player's own board), "Deduction running out on a sound board SHALL have one wording" and "Deduction runs out only where the tier permits search" |
-| Hint: The plan offers the lowest rung that fires | gains the refusal sentence and the scenario "A board that needs a guess is refused", both from "Hint: Map explains the next deduction" | |
-| Hint: A hint step rings the region it acts on | title and scenario kept. "with a solid band inside the region's boundary, in the hint's action color" replaced by a sentence that sends the reader to the legend (rule 2); that the band is the only hint mark on a region boundary, and that a single outlines nothing else, kept | `hintMarks.roles.ring`, `src/games/map/index.ts:548` ("a thick band in the hint color along its border") |
+| Preferences: Map's preferences | retitled "Preferences: The `l` key shows and hides the region numbers". First sentence (the two preferences are exposed through `prefs` under two keywords) cut; second sentence kept, and names the key it toggles, `show-numbers`. `stipple-style` stands, with its two choices in order and its default, in "Preferences: The stipple-style preference sizes the dots". Scenario kept | `prefs`, `src/games/map/index.ts:558` (`show-numbers` at `:560`, `stipple-style` at `:569`); `ts-engine`, "The engine supports per-game user preferences" |
+| Hint: Map explains the next deduction | removed, with its scenario "A board that needs a guess is refused" (second pass: its refusal had joined "Hint: The plan offers the lowest rung that fires" as a sentence with a citation, and that went too) | `engine-hints`, "A hint is deduced from the board in play" (the forced steps from the player's own board), "Deduction running out on a sound board SHALL have one wording" (the refusal, and its scenario) and "Deduction runs out only where the tier permits search" ("which only an Unreasonable board allows") |
+| Hint: A hint step rings the region it acts on | title and scenario kept. "with a solid band inside the region's boundary, in the hint's action color" cut (the sentence naming `hintMarks` that stood for it went in the second pass); that the band is the only hint mark on a region boundary, and that a single outlines nothing else, kept | `hintMarks.roles.ring`, `src/games/map/index.ts:548` ("a thick band in the hint color along its border") |
 | Hint: A premise's regions are outlined apart from the ring | title and scenario kept. "by a thin dashed line in the hint's evidence color, set in from their boundary" reworded to a clause that names the legend; "A chain's regions SHALL be numbered at their label points, with the region numbers hidden while it shows" cut. Kept: the outline stays apart from the ring, and the selection band stays visible | `hintMarks.roles.outline`, `src/games/map/index.ts:549` ("a thin dashed line in a second color, set in from its border", the chain's numbers "where a region's number would go", "the map's own region numbers are hidden"); `engine-hints`, "A chain's order is declared and drawn as an ordinal" |
 | Hint: Map offers the player's reading of an undotted region | the requirement it names as the first of the run is now "A blank region's colors are read from its dots", since "Map explains the next deduction" is gone. Nothing else changed | |
 | Look: The Map completion flash sweeps the regions | "the whole of a lit region SHALL be filled with a flash color and keep its border and its number" cut to "a region SHALL be lit whole"; the order of the regions and the hidden band kept. Scenario kept | `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground of a region filled with the role's color, keeping what it holds) |
@@ -130,3 +128,54 @@ Checked and found sound:
   hand has to give.
 - Each subject read alone: none hollow, no dangling antecedent, every title
   fits its body.
+
+## Second pass
+
+The brief's "A pointer is for that case only" and its line on a preference's
+key, applied. 9 citing sentences read; 5 removed, none kept as a subject's
+pointer (no owed subject of Map's is hollow: its codec, its tiers, its
+gestures and its hint are all written out), 4 kept as what the game says
+beside a shared name.
+
+Removed (each a copy with a citation, in a subject that says plenty of its
+own; where it is stated is the row's third cell):
+
+- **Params**, "The width, the height and the region count SHALL be bounded
+  below as `paramConfig` declares", which the review added. The Params
+  subject has five requirements of the game's own, and the bounds are stated
+  where the row of "Params: Map's grid is at least two squares each way and
+  holds at least five regions" says. "Params: Map's parameters" is as it
+  stood before the cut, and its row is gone from the table.
+- **Generation**, "That the board has one solution, found at the requested
+  difficulty and not at the one below, is the collection's (…), and Map SHALL
+  depart from neither", with the scenario that was its case. Generation
+  still says what each tier's solver does and what the reduction never
+  removes; the requirement's new scenario is the kept sentence's own case,
+  in words.
+- **Preferences**, "It and `stipple-style` are the preferences of the game's
+  own in its `prefs`".
+- **Hint**, "Where no rung fires, which only an Unreasonable board allows,
+  the hint SHALL refuse as `engine-hints`, "Deduction running out on a sound
+  board SHALL have one wording" says", with the scenario "A board that needs
+  a guess is refused". "Hint: The plan offers the lowest rung that fires" is
+  as it stood before the cut, and its row is gone from the table.
+- **Hint**, "A step's marks SHALL be the roles `hintMarks` declares".
+
+Kept: "What a selecting gesture does … SHALL be the note-taking cell's rule
+(`engine-notes`, "The button and the sticky preference decide the mode a
+press selects for"), with the button the gesture used: a region may take a
+color when it is not a clue, and a mark when it is blank", and "Map's
+`markAll` SHALL be the adaptive press of `engine-notes`, "…", by a rule of
+its own: …": each names the shared rule only to say what Map hands it. "Map
+SHALL offer the shared `hint-notes` preference, defaulting to `implicit`":
+the shared rule has the game state the reading it starts on. "which the
+legend sets in from their boundary" is a clause that says why the outline
+and the ring can stay apart.
+
+Preferences: the cut removed no key. `show-numbers` stands in "Preferences:
+The `l` key shows and hides the region numbers", and `stipple-style` with
+its choices, "Small" the default and then "Large", in the requirement after
+it.
+
+Each subject read alone after the edits: no fragment, no dangling "it",
+every owed subject says what the game does there, every title fits its body.

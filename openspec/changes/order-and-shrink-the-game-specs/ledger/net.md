@@ -91,3 +91,48 @@ The Purpose was left as it stood: it names nothing the cut removed.
   locked tile" said the ground returns "once the highlight has left it"; no
   shared requirement says that in those words, and it follows from `Flash.win`
   answering no tone for a position the highlight has passed.
+
+## Review
+
+12 rows read, each against the declaration or the requirement it names, read
+whole; 6 rows' requirements changed in the spec, no sentence restored but the
+preference's key.
+
+Changed:
+
+- **Five pointers undone into plain removals**, each a copy swapped for a
+  citation of the same length inside a subject that says plenty of its own:
+  "as `engine-difficulty`, "One search answers …" says" in "Rules: Net flags
+  wrong locks and notes"; the loading rule's two citations in "Generation: A
+  Net board is Easy where the hint finishes it" (its two scenarios still give
+  what a pasted board opens as); both citations in the Solver requirement,
+  which now says the search is trial and error over the solver and what it
+  assumes; the `targetVerbs` sentence of "Controls: A tap in the middle of a
+  tile in notes mode locks it" ("outside notes mode both buttons rotate"
+  stays); and the citation and the Jumble key's clause in "Controls: Net's
+  view controls and jumble have pointer routes".
+- **The preference's key `unlocked-loops` restored.** No test pins the
+  string (`grep` over `src` finds it in `index.ts` alone), and a stored
+  preference depends on it.
+- The engine request for `findMistakes` reworded to the line the other
+  ledgers carry.
+
+Checked and found sound:
+
+- The engine titles the rows name are exact and each states what went: the
+  preset grid and the run of tiers against `BOARDS`, `VARIANTS` and the
+  `tiers` option; the hint walk; the three search requirements against the
+  old Solver sentence clause by clause; the two tier-loading requirements and
+  the one-answer refusal; the two buttons; the flash color, which names a
+  tile and forbids a lifted or swapped surface.
+- No engine capability names `wires.ts`, `parseWireDesc`, `computeActive` or
+  `wireDistance` (`grep` over `openspec/specs`: only `net` and `netslide`),
+  so the tile mask, the description, the flood and the flash distance stay,
+  and the request stands. `engine-difficulty`, "One search answers a board
+  for everything that asks", does not say what `findMistakes` returns where
+  the search proved nothing: the sentence stays.
+- The codec is hand-written (`state.ts:78`, `:85`); every line citation in
+  the table opens on what it names; `net-tier.test.ts` has "a pasted Net
+  board".
+- Each subject read alone: none hollow, no dangling antecedent, every title
+  fits its body.

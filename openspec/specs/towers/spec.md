@@ -36,12 +36,10 @@ clue and no Latin constraint.
 
 ### Requirement: Rules: Towers' mistake check re-solves from its clues and givens
 
-Towers' `findMistakes` SHALL report what the collection's check reports
-(`engine-hints`, "Check & Save names a wrong entry in every game", and
-`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
-the answer it re-solves from the clues and givens. A wrong tower and a note
-set that lacks its height SHALL render as the same red cell overlay. When the
-clues and givens do not solve to exactly one answer the result SHALL be empty.
+Towers' `findMistakes` SHALL judge the board against the answer it re-solves
+from the clues and givens. A wrong tower and a note set that lacks its height
+SHALL render as the same red cell overlay. When the clues and givens do not
+solve to exactly one answer the result SHALL be empty.
 
 #### Scenario: A wrong tower that breaks no rule
 
@@ -205,10 +203,9 @@ firing that rules out several heights SHALL be one leg for each height.
 
 ### Requirement: Hint: Towers' own rung is the clue lines that need no notes
 
-Towers' own rung of the walk's ladder (`engine-candidate-hints`, "The walk
-owns the ladder") SHALL be the clue lines that need no notes: a clue equal to
-the grid size, whose line climbs from 1 beside the clue, and then a clue of 1,
-which has the tallest tower beside it.
+Towers' own rung of the walk's ladder SHALL be the clue lines that need no
+notes: a clue equal to the grid size, whose line climbs from 1 beside the
+clue, and then a clue of 1, which has the tallest tower beside it.
 
 #### Scenario: A full-height clue opens an empty board
 

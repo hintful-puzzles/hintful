@@ -2,11 +2,11 @@
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Keen flags mistakes against its unique solution | retitled "Rules: Keen's mistake check re-solves from the cage clues". Sentence 1 (implement `findMistakes`; a wrong digit is a `"cell"`, notes that cross out the answer a `"note"`) replaced by one that names the two shared requirements and keeps what is Keen's: the answer is re-solved from the cage clues alone. Sentence 2 (empty when the clues do not solve to one answer) kept, reworded to stand. Scenario "A wrong digit and a wrong note are flagged" dropped; scenario "A wrong digit its cage allows" written as the game's case | a wrong entry: `engine-hints`, "Check & Save names a wrong entry in every game"; a note set that leaves out the answer, extra candidates not reported, the answer never taken from what the player entered: `ts-engine`, "A candidate note that excludes the answer is a mistake" (its first scenario is the dropped one). The two kinds are `KeenMistake`, `src/games/keen/index.ts:119`; the check, `index.ts:292` |
-| Params: Keen's parameters | title kept. Sentence 1 reworded to say the three params are the fields of `paramConfig`, which declares the size's range; sentence 2 (the tier keys) kept; sentence 3 (refused outside `3 ≤ w ≤ 9`) cut. Scenario "Invalid params are rejected" dropped; scenario "The Tricky preset" written from the params snapshot | `bounds: { min: 3, max: 9 }` on the `grid-size` item, `index.ts:424`; `engine-params`, "Params validity is the engine's check" (each item's bounds, the refusal names the field; its first scenario is the dropped one). `6dh` and "6x6 Tricky": the `keen` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` |
+| Rules: Keen flags mistakes against its unique solution | retitled "Rules: Keen's mistake check re-solves from the cage clues". Sentence 1 (implement `findMistakes`; a wrong digit is a `"cell"`, notes that cross out the answer a `"note"`) cut to what is Keen's: the board is judged against the answer re-solved from the cage clues alone (second pass: the sentence no longer names the two shared requirements). Sentence 2 (empty when the clues do not solve to one answer) kept, reworded to stand. Scenario "A wrong digit and a wrong note are flagged" dropped; scenario "A wrong digit its cage allows" written as the game's case | a wrong entry: `engine-hints`, "Check & Save names a wrong entry in every game"; a note set that leaves out the answer, extra candidates not reported, the answer never taken from what the player entered: `ts-engine`, "A candidate note that excludes the answer is a mistake" (its first scenario is the dropped one). The two kinds are `KeenMistake`, `src/games/keen/index.ts:119`; the check, `index.ts:292` |
+| Params: Keen's parameters | title kept. Sentence 1 kept as the three params (second pass: without the clause that they are fields of `paramConfig`, which declares the size's range); sentence 2 (the tier keys) kept; sentence 3 (refused outside `3 ≤ w ≤ 9`) cut. Scenario "Invalid params are rejected" dropped; scenario "The Tricky preset" written from the params snapshot | `bounds: { min: 3, max: 9 }` on the `grid-size` item, `index.ts:424`; `engine-params`, "Params validity is the engine's check" (each item's bounds, the refusal names the field; its first scenario is the dropped one). `6dh` and "6x6 Tricky": the `keen` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` |
 | Params: Keen's params encoding | sentence 2 (a `d` followed by a letter that is none of the five, or by nothing, is refused) cut. Scenario "A difficulty letter that names no tier" dropped; "Params round-trip" kept | `engine-params`, "A params string is read whole or refused" (a letter the tag does not list, a tag with nothing after it; its first two scenarios) and "The engine makes the one refusal of a params string" (the sentence, through `paramsLetter`). Keen's call: `paramsLetter(s, i + 1, DIFF_CHARS)`, `src/games/keen/state.ts:129` |
 | Params: A Keen label ends in multiplication only for a product-only puzzle | removed | `label: { slot: "tail", words: … "multiplication only" }` on the `multiplication-only` item, `index.ts:438`; `engine-params`, "One describer labels every params set" (`size[ tier][, tail…]`). The snapshot above holds "6x6 Normal, multiplication only" |
-| Generation: Keen generates boards uniquely solvable at exactly the requested difficulty | retitled "Generation: A Keen cage has at most six cells and a balanced mix of clues". Sentence 1 (solvable at `diff` and not at `diff − 1`) replaced by one that names the two shared requirements and says Keen departs from neither; sentence 2 (cage area, the mix of clues) kept; sentence 3 (regenerates under a capped backstop that throws) cut. The scenario keeps its last clause as "The cages of a dealt board" and loses its first two | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (both directions, and the dropped clauses as its first scenario); the bounded loop: `engine-difficulty`, "Every generate-until-success loop is bounded by the shared retry limit", and `retryLimit` at `src/games/keen/generator.ts:108` |
+| Generation: Keen generates boards uniquely solvable at exactly the requested difficulty | retitled "Generation: A Keen cage has at most six cells and a balanced mix of clues". Sentence 1 (solvable at `diff` and not at `diff − 1`) cut (second pass: the sentence that named the two shared requirements in its place went too, the subject's other two requirements saying what Keen's tiers and cages are); sentence 2 (cage area, the mix of clues) kept; sentence 3 (regenerates under a capped backstop that throws) cut. The scenario keeps its last clause as "The cages of a dealt board" and loses its first two | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (both directions, and the dropped clauses as its first scenario); the bounded loop: `engine-difficulty`, "Every generate-until-success loop is bounded by the shared retry limit", and `retryLimit` at `src/games/keen/generator.ts:108` |
 | Controls: Keen selects a cell through the shared note-taking cell | the first sentence gains the citation of the requirement it sends the reader to; nothing else changes | |
 | Controls: Keen provides on-screen key labels | removed | `requestKeys: (p) => digitKeys(p.w)`, `index.ts:491`; `engine-input`, "Games may expose on-screen key labels" and "A key label carries its resolved text" (whose scenario is `digitKeys(3)`: the digits, then `"Clear"` on `CLEAR_BUTTON`) |
 | Hint: Keen provides an explained deduction hint | retitled "Hint: Keen's hint is the shared candidate plan over rows and columns". Sentence 1 (teaches the next deduction in pencil-notes terms) replaced by a pointer to the shared plan and its row/column preset, saying what Keen supplies (rule 2: the subject's ordinary case was stated nowhere). Sentence 2 (capped below recursion, because a guess is not a teachable strike) cut. Scenario "A hint on an Unreasonable board" moves, unchanged, to "Hint: Keen's hint deduces at the tier of the board's params"; scenario "A single on a Keen board" written | pencil-notes terms: `engine-candidate-hints`, "A shared candidate-elimination hint plan"; the cap: this spec's "Hint: Keen's hint deduces at the tier of the board's params" ("capped at Hard"), and its reason `engine-hints`, "A Search is refused and never narrated". Keen's call: `runLatinCandidatePlan`, `index.ts:368`; the single's sentence: `narrateLatinReason`, `index.ts:341` |
@@ -181,3 +181,42 @@ Checked and found sound:
   fits its body.
 - Left: the hand-written codec, and every kept `Look` requirement but the one
   above, each a decision about Keen's own cage lines, clues and error cells.
+
+## Second pass
+
+Applied the brief's "A pointer is for that case only". 7 citing sentences or
+clauses read: 3 removed, 2 kept as the subject's one pointer, 2 kept as a
+departure.
+
+Removed, each a copy with a citation in a subject that says plenty of Keen's
+own (the rows above say where each is stated):
+
+- **"Rules: Keen's mistake check re-solves from the cage clues"**: "SHALL
+  report what the collection's check reports (`engine-hints`, …, and
+  `ts-engine`, …), against" reworded out; the sentence keeps what the answer
+  is re-solved from. `Rules` states the puzzle and the solved board in two
+  requirements of its own.
+- **"Params: Keen's parameters"**: "each a field of its `paramConfig`, which
+  declares the size's range" reworded out. `Params` holds the keys, the
+  hand-written encoding and two refusals.
+- **"Generation: A Keen cage has at most six cells and a balanced mix of
+  clues"**: "What a board dealt at a tier promises SHALL be the collection's
+  (`engine-difficulty`, …), with no departure." removed. `Generation` says
+  what each tier allows, how a cage deduction prunes and what a cage is.
+
+Kept as a pointer: "Keen SHALL take its selection from the engine's
+note-taking cell (`engine-notes`, …)", the one place `Controls` says how a
+cell is selected; and the first sentence of "Hint: Keen's hint is the shared
+candidate plan over rows and columns", without which `Hint` holds only the
+two cage deductions and the tier.
+
+Kept as a departure: "in the collection's sentence for a size that has no
+board of the tier" and "in the collection's sentence for boards too rare to
+deal", each a clause of a refusal that is Keen's (which size, which tier),
+citing no capability.
+
+Preferences: the cut removed no preference's key or choice order (Keen's
+spec never named one).
+
+Each subject read alone after the edits: no fragment, no dangling pronoun,
+every title fits its body.

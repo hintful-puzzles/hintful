@@ -117,5 +117,12 @@ Checked and found sound:
   (`:606`), `HINT_EVIDENCE` (`render.ts:142`); the snapshot holds `8x8dt` as
   the default and every preset.
 - The new scenario "A blocked side on the rim is not a step" is `evident`'s
-  `!inGrid` arm (`hint.ts:252`). The hint's cap is `state.diff` (`:309`).
-- Each subject read alone: none hollow, no dangling antecedent.
+  `!inGrid` arm (`hint.ts:252`). The hint's cap is `state.diff` (`:310`).
+- The scenario strings run through the codec: `8x8` decodes at Normal with
+  consecutive 1 clues disallowed, `8x8de` has the short form `8x8`, `10x8dto`
+  allows them, and `8x8dq` is refused. The reworded cursor scenario is the
+  geometry's: the cursor stops on centers and edges and skips corners
+  (`index.ts:267`), and Enter is the engine's left-click verb. No test of the
+  game presses Enter on an edge.
+- The spec read whole, subject by subject: none hollow, no dangling
+  antecedent.

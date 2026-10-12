@@ -85,3 +85,35 @@ None.
 - The preset menu (`PRESETS`, `src/games/dominosa/state.ts:93`) is written
   out by hand and is in no requirement; `src/engine/params-stability.test.ts`
   holds its lines.
+
+## Review
+
+8 rows read, each against the declaration or the requirement it names, read
+whole; 3 rows' requirements changed in the spec, no sentence restored.
+
+Changed:
+
+- **"Params: Dominosa refuses params outside its bounds"**: the clause "An
+  `n` below 1 is refused by the bound its field declares" cut, a copy with
+  its source attached, and the title put back as it stood, which the body
+  still fits.
+- **"Controls: Dominosa input places dominoes and barrier edges"**: the
+  sentence naming `targetVerbs` and the engine's select keys cut. What stays
+  is what `executeMove` and the secondary verb's `apply` do.
+- **"Hint: Dominosa's marks are the roles its legend declares"** removed with
+  its scenario: the legend (`index.ts:701`) and the palette
+  (`render.ts:92`, `:96`) state all of what "Hint: Dominosa renders the hint
+  distinctly" said, and the Hint subject is not hollow without it.
+
+Checked and found sound:
+
+- `engine-hints`, "One deduction firing is one journey", for the grouping
+  clause; "A hint is deduced from the board in play" leaves which marks a
+  step rests on to the game, so "seeded from the placed dominoes" and the
+  skipped barrier stay; `engine-drawing`, "A warm frame matches a fresh paint
+  of the same state", for the diff-key sentence; `quick-save` for the save.
+- `validateParams` (`state.ts:144`) makes the two refusals the kept sentence
+  names and no other; `bounds: { min: 1 }` is at `index.ts:677`.
+- The codec is hand-written (`state.ts:115`, `:121`), so the three Params
+  requirements above the refusal stay whole.
+- Each subject read alone: none hollow, no dangling antecedent.

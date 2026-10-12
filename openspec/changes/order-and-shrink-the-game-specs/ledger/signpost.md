@@ -6,15 +6,14 @@ refuse and its description encoding", and names the hint, which it left out.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Signpost reports mistakes for Check & Save | title kept. "`signpost` SHALL implement `findMistakes(state)`: it SHALL take the board's one chain from the search that counts its answers, at either difficulty" reworded to a citation; what is flagged, how a flagged cell is drawn, the unlinked cell and the empty result kept. Scenarios "A wrong link is flagged" and "A hand-typed ambiguous board reports nothing" dropped; "A wrong link out of a given" kept | `engine-difficulty`, "One search answers a board for everything that asks" (`answerOf`, `src/games/signpost/index.ts:310`); the first scenario is `engine-hints`, "Check & Save names a wrong entry in every game"; the second restated the requirement's last sentence, of a board that does not load (`engine-params`, "A board with a mistake check loads only with exactly one answer") |
+| Rules: Signpost reports mistakes for Check & Save | title kept. "`signpost` SHALL implement `findMistakes(state)`: it SHALL take the board's one chain from the search that counts its answers, at either difficulty" cut, and no citation stands in its place (second pass); what is flagged, how a flagged cell is drawn, the unlinked cell and the empty result kept. Scenarios "A wrong link is flagged" and "A hand-typed ambiguous board reports nothing" dropped; "A wrong link out of a given" kept | `engine-difficulty`, "One search answers a board for everything that asks" (`answerOf`, `src/games/signpost/index.ts:310`); the first scenario is `engine-hints`, "Check & Save names a wrong entry in every game"; the second restated the requirement's last sentence, of a board that does not load (`engine-params`, "A board with a mistake check loads only with exactly one answer") |
 | Params: Signpost's parameters | replaced by "Params: A Signpost params string may leave out its height and its difficulty" (the pointer, rule 2, with the two missing-field sentences) and "Params: Signpost refuses to deal a 1×1 board" (the `validateParams` sentence, standing alone, with scenario "Invalid params are rejected"). The field list, the `{w}x{h}`, `c`, `de`, `du` encoding and the bound of one cut. Scenarios "Params round-trip" and "The difficulty is in the full encoding only" replaced by "A string that leaves the difficulty out", made of the first's last line | `paramConfig`, `src/games/signpost/index.ts:144` (`bounds: { min: 1 }` at `:147`), and the `paramsCodec` field list, `:169` (`dims`, `flag "c"` full only, `searchTierSegment`); `engine-difficulty`, "A game that searches has a tier for each deduction and Unreasonable above them"; `engine-params`, "Params validity is the engine's check"; `src/engine/__snapshots__/params-stability.test.ts.snap` holds `4x4cde`/`4x4`, `5x5cdu`/`5x5`, `4x4de` and every preset |
 | Params: Signpost's menu offers each size at both difficulties | removed; the `Params` pointer names `presets` and `defaultParams` | `BOARDS`, `VARIANTS`, `defaultParams` and `presets`, `src/games/signpost/index.ts:93`, `:96`, `:100`, `:402`; `engine-params`, "The preset menu is a grid" (each board at every tier, then one board for each thing that is neither a size nor a tier); the snapshot lists the default and the nine other lines |
-| Generation: An Unreasonable Signpost board has one answer that the solver does not reach | retitled "Generation: An Unreasonable Signpost board is an Easy one with more numbers taken away". Kept: the strip (from an Easy board, further givens taken, never the first or the last, each only while the search proves one chain). Cut for two citations: the strip's budget "of its own, well under the search's", and "SHALL keep the board only when the solver stops short on it". Scenario "A dealt Unreasonable board needs search and has one answer" dropped; "The smallest boards and the largest carry the tier" kept | `engine-difficulty`, "The engine deals the Unreasonable board of a game that searches" (its first scenario) and "A strip is asked within the engine's dealing budget"; `dealUnreasonable`, `src/games/signpost/generator.ts:234` |
-| Generation: A pasted Signpost board opens at the difficulty it needs | retitled "Generation: A Signpost board is Easy where the solver and the hint both finish it". Kept: what makes a board Easy and what Unreasonable. The loading rule and the two refusals became a pointer. Scenario "A board with several answers or none is refused" dropped; "A board that needs search opens as Unreasonable" kept | `engine-difficulty`, "A loaded board whose id states no tier takes the lowest tier that solves it" and "A pinned tier is kept or raised and never lowered"; `engine-params`, "A board with a mistake check loads only with exactly one answer". Boards of the dropped scenario's two kinds are in this spec, "Solver: Signpost's search assumes each link of the cell with the fewest, nearest first", scenario "The search tells one answer from several and from none"; `src/games/signpost/signpost-tier.test.ts:373` holds the refusals |
-| Solver: Signpost solves by forced-link deduction | last sentence ("`solve()` SHALL take the chain from the search that counts a board's answers, at either difficulty") cut, with scenario "Solve recovers the chain from a dirty state"; "Solver: Signpost's search assumes each link of the cell with the fewest, nearest first" names where Solve is stated | `engine-difficulty`, "Solve from the search shows the one answer or says which it lacks" and "One search answers a board for everything that asks" (the search does not read the player's entries); `ts-engine`, "Solve leaves a solved board"; `solve`, `src/games/signpost/index.ts:299` |
-| Solver: Signpost counts a board's answers by a bounded search | retitled "Solver: Signpost's search assumes each link of the cell with the fewest, nearest first". Kept: what the search runs over, which cell it takes and in what order it assumes. Cut for a citation: counting up to two, the four verdicts, the budget in positions. Gains the sentence that Solve is the search's. Scenarios "A spent budget is neither answer" and "An Easy board takes one position" dropped; the other two kept | `engine-difficulty`, "The engine counts a searching game's answers up to two, within a budget of positions" (its scenarios "The budget runs out with one answer in hand" and "A board the deduction finishes"); `searchAnswers`, `src/games/signpost/solver.ts:177` |
-| Hint: Signpost's hint stops where the solver does | one sentence added (rule 2): a finished board or one with a mistake is refused before `hint` is asked, with where that is stated. Nothing cut | |
-| Hint: A Signpost hint step marks both ends of its link | title and scenario kept. The three roles' pictures (the arrow in the hint color, the ringed square, the striped squares, the outlined rivals) cut for a sentence naming `hintMarks`; kept: the ring is at both ends, and the squares an arrow points at are striped only where there are several | `hintMarks.roles`, `src/games/signpost/index.ts:434` (`ring`: "at both ends: the arrow it leaves by is drawn in the hint color, and the square it arrives at is ringed"; `outline`; `stripes`) |
+| Generation: An Unreasonable Signpost board has one answer that the solver does not reach | retitled "Generation: An Unreasonable Signpost board is an Easy one with more numbers taken away". Kept: the strip (from an Easy board, further givens taken, never the first or the last, each only while the search proves one chain). Cut: the strip's budget "of its own, well under the search's" (the citation that stood for it went in the second pass), and "SHALL keep the board only when the solver stops short on it", for the pointer to the engine's deal. Scenario "A dealt Unreasonable board needs search and has one answer" dropped; "The smallest boards and the largest carry the tier" kept | `engine-difficulty`, "The engine deals the Unreasonable board of a game that searches" (its first scenario) and "A strip is asked within the engine's dealing budget"; `dealUnreasonable`, `src/games/signpost/generator.ts:234` |
+| Generation: A pasted Signpost board opens at the difficulty it needs | retitled "Generation: A Signpost board is Easy where the solver and the hint both finish it". Kept: what makes a board Easy and what Unreasonable. The loading rule and the two refusals cut whole (second pass: the pointer that stood for them went too). Scenario "A board with several answers or none is refused" dropped; "A board that needs search opens as Unreasonable" kept | `engine-difficulty`, "A loaded board whose id states no tier takes the lowest tier that solves it" and "A pinned tier is kept or raised and never lowered"; `engine-params`, "A board with a mistake check loads only with exactly one answer". Boards of the dropped scenario's two kinds are in this spec, "Solver: Signpost's search assumes each link of the cell with the fewest, nearest first", scenario "The search tells one answer from several and from none"; `src/games/signpost/signpost-tier.test.ts:373` holds the refusals |
+| Solver: Signpost solves by forced-link deduction | last sentence ("`solve()` SHALL take the chain from the search that counts a board's answers, at either difficulty") cut, with scenario "Solve recovers the chain from a dirty state" | `engine-difficulty`, "Solve from the search shows the one answer or says which it lacks" and "One search answers a board for everything that asks" (the search does not read the player's entries); `ts-engine`, "Solve leaves a solved board"; `solve`, `src/games/signpost/index.ts:299` |
+| Solver: Signpost counts a board's answers by a bounded search | retitled "Solver: Signpost's search assumes each link of the cell with the fewest, nearest first". Kept: what the search runs over, which cell it takes and in what order it assumes. Cut: counting up to two, the four verdicts, the budget in positions; the citation that stood for them, and the sentence that Solve is the search's, went in the second pass. Scenarios "A spent budget is neither answer" and "An Easy board takes one position" dropped; the other two kept | `engine-difficulty`, "The engine counts a searching game's answers up to two, within a budget of positions" (its scenarios "The budget runs out with one answer in hand" and "A board the deduction finishes"); `searchAnswers`, `src/games/signpost/solver.ts:177` |
+| Hint: A Signpost hint step marks both ends of its link | retitled "Hint: A Signpost hint step stripes the squares ahead of its arrow only where there are several" (second pass). The three roles' pictures (the arrow in the hint color, the ringed square, the striped squares, the outlined rivals) cut, and with them, in the second pass, the sentence naming `hintMarks` and "the ring at both ends of its link", which is the legend's `ring`; kept: the squares an arrow points at are striped only where there are several. Scenario kept | `hintMarks.roles`, `src/games/signpost/index.ts:434` (`ring`: "at both ends: the arrow it leaves by is drawn in the hint color, and the square it arrives at is ringed"; `outline`; `stripes`) |
 | Look: The Signpost completion flash runs the chain from 1 to the last number | removed, with both scenarios | `ts-engine`, "A game gives each element a position, and the route is which position it gives" ("its step from the start where the board holds a path"; `flash.win(renderState.nums[i])`, `src/games/signpost/render.ts:496`); `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground filled and what it holds kept; nothing moved, its scenario "A flash that is not a color" naming arrows; a lit given as a lit cell, scenario "A board that lifts its cells") |
 
 ## Kept, and why
@@ -145,3 +144,58 @@ Checked and found sound:
   is Signpost's, the links the board makes itself.
 - Each subject read alone: none hollow, no dangling antecedent, every title
   fits its body.
+
+## Second pass
+
+The brief's "A pointer is for that case only" and its line on a preference's
+key, applied. 10 citing sentences read; 7 removed or reworded to the game's
+own (the Solver requirement held two), 2 kept as the one pointer of a subject
+or concern, 1 kept inside an engine-request sentence.
+
+Removed (each a copy with a citation, in a subject that says plenty of its
+own; where it is stated is the row's third cell):
+
+- **Rules**, "which it SHALL take from the search as `engine-difficulty`,
+  "One search answers …" says". The engine-request sentence at the
+  requirement's end stands as it did.
+- **Generation**, "within the budget of "A strip is asked within the engine's
+  dealing budget"", a second citation in the one pointer the Unreasonable
+  deal has.
+- **Generation**, "What a pasted game ID opens as SHALL follow from that (…),
+  and one with several chains or none SHALL be refused (…)": three citations
+  and nothing of the game's. The scenario stays as the case of a board that
+  counts as Unreasonable.
+- **Solver**, the citation in the first sentence, reworded to the game's own
+  ("Signpost's search for a board's chains SHALL run over the solver: …"),
+  and "Solve SHALL be the search's, by "…", and Signpost SHALL depart from
+  neither".
+- **Hint**, "A finished board, or one with a mistake, is refused before
+  `hint` is asked: `engine-hints`, "The midend SHALL refuse …"". With it gone
+  "Hint: Signpost's hint stops where the solver does" is as it stood before
+  the cut, and its row is gone from the table.
+- **Hint**, "A step's marks SHALL be the roles `hintMarks` declares, the ring
+  at both ends of its link: the arrow it leaves by and the square it arrives
+  at". The second half is the legend's own words (`ring`: "at both ends: the
+  arrow it leaves by is drawn in the hint color, and the square it arrives at
+  is ringed", `src/games/signpost/index.ts:436`), so the sentence was a
+  pointer and a copy of the declaration together. The requirement keeps the
+  one thing the legend does not say, and is retitled for it.
+
+Kept as a pointer: the `Params` pointer (`paramConfig`, the codec, `presets`
+and `defaultParams`, one requirement); "Signpost's Unreasonable boards SHALL
+be dealt by the engine's deal (…), from an Easy board, with a strip of the
+game's own".
+
+Kept otherwise: "it SHALL refuse with the collection's sentence that
+deduction has run out", inside an engine-request sentence and left as it is.
+"`validateParams` SHALL refuse a `w·h` above 2,147,483,647, in the
+collection's sentence "…"" cites no requirement: where the ceiling sits is
+the game's. The surfaces of "Look: Signpost draws its squares on the
+collection's quiet surface" say which square takes which.
+
+Preferences: Signpost has no `prefs` of its own in the spec and the cut
+touched none.
+
+Each subject read alone after the edits: no fragment, no dangling "it",
+every owed subject says what the game does there or where to look, every
+title fits its body.

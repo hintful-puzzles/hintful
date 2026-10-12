@@ -23,10 +23,8 @@ the size of its region, and not before.
 ### Requirement: Rules: Filling reports mistakes for Check & Save
 
 `findMistakes(state)` SHALL return every player-filled cell whose number
-contradicts the board's one answer, which it SHALL take from the search as
-`engine-difficulty`, "One search answers a board for everything that asks"
-says. It SHALL return an empty result when the search did not prove exactly
-one answer.
+contradicts the board's one answer. It SHALL return an empty result when the
+search did not prove exactly one answer.
 
 #### Scenario: A wrong fill is flagged and clears
 
@@ -128,8 +126,7 @@ upstream's generator deals from the same seed.
 Filling's Unreasonable boards SHALL be dealt by the engine's deal
 (`engine-difficulty`, "The engine deals the Unreasonable board of a game that
 searches"), with a strip of the game's own: clues are hidden from a full
-board while the search still proves one answer, within the budget of "A strip
-is asked within the engine's dealing budget".
+board while the search still proves one answer.
 
 #### Scenario: The smallest boards carry the tier
 
@@ -140,12 +137,7 @@ is asked within the engine's dealing budget".
 ### Requirement: Generation: A Filling board is Easy where the solver and the hint both finish it
 
 A board SHALL count as Easy where the solver and the hint finish it, and as
-Unreasonable where it has exactly one answer that they do not reach. What a
-pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A loaded
-board whose id states no tier takes the lowest tier that solves it" and "A
-pinned tier is kept or raised and never lowered"), and one with several
-answers or none SHALL be refused (`engine-params`, "A board with a mistake
-check loads only with exactly one answer").
+Unreasonable where it has exactly one answer that they do not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
@@ -171,12 +163,8 @@ monotone.
 
 ### Requirement: Solver: Filling's search assumes each number an empty square can still take
 
-Filling SHALL count a clue set's answers by the engine's search
-(`engine-difficulty`, "The engine counts a searching game's answers up to
-two, within a budget of positions"), over the solver, assuming each number an
-empty square can still take where the solver stops. Solve SHALL be the
-search's, by "Solve from the search shows the one answer or says which it
-lacks", and Filling SHALL depart from neither.
+Filling's search for a clue set's answers SHALL run over the solver, assuming
+each number an empty square can still take where the solver stops.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -320,11 +308,11 @@ touches any other cell or uses the wrong value.
 
 ### Requirement: Hint: A Filling target is ringed empty, and is never its own evidence
 
-A displayed step's marks SHALL be the roles `hintMarks` declares. Each target
-square SHALL be ringed with no digit drawn in it: a call to action and not a
-filled-in answer, the value being read from the narration. The evidence, the
-region the deduction reasons about or the neighbors that pin a lonely or
-eliminated cell, SHALL never include a target square.
+Each target square of a displayed step SHALL be ringed with no digit drawn in
+it: a call to action and not a filled-in answer, the value being read from
+the narration. The evidence, the region the deduction reasons about or the
+neighbors that pin a lonely or eliminated cell, SHALL never include a target
+square.
 
 #### Scenario: Region-based steps show visible evidence
 
@@ -339,8 +327,8 @@ from the board in play": where no rule forces a square of the board it has
 reached, it SHALL take the next still-empty square the solver fills from the
 clues alone, narrated with the deduction that forced it there and with its
 evidence read from the board the step is shown on. The plan SHALL so finish
-every mistake-free position of a board that loads, whatever order its squares
-were filled in.
+every mistake-free position of a board the solver finishes from its clues,
+whatever order its squares were filled in.
 
 #### Scenario: A board the rules stall on from its own hint's position
 
@@ -361,9 +349,7 @@ The hint SHALL never run the search. On an Unreasonable board its plan SHALL
 hold the steps its deductions force from the player's numbers and no others,
 and where none forces anything it SHALL refuse with the collection's sentence
 that deduction has run out. It SHALL go on from the numbers the player then
-enters. A finished board, or one with a mistake, is refused before `hint` is
-asked: `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong
-board before asking the game".
+enters.
 
 #### Scenario: The hint stops, and goes on from a number tried rightly
 

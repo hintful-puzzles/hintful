@@ -524,8 +524,7 @@ cannot grow.
 ### Requirement: Controls: Enter, Space and the erase key act on Loopy's chosen edge
 
 Outside notes mode Enter, Space and the erase key SHALL apply the verbs of
-`targetVerbs` to the chosen edge (`engine-input`, "The engine owns a declaring
-game's press and select keys"), so a key's move is the click's, auto-follow
+`targetVerbs` to the chosen edge, so a key's move is the click's, auto-follow
 included. In notes mode they note corners and pairs, as "The keyboard notes
 corners and pairs at the cursor" describes. A select SHALL NOT move the
 cursor, which is already at the far end of the edge it walked. A pointer press
@@ -709,9 +708,10 @@ or off SHALL release a pin.
 
 ### Requirement: Preferences: Loopy's preferences are three aids of its own and none of the pencil ones
 
-Loopy's preferences are declared on `prefs`, each with its key: auto-follow,
-the faint drawing of excluded lines, and the ruling out of settled edges. A
-new game SHALL have auto-follow off and the faint drawing on; with the faint
+Loopy's preferences SHALL be `auto-follow`, whose choices are in order off,
+grid-only and grid-and-state; `draw-faint-lines`, the faint drawing of
+excluded lines; and `auto-rule-out`, the ruling out of settled edges. A new
+game SHALL have auto-follow off and the faint drawing on; with the faint
 drawing off an excluded edge is not drawn. `prefs` SHALL hold none of the
 collection's pencil preferences, since the right button rules an edge out and
 never switches notes mode.
@@ -800,10 +800,9 @@ was itself ruled out.
 
 ### Requirement: Hint: Loopy's plan takes the player's lines, ruled-out edges and notes as facts
 
-`hint(state)` SHALL deduce its plan from the player's own board (`engine-hints`,
-"A hint is deduced from the board in play"). Because the mistake check vouches
-for every mark before the game is asked, the plan SHALL take the player's
-corner and pair notes as facts beside the lines and ruled-out edges.
+Because the mistake check vouches for every mark before the game is asked,
+the plan `hint(state)` deduces SHALL take the player's corner and pair notes
+as facts beside the lines and ruled-out edges.
 
 #### Scenario: Following the plan finishes the board on every tiling
 

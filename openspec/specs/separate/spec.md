@@ -56,10 +56,7 @@ exactly once, and no wall lies interior to a component. `status` SHALL report
 
 A letter that a wall-bounded region of exactly `k` cells holds more than once
 SHALL be drawn in the error color wherever that region holds it. This is the
-one error Separate draws itself; the edges that redden are the shared error
-model's: `border-grid`, "The board reddens an edge beside a group joined past
-the region size" and "The board reddens a wall beside an undersized region
-and a wall that divides nothing".
+one error Separate draws itself.
 
 #### Scenario: A repeated letter in a completed region is Separate's error
 
@@ -71,10 +68,9 @@ and a wall that divides nothing".
 
 `findMistakes` SHALL return every player edge whose state contradicts the
 board's one partition: a wall where the solution has none, or a no-wall mark
-where the solution has a wall. It SHALL take the partition from the game's
-one search (`engine-difficulty`, "One search answers a board for everything
-that asks"), and where that did not prove exactly one partition it SHALL
-return an empty list.
+where the solution has a wall. It SHALL take the partition from the search
+that counts the board's answers, and where that did not prove exactly one
+partition it SHALL return an empty list.
 
 #### Scenario: A contradicting wall is flagged
 
@@ -265,12 +261,7 @@ SHALL keep the board only when the solver stops short on it.
 ### Requirement: Generation: A Separate board is Easy where the solver and the hint both finish it
 
 A board SHALL count as Easy where the solver and the hint finish it, and as
-Unreasonable where it has exactly one partition that they do not reach. What
-a pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A
-loaded board whose id states no tier takes the lowest tier that solves it" and
-"A pinned tier is kept or raised and never lowered"), and one with several
-or none SHALL be refused (`engine-params`, "A board with a mistake check
-loads only with exactly one answer").
+Unreasonable where it has exactly one partition that they do not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
@@ -297,9 +288,7 @@ Separate SHALL count a board's partitions with the engine's search over its
 solver (`engine-difficulty`, "The engine counts a searching game's answers up
 to two, within a budget of positions"). Where the solver stops, the search
 SHALL take the region with the fewest squares it could still grow into and
-assume it takes the first of them, and then that it does not. Solve SHALL be
-made from its answer (`engine-difficulty`, "Solve from the search shows the
-one answer or says which it lacks").
+assume it takes the first of them, and then that it does not.
 
 #### Scenario: The search tells one answer from several and from none
 

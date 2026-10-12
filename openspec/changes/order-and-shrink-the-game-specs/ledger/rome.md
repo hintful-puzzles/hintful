@@ -11,9 +11,9 @@
 | Hint: Rome explains its next deduction | retitled "Hint: Rome's hint is the candidate walk's, started on the implicit reading". "SHALL provide an explained `hint()` that narrates the next forced move by the premise that forces it" replaced by a pointer to the walk and the legend; "in Rome's own vocabulary of arrows, squares and areas" kept. Gains the implicit-reading sentence and the scenario "A board with no marks and no stored preference" from "Hint: Rome's hint pencils marks in only as a step needs them". Scenario "A hint can be followed to a finished board" dropped | `engine-candidate-hints`, "A shared candidate-elimination hint plan"; `engine-hints`, "A hint step always names a technique, with no un-narrated fallback". The scenario: `engine-hints`, "The hint walk SHALL cover every preset a game offers" (following hints solves the board from any reached position) and "A displayed hint step never references already-resolved state" |
 | Hint: A Rome hint rests on what the player can see or mark | removed | `engine-hints`, "A hint relies only on marks the player can make" (sentence 1), "The engine SHALL own the hint mark roles and the words for them" (outline for what a step reasons from, stripes for a region named) and "A hint marks beside the content, never behind it" (ringed and not filled; its first scenario is the dropped one). Rome's legend: `hintMarks`, `index.ts:706`-`714` |
 | Hint: A walk in a Rome hint is numbered square by square | title kept. "the chain SHALL be outlined in order, numbered, so the claim the sentence makes is one the player can follow square by square" and "The chain SHALL be computed rather than assumed." replaced by a citation; what is Rome's (the premise is an arrow chain leading back to the square being struck) kept. Scenario untouched | `engine-candidate-hints`, "A premise that asserts a walk is computed and numbered" |
-| Hint: Rome's hint pencils marks in only as a step needs them | removed. "the hint SHALL read a square with no marks as holding every arrow its area has not used that does not point off the grid", the `implicit` default and the scenario "A board with no marks and no stored preference" (unchanged) move to "Hint: Rome's hint is the candidate walk's, started on the implicit reading". "Rome SHALL offer the shared `hint-notes` preference" and "SHALL pencil marks in only where a step needs them" cut | `candidateReadingPref()` in `prefs`, `index.ts:742`; `engine-candidate-hints`, "A candidate hint plan reads an unmarked cell the way the player chose" (a game on the walk offers the choice through `hint-notes`; no fill-all under `implicit`) and "The implicit reading writes the notes a firing rests on" |
-| Look: What Rome draws | "There SHALL be no interpolated arrow animation." cut; the list untouched. Scenario "An arrow appears at once" dropped; "The player repeats a fixed arrow" written from the renderer | `animLength: () => 0`, `index.ts:751`. The new scenario: `src/games/rome/render.ts:304`-`313` |
-| Look: Rome's completion flash sweeps the board | title kept. "sweep the board's squares from the bottom left to the top right" replaced by a citation of the collection's sweep; "a lit square SHALL be filled with a flash color in place of its surface and keep what it holds" replaced by a citation (review); the hidden selection kept. Scenario "The flash moves" dropped; "The selection through the flash" kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep`: a diagonal from the bottom left to the top right); `flash.win(sweepStep(x, y))`, `render.ts:406`. The lit square: `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground of a cell filled with the role's color, keeping what it holds, and never by lifting or swapping a surface); `winHighlight`, `render.ts:406` |
+| Hint: Rome's hint pencils marks in only as a step needs them | removed. "the hint SHALL read a square with no marks as holding every arrow its area has not used that does not point off the grid", the `implicit` default and the scenario "A board with no marks and no stored preference" (unchanged) move to "Hint: Rome's hint is the candidate walk's, started on the implicit reading". "Rome SHALL offer the shared `hint-notes` preference" and "SHALL pencil marks in only where a step needs them" cut | `candidateReadingPref()` in `prefs`, `index.ts:742`, whose key and choice order are the engine's (`src/engine/pencil-prefs.ts:59`-`62`) and held by tests: `src/engine/candidate-reading.test.ts:235` reads the key `hint-notes` off every game that carries a reading, and `src/engine/midend-prefs.test.ts:176` sets it to choice 1 for the populate reading; `engine-candidate-hints`, "A candidate hint plan reads an unmarked cell the way the player chose" (a game on the walk offers the choice through `hint-notes`; no fill-all under `implicit`) and "The implicit reading writes the notes a firing rests on" |
+| Look: What Rome draws | "There SHALL be no interpolated arrow animation." cut; "and a completion flash" reworded out of the list (second pass). Scenario "An arrow appears at once" dropped; "The player repeats a fixed arrow" written from the renderer | `animLength: () => 0`, `index.ts:751`. The flash: this spec's "Look: Rome's completion flash sweeps the board", and `ts-engine`, "The win flash plays on a forward move that solves the board". The new scenario: `src/games/rome/render.ts:304`-`313` |
+| Look: Rome's completion flash sweeps the board | title kept. "sweep the board's squares from the bottom left to the top right" replaced by a citation of the collection's sweep; "a lit square SHALL be filled with a flash color in place of its surface and keep what it holds" cut (review made it a citation, and the second pass took the citing clause out); the hidden selection kept. Scenario "The flash moves" dropped; "The selection through the flash" kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep`: a diagonal from the bottom left to the top right); `flash.win(sweepStep(x, y))`, `render.ts:406`. The lit square: `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground of a cell filled with the role's color, keeping what it holds, and never by lifting or swapping a surface); `winHighlight`, `render.ts:406` |
 | Controls: A tap that commits no move selects the square | title kept. "it selects that square, a second tap on the selected square puts the highlight away, and the highlight shows only where the mode could write" replaced by a citation (review); the reason and which tap commits a move kept. Scenario "A second tap on the selected square" dropped; the other three untouched | `engine-notes`, "A game whose press starts a drag joins the note-taking cell through its tap" (a release that commits nothing resolves through the engine's press arm; Rome is named), "A game that joins through its tap is a full member of the mechanic" (its first scenario is the dropped one) and "The highlight is shown only where its mode could write"; `tapNoteTakingCell`, `index.ts:447` |
 
 ## Kept, and why
@@ -132,3 +132,36 @@ Rows read: 12. Rows corrected: 1 (the flash). Rows added: 1 (the tap).
   second); the hand-written key list, the keyboard arm and the digit keys;
   the three Look requirements on the surface, the outline and the goal, which
   say which shared role Rome gives to what.
+
+## Second pass
+
+Citing sentences read: 7, one of them with two citing clauses. Removed: 1
+clause. Kept as the subject's one pointer: 6. Kept as a departure: 1 clause.
+
+- **Removed.** "and a lit square SHALL be painted as the collection paints
+  one (`engine-colors`, …)", in "Look: Rome's completion flash sweeps the
+  board". `Look` says plenty of Rome's own and the clause was the copy with a
+  citation attached. Row corrected.
+- **Removed in passing**, not a citing sentence: "and a completion flash",
+  from the list of "Look: What Rome draws". The flash has a requirement of
+  its own two below, and Solo's and Salad's lists lost the same words in
+  review. Row corrected.
+- **Kept as a departure.** The sweep clause of the same sentence:
+  `ts-engine`, "A game gives each element a position, and the route is which
+  position it gives" hands the route to the game, and the sweep is Rome's
+  choice of one.
+- **Kept as a pointer.** `Rules`, the answer check (with "separately from
+  the rule violations", which is Rome's); `Params`, the codec sentence;
+  `Generation`, "A Rome board keeps the collection's promise at its tier"
+  (the subject's other requirement gives the order of the solver's rules and
+  nothing of what a dealt board promises); `Controls`, the tap that joins
+  the note-taking cell; `Hint`, the walk and the legend; `Hint`, the
+  numbered walk, which is the only requirement that gives the loop strike's
+  premise and cites how a walk is shown, a concern the legend's pointer does
+  not cover.
+- **Preferences.** The cut removed "Rome SHALL offer the shared `hint-notes`
+  preference". The key and its choice order are the engine's declaration and
+  two tests hold them; the row now names both. `goal` and `loop` stand in the
+  spec.
+- Each subject read alone after the edit: none is a fragment, and every
+  title fits its body.

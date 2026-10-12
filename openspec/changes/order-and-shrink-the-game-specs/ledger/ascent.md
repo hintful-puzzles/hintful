@@ -86,3 +86,44 @@ None.
 - The dropped scenario "A ruleset is asked for on a shape it does not have"
   quoted "Board shape must be Rectangle for Edges."; the sentence is the
   engine's, built from `only`.
+
+## Review
+
+15 rows read, each against the declaration or the requirement it names, read
+whole; 5 rows' requirements changed in the spec, two preference keys
+restored.
+
+Changed:
+
+- **The keys `numpad` and `auto-advance-runs` restored**, with the two
+  choices of the first in their order. No test pins either string (`grep`
+  over `src` finds them in `index.ts` alone), and a stored preference depends
+  on them. Their names stay cut.
+- **"Params: Ascent refuses an area of 1000, a Hexagon out of proportion and
+  a 2×2 in Edges"**: the sentence pointing at `paramConfig` and `presets`
+  cut. The subject says plenty of its own, and its encoding requirements name
+  every parameter.
+- **"Controls: Ascent offers a number keypad"**: "SHALL be the number keys
+  its `requestKeys` declares" reworded out.
+- **"Controls: Ascent's keys click at the cursor, and the number pad types or
+  moves"**: both citations cut. The pad is "a direction pad", and the
+  hexagonal step names the helper `interpretMove` calls.
+- **"Hint: A hint step says why in one sentence and marks what it reads"**:
+  the list of `hintMarks` roles cut, leaving what the legend does not say,
+  that the ring and the outlines follow the cell's shape.
+
+Checked and found sound:
+
+- The new scenario: a 7×6 Hexagon passes the area test and is refused by the
+  next line with "Height must be an odd number." (`index.ts:385`).
+- `RULESETS` (`index.ts:245`) holds each ruleset's name, order, `rule` (the
+  neighbors) and `only`; `presets` is `presetGrid` over `BOARDS` with the
+  `tiers` option. The seven `engine-params` and `engine-difficulty`
+  requirements named for the four removals each state what went.
+- `engine-input`, "The secondary-button declaration is held to the behavior";
+  `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong
+  board before asking the game" and "Hint narration SHALL be short enough to
+  read at a glance" (120 characters).
+- `numpadDirection` and `shearedHexStep` are called at `ui.ts:749` and
+  `:754`; the codec is hand-written (`index.ts:302`, `:317`).
+- Each subject read alone: none hollow, no dangling antecedent.

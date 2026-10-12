@@ -37,9 +37,7 @@ mistake"), against the one answer the search proves from the clues
 ### Requirement: Params: ABCD needs five letters where diagonal touching is disallowed
 
 `validateParams` SHALL refuse a letter count under 5 when diagonal touching
-is disallowed. The limits on a single field SHALL be its bounds in
-`paramConfig`, which the engine refuses (`engine-params`, "Params validity is
-the engine's check").
+is disallowed.
 
 #### Scenario: Four letters and no diagonal touching
 
@@ -50,8 +48,8 @@ the engine's check").
 ### Requirement: Params: An ABCD params string is its declared codec's, and one with no difficulty letter is Easy
 
 ABCD's params (a width, a height, a letter count, whether diagonal touching
-is disallowed, whether clues are removed, and a difficulty) and their
-encoding SHALL be those its `paramConfig` and its declared codec give
+is disallowed, whether clues are removed, and a difficulty), their bounds and
+their encoding SHALL be those its `paramConfig` and its declared codec give
 (`engine-params`, "A game declares its params encoding once, and both codec
 halves are derived"), with no departure from the codec grammar. A string with
 no `D` SHALL decode as a board that allows diagonal touching, and one with no
@@ -76,10 +74,7 @@ difficulty letter as Easy.
 Parameter validation SHALL reject, when validating for generation, any
 combination of grid size and letter count whose measured generation-success
 rate is too low to produce a board in an acceptable time, giving a reason,
-rather than retrying until an attempt budget is exhausted. The bound SHALL
-bind generation only, and a board that arrives with its description loads as
-the collection's does (`engine-params`, "Param validation distinguishes
-generating a board from loading one").
+rather than retrying until an attempt budget is exhausted.
 
 #### Scenario: An un-generable configuration is refused immediately
 
@@ -121,11 +116,9 @@ un-generable.
 
 ### Requirement: Params: ABCD's board without diagonal touching is a preset of its own
 
-Which boards the menu offers SHALL be ABCD's `presets`, in the collection's
-shape (`engine-params`, "The preset menu is a grid"). The rule against
-diagonal touching needs five letters, which no other preset has, so writing
-the one field onto another preset is refused and nothing but a preset SHALL
-reach it from the menu.
+The rule against diagonal touching needs five letters, which no other preset
+has, so writing the one field onto another preset is refused and nothing but
+a preset SHALL reach it from the menu.
 
 #### Scenario: The rule against diagonal touching is on the menu
 
@@ -236,8 +229,7 @@ ABCD's Unreasonable boards SHALL be dealt by the engine's deal
 (`engine-difficulty`, "The engine deals the Unreasonable board of a game that
 searches"), a candidate being the clues of a random fill. With "remove clues"
 set, ABCD's strip SHALL hide clues in a randomized order, each only while the
-search still proves one answer (`engine-difficulty`, "A strip is asked within
-the engine's dealing budget").
+search still proves one answer.
 
 #### Scenario: A dealt Unreasonable board needs search and has one answer
 
@@ -303,10 +295,7 @@ assert that every technique fires.
 ABCD's search SHALL be the engine's (`engine-difficulty`, "The engine counts
 a searching game's answers up to two, within a budget of positions") over the
 solver's ladder, assuming each candidate of an empty cell in turn where the
-ladder stops. Solve and the mistake check SHALL take the board's answer from
-it as every searching game's do (`engine-difficulty`, "One search answers a
-board for everything that asks" and "Solve from the search shows the one
-answer or says which it lacks").
+ladder stops.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -440,8 +429,7 @@ The hint SHALL never run the search. On an Unreasonable board its plan SHALL
 hold the steps the three techniques force from the player's marks and no
 others, and where none forces anything it SHALL refuse with the collection's
 sentence that deduction has run out. It SHALL go on from the letters the
-player then enters, as every hint does from the board in play
-(`engine-hints`, "A hint is deduced from the board in play").
+player then enters.
 
 #### Scenario: The hint stops, and goes on from a letter tried rightly
 

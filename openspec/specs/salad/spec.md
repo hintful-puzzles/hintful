@@ -52,10 +52,7 @@ once with the correct empty squares and all border clues are satisfied.
 
 ### Requirement: Params: Salad's Normal presets are the shapes that deal quickly
 
-Which boards the menu offers SHALL be Salad's `presets`, held to the
-collection's rule that every tier is on it (`engine-params`, "A board's tiers
-are one run of lines, and every tier is offered"). The Normal presets SHALL
-be shapes whose deal stays well under a second.
+Salad's Normal presets SHALL be shapes whose deal stays well under a second.
 
 #### Scenario: A shape that is slow at Normal
 
@@ -96,9 +93,6 @@ When a board is to be dealt at Normal with two symbols, `validateParams` SHALL
 refuse an ABC End View board smaller than 8×8 and a Number Ball board up to
 4×4 with the sentence that no such puzzle is Normal, and a Number Ball board
 of 5×5, or of 8×8 and larger, with the sentence for a tier too rare to deal.
-The refusal SHALL bind generation only, as the collection's does
-(`engine-difficulty`, "An unbindable tier is refused, not silently
-downgraded").
 
 #### Scenario: Two letters at Normal
 

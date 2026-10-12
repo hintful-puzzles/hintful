@@ -7,7 +7,7 @@
 | Params: Undead's parameter limits | removed. "`validateParams` SHALL refuse `w·h > 54`" moves to "Params: An Undead params string is its declared codec's, and a grid past 54 squares is refused". The minimum of 3 and the unknown difficulty letter cut; scenario "Invalid params are rejected" dropped | the minimum: `bounds: { min: 3 }`, `state.ts:118`, refused by the engine (`engine-params`, "Params validity is the engine's check"); the letter: `engine-params`, "A params string is read whole or refused" |
 | Controls: Undead supports monster, pencil, and clue moves with a cursor | sentences untouched. Scenario "Pencil-mark UX" dropped; "Place and clear a monster" kept | `engine-notes`, "The button and the sticky preference decide the mode a press selects for" (a latched pencil mode stays through the next press) and "A sticky notes mode is visible on the board" (the indicator) |
 | Controls: Undead's Mark-all fills the cells that have no notes | title kept. "SHALL fill every undecided cell that carries no notes with all three candidate notes, and SHALL make no move once none is left" replaced by a pointer to the shared rule and the hook; the reason (a placed monster rules nothing out of another cell) kept. Scenario untouched | `engine-notes`, "A game with no obvious-candidate rule keeps a fill-only Mark-all" (names Undead; fills the note-less cells, leaves a narrowed one, no move on a fully noted board). `markAll`, `index.ts:922` |
-| Hint: Undead explained deduction hint | retitled "Hint: Undead's hint is deductive, by a plan of the game's own". Sentence 1 (purely deductive, no solution reveal, no narrated guess) replaced by a pointer to the two shared requirements, "with no departure"; sentence 2 (below Unreasonable a plan solves the board, and hints followed one at a time reach a solved board) cut; one sentence added that the plan is the game's own and what it is built from (rule 2: the subject's other requirements each give one technique or one refusal). Scenario "The plan reaches a solved board from any mistake-free position" dropped; "Naked single is surfaced first as a placement" and "Total exhaustion is narrated honestly, not as a sightline" untouched | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" and "A Search is refused and never narrated"; the dropped scenario: `engine-hints`, "The hint walk SHALL cover every preset a game offers" and "Deduction runs out only where the tier permits search". The added sentence: `buildSteps`, `index.ts:660` |
+| Hint: Undead explained deduction hint | retitled "Hint: Undead's hint is a plan of the game's own". Sentence 1 (purely deductive, no solution reveal, no narrated guess) cut (second pass: the pointer to the two shared requirements that had replaced it went); sentence 2 (below Unreasonable a plan solves the board, and hints followed one at a time reach a solved board) cut; one sentence added that the plan is the game's own and what it is built from (rule 2: the subject's other requirements each give one technique or one refusal). Scenario "The plan reaches a solved board from any mistake-free position" dropped; "Naked single is surfaced first as a placement" and "Total exhaustion is narrated honestly, not as a sightline" untouched | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" and "A Search is refused and never narrated"; the dropped scenario: `engine-hints`, "The hint walk SHALL cover every preset a game offers" and "Deduction runs out only where the tier permits search". The added sentence: `buildSteps`, `index.ts:660` |
 | Hint: Undead's hint marks follow the element-type color legend | retitled "Hint: A ringed Undead cell shows no monster ahead of the move". The two colors by constant, "following the element-type color legend", the outline of the sightline evidence and "Both marks SHALL sit on the cell's edge, over the grid line" replaced by one sentence that sends the reader to the legend; "ringed … with no pre-rendered monster glyph" kept. Scenario untouched | `hintMarks.roles.ring` ("in the hint color") and `.outline` ("the *sightline* the step reasons from, in a second color: the squares, mirrors included…"), `index.ts:946`-`953`; `engine-hints`, "A hint naming several kinds of element colors them by a stable legend", "The engine SHALL own the hint mark roles and the words for them" and "A hint mark is drawn on the cell's border" |
 | Hint: A struck candidate stays legible | removed, with its scenario "A hint is dismissed" | `engine-hints`, "A highlight on a board element stays legible against its cell" (a struck candidate stays among its cell's notes in the note's own ink with a line through it, never on a fill of the highlight's color) and "A hint marks beside the content, never behind it" (the acted-on cell is ringed and not filled, whether the step places or strikes). The dismissal: `engine-hints`, "A mark outside the content box is driven by the drawstate" (a mark inside the box is undone by the cell's own repaint). The drawing: `src/games/undead/render.ts:568`-`577` |
 
@@ -128,3 +128,24 @@ Checked and found sound:
   why the cut is 6%.
 - Engine requests: none were filed, and none is owed by a kept sentence.
 - The four checks pass for `undead`.
+
+## Second pass
+
+Citing sentences read: 5. Removed: 1. Kept as the subject's one pointer: 4.
+Kept as a departure: 0.
+
+- **Removed.** "Undead's hint SHALL keep the collection's rules for a
+  deductive hint (`engine-hints`, …), with no departure", in the first
+  `Hint` requirement, retitled "Hint: Undead's hint is a plan of the game's
+  own". The subject says plenty of Undead's own on the same ground: the
+  forcing rung never reaches a hint, an Unreasonable board's hint stops
+  where deduction stops, and each technique has its requirement. What is
+  left opens "Undead's hint plan" so it stands. Row corrected.
+- **Kept as a pointer.** `Rules`, the mistake check, with what the answer is
+  re-solved from; `Params`, the codec sentence; `Controls`, Mark-all, the
+  subject's only word on that press, with Undead's reason; `Hint`, the
+  legend (`hintMarks`) for what the ring and the outline stand for.
+- **Preferences.** The cut removed no preference's key or choice order:
+  `count-style`, `monsters` and the four count styles stand in the spec.
+- Each subject read alone after the edit: none is a fragment, and every
+  title fits its body.

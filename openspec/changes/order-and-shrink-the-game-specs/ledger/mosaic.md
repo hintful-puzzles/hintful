@@ -178,5 +178,10 @@ Checked and found sound:
   and `EVERY_TIER`, the two verbs and the sweep, the legend's two roles,
   `COL_GRID`. The other line citations are right.
 - Every engine title the spec and the ledger cite is exact (30 citations).
+- The diff against `c86372f4`, read hunk by hunk with no context: 32 hunks
+  (15 at git's default context), one the Purpose and 31 inside the 16
+  requirements the table has a row for. None touches a requirement without a
+  row, a scenario the rows do not name, or a line's wrapping alone; the diff
+  holds no carriage return and no trailing space.
 - `Found`: the two player-facing items are verified above. Neither is a
   defect of the cut.

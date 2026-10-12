@@ -72,11 +72,9 @@ any difficulty.
 
 ### Requirement: Params: Clusters refuses to generate Normal on a board too small for it
 
-Validation SHALL refuse Normal on a board of fewer than 12 squares, or one
-whose shorter side is less than two, which is too small to admit one. The
-refusal SHALL bind generation only, as the collection's does
-(`engine-difficulty`, "An unbindable tier is refused, not silently
-downgraded").
+Validation SHALL refuse Normal, when a board is to be generated, on a board of
+fewer than 12 squares or one whose shorter side is less than two, which is too
+small to admit one.
 
 #### Scenario: The boundary, in both of its shapes
 
@@ -93,8 +91,7 @@ A Clusters description SHALL be the given dots and nothing else, written in
 the engine's dot-run grammar (`engine-params`, "The engine provides the
 dot-run description grammar") over the cells in row-major order: a lowercase
 letter is a red dot and an uppercase letter a blue one. The parser SHALL
-refuse what `readDotRuns` refuses (`engine-params`, "The dot-run reader
-refuses what its writer never writes"), and nothing of its own.
+refuse what `readDotRuns` refuses and nothing of its own.
 
 #### Scenario: A generated description round-trips
 
@@ -114,10 +111,7 @@ refuses what its writer never writes"), and nothing of its own.
 Clusters SHALL offer two tiers, the two levels of deduction its solver has.
 **Easy** is the single-cell proof by contradiction: a color is tried in an
 empty cell, and where it makes the board invalid the cell takes the other.
-**Normal** is the same reasoning one hypothetical level deep. What a board
-dealt at either promises SHALL be the collection's (`engine-difficulty`,
-"Every tier promises one solution found at its cap" and "A difficulty tier
-binds the board it generates"), with no departure.
+**Normal** is the same reasoning one hypothetical level deep.
 
 #### Scenario: The harder tier needs the deeper reasoning
 
@@ -208,11 +202,8 @@ nonetheless need no lookahead step at all.
 
 ### Requirement: Hint: A recomputed Clusters plan continues where the last one left off
 
-A hint SHALL be deduced from the player's current position by the game's own
-contradiction solver (`engine-hints`, "The solver and the hint are two
-projections of one deduction engine"). The plan's scan order SHALL be
-deterministic, so that a hint recomputed after a followed move continues where
-the previous plan left off.
+The scan order of a hint's plan SHALL be deterministic, so that a hint
+recomputed after a followed move continues where the previous plan left off.
 
 #### Scenario: A plan recomputed after its first step
 
@@ -251,11 +242,10 @@ SHALL outline no tile for it.
 ### Requirement: Hint: A lookahead deduction is one step showing its whole forcing chain
 
 A deduction that forces a move only through the solver's one-level lookahead
-SHALL be presented as one step, its chain shown as the collection shows one
-(`engine-hints`, "A Tactic's chain is shown on the board"): the hypothesis
-cell is the hint target, each cell the hypothesis would force holds a piece of
-the color it would be forced to, smaller than any placed piece, and the tile
-where the contradiction lands is marked as in a single-cell step.
+SHALL be presented as one step: the hypothesis cell is the hint target, each
+cell the hypothesis would force holds a piece of the color it would be forced
+to, smaller than any placed piece, and the tile where the contradiction lands
+is marked as in a single-cell step.
 
 #### Scenario: A what-if piece cannot be taken for a placed one
 

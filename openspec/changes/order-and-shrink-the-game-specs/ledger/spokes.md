@@ -130,5 +130,10 @@ Checked and found sound:
 - The two silences under Found are true of the code and stay there: `hint`
   asks `solveFromClues` before it plans (`index.ts:466`), and no `Rules`
   requirement says when a board is solved.
-- Each subject read alone: none hollow, no dangling antecedent, every title
-  fits its body.
+- The spec read whole, subject by subject. Two sentences dangled after the
+  cut and were mended: "Either on a spoke …" in Controls is "Either verb on a
+  spoke …", and the marks requirement's "inside its ring", whose ring went
+  with the legend's copy, is "The dot of a spoke the step rules out … inside
+  the step's ring". No subject is hollow and every title fits its body.
+- The scenario strings run through the codec: `4x4dt` decodes at Normal and
+  `4x4` at Easy, each with the short form `4x4`.

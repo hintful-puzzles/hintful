@@ -197,9 +197,7 @@ ruled out becomes equivalent.
 A clue SHALL stay removed only while the solver of the board's difficulty
 still finds the unique solution, and above Easy the obvious starting points
 (4s, 0s, border 2s and corner 1s) SHALL be tried for removal before the rest,
-so that few of them survive. What the dealt board's tier then promises is
-`engine-difficulty`, "Every tier promises one solution found at its cap" and
-"A difficulty tier binds the board it generates".
+so that few of them survive.
 
 #### Scenario: A removal the solver cannot bear is undone
 
@@ -234,11 +232,9 @@ a right-click the other way round. The two SHALL be swapped when the
 
 ### Requirement: Controls: A notes-mode press marks the nearest side
 
-Notes mode SHALL be turned on and off as in every game that takes notes
-(`engine-notes`, "One way into note-taking across the collection"); Slant has
-no keypad key of its own beside the Marks key. In notes mode a press of either
-button SHALL toggle the mark on the side of the pressed square nearest the
-press, and SHALL do nothing when that side is the board's outer edge.
+In notes mode a press of either button SHALL toggle the mark on the side of
+the pressed square nearest the press, and SHALL do nothing when that side is
+the board's outer edge.
 
 #### Scenario: A tap marks the nearest shared side
 
@@ -270,8 +266,9 @@ directly, whatever the square held, where a click or a select key cycles it.
 
 ### Requirement: Preferences: Slant's two preferences swap the buttons and fade grounded diagonals
 
-Of the two preferences `prefs` declares, `left-button` SHALL swap which way
-round each button cycles a square, and `fade-grounded`, off unless set, SHALL
+Of the two preferences `prefs` declares, `left-button`, whose choices are in
+order `\`-first, the default, and `/`-first, SHALL swap which way round each
+button cycles a square, and `fade-grounded`, off unless set, SHALL
 fade the diagonals in the border-connected component to a dimmed color so that
 the diagonals that could still close a loop stand out.
 

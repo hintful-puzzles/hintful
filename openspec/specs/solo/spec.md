@@ -247,14 +247,12 @@ cage.
   cell begins a cage
 - **THEN** it is refused with the same sentence
 
-### Requirement: Generation: Solo builds a full grid under every active constraint and keeps a board at its tier
+### Requirement: Generation: Solo builds a full grid under every active constraint
 
 `newDesc` SHALL generate a full solution grid satisfying all active
 constraints: Latin rows and columns, sub-blocks, X-diagonals when `xtype` and
 killer cages when `killer`, with jigsaw blocks produced by the engine's
-`divvy`. What a board kept at a tier promises SHALL be the collection's
-(`engine-difficulty`, "Every tier promises one solution found at its cap" and
-"A difficulty tier binds the board it generates"), with no departure.
+`divvy`.
 
 #### Scenario: A board with the diagonals and cages both
 

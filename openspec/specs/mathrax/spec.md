@@ -4,8 +4,8 @@
 Mathrax, the Latin-square puzzle whose clues sit on grid intersections and
 constrain the four digits around each: its rules, its parameters and
 descriptions, its controls, its mistake check against the unique solution,
-what its generator promises of a board at each tier, what its hint says and
-marks, and the look that is its own.
+what separates its tiers, what its hint says and marks, and the look that is
+its own.
 
 ## Requirements
 
@@ -41,11 +41,9 @@ even clue SHALL require all four digits to be even and an odd clue all four to b
 
 ### Requirement: Rules: Mathrax's mistake check re-solves from its givens and clues
 
-Mathrax's `findMistakes` SHALL report what the collection's check reports
-(`engine-hints`, "Check & Save names a wrong entry in every game", and
-`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
-the answer it re-solves from the given digits and the clues. When they do not
-solve to exactly one answer, no cell SHALL be flagged.
+Mathrax's `findMistakes` SHALL judge the board against the answer it re-solves
+from the given digits and the clues. When they do not solve to exactly one
+answer, no cell SHALL be flagged.
 
 #### Scenario: A wrong digit that breaks no rule
 
@@ -56,8 +54,7 @@ solve to exactly one answer, no cell SHALL be flagged.
 ### Requirement: Params: Mathrax refuses to deal with no clue type enabled
 
 `validateParams` SHALL refuse, when validating for generation, a parameter set
-with no clue type enabled. The range of the size SHALL be the one its
-`paramConfig` item declares.
+with no clue type enabled.
 
 #### Scenario: Every clue type unchecked
 
@@ -69,9 +66,7 @@ with no clue type enabled. The range of the size SHALL be the one its
 
 Mathrax SHALL refuse to *generate* a size-3 board at Normal or at the top tier,
 because a 3×3 grid's four intersections cannot separate those tiers from their
-neighbors. The refusal SHALL bind generation only, as the collection's does
-(`engine-difficulty`, "An unbindable tier is refused, not silently
-downgraded"), and SHALL name the tiers from the game's tier list, as the
+neighbors. The refusal SHALL name the tiers from the game's tier list, as the
 difficulty menu does. Size 3 at Tricky SHALL be unaffected.
 
 #### Scenario: An unsupported size and tier are refused
@@ -217,19 +212,10 @@ last square, and anything after the last intersection.
 - **WHEN** `i,E5c` is read at size 3
 - **THEN** it is refused at the `5`
 
-### Requirement: Generation: What a Mathrax board promises at its tier is the collection's
+### Requirement: Generation: An ambiguous verdict does not let Mathrax's generator keep removing
 
-What a board dealt at a tier promises SHALL be the collection's
-(`engine-difficulty`, "Every tier promises one solution found at its cap" and
-"A difficulty tier binds the board it generates"), the `Unreasonable` tier
-included and with no departure. The generator SHALL NOT take an ambiguous
-solver verdict as grounds to keep removing.
-
-#### Scenario: A Tricky board genuinely needs the Tricky tier
-
-- **WHEN** a board generated at Tricky is solved at Normal
-- **THEN** the solver does not reach a unique solution
-- **AND** solving the same board at Tricky does
+While it removes givens and clues from a board, the generator SHALL NOT take
+an ambiguous solver verdict as grounds to keep removing.
 
 #### Scenario: Even the guess-and-verify tier yields a unique solution
 

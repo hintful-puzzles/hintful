@@ -24,9 +24,8 @@ error highlight, independently of `findMistakes`.
 
 `findMistakes` SHALL flag every placed digit that contradicts the board's one
 answer and every empty cell whose pencil notes have crossed out its solution
-digit. It SHALL take the answer from the search, as `engine-difficulty`, "One
-search answers a board for everything that asks" says, and SHALL return
-nothing when the search did not prove the board has exactly one answer.
+digit. It SHALL return nothing when the search did not prove the board has
+exactly one answer.
 
 #### Scenario: Entering the wrong digit is caught by Check & Save
 
@@ -76,9 +75,7 @@ difficulty letter SHALL decode as Easy.
 Parameter validation SHALL reject, when validating for generation, any board
 whose area is larger than the generable maximum, giving a reason. A board two,
 three or four squares on its shorter side SHALL be held to a smaller maximum
-of its own, since its long runs give out sooner. The ceilings SHALL bind
-generation only, as the collection's do (`engine-params`, "A generation-only
-bound is gated on full").
+of its own, since its long runs give out sooner.
 
 #### Scenario: An ungenerable size is refused with a reason
 
@@ -202,12 +199,7 @@ and no cell that no clue can reach.
 ### Requirement: Generation: A Crossing board is Easy where the solver and the hint both finish it
 
 A board SHALL count as Easy where the solver and the hint finish it, and as
-Unreasonable where it has exactly one answer that they do not reach. What a
-pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A loaded
-board whose id states no tier takes the lowest tier that solves it" and "A
-pinned tier is kept or raised and never lowered"), and one with several
-answers or none SHALL be refused (`engine-params`, "A board with a mistake
-check loads only with exactly one answer").
+Unreasonable where it has exactly one answer that they do not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
@@ -239,12 +231,9 @@ run only that run's cells, and iterate all three to a fixpoint.
 
 ### Requirement: Solver: Crossing's search assumes each candidate digit of an empty cell in turn
 
-Crossing SHALL count a board's answers by the engine's search
-(`engine-difficulty`, "The engine counts a searching game's answers up to
-two, within a budget of positions"), over the solver's deductions, assuming
-each candidate digit of an empty cell in turn where they stop. Solve SHALL be
-the search's, by "Solve from the search shows the one answer or says which it
-lacks", and Crossing SHALL depart from neither.
+Crossing's search for a board's answers SHALL run over the solver's
+deductions, assuming each candidate digit of an empty cell in turn where they
+stop.
 
 #### Scenario: The search tells one answer from several and from none
 
@@ -426,9 +415,7 @@ a wall, a right-click, an arrow and Enter SHALL leave the clue held.
 
 Marking the runs through the selected cell on the board (`highlight-runs`)
 and coloring the clue list by where each clue fits (`fit-highlight`) SHALL be
-separately available as preferences, both on by default. They and
-`auto-advance` are the game's own in its `prefs`; its pencil preferences are
-the engine's.
+separately available as preferences, both on by default.
 
 #### Scenario: The board marking and the list coloring are independent
 
@@ -521,12 +508,10 @@ and SHALL NOT cite entries the board does not carry.
 
 ### Requirement: Hint: Crossing's marks are its legend's, on the clue list as on the grid
 
-A step's marks SHALL be the roles `hintMarks` declares, painted from the
-step's words (`engine-hints`, "A bound hint step's words SHALL name exactly
-the marks it draws"). Every step's explanation SHALL name the run its
-deduction reasons over. Crossing departs in one thing: a role marks a number
-in the clue list below the grid as it marks a square, so a premise about
-which listed numbers still fit a run is visible where the numbers are.
+Every step's explanation SHALL name the run its deduction reasons over. A
+role of `hintMarks` SHALL mark a number in the clue list below the grid as it
+marks a square, so a premise about which listed numbers still fit a run is
+visible where the numbers are.
 
 #### Scenario: The evidence includes the numbers the deduction reasons over
 
@@ -605,16 +590,7 @@ The hint SHALL never run the search. On an Unreasonable board its plan SHALL
 hold the steps its deductions force from the player's digits and notes and no
 others, and where none forces anything it SHALL refuse with the collection's
 sentence that deduction has run out. It SHALL go on from the digits the player
-then enters. A board with a mistake, a wrong note included, is refused first
-(`engine-hints`, "The midend SHALL refuse a hint on a finished or wrong board
-before asking the game").
-
-#### Scenario: A note that rules out the right digit is refused rather than reasoned from
-
-- **WHEN** a hint is requested on a board where a cell's pencil notes exclude the
-  digit the unique solution places there
-- **THEN** the hint refuses and the offending cell is highlighted, rather than a
-  plan being computed from the contradicted position
+then enters.
 
 #### Scenario: The hint stops, and goes on from a digit tried rightly
 

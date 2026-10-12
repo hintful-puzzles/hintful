@@ -76,3 +76,49 @@ None.
   dealt at the size chosen") that no other statement repeats in those words;
   it follows from `engine-params`, "A deal turns the chosen params when the
   turned board fits better", which turns only a game with `transposeParams`.
+
+## Review
+
+15 rows read (14 of the writer's and one added), each against the declaration
+or the requirement it names, read whole; 7 rows' requirements changed in the
+spec, no sentence restored.
+
+Changed:
+
+- **"Solver: The Bricks solver places cells by contradiction"**, last
+  sentence. "Every difficulty tier SHALL be solvable by pure deduction" is
+  false as the spec uses the words: the harder tier's rung solves the rest of
+  the board from a trial (`solverRecurse`, `src/games/bricks/solver.ts:234`),
+  which "Generation: Bricks offers Easy and Unreasonable" calls a search. What
+  the code does is that every cell placed is proved by contradiction, at
+  either rung, and no trial is ever committed (`solver.ts:248` restores the
+  grid before forcing the opposite). The sentence now says that.
+- **Params**: the clause sending a width below 2 to the declared bounds cut
+  from "Params: Bricks refuses a 2×2 at Unreasonable", and the citation of
+  the retired-tier requirement cut from "Params: The undeclared Bricks tier
+  still loads and is never dealt", which keeps the refusal's wording. The
+  subject keeps its one pointer, in "Params: A Bricks params string may leave
+  out its difficulty", as Palisade's does: the codec is declared, so the
+  ordinary case is said nowhere else.
+- **Controls**: three pointers made one. The first requirement keeps the
+  subject's pointer to `targetVerbs`, since nothing else in it says what a
+  click does. The cursor requirement names the helper its `moveCursor` steps
+  by and holds the number pad's clause; the two citations in the Ctrl and
+  Shift requirement went.
+- **"Hint: A Bricks hint step is one journey of one cell"**: the sentence
+  pointing at `hintMarks` cut, and the copied lines of the scenario of "Hint:
+  A Bricks hint step explains why the move is forced".
+
+Checked and found sound:
+
+- The retired tier against `engine-difficulty`, "A tier with no boards is
+  retired and still loads", whose scenario is Bricks' `dt`;
+  `bricks.test.ts:127` holds `10x8dt` both ways and `:516` the refusal's
+  sentence; the snapshot holds `6x7dn` and `6x7de`.
+- "A difficulty tier binds the board it generates" and "Every tier promises
+  one solution found at its cap" against the two Generation cuts;
+  `notApplicable.transposeParams` (`index.ts:537`) holds the removed reason.
+- The number pad's 0 is a key of the "mark it clear" verb and no direction;
+  its other digits but 5 are taken by the move arm first (`index.ts:272`).
+- Each subject read alone: none hollow, no dangling antecedent, every title
+  fits its body.

@@ -148,13 +148,10 @@ other character, an empty description, a place past the last, and a final `z`.
 
 ### Requirement: Generation: A Galaxies board is Easy where the deduction chain finishes it and Unreasonable where only recursion does
 
-What a dealt board promises is the collection's (`engine-difficulty`, "Every
-tier promises one solution found at its cap" and "A difficulty tier binds the
-board it generates"), and Galaxies departs from neither. `newDesc` SHALL
-return only a board the solver, run from the dots alone, diagnoses at exactly
-the tier asked for: Easy where its deduction chain finishes the board, and
-Unreasonable where the chain does not and its bounded recursion finds the one
-answer.
+`newDesc` SHALL return only a board the solver, run from the dots alone,
+diagnoses at exactly the tier asked for: Easy where its deduction chain
+finishes the board, and Unreasonable where the chain does not and its bounded
+recursion finds the one answer.
 
 #### Scenario: Generated boards are uniquely solvable at the right difficulty
 
@@ -439,10 +436,9 @@ advance.
 
 The hint has no step that tries a square's dot and follows it until something
 breaks. Where none of its deductions applies it SHALL refuse with the
-collection's sentence that deduction has run out (`engine-hints`, "A Search is
-refused and never narrated" and "Deduction running out on a sound board SHALL
-have one wording"). That refusal SHALL be reached on an Unreasonable board
-only: an Easy board SHALL be carried all the way to solved by deduction alone.
+collection's sentence that deduction has run out. That refusal SHALL be
+reached on an Unreasonable board only: an Easy board SHALL be carried all the
+way to solved by deduction alone.
 
 #### Scenario: Deduction running out is said plainly, not guessed past
 
@@ -700,12 +696,9 @@ same in both schemes, as a hint's words name them, each with a rim in ink.
 
 ### Requirement: Look: A lit cell of a black dot's region is drawn as a white dot's is
 
-The win flash is the collection's sweep over the cells (`ts-engine`, "A game
-gives each element a position, and the route is which position it gives"),
-and a lit cell is filled as `engine-colors`, "A solved flash drawn as a color
-takes a shared color", states. A lit cell of a black dot's region SHALL be
-filled as one of a white dot's region is, and its grid lines SHALL be the
-quiet ones a white region's cell has, in place of the ink a black fill needs.
+A cell of a black dot's region that the win flash lights SHALL be filled as
+one of a white dot's region is, and its grid lines SHALL be the quiet ones a
+white region's cell has, in place of the ink a black fill needs.
 
 #### Scenario: A cell in a black dot's region
 

@@ -6,7 +6,7 @@
 | Params: Solo reads the legacy jigsaw form and a single leading number | title kept. "and SHALL round-trip the preset list" reworded out of sentence 1; the last sentence (a `d` with no tier letter and a character the encoding does not use are refused) cut. Both scenarios untouched | the round trip: `engine-params`, "Encode and decode are mutual inverses over the corpus", and the `solo` entry of `src/engine/__snapshots__/params-stability.test.ts.snap`. The refusals: `engine-params`, "A params string is read whole or refused" ("a tag with nothing after it, and any character no piece of the game's grammar reads", of every game's `decodeParams`) and "The engine makes the one refusal of a params string"; `paramsLetter` and `unreadParams` at `src/games/solo/state.ts:242` and `:245` |
 | Params: Solo refuses parameters outside its bounds | title kept. The last sentence (a single field's limit is its Custom-dialog bound, the difficulty a choice among the tiers, the engine refuses outside either) reworded shorter and given its citation. Scenarios untouched | |
 | Look: Solo draws its cages, digits, pencil marks and live errors | title kept. "and a completion flash" reworded out of the sentence. Scenario untouched | `ts-engine`, "The win flash plays on a forward move that solves the board"; `engine-colors`, "A solved flash drawn as a color takes a shared color" (a lit cell's ground is `FLASH` or `FLASH_LEAD`, which is all Solo gives it: `src/games/solo/render.ts:118`-`119`) |
-| Generation: Solo generates boards uniquely solvable at exactly the requested difficulty | retitled "Generation: Solo builds a full grid under every active constraint and keeps a board at its tier". Sentence 1 (the full grid, `divvy`) untouched. Sentence 2 (kept only when uniquely solvable at exactly the requested difficulty) replaced by one that names the two shared requirements and says the game departs from neither. Scenario "Generated board is uniquely solvable at its difficulty" dropped; "A board with the diagonals and cages both" written in words | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (its first scenario is the dropped one). The gate: `src/games/solo/generator.ts:433` and `:485` |
+| Generation: Solo generates boards uniquely solvable at exactly the requested difficulty | retitled "Generation: Solo builds a full grid under every active constraint". Sentence 1 (the full grid, `divvy`) untouched. Sentence 2 (kept only when uniquely solvable at exactly the requested difficulty) cut (second pass: the pointer that had replaced it went, the subject's next requirement saying which boards Solo keeps). Scenario "Generated board is uniquely solvable at its difficulty" dropped; "A board with the diagonals and cages both" written in words | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (its first scenario is the dropped one). The gate: `src/games/solo/generator.ts:433` and `:485` |
 | Controls: Solo interprets digit, pencil, and mark-all input | gains "The on-screen keypad SHALL be the one `requestKeys` declares for the grid's size." (rule 2: the keypad's own requirement goes) | |
 | Controls: Solo provides on-screen key labels | removed | `requestKeys: (p) => digitKeys(p.c * p.r)`, `src/games/solo/index.ts:794`; `digitKeys` and `clearKey` in `src/engine/key-labels.ts` (`1` to `9`, then `a` on, then Clear on button 8). That the letters type what they label stays in "Controls: Solo types the numbers past 9 as letters" |
 | Preferences: Solo exposes pencil-mark preferences | removed | `prefs`, `index.ts:796`-`806`; `engine-notes`, "The pencil preferences have one key each, which a saved preference depends on" (the three preferences) and "Every member offers the keep-highlight preference, defaulted the same way" (keep-highlight on, sticky on, auto-pencil off, "which leaves cleaning the notes to the Mark-all press and the hint"). The defaults: `newUi`, `state.ts:699` |
@@ -178,3 +178,31 @@ Read and found sound:
 - The new sentences: each cited title is exact (`spec-form` and the citation
   check pass), and "A killer board, which has no givens" is true of a dealt
   board ("Generation: Givens are removed in symmetry orbits").
+
+## Second pass
+
+Citing sentences read: 6. Removed: 1. Kept as the subject's one pointer: 4.
+Kept as a departure: 1.
+
+- **Removed.** "What a board kept at a tier promises SHALL be the
+  collection's (`engine-difficulty`, …), with no departure", in the first
+  `Generation` requirement, retitled "Generation: Solo builds a full grid
+  under every active constraint". The subject says Solo's own of the ordinary
+  case: "Generation: Givens are removed in symmetry orbits" keeps a removal
+  only while the board stays solvable within the requested difficulty, and a
+  killer board only when it lands on both difficulties. The sentence was the
+  copy with a citation attached. Row corrected.
+- **Kept as a pointer.** `Rules`, the mistake check (its one word on what a
+  mistake is, with where Solo's answer comes from); `Params`, the last
+  sentence of "Solo refuses parameters outside its bounds" (the codec is
+  hand-written, so the subject has no other word on a single field's bound,
+  and the requirement would keep the cross-field cases alone); `Controls`,
+  the keypad sentence (an engine request, left as it is); `Hint`, the walk
+  and the legend in one sentence.
+- **Kept as a departure.** `Hint`, "Solo SHALL start it on the implicit
+  reading": the citation locates the convention departed from.
+- **Preferences.** The removed "Preferences: Solo exposes pencil-mark
+  preferences" named no key and no choice order, so the cut took none out of
+  the spec.
+- Each subject read alone after the edit: none is a fragment, and every
+  title fits its body.

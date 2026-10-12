@@ -69,11 +69,7 @@ count, and no wall lies within a single component (no stray border).
 ### Requirement: Rules: Palisade reddens a clue that is already impossible
 
 `redraw` SHALL redden a clue whose wall count is already impossible: more
-walls than the clue, or too few edges free of a no-wall mark to reach it. The
-edges it reddens SHALL be the shared error model's and no rule of Palisade's
-own: `border-grid`, "The board reddens an edge beside a group joined past the
-region size" and "The board reddens a wall beside an undersized region and a
-wall that divides nothing".
+walls than the clue, or too few edges free of a no-wall mark to reach it.
 
 #### Scenario: A clue with too many walls, and one that cannot reach its number
 
@@ -224,12 +220,7 @@ solver stops short on it.
 ### Requirement: Generation: A Palisade board is Easy where the solver and the hint both finish it
 
 A board SHALL count as Easy where the solver and the hint finish it, and as
-Unreasonable where it has exactly one division that they do not reach. What a
-pasted game ID opens as SHALL follow from that (`engine-difficulty`, "A loaded
-board whose id states no tier takes the lowest tier that solves it" and "A
-pinned tier is kept or raised and never lowered"), and one with several
-divisions or none SHALL be refused (`engine-params`, "A board with a mistake
-check loads only with exactly one answer").
+Unreasonable where it has exactly one division that they do not reach.
 
 #### Scenario: A board that needs search opens as Unreasonable
 
@@ -356,9 +347,7 @@ The hint SHALL never run the search. On an Unreasonable board its plan SHALL
 hold the edges its deductions force from the player's walls and marks and no
 others, and where none is forced it SHALL refuse with the collection's
 sentence that deduction has run out. It SHALL go on from the edges the player
-then decides. A finished board, or one with a mistake, is refused before
-`hint` is asked: `engine-hints`, "The midend SHALL refuse a hint on a finished
-or wrong board before asking the game".
+then decides.
 
 #### Scenario: The hint stops, and goes on from an edge tried rightly
 

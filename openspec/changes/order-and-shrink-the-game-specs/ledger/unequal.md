@@ -3,10 +3,10 @@
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
 | Rules: Unequal is a Latin square with clues between neighbors | last sentence (provides `solve` and `textFormat`, no `statusbarText`) cut; the rest and the scenario untouched | the hooks on the game object, `src/games/unequal/index.ts:622` and `:654`; `ts-engine`, "Solve, the status bar and text export follow from the game's methods" |
-| Rules: Unequal checks for mistakes against the unique solution | retitled "Rules: Unequal's mistake check re-solves from its givens and clues". Sentence 1 (a wrong number, and notes that have crossed out the answer) replaced by one that names the two shared requirements; sentence 2 (empty when not uniquely solvable) kept, reworded to stand. Scenario "A wrong number is flagged, ordinary notes are not" dropped; "An ambiguous board" kept | a wrong entry: `engine-hints`, "Check & Save names a wrong entry in every game"; the notes, extra candidates not reported, the answer from clues and givens: `ts-engine`, "A candidate note that excludes the answer is a mistake" (its first scenario is the dropped one). The check: `index.ts:403` |
+| Rules: Unequal checks for mistakes against the unique solution | retitled "Rules: Unequal's mistake check re-solves from its givens and clues". Sentence 1 (a wrong number, and notes that have crossed out the answer) cut to what the answer is re-solved from (second pass: the sentence no longer names the two shared requirements); sentence 2 (empty when not uniquely solvable) kept, reworded to stand. Scenario "A wrong number is flagged, ordinary notes are not" dropped; "An ambiguous board" kept | a wrong entry: `engine-hints`, "Check & Save names a wrong entry in every game"; the notes, extra candidates not reported, the answer from clues and givens: `ts-engine`, "A candidate note that excludes the answer is a mistake" (its first scenario is the dropped one). The check: `index.ts:403` |
 | Params: Unequal's parameters and their encoding | sentence 1 gains "which are the tiers Easy, Normal, Tricky, Hard and Unreasonable in that order", from "Params: Unequal's top tier is named Unreasonable and keeps its character"; nothing else changes | |
 | Params: Unequal's top tier is named Unreasonable and keeps its character | removed, but for the tie between the five values and the five tier names (sentence 1), which joins "Params: Unequal's parameters and their encoding". Sentence 2 (named Unreasonable because it branches and backtracks), sentence 3 (its character stays `r`) and the scenario "The top tier keeps its difficulty character" go | the name: `DIFF_NAMES = tierNames(5, { search: true })`, `src/games/unequal/state.ts:49`, and `engine-difficulty`, "Unreasonable is declared and never issued by position"; the character: this spec's "Params: Unequal's parameters and their encoding" (`r` is the fifth letter) and `engine-difficulty`, "A tier's name is not part of any encoding". The `unequal` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `7dr` and `7adr` |
-| Params: Unequal refuses the parameters it cannot deal | title kept. Sentence 1 (the bounds, 3 to `MAX_CANDIDATE_VALUE`, an order of 32 refused) cut to a clause that sends the reader to the declaration; sentence 2 (an unknown difficulty letter) cut; sentence 3 kept. Scenarios "Invalid params are rejected" and "A difficulty letter that names no tier" dropped; "A small Adjacent puzzle has no upper tiers" kept | `bounds: { min: 3, max: MAX_CANDIDATE_VALUE }`, `index.ts:601`, and `engine-params`, "Params validity is the engine's check"; the letter: `engine-params`, "A params string is read whole or refused" and "The engine makes the one refusal of a params string". `src/games/unequal/unequal.test.ts:95`-`98` holds both bound refusals |
+| Params: Unequal refuses the parameters it cannot deal | title kept. Sentence 1 (the bounds, 3 to `MAX_CANDIDATE_VALUE`, an order of 32 refused) cut (second pass: "The range of the order itself SHALL be the one its `paramConfig` item declares", which stood in its place, went too); sentence 2 (an unknown difficulty letter) cut; sentence 3 kept. Scenarios "Invalid params are rejected" and "A difficulty letter that names no tier" dropped; "A small Adjacent puzzle has no upper tiers" kept | `bounds: { min: 3, max: MAX_CANDIDATE_VALUE }`, `index.ts:601`, and `engine-params`, "Params validity is the engine's check"; the letter: `engine-params`, "A params string is read whole or refused" and "The engine makes the one refusal of a params string". `src/games/unequal/unequal.test.ts:95`-`98` holds both bound refusals |
 | Generation: Unequal generates uniquely-solvable boards at the target difficulty | retitled "Generation: What an Unequal board promises at its tier is the collection's". All four sentences replaced by one that names the three shared requirements and says Unequal departs from none, in either mode (rule 2: the subject's ordinary case). Scenario "Generated board is unique and correctly graded" dropped; scenario "An Adjacent board at Hard" written from a preset | `engine-difficulty`, "Every tier promises one solution found at its cap", "A difficulty tier binds the board it generates", "A generator never settles for a lower tier" (deals the tier asked for or exhausts its bound) and, for the refusal before a deal, "An unbindable tier is refused, not silently downgraded", which this spec's "Params: Unequal refuses the parameters it cannot deal" applies. The gate: `src/games/unequal/generator.ts:252`; `5adx` is a preset in the snapshot |
 | Controls: Unequal accepts digit, pencil, clue-spent, and solve moves | sentence 1 ("`interpretMove` SHALL select a cell by mouse or keyboard cursor") replaced by one that says where the selection is stated; the rest and the scenario untouched | `engine-notes`, "The note-taking cell is one shared mechanic" and the requirements after it; Unequal's call, `pressNoteTakingCell`, `index.ts:236` |
 | Preferences: Unequal exposes pencil-mark preferences | retitled "Preferences: Auto-pencil strikes a placed number from its row and column". Kept: where auto-pencil strikes. Cut: that the three preferences are offered, and that with auto-pencil off cleanup is left to Mark-all and the hint. Scenario "A placement with auto-pencil off" dropped; scenario "A number is placed with auto-pencil on" written | `autoPencilPref`, `stickyPencilPref`, `pencilKeepHighlightPref`, `index.ts:657`-`661`; `engine-notes`, "The pencil preferences have one key each, which a saved preference depends on" and "Every member offers the keep-highlight preference, defaulted the same way" (auto-pencil starts off, "which leaves cleaning the notes to the Mark-all press and the hint"; scenario "A placement with no preference changed") |
@@ -150,3 +150,44 @@ Checked and found sound:
   one firing of one clue" are cases of its sentence.
 - Left: `unequalKeys` is written out by hand (`index.ts:548`), so both keypad
   requirements stay; the codec is hand-written, so its requirement stays.
+
+## Second pass
+
+Applied the brief's "A pointer is for that case only". 7 citing sentences or
+clauses read: 2 removed, 4 kept as a subject's one pointer for its concern,
+1 kept as a departure.
+
+Removed (the rows above say where each is stated):
+
+- **"Rules: Unequal's mistake check re-solves from its givens and clues"**:
+  "SHALL report what the collection's check reports (`engine-hints`, …, and
+  `ts-engine`, …), against" reworded out; the sentence keeps what the answer
+  is re-solved from. `Rules` states the puzzle and its two modes itself.
+- **"Params: Unequal refuses the parameters it cannot deal"**: "The range of
+  the order itself SHALL be the one its `paramConfig` item declares." removed.
+  `Params` holds the values, the hand-written encoding and two refusals.
+
+Kept as a pointer:
+
+- `Generation`: "Generation: What an Unequal board promises at its tier is the
+  collection's", whole. Without it the subject holds only what an Adjacent
+  board's bars are, and says nothing of a board in Unequal mode.
+- `Controls`: "Unequal SHALL take its selection from the engine's note-taking
+  cell (`engine-notes`, …)", the one place the subject says how a cell is
+  selected.
+- `Hint`: the first sentence of "Hint: Unequal's hint is the shared candidate
+  plan over rows and columns", which also names the one departure, and its
+  last, "What its marks stand for SHALL be the legend's (`hintMarks`)": one
+  pointer requirement for the plan and the marks.
+
+Kept as a departure: "so it does not come from the shared `digitKeys` helper
+the other digit games use", in "Controls: The keypad is zero-based from order
+10".
+
+Preferences: the cut removed the three preferences' labels ("sticky pencil
+mode", "auto-pencil", "keep mouse highlight after changing a pencil mark") and
+no key or choice order; the spec never named a key.
+
+Each subject read alone after the edits: no fragment, no dangling pronoun
+("they" and "it" in the mistake check's second sentence are still the givens
+and clues and `findMistakes`), every title fits its body.

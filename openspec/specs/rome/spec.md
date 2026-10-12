@@ -459,8 +459,8 @@ from that neighbor's square, and the two SHALL be one journey.
 
 Rendering SHALL draw the region outlines, arrows and goals, pencil marks in
 the cell quadrants, an optional highlight of squares whose arrows reach a goal,
-an inline error tint on the square of an off-grid arrow, a duplicate arrow
-the player placed in the error color, and a completion flash.
+an inline error tint on the square of an off-grid arrow, and a duplicate arrow
+the player placed in the error color.
 
 #### Scenario: The player repeats a fixed arrow
 
@@ -527,10 +527,8 @@ each replace the square's surface.
 
 The win flash SHALL cross the board's squares by the collection's sweep
 (`ts-engine`, "A game gives each element a position, and the route is which
-position it gives"), and a lit square SHALL be painted as the collection
-paints one (`engine-colors`, "A solved flash drawn as a color takes a shared
-color"). The selected square's highlight SHALL not be drawn while the win
-flash runs.
+position it gives"). The selected square's highlight SHALL not be drawn while
+the win flash runs.
 
 #### Scenario: The selection through the flash
 

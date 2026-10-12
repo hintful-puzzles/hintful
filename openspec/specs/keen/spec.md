@@ -37,11 +37,9 @@ the grid with no errors completes the game.
 
 ### Requirement: Rules: Keen's mistake check re-solves from the cage clues
 
-Keen's `findMistakes` SHALL report what the collection's check reports
-(`engine-hints`, "Check & Save names a wrong entry in every game", and
-`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
-the answer it re-solves from the cage clues alone. When the clues do not solve
-to exactly one answer the result SHALL be empty.
+Keen's `findMistakes` SHALL judge the board against the answer it re-solves
+from the cage clues alone. When the clues do not solve to exactly one answer
+the result SHALL be empty.
 
 #### Scenario: A wrong digit its cage allows
 
@@ -52,11 +50,10 @@ to exactly one answer the result SHALL be empty.
 
 ### Requirement: Params: Keen's parameters
 
-Keen's params SHALL be a grid size `w`, a tier `diff` and `multiplicationOnly`,
-each a field of its `paramConfig`, which declares the size's range. `diff`
-SHALL be one of Easy, Normal, Tricky, Hard or Unreasonable, held as the keys
-`"easy"`, `"normal"`, `"hard"`, `"extreme"` and `"unreasonable"`, so the Tricky
-tier is `"hard"`.
+Keen's params SHALL be a grid size `w`, a tier `diff` and `multiplicationOnly`.
+`diff` SHALL be one of Easy, Normal, Tricky, Hard or Unreasonable, held as the
+keys `"easy"`, `"normal"`, `"hard"`, `"extreme"` and `"unreasonable"`, so the
+Tricky tier is `"hard"`.
 
 #### Scenario: The Tricky preset
 
@@ -230,11 +227,8 @@ values, at Normal by per-square value bitmaps, and at Tricky by the cross-cage
 
 ### Requirement: Generation: A Keen cage has at most six cells and a balanced mix of clues
 
-What a board dealt at a tier promises SHALL be the collection's
-(`engine-difficulty`, "Every tier promises one solution found at its cap" and
-"A difficulty tier binds the board it generates"), with no departure. Every
-cage SHALL have area at most 6, and the generator SHALL assign a balanced mix
-of cage operations and values that avoids low-quality clues.
+Every cage SHALL have area at most 6, and the generator SHALL assign a balanced
+mix of cage operations and values that avoids low-quality clues.
 
 #### Scenario: The cages of a dealt board
 

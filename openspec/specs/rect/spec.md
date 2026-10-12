@@ -30,9 +30,8 @@ correct.
 
 `findMistakes` SHALL return every edge the player has drawn that the board's
 one answer does not contain. A missing edge SHALL NOT be a mistake. It SHALL
-take the answer from the game's one search (`engine-difficulty`, "One search
-answers a board for everything that asks"), and a board that search did not
-prove has exactly one answer SHALL yield no mistakes.
+take the answer from the search that counts the board's answers, and a board
+that search did not prove has exactly one answer SHALL yield no mistakes.
 
 #### Scenario: A wall the solution does not contain is flagged
 
@@ -247,6 +246,12 @@ whether or not the solver reaches a unique placement on it.
   solver settles by ruling placements out that no line can record
 - **THEN** it opens as Unreasonable
 
+#### Scenario: A board that needs search opens as Unreasonable
+
+- **WHEN** a 5×5 ID whose board has one answer the hint does not reach is
+  entered with no difficulty letter, with `de`, and with `du`
+- **THEN** each opens, and the board's params read `5x5du`
+
 ### Requirement: Generation: An Unreasonable Rectangles board has one answer that the hint does not reach
 
 At Unreasonable the generator SHALL put each number on a square of its
@@ -273,21 +278,6 @@ pasted board's.
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Generation: A pasted Rectangles board opens at the difficulty it needs
-
-A board that arrives as a game ID SHALL open as Easy where the hint finishes
-it, and as Unreasonable where it has exactly one answer that the hint does
-not reach: `engine-difficulty`, "A loaded board whose id states no tier takes
-the lowest tier that solves it" and "A pinned tier is kept or raised and never
-lowered". One with several answers or none SHALL be refused (`engine-params`, "A
-board with a mistake check loads only with exactly one answer").
-
-#### Scenario: A board that needs search opens as Unreasonable
-
-- **WHEN** a 5×5 ID whose board has one answer the hint does not reach is
-  entered with no difficulty letter, with `de`, and with `du`
-- **THEN** each opens, and the board's params read `5x5du`
-
 ### Requirement: Generation: Rectangles deals a strip with an expansion factor
 
 The generator SHALL make the base grid of a board one square wide one square
@@ -302,9 +292,7 @@ wide, whatever the expansion factor.
 ### Requirement: Solver: Rectangles' Solve returns the unique solution's edges
 
 `solve` SHALL return the generator's `aux` when it is present, and otherwise
-SHALL be made from the answer of the game's search (`engine-difficulty`,
-"Solve from the search shows the one answer or says which it lacks"), as its
-edges.
+SHALL be made from the answer of the game's search, as its edges.
 
 #### Scenario: Solve without aux
 

@@ -5,20 +5,19 @@ the spec no longer holds (the legend is `hintMarks`).
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Filling reports mistakes for Check & Save | title and scenario kept. "The game SHALL implement `findMistakes(state)` by taking the board's one answer from the search that counts its answers, at either difficulty" reworded to a citation; what is returned, and the empty result where no one answer was proved, kept | `engine-difficulty`, "One search answers a board for everything that asks"; `answerOf`, `src/games/filling/index.ts:214` |
+| Rules: Filling reports mistakes for Check & Save | title and scenario kept. "The game SHALL implement `findMistakes(state)` by taking the board's one answer from the search that counts its answers, at either difficulty" cut, and no citation stands in its place (second pass); what is returned, and the empty result where no one answer was proved, kept | `engine-difficulty`, "One search answers a board for everything that asks"; `answerOf`, `src/games/filling/index.ts:214` |
 | Params: Filling's parameters | retitled "Params: A Filling params string may leave out its height and its difficulty" (the pointer, rule 2). The field list, the bound of 1 and the `{w}x{h}`, `de`, `du` encoding cut; "no difficulty letter decodes as Easy" kept, and the square fallback, which stood only in a scenario, said as a sentence. Scenarios "Params round-trip" and "The difficulty is in the full encoding only" replaced by "A string that leaves a field out", made of their two missing-field lines | `paramConfig`, `src/games/filling/state.ts:90` (`bounds: { min: 1 }` at `:93`), and the `paramsCodec` field list, `:108` (`dims`, `searchTierSegment`); `engine-difficulty`, "A game that searches has a tier for each deduction and Unreasonable above them" (`d` and the tier's letter, in the full form only); `engine-params`, "Params validity is the engine's check"; `src/engine/__snapshots__/params-stability.test.ts.snap` holds `9x13de`/`9x13` and every preset |
 | Params: Filling rejects board sizes it cannot generate | "A description that is supplied SHALL NOT be held to the bound." cut, with scenario "An existing large description still loads"; the kept sentence already says "when a board is to be dealt" | `engine-params`, "A generation-only bound is gated on full" and "Param validation distinguishes generating a board from loading one" (scenario "A generation-only bound does not refuse the descriptive form"); `if (!full) return null`, `src/games/filling/state.ts:143` |
 | Params: Filling's menu offers each size at both difficulties | removed; the `Params` pointer names `presets` and `defaultParams` | `BOARDS`, `defaultParams` and `presets`, `src/games/filling/state.ts:83`, `:85`, `:101`; `engine-params`, "The preset menu is a grid" (each board at every tier, easiest first); the snapshot lists the default and the five other lines |
-| Generation: An Unreasonable Filling board has one answer that the solver does not reach | retitled "Generation: An Unreasonable Filling board is a full board with clues hidden while one answer is proved". Kept: the strip (clues hidden from a full board while the search proves one answer). Cut for two citations: the strip's budget "of its own, well under the search's", and "SHALL keep the board only when the solver stops short on it". Scenario "A dealt Unreasonable board needs search and has one answer" dropped; "The smallest boards carry the tier" kept | `engine-difficulty`, "The engine deals the Unreasonable board of a game that searches" (kept only where deduction stops short and the search proves one answer; its first scenario) and "A strip is asked within the engine's dealing budget" (one budget, the same in every game, well under any game's own); `dealUnreasonable`, `src/games/filling/generator.ts:220` |
-| Generation: A pasted Filling board opens at the difficulty it needs | retitled "Generation: A Filling board is Easy where the solver and the hint both finish it". Kept: what makes a board Easy and what Unreasonable. The loading rule and the two refusals became a pointer. Scenario "A board with several answers or none is refused" dropped; "A board that needs search opens as Unreasonable" kept | `engine-difficulty`, "A loaded board whose id states no tier takes the lowest tier that solves it" and "A pinned tier is kept or raised and never lowered"; `engine-params`, "A board with a mistake check loads only with exactly one answer". The dropped scenario's two boards (an empty 3×1, `3x1:222`) are in this spec, "Solver: Filling's search assumes each number an empty square can still take", scenario "The search tells one answer from several and from none"; `src/games/filling/filling-tier.test.ts:306` holds the refusals |
-| Solver: Filling counts a clue set's answers by a bounded search | retitled "Solver: Filling's search assumes each number an empty square can still take". Kept: what the search runs over and what it assumes where the solver stops. Cut for two citations: counting up to two, the four verdicts, the budget in positions, and "Solve SHALL take the answer from it at either difficulty". Scenario "A spent budget is neither answer" dropped; the other two kept | `engine-difficulty`, "The engine counts a searching game's answers up to two, within a budget of positions" (its scenario "The budget runs out with one answer in hand") and "Solve from the search shows the one answer or says which it lacks"; `searchAnswers`, `src/games/filling/solver.ts:597`, and `solve`, `src/games/filling/index.ts:192` |
+| Generation: An Unreasonable Filling board has one answer that the solver does not reach | retitled "Generation: An Unreasonable Filling board is a full board with clues hidden while one answer is proved". Kept: the strip (clues hidden from a full board while the search proves one answer). Cut: the strip's budget "of its own, well under the search's" (the citation that stood for it went in the second pass), and "SHALL keep the board only when the solver stops short on it", for the pointer to the engine's deal. Scenario "A dealt Unreasonable board needs search and has one answer" dropped; "The smallest boards carry the tier" kept | `engine-difficulty`, "The engine deals the Unreasonable board of a game that searches" (kept only where deduction stops short and the search proves one answer; its first scenario) and "A strip is asked within the engine's dealing budget" (one budget, the same in every game, well under any game's own); `dealUnreasonable`, `src/games/filling/generator.ts:220` |
+| Generation: A pasted Filling board opens at the difficulty it needs | retitled "Generation: A Filling board is Easy where the solver and the hint both finish it". Kept: what makes a board Easy and what Unreasonable. The loading rule and the two refusals cut whole (second pass: the pointer that stood for them went too). Scenario "A board with several answers or none is refused" dropped; "A board that needs search opens as Unreasonable" kept | `engine-difficulty`, "A loaded board whose id states no tier takes the lowest tier that solves it" and "A pinned tier is kept or raised and never lowered"; `engine-params`, "A board with a mistake check loads only with exactly one answer". The dropped scenario's two boards (an empty 3×1, `3x1:222`) are in this spec, "Solver: Filling's search assumes each number an empty square can still take", scenario "The search tells one answer from several and from none"; `src/games/filling/filling-tier.test.ts:306` holds the refusals |
+| Solver: Filling counts a clue set's answers by a bounded search | retitled "Solver: Filling's search assumes each number an empty square can still take". Kept: what the search runs over and what it assumes where the solver stops. Cut: counting up to two, the four verdicts, the budget in positions, and "Solve SHALL take the answer from it at either difficulty"; the two citations that stood for them went in the second pass. Scenario "A spent budget is neither answer" dropped; the other two kept | `engine-difficulty`, "The engine counts a searching game's answers up to two, within a budget of positions" (its scenario "The budget runs out with one answer in hand") and "Solve from the search shows the one answer or says which it lacks"; `searchAnswers`, `src/games/filling/solver.ts:597`, and `solve`, `src/games/filling/index.ts:192` |
 | Controls: Filling provides on-screen key labels | removed, with its scenario | `requestKeys: digitKeys(9)`, `src/games/filling/index.ts:401`, which takes no params and so is the same on every board |
 | Hint: Filling provides an explained deduction hint | removed. "A step's narration SHALL avoid repeating the region's number" joins "Hint: One region-growth firing is one hint step". Scenario "Hint explains the next forced move and solves the board" dropped | `engine-hints`, "A hint is deduced from the board in play" (true of the plan's first resort only; the departure is kept, see below), "A hint step always names a technique, with no un-narrated fallback", "A player move is classified against the stored plan" and "A hint finishes a board from a right entry made out of order"; that the plan finishes every mistake-free position of a board that loads is this spec's "Hint: Filling's hint keeps what the solver deduces from the clues alone"; the scenario is "The hint walk SHALL cover every preset a game offers" |
 | Hint: One region-growth firing is one hint step | gains "A step's narration SHALL avoid repeating the region's number.", from "Hint: Filling provides an explained deduction hint" | |
-| Hint: Filling draws the displayed step's target and evidence | retitled "Hint: A Filling target is ringed empty, and is never its own evidence" (the pointer for the marks, rule 2). "`redraw` SHALL render the displayed step", "The deduction's evidence SHALL be marked too, so the picture the narration names is visible" and "The evidence cells' digits SHALL remain readable" cut for a sentence naming `hintMarks`; kept: the ring holds no digit, what the evidence is, and that it never includes a target. Scenario kept | `hintMarks.roles`, `src/games/filling/index.ts:387` (`ring`, `outline`, `stripes`); `engine-hints`, "A hint marks beside the content, never behind it" (the digits stay readable) and "A bound hint step's words SHALL name exactly the marks it draws" |
+| Hint: Filling draws the displayed step's target and evidence | retitled "Hint: A Filling target is ringed empty, and is never its own evidence". "`redraw` SHALL render the displayed step", "The deduction's evidence SHALL be marked too, so the picture the narration names is visible" and "The evidence cells' digits SHALL remain readable" cut (the sentence naming `hintMarks` that stood for them went in the second pass); kept: the ring holds no digit, what the evidence is, and that it never includes a target. Scenario kept | `hintMarks.roles`, `src/games/filling/index.ts:387` (`ring`, `outline`, `stripes`); `engine-hints`, "A hint marks beside the content, never behind it" (the digits stay readable) and "A bound hint step's words SHALL name exactly the marks it draws" |
 | Hint: Filling hint color legend | removed, with both scenarios | `hintMarks.roles`, `src/games/filling/index.ts:387`; the palette, `out[COL_HINT] = HINT_ACTION` and `out[COL_HINT_CELL] = HINT_EVIDENCE`, `src/games/filling/render.ts:86` and `:96`; `engine-hints`, "A hint naming several kinds of element colors them by a stable legend" (equivalent forced moves share the one target color) and "A legend color is never the only cue". That the target's ring holds no digit is kept in "Hint: A Filling target is ringed empty, and is never its own evidence" |
-| Hint: Filling's hint keeps what the solver deduces from the clues alone | title and both scenarios kept. Its first sentence now opens by naming the rule the fallback departs from ("The plan SHALL depart in one thing from `engine-hints`, "A hint is deduced from the board in play""), which is also the Hint subject's pointer to where the ordinary case, a plan from the player's board, is stated (rule 2; added in review). Nothing cut | |
-| Hint: Filling's hint stops where the solver does | one sentence added (rule 2): a finished board or one with a mistake is refused before `hint` is asked, with where that is stated. Nothing cut | |
+| Hint: Filling's hint keeps what the solver deduces from the clues alone | title and both scenarios kept. Its first sentence now opens by naming the rule the fallback departs from ("The plan SHALL depart in one thing from `engine-hints`, "A hint is deduced from the board in play""), which is also the Hint subject's pointer to where the ordinary case, a plan from the player's board, is stated (rule 2; added in review). Its last sentence is corrected (second pass): the plan finishes every mistake-free position "of a board the solver finishes from its clues", where it said "of a board that loads", which is false of an Unreasonable board. Nothing cut | |
 | Look: Filling flashes when the board is solved | removed, with its scenario | `ts-engine`, "The win flash plays on a forward move that solves the board" (its scenario "The Solve command does not celebrate") |
 
 ## Kept, and why
@@ -115,9 +114,10 @@ sentences.
   collection's sentence** (`src/games/filling/state.ts:139`), on a loaded
   board too; the spec does not say so.
 - **"The plan SHALL so finish every mistake-free position of a board that
-  loads" is false of an Unreasonable board** (found in review). It stands in
-  "Hint: Filling's hint keeps what the solver deduces from the clues alone",
-  kept as it was, and in the comment above `deduceHintPlan`
+  loads" is false of an Unreasonable board** (found in review; the spec's
+  sentence was corrected in the second pass, the comment stands). It stood in
+  "Hint: Filling's hint keeps what the solver deduces from the clues alone"
+  and stands in the comment above `deduceHintPlan`
   (`src/games/filling/solver.ts:712`), both written when every board that
   loaded was one the solver finishes. An Unreasonable board loads, the
   solver's run from its clues stops short, and the plan ends there
@@ -181,3 +181,65 @@ Checked and found sound:
   only one.
 - Each subject read alone: none hollow, no dangling antecedent, every title
   fits its body.
+
+## Second pass
+
+The brief's "A pointer is for that case only" and its line on a preference's
+key, applied, and one sentence corrected. 11 citing sentences read; 7 removed
+or reworded to the game's own (the Solver requirement held two), 2 kept as
+the one pointer of a subject or concern, 2 kept as a departure or as what
+the game says beside a shared name.
+
+Removed (each a copy with a citation, in a subject that says plenty of its
+own; where it is stated is the row's third cell):
+
+- **Rules**, "which it SHALL take from the search as `engine-difficulty`,
+  "One search answers …" says". The engine-request sentence after it stands
+  as it did.
+- **Generation**, "within the budget of "A strip is asked within the engine's
+  dealing budget"", a second citation in the one pointer the Unreasonable
+  deal has.
+- **Generation**, "What a pasted game ID opens as SHALL follow from that (…),
+  and one with several answers or none SHALL be refused (…)": three
+  citations and nothing of the game's. The scenario stays as the case of a
+  board that counts as Unreasonable.
+- **Solver**, the citation in the first sentence, reworded to the game's own
+  ("Filling's search for a clue set's answers SHALL run over the solver,
+  assuming …"), and "Solve SHALL be the search's, by "…", and Filling SHALL
+  depart from neither".
+- **Hint**, "A displayed step's marks SHALL be the roles `hintMarks`
+  declares"; the next sentence now opens "Each target square of a displayed
+  step".
+- **Hint**, "A finished board, or one with a mistake, is refused before
+  `hint` is asked: `engine-hints`, "The midend SHALL refuse …"". With it gone
+  "Hint: Filling's hint stops where the solver does" is as it stood before
+  the cut, and its row is gone from the table.
+
+Kept as a pointer: the `Params` pointer (`paramConfig`, the codec, `presets`
+and `defaultParams`, one requirement); "Filling's Unreasonable boards SHALL
+be dealt by the engine's deal (…), with a strip of the game's own".
+
+Kept otherwise: "The plan SHALL depart in one thing from `engine-hints`, "A
+hint is deduced from the board in play"", where the citation is the rule
+departed from; "it SHALL refuse with the collection's sentence that
+deduction has run out", inside an engine-request sentence and left as it is.
+The surfaces of "Look: Filling draws its cells on a quiet surface and keeps
+its borders" say which cell takes which and cite nothing.
+
+Corrected: **"The plan SHALL so finish every mistake-free position of a
+board that loads"** now reads "of a board the solver finishes from its
+clues". Read against `deduceHintPlan`, `src/games/filling/solver.ts:713`:
+the fallback is `recordFills(clues, …)`, every fill the solver's run makes
+from the clues, of which the plan takes the first whose square is still
+empty; where there is none it stops (`:742`). `solveFilling` is the same
+`FillingSolver.run()` (`:556`), so the fallback reaches every square exactly
+where the solver finishes the board from its clues, and on a mistake-free
+position each of its fills is the answer's. An Unreasonable board is one the
+solver does not finish, and there the plan stops, as "Hint: Filling's hint
+stops where the solver does" says. The scenario's board,
+`7x9:a24h8e45552a5255a4d8a2a4d1b544d53a444553b`, is one the solver finishes.
+
+Preferences: Filling has no `prefs` and the cut touched none.
+
+Each subject read alone after the edits: no fragment, no dangling "it",
+every owed subject says what the game does there, every title fits its body.

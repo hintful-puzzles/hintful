@@ -123,7 +123,7 @@ Changed:
   piece left out SHALL be read as "A params string is read whole or refused"
   has it", a second citation that named no capability. The codec starts from
   `defaultParams` (`src/games/bridges/state.ts:191`), whose tier, island
-  percentage and expansion are Easy, 30 and 10 (`:80`); the snapshot holds
+  percentage and expansion are Easy, 30 and 10 (`:82`); the snapshot holds
   the default as `7x7i30e10m2d0`. "written after `d` as its number from 0"
   cut: a pointer lists no letters, and it is `num "d"` in the field list.
 - **The engine request reworded** to stand beside the other ledgers'. It is
@@ -149,5 +149,9 @@ Checked and found sound:
   `stage1-arithmetic` (`solver.ts:798`); `solveSub` returns 0 on a board its
   stages leave short (`:833`); the seeding loop is at `:896`; the refusal is
   `pass.impossible()` (`hint.ts:248`).
-- Each subject read alone: none hollow, no dangling antecedent, every title
-  fits its body.
+- The scenario "A short form drops the tier" run through the codec:
+  `10x10m2L` decodes as a 10×10 board with two bridges a line, no loops, 30%
+  islands, 10% expansion and Easy, and encodes in full as `10x10i30e10m2Ld0`;
+  `10x10i30e10m2Ld1` has the short form `10x10m2L`.
+- The spec read whole, subject by subject: none hollow, no dangling
+  antecedent, every title fits its body.

@@ -217,8 +217,8 @@ performance dial, since lifting it would silently make the middle tier a search.
 
 Spokes' two verbs, a line and a ruled-out mark, SHALL be applied by a drag
 between two adjacent hubs or by the select keys on a cursor that walks the
-dots' half-grid. Either on a spoke that already holds a line or a mark SHALL
-clear it, except a crossing a diagonal line blocks. A drag or key that
+dots' half-grid. Either verb on a spoke that already holds a line or a mark
+SHALL clear it, except a crossing a diagonal line blocks. A drag or key that
 resolves to no valid change SHALL leave the board unchanged.
 
 #### Scenario: A left drag over a ruled-out spoke clears the mark
@@ -367,9 +367,9 @@ line before a forced rule-out.
 ### Requirement: Hint: A Spokes hint shows a line to draw and marks a dot to rule out
 
 A displayed step SHALL mark each spoke it has still to decide and the hubs its
-words name. A dot to rule out SHALL
-itself be left as an unmarked one inside its ring, and a hub's outline SHALL
-sit just outside its rim. A spoke that an earlier leg of the journey settled
+words name. The dot of a spoke the step rules out SHALL itself be left as an
+unmarked one inside the step's ring, and a hub's outline SHALL sit just
+outside its rim. A spoke that an earlier leg of the journey settled
 SHALL carry no hint mark.
 
 #### Scenario: The second leg of a saturated hub

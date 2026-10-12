@@ -22,11 +22,9 @@ Cayley table: Latin and associative.
 
 ### Requirement: Rules: Group's mistake check re-solves from its givens
 
-Group's `findMistakes` SHALL report what the collection's check reports
-(`engine-hints`, "Check & Save names a wrong entry in every game", and
-`ts-engine`, "A candidate note that excludes the answer is a mistake"), against
-the answer it re-solves from the givens. A mark set that leaves out its cell's
-answer SHALL be drawn in the same mistake outline as a wrong entry.
+Group's `findMistakes` SHALL judge the board against the answer it re-solves
+from the givens. A mark set that leaves out its cell's answer SHALL be drawn
+in the same mistake outline as a wrong entry.
 
 #### Scenario: A wrong element that breaks no rule
 
@@ -38,9 +36,8 @@ answer SHALL be drawn in the same mistake outline as a wrong entry.
 ### Requirement: Params: Group's parameters
 
 Group's params SHALL be a grid size (the group's order), a difficulty and a
-"show identity" flag, each a field of its `paramConfig`, which declares the
-size's range and the tiers. `validateParams` SHALL reject an identity-hidden
-3×3 puzzle with a reason, because a 3×3 board is never harder than Easy and an
+"show identity" flag. `validateParams` SHALL reject an identity-hidden 3×3
+puzzle with a reason, because a 3×3 board is never harder than Easy and an
 Easy board cannot hide its identity.
 
 #### Scenario: An identity-hidden 3×3 is rejected
@@ -159,10 +156,7 @@ a Group-specific technique.
 
 Group SHALL deal a board whose solution is a group of the requested order
 taken from the transcribed group data table, its elements permuted, with the
-identity kept in place when the identity is shown. What the board promises at
-its tier SHALL be the collection's (`engine-difficulty`, "Every tier promises
-one solution found at its cap" and "A difficulty tier binds the board it
-generates"), with no departure.
+identity kept in place when the identity is shown.
 
 #### Scenario: A generated board is a solvable group table
 

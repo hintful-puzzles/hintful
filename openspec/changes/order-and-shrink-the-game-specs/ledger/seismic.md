@@ -7,7 +7,7 @@ The Purpose is unchanged: each thing it names the spec still holds.
 | Rules: A region holds each number once and equal numbers keep apart | gains the sentence that says when the game is solved, and the scenario "Completing the grid wins" without "and flashes", both from "Controls: Seismic input, note-taking and completion" | the flash: `ts-engine`, "The win flash plays on a forward move that solves the board" |
 | Params: Seismic's parameters | removed. That a bare number decodes as a square grid joins "Params: A Seismic params string with no mode is Seismic, and with no difficulty Easy", which also names the three fields in a clause. The bound of 4, the unknown difficulty and the round trip cut, with scenario "A game ID round-trips through the parameters" | `paramConfig`, `src/games/seismic/state.ts:133` (`bounds: { min: 4 }` at `:136`, `difficultyItem`, `rulesetItem`); `engine-params`, "Params validity is the engine's check" (a bound and a choice outside its list) and "Encode and decode are mutual inverses over the corpus"; `src/engine/__snapshots__/params-stability.test.ts.snap` holds `6x6de`/`6x6` and every preset |
 | Params: Seismic's game ID writes Tectonic as T and the difficulty as de or dh | retitled "Params: A Seismic params string with no mode is Seismic, and with no difficulty Easy" (the pointer, rule 2). The letters (`T` or nothing, `de`/`dh` in the full form only) and the refusal of a `d` with another letter or none cut; the three missing-field sentences kept. The pointer names `presets` for the menu (added in review). Scenarios "A Tectonic preset" and "A letter that names no difficulty" dropped; "A Seismic preset" kept | the `paramsCodec` field list, `src/games/seismic/state.ts:146` (`dims`, `letters(…, ["", "T"])`, `choice(…, "d", …, "eh", { full: true })`, `DIFF_CHARS` at `:55`); `engine-params`, "A params string is read whole or refused" (a letter the tag does not list, a tag with nothing after it) and "The engine makes the one refusal of a params string" (the sentence the dropped scenario quoted); the snapshot holds `4x4Tde`/`4x4T` and `4x4dh`/`4x4` |
-| Generation: The generator strips clues and accepts only a board of its tier | title and scenario kept. The second half of its sentence (accepted only when soluble at the difficulty and not below) became a pointer that says Seismic does not depart | `engine-difficulty`, "A difficulty tier binds the board it generates"; the gate is `src/games/seismic/generator.ts:342`-`:347` |
+| Generation: The generator strips clues and accepts only a board of its tier | retitled "Generation: The generator strips clues while the board stays soluble at its tier". The second half of its sentence (accepted only when soluble at the difficulty and not below) cut whole (second pass: the pointer that stood for it went too). Scenario kept | `engine-difficulty`, "A difficulty tier binds the board it generates"; the gate is `src/games/seismic/generator.ts:342`-`:347` |
 | Controls: Seismic input, note-taking and completion | retitled "Controls: Seismic is played by the note-taking cell's rules" (the pointer, rule 2): gains the capability and title, that the game departs nowhere, and its two answers to the mechanic. "SHALL offer a sticky pencil mode preference" cut. The solved sentence and scenario "Completing the grid wins" move to "Rules: A region holds each number once and equal numbers keep apart"; scenario "A press on a given" written in words from `interpretMove` | `prefs`, `src/games/seismic/index.ts:346` (`stickyPencilPref`); `engine-notes`, "The pencil preferences have one key each, which a saved preference depends on". The new scenario is `canEnter: !(flags & FM_FIXED)` and `canMark: grid === 0`, `src/games/seismic/index.ts:135`, with `engine-notes`, "The highlight is shown only where its mode could write" |
 | Controls: Seismic's Mark-all fills, then strikes what a placed number rules out | title kept. The two phases, "never strike a cell's last note" and "no move when nothing is left to strike" cut for a citation; kept as the game's own: what a note-less cell is filled with and what an obvious candidate is. Scenario "Mark-all leaves a narrowed cell alone" dropped; "A second press on a filled board" kept | `engine-notes`, "Mark-all is adaptive in a game with an obvious-candidate rule" (its scenario "A narrowed cell beside a note-less one"), "Repeated Mark-all presses converge" ("A clean SHALL NOT empty a cell of its last note") and "The Mark-all cleanup is one move, or none"; `markAll`, `src/games/seismic/hint.ts:157`, is `adaptiveMarkAll` |
 | Hint: Seismic explains the next deduction | removed, with its scenario | `engine-hints`, "A hint is deduced from the board in play" (the plan from the player's own board), "A hint step always names a technique, with no un-narrated fallback" and "Requesting a hint never mutates the board" (`Game.hint` pure on its state, "byte-for-byte unchanged") |
@@ -145,3 +145,49 @@ Checked and found sound:
   already a one-line pointer before the cut.
 - Each subject read alone: none hollow but `Rules` on mistakes (above), which
   the cut did not cause; no dangling antecedent, every title fits its body.
+
+## Second pass
+
+The brief's "A pointer is for that case only" and its line on a preference's
+key, applied. 7 citing sentences read; 1 removed, 2 kept as the one pointer
+of a subject, 4 kept as what the game hands a shared rule.
+
+Removed:
+
+- **Generation**, "That it accepts a puzzle only when it is soluble at that
+  difficulty and not at the difficulty below is the collection's
+  (`engine-difficulty`, "A difficulty tier binds the board it generates"),
+  and Seismic SHALL NOT depart from it": a copy with a citation, in a subject
+  whose three requirements say what each tier's solver does, how the clues
+  are stripped and what every dealt board is held to. The requirement is
+  retitled, since its body no longer says what is accepted.
+
+Kept as a pointer: the `Params` pointer (`paramConfig`, the codec and
+`presets`, with the three missing-field sentences); "Seismic SHALL be played
+by the note-taking cell's rules (`engine-notes`, "The note-taking cell is
+one shared mechanic") … and SHALL depart from them nowhere", the one place
+Controls says how a cell is selected, with the game's two answers to the
+mechanic.
+
+Kept otherwise: "Seismic's `markAll` SHALL be the adaptive press of
+`engine-notes`, "…", by a rule of its own: …" (what a cell is filled with
+and what an obvious candidate is); "The plan SHALL be walked by the shared
+candidate walk (`runCandidatePlan`), with Seismic's keep-apart rule as the
+walk's `reach`"; "Seismic SHALL offer the player the "Hints pencil in" choice
+and start on the implicit reading, because …" (the shared rule has the game
+say why); the flash's "by its place in the grid (`ts-engine`, "A game gives
+each element a position, and the route is which position it gives")", which
+is the position Seismic gives. The surfaces of "Look: Seismic draws its
+cells on a quiet surface and keeps its walls" say which cell takes which and
+cite nothing.
+
+Preferences: the cut removed "SHALL offer a sticky pencil mode preference",
+which names no key. The preference is the engine's, not one of the game's
+own, and its key is stated by `engine-notes`, "The pencil preferences have
+one key each, which a saved preference depends on"; Seismic's `prefs`
+(`src/games/seismic/index.ts:346`) holds three items, each the engine's, and
+no key of the game's.
+
+Each subject read alone after the edits: no fragment, no dangling "it",
+every owed subject says what the game does there or where to look, but
+`Rules` on mistakes, as `## Found` records; every title fits its body.

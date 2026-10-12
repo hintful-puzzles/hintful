@@ -998,6 +998,35 @@ history, as a defect in the game.
 - **THEN** it is refused as already solved, the game's solver is not asked, and
   the status stays solved and does not become solved-with-help
 
+### Requirement: Solve by search finishes from the player's position, or else from the board as dealt
+
+`solveBySearch` SHALL make the Solve of a game that is solved by a budgeted
+search for a finishing line: the game's solve move of the line found from the
+player's position, and failing that of the line found from the board as dealt.
+Where neither has a line, Solve SHALL fail with `NO_SOLUTION` where the search
+proved the dealt board has none, and with `PUZZLE_NOT_REASONABLE` otherwise.
+The search, its budget and the move made of a line are the game's.
+
+#### Scenario: A position the player has lost
+
+- **WHEN** the search proves no line finishes from the player's position, and
+  finds one from the board as dealt
+- **THEN** Solve's move is made of the dealt board's line, and the board it
+  leaves is solved
+
+#### Scenario: A lost position on a board the search cannot settle
+
+- **WHEN** the search proves the player's position lost, and spends its budget
+  on the board as dealt
+- **THEN** Solve fails with `PUZZLE_NOT_REASONABLE` and not `NO_SOLUTION`,
+  since nothing was proved of the board itself
+
+#### Scenario: A line from where the player is
+
+- **WHEN** the search finds a line from the player's position
+- **THEN** Solve's move is made of that line, and the dealt board is not
+  searched
+
 ### Requirement: A Solve installs no route and reveals no loss
 
 A Solve SHALL never install a route or marks for the player to follow, nor
@@ -1255,13 +1284,29 @@ of.
 
 A game's `findMistakes` SHALL compare the player's marks with the board's one
 answer, including where the answer is hidden from the player. A hidden answer
-SHALL NOT be a reason in `notApplicable.findMistakes`.
+SHALL NOT be a reason in `notApplicable.findMistakes`. Where the game's solver
+or search did not establish exactly one answer, no mark SHALL be flagged for
+differing from one, and the result SHALL be empty but for a broken rule the
+game's spec says it reports without an answer.
 
 #### Scenario: A hidden answer is checked
 
 - **WHEN** the player runs Check & Save in Mines with a flag on a square that
   has no mine
 - **THEN** the flag is highlighted as a mistake and the board is not saved
+
+#### Scenario: A board whose solver finds two answers
+
+- **WHEN** `findMistakes` is asked on a Keen board whose clues solve two ways,
+  with a digit entered that neither answer holds
+- **THEN** the result is empty, since no one answer says the digit is wrong
+
+#### Scenario: A broken rule on a board with no answer to compare with
+
+- **WHEN** a Clusters board's solver cannot finish it from the givens, and the
+  player's colors break the game's rule at two squares
+- **THEN** `findMistakes` reports those squares, which its rule check finds
+  with no answer, and flags no square for its color alone
 
 ### Requirement: A move that leaves the board as it was is no step of the history
 

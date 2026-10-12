@@ -35,7 +35,7 @@ The Purpose was left as it stood: it names nothing the cut removed.
 - **Hint: A Netslide journey opens on the first reason that holds.**
   `hintRungs` lists the three reasons in the same order, and nothing reads it
   for order: the choice is the chain of `narrateStep`,
-  `src/games/netslide/hint.ts:648`.
+  `src/games/netslide/hint.ts:615`.
 - **Hint: The distance to finished is a pure function of the board.**
   `engine-hints`, "A plan steered by a measure SHALL be steered by one
   measure", forbids a second measure; that Netslide's one measure is
@@ -114,3 +114,40 @@ One more, of the slide planner's games:
 - The dropped scenario "A displayed step" was set "on a board with no keyboard
   cursor showing"; what the arrow looks like where the cursor is on the
   hinted arrow is stated nowhere.
+
+## Review
+
+6 rows read, each against the declaration or the requirement it names, read
+whole; 4 rows' requirements changed in the spec, no sentence restored.
+
+Changed:
+
+- **"Hint: Netslide can be solved from any position"**: the citation of the
+  search refusal cut with the sentence it replaced. The collection's
+  requirement states all of it, and the Hint subject says plenty of its own.
+- **"Hint: An endgame the heuristic cannot see past is searched exactly"**:
+  the rewording round a citation undone. It added a claim about the budget
+  the requirement never made; the requirement is its first sentence as it
+  stood, to "an exact shortest search".
+- **"Hint: Netslide's marks are the roles its legend declares"** removed. The
+  two requirements it replaced are the `ring` role's sentence
+  (`index.ts:333`: the piece, the arrow in the hint's color, the square
+  outlined, solid where the piece belongs and dashed where it passes
+  through), and a pointer was no better than the copies. The scenario "A
+  destination the tile does not belong in" went with it. The two requirements
+  after it ("the tile mark", "the destination mark") stand without it.
+
+Checked and found sound:
+
+- No engine capability names `wires.ts` or its functions, so the four
+  requests stand and the sentences stay. `engine-hints`, "One deduction
+  firing is one journey", binds a plan derived from a deduction, and no
+  requirement of the slide planner speaks of a journey: "Hint: A subgoal of
+  several slides is one journey" stays and its request stands.
+- The two scenario lines cut (the flash, solved-with-help) against
+  `ts-engine`, "The win flash plays on a forward move that solves the board"
+  and "Only the Solve command sets the solver record".
+- `encodeParams`, `decodeParams` and `interpretMove` are hand-written
+  (`state.ts:95`, `:108`; `index.ts:165`), so Params and Controls stay whole.
+  `narrateStep` is at `hint.ts:615`, not `:648`.
+- Each subject read alone: none hollow, no dangling antecedent.

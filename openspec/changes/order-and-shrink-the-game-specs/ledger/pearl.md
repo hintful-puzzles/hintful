@@ -128,5 +128,12 @@ Checked and found sound:
 - `validateDesc` in the Description requirement is the engine's function
   (`src/engine/desc-error.ts:250`), not a hook of Pearl's; the sentence is
   loose and not false, and stays under Found.
-- Each subject read alone: none hollow, no dangling antecedent, every title
-  fits its body.
+- The spec's diff against `c86372f4` is six hunks, each read: the Purpose
+  (the line above the table), the mistake check, the three Params
+  requirements in one hunk, Generation, the hint's premise, and the removed
+  marks requirement. Each is a row, and no hunk is without one.
+- The scenario strings run through the codec: `6x6` decodes at Easy and
+  encodes in full as `6x6de`; `6x6dt` is Normal with the short form `6x6`;
+  `12x8dtn` and `6x6den` decode as `12x8dt` and `6x6de`.
+- The spec read whole, subject by subject: none hollow, no dangling
+  antecedent, every title fits its body.

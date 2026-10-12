@@ -319,13 +319,10 @@ style has no in-play toggle.
 - **THEN** the count blocks re-render in the new style and monsters render as letters
 - **AND** the letters option is also available through the preferences dialog
 
-### Requirement: Hint: Undead's hint is deductive, by a plan of the game's own
+### Requirement: Hint: Undead's hint is a plan of the game's own
 
-Undead's hint SHALL keep the collection's rules for a deductive hint
-(`engine-hints`, "A hint step always names a technique, with no un-narrated
-fallback" and "A Search is refused and never narrated"), with no departure.
-Its plan SHALL be the game's own, built from its solver's record and the
-player's pencil marks.
+Undead's hint plan SHALL be the game's own, built from its solver's record
+and the player's pencil marks.
 
 #### Scenario: Naked single is surfaced first as a placement
 
