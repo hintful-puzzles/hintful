@@ -34,6 +34,7 @@ rules:
     - Name a Game hook, an exported helper, a params letter or a sentence the player reads. Do not name a test file or a private function.
     - A change to a subject the capability already covers MODIFIES that requirement. Do not ADD a second requirement beside it titled for what this change did.
     - A MODIFIED requirement is restated whole, and reads afterwards as the rule that now holds, with no mention of the change.
+    - In a game's capability, a requirement's title leads with its subject and a colon (the list and what each holds are in docs/new-game.md, "What a game's spec holds"). Archiving appends an ADDED requirement to the end of the spec; `node scripts/checks/spec-subjects.mjs --fix` then puts the spec back in order.
     - A scenario gives a case the rule's sentence does not. Do not write one that restates the rule or says that a named test fails.
 
 # Per-operation guidance (optional)

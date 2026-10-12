@@ -304,6 +304,15 @@ node scripts/checks/spec-form.mjs
 # is a documentation-only commit.
 node scripts/checks/spec-citations.mjs
 
+# --- 1c-000. A game's spec holds its subjects, in one order. ~0s. ---
+#
+# A game's spec is read a subject at a time, so each requirement's title leads
+# with its subject and the subjects stand in one order in every game. Archiving
+# appends the requirements a delta adds, which puts a spec out of order, and
+# archiving is a documentation-only commit, so the check is here and reads the
+# recorded surface of each `Game` where a test would have read the object.
+node scripts/checks/spec-subjects.mjs
+
 # --- 1c-i. The deploy's build-only run. ---
 #
 # CI's deploy job runs the checks above and the production build, and nothing

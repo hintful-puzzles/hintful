@@ -123,7 +123,7 @@ export interface KeenMistake {
 }
 
 // 6x6 is the one size at every tier. The others have a line each, which
-// keeps the list to twelve, and the last is the one multiplication-only board.
+// keeps the list short, and the last is the one multiplication-only board.
 const PRESETS: KeenParams[] = [
   { w: 4, diff: "easy", multiplicationOnly: false },
   { w: 5, diff: "easy", multiplicationOnly: false },

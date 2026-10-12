@@ -1,7 +1,11 @@
 # order-and-shrink-the-game-specs
 
-**Status: scaffolded 2026-10-12, not started.** Fourth of the five pieces of
-`fit-a-new-game-in-one-session`. Figures were measured 2026-10-12.
+**Status (2026-10-12): the order is done and held by the gate. The cut waits
+for the owner's answer to `design.md` § "The question for the owner".** Fourth
+of the pieces of `fit-a-new-game-in-one-session`. Figures were measured
+2026-10-12; `design.md` corrects two of this page's: the share of a spec that
+is a second copy is about a quarter, and the order of a hint's rungs is not
+one of the declarations a spec restates.
 
 ## Why
 
@@ -45,8 +49,9 @@ not settled:
 
 ## Capabilities
 
-None at filing; see `.openspec.yaml`. The work modifies `repo-layout` and
-every game capability.
+`repo-layout` gains the order and the check that holds it. Every game
+capability was retitled and reordered in place, since a delta cannot say
+order (`design.md` § "How the 1,943 were filed").
 
 ## Impact
 

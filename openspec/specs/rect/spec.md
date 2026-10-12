@@ -362,8 +362,7 @@ right-drag erasing interior edges, a click near an edge toggling it,
 and a keyboard cursor, moved square to square, with press-to-drag. Escape,
 Backspace or Delete SHALL cancel that drag, or else hide the cursor. A pointer
 position SHALL resolve to a grid corner or a square's center when close to
-one, else to the nearer edge. The status bar SHALL show a dragged rectangle's
-size.
+one, else to the nearer edge.
 
 #### Scenario: A drag draws a rectangle outline
 
@@ -377,11 +376,6 @@ size.
 - **WHEN** the player clicks where the pointer resolves to a grid corner or to
   a square's center, which names no edge
 - **THEN** `interpretMove` yields no move (returns null or a UI update only)
-
-#### Scenario: The status bar gives the dragged size
-
-- **WHEN** a drag spans a rectangle three squares wide and two tall
-- **THEN** the status bar reads `3x2`, and it is empty once the drag ends
 
 ### Requirement: Controls: Rectangles' Enter draws from the cursor's square and Space clears
 
@@ -510,6 +504,16 @@ next.
 - **WHEN** some clue has one fit left and some edge could also be drawn as a
   line
 - **THEN** the step draws the clue's rectangle
+
+### Requirement: Status bar: The Rectangles status bar gives the size of a dragged rectangle
+
+While a rectangle is being dragged, the status bar SHALL show its size as
+width `x` height, and it SHALL be empty at every other time.
+
+#### Scenario: The status bar gives the dragged size
+
+- **WHEN** a drag spans a rectangle three squares wide and two tall
+- **THEN** the status bar reads `3x2`, and it is empty once the drag ends
 
 ### Requirement: Look: Rectangles rendering
 

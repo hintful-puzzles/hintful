@@ -255,25 +255,60 @@ never types the list.
 
 `openspec/specs/<game>/spec.md` is read before working on the game and checked
 against when changing it. It holds what a session could not get right from the
-code alone, because the code says what happens and not what was meant:
+code alone, because the code says what happens and not what was meant.
 
-- the rules of the puzzle and what counts as solved;
-- the description and params encodings as the parser reads them, what each
-  refuses, each preference of the game's own by its key, and anything else a
-  save or a shared link depends on;
-- what each control does: every button, drag, key and keypad key;
-- what the hint does and says: each technique by what it concludes and from
-  what, the order they are tried in, its wording rules, its marks, when it
-  refuses;
-- the words of its status bar, and what a preset title of its own means;
-- what each difficulty tier means, and what the generator promises of a board;
-- a decision about how the game looks that is the game's own, and a
-  deliberate difference from upstream.
+**Every requirement's title leads with its subject and a colon**
+(`### Requirement: Hint: A lookahead stall takes the shortest chain`), and
+the subjects stand in this order in every game's spec
+([`repo-layout`](../openspec/specs/repo-layout/spec.md), "A game's spec is
+ordered by subject"). Working on one concern of a game, read its subject.
 
-It does not hold what the `Game` type or the registry says of every game, a
-copy in prose of a preset table or a palette, a rule of the collection that
-the game merely follows (that is the engine capability's to state, once), or
-how a thing is built.
+| Subject | What its requirements state |
+| --- | --- |
+| `Rules` | the puzzle: its rules, what a move does to the board, what counts as solved or lost, what is a mistake and what Check & Save reports |
+| `Params` | what the parameters are, how they are encoded, which are refused and why, what a preset or a title of the game's own means |
+| `Description` | the description format as the parser reads it, what it refuses, and anything else a save or a shared link depends on |
+| `Generation` | what each difficulty tier means, and what the generator promises of a board it deals |
+| `Solver` | what the game's solver answers of a position, the search that counts a board's answers, and the Solve command |
+| `Controls` | what each button, drag, key and keypad key does, note-taking included |
+| `Preferences` | each preference of the game's own, and what it changes |
+| `Hint` | everything about the hint: each technique by what it concludes and from what, the order they are tried in, its wording rules, its marks, when it refuses |
+| `Status bar` | the words of the status bar, and when each shows |
+| `Look` | a decision about how the game is drawn that is the game's own |
+
+A requirement is filed under one subject. Where it covers two: anything about
+the hint is `Hint`; which cells are flagged is `Rules` and how the flag is
+drawn is `Look`; what a move does is `Rules` and which input makes it is
+`Controls`; a refusal by `validateParams` is `Params` whatever it is about. A
+difference from upstream goes under the subject it is a difference in.
+
+`scripts/checks/spec-subjects.mjs`, in the gate, holds the titles, the order,
+and that a spec has the subjects its game owes: `Rules`, `Params`,
+`Description` and `Controls` always, `Hint` for a game with a hint, `Status
+bar` for one with a status bar, `Generation` for one with tiers. It reads the
+title and cannot tell that a requirement sits under the wrong subject, so move
+one you find misfiled. Archiving appends the requirements a delta adds to the
+end of the file; `node scripts/checks/spec-subjects.mjs --fix` puts the spec
+back in order and changes no word.
+
+A spec does not hold a second copy of something stated elsewhere:
+
+- **what the game declares to the engine**, which the engine consumes and the
+  help page is built from: the field list of `paramsCodec` and `paramConfig`,
+  the preset table, `prefs`, `targetVerbs` and `requestKeys`, the hint's
+  legend, the palette. State the promise the declaration cannot: what a
+  missing field decodes to, why a size is refused, what a verb is for where
+  its `does` string does not say;
+- **a rule of the collection that the game merely follows**, which the engine
+  capability states once. A requirement that would read the same with another
+  game's name in it belongs there. Where the game departs, the departure is
+  the requirement;
+- **what the `Game` type or the registry says of every game**, and how a
+  thing is built.
+
+What a hand-written function does (`interpretMove`, a codec written out, the
+round a solver runs its deductions in) is not declared, and the spec states
+it.
 
 A requirement is one behavior in `SHALL` sentences, within the 500 characters
 the validator allows before the first scenario, with no date, no change id and

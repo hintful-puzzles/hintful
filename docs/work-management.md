@@ -208,6 +208,11 @@ Two rules make a sweep across the collection affordable:
   words into the main spec, so the requirement has to read as the rule that
   holds, with no mention of the change that made it
   (`openspec/config.yaml`, the rules for `specs`).
+- Archiving appends a requirement a delta adds to the end of the spec. In a
+  game's spec that is after `Look`, so the gate refuses the archive's commit
+  until `node scripts/checks/spec-subjects.mjs --fix` has put the spec back in
+  the order of its subjects ([`new-game.md`](./new-game.md) § "What a game's
+  spec holds").
 - No script of ours writes into a change directory. Archiving renames it.
 
 ## Which hintless game comes next
