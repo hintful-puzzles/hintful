@@ -279,7 +279,9 @@ premise, the contradiction and the conclusion in the necessity voice.
 ### Requirement: Hint: A Bricks hint step is one journey of one cell
 
 Because every Bricks deduction forces exactly one cell, each hint step SHALL
-be a single self-contained journey.
+be a single self-contained journey. A paint that gives the step's cell the
+color it forces, alone or in a drag across other cells, SHALL complete the
+step, and every other move SHALL be off the plan.
 
 #### Scenario: A step decides one cell and leaves it as it was
 

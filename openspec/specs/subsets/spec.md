@@ -484,20 +484,6 @@ are tried with it.
 - **THEN** the hint places it there and spotlights that cell as the only
   candidate
 
-### Requirement: Hint: A Subsets hint refuses a letter the answer does not have
-
-Where a letter the player has marked present or cleared differs from the
-board's solution, `hint` SHALL refuse with the collection's sentence that the
-entries contradict each other.
-
-#### Scenario: A letter marked where the answer has none
-
-- **WHEN** B is marked present in the second cell of
-  `13RD,_,6R,_,_,_,_D,_UL,_R,12D,_,_DL,_UR,_,3U,10`, where the answer has no
-  B, and a hint is asked for
-- **THEN** the hint is refused: "These entries contradict each other, so one
-  of them must be wrong. Undo, or clear the ones you are unsure of."
-
 ### Requirement: Look: Subsets draws its letter slots, its horseshoes and a tally of every set
 
 Rendering SHALL show each cell's letter slots, the horseshoe arrows, and a

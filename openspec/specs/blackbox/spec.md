@@ -191,7 +191,9 @@ declaration.
 
 - **WHEN** `validateParams` is called with `minballs: 0`, or with
   `minballs > maxballs`, or with `minballs >= w*h`
-- **THEN** it returns a non-null error string
+- **THEN** it returns "No. of balls must be at least 1.", "No. of balls may
+  not have a minimum greater than its maximum." or "There must be fewer balls
+  than squares."
 
 ### Requirement: Params: Only a deal is bound by the ball limit
 

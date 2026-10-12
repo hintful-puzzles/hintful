@@ -13,14 +13,12 @@ block, its well and its completion flash.
 
 Twiddle SHALL be a `w×h` grid of numbered tiles, solved when the tile numbers
 read in non-decreasing row-major order and, when `orientable`, every tile is
-upright. A generated board SHALL be a scramble of the solved arrangement by
-rotations.
+upright.
 
-#### Scenario: A generated board is scrambled
+#### Scenario: One number to a row
 
-- **WHEN** a new game is created from any valid params
-- **THEN** the grid is a scramble of the solved arrangement
-- **AND** generation terminates for every preset
+- **WHEN** every tile of a `rowsonly` board stands in the row of its number
+- **THEN** the board is solved, whichever of that row's tiles stands where
 
 ### Requirement: Rules: A rotation turns the block and its tiles
 
@@ -132,9 +130,9 @@ matter, and where it does a comma or a letter other than `u`, `l`, `d` and `r`.
 `hasNoSolution` SHALL say yes of a board that breaks what every turn keeps.
 Under a block of odd side that is how many tiles of each number stand on each
 checkerboard color. Under one of even side, with `orientable`, it is that
-color taken with the tile's quarter turns, and the turns' sum modulo four. Where no number repeats
-and the side is not two more than a multiple of four, it is the arrangement's
-parity. A board that passes may still be out of reach.
+color taken with the tile's quarter turns, and the turns' sum modulo four.
+Where no number repeats and the side is not two more than a multiple of four,
+it is the arrangement's parity. A board that passes may still be out of reach.
 
 #### Scenario: Two tiles swapped under a block the size of the board
 
@@ -153,6 +151,20 @@ parity. A board that passes may still be out of reach.
 - **WHEN** `1d2u3u4u` and `1d2d3u4u` are read for the params `2x2n2o`
 - **THEN** the first has no solution, its turns adding up to two, and the
   second, whose turns add up to four, is not refused
+
+### Requirement: Generation: A Twiddle board is the solved one shuffled by turns
+
+A generated board SHALL be a scramble of the solved arrangement by rotations:
+as many as the shuffle target, or with no target `2·w·h·n²` of them or one
+more. Unless the block is the whole board, the shuffle SHALL NOT turn a block
+straight back, nor a third time the same way, while no block overlapping it
+has turned since.
+
+#### Scenario: A generated board is scrambled
+
+- **WHEN** a new game is created from any valid params
+- **THEN** the grid is a scramble of the solved arrangement
+- **AND** generation terminates for every preset
 
 ### Requirement: Solver: Solve replaces the grid with the solved arrangement
 
@@ -191,14 +203,13 @@ origins. When the cursor is visible, its
 - **THEN** the bevel edges along that block's four sides are outlined in the
   cursor color, and no other tile's are
 
-### Requirement: Controls: Letter and numpad keys rotate fixed blocks
+### Requirement: Controls: A capital letter turns its block back, and a midway key needs a block midway
 
-The letters `a`, `b`, `c` and `d` SHALL each rotate one corner block anticlockwise (`dir +1`),
-and the shifted `A`, `B`, `C` and `D` SHALL rotate the same block `dir −1`. The
-numpad digits SHALL also produce rotations: a corner digit rotates its corner
-block, and an edge digit or the center digit rotates the block midway along
-that edge or at the center only when the parity of `w−n` and `h−n` puts a block
-exactly there.
+Each letter and keypad digit that has a block SHALL turn it anticlockwise
+(`dir +1`), and the shifted `A`, `B`, `C` and `D` SHALL rotate the same block
+`dir −1`. An edge digit or the center digit SHALL rotate the block midway
+along that edge or at the center only when the parity of `w−n` and `h−n` puts
+a block exactly there.
 
 #### Scenario: A capital turns the corner back
 

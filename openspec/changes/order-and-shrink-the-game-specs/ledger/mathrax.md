@@ -14,7 +14,7 @@ the spec no longer points at it.
 | Generation: A Mathrax board has one solution at every difficulty | removed. Sentence 1 (uniqueness at every difficulty, `Unreasonable` included) goes; sentence 2 (an ambiguous verdict is no ground to keep removing) and the scenario "Even the guess-and-verify tier yields a unique solution" move to "Generation: An ambiguous verdict does not let Mathrax's generator keep removing", the scenario unchanged and the sentence with "While it removes givens and clues from a board" put before it so that it stands alone (`stripGridClues` and `stripMathClues`, `src/games/mathrax/generator.ts:115` and `:140`) | `engine-difficulty`, "Every tier promises one solution found at its cap" ("No tier SHALL promise anything but a board with one solution") and `engine-params`, "A board with a mistake check loads only with exactly one answer" |
 | Controls: Mathrax input and keypad | retitled "Controls: Mathrax enters digits through the shared note-taking cell". "The Solo-style control scheme: a cell is selected by left-click or cursor, for ink outside pencil mode and for pencil marks in it" replaced by one sentence that says where the selection is stated; the entry and clear keys reworded to stand as their own sentence; the pencil-mode and given sentences kept; the keypad sentence cut. All three scenarios untouched | the selection: `engine-notes`, "The note-taking cell is one shared mechanic" and the requirements after it (`pressNoteTakingCell`, `index.ts:189`); the keypad: `requestKeys: (p) => digitKeys(p.o)`, `index.ts:631`, and `engine-input`, "A key label carries its resolved text" |
 | Preferences: Mathrax offers the sticky pencil and auto-pencil preferences | retitled "Preferences: Auto-pencil strikes a placed digit from its row and column". Sentence 1 (offers the two preferences) cut; sentence 2 kept without "both on the board and in the hint's plan". Scenario untouched | `autoPencilPref`, `stickyPencilPref`, `index.ts:634`-`637`; `engine-notes`, "The pencil preferences have one key each, which a saved preference depends on"; the hint's plan: `engine-candidate-hints`, "A placement's cull continues its journey" (with auto-pencil on no cull step is emitted and the placement's move carries it) |
-| Hint: Mathrax's hint plan is the shared candidate-elimination walk | the first sentence gains the citation of the requirement it sends the reader to; nothing else changes | |
+| Hint: Mathrax's hint plan is the shared candidate-elimination walk | the first sentence gains the citation of the requirement it sends the reader to; nothing else changes. Found, mended: the scenario's "`pencilAll`", a move type's name, reads "the fill-all move" | |
 | Hint: The recording solve stops below the guess-and-verify tier | removed; its scenario "A board at the top tier is hinted by deduction alone" moved to "Hint: Mathrax's hint deduces at the tier of the board's params" and was dropped there in the third pass | `engine-candidate-hints`, "A recording solve stops below the tier that searches" (its first scenario is the dropped one); the reason: `engine-hints`, "A Search is refused and never narrated" |
 | Hint: Mathrax's hint deduces at the tier of the board's params | title kept. Third pass: "and at Tricky where they name `Unreasonable`" reworded out, the sentence now bound to params that name a tier below `Unreasonable`; the scenario "A board at the top tier is hinted by deduction alone", gained from "Hint: The recording solve stops below the guess-and-verify tier", dropped; "A board whose params say Easy" untouched | `engine-candidate-hints`, "A recording solve stops below the tier that searches". Mathrax's call: `src/games/mathrax/index.ts:417` |
 
@@ -232,3 +232,17 @@ that leads with the indication): none is stated.
 
 Each subject read alone: no fragment, no dangling pronoun, every title fits
 its body, and the Purpose names nothing that went.
+
+## Found, mended
+
+- The size-3 refusal in a sentence of Mathrax's own: left, code (the main
+  session's).
+- A re-entered digit handled by hand: left, and the item is false in one
+  clause. `index.ts:221` tests `state.grid[i] === c` alone, and a clear key
+  is `c = 0`, so outside pencil mode clearing an empty cell that has notes
+  is no move here; Keen and Towers also test `state.pencil[i] === 0`
+  (`src/games/keen/index.ts:191`) and so clear the notes. A difference a
+  player can meet, and code's to settle; not stated as a requirement.
+- `Controls` silent on Enter's toggle, Mark-all and the sticky preference:
+  left, the collection's, and the subject's first sentence names where.
+- `pencilAll` in a scenario: reads "the fill-all move".

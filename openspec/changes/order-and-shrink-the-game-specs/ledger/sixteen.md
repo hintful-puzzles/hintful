@@ -7,6 +7,8 @@
 | Params: A shuffled Sixteen board's title counts its shuffles | removed, with its scenario "Ten shuffling moves" | `label: { slot: "tail", words: (p) => (p.movetarget ? … shuffles : null) }` on the shuffle item, `state.ts:76`-`79`; `engine-params`, "One describer labels every params set" (size, then the tail's words). No test of Sixteen holds "4x4, 10 shuffles"; `src/games/netslide/netslide.test.ts:156` holds the same label words in Netslide |
 | Hint: Sixteen draws the hinted tile, its landing cell and its arrow | removed, with its scenario "The current step is drawn" | `hintMarks.roles.ring`, `src/games/sixteen/index.ts:726`-`730`: the tile filled in the hint's color, the arrow to click in the same color, the landing square outlined (and the two-leg journey's dashed and solid outlines, which the requirement never gave) |
 | Hint: The hint gives the move home even when it undoes the player's slide | third pass: retitled "Hint: Sixteen's hint does not open by undoing the player's slide, unless that is the shortest way home". Sentences 2 and 3 (the veto not applied to the exact search's shortest plan, and why; the veto left to the heuristic search) cut. Sentence 1 kept, reworded to the game's own: that Sixteen vetoes, after a slide, a first move that undoes that slide or part of it (`rejectFirstMove`, `src/games/sixteen/index.ts:496`), and that the hint still gives the move home where the exact search's shortest plan opens with one. Scenario "One slide off a finished board" kept | `engine-hints`, "The slide planner's first-move veto binds the heuristic search alone" (the veto applied in the heuristic forward search only; a plan the exact search returns given as found though it open with a vetoed move, and why; its first scenario is the dropped one) |
+| Rules: Sixteen slides whole rows and columns until the tiles read in order | found, mended: the cursor's modes, named by the members of an enum (`Unlocked`, `LockTile`, `LockPosition`, `src/games/sixteen/state.ts:36`), are said in the player's words; "SHALL animate a slide" gains its exception, the slide a drag's release makes (`animLength`, `src/games/sixteen/index.ts:792`-`:798`) | |
+| Controls: The Sixteen port supports direct row and column dragging | found, mended: retitled "Controls: Sixteen supports direct row and column dragging"; its one line wrapped, and two scenario lines with it; the release sentence gains that a distance past half the line becomes the shorter slide the other way and that a whole turn makes no move (`src/games/sixteen/index.ts:246`-`:250`), with scenario "A drag of three squares on a row of four", a case in words | |
 | Look: Sixteen's slide arrows are Netslide's | title kept. "and the arrow a hint names in the hint's" cut from the last sentence. Scenario untouched | `hintMarks.roles.ring` ("with the arrow to click drawn in the same color"), `index.ts:728` |
 
 ## Kept, and why
@@ -157,3 +159,18 @@ Kept, 3 clauses:
 
 Each subject read alone: none hollow, no fragment, every title fits. The
 Purpose names nothing that went.
+
+## Found, mended
+
+- A slide made by a drag is not animated: the `Rules` requirement's "SHALL
+  animate a slide" has the exception.
+- A drag takes the shorter way round: stated in the drag requirement, with a
+  scenario.
+- No requirement states the hint's refusal: left: `engine-hints`, "A hint
+  that plans by searching SHALL refuse honestly past its reach" states all
+  of it, and `Hint` says plenty of the game's own.
+- No `Look` requirement for the win flash: left: the flash is the
+  collection's, and Sixteen has no gap or other departure to state.
+- `Unlocked`, `LockTile` and `LockPosition`: said in plain words.
+- The drag requirement is one unwrapped line and says "port": wrapped and
+  retitled.

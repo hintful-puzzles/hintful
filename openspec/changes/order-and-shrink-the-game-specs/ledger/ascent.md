@@ -4,6 +4,7 @@ The Purpose was left as it stood: it names nothing the cut removed.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
+| Look: What Ascent draws | Found, mended: retitled "Look: A drawn path's open ends show the numbers they may take, and a move is drawn at once", for the two sentences its body holds; its first sentence rewrapped to the spec's width, no word changed. Scenario untouched | |
 | Rules: Ascent is solved by one path through every number | "and flashes" cut from the scenario's last line; the sentence kept | `ts-engine`, "The win flash plays on a forward move that solves the board" |
 | Rules: findMistakes compares the board with its one solution | the clause "so that Check & Save refuses a board holding one" cut, and "and Check & Save refuses to save" from the scenario; the rest kept | `quick-save`, "Check & save gates the checkpoint on a clean board" |
 | Params: Ascent's parameters | retitled "Params: Ascent refuses an area of 1000, a Hexagon out of proportion and a 2×2 in Edges". The field list, the 2-to-50 limits and "A game ID SHALL encode every parameter and round-trip through decode" cut; the three refusals `validateParams` makes kept. Scenario "A game ID round-trips through the parameters" replaced by "A Hexagon of even height", since the kept sentence had none | `paramConfig`, `src/games/ascent/index.ts:422` (`bounds: { min: 2, max: 50 }` at `:432`); `engine-params`, "Params validity is the engine's check" and "Encode and decode are mutual inverses over the corpus". The new scenario is `validateParams`, `src/games/ascent/index.ts:382` (the sentence at `:385`) |
@@ -155,3 +156,26 @@ What reads nearest, and stays, 3 clauses:
   deduction still forces before it refuses" does not bind it.
 
 Each subject read alone: none hollow, no fragment, every title fits.
+
+## Found, mended
+
+- "Look: What Ascent draws" names neither of its two sentences: retitled
+  "Look: A drawn path's open ends show the numbers they may take, and a move
+  is drawn at once", and its over-long line rewrapped. The first sentence
+  still has no scenario: none composed, no test of the game giving a case.
+- No requirement for Solve: left: `solve` fills in what the solver reaches
+  at its hardest tier (`src/games/ascent/index.ts:521`), and a board loads
+  only where some tier solves it (`engine-params`, "A board loads only if
+  the game's own solver solves it"), so Solve shows the answer as in every
+  tiered game and the incomplete case is one no player reaches.
+- What `findMistakes` returns on a board the solver does not complete: left:
+  no loaded board is one, and `ts-engine`, "A mistake check compares with
+  the one answer, hidden or not" now states the empty result.
+- "SHALL be recorded as wide by nature in the portrait guard's ledger": left:
+  a sentence of what a guard holds, which the brief has reported and not
+  rewritten.
+- "Controls: The UI_UPDATE tail of interpretMove is kept" states how a
+  function is built: left: true of the code, its scenario gives what a
+  player sees, and rewording it would change what a kept requirement claims.
+- The dropped scenario's sentence was the engine's: left: it went with the
+  cut.

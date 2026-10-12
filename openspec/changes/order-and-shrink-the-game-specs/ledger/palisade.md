@@ -7,12 +7,13 @@ holds now, and it says instead what is `border-grid`'s to state.
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
 | Rules: Palisade edges are three-valued and shared between cells | removed. The first cut took the clause "so every edit `interpretMove` emits is two-sided"; the third pass took the rest (three-valued, the byte and its two nibbles, both cells) and the scenario "A wall toggle records both sides" | `border-grid`, "Each button cycles an edge between its own state and undecided" ("The edits SHALL change both cells the edge separates"); `border-grid`, "A cell holds its four edges in one byte, and an edge is on both its cells" (the low four bits the walls up, right, down and left, the high four the marks, an edge with neither undecided, an interior edge on both cells, and "a save replays them, so no bit moves"; its first scenario is the dropped one with the flags named) |
+| Rules: Palisade detects completion and the unique-division solve | Found pass: retitled "Rules: A Palisade board is solved when its walls are a whole division that meets every clue", the body stating no solve. `isSolved`, a function of the game's own, reworded to the hook that reports it: "`status` SHALL report a board solved iff…", and in both scenarios ("`status` reports a win", "`status` does not report a win"). The three conditions untouched | |
 | Rules: Palisade reddens what the board already contradicts | retitled "Rules: Palisade reddens a clue that is already impossible". First sentence (the three edge cases) cut (the second pass took out the pointer that first replaced it: the Purpose says the edges that redden are `border-grid`'s); second sentence (the clue) kept, and now the whole requirement. Scenarios "An over-large region reddens its edges" and "An undersized region reddens its walls" dropped; scenario "A clue with too many walls, and one that cannot reach its number" written, since the kept sentence had none | `border-grid`, "The board reddens an edge beside a group joined past the region size" (its scenario "An undecided edge round an over-large group is reddened" is set in Palisade) and "The board reddens a wall beside an undersized region and a wall that divides nothing" (scenario "An undersized region reddens its walls"); the code is `borderErrorBits`, `src/engine/border-grid-render.ts`, called at `src/games/palisade/render.ts:197`. The new scenario is `on > clue \|\| clue > 4 - off`, `src/games/palisade/render.ts:194` |
 | Rules: Palisade checks mistakes against the unique solution | last sentence ("`redraw` SHALL redden each flagged edge.") cut, and the "AND `redraw` … draws the edge in the error color" line of scenario "A wrong wall is flagged". Third pass: the clause "take the board's one division from the search that counts its answers, at either difficulty" reworded out, and the sentence "Where the search did not prove exactly one division it SHALL return an empty result, never a false positive." cut; what is flagged (a wall the division lacks, a no-wall mark where it has a wall) kept. Both scenarios kept | `border-grid`, "The board reddens a wall beside an undersized region and a wall that divides nothing" ("An edge the game's Check & Save flags SHALL be drawn in the same error color"); `mistakeEdgeBits`, `src/games/palisade/render.ts:180`. The search clause: `engine-difficulty`, "One search answers a board for everything that asks" (`findMistakes` among what takes the one search's answer, at every tier). The empty result: `ts-engine`, "A mistake check compares with the one answer, hidden or not" |
 | Params: Palisade's parameters are a size and a region size | retitled "Params: A Palisade params string may leave out its region size and its difficulty". The field list and the encoding (`{w}x{h}n{k}`, `de`/`du` in the full form only) cut; a sentence sends the reader to `paramConfig`, the declared codec and `presets` (rule 2); the two missing-field sentences kept. Scenarios "Params round-trip" and "The difficulty is in the full encoding only" replaced by "A string that leaves a field out", made of their two missing-field lines | `paramConfig`, `src/games/palisade/state.ts:142`, and the `paramsCodec` field list, `src/games/palisade/state.ts:166` (`dims`, `num "n"`, `searchTierSegment`); `engine-difficulty`, "A game that searches has a tier for each deduction and Unreasonable above them" (`d` and the tier's first letter, in the full form only); `src/engine/params-stability.test.ts` holds `8x6n6`-shaped strings for the default, every preset and each field (`5x5n5de` / `5x5n5`) |
-| Params: Palisade refuses a region size the grid cannot be divided by | first sentence (the bounds refuse a `w`, `h` or `k` below 1) and scenario "A region size of zero is refused by its bound" cut | `bounds: { min: 1 }` on the three fields, `src/games/palisade/state.ts:145` and `:149`; `engine-params`, "Params validity is the engine's check" and "A params refusal is a sentence" (the bound's words are the engine's) |
+| Params: Palisade refuses a region size the grid cannot be divided by | first sentence (the bounds refuse a `w`, `h` or `k` below 1) and scenario "A region size of zero is refused by its bound" cut. Found pass: the first sentence gains "and a grid of 2³¹ squares or more as too large", and "no size" becomes "no smaller size" so the two do not contradict | `bounds: { min: 1 }` on the three fields, `src/games/palisade/state.ts:145` and `:149`; `engine-params`, "Params validity is the engine's check" and "A params refusal is a sentence" (the bound's words are the engine's) |
 | Params: Palisade's menu offers each board at both difficulties | removed; the `Params` pointer sentence names `presets` | `BOARDS`, `defaultParams` and `presets`, `src/games/palisade/state.ts:130`, `:137`, `:159`; `engine-params`, "The preset menu is a grid" (each board at every tier, easiest first); `src/engine/params-stability.test.ts` lists the eight lines |
-| Description: Palisade descriptions are run-length clue grids | third pass: "a letter `a`–`z` for each run of 1–26 clueless cells" replaced by the subject's one pointer to the run-letter grammar; the digits, the scan order and the three refusals kept. Both scenarios kept | `engine-params`, "The engine provides the run-letter description grammar" (a lowercase letter for each run of blanks, `a` for one up to `z` for twenty-six; it leaves the value characters, the refusals and the trailing run to the game). The game's calls: `encodeRunLength`, `src/games/palisade/state.ts:230`, and `scanRunLength`, `:243` |
+| Description: Palisade descriptions are run-length clue grids | third pass: "a letter `a`–`z` for each run of 1–26 clueless cells" replaced by the subject's one pointer to the run-letter grammar; the digits, the scan order and the three refusals kept. Both scenarios kept. Found pass: gains the sentence that a desc describing fewer than `w·h` squares loads with the rest clueless, the writer ending a desc at its last clue, and the scenario "A description that stops short of the last square" | `engine-params`, "The engine provides the run-letter description grammar" (a lowercase letter for each run of blanks, `a` for one up to `z` for twenty-six; it leaves the value characters, the refusals and the trailing run to the game). The game's calls: `encodeRunLength`, `src/games/palisade/state.ts:230`, and `scanRunLength`, `:243` |
 | Generation: A pasted Palisade board opens at the difficulty it needs | retitled "Generation: A Palisade board is Easy where the solver and the hint both finish it". Kept: what makes a board Easy and what Unreasonable. The loading rule ("whatever lower difficulty its ID states", the two refusals) cut; the pointer that first replaced it went in the second pass, the subject saying plenty of its own. Scenario "A board with several answers or none is refused" dropped; "A board that needs search opens as Unreasonable" kept | `engine-difficulty`, "A loaded board whose id states no tier takes the lowest tier that solves it" and "A pinned tier is kept or raised and never lowered"; `engine-params`, "A board with a mistake check loads only with exactly one answer". The dropped scenario's two boards are in this spec, "Solver: Palisade counts a clue set's answers by a bounded search", scenario "The search tells one answer from several and from none"; `src/games/palisade/palisade-tier.test.ts` ("a pasted Palisade board") holds the refusals |
 | Solver: Palisade counts a clue set's answers by a bounded search | third pass: title kept. Cut: that the divisions are counted up to two by trial and error over the solver, the four verdicts, the budget in positions and never in time, and that Solve takes the answer at either difficulty. Kept, reworded to stand: what the search assumes where the solver stops (an undecided edge a wall, and then not). Scenario "A spent budget is neither answer" dropped; the other two kept | `engine-difficulty`, "The engine counts a searching game's answers up to two, within a budget of positions" (the count, the verdicts, the budget; its scenario "The budget runs out with one answer in hand" is the dropped one and more); `engine-difficulty`, "Solve from the search shows the one answer or says which it lacks" ("at any tier … A game on the search's tiers SHALL answer `solve` through it") |
 | Controls: Each button toggles the nearest edge toward its own state | replaced by the pointer requirement "Controls: Palisade takes its buttons, drag and cursor from the border grid" (rule 2): all three sentences went, scenario "A left-click on a no-wall mark makes a wall" dropped, "A second left-click returns the edge to unknown" kept as the one real case | `targetVerbs = borderGridVerbs(…)`, `src/games/palisade/index.ts:83`; `border-grid`, "Each button cycles an edge between its own state and undecided" (its first scenario is the dropped one, set in Palisade), "A press addresses the nearest interior edge", "The keyboard cursor moves by half a cell", "A drag along a line of edges repeats the press" |
@@ -20,7 +21,7 @@ holds now, and it says instead what is `border-grid`'s to state.
 | Hint: The hint is seeded from the player's own walls and marks | retitled "Hint: The plan is every edge the deductions force from the player's walls and marks". Its last sentence ("It SHALL then run the six deductions to a fixpoint.") replaced by the plan sentence from "Hint: Palisade offers a deduction-based hint"; scenario kept. Third pass: gains the scenario "The hint goes on from an edge decided rightly", the last clause of the scenario of "Hint: Palisade's hint stops where the solver does" | this spec, "Hint: Palisade's hint runs its deductions in a fixed round" |
 | Hint: The hint records every edge the deductions force | removed | this spec's five technique requirements, which say what each forces (a wall or an open edge) and that a full clue is "one firing over all those edges"; `engine-hints`, "One deduction firing is one journey". The scenario's case is "Hint: A Palisade clue that is full, or needs every edge left, settles its edges", scenario "A clue with all its walls" |
 | Hint: The solver concludes the same with or without the hint's recorder | removed | `engine-hints`, "The solver and the hint are two projections of one deduction engine" (the generator runs the techniques with the recorder off, the hint the same techniques with it on) |
-| Hint: A multi-edge firing says why its edges are forced together | the last line of its scenario cut ("AND the plan holds both edges as one journey, the second leg flagged `continuesPrevious`") | `engine-hints`, "One deduction firing is one journey", scenario "One clue forces two edges" |
+| Hint: A multi-edge firing says why its edges are forced together | the last line of its scenario cut ("AND the plan holds both edges as one journey, the second leg flagged `continuesPrevious`"). Found pass: one line past the wrap rewrapped, no word changed | `engine-hints`, "One deduction firing is one journey", scenario "One clue forces two edges" |
 | Hint: Each hint leg marks every element its sentence references | replaced by the pointer requirement "Hint: Palisade's marks and its keep-track verdict are the border grid's" (rule 2). Its sentence and its scenario went | `hintMarks.roles`, `src/games/palisade/index.ts:290` (ring: every edge the firing decides, marked together; outline; stripes); `engine-hints`, "A bound hint step's words SHALL name exactly the marks it draws"; which marks each technique draws is in this spec's technique requirements |
 | Hint: The hint refuses when the deductions force no edge | removed | `engine-hints`, "A hint gives every step deduction still forces before it refuses" (refuses with `DEDUCTION_EXHAUSTED` only where it forces none) and "Deduction running out on a sound board SHALL have one wording" |
 | Hint: Palisade's hint stops where the solver does | removed in the third pass. Sentence 1 ("The hint SHALL never run the search."), sentence 2 (on an Unreasonable board the plan holds the forced edges and no others, and refuses where none is forced) and sentence 3 (it goes on from the edges the player then decides) cut. Of its scenario, "The hint stops, and goes on from an edge tried rightly", the last clause (an edge decided rightly wherever the hint stops, and the hint finishes the board) moves to "Hint: The plan is every edge the deductions force from the player's walls and marks" as the scenario "The hint goes on from an edge decided rightly"; the rest dropped | `engine-hints`, "The hint of a game on the search's tiers never searches" (sentence 1, and the wrong edge reported by the mistake check: scenario "A value tried wrongly"); `engine-hints`, "A hint gives every step deduction still forces before it refuses" (sentences 2 and 3, and the scenario's refusal); that the steps are edges forced from the player's walls and marks is this spec's "Hint: The plan is every edge the deductions force from the player's walls and marks" |
@@ -239,3 +240,68 @@ Kept, 6 clauses:
 
 Each subject read alone after the edits: none hollow, no fragment, no
 "the search" without the board it searches, every title fits.
+
+## Found, mended
+
+- A description may stop short of the last square and the spec never says
+  so: "Description: Palisade descriptions are run-length clue grids" gains
+  the sentence and a scenario. `parseDesc`, `src/games/palisade/state.ts:238`,
+  refuses only `squares > wh`; `encodeDesc`, `:229`, calls `encodeRunLength`
+  without `keepTrailingBlanks`. The scenario's string is
+  `src/games/palisade/palisade.test.ts:319`, whose letters and digits come to
+  22 squares of 25.
+- `validateParams` refuses an area past 2³¹ and the spec never says so:
+  "Params: Palisade refuses a region size the grid cannot be divided by"
+  gains the clause. `state.ts:178`, `w > 0x7fffffff / h`; `engine-params`, "A
+  grid too large for a game is refused in one sentence" leaves where the
+  ceiling sits to the game.
+- No test of the game draws a clue in the error color: left: a test's to
+  hold, and the sentence is true of `src/games/palisade/render.ts:194`.
+- The title "Rules: Palisade detects completion and the unique-division
+  solve" names a solve its body does not state: retitled.
+- The dropped scenario "Next deduction is surfaced and solves the board" was
+  true of an Easy board only: left: it went with the cut and nothing in the
+  spec repeats it.
+
+## Whole read
+
+28 requirements read top to bottom as a reader with the spec alone; 8
+citations checked against the capability's titles (2 of `engine-params`, 6
+of `border-grid`), all exact; 2 mends beyond the three above: `isSolved`
+reworded to `status` in the retitled `Rules` requirement, and one line past
+the wrap in "Hint: A multi-edge firing says why its edges are forced
+together".
+
+The diff from `c86372f4` as the third pass left it, read whole beside this
+table: 17 hunks, in the Purpose and the 26 requirements the cut removed or
+changed, and each is accounted for, the Purpose by the line above the table
+and the rest by the row under the title the requirement had. No hunk changes
+a requirement that has no row, and no row claims a change the diff lacks.
+Nothing in it is false of the code:
+
+- `Rules`: the reddened clue is `on > clue || clue > 4 - off`
+  (`render.ts:194`); `findMistakes` flags a wall the answer lacks and a
+  no-wall mark where it has one (`index.ts:105`-`122`).
+- `Params`: `whenAbsent` sets `k` to the width (`state.ts:169`); the
+  refusals (`:176`-`193`).
+- `Description`: a digit above 4, another character and too many squares
+  (`:248`-`253`).
+- `Solver`: the search assumes an edge each way (`assumeEdge`,
+  `solver.ts:563`).
+- `Controls`: `targetVerbs` is `borderGridVerbs` and `interpretMove` is
+  `interpretTargetVerbs` alone (`index.ts:83`-`98`).
+- `Hint`: the plan is `deduceForcedEdges` from the player's borders, one
+  journey a firing (`index.ts:198`-`229`); `hintKeepTrack` only hands over
+  (`:232`-`243`); the legend's three roles (`:290`-`297`).
+- `Generation`: Easy is the solver and the hint both (`deductionFinishes`,
+  `index.ts:283`).
+
+Checked and found sound: each subject says what the game does there or where
+to look, `Controls` and the hint's marks by one pointer each; no fragment and
+no pronoun without its antecedent; "the deductions" of "Hint: The plan is
+every edge…" are named by the five technique requirements and the round
+after it.
+
+Left, and seen: three scenarios name a palette index of the game's own
+(`COL_HINT_CELL`, `COL_HINT`, `COL_CORRECT`), each moved or kept unchanged by
+the cut.

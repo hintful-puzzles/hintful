@@ -13,6 +13,8 @@ The Purpose is unchanged.
 | Hint: A score the settled slots account for rules out the rest | last sentence ("Each SHALL stripe the row and outline the settled slots.") cut; the rest and the scenario untouched | `hintMarks.roles.stripes` and `.outline`, as above |
 | Look: Guess's win flash sweeps the whole board | title kept. "SHALL sweep … diagonally" reworded to "SHALL light", over the game's own positions; sentence 2 (a lit position's box is filled with a flash color, an empty hole with it and a peg keeping its color) cut. Kept: which positions, the answer's row, why empty holes light, the feedback pegs. Scenario untouched | the diagonal: `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep` of the position, asked at `src/games/guess/render.ts:607`). The fill: `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground is filled with the role's color and keeps what it holds) |
 | Controls: Guess's pointer acts on the release | third pass: title kept. From sentence 2, "An unconsumed press is answered with a release at the press point, so a press that slides off before it lifts SHALL still act where it started" cut; its last clause stands as a sentence of its own ("A press the touch hold promoted to the right button SHALL therefore still act as itself."). Sentence 1 and the scenario untouched | `engine-input`, "A press the game declines is answered with its release where it was pressed". `src/puzzle/components/view-interactive.ts:450`-`452` |
+| Rules: A row is submittable only when it is markable | Found, mended: "(all, unless `allowBlank`)" now says how many are enough with blanks on, at least one | |
+| Status bar: Guess says why a row will not go | Found, mended: "SHALL say so" replaced by the sentence the status bar reads, and the scenario's THEN quotes its ending | |
 
 ## Kept, and why
 
@@ -158,3 +160,14 @@ Clauses kept: 3.
   prove a loss; this search is for a fitting answer and proves none.
 - No "no departure" sentence, none of the form "What a pasted game ID opens
   as" and none citing `engine-difficulty`.
+
+## Found, mended
+
+- How many pegs are enough with blanks on: "Rules: A row is submittable only
+  when it is markable" now says at least one (`isMarkable`, `state.ts:202`).
+- The sentence of "Status bar: Guess says why a row will not go": quoted from
+  `statusbarText`, `index.ts:506`.
+- Two requirements state where a color goes with no cursor: left. Each says
+  what the other does not (that a key acts on a hidden cursor and reveals
+  it; where the cursor rests after an entry), so neither is a copy to
+  remove.

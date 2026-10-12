@@ -109,12 +109,18 @@ a difficulty, SHALL be bounded and encoded as its `paramConfig` and its
 declared codec give (`engine-params`, "A game declares its params encoding
 once, and both codec halves are derived"), and its menu and default SHALL be
 what `presets` and `defaultParams` give. A bare number SHALL decode as a
-square grid, and a string with no difficulty letter as Easy.
+square grid, a string with no difficulty letter as Easy, and one with no `c`,
+the short form among them, with free ends.
 
 #### Scenario: A string that leaves the difficulty out
 
 - **WHEN** `5x5c`, written before the game had tiers, is decoded
 - **THEN** it decodes to the params `5x5cde` does
+
+#### Scenario: A string that leaves the corner letter out
+
+- **WHEN** `6x4` is decoded
+- **THEN** it decodes to the params `6x4de` does, a board with free ends
 
 ### Requirement: Params: Signpost refuses to deal a 1×1 board
 
@@ -123,7 +129,7 @@ square grid, and a string with no difficulty letter as Easy.
 #### Scenario: Invalid params are rejected
 
 - **WHEN** `validateParams` is given a 1×1 grid for full generation
-- **THEN** it returns a non-null error string
+- **THEN** it answers "Width and height cannot both be one."
 
 ### Requirement: Params: Signpost refuses Unreasonable where no board needs it
 

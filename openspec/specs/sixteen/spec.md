@@ -14,8 +14,9 @@ is in `docs/hints-search.md` § "Sliding-permutation games".
 
 Sixteen SHALL be the toroidal sliding-tile puzzle, in which a move slides a
 whole row or column and the board is solved when the tiles read in order. The
-game SHALL provide a keyboard cursor with Unlocked, LockTile and LockPosition
-modes, and SHALL animate a slide.
+game SHALL provide a keyboard cursor that moves freely or is locked to
+sliding, with its tile or in place, and SHALL animate a slide, except the one
+a drag's release makes, the line being already where the finger left it.
 
 #### Scenario: The solved board is complete
 
@@ -89,13 +90,25 @@ it SHALL claim nothing.
 - **THEN** the description is read as a board, and the board is refused with
   "This game ID's puzzle has no solution, so it can't be played here."
 
-### Requirement: Controls: The Sixteen port supports direct row and column dragging
+### Requirement: Controls: Sixteen supports direct row and column dragging
 
-Sixteen SHALL support direct touch and mouse row/column dragging. When a user drags on a tile in the grid, the game SHALL track the horizontal or vertical drag vector and visually offset the dragged row/column in real-time. When released, the line SHALL slide by the drag's distance rounded to a whole number of tiles, and a drag that rounds to none SHALL make no move.
+Sixteen SHALL support direct touch and mouse row/column dragging. When a user
+drags on a tile in the grid, the game SHALL track the horizontal or vertical
+drag vector and visually offset the dragged row/column in real-time. When
+released, the line SHALL slide by the drag's distance rounded to a whole
+number of tiles, a distance past half the line becoming the shorter slide the
+other way, and a drag that rounds to none, or to a whole turn of the line,
+SHALL make no move.
 
 #### Scenario: Dragging a row to slide it right
-- **WHEN** a user pointerdowns on tile (0, 1), pointermoves right by 1.2 tiles, and pointerups
-- **THEN** the game executes a slide move on row 1 with a delta of +1 (shifting right by 1)
+- **WHEN** a user pointerdowns on tile (0, 1), pointermoves right by 1.2
+  tiles, and pointerups
+- **THEN** the game executes a slide move on row 1 with a delta of +1
+  (shifting right by 1)
+
+#### Scenario: A drag of three squares on a row of four
+- **WHEN** a row of four is dragged right by three tiles and released
+- **THEN** the move slides that row one square left
 
 #### Scenario: A short drag makes no move
 - **WHEN** a user drags a row right by a third of a tile and releases

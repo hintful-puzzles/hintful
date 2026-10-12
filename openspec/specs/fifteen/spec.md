@@ -104,7 +104,8 @@ chessboard parity, so the board is reachable from the solved arrangement.
 shares exactly one coordinate with the current gap: a click sharing zero or
 both coordinates, or out of bounds, SHALL produce nothing. Cursor keys SHALL
 slide the adjacent tile into the gap immediately: the pressed arrow moves a
-tile in that direction.
+tile in that direction, and does nothing where the gap has no tile on that
+side.
 
 #### Scenario: Click geometry constrains legal slides
 
@@ -206,10 +207,9 @@ square with its centered number.
 
 #### Scenario: First draw emits the border and numbered tiles
 
-- **WHEN** `redraw` runs against a recording `GameDrawing` double for a fresh
-  board
-- **THEN** the recorded operations include the recessed border and one beveled
-  tile with its number for each non-gap cell
+- **WHEN** a fresh board is first drawn
+- **THEN** the frame holds the recessed border and one beveled tile with its
+  number for each non-gap cell
 
 ### Requirement: Look: A Fifteen slide animates its tiles between cells
 

@@ -2,9 +2,10 @@
 
 ## Purpose
 Net, the puzzle of rotating tiles until every wire joins one connected network
-with no loops. Its boards are uniquely solvable without guessing, its tiles
-rotate and lock, its jumble replays deterministically, its source is movable,
-and its player can note the sides of tiles.
+with no loops. Its boards have one answer, which an Easy board gives up
+without guessing, its tiles rotate and lock, its jumble replays
+deterministically, its source is movable, and its player can note the sides
+of tiles.
 
 ## Requirements
 
@@ -457,6 +458,21 @@ the turn and the lock.
 - **WHEN** the hint locks a tile that is not yet turned the one way that fits
 - **THEN** the plan holds a rotation of that tile and then its lock, the lock
   continuing the rotation's step
+
+### Requirement: Hint: A turn short of a Net step's wiring keeps the step
+
+`hintKeepTrack` SHALL keep a turn step through a turn of its tile that leaves
+the tile short of the step's wiring, the step then asking for the rest of the
+turn, and SHALL complete it when the tile shows that wiring. A lock SHALL
+complete its step only on an unlocked tile showing the step's wiring, and a
+note only where it is the step's note on the step's side. Any other move
+SHALL drop the plan.
+
+#### Scenario: A quarter turn where a half turn is asked
+
+- **WHEN** a step asks for a half turn of a tile and the player turns that
+  tile a quarter turn
+- **THEN** the step stays and asks for the quarter turn left
 
 ### Requirement: Hint: Net's hint follows a wire through tiles not settled yet
 

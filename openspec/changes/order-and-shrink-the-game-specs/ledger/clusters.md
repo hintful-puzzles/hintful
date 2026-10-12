@@ -17,6 +17,7 @@
 | Hint: A Clusters hint step names the rule the other color would break | sentence 1 ("explain why the move is forced, not merely which cell") cut and "Each hint step" moved onto sentence 2; "in the necessity voice" reworded out of sentence 3. Scenario untouched | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback" and "The necessity-voice rule applies to every hinting game not ledgered as narrating moves" (its second scenario: a forced step is required to carry necessity) |
 | Hint: A Clusters hint shows its reasoning on the board | retitled "Hint: The tile the other color would break is outlined, in a hue the error frame does not use". Sentence 1 (the target is ringed) and sentence 3 (the forced color is not pre-placed) replaced by one that sends the reader to the legend. Sentence 2 kept without "which the narration's 'outlined' refers to uniquely, so the reasoning is visible on the board and not only in prose"; the case the legend does not give is added from the code (no tile is outlined when the contradiction is on the target). Scenario "The target stays empty under its hint" dropped; "The word and the ring go together" kept | `hintMarks.roles.ring` ("the square the step colors. It is drawn empty…") and `.outline`, `index.ts:491`-`496`; `engine-hints`, "The engine SHALL own the hint mark roles and the words for them" (ring, outline) and "A bound hint step's words SHALL name exactly the marks it draws" (the word and the mark agree). `buildHighlights`, `index.ts:367`, for the target case |
 | Hint: A lookahead deduction is one step showing its whole forcing chain | title kept. "displays the whole forcing chain statically on the board" and "numbered in order" reworded out (the citation that first stood in their place went in the second pass); kept: one step, the hypothesis cell is the target, the what-if piece and its size, the contradiction's tile. Scenario "A lookahead deduction shows its whole forcing chain" dropped; "A what-if piece cannot be taken for a placed one" kept | `engine-hints`, "A Tactic's chain is shown on the board" (every link marked in order, both ends anchored), "A chain's order is declared and drawn as an ordinal" (the numbers) and "A Tactic's narration names the ends, the links and the rule" (the dropped scenario's narration clause) |
+| Hint: A lookahead stall takes the shortest forcing chain | title kept. Found pass: gains a first sentence, that the plan takes the first single-cell deduction in row-major order wherever there is one and turns to the lookahead only at a stall; "deterministically tie-broken" reworded to what the tie-break is (the earliest in row-major order). Scenario untouched | |
 | Hint: A Clusters hint is refused where it cannot deduce | sentences untouched. Scenario "A hint is refused on a doomed board" dropped; "Several wrong tiles, none flagged" kept as the game's case of it | `engine-hints`, "The midend SHALL refuse a hint on a finished or wrong board before asking the game" (scenario "Asking for a hint on a board with a mistake highlights it") |
 | Look: Clusters draws its two colors as the collection's two-state pair | "There SHALL be no interpolated move animation." cut. The parenthesis and the clause after it reworded to say which of blue and red is the pair's first member, since "Controls: Clusters is painted…" no longer says the left button gives blue | `animLength: () => 0`, `index.ts:510`. Blue is first: `pairIndex`, `state.ts:41`, and `firstVerb`, `index.ts:139` |
 
@@ -233,3 +234,48 @@ refuses" does not bind Clusters, which has no tier that permits search; the
 spec's mention of `DEDUCTION_EXHAUSTED` is where it is reached and stays.
 Each subject read alone after the edits: none hollow, no fragment, every
 title fits; the Purpose names nothing that went.
+
+## Found, mended
+
+- A game ID with no difficulty and a Normal board opens as Normal: left: the
+  collection's, `engine-difficulty`, "A loaded board whose id states no tier
+  takes the lowest tier that solves it"; the kept sentence says "decode",
+  which is true, and `Params` has its one pointer.
+- The order the hint tries its two techniques in is not stated: "Hint: A
+  lookahead stall takes the shortest forcing chain" gains the sentence, from
+  the `next` of `deduceHintPlan` (`src/games/clusters/solver.ts:452`:
+  `firstDirectDeduction`, `:327`, then `shortestChainDeduction`, `:398`,
+  whose strict `<` keeps the earliest cell on a tie).
+- "A rule-breaking cell is reported as a mistake" reads as though that cell
+  is the mistake: left: a mistake is reported, so the scenario is not false,
+  and the next requirement says which tile is.
+- "On any other board it SHALL report the cells that break a rule" is not
+  reachable: left: a branch no player reaches.
+- "Hint: Solve and the hint use the deeper rung at every tier" holds a
+  `Solver` fact: left: it straddles, its second sentence and second scenario
+  being the hint's.
+- The lookahead is a Tactic by the reader's classification: left: the spec
+  does not use the word, and nothing is to mend.
+
+## Whole read
+
+17 requirements read top to bottom as a reader with the spec alone; 3
+citations checked against the capability's titles, all exact; 1 mend, the one
+above.
+
+Checked and found sound:
+
+- Each subject says what the game does there or where to look: `Params` and
+  `Description` by one pointer each and the game's own refusals and letters,
+  `Controls` by the `targetVerbs` pointer and the drag, the keys and the
+  modified arrows. No `Solver`, `Preferences` or `Status bar`: the game has
+  no preference and no status bar, and what Solve runs is in `Hint`.
+- No fragment and no pronoun without its antecedent; every title fits its
+  body.
+- The sentences against the code: the two size refusals and the Normal
+  refusal (`validateParams`, `state.ts:157`), red lowercase and blue
+  uppercase (`encodeDesc`, `:185`), the drag (`interpretMove`,
+  `index.ts:198`-`240`), Shift red and Ctrl blue, the edge and the hidden
+  cursor (`:244`-`269`), the key that sets outright (`paintWith`, `:126`),
+  the outline only off the target (`buildHighlights`, `:367`), the two
+  refusals (`hint`, `:389`-`392`).

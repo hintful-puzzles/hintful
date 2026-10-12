@@ -127,14 +127,15 @@ decimal numbers.
 ### Requirement: Description: A Group description is validated against the grid area
 
 Validation SHALL reject a description whose cell count does not equal the grid
-area, telling "not enough data" from "too much", and SHALL reject an
+area, as too short for its board or as too long for it, and SHALL reject an
 out-of-range number and an unknown character.
 
 #### Scenario: A description of the wrong length is rejected
 
 - **WHEN** a description carrying more or fewer cells than the grid area is
   validated
-- **THEN** it is rejected with a message distinguishing which
+- **THEN** it is rejected as too long for its board or as too short for it,
+  in the collection's sentence for each
 
 ### Requirement: Generation: Each Group tier adds its own deductions
 
@@ -320,6 +321,16 @@ implicit reading, which has no populate step.
   `(a·b)·c` are filled but `a·(b·c)` is not
 - **THEN** the plan's first step is a placement, and no note is written
   before it
+
+### Requirement: Hint: Group's hint uses no deduction above the board's tier
+
+`hint` SHALL use no deduction above the board's own tier, and on an
+Unreasonable board none above Hard.
+
+#### Scenario: A Normal board's hint
+
+- **WHEN** a hint is asked for on a board of the Normal tier
+- **THEN** no step of its plan is a deduction only Tricky or Hard adds
 
 ### Requirement: Hint: The hint teaches Group's three deductions
 

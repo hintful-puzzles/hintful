@@ -206,13 +206,13 @@ entered, SHALL be asked of that cube.
 ### Requirement: Controls: Salad's keypad holds its symbols and the two markers
 
 Salad SHALL surface its `nums` symbol keys plus the empty and not-empty markers
-as an on-screen keypad.
+as an on-screen keypad, with the collection's Clear key last.
 
 #### Scenario: The keypad of a three-symbol board
 
 - **WHEN** the keys are requested for a board of three symbols
-- **THEN** they hold the three symbol keys in the mode's own characters, and the
-  X and O marker keys
+- **THEN** they hold the three symbol keys in the mode's own characters, the
+  X and O marker keys, and Clear
 
 ### Requirement: Controls: Salad selects a square and enters a symbol or a marker
 
@@ -242,9 +242,10 @@ not an empty cell to it, and takes no marks.
 
 A square the puzzle filled with a symbol or a cross SHALL take no entry. An
 empty marker on a square whose clue is a ball SHALL be refused in either mode,
-since that square is not empty. A penciled not-empty marker on a square marked
-empty SHALL leave the square as it is. A penciled symbol or empty marker SHALL
-toggle its mark.
+since that square is not empty. A not-empty marker entered in notes mode SHALL
+make no pencil mark: on a blank square it SHALL set the real marker, on one so
+marked and holding no symbol clear it, and on a square marked empty leave it
+as it is. A penciled symbol or empty marker SHALL toggle its mark.
 
 #### Scenario: An empty marker on a given cross
 

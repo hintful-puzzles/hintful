@@ -15,7 +15,9 @@ The Purpose is unchanged: each thing it names the spec still holds.
 | Controls: Seismic's Mark-all fills, then strikes what a placed number rules out | title kept. The two phases, "never strike a cell's last note" and "no move when nothing is left to strike" cut for a citation; kept as the game's own: what a note-less cell is filled with and what an obvious candidate is. Scenario "Mark-all leaves a narrowed cell alone" dropped; "A second press on a filled board" kept | `engine-notes`, "Mark-all is adaptive in a game with an obvious-candidate rule" (its scenario "A narrowed cell beside a note-less one"), "Repeated Mark-all presses converge" ("A clean SHALL NOT empty a cell of its last note") and "The Mark-all cleanup is one move, or none"; `markAll`, `src/games/seismic/hint.ts:157`, is `adaptiveMarkAll` |
 | Hint: Seismic explains the next deduction | removed, with its scenario | `engine-hints`, "A hint is deduced from the board in play" (the plan from the player's own board), "A hint step always names a technique, with no un-narrated fallback" and "Requesting a hint never mutates the board" (`Game.hint` pure on its state, "byte-for-byte unchanged") |
 | Look: Seismic draws its numbers, its notes and a broken rule | "There SHALL be no move animation." cut | `animLength: () => 0`, `src/games/seismic/index.ts:358` |
+| Look: A flagged cell carries its own mistake overlay | found, mended: its unwrapped line wrapped; no word changed | |
 | Look: The completion flash lights each cell's surface | title and scenario kept. "SHALL sweep the board's cells", "filled with a flash color" and "SHALL keep its digit and its notes" cut for a citation; kept: a given's cell is lit as a player's, the fill stays inside the region's walls, the highlight is hidden | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep`, `src/games/seismic/render.ts:443`); `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground filled, what it holds kept; scenario "A board that lifts its cells") |
+| Params: Seismic's two bounds bind a board being dealt only | added with the code fix of task 3.4a: `validateParams` now reads `full` (`src/games/seismic/state.ts`), and `seismic.test.ts`, "opens a board past either bound when it arrives with its description" holds a 9×8 Seismic and an 11×10 Tectonic board | |
 
 ## Kept, and why
 
@@ -228,3 +230,20 @@ a cell is selected and stays.
 Each subject read alone: `Description` says the two parts, where the wall
 list is stated, the clue list and what is refused; no fragment, every title
 fits its body.
+
+## Found, mended
+
+- The size bound refuses a loaded board too: left: a defect of the code
+  (`validateParams` never reads `full`, `src/games/seismic/state.ts:210`),
+  the main session's; the spec's bound requirements speak of generation, as
+  they should once it is fixed.
+- "a test SHALL assert this", in "Params: A preset is never a long wait":
+  left: a statement of what a test asserts, reported. "Generation: A test
+  holds every generated board to the rules" is another.
+- The spec never stated the preset menu: left: `presets` is a declaration,
+  and the `Params` pointer names it.
+- `Rules` never says what Check & Save reports: left: the check is the
+  collection's whole (`entryMistakes` against the solver's answer,
+  `src/games/seismic/index.ts:265`), and `Rules` says the game's own.
+- Form: the unwrapped line of "Look: A flagged cell carries its own mistake
+  overlay" wrapped.

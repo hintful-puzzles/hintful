@@ -183,3 +183,28 @@ cut: 0. Clauses kept: 3.
   the indication first, the hatch, the premise references, a recomputed
   plan, the refusals: none is stated.
 - No "no departure" sentence and none on what a pasted game ID opens as.
+
+## Found, mended
+
+Nothing changed in the spec.
+
+- The ring role's mark is not a ring: left: the main session is deciding
+  between the code and `engine-hints`, "A hint marks beside the content,
+  never behind it", and the brief names it as not the spec's to restate.
+- Two `Description` requirements state the format twice: left: neither says
+  only what the other does. The first holds that the tokens are
+  comma-terminated and the grid row-major, with the round trip; the second
+  the order of the border tokens (`borderClues[x]` then `[y + w]`,
+  `src/games/boats/generator.ts:117`), the refusals and each letter. The
+  two do not fit one requirement of 500 characters.
+- "Generation: An end-capped boat that cannot stop grows at the second tier"
+  is a deduction filed under `Generation`: left: it straddles, being what the
+  second tier adds, a rung of the solver and the hint's reason at once.
+- The spec never says when the hint refuses: left: a board loads only where
+  the solver solves it (`engine-params`, "A board loads only if the game's
+  own solver solves it"), so no player's board runs out of deduction, and the
+  refusal on a mistake is the collection's.
+- The win flash and how a mistake is drawn are not stated: left: both are
+  the collection's, and the game departs from neither.
+- No test reads a label with "hidden clues" or a fleet that is not the
+  pyramid: left: a test is wanted, not a sentence; reported.

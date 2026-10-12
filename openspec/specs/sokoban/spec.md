@@ -349,7 +349,9 @@ many squares to the player as they could walk to.
 ### Requirement: Hint: Sokoban's hint refuses, outlining the barrel, where a barrel is stuck for good
 
 The hint SHALL refuse, outlining the barrel, when a barrel off its target is already
-stuck for good.
+stuck for good. It SHALL call a barrel stuck only on a board where every barrel is
+needed, one with no pit and no more barrels than targets, which every dealt board is;
+on any other board no barrel is stuck, here or in a push a step stripes.
 
 #### Scenario: A stuck barrel is outlined as the reason to undo
 

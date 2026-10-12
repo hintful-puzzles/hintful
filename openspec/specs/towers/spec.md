@@ -53,7 +53,8 @@ Towers' params, a grid size and a difficulty, and their encoding SHALL be
 those its `paramConfig` and its declared codec give (`engine-params`, "A game
 declares its params encoding once, and both codec halves are derived"), with
 no departure from the codec grammar. A params string that carries no
-difficulty SHALL decode to Easy.
+difficulty SHALL decode to Easy. Easy, Normal, Tricky and Unreasonable SHALL
+be held in `diff` as `"easy"`, `"hard"`, `"extreme"` and `"unreasonable"`.
 
 #### Scenario: The tier letters are not the tiers' initials
 
@@ -99,6 +100,20 @@ a length other than `w²`, and a `_` anywhere but between two adjacent givens.
   read
 - **THEN** it is refused with an error and no state is built
 
+### Requirement: Generation: Each Towers tier adds deductions to the one below
+
+An Easy board SHALL fall to the singles of the Latin square and to the clue
+deductions that enumerate nothing. Normal SHALL add a clue's arrangements,
+every way of filling its line that shows the clue's count, and the row and
+column sets; Tricky the single-number sets and forcing chains; and
+Unreasonable a guess that is verified.
+
+#### Scenario: The solver capped at Easy
+
+- **WHEN** the solver is run on a board with its cap at Easy
+- **THEN** it tries no clue's arrangements and no set, and reports a board
+  that needs either as unfinished
+
 ### Requirement: Generation: An Easy Towers board keeps every clue
 
 An Easy board SHALL keep every one of its `4w` edge clues; above Easy the
@@ -124,11 +139,12 @@ tower protruding from a neighboring cell selects that neighbor.
   square, on the top face of the tower standing in the cell below it
 - **THEN** the cell below is the one selected
 
-### Requirement: Controls: Towers accepts digit, pencil, clue-strike, and solve moves
+### Requirement: Controls: A digit enters a tower or toggles its pencil mark, and Backspace, Space or 0 clears
 
 With a cell highlighted, a digit `1..w` SHALL enter that tower, or toggle that
 pencil mark in pencil mode, and Backspace, Space (`CURSOR_SELECT2`) or `0`
-SHALL clear the cell. Immutable (given) cells SHALL reject entry.
+SHALL clear the cell. Immutable (given) cells SHALL reject entry. In pencil
+mode no key SHALL change a cell that holds a tower.
 
 #### Scenario: Entry into an immutable cell is rejected
 

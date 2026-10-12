@@ -15,6 +15,7 @@
 | Rules: Light Up ships findMistakes | third pass. "A board without a unique solution SHALL yield `[]`" cut; the two kinds of mistake and the overlay kept. Both scenarios kept | `ts-engine`, "A mistake check compares with the one answer, hidden or not" |
 | Description: Light Up descriptions use the upstream run-length encoding | third pass. "with maximal runs of open squares compressed as `a`–`z` (a run of 1 to 26)" cut for the one pointer the subject has to the grammar; the wall characters and the three refusals kept. Both scenarios kept | `engine-params`, "The engine provides the run-letter description grammar"; `encodeRunLength` and `scanRunLength`, `src/games/lightup/state.ts:381` and `:397` |
 | Look: Light Up's cursor and completion flash | title kept. "SHALL sweep the open squares diagonally" reworded to "SHALL light the open squares only", which keeps what is the game's (which squares are elements of the flash) and drops the route. Both scenarios kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep` of its center, a diagonal from the bottom left); the game's call is `flash.win(sweepStep(x, y))`, `src/games/lightup/render.ts:189` |
+| Params: Light Up reads a params string with no symmetry, and the legacy r | Found, mended: retitled "Params: Light Up reads a params string that leaves a field out, and the legacy r". "Decoding SHALL accept two forms beyond the full encoding." (false: the short form is a third) replaced by what a string with no `d` and no `b` decodes to; the symmetry sentence now says the default's symmetry is kept, then demoted; gains scenario "The short form of a Normal preset", whose strings are the snapshot's | |
 
 ## Kept, and why
 
@@ -207,3 +208,21 @@ pasted-ID sentence.
 Each subject read alone: `Hint` no longer speaks of an Unreasonable board or
 of a partly followed step, both the engine's; no fragment, every title fits
 its body, and the Purpose names nothing that went.
+
+## Found, mended
+
+- What a params string with no `d` decodes to: stated in "Params: Light Up
+  reads a params string that leaves a field out, and the legacy r"
+  (`p.difficulty = 0`, `state.ts:139`), with a scenario from the snapshot's
+  `10x10b20s2d1` and its brief `10x10`.
+- No `b` or no `s` keeps the default's: stated in the same requirement
+  (`defaultParams` is `PRESETS[0]`, `7x7b20s4d0`, `state.ts:95`).
+- "Two forms beyond the full encoding": the sentence is gone from that
+  requirement, which now lists what each absent field decodes to.
+- `[]` on a board without a unique solution: left, the third pass cut it.
+- The scenario "Generated boards solve at exactly their difficulty" under
+  the techniques' requirement: left. It is that requirement's only scenario
+  and gives the case of its tiers; the requirement does not belong
+  elsewhere.
+- The hint target's title: left, retitled in review.
+- The cut is small: left, not a claim about the spec's content.

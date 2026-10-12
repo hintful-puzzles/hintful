@@ -30,10 +30,12 @@ without exchanging paint.
 
 #### Scenario: Rolling tips the solid onto a new face
 
-- **WHEN** a roll move executes from a given orientation
-- **THEN** the new state's resting face differs per the polyhedron's geometry
-- **AND** paint is exchanged between the destination square and the landing
-  face
+- **WHEN** a cube on an inner square of a 4×4 arena is rolled right and then
+  left
+- **THEN** the first roll takes it to another square and the second brings it
+  back to the square it left
+- **AND** every face's paint is as it was, the two exchanges having been with
+  one square
 
 ### Requirement: Rules: Cube is solved exactly while every face is painted
 

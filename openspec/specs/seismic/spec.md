@@ -76,6 +76,20 @@ several seeds, and the bound SHALL NOT be set from medians.
 - **THEN** it is rejected with a stated reason naming the mode, rather than
   accepted and left to churn until its retry budget is exhausted
 
+### Requirement: Params: Seismic's two bounds bind a board being dealt only
+
+Both bounds are the generator's, so `validateParams` SHALL apply them to full
+params alone. A board that arrives with its description SHALL open at any
+size: another build of the puzzle has neither bound and shares such boards,
+and opening one is a single run of the solver.
+
+#### Scenario: A shared board past the bound of its mode
+
+- **WHEN** a game ID of a 9×8 Seismic board or an 11×10 Tectonic board, each
+  with its description, is opened
+- **THEN** it loads, where the same size asked for in the Custom dialog is
+  refused
+
 ### Requirement: Params: A preset is never a long wait
 
 A preset SHALL NOT be a size whose worst observed run is a long wait: it is
@@ -381,9 +395,10 @@ an error color as it is entered.
 
 ### Requirement: Look: A flagged cell carries its own mistake overlay
 
-The cells Check flags SHALL be rendered with a mistake overlay of their own, an inset double outline that reads apart from the red number a broken rule gets, and
-the overlay SHALL appear on the frame after the check, on a cell whose contents
-did not change included.
+The cells Check flags SHALL be rendered with a mistake overlay of their own,
+an inset double outline that reads apart from the red number a broken rule
+gets, and the overlay SHALL appear on the frame after the check, on a cell
+whose contents did not change included.
 
 #### Scenario: A mistake appears on a cell whose contents did not change
 

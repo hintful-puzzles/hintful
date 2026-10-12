@@ -49,7 +49,8 @@ never be reported.
 Singles' params (a width, a height and a difficulty) and their encoding SHALL
 be those its `paramConfig` and its declared codec give (`engine-params`, "A
 game declares its params encoding once, and both codec halves are derived"),
-with no departure from the codec grammar.
+with no departure from the codec grammar. A string with no difficulty letter
+SHALL decode as Easy.
 
 #### Scenario: Params round-trip
 
@@ -59,6 +60,11 @@ with no departure from the codec grammar.
 - **AND** decoding it round-trips the params
 - **AND** encoding with `full = false` yields `8x8`
 
+#### Scenario: A string with no difficulty letter
+
+- **WHEN** the bare `6` is decoded
+- **THEN** the board is 6×6 at Easy
+
 ### Requirement: Params: Singles params are refused outside their bounds
 
 Params SHALL be refused unless `w ≥ 2`, `h ≥ 2` and both are `≤ 61`: 61 is the
@@ -67,8 +73,8 @@ largest number the desc alphabet writes, and a cell holds a number up to
 
 #### Scenario: Invalid params are rejected
 
-- **WHEN** params with `w < 2` or `h < 2` are checked
-- **THEN** the check returns a non-null error string
+- **WHEN** params with a width of 1 are checked
+- **THEN** the check returns "Width must be at least 2."
 
 #### Scenario: A grid one past the alphabet is rejected
 
@@ -122,10 +128,11 @@ sneaky generation-artifact deduction enabled.
 
 The game SHALL provide a deductive solver with these techniques: the
 auto-cascade (a black forces its neighbors white; a circled cell forces
-same-numbered cells in its row/column black), `singlesep`, `doubles`,
-`corners`, `offsetpair` (Normal and above), `allblackbutone`, and
-`removesplits` (Normal and above). It SHALL detect impossibility (e.g. a white
-cell with no white escape, or a contradiction in the cascade).
+same-numbered cells in its row/column black), the sandwich, the touching pair,
+the corner, the neighboring-line pair (Normal and above), an unshaded square's
+last way out, and a square whose shading would split the unshaded squares
+(Normal and above). It SHALL detect impossibility (e.g. a white cell with no
+white escape, or a contradiction in the cascade).
 
 #### Scenario: Solver completes a generated board
 
@@ -383,8 +390,9 @@ side.
 
 - **WHEN** a pair of 3s in one column and a pair of 6s in the next are lined
   up so, and one of the two squares is already circled
-- **THEN** the step circles the other, which holds a 3, and says "There's a pair of 3s in one
-  column and a pair of 6s in the next, lined up so that shading the ringed 3
+- **THEN** the step circles the other, which holds a 3, and says "There's a
+  pair of 3s in one column and a pair of 6s in the next, lined up so that
+  shading the ringed 3
   would force one of the 3s and one of the 6s to be *shaded* next to each
   other, and *shaded* squares can't touch, so it must be *not shaded*."
 

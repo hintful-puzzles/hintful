@@ -349,7 +349,8 @@ either side of a wall the player drew are disconnected already.
 
 #### Scenario: The hint finishes from the player's own positions
 
-- **WHEN** hints are followed one recomputed step at a time from a fresh board or from a board revealing a random share of the solution's edges
+- **WHEN** hints are followed one recomputed step at a time from a fresh
+  Easy board, or from one revealing a random share of the solution's edges
 - **THEN** the board is solved and no hint refuses
 
 #### Scenario: The hint goes on from an edge decided rightly
@@ -448,9 +449,9 @@ letters, the same at every point of play.
 
 The render SHALL fill a wall-bounded region with the shared finished-region
 role once it is a completed, correct region: exactly `k` cells, holding one
-of each letter with no duplicate, with no wall interior to it. The untouched board, one undivided
-region, SHALL NOT be filled. The fill SHALL be a local check on the region as
-drawn, not a check against the unique solution.
+of each letter with no duplicate, with no wall interior to it. The untouched
+board, one undivided region, SHALL NOT be filled. The fill SHALL be a local
+check on the region as drawn, not a check against the unique solution.
 
 #### Scenario: A completed region is shaded, the rest is not
 

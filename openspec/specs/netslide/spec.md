@@ -210,7 +210,9 @@ button does, and the first of them on a hidden cursor SHALL only show it.
 
 Because Netslide has no solver, the hint SHALL plan against a finished grid:
 the generator's `aux`, the unshuffled grid, when the game came with one, and
-otherwise a grid recovered from the board itself.
+otherwise a grid recovered from the board itself. Where none can be
+recovered, which is so of no board a generator writes, the hint SHALL refuse
+in the sentence Solve refuses that board in.
 
 #### Scenario: A hint on a board that came with no answer
 
@@ -218,6 +220,13 @@ otherwise a grid recovered from the board itself.
   as a shared link or a bookmark, which carries no `aux`
 - **THEN** the hint recovers the finished grid from the board and plans against
   it, and does not give up
+
+#### Scenario: A hint on a hand-typed board with no wires
+
+- **WHEN** a hint is requested on a game created from a hand-typed id whose
+  tiles carry no wires at all
+- **THEN** it is refused with "This game ID doesn't include its solution, and
+  this puzzle has no solver to work one out."
 
 ### Requirement: Hint: The plan's goal is every tile powered
 
@@ -390,6 +399,31 @@ the legs of its journey, and SHALL mark that tile on the board.
 - **THEN** the tile it marks is the tile the first leg marked, in the cell the
   first leg's slide landed it in
 
+### Requirement: Hint: Only the slide a Netslide step asks for keeps the plan
+
+`hintKeepTrack` SHALL complete a step on the slide the step asks for and
+SHALL drop the plan on any other move: a step is one slide of one line, so
+there is no progress part of the way through one.
+
+#### Scenario: The same line slid the other way
+
+- **WHEN** a step asks for a row to slide one way and the player slides that
+  row the other way
+- **THEN** the plan is dropped and the next hint is planned afresh
+
+### Requirement: Hint: Netslide's hint does not open by undoing the player's last slide
+
+Netslide SHALL hand the planner the veto on the slide that undoes the player's
+last (`engine-hints`, "The slide planner's first-move veto binds the heuristic
+search alone"), so that a plan made afresh does not send the player straight
+back.
+
+#### Scenario: A hint after a slide
+
+- **WHEN** the player slides a row and asks for a hint on a board the
+  heuristic search plans
+- **THEN** the plan's first slide is not that row slid back
+
 ### Requirement: Hint: The tile mark travels with the tile during a slide
 
 The tile mark marks a tile, which moves, so it SHALL travel with the tile it
@@ -435,22 +469,17 @@ later leg SHALL say that it takes the tile on.
 - **THEN** the opening step says "This row never slides", and not that the
   tile belongs beside the source
 
-### Requirement: Status bar: The status bar counts moves and powered tiles
+### Requirement: Status bar: Netslide's status bar reads moves, then the target, then the tiles lit
 
-The game's status bar text SHALL report the move count, the target move count
-when one is set, and how many tiles are currently active.
+The status bar SHALL read `Moves: {n}`, then ` (target {t})` where the params
+set a move target, then ` Active: {lit}/{w·h}`, the tiles lit from the source
+over every tile of the grid.
 
 #### Scenario: A game with a move target
 
 - **WHEN** three slides have been made on a game whose move target is 20
 - **THEN** the status bar gives three moves, the target of 20, and the number
   of active tiles out of all the tiles
-
-### Requirement: Status bar: Netslide's status bar reads moves, then the target, then the tiles lit
-
-The status bar SHALL read `Moves: {n}`, then ` (target {t})` where the params
-set a move target, then ` Active: {lit}/{w·h}`, the tiles lit from the source
-over every tile of the grid.
 
 #### Scenario: A board as dealt, with and without a target
 

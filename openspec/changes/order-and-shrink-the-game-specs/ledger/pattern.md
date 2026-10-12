@@ -183,3 +183,20 @@ requirements and two scenarios with them. Clauses kept: 4.
 - No "no departure" sentence and none on what a pasted game ID opens as. The
   scenario "A board that needs search opens as Unreasonable" sits under the
   sentence that says what counts as which tier.
+
+## Found, mended
+
+The spec is unchanged: no item is the spec's to mend.
+
+- No test refuses a grid for its size: left. The requirement is true of the
+  code (`state.ts:173`); what is missing is a test, and the ceiling is one
+  no dialog reaches.
+- `findMistakes` where the search proved no single answer: left. Such a
+  board does not load, and `ts-engine`, "A mistake check compares with the
+  one answer, hidden or not" states the empty result.
+- The win flash never stated: left, the collection's, with nothing of the
+  game's own.
+- The comment "Pattern is untiered" (`solver.ts:775`): left, code. Still
+  there, and false: the game has a `difficulty` contract (`index.ts:448`).
+- `COL_HINT` named in the spec: left, gone. The third pass cut the premise
+  outlines, and the spec names no palette index.

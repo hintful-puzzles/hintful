@@ -17,6 +17,8 @@ requirement says where), and says where the note-taking part is stated.
 | Controls: Group selects a cell through the shared note-taking cell | added (rule 2): the subject began at "a cell selected for entry" and said nowhere how a cell is selected. Its two answers and its scenario are from `pressNoteTakingCell`'s call, `index.ts:199`-`202`, and `prefs`, `index.ts:821` | |
 | Look: Group draws its table on a quiet surface, with a given's cell lifted | third pass: last sentence ("The selection's wash and its pencil-mode corner SHALL be drawn over whichever surface the cell has.") cut; the surfaces, the legend's sentence and the scenario untouched | `engine-notes`, "The highlight is part of the cell's background" (the wash replaces whichever surface the game gives the cell, a given's lifted one included; the triangle lies over it) |
 | Look: Group draws its legend, marks and errors | "highlight the selection" and "and flash on completion" reworded out of the one sentence; the legend, the pencil-mark grid and the error annotation, the title and the scenario untouched | the highlight: `engine-notes`, "The note-taking cell's highlight has one picture, drawn by the engine" (`cellHighlight`, `src/games/group/render.ts:548`); the flash: `ts-engine`, "The win flash plays on a forward move that solves the board" and "The win flash is one traveling highlight in every game" (`winHighlight`, `render.ts:551`) |
+| Description: A Group description is validated against the grid area | Found, mended: "telling "not enough data" from "too much"" corrected to the two kinds a player reads, too short and too long for its board, in the sentence and the scenario's THEN | |
+| Hint: Group's hint uses no deduction above the board's tier | added (Found, mended): the cap of `buildSteps`, `src/games/group/index.ts:606` | |
 
 ## Kept, and why
 
@@ -222,3 +224,22 @@ leads with the indication, an auto-pencil decision): none is stated.
 
 Each subject read alone: no fragment, no dangling pronoun, every title fits
 its body, and the Purpose names nothing that went.
+
+## Found, mended
+
+- The mistake check on a board with no one answer: left. Such a board does
+  not load (`engine-params`, "A board with a mistake check loads only with
+  exactly one answer"), and `ts-engine`, "A mistake check compares with the
+  one answer, hidden or not" states the empty result.
+- The tier the hint deduces at: added "Hint: Group's hint uses no deduction
+  above the board's tier" (`Math.min(state.diff, DIFF_EXTREME)`,
+  `index.ts:606`; `DIFF_EXTREME` is the tier a player reads as Hard).
+  `engine-candidate-hints`, "A recording solve stops below the tier that
+  searches" leaves how far beneath to the game.
+- No sticky pencil preference and no auto-pencil: left, the absence of a
+  declaration (`prefs`), and the scenario of "Controls: Group selects a cell
+  through the shared note-taking cell" gives the secondary press.
+- "Not enough data" and "too much": corrected in "Description: A Group
+  description is validated against the grid area" to too short and too long
+  for its board (`DESC_TOO_LONG`, `state.ts:364`; the reader's own
+  too-short at the end of the string).

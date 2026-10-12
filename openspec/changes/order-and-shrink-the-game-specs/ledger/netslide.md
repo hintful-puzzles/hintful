@@ -13,6 +13,11 @@ The Purpose was left as it stood: it names nothing the cut removed.
 | Hint: An endgame the heuristic cannot see past is searched exactly | cut after "an exact shortest search": "so that the plan's first move provably shortens the distance to a finished board. A heuristic plan carries no such guarantee, and loops." Title and scenario kept | `engine-hints`, "Sliding-permutation games share one slide planner whose exact search always runs" (scenario "The exact search returns a shortest plan": playing its first move leaves the board strictly nearer the goal) and "The slide planner's exact search runs on every board" (why a gated search cycles); `exactSearch`, `src/games/netslide/hint.ts:394` |
 | Hint: Netslide renders the displayed hint step | removed, with its scenario "A displayed step" | `hintMarks.roles.ring`, `src/games/netslide/index.ts:333` (the piece ringed, the arrow in the hint's color, the square the slide takes it to outlined); `engine-hints`, "A bound hint step's words SHALL name exactly the marks it draws" |
 | Hint: A destination a tile belongs in is marked apart from a stop on the way | removed, with its scenario "A destination the tile does not belong in" | `hintMarks.roles.ring`, `src/games/netslide/index.ts:333` ("A solid outline is where the piece belongs; a dashed one is a square it is only passing through, or being parked in to set up a later move"); drawn at `src/games/netslide/render.ts:412` |
+| Status bar: The status bar counts moves and powered tiles | removed (Found, mended): its sentence says nothing the requirement after it does not. Scenario "A game with a move target" moves, unchanged, to "Status bar: Netslide's status bar reads moves, then the target, then the tiles lit" | this spec, "Status bar: Netslide's status bar reads moves, then the target, then the tiles lit" |
+| Status bar: Netslide's status bar reads moves, then the target, then the tiles lit | gains scenario "A game with a move target" | |
+| Hint: The hint plans against a finished grid | Found, mended: gains the sentence that the hint refuses, in Solve's sentence, where no finished grid can be recovered (`SOLUTION_UNKNOWN`, `src/games/netslide/hint.ts:351`), and the scenario "A hint on a hand-typed board with no wires", whose board and sentence are those of the Solver requirement's scenario | |
+| Hint: Only the slide a Netslide step asks for keeps the plan | added (Found, mended): `hintKeepTrack`, `src/games/netslide/hint.ts:710` | |
+| Hint: Netslide's hint does not open by undoing the player's last slide | added (Found, mended): `rejectFirstMove`, `src/games/netslide/hint.ts:399`; the engine requirement says a game may hand the veto over and where the planner applies it, and not that Netslide does | |
 
 ## Kept, and why
 
@@ -204,3 +209,20 @@ veto (see Found). No sentence of the brief's section 2 stood in the spec.
 Each subject read alone: `Description` is one pointer with a case of
 Netslide; no fragment, no dangling antecedent, every title fits. The Purpose
 names nothing that went.
+
+## Found, mended
+
+- Two status-bar requirements stating one thing: "Status bar: The status bar
+  counts moves and powered tiles" removed, its scenario moved to the other.
+- Solve counts as a move: left, not sure it is meant. `executeMove` adds one
+  (`index.ts:116`) where upstream sets the count to 1
+  (`../puzzles/netslide.c:1145`); for the owner.
+- The keep-track verdict: added "Hint: Only the slide a Netslide step asks
+  for keeps the plan".
+- The hint does not open by undoing the last slide: added "Hint: Netslide's
+  hint does not open by undoing the player's last slide".
+- The hint's answer where no finished grid can be recovered: a sentence and
+  a scenario of "Hint: The hint plans against a finished grid". The board of
+  the Solver requirement's scenario loads, so a player reaches it.
+- The arrow where the cursor is on the hinted arrow: left, the scenario that
+  raised it is gone and no sentence of the spec is wrong about it.

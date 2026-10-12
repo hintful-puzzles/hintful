@@ -239,9 +239,11 @@ is marked as in a single-cell step.
 
 ### Requirement: Hint: A lookahead stall takes the shortest forcing chain
 
-At each lookahead stall the hint plan SHALL select the candidate firing with
-the shortest forcing chain, deterministically tie-broken, keeping the displayed
-chain short.
+The hint plan SHALL take a single-cell deduction wherever one is to be had,
+the first in row-major order, and SHALL turn to the lookahead only at a stall,
+where no cell is decided that way. At each lookahead stall the hint plan SHALL
+select the candidate firing with the shortest forcing chain, the earliest in
+row-major order on a tie, keeping the displayed chain short.
 
 #### Scenario: Two firings of different lengths
 

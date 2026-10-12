@@ -20,7 +20,7 @@ The Purpose was left as it stood: it names nothing the cut removed.
 | Hint: A Bricks hint plan is recompute-stable | third pass: removed, with its scenario "A hint after a followed step continues the plan" | `engine-hints`, "A recomputed plan continues the plan it replaces" (a `next` found by a scan in a fixed order, and a plan made again beginning with the old one's second firing, of every game on `deduceHintPlan`; Bricks calls it at `src/games/bricks/solver.ts:486`) |
 | Hint: The recursive lookahead rung is never narrated | third pass: last sentence ("Where the single-cell rung runs out, the hint SHALL refuse rather than reach for it.") cut; that the rung is not narrated, why, and that the solver keeps it stay, with the scenario | `engine-hints`, "A hint gives every step deduction still forces before it refuses" (refused with `DEDUCTION_EXHAUSTED` where it forces none); `engine-hints`, "A Search is refused and never narrated" |
 | Hint: A Bricks hint step explains why the move is forced | first sentence ("Each hint step SHALL explain why the move is forced, not merely which cell to act on.") cut; the rest kept; the scenario's "the forced cell is highlighted as the target, its evidence cells are marked" and "without pre-placing the forced color" cut, leaving the rule the explanation names | `engine-hints`, "A hint step always names a technique, with no un-narrated fallback"; for the scenario, `hintMarks.roles`, `src/games/bricks/index.ts:545`, and `engine-hints`, "Requesting a hint never mutates the board" |
-| Hint: A Bricks hint marks the forced cell and its evidence, and places nothing | retitled "Hint: A Bricks hint step is one journey of one cell". The two marks and "The hint SHALL NOT pre-place the forced color." cut; the one-journey sentence and the scenario kept | `hintMarks.roles`, `src/games/bricks/index.ts:545` (ring: the cell the step decides; outline: what it reasons from); `engine-hints`, "Requesting a hint never mutates the board" (only highlighting is added) |
+| Hint: A Bricks hint marks the forced cell and its evidence, and places nothing | retitled "Hint: A Bricks hint step is one journey of one cell". The two marks and "The hint SHALL NOT pre-place the forced color." cut; the one-journey sentence and the scenario kept. Found, mended: gains the keep-track verdict (a paint that gives the step's cell the forced color completes the step, any other move is off the plan; `hintKeepTrack`, `src/games/bricks/index.ts:454`) | `hintMarks.roles`, `src/games/bricks/index.ts:545` (ring: the cell the step decides; outline: what it reasons from); `engine-hints`, "Requesting a hint never mutates the board" (only highlighting is added) |
 
 ## Kept, and why
 
@@ -159,3 +159,20 @@ Params keeps its one pointer, the codec being declared.
 Each subject read alone: none hollow, no fragment, every title fits. The
 Purpose's "its explained hint and when it refuses" still holds: the hint's
 subject keeps the lookahead rung never narrated.
+
+## Found, mended
+
+- The question the hint asks of the clues before it plans
+  (`PUZZLE_NOT_REASONABLE` where the deepest rung does not finish the board,
+  `src/games/bricks/index.ts:430`): left: no player reaches it. The hint asks
+  the solver what Solve and the load ask (`solveGame(…, DIFF_TRICKY, …)`),
+  and a board that does not finish there does not load (`engine-params`, "A
+  board loads only if the game's own solver solves it").
+- The hint's keep-track verdict: stated in "Hint: A Bricks hint step is one
+  journey of one cell".
+- What Solve answers on a board the solver proves impossible (`NO_SOLUTION`,
+  `index.ts:356`): left: such a board does not load (`engine-params`, "A
+  board its game proves has no solution does not load").
+- The removed scenario "it is dealt at the size chosen": left: it follows
+  from the shared requirement the Found item names, and `Params` says plenty
+  of its own.

@@ -10,9 +10,9 @@ rule but contradicts the unique solution.
 
 ### Requirement: Rules: Rome is complete when every arrow leads to a goal
 
-Completing the board SHALL report the game solved, and a board is complete when every square is filled with arrows
-leading to a goal, with no loop, no off-grid arrow and no duplicate arrow
-within a region.
+Completing the board SHALL report the game solved, and a board is complete
+when every square is filled with arrows leading to a goal, with no loop, no
+off-grid arrow and no duplicate arrow within a region.
 
 #### Scenario: Completing the grid wins
 
@@ -37,7 +37,8 @@ Separately from the rule violations, mistake-checking SHALL make the
 collection's check of entries and notes (`ts-engine`, "A mistake check
 compares with the one answer, hidden or not" and "A candidate note that
 excludes the answer is a mistake"), against the solution Rome's solver derives
-from the fixed clues alone.
+from the fixed clues alone. A square already reported for a rule violation
+SHALL NOT be reported a second time by this check.
 
 #### Scenario: A legal-looking arrow that contradicts the solution is flagged
 

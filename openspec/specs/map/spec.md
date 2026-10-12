@@ -65,19 +65,20 @@ Normal, Tricky, Unreasonable), encoded `{w}x{h}n{n}` with a full-form
 
 `decodeParams` SHALL default an omitted `xH` to the width and an omitted `nN`
 to `w*h/8`, SHALL read a `.` and the digits after it in the region count and
-drop them, and SHALL refuse a difficulty char that is none of the four.
+drop them, SHALL read a string with no `d` as Normal, and SHALL refuse a
+difficulty char that is none of the four.
 
 #### Scenario: Lenient decode
 
 - **WHEN** `decodeParams` is given `12` (no height, no region count, no
   difficulty)
-- **THEN** it yields `w = 12`, `h = 12`, `n = 12*12/8`, and the default
-  difficulty
+- **THEN** it yields `w = 12`, `h = 12`, `n = 12*12/8`, and Normal
 
 ### Requirement: Params: Map refuses params that describe no map
 
 `validateParams` SHALL refuse more regions than grid squares (`n > w*h`), and
-a width and height whose product overflows.
+a width and height whose product overflows, the second in the collection's
+sentence for an area too large.
 
 #### Scenario: More regions than squares
 
@@ -346,7 +347,9 @@ second way in and SHALL NOT replace either.
 Map's `markAll` SHALL be the adaptive press of `engine-notes`, "Mark-all is
 adaptive in a game with an obvious-candidate rule", by a rule of its own: a
 blank region with no dots is filled with all four colors, and an obvious
-candidate is the dot of a color one of the region's neighbors shows.
+candidate is the dot of a color one of the region's neighbors shows. Where
+that would strike every dot of a region, its first dot in the colors' order
+SHALL stay.
 
 #### Scenario: Two presses dot each region with what its neighbors leave
 

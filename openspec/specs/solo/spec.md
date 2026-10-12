@@ -73,7 +73,13 @@ with `dt`, the default `DIFF_BLOCK`, omitted).
 `decodeParams` SHALL accept the legacy `"{c}x{r}j"` form, in which a `j` after
 a seen `r` collapses the rectangle to a jigsaw of edge `c·r`. A leading
 number with no `x` after it SHALL be read as both `c` and `r`, and `r2` SHALL
-be read as the default symmetry.
+be read as the default symmetry. A symmetry code the encoder does not write
+SHALL be refused.
+
+#### Scenario: A symmetry of an order the game does not have
+
+- **WHEN** `3x3m3`, `3x3r7` or `3x3a5` is decoded
+- **THEN** each is refused, and none is read as the default symmetry
 
 #### Scenario: The legacy jigsaw form is read
 
@@ -362,7 +368,8 @@ cells SHALL be a contradiction.
 
 A digit key `1..cr` SHALL enter that digit in the highlighted non-given cell
 or, in pencil mode, toggle that pencil mark in the highlighted empty cell;
-backspace or space SHALL clear the cell.
+backspace or space SHALL clear the cell. Mark-all's cleanup SHALL strike a
+placed digit over the same no-repeat regions auto-pencil strikes it from.
 
 #### Scenario: Placing and penciling digits
 
@@ -410,7 +417,7 @@ so any list is true of some Solo boards and false of others.
 
 ### Requirement: Hint: Every killer sum Solo cites is worked out from the board in one step
 
-The killer region rule (`DIFF_KINTERSECT`) SHALL derive the sums it leaves
+The killer region rule SHALL derive the sums it leaves
 afresh on every pass from the cages on the board, and SHALL NOT keep a derived
 part of a cage as a working cage of its own. Every sum a killer deduction rests
 on SHALL therefore be one of the three a killer sum's origin names, each worked
@@ -529,7 +536,7 @@ that sets them up.
 A Solo hint step SHALL mark, as evidence or as its target, every cell its
 narration refers to deictically. A sentence saying "these cells", "their
 region" or "these lines" SHALL have those cells on the frame; where the firing
-is not over a `SoloRegion` the step SHALL carry the cells themselves.
+is not over a region the step SHALL carry the cells themselves.
 
 #### Scenario: The deduced extra-cage shows the region it counted
 

@@ -7,7 +7,7 @@
 | Hint: Pegs' hint refuses a position it cannot finish from | third pass: retitled "Hint: Pegs' hint refuses, outlining them, where pegs are cut off for good". Sentence 2 ("Otherwise it SHALL refuse with `NO_SOLUTION_FROM_HERE` when the search proved no line finishes, and with `SEARCH_OUT_OF_REACH` when the search could not settle the position.") cut. Sentence 1 and the scenario kept | `engine-hints`, "A search that can prove a position lost says which of its two ends it met". `searchRefusal(finish)`, `src/games/pegs/hint.ts:162` |
 | Look: Pegs' marks sit beside the peg and never recolor it | third pass: title kept. "and its stripes on the cell's face under the peg" cut from sentence 3. Nothing else; the three scenarios untouched | `engine-hints`, "A hatch lies over the square's ground and under what it holds" (a tile's or cell's face is ground, a piece is what the square holds). `dr.drawHatch(face, …)` before the peg, `src/games/pegs/render.ts:193` |
 | Controls: Pegs discards a drag or an armed jump when the board changes under it | retitled "Controls: Pegs disarms a keyboard jump when the board changes under it". The dragged peg cut from the sentence, which now speaks of the armed jump alone. Scenario untouched | `engine-input`, "A board change from outside the input ends the gesture in flight" (every game, "whatever the game holds the gesture in") and "An ended gesture leaves the Ui as before its press". The game's own clearing: `changedState`, `index.ts:240` |
-| Hint: Pegs' hint offers the first jump of a line that leaves one peg | title kept. "Pegs SHALL provide a `hint` that searches … and offers" reworded to "Pegs' hint SHALL search … and offer"; "ringing the peg that jumps and the hole it lands in" cut. Second sentence and scenario untouched | `hintMarks.roles.ring` ("the jump to make: the peg that jumps, and the hole it lands in."), `src/games/pegs/hint-text.ts:47`; `engine-hints`, "A bound hint step's words SHALL name exactly the marks it draws" |
+| Hint: Pegs' hint offers the first jump of a line that leaves one peg | title kept. "Pegs SHALL provide a `hint` that searches … and offers" reworded to "Pegs' hint SHALL search … and offer"; "ringing the peg that jumps and the hole it lands in" cut. Second sentence and scenario untouched. Found, mended: gains a third sentence, what completes a step and what drops the plan (`hintKeepTrack`, `src/games/pegs/hint.ts:266`) | `hintMarks.roles.ring` ("the jump to make: the peg that jumps, and the hole it lands in."), `src/games/pegs/hint-text.ts:47`; `engine-hints`, "A bound hint step's words SHALL name exactly the marks it draws" |
 
 ## Kept, and why
 
@@ -150,3 +150,14 @@ its own: 2, both answered. Sentences cut: 3 whole and 1 clause. Clauses kept:
 - No "no departure" sentence, none of the form "What a pasted game ID opens
   as" and none citing `engine-difficulty`: Pegs has no tiers.
 - The Purpose still fits ("what the hint and Solve do and say").
+
+## Found, mended
+
+- What a Random board promises sits under `Rules`: left: the requirement
+  straddles (the jump, the win and the three types are `Rules`'), and Pegs
+  owes no `Generation` subject.
+- The spec does not say what keeps a hint's step: "Hint: Pegs' hint offers
+  the first jump of a line that leaves one peg" gains the sentence.
+- The Custom dialog admits a side of 1: left: the bound is a declaration's
+  and the refusal is stated; deliberate by `engine-params`, "A generation-only
+  bound is gated on full".

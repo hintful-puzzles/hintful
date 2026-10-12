@@ -1,13 +1,9 @@
 # Tasks
 
-**Where this stands (2026-10-12, evening): the cut is made and committed.
-All 57 game specs are cut in place, reviewed, and passed over twice more
-(`design.md` § "What the cut measured": 10% of their bytes, 155 requirements,
-284 scenarios), and the engine capabilities state what the games repeated
-(`ledger/_engine.md`). What is left, for the next session, in this order:
-3.4a (what the readers found: code fixes, each run in the app, and the
-questions for the owner), 3.8 (the whole read of the four specs to copy),
-then 4.3 (delete `tools/`, archive, `spec-subjects.mjs --fix`, push).**
+**Where this stands (2026-10-12, night): done. The cut is made, what its
+readers found is mended or raised (`design.md` § "Found by the readers, and
+mended" and § "Found, and the owner's to decide"), and the four specs to
+copy were read whole.**
 
 ## 1. Decide, on a sample
 
@@ -109,7 +105,10 @@ then 4.3 (delete `tools/`, archive, `spec-subjects.mjs --fix`, push).**
       sticks) (net netslide dominosa bricks ascent) (fifteen sixteen twiddle
       cube flip) (inertia sokoban slide pegs samegame) (mines blackbox guess
       untangle flood).
-- [ ] 3.4a Read `## Found` in every ledger
+- [x] 3.4a (done: `brief-found.md` is what each reader was given, every
+      ledger ends with `## Found, mended`, and `design.md` § "Found by the
+      readers, and mended" has the code fixes, what was left and why, and
+      the one question raised) Read `## Found` in every ledger
       (`grep -n -A30 '^## Found' ledger/*.md`, and the Found lists of
       `ledger/_engine.md`): fix what is quick and safe, a spec sentence the
       code contradicts above all, and raise the rest in `design.md` under
@@ -169,7 +168,8 @@ then 4.3 (delete `tools/`, archive, `spec-subjects.mjs --fix`, push).**
       after, by subject: `design.md` § "What the cut measured". `sample/` is
       deleted; `spec-subjects.mjs`, the validator and `spec-form.mjs` are
       green.
-- [ ] 3.8 **Read whole, as a session that has never seen the game, the four
+- [x] 3.8 (done by a reader who had seen none of the four: `## Whole read`
+      in each of their ledgers) **Read whole, as a session that has never seen the game, the four
       specs the guide names as the ones to copy**: `clusters`, `palisade`,
       `keen`, `inertia`. Three passes by different agents went over each, and
       Clusters and Palisade are a quarter shorter than when they were last

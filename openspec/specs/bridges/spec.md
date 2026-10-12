@@ -162,17 +162,6 @@ that arrives with its description alike.
 - **THEN** it is refused with "%age of island squares must be between 1% and
   30%."
 
-### Requirement: Description: Bridges descriptions encode the island clue grid
-
-The desc SHALL encode the island positions and their bridge counts row-major: a
-digit or letter gives an island with that count at the current cell, and a
-run letter skips the empty cells between.
-
-#### Scenario: A description round-trips
-
-- **WHEN** a generated desc is parsed by `newState` and the islands re-encoded
-- **THEN** the re-encoded desc equals the original
-
 ### Requirement: Description: A Bridges description that describes no board is refused
 
 `newState` SHALL refuse a desc that overruns the grid or stops short of it,
@@ -182,14 +171,21 @@ than two islands.
 
 #### Scenario: A malformed description is rejected
 
-- **WHEN** `validateDesc` is given a desc whose run-lengths overrun the grid
-- **THEN** it returns a non-null error string
+- **WHEN** a desc whose run-lengths overrun the grid is opened
+- **THEN** it is refused
 
-### Requirement: Description: A Bridges description writes a count above nine as a capital letter
+### Requirement: Description: A Bridges description gives its islands row-major, a count above nine as a capital letter
 
-An island's count SHALL be written `1` to `9`, then `A` to `G` for 10 to 16.
-The description SHALL cover every square of the grid, the empty ones after
-the last island included.
+The desc SHALL encode the island positions and their bridge counts row-major:
+a digit or letter gives an island with that count at the current cell, and a
+run letter skips the empty cells between. An island's count SHALL be written
+`1` to `9`, then `A` to `G` for 10 to 16. The description SHALL cover every
+square of the grid, the empty ones after the last island included.
+
+#### Scenario: A description round-trips
+
+- **WHEN** a generated desc is parsed by `newState` and the islands re-encoded
+- **THEN** the re-encoded desc equals the original
 
 #### Scenario: A dealt 7×7 board
 
@@ -305,8 +301,8 @@ SHALL add a bridge between them, or one more to those there, wrapping back to
 zero once the span's limit is exceeded. The island the drag points at SHALL be
 tracked as the pointer moves, and the move SHALL be committed on release. A
 drag that does not run cleanly between two in-line islands SHALL be canceled
-with no change. A secondary drag is Requirement: A secondary drag lowers a
-Bridges span's limit by one.
+with no change. What a secondary drag does is "Controls: A secondary drag
+lowers a Bridges span's limit by one".
 
 #### Scenario: Dragging cycles the bridge count
 
@@ -489,8 +485,8 @@ the win condition does not read.
 ### Requirement: Hint: No Bridges hint step leans on a fact the player cannot see
 
 No step SHALL lean on a fact the player cannot see. The limit stage 3 derives
-is a mark the player can write (Requirement: Bridges lets the player limit a
-span), so the hint SHALL write it as a step of its own, and the board the
+is a mark the player can write ("Rules: Bridges lets the player limit a
+span"), so the hint SHALL write it as a step of its own, and the board the
 deduction reasons from SHALL never hold a bridge, a cross or a limit the
 player's board does not.
 

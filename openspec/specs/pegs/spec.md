@@ -172,6 +172,8 @@ Pegs' hint SHALL search for a line of jumps leaving one peg and offer its
 first jump.
 It SHALL judge the other jumps from the same position within a work allowance
 per request, and a step SHALL say about those jumps only what the hint checked.
+A step SHALL be completed by its own jump alone, the same peg into the same
+hole, and any other jump SHALL drop the plan.
 
 #### Scenario: Following the hint from the dealt board
 

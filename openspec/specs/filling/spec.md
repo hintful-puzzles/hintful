@@ -163,7 +163,9 @@ monotone.
 ### Requirement: Solver: Filling's search assumes each number an empty square can still take
 
 Filling's search for a clue set's answers SHALL run over the solver, assuming
-each number an empty square can still take where the solver stops.
+each number an empty square can still take where the solver stops. Its budget
+SHALL be 2,000 positions, and SHALL NOT be lowered: a board already dealt,
+which a saved game holds, loads only within it.
 
 #### Scenario: The search tells one answer from several and from none
 

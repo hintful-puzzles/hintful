@@ -4,6 +4,8 @@ Purpose: "the params encoding" reworded to "where its params are declared".
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
+| Controls: A click slides only along the gap's row or column | Found, mended: the last sentence gains "and does nothing where the gap has no tile on that side" (`gridCursorMove` answers null off the edge, `src/games/fifteen/index.ts:125`). Scenarios untouched | |
+| Look: Fifteen draws beveled numbered tiles in a recessed border | Found, mended: the scenario "First draw emits the border and numbered tiles" says a fresh board is first drawn and what the frame holds, where it named "a recording `GameDrawing` double" and "the recorded operations", how a test is built. Sentence untouched | |
 | Params: Fifteen's params are a width and a height | retitled "Params: Fifteen's params are its declared codec's". All three sentences (the two fields and `WxH`; the bare `W`; the refusal below 2) replaced by a pointer to the declaration that says the game departs nowhere and refuses nothing of its own (rule 2). Scenario "Params round-trip and lenient decode" kept as the game's one case; "A board one cell wide is refused" dropped | the fields and the minimum: `paramConfig`, `dimensionParamConfig({ bounds: { min: 2 } })`, `src/games/fifteen/state.ts:48`-`52`; the encoding: `paramsCodec(defaultParams, [dims(paramConfig)])`, `state.ts:55`; the bare `W`: `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters"; the refusal: `engine-params`, "Params validity is the engine's check" (each item's `bounds`). `src/games/fifteen/fifteen.test.ts:86` holds the 1×4 refusal and the `fifteen` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds the strings |
 | Generation: A generated Fifteen board is solvable and starts unsolved | retitled "Generation: A generated Fifteen board is one slides can solve". Sentence 1 kept; sentence 2 ("It SHALL NOT deal the solved arrangement.") cut. The scenario is renamed "A generated board is solvable" and loses its AND clause (the initial state is not solved) | `engine-difficulty`, "A board that comes solved is dealt again" (`generate`, `src/engine/deal.ts:51`) |
 | Hint: Fifteen offers a greedy full-solution hint plan | title kept. "highlighting the tile it slides" cut from sentence 2. Scenario "Hint highlights the tile it moves" dropped; "Hint plan solves a solvable board" kept | `hintMarks.roles.ring` ("what the step decides: the tile to slide, filled in the hint's color."), `src/games/fifteen/index.ts:300`-`304`; that the slide is one cell from the gap is the kept sentence's "single-cell gap slide" and the kept scenario's "legal single-cell gap slides" |
@@ -118,3 +120,15 @@ round's other rules in other words found none.
 
 Each subject read alone: none hollow, no fragment, every title fits. The
 Purpose names nothing that went.
+
+## Found, mended
+
+- The generator rules out the solved board in a loop of its own: left: code,
+  which the main session is fixing.
+- The right button does nothing and a held touch is a click: left: the
+  declaration's (`ignoresSecondaryButton`), and `Controls` says plenty of the
+  game's own, so it takes no pointer.
+- What an arrow does when no tile is on that side: stated in "Controls: A
+  click slides only along the gap's row or column".
+- The scenario "First draw emits the border and numbered tiles" named a
+  recording `GameDrawing` double: reworded to the case of the game.

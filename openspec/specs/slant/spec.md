@@ -71,9 +71,10 @@ harmless.
 ### Requirement: Rules: Slant computes live errors after every move
 
 The state `executeMove` returns SHALL carry the board's errors: every diagonal
-lying on a loop edge is a loop error; every clue vertex whose degree exceeds its clue, or whose
-maximum achievable degree is below its clue, is a vertex error; and every
-diagonal in the border-connected vertex component is grounded.
+lying on a loop edge is a loop error; every clue vertex whose degree exceeds
+its clue, or whose maximum achievable degree is below its clue, is a vertex
+error; and every diagonal in the border-connected vertex component is
+grounded.
 
 #### Scenario: A closed loop is flagged
 
@@ -209,7 +210,9 @@ so that few of them survive.
 
 The solver SHALL apply its deductions by difficulty, Normal adding to Easy,
 and SHALL return one of three verdicts: impossible, unique or non-converged.
-The solver SHALL be reused by `solve()` and `findMistakes`.
+`findMistakes` SHALL reuse the solver, and so SHALL `solve()` where the board
+came with no answer from its deal; a dealt board's Solve is the generator's
+answer.
 
 #### Scenario: Solve recovers from a wrong mid-game state
 
@@ -221,8 +224,8 @@ The solver SHALL be reused by `solve()` and `findMistakes`.
 Slant SHALL take its clicks, its cursor and its select keys from its
 `targetVerbs` declaration (`engine-input`, "The engine owns a declaring game's
 press and select keys"): a left-click cycles a square blank→`\`→`/`→blank and
-a right-click the other way round. The two SHALL be swapped when the
-`left-button` preference selects `/`-first.
+a right-click the other way round. The two, and Enter and Space with them,
+SHALL be swapped when the `left-button` preference selects `/`-first.
 
 #### Scenario: Swapped button order
 
@@ -234,7 +237,8 @@ a right-click the other way round. The two SHALL be swapped when the
 
 In notes mode a press of either button SHALL toggle the mark on the side of
 the pressed square nearest the press, and SHALL do nothing when that side is
-the board's outer edge.
+the board's outer edge. A drag on from the press across more sides SHALL do
+the same to each.
 
 #### Scenario: A tap marks the nearest shared side
 
@@ -246,7 +250,8 @@ the board's outer edge.
 
 In notes mode Enter or Space SHALL pin the cursor square, toggle the mark
 between the pin and a square beside it, let go of the pin when pressed on it,
-and move the pin when pressed elsewhere. Escape SHALL let go of a pin.
+and move the pin when pressed elsewhere. Escape SHALL let go of a pin, and so
+SHALL the Marks key, which turns notes mode on or off.
 
 #### Scenario: The keyboard pins and pairs
 
@@ -340,6 +345,17 @@ computed against the board as that step fires.
 - **WHEN** any step is displayed
 - **THEN** it carries a non-empty evidence area, a ringed anchor, a clue it
   reads or a mark it cites, never a bare conclusion
+
+### Requirement: Hint: A Slant hint step is completed only by exactly its move
+
+A step SHALL be completed by the move that makes exactly its change, the same
+diagonal in the same square or the same mark set or cleared between the same
+two squares, and any other move SHALL drop the plan.
+
+#### Scenario: The other diagonal in the hinted square
+
+- **WHEN** a step asks for `\` in a square and the player draws `/` there
+- **THEN** the step is not completed and the plan is dropped
 
 ### Requirement: Hint: Slant's hint steps come in the order its solver finds them
 

@@ -93,17 +93,24 @@ form.
   are encoded in full
 - **THEN** the result is `10x10b20s2d1` and decoding it round-trips the params
 
-### Requirement: Params: Light Up reads a params string with no symmetry, and the legacy r
+### Requirement: Params: Light Up reads a params string that leaves a field out, and the legacy r
 
-Decoding SHALL accept two forms beyond the full encoding. A params string that
-names no symmetry SHALL demote a default of 4-way rotational symmetry to 2-way
-rotational when `w ≠ h`. The legacy `r` flag SHALL decode as difficulty 2.
+A params string with no `d` SHALL decode as Easy, and one with no `b` as the
+default's 20% walls. A params string that names no symmetry SHALL keep the
+default's 4-way rotational symmetry, demoted to 2-way rotational when `w ≠ h`.
+The legacy `r` flag SHALL decode as difficulty 2.
 
 #### Scenario: Lenient decode quirks
 
 - **WHEN** `18x10` is decoded with defaults carrying 4-way-rotational symmetry
 - **THEN** the symmetry demotes to 2-way rotational
 - **AND** a params string using the legacy `r` suffix decodes as difficulty 2
+
+#### Scenario: The short form of a Normal preset
+
+- **WHEN** `10x10`, the short form of `10x10b20s2d1`, is decoded
+- **THEN** it is a 10×10 Easy board with 20% walls and 4-way rotational
+  symmetry
 
 ### Requirement: Params: Light Up's params are validated
 

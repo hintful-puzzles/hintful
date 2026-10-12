@@ -219,8 +219,8 @@ hint SHALL still give the solver's remaining fills.
 
 ### Requirement: Status bar: Flood's status bar counts moves against the limit
 
-The status bar SHALL give the move count against the limit, opening with
-`FAILED!` on a lost board.
+The status bar SHALL give the move count against the limit, as `0 / 23
+moves`, with `FAILED! ` before it on a lost board.
 
 #### Scenario: A lost board says so
 
@@ -273,3 +273,15 @@ in both schemes, since it is read against the tile and not against the board.
 - **WHEN** a hint step is shown on a board drawn in the dark scheme
 - **THEN** the dot on each square the fill joins is black, as it is in the
   light scheme
+
+### Requirement: Look: The fill that loses a Flood board blinks it
+
+The fill that loses the board SHALL blink it as it is played: for three beats
+every tile is drawn in the mark color on the first and the third, and the
+board as it stands on the second. Undoing that fill SHALL blink nothing.
+
+#### Scenario: The blink's first beat
+
+- **WHEN** a 3×3 board whose move count has reached its limit, with the grid
+  not one color, is drawn in the first beat of the blink
+- **THEN** each of its nine tiles is filled with the mark color

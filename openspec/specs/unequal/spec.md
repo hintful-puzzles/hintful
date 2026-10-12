@@ -55,7 +55,13 @@ values `"trivial"`, `"easy"`, `"tricky"`, `"extreme"` and `"recursive"`, which
 are the tiers Easy, Normal, Tricky, Hard and Unreasonable in that order. They
 SHALL be encoded `{order}` with an `a` suffix for Adjacent mode and a `d{c}`
 suffix for difficulty when full, `c` being `t`, `e`, `k`, `x` or `r` in that
-order of the values.
+order of the values. A string with no `d` SHALL decode as Normal.
+
+#### Scenario: A string with no difficulty
+
+- **WHEN** `4` is decoded
+- **THEN** it is a 4×4 Unequal board at Normal, whose full form is `4de`
+- **AND** `5a` decoded is an Adjacent 5×5 board at Normal
 
 #### Scenario: Params round-trip
 
@@ -136,14 +142,15 @@ stripped.
 - **THEN** a bar is flagged, from both ends, between every pair of neighboring
   cells whose solution values differ by exactly 1, and between no other pair
 
-### Requirement: Controls: Unequal accepts digit, pencil, clue-spent, and solve moves
+### Requirement: Controls: A digit places a number or toggles its pencil mark, and Backspace or Space clears
 
 Unequal SHALL take its selection from the engine's note-taking cell
 (`engine-notes`, "The note-taking cell is one shared mechanic"). With a cell
 highlighted, a digit `1..order` (entered as a digit, or a letter for 11 and
 above) SHALL place that number, or toggle the pencil mark in pencil mode, and
 backspace, space, or below order 10 the `0` key, SHALL clear it. Immutable
-(given) cells SHALL reject entry.
+(given) cells SHALL reject entry, and in pencil mode no key SHALL change a
+cell that holds a number.
 
 #### Scenario: Entry into an immutable cell is rejected
 
@@ -152,9 +159,9 @@ backspace, space, or below order 10 the `0` key, SHALL clear it. Immutable
 
 ### Requirement: Controls: A clue is struck through by a click or a modified arrow
 
-A click on a greater-than sign or adjacency bar in the gap between two cells,
-or a shift/ctrl-cursor toward a neighboring clue, SHALL toggle that clue's
-struck-through ("spent") state.
+A click of either button on a greater-than sign or adjacency bar in the gap
+between two cells, or a shift/ctrl-cursor toward a neighboring clue, SHALL
+toggle that clue's struck-through ("spent") state.
 
 #### Scenario: Clicking a clue toggles its spent state
 

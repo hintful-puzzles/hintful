@@ -92,9 +92,9 @@ Normal board has `w + h ≥ 11`.
 The desc SHALL encode the clue grid row-major as a run-length string: lowercase
 letters compress runs of unclued cells, `B` marks a black pearl and `W` marks a
 white pearl. The unclued squares after the last pearl SHALL be written too, so
-that the description covers the grid exactly. `validateDesc` SHALL reject an
-unknown character and a description whose decoded cell count does not exactly
-fill the grid.
+that the description covers the grid exactly. A description with an unknown
+character, or whose decoded cell count does not exactly fill the grid, SHALL
+be refused.
 
 #### Scenario: A description round-trips
 
@@ -103,9 +103,8 @@ fill the grid.
 
 #### Scenario: A malformed description is rejected
 
-- **WHEN** `validateDesc` is given a desc with too much or too little data to
-  fill the grid
-- **THEN** it returns a non-null error string
+- **WHEN** a desc with too much or too little data to fill the grid is read
+- **THEN** the board is refused with an error string
 
 #### Scenario: A dealt 6×6 board
 
@@ -119,12 +118,13 @@ fill the grid.
 The generator SHALL keep a loop only where its full set of pearls passes the
 collection's two-way gate (`engine-difficulty`, "A difficulty tier binds the
 board it generates"), a tier being the rungs of "Solver: Pearl's solver is a
-certified deduction ladder", and SHALL then greedily minimize the clues.
+certified deduction ladder", and SHALL then greedily remove white pearls,
+trying each in a shuffled order twice. It SHALL remove no black pearl.
 
 #### Scenario: A pearl is taken away after the gate
 
-- **WHEN** a loop's full set of pearls has passed the gate and a pearl is
-  removed
+- **WHEN** a loop's full set of pearls has passed the gate and a white pearl
+  is removed
 - **THEN** the removal stands only where the solver still finds the one
   solution at the tier asked for, and the lower tier is not asked again
 
@@ -181,19 +181,6 @@ when that would leave the square with more than two lines.
 - **WHEN** the player left-clicks an edge that holds a no-line cross
 - **THEN** `interpretMove` yields no move, and the cross stays
 
-### Requirement: Controls: Pearl's keyboard cursor draws lines and marks
-
-`interpretMove` SHALL support a keyboard cursor that draws lines or marks with
-modifiers.
-
-#### Scenario: A modified arrow key marks the edge it points across
-
-- **WHEN** the cursor is showing on a square and the player presses an arrow
-  key toward a neighboring square, across an edge with no line or cross, with
-  Ctrl held, or with Shift held
-- **THEN** with Ctrl the move draws a line on the edge between the two squares,
-  and with Shift it marks that edge with a no-line cross
-
 ### Requirement: Controls: Pearl leaves the H key to the app
 
 The game SHALL decline the `H` key, so the app's Next hint shortcut reaches it.
@@ -245,6 +232,14 @@ held the line is toggled and the cursor stays.
 - **WHEN** Enter is pressed on a square, the right arrow twice, and then Space
 - **THEN** no move is made, and the next Enter starts a new path
 - **AND** Delete in place of Space does the same
+
+#### Scenario: A modified arrow key marks the edge it points across
+
+- **WHEN** the cursor is showing on a square and the player presses an arrow
+  key toward a neighboring square, across an edge with no line or cross, with
+  Ctrl held, or with Shift held
+- **THEN** with Ctrl the move draws a line on the edge between the two squares,
+  and with Shift it marks that edge with a no-line cross
 
 ### Requirement: Preferences: Pearl's appearance preference
 

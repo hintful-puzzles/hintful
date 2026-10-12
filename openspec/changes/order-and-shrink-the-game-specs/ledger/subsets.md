@@ -15,7 +15,7 @@ The Purpose is unchanged: each thing it names the spec still holds.
 | Look: What Subsets draws | retitled "Look: Subsets draws its letter slots, its horseshoes and a tally of every set". Cut: "The board SHALL be formattable as text", "and a completion flash", "There SHALL be no move animation". Scenario kept | the `Game` type (`textFormat`, `src/games/subsets/index.ts:745`); `animLength: () => 0`, `:753`; the flash is this spec's "Look: The Subsets completion flash fills a cell's slots together" and `ts-engine`, "The win flash is one traveling highlight in every game" |
 | Look: A slot's surface says who decided its cell | the clause "with the collection's surface grid line between the slots of a cell" cut; scenario kept | the palette, `out[COL_GRID] = surfaceGrid(background)`, `src/games/subsets/render.ts:127` |
 | Look: The Subsets completion flash fills a cell's slots together | "SHALL sweep the cells diagonally" and "Every slot of a lit cell SHALL be filled with a flash color and keep its letter or cross … whether the player filled it or the puzzle gave it" cut; that the position is the cell's and not the slot's, so a cell lights as one piece, kept. Scenario kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep`, `src/games/subsets/render.ts:342`); `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground filled, what it holds kept; its scenario "A board that lifts its cells") |
-| Hint: A Subsets hint refuses a letter the answer does not have | third pass: the clause "or the hint's own deduction from the player's marks ends in a contradiction" cut; the refusal of a letter that differs from the solution, and the scenario, kept | `engine-hints`, "A contradiction no entry can be blamed for is refused as one to undo" (`CONTRADICTION_UNLOCALIZED` where the deduction contradicts itself; `src/games/subsets/index.ts:598`) |
+| Hint: A Subsets hint refuses a letter the answer does not have | third pass: the clause "or the hint's own deduction from the player's marks ends in a contradiction" cut; the refusal of a letter that differs from the solution, and the scenario, kept. Found, mended: removed, with its scenario. What was left is true only of `hint` called directly: on the scenario's board the wrong B is a mistake (`findMistakes`, `src/games/subsets/solver.ts:432`), so the player is refused for the mistake, in the collection's sentence for one, and `hint` is never asked. "Rules: Subsets flags mistakes for Check & Save" holds the same board (scenario "A wrong letter that breaks no rule") and that the hint refuses on a mistake (scenario "A wrong rule-out is a mistake") | `engine-hints`, "A contradiction no entry can be blamed for is refused as one to undo" (`CONTRADICTION_UNLOCALIZED` where the deduction contradicts itself, and the one board a player reads it on: one the solver does not finish, scenario "A board the game's solver does not finish"; `src/games/subsets/index.ts:598`) |
 
 ## Kept, and why
 
@@ -172,3 +172,18 @@ refuses). Engine requests of its own: 1, left the game's own. Sentences cut:
   recomputed plan, the indication first, the hatch, the premise references,
   a step followed one element at a time): none is stated.
 - No "no departure" sentence and none on what a pasted game ID opens as.
+
+## Found, mended
+
+- "Hint: A Subsets hint refuses a letter the answer does not have" is of
+  `hint` called directly: removed. A player on its board is refused for the
+  mistake, which `Rules` states; the refusal `hint` itself makes is the
+  engine's, with the one board a player meets it on.
+- "left-click", "tap" and "press" for one input: left: each is true of the
+  arm it names.
+- The aid's requirement states what it judges from, under `Controls`: left:
+  it straddles, with the five requirements of the aid beside it.
+- A drag repeats a press: left: `targetVerbs.sweep` is a declaration.
+- The key-only verb's `does` string says "the number under the cursor" of a
+  letter slot: left: code (`src/games/subsets/index.ts:399`), the main
+  session's.

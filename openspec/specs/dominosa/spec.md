@@ -108,8 +108,8 @@ and a tier above Normal at `n = 2`, which no board of that size reaches.
 ### Requirement: Description: Dominosa descriptions carry the clue grid
 
 The desc SHALL be a row-major string of the `w·h` clue numbers, each rendered as
-a single digit or, for a number ≥ 10, as `[NN]` in decimal. `validateDesc`
-SHALL reject a desc that is too short or too long, a number out of the range
+a single digit or, for a number ≥ 10, as `[NN]` in decimal. `newState`
+SHALL refuse a desc that is too short or too long, a number out of the range
 `0…n`, a missing `]`, and a clue grid in which any number `0…n` does not occur
 exactly `n+2` times.
 
@@ -120,8 +120,8 @@ exactly `n+2` times.
 
 #### Scenario: A malformed description is rejected
 
-- **WHEN** `validateDesc` is given a desc whose number balance is wrong
-- **THEN** it returns a non-null error string
+- **WHEN** a desc whose number balance is wrong is opened
+- **THEN** it is refused
 
 ### Requirement: Description: A Dominosa description brackets only a number of 10 or more
 
@@ -264,7 +264,9 @@ would otherwise do nothing SHALL repaint, so the cleared spotlight disappears.
 ### Requirement: Hint: Dominosa's hint is seeded from the placed dominoes
 
 The hint's plan SHALL be computed by running the deductive solver one firing
-at a time, seeded from the placed dominoes.
+at a time, seeded from the placed dominoes. It SHALL NOT take a barrier edge
+the player has drawn as a premise. The step's exact move, a domino or an
+edge, SHALL complete the step, and every other move SHALL be off the plan.
 
 #### Scenario: The plan solves the board from any mid-game position
 

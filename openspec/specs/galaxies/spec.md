@@ -170,6 +170,16 @@ verdicts `Normal` (solvable at the Easy tier), `Unreasonable`, `Ambiguous`,
 - **WHEN** the solver runs on a position with no consistent association
 - **THEN** it reports `Impossible` rather than returning a move
 
+### Requirement: Solver: Solve leaves the answer's walls and no arrow
+
+Solve SHALL set the board's walls to the answer's and remove every arrow the
+player set, so the solved board shows walls only.
+
+#### Scenario: Solve on a board with arrows drawn
+
+- **WHEN** the player has associated some cells with dots and asks for Solve
+- **THEN** every wall of the answer is drawn and no arrow is left
+
 ### Requirement: Controls: The association drag runs from either button, the keyboard, and either end
 
 The association drag SHALL be reachable from either mouse button and from the
@@ -554,13 +564,19 @@ it is about SHALL ring every cell it decides alike, doubled.
 
 ### Requirement: Status bar: Galaxies reports its difficulty in the status bar
 
-The game SHALL provide a status-bar string reporting the current puzzle's
-difficulty when it is known.
+The status bar SHALL read `Difficulty Easy.` or `Difficulty Unreasonable.`,
+the tier the solver grades the board at from its dots alone, whatever tier
+the board's params state.
 
 #### Scenario: An Easy board says so
 
 - **WHEN** an Easy board is in play
 - **THEN** the status bar reads `Difficulty Easy.`
+
+#### Scenario: A board harder than its ID says
+
+- **WHEN** a board only recursion solves is loaded under params stating Easy
+- **THEN** the status bar reads `Difficulty Unreasonable.`
 
 ### Requirement: Look: Galaxies renders its board through GameDrawing
 

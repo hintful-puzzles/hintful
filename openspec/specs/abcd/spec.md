@@ -70,10 +70,10 @@ no difficulty letter SHALL decode as Easy.
 
 ### Requirement: Params: ABCD refuses board sizes it cannot generate
 
-Parameter validation SHALL reject, when validating for generation, any
-combination of grid size and letter count whose measured generation-success
-rate is too low to produce a board in an acceptable time, giving a reason,
-rather than retrying until an attempt budget is exhausted.
+Parameter validation SHALL reject, when validating for generation at Easy,
+any combination of grid size and letter count whose measured
+generation-success rate is too low to produce a board in an acceptable time,
+giving a reason, rather than retrying until an attempt budget is exhausted.
 
 #### Scenario: An un-generable configuration is refused immediately
 
@@ -276,7 +276,8 @@ menu, and every technique SHALL fire on them.
 ABCD's search SHALL be the engine's (`engine-difficulty`, "The engine counts
 a searching game's answers up to two, within a budget of positions") over the
 solver's ladder, assuming each candidate of an empty cell in turn where the
-ladder stops.
+ladder stops. Its budget SHALL be 2,000 positions, and SHALL NOT be lowered:
+a board already dealt, which a saved game holds, loads only within it.
 
 #### Scenario: The search tells one answer from several and from none
 

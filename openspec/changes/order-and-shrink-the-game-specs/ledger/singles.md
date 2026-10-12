@@ -8,8 +8,10 @@ techniques and the test its generator adds, and its own colors of marks.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Params: Singles params are a size and a difficulty | retitled "Params: A Singles params string is its declared codec's". Its one sentence (the three fields, `{w}x{h}d{c}` when full, `e` and `k`, `{w}x{h}` otherwise) replaced by one that sends the reader to the declaration and says the game departs nowhere (rule 2). Scenario "Params round-trip" kept: it is the one place `k` is tied to Normal | the fields: `paramConfig`, `src/games/singles/state.ts:103`-`114`; the encoding: `paramsCodec(defaultParams, [dims(paramConfig), choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true })])`, `state.ts:126`, with `DIFF_CHARS = "ek"`, `state.ts:33`; `engine-params`, "A game declares its params encoding once, and both codec halves are derived". The `singles` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `8x8dk` and `8x8`; `src/games/singles/singles.test.ts:53` |
-| Params: Singles params are refused outside their bounds | title kept. Sentence 2 ("A difficulty letter the encoding does not know SHALL be refused") cut; sentence 1 and both scenarios untouched | `engine-params`, "A params string is read whole or refused" (a letter after a tag that the tag does not list) |
+| Params: Singles params are a size and a difficulty | retitled "Params: A Singles params string is its declared codec's". Its one sentence (the three fields, `{w}x{h}d{c}` when full, `e` and `k`, `{w}x{h}` otherwise) replaced by one that sends the reader to the declaration and says the game departs nowhere (rule 2). Scenario "Params round-trip" kept: it is the one place `k` is tied to Normal | the fields: `paramConfig`, `src/games/singles/state.ts:103`-`114`; the encoding: `paramsCodec(defaultParams, [dims(paramConfig), choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true })])`, `state.ts:126`, with `DIFF_CHARS = "ek"`, `state.ts:33`; `engine-params`, "A game declares its params encoding once, and both codec halves are derived". The `singles` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `8x8dk` and `8x8`; `src/games/singles/singles.test.ts:53`. Found, mended: gains "A string with no difficulty letter SHALL decode as Easy" and scenario "A string with no difficulty letter", whose bare `6` is `src/games/singles/singles.test.ts:62` |
+| Solver: Singles deductive solver | found, mended: the six techniques named by private function names (`singlesep`, `doubles`, `corners`, `offsetpair`, `allblackbutone`, `removesplits`) are named in the words "Hint: Singles' hint takes the number patterns once and the joining rules last" uses for them, in the same order and with the same tiers (`src/games/singles/solver.ts:726`-`:772`); nothing else | |
+| Hint: Two pairs in neighboring Singles lines force two squares unshaded | found, mended: a scenario's unwrapped line wrapped; no word changed | |
+| Params: Singles params are refused outside their bounds | title kept. Sentence 2 ("A difficulty letter the encoding does not know SHALL be refused") cut; sentence 1 and both scenarios untouched. Found, mended: scenario "Invalid params are rejected" gives the case of a width of 1 and its sentence, "Width must be at least 2." (`src/games/singles/singles.test.ts:66`), in place of "a non-null error string" | `engine-params`, "A params string is read whole or refused" (a letter after a tag that the tag does not list) |
 | Params: Normal is refused on a Singles grid under 4 squares both ways | title kept. "The difficulty SHALL NOT be downgraded to Easy" cut; the size under which Normal is refused and the sentence that a grid 4 long either way is dealt as asked kept. Both scenarios kept | `engine-difficulty`, "An unbindable tier is refused, not silently downgraded" (refused through validation, for generation only, and no neighboring tier substituted) |
 | Description: Singles descriptions are fixed-length number grids | title kept. The alphabet (digits for 0 to 9, `a`–`z` for 10 to 35, `A`–`Z` for 36 to 61) replaced by a citation; the scan order, one character a cell, and both refusals kept. Scenario kept | `engine-params`, "The engine provides the two desc value alphabets" (`n2c`/`c2n` over `0`–`9`, `a`–`z`, `A`–`Z`, 62 values, in an order that does not change); the game's calls: `c2n`, `state.ts:159`, and `n2c`, `state.ts:174` |
 | Generation: Singles generates unique, difficulty-graded boards | retitled "Generation: Singles tests a board one level below with the sneaky deduction". "SHALL deal a board with exactly one solution", "solvable at the requested difficulty", "not solvable one … level below" and "regenerating otherwise" replaced by one clause that names the two shared requirements; the sneaky deduction in the test one level below kept, as the game's addition. Scenario kept | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates"; regenerating: `engine-difficulty`, "A generator never settles for a lower tier" |
@@ -200,3 +202,21 @@ not state the empty result, so the mistake row cut nothing.
 
 Each subject read alone: `Hint` says nothing of how a partly followed step
 is tracked, which is the engine's; no fragment, every title fits its body.
+
+## Found, mended
+
+- What a params string with no `d` decodes to: stated in the `Params`
+  pointer, with a scenario.
+- The bounds requirement has no scenario for the width's upper bound, and
+  its first scenario gives no sentence: the first scenario now quotes the
+  refusal; the width's upper bound left, the bound being the field's.
+- The solver requirement names techniques by private function names: named
+  in plain words.
+- What `findMistakes` returns where the numbers do not solve: left: no
+  board that loads gets there.
+- The spec never states the drag: left: `targetVerbs.sweep` declares it.
+- The cut is small because the spec is: left: nothing to mend.
+- No test holds the preference keyword `show-black-nums`: left: the spec
+  keeps the key; a test is code's to add.
+- Form: an unwrapped scenario line of "Hint: Two pairs in neighboring
+  Singles lines force two squares unshaded" wrapped.

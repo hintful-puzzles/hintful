@@ -36,9 +36,9 @@ walls set and all interior edges unknown.
 - **WHEN** a move would toggle a wall pointing off the grid
 - **THEN** `executeMove` throws (the move is rejected)
 
-### Requirement: Rules: Palisade detects completion and the unique-division solve
+### Requirement: Rules: A Palisade board is solved when its walls are a whole division that meets every clue
 
-`isSolved` SHALL report a state solved iff the walls divide the grid into
+`status` SHALL report a board solved iff the walls divide the grid into
 connected components every of size `k`, every clue equals its cell's wall
 count, and no wall lies within a single component (no stray border).
 
@@ -46,13 +46,13 @@ count, and no wall lies within a single component (no stray border).
 
 - **WHEN** the walls divide the grid into size-`k` regions matching all clues
   with no stray walls
-- **THEN** `isSolved` returns true and `status` reports a win
+- **THEN** `status` reports a win
 
 #### Scenario: A stray wall keeps the board unsolved
 
 - **WHEN** a correct division also carries a wall between two cells of one
   region
-- **THEN** `isSolved` returns false
+- **THEN** `status` does not report a win
 
 ### Requirement: Rules: Palisade reddens a clue that is already impossible
 
@@ -99,10 +99,10 @@ as Easy.
 
 ### Requirement: Params: Palisade refuses a region size the grid cannot be divided by
 
-`validateParams` SHALL refuse a `k` that does not divide `w·h`. Under full
-validation it SHALL also refuse `k = w·h`, and `k = 2` unless `w` or `h` is 1.
-It SHALL refuse no size for the time its deal takes, at either difficulty: a
-player can stop a deal.
+`validateParams` SHALL refuse a `k` that does not divide `w·h`, and a grid of
+2³¹ squares or more as too large. Under full validation it SHALL also refuse
+`k = w·h`, and `k = 2` unless `w` or `h` is 1. It SHALL refuse no smaller size
+for the time its deal takes, at either difficulty: a player can stop a deal.
 
 #### Scenario: Invalid params are rejected
 
@@ -143,7 +143,13 @@ grammar (`engine-params`, "The engine provides the run-letter description
 grammar"): a digit `0`–`4` for each clue, and the grammar's letters for the
 clueless cells. Validating a desc SHALL reject a digit above `4`, any other
 character that is neither a clue nor a run letter, and a desc describing more
-than `w·h` squares.
+than `w·h` squares. One describing fewer SHALL load with the rest clueless:
+the writer ends a desc at its last clue.
+
+#### Scenario: A description that stops short of the last square
+
+- **WHEN** `a2a1a2b2e1e33`, which describes 22 squares, is read for a 5×5 board
+- **THEN** it loads, and the last three squares hold no clue
 
 #### Scenario: A description round-trips
 
@@ -303,8 +309,8 @@ For a multi-edge firing the first leg SHALL state why the moves are forced
 together. For `equivalentEdges`: the two highlighted edges border the same
 region and therefore share a fate (both walls or both open), which together
 with the clue's count forces the result. For `numberExhausted`: the clue's
-count leaves its remaining edges a single possible state. The first leg SHALL phrase
-the conclusion across the set ("draw them all", "both must be walls").
+count leaves its remaining edges a single possible state. The first leg SHALL
+phrase the conclusion across the set ("draw them all", "both must be walls").
 
 #### Scenario: The coupled pair's first leg states the shared fate
 

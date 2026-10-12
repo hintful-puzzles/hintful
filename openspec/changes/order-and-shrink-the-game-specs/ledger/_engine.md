@@ -613,3 +613,20 @@ renamed. No requirement was removed.
   search, so the requirement does not bind it and the midend would throw.
 - **`slant/render.ts` calls its reference "a doubled teal ring"**; the slot is
   `HINT_BLACKREF`, which is green.
+
+## Found, mended (task 3.4a)
+
+- `engine-params`, "A grid too large for a game is refused in one sentence"
+  gains the sentence and scenario that keep Undead's "must be at most 54.":
+  a ceiling a player meets at a size they might well ask for names its
+  number. Mosaic's 10000 took `AREA_TOO_LARGE`, as Clusters' has.
+- `src/store/settings.ts` no longer seeds `pencil-keep-highlight`.
+- The Slant comment is corrected.
+- Boats' mark: raised to the owner in `design.md` § "Found, and the owner's
+  to decide". The "no exceptions" is the owner's ruling
+  (`src/engine/hint-mark.test.ts`), so the requirement was not given an
+  exception here.
+- The three pencil preference keys, Loopy's "the edge under" and Loopy's clue
+  colors stand in `design.md` as they were raised.
+- Clusters' `DEDUCTION_EXHAUSTED` on a stalled plan: left, since a board
+  Clusters' solver does not finish does not load.

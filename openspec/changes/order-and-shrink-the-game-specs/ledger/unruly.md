@@ -208,3 +208,24 @@ sentence.
 Each subject read alone: `Hint`'s two color requirements still read
 together (the hatch in `COL_HINT`, the premise ring in `COL_HINT_REF`); no
 fragment, every title fits its body.
+
+## Found, mended
+
+The spec is unchanged by this pass.
+
+- A description closing in uppercase, or with a skip in the other case, is
+  refused: left: the cut states it by citation, as the item says.
+- A digit key does nothing while the cursor is hidden: left: the spec's
+  "under a shown cursor" is true, and the hidden half is a defect and not a
+  promise: Backspace on a hidden cursor shows it and a digit does not
+  (`src/games/unruly/index.ts:128`-`131`). Stating it would make today's
+  behavior a requirement. Reported.
+- The spec never states the drag: left: `targetVerbs.sweep` is a
+  declaration.
+- The Params scenario lists "a dimension below 6": left: it says "the
+  engine's params check" and is true.
+- `validateParams` refuses no area a player can type: left: code
+  (`src/games/unruly/state.ts:139`; the size items declare no maximum).
+  Reported.
+- Two `Look` requirements hold which cells are flagged: left: each states
+  how the flag is drawn as well, and one that straddles stays.

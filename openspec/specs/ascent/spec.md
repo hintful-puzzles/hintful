@@ -665,10 +665,11 @@ neighbor in the sequence, and first of the Hard ones where it has none.
   route between the placed numbers either side of it
 - **THEN** the step places the first, as where the lines cross
 
-### Requirement: Look: What Ascent draws
+### Requirement: Look: A drawn path's open ends show the numbers they may take, and a move is drawn at once
 
-Where a drawn path holds only a single number, rendering SHALL show at its endpoints the one or two smaller numbers valid there. Moves
-SHALL be applied instantly, with no interpolated animation.
+Where a drawn path holds only a single number, rendering SHALL show at its
+endpoints the one or two smaller numbers valid there. Moves SHALL be applied
+instantly, with no interpolated animation.
 
 #### Scenario: A move is drawn at once
 

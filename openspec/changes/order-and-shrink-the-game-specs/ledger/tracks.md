@@ -10,6 +10,7 @@ The Purpose stands: it names nothing the spec no longer holds.
 | Params: Tracks refuses a grid under 4×4, and a 4×4 above Easy | retitled "Params: Tracks refuses a 4×4 above Easy". First sentence (the bound of 4) and scenario "Invalid params are rejected" cut; the kept sentence now says a 4×4 is the smallest the bounds allow | `bounds: { min: 4 }` on the dimensions, `src/games/tracks/state.ts:291`; `engine-params`, "Params validity is the engine's check" |
 | Params: Tracks params that name no difficulty are Normal | joined to the pointer requirement "Params: A Tracks params string may leave out its difficulty and its `o`", with its scenario. The clause "or whose `d` is followed by a letter that names no tier" cut: it is false of the code (see Found) | `engine-params`, "A params string is read whole or refused" ("a letter after a tag that the tag does not list … SHALL each be refused") |
 | Params: Tracks refuses a grid whose area cannot be counted | the clause "in the engine's sentence that the width times the height must not be unreasonably large" cut; the scenario keeps the sentence | `engine-params`, "A grid too large for a game is refused in one sentence" |
+| Generation: Tracks generates solver-gated boards | Found, mended: retitled "Generation: A Tracks deal lays its track by construction and strips the clues its tier can spare". The old title named a gate the body does not state. Body and scenario untouched | |
 | Params: A Tracks title says when adjacent 1 clues are allowed | removed, with its scenario; the pointer requirement names the label words as `paramConfig`'s | `label: { slot: "tail", words: … "allow adjacent 1’s" }` on the `disallow-consecutive-1-clues` item, `src/games/tracks/state.ts:299`; `engine-params`, "One describer labels every params set" (`size[ tier][, tail…]`) |
 | Description: newState parses a Tracks description and refuses a malformed one | the clause "as a desc error the engine's `validateDesc` reports" cut | `engine-params`, "The engine derives a description's verdict from newState" |
 | Controls: The Tracks keyboard cursor walks a half-grid | reworded: what select and select2 toggle cut; the half-grid and its two kinds of stop kept. The scenario says "shows" and "Enter" for "stands" and "select" | `engine-input`, "The engine owns a declaring game's press and select keys" (Enter the left-click verb, Space the right-click verb); the verbs are `primary: trackVerb` and `secondary: noTrackVerb`, `src/games/tracks/index.ts:293` |
@@ -161,3 +162,14 @@ own: 1, answered. Sentences cut: 2. Clauses kept: 5.
 - The spec never says when the hint refuses, so "A hint gives every step
   deduction still forces before it refuses" had nothing to take.
 - No "no departure" sentence and none on what a pasted game ID opens as.
+
+## Found, mended
+
+- A `d` with a letter that names no tier was said to decode as Normal: left:
+  the clause went with the cut.
+- "Generation: Tracks generates solver-gated boards" named a gate its body
+  does not state: retitled "Generation: A Tracks deal lays its track by
+  construction and strips the clues its tier can spare".
+- No test of the game holds the label "10x8 Normal, allow adjacent 1’s":
+  left: a test is not this pass's to write. The words are `paramConfig`'s
+  (`src/games/tracks/state.ts:301`). Reported.

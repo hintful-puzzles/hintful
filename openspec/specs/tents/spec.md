@@ -271,8 +271,9 @@ the same placements for what they do to the two lines alongside.
 `interpretMove` SHALL start a one-cell drag on a left or right press, extend it
 along the single nearer row or column, and enact it on release. A left click
 SHALL set a blank square to a tent or clear a non-blank square; a right click
-SHALL set a blank to a non-tent or clear a non-blank; a right-drag SHALL set
-every blank square it covers to a non-tent. Trees SHALL never be modified.
+SHALL set a blank to a non-tent or clear a non-blank; a right-drag, and only
+a right one, SHALL set every blank square it covers to a non-tent. Trees SHALL
+never be modified.
 
 #### Scenario: A left click toggles a tent
 

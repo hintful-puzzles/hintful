@@ -1373,7 +1373,16 @@ refuse a hint and a check with that dead end and SHALL NOT ask the game's
 A game whose `validateParams` refuses a grid because its width times its
 height is more than the game can hold SHALL return the engine's
 `AREA_TOO_LARGE`, "Width times height must not be unreasonably large.", and no
-sentence of its own. Where the ceiling sits SHALL stay the game's own.
+sentence of its own. Where the ceiling sits SHALL stay the game's own. A
+ceiling a player meets at a size they might well ask for is no such refusal:
+its sentence SHALL name the number.
+
+#### Scenario: A ceiling a player meets
+
+- **WHEN** Undead is asked for a 6×10 board
+- **THEN** it refuses with "Width times height must be at most 54.", since an
+  8×8 board is already past its ceiling and the number is what the player
+  needs
 
 #### Scenario: Two games with different ceilings
 

@@ -54,8 +54,8 @@ declared codec give (`engine-params`, "A game declares its params encoding
 once, and both codec halves are derived"), with no departure from the codec
 grammar. `w` and `h` SHALL each stop at 61, the largest count one description
 character writes. `validateParams` SHALL refuse Easy unless `w ≥ 3` or
-`h ≥ 3`, Normal unless `w ≥ 5` or `h ≥ 5`, and, of full params, Normal at
-3×6 and 6×3.
+`h ≥ 3` and, of full params only, Normal unless `w ≥ 5` or `h ≥ 5` and Normal
+at 3×6 and 6×3.
 
 #### Scenario: Params round-trip
 
@@ -65,14 +65,26 @@ character writes. `validateParams` SHALL refuse Easy unless `w ≥ 3` or
 
 #### Scenario: Invalid params are rejected
 
-- **WHEN** `validateParams` is given a 4×4 grid at Normal difficulty
+- **WHEN** `validateParams` is given a 4×4 grid at Normal difficulty to deal
 - **THEN** it returns a non-null error string (Normal needs a side ≥ 5)
+- **AND** the same params beside a description are accepted
 
 #### Scenario: A 3×6 Normal board that arrives written still loads
 
 - **WHEN** a game ID carries a 3×6 Normal board with its description
 - **THEN** the params are accepted, and the same params are refused when a
   board is to be dealt
+
+### Requirement: Params: A Magnets params string with no tier is Normal, and with no S keeps its clues
+
+A params string with no `d` SHALL decode as Normal, the tier of the default
+params, and one with no `S` as a board whose clues are not stripped, whatever
+the default holds.
+
+#### Scenario: The short form of the Easy preset
+
+- **WHEN** `5x6`, the short form of `5x6de`, is decoded
+- **THEN** it is a 5×6 board at Normal with its clues not stripped
 
 ### Requirement: Description: Magnets descriptions carry the clues and domino layout
 
@@ -185,8 +197,8 @@ On a clue slot the right-click verb SHALL do nothing.
 
 #### Scenario: The cursor stops short of a corner
 
-- **WHEN** the cursor is on the first column's `+` clue and the player presses
-  Left
+- **WHEN** the cursor is shown on the first column's `+` clue and the player
+  presses Left
 - **THEN** the cursor stays where it is
 
 ### Requirement: Controls: A Magnets drag repeats its press across tiles or across clues

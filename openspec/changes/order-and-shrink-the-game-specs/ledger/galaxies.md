@@ -16,6 +16,8 @@ The Purpose stands as it was: everything it names is still in the spec.
 | Hint: An Easy board is finished by deduction alone | removed. Both sentences joined "Hint: The Galaxies hint stops where its deductions do"; scenario "An Easy board is always finished by deduction" dropped | `engine-hints`, "The hint walk SHALL cover every preset a game offers" and "Deduction runs out only where the tier permits search"; `src/games/galaxies/galaxies-hint.test.ts` ("an Easy board is always carried all the way to solved") |
 | Look: Galaxies' win flash sweeps the cells | retitled "Look: A lit cell of a black dot's region is drawn as a white dot's is". The diagonal sweep, and that a lit cell is filled with a flash color and keeps what it holds, cut (the two citations that first replaced them went in the second pass); the black region's case is kept as the sentence, opening "A cell of a black dot's region that the win flash lights", with what its scenario said of the grid lines. Scenario kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep`, `src/games/galaxies/render.ts:815`); `engine-colors`, "A solved flash drawn as a color takes a shared color"; the grid line is `flags & DRAW_BLACK && !lit`, `src/games/galaxies/render.ts:382` |
 | Hint: Hint marks name what the player can see | first clause cut ("Evidence SHALL be highlighted in the hint color legend, and"), the rest of that sentence now led by "A hint's words"; last sentence cut ("Equivalent moves SHALL share a color."). Scenario kept | `engine-hints`, "A hint naming several kinds of element colors them by a stable legend" (each kind one legend color, equivalent forced moves the one target color) and "A bound hint step's words SHALL name exactly the marks it draws"; the legend is `hintMarks.roles`, `src/games/galaxies/index.ts:1226` |
+| Solver: Solve leaves the answer's walls and no arrow | added (Found, mended): what `solveGalaxies` hands back, `src/games/galaxies/index.ts:895` | |
+| Status bar: Galaxies reports its difficulty in the status bar | Found, mended: "reporting the current puzzle's difficulty when it is known" replaced by the two sentences a board that loads can show and what the tier is read from (the dots alone, whatever the params state); gains scenario "A board harder than its ID says" | |
 
 ## Kept, and why
 
@@ -196,3 +198,23 @@ Kept, 4 clauses:
 Each subject read alone after the edits: none hollow, no fragment, no "That
 refusal" without the refusal it names, every title fits; the Purpose names
 nothing that went.
+
+## Found, mended
+
+- The Solve command stated nowhere: added "Solver: Solve leaves the answer's
+  walls and no arrow". Its refusal (`PUZZLE_NOT_REASONABLE`, `index.ts:902`)
+  left: a board the solver does not solve does not load (`engine-params`, "A
+  board loads only if the game's own solver solves it"), so no player
+  reaches it.
+- The status bar's `Impossible`, `Ambiguous` and `Unfinished`: left, for the
+  same reason no board that loads shows them. "When it is known" corrected
+  to the two sentences a loaded board shows and to what the tier is read
+  from (`statusbarText`, `index.ts:1116`), with a scenario for a board
+  harder than its params say.
+- A grid line inside a black dot's finished region: left, already a clause
+  of "Look: A lit cell of a black dot's region is drawn as a white dot's
+  is".
+- Easy's params letter is `n`: left, the declared codec's
+  (`choice(…, "nu", …)`, `index.ts:1101`), and the snapshot holds `7x7dn`.
+- The dropped scenario's "the engine's lifecycle": left, the scenario is
+  gone.

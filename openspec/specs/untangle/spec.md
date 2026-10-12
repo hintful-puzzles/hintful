@@ -50,7 +50,14 @@ included: the exact crossing test depends on `RationalPoint` holding integers.
 
 ### Requirement: Params: Untangle's params are a vertex count
 
-Params SHALL be `{ n }`, the vertex count, encoded as the integer.
+Params SHALL be `{ n }`, the vertex count, encoded as the integer. A string
+with no number SHALL read as 0 points, which the count's bounds refuse.
+
+#### Scenario: A string with no number
+
+- **WHEN** an empty params string is decoded and goes through the engine's
+  params check
+- **THEN** it is refused, as a board of 0 points is
 
 #### Scenario: Params round-trip
 
@@ -489,6 +496,18 @@ The danger color (red) SHALL be reserved for crossings.
 - **THEN** crossed edges render red, the dragged vertex renders in the color of
   a thing picked up, and its neighbor vertices render in the pair's first color
   (not red), so neighbors are not mistaken for a crossing/error indication
+
+### Requirement: Look: A point the player drops does not slide
+
+A move made by dropping a held point, by pointer or by keyboard, SHALL NOT
+animate where the board was last drawn with the point on that spot: the point
+is already there. An undo or redo of that move SHALL slide the point.
+
+#### Scenario: A drop, and its undo
+
+- **WHEN** the player drags a point, lets it go, and then undoes the move
+- **THEN** the point stays where it was let go with no slide, and on the undo
+  it slides back to where it was picked up
 
 ### Requirement: Look: A vertex's color says its role
 

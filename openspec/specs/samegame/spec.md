@@ -16,7 +16,7 @@ A `SamegameMove` SHALL be `{ type: "remove"; tiles: number[] }` carrying the gri
 indices to clear. `executeMove` SHALL range-check each index, set those tiles
 empty, add `max(0, n − scoresub)²` to the score (where `n` is the number of
 removed tiles), let remaining tiles fall to the bottom of their columns, and
-shuffle non-empty columns to the left.
+close up the non-empty columns to the left, keeping their order.
 
 #### Scenario: Removing a group scores and compacts
 
@@ -106,8 +106,9 @@ grid can be cleared, SHALL be read and SHALL set nothing.
 
 A desc SHALL be the tiles' colors in row-major order, comma-separated. A desc
 without exactly `w·h` integers, or with any integer outside `1..ncols`, SHALL
-be refused: a dealt board is full, so no desc names an empty cell. `newState` SHALL parse the desc into the tile grid with score
-0, and SHALL read `impossible` off the tiles.
+be refused: a dealt board is full, so no desc names an empty cell. `newState`
+SHALL parse the desc into the tile grid with score 0, and SHALL read
+`impossible` off the tiles.
 
 #### Scenario: A malformed description is rejected
 
@@ -158,10 +159,11 @@ played until no move is left SHALL open from its save.
 Every board `newDesc` deals SHALL be one that some order of removals empties.
 No parameter SHALL deal a grid that may not be clearable.
 
-#### Scenario: A generated description is well-formed
+#### Scenario: A dealt board can be emptied
 
-- **WHEN** `newDesc` runs for a preset with a fixed seed
-- **THEN** `validateDesc` accepts it and `newState` parses `w·h` tiles
+- **WHEN** `newDesc` runs for a preset
+- **THEN** the description parses to `w·h` tiles, and some order of removals
+  from that board leaves the grid empty
 
 ### Requirement: Controls: A first click in Same Game selects the group
 
@@ -203,8 +205,9 @@ selection, or `CURSOR_SELECT2` on it, SHALL clear it and return a UI update.
 
 ### Requirement: Controls: Same Game's keyboard cursor acts where it stands
 
-A keyboard cursor SHALL move with the cursor keys, wrapping at the board's edges, and a select key SHALL act
-on the tile at the cursor as a click there does.
+A keyboard cursor SHALL move with the cursor keys, wrapping at the board's
+edges, and a select key SHALL act on the tile at the cursor as a click there
+does.
 
 #### Scenario: Select at the cursor picks the group, then removes it
 

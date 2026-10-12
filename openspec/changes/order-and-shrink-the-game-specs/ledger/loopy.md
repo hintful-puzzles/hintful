@@ -23,6 +23,7 @@ The Purpose stands as it was: everything it names is still in the spec.
 | Controls: Each button sets its own state and clears a decided edge | "(a tap)" and "(a long press)" reworded out of the first sentence, and the second cut ("A finger and a mouse SHALL behave the same.") | `engine-input`, "A game reads one pointer with two buttons" (a tap is the left button and a long press the right, the same from a mouse, a finger and a pen) |
 | Controls: Each button cycles a note its own way | ", and a held finger," reworded out of the second sentence | `engine-input`, "A game reads one pointer with two buttons" |
 | Look: Loopy shows which lines are joined to the one under the pointer | fourth sentence corrected, not cut: "The highlight of every closed loop but the largest" became "The flag `checkCompletion` puts on every piece but the largest" (see `## Review`) | |
+| Solver: Solve fills in the answer from the clues alone | added (Found, mended): what `solve` hands back, `src/games/loopy/index.ts:792` | |
 
 ## Kept, and why
 
@@ -256,3 +257,27 @@ The hint's two refusals are still stated nowhere in the spec (see Found), so
 to undo" and "A hint gives every step deduction still forces before it
 refuses" took nothing from it. Each subject read alone after the edits: none
 hollow, no fragment, every title fits; the Purpose names nothing that went.
+
+## Found, mended
+
+- The hint's refusals: left. A board loads only where the solver, whose
+  rungs the plan is, solves it (`difficulty`, `index.ts:848`; `engine-params`,
+  "A board loads only if the game's own solver solves it"), and a mark that
+  disagrees with the answer refuses the hint before the game is asked, so
+  neither arm of `hint.ts:782` is reached by a player; `engine-hints` states
+  both sentences.
+- The Solve command: added "Solver: Solve fills in the answer from the clues
+  alone". The Found item's last sentence, that a pasted board the solver
+  cannot finish loads and Solve leaves it unsolved, is false of the code
+  now: Loopy has a difficulty contract and such a board is refused at load.
+- The hover's "every closed loop but the largest": left, corrected in
+  review.
+- How the win flash travels: left. `ts-engine`, "A game gives each element a
+  position, and the route is which position it gives" states the loop's
+  route, bottom-left corner and clockwise.
+- A press moves the hidden cursor to the pressed edge: left, `engine-input`,
+  "The engine owns a declaring game's press and select keys".
+- `buildLoopyGrid`'s own retry loop: left, code (the main session's).
+- `auto-follow` read by its key in no test: left, the second pass restored
+  the keys and the order to the `Preferences` requirement.
+- The dropped scenario's list: left, the scenario is gone.

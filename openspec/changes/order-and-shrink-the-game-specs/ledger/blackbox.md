@@ -4,7 +4,7 @@ The Purpose is unchanged.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Params: Black Box refuses params that cannot be played | title kept. Sentence 1 ("A `w` or an `h` below 2 or above 255 SHALL be refused, by the bounds the size fields declare.") cut; sentence 2 untouched. Scenario "A box too narrow" dropped; "Invalid params are rejected" kept | `bounds: { min: 2, max: 255 }` on the size fields of `paramConfig`, `src/games/blackbox/index.ts:402`; that a declared bound refuses: `engine-params`, "Params validity is the engine's check" (scenario "A value outside its range"). `src/games/blackbox/blackbox.test.ts:297` holds the `w: 1` case |
+| Params: Black Box refuses params that cannot be played | title kept. Sentence 1 ("A `w` or an `h` below 2 or above 255 SHALL be refused, by the bounds the size fields declare.") cut; sentence 2 untouched. Scenario "A box too narrow" dropped; "Invalid params are rejected" kept. Found, mended: that scenario's THEN gives the three sentences `validateParams` answers (`src/games/blackbox/state.ts:190`-`193`) where it said "a non-null error string" | `bounds: { min: 2, max: 255 }` on the size fields of `paramConfig`, `src/games/blackbox/index.ts:402`; that a declared bound refuses: `engine-params`, "Params validity is the engine's check" (scenario "A value outside its range"). `src/games/blackbox/blackbox.test.ts:297` holds the `w: 1` case |
 | Controls: A Black Box drag repeats a ball or a mark inside the box and fires nothing | title kept. In sentence 2, "SHALL repeat its press on each inside square it passes that holds what the pressed one held" cut, sentences 2 and 3 joining as what a drag from inside and a drag from the edge do; sentence 1 untouched. Scenario untouched | `engine-input`, "A drag on from a press repeats the press" (each further target that holds what the pressed target held gets the pressed button's verb, and one that holds anything else is passed over) |
 | Hint: A settled square is shown by a mark, in one step | title kept. "that rings the square and outlines the laser's ends" cut from the sentence. Scenario untouched | `HINT_MARKS.roles.ring` ("what the step decides: the square to mark as known or to put a ball on…") and `.outline` ("the ends of the fired laser the step reasons from."), `src/games/blackbox/hint-text.ts:36` |
 | Look: Black Box's win flash sweeps the squares of the revealed box | retitled "Look: Black Box's win flash lights the squares of the box and never a laser square". "SHALL declare no flash of its own for it", "SHALL sweep the squares of the box diagonally" and sentence 2 (a lit square is filled with a flash color and keeps its ball) cut; kept: a reveal is the win, the flash is over the squares of the box alone, a laser square is never lit. Scenario "The Solve command reveals without a flash" dropped; "A check the box accepts" written in words for the game's own case | no length of its own and no flash on Solve: `ts-engine`, "The win flash plays on a forward move that solves the board" ("A game SHALL NOT give it a length"; scenario "The Solve command does not celebrate"). The diagonal: `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep` otherwise), asked at `src/games/blackbox/render.ts:414`. The fill: `engine-colors`, "A solved flash drawn as a color takes a shared color". The new scenario: the loop at `render.ts:412` asks `flash.win` of the box's squares only |
@@ -126,3 +126,17 @@ kept: 2, each read against the third-round requirement it resembles.
   game's.
 - No "no departure" sentence, none of the form "What a pasted game ID opens
   as" and none citing `engine-difficulty`.
+
+## Found, mended
+
+- The spec said nothing of the keyboard but the cursor's walk: left: the
+  review mended it, with "Controls: Black Box takes its presses, its cursor
+  and its select keys from its target verbs".
+- "Rules: A reveal is gated on the ball count" and "Controls: The corner
+  button checks the guess while the ball count allows it" give one condition
+  twice: left: neither says only what the other does. The first is what
+  `executeMove` refuses of a reveal move (`state.ts`, `canReveal`), with the
+  scenario of the throw; the second is when the corner is a target, with the
+  failed check and the revealed board besides.
+- The scenario "Invalid params are rejected" said only "a non-null error
+  string": it now gives the three sentences (`state.ts:190`-`193`).

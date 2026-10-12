@@ -232,7 +232,8 @@ run only that run's cells, and iterate all three to a fixpoint.
 
 Crossing's search for a board's answers SHALL run over the solver's
 deductions, assuming each candidate digit of an empty cell in turn where they
-stop.
+stop. Its budget SHALL be 2,000 positions, and SHALL NOT be lowered: a board
+already dealt, which a saved game holds, loads only within it.
 
 #### Scenario: The search tells one answer from several and from none
 

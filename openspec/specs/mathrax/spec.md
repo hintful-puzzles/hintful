@@ -287,7 +287,7 @@ cells.
 #### Scenario: A hint with no Ui pencils in only what it needs
 
 - **WHEN** a hint is requested with no `Ui` on a board with no notes
-- **THEN** no step of the plan is `pencilAll`
+- **THEN** no step of the plan is the fill-all move
 
 ### Requirement: Hint: A recorded clue elimination names one clue acting on one cell
 

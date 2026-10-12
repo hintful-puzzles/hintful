@@ -5,6 +5,10 @@
 | Params: Same Game's params are a size, a color count and a scoring system | retitled "Params: Same Game reads upstream's r and sets nothing", and moved to stand last in its subject, after the requirement that says what a string holds. Sentence 1 (the four fields and the `{w}x{h}c{ncols}s{scoresub}` form) removed. Sentence 2 (the trailing `r`) cut to what the letter asked upstream for and that it is read and sets nothing; "encoding SHALL never write it" removed. Scenario "Params round-trip and lenient decode" replaced by "A string upstream wrote for a random grid", which keeps its `r` case and its strings and drops the round trip | the fields: `paramConfig`, `src/games/samegame/state.ts:72`-`95`; the encoding: `paramsCodec(defaultParams, [dims, num "c", num "s", unusedLetter("r")])`, `state.ts:101`-`111`; the round trip: `engine-params`, "A game declares its params encoding once, and both codec halves are derived" and "Encode and decode are mutual inverses over the corpus"; what a string holds, in this spec: "Params: Same Game writes its params whole in both encodings"; never written: `engine-params`, "A letter upstream writes is read by name". `src/games/samegame/samegame.test.ts:71`-`76` holds `15x10c4s2` and `15x10c4s2r`, and the `samegame` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` the presets' strings |
 | Params: Same Game refuses params it cannot deal | title kept. The one sentence cut to the two refusals `validateParams` makes (fewer than three colors, a grid of one square); the width, the height, the nine colors and the two scoring systems removed. Scenario "Invalid params are rejected" replaced by "Two colors, and one square", with the sentences from the game's test | `bounds: { min: 1 }` on the dimensions, `state.ts:75`; `bounds: { max: 9 }` on the colors, `state.ts:79`; `choices: ["(n-1)²", "(n-2)²"]`, `state.ts:86`; each refused by `engine-params`, "Params validity is the engine's check". The kept two: `validateParams`, `state.ts:115`-`116`, and `samegame.test.ts:87`-`96` |
 | Params: A Same Game title names the colors and the other scoring | removed, with its scenario "The other scoring system" | the two `label.words`, `state.ts:80` ("`${p.ncols} colors`") and `:89` ("alt. scoring" unless `scoresub` is 2, beside the choices that name the two scorings); `engine-params`, "One describer labels every params set" (the size, then the tail words). `samegame.test.ts:122` holds "5x5, 3 colors, alt. scoring", and the params snapshot the four preset titles |
+| Rules: Same Game removes connected groups, scores, and compacts | found, mended: "shuffle non-empty columns to the left" became "close up the non-empty columns to the left, keeping their order" (`snuggle`, `src/games/samegame/state.ts:407`); nothing else | |
+| Description: A Same Game description is one color for every tile | found, mended: its unwrapped line wrapped; no word changed | |
+| Controls: Same Game's keyboard cursor acts where it stands | found, mended: its unwrapped line wrapped; no word changed | |
+| Generation: Same Game generates boards that can be cleared | found, mended: scenario "A generated description is well-formed", which named `validateDesc` and gave no case of the promise, replaced by "A dealt board can be emptied", the case in words (`newDesc` builds the board by playing backwards, `src/games/samegame/state.ts:135`; no test of the game holds a board with its order of removals) | |
 
 ## Kept, and why
 
@@ -104,3 +108,14 @@ kept: 1.
   cancel keys, the release of a declined press, a lit beveled tile, a hatch
   under content, a mistake check without an answer): none is stated. Same
   Game has no hint, no Solve and no mistake check.
+
+## Found, mended
+
+- The `Generation` scenario gives no case of the promise: replaced by one
+  that does, in words.
+- The color count's floor and ceiling are stated in two places: left: the
+  ceiling is the field's bound, a declaration, and the floor's refusal is
+  stated with its sentence.
+- Same Game has no hint: left: the game's, and no `Hint` subject is owed.
+- "shuffle non-empty columns to the left": reworded to "close up", with
+  "keeping their order".

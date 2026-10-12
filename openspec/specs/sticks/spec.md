@@ -232,7 +232,7 @@ Unreasonable where it has exactly one fill that they do not reach.
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `4x4b20s2du`
 
-### Requirement: Solver: Sticks ports the deductive solver and solver-gated generator
+### Requirement: Solver: Sticks' solver works by contradiction on single cells and never backtracks
 
 Sticks SHALL provide a deductive solver that fills the blank cells with horizontal
 or vertical lines consistent with every clue, or reports that the board is

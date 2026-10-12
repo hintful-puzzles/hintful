@@ -2,6 +2,7 @@
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
+| Rules: Cube roll moves transform orientation and swap paint | Found, mended: the scenario "Rolling tips the solid onto a new face", which named no case ("the new state's resting face differs per the polyhedron's geometry"), now gives the one `src/games/cube/cube.test.ts:196` holds: a cube on an inner square of a 4×4 arena rolled right and then left. Sentence untouched | |
 | Look: Cube's win flash sweeps the squares of the arena | title kept. Sentence 1 (the sweep is diagonal; a square's position is its center's; a lit square is filled with a flash color) cut to what is the game's, that the elements are the arena's squares on either grid. Sentence 2 (the solid is drawn over the arena) and the scenario untouched | the diagonal and the center: `ts-engine`, "A game gives each element a position, and the route is which position it gives" ("`sweepStep` of its center otherwise: a diagonal from the bottom left to the top right"); the fill: `engine-colors`, "A solved flash drawn as a color takes a shared color" ("The ground of a cell … SHALL be filled with the role's color"). `flash.win(sweepStep(cx, cy))`, `src/games/cube/render.ts:154` |
 
 ## Kept, and why
@@ -105,3 +106,16 @@ of squares is not its, and it has no hint, mistake check or tiers for the
 other rows to bind.
 
 Each subject read alone: none hollow, no fragment, every title fits.
+
+## Found, mended
+
+- Trailing characters refuse a params string: left: the collection's, as the
+  item says.
+- The labels of Cube's presets: left: a declaration's, and the snapshot holds
+  them.
+- A painted square of the arena is never lit by the win flash: left: no
+  player can see it.
+- The scenario "Rolling tips the solid onto a new face" named no case: it now
+  gives the roll right and back of `src/games/cube/cube.test.ts:196`.
+- Cube has neither `hint` nor `solve`: left: code, and the owner's to order;
+  reported.

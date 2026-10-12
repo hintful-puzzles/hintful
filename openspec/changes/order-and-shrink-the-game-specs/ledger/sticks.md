@@ -21,6 +21,7 @@ explained hint", and now says what of each the spec holds.
 | Hint: One clue ruling out several Sticks squares is one journey | removed, with its scenario | `engine-hints`, "One deduction firing is one journey" (later legs flagged, with abbreviated narration); which squares one journey holds is this spec's "Hint: The Sticks hint takes the first forced square in reading order" ("every later square the same clue and rule force"), whose first scenario gives a journey of two |
 | Hint: The Sticks hint draws the forced line in the hint color | removed. Scenario "The forced orientation is visible, not merely described" moves, unchanged, to "Hint: A Sticks hint's marks count out against the words" | the legend's `ring` role, `src/games/sticks/index.ts:555` (the line the step asks for, in the hint color, running the way it must go); that the hint's color is not a placed line's is this spec's "Look: No two roles on the Sticks board share a color" |
 | Hint: The Sticks hint shows its evidence, and the marks count out against the words | retitled "Hint: A Sticks hint's marks count out against the words". First sentence (the evidence is shown, and does not hide what makes it evidence) cut; the two sentences on counts and on the run walked kept. Gains the scenario of "Hint: The Sticks hint draws the forced line in the hint color" | the legend's `outline` role, `src/games/sticks/index.ts:556`; `engine-hints`, "A hint marks beside the content, never behind it" |
+| Solver: Sticks ports the deductive solver and solver-gated generator | Found, mended: retitled "Solver: Sticks' solver works by contradiction on single cells and never backtracks". The old title named a port and a generator, and the body states neither: it is the solver's method. Body and scenario untouched | |
 
 ## Kept, and why
 
@@ -159,3 +160,16 @@ requirement and no scenario with them. Clauses kept: 4.
 - No "no departure" sentence and none on what a pasted game ID opens as. The
   scenario "A board that needs search opens as Unreasonable" sits under the
   sentence that says what counts as which tier.
+
+## Found, mended
+
+- The scenario of "Rules: Sticks validity is checked against the puzzle
+  rules" is the solver completing a dealt board: left: the code does not
+  contradict it, and its THEN gives two of the three rules on a finished
+  board. A scenario of a rule broken would be a new claim about the checker.
+- The Solver title named a port and a generator: retitled "Solver: Sticks'
+  solver works by contradiction on single cells and never backtracks".
+- Which check refuses a block's number above 4, or `s` above 4: left: the
+  first is stated ("Description: A Sticks description spells a block `B`…",
+  with the scenario of `B5`), and the second is the collection's check of a
+  declared choice (`engine-params`, "Params validity is the engine's check").

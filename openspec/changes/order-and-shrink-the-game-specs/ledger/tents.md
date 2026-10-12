@@ -16,6 +16,7 @@ and its painting arrows.
 | Hint: Tents' hintKeepTrack judges a move by what it changes | third pass. Retitled "Hint: A Tents step's links are followed as its squares are". "SHALL judge a move by … it changes, holding a step that is only partly made and shrinking it to what is left" cut; kept, reworded to stand, that the links a move changes count with the squares, which is the antecedent of the scenario. Scenario "Placing a tree's tent by a click is progress" kept | `engine-hints`, "A step asking for several elements is followed one element at a time"; `trackTargets`, `src/games/tents/hint.ts:421`, handed `changesBetween`, `:390`, which lists a tent's tree with its square |
 | Hint: A Tents hint step says why and marks what it uses | title kept. "ring what it decides, outline what it reasons from, hatch the row or column it counts with, color that clue in the action color, and draw a link it asks for in the action color" replaced by a sentence that sends the reader to the legend; "in one sentence" kept. Scenario kept | `hintMarks.roles` (`ring`: "…the link is drawn between them in the hint color"; `outline`: "…the number of the row or column it counts with, which is shown in the hint's color"; `stripes`), `index.ts:462`-`469`; `engine-hints`, "The engine SHALL own the hint mark roles and the words for them" and "A hint hatches the one line its sentence names" |
 | Look: The Tents completion flash fills each square and keeps its pieces | title kept. "The completion flash SHALL sweep the squares diagonally, a square's position being its place in the grid." cut, and the next sentence reworded to stand ("A square the completion flash is on"). Scenario kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives"; the game's call is `flash.win(sweepStep(x, y))`, `src/games/tents/render.ts:643` |
+| Controls: Tents places tents and grass by click and drag | Found, mended: "a right-drag SHALL set every blank square it covers to a non-tent" is "a right-drag, and only a right one, SHALL set …". Its first sentence has a press of either button start a drag enacted on release, which read as though a left drag painted; a left drag is the link gesture or a click at its start (`interpretMove`, `src/games/tents/index.ts:226`-`243`) | |
 
 ## Kept, and why
 
@@ -172,3 +173,18 @@ grammars of `engine-params`: Tents writes and reads its tree runs by hand
 grammar, so it stays.
 
 Each subject read alone: no fragment, every title fits its body.
+
+## Found, mended
+
+- A `d` with a letter that names no tier was said to decode as Easy: left:
+  the clause went with the cut, and the spec says nothing false of it now.
+- "Solver: Tents' solver is a certified deduction ladder" and the scenario of
+  "Generation: Tents' Normal rungs are rungs of their own" state a test:
+  left, reported.
+- A left drag read as though it painted: "Controls: Tents places tents and
+  grass by click and drag" now says only a right drag paints. The link
+  requirement's "A left drag that is not the link gesture SHALL act as a
+  click at its start" stands.
+- A tree is a target no verb applies to: left: "Trees SHALL never be
+  modified" states it, for the letter keys as for a click (`setSquare`,
+  `src/games/tents/index.ts:118`).

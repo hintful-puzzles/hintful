@@ -34,8 +34,8 @@ replaces any wrong entry. The game status SHALL NOT report a loss on death.
 #### Scenario: A player dies, undoes, and carries on
 
 - **WHEN** the player clicks a mine and then undoes
-- **THEN** play resumes on the same board, the game status is still "ongoing", and the status
-  bar reports the death
+- **THEN** play resumes on the same board, the game status is "ongoing" as it
+  was on the dead board, and the status bar reports the death
 
 #### Scenario: Solve on a dead board
 
@@ -354,13 +354,12 @@ pressed on a number.
 
 ### Requirement: Controls: A Mines press opens on its release, and the secondary button flags
 
-The left button SHALL act on its release: after a press on a covered square
-it opens the covered square it is released over, and after a press on a
-number it chords the number it is released over. A release off the grid SHALL
-make no move. The flag, its drag, the cursor and the select keys SHALL come
+The left button SHALL act on its release: a press on a covered square opens
+the covered square it is released over, and a press on a number chords the
+number it is released over. A release off the grid SHALL make no move. The flag, its drag, the cursor and the select keys SHALL come
 from `targetVerbs` (`engine-input`, "The engine owns a declaring game's press
-and select keys"); the left button has no drag. A flagged square SHALL NOT be
-opened, nor an opened one flagged.
+and select keys"), a key acting at once; the left button has no drag. A
+flagged square SHALL NOT be opened, nor an opened one flagged.
 
 #### Scenario: A press slid to another square
 
@@ -393,13 +392,11 @@ count of mines left.
 - **THEN** the hint marks that number and rings its other unopened squares as safe,
   saying so
 
-### Requirement: Hint: The Mines hint opens the first square, and refuses a dead or exhausted board
+### Requirement: Hint: The Mines hint refuses a dead or exhausted board
 
-Before the first click the hint SHALL open a square, saying that no mine is laid
-in the first square opened or beside it. On a board whose last move opened a
-mine, the hint SHALL refuse and tell the player to undo it. On a board
-deduction cannot advance, it SHALL refuse with the collection's
-deduction-exhausted words.
+On a board whose last move opened a mine, the hint SHALL refuse and tell the
+player to undo it. On a board deduction cannot advance, it SHALL refuse with
+the collection's deduction-exhausted words.
 
 #### Scenario: A dead board
 

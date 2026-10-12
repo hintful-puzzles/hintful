@@ -6,7 +6,7 @@ what its params refuse.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Params: Magnets' parameters | retitled "Params: A Magnets params string is its declared codec's, and a board too small for its tier is refused". Sentence 1 (the four fields, `{w}x{h}`, the `d{e\|t}` and `S` suffixes, the bare `{n}`) replaced by one that sends the reader to the declaration and says the game departs nowhere (rule 2). Sentence 2 cut to its upper bound and its reason ("SHALL each stop at 61, the largest count one description character writes"); "declared bounded from 2" goes. Sentence 3 (`validateParams`) untouched. All three scenarios kept | the fields and the lower bound: `paramConfig`, `src/games/magnets/state.ts:156`-`176` (`bounds: { min: 2, max: DESC_ALPHABET_SIZE - 1 }`); the encoding: `paramsCodec(defaultParams, [dims, choice "d" …, flag "S" …])`, `state.ts:179`, with `DIFF_CHARS = "et"`, `state.ts:65`; the bare `{n}`: `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters". The `magnets` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `5x6dtS` and `5x6de`; `src/games/magnets/magnets.test.ts:54` holds `10x9dtS` |
+| Params: Magnets' parameters | retitled "Params: A Magnets params string is its declared codec's, and a board too small for its tier is refused". Sentence 1 (the four fields, `{w}x{h}`, the `d{e\|t}` and `S` suffixes, the bare `{n}`) replaced by one that sends the reader to the declaration and says the game departs nowhere (rule 2). Sentence 2 cut to its upper bound and its reason ("SHALL each stop at 61, the largest count one description character writes"); "declared bounded from 2" goes. Sentence 3 (`validateParams`) untouched. All three scenarios kept | the fields and the lower bound: `paramConfig`, `src/games/magnets/state.ts:156`-`176` (`bounds: { min: 2, max: DESC_ALPHABET_SIZE - 1 }`); the encoding: `paramsCodec(defaultParams, [dims, choice "d" …, flag "S" …])`, `state.ts:179`, with `DIFF_CHARS = "et"`, `state.ts:65`; the bare `{n}`: `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters". The `magnets` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `5x6dtS` and `5x6de`; `src/games/magnets/magnets.test.ts:54` holds `10x9dtS`. With the code fix of task 3.4a (`validateParams` gates the Normal floor on `full`): "Normal unless `w ≥ 5` or `h ≥ 5`" is now said of full params only, and the scenario "Invalid params are rejected" gains that the same params beside a description are accepted (`magnets.test.ts`, "rejects a 4x4 Normal board") |
 | Params: Every Magnets preset size is offered at each tier | removed, with its scenario | the preset table: `PRESETS`, `state.ts:132`-`142` (three lines a size); `engine-params`, "A board's tiers are one run of lines, and every tier is offered". The snapshot above holds the nine presets, `9x10de` among them |
 | Generation: Magnets grades boards with a tiered deductive solver | removed. Sentence 1 (a board is solved at its own difficulty, and a Normal board not at Easy) and the scenario "A generated board is uniquely solvable at its difficulty", which restated it, cut; sentence 2 (a deduction crosses a domino to its partner) joins "Generation: The deductions of Magnets' Easy tier" | `engine-difficulty`, "Every tier promises one solution found at its cap" and "A difficulty tier binds the board it generates" (solvable at the requested tier and not one tier down) |
 | Generation: The deductions of Magnets' Easy tier | gains "At either tier the solver SHALL propagate a deduction across a domino to its partner: a color excluded at one end excludes the opposite color at the other.", from the requirement above, with "At either tier" for the place it now stands in | |
@@ -17,6 +17,8 @@ what its params refuse.
 | Hint: A Magnets firing the player can write is one journey of legs | gains "The hint SHALL start from the player's own `?` marks as it does from the placed dominoes.", from the requirement above | |
 | Controls: The Magnets cursor walks onto the clues | title kept. "`CURSOR_SELECT` on a clue slot SHALL toggle that clue's done mark as a left-click there does" cut; "`CURSOR_SELECT2` on one SHALL do nothing" reworded "On a clue slot the right-click verb SHALL do nothing". Both scenarios kept | `engine-input`, "The engine owns a declaring game's press and select keys" (Enter applies the left-click verb, Space the right-click one); what the left-click verb does on a clue is this spec's "Controls: Magnets input cycles domino contents and toggles clue aids" |
 | Look: Magnets' win flash lights a domino whole | title kept. "SHALL sweep the dominoes diagonally" reworded "The win flash's elements SHALL be the dominoes", which keeps what is the game's (the element, and its position) and drops the route. Scenario kept | `ts-engine`, "A game gives each element a position, and the route is which position it gives" (`sweepStep`, a diagonal from the bottom left); the game's call is `flash.win(mid)`, `src/games/magnets/render.ts:523` |
+| Params: A Magnets params string with no tier is Normal, and with no S keeps its clues | added (Found, mended): what a string with no `d` and no `S` decodes to (`defaultParams` is `PRESETS[2]`, `src/games/magnets/state.ts:144`; `choice` and `flag`, `src/engine/params-codec.ts:259`, `:290`); the scenario's strings are the snapshot's `5x6de` and its brief `5x6` | |
+| Controls: The Magnets cursor walks onto the clues | Found, mended: the scenario "The cursor stops short of a corner" now says the cursor is shown, since on a hidden cursor the same press shows it | |
 
 ## Kept, and why
 
@@ -172,3 +174,17 @@ a clause of the one pointer `Params` has to its declaration, in the
 subject's only requirement, whose other sentences are bounds and refusals.
 `Generation` says what each tier's deductions are and holds no sentence of
 what a dealt board promises; the spec has no pasted-ID sentence.
+
+## Found, mended
+
+- A params string with no `d` decodes as Normal, and no `S` as not
+  stripped: added "Params: A Magnets params string with no tier is Normal,
+  and with no S keeps its clues". Upstream's decoder reads the same, so an
+  old link holds; that the short form of an Easy preset reads back as Normal
+  is for the owner.
+- The size refusals bind a written board too: left, code (the main
+  session's), and the sentence was not reworded to promise it.
+- "The cursor stops short of a corner": the scenario's WHEN now says the
+  cursor is shown (`moveCursor`, `index.ts:109`).
+- "Domino" in the spec's own sentences: left. The requirement keeps the word
+  from what a player reads, and a spec is not that.

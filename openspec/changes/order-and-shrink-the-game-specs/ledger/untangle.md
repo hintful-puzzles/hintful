@@ -4,10 +4,11 @@ The Purpose is unchanged.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Params: Untangle's params are a vertex count | title kept. Sentence 2 (the `n` field declares a lower bound of 4 and an upper bound, so the engine's check refuses outside them) cut; sentence 1 untouched. Scenario "Invalid params are rejected" dropped; "Params round-trip" kept | `bounds: { min: 4, max: MAX_POINTS }` on the `number-of-points` item of `paramConfig`, `src/games/untangle/index.ts:171`; `engine-params`, "Params validity is the engine's check" (scenario "A value outside its range") |
+| Params: Untangle's params are a vertex count | title kept. Sentence 2 (the `n` field declares a lower bound of 4 and an upper bound, so the engine's check refuses outside them) cut; sentence 1 untouched. Scenario "Invalid params are rejected" dropped; "Params round-trip" kept. Found, mended: a second sentence added, that a string with no number reads as 0 points, which the bounds refuse (`decodeParams`, `src/games/untangle/index.ts:182`-`186`), with the scenario "A string with no number", given in words | `bounds: { min: 4, max: MAX_POINTS }` on the `number-of-points` item of `paramConfig`, `src/games/untangle/index.ts:171`; `engine-params`, "Params validity is the engine's check" (scenario "A value outside its range") |
 | Controls: Vertices are dragged by pointer or keyboard | "as a `UI_UPDATE` with no history entry" cut from sentence 2; nothing else changed | `ts-engine`, "A UI-only input redraws without a history entry" |
 | Preferences: The Untangle port exposes its three preferences via the hook | retitled "Preferences: Untangle shows crossed edges until the player turns that off". Sentence 1 (the three keywords, their types and the two choice labels) cut. Sentence 2 (the defaults `newUi` sets, and why crossed edges are shown) reworded only to open on its own ("Untangle's `newUi` SHALL set its preferences' defaults"). Scenario "Untangle preferences round-trip through the engine" dropped; "A board opened with no preference set" written in words for the defaults | the keywords, types and labels: `prefs`, `index.ts:448`-`477`. The config and the values the engine returns, beside `show-timer`: `ts-engine`, "The engine supports per-game user preferences" and "Every game has a solve timer, and it runs while the board is undecided". That a set preference repaints and leaves the others: `ts-engine`, "`setPreferences` applies the keys it is given and repaints in full". **The promise to a stored preference** (the three key strings and the choice's order) is held by `src/games/untangle/untangle.test.ts:439`-`452`, "ships show-crossed-edges ON, snap OFF, vertex-style Circles": `getPreferences()` is compared whole with `"snap-to-grid": false`, `"show-crossed-edges": true`, `"vertex-style": 0` and `"show-timer": true`, so a renamed, added or dropped key fails it, and the `vertex-style` item with `choicenames: ["Circles", "Numbers"]`, so a reordered choice fails it. `untangle-render-scenario.test.ts:190` holds the repaint |
 | Hint: A hint step marks its vertex, its destination and the crossings it removes | title kept. Sentence 2 (what `redraw` draws for each mark: the line, the two points in the hint's color, the rings) cut. Sentence 1 kept. Scenario "Displayed hint is rendered" dropped; "A journey's first leg marks the others" kept | `hintMarks.roles.ring` ("the point to move, drawn in the hint's color, with a line in the same color running to the spot to drop it on, which is also drawn as a point… the other points it will move next are ringed too") and `.outline` ("the crossings the move clears, each with a ring round it"), `index.ts:407`-`412` |
+| Look: A point the player drops does not slide | added (Found, mended): the hand-written `animLength` answers 0 for a move the player just dropped, where the board had drawn the point on that spot, and a length for its undo (`justDragged`, `src/games/untangle/index.ts:251`, `:323`; `changedState`, `:212`-`:217`; `animLength`, `:437`). It says nothing of a hint's step | |
 
 ## Kept, and why
 
@@ -157,3 +158,18 @@ kept: 1.
   (the cancel keys, the release of a declined press, a hatch under content,
   a mistake check without an answer): none is stated. Untangle asks no
   `isCancelKey` and has no mistake check.
+
+## Found, mended
+
+- A played hint step lands at once where the spec says it slides: left: the
+  hint's animation is the main session's. As read on 2026-10-12 the release
+  arms set `justDragged` only for a drag a frame has drawn
+  (`src/games/untangle/index.ts:251`, `:323`), and the comment on the flag
+  says a hint's step slides (`src/games/untangle/state.ts:91`-`:94`).
+- Either button drags a point: left: the secondary button is the owner's
+  open question.
+- What a params string with no number is: stated in "Params: Untangle's
+  params are a vertex count", with a scenario in words.
+- Neither animation sentence says a dragged point does not animate: "Look: A
+  point the player drops does not slide" added. The two sentences that say
+  Solve and a hint's step animate were not touched.

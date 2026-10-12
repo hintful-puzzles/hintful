@@ -57,13 +57,25 @@ least one.
 - **THEN** it is refused with "Grid area must be at least six squares."
 - **AND** a 3×2 board is accepted
 
+### Requirement: Params: Inertia refuses a grid too large to count
+
+`validateParams` SHALL refuse, as too large, a grid whose width times height
+is not a safe integer: one of 2⁵³ squares or more, which the game's arithmetic
+cannot hold exactly.
+
+#### Scenario: A grid a hundred million squares on each side
+
+- **WHEN** a grid a hundred million squares wide and as many high is validated
+- **THEN** it is refused with "Width times height must not be unreasonably
+  large."
+
 ### Requirement: Description: Descriptions encode the grid, and the start square becomes a stop
 
 The desc SHALL be exactly `w · h` characters from `{b, g, m, s, w, S}` (blank,
 gem, mine, stop, wall, start), row-major. `newState` SHALL place the ball on the
-single `S` square and treat that square as a stop-square thereafter.
-`validateDesc` SHALL reject a desc of the wrong length, containing an unrecognized
-character, without exactly one start square, or without at least one gem.
+single `S` square and treat that square as a stop-square thereafter. A desc
+SHALL be refused when it is of the wrong length, contains an unrecognized
+character, has not exactly one start square, or has no gem.
 
 #### Scenario: Start square is a stop square
 
@@ -73,8 +85,8 @@ character, without exactly one start square, or without at least one gem.
 
 #### Scenario: A desc with no gems is rejected
 
-- **WHEN** `validateDesc` is given a desc containing no `g`
-- **THEN** it returns a non-null error string
+- **WHEN** `sSbbbb`, which holds no `g`, is loaded for a 3×2 board
+- **THEN** it is refused: "This game ID has no gems to collect."
 
 ### Requirement: Generation: Generated boards place gems only where the ball can go and come back
 
@@ -240,8 +252,8 @@ mouse's right click plays as its left does.
 
 ### Requirement: Hint: The hint plans for the nearest gem the ball can safely take
 
-The hint SHALL plan in **legs**: a leg is the shortest walk
-to a gem, ending with the move that collects it. Each leg SHALL go for the
+The hint SHALL plan in **legs**: a leg is the shortest walk to a gem, ending
+with the move that collects it. Each leg SHALL go for the
 **nearest** gem, fewest moves to collect, that the ball can take **without
 stranding itself**: a candidate leg SHALL be rejected when the position it
 leaves behind can no longer be solved, and the next-nearest tried instead.
@@ -383,8 +395,8 @@ to prevent.
 ### Requirement: Hint: The hint refuses honestly when the move to make is undo
 
 `hint` SHALL refuse when the ball is dead, and when some gem can no longer be
-reached by any sequence of moves, outlining each such gem, and each refusal SHALL say that the move to
-make is to undo.
+reached by any sequence of moves, outlining each such gem, and each refusal
+SHALL say that the move to make is to undo.
 
 #### Scenario: The hint refuses honestly when the ball is dead
 
@@ -400,9 +412,8 @@ make is to undo.
 
 ### Requirement: Hint: An aimed swipe's arrow replaces the hint's
 
-While a swipe is
-aimed in a direction, its aim arrow SHALL replace the hint's arrow, being what
-the ball will actually do next.
+While a swipe is aimed in a direction, its aim arrow SHALL replace the hint's
+arrow, being what the ball will actually do next.
 
 #### Scenario: A swipe aimed across a displayed hint
 

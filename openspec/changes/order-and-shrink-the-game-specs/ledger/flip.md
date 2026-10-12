@@ -5,6 +5,7 @@ solvable".
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
+| Description: A Flip board no set of presses lights does not load | added (Found, mended): `hasNoSolution` holds for a board no set of presses lights (`!hasAnswer`, `src/games/flip/index.ts:265`), so it does not load, and a press keeps a board one with an answer, so the refusals of Solve and the hint meet no board a player opens. Its scenario's ID is the one `src/engine/no-solution-load.test.ts:32` holds | |
 | Rules: A press flips the square and its matrix-defined neighbors | title kept. "Clicking a square, or selecting it with the keyboard cursor," reworded to "Pressing a square". Scenario untouched | `targetVerbs.primary`, `src/games/flip/index.ts:113`; `engine-input`, "The engine owns a declaring game's press and select keys" (Enter applies the left-click verb). The `Controls` requirement now sends the reader there |
 | Rules: Flip's rulesets are Crosses and Random | removed, with its scenario "The help says what Random changes" | `rulesetItem` with its two entries and their `rule` strings, `index.ts:72`-`89`; `engine-params`, "A game declares its rulesets with rulesetItem"; the help: `help-pages`, "A game page's list of rulesets is generated". Which squares each flips stays in "Rules: Flip's two toggle matrices" |
 | Params: Flip's params encoding | retitled "Params: A Flip params string is its declared codec's, and one with no ruleset letter is Crosses". Sentence 1 (width and height, then `c` or `r` in the full form) and the first two shorter forms of sentence 2 replaced by a pointer to the declaration that says the game departs nowhere from the grammar (rule 2). "a string without one decoding as Crosses" kept, as a sentence. Scenario untouched | the fields: `paramConfig`, `index.ts:67`-`90`; the encoding: `paramsCodec(defaultParams, [dims(paramConfig), letters(paramConfig, RULESET_KW, ["c", "r"], { full: true })])`, `index.ts:94`-`97`; `"5"` and `"5x4"`: `engine-params`, "The codec grammar is a prefix, tagged segments, flags and letters". The `flip` entry of `src/engine/__snapshots__/params-stability.test.ts.snap` holds `5x5c`, `5x5r` and the short `5x5` |
@@ -175,3 +176,22 @@ nothing of an arrow at the edge, so `engine-input`, "The engine provides the
 geometry of a grid of squares" takes nothing from it.
 
 Each subject read alone: none hollow, no fragment, every title fits.
+
+## Found, mended
+
+- A board no presses light does not load, and the spec said so nowhere:
+  stated, in "Description: A Flip board no set of presses lights does not
+  load", with the ID the engine's test holds.
+- Two requirements describe what a player can never meet (Solve's
+  `NO_SOLUTION` and the hint's refusal): left as they stand, each true of
+  the function, and the new `Description` requirement says no board a player
+  opens meets either. The comment at `src/games/flip/hint.ts:41` ("Only a
+  game ID typed by hand") is false and is code; reported.
+- `validateParams`' second sentence for a grid too large: left: code, which
+  the main session has fixed or is fixing; the spec's scenario gives the
+  collection's sentence.
+- The generator rules out the solved board itself: left: code, the main
+  session's.
+- "no two identical rows" is checked only for Random: left: true of both
+  rulesets on every board of more than one square, as the item says.
+- The right button does nothing: left: two declarations'.

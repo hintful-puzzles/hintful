@@ -12,9 +12,10 @@ measured that day; the query is given where there is one.
   amended: § "The owner's answer" is the rule it followed and § "What the
   cut measured" is what it came to. § "The question for the owner" is kept
   as what was asked, and its recommendation of A is superseded.
-- **What is left** is in `tasks.md`: the findings the readers made (3.4a),
-  a last whole read of the specs the guide names as the ones to copy, and
-  the archive.
+- **What the readers found is mended or raised** (§ "Found by the readers,
+  and mended"), and the four specs the guide names as the ones to copy were
+  read whole. One question is the owner's: § "Found, and the owner's to
+  decide", Boats' hint mark.
 
 ## The order
 
@@ -422,7 +423,103 @@ engine. Three things the rules then kept:
   compared before and after and none differing. The bare top-row digits stay
   bound, which `docs/input.md` § "The numeric keypad never arrives" asks for.
 
+## Found by the readers, and mended (task 3.4a, 2026-10-12)
+
+Every ledger's `## Found` was gone through by a reader per batch of games
+under `brief-found.md`, and each ledger ends with `## Found, mended`: one
+line an item, mended or left and why. 53 specs changed, and the four the
+guide names as the ones to copy were then read whole (`## Whole read` in
+their ledgers: 15 citations checked, all resolving; every hunk of Palisade's
+diff against `c86372f4` has its row). What the specs gained is what a player's
+data or hands depend on and no requirement said: what a params string with no
+`d` or no flag decodes to (Keen, Light Up, Magnets, Map, Singles, Signpost,
+Undead, Unequal), a hand-written keep-track verdict (Bricks, Dominosa, Net,
+Netslide, Pegs, Slant, Spokes), Solve (Galaxies, Loopy), a search's budget
+(ABCD, Crossing, Filling). What they lost is a sentence the code contradicts,
+a hook that does not exist (`validateDesc` in four specs) and a requirement
+said twice. The 57 now stand at 9% under `c86372f4`.
+
+In the code, each run in the app or pinned by a test seen to fail:
+
+- **Untangle: a played hint step slides.** `justDragged` was set by every
+  release, the hint's included, so `animLength` answered 0 and each point of
+  an applied hint jumped. It is now set only for a drag the board has drawn
+  (`ds.dragPoint`): the player's point is already under the pointer, the
+  hint's never was. `untangle-landing.test.ts` holds both halves; in Chrome
+  the point is mid-way 450 ms after "Apply the hint", and a mouse drag still
+  lands at once.
+- **Seismic: the two size bounds bind dealing only.** `validateParams`
+  ignored `full`, so a shared board past 64 cells (100 in Tectonic) was
+  refused at load, which upstream, having no bound, deals and shares.
+  Measured: a 9×8 Seismic and 11×10, 12×11 and 12×12 Tectonic boards each
+  load in 1 to 5 ms (one solver run). Two of them are pinned in
+  `seismic.test.ts`. After such a board, New game answers "No Easy puzzle of
+  this type was found", the engine's sentence for any size only loading
+  admits.
+- **Magnets: Normal's "a side of five" floor binds dealing only**, as its
+  3×6 refusal beside it already did.
+- **Solo: a symmetry code no encoder writes is refused** (`3x3m3`, `3x3r7`,
+  `3x3a5`, `3x3md8`), where it was read as the default.
+- **Mosaic: over 10000 squares is refused in the collection's sentence**, as
+  Clusters' same ceiling is. **Flip's**, fixed in 16867030, was looked at in
+  the Custom dialog at 300×300: it reads "Width times height must not be
+  unreasonably large."
+- **Undead's "Width times height must be at most 54." stays**, and
+  `engine-params`, "A grid too large for a game is refused in one sentence"
+  now says why: a ceiling a player meets at a size they might well ask for
+  (8×8 is past it) names its number. `docs/mechanics.md` already gives that
+  sentence as the model of a refusal.
+- **Subsets' help said "the number under the cursor"** of a slot that holds
+  a letter; the verb's `does` string now says letter, read in the help page.
+- **The default tier of every game with the search's tiers is Easy**, which
+  `engine-difficulty` requires and nothing asserted:
+  `difficulty-contract.test.ts`.
+- **`src/store/settings.ts` no longer seeds `pencil-keep-highlight`**: the
+  engine's default is the one copy.
+- Stale comments in Filling's and Pattern's solvers, Flip's hint, Slant's
+  renderer and above Sokoban's `hintGesture`.
+
+Looked at and left, each with its reason:
+
+- **A short params form is never handed to a player.** The app writes a game
+  ID with full params (`Midend`'s `${encodeParams(boardParams, true)}:${desc}`),
+  so a short form arrives only in a link another build wrote, where the board
+  is graded as it loads. That Magnets' `5x6` and Undead's `5x5` decode as
+  Normal is upstream's default and is now stated in each spec.
+- **Slide refuses a board over 48 squares however it arrives**: its spec says
+  so with the reason (the solver's memory), and Solve and the hint are that
+  solver.
+- **Loopy's `buildLoopyGrid` counts its own draws**: it keeps the best of a
+  fixed number of draws and is no generate-until-success loop.
+- **Fifteen, Flip and Twiddle each rule out a solved board** that `generate`
+  would deal again. A second copy, harmless; removing it moves which board a
+  direct call of `newDesc` returns, for nothing a player sees.
+- **Mathrax's clear key leaves the notes of an empty square** outside pencil
+  mode, where Keen's clears them; in pencil mode both clear. Unruly's digit
+  on a hidden cursor does nothing where Backspace shows it. Netslide counts
+  Solve as one move more, where upstream sets the count to 1. A typed
+  `50x50` Mosaic deals with aggressive generation. Filling's parser admits a
+  clue of 3 on a 1×2 board. None is met on a board the app deals.
+- **Requirements that state what a test asserts or how a thing is built**
+  (ABCD, Ascent, Pearl, Seismic, Slide, Solo, Spokes, Tents, Towers, Undead:
+  named in each ledger) were not rewritten: `openspec/config.yaml` asks for
+  neither in a spec, and each needs its behavior found and said in its place.
+
 ## Found, and the owner's to decide
+
+- **Boats marks the square a hint decides with a filled shape and no ring**
+  (a boat segment or waves in the hint color, `src/games/boats/render.ts`),
+  where `engine-hints`, "A hint marks beside the content, never behind it"
+  has the acted-on cell "ringed and not filled, in every game and with no
+  exceptions", the owner's ruling of 2026-08-22
+  (`src/engine/hint-mark.test.ts`). Boats' mark and the guide section it
+  follows (`docs/hints-marks.md` § "Echo the move's shape in the hint
+  color") both predate the ruling, and the guard has no case that reads
+  Boats' target. Two ways out: Boats rings the square and draws its shape
+  inside the ring, or the requirement takes the echo as an exception for a
+  step that decides squares of two kinds. Recommended: the first. It keeps
+  boat told from water and keeps "one mark means one thing"; it changes what
+  a Boats hint looks like, so it waits for the owner's word.
 
 - **Inertia and Slide fold the secondary button onto the primary by hand**,
   where seven games declare `ignoresSecondaryButton`. The fold is one of the

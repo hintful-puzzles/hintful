@@ -185,3 +185,19 @@ with them. Clauses kept: 5.
 - **Left the game's own**: "Easy where the three rules finish it"
   (`deductionFinishes` is each game's).
 - No "no departure" sentence and none on what a pasted game ID opens as.
+
+## Found, mended
+
+- The too-large refusal is in a sentence of Range's own: left: "Params:
+  Range params are refused outside their bounds" states the limit on the
+  sum, and nothing contradicts it.
+- The spec never stated the drag: left: `targetVerbs.sweep` declares it, and
+  the `Controls` requirement names `targetVerbs`.
+- Black, white and empty against shaded and a cross: left: "Look: Range
+  draws a shaded cell as the collection's shaded piece" ties the words, and
+  no sentence is false.
+- The removed hint requirement said applying every step solves the board:
+  left: the requirement is gone, and "Hint: Range's hint stops where its
+  rules do" says where the hint stops.
+- `hintRungs` lists `adjacency` first: left: code, and no defect; "Hint:
+  Range's hint takes the clue rule first in each pass" states the order.

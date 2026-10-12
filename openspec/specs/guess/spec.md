@@ -64,7 +64,8 @@ without a win.
 ### Requirement: Rules: A row is submittable only when it is markable
 
 A row SHALL be submittable (`markable`) only when enough pegs are filled (all,
-unless `allowBlank`) and, when `allowMultiple` is false, no color repeats.
+or at least one where `allowBlank` is on) and, when `allowMultiple` is false,
+no color repeats.
 
 #### Scenario: Submit is only offered for a markable row
 
@@ -687,15 +688,16 @@ only as one of those that can win.
 
 While the game is in play the status line SHALL name the guess in progress and
 the number available, and, when the working row cannot be submitted because a
-color repeats under `allowMultiple: false`, SHALL say so: a submit that is
-silently declined reads to a player as a broken key.
+color repeats under `allowMultiple: false`, SHALL read `Guess N of M: this
+game allows no repeated colors.`: a submit that is silently declined reads to
+a player as a broken key.
 
 #### Scenario: A repeat under no-duplicates is explained
 
 - **WHEN** the working row is filled with a repeated color in a game with
   `allowMultiple: false`
-- **THEN** the submit key produces no move and the status line says that
-  repeated colors are not allowed
+- **THEN** the submit key produces no move and the status line ends `: this
+  game allows no repeated colors.`
 
 #### Scenario: The explanation goes when the repeat does
 

@@ -54,20 +54,6 @@ board that starts finished and which the generator provably cannot satisfy.
 - **THEN** they are rejected with a message the custom-parameters dialog can show
 - **AND** a limit of one and a negative limit are both accepted
 
-### Requirement: Params: A Slide board too large for the solver's search is rejected
-
-`validateParams` SHALL reject a board whose cell count exceeds a documented
-bound, because generation runs an exhaustive breadth-first search whose memory
-grows explosively with board area and, past the bound, exhausts the heap rather
-than merely running slowly. The measurements that set the bound SHALL be
-recorded with it.
-
-#### Scenario: A board too large to generate is rejected with a reason
-
-- **WHEN** parameters whose cell count exceeds the documented bound are validated
-- **THEN** they are rejected with a message the custom-parameters dialog can show,
-  rather than being accepted and then exhausting memory during generation
-
 ### Requirement: Params: Slide's params write the limit as m and a number, or u
 
 `encodeParams` SHALL write `{w}x{h}` and then `m{n}` for a solution-length
@@ -88,11 +74,20 @@ neither `m` nor `u` as the default limit of 40.
 - **THEN** the board is 7 by 6 with a limit of 40
 - **AND** `6u` is a 6 by 6 board with no limit
 
-### Requirement: Params: Slide's area limit holds for a board that arrives with its description
+### Requirement: Params: A Slide board of more than 48 squares is refused, dealt or loaded
 
 `validateParams` SHALL refuse a board of more than 48 squares whatever `full`
 says, so the limit holds whether the board is to be dealt or arrives with its
-description.
+description: the solver runs an exhaustive breadth-first search whose memory
+grows explosively with board area and, past the bound, exhausts the heap
+rather than merely running slowly. The measurements that set the bound SHALL
+be recorded with it.
+
+#### Scenario: A board too large to generate is rejected with a reason
+
+- **WHEN** parameters whose cell count exceeds the documented bound are validated
+- **THEN** they are rejected with a message the custom-parameters dialog can show,
+  rather than being accepted and then exhausting memory during generation
 
 #### Scenario: A 7 by 7 board is refused with its description in hand
 

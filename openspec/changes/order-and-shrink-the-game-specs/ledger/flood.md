@@ -4,6 +4,8 @@ The Purpose is unchanged.
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
+| Status bar: Flood's status bar counts moves against the limit | Found, mended: the sentence gives the words, as `0 / 23 moves` with `FAILED! ` before it on a lost board (`statusbarText`, `src/games/flood/index.ts:125`), where it said "opening with `FAILED!`". Scenario untouched | |
+| Look: The fill that loses a Flood board blinks it | added (Found, mended): `flashLength` answers three beats on the forward move that loses (`src/games/flood/index.ts:179`), and `redraw` fills every tile with the mark color on all but the second (`src/games/flood/render.ts:222`, `:115`). Its scenario is the case `src/games/flood/flood-render.test.ts:128` holds | |
 | Params: Flood refuses params it cannot deal | title kept. Sentence 2 ("A `colors` outside 3–10 and a negative `leniency` SHALL be refused too.") cut. Scenario "Too many colors are refused" dropped; "A one-square grid is refused" kept | `bounds: { min: 3, max: MAXCOLORS }` on `colors` and `bounds: { min: 0 }` on `extra-moves-permitted`, in `paramConfig`, `src/games/flood/index.ts:221` and `:230`; `engine-params`, "Params validity is the engine's check" (a bound's refusal names the field by its label; scenario "A value outside its range"). `src/games/flood/flood.test.ts:69` holds "Colors must be at most 10." |
 | Hint: Flood offers a solver-backed hint plan | "and highlighting the squares that fill will absorb" cut, the sentence ending at "narrated by its color"; the scenario untouched | `hintMarks.roles.ring` ("a black dot on every square the named color's fill would join to your region"), `index.ts:269` |
 | Controls: Flood input fills with the chosen square's color | gains a first sentence that names `targetVerbs` and `engine-input`, "The engine owns a declaring game's press and select keys", for the click, the cursor and the select keys (rule 2); the rest and the scenario untouched | |
@@ -113,3 +115,12 @@ name Flood: 0. Engine requests of its own: 0. Sentences cut: 0. Clauses kept:
   opens as". The one mention of `engine-difficulty` is in this ledger and
   not in the spec: Flood's Easy, Medium and Hard are no tier, which "Params:
   Flood's Easy, Medium and Hard name the extra moves" says.
+
+## Found, mended
+
+- `Controls` said nothing of how a square is chosen: left: the review added
+  the sentence.
+- No requirement states the defeat blink: stated, in "Look: The fill that
+  loses a Flood board blinks it".
+- The status bar's requirement does not give the words: it now does, as the
+  code has them.

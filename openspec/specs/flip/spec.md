@@ -95,6 +95,20 @@ set bit past a bitmap's last, a missing comma and anything after the lights.
   which sets a bit after the ninth square's
 - **THEN** the description is refused
 
+### Requirement: Description: A Flip board no set of presses lights does not load
+
+`hasNoSolution` SHALL hold for a board no set of presses lights, so its
+description does not load. A press keeps a board one that some set of presses
+lights, so the refusals Solve and the hint make of such a board meet no board
+a player opens.
+
+#### Scenario: A matrix that flips nothing
+
+- **WHEN** `000000000000000000000,800` is opened under `3x3c`, a board where
+  no press flips anything and one square is unlit
+- **THEN** it reads as a description and is refused as a puzzle with no
+  solution
+
 ### Requirement: Generation: Flip generates solvable boards
 
 For every preset, in both matrix types, `newDesc` SHALL produce a board whose

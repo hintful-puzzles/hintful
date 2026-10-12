@@ -63,7 +63,14 @@ Tricky tier is `"hard"`.
 
 Params SHALL be encoded `{w}` without `full` and `{w}d{c}{m?}` with `full`,
 where `c` is `e`, `n`, `h`, `x` or `u` for the five tiers in order and a
-trailing `m` marks a multiplication-only puzzle.
+trailing `m` marks a multiplication-only puzzle. A string with no `d` SHALL
+decode as Normal, and one with no `m` as a puzzle with every operation.
+
+#### Scenario: A string with no tier
+
+- **WHEN** `6` is decoded
+- **THEN** it is a 6×6 board at Normal with every operation, whose full form
+  is `6dn`
 
 #### Scenario: Params round-trip
 
@@ -201,13 +208,13 @@ letter are only ever the letter written twice.
 ### Requirement: Generation: Keen's tiers are the Latin-square deductions a board needs
 
 The solver SHALL accept a completed grid only when every cage's digits satisfy
-its clue. Of the shared Latin-square deductions, Easy SHALL allow the simple
-ones, Tricky the set deductions, Hard the deeper set deductions and forcing
-chains, and Unreasonable recursion.
+its clue. Of the shared Latin-square deductions, Easy and Normal SHALL allow
+the simple ones, Tricky the set deductions, Hard the deeper set deductions and
+forcing chains, and Unreasonable recursion.
 
 #### Scenario: Solver grades a known board
 
-- **WHEN** `solveKeen` is run on a generated board at its difficulty
+- **WHEN** the solver is run on a generated board at its difficulty
 - **THEN** it returns that difficulty and fills the grid with the unique solution
 
 ### Requirement: Generation: A cage deduction enumerates the cage's layouts
@@ -237,10 +244,10 @@ mix of cage operations and values that avoids low-quality clues.
 
 ### Requirement: Controls: Keen selects a cell through the shared note-taking cell
 
-Keen SHALL take its selection from the engine's note-taking cell
-(`engine-notes`, "The note-taking cell is one shared mechanic"). Every cell
-SHALL take an entry, since Keen has no givens, and only an empty cell SHALL
-take a pencil mark.
+Keen SHALL take its selection, its pencil mode and its Mark-all from the
+engine's note-taking cell (`engine-notes`, "The note-taking cell is one shared
+mechanic"). Every cell SHALL take an entry, since Keen has no givens, and only
+an empty cell SHALL take a pencil mark.
 
 #### Scenario: A right press on a filled cell without sticky mode
 
@@ -249,7 +256,7 @@ take a pencil mark.
 - **THEN** the highlight moves to that cell and is not shown, because the cell
   can take no pencil mark
 
-### Requirement: Controls: Keen interprets digit, pencil, and mark-all input
+### Requirement: Controls: A Keen digit key enters or pencils its digit, and 0, Backspace and Space clear
 
 With a cell highlighted, a digit key `1..w` SHALL enter that digit, or in
 pencil mode toggle that pencil mark, and backspace or space, which is the

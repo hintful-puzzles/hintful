@@ -2,7 +2,7 @@
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
-| Rules: Twiddle is solved when its tiles read in order | title kept. "and SHALL NOT itself be solved" cut from sentence 2; sentence 3 ("The game SHALL provide `statusbarText`, `solve` and `textFormat`.") cut. The scenario is renamed "A generated board is scrambled" and loses "that is not itself the solved arrangement, and reports a not-completed status" | not solved: `engine-difficulty`, "A board that comes solved is dealt again" (`generate`, `src/engine/deal.ts:51`); the three methods: the `Game` object, `src/games/twiddle/index.ts:296`-`300`, and `ts-engine`, "Solve, the status bar and text export follow from the game's methods" |
+| Rules: Twiddle is solved when its tiles read in order | title kept. "and SHALL NOT itself be solved" cut from sentence 2; sentence 3 ("The game SHALL provide `statusbarText`, `solve` and `textFormat`.") cut. The scenario is renamed "A generated board is scrambled" and loses "that is not itself the solved arrangement, and reports a not-completed status". Found, mended: sentence 2 as the cut left it ("A generated board SHALL be a scramble of the solved arrangement by rotations") and the scenario move to the new "Generation: A Twiddle board is the solved one shuffled by turns"; the requirement gains the scenario "One number to a row" (`isComplete` asks only that the numbers do not fall, `src/games/twiddle/state.ts:199`) | not solved: `engine-difficulty`, "A board that comes solved is dealt again" (`generate`, `src/engine/deal.ts:51`); the three methods: the `Game` object, `src/games/twiddle/index.ts:296`-`300`, and `ts-engine`, "Solve, the status bar and text export follow from the game's methods" |
 | Params: Twiddle refuses a board smaller than its block | title kept. "each with a human-readable reason" cut. The scenario's THEN ("it returns a non-null human-readable reason") now gives the sentence `validateParams` returns | `engine-params`, "A params refusal is a sentence". The sentence: `src/games/twiddle/state.ts:103` |
 | Params: Twiddle's short params are its full ones | title kept. "It SHALL refuse a character it does not know" cut, and the sentence's other half ("SHALL read `n0` as a block of 2") joined to the one before. Scenarios untouched | `engine-params`, "A params string is read whole or refused" |
 | Params: Twiddle's block is at least two squares wide | removed, with its scenario "A block of one square" | `bounds: { min: 2 }` on the block-size item and `bounds: { min: 0 }` on the shuffle item, `index.ts:235` and `:273`; `engine-params`, "Params validity is the engine's check" (each item's `bounds`, named by the label its dialog shows). `src/games/twiddle/twiddle.test.ts:107` holds "Rotating block size must be at least 2." |
@@ -10,6 +10,9 @@
 | Controls: A click rotates the block centered on it | title kept. "`interpretMove` SHALL convert a left or right click to a rotation" and the last sentence (left anticlockwise, right clockwise) cut. The offset and the refusal of a block off the grid kept, reworded to stand alone ("A click SHALL be offset", "make no move" for "reject"); "and mapping the result to grid coordinates" cut with the clause it explained. Scenario untouched | `targetVerbs.primary` ("rotate it anticlockwise") and `.secondary` ("rotate it clockwise"), `index.ts:98`-`105`; `engine-input`, "The engine owns a declaring game's press and select keys". That anticlockwise is `dir +1` stays in "Controls: Letter and numpad keys rotate fixed blocks" |
 | Controls: The Twiddle cursor moves over the rotation origins | third pass: "clamped at the edges without wrapping" reworded out; that the cursor's squares are the rotation origins, how its block is outlined and the scenario kept | `engine-input`, "The engine provides the geometry of a grid of squares" (an arrow stops at the grid's edge unless the game declares `wrap`; its scenario "A grid that is not the board's cells" is Twiddle's); `squareGrid` with no `wrap`, `src/games/twiddle/index.ts:92` |
 | Look: The Twiddle completion flash lights each tile's face | title kept. Third pass: the sentence as the first cut left it (the face filled inside the bevel, the number and the orientation mark kept) cut, and one written for what the kept scenario says: the flash lights the tiles, and a tile it has left is alone repainted, with its own face; `engine-colors`, "A lit beveled tile is lit on its face and keeps its bevel" (the number "and any mark on it" drawn as on any other frame) states what went. Earlier: Sentence 1 ("The completion flash SHALL sweep the tiles diagonally, a tile's position being its place in the grid") cut. Sentence 2 reworded to stand without it ("A tile the completion flash lights SHALL have its face filled" for "A lit tile's face SHALL be filled"). Scenario untouched | `ts-engine`, "A game gives each element a position, and the route is which position it gives" ("`sweepStep` of its center otherwise: a diagonal from the bottom left to the top right"). `flash.win(sweepStep(tx, ty))`, `src/games/twiddle/render.ts:348` |
+| Generation: A Twiddle board is the solved one shuffled by turns | added (Found, mended): holds the sentence and the scenario "A generated board is scrambled" that stood under `Rules`, and states how long the shuffle is with no target and which turns it does not make (`newDesc`, `src/games/twiddle/state.ts:365`, `:379`-`:392`). It says nothing of a shuffle that comes out solved, which is the main session's | |
+| Description: Twiddle refuses a board no turns can put in order | Found, mended: one line past the wrap rewrapped; no word changed | |
+| Controls: Letter and numpad keys rotate fixed blocks | Found, mended: retitled "Controls: A capital letter turns its block back, and a midway key needs a block midway" and cut to what "Controls: Each Twiddle letter and keypad digit has its block" does not state: the direction, the capitals and the parity condition. Which letter and which corner digit has which block went; both scenarios kept | "Controls: Each Twiddle letter and keypad digit has its block", in this spec (one arm, `fixedBlockKey`, `src/games/twiddle/index.ts:126`) |
 
 ## Kept, and why
 
@@ -167,3 +170,21 @@ one pointer, to `targetVerbs`, from the second pass.
 
 Each subject read alone: none hollow, no fragment, every title fits. The
 Purpose names nothing that went.
+
+## Found, mended
+
+- The generator rules out the solved board itself: left: code, the main
+  session's; the new `Generation` requirement says nothing of it.
+- Two requirements state `fixedBlockKey` twice: the first cut to the
+  direction, the capitals and the parity condition, and retitled; which key
+  has which block is the second's alone.
+- A keypad digit with Shift still turns anticlockwise: left: the spec's "A
+  keypad digit SHALL turn anticlockwise only" holds.
+- `Rules` held a `Generation` sentence, and the shuffle's length and its
+  guard were unstated: "Generation: A Twiddle board is the solved one
+  shuffled by turns" added, the sentence and its scenario moved to it.
+- One line past the wrap: rewrapped.
+- Twiddle has no `hint`: left: no `Hint` subject is owed, and a hint is work
+  for the game, not the spec. Reported.
+- `Controls` does not say which button turns which way: left: `targetVerbs`
+  declares it, and the click requirement names the declaration.

@@ -177,7 +177,7 @@ deduction (`check-neighbors-both-ways`) and the bridge-parity argument
 - **THEN** neither the two-way neighbor deduction nor the bridge-parity
   argument runs
 
-### Requirement: Generation: Tracks generates solver-gated boards
+### Requirement: Generation: A Tracks deal lays its track by construction and strips the clues its tier can spare
 
 `newDesc` SHALL strip every clue the board solves at its tier without. It
 SHALL lay the track by construction and not by throwing tracks away: a walk

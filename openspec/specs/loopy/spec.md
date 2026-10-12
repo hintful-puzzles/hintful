@@ -458,6 +458,18 @@ rule.
 - **THEN** the same deduction fires and its sentence reads the same with that
   clue's digit throughout
 
+### Requirement: Solver: Solve fills in the answer from the clues alone
+
+Solve SHALL solve from the clues alone at the top tier and never from the
+player's lines, so that a mistake on the board does not reach it, and SHALL
+set every edge the solver decided to its state: a line, or ruled out.
+
+#### Scenario: Solve on a board with a wrong line
+
+- **WHEN** Solve is asked for on a board where the player has drawn a line
+  the loop does not run along
+- **THEN** that edge is ruled out and the board is solved
+
 ### Requirement: Controls: Loopy is playable from the keyboard alone
 
 Loopy SHALL accept keyboard input that can select any edge and set it to any of

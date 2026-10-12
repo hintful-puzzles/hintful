@@ -1,6 +1,9 @@
 # net
 
-The Purpose was left as it stood: it names nothing the cut removed.
+The Purpose was left as it stood by the cut: it names nothing the cut
+removed. Found, mended: "Its boards are uniquely solvable without guessing",
+true of an Easy board only, now reads "Its boards have one answer, which an
+Easy board gives up without guessing".
 
 | Requirement (title as it stood) | What happens | Where it is stated instead |
 | --- | --- | --- |
@@ -19,6 +22,7 @@ The Purpose was left as it stood: it names nothing the cut removed.
 | Hint: Net's hint reasons from notes, locks and walls | "Net SHALL provide an explained `hint` that reasons" reworded to "Net's hint SHALL reason"; nothing else | `engine-hints`, "The engine supports an ephemeral Hint System"; the `Game` type (`hint`) |
 | Hint: Net's hint stops where its deductions do | third pass: "The hint SHALL never run the search.", "and no others, and where none is forced it SHALL refuse with the collection's sentence that deduction has run out" and "It SHALL go on from the squares the player then locks." cut; kept, reworded to stand, that on an Unreasonable board the steps are the notes and locks the four reasons force from the player's locks, notes and the walls. The scenario cut to its last line (a square locked rightly wherever the hint stops lets it finish the board) and retitled "The hint goes on from a square locked rightly" | `engine-hints`, "The hint of a game on the search's tiers never searches"; `engine-hints`, "A hint gives every step deduction still forces before it refuses" (the steps forced and no refusal while one remains; asked again it deduces from the board as it then stands; its scenario "A board that stalls part-way") |
 | Look: The completion flash spreads from the source along the wires | third pass: how the distance is measured ("in tiles along the connections, through the wrap of a wrapping board and never through a barrier") reworded out, the sentence now naming `wireDistance`; scenario "A neighbor the wires do not join" dropped and "The cursor on a tile the flash lights" written for the rings' sentence, which had no case of its own. Earlier: second sentence ("A lit tile's ground SHALL be filled with a flash color, locked or not, and the tile SHALL keep its wires.") cut, and the last sentence given "a flash color included" so the rings' claim still covers a lit tile. Scenarios "The ripple reaches an unlocked tile" and "The ripple reaches a locked tile" dropped; "A neighbor the wires do not join" kept | `engine-colors`, "A solved flash drawn as a color takes a shared color" (the ground of a tile filled and keeping what it holds; no surface lifted or swapped; its scenario "A board that lifts its cells"); `COL_FLASH` and `COL_FLASH_LEAD`, `src/games/net/render.ts:99`, chosen ahead of `COL_LOCKED` at `:309`; `engine-helpers`, "A wire distance is counted in tiles along the wires" (its scenario is the dropped one) |
+| Hint: A turn short of a Net step's wiring keeps the step | added (Found, mended): the verdicts of `netHintKeepTrack`, `src/games/net/hint.ts:288`, which does not call `trackTargets` | |
 
 ## Kept, and why
 
@@ -187,3 +191,15 @@ that.
 Each subject read alone: `Description` is one pointer with two cases of Net;
 no fragment, no dangling antecedent, every title fits. The Purpose names
 nothing that went.
+
+## Found, mended
+
+- The Purpose's "uniquely solvable without guessing": corrected, see above
+  the table.
+- The hint's keep-track verdict: added "Hint: A turn short of a Net step's
+  wiring keeps the step".
+- `decodeUi` takes an origin or source off the grid: left. `encodeUi` writes
+  only what the game holds, so only a save edited by hand carries one, and
+  no player reaches it.
+- The dropped scenarios' "once the highlight has left it": left, the
+  scenarios are gone.

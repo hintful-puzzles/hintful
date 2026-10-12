@@ -40,9 +40,10 @@ one answer does not contain. A missing edge SHALL NOT be a mistake.
 ### Requirement: Params: Rectangles' parameters and their encoding
 
 Params SHALL be `w`, `h`, `expandfactor`, a non-negative float that defaults
-to 0, and the difficulty. They SHALL encode as `{w}x{h}`, with an `e{%g}`
-suffix for a non-zero expansion factor and then the difficulty, Easy as `de`
-or Unreasonable as `du`, in the full form only. A bare `{n}` SHALL decode as a
+to 0, and the difficulty. They SHALL encode as `{w}x{h}`, followed in the
+full form only by an `e{%g}` suffix for a non-zero expansion factor and then
+the difficulty, Easy as `de` or Unreasonable as `du`; the short form SHALL
+write neither. A bare `{n}` SHALL decode as a
 square of that side, and an ID with no difficulty letter SHALL decode as Easy.
 A grid whose area is less than 2 SHALL be refused.
 
@@ -287,7 +288,7 @@ wide, whatever the expansion factor.
   of 2
 - **THEN** each is dealt, and the hint's steps finish it
 
-### Requirement: Solver: Rectangles' Solve returns the unique solution's edges
+### Requirement: Solver: Rectangles' Solve returns the generator's answer, or the search's, as edges
 
 `solve` SHALL return the generator's `aux` when it is present, and otherwise
 SHALL be made from the answer of the game's search, as its edges.

@@ -61,7 +61,7 @@ cell of its neighborhood unmarked.
 - **WHEN** the last clue becomes satisfied
 - **THEN** no clue is left and `status` returns `"solved"`
 
-### Requirement: Rules: Mosaic checks mistakes against the deduced solution
+### Requirement: Rules: Mosaic checks mistakes against the board's one answer
 
 `findMistakes` SHALL return every cell the player has determined whose mark
 contradicts the board's one answer, and each SHALL be drawn with an
@@ -80,13 +80,18 @@ Mosaic's params, a size, whether generation is aggressive and a difficulty,
 SHALL be bounded and encoded as its `paramConfig` and its declared codec give
 (`engine-params`, "A game declares its params encoding once, and both codec
 halves are derived"). A string with no `h` SHALL decode with aggressive
-generation on, whatever its size, and a string with no difficulty letter
-SHALL decode as Easy.
+generation on, whatever its size, a string with no difficulty letter SHALL
+decode as Easy, and a string of one number SHALL decode as a square board.
 
 #### Scenario: A string from before the tiers reads as Easy
 
 - **WHEN** `10x8` and `50x50h0` are decoded
 - **THEN** each is an Easy board, the second with `aggressive` false
+
+#### Scenario: One number is a square board
+
+- **WHEN** `7` is decoded
+- **THEN** it is a 7×7 Easy board with aggressive generation on
 
 ### Requirement: Params: Mosaic refuses a board of more than 10000 squares
 

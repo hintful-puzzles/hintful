@@ -45,6 +45,18 @@ diagonal line.
   carries a line
 - **THEN** no line is drawn and the board is unchanged
 
+### Requirement: Rules: Spokes is solved when every hub has its lines and all hubs are one group
+
+A board SHALL be solved when every hub carries exactly its number of lines, no
+two diagonal lines cross, and the lines join every hub into one group. Marks
+SHALL play no part in it.
+
+#### Scenario: Every count met in two separate groups
+
+- **WHEN** every hub carries exactly its number of lines and the lines leave
+  the hubs in two groups with no line between them
+- **THEN** the board is not solved
+
 ### Requirement: Rules: A Spokes mistake is a line the solution forbids or a mark where it needs a line
 
 `findMistakes` SHALL flag every line the player has drawn that the unique solution
@@ -226,6 +238,19 @@ resolves to no valid change SHALL leave the board unchanged.
   mark
 - **THEN** the mark is cleared and no line is drawn
 
+### Requirement: Controls: The Spokes cursor rests on a dot or on a hub's center
+
+The cursor's half-grid SHALL put a hub's center on every third position each
+way and the hub's eight dots on the positions round it, so that an arrow key
+steps from a hub to its dot and from that dot to the next hub's. A select key
+SHALL act on the spoke of the dot the cursor rests on, and on a hub's center
+SHALL change nothing.
+
+#### Scenario: A select key on a hub's center
+
+- **WHEN** the cursor rests on a hub's center and Enter is pressed
+- **THEN** no spoke changes
+
 ### Requirement: Controls: A press on a hub aims at the dot it points toward
 
 A press on a hub's square, and a drag from it, SHALL aim by the direction
@@ -305,7 +330,9 @@ checked.
 
 A plan computed again after the player has followed one leg of a journey SHALL
 still hold that journey's remaining legs, and nothing that contradicts the leg
-followed.
+followed. A move SHALL complete a leg only by setting that leg's own spoke to
+the state the leg shows; another spoke of the same deduction SHALL count as
+leaving the plan.
 
 #### Scenario: A journey resumes where the player left it
 
