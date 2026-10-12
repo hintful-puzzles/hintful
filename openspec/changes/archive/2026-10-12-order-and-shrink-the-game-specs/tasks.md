@@ -189,7 +189,9 @@ copy were read whole.**
       planted failures are in `design.md`.
 - [x] 4.2 `docs/new-game.md` § "What a game's spec holds" states the
       rule and the order.
-- [ ] 4.3 Gate, commit, archive, push. Before the archive: delete `tools/`
+- [x] 4.3 (`tools/cut-check.mjs` is deleted with this archive: it held each
+      ledger to its spec's diff against `c86372f4` and passed for all 57 at
+      e1029b0b) Gate, commit, archive, push. Before the archive: delete `tools/`
       (its import path breaks when the directory moves) and re-read the
       `repo-layout` delta against the specs as they stand. After it:
       `node scripts/checks/spec-subjects.mjs --fix`.
