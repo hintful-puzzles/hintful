@@ -359,10 +359,13 @@ whole predicate in one `filter`, or write a type guard.
 **A new game has no oracle; its assurance is behavioral, and the standard
 floor is a generation-invariant property test**: every generated board is
 uniquely solvable at *exactly* its stated difficulty, across a fixed-seed
-sweep. `scripts/new-game-port.sh` scaffolds a `<game>-generation.test.ts` stub
-for exactly this (the scaffold deliberately emits no differential stub — see
-the [`repo-layout`](../../openspec/specs/repo-layout/spec.md) scaffolding
-requirement). Beyond that floor:
+sweep. `scripts/new-game.sh` copies the skeleton's three test files with the
+game, passing, and they are the shape to keep
+([`src/skeleton/grid/`](../../src/skeleton/grid/)):
+`<game>-generation.test.ts` is this floor (`describeDealtTiers` over the
+presets and the smallest board, `describeLadderCensus` over dealt boards),
+`<game>-hint.test.ts` pins every rung, and `<game>.test.ts` is the game's own
+behavior. No differential is written for a new game. Beyond that floor:
 
 - Tier-1 behavioral tests: input→move mapping, `executeMove` purity,
   serialize/deserialize round-trips, completion detection.

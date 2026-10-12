@@ -37,10 +37,11 @@ input, params, difficulty, notes, colors, drawing, helpers) ·
 [`testing`](../../openspec/specs/testing/spec.md) (the in-process test tiers) ·
 [`help-pages`](../../openspec/specs/help-pages/spec.md) (a game's help page) ·
 per-game specs under `openspec/specs/<game>/`.
-Doctrine: [`doctrine.md`](../doctrine.md). **Exemplar to read
-end-to-end before starting:** [`src/games/galaxies/`](../../src/games/galaxies/).
-It is one of the larger games; § "File anatomy" says which files every game
-has.
+Doctrine: [`doctrine.md`](../doctrine.md). **A new game starts as a copy of
+the skeleton**, [`src/skeleton/`](../../src/skeleton/README.md): a small game
+that plays, on the shared way for every concern that has one. It is what to
+read before starting, and § "File anatomy" says what each of its files holds.
+No existing game is required reading.
 
 ## The guides
 
@@ -76,18 +77,20 @@ the pinned CLI installs (`propose`, `explore`, `apply`, `update`, `sync`,
 
 For a new game:
 
-1. **Open the change** (`add-<game>-ts-port`), decide the interface risks below
+1. **Open the change** (`add-<game>`), decide the interface risks below
    in its `design.md`.
-2. **Scaffold**: `scripts/new-game-port.sh <gameId>` stamps out
-   `src/games/<gameId>/` with compiling typed `Game<…>` stubs in the file shape
-   below, a starter test file (save round-trip + render smoke, both `it.skip`),
-   and a generation-invariants stub — then prints the manual-edit checklist it
-   deliberately won't do for you. The owning requirement is "A scaffolding
-   script stamps out a new game-port skeleton" in
-   [`repo-layout`](../../openspec/specs/repo-layout/spec.md).
-3. **Implement**, one concern at a time — the guide files above are ordered the
-   way the work usually goes: mechanics → input → rendering → solver/generator
-   → hints → tests throughout.
+2. **Scaffold**: `scripts/new-game.sh <gameId>` copies the skeleton to
+   `src/games/<gameId>/` and `help/games/<gameId>.md`, renamed for the game,
+   and checks the copy: it compiles, lints and passes its tests before a line
+   is changed. It then prints what the copy leaves undone. The owning
+   requirement is "A scaffolding script stamps out a new game from the
+   skeleton" in [`repo-layout`](../../openspec/specs/repo-layout/spec.md).
+3. **Implement by replacing the skeleton's puzzle with yours**, keeping its
+   tests green as you go: the board and the moves (`state.ts`), the rules
+   (`solver.ts`), the generator, the picture, the hint's sentences. Each
+   concern is already on the shared way, so where your puzzle fits it, change
+   the puzzle's part and leave the shape; where it does not, the guide for
+   that concern says what else a game may do.
 4. **Register** the game — two edits, made together because
    `catalog-registry.test.ts` holds them to each other: import the game in
    [`src/games/index.ts`](../../src/games/index.ts) and add its catalog entry
@@ -144,20 +147,24 @@ earlier line firing first makes the general claim false.
 
 ## File anatomy
 
-The file shape every game holds to (Galaxies is the reference; a game with no
-deduction or no dealt board has no `solver.ts` or `generator.ts`, and a large
-game splits further). Take the population of any row with
-`ls src/games/*/<file>`:
+The file shape a new game has, which is the skeleton's
+([`src/skeleton/grid/`](../../src/skeleton/grid/)). A game with no deduction
+or no dealt board has no `solver.ts` or `generator.ts`, and a large game
+splits further. The games written before the skeleton hold to it less evenly:
+take the population of any row with `ls src/games/*/<file>`.
 
 | File | Holds |
 | --- | --- |
-| `index.ts` | The `Game<…>` object + glue: move logic, `interpretMove`/`executeMove`, presets, `colors()`, `hint`/`findMistakes`, `registerGame(...)`. |
-| `state.ts` | Immutable state type + params, encode/decode/validate desc + params, `newState`, `cloneState`, the move/UI types. |
-| `solver.ts` | The deductive solver (used by the generator for uniqueness, by `solve`, and by `hint`/`findMistakes`). |
-| `generator.ts` | `newDesc`: board generation + retry-to-target-difficulty. |
-| `render.ts` | `redraw`, the palette indices, `computeSize`, the per-tile cache. |
+| `index.ts` | The `Game<…>` object and its glue: the target verbs, `status`, `solve`, `findMistakes`, the difficulty contract, `hintGesture`, `registerGame(...)`. |
+| `state.ts` | The state, params, move and `Ui` types; `paramConfig`, the presets and the params codec; the desc codec, `newState`, `cloneState`; and `executeMove`, here so that `hint.ts` can run a move without importing `index.ts`. |
+| `solver.ts` | The deduction ladder, declared once and run two ways: to a fixpoint (the generator's gate, `solve`, `findMistakes`) and one firing at a time (the hint). The rung list, as the kinds of reason a firing carries. |
+| `generator.ts` | `newDesc`: a board, and the retry until it needs exactly the tier asked for. |
+| `render.ts` | `redraw`, the palette indices, `computeSize`, the per-tile cache, the hint's marks. |
+| `hint.ts` | The hint's plan: the solver's firings turned into steps, and `hintKeepTrack`. Always its own file, however short. |
 | `hint-text.ts` | Every sentence the hint speaks, exported as `say` ([`hints.md`](./hints.md) § "The sentences live in one file per game"). |
-| `hint.ts` | The hint's plan, where it is too long for `index.ts`: the solver's firings turned into steps, marks and sentences. |
+| `<game>.test.ts` | The game's own behavior: codecs, moves, completion, the mistake check, a save, the frame. |
+| `<game>-generation.test.ts` | Every board dealt needs its tier, and every rung fires on dealt boards. |
+| `<game>-hint.test.ts` | A pinned position and sentence for every rung, and what holds of any plan. |
 
 A drag-preview game adds a small `moves.ts` so `render.ts` can simulate the
 release move without an import cycle — see

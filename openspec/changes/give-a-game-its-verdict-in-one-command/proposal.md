@@ -33,6 +33,30 @@ offers and the game ignores.
 
 Not in this change: making the gate faster, and any new guard.
 
+## What registering a copy of the skeleton found (2026-10-12)
+
+`hold-the-game-skeleton-to-the-compiler` stamped a game from the skeleton,
+registered it and ran the source scans and every cross-game guard against it
+(its `design.md` § "The first day"). Three refusals were the skeleton's own
+and are mended there. Five were records kept by hand that a game with
+nothing wrong with it is refused by until someone adds it, and they are this
+change's to weigh, since each is a verdict that arrives late and says
+nothing about the game:
+
+| Guard | What a new game must add by hand |
+| --- | --- |
+| `asset-integrity.test.ts` | its two icons (a real thing to make) |
+| `help-coverage.test.ts` | its row in `help/puzzles.md` |
+| `params-read-whole.test.ts` | its id in `UPSTREAM`, a record of params strings upstream's encoder wrote, which a game written here never had |
+| `hint-mark.test.ts` | `expect(CHECKED.length).toBe(50)`, a census of renderers pinned as a literal |
+| `capability-surface.test.ts`, `params-stability.test.ts` | a snapshot row each |
+
+The doctrine is that a guard derives its population from what each game is.
+`UPSTREAM` and the pinned 50 are the two that do not: the first should ask
+nothing of a game with no upstream, and the second is a floor
+(`toBeGreaterThanOrEqual`) or a derived count. The command this change
+builds should at least name all five on a game's first run.
+
 ## Capabilities
 
 None at filing; see `.openspec.yaml`.

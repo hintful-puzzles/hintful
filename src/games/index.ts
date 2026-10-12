@@ -1,8 +1,8 @@
 /**
- * Registry of native-TS game ports. Importing this module registers every
- * ported game (via the module-load side effect below), so the worker's
- * dispatch seam (`createTsEngine`) can find them. Each game port adds one
- * entry to `ALL_GAMES`.
+ * The collection's games. Importing this module registers every one (via the
+ * module-load side effect below), so the worker's dispatch seam
+ * (`createTsEngine`) can find them. A new game adds one import and one
+ * `registerGame` line.
  *
  * `registerAllGames()` is exported and **idempotent** (re-registering the
  * same `Game` instance is a no-op — see `registry.ts`). It exists so a test

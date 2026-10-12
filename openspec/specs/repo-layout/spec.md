@@ -294,43 +294,59 @@ already have open, and not a line in `AGENTS.md`.
 - **AND** anything the linked source does not cover is moved into the code as a
   comment where a reader of that code would look
 
-### Requirement: A scaffolding script stamps out a new game-port skeleton
+### Requirement: A scaffolding script stamps out a new game from the skeleton
 
-The repository SHALL provide `scripts/new-game-port.sh <gameId>`, which creates
-`src/games/<gameId>/` holding typed `Game<…>` stub modules in the
-`index`/`state`/`solver`/`generator`/`render` file shape the game guides
-prescribe, an empty `__fixtures__/` placeholder, a `<gameId>.test.ts` with a
-save round-trip skeleton and a `renderScenario` smoke skeleton, and a
-`<gameId>-generation.test.ts` stub for the generation invariants. It SHALL
-refuse to overwrite an existing game directory.
+The repository SHALL hold a skeleton game under `src/skeleton/` as source the
+gate's typecheck and test run read, and `scripts/new-game.sh <gameId>` SHALL
+create `src/games/<gameId>/` and `help/games/<gameId>.md` as a renamed copy
+of it. The skeleton SHALL NOT be registered as a game or shipped. The script
+SHALL refuse to overwrite an existing game.
 
 #### Scenario: Scaffolding a new game
 
-- **WHEN** a contributor runs `scripts/new-game-port.sh singles`
-- **THEN** `src/games/singles/` is created with the typed stub modules, an
-  empty `__fixtures__/`, a starter `singles.test.ts`, and a
-  `singles-generation.test.ts` stub
-- **AND** the emitted files type-check and lint clean
+- **WHEN** a contributor runs `scripts/new-game.sh singles`
+- **THEN** `src/games/singles/` holds the skeleton's modules, tests and
+  snapshots, named for the new game, and `help/games/singles.md` its help page
+- **AND** the copy registers itself as `singles`
+
+#### Scenario: The contract moves under the skeleton
+
+- **WHEN** a member of `Game` that the skeleton does not have becomes required
+- **THEN** the gate's typecheck fails on the skeleton, before any game is
+  stamped
+
+#### Scenario: The skeleton is not a game of the collection
+
+- **WHEN** the suite runs and the app is built
+- **THEN** no registry-derived guard has the skeleton in its population
+- **AND** the bundle does not contain it
 
 #### Scenario: The game directory already exists
 
-- **WHEN** the script is run with the id of a game that has a directory
+- **WHEN** the script is run with the id of a game that has a directory or a
+  help page
 - **THEN** it refuses and writes nothing
 
-### Requirement: The scaffold prints the edits that need judgment and performs none
+### Requirement: The scaffold checks its copy and prints what it leaves undone
 
-The scaffolding script SHALL print, and SHALL NOT itself perform, the
-manual-edit checklist that requires judgment: registering the game in
-`src/games/index.ts`, adding its catalog entry to `src/puzzle/catalog-data.ts`,
-stating what the generation test asserts, and adding the two committed icon
-PNGs. `docs/games/README.md` SHALL reference the script as the
-copy-from-exemplar entry point.
+The scaffolding script SHALL type-check, lint and test the copy it made and
+fail if any does. It SHALL print, and SHALL NOT perform, what the copy leaves
+undone: replacing the puzzle, registering the game in `src/games/index.ts`
+and `src/puzzle/catalog-data.ts`, pinning its hint again, its help page's
+words, its two icons and its spec. `docs/games/README.md` SHALL name the
+skeleton as what a new game starts from.
+
+#### Scenario: The copy is checked where it is made
+
+- **WHEN** the script has written a game's files
+- **THEN** it runs the typecheck, the linter and the copy's own tests
+- **AND** it exits non-zero if any of them fails
 
 #### Scenario: The checklist is printed, not performed
 
-- **WHEN** the script has scaffolded a game
-- **THEN** it prints the manual-edit checklist (the two registration points, the
-  generation invariants, the icon PNGs) without editing those files
+- **WHEN** the script finishes
+- **THEN** it prints each remaining edit
+- **AND** `src/games/index.ts`, the catalog and the icons are unchanged
 
 ### Requirement: The scaffold promises no C oracle
 

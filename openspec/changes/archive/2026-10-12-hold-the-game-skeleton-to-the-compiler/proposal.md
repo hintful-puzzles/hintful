@@ -1,6 +1,6 @@
 # hold-the-game-skeleton-to-the-compiler
 
-**Status: scaffolded 2026-10-12, not started.** First of the five pieces of
+**Status: done 2026-10-12.** First of the five pieces of
 `fit-a-new-game-in-one-session`, whose proposal holds the measurements.
 
 ## Why
@@ -41,6 +41,13 @@ other games, and the games disagree
   open choices are in `fit-a-new-game-in-one-session` and in the five audit
   findings quoted in `design.md`.
 
+- **The script is `scripts/new-game.sh`, and nothing about it says "port"**
+  (the owner, 2026-10-12, during this change): games are written here now,
+  not ported. Before this change it was `scripts/new-game-port.sh`, which is
+  the name the rest of this proposal uses for what it found.
+- **The skeleton's help page is stamped with it**, to `help/games/`, so the
+  copy is a game with a page from its first minute.
+
 Not in this change: moving any existing game onto the shared way, and any
 new engine helper. A helper the skeleton shows to be missing is filed.
 
@@ -49,10 +56,11 @@ new engine helper. A helper the skeleton shows to be missing is filed.
 ### Modified Capabilities
 
 - `repo-layout`: "A scaffolding script stamps out a new game-port skeleton"
-  and the requirement after it.
+  and the requirement after it, both renamed.
 
 ## Impact
 
-`scripts/new-game-port.sh`, a new skeleton directory, `tsconfig`, the guards
-that enumerate games, `docs/games/README.md` § "The lifecycle of a game
-change" and § "File anatomy".
+`scripts/new-game-port.sh` (renamed), `src/skeleton/`,
+`docs/games/README.md` § "The lifecycle of a game change" and § "File
+anatomy", `docs/games/testing.md` § "What a new game ships". No `tsconfig`
+or guard needed changing (`design.md` D1).

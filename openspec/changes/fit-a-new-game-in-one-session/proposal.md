@@ -33,7 +33,8 @@ insides of a guard, or what only one kind of game needs. No guide routes a
 reader by kind of game.
 
 **2. There is no skeleton that is the obvious way.**
-`scripts/new-game-port.sh` did not compile against `Game` from 2026-09-15
+`scripts/new-game-port.sh` (`scripts/new-game.sh` since
+`hold-the-game-skeleton-to-the-compiler`) did not compile against `Game` from 2026-09-15
 (`newDrawState` became required) until this pass mended it, and no check ran
 it, though `repo-layout` requires that its output type-checks. It stamps a
 hand-written params codec, bare `throw` stubs for the solver and generator,
