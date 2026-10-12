@@ -15,7 +15,7 @@ from puzzles-web, and no C is left in the tree. `README.md` says the rest.
 
 **For a fact about the tree, read the tree.** Which directories exist, what a
 command runs (`package.json`), what a file holds, and what the gate's steps are
-and why: the gate is `npm run gate`, which the pre-commit hook also runs, and
+and why: the gate is `npm run gate`, which the commit and push hooks also run, and
 `scripts/gate.sh` is its definition. The source answers these and cannot be
 out of date. This file and the guides hold only what the source cannot say: a
 rule, a decision, a reason, or a trap the code does not warn about. How a
@@ -31,9 +31,10 @@ incident only what a later session acts on: the rule, and the shape to look for.
 - **Never bypass the gate**, in whole or in part, however small the change and
   however sure you are that it is not needed. No `--no-verify`, no disabled
   step.
-- **Combine commits where it makes sense, so the gate's full run is not waited
-  for twice.** An archive goes in with the change's last commit once the owner
-  has accepted it. A commit stays separate where it has its own reason to.
+- **Push once, at the session's end, or when the owner asks to see the work
+  sooner.** A commit tests only the games it stages; the push runs what the
+  commits left out, whole, once (`docs/games/testing.md` § "What runs when").
+  An archive goes in with the change's last commit.
 - **A green suite does not show that a game plays correctly.** Run the app
   before calling game-facing or UI work done: rendering, animation, input and
   wording included. A shortfall is never called "cosmetic" or "out of scope",

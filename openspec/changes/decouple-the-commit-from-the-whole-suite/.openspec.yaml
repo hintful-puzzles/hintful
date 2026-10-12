@@ -1,5 +1,2 @@
-# No delta at filing: the owner's choice among the proposal's options decides
-# which `build-pipeline` requirement moves, and the delta is written then.
 schema: spec-driven
 created: 2026-10-12
-skip_specs: true

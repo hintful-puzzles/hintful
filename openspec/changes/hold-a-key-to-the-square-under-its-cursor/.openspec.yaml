@@ -1,0 +1,5 @@
+# No delta at filing: the change strengthens a guard. Task 2.2 writes one,
+# removing this line, if what a game must declare changes.
+schema: spec-driven
+created: 2026-10-12
+skip_specs: true

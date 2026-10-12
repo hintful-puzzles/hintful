@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
-# The pre-commit gate, in one place so `.husky/pre-commit` and `npm run gate`
-# cannot drift (the build-pipeline spec requires they mirror each other).
+# The gate, in one place so the two hooks (`.husky/pre-commit`,
+# `.husky/pre-push`) and `npm run gate` cannot drift (the build-pipeline spec
+# requires they mirror each other). Section 0a says which role does what.
 #
 # THIS COMMENT DESCRIBES THE SHAPE, NOT THE STEPS. Naming a step up here is how
 # a header comes to name a compiler the gate no longer runs, eight lines above
@@ -44,6 +45,74 @@
 # competing with it.
 set -e
 
+# --- 0a. Which paths is this run about, and is there anything to run? ---
+#
+# Three roles run this script, and two of them are about a set of paths. A
+# commit's are the staged ones (`.husky/pre-commit` sets GATE_PRECOMMIT). A
+# push's are everything between the commit the remote has and `HEAD`
+# (`.husky/pre-push` passes that commit as GATE_SINCE, beside GATE_PRECOMMIT).
+# CI and a manual `npm run gate` set neither and are about the whole tree.
+#
+# The set is every path changed in any way: a deleted file by its path, and a
+# moved one by both (`--no-renames` lists the path it left beside the one it
+# arrived at). A deletion under `src/` can break a test as surely as an edit,
+# and a file moved from `src/` into `docs/` has left `src/`.
+changed=""
+if [ -n "${GATE_SINCE:-}" ]; then
+  changed=$(git diff --name-only --no-renames "$GATE_SINCE" HEAD)
+elif [ "${GATE_PRECOMMIT:-}" = "1" ]; then
+  changed=$(git diff --cached --name-only --no-renames)
+fi
+# Whether every changed path is one no test and no build reads: section 1d
+# says why these, and what holds the list to that.
+doc_only() {
+  [ -n "$changed" ] && ! printf '%s\n' "$changed" |
+    grep -qvE '^(docs/|openspec/|AGENTS\.md$|CLAUDE\.md$|CREDITS\.md$)'
+}
+# What the push runs and a commit does not shows first as a red CI run, and
+# nobody watches one, so both hooks end by saying so when the last finished run
+# on `main` failed (`scripts/checks/ci-status.mjs`). It is a notice and cannot
+# fail the hook, since the commit that meets it is usually the fix; it is
+# silent when it cannot reach GitHub.
+ci_notice() {
+  if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
+    node scripts/checks/ci-status.mjs || true
+  fi
+}
+
+# **The push runs what its commits left out, once, and nothing when they left
+# nothing.** A commit runs the per-game work of the games it stages and no
+# other (section 1e), so a commit to the engine leaves every game's boards to
+# the push that carries it. `select-tests.ts --since` prints that remainder, or
+# `NOTHING` for a push whose commits were each a game's own or documentation.
+# Decided here, ahead of the prefix, because each commit has passed the prefix
+# already and a push with nothing owed should cost a second.
+#
+# The run reads the working tree, so the tree has to be the commits: a push
+# over uncommitted changes would be judged on code it does not carry.
+plan="ALL"
+if [ -n "${GATE_SINCE:-}" ]; then
+  if [ -z "$changed" ] || doc_only; then
+    echo "✓ this push carries no change a test or the build reads."
+    ci_notice
+    exit 0
+  fi
+  plan=$(node scripts/checks/select-tests.ts --since "$GATE_SINCE" 2>/dev/null) || plan="ALL"
+  [ -n "$plan" ] || plan="ALL"
+  if [ "$plan" = "NOTHING" ]; then
+    echo "✓ this push's commits ran every test it can have broken."
+    ci_notice
+    exit 0
+  fi
+  if ! git diff --quiet HEAD; then
+    echo "✗ the push runs the tests its commits left out, and it runs them on the"
+    echo "  working tree, which has uncommitted changes. Commit or stash them."
+    exit 1
+  fi
+  echo "The push runs what its commits left to it: every game's cases of the"
+  echo "cross-game sweeps a commit to shared code reaches. Once a push, not a commit."
+fi
+
 # --- 0. Reap orphaned vitest workers from a previously-interrupted run. ---
 # A sync-blocked worker survives its parent's death and spins a core forever
 # (see scripts/reap-orphaned-workers.sh). Reaping up front rather than relying
@@ -78,7 +147,7 @@ node scripts/checks/typescript-projects.mjs
 # `format --check`, which misses import sorting). `npm run check` stays the fixer.
 #
 # Scope depends on role. A commit can only make a file unformatted by touching
-# it, so the automatic per-commit hook (which sets GATE_BIOME_STAGED=1) checks
+# it, so a local hook (which sets GATE_BIOME_STAGED=1) checks
 # only the staged files — no redundant re-scan of an already-clean tree.
 # CI and a manual `npm run gate` leave the toggle unset and check the WHOLE tree:
 # that is the backstop for a --no-verify bypass and the thing that forces a
@@ -240,25 +309,14 @@ fi
 
 # --- 1c-ii. A note on what else GATE_PRECOMMIT reaches. ---
 #
-# The toggle is set once, by `.husky/pre-commit`, and vitest inherits it — so a
-# test can read it (`src/engine/testing/slow.ts`), two ways. `PRECOMMIT_HOOK_RUN`
-# defers an expensive *decay* check to push, while the half of the same guard
-# that catches what the commit just wrote keeps running here. `perCommit` has a
-# cross-game sweep walk one board of each kind here and the rest on push. The
-# conditions for both are in the build-pipeline spec. The backstop is asserted
-# by `src/gate-scope.test.ts`, which fails if CI ever sets this or the hook
-# stops.
-#
-# What the push runs and this does not shows first as a red CI run, and nobody
-# watches one, so the hook ends by saying so when the last finished run on
-# `main` failed (`scripts/checks/ci-status.mjs`). It is a notice and cannot fail
-# the commit, which is usually the fix; it is silent when it cannot reach
-# GitHub.
-ci_notice() {
-  if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
-    node scripts/checks/ci-status.mjs || true
-  fi
-}
+# The toggle is set by the two local hooks and by nothing else, and vitest
+# inherits it — so a test can read it (`src/engine/testing/slow.ts`), two ways.
+# `PRECOMMIT_HOOK_RUN` defers an expensive *decay* check to CI, while the half
+# of the same guard that catches what the commit just wrote keeps running here.
+# `perCommit` has a cross-game sweep walk one board of each kind here and the
+# rest in CI. The conditions for both are in the build-pipeline spec. The
+# backstop is asserted by `src/gate-scope.test.ts`, which fails if CI ever sets
+# this or a hook stops.
 #
 # `nice` (weak on macOS but free insurance) is applied to BOTH heavy branches,
 # so the gate yields to whatever else the developer is running rather than
@@ -278,12 +336,12 @@ fi
 # and the build 20s); `vitest run` is the other eight to ten minutes, and it ran
 # in full for a commit touching one markdown file.
 #
-# **Scoped by role, exactly as the biome step is.** Only the automatic
-# per-commit hook takes this path (it sets GATE_PRECOMMIT=1); CI and a manual
-# `npm run gate` always run everything, so nothing reaches `main` without the
-# full gate having seen it. That is the same backstop argument as `biome ci`,
-# and it is why this narrows a *commit's* cost without narrowing what protects
-# the branch.
+# **Scoped by role, exactly as the biome step is.** Only the local hooks take
+# this path (they set GATE_PRECOMMIT=1; the push takes it in section 0a); CI
+# and a manual `npm run gate` always run everything, so nothing reaches `main`
+# without the full gate having seen it. That is the same backstop argument as
+# `biome ci`, and it is why this narrows a *commit's* cost without narrowing
+# what protects the branch.
 #
 # **The allowlist is provable, and it is proved.** These paths are read by no
 # test and are not build inputs — `openspec/` is already covered by the
@@ -291,7 +349,7 @@ fi
 # nothing at all. `src/gate-scope.test.ts` asserts that, by scanning for any
 # glob, file read or import naming them, so the day a test starts reading
 # `docs/` this path stops being safe *and says so*. It takes the list from the
-# pattern below, so there is no second copy to fall behind. `help/` is
+# pattern in `doc_only` above, so there is no second copy to fall behind. `help/` is
 # deliberately absent: it is both a `vite build` input and
 # `help-coverage.test.ts`'s subject. So are `README.md`, which
 # `src/project-identity.test.ts` reads, and `LICENSE.md`, which the About
@@ -300,54 +358,47 @@ fi
 # Anything outside the list — one `src/` file, one `help/` page, one license —
 # and the whole gate runs. The default is "run everything"; this is the
 # exception, and it fails closed.
-#
-# The staged set is every path the commit changes in any way: a deleted file by
-# its path, and a moved one by both (`--no-renames` lists the path it left
-# beside the one it arrived at). A deletion under `src/` can break a test as
-# surely as an edit, and a file moved from `src/` into `docs/` has left `src/`.
-if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
-  staged=$(git diff --cached --name-only --no-renames)
-  if [ -n "$staged" ] && ! printf '%s\n' "$staged" |
-    grep -qvE '^(docs/|openspec/|AGENTS\.md$|CLAUDE\.md$|CREDITS\.md$)'; then
-    echo "✓ documentation-only commit — skipping vitest and vite build."
-    echo "  (CI runs the full gate on push; \`npm run gate\` runs it here.)"
-    ci_notice
-    exit 0
-  fi
+if [ "${GATE_PRECOMMIT:-}" = "1" ] && doc_only; then
+  echo "✓ documentation-only commit — skipping vitest and vite build."
+  echo "  (CI runs the full gate on push; \`npm run gate\` runs it here.)"
+  ci_notice
+  exit 0
 fi
 
-# --- 1e. Which tests can this commit have broken? (pre-commit hook only) ---
+# --- 1e. Which tests does this commit run? (the local hooks only) ---
 #
 # `scripts/checks/select-tests.ts` prints a plan: either `ALL`, or the test
 # files to run, each marked `whole` or `narrow`, and a `scope` of games. It
 # selects a file when the static import graph (`vitest list --changed`) or
-# `reach.ts`'s walk reaches a staged path. The walk exists because this repo's
+# `reach.ts`'s walk reaches a changed path. The walk exists because this repo's
 # cross-game guards read game source as *text* — `AGENTS.md` requires a guard to
 # derive its population from what a game IS — and text reads form no import
 # edge. Measured: on a `help/` page the graph alone selects **nothing**, against
 # three guards that check exactly those files.
 #
-# **Hook only.** CI runs the whole suite on every push to `main`, which is what
-# makes a narrower per-commit run safe — the identical argument that already
-# scopes biome to staged files here and to the whole tree there. A selector bug
-# costs a slower feedback loop, never a broken `main`.
+# **Hooks only.** CI runs the whole suite on every push to `main`, which is what
+# makes a narrower local run safe — the identical argument that already scopes
+# biome to staged files here and to the whole tree there. A selector bug costs a
+# slower feedback loop, never a broken `main`.
 #
-# The selector fails closed: any staged path it does not model, an empty result,
-# or any error at all yields `ALL`. `src/test-selection.test.ts` fails the build
-# if a test acquires a read channel the selector cannot see, and step 1f holds
-# the walk to known positives.
+# The selector fails closed: any error at all yields `ALL`, and so does a push
+# with a path it does not model or an empty result. `src/test-selection.test.ts`
+# fails the build if a test acquires a read channel the selector cannot see, and
+# step 1f holds the walk and both plans to known positives.
 #
 # **Within those files, a `narrow` file skips the cases of games outside the
-# scope.** A cross-game guard titles each case `<id>: …`, and on a Pearl-only
-# change 413 s of 593 s of test time was those cases for games the commit could
-# not have changed. The scope is the games whose own code reaches a staged path;
-# a file that reaches one *itself*, not through a game, is `whole`. It runs in a
-# vitest invocation of its own with GATE_GAME_SCOPE unset, because the name
-# filter is one per run. What reads the variable, and why narrowing is sound, is
-# in `src/engine/testing/game-scope.ts` and `scripts/checks/reach.ts`. Skipped
-# cases are reported as skipped, and CI runs them all.
-plan="ALL"
-if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
+# scope.** A cross-game guard titles each case `<id>: …`, and per-game work is
+# nearly all of the suite: 880 s of 1,005 s of test time, measured 2026-10-12
+# over the hook's whole selection. A `whole` file runs in a vitest invocation of
+# its own with GATE_GAME_SCOPE unset, because the name filter is one per run.
+#
+# **A commit's scope is the games it stages; a push's is the games that reach
+# what it carries.** So a commit costs about the same whatever it touches, and
+# a commit to shared code leaves every other game's cases to the one push at
+# the session's end (section 0a). What reads the variable, and what each role's
+# skipped case means, is in `src/engine/testing/game-scope.ts`. Skipped cases
+# are reported as skipped, and CI runs them all.
+if [ "${GATE_PRECOMMIT:-}" = "1" ] && [ -z "${GATE_SINCE:-}" ]; then
   plan=$(node scripts/checks/select-tests.ts 2>/dev/null) || plan="ALL"
   [ -n "$plan" ] || plan="ALL"
 fi
@@ -357,14 +408,19 @@ whole=$(plan_lines whole)
 narrow=$(plan_lines narrow)
 if [ "$plan" != "ALL" ]; then
   count() { [ -n "$1" ] && printf '%s\n' "$1" | wc -l | tr -d ' ' || echo 0; }
-  echo "✓ running $(($(count "$whole") + $(count "$narrow"))) of $(find src vite-plugins -name '*.test.ts' | wc -l | tr -d ' ') test files for this commit."
-  if [ -n "$narrow" ]; then
+  echo "✓ running $(($(count "$whole") + $(count "$narrow"))) of $(find src vite-plugins -name '*.test.ts' | wc -l | tr -d ' ') test files."
+  if [ "$scope" = "-" ]; then
+    echo "✓ $(count "$narrow") of them run no game's cross-game cases: this commit stages no game."
+  elif [ -n "$narrow" ]; then
     echo "✓ $(count "$narrow") of them run only the cross-game cases of: $scope."
   fi
-  echo "  (CI runs everything on push; \`npm run gate\` runs everything here.)"
+fi
+if [ "${GATE_PRECOMMIT:-}" = "1" ] && [ -z "${GATE_SINCE:-}" ]; then
+  echo "  The push runs the cases of the games this commit does not stage, and CI"
+  echo "  runs everything. \`npm run gate\` runs everything here."
 fi
 if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
-  echo "  The cross-game sweeps walk one board of each kind here and the rest on push."
+  echo "  The cross-game sweeps walk one board of each kind here and the rest in CI."
   echo "  After changing code a sweep guards, run it wide: npx vitest run <its file>."
 fi
 

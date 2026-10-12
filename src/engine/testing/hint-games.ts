@@ -145,11 +145,11 @@ export function markRoles(highlights: unknown): number {
  * reaches the modes, and it is a board the player can actually pick rather than
  * a tier label written onto the smallest grid in the menu.
  *
- * **The per-commit hook takes its modes and not its sizes, for every game.**
- * `perCommit` leaves the largest board to the push, where the whole slice is
- * walked on every commit to `main` (`docs/games/testing.md` § "One board of
- * each kind per commit"). Every value of every mode, tier and choice keeps a
- * board in the hook, on the smallest preset offering it.
+ * **The local hooks take a game's modes and not its sizes, for every game.**
+ * `perCommit` leaves the largest board to CI, where the whole slice is
+ * walked on every push to `main` (`docs/games/testing.md` § "One board of
+ * each kind in the hooks"). Every value of every mode, tier and choice keeps
+ * a board in the hooks, on the smallest preset offering it.
  *
  * **A searching hint takes its modes and not its sizes everywhere.** Its cost is
  * superlinear in board size — one full search per move, and more moves to make

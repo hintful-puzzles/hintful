@@ -1,0 +1,58 @@
+# The whole gate, on every push to `main`: the backstop for this project.
+#
+# Trunk-based (no PRs), so the gate runs after the push: the SAME gate as the
+# husky hooks, `npm run gate`, whose steps are defined in `scripts/gate.sh` and
+# nowhere else, with no role toggle set, so it is the whole suite at its widest.
+# It is what catches a `--no-verify` commit or a clone whose hooks never
+# installed, and it is the only run of what the local hooks scope away: the
+# sweeps' wider boards and the checks deferred to it.
+#
+# A workflow of its own, beside `ci.yml`'s build and deploy and not a job in
+# it, for two reasons. The deploy does not wait on it (owner, 2026-09-27: ten
+# minutes per push was the velocity cost). And the two want opposite answers
+# when a newer commit lands, with one verdict each: a moot build is canceled,
+# and a run in which the build was canceled would conclude as canceled whatever
+# the suite found, which is the conclusion `scripts/checks/ci-status.mjs` reads.
+#
+# (If contributors arrive later and PRs become useful, add a `pull_request:`
+# trigger here.)
+name: Gate
+
+on:
+  push:
+    branches: [main]
+  # Manual trigger — run the gate on demand.
+  workflow_dispatch:
+
+# A run in progress is never canceled by a newer push. Canceled, it left its
+# commit with no verdict: 93 of 291 runs went that way up to 2026-10-12, as
+# many as seven in a row. GitHub keeps one waiting run per group and replaces
+# it when a newer one arrives, so the queue cannot grow: the tree is judged at
+# most one run behind `main`, and every commit is in a tree that was judged.
+concurrency:
+  group: gate-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # It builds too, and throws that build away: `vite build` is one of the
+  # gate's steps, and the artifact that ships is `ci.yml`'s.
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          # Current LTS-track major; matches the local dev environment. A
+          # preference: nothing in the gate needs this major.
+          node-version: 24
+          cache: npm
+      # Nothing is generated and no native tool is provisioned, so the job is
+      # `npm ci` and the gate.
+      - name: Install npm dependencies
+        run: npm ci
+      - name: Run the gate
+        run: npm run gate

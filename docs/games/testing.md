@@ -12,7 +12,7 @@
 > differential helper, a hint test's pins, the boards a cross-game sweep
 > walks) ·
 > [`build-pipeline`](../../openspec/specs/build-pipeline/spec.md) (what the
-> gate runs, and what it may defer to the push).
+> gate runs, and what a commit may leave to the push and to CI).
 > Neighboring guides: [`rendering.md`](./rendering.md) (what to draw),
 > [`hints.md`](./hints.md) (hint verification recipe),
 > [`solver-and-generator.md`](./solver-and-generator.md) (when to diverge from a
@@ -587,11 +587,44 @@ excuse:
   delete the only case covering a mode, grid type or difficulty.
 - **A guard that catches what the author just wrote stays on the per-commit
   path, on one board of every kind it walks.** More boards of the same kind,
-  and a check on *decay*, go to push (§ "One board of each kind per commit");
+  and a check on *decay*, go to CI (§ "One board of each kind in the hooks");
   the conditions are in the `build-pipeline` spec.
 
-**The gate is paid on every commit; keep each test's cost proportional to what
-it catches.** Three treatments, in order of how little they lose:
+### What runs when
+
+**Three runs, each wider than the last, and the suite is paid for whole once a
+session.** `scripts/gate.sh` is all three, and the steps and their reasons are
+its comments.
+
+| Run | When | What it tests |
+| --- | --- | --- |
+| The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other. About a minute, whatever it touches. |
+| The push hook | once, at a session's end | What the commits left out: every game's cases of the sweeps a commit to shared code reaches. Nothing, when every commit was a game's own or documentation. |
+| CI | every push | Everything, on every board. Never canceled by a newer push. |
+
+- **Per-game work** is a game's own test files and the cases a cross-game
+  guard titles `<id>: …`. It is nearly all of the suite: 880 s of 1,005 s of
+  test time (2026-10-12), over 57 games. So **title a per-game case
+  `<id>: …`**, or no hook can leave it out and it runs on every commit to any
+  game.
+- **A commit to the engine tests no game's boards.** It runs the engine's own
+  tests and the whole-collection tests that are not split by game. Run the
+  sweep that guards what you changed yourself, before committing:
+  `npx vitest run src/engine/hint-resume.test.ts` for a hint planner, the file
+  named for the mechanic otherwise. The push would tell you, at the end.
+- **Push once, when the session's work is done**, or when the owner asks to
+  see it sooner. A push that carries a change to shared code is one whole run
+  on two workers, and it will not run over uncommitted changes.
+- A change to nothing but comments in a source file outside the games selects
+  only the guards that read the file as text.
+
+The selector is `scripts/checks/select-tests.ts`, and its `--verify` holds
+both plans to known cases. The spec is `build-pipeline`, "A commit runs the
+per-game work of the games it stages" and "The push runs what its commits left
+out, and nothing when they left nothing".
+
+**The suite is paid for at every push; keep each test's cost proportional to
+what it catches.** Three treatments, in order of how little they lose:
 
 1. **Run a deterministic search once.** A "scan seeds until a board shows
    technique X" loop finds the same hit every time, so write the board down.
@@ -628,30 +661,31 @@ shares a board.
 - A game's own test deals as it likes. The dealer is for the sweeps that walk
   every game.
 
-### One board of each kind per commit
+### One board of each kind in the hooks
 
-**The per-commit hook walks one board of each kind, and the push walks the
-rest.** `perCommit(hook, wide)` ([`slow.ts`](../../src/engine/testing/slow.ts))
+**The two local hooks walk one board of each kind, and CI walks the rest.**
+`perCommit(hook, wide)` ([`slow.ts`](../../src/engine/testing/slow.ts))
 is the lever, and `gatePresets` uses it, so a sweep that takes its boards
-there has it already. In the hook:
+there has it already. In the hooks:
 
-- a sweep walks one board of each params set where the push walks several;
+- a sweep walks one board of each params set where CI walks several;
 - `gatePresets` leaves out a game's largest board, and keeps one board for
   every value of every mode, tier and choice;
 - the bound-hint walk in `hint-quality.test.ts` checks the first 400 steps of
-  a board.
+  a board;
+- the resume walk in `hint-resume.test.ts` asks for a fresh plan at no more
+  than 64 evenly spaced moves of a board and follows the plan between them,
+  where CI asks after every move.
 
 CI runs everything on every push, and so does a bare `vitest`: nothing but
-the hook sets the toggle. **After changing the code a sweep guards, run that
-sweep wide before committing**: `npx vitest run src/engine/hint-resume.test.ts`
-for a hint planner, the file named for the mechanic otherwise. The hook is not
-that run.
+the hooks set the toggle. **After changing the code a sweep guards, run that
+sweep wide before committing.** No hook is that run.
 
 Use it only for more of the same. The only board of a mode, a tier or a rule
-stays in the hook, and so does anything a single board shows. Say at the call
-site what the hook's amount still walks.
+stays in the hooks, and so does anything a single board shows. Say at the call
+site what the hooks' amount still walks.
 
-**The hook and the push can walk different boards of one game.** The slice
+**The hooks and CI can walk different boards of one game.** The slice
 takes the smallest preset that supplies each value still wanted, so leaving out
 the largest board can change which preset a mode is walked on. A ledger a walk
 is held against has to be true of both.
@@ -1030,8 +1064,8 @@ time, because every wrong answer looks like coverage.
 back every preset in the slow tier and the slice otherwise — one
 preset per *value* of every axis the game varies, derived from the game's own
 `paramConfig` — and it decides the search-planning games' cost discipline for
-you. In the per-commit hook the slice leaves out each game's largest board
-(§ "One board of each kind per commit"). Difficulty is not special there; it is a `"choices"` item like any other,
+you. In the local hooks the slice leaves out each game's largest board
+(§ "One board of each kind in the hooks"). Difficulty is not special there; it is a `"choices"` item like any other,
 so the slice **replaces** a `tiers.map(withTier(base))` loop rather than
 multiplying with it, and the board it walks a tier on is one the player can pick
 from the menu.

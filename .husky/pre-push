@@ -1,0 +1,38 @@
+# The push runs, once, what its commits left out: the gate in scripts/gate.sh,
+# told which commit the remote already has (GATE_SINCE). A commit runs the
+# per-game work of the games it stages and no other, so that it costs about a
+# minute whatever it touches; a commit to shared code therefore leaves every
+# other game's cases of the cross-game sweeps to this hook. A push whose
+# commits left nothing out (documentation, or each a game's own) ends in a
+# second or two.
+#
+# This is why a session pushes once, at its end, or when the owner asks to see
+# the work sooner: each push that carries a change to shared code is one whole
+# run (`AGENTS.md`, "Rules for every session"; `docs/work-management.md`
+# § "Pushing and deploying").
+#
+# GATE_PRECOMMIT=1 is the same toggle the commit hook sets, and means the same:
+# the local slice of each sweep, with CI as the backstop for the rest.
+#
+# Git writes one line per ref being pushed: local ref, local commit, remote
+# ref, remote commit.
+zero=0000000000000000000000000000000000000000
+# Git's name for the tree with nothing in it: against it every file is changed.
+empty_tree=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  # A deleted ref carries no commits.
+  [ "$local_sha" = "$zero" ] && continue
+  # The run reads the working tree, so it can only judge the commit checked out.
+  if [ "$local_sha" != "$(git rev-parse HEAD)" ]; then
+    echo "pre-push: not pushing HEAD, so nothing was run here; CI runs the whole gate."
+    continue
+  fi
+  since=$remote_sha
+  # A ref the remote does not have yet: everything since it left the remote's
+  # main. A commit this clone does not hold: no telling, so everything.
+  if [ "$since" = "$zero" ]; then
+    since=$(git merge-base HEAD "refs/remotes/$1/main" 2>/dev/null) || since=$empty_tree
+  fi
+  git cat-file -e "$since^{commit}" 2>/dev/null || since=$empty_tree
+  GATE_BIOME_STAGED=1 GATE_PRECOMMIT=1 GATE_SINCE=$since sh scripts/gate.sh </dev/null || exit 1
+done

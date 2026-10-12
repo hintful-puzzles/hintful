@@ -77,6 +77,11 @@ function gameIds(): string[] {
 interface GlobBase {
   base: string;
   suffix: string;
+  /** The fewest path segments a match has below `base`: the pattern's own,
+   * leaving out each `**`, which can match none. */
+  minDepth: number;
+  /** The most, where the pattern fixes it: one with no `**`. `null` is any. */
+  maxDepth: number | null;
 }
 
 interface GlobCall {
@@ -93,7 +98,7 @@ interface Edges {
   globs: GlobCall[];
 }
 
-const EVERYTHING: GlobBase = { base: "", suffix: "" };
+const EVERYTHING: GlobBase = { base: "", suffix: "", minDepth: 0, maxDepth: null };
 
 /** Where one glob pattern written in `fromFile` can match. A root-anchored
  * pattern (`/src/…`) is relative to the repository, as Vite reads it. */
@@ -108,19 +113,33 @@ function globBase(pattern: string, fromFile: string): GlobBase {
     : path.resolve(path.dirname(path.join(ROOT, fromFile)), dir);
   const rel = path.relative(ROOT, abs);
   if (rel.startsWith("..")) return EVERYTHING;
-  if (wildcard === -1) return { base: rel, suffix: "" };
+  if (wildcard === -1) return { base: rel, suffix: "", minDepth: 0, maxDepth: null };
   const last = pattern.slice(pattern.lastIndexOf("/") + 1);
   const suffix = /^[^*?{}[\]]+$/.test(last)
     ? `/${last}`
     : (/^\*([^*?{}[\]]+)$/.exec(last)?.[1] ?? "");
-  return { base: rel === "" ? "" : `${rel}/`, suffix };
+  // `./*/**/*.ts` matches two segments down or more and never `./index.ts`. A
+  // brace can hold a `/`, so a pattern with one keeps any depth.
+  const below = pattern.slice(dir.length).split("/");
+  const fixed = below.filter((segment) => segment !== "**").length;
+  if (below.some((segment) => /[{}]/.test(segment)))
+    return { base: rel === "" ? "" : `${rel}/`, suffix, minDepth: 0, maxDepth: null };
+  return {
+    base: rel === "" ? "" : `${rel}/`,
+    suffix,
+    minDepth: fixed,
+    maxDepth: fixed === below.length ? fixed : null,
+  };
 }
 
 /** Whether a glob with this base can match `file` (repo-relative). */
-function globReaches({ base, suffix }: GlobBase, file: string): boolean {
+function globReaches(glob: GlobBase, file: string): boolean {
+  const { base, suffix, minDepth, maxDepth } = glob;
   if (base === file) return true;
   if (base !== "" && !base.endsWith("/")) return false;
-  return file.startsWith(base) && file.endsWith(suffix);
+  if (!file.startsWith(base) || !file.endsWith(suffix)) return false;
+  const depth = file.slice(base.length).split("/").length;
+  return depth >= minDepth && (maxDepth === null || depth <= maxDepth);
 }
 
 /**
@@ -219,6 +238,9 @@ interface Reach {
   texts: Set<string>;
   /** Where the globs on the walk can match. */
   bases: GlobBase[];
+  /** The subset of `bases` that comes from globs reading text (`?raw`,
+   * `?url`). */
+  textBases: GlobBase[];
   /**
    * Whether the walk reaches every file: through a glob that imports modules,
    * whose closure this walk does not expand, or through an import that
@@ -247,6 +269,7 @@ export function reach(start: string, { cutAtGames = false } = {}): Reach {
     files: new Set([start]),
     texts: new Set(),
     bases: [],
+    textBases: [],
     everything: false,
   };
   const queue = [start];
@@ -254,6 +277,7 @@ export function reach(start: string, { cutAtGames = false } = {}): Reach {
     const { imports, globs } = edges(file);
     for (const glob of globs) {
       out.bases.push(...glob.bases);
+      if (glob.query !== null) out.textBases.push(...glob.bases);
       if (glob.query === null && !(cutAtGames && intoGames(glob.bases))) {
         out.everything = true;
       }
@@ -284,6 +308,16 @@ function reaches(r: Reach, file: string): boolean {
     r.texts.has(file) ||
     r.bases.some((b) => globReaches(b, file))
   );
+}
+
+/**
+ * Whether a walk reads `file` (repo-relative) as text: through a queried
+ * import or a glob that reads text. A file read this way is read whole,
+ * comments included, where one reached only as a module is read for what it
+ * does.
+ */
+export function readsAsText(r: Reach, file: string): boolean {
+  return r.texts.has(file) || r.textBases.some((b) => globReaches(b, file));
 }
 
 /** The snapshot file vitest writes for `test`, which only that test reads. */

@@ -682,9 +682,9 @@ reaches), because long sentences are the ones spoken
 once more of the board is decided, and the easiest preset's opening plan is
 exactly where they are not.
 
-That last corner is the costly one, and the per-commit test selector
+That last corner is the costly one, and the hooks' test selector
 reaches this guard from any staged path under `src/games/`, so it is
-**scoped by role**: off in the automatic pre-commit hook, on in CI and in
+**scoped by role**: off in the two local hooks, on in CI and in
 `npm run gate`. What it defers is the ledger's *rot* half below, which cannot
 be decided without it. **The limit itself never defers** — a sentence you just
 wrote too long fails your commit, at every tier and every preset.
@@ -729,7 +729,7 @@ seeds a preset heard it on none, so the listing read as dead on every push
 while the sentence was live. Reach for a pin before a wider walk, since a
 wider walk is a bigger sample and a pin is an input.
 
-**If you are reading a red from that half, you are not in the pre-commit hook**
+**If you are reading a red from that half, you are not in a local hook**
 — it is skipped there and reported as skipped, so the run that flagged it was
 CI or `npm run gate`, and the corner walk did happen.
 

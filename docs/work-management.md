@@ -193,9 +193,19 @@ contract is tested by writing a real hint against it.
 
 ## Pushing and deploying
 
-Push to `main` when a task is done and you have no particular concern. The
-push deploys, and the deployment is how the owner looks at player-visible
-work. `.github/workflows/ci.yml` is the definition of what a push does.
+Push to `main` once, when the session's work is done and you have no
+particular concern, or earlier when the owner asks to see it. The push
+deploys, and the deployment is how the owner looks at player-visible work, so
+work the owner is waiting to look at is a reason to end the session's commits
+there and push.
+
+**Once, because the push is where the suite is paid for whole.** A commit
+tests the games it stages, and the push hook runs everything the session's
+commits left out before they leave the machine, which for a change to shared
+code is every game's boards. A second push in a session pays that again.
+`docs/games/testing.md` § "What runs when" has the three runs.
+`.github/workflows/ci.yml` is the definition of what a push publishes, and
+`gate.yml` beside it runs the whole gate.
 
 **Verify a deploy against the deployed origin, never against `dist/`.**
 Headers, clean URLs and service-worker scope are host behavior, and each

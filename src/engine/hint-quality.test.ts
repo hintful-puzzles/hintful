@@ -750,10 +750,10 @@ function formDefects(step: HintStep<unknown>, searching: boolean): string[] {
 }
 
 /**
- * How many steps of one board the walk below checks. The per-commit hook stops
+ * How many steps of one board the walk below checks. The local hooks stop
  * at 400: a board's later steps are spoken by the rungs its earlier ones were,
  * and one board, Mosaic's 50x50 with its 1,355 steps, was 52 s of the walk's
- * 110 s (2026-10-08). Every step of every board is checked on push.
+ * 110 s (2026-10-08). Every step of every board is checked in CI.
  */
 const BOUND_STEPS = perCommit(400, Number.POSITIVE_INFINITY);
 

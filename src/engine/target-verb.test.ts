@@ -253,7 +253,7 @@ describe("a geometry's pointAt is a point that addresses its target", () => {
   // reach, found by sweeping the board, must come back from its own point.
   it.each(
     registeredGameIds().filter((id) => getTsGame(id)?.targetVerbs),
-  )("%s", (id) => {
+  )("%s: every target's point presses that target", (id) => {
     const game = getTsGame(id) as unknown as AnyGame;
     const geometry = game.targetVerbs?.geometry;
     if (!geometry) throw new Error(`${id} declares no verbs`);
@@ -326,7 +326,7 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
 
   it.each(
     registeredGameIds().filter((id) => getTsGame(id)?.targetVerbs),
-  )("%s", (id) => {
+  )("%s: each key reaches the boards its button does", (id) => {
     const game = getTsGame(id) as unknown as AnyGame;
     const verbs = game.targetVerbs;
     if (!verbs) throw new Error(`${id} declares no verbs`);

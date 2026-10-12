@@ -21,7 +21,7 @@ function runs(scope: string[], name: string): boolean {
 }
 
 describe("the scope a run was given", () => {
-  it("is honored only in the per-commit hook", () => {
+  it("is honored only in a local hook", () => {
     expect(
       scopeFromEnv({ GATE_PRECOMMIT: "1", GATE_GAME_SCOPE: "loopy,pearl" }),
     ).toEqual(["loopy", "pearl"]);
@@ -32,6 +32,13 @@ describe("the scope a run was given", () => {
   it("is nothing when the hook found no scope", () => {
     expect(scopeFromEnv({ GATE_PRECOMMIT: "1", GATE_GAME_SCOPE: "" })).toBeNull();
     expect(scopeFromEnv({ GATE_PRECOMMIT: "1" })).toBeNull();
+  });
+
+  it("is no game at all for a commit that stages none", () => {
+    expect(scopeFromEnv({ GATE_PRECOMMIT: "1", GATE_GAME_SCOPE: "-" })).toEqual([]);
+    expect(scopeFromEnv({ GATE_GAME_SCOPE: "-" })).toBeNull();
+    expect(runs([], "a sweep pearl: case")).toBe(false);
+    expect(runs([], "the tiered-game set is derived from the registry")).toBe(true);
   });
 });
 

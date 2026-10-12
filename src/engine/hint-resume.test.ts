@@ -34,7 +34,7 @@ import {
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
-import { itOverWholeSweep } from "./testing/slow.ts";
+import { itOverWholeSweep, perCommit } from "./testing/slow.ts";
 import { NO_FLASH } from "./win-wave.ts";
 
 /** Walk a fresh board to solved, recomputing the hint after every move.
@@ -63,8 +63,10 @@ function solveByHints(
   // honest plan: a 50×50 Mosaic plan is some 1,350 steps (measured
   // 2026-09-30).
   const first = game.hint?.(state, aux);
-  const cap = Math.max(800, 2 * (first?.ok ? first.steps.length : 0));
-  for (let moves = 0; moves < cap; moves++) {
+  const planned = first?.ok ? first.steps.length : 0;
+  const cap = Math.max(800, 2 * planned);
+  const stride = Math.max(1, Math.ceil(planned / RECOMPUTES));
+  for (let moves = 0; moves < cap; ) {
     if (game.status(state) === "solved") return moves;
     // The midend's own question before every hint. A board the hints led to
     // has nothing wrong on it, so a mistake here is a hint leading the player
@@ -97,10 +99,44 @@ function solveByHints(
       }
       return moves;
     }
-    state = game.executeMove(state, res.steps[0].move);
+    // The plan's next `stride` steps, as a player pressing Hint again plays
+    // them: each refreshed against the board it meets, and one already
+    // resolved passed over. The first is always played, so a walk that
+    // recomputes every move is the stride of one.
+    let played = 0;
+    for (const step of res.steps) {
+      if (played > 0 && game.status(state) === "solved") break;
+      const live =
+        played > 0 && game.refreshHintStep ? game.refreshHintStep(step, state) : step;
+      if (live === null) continue;
+      state = game.executeMove(state, live.move);
+      if (++played === stride) break;
+    }
+    moves += played;
   }
   throw new Error(`${seed}: did not converge within ${cap} moves (loop?)`);
 }
+
+/**
+ * How many times the walk asks for a fresh plan on one board, at most, where
+ * the board's first plan is longer than that: the local hooks ask at evenly
+ * spaced moves and follow the plan between them, and CI asks after every move.
+ *
+ * The walk is quadratic in a plan's length, a whole plan computed again for
+ * each of its moves, and Loopy's 21 boards were 6,656 moves and 44 s of hint
+ * computation (2026-10-12). At 64 a plan of 64 steps or fewer is still walked
+ * one move at a time, which is every board of the searching hints the hooks
+ * walk and every Solo board.
+ *
+ * **What the hooks still walk, and what waits for CI.** A hint that cannot
+ * resume from a position the player reached fails at the first such position
+ * it is asked from, and the hooks ask from up to 64 of them on every board, the
+ * opening included. A refusal is met wherever a plan runs out. What the stride
+ * can step over is an instability between two consecutive recomputes on a
+ * board whose plan is longer than 64 steps: a planner that undoes its own last
+ * move. CI's walk recomputes after every move.
+ */
+const RECOMPUTES = perCommit(64, Number.POSITIVE_INFINITY);
 
 /**
  * The games whose hint **plans by searching ahead a bounded number of moves**,
@@ -276,9 +312,53 @@ const SEEDS = ["hr-a", "hr-b", "hr-c", "hr-d", "hr-e"];
  */
 const BREADTH_SEEDS = SEEDS.slice(0, 1);
 
+/**
+ * Whether two states hold the same values in every field: a move that leaves
+ * its board so is a step that does nothing.
+ *
+ * **What the two share by reference is not walked.** A move returns a new
+ * state that keeps whatever it did not change, and for Loopy that is the grid,
+ * a cyclic structure of every dot, edge and face that cost more to write out
+ * once per step than the plan cost to compute (25 s of this file, 2026-10-12).
+ * A move that changed shared structure in place would read here as a step
+ * that does nothing, which is the louder of the two ways to be wrong about it.
+ */
+function sameState(a: unknown, b: unknown, met = new Map<object, object>()): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null)
+    return false;
+  // A pair met again is on a cycle; it is equal unless something else differs.
+  if (met.get(a) === b) return true;
+  met.set(a, b);
+  if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return false;
+  if (ArrayBuffer.isView(a) && !(a instanceof DataView)) {
+    const x = a as unknown as ArrayLike<number>;
+    const y = b as unknown as ArrayLike<number>;
+    if (x.length !== y.length) return false;
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
+    return true;
+  }
+  if (a instanceof Set || a instanceof Map) {
+    const x = [...a];
+    const y = [...(b as Set<unknown>)];
+    return x.length === y.length && x.every((v, i) => sameState(v, y[i], met));
+  }
+  const keys = Object.keys(a);
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every(
+    (k) =>
+      Object.hasOwn(b, k) &&
+      sameState(
+        (a as Record<string, unknown>)[k],
+        (b as Record<string, unknown>)[k],
+        met,
+      ),
+  );
+}
+
 /** A structural key for a game state — typed arrays rendered as plain arrays so
- * two states compare equal iff every field matches. Used to detect a hint step
- * that does nothing (a no-op when reached = an intrinsically stale step).
+ * two states compare equal iff every field matches. Used to detect a `hint()`
+ * that changed the state it was asked about.
  *
  * An object met a second time is written as a reference to its first position
  * rather than again. A state may share a cyclic structure — Loopy's grid, whose
@@ -322,17 +402,13 @@ describe("a kept hint plan never contains a step that does nothing", () => {
           let state = game.newState(params, desc);
           const res = game.hint?.(state, aux);
           if (!res?.ok) continue; // a refusal has no steps to check
-          // Each board is keyed once and its key carried to the next step:
-          // writing a state out is this walk's whole cost on Loopy's grid.
-          let key = stateKey(state);
           res.steps.forEach((step, i) => {
-            state = game.executeMove(state, step.move);
-            const after = stateKey(state);
+            const after = game.executeMove(state, step.move);
             expect(
-              after !== key,
+              sameState(state, after),
               `${at}: plan step ${i} is a no-op when reached (stale step)`,
-            ).toBe(true);
-            key = after;
+            ).toBe(false);
+            state = after;
           });
         }
       }

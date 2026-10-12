@@ -57,11 +57,12 @@ const env = (globalThis as { process?: { env?: Record<string, string | undefined
 export const SLOW_TESTS_ENABLED = Boolean(env?.["PUZZLES_SLOW_TESTS"]);
 
 /**
- * True when this run is the **automatic per-commit hook** — the one role that
- * is allowed to narrow what it checks, because CI runs the whole gate on every
- * push to `main` (`.github/workflows/ci.yml` calls `npm run gate` with neither
- * toggle set). It is `.husky/pre-commit`'s own `GATE_PRECOMMIT`, read here
- * rather than invented, so the hook has one name for one idea.
+ * True when this run is one of the **two local hooks**, pre-commit and
+ * pre-push — the one role that is allowed to narrow what it checks, because CI
+ * runs the whole gate on every push to `main` (`.github/workflows/gate.yml` calls
+ * `npm run gate` with neither toggle set). It is the hooks' own
+ * `GATE_PRECOMMIT`, read here rather than invented, so they have one name for
+ * one idea.
  *
  * **The opposite polarity to {@link SLOW_TESTS_ENABLED}, and used far more
  * sparingly.** Slow is opt-in and defaults to *less*; this defaults to
@@ -71,7 +72,7 @@ export const SLOW_TESTS_ENABLED = Boolean(env?.["PUZZLES_SLOW_TESTS"]);
  * is unreachable from anywhere except the one caller that has the backstop.
  *
  * **What may hide behind it**, and it is a much narrower license than `slow`:
- * work whose omission for one commit is covered by the same run on push, and
+ * work whose omission locally is covered by the same run in CI on push, and
  * which is expensive enough that a developer would otherwise start reaching for
  * `--no-verify`. It may **not** hide a check of the code the commit is
  * changing. `hint-quality.test.ts` is the case and states its own reasoning:
@@ -87,30 +88,30 @@ export const SLOW_TESTS_ENABLED = Boolean(env?.["PUZZLES_SLOW_TESTS"]);
 export const PRECOMMIT_HOOK_RUN = env?.["GATE_PRECOMMIT"] === "1";
 
 /**
- * An amount of work by role: `hook` in the automatic per-commit hook, `wide`
- * everywhere else (CI on every push, `npm run gate`, a bare `vitest`).
+ * An amount of work by role: `hook` in the two local hooks, `wide` everywhere
+ * else (CI on every push, `npm run gate`, a bare `vitest`).
  *
- * **For more of the same, never for the only board of a kind.** The hook keeps
+ * **For more of the same, never for the only board of a kind.** The hooks keep
  * one board of every params set a sweep walks and every value of every mode;
- * what this takes off it is the second and later boards of one params set, and
- * a game's largest board where a smaller one of the same modes is walked. A
- * defect that shows on every board of a kind still fails the commit, and one
- * that needs the fourth board or the 50x50 fails the push. Say at the call
- * site what the hook's amount still walks.
+ * what this takes off them is the second and later boards of one params set,
+ * and a game's largest board where a smaller one of the same modes is walked.
+ * A defect that shows on every board of a kind still fails locally, and one
+ * that needs the fourth board or the 50x50 fails CI. Say at the call site what
+ * the hooks' amount still walks.
  *
  * A session that changed the code a sweep guards runs it wide before
  * committing: `npx vitest run <file>`, which is the wide run because nothing
- * but the hook sets the toggle.
+ * but a hook sets the toggle.
  */
 export function perCommit<T>(hook: T, wide: T): T {
   return PRECOMMIT_HOOK_RUN ? hook : wide;
 }
 
 /** The games this run's cross-game sweeps are narrowed to, or `null` when every
- * sweep is whole. Only the per-commit hook narrows, and only to the games whose
- * code reaches what the commit staged; `game-scope.ts` states when that is
- * sound, and `vitest.config.ts` skips the other games' `<id>: ` cases from the
- * same variable. */
+ * sweep is whole. Only the local hooks narrow: a commit to the games it
+ * stages, a push to the games whose code reaches what it carries.
+ * `game-scope.ts` states what each skips, and `vitest.config.ts` skips the
+ * other games' `<id>: ` cases from the same variable. */
 const SWEEP_SCOPE: ReadonlySet<string> | null = (() => {
   const ids = scopeFromEnv(env ?? {});
   return ids === null ? null : new Set(ids);

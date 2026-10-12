@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 /**
- * Says so when the last finished CI run on `main` failed. Never fails.
+ * Says so when the last finished run of the gate on `main` failed. Never fails.
  *
- * The per-commit hook leaves part of every cross-game sweep to the push
- * (`perCommit` in `src/engine/testing/slow.ts`), so a defect the hook cannot
- * see shows first as a red CI run, and nobody is watching one: a session
- * pushes and moves on. This puts the result where the next commit prints it.
+ * The local hooks leave part of every cross-game sweep to CI (`perCommit` in
+ * `src/engine/testing/slow.ts`), so a defect they cannot see shows first as a
+ * red run of `.github/workflows/gate.yml`, and nobody is watching one: a
+ * session pushes and moves on. This puts the result where the next commit and
+ * the next push print it.
  *
  * **A notice and not a check.** The commit that meets a red run is usually the
  * fix for it, so refusing the commit would refuse the repair. It is also
  * silent whenever it cannot tell: no `gh`, no network, no answer within five
  * seconds. A hook that waits on a network is a hook people learn to skip.
  *
- * A canceled run is passed over. CI cancels a run when a newer push arrives,
- * so the newest finished run is often one that was cut short and says nothing.
+ * A canceled run is passed over: it says nothing. The workflow does not cancel
+ * its own runs, so one is canceled only by hand or by the runner.
  */
 import { execFileSync } from "node:child_process";
 
@@ -29,7 +30,7 @@ function lastVerdict() {
         "--branch",
         "main",
         "--workflow",
-        "CI",
+        "Gate",
         "--status",
         "completed",
         "--limit",
@@ -59,6 +60,6 @@ if (run?.conclusion === "failure") {
   console.log("");
   console.log(`✗ CI is red on main: ${run.headSha.slice(0, 8)} "${run.displayTitle}"`);
   console.log(`  ${run.url}`);
-  console.log("  The push runs what this hook leaves out. Read the failure with");
+  console.log("  CI runs what the local hooks leave out. Read the failure with");
   console.log("  `gh run view --log-failed`, and fix it before other work.");
 }

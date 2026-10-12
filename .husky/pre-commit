@@ -12,8 +12,10 @@
 #                        unformat a file it touches).
 #   GATE_PRECOMMIT=1     a commit touching only documentation (docs/, openspec/,
 #                        AGENTS.md and friends — never help/, which is a build
-#                        input) skips vitest and vite build. It is also the one
-#                        signal a test reads to do less here than on push
+#                        input) skips vitest and vite build, and any other runs
+#                        the per-game tests of the games it stages only: the
+#                        rest is `.husky/pre-push`'s. It is also the one
+#                        signal a test reads to do less here than in CI
 #                        (`PRECOMMIT_HOOK_RUN` and `perCommit` in
 #                        engine/testing/slow.ts), so there is one name for one
 #                        idea rather than a second switch to keep in step.

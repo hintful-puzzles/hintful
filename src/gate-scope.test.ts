@@ -13,11 +13,15 @@
  *
  * **A deferred assertion and a sweep's smaller per-commit amount**
  * (`PRECOMMIT_HOOK_RUN` and `perCommit`, `engine/testing/slow.ts`)
- * rest on a different one: **CI is the backstop.** The hook sets
- * `GATE_PRECOMMIT` and CI does not, so work skipped for a commit still runs on
- * every push. Set it in both and the deferred assertions run *nowhere* while
- * both runs report green, which is why the last test below reads the two files
+ * rest on a different one: **CI is the backstop.** The two local hooks set
+ * `GATE_PRECOMMIT` and CI does not, so work skipped locally still runs in CI
+ * on every push. Set it in both and the deferred assertions run *nowhere*
+ * while both runs report green, which is why a test below reads the files
  * rather than taking the arrangement on trust.
+ *
+ * **A commit's per-game work, limited to the games it stages**, rests on a
+ * third: **the push runs the rest.** `.husky/pre-push` hands the gate the
+ * commit the remote has, and a test below holds it to that.
  *
  * ON THE INSTRUMENT. This scans for the **shape of a read** — an
  * `import.meta.glob`, `readFileSync`, `readdirSync`, `fs.read*` or `new URL`
@@ -40,8 +44,9 @@ import { describe, expect, it } from "vitest";
 // Read as text, the way the About dialog reads the licenses — `import.meta.glob`
 // cannot take an extension-less dotfile path (`../.husky/pre-commit` reaches
 // picomatch as an empty pattern and throws at transform time).
-import ciWorkflow from "../.github/workflows/ci.yml?raw";
+import gateWorkflow from "../.github/workflows/gate.yml?raw";
 import preCommitHook from "../.husky/pre-commit?raw";
+import prePushHook from "../.husky/pre-push?raw";
 import gateScript from "../scripts/gate.sh?raw";
 
 /** Every source and test module, plus the build side, as raw text. */
@@ -152,10 +157,12 @@ describe("the gate's per-commit scopings stay safe", () => {
     // source file beside a docs edit, or moves one into `docs/`. A filter on
     // the kind of change is how a deletion drops out, and rename detection is
     // how the path a file left does.
-    const listings = [
-      ...gateScript.matchAll(/staged=\$\(git diff --cached ([^)]*)\)/g),
-    ];
-    expect(listings.map((m) => m[1])).toEqual(["--name-only --no-renames"]);
+    // Two listings, a push's and a commit's, and the shortcut reads either.
+    const listings = [...gateScript.matchAll(/changed=\$\(git diff ([^)]*)\)/g)];
+    expect(listings.map((m) => m[1])).toEqual([
+      '--name-only --no-renames "$GATE_SINCE" HEAD',
+      "--cached --name-only --no-renames",
+    ]);
   });
 
   it("reads the skipped roots out of the shortcut's own pattern", () => {
@@ -179,27 +186,48 @@ describe("the gate's per-commit scopings stay safe", () => {
   });
 
   it("keeps GATE_PRECOMMIT a hook-only toggle, so CI is still the backstop", () => {
-    // The second scoping in this gate that narrows a *commit* rather than the
-    // branch: `PRECOMMIT_HOOK_RUN` (engine/testing/slow.ts) lets a check defer
-    // to push, and every such deferral rests on one claim — CI leaves the
+    // The second scoping in this gate that narrows a local run rather than
+    // the branch: `PRECOMMIT_HOOK_RUN` (engine/testing/slow.ts) lets a check
+    // defer to CI, and every such deferral rests on one claim — CI leaves the
     // toggle unset and runs everything. Asserted here rather than trusted,
     // because the failure is silent in the worst direction: set it in CI and
     // the deferred checks run **nowhere**, while both runs report green.
     // Vacuity: a `?raw` import that resolved to nothing would make every
     // assertion below pass over an empty string.
     expect(preCommitHook.length, "the pre-commit hook read empty").toBeGreaterThan(200);
-    expect(ciWorkflow.length, "the CI workflow read empty").toBeGreaterThan(200);
-    const ci = ciWorkflow;
-    const hook = preCommitHook;
-    // The hook sets it (so the narrowing is reachable at all) ...
-    expect(hook, "the hook no longer sets GATE_PRECOMMIT").toMatch(/GATE_PRECOMMIT=1/);
+    expect(prePushHook.length, "the pre-push hook read empty").toBeGreaterThan(200);
+    expect(gateWorkflow.length, "the gate workflow read empty").toBeGreaterThan(200);
+    // The hooks set it (so the narrowing is reachable at all) ...
+    for (const hook of [preCommitHook, prePushHook])
+      expect(hook, "a hook no longer sets GATE_PRECOMMIT").toMatch(/GATE_PRECOMMIT=1/);
     // ... and CI runs the gate without it (so nothing hides from `main`).
-    // A step running the whole gate, not only the deploy's build-only run.
-    expect(ci, "CI no longer runs the full gate").toMatch(/^\s*run: npm run gate\s*$/m);
+    // A step running the whole gate, not the deploy's build-only run.
+    expect(gateWorkflow, "CI no longer runs the full gate").toMatch(
+      /^\s*run: npm run gate\s*$/m,
+    );
     expect(
-      /GATE_PRECOMMIT/.test(ci),
-      "CI sets GATE_PRECOMMIT, so every check deferred to push now runs nowhere",
+      /GATE_PRECOMMIT|GATE_SINCE/.test(gateWorkflow),
+      "CI sets a hook's toggle, so every check deferred to CI now runs nowhere",
     ).toBe(false);
+  });
+
+  it("hands the push what the commits left out, and to nothing else", () => {
+    // A commit runs the per-game work of the games it stages and no other, so
+    // the rest has to run somewhere before the commits leave this machine.
+    // The push's role is its base commit: unset in the commit hook, where it
+    // would make the commit run the push's plan, and set in the push hook,
+    // where its absence would make the push run a commit's plan over nothing.
+    expect(prePushHook, "the push hook no longer names its base").toMatch(
+      /GATE_SINCE=\$since sh scripts\/gate\.sh/,
+    );
+    expect(/GATE_SINCE/.test(preCommitHook)).toBe(false);
+  });
+
+  it("never cancels a run of the whole gate in CI", () => {
+    // The wide boards of every sweep run in CI alone, so a canceled run is a
+    // commit nothing judged at that width.
+    expect(gateWorkflow).toMatch(/^\s*cancel-in-progress: false\s*$/m);
+    expect(/cancel-in-progress: true/.test(gateWorkflow)).toBe(false);
   });
 
   it("does not skip help/, which is a build input and a test subject", () => {

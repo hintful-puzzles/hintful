@@ -23,7 +23,7 @@
  * scopings are only safe while an assumption about the tree holds, and an
  * assumption nothing checks is one that has already started to drift.
  *
- * **CI is the backstop, not this file.** `.github/workflows/ci.yml` runs the
+ * **CI is the backstop, not this file.** `.github/workflows/gate.yml` runs the
  * whole suite on every push to `main`, so a selector bug costs a slower
  * feedback loop rather than a broken `main`. That is the same argument that
  * lets the hook run `biome check --staged` while CI runs `biome ci .`.

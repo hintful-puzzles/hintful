@@ -287,7 +287,9 @@ describe("hint plans continue from their previous step where they can", () => {
     const game = HINT_GAMES.find(([g]) => g === id)?.[1];
     for (const reading of readingsOf(id)) {
       const key = reading ? `${id}/${reading}` : id;
-      it(`${key}: few jumps pass over a firing that continued`, () => {
+      // Titled `<id>: `, which is what lets a local hook run one game's case.
+      const title = reading ? `${id}: with ${reading} notes, few` : `${id}: few`;
+      it(`${title} jumps pass over a firing that continued`, () => {
         if (!game) throw new Error(`${id} is not a hint game`);
         let jumps = 0;
         let avoidable = 0;

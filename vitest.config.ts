@@ -76,7 +76,7 @@ const CONCURRENT_REPOS = 4;
  * **The two-core reservation is for a human, so CI does not get it.** That
  * sentence used to read "`VITEST_MAX_WORKERS` overrides it — set it to the core
  * count in CI", which described an intention rather than a fact: nothing set it.
- * `.github/workflows/ci.yml` passes three `VITE_*` variables and no more, so CI
+ * `.github/workflows/gate.yml` passes the run no variable at all, so CI
  * silently inherited a courtesy written for a developer's laptop and ran on a
  * 4-core runner with **two** workers. Reading `CI` here is what makes the
  * comment true, and it needs nobody to remember anything — a rule that depends

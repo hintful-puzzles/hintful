@@ -199,7 +199,7 @@ export function capabilitySets(): CapabilitySet[] {
  * asking "does this game hand-roll the mechanic" must not be satisfied by a
  * test that merely mentions the helper. */
 const sourceText = (() => {
-  const modules = import.meta.glob<string>("../../games/**/*.ts", {
+  const modules = import.meta.glob<string>("../../games/*/**/*.ts", {
     query: "?raw",
     import: "default",
     eager: true,

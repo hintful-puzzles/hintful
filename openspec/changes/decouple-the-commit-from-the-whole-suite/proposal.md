@@ -1,7 +1,9 @@
 # decouple-the-commit-from-the-whole-suite
 
-**Status: a draft, filed 2026-10-12 on the owner's word. It waits for the
-owner's choice among the options below.** It has no `tasks.md` until then.
+**Status: built, 2026-10-12.** The options below are as they were filed and
+the owner's answers follow them. What was decided and why is `design.md`: a
+commit tests the games it stages, a pre-push hook runs the rest once a
+session, and CI's whole run is no longer canceled.
 
 ## Why
 
@@ -168,11 +170,14 @@ cursor passed, because that board is one a click elsewhere also reaches.
 
 ## Capabilities
 
-None at filing; the change sets `skip_specs`. A, B and C each move a
-requirement of `build-pipeline`.
+`build-pipeline`: what a commit runs, what a push runs, the selector's two
+plans, and CI's run of the whole gate.
 
 ## Impact
 
-`scripts/gate.sh`, `scripts/checks/select-tests.ts`, `.husky/`,
-`.github/workflows/ci.yml`, the five test files, `docs/games/testing.md`
-§ "Right-sizing the gate".
+`scripts/gate.sh`, `scripts/checks/select-tests.ts` and `reach.ts`,
+`.husky/pre-commit` and a new `.husky/pre-push`, `.github/workflows/ci.yml`
+and a new `gate.yml`, `scripts/checks/ci-status.mjs`,
+`src/engine/hint-resume.test.ts`, `docs/games/testing.md` § "What runs when",
+`docs/work-management.md` § "Pushing and deploying", and the push rule in
+`AGENTS.md`.

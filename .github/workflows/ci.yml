@@ -1,26 +1,22 @@
-# CI backstop for this project.
+# The build and the deploy, on every push to `main`.
 #
-# Trunk-based (no PRs), so the gate runs post-push on `main`: it runs the SAME
-# gate as the husky pre-commit hook, `npm run gate`, whose steps are defined in
-# `scripts/gate.sh` and nowhere else. So a `--no-verify` commit or a fresh
-# clone whose hooks never installed cannot land breakage on `main` undetected.
-# The deploy waits only on the gate's fast checks and the build (the `build`
-# job); the full gate runs beside it and marks the commit red after the fact.
-# (If contributors arrive later and PRs become useful, add a `pull_request:`
-# trigger here.)
+# Trunk-based (no PRs), so a push is what publishes. The deploy waits only on
+# the gate's fast checks and the build (the `build` job), run by
+# `scripts/gate.sh` itself. The whole gate, test suite included, runs beside
+# this in `gate.yml` and marks the commit red after the fact.
 #
 # Nothing is generated and no native tool is provisioned, so each job is
-# `npm ci` and the gate.
+# `npm ci` and the gate's script.
 name: CI
 
 on:
   push:
     branches: [main]
-  # Manual trigger — run the gate on demand.
+  # Manual trigger — build on demand. Off `main` it builds and stops.
   workflow_dispatch:
 
 # Cancel an in-progress run when a newer commit lands on the same ref — the
-# older run's result is moot.
+# older build is moot, and so is its deploy.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -29,26 +25,6 @@ permissions:
   contents: read
 
 jobs:
-  # The full gate, beside the deploy rather than in front of it (owner,
-  # 2026-09-27: ten minutes per push was the velocity cost). Every commit has
-  # passed the hook's gate already; this job is the backstop for what the hook
-  # scopes away (tests a commit could not have affected, checks deferred to
-  # push) and for a `--no-verify` commit, and it still fails the run and marks
-  # the commit red. It builds too, and throws that build away.
-  gate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: npm
-      - name: Install npm dependencies
-        run: npm ci
-      - name: Run the gate
-        run: npm run gate
-
   # The gate's fast checks and the production build, which is the artifact
   # that ships. The fast checks are the prefix of `scripts/gate.sh`, which is
   # where they are listed; they run first, so a commit that fails one of them
