@@ -10,7 +10,7 @@ that Check & Save flags pencil marks that have crossed out the answer.
 
 ## Requirements
 
-### Requirement: A Group board is solved by a group table
+### Requirement: Rules: A Group board is solved by a group table
 
 A board SHALL be solved when every cell is filled and the grid is a valid group
 Cayley table: Latin and associative. Because a board has one solution, Group
@@ -21,7 +21,27 @@ SHALL provide `findMistakes`, so Check & Save applies.
 - **WHEN** every cell is filled so the grid is Latin and associative
 - **THEN** the game is reported solved and flashes
 
-### Requirement: Group's parameters
+### Requirement: Rules: Group's Check & Save flags pencil marks that have crossed out the answer
+
+Group's `findMistakes` SHALL report, beside every entry that contradicts the
+unique solution, every empty cell whose non-empty pencil marks leave out that
+cell's solution element, as a `note` mistake drawn in the same mistake
+outline. Marks that include the answer beside other candidates SHALL NOT be
+reported. Because the hint reasons from the marks, it SHALL refuse while such
+a mark set stands.
+
+#### Scenario: Marks without the answer are a mistake and the hint refuses
+
+- **WHEN** an empty cell's pencil marks hold only elements other than its solution
+- **THEN** `findMistakes` reports that cell as a `note` mistake, and a hint request
+  refuses asking the player to fix the highlighted mistakes first
+
+#### Scenario: Extra candidates beside the answer are not a mistake
+
+- **WHEN** an empty cell's pencil marks hold its solution element and others
+- **THEN** `findMistakes` reports nothing for that cell
+
+### Requirement: Params: Group's parameters
 
 Group SHALL accept a grid size (the group's order) between 3 and 26, a
 difficulty of Easy, Normal, Tricky, Hard or Unreasonable, and a "show
@@ -34,7 +54,7 @@ cannot hide its identity.
 - **WHEN** parameters request a 3×3 puzzle with the identity hidden
 - **THEN** `validateParams` rejects them with a reason
 
-### Requirement: Hiding the identity leaves every tier but Easy
+### Requirement: Params: Hiding the identity leaves every tier but Easy
 
 Group SHALL declare that hiding the identity leaves every tier but Easy (the
 modifier's `only`), because an identity-hidden board has two blank rows and
@@ -46,7 +66,7 @@ columns that only a deduction above Easy can tell apart.
   puzzle
 - **THEN** the engine refuses them with a reason
 
-### Requirement: A size is refused at a tier none of its boards need
+### Requirement: Params: A size is refused at a tier none of its boards need
 
 When parameters are about to deal a board, `validateParams` SHALL refuse a
 tier no board of the size needs, and SHALL NOT deal an easier board in its
@@ -65,7 +85,7 @@ It SHALL refuse a 6×6 at Hard with the identity shown as too rare to deal.
   identity shown
 - **THEN** the refusal names 5×5 puzzles that show their identity
 
-### Requirement: The identity flag sets how elements are lettered
+### Requirement: Params: The identity flag sets how elements are lettered
 
 The element numbering used for display and keyboard input SHALL depend on the
 "show identity" flag: with the identity shown, the identity element is
@@ -79,7 +99,33 @@ labels, and SHALL NOT affect the grid description.
 - **THEN** the clues are the same elements in both, and only the letters they
   show differ
 
-### Requirement: Group descriptions use the upstream run-length encoding
+### Requirement: Params: Group's params are a size, a tier letter and an identity flag
+
+The params encoding SHALL be the size in decimal, then in the full form `d`
+and the tier's letter (`t` Easy, `n` Normal, `h` Tricky, `x` Hard, `u`
+Unreasonable), then `i` when the identity is hidden. The short form SHALL
+leave out the tier and keep the `i`. Decoding SHALL read a string with no `d`
+as Normal and one with no `i` as showing the identity, and SHALL refuse a
+character it does not know and a `d` followed by no tier letter.
+
+#### Scenario: A preset that hides its identity
+
+- **WHEN** `8dni` is decoded
+- **THEN** it is an 8×8 board at Normal with the identity hidden, and its
+  short form is `8i`
+
+#### Scenario: The tier letters are not the tier's initials
+
+- **WHEN** `8dh` is decoded
+- **THEN** it is an 8×8 board at Tricky, not Hard, with the identity shown
+
+#### Scenario: A letter that is no tier
+
+- **WHEN** the `h` of `8dh` is changed to `q`
+- **THEN** the params are refused:
+  `The parameters 8dq have a "q" where this puzzle reads none.`
+
+### Requirement: Description: Group descriptions use the upstream run-length encoding
 
 A Group description SHALL encode the grid in reading order: each clue as a
 decimal number from 1 to the grid size, each run of 1 to 26 blank cells as a
@@ -94,7 +140,7 @@ decimal numbers.
 - **THEN** the resulting clues are identical, and re-encoding yields the same
   description
 
-### Requirement: A Group description is validated against the grid area
+### Requirement: Description: A Group description is validated against the grid area
 
 Validation SHALL reject a description whose cell count does not equal the grid
 area, telling "not enough data" from "too much", and SHALL reject an
@@ -106,17 +152,7 @@ out-of-range number and an unknown character.
   validated
 - **THEN** it is rejected with a message distinguishing which
 
-### Requirement: Group's solver accepts only an associative grid and grades a board at its tier
-
-The solver SHALL accept a completed grid only if it is associative. A board
-dealt at a difficulty SHALL be solvable at that tier and not at the tier below.
-
-#### Scenario: The solver grades a board at the intended difficulty
-
-- **WHEN** a board generated at a given difficulty is solved
-- **THEN** it is solvable at that difficulty and not at the tier below
-
-### Requirement: Each Group tier adds its own deductions
+### Requirement: Generation: Each Group tier adds its own deductions
 
 Normal SHALL add associativity (with `ab`, `bc` and one bracketing of `abc`
 known, the other is placed equal to it) and the filling of the identity's row
@@ -132,7 +168,7 @@ a Group-specific technique.
   blank at Normal or harder
 - **THEN** the solver places `a(bc)` equal to `(ab)c`
 
-### Requirement: A Group board is a group from the data table
+### Requirement: Generation: A Group board is a group from the data table
 
 Group SHALL deal a board whose solution is a group of the requested order
 taken from the transcribed group data table, its elements permuted, with the
@@ -146,7 +182,7 @@ exactly one completion, at the requested difficulty.
 - **THEN** its clues admit exactly one completion, that completion is a valid
   group table, and the solver grades it at the requested difficulty
 
-### Requirement: An identity-hidden board blanks two rows and columns
+### Requirement: Generation: An identity-hidden board blanks two rows and columns
 
 In identity-hidden mode, generation SHALL blank the identity's row and column
 and one further row and column before it removes clues, so the identity cannot
@@ -159,7 +195,17 @@ afterward.
 - **THEN** the identity's row and column, and one further row and column, are
   blank, and the board is still uniquely solvable at its difficulty
 
-### Requirement: A diagonal drag fills a whole diagonal at once
+### Requirement: Solver: Group's solver accepts only an associative grid and grades a board at its tier
+
+The solver SHALL accept a completed grid only if it is associative. A board
+dealt at a difficulty SHALL be solvable at that tier and not at the tier below.
+
+#### Scenario: The solver grades a board at the intended difficulty
+
+- **WHEN** a board generated at a given difficulty is solved
+- **THEN** it is solvable at that difficulty and not at the tier below
+
+### Requirement: Controls: A diagonal drag fills a whole diagonal at once
 
 A diagonal drag from a cell selected for entry SHALL extend the selection
 along that diagonal, and an element entered then SHALL fill every cell of it
@@ -187,7 +233,7 @@ it was; one that holds any other element SHALL refuse the whole entry.
   diagonally, then an element is entered
 - **THEN** only the selected cell takes the mark
 
-### Requirement: Group's rows and columns reorder, and take subgroup dividers
+### Requirement: Controls: Group's rows and columns reorder, and take subgroup dividers
 
 Group SHALL provide two structural aids. Dragging a row or column header SHALL
 reposition that element's entire row and column, so a player can group a
@@ -201,7 +247,7 @@ elements are dragged apart.
   bordering elements are no longer adjacent
 - **THEN** the affected divider is removed
 
-### Requirement: Shift and an arrow move the cursor's row or column
+### Requirement: Controls: Shift and an arrow move the cursor's row or column
 
 Shift+Left or Shift+Right SHALL move the element of the cursor's column one
 place along the order, and Shift+Up or Shift+Down the element of its row,
@@ -218,7 +264,7 @@ on its element. On a hidden cursor the first such press SHALL only show it.
 - **WHEN** the cursor is hidden and the player presses Shift+Right
 - **THEN** the cursor shows and the table's order is unchanged
 
-### Requirement: Two keys toggle the subgroup line beside the cursor
+### Requirement: Controls: Two keys toggle the subgroup line beside the cursor
 
 `|` SHALL toggle the subgroup line after the cursor's column, and `-` the line
 below its row, making the same move as clicking between the two headings. At
@@ -234,59 +280,35 @@ the last column or row there is no line, and the key SHALL do nothing.
 - **WHEN** the cursor shows on the last column and the player presses `|`
 - **THEN** no move is made
 
-### Requirement: Group draws its legend, marks and errors
+### Requirement: Controls: Backspace, Space and Clear empty the selected Group cells
 
-Rendering SHALL draw the element legend along the top and left, lay out pencil
-marks in a grid, highlight the selection, annotate Latin duplicates and
-associativity failures in the error color, and flash on completion.
+Backspace, Space and the keypad's Clear SHALL empty the selected cells of
+their letter and of their pencil marks, as one move. In pencil mode they SHALL
+leave a cell that holds a letter as it is, and in either mode a given.
 
-#### Scenario: A broken product is annotated
+#### Scenario: Space on a cell that holds only marks
 
-- **WHEN** four filled cells make `(ab)c` and `a(bc)` differ
-- **THEN** the two cells holding them are annotated with the triple in the
-  error color
+- **WHEN** an empty cell with pencil marks is selected and Space is pressed
+- **THEN** the cell's marks are gone, and one undo brings them back
 
-### Requirement: Group draws its table on a quiet surface, with a given's cell lifted
+### Requirement: Controls: A letter key enters its element
 
-`redraw` SHALL draw every cell of the table the player fills on the
-collection's cell surface, and every cell holding a given element on the
-collection's lifted surface of a given, so that a given is told by the cell
-under it as well as by its ink. The legend SHALL stay on the board, outside
-the surface. The selection's wash and its pencil-mode corner SHALL be drawn
-over whichever surface the cell has.
+A letter key, capital or small, SHALL enter the element it letters in the
+selected cells, or toggle that element's pencil mark in pencil mode; a letter
+no element of the board has SHALL be declined. The keypad SHALL offer a key
+for each element, in the order of their numbers, then Clear.
 
-#### Scenario: A given is told by the cell under it
+#### Scenario: The keypad of a board that shows its identity
 
-- **WHEN** a board with given elements is drawn
-- **THEN** each given's cell is the lifted surface
-- **AND** every other cell of the table is the cell surface
+- **WHEN** the keypad is asked for under `6dt`
+- **THEN** its keys are `e`, `a`, `b`, `c`, `d`, `f` and Clear
 
-### Requirement: Only a subgroup divider is drawn in ink
+#### Scenario: A letter the board has no element for
 
-The line between cells and the frame round the table SHALL be the collection's
-surface grid line, the frame no heavier than the line. A subgroup divider is
-the player's own mark: it SHALL be drawn as an edge and SHALL stay in ink.
+- **WHEN** `k` is pressed with a cell selected on a 6×6 board
+- **THEN** no move is made
 
-#### Scenario: Only a divider is heavy
-
-- **WHEN** a board with one subgroup divider is drawn
-- **THEN** the divider is ink
-- **AND** every other line of the table, and its frame, is the surface grid
-  line
-
-### Requirement: The leading diagonal is a stroke, not a shade
-
-The leading diagonal SHALL be drawn as a stroke in the surface grid line's
-color from corner to corner of each cell on it, under the cell's element and
-pencil marks, and SHALL NOT be told by a shade of the cell's surface.
-
-#### Scenario: A diagonal cell keeps its surface
-
-- **WHEN** a given and a cell the player fills both lie on the leading diagonal
-- **THEN** the given's cell is the lifted surface and the other the cell
-  surface, each with the stroke under its content
-
-### Requirement: Group's own placements lead the eliminations
+### Requirement: Hint: Group's own placements lead the eliminations
 
 The plan SHALL prefer a naked single, placed by a `set` move: an empty cell
 whose notes have collapsed to one candidate. Next SHALL come an associativity
@@ -302,7 +324,7 @@ implicit reading, which has no populate step.
 - **THEN** the plan's first step is a placement, and no note is written
   before it
 
-### Requirement: The hint teaches Group's three deductions
+### Requirement: Hint: The hint teaches Group's three deductions
 
 An associativity placement SHALL place the fourth product by a `set` move: the
 player has filled `a·b`, `b·c` and one bracketing of `a·b·c`, which forces the
@@ -331,7 +353,7 @@ shows is not the identity.
   of `a`, narrated from that product: it is not `b`, as it would be if `a`
   were the identity
 
-### Requirement: A Group hint names cells by their letters and associativity by its triple
+### Requirement: Hint: A Group hint names cells by their letters and associativity by its triple
 
 A step's narration SHALL refer to each cell by the element letter it shows.
 The associativity step SHALL state the actual triple and the three known
@@ -344,7 +366,7 @@ at the cell.
 - **THEN** its narration gives the three products as equations in the letters
   the board shows, and says the other bracketing must be the same element
 
-### Requirement: Learning the identity fills its row and column as one journey
+### Requirement: Hint: Learning the identity fills its row and column as one journey
 
 Learning the identity forces every empty cell of its row and column at once.
 Those placements SHALL be one journey, its continuation legs flagged
@@ -358,53 +380,59 @@ Those placements SHALL be one journey, its continuation legs flagged
   single multi-leg journey (continuation legs flagged `continuesPrevious`), not as
   separate hints
 
-### Requirement: Group's Check & Save flags pencil marks that have crossed out the answer
+### Requirement: Look: Group draws its legend, marks and errors
 
-Group's `findMistakes` SHALL report, beside every entry that contradicts the
-unique solution, every empty cell whose non-empty pencil marks leave out that
-cell's solution element, as a `note` mistake drawn in the same mistake
-outline. Marks that include the answer beside other candidates SHALL NOT be
-reported. Because the hint reasons from the marks, it SHALL refuse while such
-a mark set stands.
+Rendering SHALL draw the element legend along the top and left, lay out pencil
+marks in a grid, highlight the selection, annotate Latin duplicates and
+associativity failures in the error color, and flash on completion.
 
-#### Scenario: Marks without the answer are a mistake and the hint refuses
+#### Scenario: A broken product is annotated
 
-- **WHEN** an empty cell's pencil marks hold only elements other than its solution
-- **THEN** `findMistakes` reports that cell as a `note` mistake, and a hint request
-  refuses asking the player to fix the highlighted mistakes first
+- **WHEN** four filled cells make `(ab)c` and `a(bc)` differ
+- **THEN** the two cells holding them are annotated with the triple in the
+  error color
 
-#### Scenario: Extra candidates beside the answer are not a mistake
+### Requirement: Look: Group draws its table on a quiet surface, with a given's cell lifted
 
-- **WHEN** an empty cell's pencil marks hold its solution element and others
-- **THEN** `findMistakes` reports nothing for that cell
+`redraw` SHALL draw every cell of the table the player fills on the
+collection's cell surface, and every cell holding a given element on the
+collection's lifted surface of a given, so that a given is told by the cell
+under it as well as by its ink. The legend SHALL stay on the board, outside
+the surface. The selection's wash and its pencil-mode corner SHALL be drawn
+over whichever surface the cell has.
 
-### Requirement: Group's params are a size, a tier letter and an identity flag
+#### Scenario: A given is told by the cell under it
 
-The params encoding SHALL be the size in decimal, then in the full form `d`
-and the tier's letter (`t` Easy, `n` Normal, `h` Tricky, `x` Hard, `u`
-Unreasonable), then `i` when the identity is hidden. The short form SHALL
-leave out the tier and keep the `i`. Decoding SHALL read a string with no `d`
-as Normal and one with no `i` as showing the identity, and SHALL refuse a
-character it does not know and a `d` followed by no tier letter.
+- **WHEN** a board with given elements is drawn
+- **THEN** each given's cell is the lifted surface
+- **AND** every other cell of the table is the cell surface
 
-#### Scenario: A preset that hides its identity
+### Requirement: Look: Only a subgroup divider is drawn in ink
 
-- **WHEN** `8dni` is decoded
-- **THEN** it is an 8×8 board at Normal with the identity hidden, and its
-  short form is `8i`
+The line between cells and the frame round the table SHALL be the collection's
+surface grid line, the frame no heavier than the line. A subgroup divider is
+the player's own mark: it SHALL be drawn as an edge and SHALL stay in ink.
 
-#### Scenario: The tier letters are not the tier's initials
+#### Scenario: Only a divider is heavy
 
-- **WHEN** `8dh` is decoded
-- **THEN** it is an 8×8 board at Tricky, not Hard, with the identity shown
+- **WHEN** a board with one subgroup divider is drawn
+- **THEN** the divider is ink
+- **AND** every other line of the table, and its frame, is the surface grid
+  line
 
-#### Scenario: A letter that is no tier
+### Requirement: Look: The leading diagonal is a stroke, not a shade
 
-- **WHEN** the `h` of `8dh` is changed to `q`
-- **THEN** the params are refused:
-  `The parameters 8dq have a "q" where this puzzle reads none.`
+The leading diagonal SHALL be drawn as a stroke in the surface grid line's
+color from corner to corner of each cell on it, under the cell's element and
+pencil marks, and SHALL NOT be told by a shade of the cell's surface.
 
-### Requirement: With the identity shown, number 1 is lettered e
+#### Scenario: A diagonal cell keeps its surface
+
+- **WHEN** a given and a cell the player fills both lie on the leading diagonal
+- **THEN** the given's cell is the lifted surface and the other the cell
+  surface, each with the stroke under its content
+
+### Requirement: Look: With the identity shown, number 1 is lettered e
 
 With the identity shown, the number 1 of a description SHALL be lettered `e`,
 the numbers 2 to 5 `a` to `d`, and each number above 5 by its place in the
@@ -422,31 +450,3 @@ in the alphabet. A letter the player types SHALL be read back the same way.
 
 - **WHEN** a 3×3 board that shows its identity is opened
 - **THEN** its three elements are lettered `e`, `a` and `b`
-
-### Requirement: Backspace, Space and Clear empty the selected Group cells
-
-Backspace, Space and the keypad's Clear SHALL empty the selected cells of
-their letter and of their pencil marks, as one move. In pencil mode they SHALL
-leave a cell that holds a letter as it is, and in either mode a given.
-
-#### Scenario: Space on a cell that holds only marks
-
-- **WHEN** an empty cell with pencil marks is selected and Space is pressed
-- **THEN** the cell's marks are gone, and one undo brings them back
-
-### Requirement: A letter key enters its element
-
-A letter key, capital or small, SHALL enter the element it letters in the
-selected cells, or toggle that element's pencil mark in pencil mode; a letter
-no element of the board has SHALL be declined. The keypad SHALL offer a key
-for each element, in the order of their numbers, then Clear.
-
-#### Scenario: The keypad of a board that shows its identity
-
-- **WHEN** the keypad is asked for under `6dt`
-- **THEN** its keys are `e`, `a`, `b`, `c`, `d`, `f` and Clear
-
-#### Scenario: A letter the board has no element for
-
-- **WHEN** `k` is pressed with a cell selected on a 6×6 board
-- **THEN** no move is made

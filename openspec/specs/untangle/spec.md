@@ -8,7 +8,7 @@ crossings.
 
 ## Requirements
 
-### Requirement: Crossed edges are Untangle's only mistake feedback
+### Requirement: Rules: Crossed edges are Untangle's only mistake feedback
 
 Untangle SHALL NOT provide `findMistakes`: any layout with no crossing wins, so
 there is no one answer to check a move against, and crossed edges are the
@@ -19,7 +19,36 @@ built-in mistake feedback.
 - **WHEN** the registered `untangle` game is read
 - **THEN** it has no `findMistakes`
 
-### Requirement: Untangle's params are a vertex count
+### Requirement: Rules: Crossing detection is exact and drives solved status
+
+The game SHALL determine whether two edges cross using an exact integer
+segment-intersection test over the rational vertex coordinates (no
+floating-point epsilon), treating collinear overlap and an endpoint lying on
+the other segment as crossings, and considering only non-adjacent edge pairs.
+`status` SHALL report `"solved"` exactly when no edge pair crosses.
+
+#### Scenario: A board with no crossings is solved
+
+- **WHEN** the vertices are positioned so that no two non-adjacent edges cross
+- **THEN** `status` returns `"solved"`
+
+#### Scenario: Adjacent edges meeting at a vertex are not a crossing
+
+- **WHEN** two edges share an endpoint
+- **THEN** they are never counted as crossing each other
+
+### Requirement: Rules: executeMove places vertices and refuses a malformed move
+
+`executeMove` SHALL apply the placement or placements and recompute the
+crossings. It SHALL throw on a malformed move, a non-integer coordinate
+included: the exact crossing test depends on `RationalPoint` holding integers.
+
+#### Scenario: A fractional coordinate is refused
+
+- **WHEN** `executeMove` receives a move whose point has a non-integer `x`
+- **THEN** it throws
+
+### Requirement: Params: Untangle's params are a vertex count
 
 Params SHALL be `{ n }`, the vertex count, encoded as the integer. The `n`
 field SHALL declare a lower bound of 4 and an upper bound, so that the engine's
@@ -36,22 +65,16 @@ params check refuses an `n` under 4 and an unreasonably large `n`.
   above the declared upper bound
 - **THEN** it returns a non-null reason
 
-### Requirement: Generation yields a planar graph drawn tangled
+### Requirement: Params: An Untangle title is its number of points
 
-`newDesc` SHALL build a graph that is planar by construction, with every vertex
-degree capped at 4. A new board SHALL lay the vertices on a circle, in an order
-under which at least one non-adjacent edge pair crosses, so the puzzle never
-starts solved.
+A board's label SHALL be its number of points followed by `points`.
 
-#### Scenario: A generated board is planar, degree-capped, and starts tangled
+#### Scenario: The default board
 
-- **WHEN** a new game is created from any preset
-- **THEN** the graph has a crossing-free embedding (it was built planar), every
-  vertex has degree ≤ 4, and the initial circle layout has at least one pair of
-  crossing edges (not already solved)
-- **AND** generation terminates for every preset
+- **WHEN** the params `10` are labeled
+- **THEN** the label reads "10 points"
 
-### Requirement: The Untangle desc encodes the edges only
+### Requirement: Description: The Untangle desc encodes the edges only
 
 The desc SHALL encode the edges only, as sorted zero-based `a-b` pairs with
 `a < b`, carrying no vertex coordinates. `newDesc` SHALL return the solved
@@ -71,79 +94,7 @@ out-of-range pair, a self-loop or a repeated edge.
   joining a vertex to itself, or the same edge twice
 - **THEN** it returns a reason
 
-### Requirement: Crossing detection is exact and drives solved status
-
-The game SHALL determine whether two edges cross using an exact integer
-segment-intersection test over the rational vertex coordinates (no
-floating-point epsilon), treating collinear overlap and an endpoint lying on
-the other segment as crossings, and considering only non-adjacent edge pairs.
-`status` SHALL report `"solved"` exactly when no edge pair crosses.
-
-#### Scenario: A board with no crossings is solved
-
-- **WHEN** the vertices are positioned so that no two non-adjacent edges cross
-- **THEN** `status` returns `"solved"`
-
-#### Scenario: Adjacent edges meeting at a vertex are not a crossing
-
-- **WHEN** two edges share an endpoint
-- **THEN** they are never counted as crossing each other
-
-### Requirement: Vertices are dragged by pointer or keyboard
-
-`interpretMove` SHALL let the player move one vertex at a time. A pointer
-press near a vertex SHALL begin a drag, motion SHALL preview the vertex
-following the pointer as a `UI_UPDATE` with no history entry, and release SHALL
-place that vertex at its position.
-
-#### Scenario: A drag moves one vertex and updates crossings
-
-- **WHEN** the player drags a vertex to a new position and releases in-bounds
-- **THEN** a move is committed that repositions only that vertex, the crossing set
-  is recomputed, and the displayed crossed-edge highlighting updates
-
-### Requirement: A drag is clamped to the playable area
-
-The drag target SHALL be clamped to the playable area, keeping the vertex blob
-inside the play-area border: dragging past the edge SHALL preview the vertex
-pinned at the nearest in-bounds position, and a release SHALL commit it there.
-A drag off the board SHALL NOT cancel. The clamped position SHALL be rounded to
-integers, so fractional pointer input never reaches a move.
-
-#### Scenario: A drag released outside the play area clamps and commits
-
-- **WHEN** the player drags a vertex past the play-area edge and releases
-- **THEN** the vertex is committed at the nearest position inside the play-area
-  border (it does not reset to its prior position)
-
-### Requirement: The keyboard selects, holds, nudges and cycles a vertex
-
-An arrow key SHALL select the nearest vertex in that direction. Space or Tab
-SHALL step the selection through the vertices in turn, backwards with Shift,
-and SHALL do nothing while a vertex is held. Enter SHALL pick the selected
-vertex up, the arrow keys SHALL then nudge it, and Enter again SHALL put it
-down where the nudges left it. A vertex put down where it was picked up SHALL
-go back exactly as it was, not rounded to a pixel, and Undo gains no step.
-
-#### Scenario: A held vertex is nudged and dropped
-
-- **WHEN** the player selects a vertex away from the border, presses the select
-  key, presses an arrow, and presses the select key again, with snapping off
-- **THEN** a move is committed placing that vertex one nudge away in the
-  arrow's direction
-
-### Requirement: executeMove places vertices and refuses a malformed move
-
-`executeMove` SHALL apply the placement or placements and recompute the
-crossings. It SHALL throw on a malformed move, a non-integer coordinate
-included: the exact crossing test depends on `RationalPoint` holding integers.
-
-#### Scenario: A fractional coordinate is refused
-
-- **WHEN** `executeMove` receives a move whose point has a non-integer `x`
-- **THEN** it throws
-
-### Requirement: The layout is restored by replaying the move log
+### Requirement: Description: The layout is restored by replaying the move log
 
 A saved game SHALL reload to the same vertex positions by replaying its move
 log. Restoring the layout SHALL require no superseding desc (the
@@ -154,38 +105,40 @@ log. Restoring the layout SHALL require no superseding desc (the
 - **WHEN** a game with dragged vertices is serialized and reloaded
 - **THEN** the reconstructed positions exactly match
 
-### Requirement: Rendering frames the play area and colors roles distinctly
+### Requirement: Description: A graph that is not planar does not load
 
-`redraw` SHALL draw a visible border around the playable area, so the drop zone
-is told from any surrounding dead space. It SHALL draw edges as lines, red for
-an edge involved in a crossing when the show-crossed-edges preference is on and
-ink otherwise, and vertices as blobs, or as index numbers under the
-vertex-style preference, in a fixed z-order so the dragged vertex sits on top.
-The danger color (red) SHALL be reserved for crossings.
+`hasNoSolution` SHALL say yes exactly of a graph that is not planar, by the
+planarity test the solved layout comes from, wherever its points stand. A
+description the parser reads is therefore still refused when it is opened, if
+no layout of its lines is free of crossings.
 
-#### Scenario: Crossed edges and dragged-vertex neighbors are visually distinct
+#### Scenario: Five points all joined
 
-- **WHEN** the player drags a vertex that has neighbors while crossings exist
-- **THEN** crossed edges render red, the dragged vertex renders in the color of
-  a thing picked up, and its neighbor vertices render in the pair's first color
-  (not red), so neighbors are not mistaken for a crossing/error indication
+- **WHEN** the game ID `5:0-1,0-2,0-3,0-4,1-2,1-3,1-4,2-3,2-4,3-4` is opened
+- **THEN** its ten pairs are read without complaint, and it is refused as
+  having no solution
 
-### Requirement: A vertex's color says its role
+#### Scenario: A dealt board
 
-A vertex SHALL be the theme pair's second color, and a vertex adjacent to the
-one being dragged the pair's first, so the held vertex's neighbors stand
-against the rest. The dragged vertex SHALL be the collection's color for a
-thing picked up and the keyboard-cursor vertex the collection's cursor color.
-The two SHALL never be shown together, and picking a vertex up SHALL be told by
-its neighbors changing color.
+- **WHEN** `0-2,0-5,1-2,1-3,1-4,1-5,2-4,2-5,3-4,3-5` is opened for 6 points
+- **THEN** it loads, drawn on a circle with lines crossing
 
-#### Scenario: Picking up the cursor vertex
+### Requirement: Generation: Generation yields a planar graph drawn tangled
 
-- **WHEN** the player presses the select key on the keyboard-cursor vertex
-- **THEN** that vertex takes the picked-up color, no vertex keeps the cursor
-  color, and its neighbors take the pair's first color
+`newDesc` SHALL build a graph that is planar by construction, with every vertex
+degree capped at 4. A new board SHALL lay the vertices on a circle, in an order
+under which at least one non-adjacent edge pair crosses, so the puzzle never
+starts solved.
 
-### Requirement: Solve untangles any planar board, with or without aux
+#### Scenario: A generated board is planar, degree-capped, and starts tangled
+
+- **WHEN** a new game is created from any preset
+- **THEN** the graph has a crossing-free embedding (it was built planar), every
+  vertex has degree ≤ 4, and the initial circle layout has at least one pair of
+  crossing edges (not already solved)
+- **AND** generation terminates for every preset
+
+### Requirement: Solver: Solve untangles any planar board, with or without aux
 
 `solve` SHALL return a single move repositioning every vertex to a
 crossing-free layout, choosing among the eight dihedral symmetries of that
@@ -209,7 +162,7 @@ animate.
 - **WHEN** Solve is invoked on a hand-typed description of K5
 - **THEN** it reports that no solution exists and leaves the board unchanged
 
-### Requirement: The solved layout is exact and checked
+### Requirement: Solver: The solved layout is exact and checked
 
 The solved layout SHALL be the generator's `aux` when the session has it,
 scaled to fill the play box, and otherwise a layout computed from the edges
@@ -230,7 +183,96 @@ fails that test, the layout SHALL be the `aux` as the generator gave it.
 - **THEN** `solve` and `hint` throw, and no layout is given: only a graph
   proved non-planar is answered with no solution
 
-### Requirement: Untangle hints move the point that removes the most crossings
+### Requirement: Controls: Vertices are dragged by pointer or keyboard
+
+`interpretMove` SHALL let the player move one vertex at a time. A pointer
+press near a vertex SHALL begin a drag, motion SHALL preview the vertex
+following the pointer as a `UI_UPDATE` with no history entry, and release SHALL
+place that vertex at its position.
+
+#### Scenario: A drag moves one vertex and updates crossings
+
+- **WHEN** the player drags a vertex to a new position and releases in-bounds
+- **THEN** a move is committed that repositions only that vertex, the crossing set
+  is recomputed, and the displayed crossed-edge highlighting updates
+
+### Requirement: Controls: A drag is clamped to the playable area
+
+The drag target SHALL be clamped to the playable area, keeping the vertex blob
+inside the play-area border: dragging past the edge SHALL preview the vertex
+pinned at the nearest in-bounds position, and a release SHALL commit it there.
+A drag off the board SHALL NOT cancel. The clamped position SHALL be rounded to
+integers, so fractional pointer input never reaches a move.
+
+#### Scenario: A drag released outside the play area clamps and commits
+
+- **WHEN** the player drags a vertex past the play-area edge and releases
+- **THEN** the vertex is committed at the nearest position inside the play-area
+  border (it does not reset to its prior position)
+
+### Requirement: Controls: The keyboard selects, holds, nudges and cycles a vertex
+
+An arrow key SHALL select the nearest vertex in that direction. Space or Tab
+SHALL step the selection through the vertices in turn, backwards with Shift,
+and SHALL do nothing while a vertex is held. Enter SHALL pick the selected
+vertex up, the arrow keys SHALL then nudge it, and Enter again SHALL put it
+down where the nudges left it. A vertex put down where it was picked up SHALL
+go back exactly as it was, not rounded to a pixel, and Undo gains no step.
+
+#### Scenario: A held vertex is nudged and dropped
+
+- **WHEN** the player selects a vertex away from the border, presses the select
+  key, presses an arrow, and presses the select key again, with snapping off
+- **THEN** a move is committed placing that vertex one nudge away in the
+  arrow's direction
+
+### Requirement: Controls: Untangle's keyboard starts from point 0
+
+With no point selected, Enter, Space or Tab SHALL select point 0, and an
+arrow key SHALL select the point nearest point 0 in its direction, or point 0
+where none lies that way. A point SHALL lie in an arrow's direction when it is
+within 45° of it. A nudge SHALL move a held point half a board unit.
+
+#### Scenario: Up on a board just opened
+
+- **WHEN** Up is pressed on a board just opened, whose point 0 is at the top
+  of the circle
+- **THEN** point 0 is selected, no point lying above it
+
+### Requirement: Preferences: The Untangle port exposes its three preferences via the hook
+
+Untangle SHALL expose three preferences through `prefs`, under the keywords
+`snap-to-grid` (boolean), `show-crossed-edges` (boolean) and `vertex-style` (a
+two-way choice, Circles or Numbers). Its `newUi` SHALL set the defaults:
+show-crossed-edges on, since it doubles as the built-in mistake feedback,
+snap-to-grid off, and vertex-style Circles.
+
+#### Scenario: Untangle preferences round-trip through the engine
+
+- **WHEN** `getPreferencesConfig()` is called for Untangle
+- **THEN** it returns two booleans and one two-way choice of the game's own,
+  beside the engine's `show-timer`, and `getPreferences()` reports
+  show-crossed-edges true by default
+- **AND** `setPreferences({ "show-crossed-edges": false })` turns off the
+  crossed-edge highlight and repaints, leaving the others unchanged
+
+### Requirement: Preferences: Snap-to-grid drops a point in the middle of a grid square
+
+With `snap-to-grid` on, a point dragged by the pointer or nudged with the
+arrow keys SHALL be placed at the middle of the square it is over, of a grid
+of `n − 1` squares each way across the play area. With it off the point SHALL
+be placed at the pixel it is over. The preference SHALL NOT move a point
+already placed.
+
+#### Scenario: A drop on a board of six points
+
+- **WHEN** snap-to-grid is on and a point of a 6-point board drawn 256 pixels
+  wide is dropped at pixel (100, 100)
+- **THEN** it is placed at 1.2 of the board's 4 units each way, pixel 76.8,
+  the middle of the second of five squares
+- **AND** with the preference off it is placed at pixel (100, 100)
+
+### Requirement: Hint: Untangle hints move the point that removes the most crossings
 
 Each hint step SHALL move one vertex, and SHALL be a leg of a journey (see "Untangle hints finish a knot of
 crossings as one journey") or, when no journey is found, a clearing step or a
@@ -243,7 +285,7 @@ destination.
 - **WHEN** a hint is requested on a tangled planar board
 - **THEN** every step of the plan is a move placing exactly one vertex
 
-### Requirement: A clearing step removes the most crossings a searched spot allows
+### Requirement: Hint: A clearing step removes the most crossings a searched spot allows
 
 A clearing step SHALL move a vertex not already on its place to a spot that
 removes the most crossings among the spots searched: a grid over the whole
@@ -268,7 +310,7 @@ counted exactly as the board counts them.
 - **AND** where no spot that ties is a vertex's place, the step takes the one
   farthest, by the crowding measure, from the other vertices and the frame
 
-### Requirement: A hint's count is a numeral
+### Requirement: Hint: A hint's count is a numeral
 
 A count in a hint's explanation SHALL be written as a numeral, never as a
 number word. The one exception is a move that clears every crossing of its
@@ -280,7 +322,7 @@ three up, "all" and the numeral.
 - **WHEN** a clearing step takes a vertex's crossings from five to two
 - **THEN** its explanation says "from 5 to 2"
 
-### Requirement: A clearing spot keeps its gaps
+### Requirement: Hint: A clearing spot keeps its gaps
 
 A spot a clearing step is chosen at SHALL keep, as fractions of the typical
 spacing between points, a gap from every other vertex and from every line the
@@ -295,7 +337,7 @@ margin from the frame SHALL NOT tighten.
 - **THEN** that move is the clearing step, and no spot with the tighter gap is
   considered
 
-### Requirement: A placing step moves a vertex to its place in the solved layout
+### Requirement: Hint: A placing step moves a vertex to its place in the solved layout
 
 A placing step SHALL move a vertex not already on its place to its place in
 the solved layout. It SHALL prefer a vertex that is in some crossing, whose
@@ -310,7 +352,7 @@ what it adds.
   pointer can drop them on
 - **THEN** the step moves the vertex that is in a crossing
 
-### Requirement: A vertex's place is one the pointer can drop it on
+### Requirement: Hint: A vertex's place is one the pointer can drop it on
 
 A vertex's place SHALL be its position in the solved layout, moved to a nearby
 spot where a pointer drop can land and the layout stays crossing-free. A vertex
@@ -324,7 +366,7 @@ on their places and then the least motion, the criterion Solve chooses by.
   spot, and a hint is requested again
 - **THEN** that vertex counts as on its place
 
-### Requirement: A placing step is explained by what the player can see
+### Requirement: Hint: A placing step is explained by what the player can see
 
 A placing step's explanation SHALL state what the move does to the vertex's
 crossings. When the next step removes crossings, and at least as many as this
@@ -337,7 +379,7 @@ refer to the solved layout, which the player cannot see.
   step removes three
 - **THEN** its explanation says the move frees a move that removes 3
 
-### Requirement: A vertex on its place is not moved, so hints end solved
+### Requirement: Hint: A vertex on its place is not moved, so hints end solved
 
 A vertex on its place in the solved layout SHALL NOT be moved by a clearing
 step, a placing step, or a journey's first leg. Following hints from any
@@ -350,7 +392,7 @@ step.
   board with `aux`, or from randomly scattered points without `aux`
 - **THEN** the board ends with no crossings
 
-### Requirement: Untangle's hint refusals
+### Requirement: Hint: Untangle's hint refusals
 
 `hint` SHALL refuse with the collection's no-move-worth-making wording on a
 non-planar board once no single move removes a crossing. Until then it SHALL
@@ -362,7 +404,7 @@ still give the moves that remove crossings.
 - **THEN** hints are given while a single move removes a crossing, and the
   next is refused as no move worth making, with crossings still on the board
 
-### Requirement: A hint step marks its vertex, its destination and the crossings it removes
+### Requirement: Hint: A hint step marks its vertex, its destination and the crossings it removes
 
 Each step SHALL mark the vertex it moves, its destination, where the crossings
 the move removes sit, and, on a journey's leg, the marked vertices still to
@@ -383,7 +425,7 @@ and around each marked vertex still to move.
 - **THEN** `redraw` draws a hint-colored line to, and a hint-colored marker at,
   the suggested destination, and one ring for each crossing the move removes
 
-### Requirement: Untangle hints finish a knot of crossings as one journey
+### Requirement: Hint: Untangle hints finish a knot of crossings as one journey
 
 When at most a few crossings are left, `hint` SHALL first look for a journey:
 moves of a few marked vertices after which none of their lines crosses
@@ -404,7 +446,7 @@ continuing the one before.
 - **WHEN** hints are followed on the board `20#343769d2db4f418cccd3b79e00c975d0`
 - **THEN** the board is solved within 22 moves
 
-### Requirement: A journey removes crossings and unplaces nothing it need not
+### Requirement: Hint: A journey removes crossings and unplaces nothing it need not
 
 A journey's first leg SHALL remove at least one crossing and SHALL NOT move a
 vertex that is on its place in the solved layout. A journey that leaves
@@ -418,7 +460,7 @@ still cannot cycle.
 - **THEN** none of its legs moves a vertex that was on its place in the solved
   layout
 
-### Requirement: A journey's legs say what the journey and each move do
+### Requirement: Hint: A journey's legs say what the journey and each move do
 
 The first leg's explanation SHALL say how many marked vertices the journey
 moves and whether it clears every crossing on the board or every crossing those
@@ -433,7 +475,7 @@ vertex SHALL be explained as a clearing step.
 - **THEN** its explanation says the crossings rise, from the count the board
   has as that leg finds it to the count after its move
 
-### Requirement: A clearing step lands where the pointer can drop
+### Requirement: Hint: A clearing step lands where the pointer can drop
 
 A clearing step SHALL move its vertex to the spot nearest the chosen one where
 a pointer drop can land with the crossings the step counts. With snap-to-grid
@@ -455,75 +497,33 @@ from the frame, inside which a drop is clamped.
   lies within `FRAME_MARGIN` of the frame
 - **THEN** that cell is passed over for the next nearest
 
-### Requirement: The Untangle port exposes its three preferences via the hook
+### Requirement: Look: Rendering frames the play area and colors roles distinctly
 
-Untangle SHALL expose three preferences through `prefs`, under the keywords
-`snap-to-grid` (boolean), `show-crossed-edges` (boolean) and `vertex-style` (a
-two-way choice, Circles or Numbers). Its `newUi` SHALL set the defaults:
-show-crossed-edges on, since it doubles as the built-in mistake feedback,
-snap-to-grid off, and vertex-style Circles.
+`redraw` SHALL draw a visible border around the playable area, so the drop zone
+is told from any surrounding dead space. It SHALL draw edges as lines, red for
+an edge involved in a crossing when the show-crossed-edges preference is on and
+ink otherwise, and vertices as blobs, or as index numbers under the
+vertex-style preference, in a fixed z-order so the dragged vertex sits on top.
+The danger color (red) SHALL be reserved for crossings.
 
-#### Scenario: Untangle preferences round-trip through the engine
+#### Scenario: Crossed edges and dragged-vertex neighbors are visually distinct
 
-- **WHEN** `getPreferencesConfig()` is called for Untangle
-- **THEN** it returns two booleans and one two-way choice of the game's own,
-  beside the engine's `show-timer`, and `getPreferences()` reports
-  show-crossed-edges true by default
-- **AND** `setPreferences({ "show-crossed-edges": false })` turns off the
-  crossed-edge highlight and repaints, leaving the others unchanged
+- **WHEN** the player drags a vertex that has neighbors while crossings exist
+- **THEN** crossed edges render red, the dragged vertex renders in the color of
+  a thing picked up, and its neighbor vertices render in the pair's first color
+  (not red), so neighbors are not mistaken for a crossing/error indication
 
-### Requirement: A graph that is not planar does not load
+### Requirement: Look: A vertex's color says its role
 
-`hasNoSolution` SHALL say yes exactly of a graph that is not planar, by the
-planarity test the solved layout comes from, wherever its points stand. A
-description the parser reads is therefore still refused when it is opened, if
-no layout of its lines is free of crossings.
+A vertex SHALL be the theme pair's second color, and a vertex adjacent to the
+one being dragged the pair's first, so the held vertex's neighbors stand
+against the rest. The dragged vertex SHALL be the collection's color for a
+thing picked up and the keyboard-cursor vertex the collection's cursor color.
+The two SHALL never be shown together, and picking a vertex up SHALL be told by
+its neighbors changing color.
 
-#### Scenario: Five points all joined
+#### Scenario: Picking up the cursor vertex
 
-- **WHEN** the game ID `5:0-1,0-2,0-3,0-4,1-2,1-3,1-4,2-3,2-4,3-4` is opened
-- **THEN** its ten pairs are read without complaint, and it is refused as
-  having no solution
-
-#### Scenario: A dealt board
-
-- **WHEN** `0-2,0-5,1-2,1-3,1-4,1-5,2-4,2-5,3-4,3-5` is opened for 6 points
-- **THEN** it loads, drawn on a circle with lines crossing
-
-### Requirement: Snap-to-grid drops a point in the middle of a grid square
-
-With `snap-to-grid` on, a point dragged by the pointer or nudged with the
-arrow keys SHALL be placed at the middle of the square it is over, of a grid
-of `n − 1` squares each way across the play area. With it off the point SHALL
-be placed at the pixel it is over. The preference SHALL NOT move a point
-already placed.
-
-#### Scenario: A drop on a board of six points
-
-- **WHEN** snap-to-grid is on and a point of a 6-point board drawn 256 pixels
-  wide is dropped at pixel (100, 100)
-- **THEN** it is placed at 1.2 of the board's 4 units each way, pixel 76.8,
-  the middle of the second of five squares
-- **AND** with the preference off it is placed at pixel (100, 100)
-
-### Requirement: Untangle's keyboard starts from point 0
-
-With no point selected, Enter, Space or Tab SHALL select point 0, and an
-arrow key SHALL select the point nearest point 0 in its direction, or point 0
-where none lies that way. A point SHALL lie in an arrow's direction when it is
-within 45° of it. A nudge SHALL move a held point half a board unit.
-
-#### Scenario: Up on a board just opened
-
-- **WHEN** Up is pressed on a board just opened, whose point 0 is at the top
-  of the circle
-- **THEN** point 0 is selected, no point lying above it
-
-### Requirement: An Untangle title is its number of points
-
-A board's label SHALL be its number of points followed by `points`.
-
-#### Scenario: The default board
-
-- **WHEN** the params `10` are labeled
-- **THEN** the label reads "10 points"
+- **WHEN** the player presses the select key on the keyboard-cursor vertex
+- **THEN** that vertex takes the picked-up color, no vertex keeps the cursor
+  color, and its neighbors take the pair's first color

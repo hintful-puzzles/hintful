@@ -9,7 +9,7 @@ marks, and the look that is its own.
 
 ## Requirements
 
-### Requirement: Mathrax is solved when the filled grid breaks no rule
+### Requirement: Rules: Mathrax is solved when the filled grid breaks no rule
 
 The objective SHALL be to fill the grid with digits from 1 to the grid size so
 that no digit repeats in any row or column and every clue is satisfied. The
@@ -26,7 +26,35 @@ clue violation.
 - **WHEN** every cell is filled and one row holds the same digit twice
 - **THEN** the game is not reported solved
 
-### Requirement: Mathrax's parameters are a size, a difficulty and a set of clue types
+### Requirement: Rules: Mathrax clues constrain the four digits around each intersection
+
+Clues SHALL sit on the interior grid intersections. Each clue SHALL constrain the four
+digits diagonally adjacent to it. An arithmetic clue (add, subtract, multiply, divide)
+SHALL require the operation to give the same result on both diagonal pairs and SHALL
+display that result; an equality clue SHALL require each diagonal pair to be equal; an
+even clue SHALL require all four digits to be even and an odd clue all four to be odd.
+
+#### Scenario: An arithmetic clue is satisfied on both diagonals
+
+- **WHEN** the four digits around an addition clue showing `n` are examined
+- **THEN** the two diagonally-opposite pairs each sum to `n`
+
+### Requirement: Rules: Mathrax flags mistakes against the unique solution
+
+Mathrax SHALL provide `findMistakes`. It SHALL re-solve from the given digits
+and the clues to the unique solution, and flag every placed digit that
+contradicts it and every empty cell whose non-empty pencil notes have crossed
+out its solution value. A cell whose notes merely carry extra candidates SHALL
+NOT be flagged. When the board is not uniquely deducible, no cell SHALL be
+flagged.
+
+#### Scenario: A wrong placed digit is flagged
+
+- **WHEN** a cell holds a digit that differs from the unique solution and mistakes are
+  checked
+- **THEN** that cell is reported as a mistake
+
+### Requirement: Params: Mathrax's parameters are a size, a difficulty and a set of clue types
 
 Parameters SHALL be a grid size, a difficulty (Easy, Normal, Tricky or
 `Unreasonable`), and a set of enabled clue types (addition, subtraction,
@@ -47,7 +75,7 @@ clue-type set means all clue types are enabled.
 - **THEN** the difficulty character is `r`, so an ID that names the tier by
   that character still names the same board
 
-### Requirement: Mathrax refuses a size, a difficulty or a clue-type set it cannot play
+### Requirement: Params: Mathrax refuses a size, a difficulty or a clue-type set it cannot play
 
 Mathrax SHALL play sizes 3 to 9, one digit to a cell, and SHALL refuse a size
 outside them. `validateParams` SHALL refuse, when validating for generation, a
@@ -58,20 +86,71 @@ parameter set with no clue type enabled.
 - **WHEN** a parameter set of size 2 is checked
 - **THEN** it is refused with a message saying the size must be at least 3
 
-### Requirement: Mathrax clues constrain the four digits around each intersection
+### Requirement: Params: Mathrax offers only the difficulties a size can support
 
-Clues SHALL sit on the interior grid intersections. Each clue SHALL constrain the four
-digits diagonally adjacent to it. An arithmetic clue (add, subtract, multiply, divide)
-SHALL require the operation to give the same result on both diagonal pairs and SHALL
-display that result; an equality clue SHALL require each diagonal pair to be equal; an
-even clue SHALL require all four digits to be even and an odd clue all four to be odd.
+Mathrax SHALL refuse to *generate* a size-3 board at Normal or at the top tier,
+because a 3×3 grid's four intersections cannot separate those tiers from their
+neighbors. `validateParams` SHALL reject those combinations for a full
+(generation-capable) parameter set and accept them otherwise, so a saved game
+or a game ID carrying its own description still loads. The refusal SHALL name
+the tiers from the game's tier list, as the difficulty menu does. Size 3 at
+Tricky SHALL be unaffected.
 
-#### Scenario: An arithmetic clue is satisfied on both diagonals
+#### Scenario: An unsupported size and tier are refused
 
-- **WHEN** the four digits around an addition clue showing `n` are examined
-- **THEN** the two diagonally-opposite pairs each sum to `n`
+- **WHEN** a full parameter set requesting size 3 at Normal or the top tier is
+  validated
+- **THEN** it is rejected with a message naming the size, and Normal and the
+  top tier exactly as the difficulty menu does
+- **AND** the same parameters validate successfully when a description is supplied
 
-### Requirement: Mathrax descriptions use the run-length grid-and-clue encoding
+### Requirement: Params: Mathrax's params are the size, a tier letter and the clue-type letters
+
+The params string SHALL be the size in decimal, then `d` and one of `e`, `n`,
+`t`, `r` for the four tiers in order, then a letter for each enabled clue
+type in the order `A` (addition), `S` (subtraction), `M` (multiplication),
+`D` (division), `E` (equality), `O` (even/odd), and no letter when all six
+are enabled. The short form SHALL be the size alone and SHALL decode to Easy
+with every clue type. `decodeParams` SHALL read each clue letter once and
+refuse one out of that order.
+
+#### Scenario: A restricted clue set
+
+- **WHEN** `7dtAM` is decoded
+- **THEN** it is a size-7 Tricky board with only addition and multiplication
+  clues, and its short form is `7`
+
+#### Scenario: Clue letters out of order
+
+- **WHEN** `6dnDS` is decoded
+- **THEN** it is refused for its `S`, because `S` is looked for before `D`
+
+#### Scenario: The short form
+
+- **WHEN** `5` is decoded and encoded in full
+- **THEN** the result is `5de`
+
+### Requirement: Params: A Mathrax label names a restricted clue set by the shorter list
+
+A params label SHALL say nothing of clue types when all six are enabled.
+Otherwise it SHALL end, after a comma, with `only` and the enabled types when
+they are no more than the disabled ones, and with `no` and the disabled types
+when those are fewer, joined by `/` in the order of the Custom dialog. The
+words SHALL be `addition`, `subtraction`, `multiplication`, `division`,
+`equality` and `even-odd`.
+
+#### Scenario: Two types enabled
+
+- **WHEN** the params `7dtAM` are labeled
+- **THEN** the label is "7x7 Tricky, only addition/multiplication"
+
+#### Scenario: One type disabled
+
+- **WHEN** `7dtASMDE`, size-7 Tricky params with every type but even/odd, are
+  labeled
+- **THEN** the label is "7x7 Tricky, no even-odd"
+
+### Requirement: Description: Mathrax descriptions use the run-length grid-and-clue encoding
 
 A Mathrax description SHALL encode the immutable given digits and then the clues, in
 two comma-separated run-length parts. In the grid part each square SHALL be a digit or
@@ -84,7 +163,7 @@ empty intersections. Encoding and decoding SHALL be exact inverses.
 - **WHEN** a description is generated and then decoded into a board
 - **THEN** re-encoding that board yields the identical description
 
-### Requirement: Mathrax's reading of a description refuses a malformed one
+### Requirement: Description: Mathrax's reading of a description refuses a malformed one
 
 The reading `newState` builds a board from SHALL refuse a description whose
 grid part carries more squares than the grid holds, that contains a digit
@@ -109,240 +188,7 @@ that size, or whose grid or clue part stops short of covering the grid.
 - **THEN** it is rejected, because two equal cells are shown by the `=` clue,
   which is a difference of 0
 
-### Requirement: Mathrax input and keypad
-
-Mathrax SHALL be played with the Solo-style control scheme: a cell is selected
-by left-click or cursor, for ink outside pencil mode and for pencil marks in
-it; digit keys enter a value or toggle a pencil mark; and backspace, space or
-zero clear. In pencil mode no key SHALL change a cell that holds a digit.
-Immutable given cells SHALL NOT be editable. The on-screen keypad SHALL offer
-the digits 1 to the grid size and a clear key.
-
-#### Scenario: A digit is entered into a selected cell
-
-- **WHEN** an empty mutable cell is selected and a digit within range is typed
-- **THEN** that digit is placed in the cell
-
-#### Scenario: A given takes no entry
-
-- **WHEN** the cursor is on a given cell and a different digit is typed
-- **THEN** no move is made
-
-#### Scenario: A clear key in pencil mode on a filled cell
-
-- **WHEN** pencil mode is on, the cursor is on a cell holding a digit, and
-  Backspace is pressed
-- **THEN** no move is made and the digit stays
-
-### Requirement: Mathrax offers the sticky pencil and auto-pencil preferences
-
-Mathrax SHALL offer the collection's sticky pencil preference and its
-auto-pencil preference. When auto-pencil is on a placement SHALL remove its
-digit from the pencil marks of the rest of its row and column, both on the
-board and in the hint's plan.
-
-#### Scenario: A placement clears its digit from its row and column
-
-- **WHEN** the auto-pencil preference is on and a digit is entered in a cell
-  whose row and column hold that digit as a pencil mark
-- **THEN** those pencil marks are removed with the entry
-
-### Requirement: Mathrax flags mistakes against the unique solution
-
-Mathrax SHALL provide `findMistakes`. It SHALL re-solve from the given digits
-and the clues to the unique solution, and flag every placed digit that
-contradicts it and every empty cell whose non-empty pencil notes have crossed
-out its solution value. A cell whose notes merely carry extra candidates SHALL
-NOT be flagged. When the board is not uniquely deducible, no cell SHALL be
-flagged.
-
-#### Scenario: A wrong placed digit is flagged
-
-- **WHEN** a cell holds a digit that differs from the unique solution and mistakes are
-  checked
-- **THEN** that cell is reported as a mistake
-
-### Requirement: Mathrax grades its difficulty tiers honestly
-
-A Mathrax board generated at a difficulty above the easiest SHALL NOT be soluble at
-the tier below it. The generator SHALL retry until a candidate needs its tier,
-and that loop SHALL be bounded.
-
-#### Scenario: A Tricky board genuinely needs the Tricky tier
-
-- **WHEN** a board generated at Tricky is solved at Normal
-- **THEN** the solver does not reach a unique solution
-- **AND** solving the same board at Tricky does
-
-### Requirement: Mathrax offers only the difficulties a size can support
-
-Mathrax SHALL refuse to *generate* a size-3 board at Normal or at the top tier,
-because a 3×3 grid's four intersections cannot separate those tiers from their
-neighbors. `validateParams` SHALL reject those combinations for a full
-(generation-capable) parameter set and accept them otherwise, so a saved game
-or a game ID carrying its own description still loads. The refusal SHALL name
-the tiers from the game's tier list, as the difficulty menu does. Size 3 at
-Tricky SHALL be unaffected.
-
-#### Scenario: An unsupported size and tier are refused
-
-- **WHEN** a full parameter set requesting size 3 at Normal or the top tier is
-  validated
-- **THEN** it is rejected with a message naming the size, and Normal and the
-  top tier exactly as the difficulty menu does
-- **AND** the same parameters validate successfully when a description is supplied
-
-### Requirement: What separates Mathrax's difficulty tiers
-
-Beside the shared Latin deductions, Mathrax's clue deduction SHALL keep in a
-cell only the digits every clue at its corners permits, given the candidates of
-the cell across that clue. Easy SHALL read an arithmetic clue only when the cell
-across it is down to one digit. Easy and Normal SHALL act only where one digit
-is left; Tricky SHALL strike all that is ruled out. Normal SHALL add the shared
-set elimination, Tricky the harder one and forcing chains, and `Unreasonable`
-guessing and verifying.
-
-#### Scenario: The solver solves a generated board
-
-- **WHEN** a generated board is solved
-- **THEN** the returned grid is the board's unique Latin-square solution and satisfies
-  every clue
-
-### Requirement: A Mathrax board has one solution at every difficulty
-
-Uniqueness SHALL be required at *every* difficulty, including the
-guess-and-verify `Unreasonable` tier, because a board with no unique answer
-cannot be mistake-checked. The generator SHALL NOT take an ambiguous solver
-verdict as grounds to keep removing.
-
-#### Scenario: Even the guess-and-verify tier yields a unique solution
-
-- **WHEN** a board is generated at the `Unreasonable` difficulty
-- **THEN** it has exactly one solution, and it cannot be solved without the
-  guess-and-verify step
-
-### Requirement: Mathrax's hint plan is the shared candidate-elimination walk
-
-The plan SHALL be built by the shared candidate-elimination walk over Mathrax's
-row and column regions; a clue is not a region. Mathrax SHALL start on the
-reading that pencils in only the notes a deduction needs, because a clue reads
-the cell across it and the rest is singles, so a plan writes notes into few
-cells.
-
-#### Scenario: A hint with no Ui pencils in only what it needs
-
-- **WHEN** a hint is requested with no `Ui` on a board with no notes
-- **THEN** no step of the plan is `pencilAll`
-
-### Requirement: The recording solve stops below the guess-and-verify tier
-
-The recording solve SHALL be capped below the guess-and-verify tier, because a
-guess is not a teachable note strike.
-
-#### Scenario: A board at the top tier is hinted by deduction alone
-
-- **WHEN** a hint is requested on a board generated at `Unreasonable`
-- **THEN** the recording solve runs no higher than Tricky
-
-### Requirement: A recorded clue elimination names one clue acting on one cell
-
-A recorded clue elimination SHALL name exactly one clue acting on exactly one
-cell. Mathrax's deduction intersects a cell's candidates across the up to four
-clues at its corners at once, so the recording path SHALL attribute each
-elimination to a clue whose options exclude it and commit one clue's
-eliminations per firing.
-
-#### Scenario: A clue step strikes only the one cell it acts on
-
-- **WHEN** a clue's deduction is hinted
-- **THEN** the step names one clue and strikes only candidates of the one cell
-  it acts on
-
-### Requirement: Recording does not change what the Mathrax solver commits
-
-The recording path SHALL NOT change what the deduction commits: the difficulty
-gate SHALL still wait on the intersection across every incident clue, so the
-solver reaches the same verdict and the same grid with and without a recorder,
-and the solver-gated generator produces the same boards.
-
-#### Scenario: The recorder does not change the solver's verdict
-
-- **WHEN** the same board is solved at the same difficulty cap with and without a
-  deduction recorder
-- **THEN** both solves return the same verdict and write back the same grid
-
-### Requirement: A clue step names its clue and what lies across it
-
-A clue step's sentence SHALL name the clue as the board draws it and state the
-operation in words. Whether it names a digit across the clue SHALL be decided by
-the working board and not by the recorded deduction: it SHALL say so only
-when a digit is written there, and otherwise SHALL speak of what is still open
-across the clue.
-
-#### Scenario: A clue read against a digit across it names that digit
-
-- **WHEN** a hint is requested on a board where a clue's deduction acts on a cell
-  whose diagonal partner across that clue holds a digit
-- **THEN** the step names the clue as the board draws it, states what the two
-  cells on that diagonal must do, names the partner's digit, and strikes only
-  candidates of the one cell it acts on
-
-#### Scenario: A clue read against an open cell speaks of what is still open
-
-- **WHEN** the same deduction acts on a cell whose diagonal partner across the
-  clue is still empty
-- **THEN** the step says that nothing open across that clue pairs with the values
-  it strikes, and names no digit across the clue
-
-### Requirement: A clue step outlines the cells that identify its clue
-
-A clue step SHALL outline as its evidence the cells that identify the clue: the
-diagonal pair for an arithmetic or equality clue, all four cells around the
-intersection for an even or odd clue. The clue sits on an intersection the
-board has no mark for, and each of those sets meets at exactly one
-intersection.
-
-#### Scenario: An even or odd clue outlines all four cells around it
-
-- **WHEN** an `E` or `O` clue's deduction is hinted
-- **THEN** the step says all four numbers around the clue are even or odd, and
-  outlines the block of four cells around that intersection
-
-### Requirement: Mathrax draws its cells on a quiet surface and lifts a given
-
-`redraw` SHALL draw every cell the player fills on the collection's cell
-surface, with the collection's surface grid line between cells and a frame
-round the grid no heavier than that line. A cell holding a given number SHALL
-sit on the collection's lifted surface of a given, with its number in ink, and
-a number the player entered SHALL keep the player's entry color on the plain
-surface, unless it repeats in its row or column.
-
-#### Scenario: A given is told by the cell under it
-
-- **WHEN** a board with a given number is drawn
-- **THEN** the given's cell is the lifted surface and every empty cell is the
-  plain cell surface
-
-#### Scenario: The grid is quiet
-
-- **WHEN** the opening frame is drawn
-- **THEN** the lines between cells and the frame are the surface's grid line
-- **AND** nothing but a number, a clue's ring and a clue's label is drawn in ink
-
-### Requirement: A Mathrax clue is a lifted disc with a ring and a label in ink
-
-A clue SHALL be a disc in the lifted surface's color with a ring and a label in
-ink, so a clue reads as the puzzle's own in both schemes. The quarter of a clue
-in a cell whose digit contradicts it is excepted: its disc and ring take the
-error colors.
-
-#### Scenario: A clue is drawn as the puzzle's own
-
-- **WHEN** a board with a satisfied clue is drawn
-- **THEN** the clue's disc is the lifted surface's color and its ring and label
-  are ink
-
-### Requirement: A Mathrax description spells a run in lowercase and a clue in uppercase
+### Requirement: Description: A Mathrax description spells a run in lowercase and a clue in uppercase
 
 Each part SHALL list its entries row by row: the squares, a `,`, then the
 interior intersections. A letter `a` to `z` SHALL stand for a run of 1 to 26
@@ -370,7 +216,7 @@ alone. The equality clue SHALL be written `S0`.
 - **THEN** the description is `zj,y`: 26 and 10 empty squares, then 25 empty
   intersections
 
-### Requirement: A Mathrax clue number is one that two digits of the board can make
+### Requirement: Description: A Mathrax clue number is one that two digits of the board can make
 
 On a board of size `o`, the reading SHALL accept a sum from 2 to 2`o`, a
 difference from 0 to `o`−1, a product from 1 to `o`², and a quotient from 2 to
@@ -393,53 +239,173 @@ last square, and anything after the last intersection.
 - **WHEN** `i,E5c` is read at size 3
 - **THEN** it is refused at the `5`
 
-### Requirement: Mathrax's params are the size, a tier letter and the clue-type letters
+### Requirement: Generation: Mathrax grades its difficulty tiers honestly
 
-The params string SHALL be the size in decimal, then `d` and one of `e`, `n`,
-`t`, `r` for the four tiers in order, then a letter for each enabled clue
-type in the order `A` (addition), `S` (subtraction), `M` (multiplication),
-`D` (division), `E` (equality), `O` (even/odd), and no letter when all six
-are enabled. The short form SHALL be the size alone and SHALL decode to Easy
-with every clue type. `decodeParams` SHALL read each clue letter once and
-refuse one out of that order.
+A Mathrax board generated at a difficulty above the easiest SHALL NOT be soluble at
+the tier below it. The generator SHALL retry until a candidate needs its tier,
+and that loop SHALL be bounded.
 
-#### Scenario: A restricted clue set
+#### Scenario: A Tricky board genuinely needs the Tricky tier
 
-- **WHEN** `7dtAM` is decoded
-- **THEN** it is a size-7 Tricky board with only addition and multiplication
-  clues, and its short form is `7`
+- **WHEN** a board generated at Tricky is solved at Normal
+- **THEN** the solver does not reach a unique solution
+- **AND** solving the same board at Tricky does
 
-#### Scenario: Clue letters out of order
+### Requirement: Generation: What separates Mathrax's difficulty tiers
 
-- **WHEN** `6dnDS` is decoded
-- **THEN** it is refused for its `S`, because `S` is looked for before `D`
+Beside the shared Latin deductions, Mathrax's clue deduction SHALL keep in a
+cell only the digits every clue at its corners permits, given the candidates of
+the cell across that clue. Easy SHALL read an arithmetic clue only when the cell
+across it is down to one digit. Easy and Normal SHALL act only where one digit
+is left; Tricky SHALL strike all that is ruled out. Normal SHALL add the shared
+set elimination, Tricky the harder one and forcing chains, and `Unreasonable`
+guessing and verifying.
 
-#### Scenario: The short form
+#### Scenario: The solver solves a generated board
 
-- **WHEN** `5` is decoded and encoded in full
-- **THEN** the result is `5de`
+- **WHEN** a generated board is solved
+- **THEN** the returned grid is the board's unique Latin-square solution and satisfies
+  every clue
 
-### Requirement: A Mathrax label names a restricted clue set by the shorter list
+### Requirement: Generation: A Mathrax board has one solution at every difficulty
 
-A params label SHALL say nothing of clue types when all six are enabled.
-Otherwise it SHALL end, after a comma, with `only` and the enabled types when
-they are no more than the disabled ones, and with `no` and the disabled types
-when those are fewer, joined by `/` in the order of the Custom dialog. The
-words SHALL be `addition`, `subtraction`, `multiplication`, `division`,
-`equality` and `even-odd`.
+Uniqueness SHALL be required at *every* difficulty, including the
+guess-and-verify `Unreasonable` tier, because a board with no unique answer
+cannot be mistake-checked. The generator SHALL NOT take an ambiguous solver
+verdict as grounds to keep removing.
 
-#### Scenario: Two types enabled
+#### Scenario: Even the guess-and-verify tier yields a unique solution
 
-- **WHEN** the params `7dtAM` are labeled
-- **THEN** the label is "7x7 Tricky, only addition/multiplication"
+- **WHEN** a board is generated at the `Unreasonable` difficulty
+- **THEN** it has exactly one solution, and it cannot be solved without the
+  guess-and-verify step
 
-#### Scenario: One type disabled
+### Requirement: Controls: Mathrax input and keypad
 
-- **WHEN** `7dtASMDE`, size-7 Tricky params with every type but even/odd, are
-  labeled
-- **THEN** the label is "7x7 Tricky, no even-odd"
+Mathrax SHALL be played with the Solo-style control scheme: a cell is selected
+by left-click or cursor, for ink outside pencil mode and for pencil marks in
+it; digit keys enter a value or toggle a pencil mark; and backspace, space or
+zero clear. In pencil mode no key SHALL change a cell that holds a digit.
+Immutable given cells SHALL NOT be editable. The on-screen keypad SHALL offer
+the digits 1 to the grid size and a clear key.
 
-### Requirement: Mathrax's hint deduces at the tier of the board's params
+#### Scenario: A digit is entered into a selected cell
+
+- **WHEN** an empty mutable cell is selected and a digit within range is typed
+- **THEN** that digit is placed in the cell
+
+#### Scenario: A given takes no entry
+
+- **WHEN** the cursor is on a given cell and a different digit is typed
+- **THEN** no move is made
+
+#### Scenario: A clear key in pencil mode on a filled cell
+
+- **WHEN** pencil mode is on, the cursor is on a cell holding a digit, and
+  Backspace is pressed
+- **THEN** no move is made and the digit stays
+
+### Requirement: Preferences: Mathrax offers the sticky pencil and auto-pencil preferences
+
+Mathrax SHALL offer the collection's sticky pencil preference and its
+auto-pencil preference. When auto-pencil is on a placement SHALL remove its
+digit from the pencil marks of the rest of its row and column, both on the
+board and in the hint's plan.
+
+#### Scenario: A placement clears its digit from its row and column
+
+- **WHEN** the auto-pencil preference is on and a digit is entered in a cell
+  whose row and column hold that digit as a pencil mark
+- **THEN** those pencil marks are removed with the entry
+
+### Requirement: Hint: Mathrax's hint plan is the shared candidate-elimination walk
+
+The plan SHALL be built by the shared candidate-elimination walk over Mathrax's
+row and column regions; a clue is not a region. Mathrax SHALL start on the
+reading that pencils in only the notes a deduction needs, because a clue reads
+the cell across it and the rest is singles, so a plan writes notes into few
+cells.
+
+#### Scenario: A hint with no Ui pencils in only what it needs
+
+- **WHEN** a hint is requested with no `Ui` on a board with no notes
+- **THEN** no step of the plan is `pencilAll`
+
+### Requirement: Hint: The recording solve stops below the guess-and-verify tier
+
+The recording solve SHALL be capped below the guess-and-verify tier, because a
+guess is not a teachable note strike.
+
+#### Scenario: A board at the top tier is hinted by deduction alone
+
+- **WHEN** a hint is requested on a board generated at `Unreasonable`
+- **THEN** the recording solve runs no higher than Tricky
+
+### Requirement: Hint: A recorded clue elimination names one clue acting on one cell
+
+A recorded clue elimination SHALL name exactly one clue acting on exactly one
+cell. Mathrax's deduction intersects a cell's candidates across the up to four
+clues at its corners at once, so the recording path SHALL attribute each
+elimination to a clue whose options exclude it and commit one clue's
+eliminations per firing.
+
+#### Scenario: A clue step strikes only the one cell it acts on
+
+- **WHEN** a clue's deduction is hinted
+- **THEN** the step names one clue and strikes only candidates of the one cell
+  it acts on
+
+### Requirement: Hint: Recording does not change what the Mathrax solver commits
+
+The recording path SHALL NOT change what the deduction commits: the difficulty
+gate SHALL still wait on the intersection across every incident clue, so the
+solver reaches the same verdict and the same grid with and without a recorder,
+and the solver-gated generator produces the same boards.
+
+#### Scenario: The recorder does not change the solver's verdict
+
+- **WHEN** the same board is solved at the same difficulty cap with and without a
+  deduction recorder
+- **THEN** both solves return the same verdict and write back the same grid
+
+### Requirement: Hint: A clue step names its clue and what lies across it
+
+A clue step's sentence SHALL name the clue as the board draws it and state the
+operation in words. Whether it names a digit across the clue SHALL be decided by
+the working board and not by the recorded deduction: it SHALL say so only
+when a digit is written there, and otherwise SHALL speak of what is still open
+across the clue.
+
+#### Scenario: A clue read against a digit across it names that digit
+
+- **WHEN** a hint is requested on a board where a clue's deduction acts on a cell
+  whose diagonal partner across that clue holds a digit
+- **THEN** the step names the clue as the board draws it, states what the two
+  cells on that diagonal must do, names the partner's digit, and strikes only
+  candidates of the one cell it acts on
+
+#### Scenario: A clue read against an open cell speaks of what is still open
+
+- **WHEN** the same deduction acts on a cell whose diagonal partner across the
+  clue is still empty
+- **THEN** the step says that nothing open across that clue pairs with the values
+  it strikes, and names no digit across the clue
+
+### Requirement: Hint: A clue step outlines the cells that identify its clue
+
+A clue step SHALL outline as its evidence the cells that identify the clue: the
+diagonal pair for an arithmetic or equality clue, all four cells around the
+intersection for an even or odd clue. The clue sits on an intersection the
+board has no mark for, and each of those sets meets at exactly one
+intersection.
+
+#### Scenario: An even or odd clue outlines all four cells around it
+
+- **WHEN** an `E` or `O` clue's deduction is hinted
+- **THEN** the step says all four numbers around the clue are even or odd, and
+  outlines the block of four cells around that intersection
+
+### Requirement: Hint: Mathrax's hint deduces at the tier of the board's params
 
 The recording solve SHALL run at the tier the board's params name, and at
 Tricky where they name `Unreasonable`, so a hint uses no deduction its board's
@@ -451,3 +417,37 @@ tier does not.
 - **THEN** the recording solve runs at Easy, so no step is a set elimination
   or a chain, and an arithmetic clue is read only where one digit is left
   across it
+
+### Requirement: Look: Mathrax draws its cells on a quiet surface and lifts a given
+
+`redraw` SHALL draw every cell the player fills on the collection's cell
+surface, with the collection's surface grid line between cells and a frame
+round the grid no heavier than that line. A cell holding a given number SHALL
+sit on the collection's lifted surface of a given, with its number in ink, and
+a number the player entered SHALL keep the player's entry color on the plain
+surface, unless it repeats in its row or column.
+
+#### Scenario: A given is told by the cell under it
+
+- **WHEN** a board with a given number is drawn
+- **THEN** the given's cell is the lifted surface and every empty cell is the
+  plain cell surface
+
+#### Scenario: The grid is quiet
+
+- **WHEN** the opening frame is drawn
+- **THEN** the lines between cells and the frame are the surface's grid line
+- **AND** nothing but a number, a clue's ring and a clue's label is drawn in ink
+
+### Requirement: Look: A Mathrax clue is a lifted disc with a ring and a label in ink
+
+A clue SHALL be a disc in the lifted surface's color with a ring and a label in
+ink, so a clue reads as the puzzle's own in both schemes. The quarter of a clue
+in a cell whose digit contradicts it is excepted: its disc and ring take the
+error colors.
+
+#### Scenario: A clue is drawn as the puzzle's own
+
+- **WHEN** a board with a satisfied clue is drawn
+- **THEN** the clue's disc is the lifted surface's color and its ring and label
+  are ink

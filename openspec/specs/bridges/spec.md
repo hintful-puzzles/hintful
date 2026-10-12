@@ -12,7 +12,7 @@ game's own vocabulary.
 
 ## Requirements
 
-### Requirement: Bridges links every island into one network
+### Requirement: Rules: Bridges links every island into one network
 
 A Bridges board SHALL be solved when the numbered islands on a `w × h` grid are
 connected with horizontal and vertical bridges so that each island carries
@@ -26,7 +26,79 @@ an island or another bridge, and all islands form a single connected group.
   islands form two groups with no bridge between them
 - **THEN** the board is not solved
 
-### Requirement: Bridges params are size, bridge limit, density, expansion, loops and difficulty
+### Requirement: Rules: Bridges draws provably wrong state red
+
+`redraw` SHALL draw in red, as the board is played, an island that can no
+longer reach its count, when `allowloops` is false the bridges that complete a
+forbidden loop, and a group of islands that all have their full count and join
+only one another while other islands are left out.
+
+#### Scenario: A loop is red only where loops are forbidden
+
+- **WHEN** the player's bridges close a loop
+- **THEN** the loop's bridges are drawn red on a board with
+  `allowloops = false`, and closing a loop is not what turns anything red on a
+  board that allows loops
+
+### Requirement: Rules: Bridges findMistakes reports every span the unique solution contradicts
+
+Because a generated board is uniquely solvable, the game SHALL implement
+`findMistakes`: it SHALL solve the board again from its island clues and
+return every span whose player marks that solution contradicts: a bridge where
+the solution has none, a count exceeding the solution's, or a limit below the
+solution's count, the cross included. It SHALL also return every island marked
+complete short of its count. A board that is not uniquely solvable SHALL yield
+no mistakes.
+
+#### Scenario: A wrong bridge is flagged
+
+- **WHEN** the player places a bridge the unique solution does not contain,
+  without yet over-committing an island
+- **THEN** `findMistakes` includes that bridge and Check & Save refuses to save
+
+#### Scenario: An island marked complete too soon
+
+- **WHEN** an island is marked complete while it has fewer bridges than its
+  count
+- **THEN** `findMistakes` returns that island, and the same mark on the island
+  once its bridges are all drawn returns nothing
+
+### Requirement: Rules: Bridges lets the player limit a span
+
+A player SHALL be able to write on any span between two in-line islands the
+most bridges it may carry, as a mark the board keeps: the limit. No limit is
+the board's own `maxb`, and a limit of none is the no-line cross, so the cross
+is the bottom of the same scale and not a separate mark. A limit SHALL be
+stored in the state's per-span maximum, which a bridge drag wraps at.
+
+#### Scenario: A limited span wraps at its limit
+
+- **WHEN** a span limited to one carries one bridge and the player left-drags
+  along it
+- **THEN** the span is cleared, having taken a single bridge and no second
+
+#### Scenario: A wrong limit is a mistake
+
+- **WHEN** the player limits a span below the bridges the unique solution puts
+  there
+- **THEN** `findMistakes` reports that span
+
+### Requirement: Rules: A Bridges limit never drops below the bridges drawn
+
+A limit SHALL never drop below the bridges already drawn on the span: over a
+bundle the secondary drag's cycle SHALL stop at the bridges drawn and wrap to
+no limit without reaching the cross, and a full bundle with no limit on it
+SHALL have nothing to lower. `executeMove` SHALL reject a limit below the
+bridges drawn, above `maxb`, or of none.
+
+#### Scenario: A limit never falls below the bridges drawn
+
+- **WHEN** a span carries one bridge on a `maxb = 2` board and the player
+  right-drags along it twice
+- **THEN** the span is limited to one bridge, then free again, and is never
+  crossed
+
+### Requirement: Params: Bridges params are size, bridge limit, density, expansion, loops and difficulty
 
 Params SHALL be `w`, `h`, `maxb`, `islands` (the percentage of squares that are
 islands), `expansion` (a percentage), `allowloops` (boolean) and `difficulty`
@@ -49,7 +121,63 @@ end.
   three at a tier above Easy (e.g. `3×3` Normal at the default density)
 - **THEN** it returns a non-null error string
 
-### Requirement: Bridges descriptions encode the island clue grid
+### Requirement: Params: Bridges refuses to generate Tricky with one bridge per line
+
+Generating a Tricky board with `maxb` 1 SHALL be refused with a reason, because
+with one bridge per line no "at most" limit can exist and sealing off is
+Normal's, so Tricky has almost nothing a Normal board could not need. A board
+already dealt that way SHALL still load.
+
+#### Scenario: Tricky with one bridge per line is refused
+
+- **WHEN** a Tricky board with `maxb` 1 is asked to be generated
+- **THEN** the params are refused with a reason, and a `params:desc` id with
+  those params still loads
+
+### Requirement: Params: Bridges refuses a tier that so few islands cannot need
+
+When a board is to be dealt above Easy, `validateParams` SHALL refuse, as a
+board with no such puzzle, one whose island target (the percentage of its
+squares, and never under three) is three; at Tricky one of four, or of five
+with two bridges a line and no loops made; and at Normal with one bridge a
+line one of five or fewer, or one with loops allowed and 100% expansion. No
+loops are made where loops are disallowed or the expansion is 0%.
+
+#### Scenario: Four islands at Tricky
+
+- **WHEN** a 4×4 board at 25% islands, whose target is four, is asked for at
+  Tricky and at Normal with two bridges a line
+- **THEN** the first is refused with "No puzzle of 4 islands is Tricky." and
+  the second is not refused
+
+### Requirement: Params: Bridges refuses a percentage past its last choice when dealing
+
+When a board is to be dealt, `validateParams` SHALL refuse an island
+percentage over 30 and an expansion over 100. A typed ID can carry one that
+the engine's check of the field's choices lets by, the few values that fall
+to the last choice; the engine refuses the rest, for a deal and for a board
+that arrives with its description alike.
+
+#### Scenario: Thirty-two percent islands
+
+- **WHEN** the preset `7x7i30e10m2d0` is asked for with its `i30` written
+  `i32`
+- **THEN** it is refused with "%age of island squares must be between 1% and
+  30%."
+
+### Requirement: Params: A Bridges label says only what departs from two bridges, 30% islands and 10% expansion
+
+A board's label SHALL say "no loops" where loops are disallowed, "max N
+bridges" (or "max 1 bridge") where the most bridges a line may carry is not
+two, "N% islands" where that is not 30, and "N% expansion" where that is not
+10, and SHALL say none of them otherwise.
+
+#### Scenario: The preset that disallows loops
+
+- **WHEN** `10x10i30e10m2Ld1` is labeled
+- **THEN** the label is "10x10 Normal, no loops"
+
+### Requirement: Description: Bridges descriptions encode the island clue grid
 
 The desc SHALL encode the island positions and their bridge counts row-major: a
 digit or letter gives an island with that count at the current cell, and a
@@ -60,7 +188,7 @@ run-length letter skips that many empty cells.
 - **WHEN** a generated desc is parsed by `newState` and the islands re-encoded
 - **THEN** the re-encoded desc equals the original
 
-### Requirement: A Bridges description that describes no board is refused
+### Requirement: Description: A Bridges description that describes no board is refused
 
 `newState` SHALL refuse, so that `validateDesc` reports with a reason, a desc
 that overruns the grid or stops short of it, that holds a character which is
@@ -72,7 +200,122 @@ orthogonally next to each other, or that has fewer than two islands.
 - **WHEN** `validateDesc` is given a desc whose run-lengths overrun the grid
 - **THEN** it returns a non-null error string
 
-### Requirement: Bridges input drags bridges between islands
+### Requirement: Description: A Bridges description writes a count above nine as a capital letter
+
+An island's count SHALL be written `1` to `9`, then `A` to `G` for 10 to 16,
+and a run of empty squares as a lowercase letter, `a` for one to `z` for
+twenty-six. The description SHALL cover every square of the grid, the empty
+ones after the last island included.
+
+#### Scenario: A dealt 7×7 board
+
+- **WHEN** `2d1c1a3a3a2a6a2h5b7b5g2b1b2` is opened as a 7×7 board
+- **THEN** its top row holds a 2 in its first square and a 1 in its sixth, and
+  its last square holds a 2
+- **AND** with that last `2` written `H` it is refused for the character,
+  where `G` is read as an island of 16
+
+### Requirement: Generation: Bridges Easy runs the single-island deductions
+
+Easy SHALL run stage 1: force the bridges an island must place because its
+remaining count equals its available adjacent space, force one bridge to every
+neighbor of an island whose count is more than the others could carry at the
+bridge limit, and forbid bridges into a satisfied island.
+
+#### Scenario: An island with exactly enough room is filled at Easy
+
+- **WHEN** an island still needs two bridges and the spans around it have room
+  for exactly two
+- **THEN** the Easy solver draws both
+
+### Requirement: Generation: Bridges Normal adds direction counting, loops and sealing off
+
+Normal SHALL additionally run stage 2: a bridge in each direction the island's
+count cannot do without, given the most its other directions can hold, and,
+when `allowloops` is false, no bridge that would complete a premature loop.
+Normal SHALL also run sealing off: forbid a first bridge in a direction when
+that one bridge would finish the island and its neighbor into a group cut off
+from the rest, as two neighboring 1s would.
+
+#### Scenario: Two neighboring 1s are kept apart at Normal
+
+- **WHEN** a Normal board's only way to finish an island is a bridge to a
+  neighbor that the same bridge would finish, sealing the pair off
+- **THEN** the Normal solver blocks that bridge, and the Normal hint narrates it
+  as a finished group sealed off
+
+### Requirement: Generation: Bridges Tricky adds the connected-group deductions
+
+Tricky SHALL additionally run stage 3, the connected-group deductions beyond
+sealing off: an "at most" limit on a span, a bridge that would leave some
+island unable to reach its count, and a direction that must carry a bridge
+because filling every other direction would seal a group off.
+
+#### Scenario: An "at most" limit is Tricky's
+
+- **WHEN** on a `maxb = 2` board one bridge on a span is safe and a second
+  would finish its islands into a group cut off from the rest
+- **THEN** the Tricky solver limits that span to one bridge, and the Normal
+  solver does not
+
+### Requirement: Solver: Bridges solves with a graded multi-stage deductive solver
+
+The solver SHALL run its stages gated by difficulty, and SHALL report whether
+it solved the board. It SHALL be purely deductive and SHALL NOT guess and
+verify.
+
+#### Scenario: A generated board is uniquely solvable at its difficulty
+
+- **WHEN** a board generated at difficulty `d` is solved from the clue-only state
+- **THEN** the solver returns solved at `d`, and a Normal/Tricky board is not fully
+  solved at the tier below it
+
+### Requirement: Solver: A Bridges solve ignores and lifts the player's limits
+
+A from-scratch solve SHALL ignore the player's limits, as it ignores their
+bridges, and Solve SHALL lift every limit the player wrote.
+
+#### Scenario: Solve leaves no limit behind
+
+- **WHEN** the player limits a span to one bridge on a `maxb = 2` board and
+  then uses Solve
+- **THEN** that span is no longer limited to one bridge on the solved board
+
+### Requirement: Solver: Bridges grades a board the same however its islands are listed
+
+The solver's verdict at every difficulty SHALL be a function of the board: the
+clues, their places and the params. It SHALL NOT depend on the order the state
+lists its islands in, so the state the generator grows and the state loaded
+from that board's description get one grade.
+
+#### Scenario: A board has one grade in every island order
+
+- **WHEN** the islands of `11x11i5e10m3d2:4b7f2zzf2zn3b2g` are listed in any
+  order and the board is solved from its clues at Easy, Normal and Tricky
+- **THEN** every order solves it at all three
+
+#### Scenario: A dealt board has one grade in every island order
+
+- **WHEN** boards are dealt at `11x11i5e10m3d2` and each is solved at every
+  difficulty with its islands listed in several shuffled orders
+- **THEN** no board gets two verdicts
+
+### Requirement: Solver: An island's room along a span never grows as bridges are drawn
+
+So that the grade does not depend on island order, the room an island has along
+a span SHALL be the least of what the island still needs and what the span can
+still take, where what the span can still take is its capacity (the lesser clue
+at its ends, and its limit) less the bridges already on it. Room counted that
+way never grows as bridges are drawn, so a deduction available on an emptier
+board is not lost on a fuller one.
+
+#### Scenario: A bridge drawn comes off the span's whole capacity
+
+- **WHEN** a span whose capacity is two carries one bridge and an island at its
+  end still needs three
+- **THEN** that island's room along the span is one
+
+### Requirement: Controls: Bridges input drags bridges between islands
 
 A left-drag from an island along its row or column to the next in-line island
 SHALL add a bridge between them, or one more to those there, wrapping back to
@@ -100,7 +343,7 @@ Bridges span's limit by one.
   canvas's left edge and is released there
 - **THEN** the bridge to that neighbor is drawn
 
-### Requirement: Bridges has a keyboard cursor that drags
+### Requirement: Controls: Bridges has a keyboard cursor that drags
 
 Cursor keys SHALL move a keyboard cursor, and a digit SHALL jump a shown
 cursor to the nearest other island bearing that clue. `CURSOR_SELECT` SHALL grab a keyboard drag at
@@ -123,65 +366,38 @@ bridge in one key, and Shift with an arrow the secondary drag.
 - **THEN** the second press makes the move that toggles the island's completed
   mark
 
-### Requirement: Bridges draws provably wrong state red
+### Requirement: Controls: A secondary drag lowers a Bridges span's limit by one
 
-`redraw` SHALL draw in red, as the board is played, an island that can no
-longer reach its count, when `allowloops` is false the bridges that complete a
-forbidden loop, and a group of islands that all have their full count and join
-only one another while other islands are left out.
+The secondary drag (the right button, a touch hold promoted to it, or the
+keyboard's Shift+arrow) SHALL lower the span's limit by one: no limit, then
+each limit down to one, then the cross, then no limit again. Every stop is
+weaker than the one after it, so a player heading for "at most one" or for the
+cross never passes through a mark that claims more than they mean.
 
-#### Scenario: A loop is red only where loops are forbidden
+#### Scenario: A right-drag lowers a span's limit
 
-- **WHEN** the player's bridges close a loop
-- **THEN** the loop's bridges are drawn red on a board with
-  `allowloops = false`, and closing a loop is not what turns anything red on a
-  board that allows loops
+- **WHEN** the player right-drags between two in-line islands with no bridge
+  between them three times on a `maxb = 2` board
+- **THEN** the span is limited to one bridge, then crossed with the limit
+  lifted, then free again
 
-### Requirement: Bridges findMistakes reports every span the unique solution contradicts
+### Requirement: Controls: A Bridges arrow steps the cursor to the nearest island that way
 
-Because a generated board is uniquely solvable, the game SHALL implement
-`findMistakes`: it SHALL solve the board again from its island clues and
-return every span whose player marks that solution contradicts: a bridge where
-the solution has none, a count exceeding the solution's, or a limit below the
-solution's count, the cross included. It SHALL also return every island marked
-complete short of its count. A board that is not uniquely solvable SHALL yield
-no mistakes.
+A bare arrow SHALL move the keyboard cursor to an island in that direction:
+the one least far to the side, and of those the nearest forward, never one
+further to the side than forward. It SHALL leave the cursor where it is when
+there is none. The letters `A` to `F`, in either case, SHALL
+jump to an island of 10 to 15 as a digit does to one of its number, and `0`
+to one of 16. `G`, in either case, SHALL switch the possible-bridge lines on
+or off, as the `show-hints` preference does.
 
-#### Scenario: A wrong bridge is flagged
+#### Scenario: The nearest island is off the cursor's row
 
-- **WHEN** the player places a bridge the unique solution does not contain,
-  without yet over-committing an island
-- **THEN** `findMistakes` includes that bridge and Check & Save refuses to save
+- **WHEN** the cursor is on an island with no island to its right in its own
+  row, and there is one a column to the right and a row down
+- **THEN** Right moves the cursor to that island
 
-#### Scenario: An island marked complete too soon
-
-- **WHEN** an island is marked complete while it has fewer bridges than its
-  count
-- **THEN** `findMistakes` returns that island, and the same mark on the island
-  once its bridges are all drawn returns nothing
-
-### Requirement: Every Bridges mark is in the tile diff key
-
-The `findMistakes` overlay SHALL be drawn in the live-error red, with no
-palette entry of its own. The live errors, the mistake overlay, an island's
-face, a span's limit and the hint marks SHALL each be part of the tile cache's
-diff key, so each is painted on a frame later than the move that drew the
-board and repaints clean when it clears. An island's recolored hint rim SHALL
-reach the four tiles its arcs intrude into.
-
-#### Scenario: A mistake overlay repaints on a later frame
-
-- **WHEN** a bridge is drawn, then `findMistakes` flags it on a subsequent frame
-  without that bridge's own value changing
-- **THEN** the mistake overlay is painted on that later frame
-
-#### Scenario: A displayed hint repaints an otherwise unchanged frame
-
-- **WHEN** the board is painted, a hint is displayed, and `redraw` runs again
-  with nothing else changed
-- **THEN** the frame carries the step's marks
-
-### Requirement: Bridges auto-marks satisfied islands (fork aid)
+### Requirement: Preferences: Bridges auto-marks satisfied islands (fork aid)
 
 The game SHALL offer an `auto-mark-complete` boolean preference through
 `Game.prefs`, default on. When on, `redraw` SHALL draw an island whose bridge
@@ -199,7 +415,20 @@ the live-error red, on the rim and count.
   drawn with the preference off shows no completed face, and in neither case
   is the island marked completed (its bridges stay editable)
 
-### Requirement: A Bridges hint's ladder is capped at the board's own difficulty
+### Requirement: Preferences: Bridges offers a show-hints preference for possible bridges
+
+The game SHALL expose a `show-hints` boolean preference through the
+`Game.prefs` hook. When it is on, `redraw` SHALL draw a faint line along every
+span between two in-line islands that carries neither a bridge nor a cross, in
+the possible-bridge color, which is not a hint color.
+
+#### Scenario: The show-hints preference toggles the possible-bridge lines
+
+- **WHEN** the `show-hints` preference is turned on
+- **THEN** the renderer draws possible-bridge lines that are absent when it is
+  off
+
+### Requirement: Hint: A Bridges hint's ladder is capped at the board's own difficulty
 
 The hint's ladder SHALL be capped at the board's own difficulty and not at the
 top rung, since that is the tier the generator certified it soluble at.
@@ -210,7 +439,7 @@ top rung, since that is the tier the generator certified it soluble at.
   again, repeatedly, on a board of any tier
 - **THEN** deduction never runs out before the board is solved
 
-### Requirement: One Bridges firing is one hint step
+### Requirement: Hint: One Bridges firing is one hint step
 
 One firing SHALL be one step. When a recorder is attached, a stage SHALL stop
 at the first island that moved, and a rung holding more than one teachable
@@ -226,7 +455,7 @@ carry them all.
 - **THEN** one step's move draws both bridges, and no other island's deduction
   is in that step
 
-### Requirement: A Bridges hint step is followed one drag at a time
+### Requirement: Hint: A Bridges hint step is followed one drag at a time
 
 Where the player's move does part of what a step asks, `hintKeepTrack` SHALL
 verdict `"onTrack"` and shrink the step in place. It SHALL judge a bridge count
@@ -248,7 +477,7 @@ step's limit is progress.
   `maxb = 2` board, and the player's secondary drag leaves it limited to one
 - **THEN** the verdict is `"onTrack"`
 
-### Requirement: Bridges hint resumes from the player's marks
+### Requirement: Hint: Bridges hint resumes from the player's marks
 
 The hint's working copy SHALL resume from the player's marks and SHALL NOT
 clear them. It SHALL first mark as complete every island whose bridges already
@@ -261,7 +490,7 @@ certified on.
 - **THEN** the plan is deduced from those bridges and its first step is a
   deduction that follows from them
 
-### Requirement: Bridges hint hides the bookkeeping mark
+### Requirement: Hint: Bridges hint hides the bookkeeping mark
 
 Every change a rung makes SHALL be recorded, and the plan SHALL apply to its
 working board, but never show, a firing that declares no reason. Exactly one
@@ -275,7 +504,7 @@ the win condition does not read.
 - **THEN** no step in the plan asks the player to mark it, and the plan still
   reaches a solved board
 
-### Requirement: No Bridges hint step leans on a fact the player cannot see
+### Requirement: Hint: No Bridges hint step leans on a fact the player cannot see
 
 No step SHALL lean on a fact the player cannot see. The limit stage 3 derives
 is a mark the player can write (Requirement: Bridges lets the player limit a
@@ -293,7 +522,7 @@ player's board does not.
   this way.", and every later step's board matches the player's in bridges,
   crosses and limits
 
-### Requirement: A Bridges firing carries which cause forced it
+### Requirement: Hint: A Bridges firing carries which cause forced it
 
 Where a rung can be forced by more than one cause, the firing SHALL carry
 which. Stage 3's limit SHALL be narrated as a finished group sealed off or as a
@@ -306,7 +535,7 @@ named island left short of its clue.
 - **THEN** the step's sentence is about that island left short, and that
   island is the one the step marks as counted
 
-### Requirement: Bridges marks a hint in its own vocabulary
+### Requirement: Hint: Bridges marks a hint in its own vocabulary
 
 `redraw` SHALL draw the displayed step's marks from `BridgesHighlights` as the
 game's own shapes recolored, because neither element a Bridges deduction
@@ -320,7 +549,7 @@ box.
 - **WHEN** any frame of a hint plan is captured
 - **THEN** no rect in either hint color is tile-sized in both directions
 
-### Requirement: A Bridges hint draws a span as what the step makes of it
+### Requirement: Hint: A Bridges hint draws a span as what the step makes of it
 
 A span the step decides SHALL be drawn as the bridge bundle it would become,
 with the bars the step adds in `COL_HINT` and the bars already there in the
@@ -333,7 +562,7 @@ step blocks it.
 - **THEN** the frame draws the bundle at the new count with only the added bars
   in the action color
 
-### Requirement: A Bridges hint recolors an island's rim and clue digit
+### Requirement: Hint: A Bridges hint recolors an island's rim and clue digit
 
 An island SHALL be marked by recoloring its own rim and clue digit, which is a
 ring and not a fill: `COL_HINT` for the island a sentence names,
@@ -350,138 +579,57 @@ of one color and not at one mark of each.
 - **THEN** every island of that group, the one the bridge would start from
   included, takes the evidence color and none takes the action color
 
-### Requirement: Bridges solves with a graded multi-stage deductive solver
+### Requirement: Hint: A Bridges hint asks its stages in order after every step
 
-The solver SHALL run its stages gated by difficulty, and SHALL report whether
-it solved the board. It SHALL be purely deductive and SHALL NOT guess and
-verify.
+The hint SHALL ask its stages in this order and take the first that fires,
+starting again from the first after each firing: the single-island
+arithmetic; from Normal the direction counting with its loop check, then
+sealing off; from Tricky the connected-group deductions. Within a stage it
+SHALL take the islands in the order the description lists them.
 
-#### Scenario: A generated board is uniquely solvable at its difficulty
+#### Scenario: An Easy deduction is spoken before a Normal one
 
-- **WHEN** a board generated at difficulty `d` is solved from the clue-only state
-- **THEN** the solver returns solved at `d`, and a Normal/Tricky board is not fully
-  solved at the tier below it
+- **WHEN** on a Normal board one island has exactly enough room left, and
+  another needs a bridge one way by counting its other directions
+- **THEN** the step is the first island's
 
-### Requirement: Bridges Easy runs the single-island deductions
+### Requirement: Hint: Bridges explains each forced deduction
 
-Easy SHALL run stage 1: force the bridges an island must place because its
-remaining count equals its available adjacent space, force one bridge to every
-neighbor of an island whose count is more than the others could carry at the
-bridge limit, and forbid bridges into a satisfied island.
+`hint(state)` SHALL return the forced deductions from the player's own marks as
+an ordered plan, each step narrating why its moves are forced from premises the
+sentence itself states. Where the deduction contradicts itself on a board
+`findMistakes` finds nothing wrong with, it SHALL refuse with the collection's
+unlocalized-contradiction wording.
 
-#### Scenario: An island with exactly enough room is filled at Easy
+#### Scenario: A hint explains an island with exactly enough room left
 
-- **WHEN** an island still needs two bridges and the spans around it have room
-  for exactly two
-- **THEN** the Easy solver draws both
+- **WHEN** an island's remaining count equals the bridges it can still take and a
+  hint is requested
+- **THEN** the step's narration states that count, its move draws exactly that
+  many bridges, and the island it names is the one the hint recolors
 
-### Requirement: Bridges Normal adds direction counting, loops and sealing off
+### Requirement: Look: Every Bridges mark is in the tile diff key
 
-Normal SHALL additionally run stage 2: a bridge in each direction the island's
-count cannot do without, given the most its other directions can hold, and,
-when `allowloops` is false, no bridge that would complete a premature loop.
-Normal SHALL also run sealing off: forbid a first bridge in a direction when
-that one bridge would finish the island and its neighbor into a group cut off
-from the rest, as two neighboring 1s would.
+The `findMistakes` overlay SHALL be drawn in the live-error red, with no
+palette entry of its own. The live errors, the mistake overlay, an island's
+face, a span's limit and the hint marks SHALL each be part of the tile cache's
+diff key, so each is painted on a frame later than the move that drew the
+board and repaints clean when it clears. An island's recolored hint rim SHALL
+reach the four tiles its arcs intrude into.
 
-#### Scenario: Two neighboring 1s are kept apart at Normal
+#### Scenario: A mistake overlay repaints on a later frame
 
-- **WHEN** a Normal board's only way to finish an island is a bridge to a
-  neighbor that the same bridge would finish, sealing the pair off
-- **THEN** the Normal solver blocks that bridge, and the Normal hint narrates it
-  as a finished group sealed off
+- **WHEN** a bridge is drawn, then `findMistakes` flags it on a subsequent frame
+  without that bridge's own value changing
+- **THEN** the mistake overlay is painted on that later frame
 
-### Requirement: Bridges Tricky adds the connected-group deductions
+#### Scenario: A displayed hint repaints an otherwise unchanged frame
 
-Tricky SHALL additionally run stage 3, the connected-group deductions beyond
-sealing off: an "at most" limit on a span, a bridge that would leave some
-island unable to reach its count, and a direction that must carry a bridge
-because filling every other direction would seal a group off.
+- **WHEN** the board is painted, a hint is displayed, and `redraw` runs again
+  with nothing else changed
+- **THEN** the frame carries the step's marks
 
-#### Scenario: An "at most" limit is Tricky's
-
-- **WHEN** on a `maxb = 2` board one bridge on a span is safe and a second
-  would finish its islands into a group cut off from the rest
-- **THEN** the Tricky solver limits that span to one bridge, and the Normal
-  solver does not
-
-### Requirement: Bridges refuses to generate Tricky with one bridge per line
-
-Generating a Tricky board with `maxb` 1 SHALL be refused with a reason, because
-with one bridge per line no "at most" limit can exist and sealing off is
-Normal's, so Tricky has almost nothing a Normal board could not need. A board
-already dealt that way SHALL still load.
-
-#### Scenario: Tricky with one bridge per line is refused
-
-- **WHEN** a Tricky board with `maxb` 1 is asked to be generated
-- **THEN** the params are refused with a reason, and a `params:desc` id with
-  those params still loads
-
-### Requirement: Bridges offers a show-hints preference for possible bridges
-
-The game SHALL expose a `show-hints` boolean preference through the
-`Game.prefs` hook. When it is on, `redraw` SHALL draw a faint line along every
-span between two in-line islands that carries neither a bridge nor a cross, in
-the possible-bridge color, which is not a hint color.
-
-#### Scenario: The show-hints preference toggles the possible-bridge lines
-
-- **WHEN** the `show-hints` preference is turned on
-- **THEN** the renderer draws possible-bridge lines that are absent when it is
-  off
-
-### Requirement: Bridges lets the player limit a span
-
-A player SHALL be able to write on any span between two in-line islands the
-most bridges it may carry, as a mark the board keeps: the limit. No limit is
-the board's own `maxb`, and a limit of none is the no-line cross, so the cross
-is the bottom of the same scale and not a separate mark. A limit SHALL be
-stored in the state's per-span maximum, which a bridge drag wraps at.
-
-#### Scenario: A limited span wraps at its limit
-
-- **WHEN** a span limited to one carries one bridge and the player left-drags
-  along it
-- **THEN** the span is cleared, having taken a single bridge and no second
-
-#### Scenario: A wrong limit is a mistake
-
-- **WHEN** the player limits a span below the bridges the unique solution puts
-  there
-- **THEN** `findMistakes` reports that span
-
-### Requirement: A secondary drag lowers a Bridges span's limit by one
-
-The secondary drag (the right button, a touch hold promoted to it, or the
-keyboard's Shift+arrow) SHALL lower the span's limit by one: no limit, then
-each limit down to one, then the cross, then no limit again. Every stop is
-weaker than the one after it, so a player heading for "at most one" or for the
-cross never passes through a mark that claims more than they mean.
-
-#### Scenario: A right-drag lowers a span's limit
-
-- **WHEN** the player right-drags between two in-line islands with no bridge
-  between them three times on a `maxb = 2` board
-- **THEN** the span is limited to one bridge, then crossed with the limit
-  lifted, then free again
-
-### Requirement: A Bridges limit never drops below the bridges drawn
-
-A limit SHALL never drop below the bridges already drawn on the span: over a
-bundle the secondary drag's cycle SHALL stop at the bridges drawn and wrap to
-no limit without reaching the cross, and a full bundle with no limit on it
-SHALL have nothing to lower. `executeMove` SHALL reject a limit below the
-bridges drawn, above `maxb`, or of none.
-
-#### Scenario: A limit never falls below the bridges drawn
-
-- **WHEN** a span carries one bridge on a `maxb = 2` board and the player
-  right-drags along it twice
-- **THEN** the span is limited to one bridge, then free again, and is never
-  crossed
-
-### Requirement: A Bridges limit is drawn as ≤n at the middle of its span
+### Requirement: Look: A Bridges limit is drawn as ≤n at the middle of its span
 
 A limit SHALL be drawn as `≤n` on a patch of background at the middle square of
 its span, in the span's own color, so it reads over a bridge already drawn
@@ -494,52 +642,7 @@ through that square and turns red with the span when `findMistakes` flags it.
 - **THEN** its middle square is repainted with "≤1" on a patch of background
   over the bridge, in the color the bridge is drawn in
 
-### Requirement: A Bridges solve ignores and lifts the player's limits
-
-A from-scratch solve SHALL ignore the player's limits, as it ignores their
-bridges, and Solve SHALL lift every limit the player wrote.
-
-#### Scenario: Solve leaves no limit behind
-
-- **WHEN** the player limits a span to one bridge on a `maxb = 2` board and
-  then uses Solve
-- **THEN** that span is no longer limited to one bridge on the solved board
-
-### Requirement: Bridges grades a board the same however its islands are listed
-
-The solver's verdict at every difficulty SHALL be a function of the board: the
-clues, their places and the params. It SHALL NOT depend on the order the state
-lists its islands in, so the state the generator grows and the state loaded
-from that board's description get one grade.
-
-#### Scenario: A board has one grade in every island order
-
-- **WHEN** the islands of `11x11i5e10m3d2:4b7f2zzf2zn3b2g` are listed in any
-  order and the board is solved from its clues at Easy, Normal and Tricky
-- **THEN** every order solves it at all three
-
-#### Scenario: A dealt board has one grade in every island order
-
-- **WHEN** boards are dealt at `11x11i5e10m3d2` and each is solved at every
-  difficulty with its islands listed in several shuffled orders
-- **THEN** no board gets two verdicts
-
-### Requirement: An island's room along a span never grows as bridges are drawn
-
-So that the grade does not depend on island order, the room an island has along
-a span SHALL be the least of what the island still needs and what the span can
-still take, where what the span can still take is its capacity (the lesser clue
-at its ends, and its limit) less the bridges already on it. Room counted that
-way never grows as bridges are drawn, so a deduction available on an emptier
-board is not lost on a fuller one.
-
-#### Scenario: A bridge drawn comes off the span's whole capacity
-
-- **WHEN** a span whose capacity is two carries one bridge and an island at its
-  end still needs three
-- **THEN** that island's room along the span is one
-
-### Requirement: Bridges tells a settled island by a lifted face
+### Requirement: Look: Bridges tells a settled island by a lifted face
 
 `redraw` SHALL draw the face of an island that still has bridges to take as
 the collection's cell surface, and the face of an island the player has marked
@@ -560,7 +663,7 @@ SHALL NOT be told by a bevel shade.
 - **WHEN** the player marks an island completed
 - **THEN** that island's face is the lifted surface
 
-### Requirement: A settled Bridges island keeps its rim, count and bridges in ink
+### Requirement: Look: A settled Bridges island keeps its rim, count and bridges in ink
 
 An island's rim, its count and the bridges SHALL stay in ink whether or not the
 island is settled, and the board between islands SHALL stay the board.
@@ -572,7 +675,7 @@ island is settled, and the board between islands SHALL stay the board.
 - **THEN** its rim and count are drawn in ink as before, and the squares
   between islands are the board's own background
 
-### Requirement: Bridges renders islands, bridges, marks, a drag's preview and the win flash
+### Requirement: Look: Bridges renders islands, bridges, marks, a drag's preview and the win flash
 
 The renderer SHALL draw islands as circles bearing their count, bridges, the
 no-line and completed-mark indicators, the keyboard cursor as a wash on its
@@ -613,106 +716,3 @@ A drag that points at no island SHALL recolor its own island's rim alone.
 - **WHEN** a drag that pointed at one island turns to point at another
 - **THEN** the first span is drawn as the board has it and the second carries
   the preview
-
-### Requirement: A Bridges description writes a count above nine as a capital letter
-
-An island's count SHALL be written `1` to `9`, then `A` to `G` for 10 to 16,
-and a run of empty squares as a lowercase letter, `a` for one to `z` for
-twenty-six. The description SHALL cover every square of the grid, the empty
-ones after the last island included.
-
-#### Scenario: A dealt 7×7 board
-
-- **WHEN** `2d1c1a3a3a2a6a2h5b7b5g2b1b2` is opened as a 7×7 board
-- **THEN** its top row holds a 2 in its first square and a 1 in its sixth, and
-  its last square holds a 2
-- **AND** with that last `2` written `H` it is refused for the character,
-  where `G` is read as an island of 16
-
-### Requirement: Bridges refuses a tier that so few islands cannot need
-
-When a board is to be dealt above Easy, `validateParams` SHALL refuse, as a
-board with no such puzzle, one whose island target (the percentage of its
-squares, and never under three) is three; at Tricky one of four, or of five
-with two bridges a line and no loops made; and at Normal with one bridge a
-line one of five or fewer, or one with loops allowed and 100% expansion. No
-loops are made where loops are disallowed or the expansion is 0%.
-
-#### Scenario: Four islands at Tricky
-
-- **WHEN** a 4×4 board at 25% islands, whose target is four, is asked for at
-  Tricky and at Normal with two bridges a line
-- **THEN** the first is refused with "No puzzle of 4 islands is Tricky." and
-  the second is not refused
-
-### Requirement: Bridges refuses a percentage past its last choice when dealing
-
-When a board is to be dealt, `validateParams` SHALL refuse an island
-percentage over 30 and an expansion over 100. A typed ID can carry one that
-the engine's check of the field's choices lets by, the few values that fall
-to the last choice; the engine refuses the rest, for a deal and for a board
-that arrives with its description alike.
-
-#### Scenario: Thirty-two percent islands
-
-- **WHEN** the preset `7x7i30e10m2d0` is asked for with its `i30` written
-  `i32`
-- **THEN** it is refused with "%age of island squares must be between 1% and
-  30%."
-
-### Requirement: A Bridges arrow steps the cursor to the nearest island that way
-
-A bare arrow SHALL move the keyboard cursor to an island in that direction:
-the one least far to the side, and of those the nearest forward, never one
-further to the side than forward. It SHALL leave the cursor where it is when
-there is none. The letters `A` to `F`, in either case, SHALL
-jump to an island of 10 to 15 as a digit does to one of its number, and `0`
-to one of 16. `G`, in either case, SHALL switch the possible-bridge lines on
-or off, as the `show-hints` preference does.
-
-#### Scenario: The nearest island is off the cursor's row
-
-- **WHEN** the cursor is on an island with no island to its right in its own
-  row, and there is one a column to the right and a row down
-- **THEN** Right moves the cursor to that island
-
-### Requirement: A Bridges hint asks its stages in order after every step
-
-The hint SHALL ask its stages in this order and take the first that fires,
-starting again from the first after each firing: the single-island
-arithmetic; from Normal the direction counting with its loop check, then
-sealing off; from Tricky the connected-group deductions. Within a stage it
-SHALL take the islands in the order the description lists them.
-
-#### Scenario: An Easy deduction is spoken before a Normal one
-
-- **WHEN** on a Normal board one island has exactly enough room left, and
-  another needs a bridge one way by counting its other directions
-- **THEN** the step is the first island's
-
-### Requirement: A Bridges label says only what departs from two bridges, 30% islands and 10% expansion
-
-A board's label SHALL say "no loops" where loops are disallowed, "max N
-bridges" (or "max 1 bridge") where the most bridges a line may carry is not
-two, "N% islands" where that is not 30, and "N% expansion" where that is not
-10, and SHALL say none of them otherwise.
-
-#### Scenario: The preset that disallows loops
-
-- **WHEN** `10x10i30e10m2Ld1` is labeled
-- **THEN** the label is "10x10 Normal, no loops"
-
-### Requirement: Bridges explains each forced deduction
-
-`hint(state)` SHALL return the forced deductions from the player's own marks as
-an ordered plan, each step narrating why its moves are forced from premises the
-sentence itself states. Where the deduction contradicts itself on a board
-`findMistakes` finds nothing wrong with, it SHALL refuse with the collection's
-unlocalized-contradiction wording.
-
-#### Scenario: A hint explains an island with exactly enough room left
-
-- **WHEN** an island's remaining count equals the bridges it can still take and a
-  hint is requested
-- **THEN** the step's narration states that count, its move draws exactly that
-  many bridges, and the island it names is the one the hint recolors

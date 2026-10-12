@@ -10,7 +10,64 @@ tiers and the retired third, what its generator promises, and how it is drawn.
 
 ## Requirements
 
-### Requirement: Bricks parameters are a width, a height and a difficulty
+### Requirement: Rules: The Bricks board is a hexagon stored as a padded parallelogram
+
+The board SHALL be a hexagon stored as a padded parallelogram: the actual grid
+width SHALL be the parameter width plus the ceiling of half the height minus one,
+with the two triangular corners masked as boundary cells, leaving exactly
+width-by-height playable cells. Neighbors SHALL be the fixed six-direction hex
+step set.
+
+#### Scenario: A board six wide and seven high
+
+- **WHEN** a board of width 6 and height 7 is built
+- **THEN** its grid is nine cells wide
+- **AND** forty-two of its cells are playable
+
+### Requirement: Rules: A Bricks board is complete when its three rules hold
+
+The game SHALL be reported complete when the grid satisfies all three rules: no
+three shaded cells in a row, every shaded cell above the bottom row resting on a
+shaded one, and every clue counting exactly its shaded neighbors. A cell left
+empty SHALL count as not shaded and SHALL NOT hold completion back. The game
+SHALL flash on completion. There SHALL be no interpolated animation.
+
+#### Scenario: Satisfying every rule wins
+
+- **WHEN** a move leaves all three rules satisfied
+- **THEN** the game is reported complete and flashes
+
+#### Scenario: The last brick wins with cells still empty
+
+- **WHEN** the last shaded cell of the solution is placed while other cells of the
+  board are still empty
+- **THEN** the game is reported complete
+
+### Requirement: Rules: Bricks' findMistakes reports a broken rule and a cell the answer contradicts
+
+`findMistakes` SHALL report every cell the rule pass flags and, on a board the
+solver finishes from its clues, every cell shaded or ruled out against that
+answer. A brick or a cross the answer contradicts SHALL be drawn in the error
+color when the check hands `redraw` its mistakes, beside the rule marks.
+
+#### Scenario: A mistake blocks Check & Save
+
+- **WHEN** the grid contains a rule violation and the player invokes Check & Save
+- **THEN** `findMistakes` reports the offending cells and the save is blocked
+
+#### Scenario: A wrong cross that breaks no rule
+
+- **WHEN** a cell the answer shades is ruled out, no rule is broken by it, and
+  Check & Save is pressed
+- **THEN** one mistake is reported, the cross is drawn in the error color on a
+  board already drawn, and the board is not saved
+
+#### Scenario: The right color in the same cell
+
+- **WHEN** that cell is shaded as the answer has it
+- **THEN** `findMistakes` reports nothing
+
+### Requirement: Params: Bricks parameters are a width, a height and a difficulty
 
 Parameters SHALL be a width, a height and a difficulty, Easy or `Unreasonable`.
 The engine SHALL refuse a width or height below 2 and an unknown difficulty,
@@ -36,206 +93,7 @@ so that an existing game ID names the same board.
 - **THEN** it is refused with "No 2x2 puzzle is Unreasonable.", and a 2×3 at
   the same tier is dealt
 
-### Requirement: Bricks offers Easy and Unreasonable, and no third tier
-
-Bricks SHALL offer two tiers, Easy and `Unreasonable`. The harder SHALL carry
-that name because its rung commits a cell by solving the rest of the board from
-a hypothesis, and only a tier of that name may ship such a rung. Upstream's
-third tier, whose sub-solve recurses in turn, names no boards, so it SHALL NOT
-be offered under any name: not in the preset menu, the difficulty contract or
-the custom-params dialog.
-
-#### Scenario: The preset menu offers two tiers
-
-- **WHEN** the preset menu is listed
-- **THEN** every entry is Easy or `Unreasonable`
-
-### Requirement: The Bricks board is a hexagon stored as a padded parallelogram
-
-The board SHALL be a hexagon stored as a padded parallelogram: the actual grid
-width SHALL be the parameter width plus the ceiling of half the height minus one,
-with the two triangular corners masked as boundary cells, leaving exactly
-width-by-height playable cells. Neighbors SHALL be the fixed six-direction hex
-step set.
-
-#### Scenario: A board six wide and seven high
-
-- **WHEN** a board of width 6 and height 7 is built
-- **THEN** its grid is nine cells wide
-- **AND** forty-two of its cells are playable
-
-### Requirement: Bricks descriptions use the run-length cell encoding
-
-A Bricks description SHALL encode only the playable cells in canonical
-left-to-right, top-to-bottom order: each numbered cell as its decimal value with a
-separator inserted between two adjacent numbers, and each run of playable
-(non-numbered) cells as a run-length lowercase count. Boundary cells SHALL be
-re-derived from the geometry and SHALL NOT appear in the description.
-
-#### Scenario: A generated description round-trips
-
-- **WHEN** a description is generated and then decoded into a board
-- **THEN** re-encoding that board yields the identical description
-
-### Requirement: A Bricks description of the wrong size or range is rejected
-
-Validation SHALL reject a description that decodes to more or fewer playable cells
-than the board holds, distinguishing too many from too few, and SHALL reject a clue
-value out of range.
-
-#### Scenario: A description with the wrong number of cells is rejected
-
-- **WHEN** a description that decodes to more or fewer playable cells than the board
-  has is validated
-- **THEN** it is rejected with a message distinguishing too many from too few
-
-### Requirement: Bricks cells cycle by a click or a drag
-
-Bricks SHALL be played by clicking or dragging to cycle a cell between shaded,
-unshaded and empty, with the right button cycling in the reverse direction. A
-numbered cell SHALL never be shadeable.
-
-#### Scenario: Dragging paints a run of cells
-
-- **WHEN** the player presses on a cell and drags across further playable cells
-- **THEN** on release every dragged playable cell is set to the drag's color in a
-  single move
-
-### Requirement: The Bricks keyboard cursor follows the hexagonal grid
-
-Bricks SHALL be played, as well as by the pointer, by a hexagon-aware keyboard
-cursor. Moving the cursor up or down SHALL alternate between an orthogonal and a
-diagonal step to follow the hexagonal grid.
-
-#### Scenario: Two steps up take one of each kind
-
-- **WHEN** the cursor is moved up twice from a cell away from the board's edges
-- **THEN** one of the two steps keeps its column in the stored grid and the other
-  changes it
-
-### Requirement: Bricks marks a rule violation on the board
-
-A rule violation SHALL be marked on the board: a bar over three shaded cells in
-a row, an error diamond where a shaded cell rests on nothing, and a miscounted
-clue's number in the error color. The marks SHALL show live while a drag is in
-flight, for the board the drag previews, and when the check hands `redraw` its
-mistakes. A committed board SHALL otherwise carry none.
-
-#### Scenario: A drag shows the row it is about to make
-
-- **WHEN** a drag in flight previews three shaded cells in a row
-- **THEN** the bar is drawn over them before the drag is released
-
-#### Scenario: A committed violation waits for the check
-
-- **WHEN** a move leaves three shaded cells in a row and no drag is in flight
-- **THEN** no mark is drawn until the check reports the mistake
-
-### Requirement: A Bricks board is complete when its three rules hold
-
-The game SHALL be reported complete when the grid satisfies all three rules: no
-three shaded cells in a row, every shaded cell above the bottom row resting on a
-shaded one, and every clue counting exactly its shaded neighbors. A cell left
-empty SHALL count as not shaded and SHALL NOT hold completion back. The game
-SHALL flash on completion. There SHALL be no interpolated animation.
-
-#### Scenario: Satisfying every rule wins
-
-- **WHEN** a move leaves all three rules satisfied
-- **THEN** the game is reported complete and flashes
-
-#### Scenario: The last brick wins with cells still empty
-
-- **WHEN** the last shaded cell of the solution is placed while other cells of the
-  board are still empty
-- **THEN** the game is reported complete
-
-### Requirement: Bricks provides an explained deduction hint
-
-Bricks SHALL implement the `hint` and `hintKeepTrack` hooks so a player can ask
-why the next move is forced. A hint SHALL be computed from the game's own
-contradiction solver, the solver and the hint being two projections of one
-deduction engine, so that every hinted move corresponds to a deduction the
-solver can make from the player's current position.
-
-#### Scenario: Following the hints solves the board
-
-- **WHEN** hint steps are applied in order on a board the single-cell rung
-  solves, a new hint being asked for whenever a plan runs out
-- **THEN** the board is driven to completion
-
-### Requirement: A Bricks hint plan is recompute-stable
-
-The hint plan SHALL be recompute-stable: it SHALL scan in a deterministic order,
-so a hint recomputed after a followed move continues where the previous plan left
-off.
-
-#### Scenario: A hint after a followed step continues the plan
-
-- **WHEN** the first step of a plan is followed and a hint is asked for again
-- **THEN** the new plan begins with the old plan's second step
-
-### Requirement: A Bricks hint step explains why the move is forced
-
-Each hint step SHALL explain why the move is forced, not merely which cell to act
-on. For a single-cell contradiction it SHALL name the concrete rule the opposite
-color would violate: three shaded bricks in a horizontal row, a shaded brick with
-no shaded brick beneath it to rest on, or a clue that the change would push above
-or below its shaded-neighbor count. It SHALL state the premise, the
-contradiction and the conclusion in the necessity voice.
-
-#### Scenario: A forced move is explained by the rule it would break
-
-- **WHEN** a hint is requested on a solvable, mistake-free board where a
-  single-cell contradiction is available
-- **THEN** the forced cell is highlighted as the target, its evidence cells are
-  marked, and the explanation names the rule (three-in-a-row, a brick left
-  unsupported, or a clue's neighbor count) that the opposite color would
-  violate, without pre-placing the forced color
-
-### Requirement: A Bricks hint marks the forced cell and its evidence, and places nothing
-
-The forced cell SHALL be highlighted as the hint target, and the deduction's
-evidence cells SHALL be marked distinctly on the board, so the reasoning is
-visible and not only in prose. The hint SHALL NOT pre-place the forced color.
-Because every Bricks deduction forces exactly one cell, each hint step SHALL be a
-single self-contained journey.
-
-#### Scenario: A step decides one cell and leaves it as it was
-
-- **WHEN** a hint step is shown
-- **THEN** it rings one cell, which is still empty on the board
-- **AND** the cells it reasons from carry a different mark
-
-### Requirement: The recursive lookahead rung is never narrated
-
-The recursive lookahead rung SHALL NOT be narrated at all: it commits a cell by
-solving the rest of the board from a hypothesis, which is a search, and no hint
-narrates a search on any tier. The recorder SHALL omit it while the solver
-retains it, so that grading and generation are unchanged and no description
-moves. Where the single-cell rung runs out, the hint SHALL refuse rather than
-reach for it.
-
-#### Scenario: The lookahead rung never reaches a narration
-
-- **WHEN** hint plans are recorded across every tier and many seeds
-- **THEN** no step is forced by the recursive lookahead rung, and where only that
-  rung could progress the hint refuses instead
-
-### Requirement: A Bricks contradiction no named rule matches is an error, never a narration
-
-The single-cell rung places one color and calls the validator once. Every hint
-step SHALL give one of the named rules as its reason; a rejected trial that
-matches none of them SHALL throw, and SHALL NOT be narrated. No hint sentence
-SHALL claim that a chain of forced consequences was followed.
-
-#### Scenario: Every refutation on a board has a named rule
-
-- **WHEN** the single-cell rung is run over a board filled in any order that
-  agrees with its solution
-- **THEN** every forced cell is given one of the named rules, and nothing throws
-
-### Requirement: The undeclared Bricks tier still loads and is never dealt
+### Requirement: Params: The undeclared Bricks tier still loads and is never dealt
 
 The undeclared tier SHALL remain decodable: its difficulty letter is kept, so a
 game ID or saved game carrying it still parses and still round-trips. A full
@@ -263,19 +121,85 @@ carrying it SHALL be accepted, so such a game still loads.
 - **THEN** it fails immediately, rather than rejecting candidates until its retry
   budget is spent
 
-### Requirement: The depth-2 rung stays in the Bricks solver
+### Requirement: Params: A Bricks board is never turned
 
-Bricks' tiers are lookahead depth: Easy assumes nothing, the harder tier assumes
-a cell and looks for an Easy-level contradiction, and depth 2 lets that sub-solve
-recurse in turn. The depth-2 rung SHALL remain available to the solver, where the
-hint and Solve use it as "try as hard as you can".
+Bricks SHALL declare `transposeParams` not applicable: a shaded brick rests on
+the row below it and no three may lie in a horizontal line, so a tall board is a
+different puzzle from a wide one rather than the same one turned.
 
-#### Scenario: Solve asks for the deepest rung
+#### Scenario: A Bricks board is dealt as chosen
 
-- **WHEN** the player asks for the solution of a board
-- **THEN** the solver is run at depth 2, whatever tier the board was dealt at
+- **WHEN** a Bricks board is dealt to fit a wide area
+- **THEN** it is dealt at the size chosen
 
-### Requirement: Bricks grades the tiers it does offer
+### Requirement: Params: Bricks writes its difficulty after d, in the full encoding only
+
+The full encoding SHALL be `WxH` then `d` and the difficulty letter, and the
+shared encoding `WxH` alone. `decodeParams` SHALL read a string with no `d` as
+Easy, and SHALL refuse one whose letter after `d` is none of the three,
+whether or not a description comes with it.
+
+#### Scenario: The Unreasonable preset
+
+- **WHEN** `6x7dn` is decoded
+- **THEN** it is the 6×7 `Unreasonable` board
+- **AND** its shared encoding is `6x7`, which decodes as Easy
+
+### Requirement: Description: Bricks descriptions use the run-length cell encoding
+
+A Bricks description SHALL encode only the playable cells in canonical
+left-to-right, top-to-bottom order: each numbered cell as its decimal value with a
+separator inserted between two adjacent numbers, and each run of playable
+(non-numbered) cells as a run-length lowercase count. Boundary cells SHALL be
+re-derived from the geometry and SHALL NOT appear in the description.
+
+#### Scenario: A generated description round-trips
+
+- **WHEN** a description is generated and then decoded into a board
+- **THEN** re-encoding that board yields the identical description
+
+### Requirement: Description: A Bricks description of the wrong size or range is rejected
+
+Validation SHALL reject a description that decodes to more or fewer playable cells
+than the board holds, distinguishing too many from too few, and SHALL reject a clue
+value out of range.
+
+#### Scenario: A description with the wrong number of cells is rejected
+
+- **WHEN** a description that decodes to more or fewer playable cells than the board
+  has is validated
+- **THEN** it is rejected with a message distinguishing too many from too few
+
+### Requirement: Description: A Bricks description parts two numbers with _ and counts blank cells from a
+
+Between two numbers with no blank cell between them a description SHALL hold
+`_`. A letter SHALL count from `a` for one blank cell to `z` for twenty-six,
+and `newState` SHALL read a run however it is split into letters. A number
+SHALL be from 0 to 7, and a 7 SHALL be a cell that cannot be shaded and
+counts nothing, drawn as `?`.
+
+#### Scenario: A dealt 6×7 board
+
+- **WHEN** `a1b2ad2a0a4b3fa3b4ab5a5a1e` is opened as a 6×7 board
+- **THEN** its forty-two cells are covered, and the top row of six reads a
+  blank cell, 1, two blank cells, 2 and a blank cell
+- **AND** with its first number written 8 it is refused as out of range
+
+### Requirement: Generation: Bricks offers Easy and Unreasonable, and no third tier
+
+Bricks SHALL offer two tiers, Easy and `Unreasonable`. The harder SHALL carry
+that name because its rung commits a cell by solving the rest of the board from
+a hypothesis, and only a tier of that name may ship such a rung. Upstream's
+third tier, whose sub-solve recurses in turn, names no boards, so it SHALL NOT
+be offered under any name: not in the preset menu, the difficulty contract or
+the custom-params dialog.
+
+#### Scenario: The preset menu offers two tiers
+
+- **WHEN** the preset menu is listed
+- **THEN** every entry is Easy or `Unreasonable`
+
+### Requirement: Generation: Bricks grades the tiers it does offer
 
 A Bricks board generated at a difficulty above the easiest SHALL NOT be soluble at
 the tier below it. The acceptance gate SHALL probe the tier immediately below the
@@ -287,20 +211,7 @@ one requested.
 - **THEN** the solver does not reach a solution
 - **AND** solving the same board at `Unreasonable` does
 
-### Requirement: The Bricks solver places cells by contradiction
-
-The solver SHALL place cells by contradiction, tentatively shading or unshading
-a cell and forcing the opposite when that leads to an invalid grid, with bounded
-lookahead for the harder difficulties. Every difficulty tier SHALL be solvable
-by pure deduction; the solver SHALL NOT rely on guessing.
-
-#### Scenario: A cell that would complete a row of three is cleared
-
-- **WHEN** an empty cell lies between two shaded cells of its row, on a board
-  that has a solution
-- **THEN** the solver finds shading it invalid and sets it unshaded
-
-### Requirement: The Bricks generator deals only a board with one solution its solver completes
+### Requirement: Generation: The Bricks generator deals only a board with one solution its solver completes
 
 The generator SHALL write out only a board with exactly one solution, which its
 solver completes at the difficulty asked for. Before it removes any number it
@@ -321,69 +232,56 @@ solve.
 - **WHEN** a board is dealt at a height of two
 - **THEN** loading the board's game ID is accepted
 
-### Requirement: A Bricks board is never turned
+### Requirement: Solver: The depth-2 rung stays in the Bricks solver
 
-Bricks SHALL declare `transposeParams` not applicable: a shaded brick rests on
-the row below it and no three may lie in a horizontal line, so a tall board is a
-different puzzle from a wide one rather than the same one turned.
+Bricks' tiers are lookahead depth: Easy assumes nothing, the harder tier assumes
+a cell and looks for an Easy-level contradiction, and depth 2 lets that sub-solve
+recurse in turn. The depth-2 rung SHALL remain available to the solver, where the
+hint and Solve use it as "try as hard as you can".
 
-#### Scenario: A Bricks board is dealt as chosen
+#### Scenario: Solve asks for the deepest rung
 
-- **WHEN** a Bricks board is dealt to fit a wide area
-- **THEN** it is dealt at the size chosen
+- **WHEN** the player asks for the solution of a board
+- **THEN** the solver is run at depth 2, whatever tier the board was dealt at
 
-### Requirement: Bricks draws its marks beside the piece
+### Requirement: Solver: The Bricks solver places cells by contradiction
 
-The keyboard cursor and both of a hint's rings SHALL be drawn in the margin a
-piece leaves round itself, so none lands on a piece. A gravity mark, which
-straddles the edge between two cells, SHALL carry a rim that parts it from the
-pieces it overlaps.
+The solver SHALL place cells by contradiction, tentatively shading or unshading
+a cell and forcing the opposite when that leads to an invalid grid, with bounded
+lookahead for the harder difficulties. Every difficulty tier SHALL be solvable
+by pure deduction; the solver SHALL NOT rely on guessing.
 
-#### Scenario: A ring on a shaded cell leaves the piece whole
+#### Scenario: A cell that would complete a row of three is cleared
 
-- **WHEN** the cursor or a hint ring is drawn on a cell holding a piece
-- **THEN** the ring does not cover the piece
+- **WHEN** an empty cell lies between two shaded cells of its row, on a board
+  that has a solution
+- **THEN** the solver finds shading it invalid and sets it unshaded
 
-### Requirement: Bricks calls its piece shaded and never by its color
+### Requirement: Controls: Bricks cells cycle by a click or a drag
 
-Bricks' hint sentences and control words SHALL say "shaded" for the shaded
-state and SHALL NOT say the piece's color, and its help page SHALL say the
-piece's shape beside the placeholder for its color.
+Bricks SHALL be played by clicking or dragging to cycle a cell between shaded,
+unshaded and empty, with the right button cycling in the reverse direction. A
+numbered cell SHALL never be shadeable.
 
-#### Scenario: A hint rests on a shaded cell
+#### Scenario: Dragging paints a run of cells
 
-- **WHEN** a hint step reasons from a cell that is shaded
-- **THEN** its sentence calls it a shaded brick and names no color
+- **WHEN** the player presses on a cell and drags across further playable cells
+- **THEN** on release every dragged playable cell is set to the drag's color in a
+  single move
 
-### Requirement: A Bricks description parts two numbers with _ and counts blank cells from a
+### Requirement: Controls: The Bricks keyboard cursor follows the hexagonal grid
 
-Between two numbers with no blank cell between them a description SHALL hold
-`_`. A letter SHALL count from `a` for one blank cell to `z` for twenty-six,
-and `newState` SHALL read a run however it is split into letters. A number
-SHALL be from 0 to 7, and a 7 SHALL be a cell that cannot be shaded and
-counts nothing, drawn as `?`.
+Bricks SHALL be played, as well as by the pointer, by a hexagon-aware keyboard
+cursor. Moving the cursor up or down SHALL alternate between an orthogonal and a
+diagonal step to follow the hexagonal grid.
 
-#### Scenario: A dealt 6×7 board
+#### Scenario: Two steps up take one of each kind
 
-- **WHEN** `a1b2ad2a0a4b3fa3b4ab5a5a1e` is opened as a 6×7 board
-- **THEN** its forty-two cells are covered, and the top row of six reads a
-  blank cell, 1, two blank cells, 2 and a blank cell
-- **AND** with its first number written 8 it is refused as out of range
+- **WHEN** the cursor is moved up twice from a cell away from the board's edges
+- **THEN** one of the two steps keeps its column in the stored grid and the other
+  changes it
 
-### Requirement: Bricks writes its difficulty after d, in the full encoding only
-
-The full encoding SHALL be `WxH` then `d` and the difficulty letter, and the
-shared encoding `WxH` alone. `decodeParams` SHALL read a string with no `d` as
-Easy, and SHALL refuse one whose letter after `d` is none of the three,
-whether or not a description comes with it.
-
-#### Scenario: The Unreasonable preset
-
-- **WHEN** `6x7dn` is decoded
-- **THEN** it is the 6×7 `Unreasonable` board
-- **AND** its shared encoding is `6x7`, which decodes as Easy
-
-### Requirement: Bricks' keys paint the cell under the cursor
+### Requirement: Controls: Bricks' keys paint the cell under the cursor
 
 The `1` key SHALL shade the cell under the cursor, `0` or `2` mark it clear,
 and Backspace or Delete empty it. The number pad's 8, 2, 4 and 6 SHALL move
@@ -399,7 +297,117 @@ them is left as it is.
   the player presses Ctrl with Right
 - **THEN** one move shades both cells
 
-### Requirement: A Bricks hint takes the first empty cell one color breaks a rule in
+### Requirement: Controls: Ctrl or Shift with a Bricks move that paints nothing makes no move
+
+Ctrl or Shift with a move SHALL name in its move only cells that take a color
+and do not have the one asked for. Where that leaves none, the key SHALL make
+no move: it SHALL be a cursor move where the cursor moved, and be declined
+where it did not.
+
+#### Scenario: Ctrl with an arrow off the board from a numbered cell
+
+- **WHEN** the cursor is on a numbered cell at the board's edge and Ctrl is
+  pressed with the arrow that points off the board
+- **THEN** the game declines the key, and the board and the cursor are as
+  they were
+
+### Requirement: Hint: Bricks provides an explained deduction hint
+
+Bricks SHALL implement the `hint` and `hintKeepTrack` hooks so a player can ask
+why the next move is forced. A hint SHALL be computed from the game's own
+contradiction solver, the solver and the hint being two projections of one
+deduction engine, so that every hinted move corresponds to a deduction the
+solver can make from the player's current position.
+
+#### Scenario: Following the hints solves the board
+
+- **WHEN** hint steps are applied in order on a board the single-cell rung
+  solves, a new hint being asked for whenever a plan runs out
+- **THEN** the board is driven to completion
+
+### Requirement: Hint: A Bricks hint plan is recompute-stable
+
+The hint plan SHALL be recompute-stable: it SHALL scan in a deterministic order,
+so a hint recomputed after a followed move continues where the previous plan left
+off.
+
+#### Scenario: A hint after a followed step continues the plan
+
+- **WHEN** the first step of a plan is followed and a hint is asked for again
+- **THEN** the new plan begins with the old plan's second step
+
+### Requirement: Hint: A Bricks hint step explains why the move is forced
+
+Each hint step SHALL explain why the move is forced, not merely which cell to act
+on. For a single-cell contradiction it SHALL name the concrete rule the opposite
+color would violate: three shaded bricks in a horizontal row, a shaded brick with
+no shaded brick beneath it to rest on, or a clue that the change would push above
+or below its shaded-neighbor count. It SHALL state the premise, the
+contradiction and the conclusion in the necessity voice.
+
+#### Scenario: A forced move is explained by the rule it would break
+
+- **WHEN** a hint is requested on a solvable, mistake-free board where a
+  single-cell contradiction is available
+- **THEN** the forced cell is highlighted as the target, its evidence cells are
+  marked, and the explanation names the rule (three-in-a-row, a brick left
+  unsupported, or a clue's neighbor count) that the opposite color would
+  violate, without pre-placing the forced color
+
+### Requirement: Hint: A Bricks hint marks the forced cell and its evidence, and places nothing
+
+The forced cell SHALL be highlighted as the hint target, and the deduction's
+evidence cells SHALL be marked distinctly on the board, so the reasoning is
+visible and not only in prose. The hint SHALL NOT pre-place the forced color.
+Because every Bricks deduction forces exactly one cell, each hint step SHALL be a
+single self-contained journey.
+
+#### Scenario: A step decides one cell and leaves it as it was
+
+- **WHEN** a hint step is shown
+- **THEN** it rings one cell, which is still empty on the board
+- **AND** the cells it reasons from carry a different mark
+
+### Requirement: Hint: The recursive lookahead rung is never narrated
+
+The recursive lookahead rung SHALL NOT be narrated at all: it commits a cell by
+solving the rest of the board from a hypothesis, which is a search, and no hint
+narrates a search on any tier. The recorder SHALL omit it while the solver
+retains it, so that grading and generation are unchanged and no description
+moves. Where the single-cell rung runs out, the hint SHALL refuse rather than
+reach for it.
+
+#### Scenario: The lookahead rung never reaches a narration
+
+- **WHEN** hint plans are recorded across every tier and many seeds
+- **THEN** no step is forced by the recursive lookahead rung, and where only that
+  rung could progress the hint refuses instead
+
+### Requirement: Hint: A Bricks contradiction no named rule matches is an error, never a narration
+
+The single-cell rung places one color and calls the validator once. Every hint
+step SHALL give one of the named rules as its reason; a rejected trial that
+matches none of them SHALL throw, and SHALL NOT be narrated. No hint sentence
+SHALL claim that a chain of forced consequences was followed.
+
+#### Scenario: Every refutation on a board has a named rule
+
+- **WHEN** the single-cell rung is run over a board filled in any order that
+  agrees with its solution
+- **THEN** every forced cell is given one of the named rules, and nothing throws
+
+### Requirement: Hint: Bricks calls its piece shaded and never by its color
+
+Bricks' hint sentences and control words SHALL say "shaded" for the shaded
+state and SHALL NOT say the piece's color, and its help page SHALL say the
+piece's shape beside the placeholder for its color.
+
+#### Scenario: A hint rests on a shaded cell
+
+- **WHEN** a hint step reasons from a cell that is shaded
+- **THEN** its sentence calls it a shaded brick and names no color
+
+### Requirement: Hint: A Bricks hint takes the first empty cell one color breaks a rule in
 
 The hint SHALL take the empty cells in reading order and give the first that
 one color breaks a rule in. In each it SHALL try clear first: where that
@@ -415,45 +423,37 @@ SHALL be the reason given.
   give a number beside it too many shaded neighbors
 - **THEN** the step's sentence gives the three in a row
 
-### Requirement: Ctrl or Shift with a Bricks move that paints nothing makes no move
+### Requirement: Look: Bricks marks a rule violation on the board
 
-Ctrl or Shift with a move SHALL name in its move only cells that take a color
-and do not have the one asked for. Where that leaves none, the key SHALL make
-no move: it SHALL be a cursor move where the cursor moved, and be declined
-where it did not.
+A rule violation SHALL be marked on the board: a bar over three shaded cells in
+a row, an error diamond where a shaded cell rests on nothing, and a miscounted
+clue's number in the error color. The marks SHALL show live while a drag is in
+flight, for the board the drag previews, and when the check hands `redraw` its
+mistakes. A committed board SHALL otherwise carry none.
 
-#### Scenario: Ctrl with an arrow off the board from a numbered cell
+#### Scenario: A drag shows the row it is about to make
 
-- **WHEN** the cursor is on a numbered cell at the board's edge and Ctrl is
-  pressed with the arrow that points off the board
-- **THEN** the game declines the key, and the board and the cursor are as
-  they were
+- **WHEN** a drag in flight previews three shaded cells in a row
+- **THEN** the bar is drawn over them before the drag is released
 
-### Requirement: Bricks' findMistakes reports a broken rule and a cell the answer contradicts
+#### Scenario: A committed violation waits for the check
 
-`findMistakes` SHALL report every cell the rule pass flags and, on a board the
-solver finishes from its clues, every cell shaded or ruled out against that
-answer. A brick or a cross the answer contradicts SHALL be drawn in the error
-color when the check hands `redraw` its mistakes, beside the rule marks.
+- **WHEN** a move leaves three shaded cells in a row and no drag is in flight
+- **THEN** no mark is drawn until the check reports the mistake
 
-#### Scenario: A mistake blocks Check & Save
+### Requirement: Look: Bricks draws its marks beside the piece
 
-- **WHEN** the grid contains a rule violation and the player invokes Check & Save
-- **THEN** `findMistakes` reports the offending cells and the save is blocked
+The keyboard cursor and both of a hint's rings SHALL be drawn in the margin a
+piece leaves round itself, so none lands on a piece. A gravity mark, which
+straddles the edge between two cells, SHALL carry a rim that parts it from the
+pieces it overlaps.
 
-#### Scenario: A wrong cross that breaks no rule
+#### Scenario: A ring on a shaded cell leaves the piece whole
 
-- **WHEN** a cell the answer shades is ruled out, no rule is broken by it, and
-  Check & Save is pressed
-- **THEN** one mistake is reported, the cross is drawn in the error color on a
-  board already drawn, and the board is not saved
+- **WHEN** the cursor or a hint ring is drawn on a cell holding a piece
+- **THEN** the ring does not cover the piece
 
-#### Scenario: The right color in the same cell
-
-- **WHEN** that cell is shaded as the answer has it
-- **THEN** `findMistakes` reports nothing
-
-### Requirement: Bricks draws a shaded cell as a piece and a ruled-out one as the clear square
+### Requirement: Look: Bricks draws a shaded cell as a piece and a ruled-out one as the clear square
 
 The board SHALL be drawn as pieces on the collection's quiet surface. A shaded
 cell SHALL hold the collection's shaded piece inset on its cell, the square one,

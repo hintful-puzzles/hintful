@@ -8,7 +8,84 @@ rule but contradicts the unique solution.
 
 ## Requirements
 
-### Requirement: Rome's parameters
+### Requirement: Rules: Rome is complete when every arrow leads to a goal
+
+Completing the board SHALL report the game solved, and a board is complete when every square is filled with arrows
+leading to a goal, with no loop, no off-grid arrow and no duplicate arrow
+within a region.
+
+#### Scenario: Completing the grid wins
+
+- **WHEN** the final arrow is placed so every square leads to a goal with no loop
+  and no duplicate arrow in any region
+- **THEN** the game is reported solved and flashes
+
+### Requirement: Rules: Mistake-checking reports the rule violations the board shows
+
+Mistake-checking SHALL report the rule violations the board already shows as
+the player works: an arrow pointing off the grid, an arrow duplicated inside
+an outlined region, and an arrow that forms a loop.
+
+#### Scenario: A duplicate arrow in a region is flagged as a mistake
+
+- **WHEN** two squares in the same outlined region hold the same arrow direction
+- **THEN** `findMistakes` flags both squares and Check & Save is hard-blocked
+
+### Requirement: Rules: Rome mistake-checking covers arrows and marks that break no rule
+
+Mistake-checking SHALL report, separately from the rule violations, any arrow
+the player has placed that contradicts the puzzle's unique solution even though
+it breaks no rule. The unique solution SHALL be re-derived from the fixed clues
+alone, and when the board is not deducible from those clues no contradiction
+SHALL be reported.
+
+#### Scenario: A legal-looking arrow that contradicts the solution is flagged
+
+- **WHEN** an arrow is placed that breaks no rule but differs from the unique
+  solution's arrow for that square
+- **THEN** it is reported as a mistake and Check & Save is hard-blocked
+
+### Requirement: Rules: Marks that rule out the answer are a mistake
+
+A pencil mark SHALL claim that its arrow is still possible for that square, so
+an empty square whose marks are non-empty and exclude the solution's arrow
+SHALL be reported as a mistake of its own kind, `note`. An empty square
+carrying no marks SHALL NOT be reported as a mistake.
+
+#### Scenario: Marks that rule out the answer are a mistake
+
+- **WHEN** an empty square carries pencil marks that exclude the solution's
+  direction for that square
+- **THEN** a `note` mistake is reported for that square and Check & Save is
+  hard-blocked
+
+### Requirement: Rules: A replayed off-grid mark leaves no note
+
+Executing a pencil move SHALL leave no mark pointing off the grid, so a move
+log that holds such a mark replays without one.
+
+#### Scenario: A replayed off-grid mark leaves no note
+
+- **WHEN** a pencil move for an arrow pointing off the grid is executed
+- **THEN** the square's marks are unchanged by it
+
+#### Scenario: The hint survives a move log ending in an off-grid mark
+
+- **WHEN** the hint is asked on a board after a move log that ends in a pencil
+  mark pointing off the grid
+- **THEN** the hint answers instead of throwing
+
+### Requirement: Rules: An arrow placed pointing off the grid stays a move
+
+Placing an arrow that points off the grid as a real entry SHALL remain a move,
+which the board flags as an error.
+
+#### Scenario: An up arrow in the top row is placed and flagged
+
+- **WHEN** an up arrow is placed in a top-row square
+- **THEN** the arrow is placed, and the square is flagged as an error
+
+### Requirement: Params: Rome's parameters
 
 Parameters SHALL be a width, a height, and a difficulty (Easy, Normal or
 Tricky). Validation SHALL require a width of at least 3, a height of at least
@@ -21,19 +98,23 @@ difficulty's letter: `e`, `n` or `t`. It SHALL round-trip through decode.
 - **WHEN** a parameter set is encoded in the full form and decoded
 - **THEN** the same width, height and difficulty are recovered
 
-### Requirement: Rome's two highlight preferences
+### Requirement: Params: A Rome params string with no difficulty letter is Easy
 
-Rome SHALL offer two highlight preferences: one highlighting the squares whose
-arrows reach a goal, on by default, under the key `goal`, and one highlighting
-the squares of a loop, off by default, under the key `loop`.
+Decoding a string with no `d` SHALL give Easy. A `d` followed by anything but
+`e`, `n` or `t` SHALL be refused.
 
-#### Scenario: A new game starts with the defaults
+#### Scenario: A string with no letter
 
-- **WHEN** a game is started with no stored preference
-- **THEN** the squares whose arrows reach a goal are highlighted and the
-  squares of a loop are not
+- **WHEN** `4x4` is decoded
+- **THEN** the board is Easy, and its full encoding is `4x4de`
 
-### Requirement: Rome descriptions use the region-border and clue encoding
+#### Scenario: A letter that is no difficulty
+
+- **WHEN** the `n` of `4x4dn` is changed to `z`
+- **THEN** the params are refused:
+  `The parameters 4x4dz have a "z" where this puzzle reads none.`
+
+### Requirement: Description: Rome descriptions use the region-border and clue encoding
 
 A Rome description SHALL encode the outlined-region layout as a run-length
 list over the inter-cell edges: a decimal number for a run of walls and a
@@ -48,7 +129,7 @@ and `X` denote fixed up, down, left and right arrows and goals.
   re-encoded
 - **THEN** the resulting description is identical
 
-### Requirement: Rome rejects a description that breaks its shape
+### Requirement: Description: Rome rejects a description that breaks its shape
 
 Validation SHALL reject a description that uses invalid region-border
 characters, that uses invalid clue characters, that contains a region larger
@@ -61,43 +142,59 @@ one.
   validated
 - **THEN** it is rejected
 
-### Requirement: Rome places an arrow or a mark by drag or by keyboard cursor
+### Requirement: Description: A Rome description is the walls, a comma, then the clues
 
-Rome SHALL be played by grabbing a square and dragging a direction to place an
-arrow, by right-dragging or using the pencil key to toggle a pencil mark, or by
-moving a keyboard cursor and placing an arrow or a mark.
+The wall list SHALL cover the borders between side-by-side squares, row by
+row, then the borders between rows, each in reading order. A letter `a`–`y`
+SHALL be that many open borders followed by one wall. A `,` SHALL follow the
+list, and then the clue grid, in which `a`–`z` is a run of 1 to 26 empty
+squares. A missing comma, and either part running past its count, SHALL be
+refused.
 
-#### Scenario: Dragging a direction places an arrow
+#### Scenario: A dealt 4×4 board
 
-- **WHEN** a non-fixed square is grabbed and a direction is dragged and released
-- **THEN** an arrow in that direction is placed in the square
+- **WHEN** `9a1aba2b,cLeRDXcL` is read as a 4×4 board
+- **THEN** the first nine borders within the rows are walls and the tenth is
+  open, so the bottom row's first two squares share an area
+- **AND** the clues are a left arrow ending the top row, a right arrow, a down
+  arrow and a goal ending the third row, and a left arrow ending the bottom
+  row
 
-### Requirement: Rome is complete when every arrow leads to a goal
+#### Scenario: The comma left out
 
-Completing the board SHALL report the game solved, and a board is complete when every square is filled with arrows
-leading to a goal, with no loop, no off-grid arrow and no duplicate arrow
-within a region.
+- **WHEN** the `,` of that description is taken out
+- **THEN** the board is refused, naming the `c` as a character the game ID
+  cannot have there
 
-#### Scenario: Completing the grid wins
+### Requirement: Generation: Rome's generator keeps every board soluble at its tier
 
-- **WHEN** the final arrow is placed so every square leads to a goal with no loop
-  and no duplicate arrow in any region
-- **THEN** the game is reported solved and flashes
+The generator SHALL accept a board only when the solver finds it soluble at the
+target difficulty and not soluble at the difficulty below.
 
-### Requirement: What Rome draws
+#### Scenario: Every preset produces a soluble board
 
-Rendering SHALL draw the region outlines, arrows and goals, pencil marks in
-the cell quadrants, an optional highlight of squares whose arrows reach a goal,
-an inline error tint on the square of an off-grid arrow, a duplicate arrow
-the player placed in the error color, and a completion flash. There SHALL be
-no interpolated arrow animation.
+- **WHEN** a new game is generated for any preset or legal size and difficulty
+- **THEN** a board is produced that is solvable by pure deduction at exactly that
+  difficulty
 
-#### Scenario: An arrow appears at once
+### Requirement: Generation: Rome's rules are met in one order, Easy first
 
-- **WHEN** an arrow is placed
-- **THEN** the next frame shows it whole, with no animation between
+The solver SHALL try its rules in this order, each only where those before it
+find nothing, and the hint SHALL record that solver: a square down to one
+arrow, an arrow its area already holds, and an arrow that would close a loop,
+at Easy; the squares an area's arrows must go in, a pair, and the one mark
+that leads to a goal, at Normal; and an arrow into a square that could only
+point back, at Tricky.
 
-### Requirement: Rome's solver deduces and never guesses
+#### Scenario: A Tricky rule on an Easy board
+
+- **WHEN** the hint is followed from the dealt position of a board dealt at
+  Easy
+- **THEN** no step is a Normal or a Tricky rule: none keeps an area's arrows
+  to their squares, names a pair, keeps the one mark that leads to a goal, or
+  rules out an arrow into a square that could only point back
+
+### Requirement: Solver: Rome's solver deduces and never guesses
 
 Rome SHALL provide a solver that fills the grid by pure deduction, or reports
 that the board is invalid or incomplete. The solver SHALL apply its deduction
@@ -111,57 +208,18 @@ difficulty.
 - **THEN** every square is filled by deduction and the result reaches a goal from
   every square with no loops and no duplicate arrows in any region
 
-### Requirement: Rome's generator keeps every board soluble at its tier
+### Requirement: Controls: Rome places an arrow or a mark by drag or by keyboard cursor
 
-The generator SHALL accept a board only when the solver finds it soluble at the
-target difficulty and not soluble at the difficulty below.
+Rome SHALL be played by grabbing a square and dragging a direction to place an
+arrow, by right-dragging or using the pencil key to toggle a pencil mark, or by
+moving a keyboard cursor and placing an arrow or a mark.
 
-#### Scenario: Every preset produces a soluble board
+#### Scenario: Dragging a direction places an arrow
 
-- **WHEN** a new game is generated for any preset or legal size and difficulty
-- **THEN** a board is produced that is solvable by pure deduction at exactly that
-  difficulty
+- **WHEN** a non-fixed square is grabbed and a direction is dragged and released
+- **THEN** an arrow in that direction is placed in the square
 
-### Requirement: Mistake-checking reports the rule violations the board shows
-
-Mistake-checking SHALL report the rule violations the board already shows as
-the player works: an arrow pointing off the grid, an arrow duplicated inside
-an outlined region, and an arrow that forms a loop.
-
-#### Scenario: A duplicate arrow in a region is flagged as a mistake
-
-- **WHEN** two squares in the same outlined region hold the same arrow direction
-- **THEN** `findMistakes` flags both squares and Check & Save is hard-blocked
-
-### Requirement: Rome mistake-checking covers arrows and marks that break no rule
-
-Mistake-checking SHALL report, separately from the rule violations, any arrow
-the player has placed that contradicts the puzzle's unique solution even though
-it breaks no rule. The unique solution SHALL be re-derived from the fixed clues
-alone, and when the board is not deducible from those clues no contradiction
-SHALL be reported.
-
-#### Scenario: A legal-looking arrow that contradicts the solution is flagged
-
-- **WHEN** an arrow is placed that breaks no rule but differs from the unique
-  solution's arrow for that square
-- **THEN** it is reported as a mistake and Check & Save is hard-blocked
-
-### Requirement: Marks that rule out the answer are a mistake
-
-A pencil mark SHALL claim that its arrow is still possible for that square, so
-an empty square whose marks are non-empty and exclude the solution's arrow
-SHALL be reported as a mistake of its own kind, `note`. An empty square
-carrying no marks SHALL NOT be reported as a mistake.
-
-#### Scenario: Marks that rule out the answer are a mistake
-
-- **WHEN** an empty square carries pencil marks that exclude the solution's
-  direction for that square
-- **THEN** a `note` mistake is reported for that square and Check & Save is
-  hard-blocked
-
-### Requirement: Rome fills and cleans candidate marks in one press
+### Requirement: Controls: Rome fills and cleans candidate marks in one press
 
 Rome SHALL answer the Mark-all press. The set of arrows a square can legally
 hold SHALL be per square: all four less any that would point off the grid. It
@@ -181,59 +239,7 @@ empty square every arrow already placed in that square's own outlined region.
 - **THEN** each empty square loses the marks for arrows already placed in its
   own outlined region, and no other mark
 
-### Requirement: Rome explains its next deduction
-
-Rome SHALL provide an explained `hint()` that narrates the next forced move by
-the premise that forces it, in Rome's own vocabulary of arrows, squares and
-areas.
-
-#### Scenario: A hint can be followed to a finished board
-
-- **WHEN** the hint's move is applied repeatedly from any mid-game position
-- **THEN** the board reaches a solved state, and every step changes the board
-  when it is reached
-
-### Requirement: A Rome hint rests on what the player can see or mark
-
-Every sentence of a hint SHALL rest only on facts the player can see on the
-board or record with Rome's own marks. A step's evidence SHALL be marked on
-the board, the squares it reasons from by an outline and an area it names by
-stripes, and the square the step acts on SHALL be ringed rather than filled.
-
-#### Scenario: The square a step decides is ringed
-
-- **WHEN** a hint step that places an arrow is shown
-- **THEN** the square it acts on is ringed and not filled
-
-### Requirement: A walk in a Rome hint is numbered square by square
-
-Where a firing's premise is a walk, an arrow chain that leads back to the
-square being struck, the chain SHALL be outlined in order, numbered, so the
-claim the sentence makes is one the player can follow square by square. The
-chain SHALL be computed rather than assumed.
-
-#### Scenario: A deduction is narrated by its premise, not by its move
-
-- **WHEN** the hint's next step strikes an arrow that would close a loop
-- **THEN** the sentence states that following the arrows from the named
-  neighboring square leads back to this one, and the arrow chain is outlined in
-  order with each square's place in the walk drawn on it
-
-### Requirement: The hint's recorder changes nothing the solver decides
-
-The hint SHALL derive its script from a recording projection of Rome's own
-solver. That projection SHALL NOT change any deduction the solver makes,
-because the generator keeps a blanked clue only while the solver still
-finishes the board, and so every published description depends on the solver's
-verdict on every intermediate clue set.
-
-#### Scenario: The recorder changes nothing the solver decides
-
-- **WHEN** a board is solved with the recorder attached and again without it
-- **THEN** both runs finish with the same grid and the same candidate set,
-  square for square
-
-### Requirement: Rome offers one key per arrow, and a Clear key
+### Requirement: Controls: Rome offers one key per arrow, and a Clear key
 
 Rome SHALL offer an on-screen key for each of the four arrows, and a Clear key.
 Pressing an arrow key SHALL place that arrow in the selected square, or toggle
@@ -253,7 +259,7 @@ drag.
 - **THEN** that arrow is toggled as a pencil mark rather than placed, and Clear
   empties the square's marks rather than its arrow
 
-### Requirement: A tap that commits no move selects the square
+### Requirement: Controls: A tap that commits no move selects the square
 
 A press and release on one square that commits no move SHALL act on the
 selection as a press does in every note-taking game, in both modes: it selects
@@ -285,20 +291,7 @@ a tap on a square holding the player's arrow clears that arrow.
 - **THEN** no move is made, and the cursor moves to that square without being
   shown, since a square holding an arrow takes no marks
 
-### Requirement: The selected square is drawn with the note-taking cell's picture
-
-The selected square SHALL be drawn with the note-taking cell's picture. A
-keyboard cursor armed to await a direction SHALL additionally show a `?` in the
-ink of the arrow or the mark that direction will make, which is what tells an
-armed cursor from a resting one.
-
-#### Scenario: An armed cursor prompts for its direction
-
-- **WHEN** the keyboard cursor is armed to place an arrow, or to place a mark
-- **THEN** the square shows the entry wash or the notes triangle respectively,
-  with a `?` in the ink the arrow or the mark will take
-
-### Requirement: Rome refuses a pencil mark pointing off the grid
+### Requirement: Controls: Rome refuses a pencil mark pointing off the grid
 
 Rome SHALL refuse a pencil mark for an arrow that points off the grid, on every
 way into notes: the armed keyboard cursor, a typed or on-screen arrow key in
@@ -313,92 +306,7 @@ meeting one would have no strike to teach.
   armed cursor, presses the up arrow key, or pencil-drags off the top edge
 - **THEN** no move is made, and the drag previews no mark
 
-### Requirement: A replayed off-grid mark leaves no note
-
-Executing a pencil move SHALL leave no mark pointing off the grid, so a move
-log that holds such a mark replays without one.
-
-#### Scenario: A replayed off-grid mark leaves no note
-
-- **WHEN** a pencil move for an arrow pointing off the grid is executed
-- **THEN** the square's marks are unchanged by it
-
-#### Scenario: The hint survives a move log ending in an off-grid mark
-
-- **WHEN** the hint is asked on a board after a move log that ends in a pencil
-  mark pointing off the grid
-- **THEN** the hint answers instead of throwing
-
-### Requirement: An arrow placed pointing off the grid stays a move
-
-Placing an arrow that points off the grid as a real entry SHALL remain a move,
-which the board flags as an error.
-
-#### Scenario: An up arrow in the top row is placed and flagged
-
-- **WHEN** an up arrow is placed in a top-row square
-- **THEN** the arrow is placed, and the square is flagged as an error
-
-### Requirement: Rome draws its squares on a quiet surface and keeps its outlines
-
-`redraw` SHALL draw every square the player fills on the collection's cell
-surface, and a square holding an arrow the puzzle fixed, or a goal, on the
-collection's lifted surface of a given, with the fixed arrow in ink and the
-player's in the entry color. The line between two squares of one region SHALL
-be the collection's surface grid line.
-
-#### Scenario: A fixed arrow is told by the square under it
-
-- **WHEN** the opening frame of a board is drawn
-- **THEN** every square holding a fixed arrow is the lifted surface and every
-  empty square is the plain cell surface
-
-### Requirement: A region's outline is content
-
-A region's outline, the frame round the board included, is content: it SHALL
-stay in ink at its full width, and where two outlines turn round a square's
-corner they SHALL meet in a solid corner.
-
-#### Scenario: An outline is stronger than a grid line
-
-- **WHEN** a board with a region of two or more squares is drawn
-- **THEN** the line between two squares of that region is the surface's grid
-  line
-- **AND** the line between two regions is ink
-
-### Requirement: Rome's goal takes the color for where the player is going
-
-A goal SHALL be a disc in the collection's color for where the player is going
-(the theme pair's second member), and the tint of a square whose arrows reach
-a goal SHALL be that color's wash, so the squares that are settled take the
-goal's hue. That tint, the error tint and the selected square's wash SHALL
-each replace the square's surface.
-
-#### Scenario: A settled square takes the goal's hue
-
-- **WHEN** a square whose arrows reach a goal is drawn with that highlight on
-- **THEN** the square is filled with the goal color's wash in place of its
-  surface
-
-### Requirement: Rome's completion flash sweeps the board
-
-The win flash SHALL sweep the board's squares from the bottom left to the top
-right, and a lit square SHALL be filled with a flash color in place of its
-surface and keep what it holds. The selected square's
-highlight SHALL not be drawn while the win flash runs.
-
-#### Scenario: The flash moves
-
-- **WHEN** the win flash is drawn early and late
-- **THEN** the early frame lights the bottom-left square and the late one the
-  top-right square
-
-#### Scenario: The selection through the flash
-
-- **WHEN** a square is selected for notes and the board is won
-- **THEN** no frame of the flash shows the selection's wash or its `?`
-
-### Requirement: A Rome press on a fixed clue or outside the grid grabs nothing
+### Requirement: Controls: A Rome press on a fixed clue or outside the grid grabs nothing
 
 A press on a fixed clue or a press outside the grid SHALL produce no state
 change and no history entry. The line round the grid belongs to the square it
@@ -416,47 +324,7 @@ for the release that ends it alike.
   row whose first square is empty
 - **THEN** nothing is grabbed, and no arrow is placed in that square
 
-### Requirement: A Rome description is the walls, a comma, then the clues
-
-The wall list SHALL cover the borders between side-by-side squares, row by
-row, then the borders between rows, each in reading order. A letter `a`–`y`
-SHALL be that many open borders followed by one wall. A `,` SHALL follow the
-list, and then the clue grid, in which `a`–`z` is a run of 1 to 26 empty
-squares. A missing comma, and either part running past its count, SHALL be
-refused.
-
-#### Scenario: A dealt 4×4 board
-
-- **WHEN** `9a1aba2b,cLeRDXcL` is read as a 4×4 board
-- **THEN** the first nine borders within the rows are walls and the tenth is
-  open, so the bottom row's first two squares share an area
-- **AND** the clues are a left arrow ending the top row, a right arrow, a down
-  arrow and a goal ending the third row, and a left arrow ending the bottom
-  row
-
-#### Scenario: The comma left out
-
-- **WHEN** the `,` of that description is taken out
-- **THEN** the board is refused, naming the `c` as a character the game ID
-  cannot have there
-
-### Requirement: A Rome params string with no difficulty letter is Easy
-
-Decoding a string with no `d` SHALL give Easy. A `d` followed by anything but
-`e`, `n` or `t` SHALL be refused.
-
-#### Scenario: A string with no letter
-
-- **WHEN** `4x4` is decoded
-- **THEN** the board is Easy, and its full encoding is `4x4de`
-
-#### Scenario: A letter that is no difficulty
-
-- **WHEN** the `n` of `4x4dn` is changed to `z`
-- **THEN** the params are refused:
-  `The parameters 4x4dz have a "z" where this puzzle reads none.`
-
-### Requirement: Rome's Enter and Space arm the cursor for one arrow key
+### Requirement: Controls: Rome's Enter and Space arm the cursor for one arrow key
 
 Enter on a square that is not fixed SHALL show the cursor and arm it to
 place: the next arrow key SHALL place that arrow and disarm, Enter again SHALL
@@ -478,7 +346,7 @@ keys SHALL NOT move it. An arrow the square already holds SHALL make no move.
   arrow
 - **THEN** the arrow is cleared and the cursor is no longer armed
 
-### Requirement: Rome's digits 8, 2, 4 and 6 type the arrows
+### Requirement: Controls: Rome's digits 8, 2, 4 and 6 type the arrows
 
 With the cursor showing on a square that is not fixed, the characters `8`,
 `2`, `4` and `6` SHALL enter the up, down, left and right arrow, from the
@@ -492,7 +360,71 @@ notes mode is on.
 - **WHEN** the cursor shows on an empty square and `6` is typed
 - **THEN** a right arrow is placed in it
 
-### Requirement: Rome's hint places an arrow for one of three reasons
+### Requirement: Preferences: Rome's two highlight preferences
+
+Rome SHALL offer two highlight preferences: one highlighting the squares whose
+arrows reach a goal, on by default, under the key `goal`, and one highlighting
+the squares of a loop, off by default, under the key `loop`.
+
+#### Scenario: A new game starts with the defaults
+
+- **WHEN** a game is started with no stored preference
+- **THEN** the squares whose arrows reach a goal are highlighted and the
+  squares of a loop are not
+
+### Requirement: Hint: Rome explains its next deduction
+
+Rome SHALL provide an explained `hint()` that narrates the next forced move by
+the premise that forces it, in Rome's own vocabulary of arrows, squares and
+areas.
+
+#### Scenario: A hint can be followed to a finished board
+
+- **WHEN** the hint's move is applied repeatedly from any mid-game position
+- **THEN** the board reaches a solved state, and every step changes the board
+  when it is reached
+
+### Requirement: Hint: A Rome hint rests on what the player can see or mark
+
+Every sentence of a hint SHALL rest only on facts the player can see on the
+board or record with Rome's own marks. A step's evidence SHALL be marked on
+the board, the squares it reasons from by an outline and an area it names by
+stripes, and the square the step acts on SHALL be ringed rather than filled.
+
+#### Scenario: The square a step decides is ringed
+
+- **WHEN** a hint step that places an arrow is shown
+- **THEN** the square it acts on is ringed and not filled
+
+### Requirement: Hint: A walk in a Rome hint is numbered square by square
+
+Where a firing's premise is a walk, an arrow chain that leads back to the
+square being struck, the chain SHALL be outlined in order, numbered, so the
+claim the sentence makes is one the player can follow square by square. The
+chain SHALL be computed rather than assumed.
+
+#### Scenario: A deduction is narrated by its premise, not by its move
+
+- **WHEN** the hint's next step strikes an arrow that would close a loop
+- **THEN** the sentence states that following the arrows from the named
+  neighboring square leads back to this one, and the arrow chain is outlined in
+  order with each square's place in the walk drawn on it
+
+### Requirement: Hint: The hint's recorder changes nothing the solver decides
+
+The hint SHALL derive its script from a recording projection of Rome's own
+solver. That projection SHALL NOT change any deduction the solver makes,
+because the generator keeps a blanked clue only while the solver still
+finishes the board, and so every published description depends on the solver's
+verdict on every intermediate clue set.
+
+#### Scenario: The recorder changes nothing the solver decides
+
+- **WHEN** a board is solved with the recorder attached and again without it
+- **THEN** both runs finish with the same grid and the same candidate set,
+  square for square
+
+### Requirement: Hint: Rome's hint places an arrow for one of three reasons
 
 A step that places an arrow SHALL say one of: every other arrow has been ruled
 out in the square, where its marks are down to one; every other way the square
@@ -507,7 +439,7 @@ way, with the area striped.
 - **THEN** the step places the fourth arrow and says every other way the
   square can point is already used in its area
 
-### Requirement: Rome's hint strikes an arrow its area already holds
+### Requirement: Hint: Rome's hint strikes an arrow its area already holds
 
 The leg that strikes a placed arrow from the rest of its area SHALL stripe the
 area, outline the placed arrow, and say that the area now has that arrow, so no
@@ -520,7 +452,7 @@ other square in it can point that way.
 - **THEN** the leg that follows strikes those marks and says the area now has
   its up arrow
 
-### Requirement: Rome's hint keeps the squares an area's arrows must go in
+### Requirement: Hint: Rome's hint keeps the squares an area's arrows must go in
 
 In an area of four squares, where one square alone can still take some arrow,
 a step SHALL strike that square's other marks and say the area must hold all
@@ -535,7 +467,7 @@ the pair and strike those two arrows from the area's other squares.
 - **THEN** the step says only this square can still point up, and that its
   other marks must go
 
-### Requirement: Rome's hint keeps the one mark that leads to a goal
+### Requirement: Hint: Rome's hint keeps the one mark that leads to a goal
 
 Where one mark alone, anywhere on the board, still points into the group of
 squares that already lead to a goal, a step SHALL ring that mark, stripe the
@@ -548,7 +480,7 @@ must reach a goal.
   pointing into them, but one
 - **THEN** the step keeps that mark and strikes the rest of its square's marks
 
-### Requirement: Rome's hint rules out an arrow into a square that could only point back
+### Requirement: Hint: Rome's hint rules out an arrow into a square that could only point back
 
 Where a square's marks are down to up and down, or to left and right, a step
 SHALL strike, from each neighbor on that line that shares its area, the mark
@@ -564,24 +496,7 @@ from that neighbor's square, and the two SHALL be one journey.
   struck square's lower neighbor, and says an arrow into it would close a loop
   or be the area's second down
 
-### Requirement: Rome's rules are met in one order, Easy first
-
-The solver SHALL try its rules in this order, each only where those before it
-find nothing, and the hint SHALL record that solver: a square down to one
-arrow, an arrow its area already holds, and an arrow that would close a loop,
-at Easy; the squares an area's arrows must go in, a pair, and the one mark
-that leads to a goal, at Normal; and an arrow into a square that could only
-point back, at Tricky.
-
-#### Scenario: A Tricky rule on an Easy board
-
-- **WHEN** the hint is followed from the dealt position of a board dealt at
-  Easy
-- **THEN** no step is a Normal or a Tricky rule: none keeps an area's arrows
-  to their squares, names a pair, keeps the one mark that leads to a goal, or
-  rules out an arrow into a square that could only point back
-
-### Requirement: Rome's hint pencils marks in only as a step needs them
+### Requirement: Hint: Rome's hint pencils marks in only as a step needs them
 
 Rome SHALL offer the shared `hint-notes` preference, defaulting to `implicit`:
 unless the player chooses otherwise, the hint SHALL read a square with no
@@ -594,3 +509,88 @@ grid, and SHALL pencil marks in only where a step needs them.
   preference stored
 - **THEN** no step is the Mark-all fill, and a step that needs a square's marks
   pencils in that square's alone
+
+### Requirement: Look: What Rome draws
+
+Rendering SHALL draw the region outlines, arrows and goals, pencil marks in
+the cell quadrants, an optional highlight of squares whose arrows reach a goal,
+an inline error tint on the square of an off-grid arrow, a duplicate arrow
+the player placed in the error color, and a completion flash. There SHALL be
+no interpolated arrow animation.
+
+#### Scenario: An arrow appears at once
+
+- **WHEN** an arrow is placed
+- **THEN** the next frame shows it whole, with no animation between
+
+### Requirement: Look: The selected square is drawn with the note-taking cell's picture
+
+The selected square SHALL be drawn with the note-taking cell's picture. A
+keyboard cursor armed to await a direction SHALL additionally show a `?` in the
+ink of the arrow or the mark that direction will make, which is what tells an
+armed cursor from a resting one.
+
+#### Scenario: An armed cursor prompts for its direction
+
+- **WHEN** the keyboard cursor is armed to place an arrow, or to place a mark
+- **THEN** the square shows the entry wash or the notes triangle respectively,
+  with a `?` in the ink the arrow or the mark will take
+
+### Requirement: Look: Rome draws its squares on a quiet surface and keeps its outlines
+
+`redraw` SHALL draw every square the player fills on the collection's cell
+surface, and a square holding an arrow the puzzle fixed, or a goal, on the
+collection's lifted surface of a given, with the fixed arrow in ink and the
+player's in the entry color. The line between two squares of one region SHALL
+be the collection's surface grid line.
+
+#### Scenario: A fixed arrow is told by the square under it
+
+- **WHEN** the opening frame of a board is drawn
+- **THEN** every square holding a fixed arrow is the lifted surface and every
+  empty square is the plain cell surface
+
+### Requirement: Look: A region's outline is content
+
+A region's outline, the frame round the board included, is content: it SHALL
+stay in ink at its full width, and where two outlines turn round a square's
+corner they SHALL meet in a solid corner.
+
+#### Scenario: An outline is stronger than a grid line
+
+- **WHEN** a board with a region of two or more squares is drawn
+- **THEN** the line between two squares of that region is the surface's grid
+  line
+- **AND** the line between two regions is ink
+
+### Requirement: Look: Rome's goal takes the color for where the player is going
+
+A goal SHALL be a disc in the collection's color for where the player is going
+(the theme pair's second member), and the tint of a square whose arrows reach
+a goal SHALL be that color's wash, so the squares that are settled take the
+goal's hue. That tint, the error tint and the selected square's wash SHALL
+each replace the square's surface.
+
+#### Scenario: A settled square takes the goal's hue
+
+- **WHEN** a square whose arrows reach a goal is drawn with that highlight on
+- **THEN** the square is filled with the goal color's wash in place of its
+  surface
+
+### Requirement: Look: Rome's completion flash sweeps the board
+
+The win flash SHALL sweep the board's squares from the bottom left to the top
+right, and a lit square SHALL be filled with a flash color in place of its
+surface and keep what it holds. The selected square's
+highlight SHALL not be drawn while the win flash runs.
+
+#### Scenario: The flash moves
+
+- **WHEN** the win flash is drawn early and late
+- **THEN** the early frame lights the bottom-left square and the late one the
+  top-right square
+
+#### Scenario: The selection through the flash
+
+- **WHEN** a square is selected for notes and the board is won
+- **THEN** no frame of the flash shows the selection's wash or its `?`

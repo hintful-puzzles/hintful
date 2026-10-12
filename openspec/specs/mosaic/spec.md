@@ -9,7 +9,73 @@ and how its marks and numbers are drawn.
 
 ## Requirements
 
-### Requirement: Mosaic's parameters and their encoding
+### Requirement: Rules: A Mosaic toggle cycles a mark and a paint fills only unmarked cells
+
+One step of a toggle SHALL take a cell around the cycle unmarked, marked,
+blank; two steps are the right button's and select2's way round it. A paint
+SHALL set only the still-unmarked cells along its straight run. The game
+SHALL make no `paint` move of its own, and SHALL still replay one from a
+saved game. `executeMove` SHALL throw on an out-of-bounds target.
+
+#### Scenario: Toggling cycles a cell
+
+- **WHEN** a cell is toggled three times (single steps)
+- **THEN** it passes marked → blank → unmarked
+
+#### Scenario: A double toggle goes the other way
+
+- **WHEN** an unmarked cell is toggled by two steps
+- **THEN** it is blank
+
+#### Scenario: Painting fills only unmarked cells
+
+- **WHEN** a paint move covers a run containing a marked cell and unmarked
+  cells, painting blank
+- **THEN** the unmarked cells become blank and the already-marked cell is
+  unchanged
+
+### Requirement: Rules: Mosaic flags a satisfied clue and a contradicted one
+
+A clue SHALL be flagged `SOLVED` when it is exactly satisfied with no cell of
+its neighborhood unmarked, and `ERROR` when it is overcommitted, with more
+cells marked than the clue or too few cells left that could be. The flags and
+the count of clues left SHALL follow the marks.
+
+#### Scenario: A satisfied clue grays out and a contradicted clue reddens
+
+- **WHEN** a clue's neighborhood is fully determined with exactly the clue's
+  count marked
+- **THEN** the clue carries the `SOLVED` flag (drawn gray)
+- **AND** when more cells are marked around a clue than its value, it carries
+  the `ERROR` flag (drawn red)
+
+### Requirement: Rules: Mosaic is complete when every clue is satisfied
+
+A clue SHALL count the marked cells of its 3×3 neighborhood, itself included.
+The board SHALL be complete exactly when every shown clue is satisfied with no
+cell of its neighborhood unmarked.
+
+#### Scenario: Completing every clue solves the game
+
+- **WHEN** the last clue becomes satisfied
+- **THEN** no clue is left and `status` returns `"solved"`
+
+### Requirement: Rules: Mosaic checks mistakes against the deduced solution
+
+`findMistakes` SHALL return every cell the player has determined whose mark
+contradicts the board's one answer, taken from the search at either
+difficulty, and each SHALL be drawn with an error-colored outline overlay. It
+SHALL return no mistakes when the search did not prove exactly one answer or
+when the marks are consistent.
+
+#### Scenario: findMistakes flags a wrong mark
+
+- **WHEN** the player marks a cell that is blank in the solution and Check &
+  Save runs
+- **THEN** `findMistakes` returns that cell
+- **AND** a correctly-marked board returns no mistakes
+
+### Requirement: Params: Mosaic's parameters and their encoding
 
 Params SHALL be `width`, `height`, `aggressive`, which asks for harder
 generation by clue minimization and defaults to true, and a difficulty, Easy,
@@ -37,7 +103,7 @@ SHALL decode as Easy.
 - **WHEN** a Normal 10×8 board's params are encoded in full
 - **THEN** the result is `10x8dn`, and `10x8du` still decodes as Unreasonable
 
-### Requirement: Mosaic's largest preset deals without aggressive generation
+### Requirement: Params: Mosaic's largest preset deals without aggressive generation
 
 Every preset SHALL ask for aggressive generation except the largest, 50×50,
 where it is too slow.
@@ -48,7 +114,7 @@ where it is too slow.
 - **THEN** the 50×50 preset has `aggressive` false and every other preset has
   it true
 
-### Requirement: Mosaic's size limits
+### Requirement: Params: Mosaic's size limits
 
 A board narrower or shorter than 3 SHALL be refused. `validateParams` SHALL
 refuse a board of more than 10000 tiles.
@@ -60,7 +126,57 @@ refuse a board of more than 10000 tiles.
 - **THEN** each is refused with a non-null error string
 - **AND** a 3×3 board and a 100×100 board are accepted
 
-### Requirement: Mosaic descriptions are run-length clue grids
+### Requirement: Params: Mosaic rejects board shapes it cannot generate
+
+`validateParams` SHALL refuse, when a board is to be dealt at any difficulty,
+a board longer than the longest that is dealt at its shorter side, with a
+reason naming both. A board 20 or more across SHALL be dealt at any length
+within the tile limit. A description that is supplied SHALL NOT be held to the
+bound.
+
+#### Scenario: A long thin board is refused with a reason
+
+- **WHEN** a 3×21, a 5×31, an 8×51, a 101×12 and a 19×201 board are validated
+  for generation
+- **THEN** each is refused with a message naming its shorter side and that
+  side's greatest length
+- **AND** a 3×20, a 5×30, a 9×50, a 10×100, a 15×200 and a 20×500 board are
+  admitted
+
+#### Scenario: An existing long description still loads
+
+- **WHEN** a 3×400 board's params accompany a supplied description
+- **THEN** validation succeeds
+
+### Requirement: Params: Aggressive generation above Easy is bounded on its own measurements
+
+`validateParams` SHALL refuse, when a board is to be dealt, a Normal or an
+Unreasonable board of more than 900 squares with aggressive generation on,
+with a reason that names the difficulty and says to turn it off. The same size
+SHALL be dealt at Easy, and at either higher difficulty with aggressive
+generation off.
+
+#### Scenario: A size dealt at Easy is refused above it with aggressive generation
+
+- **WHEN** a 31×30 board is checked for dealing at Normal and at Unreasonable,
+  and a 50×50 board at Unreasonable
+- **THEN** each is refused with aggressive generation on
+- **AND** each is admitted at Easy, and at its own difficulty with it off
+
+### Requirement: Params: Mosaic's menu offers its middle sizes at every difficulty
+
+Mosaic's presets SHALL offer 10×10, 15×15 and 25×25 as Easy, Normal and
+Unreasonable, and 3×3, 5×5 and 50×50 as Easy alone, so that the menu is one
+section. The default SHALL be an Easy 10×10. Every size SHALL be dealt at
+every difficulty from the Custom dialog.
+
+#### Scenario: The smallest board is on the menu once
+
+- **WHEN** Mosaic's preset menu is read
+- **THEN** 3×3 appears as Easy and at no other difficulty
+- **AND** a Normal and an Unreasonable 3×3 board are each dealt when asked for
+
+### Requirement: Description: Mosaic descriptions are run-length clue grids
 
 The desc SHALL encode the board in scan order: a digit `0`-`9` for each shown
 clue and a letter `a`-`z` for each run of 1-26 hidden cells. A desc holding
@@ -79,7 +195,7 @@ SHALL be refused.
   mismatching the params, is checked
 - **THEN** the check returns a non-null error
 
-### Requirement: Mosaic generates deduction-solvable boards
+### Requirement: Generation: Mosaic generates deduction-solvable boards
 
 `newDesc` SHALL generate a random image of marked and blank cells and compute
 every cell's clue from it, a border cell counting only its in-bounds
@@ -95,7 +211,7 @@ hidden as upstream hides them.
 - **AND** the deductive solver solves every resulting board from its visible
   clues alone
 
-### Requirement: Mosaic hides the clues a board does not need
+### Requirement: Generation: Mosaic hides the clues a board does not need
 
 Once a generated board is solvable, `newDesc` SHALL hide every clue whose
 deduction never narrowed anything. In aggressive mode it SHALL additionally
@@ -107,193 +223,7 @@ that makes the board unsolvable.
 - **WHEN** a board is generated with aggressive generation on
 - **THEN** the deductive solver solves it from the clues left showing
 
-### Requirement: A Mosaic toggle cycles a mark and a paint fills only unmarked cells
-
-One step of a toggle SHALL take a cell around the cycle unmarked, marked,
-blank; two steps are the right button's and select2's way round it. A paint
-SHALL set only the still-unmarked cells along its straight run. The game
-SHALL make no `paint` move of its own, and SHALL still replay one from a
-saved game. `executeMove` SHALL throw on an out-of-bounds target.
-
-#### Scenario: Toggling cycles a cell
-
-- **WHEN** a cell is toggled three times (single steps)
-- **THEN** it passes marked → blank → unmarked
-
-#### Scenario: A double toggle goes the other way
-
-- **WHEN** an unmarked cell is toggled by two steps
-- **THEN** it is blank
-
-#### Scenario: Painting fills only unmarked cells
-
-- **WHEN** a paint move covers a run containing a marked cell and unmarked
-  cells, painting blank
-- **THEN** the unmarked cells become blank and the already-marked cell is
-  unchanged
-
-### Requirement: Mosaic flags a satisfied clue and a contradicted one
-
-A clue SHALL be flagged `SOLVED` when it is exactly satisfied with no cell of
-its neighborhood unmarked, and `ERROR` when it is overcommitted, with more
-cells marked than the clue or too few cells left that could be. The flags and
-the count of clues left SHALL follow the marks.
-
-#### Scenario: A satisfied clue grays out and a contradicted clue reddens
-
-- **WHEN** a clue's neighborhood is fully determined with exactly the clue's
-  count marked
-- **THEN** the clue carries the `SOLVED` flag (drawn gray)
-- **AND** when more cells are marked around a clue than its value, it carries
-  the `ERROR` flag (drawn red)
-
-### Requirement: A Mosaic press toggles a cell and a drag repeats it
-
-A pointer press SHALL toggle the cell it lands on, and a drag on from it SHALL
-be the engine's sweep over the cells holding the mark the pressed cell held: a
-drag from an unmarked cell lays a mark and a drag from a marked cell clears
-marks. Once the board is complete, the game SHALL accept only cursor movement.
-
-#### Scenario: A drag from a marked cell clears marks
-
-- **WHEN** the player presses a marked cell with the primary button and drags
-  across a marked cell and an unmarked cell
-- **THEN** both marked cells become blank and the unmarked cell is left as it
-  was
-
-#### Scenario: A finished board takes no click
-
-- **WHEN** the board is complete and the player clicks a cell
-- **THEN** no move is made
-- **AND** an arrow key still moves the cursor
-
-### Requirement: Mosaic is complete when every clue is satisfied
-
-A clue SHALL count the marked cells of its 3×3 neighborhood, itself included.
-The board SHALL be complete exactly when every shown clue is satisfied with no
-cell of its neighborhood unmarked.
-
-#### Scenario: Completing every clue solves the game
-
-- **WHEN** the last clue becomes satisfied
-- **THEN** no clue is left and `status` returns `"solved"`
-
-### Requirement: Mosaic's Solve applies the deduced solution
-
-The Solve command SHALL take the board's one answer from the search that
-counts its answers, at any difficulty, and apply the full solution, its
-cells flagged solved. It SHALL fail with an error when the search did not
-prove exactly one answer, saying which where it proved several or none.
-
-#### Scenario: Solve completes the board
-
-- **WHEN** the Solve command runs on a generated board of any difficulty
-- **THEN** every cell is determined and the board is solved
-
-### Requirement: Mosaic checks mistakes against the deduced solution
-
-`findMistakes` SHALL return every cell the player has determined whose mark
-contradicts the board's one answer, taken from the search at either
-difficulty, and each SHALL be drawn with an error-colored outline overlay. It
-SHALL return no mistakes when the search did not prove exactly one answer or
-when the marks are consistent.
-
-#### Scenario: findMistakes flags a wrong mark
-
-- **WHEN** the player marks a cell that is blank in the solution and Check &
-  Save runs
-- **THEN** `findMistakes` returns that cell
-- **AND** a correctly-marked board returns no mistakes
-
-### Requirement: A Mosaic number reads over whatever its cell holds
-
-A cell's number SHALL be drawn over whatever the cell holds and SHALL read
-against it in both color schemes: on the shaded piece it is drawn in a color
-that does not invert with the scheme. A satisfied number SHALL be drawn
-fainter than an unsatisfied one on the piece and on the clear square, which
-are the two places it can be: on the clear square in the square's faint
-color, the cross's.
-
-#### Scenario: A satisfied number grays on the piece and off it
-
-- **WHEN** a satisfied number is drawn on a marked cell
-- **THEN** it is drawn in a different color from an unsatisfied number on a
-  marked cell
-- **AND** a satisfied number on a blank cell is drawn in a different color
-  from an unsatisfied number on a blank cell
-
-### Requirement: A contradicted Mosaic number is red, and a badge on the piece
-
-A contradicted number SHALL be drawn in the error color on bare surface. On
-the shaded piece and on the clear square it SHALL be drawn as a badge: a disc
-in the error color under the number.
-
-#### Scenario: A contradicted number on a marked cell
-
-- **WHEN** a marked cell's number has more marked cells around it than its
-  value
-- **THEN** a disc in the error color is drawn on the piece, and the number
-  over the disc
-
-#### Scenario: A contradicted number on a blank cell
-
-- **WHEN** a blank cell's number has more marked cells around it than its
-  value
-- **THEN** a disc in the error color is drawn on the clear square, and the
-  number over the disc
-
-### Requirement: Mosaic counts a board's answers by a bounded search
-
-The game SHALL count a board's answers up to two by trial and error over its
-deduction, assuming an undecided square shaded and then clear where the
-deduction stops. It SHALL report one answer, several, none, or that it stopped
-at its budget, which SHALL be counted in positions and never in time. A square
-no number counts is free, so a board with one has several answers.
-
-#### Scenario: The search tells one answer from several and from none
-
-- **WHEN** the search runs on a 3×3 board the rule finishes, on a 5×5 with
-  one answer that the deduction does not reach, on a 3×3 with a lone 5 in the
-  middle and on a 3×3 whose corner counts none and whose middle counts nine
-- **THEN** it reports one answer for the first two, several for the third and
-  none for the fourth
-
-#### Scenario: A spent budget is neither answer
-
-- **WHEN** the search is given fewer positions than a board needs
-- **THEN** it reports that it stopped, and neither one answer nor several
-
-#### Scenario: The search agrees with a count that has no search in it
-
-- **WHEN** dealt boards from 3×3 to 5×5, the same with clues taken away and
-  the same with one clue changed are each counted by shading or clearing one
-  square at a time
-- **THEN** the search reports one answer exactly where one picture fits,
-  several where more do and none where none does
-
-### Requirement: Mosaic's rule says when a block cannot meet its number
-
-The deduction SHALL report a contradiction as soon as a number's block holds
-more shaded squares than the number, or too few squares that are not clear to
-reach it, whether or not every square of the block is decided. It SHALL report
-one as well where a number needs more shaded squares beyond another's need
-than it has empty squares outside the other's block.
-
-#### Scenario: A block goes wrong with squares still undecided
-
-- **WHEN** the search is given one position to try on a 3×3 board whose
-  corner is 4 and whose middle is 3, and on one whose corner is 0 and whose
-  middle is 6
-- **THEN** it reports no answer for each
-- **AND** on a 3×3 board with a lone 5 it reports that it stopped
-
-#### Scenario: Two numbers are wrong only together
-
-- **WHEN** the search is given one position to try on the 3×3 board `14g`, a
-  corner 1 beside a 4
-- **THEN** it reports no answer
-
-### Requirement: An Unreasonable Mosaic board has one answer that the rule does not reach
+### Requirement: Generation: An Unreasonable Mosaic board has one answer that the rule does not reach
 
 At Unreasonable the generator SHALL hide clues while the search still proves
 one answer within a budget of its own, and SHALL keep the board only when the
@@ -322,143 +252,7 @@ tries from every clue showing, which the smallest boards are dealt from.
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
-### Requirement: Mosaic rejects board shapes it cannot generate
-
-`validateParams` SHALL refuse, when a board is to be dealt at any difficulty,
-a board longer than the longest that is dealt at its shorter side, with a
-reason naming both. A board 20 or more across SHALL be dealt at any length
-within the tile limit. A description that is supplied SHALL NOT be held to the
-bound.
-
-#### Scenario: A long thin board is refused with a reason
-
-- **WHEN** a 3×21, a 5×31, an 8×51, a 101×12 and a 19×201 board are validated
-  for generation
-- **THEN** each is refused with a message naming its shorter side and that
-  side's greatest length
-- **AND** a 3×20, a 5×30, a 9×50, a 10×100, a 15×200 and a 20×500 board are
-  admitted
-
-#### Scenario: An existing long description still loads
-
-- **WHEN** a 3×400 board's params accompany a supplied description
-- **THEN** validation succeeds
-
-### Requirement: Mosaic's hint stops where the rule does
-
-The hint SHALL never run the search. Its plan SHALL hold the steps the
-deduction forces from the player's marks, one number at a time and then two
-numbers compared, and no others, and where nothing is forced it SHALL refuse
-with the collection's sentence that deduction has run out. It SHALL go on from
-the squares the player then marks.
-
-#### Scenario: The hint stops, and goes on from a square tried rightly
-
-- **WHEN** the hint is followed on an Unreasonable board until it refuses
-- **THEN** the board is unfinished and holds no mistake, and the refusal is the
-  collection's sentence that deduction has run out
-- **AND** a square marked wrongly there is reported by the mistake check
-- **AND** with a square marked as the solution has it wherever the hint
-  stops, the hint finishes the board
-
-### Requirement: Mosaic's deduction compares two numbers whose blocks overlap
-
-Where no number decides a square alone, the board-side solver SHALL compare
-each two numbers whose blocks overlap. Where one still needs as many more
-shaded squares than the other as it has empty squares outside the other's
-block, those squares SHALL be shaded. Where the two need the same and the
-first has no empty square outside the other's block, the other's empty squares
-outside the first's SHALL be clear. A number SHALL be compared only where no
-number decides anything alone.
-
-#### Scenario: A number needs more than its neighbor by all it has outside
-
-- **WHEN** the deduction runs on the 3×3 board `13g`, a corner 1 beside a 3
-- **THEN** it shades the 3's two squares outside the 1's block, and stops
-
-#### Scenario: A number inside another's block needs as many
-
-- **WHEN** the deduction runs on the 3×3 board `22g`, a corner 2 beside a 2
-- **THEN** it clears the second 2's two squares outside the corner's block
-
-#### Scenario: A board one number at a time does not finish
-
-- **WHEN** the 5×5 board `0b4c4b4a6a3d3a2c` is solved
-- **THEN** the solver finishes it, where upstream's rule alone stops short
-
-### Requirement: Mosaic's hint says a comparison of two numbers
-
-A hint step that compares two numbers SHALL name both by their values, and by
-where each sits where the values are equal. It SHALL circle each number,
-outline each number's block whole, and ring the squares it decides, which
-only one of the two counts. A step that shades SHALL say how many more the
-first needs than the second and that it has only that many empty squares
-outside the second's block. A step that clears SHALL say that both need the
-same.
-
-#### Scenario: The ringed squares belong to one block only
-
-- **WHEN** a step that shades by comparison is shown
-- **THEN** every ringed square is in the first number's block and outside the
-  other's, and both blocks' perimeters are drawn
-
-#### Scenario: Two 7s side by side
-
-- **WHEN** a step compares two 7s in one row
-- **THEN** it says "The left 7 still needs 2 more purple squares than the
-  right 7, and only 2 of its empty squares are outside the right 7's block, so
-  these squares must be purple.", or the same with left and right exchanged
-
-### Requirement: One Mosaic number alone settles its block
-
-A number whose block already holds as many shaded squares as it counts SHALL
-make every empty square of the block clear. A number whose block holds only
-as many squares that are not clear as it counts SHALL make every empty square
-of the block shaded. The hint step SHALL circle the number, outline its block
-and ring the squares it decides, and SHALL say of a 0 that it allows no shaded
-squares and of a number equal to its block's size that it needs all of them.
-
-#### Scenario: The three sentences of a small board
-
-- **WHEN** the hint's plan is read on the 3×3 board `d7a2a4`
-- **THEN** it says "This 4 needs all 4 of its squares purple, so these squares
-  must be purple.", then "This 2 already has its 2 purple squares, so these
-  squares must be clear.", then "This 7 needs 7 purple squares, and only 7 of
-  its squares are not clear, so these squares must be purple."
-
-#### Scenario: A number on a shaded square
-
-- **WHEN** the number a step names sits on a shaded square
-- **THEN** its circle is drawn in the color of the number
-
-### Requirement: Mosaic's hint asks the numbers in reading order, and the nearest pair first
-
-The plan SHALL ask every number once in reading order, and SHALL ask a number
-again, after those already waiting, each time a square of its block is
-decided. Where the numbers alone decide nothing, each number in turn SHALL be
-compared with the numbers whose blocks overlap its own, the nearest first, a
-number beside it before one two squares away, and the first comparison that
-decides a square SHALL be the step.
-
-#### Scenario: The first number that decides is not the first number
-
-- **WHEN** the hint is asked on the 3×3 board `d7a2a4`, whose 7 and 2 come
-  before its 4 in reading order and decide nothing as dealt
-- **THEN** the first step is the 4's
-
-### Requirement: The Mosaic status bar counts the numbers left
-
-The status bar SHALL read `Clues left: {n}`, counting the shown numbers that
-are not yet met with every square of their block decided, and SHALL be empty
-once none is left.
-
-#### Scenario: A board as dealt
-
-- **WHEN** the 3×3 board `d7a2a4` is opened
-- **THEN** the status bar reads "Clues left: 3"
-- **AND** it is empty once the hint's three steps are played
-
-### Requirement: A Normal Mosaic board needs a comparison and no search
+### Requirement: Generation: A Normal Mosaic board needs a comparison and no search
 
 At Normal the generator SHALL hide clues of an Easy board while the deduction,
 two numbers compared included, still finishes it, and SHALL keep the board
@@ -486,35 +280,7 @@ of its numbers.
 - **THEN** it reaches the solution without refusing, and some of its steps
   compare two numbers
 
-### Requirement: Aggressive generation above Easy is bounded on its own measurements
-
-`validateParams` SHALL refuse, when a board is to be dealt, a Normal or an
-Unreasonable board of more than 900 squares with aggressive generation on,
-with a reason that names the difficulty and says to turn it off. The same size
-SHALL be dealt at Easy, and at either higher difficulty with aggressive
-generation off.
-
-#### Scenario: A size dealt at Easy is refused above it with aggressive generation
-
-- **WHEN** a 31×30 board is checked for dealing at Normal and at Unreasonable,
-  and a 50×50 board at Unreasonable
-- **THEN** each is refused with aggressive generation on
-- **AND** each is admitted at Easy, and at its own difficulty with it off
-
-### Requirement: Mosaic's menu offers its middle sizes at every difficulty
-
-Mosaic's presets SHALL offer 10×10, 15×15 and 25×25 as Easy, Normal and
-Unreasonable, and 3×3, 5×5 and 50×50 as Easy alone, so that the menu is one
-section. The default SHALL be an Easy 10×10. Every size SHALL be dealt at
-every difficulty from the Custom dialog.
-
-#### Scenario: The smallest board is on the menu once
-
-- **WHEN** Mosaic's preset menu is read
-- **THEN** 3×3 appears as Easy and at no other difficulty
-- **AND** a Normal and an Unreasonable 3×3 board are each dealt when asked for
-
-### Requirement: A pasted Mosaic board opens at the lowest difficulty that solves it
+### Requirement: Generation: A pasted Mosaic board opens at the lowest difficulty that solves it
 
 A board that arrives as a game ID SHALL open as Easy where one number at a
 time finishes it, as Normal where two numbers compared do, and as
@@ -545,7 +311,241 @@ each other.
 - **THEN** the first two open as Normal, and the third keeps the difficulty
   it was saved at
 
-### Requirement: A blank Mosaic cell's number has the clear square to itself
+### Requirement: Solver: Mosaic's Solve applies the deduced solution
+
+The Solve command SHALL take the board's one answer from the search that
+counts its answers, at any difficulty, and apply the full solution, its
+cells flagged solved. It SHALL fail with an error when the search did not
+prove exactly one answer, saying which where it proved several or none.
+
+#### Scenario: Solve completes the board
+
+- **WHEN** the Solve command runs on a generated board of any difficulty
+- **THEN** every cell is determined and the board is solved
+
+### Requirement: Solver: Mosaic counts a board's answers by a bounded search
+
+The game SHALL count a board's answers up to two by trial and error over its
+deduction, assuming an undecided square shaded and then clear where the
+deduction stops. It SHALL report one answer, several, none, or that it stopped
+at its budget, which SHALL be counted in positions and never in time. A square
+no number counts is free, so a board with one has several answers.
+
+#### Scenario: The search tells one answer from several and from none
+
+- **WHEN** the search runs on a 3×3 board the rule finishes, on a 5×5 with
+  one answer that the deduction does not reach, on a 3×3 with a lone 5 in the
+  middle and on a 3×3 whose corner counts none and whose middle counts nine
+- **THEN** it reports one answer for the first two, several for the third and
+  none for the fourth
+
+#### Scenario: A spent budget is neither answer
+
+- **WHEN** the search is given fewer positions than a board needs
+- **THEN** it reports that it stopped, and neither one answer nor several
+
+#### Scenario: The search agrees with a count that has no search in it
+
+- **WHEN** dealt boards from 3×3 to 5×5, the same with clues taken away and
+  the same with one clue changed are each counted by shading or clearing one
+  square at a time
+- **THEN** the search reports one answer exactly where one picture fits,
+  several where more do and none where none does
+
+### Requirement: Solver: Mosaic's rule says when a block cannot meet its number
+
+The deduction SHALL report a contradiction as soon as a number's block holds
+more shaded squares than the number, or too few squares that are not clear to
+reach it, whether or not every square of the block is decided. It SHALL report
+one as well where a number needs more shaded squares beyond another's need
+than it has empty squares outside the other's block.
+
+#### Scenario: A block goes wrong with squares still undecided
+
+- **WHEN** the search is given one position to try on a 3×3 board whose
+  corner is 4 and whose middle is 3, and on one whose corner is 0 and whose
+  middle is 6
+- **THEN** it reports no answer for each
+- **AND** on a 3×3 board with a lone 5 it reports that it stopped
+
+#### Scenario: Two numbers are wrong only together
+
+- **WHEN** the search is given one position to try on the 3×3 board `14g`, a
+  corner 1 beside a 4
+- **THEN** it reports no answer
+
+### Requirement: Solver: Mosaic's deduction compares two numbers whose blocks overlap
+
+Where no number decides a square alone, the board-side solver SHALL compare
+each two numbers whose blocks overlap. Where one still needs as many more
+shaded squares than the other as it has empty squares outside the other's
+block, those squares SHALL be shaded. Where the two need the same and the
+first has no empty square outside the other's block, the other's empty squares
+outside the first's SHALL be clear. A number SHALL be compared only where no
+number decides anything alone.
+
+#### Scenario: A number needs more than its neighbor by all it has outside
+
+- **WHEN** the deduction runs on the 3×3 board `13g`, a corner 1 beside a 3
+- **THEN** it shades the 3's two squares outside the 1's block, and stops
+
+#### Scenario: A number inside another's block needs as many
+
+- **WHEN** the deduction runs on the 3×3 board `22g`, a corner 2 beside a 2
+- **THEN** it clears the second 2's two squares outside the corner's block
+
+#### Scenario: A board one number at a time does not finish
+
+- **WHEN** the 5×5 board `0b4c4b4a6a3d3a2c` is solved
+- **THEN** the solver finishes it, where upstream's rule alone stops short
+
+### Requirement: Controls: A Mosaic press toggles a cell and a drag repeats it
+
+A pointer press SHALL toggle the cell it lands on, and a drag on from it SHALL
+be the engine's sweep over the cells holding the mark the pressed cell held: a
+drag from an unmarked cell lays a mark and a drag from a marked cell clears
+marks. Once the board is complete, the game SHALL accept only cursor movement.
+
+#### Scenario: A drag from a marked cell clears marks
+
+- **WHEN** the player presses a marked cell with the primary button and drags
+  across a marked cell and an unmarked cell
+- **THEN** both marked cells become blank and the unmarked cell is left as it
+  was
+
+#### Scenario: A finished board takes no click
+
+- **WHEN** the board is complete and the player clicks a cell
+- **THEN** no move is made
+- **AND** an arrow key still moves the cursor
+
+### Requirement: Hint: Mosaic's hint stops where the rule does
+
+The hint SHALL never run the search. Its plan SHALL hold the steps the
+deduction forces from the player's marks, one number at a time and then two
+numbers compared, and no others, and where nothing is forced it SHALL refuse
+with the collection's sentence that deduction has run out. It SHALL go on from
+the squares the player then marks.
+
+#### Scenario: The hint stops, and goes on from a square tried rightly
+
+- **WHEN** the hint is followed on an Unreasonable board until it refuses
+- **THEN** the board is unfinished and holds no mistake, and the refusal is the
+  collection's sentence that deduction has run out
+- **AND** a square marked wrongly there is reported by the mistake check
+- **AND** with a square marked as the solution has it wherever the hint
+  stops, the hint finishes the board
+
+### Requirement: Hint: Mosaic's hint says a comparison of two numbers
+
+A hint step that compares two numbers SHALL name both by their values, and by
+where each sits where the values are equal. It SHALL circle each number,
+outline each number's block whole, and ring the squares it decides, which
+only one of the two counts. A step that shades SHALL say how many more the
+first needs than the second and that it has only that many empty squares
+outside the second's block. A step that clears SHALL say that both need the
+same.
+
+#### Scenario: The ringed squares belong to one block only
+
+- **WHEN** a step that shades by comparison is shown
+- **THEN** every ringed square is in the first number's block and outside the
+  other's, and both blocks' perimeters are drawn
+
+#### Scenario: Two 7s side by side
+
+- **WHEN** a step compares two 7s in one row
+- **THEN** it says "The left 7 still needs 2 more purple squares than the
+  right 7, and only 2 of its empty squares are outside the right 7's block, so
+  these squares must be purple.", or the same with left and right exchanged
+
+### Requirement: Hint: One Mosaic number alone settles its block
+
+A number whose block already holds as many shaded squares as it counts SHALL
+make every empty square of the block clear. A number whose block holds only
+as many squares that are not clear as it counts SHALL make every empty square
+of the block shaded. The hint step SHALL circle the number, outline its block
+and ring the squares it decides, and SHALL say of a 0 that it allows no shaded
+squares and of a number equal to its block's size that it needs all of them.
+
+#### Scenario: The three sentences of a small board
+
+- **WHEN** the hint's plan is read on the 3×3 board `d7a2a4`
+- **THEN** it says "This 4 needs all 4 of its squares purple, so these squares
+  must be purple.", then "This 2 already has its 2 purple squares, so these
+  squares must be clear.", then "This 7 needs 7 purple squares, and only 7 of
+  its squares are not clear, so these squares must be purple."
+
+#### Scenario: A number on a shaded square
+
+- **WHEN** the number a step names sits on a shaded square
+- **THEN** its circle is drawn in the color of the number
+
+### Requirement: Hint: Mosaic's hint asks the numbers in reading order, and the nearest pair first
+
+The plan SHALL ask every number once in reading order, and SHALL ask a number
+again, after those already waiting, each time a square of its block is
+decided. Where the numbers alone decide nothing, each number in turn SHALL be
+compared with the numbers whose blocks overlap its own, the nearest first, a
+number beside it before one two squares away, and the first comparison that
+decides a square SHALL be the step.
+
+#### Scenario: The first number that decides is not the first number
+
+- **WHEN** the hint is asked on the 3×3 board `d7a2a4`, whose 7 and 2 come
+  before its 4 in reading order and decide nothing as dealt
+- **THEN** the first step is the 4's
+
+### Requirement: Status bar: The Mosaic status bar counts the numbers left
+
+The status bar SHALL read `Clues left: {n}`, counting the shown numbers that
+are not yet met with every square of their block decided, and SHALL be empty
+once none is left.
+
+#### Scenario: A board as dealt
+
+- **WHEN** the 3×3 board `d7a2a4` is opened
+- **THEN** the status bar reads "Clues left: 3"
+- **AND** it is empty once the hint's three steps are played
+
+### Requirement: Look: A Mosaic number reads over whatever its cell holds
+
+A cell's number SHALL be drawn over whatever the cell holds and SHALL read
+against it in both color schemes: on the shaded piece it is drawn in a color
+that does not invert with the scheme. A satisfied number SHALL be drawn
+fainter than an unsatisfied one on the piece and on the clear square, which
+are the two places it can be: on the clear square in the square's faint
+color, the cross's.
+
+#### Scenario: A satisfied number grays on the piece and off it
+
+- **WHEN** a satisfied number is drawn on a marked cell
+- **THEN** it is drawn in a different color from an unsatisfied number on a
+  marked cell
+- **AND** a satisfied number on a blank cell is drawn in a different color
+  from an unsatisfied number on a blank cell
+
+### Requirement: Look: A contradicted Mosaic number is red, and a badge on the piece
+
+A contradicted number SHALL be drawn in the error color on bare surface. On
+the shaded piece and on the clear square it SHALL be drawn as a badge: a disc
+in the error color under the number.
+
+#### Scenario: A contradicted number on a marked cell
+
+- **WHEN** a marked cell's number has more marked cells around it than its
+  value
+- **THEN** a disc in the error color is drawn on the piece, and the number
+  over the disc
+
+#### Scenario: A contradicted number on a blank cell
+
+- **WHEN** a blank cell's number has more marked cells around it than its
+  value
+- **THEN** a disc in the error color is drawn on the clear square, and the
+  number over the disc
+
+### Requirement: Look: A blank Mosaic cell's number has the clear square to itself
 
 A blank cell that has no number SHALL carry the clear square's faint cross in
 its middle. A blank cell that has a number SHALL carry no cross.
@@ -562,7 +562,7 @@ its middle. A blank cell that has a number SHALL carry no cross.
 - **THEN** a cross in the clear square's faint color is drawn about the
   middle of the cell
 
-### Requirement: Mosaic's win flash fills the ground of a cell
+### Requirement: Look: Mosaic's win flash fills the ground of a cell
 
 The win flash SHALL sweep the board's cells from the bottom left to the top
 right. A lit cell's ground SHALL be filled with a flash color in place of
@@ -575,7 +575,7 @@ holds: its piece, its cross and its number.
 - **THEN** the cell is filled with a flash color and still carries its
   faint cross
 
-### Requirement: Mosaic draws a marked cell as a piece and a blank cell as the clear square
+### Requirement: Look: Mosaic draws a marked cell as a piece and a blank cell as the clear square
 
 `redraw` SHALL draw a marked cell as the collection's shaded piece, inset on
 the plain cell surface, a blank cell as the collection's clear square, a

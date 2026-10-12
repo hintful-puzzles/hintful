@@ -9,7 +9,108 @@ those marks, and the hint that fills the row and suggests a guess.
 
 ## Requirements
 
-### Requirement: Guess's parameters
+### Requirement: Rules: A Guess move is a submitted row or a set of marks
+
+A `GuessMove` SHALL be a guess submission carrying the working row's pegs and
+holds (`{ type: "guess", pegs, holds }`), or a set of answer-row marks. Solve
+SHALL submit the answer as the next guess, which wins.
+
+#### Scenario: Solve plays the answer
+
+- **WHEN** the move `solve` returns is executed on a board in play
+- **THEN** `status()` returns `"solved"` and the source state is unmutated
+
+### Requirement: Rules: Guess scores submitted rows with Knuth feedback
+
+A guess submission SHALL validate each peg against
+`[allowBlank ? 0 : 1, ncolors]`, then mark the row with Knuth's feedback:
+`nc_place` exact-position matches (black) and
+`nc_colour = Σ_color min(#guess, #solution) − nc_place` color-only matches
+(white). It SHALL store that feedback on the row, then advance to the next row
+unless every peg is in the correct place.
+
+#### Scenario: Feedback counts black then white pegs
+
+- **WHEN** a row with two pegs in the correct place and one further peg of a
+  color present elsewhere in the solution is submitted
+- **THEN** the feedback contains exactly two correct-place markers followed by
+  one correct-color marker, and the source state is unmutated
+
+#### Scenario: A blank peg is refused where blanks are off
+
+- **WHEN** a guess move carrying an empty peg is executed in a game with
+  `allowBlank: false`
+- **THEN** `executeMove` throws
+
+### Requirement: Rules: Guess is won or lost by the rows on the board
+
+Guess SHALL be a Mastermind clone: the player deduces a hidden combination of
+`npegs` color pegs drawn from `ncolors` colors within `nguesses` guess rows. The
+game SHALL be won when the last submitted row has every peg in the correct
+place, and lost, with the solution revealed, when the rows are exhausted
+without a win.
+
+#### Scenario: A correct guess wins
+
+- **WHEN** the submitted row equals the solution
+- **THEN** the row's feedback is all correct-place, and `status()` returns
+  `"solved"`
+
+#### Scenario: Exhausting the rows loses and reveals
+
+- **WHEN** the final available row is submitted without matching the solution
+- **THEN** `status()` returns `"lost"` and the solution becomes visible
+
+### Requirement: Rules: A row is submittable only when it is markable
+
+A row SHALL be submittable (`markable`) only when enough pegs are filled (all,
+unless `allowBlank`) and, when `allowMultiple` is false, no color repeats.
+
+#### Scenario: Submit is only offered for a markable row
+
+- **WHEN** the working row has fewer filled pegs than required
+- **THEN** `isMarkable` is false and a submit attempt produces no guess move
+
+### Requirement: Rules: A mark is state, set by a move
+
+A slot's ruled-out colors SHALL be part of the state (`ruledOut`, a bitmask per
+slot), changed by a mark move that sets each named mark to ruled out or not
+rather than toggling it, so that a mark undoes, replays from the move log, and
+can be placed by a hint step idempotently.
+
+#### Scenario: The same mark move twice
+
+- **WHEN** a mark move ruling color 5 out of the third slot is executed, and
+  then executed again
+- **THEN** color 5 is ruled out of the third slot after each
+
+### Requirement: Rules: Guess checks the answer row's rule-outs against the code
+
+Guess's `findMistakes` SHALL report each answer slot whose rule-out marks include
+the code's color in that slot, as the slot alone, never the color, and nothing
+once the game is over. It SHALL NOT read the guess rows, scored or in progress,
+and SHALL NOT report any other mark. The mistake SHALL be drawn as a frame in the
+error color in the margin round the slot's well, and SHALL repaint when it comes
+and when it goes.
+
+#### Scenario: A rule-out of the code's own color
+
+- **WHEN** the player rules out of a slot the color the code has there, and runs
+  Check & Save
+- **THEN** that slot is framed as a mistake and the board is not saved
+
+#### Scenario: Every color ruled out
+
+- **WHEN** every color is ruled out of a slot
+- **THEN** that slot is reported, since one of those colors is the code's
+
+#### Scenario: A guess that is not the code
+
+- **WHEN** the player has submitted rows that are not the code, and no slot rules
+  out its own color
+- **THEN** `findMistakes` reports nothing
+
+### Requirement: Params: Guess's parameters
 
 Params SHALL be `ncolors`, `npegs`, `nguesses`, `allowBlank` and
 `allowMultiple`, encoded `c{ncolors}p{npegs}g{nguesses}{b|B}{m|M}`. Decoding
@@ -22,7 +123,7 @@ SHALL read the fields in any order and SHALL refuse any other character.
 - **THEN** the result is `c8p5g12Bm`
 - **AND** decoding `c8p5g12Bm` round-trips those params
 
-### Requirement: Guess refuses params no board can be dealt for
+### Requirement: Params: Guess refuses params no board can be dealt for
 
 The `paramConfig` bounds SHALL hold `ncolors` to 2 through 10, `npegs` to at
 least 2 and `nguesses` to at least 1, so that the engine refuses a value outside
@@ -40,7 +141,21 @@ them. `validateParams` SHALL reject `allowMultiple = false` with
 - **WHEN** the engine's params check is given `ncolors: 11`
 - **THEN** it returns a refusal that names the Colors field
 
-### Requirement: Guess descriptions are obfuscated solution bitmaps
+### Requirement: Params: Standard and Super are Guess's two named boards
+
+The preset titled Standard SHALL be six colors, four pegs and ten guesses,
+with no blanks and with repeats allowed, and the preset titled Super eight
+colors, five pegs and twelve guesses on the same terms. Any other board SHALL
+be titled by its params.
+
+#### Scenario: The two names
+
+- **WHEN** the presets are listed
+- **THEN** `c6p4g10Bm` is titled `Standard` and `c8p5g12Bm` is titled `Super`
+- **AND** `c6p4g10BM`, Standard without repeats, is titled `4x10, 6 colors, no
+  duplicates`
+
+### Requirement: Description: Guess descriptions are obfuscated solution bitmaps
 
 `newDesc` SHALL draw a random color sequence, each peg uniformly from
 `1..ncolors` and redrawn on a repeat when `allowMultiple` is false, encode it as
@@ -67,59 +182,7 @@ of the wrong length, one whose bytes fall outside `1..ncolors`, and, when
   to a game with `allowMultiple: false`
 - **THEN** it is refused as repeating a color
 
-### Requirement: A Guess move is a submitted row or a set of marks
-
-A `GuessMove` SHALL be a guess submission carrying the working row's pegs and
-holds (`{ type: "guess", pegs, holds }`), or a set of answer-row marks. Solve
-SHALL submit the answer as the next guess, which wins.
-
-#### Scenario: Solve plays the answer
-
-- **WHEN** the move `solve` returns is executed on a board in play
-- **THEN** `status()` returns `"solved"` and the source state is unmutated
-
-### Requirement: Guess scores submitted rows with Knuth feedback
-
-A guess submission SHALL validate each peg against
-`[allowBlank ? 0 : 1, ncolors]`, then mark the row with Knuth's feedback:
-`nc_place` exact-position matches (black) and
-`nc_colour = Σ_color min(#guess, #solution) − nc_place` color-only matches
-(white). It SHALL store that feedback on the row, then advance to the next row
-unless every peg is in the correct place.
-
-#### Scenario: Feedback counts black then white pegs
-
-- **WHEN** a row with two pegs in the correct place and one further peg of a
-  color present elsewhere in the solution is submitted
-- **THEN** the feedback contains exactly two correct-place markers followed by
-  one correct-color marker, and the source state is unmutated
-
-#### Scenario: A blank peg is refused where blanks are off
-
-- **WHEN** a guess move carrying an empty peg is executed in a game with
-  `allowBlank: false`
-- **THEN** `executeMove` throws
-
-### Requirement: Guess is won or lost by the rows on the board
-
-Guess SHALL be a Mastermind clone: the player deduces a hidden combination of
-`npegs` color pegs drawn from `ncolors` colors within `nguesses` guess rows. The
-game SHALL be won when the last submitted row has every peg in the correct
-place, and lost, with the solution revealed, when the rows are exhausted
-without a win.
-
-#### Scenario: A correct guess wins
-
-- **WHEN** the submitted row equals the solution
-- **THEN** the row's feedback is all correct-place, and `status()` returns
-  `"solved"`
-
-#### Scenario: Exhausting the rows loses and reveals
-
-- **WHEN** the final available row is submitted without matching the solution
-- **THEN** `status()` returns `"lost"` and the solution becomes visible
-
-### Requirement: Guess offers one key per color
+### Requirement: Controls: Guess offers one key per color
 
 Guess SHALL offer an on-screen key for each of its colors, a Clear key, and a
 Submit key. Pressing a color key SHALL place that color in the working row and
@@ -133,7 +196,7 @@ when it is markable.
   submit key, with no pointer input anywhere in the sequence
 - **THEN** a guess move is committed
 
-### Requirement: A key acts whether or not the cursor is shown
+### Requirement: Controls: A key acts whether or not the cursor is shown
 
 Outside notes mode a color key or Clear SHALL act whether or not the cursor is
 shown, revealing it, and the Submit key SHALL act whether or not it is shown.
@@ -147,7 +210,7 @@ has never moved a cursor can fill a row by pressing colors alone.
 - **THEN** the color lands in the first slot and the cursor is shown on the
   second
 
-### Requirement: A color key wears its color and its digit
+### Requirement: Controls: A color key wears its color and its digit
 
 A key SHALL be painted in the color it enters (`KeyLabel.swatch`) and labeled
 with the digit it sends. The tenth color SHALL be the `'0'` key, not the `'a'`
@@ -161,7 +224,7 @@ game refuses.
 - **THEN** the tenth key sends `'0'` and the Clear and Submit keys are still the
   last two entries
 
-### Requirement: The Submit key is always offered and only the panel sends it
+### Requirement: Controls: The Submit key is always offered and only the panel sends it
 
 The Submit key SHALL carry a button code this frontend's key map does not send,
 so that the panel is its only emitter and it cannot collide with a bare-letter
@@ -174,7 +237,7 @@ line SHALL carry the refusal's reason (see "Guess says why a row will not go").
 - **WHEN** the Submit key is pressed on a fresh board with an empty working row
 - **THEN** no move and no UI update is produced
 
-### Requirement: Guess never submits a row on its own
+### Requirement: Controls: Guess never submits a row on its own
 
 Submitting SHALL NOT happen automatically when the last slot is filled. Undo
 cannot give a submitted row back, because `changedState` rebuilds the working
@@ -187,7 +250,7 @@ than a mistake to correct.
   Standard board
 - **THEN** no guess move is made and the cursor rests on the submit position
 
-### Requirement: A tap selects a peg of the working row
+### Requirement: Controls: A tap selects a peg of the working row
 
 A pointer release over a peg of the current row SHALL select that peg and leave
 notes mode, so that a row can be edited rather than only filled, and a
@@ -204,20 +267,7 @@ position is part of the guess.
 - **WHEN** a filled slot of the current row is tapped
 - **THEN** the slot keeps its color and the cursor is shown on that slot
 
-### Requirement: The board draws no palette column
-
-The board SHALL NOT draw a palette column: the key panel already says what a
-column of colors would. The board's width SHALL carry no term for a palette, and
-its height SHALL be that of the guess rows and the answer row, never the greater
-of the rows and a column.
-
-#### Scenario: The board has no palette to tap
-
-- **WHEN** the board is tapped to the left of the guess rows
-- **THEN** no move and no UI update is produced, and the working row is
-  unchanged
-
-### Requirement: The panel is the pointer's only way to choose a color
+### Requirement: Controls: The panel is the pointer's only way to choose a color
 
 A tap SHALL select a slot, of the working row or of the answer row (see "Guess
 marks an answer slot selected as a whole"), and never a color inside one. The
@@ -230,7 +280,7 @@ with the physical keyboard's digits.
 - **WHEN** an answer slot is tapped on the block of one of its colors
 - **THEN** the slot is selected, no mark move is made, and no peg is placed
 
-### Requirement: Guess's keyboard cursor is one-dimensional
+### Requirement: Controls: Guess's keyboard cursor is one-dimensional
 
 The keyboard cursor SHALL be one-dimensional: the peg the next color will fill,
 or, in notes mode, the answer slot the next mark goes in. `CURSOR_SELECT` SHALL
@@ -246,7 +296,7 @@ only by walking a list.
 - **THEN** notes mode is switched on by the first press and off by the second,
   and no move is made
 
-### Requirement: A hold stays off the panel
+### Requirement: Controls: A hold stays off the panel
 
 A peg's hold SHALL stay off the panel: a hold is a modifier on a peg rather than
 an element. It SHALL be reachable by a right click, by a long press on touch,
@@ -259,27 +309,7 @@ and by `CURSOR_SELECT2` at the cursor. Guess SHALL NOT declare
   pressed on it again
 - **THEN** the slot is held after the first press and not held after the second
 
-### Requirement: Guess says why a row will not go
-
-While the game is in play the status line SHALL name the guess in progress and
-the number available, and, when the working row cannot be submitted because a
-color repeats under `allowMultiple: false`, SHALL say so: a submit that is
-silently declined reads to a player as a broken key.
-
-#### Scenario: A repeat under no-duplicates is explained
-
-- **WHEN** the working row is filled with a repeated color in a game with
-  `allowMultiple: false`
-- **THEN** the submit key produces no move and the status line says that
-  repeated colors are not allowed
-
-#### Scenario: The explanation goes when the repeat does
-
-- **WHEN** the repeated color is replaced by one the row does not already hold
-- **THEN** the status line no longer mentions repeated colors and the submit key
-  produces a guess move
-
-### Requirement: Guess remembers a half-composed row across a save
+### Requirement: Controls: Guess remembers a half-composed row across a save
 
 Guess SHALL provide `encodeUi` and `decodeUi`, carrying the working row and the
 live holds, which replaying the move log cannot recover. The encoding SHALL be
@@ -300,7 +330,7 @@ cursor where the next color will go.
 - **WHEN** `decodeUi` is given a peg outside `1..ncolors`
 - **THEN** that slot is left empty and the rest of the row still decodes
 
-### Requirement: Guess leaves the hint letters to the app
+### Requirement: Controls: Guess leaves the hint letters to the app
 
 Guess SHALL NOT consume `'h'`, `'H'` or `'?'`, which reach the app's Hint
 command.
@@ -310,7 +340,7 @@ command.
 - **WHEN** `'h'`, `'H'` or `'?'` is pressed on a board in play
 - **THEN** `interpretMove` returns `null`
 
-### Requirement: A color lands in the selected slot, else the first empty one
+### Requirement: Controls: A color lands in the selected slot, else the first empty one
 
 A color the player enters SHALL land in the slot they have selected, and, when
 none is selected, in the first empty slot of the working row, because holds
@@ -332,7 +362,7 @@ after a transition.
   in a game with `allowMultiple: false`
 - **THEN** the cursor rests on that slot and not on the submit position
 
-### Requirement: A color is declined when the row is full and no slot is selected
+### Requirement: Controls: A color is declined when the row is full and no slot is selected
 
 A color SHALL be declined when the row is full and no slot is selected: there
 is nowhere for it to go, and overwriting a slot the player did not name would be
@@ -344,17 +374,7 @@ a guess about which one they meant.
   pressed
 - **THEN** no move and no UI update is produced and the row is unchanged
 
-### Requirement: A row is submittable only when it is markable
-
-A row SHALL be submittable (`markable`) only when enough pegs are filled (all,
-unless `allowBlank`) and, when `allowMultiple` is false, no color repeats.
-
-#### Scenario: Submit is only offered for a markable row
-
-- **WHEN** the working row has fewer filled pegs than required
-- **THEN** `isMarkable` is false and a submit attempt produces no guess move
-
-### Requirement: The working row lives in the Ui and is rebuilt only when the row changes
+### Requirement: Controls: The working row lives in the Ui and is rebuilt only when the row changes
 
 The working row, holds, cursor, label toggle and notes mode SHALL live in
 `GuessUi`; submitting holds SHALL carry held pegs into the next working row.
@@ -374,7 +394,7 @@ across a mark, which is a move too.
   an answer slot, and that mark is then undone
 - **THEN** the working row still holds both pegs after each
 
-### Requirement: Guess's pointer acts on the release
+### Requirement: Controls: Guess's pointer acts on the release
 
 A pointer action SHALL happen on the release, keyed on the button class rather
 than the left button specifically, and its press SHALL be declined; the hold
@@ -389,129 +409,7 @@ the right button SHALL still act as itself.
   released over the feedback pegs beside it
 - **THEN** the press is declined and the release produces a guess move
 
-### Requirement: Guess's hint places what the rows prove, then suggests a guess
-
-Guess SHALL provide `hint`, `hintKeepTrack` and `refreshHintStep`. The hint
-SHALL read nothing but the scored rows, never the hidden answer, so that two
-boards whose rows scored alike get the same plan. Its steps SHALL be of two
-kinds, in this order: marks, then a probe.
-
-#### Scenario: Two answers behind the same rows
-
-- **WHEN** two boards with different hidden answers hold the same scored rows
-  and the same marks
-- **THEN** the hint gives both the same plan
-
-### Requirement: A mark step places what one reading proves
-
-Each mark step SHALL place, as one mark move, the rule-outs that one one-row
-reading proves and the answer row does not yet show, narrated with the reading,
-with the row it reads striped, any answer slots it leans on outlined, and the
-colors it rules out framed. The hint SHALL derive its own rule-outs from the
-rows rather than read the player's, and SHALL NOT place a mark the board already
-has.
-
-#### Scenario: A row with no blacks is read as marks
-
-- **WHEN** repeats are off and the only scored row is `1, 2, 3, 4` with two
-  whites and no blacks
-- **THEN** the first step rules 1, 2, 3 and 4 out of the first, second, third
-  and fourth answer slots respectively, in one mark move
-
-#### Scenario: A mark the player made is not taught again
-
-- **WHEN** the player has already ruled 2 out of the second slot on that board
-- **THEN** the first step rules out the other three and not that one
-
-### Requirement: The hint's readings are sound
-
-The readings SHALL be sound: no answer that fits every scored row has a color
-the hint rules out of a slot. Soundness SHALL be checked by brute force over the
-whole answer space.
-
-#### Scenario: Every fitting answer survives the rule-outs
-
-- **WHEN** every answer that fits a board's scored rows is enumerated
-- **THEN** none of them has, in any slot, a color the hint rules out of that
-  slot
-
-### Requirement: Every plan ends with a probe that could win
-
-Every plan SHALL end with a guess that fits every score so far, with one color
-per slot framed, unless its search is out of reach (see the next requirement).
-Its sentence SHALL claim only what was counted: how many
-answers still fit, and the most the guess can leave whatever it scores. Those
-counts SHALL be checked against a recount. The probe SHALL be a function of the
-scored rows alone, so that a plan recomputed after anything but a guess names
-the same guess.
-
-#### Scenario: The plan ends in a guess that could win
-
-- **WHEN** a hint is asked on any board in play
-- **THEN** its last step is a guess move whose pegs fit every scored row
-
-### Requirement: Following the hint wins, and the hint refuses only a dead end
-
-On the presets a player who follows the hint SHALL win within the row limit,
-checked over every Standard answer. The hint SHALL refuse only once the game is
-over, or on a board so large that its search finds no fitting answer within its
-budget and no mark step is left. With mark steps left on such a board, the plan
-SHALL be those steps alone.
-
-#### Scenario: Following the hint wins
-
-- **WHEN** every Standard answer is played by applying the first step of a
-  freshly computed hint until the game ends
-- **THEN** every game is won within ten rows
-
-#### Scenario: A lost game has no hint
-
-- **WHEN** a hint is asked after the rows are exhausted
-- **THEN** the hint refuses, saying the game is over
-
-### Requirement: Guess draws an answer row of the colors still possible
-
-Guess SHALL draw an answer row below the guess rows while the game is in play,
-1.5 tiles tall: one slot per peg of the hidden combination, each a dark well
-divided into one cell per color, in keypad order and in the same place in every
-slot. A color still possible in a slot SHALL be a solid block inset in its
-cell, with no outline; a color ruled out of the slot SHALL be drawn as nothing.
-The reveal SHALL replace the row when the game ends.
-
-#### Scenario: A ruled-out color is drawn as nothing
-
-- **WHEN** the answer row is drawn on a fresh Standard board
-- **THEN** there is one block per color per slot, and a slot with a color ruled
-  out draws one block fewer
-
-### Requirement: The answer row's blocks stay legible
-
-The well SHALL be darker than every peg color in both color schemes, so that no
-block can sink into it and read as ruled out. The cell grid SHALL be the one
-giving the largest cell, fewest wasted cells among equals. A block SHALL be
-small enough never to read as a peg. With labels on, a block SHALL carry its
-color's digit.
-
-#### Scenario: Six colors in a slot
-
-- **WHEN** the answer row is drawn on a fresh Standard board
-- **THEN** each slot's cells are two across and three down, and each block is
-  under half a tile across
-
-### Requirement: A mark is state, set by a move
-
-A slot's ruled-out colors SHALL be part of the state (`ruledOut`, a bitmask per
-slot), changed by a mark move that sets each named mark to ruled out or not
-rather than toggling it, so that a mark undoes, replays from the move log, and
-can be placed by a hint step idempotently.
-
-#### Scenario: The same mark move twice
-
-- **WHEN** a mark move ruling color 5 out of the third slot is executed, and
-  then executed again
-- **THEN** color 5 is ruled out of the third slot after each
-
-### Requirement: Guess marks an answer slot selected as a whole
+### Requirement: Controls: Guess marks an answer slot selected as a whole
 
 Where the selection is SHALL decide what a color key does. A pointer release
 anywhere on an answer slot, its gap and margin included, SHALL select that slot
@@ -540,7 +438,7 @@ tap does.
 - **THEN** the press returns `null`, and the release shows the cursor on that
   slot with notes mode on and no color ruled out
 
-### Requirement: In notes mode a color key rules its color out
+### Requirement: Controls: In notes mode a color key rules its color out
 
 In notes mode a color key or digit SHALL rule its color out of the selected
 slot, or back in when it is already out, and Clear SHALL put every color back in
@@ -558,7 +456,7 @@ that slot. With no slot selected, both SHALL be declined.
   has never been shown, and a color key is pressed
 - **THEN** no move and no UI update is produced
 
-### Requirement: Notes mode is the engine's pencil mode
+### Requirement: Controls: Notes mode is the engine's pencil mode
 
 Notes mode SHALL be `GuessUi.pencilMode`, so that the engine supplies the Marks
 key and the pencil-mode indicator. In notes mode a shown cursor SHALL be drawn
@@ -580,66 +478,7 @@ column; the Marks key SHALL NOT itself show a hidden cursor.
 - **THEN** the frame is on the last answer slot, and a color key rules its
   color out of that slot
 
-### Requirement: A hint's marks on the answer row sit beside the content
-
-A hint's mark on a color SHALL be a thin frame in the gap beside its block,
-never a fill over it; a hint's evidence outline on a slot SHALL sit in the
-margin outside the well.
-
-#### Scenario: A color the hint rules out
-
-- **WHEN** a mark step is shown before its marks are placed
-- **THEN** each color it rules out is still drawn as its whole block, with a
-  frame round the block in the gap
-
-### Requirement: Guess checks the answer row's rule-outs against the code
-
-Guess's `findMistakes` SHALL report each answer slot whose rule-out marks include
-the code's color in that slot, as the slot alone, never the color, and nothing
-once the game is over. It SHALL NOT read the guess rows, scored or in progress,
-and SHALL NOT report any other mark. The mistake SHALL be drawn as a frame in the
-error color in the margin round the slot's well, and SHALL repaint when it comes
-and when it goes.
-
-#### Scenario: A rule-out of the code's own color
-
-- **WHEN** the player rules out of a slot the color the code has there, and runs
-  Check & Save
-- **THEN** that slot is framed as a mistake and the board is not saved
-
-#### Scenario: Every color ruled out
-
-- **WHEN** every color is ruled out of a slot
-- **THEN** that slot is reported, since one of those colors is the code's
-
-#### Scenario: A guess that is not the code
-
-- **WHEN** the player has submitted rows that are not the code, and no slot rules
-  out its own color
-- **THEN** `findMistakes` reports nothing
-
-### Requirement: Guess draws an empty hole as quiet surface
-
-`redraw` SHALL draw an empty peg hole, and an empty feedback hole, as the
-collection's cell surface inside a rim in the surface's grid line, so that the
-pegs are the color on the board and an empty hole is where a peg goes and no
-state of its own. The ten peg colors, the black and white feedback pegs, the
-wash that lights a row ready to be scored, the held-peg bar and the answer
-row's well SHALL keep their own colors.
-
-#### Scenario: An empty hole recedes
-
-- **WHEN** a board with rows not yet reached is drawn
-- **THEN** each of their holes is filled in the cell surface and rimmed in the
-  grid line
-- **AND** no empty hole is outlined in ink
-
-#### Scenario: A peg keeps its color and its outline
-
-- **WHEN** a row holds pegs
-- **THEN** each peg is filled in its own color and outlined in ink
-
-### Requirement: Guess's rub-out keys act on the row the frame is on
+### Requirement: Controls: Guess's rub-out keys act on the row the frame is on
 
 Outside notes mode the erase key SHALL clear the selected slot when it holds a
 color, and otherwise SHALL backspace: rub out the rightmost filled slot the
@@ -674,7 +513,7 @@ the erase key does in either mode, and in notes mode touch no peg.
   working row, and `d` is pressed
 - **THEN** the second peg of the working row is rubbed out
 
-### Requirement: L numbers the colors
+### Requirement: Controls: L numbers the colors
 
 `L` or `l` SHALL switch the color numbers on and off: with them on, every peg
 on the board, the revealed answer's included, and every block of the answer
@@ -689,7 +528,214 @@ off.
 - **THEN** the pegs of every row and of the revealed answer show their digits,
   and no move is made
 
-### Requirement: Guess's status bar counts the guesses and says how the game ended
+### Requirement: Hint: Guess's hint places what the rows prove, then suggests a guess
+
+Guess SHALL provide `hint`, `hintKeepTrack` and `refreshHintStep`. The hint
+SHALL read nothing but the scored rows, never the hidden answer, so that two
+boards whose rows scored alike get the same plan. Its steps SHALL be of two
+kinds, in this order: marks, then a probe.
+
+#### Scenario: Two answers behind the same rows
+
+- **WHEN** two boards with different hidden answers hold the same scored rows
+  and the same marks
+- **THEN** the hint gives both the same plan
+
+### Requirement: Hint: A mark step places what one reading proves
+
+Each mark step SHALL place, as one mark move, the rule-outs that one one-row
+reading proves and the answer row does not yet show, narrated with the reading,
+with the row it reads striped, any answer slots it leans on outlined, and the
+colors it rules out framed. The hint SHALL derive its own rule-outs from the
+rows rather than read the player's, and SHALL NOT place a mark the board already
+has.
+
+#### Scenario: A row with no blacks is read as marks
+
+- **WHEN** repeats are off and the only scored row is `1, 2, 3, 4` with two
+  whites and no blacks
+- **THEN** the first step rules 1, 2, 3 and 4 out of the first, second, third
+  and fourth answer slots respectively, in one mark move
+
+#### Scenario: A mark the player made is not taught again
+
+- **WHEN** the player has already ruled 2 out of the second slot on that board
+- **THEN** the first step rules out the other three and not that one
+
+### Requirement: Hint: The hint's readings are sound
+
+The readings SHALL be sound: no answer that fits every scored row has a color
+the hint rules out of a slot. Soundness SHALL be checked by brute force over the
+whole answer space.
+
+#### Scenario: Every fitting answer survives the rule-outs
+
+- **WHEN** every answer that fits a board's scored rows is enumerated
+- **THEN** none of them has, in any slot, a color the hint rules out of that
+  slot
+
+### Requirement: Hint: Every plan ends with a probe that could win
+
+Every plan SHALL end with a guess that fits every score so far, with one color
+per slot framed, unless its search is out of reach (see the next requirement).
+Its sentence SHALL claim only what was counted: how many
+answers still fit, and the most the guess can leave whatever it scores. Those
+counts SHALL be checked against a recount. The probe SHALL be a function of the
+scored rows alone, so that a plan recomputed after anything but a guess names
+the same guess.
+
+#### Scenario: The plan ends in a guess that could win
+
+- **WHEN** a hint is asked on any board in play
+- **THEN** its last step is a guess move whose pegs fit every scored row
+
+### Requirement: Hint: Following the hint wins, and the hint refuses only a dead end
+
+On the presets a player who follows the hint SHALL win within the row limit,
+checked over every Standard answer. The hint SHALL refuse only once the game is
+over, or on a board so large that its search finds no fitting answer within its
+budget and no mark step is left. With mark steps left on such a board, the plan
+SHALL be those steps alone.
+
+#### Scenario: Following the hint wins
+
+- **WHEN** every Standard answer is played by applying the first step of a
+  freshly computed hint until the game ends
+- **THEN** every game is won within ten rows
+
+#### Scenario: A lost game has no hint
+
+- **WHEN** a hint is asked after the rows are exhausted
+- **THEN** the hint refuses, saying the game is over
+
+### Requirement: Hint: A hint's marks on the answer row sit beside the content
+
+A hint's mark on a color SHALL be a thin frame in the gap beside its block,
+never a fill over it; a hint's evidence outline on a slot SHALL sit in the
+margin outside the well.
+
+#### Scenario: A color the hint rules out
+
+- **WHEN** a mark step is shown before its marks are placed
+- **THEN** each color it rules out is still drawn as its whole block, with a
+  frame round the block in the gap
+
+### Requirement: Hint: Three readings come from one scored row alone
+
+The hint SHALL rule every color of a row that scored nothing out of every
+slot, saying none of its colors can be in the answer. It SHALL rule each
+color of a row that scored no black pegs out of the slot it was guessed in,
+saying none can be where it was guessed. It SHALL rule every color a row does
+not hold out of every slot when every peg of the row scored, saying the
+answer can only use its colors. Each SHALL stripe the row and frame the
+colors it rules out.
+
+#### Scenario: A row that scored nothing
+
+- **WHEN** the only scored row is `1, 1, 2, 2` with no black and no white pegs
+- **THEN** the first step rules colors 1 and 2 out of all four answer slots,
+  and says the striped row scored nothing
+
+### Requirement: Hint: A score the settled slots account for rules out the rest
+
+A slot is settled when the rows prove it can hold one color only. Where the
+slots settled on a row's own pegs number as many as its black pegs, the hint
+SHALL rule the row's other pegs out of the slots they were guessed in. Where
+settled slots account for a row's whole score, it SHALL rule each color the
+row holds more of than they do out of every slot not settled on it. Each
+SHALL stripe the row and outline the settled slots.
+
+#### Scenario: A settled slot holds the row's one black
+
+- **WHEN** a row scored one black peg and a slot is already settled on the
+  color that row guessed there
+- **THEN** a step says the outlined slot accounts for the striped row's black
+  peg, so its other pegs are misplaced
+
+### Requirement: Hint: A settled color is out of the other slots, and forced blacks settle theirs
+
+Where repeats are off, the hint SHALL rule a settled slot's color out of
+every other slot, outlining the slot and reading no row. Where a row has
+exactly as many pegs still possible in the slots they were guessed in as it
+scored black, the hint SHALL settle each of those slots on its peg's color,
+outlining them and striping the row.
+
+#### Scenario: One black and one peg that can still be right
+
+- **WHEN** a row scored one black peg, and what the rows already prove leaves
+  only one of its pegs possible in the slot it was guessed in
+- **THEN** a step says the striped row's 1 black can only be in the outlined
+  slot, so that peg is right, and rules the slot's other remaining colors out
+  of it
+
+#### Scenario: The player's own marks are not leaned on
+
+- **WHEN** the player has ruled colors out of the answer row that the scored
+  rows do not prove are out
+- **THEN** no reading counts a slot as settled because of them
+
+### Requirement: Hint: Guess's readings are tried in one order
+
+The hint SHALL take, until none applies, the first reading in this order: a
+row that scored nothing, a row with no black pegs, a row whose every peg
+scored; then a settled color under no repeats; then blacks that can only be
+in certain slots, blacks already accounted for, and a whole score already
+accounted for. Within a reading it SHALL read the rows oldest first. Only
+when no reading applies SHALL it choose the guess.
+
+#### Scenario: Two rows, each with a reading
+
+- **WHEN** the first scored row has no black pegs and the second scored
+  nothing at all
+- **THEN** the first step reads the second row, since a row that scored
+  nothing is read before a row with no black pegs
+
+### Requirement: Hint: The suggested guess is said in one of four ways
+
+When one answer fits the scores, the step SHALL say so and give it as forced.
+With no row scored it SHALL say so and the most the guess can leave; with
+repeats on, that guess is two pegs of each color in turn from four pegs up,
+one of each below. Otherwise it SHALL say how many answers fit, that the
+framed colors are one, and the most the guess can leave. Answers too many to
+count, even on the first row, SHALL get the first guess that fits, offered
+only as one of those that can win.
+
+#### Scenario: The opening of a Standard board
+
+- **WHEN** a hint is asked on a fresh board under `c6p4g10Bm`
+- **THEN** its one step is the guess `1, 1, 2, 2`, and it reads `Nothing is
+  scored yet. Guess the framed colors: whatever they score, at most 256 of the
+  1296 answers will be left.`
+
+#### Scenario: A fresh board with too many answers to count
+
+- **WHEN** a hint is asked on a fresh board of ten colors and five pegs with
+  repeats allowed
+- **THEN** its one step is the guess `1, 1, 1, 1, 1`, and it reads `Only
+  guesses that fit every score so far can win. One of them: guess the framed
+  colors.`
+
+### Requirement: Status bar: Guess says why a row will not go
+
+While the game is in play the status line SHALL name the guess in progress and
+the number available, and, when the working row cannot be submitted because a
+color repeats under `allowMultiple: false`, SHALL say so: a submit that is
+silently declined reads to a player as a broken key.
+
+#### Scenario: A repeat under no-duplicates is explained
+
+- **WHEN** the working row is filled with a repeated color in a game with
+  `allowMultiple: false`
+- **THEN** the submit key produces no move and the status line says that
+  repeated colors are not allowed
+
+#### Scenario: The explanation goes when the repeat does
+
+- **WHEN** the repeated color is replaced by one the row does not already hold
+- **THEN** the status line no longer mentions repeated colors and the submit key
+  produces a guess move
+
+### Requirement: Status bar: Guess's status bar counts the guesses and says how the game ended
 
 While the game is in play the status bar SHALL read `Guess N of M`, N being
 the row being composed and M the rows allowed, followed by `: ready to
@@ -719,116 +765,70 @@ revealed.`
 - **THEN** the status bar reads `Out of guesses: the answer is revealed.`,
   with no word of the engine's before it
 
-### Requirement: Standard and Super are Guess's two named boards
+### Requirement: Look: The board draws no palette column
 
-The preset titled Standard SHALL be six colors, four pegs and ten guesses,
-with no blanks and with repeats allowed, and the preset titled Super eight
-colors, five pegs and twelve guesses on the same terms. Any other board SHALL
-be titled by its params.
+The board SHALL NOT draw a palette column: the key panel already says what a
+column of colors would. The board's width SHALL carry no term for a palette, and
+its height SHALL be that of the guess rows and the answer row, never the greater
+of the rows and a column.
 
-#### Scenario: The two names
+#### Scenario: The board has no palette to tap
 
-- **WHEN** the presets are listed
-- **THEN** `c6p4g10Bm` is titled `Standard` and `c8p5g12Bm` is titled `Super`
-- **AND** `c6p4g10BM`, Standard without repeats, is titled `4x10, 6 colors, no
-  duplicates`
+- **WHEN** the board is tapped to the left of the guess rows
+- **THEN** no move and no UI update is produced, and the working row is
+  unchanged
 
-### Requirement: Three readings come from one scored row alone
+### Requirement: Look: Guess draws an answer row of the colors still possible
 
-The hint SHALL rule every color of a row that scored nothing out of every
-slot, saying none of its colors can be in the answer. It SHALL rule each
-color of a row that scored no black pegs out of the slot it was guessed in,
-saying none can be where it was guessed. It SHALL rule every color a row does
-not hold out of every slot when every peg of the row scored, saying the
-answer can only use its colors. Each SHALL stripe the row and frame the
-colors it rules out.
+Guess SHALL draw an answer row below the guess rows while the game is in play,
+1.5 tiles tall: one slot per peg of the hidden combination, each a dark well
+divided into one cell per color, in keypad order and in the same place in every
+slot. A color still possible in a slot SHALL be a solid block inset in its
+cell, with no outline; a color ruled out of the slot SHALL be drawn as nothing.
+The reveal SHALL replace the row when the game ends.
 
-#### Scenario: A row that scored nothing
+#### Scenario: A ruled-out color is drawn as nothing
 
-- **WHEN** the only scored row is `1, 1, 2, 2` with no black and no white pegs
-- **THEN** the first step rules colors 1 and 2 out of all four answer slots,
-  and says the striped row scored nothing
+- **WHEN** the answer row is drawn on a fresh Standard board
+- **THEN** there is one block per color per slot, and a slot with a color ruled
+  out draws one block fewer
 
-### Requirement: A score the settled slots account for rules out the rest
+### Requirement: Look: The answer row's blocks stay legible
 
-A slot is settled when the rows prove it can hold one color only. Where the
-slots settled on a row's own pegs number as many as its black pegs, the hint
-SHALL rule the row's other pegs out of the slots they were guessed in. Where
-settled slots account for a row's whole score, it SHALL rule each color the
-row holds more of than they do out of every slot not settled on it. Each
-SHALL stripe the row and outline the settled slots.
+The well SHALL be darker than every peg color in both color schemes, so that no
+block can sink into it and read as ruled out. The cell grid SHALL be the one
+giving the largest cell, fewest wasted cells among equals. A block SHALL be
+small enough never to read as a peg. With labels on, a block SHALL carry its
+color's digit.
 
-#### Scenario: A settled slot holds the row's one black
+#### Scenario: Six colors in a slot
 
-- **WHEN** a row scored one black peg and a slot is already settled on the
-  color that row guessed there
-- **THEN** a step says the outlined slot accounts for the striped row's black
-  peg, so its other pegs are misplaced
+- **WHEN** the answer row is drawn on a fresh Standard board
+- **THEN** each slot's cells are two across and three down, and each block is
+  under half a tile across
 
-### Requirement: A settled color is out of the other slots, and forced blacks settle theirs
+### Requirement: Look: Guess draws an empty hole as quiet surface
 
-Where repeats are off, the hint SHALL rule a settled slot's color out of
-every other slot, outlining the slot and reading no row. Where a row has
-exactly as many pegs still possible in the slots they were guessed in as it
-scored black, the hint SHALL settle each of those slots on its peg's color,
-outlining them and striping the row.
+`redraw` SHALL draw an empty peg hole, and an empty feedback hole, as the
+collection's cell surface inside a rim in the surface's grid line, so that the
+pegs are the color on the board and an empty hole is where a peg goes and no
+state of its own. The ten peg colors, the black and white feedback pegs, the
+wash that lights a row ready to be scored, the held-peg bar and the answer
+row's well SHALL keep their own colors.
 
-#### Scenario: One black and one peg that can still be right
+#### Scenario: An empty hole recedes
 
-- **WHEN** a row scored one black peg, and what the rows already prove leaves
-  only one of its pegs possible in the slot it was guessed in
-- **THEN** a step says the striped row's 1 black can only be in the outlined
-  slot, so that peg is right, and rules the slot's other remaining colors out
-  of it
+- **WHEN** a board with rows not yet reached is drawn
+- **THEN** each of their holes is filled in the cell surface and rimmed in the
+  grid line
+- **AND** no empty hole is outlined in ink
 
-#### Scenario: The player's own marks are not leaned on
+#### Scenario: A peg keeps its color and its outline
 
-- **WHEN** the player has ruled colors out of the answer row that the scored
-  rows do not prove are out
-- **THEN** no reading counts a slot as settled because of them
+- **WHEN** a row holds pegs
+- **THEN** each peg is filled in its own color and outlined in ink
 
-### Requirement: Guess's readings are tried in one order
-
-The hint SHALL take, until none applies, the first reading in this order: a
-row that scored nothing, a row with no black pegs, a row whose every peg
-scored; then a settled color under no repeats; then blacks that can only be
-in certain slots, blacks already accounted for, and a whole score already
-accounted for. Within a reading it SHALL read the rows oldest first. Only
-when no reading applies SHALL it choose the guess.
-
-#### Scenario: Two rows, each with a reading
-
-- **WHEN** the first scored row has no black pegs and the second scored
-  nothing at all
-- **THEN** the first step reads the second row, since a row that scored
-  nothing is read before a row with no black pegs
-
-### Requirement: The suggested guess is said in one of four ways
-
-When one answer fits the scores, the step SHALL say so and give it as forced.
-With no row scored it SHALL say so and the most the guess can leave; with
-repeats on, that guess is two pegs of each color in turn from four pegs up,
-one of each below. Otherwise it SHALL say how many answers fit, that the
-framed colors are one, and the most the guess can leave. Answers too many to
-count, even on the first row, SHALL get the first guess that fits, offered
-only as one of those that can win.
-
-#### Scenario: The opening of a Standard board
-
-- **WHEN** a hint is asked on a fresh board under `c6p4g10Bm`
-- **THEN** its one step is the guess `1, 1, 2, 2`, and it reads `Nothing is
-  scored yet. Guess the framed colors: whatever they score, at most 256 of the
-  1296 answers will be left.`
-
-#### Scenario: A fresh board with too many answers to count
-
-- **WHEN** a hint is asked on a fresh board of ten colors and five pegs with
-  repeats allowed
-- **THEN** its one step is the guess `1, 1, 1, 1, 1`, and it reads `Only
-  guesses that fit every score so far can win. One of them: guess the framed
-  colors.`
-
-### Requirement: Guess's win flash sweeps the whole board
+### Requirement: Look: Guess's win flash sweeps the whole board
 
 The win flash SHALL sweep every peg position of the board diagonally: each
 guess row's, played or not, and the answer's, counted as the row under the

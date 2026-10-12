@@ -8,90 +8,7 @@ guess rests on its deterministic laser tracing.
 
 ## Requirements
 
-### Requirement: Black Box params are a size and a ball range
-
-Params SHALL be `w`, `h`, `minballs` and `maxballs`, encoded
-`w{w}h{h}m{minballs}M{maxballs}`. Decoding SHALL read the four letters in any
-order, a letter left out keeping its default, and SHALL refuse any other
-character.
-
-#### Scenario: Params round-trip and lenient decode
-
-- **WHEN** params `{ w: 8, h: 8, minballs: 3, maxballs: 6 }` are encoded
-- **THEN** the result is `w8h8m3M6`
-- **AND** decoding `w8h8m3M6` round-trips those params
-
-### Requirement: The type summary names the size and the ball count
-
-The preset and custom type summary SHALL read `{w}x{h}, {n} balls` for a fixed
-count, `{w}x{h}, {min}-{max} balls` for a range, and `ball` in the singular for
-a count of exactly one. Its ball count SHALL be the label of the params field
-whose keyword is `no-of-balls`, so the summary and the Custom dialog read one
-declaration.
-
-#### Scenario: The ball-count type summary reflects a range
-
-- **WHEN** params `w8h8m3M6` are described for the type summary
-- **THEN** the `no-of-balls` field reads `3-6` and the summary is
-  `8x8, 3-6 balls`
-- **AND** for `w8h8m5M5` the field reads `5` and the summary is `8x8, 5 balls`
-
-### Requirement: Black Box refuses params that cannot be played
-
-A `w` or an `h` below 2 or above 255 SHALL be refused, by the bounds the size
-fields declare. `validateParams` SHALL reject `minballs < 1`,
-`minballs > maxballs`, and `minballs >= w*h`.
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** `validateParams` is called with `minballs: 0`, or with
-  `minballs > maxballs`, or with `minballs >= w*h`
-- **THEN** it returns a non-null error string
-
-#### Scenario: A box too narrow
-
-- **WHEN** params with `w: 1` are checked
-- **THEN** they are refused
-
-### Requirement: Only a deal is bound by the ball limit
-
-`validateParams` SHALL reject `maxballs` above `ballLimit(w, h)`, and SHALL do
-so only when the params are about to deal a board. Params that arrive with
-their board SHALL NOT be held to the limit.
-
-#### Scenario: One ball past the limit
-
-- **WHEN** `validateParams` is given an 8×8 box whose `maxballs` is one more
-  than `ballLimit(8, 8)`, about to deal a board
-- **THEN** it returns a non-null error string
-- **AND** given the same params arriving with a board, it returns null
-
-### Requirement: Black Box descriptions are obfuscated ball-layout bitmaps
-
-A desc SHALL encode `[w, h, ball1x, ball1y, …]` as a byte-per-value bitmap,
-apply the shared `obfuscateBitmap` SHA-1 masking, and hex-encode the result
-(`encodeBalls`). `newState` SHALL recover the ball layout by hex-decoding and
-de-obfuscating the desc.
-
-#### Scenario: A description round-trips through obfuscation
-
-- **WHEN** a generated desc is decoded by `newState`
-- **THEN** the recovered ball cells are the balls the generator placed, as many
-  as the params allow
-
-### Requirement: A damaged Black Box description is refused
-
-The verdict on a desc SHALL reject one of wrong length, one whose de-obfuscated
-header mismatches `w` or `h`, and one whose ball coordinates fall outside the
-arena.
-
-#### Scenario: A corrupted description is rejected
-
-- **WHEN** a desc of the wrong length is validated, or one that de-obfuscates
-  to a ball outside the arena
-- **THEN** the verdict is a non-null error
-
-### Requirement: A laser's entry is judged before it moves
+### Requirement: Rules: A laser's entry is judged before it moves
 
 For a beam entering at a range cell in a given direction, the laser engine
 SHALL return an **instant hit** when a ball sits directly ahead of the entry
@@ -108,7 +25,7 @@ ahead-right of the entry cell. A hit SHALL be prioritized over a reflection.
 - **WHEN** a laser enters a cell with a ball diagonally ahead of the entry point
 - **THEN** the result is an instant reflection (the entry cell shows `R`)
 
-### Requirement: Black Box traces lasers through the arena deterministically
+### Requirement: Rules: Black Box traces lasers through the arena deterministically
 
 A beam that is neither an instant hit nor an instant reflection SHALL step
 forward, turning clockwise when a ball is ahead-left and anticlockwise when a
@@ -121,7 +38,7 @@ otherwise the exit range index.
 - **WHEN** a laser is fired across an arena with no ball in its path
 - **THEN** it exits at the opposite range cell
 
-### Requirement: A laser that exits numbers both its ends
+### Requirement: Rules: A laser that exits numbers both its ends
 
 A fired laser that neither hits nor reflects SHALL number its entry and exit
 cells with a shared incrementing laser number.
@@ -131,7 +48,7 @@ cells with a shared incrementing laser number.
 - **WHEN** a laser is fired across an arena with no ball in its path
 - **THEN** both the entry and exit cells carry the same laser number
 
-### Requirement: A ball toggle updates the guess count, and a locked cell takes none
+### Requirement: Rules: A ball toggle updates the guess count, and a locked cell takes none
 
 Toggling a ball SHALL update the guess count. A locked cell SHALL offer no ball
 toggle: the primary action on it makes no move.
@@ -147,7 +64,7 @@ toggle: the primary action on it makes no move.
 - **WHEN** the player clicks an arena cell that is locked
 - **THEN** no move is made
 
-### Requirement: A laser is fired once
+### Requirement: Rules: A laser is fired once
 
 `executeMove` SHALL reject firing a laser that is already fired.
 
@@ -157,7 +74,7 @@ toggle: the primary action on it makes no move.
 - **THEN** the new state's `exits` for that range index is no longer empty
 - **AND** a second fire on that range cell throws
 
-### Requirement: A reveal is gated on the ball count
+### Requirement: Rules: A reveal is gated on the ball count
 
 Revealing SHALL be allowed only when the guess count is within
 `[minballs, maxballs]`.
@@ -167,7 +84,7 @@ Revealing SHALL be allowed only when the guess count is within
 - **WHEN** the guess count is below `minballs`
 - **THEN** a reveal move is rejected (throws)
 
-### Requirement: A line lock follows the majority of its cells
+### Requirement: Rules: A line lock follows the majority of its cells
 
 A whole-column or whole-row lock SHALL unlock every cell of the line when more
 than half of them are locked, and otherwise lock every cell.
@@ -177,7 +94,7 @@ than half of them are locked, and otherwise lock every cell.
 - **WHEN** a row lock is applied to a row with exactly half its cells locked
 - **THEN** every cell of the row is locked
 
-### Requirement: A verify shows one laser that tells the guess from the answer
+### Requirement: Rules: A verify shows one laser that tells the guess from the answer
 
 The verify (reveal) move SHALL run `checkGuesses`, which compares the player's
 guessed layout with the real one by the lasers. When the player's already-fired
@@ -191,7 +108,7 @@ current grid, and set `justwrong` without revealing.
 - **THEN** `justwrong` is set, exactly one laser is flagged wrong, and the full
   layout is not revealed
 
-### Requirement: A guess no laser tells from the answer is accepted
+### Requirement: Rules: A guess no laser tells from the answer is accepted
 
 When no fired laser contradicts the guess and no un-fired laser would have
 distinguished the layouts, every laser goes where the real layout sends it, so
@@ -204,17 +121,7 @@ and reveal.
   verifies
 - **THEN** the arena is revealed and `status` returns `"solved"`
 
-### Requirement: Solve guesses the real balls and reveals
-
-Solve SHALL guess exactly the real balls and reveal.
-
-#### Scenario: Solve replaces the guesses with the answer
-
-- **WHEN** the player invokes Solve with some balls guessed wrongly
-- **THEN** the guesses become exactly the real balls, the arena is revealed, and
-  `status` returns `"solved"`
-
-### Requirement: Black Box verifies guesses, and a reveal is a win
+### Requirement: Rules: Black Box verifies guesses, and a reveal is a win
 
 `status` SHALL return `"solved"` when revealed and `"ongoing"` before. A reveal
 SHALL only ever be of a guess proven to be the answer, or Solve's, so a Black
@@ -226,7 +133,7 @@ the session error count, when there is one.
 - **WHEN** the player verifies the right balls, with no wrong verify before
 - **THEN** `status` returns `"solved"` and `statusbarText` is empty
 
-### Requirement: A wrong verify is counted for the session
+### Requirement: Rules: A wrong verify is counted for the session
 
 A wrong verify SHALL increment a session error counter shown in the status
 bar.
@@ -236,135 +143,7 @@ bar.
 - **WHEN** the player verifies a guess that a fired laser contradicts
 - **THEN** the session error counter increments and the status bar shows it
 
-### Requirement: Black Box's hint SHALL reason only from the lasers fired
-
-Black Box SHALL provide a `hint` that reads only what the player can see: the
-lasers fired, where they went and the marks on the box. It SHALL NOT read the
-hidden balls, so two boards whose balls send every fired laser the same way get
-the same plan.
-
-#### Scenario: The hint gives nothing away
-
-- **WHEN** a hidden ball is moved to another square and every fired laser still goes where it
-  went
-- **THEN** the hint's plan is unchanged
-
-### Requirement: The hint's steps only add marks
-
-The hint's steps SHALL only ever add marks. The midend asks it only about a
-board whose marks the check passes, so no mark it meets is wrong.
-
-#### Scenario: A board with marks on it
-
-- **WHEN** the hint is asked about a board with guessed balls and known squares
-  that the check passes
-- **THEN** no step takes a ball off or unmarks a known square
-
-### Requirement: A fired laser settles the first unsettled square on its path
-
-The hint SHALL settle a square by following a fired laser through the squares
-already settled to the first one nothing has settled, and concluding that the
-square holds what does not send the laser somewhere it did not go. A laser that
-came out at a numbered square SHALL be followed from either end.
-
-#### Scenario: A square a laser settles
-
-- **WHEN** a fired laser came out at its other numbered end, and a ball on the first unsettled
-  square along its path would keep any ray from running between those ends
-- **THEN** the step rings that square, outlines both ends, says the square must be empty, and
-  marks it known
-
-### Requirement: A settled square is shown by a mark, in one step
-
-A settled empty square SHALL be shown by marking it known and a settled ball by
-guessing it, in one step that rings the square and outlines the laser's ends.
-
-#### Scenario: A settled ball
-
-- **WHEN** a fired laser settles that a square holds a ball
-- **THEN** one step guesses a ball there, ringing the square and outlining the
-  ends of that laser
-
-### Requirement: When nothing more settles, the hint asks for a laser
-
-When no fired laser settles another square, the hint SHALL ask for a laser
-whose path still depends on unsettled squares.
-
-#### Scenario: Nothing settles
-
-- **WHEN** no fired laser settles a square and some laser's path still runs through unsettled
-  squares
-- **THEN** the step rings one such laser and asks the player to fire it
-
-### Requirement: With every laser fired, the hint offers a layout it searched for
-
-When every laser is fired and none settles a square on its own, the hint SHALL
-offer balls that send every laser where it went, found by a bounded search that
-keeps the player's marks. Past the search's budget it SHALL refuse with
-`SEARCH_OUT_OF_REACH`.
-
-#### Scenario: A search past its budget
-
-- **WHEN** every laser is fired, none settles a square on its own, and the
-  search runs past its budget
-- **THEN** the hint refuses with `SEARCH_OUT_OF_REACH`
-
-### Requirement: The hint ends by placing unreached balls and asking for a check
-
-Once every laser's path is settled by the balls on the board, the hint SHALL
-put any balls the count still requires on squares no laser reaches, and then
-ask the player to check the answer.
-
-#### Scenario: Following the hint wins
-
-- **WHEN** the player follows every step from a dealt board of any preset
-- **THEN** the answer is checked and accepted
-
-### Requirement: Black Box plays only boards with one answer
-
-A Black Box board's answers SHALL be the layouts, within the params' ball count,
-that send every laser, fired or not, where its real balls do. They SHALL be
-counted by the hint's own layout search with every laser fired, and the count
-SHALL agree with trying every layout on boards small enough to try.
-
-#### Scenario: A count against every layout
-
-- **WHEN** a board small enough to try every layout is counted
-- **THEN** the count says one answer exactly when trying every layout finds one
-
-### Requirement: A dealt board has one answer across its whole ball range
-
-`newDesc` SHALL deal only a board with one answer, judged against the params'
-whole range of ball counts.
-
-#### Scenario: A dealt board
-
-- **WHEN** a board is dealt for any preset
-- **THEN** its answer count is one
-
-### Requirement: A board with several answers does not load
-
-`solve` SHALL say `MULTIPLE_SOLUTIONS` for a board the count proves has several
-answers, so that such a board does not load.
-
-#### Scenario: Four corners hide the middle
-
-- **WHEN** a 3×3 game ID with balls on its four corners is opened under a count
-  of 4 to 5 balls
-- **THEN** it is refused as having more than one solution, and under a count of
-  exactly 4 it loads
-
-### Requirement: A count past its budget settles nothing
-
-A count of answers that runs past its budget SHALL settle nothing: the
-generator builds again, and a loaded board loads.
-
-#### Scenario: A loaded board the count cannot finish
-
-- **WHEN** a game ID is opened whose answer count runs past its budget
-- **THEN** `solve` does not say `MULTIPLE_SOLUTIONS` and the board loads
-
-### Requirement: Black Box checks marks against its answer
+### Requirement: Rules: Black Box checks marks against its answer
 
 Black Box SHALL implement `findMistakes`, reporting every guessed ball on a
 square with no ball and every square marked known that holds a ball, and
@@ -375,88 +154,90 @@ nothing once the answer is revealed.
 - **WHEN** every guess is on a ball and every known mark on an empty square
 - **THEN** `findMistakes` reports nothing
 
-### Requirement: A mistake is framed in the error color
+### Requirement: Params: Black Box params are a size and a ball range
 
-A mistake SHALL be drawn as a frame in the error color inside the square.
+Params SHALL be `w`, `h`, `minballs` and `maxballs`, encoded
+`w{w}h{h}m{minballs}M{maxballs}`. Decoding SHALL read the four letters in any
+order, a letter left out keeping its default, and SHALL refuse any other
+character.
 
-#### Scenario: Check & Save with a wrong guess
+#### Scenario: Params round-trip and lenient decode
 
-- **WHEN** the player runs Check & Save with a ball guessed on an empty square
-- **THEN** that square is framed as a mistake and the board is not saved
+- **WHEN** params `{ w: 8, h: 8, minballs: 3, maxballs: 6 }` are encoded
+- **THEN** the result is `w8h8m3M6`
+- **AND** decoding `w8h8m3M6` round-trips those params
 
-### Requirement: Black Box draws its balls as pieces and lifts what is settled
+### Requirement: Params: The type summary names the size and the ball count
 
-`redraw` SHALL draw the board as pieces on a quiet surface, with no bevel. A
-square of the box SHALL be the plain cell surface, and the line between two
-squares SHALL be the surface's grid line, which each square carries on all four
-sides so the board needs no frame.
+The preset and custom type summary SHALL read `{w}x{h}, {n} balls` for a fixed
+count, `{w}x{h}, {min}-{max} balls` for a range, and `ball` in the singular for
+a count of exactly one. Its ball count SHALL be the label of the params field
+whose keyword is `no-of-balls`, so the summary and the Custom dialog read one
+declaration.
 
-#### Scenario: A covered box is the cell surface
+#### Scenario: The ball-count type summary reflects a range
 
-- **WHEN** a new board is drawn, before any move
-- **THEN** every square of the box is the plain cell surface
-- **AND** no square is the lifted surface
+- **WHEN** params `w8h8m3M6` are described for the type summary
+- **THEN** the `no-of-balls` field reads `3-6` and the summary is
+  `8x8, 3-6 balls`
+- **AND** for `w8h8m5M5` the field reads `5` and the summary is `8x8, 5 balls`
 
-### Requirement: A guessed ball is the disc piece
+### Requirement: Params: Black Box refuses params that cannot be played
 
-A guessed ball SHALL be the collection's disc piece, inset on its square, in a
-color that none of the marks drawn on the board uses.
+A `w` or an `h` below 2 or above 255 SHALL be refused, by the bounds the size
+fields declare. `validateParams` SHALL reject `minballs < 1`,
+`minballs > maxballs`, and `minballs >= w*h`.
 
-#### Scenario: A ball is a piece
+#### Scenario: Invalid params are rejected
 
-- **WHEN** the player puts a ball on a square
-- **THEN** the square holds a disc in the ball's color, inset on its surface
+- **WHEN** `validateParams` is called with `minballs: 0`, or with
+  `minballs > maxballs`, or with `minballs >= w*h`
+- **THEN** it returns a non-null error string
 
-### Requirement: What is settled sits on the lifted surface
+#### Scenario: A box too narrow
 
-What is settled SHALL sit on the lifted surface: a square marked as known, a
-laser square once it has been fired, and every square of the box after a
-reveal. A laser square not yet fired SHALL be the board's own color inside its
-grid line.
+- **WHEN** params with `w: 1` are checked
+- **THEN** they are refused
 
-#### Scenario: A fired laser square is lifted
+### Requirement: Params: Only a deal is bound by the ball limit
 
-- **WHEN** a laser is fired
-- **THEN** the square it entered, and the square it left by if any, are the
-  lifted surface under their letter or number
-- **AND** the laser squares not fired are not
+`validateParams` SHALL reject `maxballs` above `ballLimit(w, h)`, and SHALL do
+so only when the params are about to deal a board. Params that arrive with
+their board SHALL NOT be held to the limit.
 
-### Requirement: A known square with no ball holds the ruled-out cross
+#### Scenario: One ball past the limit
 
-Until the reveal, a square marked as known that holds no ball SHALL also hold
-the collection's ruled-out cross, so that being marked is never told by a step
-of gray alone.
+- **WHEN** `validateParams` is given an 8×8 box whose `maxballs` is one more
+  than `ballLimit(8, 8)`, about to deal a board
+- **THEN** it returns a non-null error string
+- **AND** given the same params arriving with a board, it returns null
 
-#### Scenario: A known square is lifted and marked
+### Requirement: Description: Black Box descriptions are obfuscated ball-layout bitmaps
 
-- **WHEN** the player marks an empty square as known
-- **THEN** the square is the lifted surface and holds the ruled-out cross
-- **AND** a ball on a square marked as known sits on the lifted surface with
-  no cross
+A desc SHALL encode `[w, h, ball1x, ball1y, …]` as a byte-per-value bitmap,
+apply the shared `obfuscateBitmap` SHA-1 masking, and hex-encode the result
+(`encodeBalls`). `newState` SHALL recover the ball layout by hex-decoding and
+de-obfuscating the desc.
 
-### Requirement: The cursor and the marks keep clear of a ball
+#### Scenario: A description round-trips through obfuscation
 
-The keyboard cursor SHALL be drawn at the corners of its square, beside a ball,
-and SHALL NOT recolor it. A hint's ring and outline and a mistake's frame SHALL
-sit at the edge of the square's surface.
+- **WHEN** a generated desc is decoded by `newState`
+- **THEN** the recovered ball cells are the balls the generator placed, as many
+  as the params allow
 
-#### Scenario: The cursor on a ball
+### Requirement: Description: A damaged Black Box description is refused
 
-- **WHEN** the keyboard cursor is on a square that holds a guessed ball
-- **THEN** the cursor is drawn at the square's corners and the disc keeps the
-  ball's color
+The verdict on a desc SHALL reject one of wrong length, one whose de-obfuscated
+header mismatches `w` or `h`, and one whose ball coordinates fall outside the
+arena.
 
-### Requirement: Black Box swaps no palette for the dark scheme and names no hue for a ball
+#### Scenario: A corrupted description is rejected
 
-The game SHALL declare no palette swap for the dark scheme, and its hint
-sentences and help page SHALL name no hue for a ball.
+- **WHEN** a desc of the wrong length is validated, or one that de-obfuscates
+  to a ball outside the arena
+- **THEN** the verdict is a non-null error
 
-#### Scenario: A hint about a ball
-
-- **WHEN** a hint step puts a ball on a square
-- **THEN** its sentence says "a ball" and names no color
-
-### Requirement: A Black Box description holds each ball once, and as many as the params allow
+### Requirement: Description: A Black Box description holds each ball once, and as many as the params allow
 
 A description SHALL be lowercase hex digits alone, four for the board's size
 and four for each ball. `newState` SHALL refuse as too short one with fewer
@@ -471,7 +252,61 @@ one that puts two balls on one square.
 - **AND** with its last four digits taken off it is refused as too short
 - **AND** with its sixth digit written `C` it is refused for that character
 
-### Requirement: A primary press on the edge fires a laser, or shows again one already fired
+### Requirement: Generation: A dealt board has one answer across its whole ball range
+
+`newDesc` SHALL deal only a board with one answer, judged against the params'
+whole range of ball counts.
+
+#### Scenario: A dealt board
+
+- **WHEN** a board is dealt for any preset
+- **THEN** its answer count is one
+
+### Requirement: Solver: Solve guesses the real balls and reveals
+
+Solve SHALL guess exactly the real balls and reveal.
+
+#### Scenario: Solve replaces the guesses with the answer
+
+- **WHEN** the player invokes Solve with some balls guessed wrongly
+- **THEN** the guesses become exactly the real balls, the arena is revealed, and
+  `status` returns `"solved"`
+
+### Requirement: Solver: Black Box plays only boards with one answer
+
+A Black Box board's answers SHALL be the layouts, within the params' ball count,
+that send every laser, fired or not, where its real balls do. They SHALL be
+counted by the hint's own layout search with every laser fired, and the count
+SHALL agree with trying every layout on boards small enough to try.
+
+#### Scenario: A count against every layout
+
+- **WHEN** a board small enough to try every layout is counted
+- **THEN** the count says one answer exactly when trying every layout finds one
+
+### Requirement: Solver: A board with several answers does not load
+
+`solve` SHALL say `MULTIPLE_SOLUTIONS` for a board the count proves has several
+answers, so that such a board does not load.
+
+#### Scenario: Four corners hide the middle
+
+- **WHEN** a 3×3 game ID with balls on its four corners is opened under a count
+  of 4 to 5 balls
+- **THEN** it is refused as having more than one solution, and under a count of
+  exactly 4 it loads
+
+### Requirement: Solver: A count past its budget settles nothing
+
+A count of answers that runs past its budget SHALL settle nothing: the
+generator builds again, and a loaded board loads.
+
+#### Scenario: A loaded board the count cannot finish
+
+- **WHEN** a game ID is opened whose answer count runs past its budget
+- **THEN** `solve` does not say `MULTIPLE_SOLUTIONS` and the board loads
+
+### Requirement: Controls: A primary press on the edge fires a laser, or shows again one already fired
 
 A primary press on a square round the edge SHALL fire the laser that enters
 there. On a laser already fired it SHALL make no move and SHALL draw that
@@ -487,7 +322,7 @@ inside the box, SHALL do nothing.
 - **THEN** no move is made, and the `H` is drawn in the flash color until the
   button is let go
 
-### Requirement: The corner button checks the guess while the ball count allows it
+### Requirement: Controls: The corner button checks the guess while the ball count allows it
 
 The top-left corner SHALL be a target only while the guessed balls number
 from `minballs` to `maxballs`, the board is not revealed, and the last move
@@ -502,7 +337,7 @@ squares round its edge, and no corner but that one while it is a target.
 - **THEN** the corner takes the cursor and a press
 - **AND** after a check that fails it takes neither until another move is made
 
-### Requirement: A secondary press marks a square known, or its whole row or column from the edge
+### Requirement: Controls: A secondary press marks a square known, or its whole row or column from the edge
 
 A secondary press on a square inside the box SHALL toggle its known mark,
 whether or not it holds a guessed ball. On a square round the edge it SHALL
@@ -514,7 +349,7 @@ the top or the bottom edge, the row from the left or the right.
 - **WHEN** the player right-clicks the edge square above the third column
 - **THEN** the move is the line lock of the third column
 
-### Requirement: A Black Box drag repeats a ball or a mark inside the box and fires nothing
+### Requirement: Controls: A Black Box drag repeats a ball or a mark inside the box and fires nothing
 
 The game's sweep SHALL cover the squares inside the box alone, and SHALL
 compare a square's guessed ball and its known mark together. A drag that
@@ -531,7 +366,91 @@ mark.
 - **THEN** the empty square takes a ball, the known one is left as it was, and
   no laser is fired
 
-### Requirement: Black Box's status bar counts the balls marked and says when to check
+### Requirement: Hint: Black Box's hint SHALL reason only from the lasers fired
+
+Black Box SHALL provide a `hint` that reads only what the player can see: the
+lasers fired, where they went and the marks on the box. It SHALL NOT read the
+hidden balls, so two boards whose balls send every fired laser the same way get
+the same plan.
+
+#### Scenario: The hint gives nothing away
+
+- **WHEN** a hidden ball is moved to another square and every fired laser still goes where it
+  went
+- **THEN** the hint's plan is unchanged
+
+### Requirement: Hint: The hint's steps only add marks
+
+The hint's steps SHALL only ever add marks. The midend asks it only about a
+board whose marks the check passes, so no mark it meets is wrong.
+
+#### Scenario: A board with marks on it
+
+- **WHEN** the hint is asked about a board with guessed balls and known squares
+  that the check passes
+- **THEN** no step takes a ball off or unmarks a known square
+
+### Requirement: Hint: A fired laser settles the first unsettled square on its path
+
+The hint SHALL settle a square by following a fired laser through the squares
+already settled to the first one nothing has settled, and concluding that the
+square holds what does not send the laser somewhere it did not go. A laser that
+came out at a numbered square SHALL be followed from either end.
+
+#### Scenario: A square a laser settles
+
+- **WHEN** a fired laser came out at its other numbered end, and a ball on the first unsettled
+  square along its path would keep any ray from running between those ends
+- **THEN** the step rings that square, outlines both ends, says the square must be empty, and
+  marks it known
+
+### Requirement: Hint: A settled square is shown by a mark, in one step
+
+A settled empty square SHALL be shown by marking it known and a settled ball by
+guessing it, in one step that rings the square and outlines the laser's ends.
+
+#### Scenario: A settled ball
+
+- **WHEN** a fired laser settles that a square holds a ball
+- **THEN** one step guesses a ball there, ringing the square and outlining the
+  ends of that laser
+
+### Requirement: Hint: When nothing more settles, the hint asks for a laser
+
+When no fired laser settles another square, the hint SHALL ask for a laser
+whose path still depends on unsettled squares.
+
+#### Scenario: Nothing settles
+
+- **WHEN** no fired laser settles a square and some laser's path still runs through unsettled
+  squares
+- **THEN** the step rings one such laser and asks the player to fire it
+
+### Requirement: Hint: With every laser fired, the hint offers a layout it searched for
+
+When every laser is fired and none settles a square on its own, the hint SHALL
+offer balls that send every laser where it went, found by a bounded search that
+keeps the player's marks. Past the search's budget it SHALL refuse with
+`SEARCH_OUT_OF_REACH`.
+
+#### Scenario: A search past its budget
+
+- **WHEN** every laser is fired, none settles a square on its own, and the
+  search runs past its budget
+- **THEN** the hint refuses with `SEARCH_OUT_OF_REACH`
+
+### Requirement: Hint: The hint ends by placing unreached balls and asking for a check
+
+Once every laser's path is settled by the balls on the board, the hint SHALL
+put any balls the count still requires on squares no laser reaches, and then
+ask the player to check the answer.
+
+#### Scenario: Following the hint wins
+
+- **WHEN** the player follows every step from a dealt board of any preset
+- **THEN** the answer is checked and accepted
+
+### Requirement: Status bar: Black Box's status bar counts the balls marked and says when to check
 
 On an unrevealed board `statusbarText` SHALL read "Wrong! Guess again." after
 a check that failed, until the next move; else "N too many balls marked."
@@ -549,7 +468,88 @@ errors SHALL follow in brackets, as "(1 error)" or "(N errors)".
 - **AND** after a first check that fails it reads "Wrong! Guess again. (1
   error)"
 
-### Requirement: Black Box's win flash sweeps the squares of the revealed box
+### Requirement: Look: A mistake is framed in the error color
+
+A mistake SHALL be drawn as a frame in the error color inside the square.
+
+#### Scenario: Check & Save with a wrong guess
+
+- **WHEN** the player runs Check & Save with a ball guessed on an empty square
+- **THEN** that square is framed as a mistake and the board is not saved
+
+### Requirement: Look: Black Box draws its balls as pieces and lifts what is settled
+
+`redraw` SHALL draw the board as pieces on a quiet surface, with no bevel. A
+square of the box SHALL be the plain cell surface, and the line between two
+squares SHALL be the surface's grid line, which each square carries on all four
+sides so the board needs no frame.
+
+#### Scenario: A covered box is the cell surface
+
+- **WHEN** a new board is drawn, before any move
+- **THEN** every square of the box is the plain cell surface
+- **AND** no square is the lifted surface
+
+### Requirement: Look: A guessed ball is the disc piece
+
+A guessed ball SHALL be the collection's disc piece, inset on its square, in a
+color that none of the marks drawn on the board uses.
+
+#### Scenario: A ball is a piece
+
+- **WHEN** the player puts a ball on a square
+- **THEN** the square holds a disc in the ball's color, inset on its surface
+
+### Requirement: Look: What is settled sits on the lifted surface
+
+What is settled SHALL sit on the lifted surface: a square marked as known, a
+laser square once it has been fired, and every square of the box after a
+reveal. A laser square not yet fired SHALL be the board's own color inside its
+grid line.
+
+#### Scenario: A fired laser square is lifted
+
+- **WHEN** a laser is fired
+- **THEN** the square it entered, and the square it left by if any, are the
+  lifted surface under their letter or number
+- **AND** the laser squares not fired are not
+
+### Requirement: Look: A known square with no ball holds the ruled-out cross
+
+Until the reveal, a square marked as known that holds no ball SHALL also hold
+the collection's ruled-out cross, so that being marked is never told by a step
+of gray alone.
+
+#### Scenario: A known square is lifted and marked
+
+- **WHEN** the player marks an empty square as known
+- **THEN** the square is the lifted surface and holds the ruled-out cross
+- **AND** a ball on a square marked as known sits on the lifted surface with
+  no cross
+
+### Requirement: Look: The cursor and the marks keep clear of a ball
+
+The keyboard cursor SHALL be drawn at the corners of its square, beside a ball,
+and SHALL NOT recolor it. A hint's ring and outline and a mistake's frame SHALL
+sit at the edge of the square's surface.
+
+#### Scenario: The cursor on a ball
+
+- **WHEN** the keyboard cursor is on a square that holds a guessed ball
+- **THEN** the cursor is drawn at the square's corners and the disc keeps the
+  ball's color
+
+### Requirement: Look: Black Box swaps no palette for the dark scheme and names no hue for a ball
+
+The game SHALL declare no palette swap for the dark scheme, and its hint
+sentences and help page SHALL name no hue for a ball.
+
+#### Scenario: A hint about a ball
+
+- **WHEN** a hint step puts a ball on a square
+- **THEN** its sentence says "a ball" and names no color
+
+### Requirement: Look: Black Box's win flash sweeps the squares of the revealed box
 
 A reveal is the win, and Black Box SHALL declare no flash of its own for it:
 the win flash SHALL sweep the squares of the box diagonally. A lit square

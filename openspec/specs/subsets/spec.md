@@ -9,7 +9,7 @@ go and what a cell can hold.
 
 ## Requirements
 
-### Requirement: Subsets is solved when every set is placed once and every clue holds
+### Requirement: Rules: Subsets is solved when every set is placed once and every clue holds
 
 The game SHALL be solved when every set is placed exactly once and every clue
 holds. A horseshoe between two neighbors says that one cell's set contains the
@@ -21,101 +21,7 @@ of which contains the other.
 - **WHEN** every set is placed exactly once so that all clues hold
 - **THEN** the game is reported solved and flashes
 
-### Requirement: Subsets' parameters
-
-Parameters SHALL be a width, a height, a universe size `n` and a difficulty
-tier. Validation SHALL accept only `4×4` with `n = 4`. There SHALL be one
-preset per tier. A game ID SHALL encode the width, height, universe size and
-tier and round-trip through decode, and each tier SHALL encode to a *distinct*
-ID. A game ID whose difficulty character names no tier SHALL be refused, and
-SHALL NOT be played at another tier in its place.
-
-#### Scenario: A game ID round-trips through the parameters
-
-- **WHEN** a parameter set is encoded to a game ID and decoded
-- **THEN** the same width, height, universe size and tier are recovered
-
-#### Scenario: Unsupported parameters are rejected
-
-- **WHEN** parameters other than `4×4` with `n = 4` are validated
-- **THEN** they are rejected: "Currently only 4x4 puzzles are supported."
-
-#### Scenario: An unrecognized difficulty character is rejected
-
-- **WHEN** a game ID carries a difficulty character naming no tier
-- **THEN** decoding refuses it, rather than falling back to another tier
-
-### Requirement: The Custom dialog offers the tier alone
-
-A Custom-parameters dialog SHALL be offered for the tier alone: the board
-shape has exactly one legal value, so the tier is the only field.
-
-#### Scenario: The dialog is opened
-
-- **WHEN** the Custom dialog is opened for Subsets
-- **THEN** it holds one field, the difficulty, and none for the width, the
-  height or the universe size
-
-### Requirement: Subsets descriptions use the per-cell arrow encoding
-
-A Subsets description SHALL encode the grid in row-major order as one
-comma-separated token per cell: a decimal set number for a given cell or an
-underscore for a blank cell, immediately followed by any of the arrow markers
-`U`, `R`, `D`, `L` for the horseshoe clues leaving that cell.
-
-#### Scenario: A generated description round-trips
-
-- **WHEN** a description is generated and then decoded into a board
-- **THEN** re-encoding that board yields the identical description
-
-### Requirement: A Subsets description is validated
-
-Validation SHALL reject a description that carries more or fewer cells than
-the grid holds (distinguishing which), that contains a set number out of range
-for the universe, that omits a required separator, that uses an unexpected
-character, that places an arrow pointing off the grid, or that places two
-arrows on one edge which contradict each other.
-
-#### Scenario: A description with the wrong number of cells is rejected
-
-- **WHEN** a description carrying more or fewer cells than the grid has is
-  validated
-- **THEN** it is rejected with a message distinguishing too much data from too
-  little
-
-#### Scenario: Contradicting arrows on one edge are rejected
-
-- **WHEN** a description places an arrow from a cell to its neighbor and the
-  opposite arrow from that neighbor back
-- **THEN** the description is rejected as contradictory
-
-### Requirement: Subsets is played by toggling letter slots
-
-Subsets SHALL be played by toggling individual letter slots within each cell.
-A left-click or select SHALL cycle a slot unknown → known → cleared → unknown,
-a right-click or secondary select SHALL cycle unknown → cleared → known →
-unknown, and Backspace SHALL reset a slot to unknown. A given (immutable) slot
-SHALL NOT change.
-
-#### Scenario: Toggling a letter slot cycles its state
-
-- **WHEN** a mutable letter slot is left-clicked repeatedly
-- **THEN** it advances unknown → known → cleared and back to unknown, and a given
-  slot does not change
-
-### Requirement: The keyboard cursor walks the letter slots
-
-A keyboard cursor SHALL navigate the letter slots, skipping the gaps between
-cell blocks.
-
-#### Scenario: The cursor crosses from one cell to the next
-
-- **WHEN** the cursor is on the right-hand slot of a cell that has a cell to its
-  right, and Right is pressed
-- **THEN** it rests on the left-hand slot of that next cell, never on the gap
-  between the two
-
-### Requirement: Subsets flags mistakes for Check & Save
+### Requirement: Rules: Subsets flags mistakes for Check & Save
 
 The game SHALL flag as mistakes for Check & Save: a set-value placed in more
 than one cell; any
@@ -149,183 +55,161 @@ drawn in the mistake color.
 - **THEN** `findMistakes` reports that slot, and its cross is drawn in the
   mistake color
 
-### Requirement: What Subsets draws
+### Requirement: Params: Subsets' parameters
 
-The board SHALL be formattable as text. Rendering SHALL show each cell's
-letter slots, the horseshoe arrows, a tally of every set-value that tells
-whether it is placed never, once or more than once, and a completion flash.
-There SHALL be no move animation.
+Parameters SHALL be a width, a height, a universe size `n` and a difficulty
+tier. Validation SHALL accept only `4×4` with `n = 4`. There SHALL be one
+preset per tier. A game ID SHALL encode the width, height, universe size and
+tier and round-trip through decode, and each tier SHALL encode to a *distinct*
+ID. A game ID whose difficulty character names no tier SHALL be refused, and
+SHALL NOT be played at another tier in its place.
 
-#### Scenario: A set placed twice shows in the tally
+#### Scenario: A game ID round-trips through the parameters
 
-- **WHEN** the same set is fully placed in two cells
-- **THEN** its tally entry is drawn in the mistake color, unlike an entry placed
-  once or not at all
+- **WHEN** a parameter set is encoded to a game ID and decoded
+- **THEN** the same width, height, universe size and tier are recovered
 
-### Requirement: Subsets provides an explained hint
+#### Scenario: Unsupported parameters are rejected
 
-Subsets SHALL implement `hint()`, planning from the player's current marks and
-rule-outs and narrating each firing as the deduction that forces it. A hint on
-a board that contradicts its own clues SHALL be refused, pointing at the
-mistakes.
+- **WHEN** parameters other than `4×4` with `n = 4` are validated
+- **THEN** they are rejected: "Currently only 4x4 puzzles are supported."
 
-#### Scenario: A hint narrates an arrow deduction
+#### Scenario: An unrecognized difficulty character is rejected
 
-- **WHEN** a hint is requested on a board where a horseshoe forces a letter
-- **THEN** the explanation names the arrow relation that forces it, not just the
-  letter to write
+- **WHEN** a game ID carries a difficulty character naming no tier
+- **THEN** decoding refuses it, rather than falling back to another tier
 
-#### Scenario: A hidden single is shown with its placement spotlight
+### Requirement: Params: The Custom dialog offers the tier alone
 
-- **WHEN** a set has exactly one cell it can still legally occupy
-- **THEN** the hint places it there and spotlights that cell as the only
-  candidate
+A Custom-parameters dialog SHALL be offered for the tier alone: the board
+shape has exactly one legal value, so the tier is the only field.
 
-#### Scenario: A mistaken board is refused honestly
+#### Scenario: The dialog is opened
 
-- **WHEN** a hint is requested on a board contradicting its own clues
-- **THEN** the hint refuses and points at the mistakes instead of deducing from
-  a wrong position
+- **WHEN** the Custom dialog is opened for Subsets
+- **THEN** it holds one field, the difficulty, and none for the width, the
+  height or the universe size
 
-### Requirement: The hint narrates every deduction the solver may use
+### Requirement: Params: Subsets params are written `4x4n4` and a difficulty letter
 
-The recorder SHALL be able to narrate every deduction the solver may use,
-including the rules available only above the lowest tier: a board whose tier
-the recorder cannot reach stalls mid-plan with nothing to say.
+`encodeParams` SHALL write the width, `x`, the height, `n` and the universe
+size, and in the full form `d` and the tier's letter after them: `e` for Easy
+and `t` for Normal. `decodeParams` SHALL read a width with no `x` as a square,
+a string with no `n` as four letters, and a string with no `d` as Easy.
 
-#### Scenario: A board above the lowest tier is fully narratable
+#### Scenario: The Normal preset and its short form
 
-- **WHEN** a hint plan is computed from the opening position of a board
-  generated above the lowest tier
-- **THEN** the plan reaches a complete solution, and the same recorder capped
-  one tier lower does not
+- **WHEN** the Normal preset is encoded in full and without the difficulty
+- **THEN** the results are `4x4n4dt` and `4x4n4`
+- **AND** `4x4n4` decodes as the Easy board
 
-### Requirement: The hint reaches for the higher rules last
+### Requirement: Params: A Subsets preset is titled by its board and its tier
 
-The rules available only above the lowest tier SHALL be reached for **only
-once the cheaper rules are exhausted**, so a board at the lowest tier is
-planned exactly as a recorder lacking them would plan it. That equivalence
-SHALL be asserted by comparison against a capped recorder, not assumed:
-running a stronger rule unconditionally is sound and still silently re-plans
-easier boards.
+Each preset SHALL be titled `4x4 Size 4` and then its tier's name, where Size
+is the number of letters the sets are drawn from.
 
-#### Scenario: The lowest tier's plan is unchanged by the higher rules
+#### Scenario: The Type menu
 
-- **WHEN** a board at the lowest tier is planned by the full recorder and by one
-  capped below the higher rules
-- **THEN** both produce the same firings, in the same order
+- **WHEN** the presets are listed
+- **THEN** they read "4x4 Size 4 Easy" and "4x4 Size 4 Normal", for the params
+  `4x4n4de` and `4x4n4dt`
 
-### Requirement: A hint step rests only on what the board shows
+### Requirement: Description: Subsets descriptions use the per-cell arrow encoding
 
-A step SHALL rest only on what the board shows: letters, rule-outs, horseshoes
-and placed sets. Each step's highlights and claims SHALL be read off the board
-as that step is shown.
+A Subsets description SHALL encode the grid in row-major order as one
+comma-separated token per cell: a decimal set number for a given cell or an
+underscore for a blank cell, immediately followed by any of the arrow markers
+`U`, `R`, `D`, `L` for the horseshoe clues leaving that cell.
 
-#### Scenario: A collapse's survivors agree on the letters
+#### Scenario: A generated description round-trips
 
-- **WHEN** a step decides a cell's letters because only some sets can still go
-  in it
-- **THEN** the sets the tally shows for the cell at that step all agree on those
-  letters
+- **WHEN** a description is generated and then decoded into a board
+- **THEN** re-encoding that board yields the identical description
 
-### Requirement: A firing's rule-outs are placed before it
+### Requirement: Description: A Subsets description is validated
 
-Every set a firing needs gone from a cell that the board does not already rule
-out SHALL be ruled out by an earlier step of its own, in the same journey,
-narrated by the horseshoe that leaves it no partner: no set the neighbor across
-it can still hold is a smaller set inside it (or a bigger set holding it).
-Every set that step's own premise needs gone SHALL be ruled out before it, and
-no rule-out SHALL be placed that no firing uses.
+Validation SHALL reject a description that carries more or fewer cells than
+the grid holds (distinguishing which), that contains a set number out of range
+for the universe, that omits a required separator, that uses an unexpected
+character, that places an arrow pointing off the grid, or that places two
+arrows on one edge which contradict each other.
 
-#### Scenario: A collapse rests on rule-outs the plan placed
+#### Scenario: A description with the wrong number of cells is rejected
 
-- **WHEN** the plan decides a cell's letters because only some sets can still go
-  in it, and the board alone does not rule the others out
-- **THEN** each set it needs gone is ruled out by an earlier step in the same
-  journey, naming the horseshoe and boxing the sets the neighbor can still hold
-- **AND** when the letters are decided, the sets the tally shows for the cell all
-  agree on them
+- **WHEN** a description carrying more or fewer cells than the grid has is
+  validated
+- **THEN** it is rejected with a message distinguishing too much data from too
+  little
 
-### Requirement: Subsets offers a two-way placement reference aid
+#### Scenario: Contradicting arrows on one edge are rejected
 
-Subsets SHALL let the player explore where sets and cells can go, judged
-shallowly from the visible board and never from a solver or the solution. The
-judgment SHALL read a cell's own marks and rule-outs, the horseshoe and
-missing-horseshoe relations to decided neighbors, that the empty set and the
-full set need every edge of their cell to point the one way, and the
-exactly-once rule.
+- **WHEN** a description places an arrow from a cell to its neighbor and the
+  opposite arrow from that neighbor back
+- **THEN** the description is rejected as contradictory
 
-#### Scenario: A rule-out leaves the cell's list
+### Requirement: Description: A Subsets set number adds up its letters, and an arrow is written on the bigger set's cell
 
-- **WHEN** the player rules a set out of the cell in focus
-- **THEN** that set is no longer highlighted as one the cell could hold, and no
-  longer spotlights the cell
+A given cell's number SHALL be the sum of its set's letters, A as 1, B as 2, C
+as 4 and D as 8, so that 0 is the empty set. An arrow letter SHALL be written
+on the cell whose set contains its neighbor's, and SHALL name the side that
+neighbor is on. A cell's arrow letters SHALL come in the order `U`, `R`, `D`,
+`L`, each at most once. `newState` SHALL refuse arrow letters in another
+order, and a set given to two cells.
 
-### Requirement: Selecting a set shows where it can go
+#### Scenario: A dealt board is read
 
-Selecting a **set** from the tally band, with no undecided cell in focus, SHALL
-spotlight every cell it can still legally go in. If the set is already placed,
-its home cell SHALL be shown in a distinct color: where it *is*, versus where
-it could go.
+- **WHEN** `13RD,_,6R,_,_,_,_D,_UL,_R,12D,_,_DL,_UR,_,3U,10` is read
+- **THEN** the top-left cell is given the set {A,C,D}, which contains the set
+  of the cell to its right and the set of the cell below it
+- **AND** the third cell is given {B,C} and the last cell {B,D}
 
-#### Scenario: Spotlighting a set's placements
+#### Scenario: Letters out of order, and a set given twice
 
-- **WHEN** the player clicks an unplaced set in the tally band
-- **THEN** every cell where that set could still legally go is spotlit, and
-  clicking it again clears the spotlight
+- **WHEN** the `13RD` of that description is changed to `13DR`, or its `6R` to
+  `13R`
+- **THEN** the first is refused as having an `R` where it cannot have one, and
+  the second as giving the same number twice
 
-#### Scenario: A placed set shows where it sits
+### Requirement: Generation: The higher tier adds the mirror half of the advanced arrow rule
 
-- **WHEN** the player clicks a set that is already placed
-- **THEN** its home cell is highlighted in the distinct "placed" color, not the
-  "could go here" spotlight color
+Above the lowest tier the solver SHALL additionally apply the **mirror half**
+of the advanced arrow rule: where an arrow forces `set(head) ⊂ set(tail)`, a
+surviving candidate at the head that fits inside no surviving candidate at the
+tail SHALL be eliminated.
 
-### Requirement: Focusing a cell shows the sets it can hold
+#### Scenario: A board above the lowest tier needs its tier
 
-Focusing a **cell** SHALL highlight in the tally every set that cell could
-still hold. A cell SHALL be focused by its dedicated inspect icon, or by moving
-the keyboard cursor onto it. The icon SHALL be a touch-sized badge in the
-margin above the cell block, and SHALL do nothing but inspect, never editing.
+- **WHEN** a board generated above the lowest tier is solved with the ladder
+  capped one tier below it
+- **THEN** the solver does not reach a complete solution
 
-#### Scenario: A cell shows the sets it can still hold
+### Requirement: Generation: Subsets generates uniqueness-gated boards
 
-- **WHEN** the player taps an undecided cell's inspect icon
-- **THEN** every set that could still legally go in it is highlighted in the
-  tally band, and nothing about the cell is edited
+The generator SHALL assign every set-value to the grid by a single shuffle,
+derive all arrow clues from the subset relation, then blank cells in a shuffled
+order, keeping a cell blank only while the solver, capped at the requested
+tier, still reaches a complete solution.
 
-### Requirement: The aid's two directions are exclusive and ephemeral
+#### Scenario: A cell the capped solver needs stays given
 
-The two directions of the reference aid SHALL be mutually exclusive, the
-spotlight SHALL update as the board changes, and all of the aid SHALL be
-ephemeral UI state, never persisted.
+- **WHEN** blanking a cell leaves a board the solver, capped at the requested
+  tier, does not complete
+- **THEN** that cell is given again, and the blanking goes on to the next
 
-#### Scenario: Inspecting a cell replaces a set's spotlight
+### Requirement: Generation: A board above the lowest tier is not solved by the tier below
 
-- **WHEN** a set is spotlit and the player taps a cell's inspect icon
-- **THEN** the set's spotlight is gone and the tally shows the sets that cell
-  could hold
+Above the lowest tier the generator SHALL also reject a candidate board that
+the tier below already solves, and SHALL redraw a wholly fresh board, not
+perturb the rejected one: every candidate consumes fresh randomness, so a plain
+retry cannot re-derive what it rejected.
 
-### Requirement: Touching the reference aid dismisses a displayed hint
+#### Scenario: A candidate the lower tier solves is thrown away
 
-Because the aid and a hint draw in the same overlay space, touching the aid
-while a hint is displayed SHALL dismiss the hint and its status text, so the
-aid is shown and not silently suppressed. The exception SHALL be a hint step
-that rules a set out of a cell, which SHALL stay: following it by hand starts
-with that cell's inspect icon.
+- **WHEN** a board is generated above the lowest tier
+- **THEN** the solver capped one tier below it does not reach a complete
+  solution, and the solver capped at its own tier does
 
-#### Scenario: The reference aid dismisses a displayed hint
-
-- **WHEN** the player interacts with the reference aid while a hint step that
-  marks a letter is on display
-- **THEN** the hint is dismissed and the aid is shown
-
-#### Scenario: A rule-out step is followed by hand
-
-- **WHEN** the displayed hint step rules a set out of a cell and the player taps
-  that cell's inspect icon
-- **THEN** the hint stays on display
-
-### Requirement: Subsets solves by candidate elimination
+### Requirement: Solver: Subsets solves by candidate elimination
 
 Subsets SHALL provide a solver that reports whether a board is complete,
 unfinished or invalid, driven by a candidate-elimination fixpoint over the set
@@ -340,7 +224,7 @@ single-position placement, and the advanced arrow-subset elimination.
   solved
 - **THEN** the solver reports complete, unfinished and invalid respectively
 
-### Requirement: The solver takes an explicit difficulty cap
+### Requirement: Solver: The solver takes an explicit difficulty cap
 
 The grading solver, `subsetsSolveGame`, SHALL take an explicit difficulty cap,
 with no default: an implicit cap is how a caller silently measures a tier it
@@ -366,20 +250,7 @@ states, and `solve` SHALL refuse a board that leaves unfinished.
 - **THEN** it returns "This puzzle's solution can't be determined." and no
   partly filled board
 
-### Requirement: The higher tier adds the mirror half of the advanced arrow rule
-
-Above the lowest tier the solver SHALL additionally apply the **mirror half**
-of the advanced arrow rule: where an arrow forces `set(head) ⊂ set(tail)`, a
-surviving candidate at the head that fits inside no surviving candidate at the
-tail SHALL be eliminated.
-
-#### Scenario: A board above the lowest tier needs its tier
-
-- **WHEN** a board generated above the lowest tier is solved with the ladder
-  capped one tier below it
-- **THEN** the solver does not reach a complete solution
-
-### Requirement: The mirror elimination is sound
+### Requirement: Solver: The mirror elimination is sound
 
 The mirror elimination SHALL never remove a set-value that the board's own
 solution places in that cell: a puzzle whose one solution the solver has ruled
@@ -393,33 +264,92 @@ generator's known assignment, and SHALL NOT be checked against the other cap.
 - **THEN** the solved board matches, cell for cell, the assignment the generator
   blanked to produce it
 
-### Requirement: Subsets generates uniqueness-gated boards
+### Requirement: Controls: Subsets is played by toggling letter slots
 
-The generator SHALL assign every set-value to the grid by a single shuffle,
-derive all arrow clues from the subset relation, then blank cells in a shuffled
-order, keeping a cell blank only while the solver, capped at the requested
-tier, still reaches a complete solution.
+Subsets SHALL be played by toggling individual letter slots within each cell.
+A left-click or select SHALL cycle a slot unknown → known → cleared → unknown,
+a right-click or secondary select SHALL cycle unknown → cleared → known →
+unknown, and Backspace SHALL reset a slot to unknown. A given (immutable) slot
+SHALL NOT change.
 
-#### Scenario: A cell the capped solver needs stays given
+#### Scenario: Toggling a letter slot cycles its state
 
-- **WHEN** blanking a cell leaves a board the solver, capped at the requested
-  tier, does not complete
-- **THEN** that cell is given again, and the blanking goes on to the next
+- **WHEN** a mutable letter slot is left-clicked repeatedly
+- **THEN** it advances unknown → known → cleared and back to unknown, and a given
+  slot does not change
 
-### Requirement: A board above the lowest tier is not solved by the tier below
+### Requirement: Controls: The keyboard cursor walks the letter slots
 
-Above the lowest tier the generator SHALL also reject a candidate board that
-the tier below already solves, and SHALL redraw a wholly fresh board, not
-perturb the rejected one: every candidate consumes fresh randomness, so a plain
-retry cannot re-derive what it rejected.
+A keyboard cursor SHALL navigate the letter slots, skipping the gaps between
+cell blocks.
 
-#### Scenario: A candidate the lower tier solves is thrown away
+#### Scenario: The cursor crosses from one cell to the next
 
-- **WHEN** a board is generated above the lowest tier
-- **THEN** the solver capped one tier below it does not reach a complete
-  solution, and the solver capped at its own tier does
+- **WHEN** the cursor is on the right-hand slot of a cell that has a cell to its
+  right, and Right is pressed
+- **THEN** it rests on the left-hand slot of that next cell, never on the gap
+  between the two
 
-### Requirement: Subsets players can rule a set out of a cell
+### Requirement: Controls: Subsets offers a two-way placement reference aid
+
+Subsets SHALL let the player explore where sets and cells can go, judged
+shallowly from the visible board and never from a solver or the solution. The
+judgment SHALL read a cell's own marks and rule-outs, the horseshoe and
+missing-horseshoe relations to decided neighbors, that the empty set and the
+full set need every edge of their cell to point the one way, and the
+exactly-once rule.
+
+#### Scenario: A rule-out leaves the cell's list
+
+- **WHEN** the player rules a set out of the cell in focus
+- **THEN** that set is no longer highlighted as one the cell could hold, and no
+  longer spotlights the cell
+
+### Requirement: Controls: Selecting a set shows where it can go
+
+Selecting a **set** from the tally band, with no undecided cell in focus, SHALL
+spotlight every cell it can still legally go in. If the set is already placed,
+its home cell SHALL be shown in a distinct color: where it *is*, versus where
+it could go.
+
+#### Scenario: Spotlighting a set's placements
+
+- **WHEN** the player clicks an unplaced set in the tally band
+- **THEN** every cell where that set could still legally go is spotlit, and
+  clicking it again clears the spotlight
+
+#### Scenario: A placed set shows where it sits
+
+- **WHEN** the player clicks a set that is already placed
+- **THEN** its home cell is highlighted in the distinct "placed" color, not the
+  "could go here" spotlight color
+
+### Requirement: Controls: Focusing a cell shows the sets it can hold
+
+Focusing a **cell** SHALL highlight in the tally every set that cell could
+still hold. A cell SHALL be focused by its dedicated inspect icon, or by moving
+the keyboard cursor onto it. The icon SHALL be a touch-sized badge in the
+margin above the cell block, and SHALL do nothing but inspect, never editing.
+
+#### Scenario: A cell shows the sets it can still hold
+
+- **WHEN** the player taps an undecided cell's inspect icon
+- **THEN** every set that could still legally go in it is highlighted in the
+  tally band, and nothing about the cell is edited
+
+### Requirement: Controls: The aid's two directions are exclusive and ephemeral
+
+The two directions of the reference aid SHALL be mutually exclusive, the
+spotlight SHALL update as the board changes, and all of the aid SHALL be
+ephemeral UI state, never persisted.
+
+#### Scenario: Inspecting a cell replaces a set's spotlight
+
+- **WHEN** a set is spotlit and the player taps a cell's inspect icon
+- **THEN** the set's spotlight is gone and the tally shows the sets that cell
+  could hold
+
+### Requirement: Controls: Subsets players can rule a set out of a cell
 
 The game SHALL let the player rule any set-value out of any cell, stored per
 cell as a set of ruled-out set-values and set or cleared by an absolute `rule`
@@ -439,7 +369,7 @@ spotlight the set.
 - **WHEN** a move log holding only letter moves is replayed
 - **THEN** it produces the same board, with nothing ruled out
 
-### Requirement: The keyboard reaches the tally band
+### Requirement: Controls: The keyboard reaches the tally band
 
 The keyboard cursor SHALL move from the grid's bottom row down into the tally
 band, keeping the cell in focus. In the band the arrows SHALL move between
@@ -452,101 +382,111 @@ back, and Up from the band's top row SHALL return to the grid.
 - **THEN** the cursor is in the tally band and the entry under it is ruled out of
   the cell in focus
 
-### Requirement: The tally strikes through what is ruled out of its cell
+### Requirement: Hint: Subsets provides an explained hint
 
-While a cell is in focus, or a hint step is about it, the tally SHALL draw
-every set ruled out of that cell struck through.
+Subsets SHALL implement `hint()`, planning from the player's current marks and
+rule-outs and narrating each firing as the deduction that forces it. A hint on
+a board that contradicts its own clues SHALL be refused, pointing at the
+mistakes.
 
-#### Scenario: A rule-out is struck through while its cell is in focus
+#### Scenario: A hint narrates an arrow deduction
 
-- **WHEN** a set is ruled out of the undecided cell in focus
-- **THEN** the set's tally entry is drawn struck through while the cell is in
-  focus
+- **WHEN** a hint is requested on a board where a horseshoe forces a letter
+- **THEN** the explanation names the arrow relation that forces it, not just the
+  letter to write
 
-### Requirement: A slot's surface says who decided its cell
+#### Scenario: A hidden single is shown with its placement spotlight
 
-`redraw` SHALL draw every letter slot of a cell the player fills on the
-collection's cell surface, and every slot of a cell whose set the puzzle gave
-on the collection's lifted surface of a given, with the collection's surface
-grid line between the slots of a cell.
+- **WHEN** a set has exactly one cell it can still legally occupy
+- **THEN** the hint places it there and spotlights that cell as the only
+  candidate
 
-#### Scenario: A given cell is told by the surface under it
+#### Scenario: A mistaken board is refused honestly
 
-- **WHEN** the opening frame is drawn
-- **THEN** every slot of a given cell is the lifted surface and every other
-  slot is the plain cell surface
+- **WHEN** a hint is requested on a board contradicting its own clues
+- **THEN** the hint refuses and points at the mistakes instead of deducing from
+  a wrong position
 
-### Requirement: Subsets tells a slot's state by a letter, a cross or nothing
+### Requirement: Hint: The hint narrates every deduction the solver may use
 
-A slot's state SHALL be what it holds and never the surface under it: a letter
-marked present is drawn, in ink for a given and in the entry color for the
-player's; a letter cleared holds the collection's ruled-out cross; an unknown
-slot holds nothing. No state SHALL be told by a step of gray.
+The recorder SHALL be able to narrate every deduction the solver may use,
+including the rules available only above the lowest tier: a board whose tier
+the recorder cannot reach stalls mid-plan with nothing to say.
 
-#### Scenario: A cleared letter holds the cross
+#### Scenario: A board above the lowest tier is fully narratable
 
-- **WHEN** the opening frame is drawn
-- **THEN** each letter absent from a given set holds the ruled-out cross, and no
-  unknown slot holds one
+- **WHEN** a hint plan is computed from the opening position of a board
+  generated above the lowest tier
+- **THEN** the plan reaches a complete solution, and the same recorder capped
+  one tier lower does not
 
-### Requirement: A used-up entry takes the used-up clue color
+### Requirement: Hint: The hint reaches for the higher rules last
 
-A tally entry placed once and the idle inspect badge SHALL be drawn in the
-collection's color for a clue that is used up.
+The rules available only above the lowest tier SHALL be reached for **only
+once the cheaper rules are exhausted**, so a board at the lowest tier is
+planned exactly as a recorder lacking them would plan it. That equivalence
+SHALL be asserted by comparison against a capped recorder, not assumed:
+running a stronger rule unconditionally is sound and still silently re-plans
+easier boards.
 
-#### Scenario: A set is placed once
+#### Scenario: The lowest tier's plan is unchanged by the higher rules
 
-- **WHEN** a set is fully placed in exactly one cell
-- **THEN** its tally entry is drawn in the color for a clue that is used up
+- **WHEN** a board at the lowest tier is planned by the full recorder and by one
+  capped below the higher rules
+- **THEN** both produce the same firings, in the same order
 
-### Requirement: A Subsets set number adds up its letters, and an arrow is written on the bigger set's cell
+### Requirement: Hint: A hint step rests only on what the board shows
 
-A given cell's number SHALL be the sum of its set's letters, A as 1, B as 2, C
-as 4 and D as 8, so that 0 is the empty set. An arrow letter SHALL be written
-on the cell whose set contains its neighbor's, and SHALL name the side that
-neighbor is on. A cell's arrow letters SHALL come in the order `U`, `R`, `D`,
-`L`, each at most once. `newState` SHALL refuse arrow letters in another
-order, and a set given to two cells.
+A step SHALL rest only on what the board shows: letters, rule-outs, horseshoes
+and placed sets. Each step's highlights and claims SHALL be read off the board
+as that step is shown.
 
-#### Scenario: A dealt board is read
+#### Scenario: A collapse's survivors agree on the letters
 
-- **WHEN** `13RD,_,6R,_,_,_,_D,_UL,_R,12D,_,_DL,_UR,_,3U,10` is read
-- **THEN** the top-left cell is given the set {A,C,D}, which contains the set
-  of the cell to its right and the set of the cell below it
-- **AND** the third cell is given {B,C} and the last cell {B,D}
+- **WHEN** a step decides a cell's letters because only some sets can still go
+  in it
+- **THEN** the sets the tally shows for the cell at that step all agree on those
+  letters
 
-#### Scenario: Letters out of order, and a set given twice
+### Requirement: Hint: A firing's rule-outs are placed before it
 
-- **WHEN** the `13RD` of that description is changed to `13DR`, or its `6R` to
-  `13R`
-- **THEN** the first is refused as having an `R` where it cannot have one, and
-  the second as giving the same number twice
+Every set a firing needs gone from a cell that the board does not already rule
+out SHALL be ruled out by an earlier step of its own, in the same journey,
+narrated by the horseshoe that leaves it no partner: no set the neighbor across
+it can still hold is a smaller set inside it (or a bigger set holding it).
+Every set that step's own premise needs gone SHALL be ruled out before it, and
+no rule-out SHALL be placed that no firing uses.
 
-### Requirement: Subsets params are written `4x4n4` and a difficulty letter
+#### Scenario: A collapse rests on rule-outs the plan placed
 
-`encodeParams` SHALL write the width, `x`, the height, `n` and the universe
-size, and in the full form `d` and the tier's letter after them: `e` for Easy
-and `t` for Normal. `decodeParams` SHALL read a width with no `x` as a square,
-a string with no `n` as four letters, and a string with no `d` as Easy.
+- **WHEN** the plan decides a cell's letters because only some sets can still go
+  in it, and the board alone does not rule the others out
+- **THEN** each set it needs gone is ruled out by an earlier step in the same
+  journey, naming the horseshoe and boxing the sets the neighbor can still hold
+- **AND** when the letters are decided, the sets the tally shows for the cell all
+  agree on them
 
-#### Scenario: The Normal preset and its short form
+### Requirement: Hint: Touching the reference aid dismisses a displayed hint
 
-- **WHEN** the Normal preset is encoded in full and without the difficulty
-- **THEN** the results are `4x4n4dt` and `4x4n4`
-- **AND** `4x4n4` decodes as the Easy board
+Because the aid and a hint draw in the same overlay space, touching the aid
+while a hint is displayed SHALL dismiss the hint and its status text, so the
+aid is shown and not silently suppressed. The exception SHALL be a hint step
+that rules a set out of a cell, which SHALL stay: following it by hand starts
+with that cell's inspect icon.
 
-### Requirement: A Subsets preset is titled by its board and its tier
+#### Scenario: The reference aid dismisses a displayed hint
 
-Each preset SHALL be titled `4x4 Size 4` and then its tier's name, where Size
-is the number of letters the sets are drawn from.
+- **WHEN** the player interacts with the reference aid while a hint step that
+  marks a letter is on display
+- **THEN** the hint is dismissed and the aid is shown
 
-#### Scenario: The Type menu
+#### Scenario: A rule-out step is followed by hand
 
-- **WHEN** the presets are listed
-- **THEN** they read "4x4 Size 4 Easy" and "4x4 Size 4 Normal", for the params
-  `4x4n4de` and `4x4n4dt`
+- **WHEN** the displayed hint step rules a set out of a cell and the player taps
+  that cell's inspect icon
+- **THEN** the hint stays on display
 
-### Requirement: The Subsets hint carries a letter across a horseshoe
+### Requirement: Hint: The Subsets hint carries a letter across a horseshoe
 
 Where a letter is marked present in the cell at a horseshoe's closed end and
 not in the cell at its open end, a step SHALL mark it present there ("…has C
@@ -563,7 +503,7 @@ one journey.
 - **THEN** the first step clears B in the second cell of the top row, whose
   set lies inside the top-left cell's {A,C,D}
 
-### Requirement: The Subsets hint reads the horseshoes before it counts sets
+### Requirement: Hint: The Subsets hint reads the horseshoes before it counts sets
 
 `hint` SHALL take the first of these that decides a letter, and begin again
 after each: a horseshoe, taken by its open-end cell in reading order, a letter
@@ -579,7 +519,7 @@ are tried with it.
   set that can go in one cell only
 - **THEN** the next step is the horseshoe's
 
-### Requirement: A Subsets hint refuses a letter the answer does not have
+### Requirement: Hint: A Subsets hint refuses a letter the answer does not have
 
 Where a letter the player has marked present or cleared differs from the
 board's solution, or the hint's own deduction from the player's marks ends in
@@ -594,7 +534,67 @@ entries contradict each other.
 - **THEN** the hint is refused: "These entries contradict each other, so one
   of them must be wrong. Undo, or clear the ones you are unsure of."
 
-### Requirement: The Subsets completion flash fills a cell's slots together
+### Requirement: Look: What Subsets draws
+
+The board SHALL be formattable as text. Rendering SHALL show each cell's
+letter slots, the horseshoe arrows, a tally of every set-value that tells
+whether it is placed never, once or more than once, and a completion flash.
+There SHALL be no move animation.
+
+#### Scenario: A set placed twice shows in the tally
+
+- **WHEN** the same set is fully placed in two cells
+- **THEN** its tally entry is drawn in the mistake color, unlike an entry placed
+  once or not at all
+
+### Requirement: Look: The tally strikes through what is ruled out of its cell
+
+While a cell is in focus, or a hint step is about it, the tally SHALL draw
+every set ruled out of that cell struck through.
+
+#### Scenario: A rule-out is struck through while its cell is in focus
+
+- **WHEN** a set is ruled out of the undecided cell in focus
+- **THEN** the set's tally entry is drawn struck through while the cell is in
+  focus
+
+### Requirement: Look: A slot's surface says who decided its cell
+
+`redraw` SHALL draw every letter slot of a cell the player fills on the
+collection's cell surface, and every slot of a cell whose set the puzzle gave
+on the collection's lifted surface of a given, with the collection's surface
+grid line between the slots of a cell.
+
+#### Scenario: A given cell is told by the surface under it
+
+- **WHEN** the opening frame is drawn
+- **THEN** every slot of a given cell is the lifted surface and every other
+  slot is the plain cell surface
+
+### Requirement: Look: Subsets tells a slot's state by a letter, a cross or nothing
+
+A slot's state SHALL be what it holds and never the surface under it: a letter
+marked present is drawn, in ink for a given and in the entry color for the
+player's; a letter cleared holds the collection's ruled-out cross; an unknown
+slot holds nothing. No state SHALL be told by a step of gray.
+
+#### Scenario: A cleared letter holds the cross
+
+- **WHEN** the opening frame is drawn
+- **THEN** each letter absent from a given set holds the ruled-out cross, and no
+  unknown slot holds one
+
+### Requirement: Look: A used-up entry takes the used-up clue color
+
+A tally entry placed once and the idle inspect badge SHALL be drawn in the
+collection's color for a clue that is used up.
+
+#### Scenario: A set is placed once
+
+- **WHEN** a set is fully placed in exactly one cell
+- **THEN** its tally entry is drawn in the color for a clue that is used up
+
+### Requirement: Look: The Subsets completion flash fills a cell's slots together
 
 The completion flash SHALL sweep the cells diagonally, a cell's position being
 its place in the grid. Every slot of a lit cell SHALL be filled with a flash

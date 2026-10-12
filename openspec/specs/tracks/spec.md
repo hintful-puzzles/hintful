@@ -8,7 +8,7 @@ that explains the next deduction and marks it in the game's own vocabulary.
 
 ## Requirements
 
-### Requirement: Tracks judges completion from the board
+### Requirement: Rules: Tracks judges completion from the board
 
 The player lays a single continuous train track from an entrance on the left
 edge to an exit on the bottom edge of a `w × h` grid, using only straight and
@@ -24,7 +24,45 @@ matches, judged from the board however it was reached.
 - **THEN** `status` reports the board solved
 - **AND** a later move that breaks the track or a clue reports it unsolved again
 
-### Requirement: Tracks' parameters
+### Requirement: Rules: Tracks ships findMistakes
+
+`findMistakes(state)` SHALL re-solve the board's clues to the unique solution
+and, when one exists, report every square holding a player's mark, on itself
+or on one of its edges, that contradicts that solution: a track where the
+solution has none, or a no-track where the solution lays track. Unmarked cells
+SHALL never be mistakes. It SHALL return an empty list when the board is not
+uniquely solvable.
+
+#### Scenario: A wrong mark blocks Check & Save
+
+- **WHEN** a cell is marked as track where the unique solution has none and
+  `findMistakes` runs
+- **THEN** that cell is reported and rendered red
+
+### Requirement: Rules: Tracks computes live errors on every move
+
+`executeMove` SHALL recompute error state: a cell with more than two track
+edges is an error; every cell on a track loop is an error; and once a continuous entrance→exit path exists,
+any track cell not on that path is an error.
+
+#### Scenario: A loop is flagged
+
+- **WHEN** track edges are placed forming a closed loop
+- **THEN** every cell on the loop carries the error flag
+
+### Requirement: Rules: A Tracks clue is in error when its line cannot meet it
+
+`executeMove` SHALL mark a row or column as a clue error when its track cells
+exceed its clue, when its no-track cells exceed the complement, or when its
+completed track count fails to match the clue once a continuous entrance→exit
+path exists and no cell is in error.
+
+#### Scenario: An over-filled clue is flagged
+
+- **WHEN** a row has more track cells than its clue number
+- **THEN** that row's clue is marked in error
+
+### Requirement: Params: Tracks' parameters
 
 Params SHALL be `w`, `h`, `diff` (Easy, Normal or Tricky, the constants
 `DIFF_EASY`, `DIFF_TRICKY` and `DIFF_HARD`) and `singleOnes` (disallow
@@ -38,7 +76,7 @@ form by `d` and one of `e`, `t` or `h` for the difficulty, and by an `o` when
   Normal tier) are encoded in full
 - **THEN** the result is `10x8dto` and decoding it round-trips the params
 
-### Requirement: Tracks refuses a grid under 4×4, and a 4×4 above Easy
+### Requirement: Params: Tracks refuses a grid under 4×4, and a 4×4 above Easy
 
 The params config SHALL bound the width and the height at a minimum of 4, so
 that the engine refuses a smaller grid. `validateParams` SHALL refuse a 4×4
@@ -55,7 +93,44 @@ the words of `noSuchTier`, because no 4×4 board needs a higher tier.
 - **WHEN** the params `4x4dt` or `4x4dh` are checked for a deal
 - **THEN** they are refused, and no board is dealt
 
-### Requirement: Tracks descriptions use the upstream encoding
+### Requirement: Params: Tracks params that name no difficulty are Normal
+
+A params string with no `d`, or whose `d` is followed by a letter that names
+no tier, SHALL decode as Normal, with consecutive 1 clues disallowed unless it
+carries the `o`.
+
+#### Scenario: An Easy preset's short form
+
+- **WHEN** the Easy 8×8 preset, `8x8de`, is encoded without its difficulty and
+  the result, `8x8`, is decoded
+- **THEN** the params are an 8×8 board at Normal
+
+### Requirement: Params: Tracks refuses a grid whose area cannot be counted
+
+`validateParams` SHALL refuse, at every check, a width and a height whose
+product is past the largest whole number the program counts exactly, in the
+engine's sentence that the width times the height must not be unreasonably
+large.
+
+#### Scenario: A width in the thousands of millions of millions
+
+- **WHEN** the width of `8x8de` is changed to 1200000000000000 and the params
+  are checked, for a deal or for a board that arrives written
+- **THEN** they are refused: "Width times height must not be unreasonably
+  large."
+
+### Requirement: Params: A Tracks title says when adjacent 1 clues are allowed
+
+The label of a set of params that does not disallow consecutive 1 clues SHALL
+end with the words "allow adjacent 1’s", and the label of one that does SHALL
+say nothing of them.
+
+#### Scenario: A board with the rule off
+
+- **WHEN** the label of `10x8dto` is composed
+- **THEN** it reads "10x8 Normal, allow adjacent 1’s"
+
+### Requirement: Description: Tracks descriptions use the upstream encoding
 
 The desc SHALL encode the `w × h` square grid row-major: one lowercase
 character `a`–`z` for a run of 1–26 consecutive non-clue squares, and one
@@ -69,7 +144,7 @@ marking the exit column and the entrance row.
 - **WHEN** a generated desc is parsed by `newState` and re-encoded
 - **THEN** the re-encoded desc equals the original
 
-### Requirement: newState parses a Tracks description and refuses a malformed one
+### Requirement: Description: newState parses a Tracks description and refuses a malformed one
 
 `newState` SHALL parse the desc into a board whose player grid is blank. It
 SHALL refuse, as a desc error the engine's `validateDesc` reports, a desc
@@ -83,7 +158,101 @@ exit.
   one entrance and one exit, is validated
 - **THEN** the result is a non-null error
 
-### Requirement: Tracks input maps drag, click and cursor
+### Requirement: Description: A Tracks clue square's character adds up the sides its track leaves by
+
+A clue square's hexadecimal character SHALL be the sum of the two sides its
+track leaves by: 1 for the right, 2 for the top, 4 for the left and 8 for the
+bottom. A square at the grid's rim MAY name the side on the rim, which is how
+the entrance and the exit are written.
+
+#### Scenario: A dealt 8×8 board is read
+
+- **WHEN** `zn5CbApAb,5,8,8,7,4,S4,3,3,2,3,4,4,5,S8,8,8` is read as an 8×8
+  board
+- **THEN** its first clue square, at the left of the sixth row, is `5`, track
+  from the left side to the right, and that row's number carries the `S` of
+  the entrance
+- **AND** the `C` beside it turns the track from the left side to the bottom,
+  and each `A` is track from top to bottom, the second at the foot of the
+  sixth column, whose number carries the `S` of the exit
+
+### Requirement: Description: A Tracks number is at most the length of its line
+
+`newState` SHALL refuse a description in which a column's number is above the
+height of the grid or a row's number above its width, and one whose run
+letters and clue squares count past the grid's area.
+
+#### Scenario: A column of an 8×8 board is given 9 track squares
+
+- **WHEN** the first number of `zn5CbApAb,5,8,8,7,4,S4,3,3,2,3,4,4,5,S8,8,8`,
+  the first column's 5, is changed to 9
+- **THEN** it is refused as holding a number out of range for its board
+
+#### Scenario: One square too many
+
+- **WHEN** the last `b` of that description's grid is changed to `c`
+- **THEN** it is refused as too long for its board
+
+### Requirement: Generation: Each Tracks difficulty adds its rungs
+
+Easy SHALL run edge and square flag propagation (`update-flags`), row and
+column track counts (`count-clues`) and immediate loop avoidance
+(`check-loop`). Normal SHALL add single-track reasoning
+(`check-single`), loose-end reasoning (`check-loose-ends`) and the one-way
+neighbor deduction (`check-neighbors`). Tricky SHALL add the two-way neighbor
+deduction (`check-neighbors-both-ways`) and the bridge-parity argument
+(`check-bridge-parity`).
+
+#### Scenario: A capped solve leaves the higher rungs out
+
+- **WHEN** the solver runs capped at Normal
+- **THEN** neither the two-way neighbor deduction nor the bridge-parity
+  argument runs
+
+### Requirement: Generation: Tracks generates solver-gated boards
+
+`newDesc` SHALL strip every clue the board solves at its tier without. It
+SHALL lay the track by construction and not by throwing tracks away: a walk
+that does not leave the board while a row or column holds no track, and that
+never steps where the squares still free no longer reach every such row and
+column and the bottom edge. Every clue of a dealt board SHALL therefore be at
+least 1, at any size the params allow.
+
+#### Scenario: A long thin board deals
+
+- **WHEN** `newDesc` runs at 60x8, 8x60 or 40x12 at Easy
+- **THEN** it returns a board that solves at Easy, with every clue at least 1,
+  and does not throw `RetryLimitExceeded`
+
+### Requirement: Generation: Tracks meets singleOnes by bending the track
+
+Under `singleOnes` a dealt board SHALL have no 1 as the clue of the entrance's
+column or of the exit's row, and no two 1 clues next to each other in the list
+of column clues then row clues. The generator SHALL reach that by bending the
+laid track, taking the one step that crosses two such lines round three sides
+of a square, and SHALL lay another track only where a bend has no room.
+
+#### Scenario: A long thin board has no forbidden 1
+
+- **WHEN** `newDesc` runs at 60x8, 8x60 or 40x12 at Easy with `singleOnes`
+- **THEN** it returns a board with no 1 clue where `singleOnes` forbids one,
+  and does not throw `RetryLimitExceeded`
+
+### Requirement: Generation: A stalled bare Tracks board goes on to clue-laying
+
+The generator SHALL reject a laid track as too easy only when its bare board
+(the row and column counts, the entrance and the exit) solves completely
+without reaching the target tier. A bare board that stalls SHALL go on to
+clue-laying whatever rungs fired before it stalled, since the clue-laying loop
+already refuses any clue that finishes the board below the target tier.
+
+#### Scenario: A stalled bare board is not too easy
+
+- **WHEN** the bare board of a laid track stalls at the target tier without any
+  of that tier's rungs having fired
+- **THEN** the generator lays clues on it and does not ask for a new track
+
+### Requirement: Controls: Tracks input maps drag, click and cursor
 
 `interpretMove` SHALL support two drags, told apart by what the pressed square
 holds and never by where in it the press lands. A left-drag from a square that
@@ -112,7 +281,7 @@ edge, since a run of crosses on edges is no use to a player.
 - **THEN** the drag stays active with its last valid extent frozen, and
   resumes when the pointer returns to the start row or column
 
-### Requirement: A drag from a square that carries track lays segments
+### Requirement: Controls: A drag from a square that carries track lays segments
 
 A left-drag from a square that carries track (the player marked it, or a
 segment reaches it) SHALL mark no square. To every edge it crosses that held
@@ -130,7 +299,7 @@ one step of Undo.
 - **AND WHEN** the player makes the same drag again
 - **THEN** both segments are taken away
 
-### Requirement: A Tracks click toggles a square or an edge
+### Requirement: Controls: A Tracks click toggles a square or an edge
 
 A left-click near a cell center SHALL toggle the square's track, and one near
 a cell edge SHALL toggle that edge's track. A right-click SHALL toggle
@@ -146,7 +315,7 @@ no-track on that edge.
 - **AND WHEN** the player right-clicks two pixels inside the square's side
 - **THEN** that edge is marked no-track and the square is not
 
-### Requirement: The Tracks keyboard cursor walks a half-grid
+### Requirement: Controls: The Tracks keyboard cursor walks a half-grid
 
 `interpretMove` SHALL support a half-grid keyboard cursor whose select toggles
 a square (at a cell center) or an edge (on a cell border), with select2
@@ -158,22 +327,18 @@ toggling no-track.
   select is pressed
 - **THEN** that edge carries a track segment and neither square's mark changes
 
-### Requirement: Tracks ships findMistakes
+### Requirement: Controls: A Tracks press outside the grid, or a no-track drag over track, makes no move
 
-`findMistakes(state)` SHALL re-solve the board's clues to the unique solution
-and, when one exists, report every square holding a player's mark, on itself
-or on one of its edges, that contradicts that solution: a track where the
-solution has none, or a no-track where the solution lays track. Unmarked cells
-SHALL never be mistakes. It SHALL return an empty list when the board is not
-uniquely solvable.
+An interaction outside the grid SHALL produce no history move. A right-drag
+SHALL set no no-track mark on a square that holds track.
 
-#### Scenario: A wrong mark blocks Check & Save
+#### Scenario: A no-track drag over squares that hold track
 
-- **WHEN** a cell is marked as track where the unique solution has none and
-  `findMistakes` runs
-- **THEN** that cell is reported and rendered red
+- **WHEN** a right-drag (no-track) covers only cells that already hold track,
+  so no flag can change
+- **THEN** `interpretMove` returns no history move
 
-### Requirement: Tracks explains the next deduction
+### Requirement: Hint: Tracks explains the next deduction
 
 `hint(state)` SHALL return the forced deductions from the player's current marks as an ordered
 plan, each step narrating why its moves are forced from premises the sentence
@@ -191,7 +356,7 @@ itself states.
   again, repeatedly, on a board of any tier
 - **THEN** deduction never runs out before the board is solved
 
-### Requirement: The Tracks hint is capped at the board's own tier
+### Requirement: Hint: The Tracks hint is capped at the board's own tier
 
 The hint's ladder SHALL be capped at the board's own difficulty and not at the
 highest tier, since the board's own is the tier the generator certified it
@@ -202,7 +367,7 @@ soluble at.
 - **WHEN** a hint is requested on a board dealt at Easy
 - **THEN** no step of its plan comes from a rung above Easy
 
-### Requirement: One Tracks firing is one hint step
+### Requirement: Hint: One Tracks firing is one hint step
 
 One firing SHALL be one step: with a recorder attached, a rung SHALL return at
 its first premise that changed the board, so that a rung that scans the whole
@@ -219,7 +384,7 @@ until the last of them is placed.
   square in the line empty, and its evidence is exactly the clue's own track
   squares with the clue's digit recolored
 
-### Requirement: A firing the board already shows is hidden
+### Requirement: Hint: A firing the board already shows is hidden
 
 Every change a rung makes SHALL be recorded. Through the shared plan loop's
 `showable` hook, the plan SHALL hide (apply to its working board, but not
@@ -236,7 +401,7 @@ showing a rail.
 - **THEN** the plan applies the firing to its working board and shows no step
   for it
 
-### Requirement: Three rules of update-flags declare no reason
+### Requirement: Hint: Three rules of update-flags declare no reason
 
 Three rules of the `update-flags` rung SHALL declare no reason, because the
 player's board already decides what each concludes: a square with a track side
@@ -250,7 +415,7 @@ by the already-decided test.
   marked empty and a hint is requested
 - **THEN** no step in the plan asks for either side to be blocked
 
-### Requirement: Tracks marks a hint in its own vocabulary
+### Requirement: Hint: Tracks marks a hint in its own vocabulary
 
 `redraw` SHALL draw the displayed step's marks from the marks the step's words
 carry, using the shape of the action and not color alone to say which action
@@ -266,7 +431,7 @@ be a fill.
 - **THEN** the first is drawn as rail stubs and the second as a cross, both in
   the action color, and neither renders the finished piece
 
-### Requirement: Tracks hint evidence is drawn in the evidence color
+### Requirement: Hint: Tracks hint evidence is drawn in the evidence color
 
 Evidence on the grid SHALL be drawn in `COL_HINT_CELL`: a contour round the
 squares the deduction reasons from, painted per side wherever the neighbor
@@ -281,273 +446,7 @@ legend SHALL say that the number takes the hint color.
 - **THEN** the clue's track squares carry the evidence contour in
   `COL_HINT_CELL` and the clue's digit is drawn in `COL_HINT` in the margin
 
-### Requirement: Each Tracks difficulty adds its rungs
-
-Easy SHALL run edge and square flag propagation (`update-flags`), row and
-column track counts (`count-clues`) and immediate loop avoidance
-(`check-loop`). Normal SHALL add single-track reasoning
-(`check-single`), loose-end reasoning (`check-loose-ends`) and the one-way
-neighbor deduction (`check-neighbors`). Tricky SHALL add the two-way neighbor
-deduction (`check-neighbors-both-ways`) and the bridge-parity argument
-(`check-bridge-parity`).
-
-#### Scenario: A capped solve leaves the higher rungs out
-
-- **WHEN** the solver runs capped at Normal
-- **THEN** neither the two-way neighbor deduction nor the bridge-parity
-  argument runs
-
-### Requirement: Tracks generates solver-gated boards
-
-`newDesc` SHALL strip every clue the board solves at its tier without. It
-SHALL lay the track by construction and not by throwing tracks away: a walk
-that does not leave the board while a row or column holds no track, and that
-never steps where the squares still free no longer reach every such row and
-column and the bottom edge. Every clue of a dealt board SHALL therefore be at
-least 1, at any size the params allow.
-
-#### Scenario: A long thin board deals
-
-- **WHEN** `newDesc` runs at 60x8, 8x60 or 40x12 at Easy
-- **THEN** it returns a board that solves at Easy, with every clue at least 1,
-  and does not throw `RetryLimitExceeded`
-
-### Requirement: Tracks meets singleOnes by bending the track
-
-Under `singleOnes` a dealt board SHALL have no 1 as the clue of the entrance's
-column or of the exit's row, and no two 1 clues next to each other in the list
-of column clues then row clues. The generator SHALL reach that by bending the
-laid track, taking the one step that crosses two such lines round three sides
-of a square, and SHALL lay another track only where a bend has no room.
-
-#### Scenario: A long thin board has no forbidden 1
-
-- **WHEN** `newDesc` runs at 60x8, 8x60 or 40x12 at Easy with `singleOnes`
-- **THEN** it returns a board with no 1 clue where `singleOnes` forbids one,
-  and does not throw `RetryLimitExceeded`
-
-### Requirement: Tracks renders rails, clues, drag previews and the completion flash
-
-`redraw` SHALL render, with no gutter and a one-tile margin holding the clue
-numbers and the A and B entrance and exit labels: straight rails drawn with
-sleepers, curved rails, no-track crosses on squares and edges, the in-progress
-drag preview (a newly-set piece in `COL_DRAGON` blue, a cleared piece in
-`COL_DRAGOFF` light blue), row and column clue numbers (red on a clue error),
-the cursor highlight, and the completion flash.
-
-#### Scenario: A completed row clue turns red when over-filled
-
-- **WHEN** a row holds more track cells than its clue
-- **THEN** that row's clue number renders in the error color
-
-#### Scenario: A drag preview shows provisional pieces
-
-- **WHEN** a left-drag is in progress over blank cells
-- **THEN** the covered cells render their provisional track in the drag color
-
-### Requirement: The Tracks completion flash runs the track from A to B
-
-The completion flash SHALL run the finished track from the entrance to the
-exit: a square's position SHALL be its place along the track, counted from the
-entrance, and a lit square's rails SHALL be drawn in a flash color. A square
-off the track SHALL never be lit. The color SHALL read against the rails and
-the track bed in both color schemes.
-
-#### Scenario: The flash runs from A to B
-
-- **WHEN** a board is won and frames of its flash are drawn from start to end
-- **THEN** the first lit square is the entrance's, the last is the exit's, and
-  every square of the track is lit for one stretch of frames
-
-#### Scenario: A track of several hundred squares
-
-- **WHEN** a board whose track covers more than 256 squares is won
-- **THEN** the highlight runs every square of it in turn
-
-### Requirement: Tracks computes live errors on every move
-
-`executeMove` SHALL recompute error state: a cell with more than two track
-edges is an error; every cell on a track loop is an error; and once a continuous entrance→exit path exists,
-any track cell not on that path is an error.
-
-#### Scenario: A loop is flagged
-
-- **WHEN** track edges are placed forming a closed loop
-- **THEN** every cell on the loop carries the error flag
-
-### Requirement: A Tracks clue is in error when its line cannot meet it
-
-`executeMove` SHALL mark a row or column as a clue error when its track cells
-exceed its clue, when its no-track cells exceed the complement, or when its
-completed track count fails to match the clue once a continuous entrance→exit
-path exists and no cell is in error.
-
-#### Scenario: An over-filled clue is flagged
-
-- **WHEN** a row has more track cells than its clue number
-- **THEN** that row's clue is marked in error
-
-### Requirement: An undecided Tracks square is the cell surface
-
-`redraw` SHALL draw a square the player has not decided on the collection's
-cell surface, with the surface's grid line between squares one pixel wide at
-every tile size and the frame round the grid no heavier.
-
-#### Scenario: The grid line does not grow with the tile
-
-- **WHEN** a board is drawn at a small tile size and at a large one
-- **THEN** the grid line between two undecided squares is one pixel wide in
-  both
-
-### Requirement: A given Tracks rail is told by the cell under it
-
-A square the puzzle laid track in SHALL sit on the lifted surface of a given,
-and its rails SHALL be the same ink rails the player's are: a given is told by
-the cell under it and not by the color of its rail.
-
-#### Scenario: A given rail is the same rail
-
-- **WHEN** a board holds a rail the puzzle laid and a rail the player laid
-- **THEN** both rails are drawn in the same ink
-- **AND** the puzzle's square is the lifted surface and the player's is the
-  track bed
-
-### Requirement: A square that carries track is the track bed
-
-A square that carries track and is not a given SHALL be filled with the track
-bed, a purple of the theme's first hue, whether it holds a whole piece of
-rail, a rail end, or no rail yet, and SHALL hold no other mark for that state.
-The bed SHALL differ in hue from the cell surface and from a given's surface
-in both color schemes, so that "track here" is never a step of gray, and a
-rail SHALL read on it in both.
-
-#### Scenario: A square a given rail leads into is the bed
-
-- **WHEN** a fresh board is drawn
-- **THEN** each square a given rail's open end leads into is the track bed
-  and holds no mark
-
-### Requirement: Tracks tells a square's state by its surface and a cross
-
-A square marked as holding no track SHALL stay the cell surface and hold the
-collection's ruled-out cross, in the ruled-out color. An edge marked as
-carrying no track SHALL hold a smaller cross on the edge.
-
-#### Scenario: Undecided, no track and track are told apart
-
-- **WHEN** a board holds an undecided square, a square marked no-track and a
-  square marked as track with no rail yet
-- **THEN** the first two are the cell surface and the third is the track bed
-- **AND** the first holds nothing, the second holds the ruled-out cross and
-  the third holds nothing
-
-### Requirement: The Tracks keyboard cursor's outline is at least two pixels thick
-
-The keyboard cursor's outline SHALL be at least two pixels thick.
-
-#### Scenario: The outline at a small tile
-
-- **WHEN** the cursor is shown at a tile size whose marks are one pixel thick
-- **THEN** the cursor's outline is two pixels thick
-
-### Requirement: A stalled bare Tracks board goes on to clue-laying
-
-The generator SHALL reject a laid track as too easy only when its bare board
-(the row and column counts, the entrance and the exit) solves completely
-without reaching the target tier. A bare board that stalls SHALL go on to
-clue-laying whatever rungs fired before it stalled, since the clue-laying loop
-already refuses any clue that finishes the board below the target tier.
-
-#### Scenario: A stalled bare board is not too easy
-
-- **WHEN** the bare board of a laid track stalls at the target tier without any
-  of that tier's rungs having fired
-- **THEN** the generator lays clues on it and does not ask for a new track
-
-### Requirement: A Tracks press outside the grid, or a no-track drag over track, makes no move
-
-An interaction outside the grid SHALL produce no history move. A right-drag
-SHALL set no no-track mark on a square that holds track.
-
-#### Scenario: A no-track drag over squares that hold track
-
-- **WHEN** a right-drag (no-track) covers only cells that already hold track,
-  so no flag can change
-- **THEN** `interpretMove` returns no history move
-
-### Requirement: A Tracks clue square's character adds up the sides its track leaves by
-
-A clue square's hexadecimal character SHALL be the sum of the two sides its
-track leaves by: 1 for the right, 2 for the top, 4 for the left and 8 for the
-bottom. A square at the grid's rim MAY name the side on the rim, which is how
-the entrance and the exit are written.
-
-#### Scenario: A dealt 8×8 board is read
-
-- **WHEN** `zn5CbApAb,5,8,8,7,4,S4,3,3,2,3,4,4,5,S8,8,8` is read as an 8×8
-  board
-- **THEN** its first clue square, at the left of the sixth row, is `5`, track
-  from the left side to the right, and that row's number carries the `S` of
-  the entrance
-- **AND** the `C` beside it turns the track from the left side to the bottom,
-  and each `A` is track from top to bottom, the second at the foot of the
-  sixth column, whose number carries the `S` of the exit
-
-### Requirement: A Tracks number is at most the length of its line
-
-`newState` SHALL refuse a description in which a column's number is above the
-height of the grid or a row's number above its width, and one whose run
-letters and clue squares count past the grid's area.
-
-#### Scenario: A column of an 8×8 board is given 9 track squares
-
-- **WHEN** the first number of `zn5CbApAb,5,8,8,7,4,S4,3,3,2,3,4,4,5,S8,8,8`,
-  the first column's 5, is changed to 9
-- **THEN** it is refused as holding a number out of range for its board
-
-#### Scenario: One square too many
-
-- **WHEN** the last `b` of that description's grid is changed to `c`
-- **THEN** it is refused as too long for its board
-
-### Requirement: Tracks params that name no difficulty are Normal
-
-A params string with no `d`, or whose `d` is followed by a letter that names
-no tier, SHALL decode as Normal, with consecutive 1 clues disallowed unless it
-carries the `o`.
-
-#### Scenario: An Easy preset's short form
-
-- **WHEN** the Easy 8×8 preset, `8x8de`, is encoded without its difficulty and
-  the result, `8x8`, is decoded
-- **THEN** the params are an 8×8 board at Normal
-
-### Requirement: Tracks refuses a grid whose area cannot be counted
-
-`validateParams` SHALL refuse, at every check, a width and a height whose
-product is past the largest whole number the program counts exactly, in the
-engine's sentence that the width times the height must not be unreasonably
-large.
-
-#### Scenario: A width in the thousands of millions of millions
-
-- **WHEN** the width of `8x8de` is changed to 1200000000000000 and the params
-  are checked, for a deal or for a board that arrives written
-- **THEN** they are refused: "Width times height must not be unreasonably
-  large."
-
-### Requirement: A Tracks title says when adjacent 1 clues are allowed
-
-The label of a set of params that does not disallow consecutive 1 clues SHALL
-end with the words "allow adjacent 1’s", and the label of one that does SHALL
-say nothing of them.
-
-#### Scenario: A board with the rule off
-
-- **WHEN** the label of `10x8dto` is composed
-- **THEN** it reads "10x8 Normal, allow adjacent 1’s"
-
-### Requirement: The Tracks hint settles a square from its blocked sides
+### Requirement: Hint: The Tracks hint settles a square from its blocked sides
 
 A square with three or four sides blocked SHALL be marked empty ("Every side
 of this square but one is blocked, and track needs two"). A square that holds
@@ -562,7 +461,7 @@ crosses it, and the blocked sides SHALL be the evidence the step outlines.
   is marked as holding track
 - **THEN** a step lays track across its two inner sides
 
-### Requirement: The Tracks hint counts a row or column against its clue
+### Requirement: Hint: The Tracks hint counts a row or column against its clue
 
 A row or column that holds as many track squares as its clue SHALL have every
 other square in it marked empty ("This column already has all 4 of the track
@@ -578,7 +477,7 @@ step SHALL stripe the line, and outline its clue and the squares it counted.
   column's clue is 8 and it is 8 squares long, so every square in it must
   carry track."
 
-### Requirement: The Tracks hint blocks a side that would close a loop or finish the track too soon
+### Requirement: Hint: The Tracks hint blocks a side that would close a loop or finish the track too soon
 
 For two track squares side by side with nothing marked on the side between
 them, a step SHALL block that side where track already joins the two, since a
@@ -595,7 +494,7 @@ holds fewer track squares than its clue, which the step names.
 - **THEN** the side between the two squares is blocked, in the words that
   joining the runs there would finish the track with that row's clue short
 
-### Requirement: The Tracks hint runs a lone loose end straight on
+### Requirement: Hint: The Tracks hint runs a lone loose end straight on
 
 On a Normal or a Tricky board, in a row or column where exactly one square
 holds a single segment running along the line, where the clue less the squares
@@ -611,7 +510,7 @@ the loose end must run straight on").
 - **THEN** no step runs the loose end on, and the hint goes on with what the
   Easy techniques decide
 
-### Requirement: The Tracks hint decides two neighbors whose track would run on
+### Requirement: Hint: The Tracks hint decides two neighbors whose track would run on
 
 For two undecided squares side by side in a row or column, where the first has
 at most one side not blocked other than the side they share, track in the
@@ -628,7 +527,7 @@ the second as track, and where both hold it SHALL do both.
 - **THEN** a step marks the first square empty: track there would carry on
   downward and the column has room for one more track square
 
-### Requirement: The Tracks hint counts the crossings of a closed block
+### Requirement: Hint: The Tracks hint counts the crossings of a closed block
 
 On a Tricky board, for an undecided side that lies on no loop of undecided
 sides, the squares reached from one of its two squares through undecided
@@ -644,7 +543,7 @@ the block and outline those crossings.
   one side on its border holds track
 - **THEN** a step lays track on the undecided side, the block's last
 
-### Requirement: The Tracks hint tries a square's sides, then the clues, then the loop
+### Requirement: Hint: The Tracks hint tries a square's sides, then the clues, then the loop
 
 `hint` SHALL take the first of these that decides something the board does not
 show, and begin again after each: a square's blocked sides, the columns left
@@ -663,3 +562,104 @@ a block's crossings.
   columns have met
 - **AND** only then does a step lay track through a square with two sides
   blocked, since no square had two until the row was emptied
+
+### Requirement: Look: Tracks renders rails, clues, drag previews and the completion flash
+
+`redraw` SHALL render, with no gutter and a one-tile margin holding the clue
+numbers and the A and B entrance and exit labels: straight rails drawn with
+sleepers, curved rails, no-track crosses on squares and edges, the in-progress
+drag preview (a newly-set piece in `COL_DRAGON` blue, a cleared piece in
+`COL_DRAGOFF` light blue), row and column clue numbers (red on a clue error),
+the cursor highlight, and the completion flash.
+
+#### Scenario: A completed row clue turns red when over-filled
+
+- **WHEN** a row holds more track cells than its clue
+- **THEN** that row's clue number renders in the error color
+
+#### Scenario: A drag preview shows provisional pieces
+
+- **WHEN** a left-drag is in progress over blank cells
+- **THEN** the covered cells render their provisional track in the drag color
+
+### Requirement: Look: The Tracks completion flash runs the track from A to B
+
+The completion flash SHALL run the finished track from the entrance to the
+exit: a square's position SHALL be its place along the track, counted from the
+entrance, and a lit square's rails SHALL be drawn in a flash color. A square
+off the track SHALL never be lit. The color SHALL read against the rails and
+the track bed in both color schemes.
+
+#### Scenario: The flash runs from A to B
+
+- **WHEN** a board is won and frames of its flash are drawn from start to end
+- **THEN** the first lit square is the entrance's, the last is the exit's, and
+  every square of the track is lit for one stretch of frames
+
+#### Scenario: A track of several hundred squares
+
+- **WHEN** a board whose track covers more than 256 squares is won
+- **THEN** the highlight runs every square of it in turn
+
+### Requirement: Look: An undecided Tracks square is the cell surface
+
+`redraw` SHALL draw a square the player has not decided on the collection's
+cell surface, with the surface's grid line between squares one pixel wide at
+every tile size and the frame round the grid no heavier.
+
+#### Scenario: The grid line does not grow with the tile
+
+- **WHEN** a board is drawn at a small tile size and at a large one
+- **THEN** the grid line between two undecided squares is one pixel wide in
+  both
+
+### Requirement: Look: A given Tracks rail is told by the cell under it
+
+A square the puzzle laid track in SHALL sit on the lifted surface of a given,
+and its rails SHALL be the same ink rails the player's are: a given is told by
+the cell under it and not by the color of its rail.
+
+#### Scenario: A given rail is the same rail
+
+- **WHEN** a board holds a rail the puzzle laid and a rail the player laid
+- **THEN** both rails are drawn in the same ink
+- **AND** the puzzle's square is the lifted surface and the player's is the
+  track bed
+
+### Requirement: Look: A square that carries track is the track bed
+
+A square that carries track and is not a given SHALL be filled with the track
+bed, a purple of the theme's first hue, whether it holds a whole piece of
+rail, a rail end, or no rail yet, and SHALL hold no other mark for that state.
+The bed SHALL differ in hue from the cell surface and from a given's surface
+in both color schemes, so that "track here" is never a step of gray, and a
+rail SHALL read on it in both.
+
+#### Scenario: A square a given rail leads into is the bed
+
+- **WHEN** a fresh board is drawn
+- **THEN** each square a given rail's open end leads into is the track bed
+  and holds no mark
+
+### Requirement: Look: Tracks tells a square's state by its surface and a cross
+
+A square marked as holding no track SHALL stay the cell surface and hold the
+collection's ruled-out cross, in the ruled-out color. An edge marked as
+carrying no track SHALL hold a smaller cross on the edge.
+
+#### Scenario: Undecided, no track and track are told apart
+
+- **WHEN** a board holds an undecided square, a square marked no-track and a
+  square marked as track with no rail yet
+- **THEN** the first two are the cell surface and the third is the track bed
+- **AND** the first holds nothing, the second holds the ruled-out cross and
+  the third holds nothing
+
+### Requirement: Look: The Tracks keyboard cursor's outline is at least two pixels thick
+
+The keyboard cursor's outline SHALL be at least two pixels thick.
+
+#### Scenario: The outline at a small tile
+
+- **WHEN** the cursor is shown at a tile size whose marks are one pixel thick
+- **THEN** the cursor's outline is two pixels thick

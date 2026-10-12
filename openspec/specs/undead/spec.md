@@ -13,7 +13,99 @@ stops, rather than searches, where deduction runs out.
 
 ## Requirements
 
-### Requirement: Undead's parameters and their encoding
+### Requirement: Rules: Undead traces sightlines through the mirror maze
+
+A sightline SHALL start from each of the `2·(w + h)` edge positions (clockwise
+from the top-left) and follow a straight path that reflects at each `\` or `/`
+mirror until it exits at another edge position. Each line SHALL carry a
+sighting clue at both of its ends.
+
+#### Scenario: A column with no mirror
+
+- **WHEN** the line entering at the top of a column that holds no mirror is
+  traced
+- **THEN** it ends at the bottom edge position of that column, with every cell
+  of the column as its monster cells in order
+
+### Requirement: Rules: A monster's visibility depends on its type and the reflections before it
+
+A monster's contribution to a sighting count SHALL depend on its type and the
+line segment it stands on: a vampire SHALL count only on the segment before any
+reflection, a ghost only on a segment after at least one reflection, and a
+zombie always.
+
+#### Scenario: Reflected and direct visibility
+
+- **WHEN** a sightline passes a vampire before any mirror and a ghost after a mirror
+- **THEN** the sighting count entering at that end includes both
+- **AND** the sighting count entering from the opposite end (where the vampire is
+  now post-reflection and the ghost pre-reflection) excludes both
+
+### Requirement: Rules: Undead is solved when the grid is full and every count holds
+
+The game SHALL be solved when every monster cell is filled and all counts and
+sightings are satisfied.
+
+#### Scenario: The last monster goes in
+
+- **WHEN** a move fills the last monster cell so that the three totals and
+  every sighting clue hold
+- **THEN** the game's status is solved
+
+### Requirement: Rules: Undead shows live legality errors
+
+Every move SHALL bring the live legality flags up to date. A monster type whose
+placed count exceeds its total, or differs from it once the grid is full, SHALL
+flag that count and every placed cell of that type. A sightline whose placed
+monsters already exceed its clue, or whose clue can no longer be reached even
+by filling every blank, SHALL flag the clue and every cell of the line.
+
+#### Scenario: A sightline that can no longer reach its clue
+
+- **WHEN** the monsters placed on a line leave fewer visible, even with every
+  blank on it counted, than a clue at one end asks for
+- **THEN** that clue and every cell of the line are flagged
+
+### Requirement: Rules: Undead's findMistakes compares the board with its unique solution
+
+The game SHALL implement `findMistakes`: re-solving the board to its unique
+solution and returning every placed cell that contradicts it, plus every empty
+cell whose non-empty pencil notes have crossed out its solution monster. The
+solution SHALL be derived from the description clues only.
+
+#### Scenario: Check & Save flags a wrong placement
+
+- **WHEN** the player places a monster that contradicts the unique solution and
+  invokes Check & Save
+- **THEN** `findMistakes` reports that cell
+- **AND** the save is blocked
+- **AND** an empty cell whose notes have crossed out its solution monster is also
+  reported, while a cell with merely extra notes is not
+
+### Requirement: Rules: Undead's pencilStrike clears candidate bits atomically
+
+The game's move set SHALL include a `pencilStrike` move that atomically clears
+a list of candidate bits across cells, idempotent and resume-safe, used by the
+hint for a multi-strike firing. The single-bit `pencil` toggle and the fill-all
+`markAll` move SHALL stay beside it.
+
+#### Scenario: A strike applied twice
+
+- **WHEN** the same `pencilStrike` is executed on a board and then again on the
+  result
+- **THEN** the second leaves the notes as the first left them, re-adding none
+
+### Requirement: Rules: Undead refuses edits to fixed cells
+
+Fixed cells SHALL reject monster, clear and pencil edits.
+
+#### Scenario: A given monster cannot be edited
+
+- **WHEN** the player tries to place a monster in, or clear, a fixed (given)
+  monster cell
+- **THEN** both edits are rejected
+
+### Requirement: Params: Undead's parameters and their encoding
 
 Params SHALL be `w`, `h` and `diff`, a tier of Easy, Normal or `Unreasonable`
 held as the values `"easy"`, `"normal"` and `"tricky"`. They SHALL encode as
@@ -28,7 +120,7 @@ or `t`.
 - **AND** decoding it round-trips the params
 - **AND** encoding with `full = false` yields `5x5`
 
-### Requirement: Undead's top tier is Unreasonable and keeps the letter t
+### Requirement: Params: Undead's top tier is Unreasonable and keeps the letter t
 
 The top tier SHALL be named `Unreasonable`, because its boards can require the
 forcing rung, which runs the deduction fixpoint from a hypothesis: a search from
@@ -42,7 +134,7 @@ lower tiers SHALL be plain deduction.
 - **THEN** it names the top tier, which the difficulty choice shows as
   `Unreasonable`
 
-### Requirement: Undead's parameter limits
+### Requirement: Params: Undead's parameter limits
 
 Width and height SHALL each declare a minimum of 3 in `paramConfig`, which the
 engine's params check refuses below, and `validateParams` SHALL refuse
@@ -54,7 +146,7 @@ engine's params check refuses below, and `validateParams` SHALL refuse
   params check
 - **THEN** it returns a refusal sentence
 
-### Requirement: Undead descriptions encode totals, the mirror grid, and sightline clues
+### Requirement: Description: Undead descriptions encode totals, the mirror grid, and sightline clues
 
 The desc SHALL consist of the three monster totals (`ghosts,vampires,zombies`),
 followed by a comma and a grid specification, followed by `2·(w + h)`
@@ -69,7 +161,7 @@ a run of 1–26), a mirror as `L` (`\`) or `R` (`/`), and a hand-fixed monster a
 - **THEN** the mirror layout, monster totals, and sighting clues match what was
   encoded
 
-### Requirement: A malformed Undead description is refused
+### Requirement: Description: A malformed Undead description is refused
 
 Reading a description SHALL refuse one with fewer than three leading counts, an
 invalid grid character, a grid that does not fill exactly `w·h` cells, a number
@@ -82,35 +174,7 @@ sightings, or trailing data.
   grid, a monster count mismatch, or the wrong number of sightings is read
 - **THEN** the engine's description verdict is a non-null error
 
-### Requirement: Undead traces sightlines through the mirror maze
-
-A sightline SHALL start from each of the `2·(w + h)` edge positions (clockwise
-from the top-left) and follow a straight path that reflects at each `\` or `/`
-mirror until it exits at another edge position. Each line SHALL carry a
-sighting clue at both of its ends.
-
-#### Scenario: A column with no mirror
-
-- **WHEN** the line entering at the top of a column that holds no mirror is
-  traced
-- **THEN** it ends at the bottom edge position of that column, with every cell
-  of the column as its monster cells in order
-
-### Requirement: A monster's visibility depends on its type and the reflections before it
-
-A monster's contribution to a sighting count SHALL depend on its type and the
-line segment it stands on: a vampire SHALL count only on the segment before any
-reflection, a ghost only on a segment after at least one reflection, and a
-zombie always.
-
-#### Scenario: Reflected and direct visibility
-
-- **WHEN** a sightline passes a vampire before any mirror and a ghost after a mirror
-- **THEN** the sighting count entering at that end includes both
-- **AND** the sighting count entering from the opposite end (where the vampire is
-  now post-reflection and the ghost pre-reflection) excludes both
-
-### Requirement: Undead solves and generates uniquely-solvable graded boards
+### Requirement: Generation: Undead solves and generates uniquely-solvable graded boards
 
 `newDesc` SHALL generate a grid of random mirrors and monster cells, rejecting
 a grid that is too sparse or too dense in monster cells, or that has a
@@ -123,7 +187,7 @@ ladder.
 - **WHEN** `newDesc` returns a board for a given size and difficulty
 - **THEN** the brute-force oracle confirms exactly one solution
 
-### Requirement: Undead grades a board by the rung of the ladder it requires
+### Requirement: Generation: Undead grades a board by the rung of the ladder it requires
 
 `newDesc` SHALL grade a board by which rung of the deductive ladder is
 required: arc-consistency, counting, or forcing. A board's tier SHALL be the
@@ -137,7 +201,7 @@ for forcing.
 - **THEN** the deductive ladder solves it uniquely with no recursion
 - **AND** the board's grade matches the highest rung the ladder needed
 
-### Requirement: Every Undead board is solved by the ladder without recursion
+### Requirement: Generation: Every Undead board is solved by the ladder without recursion
 
 Every board Undead accepts SHALL be solvable by the deductive ladder alone
 (arc-consistency, counting and depth-1 forcing), with zero guessing or
@@ -152,7 +216,7 @@ is not nested recursion.
 - **THEN** the deductive ladder (arc-consistency + counting + depth-1 forcing) solves
   it to completion without invoking the brute-force/recursive search
 
-### Requirement: Undead supports monster, pencil, and clue moves with a cursor
+### Requirement: Controls: Undead supports monster, pencil, and clue moves with a cursor
 
 `interpretMove` SHALL support a keyboard and mouse highlight cursor that
 selects a monster cell. In the highlighted cell it SHALL place a Ghost, Vampire
@@ -174,7 +238,7 @@ the cursor pencil toggle) it SHALL toggle a pencil note.
 - **THEN** each note toggles without leaving pencil mode
 - **AND** a CapsLock-style indicator shows pencil mode is active
 
-### Requirement: Undead's Mark-all fills the cells that have no notes
+### Requirement: Controls: Undead's Mark-all fills the cells that have no notes
 
 Mark-all SHALL fill every undecided cell that carries no notes with all three
 candidate notes, and SHALL make no move once none is left: a monster placed in
@@ -187,7 +251,7 @@ one cell rules nothing out of another, so there is no note to strike.
 - **THEN** every undecided cell without notes gains all three candidate notes
 - **AND** the narrowed cell and already-placed cells are unchanged
 
-### Requirement: A click on a sighting clue strikes it through
+### Requirement: Controls: A click on a sighting clue strikes it through
 
 A click on an edge sighting clue SHALL toggle a strike-through "done" mark on
 that clue.
@@ -198,72 +262,58 @@ that clue.
 - **THEN** the clue is marked done after the first click and not after the
   second
 
-### Requirement: Undead is solved when the grid is full and every count holds
+### Requirement: Controls: Undead provides on-screen key labels
 
-The game SHALL be solved when every monster cell is filled and all counts and
-sightings are satisfied.
+Undead SHALL implement `requestKeys()` returning four keys in this order: its
+three monster-entry keys, `G` labeled `"Ghost"`, `V` labeled `"Vampire"` and
+`Z` labeled `"Zombie"`, followed by a clear key (button code `8`, labeled
+`"Clear"`). The keys SHALL carry the monster letters whichever of the pictures
+and letters displays is selected.
 
-#### Scenario: The last monster goes in
+#### Scenario: The keypad is the three monsters plus clear
 
-- **WHEN** a move fills the last monster cell so that the three totals and
-  every sighting clue hold
-- **THEN** the game's status is solved
+- **WHEN** the key labels are requested for any Undead board
+- **THEN** the result is exactly the buttons `G` ("Ghost"), `V` ("Vampire"),
+  `Z` ("Zombie"), and a clear key
 
-### Requirement: Undead shows live legality errors
+### Requirement: Controls: Space, Delete and a second count click clear an Undead cell
 
-Every move SHALL bring the live legality flags up to date. A monster type whose
-placed count exceeds its total, or differs from it once the grid is full, SHALL
-flag that count and every placed cell of that type. A sightline whose placed
-monsters already exceed its clue, or whose clue can no longer be reached even
-by filling every blank, SHALL flag the clue and every cell of the line.
+With a cell highlighted for an entry, Space and Delete SHALL clear it as `E`,
+`0` and Backspace do, and a left-click on the count block of the monster it
+already holds SHALL clear it too. A clear SHALL take the cell's pencil marks
+with its monster. In pencil mode the same keys SHALL clear a cell that has
+pencil marks and do nothing to one that has none, and a count-block click
+SHALL toggle that monster's mark like its letter.
 
-#### Scenario: A sightline that can no longer reach its clue
+#### Scenario: The zombie block clicked on a zombie
 
-- **WHEN** the monsters placed on a line leave fewer visible, even with every
-  blank on it counted, than a clue at one end asks for
-- **THEN** that clue and every cell of the line are flagged
+- **WHEN** a cell holding a zombie is highlighted for an entry and the zombie
+  count block is clicked
+- **THEN** the cell is empty
+- **AND** had the ghost block been clicked, the cell would hold a ghost
 
-### Requirement: Undead paints a flagged count and a flagged clue red
+#### Scenario: Space in pencil mode on a monster with no marks
 
-`redraw` SHALL paint a flagged count block and a flagged sighting clue in the
-error color. A flagged cell is not recolored: upstream computes that flag and never draws it, and neither does Undead.
+- **WHEN** pencil mode is on, the highlight is on a cell that holds a zombie
+  and no pencil marks, and Space is pressed
+- **THEN** the zombie stays and no move is made
 
-#### Scenario: Over-placing a monster type reddens it live
+### Requirement: Controls: Undead's first arrow selects the top-left square
 
-- **WHEN** the player places more zombies than the zombie total
-- **THEN** the zombie count renders in the error color
+While no square has yet been selected, an arrow key SHALL show the highlight on
+the top-left square of the grid, whichever arrow it is. After that an arrow
+SHALL move the highlight one square and stop at the grid's edge. The highlight
+SHALL rest on a mirror or a given monster as on any square, where no key places
+or clears.
 
-### Requirement: Undead's findMistakes compares the board with its unique solution
+#### Scenario: Down on a board just opened
 
-The game SHALL implement `findMistakes`: re-solving the board to its unique
-solution and returning every placed cell that contradicts it, plus every empty
-cell whose non-empty pencil notes have crossed out its solution monster. The
-solution SHALL be derived from the description clues only.
+- **WHEN** Down is pressed on a board just opened, and then Right
+- **THEN** the highlight shows on the top-left square after the first press,
+  not on the square below it, and on the second square of the top row after
+  the second
 
-#### Scenario: Check & Save flags a wrong placement
-
-- **WHEN** the player places a monster that contradicts the unique solution and
-  invokes Check & Save
-- **THEN** `findMistakes` reports that cell
-- **AND** the save is blocked
-- **AND** an empty cell whose notes have crossed out its solution monster is also
-  reported, while a cell with merely extra notes is not
-
-### Requirement: Undead renders monsters, mirrors, counts, and sightline hints
-
-`redraw` SHALL draw the monster-count row at the top, three blocks G/V/Z; the
-sighting clue numbers around the grid edge, dimmed when struck through and red
-on error; and each interior cell as a mirror (a thick diagonal), a placed
-monster (a drawn ghost, vampire or zombie shape, or the letter G, V or Z when
-the letters display is selected), or a 2×2 grid of pencil notes.
-
-#### Scenario: A struck clue that is also in error
-
-- **WHEN** a clue the player struck through is flagged by the live legality
-  check
-- **THEN** it is drawn red, not dimmed
-
-### Requirement: Undead's count blocks follow the selected count style
+### Requirement: Preferences: Undead's count blocks follow the selected count style
 
 A count block's number SHALL follow the selected count-display style: Total,
 Remaining, Placed/Total, or Left/Total (remaining to place over total, e.g.
@@ -276,7 +326,7 @@ complete (0 left) and red on error.
 - **THEN** the ghost block reads in the Left/Total style and is dimmed to gray,
   0 remaining to place
 
-### Requirement: Undead's count style and monster display are preferences
+### Requirement: Preferences: Undead's count style and monster display are preferences
 
 A monster-count display style and a pictures-or-letters monster display SHALL
 both be available as preferences, under the keys `count-style` and `monsters`.
@@ -290,7 +340,7 @@ style has no in-play toggle.
 - **THEN** the count blocks re-render in the new style and monsters render as letters
 - **AND** the letters option is also available through the preferences dialog
 
-### Requirement: Undead explained deduction hint
+### Requirement: Hint: Undead explained deduction hint
 
 The hint SHALL be purely deductive: it SHALL NOT reveal the known solution and
 SHALL NOT narrate a guess or backtracking search. On the two tiers below
@@ -319,7 +369,7 @@ following hints one move at a time SHALL reach a solved board.
   cell as one journey, explaining that the type's full count is already placed
 - **AND** the narration does not claim a sightline forced the elimination
 
-### Requirement: The forcing rung never reaches an Undead hint
+### Requirement: Hint: The forcing rung never reaches an Undead hint
 
 The forcing rung is a search: it assumes a candidate and runs the
 arc-consistency and counting fixpoint from it. The hint's recorder SHALL NOT
@@ -331,7 +381,7 @@ generation are the same with the hint as without.
 - **WHEN** hint plans are recorded across every tier and many seeds
 - **THEN** no recorded deduction is a forcing one, on any tier
 
-### Requirement: An Unreasonable board's hint stops where deduction stops
+### Requirement: Hint: An Unreasonable board's hint stops where deduction stops
 
 On an `Unreasonable` board the plan SHALL stop where deduction stops, and the
 hint SHALL then refuse with a message saying so, stating the consequence and
@@ -346,7 +396,7 @@ neither failure passes quietly.
   message saying deduction has run out
 - **AND** the plan neither reaches a solved board nor is empty from the start
 
-### Requirement: A sightline step speaks of the line and its two clues
+### Requirement: Hint: A sightline step speaks of the line and its two clues
 
 A sightline step's words SHALL name the sightline and its two clues and say
 which monsters they leave no room for in the cell. They SHALL read correctly at
@@ -364,7 +414,7 @@ restated in the step.
   lying on the narrated path
 - **AND** the first leg's explanation names the sightline and its two clues
 
-### Requirement: Undead's hint conclusions use the necessity voice
+### Requirement: Hint: Undead's hint conclusions use the necessity voice
 
 A hint's conclusions SHALL use the necessity voice: a strike "must cross
 out …", a placement "can only be …".
@@ -375,20 +425,7 @@ out …", a placement "can only be …".
 - **THEN** the first says the player "must cross out" the candidate and the
   second that the cell "can only be" the monster
 
-### Requirement: Undead's pencilStrike clears candidate bits atomically
-
-The game's move set SHALL include a `pencilStrike` move that atomically clears
-a list of candidate bits across cells, idempotent and resume-safe, used by the
-hint for a multi-strike firing. The single-bit `pencil` toggle and the fill-all
-`markAll` move SHALL stay beside it.
-
-#### Scenario: A strike applied twice
-
-- **WHEN** the same `pencilStrike` is executed on a board and then again on the
-  result
-- **THEN** the second leaves the notes as the first left them, re-adding none
-
-### Requirement: Undead's hint takes no auto-pencil preference
+### Requirement: Hint: Undead's hint takes no auto-pencil preference
 
 The hint SHALL NOT add an auto-pencil preference and SHALL ignore the optional
 `ui` argument, because Undead has no trivial (non-teachable) elimination to
@@ -400,7 +437,7 @@ fold away.
   on
 - **THEN** the two plans are the same
 
-### Requirement: Undead's hint marks follow the element-type color legend
+### Requirement: Hint: Undead's hint marks follow the element-type color legend
 
 The hint SHALL render with `COL_HINT` (the placement target or acted-on
 marking) and `COL_HINT_CELL` (the sightline evidence) in the palette, following
@@ -416,7 +453,7 @@ the grid line.
   area while the leg targets a single cell, which is ringed and still shows its
   notes
 
-### Requirement: A struck candidate stays legible
+### Requirement: Hint: A struck candidate stays legible
 
 A candidate a hint step strikes SHALL be drawn in its normal pencil color with
 a strikethrough, on a background that is not `COL_HINT`, so it stays legible.
@@ -427,89 +464,7 @@ a strikethrough, on a background that is not `COL_HINT`, so it stays legible.
   made
 - **THEN** the cell repaints with the candidate drawn as an ordinary note
 
-### Requirement: Undead provides on-screen key labels
-
-Undead SHALL implement `requestKeys()` returning four keys in this order: its
-three monster-entry keys, `G` labeled `"Ghost"`, `V` labeled `"Vampire"` and
-`Z` labeled `"Zombie"`, followed by a clear key (button code `8`, labeled
-`"Clear"`). The keys SHALL carry the monster letters whichever of the pictures
-and letters displays is selected.
-
-#### Scenario: The keypad is the three monsters plus clear
-
-- **WHEN** the key labels are requested for any Undead board
-- **THEN** the result is exactly the buttons `G` ("Ghost"), `V` ("Vampire"),
-  `Z` ("Zombie"), and a clear key
-
-### Requirement: Undead draws its cells on a quiet surface and lifts what is fixed
-
-`redraw` SHALL draw every cell the player fills on the collection's cell
-surface, with the collection's surface grid line between cells and a frame
-round the grid no heavier than that line. A cell holding a mirror, and a cell
-holding a monster the puzzle fixed, SHALL sit on the collection's lifted
-surface of a given. A monster SHALL be the same drawing on either surface, and
-a mirror SHALL stay in ink.
-
-#### Scenario: A mirror is told by the cell under it
-
-- **WHEN** the opening frame of a generated board is drawn
-- **THEN** every mirror's cell is the lifted surface and every empty cell is
-  the plain cell surface
-
-#### Scenario: The frame is a grid line
-
-- **WHEN** the opening frame is drawn
-- **THEN** the line round the grid is one pixel of the surface's grid line, as
-  the line between two cells is
-
-### Requirement: Undead refuses edits to fixed cells
-
-Fixed cells SHALL reject monster, clear and pencil edits.
-
-#### Scenario: A given monster cannot be edited
-
-- **WHEN** the player tries to place a monster in, or clear, a fixed (given)
-  monster cell
-- **THEN** both edits are rejected
-
-### Requirement: Space, Delete and a second count click clear an Undead cell
-
-With a cell highlighted for an entry, Space and Delete SHALL clear it as `E`,
-`0` and Backspace do, and a left-click on the count block of the monster it
-already holds SHALL clear it too. A clear SHALL take the cell's pencil marks
-with its monster. In pencil mode the same keys SHALL clear a cell that has
-pencil marks and do nothing to one that has none, and a count-block click
-SHALL toggle that monster's mark like its letter.
-
-#### Scenario: The zombie block clicked on a zombie
-
-- **WHEN** a cell holding a zombie is highlighted for an entry and the zombie
-  count block is clicked
-- **THEN** the cell is empty
-- **AND** had the ghost block been clicked, the cell would hold a ghost
-
-#### Scenario: Space in pencil mode on a monster with no marks
-
-- **WHEN** pencil mode is on, the highlight is on a cell that holds a zombie
-  and no pencil marks, and Space is pressed
-- **THEN** the zombie stays and no move is made
-
-### Requirement: Undead's first arrow selects the top-left square
-
-While no square has yet been selected, an arrow key SHALL show the highlight on
-the top-left square of the grid, whichever arrow it is. After that an arrow
-SHALL move the highlight one square and stop at the grid's edge. The highlight
-SHALL rest on a mirror or a given monster as on any square, where no key places
-or clears.
-
-#### Scenario: Down on a board just opened
-
-- **WHEN** Down is pressed on a board just opened, and then Right
-- **THEN** the highlight shows on the top-left square after the first press,
-  not on the square below it, and on the second square of the top row after
-  the second
-
-### Requirement: Undead's hint fills a cell when a monster has exactly the cells it needs
+### Requirement: Hint: Undead's hint fills a cell when a monster has exactly the cells it needs
 
 When the empty cells that can still hold a monster number exactly those of it
 left to place, the hint SHALL place it in the first of them, ringing that cell,
@@ -533,7 +488,7 @@ pencil marks list, and any monster while it has none.
 - **THEN** no step places by that count until the strikes that leave those
   cells have each been shown and made
 
-### Requirement: Undead's hint pencils every monster in before its first strike
+### Requirement: Hint: Undead's hint pencils every monster in before its first strike
 
 A strike crosses out pencil marks, so before the first strike of a plan the
 hint SHALL give one step that pencils all three monsters into every empty cell
@@ -549,7 +504,7 @@ narrowed SHALL keep its marks.
 - **THEN** no step of the plan is the fill, and the first strike crosses out
   only marks that are on the board
 
-### Requirement: Undead's hint tries a single, then a counted placement, then a strike
+### Requirement: Hint: Undead's hint tries a single, then a counted placement, then a strike
 
 At each step the plan SHALL take the first that applies of: a cell whose
 pencil marks are down to one monster, placed; a placement by a monster's
@@ -565,3 +520,48 @@ cells up, starting again from the counts after each one found.
   of a cell
 - **THEN** the ghost is crossed out first, for the count, and the sightline's
   strike follows
+
+### Requirement: Look: Undead paints a flagged count and a flagged clue red
+
+`redraw` SHALL paint a flagged count block and a flagged sighting clue in the
+error color. A flagged cell is not recolored: upstream computes that flag and never draws it, and neither does Undead.
+
+#### Scenario: Over-placing a monster type reddens it live
+
+- **WHEN** the player places more zombies than the zombie total
+- **THEN** the zombie count renders in the error color
+
+### Requirement: Look: Undead renders monsters, mirrors, counts, and sightline hints
+
+`redraw` SHALL draw the monster-count row at the top, three blocks G/V/Z; the
+sighting clue numbers around the grid edge, dimmed when struck through and red
+on error; and each interior cell as a mirror (a thick diagonal), a placed
+monster (a drawn ghost, vampire or zombie shape, or the letter G, V or Z when
+the letters display is selected), or a 2×2 grid of pencil notes.
+
+#### Scenario: A struck clue that is also in error
+
+- **WHEN** a clue the player struck through is flagged by the live legality
+  check
+- **THEN** it is drawn red, not dimmed
+
+### Requirement: Look: Undead draws its cells on a quiet surface and lifts what is fixed
+
+`redraw` SHALL draw every cell the player fills on the collection's cell
+surface, with the collection's surface grid line between cells and a frame
+round the grid no heavier than that line. A cell holding a mirror, and a cell
+holding a monster the puzzle fixed, SHALL sit on the collection's lifted
+surface of a given. A monster SHALL be the same drawing on either surface, and
+a mirror SHALL stay in ink.
+
+#### Scenario: A mirror is told by the cell under it
+
+- **WHEN** the opening frame of a generated board is drawn
+- **THEN** every mirror's cell is the lifted surface and every empty cell is
+  the plain cell surface
+
+#### Scenario: The frame is a grid line
+
+- **WHEN** the opening frame is drawn
+- **THEN** the line round the grid is one pixel of the surface's grid line, as
+  the line between two cells is

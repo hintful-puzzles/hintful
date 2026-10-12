@@ -10,74 +10,7 @@ an explained deduction hint with its own legend of marks.
 
 ## Requirements
 
-### Requirement: Singles params are a size and a difficulty
-
-Params SHALL be `w`, `h`, and `diff` (Easy or Normal), encoded `{w}x{h}d{c}`
-when full (`c` = `e` for Easy, `k` for Normal) and `{w}x{h}` otherwise.
-
-#### Scenario: Params round-trip
-
-- **WHEN** params `{ w: 8, h: 8, diff: "tricky" }` (the Normal tier) are encoded
-  with `full = true`
-- **THEN** the result is `8x8dk`
-- **AND** decoding it round-trips the params
-- **AND** encoding with `full = false` yields `8x8`
-
-### Requirement: Singles params are refused outside their bounds
-
-Params SHALL be refused unless `w ≥ 2`, `h ≥ 2` and both are `≤ 61`: 61 is the
-largest number the desc alphabet writes, and a cell holds a number up to
-`max(w, h)`. A difficulty letter the encoding does not know SHALL be
-refused.
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** params with `w < 2` or `h < 2` are checked
-- **THEN** the check returns a non-null error string
-
-#### Scenario: A grid one past the alphabet is rejected
-
-- **WHEN** params with a height of 62 are checked
-- **THEN** the check returns "Height must be at most 61."
-
-### Requirement: Singles descriptions are fixed-length number grids
-
-The desc SHALL encode the board's numbers in scan order, one character per cell:
-digits `0`–`9` for `0`–`9`, letters `a`–`z` for `10`–`35`, `A`–`Z` for `36`–`61`.
-A desc SHALL be refused unless its length equals `w·h` exactly and every
-decoded number lies in `1..max(w,h)`.
-
-#### Scenario: Wrong-length description is rejected
-
-- **WHEN** a desc whose length is not `w·h` is checked
-- **THEN** it is refused with a non-null error
-
-### Requirement: Singles toggle moves
-
-`interpretMove` SHALL map a left-click / `CURSOR_SELECT` on a grid cell to a move
-that toggles the cell black (clearing it to empty if it was already black or
-circled), and a right-click / `CURSOR_SELECT2` to a move that toggles the cell
-circled (clearing it to empty if already set).
-
-#### Scenario: Left-click cycles a cell through black and back to empty
-
-- **WHEN** the player left-clicks an empty cell, then left-clicks it again
-- **THEN** the first move marks it black
-- **AND** the second move clears it to empty
-
-### Requirement: A click outside the Singles grid toggles show-black-numbers
-
-A click outside the grid SHALL toggle the show-black-numbers preference, and
-SHALL return a `UI_UPDATE` rather than a history move.
-
-#### Scenario: A click in the border flips the preference
-
-- **WHEN** the player clicks in the border round the grid while the preference
-  is off
-- **THEN** the preference is on and `interpretMove` returns `UI_UPDATE`
-- **AND** no cell changes
-
-### Requirement: Singles is solved when the board breaks no rule
+### Requirement: Rules: Singles is solved when the board breaks no rule
 
 The puzzle is Hitori on a `w × h` grid of numbers. `status` SHALL report the
 game solved when no number repeats among the cells left white in any row or
@@ -91,129 +24,7 @@ circled or not.
   any row or column, no adjacent blacks, and a single white region
 - **THEN** `status` reports the game solved
 
-### Requirement: Singles deductive solver
-
-The game SHALL provide a deductive solver with these techniques: the
-auto-cascade (a black forces its neighbors white; a circled cell forces
-same-numbered cells in its row/column black), `singlesep`, `doubles`,
-`corners`, `offsetpair` (Normal and above), `allblackbutone`, and
-`removesplits` (Normal and above). It SHALL detect impossibility (e.g. a white
-cell with no white escape, or a contradiction in the cascade).
-
-#### Scenario: Solver completes a generated board
-
-- **WHEN** a board generated at a given difficulty is solved by the solver from
-  its initial numbers
-- **THEN** the solver fully determines every cell (black or white) with no errors
-
-### Requirement: Singles solve tries the current board, then the initial one
-
-`solve` SHALL attempt to solve the current state and then the initial state,
-returning the move that completes the board or an error when neither can be
-solved.
-
-#### Scenario: Solve reports failure on an unsolvable position
-
-- **WHEN** `solve` is called on a board the solver cannot complete
-- **THEN** it returns a non-null error and applies no move
-
-### Requirement: Singles draws pieces on a quiet surface
-
-`redraw` SHALL draw the board as pieces on a quiet surface. Every cell SHALL be
-the collection's cell surface, with the collection's surface grid line between
-cells and a frame round the grid no heavier than that line. A blackened cell
-SHALL hold the collection's shaded piece, inset on its cell. An undecided
-cell SHALL be plain surface. State SHALL never be told by a step of gray.
-
-#### Scenario: An undecided cell is plain surface
-
-- **WHEN** a cell is neither blackened nor circled
-- **THEN** it is drawn as the cell surface with its number and no piece
-
-### Requirement: A circled Singles cell is a ring round its number
-
-A circled cell SHALL hold a ring round its number in the collection's
-ruled-out color, with no fill of its own, and SHALL carry no other mark for
-that state.
-
-#### Scenario: A circled cell is a ring on the surface
-
-- **WHEN** a cell is circled
-- **THEN** it is drawn as the cell surface with an unfilled ring round its
-  number
-- **AND** the ring stands in from the cell's edge by more than the thickness
-  of a hint's band
-
-### Requirement: A Singles number is always shown off a piece, and on one by preference
-
-A cell that holds no piece SHALL always show its number, in ink. A blackened
-cell SHALL show its number only when the show-black-numbers preference is on,
-drawn on the piece in a color that is the same in both schemes, and smaller
-than the number of a cell that holds no piece.
-
-#### Scenario: A blackened cell holds the shaded piece with no number by default
-
-- **WHEN** a cell is blackened and the show-black-numbers preference is off
-- **THEN** the cell holds the shaded piece and no number is drawn
-
-### Requirement: Singles errors are drawn in the error color
-
-A cell `checkComplete` flags as an error SHALL be drawn in the error color: the
-piece of a blackened cell, and the number and the ring of any other. The grid
-lines and the frame SHALL stay in the grid color on every board, since no
-board a player reaches is marked impossible: that mark is the solver's, on
-its own working copy.
-
-#### Scenario: An erroneous cell renders in the error color
-
-- **WHEN** `checkComplete` flags a cell as an error
-- **THEN** that cell's piece, or its number and ring where it holds no piece,
-  is drawn in the error color
-
-#### Scenario: A board full of errors keeps its grid
-
-- **WHEN** every cell of a row is blackened, so each is flagged
-- **THEN** the grid lines and the frame are drawn in the grid color
-
-### Requirement: Singles edge marks land beside the piece and the ring
-
-The cursor SHALL be brackets at the corners of the cursor cell, and the hint's
-marks and the Check & Save outline SHALL be bands at the cell's edge, so that
-each lands beside the piece and the ring and never on them.
-
-#### Scenario: A cursor on a ringed cell that a hint marks
-
-- **WHEN** the cursor is on a circled cell that the displayed hint also marks
-- **THEN** the brackets sit at the cell's corners and the hint's band along
-  its edge
-- **AND** neither is drawn on the cell's ring
-
-### Requirement: Singles completion flash
-
-The completion flash SHALL sweep every cell of the board. A lit cell's ground
-SHALL be filled with a flash color, and what the cell holds, its number, a
-kept cell's ring and a blackened cell's piece, SHALL be drawn over it as on
-any other frame.
-
-#### Scenario: A hand-made completion flashes
-
-- **WHEN** the player's own move completes the board
-- **THEN** the flash plays on the ground of every cell, a blackened one's
-  showing round its piece
-- **AND** a blackened cell's piece is drawn as it was
-
-### Requirement: Singles show-black-numbers preference
-
-The game SHALL expose a single boolean preference (keyword `show-black-nums`),
-labeled "Show numbers on … squares" with the collection's word for the shaded
-color. It SHALL default to off.
-
-#### Scenario: Preference toggles numbers on black squares
-
-- **WHEN** the show-black-numbers preference is turned on
-- **THEN** subsequent redraws draw each black cell's number
-
-### Requirement: Singles mistake-checking
+### Requirement: Rules: Singles mistake-checking
 
 The game SHALL implement `findMistakes(state)`: re-solve the board from its
 immutable numbers to the unique solution and return every player cell whose
@@ -232,7 +43,153 @@ never be reported.
   black nor circled
 - **THEN** `findMistakes` does not include that cell
 
-### Requirement: Singles provides an explained deduction hint
+### Requirement: Params: Singles params are a size and a difficulty
+
+Params SHALL be `w`, `h`, and `diff` (Easy or Normal), encoded `{w}x{h}d{c}`
+when full (`c` = `e` for Easy, `k` for Normal) and `{w}x{h}` otherwise.
+
+#### Scenario: Params round-trip
+
+- **WHEN** params `{ w: 8, h: 8, diff: "tricky" }` (the Normal tier) are encoded
+  with `full = true`
+- **THEN** the result is `8x8dk`
+- **AND** decoding it round-trips the params
+- **AND** encoding with `full = false` yields `8x8`
+
+### Requirement: Params: Singles params are refused outside their bounds
+
+Params SHALL be refused unless `w ≥ 2`, `h ≥ 2` and both are `≤ 61`: 61 is the
+largest number the desc alphabet writes, and a cell holds a number up to
+`max(w, h)`. A difficulty letter the encoding does not know SHALL be
+refused.
+
+#### Scenario: Invalid params are rejected
+
+- **WHEN** params with `w < 2` or `h < 2` are checked
+- **THEN** the check returns a non-null error string
+
+#### Scenario: A grid one past the alphabet is rejected
+
+- **WHEN** params with a height of 62 are checked
+- **THEN** the check returns "Height must be at most 61."
+
+### Requirement: Params: Normal is refused on a Singles grid under 4 squares both ways
+
+Generating at Normal SHALL be refused, with a reason, when both `w` and `h`
+are under 4. The difficulty SHALL NOT be downgraded to Easy: a grid 4 or
+longer either way SHALL be generated at the difficulty asked for.
+
+#### Scenario: A 3×3 Normal is refused
+
+- **WHEN** a board is asked for at `3x3dk`
+- **THEN** it is refused with "No 3x3 puzzle is Normal."
+
+#### Scenario: A 3×5 Normal is dealt as Normal
+
+- **WHEN** a board is asked for at `3x5dk`
+- **THEN** the generator deals a board that needs the Normal techniques
+
+### Requirement: Description: Singles descriptions are fixed-length number grids
+
+The desc SHALL encode the board's numbers in scan order, one character per cell:
+digits `0`–`9` for `0`–`9`, letters `a`–`z` for `10`–`35`, `A`–`Z` for `36`–`61`.
+A desc SHALL be refused unless its length equals `w·h` exactly and every
+decoded number lies in `1..max(w,h)`.
+
+#### Scenario: Wrong-length description is rejected
+
+- **WHEN** a desc whose length is not `w·h` is checked
+- **THEN** it is refused with a non-null error
+
+### Requirement: Generation: Singles generates unique, difficulty-graded boards
+
+`newDesc` SHALL deal a board with exactly one solution. It SHALL accept a board
+only when it is solvable at the requested difficulty and *not* solvable one
+difficulty level below (with the sneaky generation-artifact deduction enabled),
+regenerating otherwise.
+
+#### Scenario: Generated boards are uniquely solvable at their difficulty
+
+- **WHEN** a board is generated at difficulty D
+- **THEN** the solver solves it at D
+- **AND** (for Normal) the solver fails to solve it at the level below D even
+  with the sneaky deduction
+
+### Requirement: Solver: Singles deductive solver
+
+The game SHALL provide a deductive solver with these techniques: the
+auto-cascade (a black forces its neighbors white; a circled cell forces
+same-numbered cells in its row/column black), `singlesep`, `doubles`,
+`corners`, `offsetpair` (Normal and above), `allblackbutone`, and
+`removesplits` (Normal and above). It SHALL detect impossibility (e.g. a white
+cell with no white escape, or a contradiction in the cascade).
+
+#### Scenario: Solver completes a generated board
+
+- **WHEN** a board generated at a given difficulty is solved by the solver from
+  its initial numbers
+- **THEN** the solver fully determines every cell (black or white) with no errors
+
+### Requirement: Solver: Singles solve tries the current board, then the initial one
+
+`solve` SHALL attempt to solve the current state and then the initial state,
+returning the move that completes the board or an error when neither can be
+solved.
+
+#### Scenario: Solve reports failure on an unsolvable position
+
+- **WHEN** `solve` is called on a board the solver cannot complete
+- **THEN** it returns a non-null error and applies no move
+
+### Requirement: Controls: Singles toggle moves
+
+`interpretMove` SHALL map a left-click / `CURSOR_SELECT` on a grid cell to a move
+that toggles the cell black (clearing it to empty if it was already black or
+circled), and a right-click / `CURSOR_SELECT2` to a move that toggles the cell
+circled (clearing it to empty if already set).
+
+#### Scenario: Left-click cycles a cell through black and back to empty
+
+- **WHEN** the player left-clicks an empty cell, then left-clicks it again
+- **THEN** the first move marks it black
+- **AND** the second move clears it to empty
+
+### Requirement: Controls: A click outside the Singles grid toggles show-black-numbers
+
+A click outside the grid SHALL toggle the show-black-numbers preference, and
+SHALL return a `UI_UPDATE` rather than a history move.
+
+#### Scenario: A click in the border flips the preference
+
+- **WHEN** the player clicks in the border round the grid while the preference
+  is off
+- **THEN** the preference is on and `interpretMove` returns `UI_UPDATE`
+- **AND** no cell changes
+
+### Requirement: Controls: Singles' keyboard cursor wraps at the grid's edges
+
+The arrow keys SHALL carry the cursor round the grid: left from the first
+column to the last, up from the first row to the last, and the same the other
+way.
+
+#### Scenario: Left from the first column
+
+- **WHEN** the cursor is on the top-left square of a 6×6 board and Left is
+  pressed
+- **THEN** the cursor is on the last square of the top row
+
+### Requirement: Preferences: Singles show-black-numbers preference
+
+The game SHALL expose a single boolean preference (keyword `show-black-nums`),
+labeled "Show numbers on … squares" with the collection's word for the shaded
+color. It SHALL default to off.
+
+#### Scenario: Preference toggles numbers on black squares
+
+- **WHEN** the show-black-numbers preference is turned on
+- **THEN** subsequent redraws draw each black cell's number
+
+### Requirement: Hint: Singles provides an explained deduction hint
 
 The `singles` game SHALL implement `hint(state)` returning a plan-carrying,
 narrated hint that explains why each move is forced, and `hintKeepTrack` so
@@ -250,7 +207,7 @@ sequence of narrated `HintStep`s (the remaining solution).
   that forces its cell
 - **AND** applying every step's move in order solves the board
 
-### Requirement: A Singles hint step states the number pattern that forces its cell
+### Requirement: Hint: A Singles hint step states the number pattern that forces its cell
 
 Where a pattern of numbers forces the cell, the step's narration SHALL state
 it: two equal numbers one cell apart forcing the middle white; an adjacent
@@ -264,7 +221,7 @@ argument (four/three/two matching numbers); or an offset-pair pattern.
   must be shaded, so the one between them must be the collection's word for
   not shaded
 
-### Requirement: A Singles hint step states the decided cell that forces its cell
+### Requirement: Hint: A Singles hint step states the decided cell that forces its cell
 
 Where a cell the board already decides forces the cell, the step's narration
 SHALL state it: a white cell with a single non-black neighbor forcing that
@@ -278,7 +235,7 @@ a line with a circled white forcing it shaded.
 - **THEN** its narration says the cell touches a shaded square and shaded
   squares cannot touch, so it must be the collection's word for not shaded
 
-### Requirement: A deduction that forces two Singles cells is one step
+### Requirement: Hint: A deduction that forces two Singles cells is one step
 
 A single deduction that forces two cells at once (the four-in-a-corner pair,
 an offset-pair's two whites) SHALL be emitted as one multi-cell `HintStep`, not
@@ -290,7 +247,7 @@ two.
   corner with four matching numbers, or an offset-pair pattern)
 - **THEN** the hint emits a single `HintStep` whose move sets both cells
 
-### Requirement: A Singles hint outlines its evidence
+### Requirement: Hint: A Singles hint outlines its evidence
 
 `redraw` SHALL outline the displayed step's evidence at the cell's edge so the
 narration's premise is visible. Every step SHALL carry visible evidence, at
@@ -302,7 +259,7 @@ least one outlined cell, never a bare conclusion.
 - **THEN** every step carries at least one outlined cell, never a bare
   conclusion
 
-### Requirement: Distinct premise roles in a Singles hint take distinct colors
+### Requirement: Hint: Distinct premise roles in a Singles hint take distinct colors
 
 Where a single deduction has premise cells in distinct roles, those roles
 SHALL be rendered in distinct colors, so the highlight does not imply cells
@@ -320,7 +277,7 @@ mutually disjoint: no cell carries two.
   "protected corner" role in its own color, and the forced cell is the target,
   the three roles disjoint
 
-### Requirement: A Singles corner deduction is narrated as a contradiction
+### Requirement: Hint: A Singles corner deduction is narrated as a contradiction
 
 A corner deduction's narration SHALL name the actual numbers involved (not
 generic "this square / its other neighbor"). That of the corner deduction
@@ -336,7 +293,7 @@ shaded, the corner boxed in), and the deduction (the target stays not shaded).
   arc ("A touching pair of 3s sits at the corner … Shading this 5 … leaving
   the corner 4 boxed in …"), ending that the 5 must stay not shaded
 
-### Requirement: The Singles corner sentence has one shape
+### Requirement: Hint: The Singles corner sentence has one shape
 
 The sentence of the corner deduction from two matching numbers SHALL take the
 shape "A touching pair of 3s sits at the corner, so one must be *shaded*. Shading
@@ -350,7 +307,7 @@ for that state.
 - **THEN** each italic word of the shape is the collection's word for that
   state, and the numbers are the board's
 
-### Requirement: Singles hint tracking follows a step cell by cell
+### Requirement: Hint: Singles hint tracking follows a step cell by cell
 
 `hintKeepTrack` SHALL report `"completed"` when the player's move sets exactly
 the hinted cell(s) to the hinted value, `"onTrack"` (shrinking a multi-cell step
@@ -366,7 +323,7 @@ otherwise.
 - **AND** a move that sets a different cell, or the hinted cell to a different
   value, returns `"off"`
 
-### Requirement: Singles hint roles are bands and stripes, never fills
+### Requirement: Hint: Singles hint roles are bands and stripes, never fills
 
 When a Singles hint is displayed, `redraw` SHALL distinguish the element types
 the deduction names using a stable color legend. Every cell carries a number,
@@ -380,7 +337,7 @@ color in every hint that cites one).
 - **WHEN** a hint cites an undecided number as a premise
 - **THEN** the cell is banded at its edge and its digit is untouched
 
-### Requirement: The forced cell, the number premises and the corner have their own colors
+### Requirement: Hint: The forced cell, the number premises and the corner have their own colors
 
 The forced cell(s) (the move) SHALL be banded `COL_HINT` and drawn without
 the forced mark: the narration says whether to shade or circle. An undecided number premise (the matching numbers a deduction reasons
@@ -405,7 +362,7 @@ names SHALL be striped in `COL_HINT`.
 - **WHEN** a hint for an adjacent equal pair is displayed
 - **THEN** the row or column the pair shares is striped in `COL_HINT`
 
-### Requirement: A decided premise in a Singles hint takes the color of its state
+### Requirement: Hint: A decided premise in a Singles hint takes the color of its state
 
 Where the evidence is an already-decided cell whose black or circled state is
 itself the reason (an adjacent shaded square; a circled cell using up a
@@ -428,49 +385,7 @@ drawn as the cue that is not a color.
   the reason)
 - **THEN** the cited circled premise is banded `COL_HINT_WHITEREF`
 
-### Requirement: Singles generates unique, difficulty-graded boards
-
-`newDesc` SHALL deal a board with exactly one solution. It SHALL accept a board
-only when it is solvable at the requested difficulty and *not* solvable one
-difficulty level below (with the sneaky generation-artifact deduction enabled),
-regenerating otherwise.
-
-#### Scenario: Generated boards are uniquely solvable at their difficulty
-
-- **WHEN** a board is generated at difficulty D
-- **THEN** the solver solves it at D
-- **AND** (for Normal) the solver fails to solve it at the level below D even
-  with the sneaky deduction
-
-### Requirement: Normal is refused on a Singles grid under 4 squares both ways
-
-Generating at Normal SHALL be refused, with a reason, when both `w` and `h`
-are under 4. The difficulty SHALL NOT be downgraded to Easy: a grid 4 or
-longer either way SHALL be generated at the difficulty asked for.
-
-#### Scenario: A 3×3 Normal is refused
-
-- **WHEN** a board is asked for at `3x3dk`
-- **THEN** it is refused with "No 3x3 puzzle is Normal."
-
-#### Scenario: A 3×5 Normal is dealt as Normal
-
-- **WHEN** a board is asked for at `3x5dk`
-- **THEN** the generator deals a board that needs the Normal techniques
-
-### Requirement: Singles' keyboard cursor wraps at the grid's edges
-
-The arrow keys SHALL carry the cursor round the grid: left from the first
-column to the last, up from the first row to the last, and the same the other
-way.
-
-#### Scenario: Left from the first column
-
-- **WHEN** the cursor is on the top-left square of a 6×6 board and Left is
-  pressed
-- **THEN** the cursor is on the last square of the top row
-
-### Requirement: Three or four matching numbers at a Singles corner are shaded
+### Requirement: Hint: Three or four matching numbers at a Singles corner are shaded
 
 In the 2×2 block at a corner of the grid the hint SHALL shade: the corner
 square and the one diagonally inside it, as one step, where all four numbers
@@ -496,7 +411,7 @@ neighbors and box the corner in.
   both outlined 3s flanking the outlined corner 6; keeping it *not shaded*
   would make both *shaded* and box the corner in, so it must be *shaded*."
 
-### Requirement: Two pairs in neighboring Singles lines force two squares unshaded
+### Requirement: Hint: Two pairs in neighboring Singles lines force two squares unshaded
 
 Where two equal numbers share a row or column, and the next row down or column
 to the right holds an equal pair of its own, one of them beside a number of
@@ -514,7 +429,7 @@ side.
   would force one of the 3s and one of the 6s to be *shaded* next to each
   other, and *shaded* squares can't touch, so it must be *not shaded*."
 
-### Requirement: Singles' hint takes the number patterns once and the joining rules last
+### Requirement: Hint: Singles' hint takes the number patterns once and the joining rules last
 
 The hint SHALL use every technique whatever the board's difficulty. Its plan
 SHALL open with what the player's own shaded and circled squares force, then
@@ -537,3 +452,88 @@ no last way out is left either.
   neighboring-line pair
 - **THEN** the plan holds that step, though the solver certifies an Easy board
   without it
+
+### Requirement: Look: Singles draws pieces on a quiet surface
+
+`redraw` SHALL draw the board as pieces on a quiet surface. Every cell SHALL be
+the collection's cell surface, with the collection's surface grid line between
+cells and a frame round the grid no heavier than that line. A blackened cell
+SHALL hold the collection's shaded piece, inset on its cell. An undecided
+cell SHALL be plain surface. State SHALL never be told by a step of gray.
+
+#### Scenario: An undecided cell is plain surface
+
+- **WHEN** a cell is neither blackened nor circled
+- **THEN** it is drawn as the cell surface with its number and no piece
+
+### Requirement: Look: A circled Singles cell is a ring round its number
+
+A circled cell SHALL hold a ring round its number in the collection's
+ruled-out color, with no fill of its own, and SHALL carry no other mark for
+that state.
+
+#### Scenario: A circled cell is a ring on the surface
+
+- **WHEN** a cell is circled
+- **THEN** it is drawn as the cell surface with an unfilled ring round its
+  number
+- **AND** the ring stands in from the cell's edge by more than the thickness
+  of a hint's band
+
+### Requirement: Look: A Singles number is always shown off a piece, and on one by preference
+
+A cell that holds no piece SHALL always show its number, in ink. A blackened
+cell SHALL show its number only when the show-black-numbers preference is on,
+drawn on the piece in a color that is the same in both schemes, and smaller
+than the number of a cell that holds no piece.
+
+#### Scenario: A blackened cell holds the shaded piece with no number by default
+
+- **WHEN** a cell is blackened and the show-black-numbers preference is off
+- **THEN** the cell holds the shaded piece and no number is drawn
+
+### Requirement: Look: Singles errors are drawn in the error color
+
+A cell `checkComplete` flags as an error SHALL be drawn in the error color: the
+piece of a blackened cell, and the number and the ring of any other. The grid
+lines and the frame SHALL stay in the grid color on every board, since no
+board a player reaches is marked impossible: that mark is the solver's, on
+its own working copy.
+
+#### Scenario: An erroneous cell renders in the error color
+
+- **WHEN** `checkComplete` flags a cell as an error
+- **THEN** that cell's piece, or its number and ring where it holds no piece,
+  is drawn in the error color
+
+#### Scenario: A board full of errors keeps its grid
+
+- **WHEN** every cell of a row is blackened, so each is flagged
+- **THEN** the grid lines and the frame are drawn in the grid color
+
+### Requirement: Look: Singles edge marks land beside the piece and the ring
+
+The cursor SHALL be brackets at the corners of the cursor cell, and the hint's
+marks and the Check & Save outline SHALL be bands at the cell's edge, so that
+each lands beside the piece and the ring and never on them.
+
+#### Scenario: A cursor on a ringed cell that a hint marks
+
+- **WHEN** the cursor is on a circled cell that the displayed hint also marks
+- **THEN** the brackets sit at the cell's corners and the hint's band along
+  its edge
+- **AND** neither is drawn on the cell's ring
+
+### Requirement: Look: Singles completion flash
+
+The completion flash SHALL sweep every cell of the board. A lit cell's ground
+SHALL be filled with a flash color, and what the cell holds, its number, a
+kept cell's ring and a blackened cell's piece, SHALL be drawn over it as on
+any other frame.
+
+#### Scenario: A hand-made completion flashes
+
+- **WHEN** the player's own move completes the board
+- **THEN** the flash plays on the ground of every cell, a blackened one's
+  showing round its piece
+- **AND** a blackened cell's piece is drawn as it was

@@ -10,7 +10,7 @@ up.
 
 ## Requirements
 
-### Requirement: Fifteen is solved when its tiles read in order with the gap last
+### Requirement: Rules: Fifteen is solved when its tiles read in order with the gap last
 
 The board SHALL be a `w×h` grid of numbered tiles with one empty gap, solved
 when the tiles read `1..n-1` in row-major order with the gap last.
@@ -23,38 +23,7 @@ when the tiles read `1..n-1` in row-major order with the gap last.
 - **AND** a board one slide away from that arrangement is reported as not
   completed
 
-### Requirement: Fifteen's params are a width and a height
-
-Params SHALL be `w` and `h`, encoded `WxH`. A bare `W` SHALL decode as a
-square `W×W` board. Params with `w < 2` or `h < 2` SHALL be refused.
-
-#### Scenario: Params round-trip and lenient decode
-
-- **WHEN** params `{ w: 4, h: 4 }` are encoded
-- **THEN** the result is `4x4`
-- **AND** decoding `4x4` and `4` both yield `{ w: 4, h: 4 }`, while a
-  non-square `5x4` decodes to `{ w: 5, h: 4 }`
-
-#### Scenario: A board one cell wide is refused
-
-- **WHEN** params `{ w: 1, h: 4 }` are checked
-- **THEN** they are refused
-
-### Requirement: A generated Fifteen board is solvable and starts unsolved
-
-`newDesc` SHALL deal a permutation of the tiles whose parity matches the gap's
-chessboard parity, so the board is reachable from the solved arrangement. It
-SHALL NOT deal the solved arrangement.
-
-#### Scenario: A generated board is solvable and starts unsolved
-
-- **WHEN** a new game is created from any valid params
-- **THEN** the tile array is a permutation whose parity matches the gap's
-  chessboard parity
-- **AND** the initial state is not in the solved arrangement and reports a
-  not-completed status
-
-### Requirement: A Fifteen slide shifts the whole line between its target and the gap
+### Requirement: Rules: A Fifteen slide shifts the whole line between its target and the gap
 
 A `FifteenMove` SHALL be either a slide carrying the destination gap cell
 (`{ type: "move", x, y }`) or a solve (`{ type: "solve" }`). A slide SHALL
@@ -75,7 +44,66 @@ replace the grid with the solved permutation and count as one move.
 - **THEN** the new state is the solved permutation with the move count one
   higher
 
-### Requirement: A click slides only along the gap's row or column
+### Requirement: Params: Fifteen's params are a width and a height
+
+Params SHALL be `w` and `h`, encoded `WxH`. A bare `W` SHALL decode as a
+square `W×W` board. Params with `w < 2` or `h < 2` SHALL be refused.
+
+#### Scenario: Params round-trip and lenient decode
+
+- **WHEN** params `{ w: 4, h: 4 }` are encoded
+- **THEN** the result is `4x4`
+- **AND** decoding `4x4` and `4` both yield `{ w: 4, h: 4 }`, while a
+  non-square `5x4` decodes to `{ w: 5, h: 4 }`
+
+#### Scenario: A board one cell wide is refused
+
+- **WHEN** params `{ w: 1, h: 4 }` are checked
+- **THEN** they are refused
+
+### Requirement: Description: Fifteen descriptions list the tiles in reading order
+
+A Fifteen description SHALL be the board's `w·h` cells in reading order as
+decimal numbers separated by commas, `0` standing for the gap and each other
+number for the tile it shows. `newState` SHALL refuse a number above
+`w·h − 1`, a number given twice, a list shorter or longer than the board, and
+any other character. `hasNoSolution` SHALL hold for a board no slides can put
+in order, so its description does not load.
+
+#### Scenario: The board the first preset deals
+
+- **WHEN** `2,7,0,8,1,5,3,6,4` is read for `3x3`
+- **THEN** the top row is tiles 2 and 7 and then the gap, the middle row 8, 1
+  and 5, and the bottom row 3, 6 and 4
+
+#### Scenario: A tile given twice
+
+- **WHEN** `2,7,0,8,1,5,3,6,2`, that board with its last number changed, is
+  read for `3x3`
+- **THEN** it is refused as giving the same number twice
+
+#### Scenario: Two tiles exchanged
+
+- **WHEN** `7,2,0,8,1,5,3,6,4`, that board with its first two tiles exchanged,
+  is opened for `3x3`
+- **THEN** it reads as a description and is refused as a puzzle with no
+  solution
+
+### Requirement: Generation: A generated Fifteen board is solvable and starts unsolved
+
+`newDesc` SHALL deal a permutation of the tiles whose parity matches the gap's
+chessboard parity, so the board is reachable from the solved arrangement. It
+SHALL NOT deal the solved arrangement.
+
+#### Scenario: A generated board is solvable and starts unsolved
+
+- **WHEN** a new game is created from any valid params
+- **THEN** the tile array is a permutation whose parity matches the gap's
+  chessboard parity
+- **AND** the initial state is not in the solved arrangement and reports a
+  not-completed status
+
+### Requirement: Controls: A click slides only along the gap's row or column
 
 `interpretMove` SHALL produce a slide from a click only when the target cell
 shares exactly one coordinate with the current gap: a click sharing zero or
@@ -94,7 +122,7 @@ tile in that direction.
 - **WHEN** the gap is in the bottom-right corner and the Down arrow is pressed
 - **THEN** the tile above the gap slides down into it
 
-### Requirement: Fifteen offers a greedy full-solution hint plan
+### Requirement: Hint: Fifteen offers a greedy full-solution hint plan
 
 `hint()` SHALL return the whole greedy solution as a multi-step plan. Each
 step SHALL be the next single-cell gap slide the greedy solver chooses,
@@ -116,7 +144,7 @@ plan from any solvable board SHALL reach the solved state.
 - **THEN** the first step's move is a slide whose target is one cell from the
   gap, and its highlight names the tile that will slide into the gap
 
-### Requirement: A Fifteen hint step says whether its slide places a tile home
+### Requirement: Hint: A Fifteen hint step says whether its slide places a tile home
 
 Each step's narration SHALL name the goal tile it works toward its home: one
 tile, held until it is home, so a restoration reads as part of one goal. A
@@ -160,7 +188,7 @@ the plan moves it, and otherwise that it slides out of the way.
 - **THEN** the step that first homed it said it slides into place, and the
   slide back says so again
 
-### Requirement: Fifteen's hintKeepTrack completes on the hinted slide alone
+### Requirement: Hint: Fifteen's hintKeepTrack completes on the hinted slide alone
 
 `hintKeepTrack` SHALL return `"completed"` for a player move that produces
 exactly the board the current step expects, and `"off"` for any other move. It
@@ -172,7 +200,18 @@ SHALL never return `"onTrack"`.
 - **THEN** `hintKeepTrack` reports the step completed
 - **AND** a different move reports `"off"`
 
-### Requirement: Fifteen draws beveled numbered tiles in a recessed border
+### Requirement: Status bar: Fifteen's status bar shows the move count
+
+The status bar SHALL show the move count after the engine's completion words.
+The move count SHALL never freeze or reset.
+
+#### Scenario: The count follows the completion words
+
+- **WHEN** the player solves a board with their twelfth tile moved
+- **THEN** the status bar reads `COMPLETED! Moves: 12`
+- **AND** a further slide off the solved arrangement reads `Moves: 13`
+
+### Requirement: Look: Fifteen draws beveled numbered tiles in a recessed border
 
 `redraw` SHALL draw a recessed beveled border, and each tile as a beveled
 square with its centered number.
@@ -184,7 +223,7 @@ square with its centered number.
 - **THEN** the recorded operations include the recessed border and one beveled
   tile with its number for each non-gap cell
 
-### Requirement: A Fifteen slide animates its tiles between cells
+### Requirement: Look: A Fifteen slide animates its tiles between cells
 
 A slide SHALL animate: each moving tile is drawn interpolated one cell from
 its old position toward the gap, over the animation duration.
@@ -196,18 +235,7 @@ its old position toward the gap, over the animation duration.
   old and new cells, settling exactly on their destination cells at animation
   end
 
-### Requirement: Fifteen's status bar shows the move count
-
-The status bar SHALL show the move count after the engine's completion words.
-The move count SHALL never freeze or reset.
-
-#### Scenario: The count follows the completion words
-
-- **WHEN** the player solves a board with their twelfth tile moved
-- **THEN** the status bar reads `COMPLETED! Moves: 12`
-- **AND** a further slide off the solved arrangement reads `Moves: 13`
-
-### Requirement: A Fifteen tile stands off the well it slides in
+### Requirement: Look: A Fifteen tile stands off the well it slides in
 
 `redraw` SHALL draw a tile's face as the collection's lifted surface inside its
 bevel, and the gap, with whatever a sliding tile uncovers, as the collection's
@@ -220,35 +248,7 @@ schemes. The tile SHALL keep its bevel: it is an object the player moves.
 - **THEN** every tile's face is the lifted surface
 - **AND** the gap is the cell surface, darker than the board around the grid
 
-### Requirement: Fifteen descriptions list the tiles in reading order
-
-A Fifteen description SHALL be the board's `w·h` cells in reading order as
-decimal numbers separated by commas, `0` standing for the gap and each other
-number for the tile it shows. `newState` SHALL refuse a number above
-`w·h − 1`, a number given twice, a list shorter or longer than the board, and
-any other character. `hasNoSolution` SHALL hold for a board no slides can put
-in order, so its description does not load.
-
-#### Scenario: The board the first preset deals
-
-- **WHEN** `2,7,0,8,1,5,3,6,4` is read for `3x3`
-- **THEN** the top row is tiles 2 and 7 and then the gap, the middle row 8, 1
-  and 5, and the bottom row 3, 6 and 4
-
-#### Scenario: A tile given twice
-
-- **WHEN** `2,7,0,8,1,5,3,6,2`, that board with its last number changed, is
-  read for `3x3`
-- **THEN** it is refused as giving the same number twice
-
-#### Scenario: Two tiles exchanged
-
-- **WHEN** `7,2,0,8,1,5,3,6,4`, that board with its first two tiles exchanged,
-  is opened for `3x3`
-- **THEN** it reads as a description and is refused as a puzzle with no
-  solution
-
-### Requirement: A genuine Fifteen completion sweeps the tiles
+### Requirement: Look: A genuine Fifteen completion sweeps the tiles
 
 A genuine completion's flash SHALL sweep the tiles diagonally, a tile's
 position being its cell's place in the grid. A lit tile's face SHALL be filled

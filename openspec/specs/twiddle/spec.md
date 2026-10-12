@@ -9,7 +9,7 @@ block, its well and its completion flash.
 
 ## Requirements
 
-### Requirement: Twiddle is solved when its tiles read in order
+### Requirement: Rules: Twiddle is solved when its tiles read in order
 
 Twiddle SHALL be a `w×h` grid of numbered tiles, solved when the tile numbers
 read in non-decreasing row-major order and, when `orientable`, every tile is
@@ -24,32 +24,7 @@ rotations, and SHALL NOT itself be solved. The game SHALL provide
   the solved arrangement, and reports a not-completed status
 - **AND** generation terminates for every preset
 
-### Requirement: Twiddle params are written WxHnN with trailing flags
-
-Twiddle's params SHALL be `w`, `h`, `n` (the rotating block's size),
-`rowsonly`, `orientable` and `movetarget`. They SHALL be encoded as `WxHnN`
-followed by `r` when `rowsonly`, `o` when `orientable`, and `mK` when a shuffle
-target `K` is set. A bare `W` SHALL decode as a square `W×W` board, and a
-missing `nN` as `n = 2`.
-
-#### Scenario: Params round-trip and lenient decode
-
-- **WHEN** params `{ w: 4, h: 4, n: 3, rowsonly: false, orientable: false, movetarget: 0 }` are encoded
-- **THEN** the result is `4x4n3`
-- **AND** decoding `4x4n3`, `4n3` (square shorthand), and `4x4n3o` all round-trip
-  to the corresponding params, with `o` setting `orientable`
-
-### Requirement: Twiddle refuses a board smaller than its block
-
-`validateParams` SHALL reject `w < n`, `h < n` and an unreasonably large `w·h`,
-each with a human-readable reason.
-
-#### Scenario: A board narrower than its block is rejected
-
-- **WHEN** the engine's params check receives `{ w: 2, n: 3 }`
-- **THEN** it returns a non-null human-readable reason
-
-### Requirement: A rotation turns the block and its tiles
+### Requirement: Rules: A rotation turns the block and its tiles
 
 A rotation SHALL turn the `n×n` block whose top-left corner it names 90° in
 its direction, SHALL advance the orientation of each tile in the block when
@@ -69,118 +44,81 @@ its direction, SHALL advance the orientation of each tile in the block when
   (mod 4), and the board is reported complete only when the numbers are ordered
   **and** every tile is upright
 
-### Requirement: A click rotates the block centered on it
+### Requirement: Params: Twiddle params are written WxHnN with trailing flags
 
-`interpretMove` SHALL convert a left or right click to a rotation by offsetting
-the click by `(n−1)/2` tiles, so that it selects the region centered on the
-click, and mapping the result to grid coordinates. It SHALL reject a click
-whose region falls outside `0 ≤ x ≤ w−n`, `0 ≤ y ≤ h−n`. A left-click SHALL
-rotate anticlockwise (`dir +1`) and a right-click clockwise (`dir −1`).
+Twiddle's params SHALL be `w`, `h`, `n` (the rotating block's size),
+`rowsonly`, `orientable` and `movetarget`. They SHALL be encoded as `WxHnN`
+followed by `r` when `rowsonly`, `o` when `orientable`, and `mK` when a shuffle
+target `K` is set. A bare `W` SHALL decode as a square `W×W` board, and a
+missing `nN` as `n = 2`.
 
-#### Scenario: Click geometry constrains legal rotations
+#### Scenario: Params round-trip and lenient decode
 
-- **WHEN** a click selects a region that would extend past the grid edge
-  (its top-left corner outside `0 ≤ x ≤ w−n`, `0 ≤ y ≤ h−n`)
-- **THEN** no move is produced
+- **WHEN** params `{ w: 4, h: 4, n: 3, rowsonly: false, orientable: false, movetarget: 0 }` are encoded
+- **THEN** the result is `4x4n3`
+- **AND** decoding `4x4n3`, `4n3` (square shorthand), and `4x4n3o` all round-trip
+  to the corresponding params, with `o` setting `orientable`
 
-### Requirement: The Twiddle cursor moves over the rotation origins
+### Requirement: Params: Twiddle refuses a board smaller than its block
 
-Cursor keys SHALL move a cursor over the `(w−n+1)×(h−n+1)` space of rotation
-origins, clamped at the edges without wrapping. When the cursor is visible, its
-`n×n` block SHALL be outlined with cursor-colored bevel edges.
+`validateParams` SHALL reject `w < n`, `h < n` and an unreasonably large `w·h`,
+each with a human-readable reason.
 
-#### Scenario: The cursor's block is outlined
+#### Scenario: A board narrower than its block is rejected
 
-- **WHEN** the cursor is visible on a block and the board is drawn at rest
-- **THEN** the bevel edges along that block's four sides are outlined in the
-  cursor color, and no other tile's are
+- **WHEN** the engine's params check receives `{ w: 2, n: 3 }`
+- **THEN** it returns a non-null human-readable reason
 
-### Requirement: Letter and numpad keys rotate fixed blocks
+### Requirement: Params: Twiddle's short params are its full ones
 
-The letters `a`, `b`, `c` and `d` SHALL each rotate one corner block anticlockwise (`dir +1`),
-and the shifted `A`, `B`, `C` and `D` SHALL rotate the same block `dir −1`. The
-numpad digits SHALL also produce rotations: a corner digit rotates its corner
-block, and an edge digit or the center digit rotates the block midway along
-that edge or at the center only when the parity of `w−n` and `h−n` puts a block
-exactly there.
+`encodeParams` SHALL write the same string with and without `full`, the shuffle
+target included, because the status bar reports progress against it.
+`decodeParams` SHALL read `nN` only directly after the size, and `r`, `o` and
+`mK` in any order after that. It SHALL refuse a character it does not know,
+and SHALL read `n0` as a block of 2.
 
-#### Scenario: A capital turns the corner back
+#### Scenario: A shuffle target survives the short form
 
-- **WHEN** `a` is pressed and then `A`
-- **THEN** the top-left block rotates `dir +1` and then `dir −1`
+- **WHEN** `3x3n3m20` is decoded and encoded again with `full` false
+- **THEN** the result is `3x3n3m20`: a 3×3 board turned as one block, shuffled
+  by 20 turns
 
-#### Scenario: An edge digit needs a block midway
+#### Scenario: Both flags
 
-- **WHEN** `w−n` is even and numpad `8` is pressed
-- **THEN** the block at `((w−n)/2, 0)` rotates `dir +1`
+- **WHEN** `4x4n2ro` is decoded
+- **THEN** the board is 4×4 with a 2×2 block, one number to a row, and tiles
+  that show their turns
 
-### Requirement: Solve replaces the grid with the solved arrangement
+### Requirement: Params: Twiddle's block is at least two squares wide
 
-A solve move SHALL replace the grid with the solved arrangement, SHALL clear
-every orientation, and SHALL count as one move.
+The block size SHALL declare a lower bound of 2 in `paramConfig`, and the
+shuffle count a lower bound of 0, which the engine's params check refuses
+below.
 
-#### Scenario: Solve snaps to the solved board
+#### Scenario: A block of one square
 
-- **WHEN** the solve move executes
-- **THEN** the new state is the solved arrangement with cleared orientations and
-  the move count one higher
+- **WHEN** the params string `4x4n3` has its block size changed to 1 and goes
+  through the engine's params check
+- **THEN** it is refused with "Rotating block size must be at least 2."
 
-### Requirement: Twiddle draws a recessed border and beveled numbered tiles
+### Requirement: Params: A Twiddle title names what departs from the basic game
 
-The Twiddle `redraw` SHALL draw a recessed beveled border, and each tile as a
-beveled square with its number centered and, when `orientable`, an orientation
-triangle.
+A board's label SHALL be its size, followed by `rows only` when `rowsonly`, by
+`orientable` when `orientable`, by `rotating NxN blocks` when the block is not
+2×2, and by `K shuffles` when a shuffle target is set. A board with none of
+these SHALL be labeled by its size alone.
 
-#### Scenario: First draw emits the border and numbered tiles
+#### Scenario: The Type menu's boards
 
-- **WHEN** `redraw` runs against a recording `GameDrawing` double for a fresh
-  board
-- **THEN** the recorded operations include the recessed border and one beveled
-  tile with its number for each cell
+- **WHEN** the params `3x3n2r`, `3x3n2` and `4x4n3` are labeled
+- **THEN** they read "3x3 rows only", "3x3" and "4x4, rotating 3x3 blocks"
 
-### Requirement: A rotation animates the block turning about its center
+#### Scenario: A shuffle target
 
-A rotation SHALL animate the `n×n` block turning 90° about its center, over an
-animation duration proportional to `sqrt(n−1)`. The four bevel edges of each
-turning tile SHALL be recolored through the rotation. Tiles outside the block
-SHALL draw normally.
+- **WHEN** the params `3x3n3m20` are labeled
+- **THEN** the label reads "3x3, rotating 3x3 blocks, 20 shuffles"
 
-#### Scenario: A rotation animates the block
-
-- **WHEN** a rotation move has just executed and `redraw` runs mid-animation
-- **THEN** the tiles inside the rotated block are drawn at coordinates rotated
-  about the block center (and settle on their final cells at animation end),
-  while tiles outside the block are drawn unrotated
-
-### Requirement: The Twiddle status bar shows a move count that never resets
-
-The status bar SHALL show the move count, which never freezes and never resets,
-with the `(target K)` suffix when a move target is set. It SHALL read
-`Moves: N`, or `Moves: N (target K)`.
-
-#### Scenario: The count keeps running after a win
-
-- **WHEN** a rotation executes on a board that is already solved
-- **THEN** the move count shown is one higher than before
-
-### Requirement: A Twiddle tile stands off the well it turns in
-
-`redraw` SHALL draw a tile's face as the collection's lifted surface inside its
-bevel, and what a turning block uncovers as the collection's cell surface, so a
-tile is told from the well by more than its bevel in both schemes. The tile
-keeps its bevel: it is an object the player moves. Color 0 stays the board.
-
-#### Scenario: A tile is not the board's gray
-
-- **WHEN** a board is drawn at rest in either scheme
-- **THEN** every tile's face is the lifted surface
-
-#### Scenario: A turning block shows the well
-
-- **WHEN** a block is drawn part of the way through its turn
-- **THEN** the corners it uncovers are the cell surface
-
-### Requirement: Twiddle descriptions list the tiles in reading order
+### Requirement: Description: Twiddle descriptions list the tiles in reading order
 
 The desc SHALL give each tile's number in reading order. Without `orientable`
 the numbers SHALL be separated by commas. With it each number SHALL be followed
@@ -201,7 +139,7 @@ tile of a row carrying the row's number.
 - **THEN** the tiles stand in order, 1 and 2 upside down and 3 and 4 upright,
   so the board is not solved
 
-### Requirement: A malformed Twiddle description is refused
+### Requirement: Description: A malformed Twiddle description is refused
 
 Reading a description SHALL refuse a number outside the solved board's range, a
 number given more often than the solved board holds it, too few or too many
@@ -221,7 +159,7 @@ matter, and where it does a comma or a letter other than `u`, `l`, `d` and `r`.
 - **THEN** it is refused as repeating a number, since that board holds each of
   1 to 9 once
 
-### Requirement: Twiddle refuses a board no turns can put in order
+### Requirement: Description: Twiddle refuses a board no turns can put in order
 
 `hasNoSolution` SHALL say yes of a board that breaks what every turn keeps.
 Under a block of odd side that is how many tiles of each number stand on each
@@ -248,39 +186,63 @@ parity. A board that passes may still be out of reach.
 - **THEN** the first has no solution, its turns adding up to two, and the
   second, whose turns add up to four, is not refused
 
-### Requirement: Twiddle's short params are its full ones
+### Requirement: Solver: Solve replaces the grid with the solved arrangement
 
-`encodeParams` SHALL write the same string with and without `full`, the shuffle
-target included, because the status bar reports progress against it.
-`decodeParams` SHALL read `nN` only directly after the size, and `r`, `o` and
-`mK` in any order after that. It SHALL refuse a character it does not know,
-and SHALL read `n0` as a block of 2.
+A solve move SHALL replace the grid with the solved arrangement, SHALL clear
+every orientation, and SHALL count as one move.
 
-#### Scenario: A shuffle target survives the short form
+#### Scenario: Solve snaps to the solved board
 
-- **WHEN** `3x3n3m20` is decoded and encoded again with `full` false
-- **THEN** the result is `3x3n3m20`: a 3×3 board turned as one block, shuffled
-  by 20 turns
+- **WHEN** the solve move executes
+- **THEN** the new state is the solved arrangement with cleared orientations and
+  the move count one higher
 
-#### Scenario: Both flags
+### Requirement: Controls: A click rotates the block centered on it
 
-- **WHEN** `4x4n2ro` is decoded
-- **THEN** the board is 4×4 with a 2×2 block, one number to a row, and tiles
-  that show their turns
+`interpretMove` SHALL convert a left or right click to a rotation by offsetting
+the click by `(n−1)/2` tiles, so that it selects the region centered on the
+click, and mapping the result to grid coordinates. It SHALL reject a click
+whose region falls outside `0 ≤ x ≤ w−n`, `0 ≤ y ≤ h−n`. A left-click SHALL
+rotate anticlockwise (`dir +1`) and a right-click clockwise (`dir −1`).
 
-### Requirement: Twiddle's block is at least two squares wide
+#### Scenario: Click geometry constrains legal rotations
 
-The block size SHALL declare a lower bound of 2 in `paramConfig`, and the
-shuffle count a lower bound of 0, which the engine's params check refuses
-below.
+- **WHEN** a click selects a region that would extend past the grid edge
+  (its top-left corner outside `0 ≤ x ≤ w−n`, `0 ≤ y ≤ h−n`)
+- **THEN** no move is produced
 
-#### Scenario: A block of one square
+### Requirement: Controls: The Twiddle cursor moves over the rotation origins
 
-- **WHEN** the params string `4x4n3` has its block size changed to 1 and goes
-  through the engine's params check
-- **THEN** it is refused with "Rotating block size must be at least 2."
+Cursor keys SHALL move a cursor over the `(w−n+1)×(h−n+1)` space of rotation
+origins, clamped at the edges without wrapping. When the cursor is visible, its
+`n×n` block SHALL be outlined with cursor-colored bevel edges.
 
-### Requirement: Each Twiddle letter and keypad digit has its block
+#### Scenario: The cursor's block is outlined
+
+- **WHEN** the cursor is visible on a block and the board is drawn at rest
+- **THEN** the bevel edges along that block's four sides are outlined in the
+  cursor color, and no other tile's are
+
+### Requirement: Controls: Letter and numpad keys rotate fixed blocks
+
+The letters `a`, `b`, `c` and `d` SHALL each rotate one corner block anticlockwise (`dir +1`),
+and the shifted `A`, `B`, `C` and `D` SHALL rotate the same block `dir −1`. The
+numpad digits SHALL also produce rotations: a corner digit rotates its corner
+block, and an edge digit or the center digit rotates the block midway along
+that edge or at the center only when the parity of `w−n` and `h−n` puts a block
+exactly there.
+
+#### Scenario: A capital turns the corner back
+
+- **WHEN** `a` is pressed and then `A`
+- **THEN** the top-left block rotates `dir +1` and then `dir −1`
+
+#### Scenario: An edge digit needs a block midway
+
+- **WHEN** `w−n` is even and numpad `8` is pressed
+- **THEN** the block at `((w−n)/2, 0)` rotates `dir +1`
+
+### Requirement: Controls: Each Twiddle letter and keypad digit has its block
 
 `a` and keypad `7` SHALL turn the top-left block, `b` and `9` the top-right,
 `c` and `1` the bottom-left, and `d` and `3` the bottom-right. Keypad `8`, `2`,
@@ -302,24 +264,62 @@ wherever the cursor is, shown or not.
 - **THEN** nothing turns, there being two blocks along the top edge and none
   between them
 
-### Requirement: A Twiddle title names what departs from the basic game
+### Requirement: Status bar: The Twiddle status bar shows a move count that never resets
 
-A board's label SHALL be its size, followed by `rows only` when `rowsonly`, by
-`orientable` when `orientable`, by `rotating NxN blocks` when the block is not
-2×2, and by `K shuffles` when a shuffle target is set. A board with none of
-these SHALL be labeled by its size alone.
+The status bar SHALL show the move count, which never freezes and never resets,
+with the `(target K)` suffix when a move target is set. It SHALL read
+`Moves: N`, or `Moves: N (target K)`.
 
-#### Scenario: The Type menu's boards
+#### Scenario: The count keeps running after a win
 
-- **WHEN** the params `3x3n2r`, `3x3n2` and `4x4n3` are labeled
-- **THEN** they read "3x3 rows only", "3x3" and "4x4, rotating 3x3 blocks"
+- **WHEN** a rotation executes on a board that is already solved
+- **THEN** the move count shown is one higher than before
 
-#### Scenario: A shuffle target
+### Requirement: Look: Twiddle draws a recessed border and beveled numbered tiles
 
-- **WHEN** the params `3x3n3m20` are labeled
-- **THEN** the label reads "3x3, rotating 3x3 blocks, 20 shuffles"
+The Twiddle `redraw` SHALL draw a recessed beveled border, and each tile as a
+beveled square with its number centered and, when `orientable`, an orientation
+triangle.
 
-### Requirement: The Twiddle completion flash lights each tile's face
+#### Scenario: First draw emits the border and numbered tiles
+
+- **WHEN** `redraw` runs against a recording `GameDrawing` double for a fresh
+  board
+- **THEN** the recorded operations include the recessed border and one beveled
+  tile with its number for each cell
+
+### Requirement: Look: A rotation animates the block turning about its center
+
+A rotation SHALL animate the `n×n` block turning 90° about its center, over an
+animation duration proportional to `sqrt(n−1)`. The four bevel edges of each
+turning tile SHALL be recolored through the rotation. Tiles outside the block
+SHALL draw normally.
+
+#### Scenario: A rotation animates the block
+
+- **WHEN** a rotation move has just executed and `redraw` runs mid-animation
+- **THEN** the tiles inside the rotated block are drawn at coordinates rotated
+  about the block center (and settle on their final cells at animation end),
+  while tiles outside the block are drawn unrotated
+
+### Requirement: Look: A Twiddle tile stands off the well it turns in
+
+`redraw` SHALL draw a tile's face as the collection's lifted surface inside its
+bevel, and what a turning block uncovers as the collection's cell surface, so a
+tile is told from the well by more than its bevel in both schemes. The tile
+keeps its bevel: it is an object the player moves. Color 0 stays the board.
+
+#### Scenario: A tile is not the board's gray
+
+- **WHEN** a board is drawn at rest in either scheme
+- **THEN** every tile's face is the lifted surface
+
+#### Scenario: A turning block shows the well
+
+- **WHEN** a block is drawn part of the way through its turn
+- **THEN** the corners it uncovers are the cell surface
+
+### Requirement: Look: The Twiddle completion flash lights each tile's face
 
 The completion flash SHALL sweep the tiles diagonally, a tile's position being
 its place in the grid. A lit tile's face SHALL be filled with a flash color
