@@ -148,6 +148,11 @@ remembered. Planted: an erase key that marks two squares is still refused by
 That is a third off, and still well above 2026-10-08's 714 s of test time.
 Neither pair was taken on a quiet machine.
 
+**In the hook itself**, with `vite build` beside the tests: commit
+`a318773b`, before, spent 1,116 s in the main pass; commit `473dcb39`,
+which made the two changes above, spent 709 s there and 12 min 38 s in the
+gate from start to finish. Both had the plan `ALL`.
+
 **What is left is three walks, and none of it is waste of that kind.**
 `hint-resume` (158 s), `hint-quality` (150 s) and `warm-repaint` (108 s) are
 38% of what remains. Loopy alone is about 110 s of the first two, and Solo,
