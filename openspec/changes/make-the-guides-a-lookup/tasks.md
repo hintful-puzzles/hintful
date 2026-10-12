@@ -2,9 +2,9 @@
 
 ## 1. Decide
 
-- [ ] 1.1 Write `design.md`: the fixed outline of a guide, the index's
-      columns and its budget (measure what an index of every section costs
-      before naming the number), and the kinds of game it routes. Take the
+- [ ] 1.1 Write `design.md`: the fixed outline of a guide, the columns
+      of its opening table and its budget (measure what a table of a
+      guide's sections costs before naming the number), and the kinds of game it routes. Take the
       kinds from which helpers occur together across `src/games`; the pass
       of 2026-10-12 found four (cells with notes, cells marked by state,
       edges and loops, moves and search).
@@ -27,15 +27,24 @@
       sentence removed and say where it went. A rule that is in neither the
       guide nor its destination is a loss.
 
-## 3. The index and its check
+## 3. The move, the openings and their check
 
-- [ ] 3.1 `docs/games/README.md` as the index, with the route per kind.
-- [ ] 3.2 A gate check, in the fast prefix: every `##` and `###` heading of
-      a guide is in the index, and the index is within its budget. See it
-      fail on a planted heading.
-- [ ] 3.3 Test the route: a subagent with only `AGENTS.md` and the index is
-      asked ten questions a new game's author would have, and reports how
-      many bytes it read to answer each. Record the result in `design.md`.
+- [ ] 3.1 Move the guides up into `docs/` and repoint every citation of a
+      `docs/games/` path outside the archive, in one commit of its own,
+      verified by the shape of its diff: the count of citations before and
+      after, and none left (`git grep -c 'docs/games/'`). Check the gate's
+      documentation-only path and every check under `scripts/checks/` that
+      names the directory.
+- [ ] 3.2 `docs/new-game.md` from `docs/games/README.md`, with the route per
+      kind of game, and the table in `AGENTS.md` naming it first, within
+      that file's limit of lines.
+- [ ] 3.3 Each guide's opening lists its sections with when a game needs
+      each. A gate check, in the fast prefix, holds every `##` and `###`
+      heading of a guide to being in its opening, and the opening to its
+      budget. See it fail on a planted heading.
+- [ ] 3.4 Test the route: a subagent with only `AGENTS.md` is asked ten
+      questions a new game's author would have, and reports how many bytes
+      it read to answer each. Record the result in `design.md`.
 
 ## 4. Close
 

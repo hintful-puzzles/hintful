@@ -1,9 +1,9 @@
 # add-starbattle
 
-**Status: scaffolded 2026-10-12, not started. It waits for the four changes
+**Status: scaffolded 2026-10-12, not started. It waits for the five changes
 before it** in `fit-a-new-game-in-one-session`: it is that change's
-measurement, and is written from the skeleton, the index, the one command and
-the spec rule those leave.
+measurement, and is written from the skeleton, the guides, the one command,
+the spec rule and the region division those leave.
 
 ## Why
 
@@ -41,9 +41,10 @@ after it.
   generator, hint, `findMistakes`, help page, spec and icons.
 - **Parameters**: the grid's size, the stars to a unit (one is Queens), and
   a difficulty.
-- **Regions**: as many as the grid is wide, of unequal sizes. The engine's
-  `divvy.ts` divides a rectangle into equal pieces only, so the generator
-  grows its own; a region's shape is where the puzzle's interest comes from.
+- **Regions**: as many as the grid is wide, of unequal sizes, taken from the
+  engine's division (`own-region-division-in-the-engine`) with Star Battle's
+  rule: no region holds more stars than the board's number. The game writes
+  no division of its own.
 - **Marks**: a star and a cross for "no star here", the cross being the
   player's own notation and the hint's.
 - **Deductions**, each a named rung that grades and narrates: a unit with

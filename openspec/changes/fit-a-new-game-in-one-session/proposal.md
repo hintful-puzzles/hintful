@@ -118,11 +118,17 @@ new game to say what to build. The fifth is the measurement.
 
 ## The owner's answers (2026-10-12)
 
-- **The order is accepted**, and the five pieces are filed as changes of
-  their own, to be taken in this order: `hold-the-game-skeleton-to-the-compiler`,
+- **The order is accepted**, and the pieces are filed as changes of their
+  own, to be taken in this order: `hold-the-game-skeleton-to-the-compiler`,
   `make-the-guides-a-lookup`, `give-a-game-its-verdict-in-one-command`,
-  `order-and-shrink-the-game-specs`, `add-starbattle`. This change is the
-  record of why, and is archived with the last of them.
+  `order-and-shrink-the-game-specs`, `own-region-division-in-the-engine`,
+  `add-starbattle`. This change is the record of why, and is archived with
+  the last of them.
+- **Dividing a grid into unequal regions is the engine's**, which the first
+  scoping of Star Battle had left to the game. Six games each write one.
+- **The guides need no directory of their own and no index file.** The
+  table in `AGENTS.md` is the one index, and each guide opens with its own
+  sections.
 - **The measurement is Star Battle**, a game the owner wants in the
   collection, with its one-star form (known as Queens) as a parameter.
 - **On a spec restating what the game declares: "if we can simplify it, we

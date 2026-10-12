@@ -22,8 +22,8 @@ as it builds, to the form `order-and-shrink-the-game-specs` leaves.
 
 ## 2. Generator
 
-- [ ] 2.1 Place stars, grow regions around them, and keep a board the
-      solver finishes at exactly its tier.
+- [ ] 2.1 Place stars, take the regions around them from the engine's
+      division, and keep a board the solver finishes at exactly its tier.
 - [ ] 2.2 Measure the deal at every preset and at the edges of the Custom
       dialog, and refuse what cannot be dealt.
 

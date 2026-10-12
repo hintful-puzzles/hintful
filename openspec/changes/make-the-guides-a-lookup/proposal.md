@@ -18,8 +18,10 @@ written to be used that way:
   `hints.md` is the story of named games.
 - **Nothing routes by kind of game.** A game with no notes still meets the
   11 KB on the keypad and the 49 KB on candidate hints.
-- **A heading does not always say when to read its section**, and the only
-  index, `docs/games/README.md`, lists seven files and not their sections.
+- **A heading does not always say when to read its section**, and no guide
+  opens with a list of its own. The guides sit a directory deeper than they
+  need to, behind a `README.md` that is a second index of files beside the
+  table in `AGENTS.md`.
 
 ## The decision on form
 
@@ -44,10 +46,25 @@ judgment and the first new game is its test.
     it either.
   - **There is no tutorial.** The skeleton and its stamped tests are what an
     agent learns the shape from.
-- **One index is read at the start, and it is the only thing read whole**:
-  `docs/games/README.md`, holding the lifecycle and a table of every section
-  of every guide with the condition under which a game needs it, and a
-  route for each kind of game. It carries a byte budget the gate holds.
+- **There is one index, and it is the table already in `AGENTS.md`**, which
+  every session has in front of it without reading anything. The owner
+  asked (2026-10-12) whether the depth of `docs/games/` and an index file
+  in it are needed, the whole repository being about games. They are not:
+  - **The guides move up into `docs/`**, and `docs/games/` goes. About 590
+    citations in 316 files outside the archive name the old paths
+    (`git grep -c 'docs/games/'`), and each is repointed.
+  - **`docs/games/README.md` stops being an index.** What it holds that a
+    new game's author needs (the lifecycle, the definition of done, the
+    route by kind of game) becomes one guide, `docs/new-game.md`, that the
+    table names first. The rest goes to the guide for its subject.
+  - **A guide's own opening is the index of its sections**: after the
+    how-to, a table of its headings with when a game needs each. So the
+    lookup is two steps, the table and then the guide's opening, with no
+    third file to keep true.
+  - **The root `README.md` stays the project's public page** and points at
+    `AGENTS.md` for the map. A table of sections there would be a second
+    copy of the one every session already holds, and a page a visitor to
+    the repository has to scroll past.
 - **A guard's insides live in the guard's header**, and a guide says only
   what a game owes the guard and the command that runs it.
 - **One session writes a game.** Its solver, hint and renderer share one
@@ -58,9 +75,12 @@ judgment and the first new game is its test.
 ## What Changes
 
 - Every guide under `docs/games/` is restructured to that form, a guide at a
-  time, moving text and cutting stories without changing a rule.
-- `docs/games/README.md` becomes the index.
-- A gate check holds the index to its budget and to naming every section.
+  time, moving text and cutting stories without changing a rule, and moves
+  up into `docs/`.
+- `docs/games/README.md` becomes `docs/new-game.md` and loses what is not a
+  new game's.
+- A gate check holds each guide's opening to naming every one of its
+  sections, and to a budget of bytes.
 
 Not in this change: any change to what a rule says.
 
