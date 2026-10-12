@@ -11,6 +11,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/midend.ts";
+import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { untangleGame } from "./index.ts";
 import { TS_MIN } from "./landing.ts";
 import { coordLimit } from "./state.ts";
@@ -30,6 +33,46 @@ const DESCS = [
 ];
 /** Far above any walk a ten-point board needs, so only a loop reaches it. */
 const MAX_STEPS = 300;
+
+describe("untangle: a point slides unless the player has watched it get there", () => {
+  const TS = 64;
+  const board = () => {
+    const midend = new Midend(untangleGame);
+    expect(midend.newGameFromId(`${N}:${DESCS[0]}`)).toBeNull();
+    const side = coordLimit(N) * TS;
+    midend.size({ w: side, h: side });
+    const paint = () =>
+      midend.forceRedraw(
+        new RecordingDrawing(midend.getColorPalette(DEFAULT_BACKGROUND)),
+      );
+    paint();
+    return { midend, paint };
+  };
+
+  it("a played hint step slides, at the hint's one duration", () => {
+    const { midend } = board();
+    expect(midend.executeHint()).toBeNull();
+    expect(midend.currentAnimationMs()).toBeCloseTo(1000);
+  });
+
+  /** Drag point 0 one tile down and right, painting between inputs or not. */
+  const dragPoint = (drawn: boolean): number => {
+    const { midend, paint } = board();
+    const p = untangleGame.newState(untangleGame.decodeParams(`${N}`), DESCS[0]).pts[0];
+    const at = { x: Math.trunc((p.x * TS) / p.d), y: Math.trunc((p.y * TS) / p.d) };
+    expect(midend.processInput(at.x, at.y, LEFT_BUTTON)).toBe(true);
+    if (drawn) paint();
+    expect(midend.processInput(at.x + TS, at.y + TS, LEFT_DRAG)).toBe(true);
+    if (drawn) paint();
+    expect(midend.processInput(at.x + TS, at.y + TS, LEFT_RELEASE)).toBe(true);
+    return midend.currentAnimationMs();
+  };
+
+  it("a drag the board drew lands at once, and the same drag undrawn slides", () => {
+    expect(dragPoint(true)).toBe(0);
+    expect(dragPoint(false)).toBeCloseTo(130);
+  });
+});
 
 describe("untangle: every hint step lands where the pointer drops it", () => {
   for (const snap of [false, true]) {

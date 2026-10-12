@@ -248,7 +248,7 @@ export const untangleGame: Game<
       const p = ui.dragPoint;
       ui.dragPoint = -1;
       ui.cursorPoint = -1;
-      ui.justDragged = true;
+      ui.justDragged = ds.dragPoint === p;
       return placeMove(p, ui.newPoint);
     }
     if (isMouseDrag(button) || isMouseRelease(button)) {
@@ -320,7 +320,7 @@ export const untangleGame: Game<
         const p = ui.dragPoint;
         ui.cursorPoint = ui.dragPoint;
         ui.dragPoint = -1;
-        ui.justDragged = true;
+        ui.justDragged = ds.dragPoint === p;
         // A vertex put down where it was picked up goes back as it was held,
         // and not rounded to the pixel the pick-up read it at: the board is
         // then the same board, which the midend makes no step of.

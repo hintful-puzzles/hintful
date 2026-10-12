@@ -58,6 +58,8 @@ describe("magnets params", () => {
   it("rejects a 4x4 Normal board (needs a side >= 5)", () => {
     expect(paramsError(magnetsGame, P(4, 4, DIFF_TRICKY), true)).not.toBeNull();
     expect(paramsError(magnetsGame, P(5, 4, DIFF_TRICKY), true)).toBeNull();
+    // Generation only: a 4x4 board that arrives written is graded as it loads.
+    expect(paramsError(magnetsGame, P(4, 4, DIFF_TRICKY), false)).toBeNull();
   });
 
   it("bounds each side by what one clue character can count", () => {

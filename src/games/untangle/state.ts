@@ -88,8 +88,9 @@ export interface UntangleUi {
   cursorPoint: number;
   /** Where the dragged/cursor-held vertex is now (live, pre-commit). */
   newPoint: RationalPoint;
-  /** Set in `interpretMove` when a drag commits to a move; consumed by
-   * `changedState` into `justMoved`. */
+  /** Set in `interpretMove` when a drag the board has drawn commits to a
+   * move; consumed by `changedState` into `justMoved`. A drag no frame showed
+   * (a hint's step, played in one go) leaves it clear, so its point slides. */
   justDragged: boolean;
   /** Set in `changedState` from `justDragged`: the just-applied move was
    * a player drag, so it animates instantly (the point is already where

@@ -184,7 +184,9 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: MagnetsParams, full: boolean): string | null {
   if (p.diff >= DIFF_TRICKY) {
-    if (p.w < 5 && p.h < 5)
+    // Generation only, as the tier below it: a board that arrives with its
+    // description is graded as it loads, whatever tier its params name.
+    if (full && p.w < 5 && p.h < 5)
       return `Either width or height must be at least five for ${DIFF_NAMES[DIFF_TRICKY]}.`;
     // Measured 2026-10-06: none in 900,000 boards built, with the clues
     // stripped or not. A 3x5 is found once in 1,000 and a 3x7 once in 400.

@@ -396,7 +396,7 @@ const targetVerbs: TargetVerbs<
   },
   keyOnly: [
     {
-      does: "leave the number under the cursor undecided",
+      does: "leave the letter under the cursor undecided",
       keys: ERASE_KEYS,
       apply: setSlot(() => "unknown"),
       pointer: { kind: "cycle", button: "primary" },

@@ -38,8 +38,8 @@ function lastFlippers(s: Pick<FlipState, "w" | "h" | "matrix">): Int32Array {
 
 export function hint(state: FlipState): HintResult<FlipMove, unknown, FlipRung> {
   const answer = shortestAnswer(state);
-  // Only a game ID typed by hand: the generator deals a board some presses
-  // light, and a press keeps it one.
+  // No board that loads: one no presses light is refused at load, and a press
+  // keeps a board one that some presses light.
   if (!answer) return { ok: false, error: PUZZLE_NOT_REASONABLE };
 
   const { w, matrix } = state;

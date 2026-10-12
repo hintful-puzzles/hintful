@@ -360,8 +360,6 @@ export const sokobanGame: Game<
   hintMarks: HINT_MARKS,
   hintRungs: SOKOBAN_RUNGS,
   hintKeepTrack,
-  // The walk a player makes to the barrel, a tap toward each square on the
-  // way, then the tap that pushes it.
   // What a player does: drag the barrel the way it goes, which walks round
   // behind it first.
   hintGesture(_s, _ui, ds, m) {

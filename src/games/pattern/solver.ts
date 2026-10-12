@@ -772,8 +772,8 @@ export function deduceHintPlan(state: PatternState): PatternHintMove[] {
     return 1;
   };
   // Each firing decides at least one cell; the step budget is the
-  // non-termination backstop. Pattern is untiered, so both techniques sit on
-  // tier 0 and the grade is unused.
+  // non-termination backstop. Both techniques sit on tier 0, and the grade
+  // is unused.
   runDeductionFixpoint({
     techniques: [
       {

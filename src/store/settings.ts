@@ -384,14 +384,9 @@ class Settings {
    * settings and app defaults.
    */
   async getPuzzlePreferences(puzzleId: PuzzleId): Promise<ConfigValues> {
-    // TODO: move defaults to src/puzzle/augment; make puzzleId-specific
-    const defaults = {
-      "pencil-keep-highlight": true, // keen, solo, towers, undead
-    };
     const commonPuzzlePreferences = this[getCommonSetting]("puzzlePreferences");
     const puzzleRecord = await this.getPuzzleSettings(puzzleId);
     return {
-      ...defaults,
       ...(commonPuzzlePreferences === UNSET ? {} : commonPuzzlePreferences),
       ...puzzleRecord?.puzzlePreferences,
     };

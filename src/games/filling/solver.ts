@@ -707,9 +707,10 @@ function stepOf(
  * Those rules can stall on a board the clues solve, because candidate
  * elimination is not monotone (`learnBitmapDeductions`). The plan then takes
  * the next square the solver fills from the clues alone. Everything that
- * deduction stood on is still on the board, so it is as true there, and the
- * solver's run from the clues reaches every square of a board that loaded:
- * the plan finishes every mistake-free position of one. */
+ * deduction stood on is still on the board, so it is as true there. Below
+ * Unreasonable the solver's run from the clues reaches every square of a board
+ * that loaded, so the plan finishes every mistake-free position of one; on an
+ * Unreasonable board the run can stop short, and the plan ends where it does. */
 export function deduceHintPlan(
   board: ArrayLike<number>,
   clues: ArrayLike<number>,

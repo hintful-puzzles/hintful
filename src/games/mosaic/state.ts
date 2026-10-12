@@ -20,7 +20,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { presetGrid } from "../../engine/preset-grid.ts";
@@ -238,8 +238,7 @@ function maxLongSide(short: number): number {
 const MAX_AGGRESSIVE_ABOVE_EASY = 900;
 
 export function validateParams(p: MosaicParams, full: boolean): string | null {
-  if (p.height > MAX_TILES / p.width)
-    return `Width times height must be at most ${MAX_TILES}.`;
+  if (p.height > MAX_TILES / p.width) return AREA_TOO_LARGE;
   // Generation only: a board that arrives with its description is not
   // searched for, so it opens at any shape.
   if (!full) return null;

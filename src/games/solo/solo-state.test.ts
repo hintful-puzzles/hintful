@@ -132,6 +132,14 @@ describe("solo params codec", () => {
     expect(p.r).toBe(1);
   });
 
+  it("refuses a symmetry code no encoder writes", () => {
+    for (const s of ["3x3m3", "3x3r7", "3x3m", "3x3md", "3x3a5", "3x3md8"]) {
+      expect(() => decodeParams(s), s).toThrow(/^The parameters /);
+    }
+    expect(decodeParams("3x3md4").symm).toBe(SYMM_REF4D);
+    expect(decodeParams("3x3r2").symm).toBe(SYMM_ROT2);
+  });
+
   it("rejects out-of-range params", () => {
     const valid = (p: SoloParams) => paramsError(soloGame, p, true);
     expect(valid({ ...defaultParams(), c: 1 })).toBe(

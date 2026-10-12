@@ -438,6 +438,13 @@ describe("a game with the search's tiers deals its Unreasonable boards through t
     expect(searchTiered.some(({ tiers }) => tiers.length > 2)).toBe(true);
   });
 
+  // What a params string with no `d` decodes to is the default's tier, and a
+  // link written before a game had tiers names an Easy board.
+  it("has Easy for the tier of every such game's default", () => {
+    for (const { id, game } of searchTiered)
+      expect(tierOf(game, game.defaultParams()), id).toBe(0);
+  });
+
   for (const t of searchTiered) {
     it(`${t.id}: deals an Unreasonable board by dealUnreasonable`, () => {
       const params = paramsForTier(t, t.tiers.length - 1);

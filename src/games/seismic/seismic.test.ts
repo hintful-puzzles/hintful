@@ -224,6 +224,18 @@ describe("seismic params", () => {
     }
   });
 
+  it("opens a board past either bound when it arrives with its description", () => {
+    // The bounds are the generator's. Upstream has none, so it deals and shares
+    // boards of these sizes, and loading one is a single solver run (1 to 5 ms
+    // here). Both were dealt by this generator with the bound lifted.
+    for (const id of [
+      "9x8:aa1b1b3b1a1ca1aa4bbaaa1a1ba3dcaa3b2c3bad1a6b1a3aab3,z34e2j1i2q",
+      "11x10T:abb1baacbbcaab4aaca1baaaa1bab1ab1daaa1dab1ba1ac7a2a2a1b2a2baa5d2d2aa3c3ab1b6b,b4a3e54m3d1a23g3j4b1d5d4f4b5m5f5d2b5c41",
+    ]) {
+      expect(new Midend(seismicGame).newGameFromId(id), id).toBeNull();
+    }
+  });
+
   it("names presets mode-first, with the game's own tier word", () => {
     // The tier word comes from `DIFF_NAMES` rather than being restated here: it
     // is the collection's, by position, and a literal would be a second copy to

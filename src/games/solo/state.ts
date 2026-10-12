@@ -231,13 +231,18 @@ export function decodeParams(s: string): SoloParams {
         sd = true;
         i++;
       }
+      const numberAt = i;
       const sn = readInt();
-      if (sc === "m" && sn === 8) ret.symm = SYMM_REF8;
-      if (sc === "m" && sn === 4) ret.symm = sd ? SYMM_REF4D : SYMM_REF4;
-      if (sc === "m" && sn === 2) ret.symm = sd ? SYMM_REF2D : SYMM_REF2;
-      if (sc === "r" && sn === 4) ret.symm = SYMM_ROT4;
-      if (sc === "r" && sn === 2) ret.symm = SYMM_ROT2;
-      if (sc === "a") ret.symm = SYMM_NONE;
+      // `a` stands alone, and the others take only the orders the encoder
+      // writes: a number that names no symmetry is refused, not read as the
+      // default.
+      if (sc === "a" && i === numberAt) ret.symm = SYMM_NONE;
+      else if (sc === "m" && sn === 8 && !sd) ret.symm = SYMM_REF8;
+      else if (sc === "m" && sn === 4) ret.symm = sd ? SYMM_REF4D : SYMM_REF4;
+      else if (sc === "m" && sn === 2) ret.symm = sd ? SYMM_REF2D : SYMM_REF2;
+      else if (sc === "r" && sn === 4) ret.symm = SYMM_ROT4;
+      else if (sc === "r" && sn === 2) ret.symm = SYMM_ROT2;
+      else unreadParams(s, numberAt);
     } else if (ch === "d") {
       ret.diff = paramsLetter(s, i + 1, DIFF_CHARS);
       i += 2;

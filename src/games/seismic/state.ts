@@ -194,9 +194,10 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  *
  * Refusing in `validateParams`, where the Custom dialog can show a reason, is
  * docs/solver-and-generator.md § "Unlucky, impossible, and load-bearing
- * validation"'s prescribed handling. Its cost: a hand-authored Seismic
- * `10x10:⟨desc⟩` game ID is refused too, since params are validated the same
- * way for a `:desc` id as for a `#seed` one.
+ * validation"'s prescribed handling. Both bounds are the generator's and bind
+ * only a board being dealt: upstream has neither, so it shares boards past
+ * them, and one that arrives with its description opens after a single solver
+ * run.
  */
 export const MAX_CELLS_SEISMIC = 64;
 
@@ -207,9 +208,9 @@ function maxCells(mode: number): number {
   return mode === MODE_TECTONIC ? MAX_CELLS_TECTONIC : MAX_CELLS_SEISMIC;
 }
 
-export function validateParams(p: SeismicParams, _full: boolean): string | null {
+export function validateParams(p: SeismicParams, full: boolean): string | null {
   const max = maxCells(p.mode);
-  if (p.w * p.h > max)
+  if (full && p.w * p.h > max)
     return `Width times height must be at most ${max} in ${MODE_NAMES[p.mode]} mode; the generator cannot reliably build a larger board.`;
   return null;
 }

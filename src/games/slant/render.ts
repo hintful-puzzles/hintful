@@ -340,7 +340,7 @@ function drawTile(
     );
   }
 
-  // Hint anchor: a doubled teal ring on a cited already-filled square (the
+  // Hint anchor: a doubled ring on a cited already-filled square (the
   // "share a fate" premise of an equivalence firing), drawn over its slash.
   if (v & HINT_REF) {
     const inset = Math.max(1, Math.floor(ts / 12));
