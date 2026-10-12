@@ -152,6 +152,31 @@ and nothing installed but Node: the game catalog is committed source
 (`src/puzzle/catalog-data.ts`), the icons are a committed snapshot, and the help
 pages are committed markdown.
 
+## Documentation
+
+The guides under [`docs/`](docs) say how work is done here, and each is
+written to be looked up by section rather than read through. This table is
+the one index of them.
+
+| Working on | Guide |
+| --- | --- |
+| Any game: the lifecycle, the definition of done | [`docs/games/README.md`](docs/games/README.md) |
+| Params, state, moves, capability hooks, affordances | [`docs/games/mechanics.md`](docs/games/mechanics.md) |
+| Pointer, keyboard, touch, the keypad | [`docs/games/input.md`](docs/games/input.md) |
+| Redraw, tile cache, palette, animation | [`docs/games/rendering.md`](docs/games/rendering.md) |
+| Solver, generator, difficulty tiers, `findMistakes` | [`docs/games/solver-and-generator.md`](docs/games/solver-and-generator.md) |
+| A hint: its words, marks, rungs, pins, its help section | [`docs/games/hints.md`](docs/games/hints.md) |
+| A test, a render scenario, a cross-game guard | [`docs/games/testing.md`](docs/games/testing.md) |
+| A shared engine helper | [`docs/games/engine-catalog.md`](docs/games/engine-catalog.md) |
+| Judging tests, or quoting a measurement | [`docs/test-strength.md`](docs/test-strength.md) |
+| A check, a census, a bulk edit, a number in a proposal | [`docs/method.md`](docs/method.md) |
+| An openspec change, acceptance, pushing, a deploy | [`docs/work-management.md`](docs/work-management.md) |
+| A help page | [`docs/help-pages.md`](docs/help-pages.md) |
+| A framework or cross-game design decision | [`docs/doctrine.md`](docs/doctrine.md) |
+
+Each guide names at its top the spec it rests on, and a game's own rules are
+`openspec/specs/<game>/spec.md`.
+
 ## Contributing / work tracking
 
 Work is tracked with **openspec** (`openspec/`): a change is proposed,

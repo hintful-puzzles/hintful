@@ -36,13 +36,14 @@
       documentation-only path and every check under `scripts/checks/` that
       names the directory.
 - [ ] 3.2 `docs/new-game.md` from `docs/games/README.md`, with the route per
-      kind of game, and the table in `AGENTS.md` naming it first, within
-      that file's limit of lines.
+      kind of game, and the table in `README.md` § "Documentation" naming
+      it first. Move out of `AGENTS.md` whatever else there is not about
+      how an agent works.
 - [ ] 3.3 Each guide's opening lists its sections with when a game needs
       each. A gate check, in the fast prefix, holds every `##` and `###`
       heading of a guide to being in its opening, and the opening to its
       budget. See it fail on a planted heading.
-- [ ] 3.4 Test the route: a subagent with only `AGENTS.md` is asked ten
+- [ ] 3.4 Test the route: a subagent with only `AGENTS.md` and `README.md` is asked ten
       questions a new game's author would have, and reports how many bytes
       it read to answer each. Record the result in `design.md`.
 

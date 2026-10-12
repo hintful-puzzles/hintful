@@ -127,7 +127,8 @@ new game to say what to build. The fifth is the measurement.
 - **Dividing a grid into unequal regions is the engine's**, which the first
   scoping of Star Battle had left to the game. Six games each write one.
 - **The guides need no directory of their own and no index file.** The
-  table in `AGENTS.md` is the one index, and each guide opens with its own
+  table in the root `README.md` is the one index, `AGENTS.md` holding only
+  how an agent works, and each guide opens with its own
   sections.
 - **The measurement is Star Battle**, a game the owner wants in the
   collection, with its one-star form (known as Queens) as a parameter.

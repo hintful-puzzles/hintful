@@ -21,7 +21,7 @@ written to be used that way:
 - **A heading does not always say when to read its section**, and no guide
   opens with a list of its own. The guides sit a directory deeper than they
   need to, behind a `README.md` that is a second index of files beside the
-  table in `AGENTS.md`.
+  table in the root `README.md`.
 
 ## The decision on form
 
@@ -46,10 +46,13 @@ judgment and the first new game is its test.
     it either.
   - **There is no tutorial.** The skeleton and its stamped tests are what an
     agent learns the shape from.
-- **There is one index, and it is the table already in `AGENTS.md`**, which
-  every session has in front of it without reading anything. The owner
-  asked (2026-10-12) whether the depth of `docs/games/` and an index file
-  in it are needed, the whole repository being about games. They are not:
+- **There is one index, and it is the table in the root `README.md`,
+  § "Documentation".** The owner's rule (2026-10-12): `AGENTS.md` holds how
+  an agent works in this repository, and anything a person would also use
+  lives outside it. So the table moved there that day, and `AGENTS.md`
+  tells a session to read it. The owner also asked whether the depth of
+  `docs/games/` and an index file in it are needed, the whole repository
+  being about games. They are not:
   - **The guides move up into `docs/`**, and `docs/games/` goes. About 590
     citations in 316 files outside the archive name the old paths
     (`git grep -c 'docs/games/'`), and each is repointed.
@@ -61,10 +64,10 @@ judgment and the first new game is its test.
     how-to, a table of its headings with when a game needs each. So the
     lookup is two steps, the table and then the guide's opening, with no
     third file to keep true.
-  - **The root `README.md` stays the project's public page** and points at
-    `AGENTS.md` for the map. A table of sections there would be a second
-    copy of the one every session already holds, and a page a visitor to
-    the repository has to scroll past.
+  - **The root `README.md` holds the table of guides and no table of
+    sections**: one row a guide, so the public page stays short.
+  - **Read `AGENTS.md` for anything else that is not about how an agent
+    works**, and move it to the guide for its subject.
 - **A guard's insides live in the guard's header**, and a guide says only
   what a game owes the guard and the command that runs it.
 - **One session writes a game.** Its solver, hint and renderer share one
@@ -90,5 +93,5 @@ None at filing; see `.openspec.yaml`.
 
 ## Impact
 
-`docs/games/`, `AGENTS.md`'s table, source comments that cite a moved
+`docs/games/`, `README.md`'s table, `AGENTS.md`, source comments that cite a moved
 heading, `scripts/gate.sh`.

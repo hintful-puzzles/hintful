@@ -153,21 +153,10 @@ The long form, with the shapes to search for, is `docs/method.md`.
 
 ## Read the guide before you touch
 
-| Working on | Read first |
-| --- | --- |
-| Any game: the lifecycle, the definition of done | `docs/games/README.md` |
-| Params, state, moves, capability hooks, affordances | `docs/games/mechanics.md` |
-| Pointer, keyboard, touch, the keypad | `docs/games/input.md` |
-| Redraw, tile cache, palette, animation | `docs/games/rendering.md` |
-| Solver, generator, difficulty tiers, `findMistakes` | `docs/games/solver-and-generator.md` |
-| A hint: its words, marks, rungs, pins, its help section | `docs/games/hints.md` |
-| A test, a render scenario, a cross-game guard | `docs/games/testing.md` |
-| A shared engine helper | `docs/games/engine-catalog.md` |
-| Judging tests, or quoting a measurement | `docs/test-strength.md` |
-| A check, a census, a bulk edit, a number in a proposal | `docs/method.md` |
-| An openspec change, acceptance, pushing, a deploy | `docs/work-management.md` |
-| A help page | `docs/help-pages.md` |
-| A framework or cross-game design decision | `docs/doctrine.md` |
+**The index of the guides is `README.md` § "Documentation"**: read that table
+at the start of a session, and go to the guide it names for the part of the
+tree you are about to touch. This file holds how an agent works here, and
+nothing a person reading the project would also need.
 
 **A guide is looked up, never read through.** Read its opening and headings,
 then the section the work needs and the requirement it names. Send a subagent
