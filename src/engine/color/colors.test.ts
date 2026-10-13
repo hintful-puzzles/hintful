@@ -141,9 +141,11 @@ describe("the named colors", () => {
       // No upstream set to beat. Any two of these may be the fills of regions
       // side by side, so the bar is the floor two neighbors are held to
       // (`MIN_DARK_DISTANCE`, `puzzle/neighbor-contrast.ts`), in both schemes.
+      // All eight at once, which holds the four and the six a board may take
+      // in their place, since each is the eight's first members.
       [
-        "four quiet region fills (star battle)",
-        colors.FOUR_FILLS_QUIET.map((c, i) => [`fill${i}`, c] as [string, Color]),
+        "eight region fills (the region palette)",
+        colors.REGION_FILLS.map((c, i) => [`fill${i}`, c] as [string, Color]),
         0.07,
       ],
       [

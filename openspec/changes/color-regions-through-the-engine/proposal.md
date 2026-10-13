@@ -2,11 +2,11 @@
 
 **Status: built and committed 2026-10-13, not pushed, waiting for the
 owner's word on the look** (`tasks.md` § 5). The session's questions are
-settled in `tasks.md` § 3, and three things came out otherwise than written
-below: the fills are a quiet set of their own in Map's four hues
-(`FOUR_FILLS_QUIET`) and not the washes; Map's generator and the renderer
-share one coloring walk; and one question is open for the owner, whether
-Map takes the quiet four too (`tasks.md` § 5.2).
+settled in `tasks.md` § 4, and the change grew at the owner's word past
+what is written below: the fills are a region palette of their own
+(`REGION_FILLS`) and not the washes; Map takes its first four, with pink
+where its red was; and Map's generator and the renderer share one coloring
+walk. What the palette's design left for other games is `tasks.md` § 6.
 
 **Where the first session stops.** The owner's word, 2026-10-13: work until
 there is a screenshot of a colored Star Battle board to show them, then wait

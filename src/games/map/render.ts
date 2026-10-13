@@ -384,7 +384,7 @@ function drawError(dr: GameDrawing, ts: number, x: number, y: number): void {
 // The note-taking cell's picture, for a selection that is a region rather than
 // a cell: a band just inside the region's boundary in both modes, which is the
 // whole region "washed" without changing its fill — a region's fill is the
-// answer in this game, so a wash over a red region would read as another red —
+// answer in this game, so a wash over a pink region would read as another pink —
 // and, for notes, the note-taking corner triangle in the region's first cell.
 //
 // Each cell holds one or two convex pieces (a square, or two right triangles

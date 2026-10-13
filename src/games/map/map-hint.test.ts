@@ -12,7 +12,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
 import { hintKeepTrack, refreshHintStep } from "./hint.ts";
-import { REGION, WALK_MAX } from "./hint-text.ts";
+import { colorName, REGION, WALK_MAX } from "./hint-text.ts";
 import { mapGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { neighbors } from "./solver.ts";
@@ -443,8 +443,8 @@ describe("map hint claims hold on the board they are spoken over", () => {
           expect(ev).not.toContain(t);
           // What the sentence says about the dots is what they show: every
           // color the walk names is one of that region's dots, and "every
-          // numbered region has a red dot" is true of every one.
-          const COLORS = ["red", "yellow", "teal", "violet"];
+          // numbered region has a pink dot" is true of every one.
+          const COLORS = [0, 1, 2, 3].map(colorName);
           // The walk as named: region 1's color from "it's X", then each
           // "region k is Y". Every one is a dot of its region, and each differs
           // from the one before, which is the whole of "takes the dot the one

@@ -448,90 +448,90 @@ export const TWO_NAMES: readonly [string, string] = ["purple", "yellow"];
  * take their fills from here, so they follow the pair when it is replaced. */
 export const TWO_WASH: readonly [Color, Color] = [PURPLE_WASH, YELLOW_WASH];
 
+/** A region fill in one scheme: `[lightness, chroma, hue]`. */
+type Lch = readonly [l: number, c: number, h: number];
+
 /**
- * **Four fills**, for the one set in the collection whose size is a *theorem* —
- * four colors suffice to color any planar map, which is Map's puzzle.
+ * **The region palette**: what a region is filled with, on any board. Eight
+ * faint fills in two rings, of which a board takes the first four, six or
+ * eight.
  *
- * The widest spread {@link EIGHT_FILLS} allows, because a Map board is almost
- * entirely region fill and the whole game is telling neighboring regions apart.
- * Upstream's four muted earth tones measured 0.077; these measure 0.113 light and
- * 0.120 dark (2026-09-11). Upstream chose earth tones so four saturated hues were
- * not tiring over a whole game; the wash step answers that without being hard to
- * read.
+ * - **The first four are a quarter turn apart in hue at one lightness**, so a
+ *   board in them is evenly light and no region is the loud one. That is why
+ *   two of them are not the palette's named hues: purple and pink stand 42
+ *   degrees apart, and at a chroma this faint 0.036, half the floor two
+ *   neighbors are held to (`MIN_DARK_DISTANCE`, `puzzle/neighbor-contrast.ts`).
+ *   The violet and the pink here are moved to where the four are spread.
+ * - **The next four sit a step lower in lightness, on the hues between**, so
+ *   that six and eight still hold every pair to that floor.
+ * - **No red and no gray.** Red is an error, and its wash the mistake's
+ *   (`ERROR_WASH`); the owner never liked it in Map (2026-10-13). A gray
+ *   region reads as a wall in the light scheme and a hole in the dark.
+ *
+ * `dark` is the **quiet** value, for a board whose regions the puzzle gives:
+ * the whole board is these and everything the player reads is drawn on them,
+ * so they are dark enough for a mark to win. At a wash's 0.42 a star measured
+ * 1.7:1 on its region and the hint's stripes 1.16:1. The dark yellow leaves
+ * its hue a little way toward orange, since a yellow that dark is olive, a
+ * muddy field (owner, 2026-10-11, of {@link YELLOW_WASH}).
+ *
+ * `answer` is the dark value where **the fill is the player's answer**, which
+ * is Map: lighter and stronger, because there a filled region has to stand
+ * off one with no color yet, a stipple of the color has to show on that
+ * surface, and the color is named to the player, where at the quiet step the
+ * yellow is brown and the pink wine. The light scheme has one value for both.
  */
-export const FOUR_FILLS: readonly Color[] = [
-  RED_WASH,
-  YELLOW_WASH,
-  TEAL_WASH,
-  PURPLE_WASH,
-];
+const REGION_DESIGN = {
+  yellow: {
+    light: [0.935, 0.078, 99],
+    dark: [0.36, 0.06, 85],
+    answer: [0.5, 0.095, 95],
+  },
+  teal: {
+    light: [0.895, 0.066, 190],
+    dark: [0.355, 0.057, 192],
+    answer: [0.46, 0.074, 192],
+  },
+  violet: {
+    light: [0.88, 0.055, 277],
+    dark: [0.35, 0.068, 282],
+    answer: [0.45, 0.095, 282],
+  },
+  pink: { light: [0.89, 0.056, 9], dark: [0.35, 0.066, 5], answer: [0.47, 0.088, 0] },
+  green: { light: [0.82, 0.062, 145], dark: [0.28, 0.06, 146] },
+  blue: { light: [0.82, 0.062, 233], dark: [0.28, 0.057, 237] },
+  peach: { light: [0.835, 0.06, 60], dark: [0.28, 0.06, 56] },
+  orchid: { light: [0.826, 0.065, 323], dark: [0.28, 0.065, 323] },
+} as const satisfies Record<string, { light: Lch; dark: Lch; answer?: Lch }>;
 
-/** The two steps the members of {@link FOUR_FILLS_QUIET} take, a scheme, as
- * `[lightness, chroma]`. */
-const QUIET_STEPS: Record<"upper" | "lower", { light: Step; dark: Step }> = {
-  upper: { light: [0.92, 0.045], dark: [0.35, 0.05] },
-  lower: { light: [0.875, 0.045], dark: [0.28, 0.055] },
-};
-
-/** A member of {@link FOUR_FILLS_QUIET}: a named color's hue at one of the
- * set's two steps. */
-const quietFill = (name: string, step: "upper" | "lower"): Color => {
-  const { h } = DESIGN[name];
-  const { light, dark } = QUIET_STEPS[step];
-  return token(oklch(light[0], light[1], h), oklch(dark[0], dark[1], h));
-};
-
-/** The yellow of {@link FOUR_FILLS_QUIET}, which says why it is not at the
- * upper step: `[lightness, chroma, hue]`. */
-const QUIET_YELLOW = {
-  light: [0.93, 0.065, 100],
-  dark: [QUIET_STEPS.upper.dark[0], QUIET_STEPS.upper.dark[1], 88],
-} as const;
+const fill = (light: Lch, dark: Lch): Color => token(oklch(...light), oklch(...dark));
 
 /**
- * **{@link FOUR_FILLS}, quiet**: the same four hues, member for member, for
- * a board whose regions the puzzle gives. There the whole board is these, and
- * all a fill says is "these squares are one region": everything the player
- * reads is drawn on it, and the heavy border between two regions is what
- * tells them apart. In Map the fill is the player's answer, and has to stand
- * off a region with no color yet; here it has to recede.
- *
- * A step of its own and not the four washes. A wash's lightness is an output
- * of the search behind {@link FOUR_FILLS}, so as a whole board they are
- * uneven, teal's brighter than the board and red's well under it, and in the
- * dark scheme too light for a mark to win on: at a wash's 0.42 a star
- * measured 1.7:1 on its region and the hint's stripes 1.16:1.
- * `palette.test.ts` holds each mark's floor on these.
- *
- * **Two steps, taken in turn round the hue circle.** Any two members may be
- * the fills of regions side by side, so every pair has to clear the floor
- * two neighbors are held to (`MIN_DARK_DISTANCE`,
- * `puzzle/neighbor-contrast.ts`), which four hues this faint do not at one
- * lightness. Hues next to each other therefore take different steps.
- *
- * **Yellow is at neither step.** At the upper step's light chroma it is
- * khaki, so it is lighter and stronger, as yellow is. In the dark scheme no
- * yellow is that dark: it is olive, a muddy field (owner, 2026-10-11, of
- * {@link YELLOW_WASH}). So its dark value leaves the hue a little way toward
- * orange, for an ochre, which it may, since no member is named to a player
- * on a board that takes these. Further, at brown, it is taken for the red
- * beside it.
- *
+ * **The fills of the regions a puzzle gives**, quiet in both schemes: see
+ * {@link REGION_DESIGN}. A board takes the first four, six or eight, and
  * `regionFills` (`engine/region-fill.ts`) says which region takes which.
  */
-export const FOUR_FILLS_QUIET: readonly Color[] = [
-  quietFill("RED", "lower"),
-  token(oklch(...QUIET_YELLOW.light), oklch(...QUIET_YELLOW.dark)),
-  quietFill("TEAL", "lower"),
-  quietFill("PURPLE", "upper"),
-];
+export const REGION_FILLS: readonly Color[] = (
+  ["yellow", "teal", "violet", "pink", "green", "blue", "peach", "orchid"] as const
+).map((name) => fill(REGION_DESIGN[name].light, REGION_DESIGN[name].dark));
+
+/**
+ * **Four fills that are a player's answer**, for the one set in the
+ * collection whose size is a *theorem*: four colors suffice to color any
+ * planar map, which is Map's puzzle.
+ *
+ * The first four of the region palette, at its `answer` step in the dark
+ * scheme ({@link REGION_DESIGN}). In the order of the numbers a save holds:
+ * the pink is where a red was, and the other three are where they were.
+ */
+export const FOUR_FILLS: readonly Color[] = (
+  ["pink", "yellow", "teal", "violet"] as const
+).map((name) => fill(REGION_DESIGN[name].light, REGION_DESIGN[name].answer));
 
 /**
  * {@link FOUR_FILLS}, as a player would say them. Map's hint names the color a
  * region must take, and as with {@link TEN_NAMES} the word and the color come
  * from one place, so recoloring the set cannot leave a sentence naming the old
- * hue. The fourth is "violet" rather than its palette entry's "purple": as a
- * wash it is pale lavender in light mode and dusky violet in dark, and a player
- * would call neither purple (owner playtest, 2026-09-25).
+ * hue.
  */
-export const FOUR_NAMES: readonly string[] = ["red", "yellow", "teal", "violet"];
+export const FOUR_NAMES: readonly string[] = ["pink", "yellow", "teal", "violet"];

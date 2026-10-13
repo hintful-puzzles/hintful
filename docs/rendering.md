@@ -732,7 +732,7 @@ and which one you reach for is the decision:
 - [`engine/color/colors.ts`](../src/engine/color/colors.ts) holds **the
   palette itself**: the named colors, most at three intensities (base,
   `_WASH`, `_BOLD`), and the sets made to be told apart (`TEN`, `TEN_NAMES`,
-  `EIGHT_FILLS`, `FOUR_FILLS`, `FOUR_FILLS_QUIET`).
+  `EIGHT_FILLS`, `REGION_FILLS`, `FOUR_FILLS`).
 - [`engine/color/palette-games.ts`](../src/engine/color/palette-games.ts)
   holds colors a game defines **relative to its own board**, prefixed with
   its id (`slantGrounded`, `undeadGhost`). Functions, not values.
@@ -782,19 +782,27 @@ names the one it applies.
   `cellSurface`, the line between cells is `surfaceGrid`, thin, and the
   frame around the grid is no heavier than it.
 - **A region the puzzle gives may take a fill in place of `cellSurface`**
-  ("The palette holds a quiet set of fills for the regions a puzzle gives"). The
-  fill is one of `FOUR_FILLS_QUIET`, Map's four hues at a strength that
-  recedes, and `regionFills`
-  ([`engine/region-fill.ts`](../src/engine/region-fill.ts)) says which, so
-  that regions sharing a side differ. It says only "these cells are one
-  region": the heavy border still tells two regions apart, and everything
-  else is drawn over the fill as it is over the plain surface. A mistake's
-  wash and the win flash take its place. Star Battle is the one game that
-  takes it, where a region holds nothing of its own. A game with numbers,
-  notes or `REGION_DONE` in its regions is put to the owner with a drawing
-  first, and when a second game takes the set it becomes a role in
-  `palette.ts`. Exemplar:
-  [`starbattle/render.ts`](../src/games/starbattle/render.ts).
+  ("The palette holds one set of fills for regions"). The fill is one of
+  `REGION_FILLS`, the region palette: eight faint fills of which a board
+  takes the first four, six or eight, and `regionFills`
+  ([`engine/region-fill.ts`](../src/engine/region-fill.ts)) says which
+  region takes which, so that regions sharing a side differ. It says only
+  "these cells are one region": the heavy border still tells two regions
+  apart, and everything else is drawn over the fill as it is over the plain
+  surface. A mistake's wash and the win flash take its place. Exemplar:
+  [`starbattle/render.ts`](../src/games/starbattle/render.ts), on the first
+  four.
+  - **Where the fill is the player's answer**, the game takes `FOUR_FILLS`:
+    the same four, stronger in the dark scheme, and `FOUR_NAMES` for the
+    words. Only the first four stand off a region with no color, so such a
+    game has four. Exemplar: Map.
+  - **A game with numbers, notes or `REGION_DONE` in its regions is put to
+    the owner with a drawing first.** Measured on the palette, not yet in
+    the app: a pencil note and a player's entry read weaker on a dark fill
+    than on a plain cell, and `REGION_DONE` is close to the light violet.
+  - **Signpost keeps `EIGHT_FILLS`.** Its chains past the eighth are
+    midpoints of two fills, and midpoints of fills this faint cannot be
+    told apart.
 - **A state is a piece, drawn with `drawPiece`**
   ([`engine/piece.ts`](../src/engine/piece.ts); "A piece is drawn inset on
   its cell"). State is never a step of gray alone.

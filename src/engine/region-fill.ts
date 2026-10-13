@@ -113,8 +113,8 @@ export function colorRegions(
  * `regions` is each cell's region, row by row, on a grid `w` wide.
  *
  * Regions that share a side differ. Past that the fills are spread: a region
- * takes the fill fewest regions have so far, and of those one that no region
- * it meets at a corner has. Nothing is drawn, so the answer is the
+ * takes the fill that covers the fewest cells so far, and of those one that
+ * no region it meets at a corner has. Nothing is drawn, so the answer is the
  * division's alone. A call with fewer than four fills throws where the
  * division needs more.
  */
@@ -124,13 +124,19 @@ export function regionFills(
   fills: number,
 ): Int32Array {
   const { beside, cornering } = regionNeighbors(regions, w);
+  const cells = new Int32Array(beside.length);
+  for (let i = 0; i < regions.length; i++) cells[regions[i]]++;
   const found = colorRegions(beside, fills, {
     // The one with the most neighbors, which constrains the most.
     region: (tied) =>
       tied.reduce((best, r) => (beside[r].length > beside[best].length ? r : best)),
     order: (free, r, fill) => {
+      // By cells and not by regions: what a player sees is how much of the
+      // board is each color.
       const used = new Int32Array(fills);
-      for (const k of fill) if (k >= 0) used[k]++;
+      fill.forEach((k, o) => {
+        if (k >= 0) used[k] += cells[o];
+      });
       const atCorner = new Set(cornering[r].map((o) => fill[o]));
       return free.sort(
         (a, b) =>

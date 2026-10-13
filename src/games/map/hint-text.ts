@@ -84,7 +84,7 @@ export type Conclusion =
   | { kind: "mark"; left: number };
 
 /** A narrowing's conclusion, as the sentence's last parts: what the rule rules
- * out (`cannot`, "it can't be red"), then what that leaves the move to do. A
+ * out (`cannot`, "it can't be pink"), then what that leaves the move to do. A
  * placed color is the move itself; a strike or a dotting follows from the
  * color ruled out. */
 function conclude(
@@ -155,7 +155,7 @@ export const say = {
    *
    * "Use both" is the premise the conclusion rests on, and it is stated rather
    * than left for the player to supply: without it, "so this region can't be
-   * either" does not follow from "both can only be red or teal" (the
+   * either" does not follow from "both can only be pink or teal" (the
    * `equivalentEdges` lesson, docs/hints.md § "Writing the narration").
    */
   pair: (
@@ -191,7 +191,7 @@ export const say = {
     c: Conclusion,
   ): Sentence => {
     const last = forced.length;
-    const red = colorName(color);
+    const hue = colorName(color);
     const at = (k: number): Narration => numbered(chain, k);
     // Past a handful of links a listed walk is no longer a glance (and an
     // eight-region one ran to 270 characters), so a long chain states the rule
@@ -201,10 +201,10 @@ export const say = {
         ? joinNarrations(
             forced.slice(1).map((f, i) => phrase`${at(i + 2)} is ${colorName(f)}`),
           )
-        : phrase`${mark.as("outline", REGION, chain, "each numbered region")} takes the dot the one before it leaves, down to ${at(last)} being ${red}`;
+        : phrase`${mark.as("outline", REGION, chain, "each numbered region")} takes the dot the one before it leaves, down to ${at(last)} being ${hue}`;
     return so({
-      look: phrase`If ${at(1)} isn't ${red}, it's ${colorName(forced[0])}, so ${walk}. Either way ${at(1)} or ${at(last)} is ${red}, and ${thisRegion(r)} touches both`,
-      ...conclude(c, `it can't be ${red}`),
+      look: phrase`If ${at(1)} isn't ${hue}, it's ${colorName(forced[0])}, so ${walk}. Either way ${at(1)} or ${at(last)} is ${hue}, and ${thisRegion(r)} touches both`,
+      ...conclude(c, `it can't be ${hue}`),
     });
   },
 
@@ -220,12 +220,12 @@ export const say = {
     color: number,
     c: Conclusion,
   ): Sentence => {
-    const red = colorName(color);
+    const hue = colorName(color);
     const last = chain.length;
     const at = (k: number): Narration => numbered(chain, k);
     return so({
-      look: phrase`${mark.as("outline", REGION, chain, "Every numbered region")} has a ${red} dot. If ${at(1)} isn't ${red}, ${at(2)} must be, and so on every other region to ${at(last)}. Either way ${at(1)} or ${at(last)} is ${red}, and ${thisRegion(r)} touches both`,
-      ...conclude(c, `it can't be ${red}`),
+      look: phrase`${mark.as("outline", REGION, chain, "Every numbered region")} has a ${hue} dot. If ${at(1)} isn't ${hue}, ${at(2)} must be, and so on every other region to ${at(last)}. Either way ${at(1)} or ${at(last)} is ${hue}, and ${thisRegion(r)} touches both`,
+      ...conclude(c, `it can't be ${hue}`),
     });
   },
 

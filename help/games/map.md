@@ -61,7 +61,7 @@ all pencil marks** twice, just as you would.
 
 {{hint-marks}}
 
-The hint names colors by their words, red, yellow, teal and violet, and
+The hint names colors by their words, pink, yellow, teal and violet, and
 a step ends by saying what to do: color the region, dot the colors it
 can still be, or remove the dots it can't.
 
@@ -73,10 +73,10 @@ The ideas it teaches, from the plainest up:
   must use both between them, so any region touching both can be
   neither.
 * **A chain.** On harder boards, a line of regions that can each be
-  only two colors passes a choice along: if region 1 isn't red, it is
+  only two colors passes a choice along: if region 1 isn't pink, it is
   its other color, which settles region 2, and so on down the chain
-  until the last region has to be red. Either way region 1 or the last
-  is red, so a region touching both can't be.
+  until the last region has to be pink. Either way region 1 or the last
+  is pink, so a region touching both can't be.
 
 Every hint is a deduction you could have made from what is on the board.
 On an **Unreasonable** board there may come a point where no deduction is

@@ -827,7 +827,7 @@ its fills are tried. Two callers, which differ only in that choice:
   `regionFills(regions, w, fills)` in `newDrawState`, with each cell's
   region as a number (`regionNumbers`, `divide.ts`). It draws nothing, so a
   board wears the same colors each time it is opened, and it spreads the
-  fills. The colors are `FOUR_FILLS_QUIET` (`color/colors.ts`), one palette
+  fills by area. The colors are `REGION_FILLS` (`color/colors.ts`), one palette
   slot each; [`rendering.md`](./rendering.md) § "What a board looks like:
   pieces on a quiet surface" says what a game owes when it takes them.
   Exemplar: `starbattle/render.ts`.

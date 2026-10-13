@@ -288,7 +288,7 @@ describe("the shared color vocabulary", () => {
       return Math.hypot(p[0] - q[0], px - qx, py - qy);
     };
 
-    expect(colors.FOUR_FILLS_QUIET.length).toBe(4);
+    expect(colors.REGION_FILLS.length).toBe(8);
     // Two bars. In the light scheme a mark reads on a fill no worse than on
     // `cellSurface`, the surface the fill replaces: every fill is lighter
     // than it. In the dark scheme no fill can be, since that surface is sunk
@@ -305,7 +305,7 @@ describe("the shared color vocabulary", () => {
       ["the cursor", roles.CURSOR, inDark(roles.CURSOR), 3],
     ];
     const surface = roles.cellSurface(BG);
-    for (const fill of colors.FOUR_FILLS_QUIET) {
+    for (const fill of colors.REGION_FILLS) {
       for (const [name, mark] of marks)
         expect(
           contrast(mark, fill),
