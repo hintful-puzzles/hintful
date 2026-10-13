@@ -3,15 +3,15 @@
  * ones whose packed key changed (docs/rendering.md § "The tile cache and the
  * diff key").
  *
- * A square is a `COL_GRID` box under a surface one pixel smaller, so the thin
- * grid lines are what shows between surfaces. Where a side of it faces
+ * A square is a `COL_GRID` box under a surface one pixel smaller, in its
+ * region's fill, so the thin grid lines are what shows between surfaces. Where a side of it faces
  * another region, or the edge of the board, the square paints its half of a
  * heavy wall inside its own box, and the two halves make the region's border.
  */
 
+import { SIX_FILLS } from "../../engine/color/colors.ts";
 import {
   CURSOR,
-  cellSurface,
   ERROR,
   ERROR_WASH,
   FLASH,
@@ -34,6 +34,7 @@ import {
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
+import { regionFills } from "../../engine/region-fill.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { StarbattleMistake } from "./index.ts";
@@ -53,30 +54,33 @@ export const PREFERRED_TILE_SIZE = 40;
 
 const COL_BACKGROUND = 0;
 const COL_GRID = 1;
-const COL_CELL = 2;
 /** The border of a region, and of the board. */
-const COL_WALL = 3;
-export const COL_STAR = 4;
-const COL_RULED_OUT = 5;
+const COL_WALL = 2;
+export const COL_STAR = 3;
+const COL_RULED_OUT = 4;
 /** A star that breaks a rule: one touching another, or one of too many in
  * its row, column or region. */
-export const COL_ERROR = 6;
+export const COL_ERROR = 5;
 /** The surface under a square Check & Save found wrong. */
-export const COL_WRONG = 7;
-const COL_CURSOR = 8;
+export const COL_WRONG = 6;
+const COL_CURSOR = 7;
 /** The ring on the squares a hint step decides, and the stripes on the row,
  * column or region its sentence names. */
-export const COL_HINT = 9;
+export const COL_HINT = 8;
 /** The outline on the squares it reasons from. */
-export const COL_HINT_EVIDENCE = 10;
-const COL_FLASH = 11;
-const COL_FLASH_LEAD = 12;
+export const COL_HINT_EVIDENCE = 9;
+const COL_FLASH = 10;
+const COL_FLASH_LEAD = 11;
+/** The first of the surfaces a region's squares take, one a fill. */
+export const COL_REGION = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_GRID] = surfaceGrid(defaultBackground);
-  out[COL_CELL] = cellSurface(defaultBackground);
+  SIX_FILLS.forEach((fill, k) => {
+    out[COL_REGION + k] = fill;
+  });
   out[COL_WALL] = INK;
   out[COL_STAR] = SHADED;
   out[COL_RULED_OUT] = RULED_OUT;
@@ -172,6 +176,8 @@ export interface StarbattleDrawState {
   tileSize: number;
   /** Each square's walls, which a board never changes. */
   walls: Uint8Array;
+  /** Each square's surface, which is its region's fill. */
+  surfaces: Uint8Array;
   /** What each square shows on the canvas, as its tile key; -1 before the
    * first frame. */
   cache: Int32Array;
@@ -184,10 +190,12 @@ export function newDrawState(
   tileSize: number,
 ): StarbattleDrawState {
   const squares = state.size * state.size;
+  const fills = regionFills(state.regions, state.size, SIX_FILLS.length);
   return {
     started: false,
     tileSize,
     walls: wallsOf(state.size, state.regions),
+    surfaces: Uint8Array.from(state.regions, (r) => COL_REGION + fills[r]),
     cache: new Int32Array(squares).fill(-1),
     marks: new HintMarks(),
   };
@@ -262,7 +270,7 @@ function drawTile(
       ? COL_WRONG
       : t.tone
         ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD)
-        : COL_CELL,
+        : ds.surfaces[i],
   );
   if (t.striped) dr.drawHatch(surface, COL_HINT, hatchPeriod(ts));
 

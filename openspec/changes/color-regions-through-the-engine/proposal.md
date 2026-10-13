@@ -1,9 +1,11 @@
 # color-regions-through-the-engine
 
-**Status: scaffolded 2026-10-13 at the owner's word, and the next change to
-be taken up.** It has no `tasks.md` yet: the session that takes it up writes
-them. The owner's two questions are answered (§ "The owner's answers"); the
-others are the session's to settle.
+**Status: built and committed 2026-10-13, not pushed, waiting for the
+owner's word on the look** (`tasks.md` § 5). The session's questions are
+settled in `tasks.md` § 3, and two things in § "What Changes" came out
+otherwise than written: the fills are a set of their own (`SIX_FILLS`) and
+not the washes, and they are spread over a board's regions, not kept to as
+few as it needs.
 
 **Where the first session stops.** The owner's word, 2026-10-13: work until
 there is a screenshot of a colored Star Battle board to show them, then wait

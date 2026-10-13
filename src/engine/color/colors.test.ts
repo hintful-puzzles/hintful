@@ -138,6 +138,14 @@ describe("the named colors", () => {
         colors.FOUR_FILLS.map((c, i) => [`fill${i}`, c] as [string, Color]),
         0.077,
       ],
+      // No upstream set to beat. Any two of these may be the fills of regions
+      // side by side, so the bar is the floor two neighbors are held to
+      // (`MIN_DARK_DISTANCE`, `puzzle/neighbor-contrast.ts`), in both schemes.
+      [
+        "six region fills (star battle)",
+        colors.SIX_FILLS.map((c, i) => [`fill${i}`, c] as [string, Color]),
+        0.07,
+      ],
       [
         "six count digits (mines)",
         label([

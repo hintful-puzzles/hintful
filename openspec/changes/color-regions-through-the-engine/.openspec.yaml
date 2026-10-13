@@ -1,5 +1,2 @@
-# No delta at filing: the first task writes the `engine-colors` delta once the
-# owner has answered the proposal's first two questions, and removes this line.
 schema: spec-driven
 created: 2026-10-13
-skip_specs: true

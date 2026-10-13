@@ -91,6 +91,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-text.ts` — the sentences several games share | another game already says your sentence |
 | – `slide-planner.ts` — sliding-permutation search | the player slides tiles into one arrangement |
 | – `piece.ts` — a piece on its cell | a cell holds a piece, is shaded or is ruled out |
+| – `region-fill.ts` — a fill for each region of a division | the puzzle divides your board into regions |
 | – `hint-mark.ts` — the ring and the outline | you draw a hint's marks on cells |
 | – `hatch.ts` — the stripes on the line a step names | a hint sentence names a row or column |
 | – `hint-ordinal.ts` — where a cell falls in a forced chain | a hint step walks a chain of cells |
@@ -813,6 +814,19 @@ and `TWO_NAMES` (`colors.ts`), and `expandPair` is what a help page's
 the same for a game whose cells are shaded or not. **`drawRuledOutCross` is
 every game's mark for a cell ruled out**, a game with no pieces included.
 Exemplar: `src/skeleton/grid/render.ts`.
+
+### `region-fill.ts` — a fill for each region of a division
+
+Reach for it in `newDrawState` when the puzzle gives the board's regions
+and each is to be colored. `regionFills(regions, w, fills)` takes each
+cell's region as a number (`regionNumbers`, `divide.ts`) and returns a fill
+number for each region: two regions that share a side never take the same
+one, the fills are spread, and the answer is the division's alone, so a
+board wears the same colors each time it is opened. The colors are
+`SIX_FILLS` (`color/colors.ts`), one palette slot each, and
+[`rendering.md`](./rendering.md) § "What a board looks like: pieces on a
+quiet surface" says what a game owes when it takes them. Exemplar:
+`starbattle/render.ts`.
 
 ### `hint-mark.ts` — the ring and the outline
 

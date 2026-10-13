@@ -18,6 +18,7 @@ import { getTsGame } from "../registry.ts";
 import { colorToOKLCH, isGrayChroma, type OKLCH } from "../testing/oklch.ts";
 import type { Color } from "../types.ts";
 import "../../games/index.ts";
+import { HATCH_OPACITY } from "../hatch.ts";
 import { mkhighlight } from "./color-mkhighlight.ts";
 import { darkValue } from "./color-token.ts";
 import * as colors from "./colors.ts";
@@ -253,6 +254,90 @@ describe("the shared color vocabulary", () => {
         contrast(inDark(fg), inDark(roles.HINT_EVIDENCE_WASH)),
         `${name} on the evidence wash in dark`,
       ).toBeGreaterThan(3);
+    }
+  });
+
+  it("keeps a region's fill under everything drawn on it, in both schemes", () => {
+    // A fill is the whole board of a game that takes it, so every mark the
+    // collection draws on a cell lands on each of the six: there is no member
+    // a game can keep its star or its hint off. Measured on the set, then,
+    // and not on one game's frames.
+    const inDark = (c: Color): Color => darkValue(c) ?? c;
+    const relLum = (c: Color): number => {
+      const lin = (v: number) =>
+        v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+    };
+    const contrast = (a: Color, b: Color): number => {
+      const [hi, lo] = [relLum(a), relLum(b)].sort((p, q) => q - p);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+    const striped = (under: Color, stripe: Color): Color => [
+      under[0] * (1 - HATCH_OPACITY) + stripe[0] * HATCH_OPACITY,
+      under[1] * (1 - HATCH_OPACITY) + stripe[1] * HATCH_OPACITY,
+      under[2] * (1 - HATCH_OPACITY) + stripe[2] * HATCH_OPACITY,
+    ];
+    const apart = (a: Color, b: Color): number => {
+      const plane = ([, c, h]: OKLCH): [number, number] => [
+        c * Math.cos((h * Math.PI) / 180),
+        c * Math.sin((h * Math.PI) / 180),
+      ];
+      const [p, q] = [colorToOKLCH(a), colorToOKLCH(b)];
+      const [px, py] = plane(p);
+      const [qx, qy] = plane(q);
+      return Math.hypot(p[0] - q[0], px - qx, py - qy);
+    };
+
+    expect(colors.SIX_FILLS.length).toBe(6);
+    // Two bars. In the light scheme a mark reads on a fill no worse than on
+    // `cellSurface`, the surface the fill replaces: every fill is lighter
+    // than it. In the dark scheme no fill can be, since that surface is sunk
+    // below the board, so there each mark has a floor, with the least it
+    // scored on 2026-10-13 beside it. The low ones are the three fills at the
+    // set's upper step.
+    const marks: [name: string, light: Color, dark: Color, floor: number][] = [
+      // A cross, a digit, the border: ink, which the dark scheme inverts.
+      ["ink", roles.INK, roles.PAPER, 7], // 10.57
+      ["a piece", roles.SHADED, inDark(roles.SHADED), 2.3], // 2.40
+      ["an error", roles.ERROR, inDark(roles.ERROR), 2.5], // 2.61
+      ["the hint's ring", roles.HINT_ACTION, inDark(roles.HINT_ACTION), 2.8], // 2.84
+      ["its outline", roles.HINT_EVIDENCE, inDark(roles.HINT_EVIDENCE), 5], // 6.80
+      ["the cursor", roles.CURSOR, inDark(roles.CURSOR), 3], // 4.59
+    ];
+    const surface = roles.cellSurface(BG);
+    for (const fill of colors.SIX_FILLS) {
+      for (const [name, mark] of marks)
+        expect(
+          contrast(mark, fill),
+          `${name} on ${key(fill)} in light`,
+        ).toBeGreaterThan(contrast(mark, surface));
+      for (const [name, , mark, floor] of marks)
+        expect(
+          contrast(mark, inDark(fill)),
+          `${name} on ${key(fill)} in dark`,
+        ).toBeGreaterThan(floor);
+      for (const [scheme, on] of [
+        ["light", fill],
+        ["dark", inDark(fill)],
+      ] as const) {
+        // The hint's stripes, at the bar `hatch-contrast.test.ts` holds them
+        // to on a board.
+        const hint = scheme === "light" ? roles.HINT_ACTION : inDark(roles.HINT_ACTION);
+        expect(
+          contrast(striped(on, hint), on),
+          `stripes on ${key(fill)} in ${scheme}`,
+        ).toBeGreaterThan(1.25);
+        // A surface that replaces the fill is told from it: the mistake's
+        // wash and the win flash, at the floor two neighbors are held to.
+        for (const [name, surface] of [
+          ["the mistake wash", roles.ERROR_WASH],
+          ["the flash", roles.FLASH],
+        ] as const)
+          expect(
+            apart(scheme === "light" ? surface : inDark(surface), on),
+            `${name} on ${key(fill)} in ${scheme}`,
+          ).toBeGreaterThan(0.07);
+      }
     }
   });
 

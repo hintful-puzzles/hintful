@@ -1,6 +1,6 @@
 # Star Battle
 
-You have a square grid divided into regions by heavy lines. Place stars so that every row, every column and every region holds the same number of them, and no two stars touch, not even at a corner. How many stars is the game mode:
+You have a square grid divided into regions by heavy lines. Each region is tinted so that it is easy to tell from the ones beside it, and the colors mean nothing more than that. Place stars so that every row, every column and every region holds the same number of them, and no two stars touch, not even at a corner. How many stars is the game mode:
 
 {{rulesets}}
 

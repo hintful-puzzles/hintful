@@ -17,7 +17,14 @@ import { Midend } from "../../engine/index.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { starbattleGame } from "./index.ts";
-import { COL_ERROR, COL_HINT, COL_STAR, COL_WRONG } from "./render.ts";
+import {
+  COL_ERROR,
+  COL_HINT,
+  COL_REGION,
+  COL_STAR,
+  COL_WRONG,
+  newDrawState,
+} from "./render.ts";
 import {
   BLANK,
   CROSSED,
@@ -209,6 +216,23 @@ describe("starbattle frame", () => {
       moves: [mark(2, STAR), mark(7, CROSSED)],
     });
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("gives a region one fill, and the regions beside it another", () => {
+    const { size, regions } = newState(P, DESC);
+    const { surfaces } = newDrawState(newState(P, DESC), 40);
+    let walls = 0;
+    regions.forEach((r, i) => {
+      expect(surfaces[i]).toBeGreaterThanOrEqual(COL_REGION);
+      for (const j of [(i + 1) % size === 0 ? i : i + 1, i + size]) {
+        if (j === i || j >= regions.length) continue;
+        expect(surfaces[j] === surfaces[i], `squares ${i} and ${j}`).toBe(
+          regions[j] === r,
+        );
+        if (regions[j] !== r) walls++;
+      }
+    });
+    expect(walls).toBeGreaterThan(10);
   });
 
   const paints = (moves: StarbattleMove[], color: number): boolean =>
