@@ -92,17 +92,40 @@ describe("starbattle moves", () => {
   const ui = starbattleGame.newUi(start);
   const { primary, secondary } = starbattleGame.targetVerbs ?? {};
 
-  it("the left button crosses out, then puts a star, then clears", () => {
+  it("the left button puts a star, then crosses out, then clears", () => {
     let s = start;
-    for (const want of [CROSSED, STAR, BLANK]) {
+    for (const want of [STAR, CROSSED, BLANK]) {
       s = executeMove(s, primary?.apply(s, { x: 1, y: 0 }, ui) as StarbattleMove);
       expect(s.grid[1]).toBe(want);
     }
   });
 
-  it("the right button puts a star first", () => {
+  it("the right button crosses out first", () => {
     const move = secondary?.apply(start, { x: 1, y: 0 }, ui) as StarbattleMove;
-    expect(executeMove(start, move).grid[1]).toBe(STAR);
+    expect(executeMove(start, move).grid[1]).toBe(CROSSED);
+  });
+
+  it("a star brings no crosses unless the player asks for them", () => {
+    const plain = primary?.apply(start, { x: 2, y: 0 }, ui) as StarbattleMove;
+    expect(plain).toEqual({ kind: "mark", cells: [{ index: 2, mark: STAR }] });
+  });
+
+  it("with the preference on, a star crosses out what it rules out", () => {
+    const asking = { ...ui, autoCross: true };
+    // The answer's star in the top row: the squares touching it, and the
+    // rest of its row, its column and its region, each of which it completes.
+    const move = primary?.apply(start, { x: 2, y: 0 }, asking) as StarbattleMove;
+    if (move.kind !== "mark") throw new Error("a click marks squares");
+    expect(move.cells[0]).toEqual({ index: 2, mark: STAR });
+    expect(move.cells.slice(1).map((c) => c.index)).toEqual([
+      0, 1, 3, 4, 6, 7, 8, 12, 17, 22,
+    ]);
+    expect(move.cells.slice(1).every((c) => c.mark === CROSSED)).toBe(true);
+    // A square already marked is left as the player has it.
+    const marked = executeMove(start, mark(7, STAR));
+    const beside = primary?.apply(marked, { x: 2, y: 0 }, asking) as StarbattleMove;
+    if (beside.kind !== "mark") throw new Error("a click marks squares");
+    expect(beside.cells.map((c) => c.index)).not.toContain(7);
   });
 
   it("executeMove leaves the state it was given alone", () => {

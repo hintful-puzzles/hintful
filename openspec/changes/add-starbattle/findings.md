@@ -111,7 +111,7 @@ the series began.
 - **Three stars deal only as Easy**, and slowly above 12x12.
 - **The first hints after a star are its crosses**, up to four steps a star
   with one star to a row. They are short and true, and a player who wants
-  the next real deduction steps through them. An aid that crosses those
-  squares for the player would remove them; it is a preference, and the
-  owner's to ask for.
+  the next real deduction steps through them. The owner asked for the aid
+  that removes them on first play (2026-10-13): the `auto-cross`
+  preference, off by default.
 - **The upstream-params table** (finding 10).

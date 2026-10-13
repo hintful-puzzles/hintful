@@ -15,11 +15,32 @@ designing against it.
   catalog's `collection` field gains a third value, `own`, for a game with no
   upstream; nothing but the upstream links read the field, and they show
   none for it.
-- **The first click crosses out, the second puts a star.** A 10x10 of two
-  stars has 20 stars and 80 empty squares, and a player crosses most of
-  those out on the way, so the cross is the left button and the drag. This
-  is how the puzzle is played where most people meet it (Queens). The right
-  button, and a held finger, put the star first.
+- **The left button puts a star and the right button a cross**, as the
+  collection's other games place with the left and rule out with the right.
+  The game first shipped the other way round, on the argument that a board
+  has four times more empty squares than stars; the owner turned it round on
+  first play (2026-10-13), and the rule is now `docs/input.md` § "Targets
+  and verbs".
+
+## The owner's first play (2026-10-13)
+
+Five things asked for, and where each went:
+
+1. **The buttons swapped**, above.
+2. **One star and two stars are rulesets**, with three stars the third. The
+   menu has a section for each: 5x5, 6x6 and 8x8 at every tier under One
+   star; 8x8, 9x9 and 10x10 at Easy and Normal under Two stars; 12x12 at
+   Easy under Three stars. A board's params string is unchanged (`10s2dn`);
+   its title now leads with the ruleset.
+3. **Two-star deals take seconds at times**: scaffolded as
+   `deal-star-battle-in-under-a-second`.
+4. **A preference, off by default, crosses out what a star rules out**: the
+   squares touching it, and the rest of its row, column or region when the
+   star is the last that one holds. The crosses ride in the star's move, so
+   one Undo takes both back. With it on, a hint's plan ends at its first
+   star, since the star brings crosses the plan did not make.
+5. **Region color through the engine**: scaffolded as
+   `color-regions-through-the-engine`.
 
 ## The ladder, and what each tier means
 
@@ -102,9 +123,9 @@ Three fifths to three quarters of a deal is the search for a second answer.
 
 **What follows from the table.**
 
-- The menu is 5x5, 6x6 and 8x8 with one star at every tier, and 10x10 with
-  two stars at Easy and Normal. Tricky at 10x10 takes two seconds and is
-  left to the Custom dialog.
+- The menu stops where a deal takes about a second (§ "The owner's first
+  play" has it as it stands). Tricky at 10x10 takes two seconds and is left
+  to the Custom dialog.
 - The size runs from 4 (one star), 8 (two) and 12 (three), below which no
   arrangement of stars exists, to 14, the largest measured.
 - Nothing is refused for its tier. A cell that came up empty in the table

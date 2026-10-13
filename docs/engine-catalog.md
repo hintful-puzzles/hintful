@@ -71,7 +71,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `step-budget.ts` — the fixpoint non-termination guard | a hint pass loops until nothing changes |
 | – `difficulty.ts` — the cross-game difficulty contract | your game has difficulty tiers |
 | – `hint-finishes.ts` — whether deduction finishes a board | your game is untiered, or has an Unreasonable tier |
-| – `answer-search.ts` — a deductive game's Unreasonable tier | some boards need trial and error |
+| – `answer-search.ts` — a deductive game's Unreasonable tier | some boards need trial and error, or a generator wants a board's second answer |
 | – `sections.ts` — contract sections and the draft label | your game leaves out a contract section |
 | – `deduction-record.ts` — the recorded-firing shape | your solver records firings for a candidate hint |
 | – `firing-replay.ts` — the premise audit | a candidate game has a solver of its own |

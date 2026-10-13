@@ -71,7 +71,7 @@ export interface StarbattleMistake extends Point {
 }
 
 function newUi(_state: StarbattleState): StarbattleUi {
-  return { cursor: newCursor() };
+  return { cursor: newCursor(), autoCross: false };
 }
 
 const boardOf = (s: StarbattleState): StarbattleBoard =>
@@ -85,12 +85,32 @@ type StarbattleVerb = TargetVerb<StarbattleState, StarbattleUi, Point, Starbattl
  * stay as it is. */
 const markWith =
   (to: (old: StarbattleMark) => StarbattleMark) =>
-  (s: StarbattleState, { x, y }: Point): StarbattleMove | null => {
+  (s: StarbattleState, { x, y }: Point, ui: StarbattleUi): StarbattleMove | null => {
     const index = y * s.size + x;
     const old = s.grid[index] as StarbattleMark;
     const mark = to(old);
-    return mark === old ? null : { kind: "mark", cells: [{ index, mark }] };
+    if (mark === old) return null;
+    const cells = [{ index, mark }];
+    if (mark === STAR && ui.autoCross)
+      for (const i of ruledOutBy(s, index)) cells.push({ index: i, mark: CROSSED });
+    return { kind: "mark", cells };
   };
+
+/**
+ * The blank squares a star on `index` rules out at a glance: the ones
+ * touching it, and the rest of its row, column or region where the star is
+ * the last that one holds. What the player's preference crosses out with the
+ * star, after it in the move.
+ */
+function ruledOutBy(s: StarbattleState, index: number): number[] {
+  const grid = s.grid.slice();
+  grid[index] = STAR;
+  const board = new StarbattleBoard(s.size, s.stars, s.regions, grid);
+  const out = new Set(board.touching(index));
+  for (const unit of board.unitsAt(index))
+    if (board.need(unit) === 0) for (const i of board.units[unit].cells) out.add(i);
+  return [...out].filter((i) => grid[i] === BLANK).sort((a, b) => a - b);
+}
 
 /** One click of a button: blank, then `first`, then the other mark, then
  * blank again. */
@@ -99,8 +119,9 @@ const cycle =
   (old: StarbattleMark): StarbattleMark =>
     old === BLANK ? first : old === first ? second : BLANK;
 
-// A board has many more empty squares than stars, and a player crosses most
-// of them out on the way, so the cross is the first click and the drag.
+// The left button places the thing the puzzle is about and the right button
+// says "nothing here", as in the rest of the collection (docs/input.md
+// § "Targets and verbs").
 const cross: StarbattleVerb = {
   does: "cross it out (click again to put a star there, and again to clear it)",
   apply: markWith(cycle(CROSSED, STAR)),
@@ -122,8 +143,8 @@ const targetVerbs: TargetVerbs<
     border: (ts) => border(ts),
   }),
   sweep: { holds: (s, { x, y }) => s.grid[y * s.size + x] },
-  primary: cross,
-  secondary: star,
+  primary: star,
+  secondary: cross,
   keyOnly: [
     {
       does: "clear it",
@@ -232,6 +253,18 @@ export const starbattleGame: Game<
   },
   hintKeepTrack: starbattleKeepTrack,
   hintGesture,
+
+  prefs: [
+    {
+      kw: "auto-cross",
+      name: "Cross out the squares a star rules out",
+      type: "boolean",
+      get: (ui) => ui.autoCross,
+      set: (ui, value) => {
+        ui.autoCross = value;
+      },
+    },
+  ],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

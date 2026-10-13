@@ -52,6 +52,57 @@ in `params-read-whole.test.ts` moves to a module the catalog's test can
 read, so that every game whose `collection` is not `own` is required to have
 an entry again.
 
+## Added 2026-10-13, at the owner's word
+
+The owner asked for every further pain point of that session to be written
+up. These are the ones `findings.md` did not turn into an item above. Two
+were small enough to mend at once and are: the catalog's row for
+`answer-search.ts` now says a generator may want it, and the stamp's
+checklist names the `stripes` role and the origins heading.
+
+5. **The right button is the cross, and nothing holds a game to it.** Star
+   Battle shipped with the cross on the left button and was turned round on
+   the owner's first play. The rule is now in `docs/input.md` § "Targets
+   and verbs". The engine could own it: a `ruledOut` verb a game declares
+   in place of `secondary`, which the model puts on the right button and
+   Space, whose `does` phrase and cross it supplies, and which a guard can
+   then find. Count first how many games' `secondary` is a cross.
+6. **A star that brings its crosses is three pieces a game wires by hand.**
+   The `auto-cross` preference needs a verb that reads the `Ui`, a
+   keep-track that leaves the brought crosses out of its judgment, and a
+   plan that ends at the first star. Other games place a thing and leave
+   the player to cross out what it rules out; Tents and Light Up are the
+   first to look at. A declared "what this placement rules out at a glance"
+   would give each the preference and its three pieces.
+7. **The skeleton speaks of a ring and an outline, and never of stripes.**
+   A hint about a row, column or region stripes it
+   (`docs/hints-marks.md` § "Hatch the line the sentence names"), which
+   most grid games' hints are. The skeleton's second rung could name its
+   number's row so the copy starts with all three roles drawn.
+8. **A registered game is asked for its spec before its change can
+   archive.** `spec-subjects.mjs` refuses a game with no
+   `openspec/specs/<game>/spec.md`, and a game that waits for the owner's
+   acceptance has only a delta. Star Battle's spec was copied to
+   `openspec/specs/` by hand, and its archive must skip the merge. Either
+   the check reads an open change's delta for a game that has no spec yet,
+   or `docs/new-game.md` § "The acceptance gate" says to sync.
+9. **Three gate checks first spoke at the commit**, each after a ninety
+   second wait: `absence-spelling` (a `| null | undefined`), the strict
+   form of `openspec validate` (a requirement over 500 characters, which
+   the plain form passes), and `unused-exports`. `npm run game` could run
+   the checks that read a game's own files and its change, since it already
+   says which gate checks it leaves out.
+10. **A scratch census has no home.** One throwaway vitest file in the
+    game's directory was rewritten about ten times, each time to print a
+    table by throwing it, and then deleted. `npm run deal-walk` measures the menu's sizes at the tiers
+    a finished game declares, and nothing measures a generator that is
+    still being written: tries, boards by lowest solving tier, and time, at
+    a list of params.
+11. **`presetGrid` and rulesets.** Splitting a menu by ruleset took one
+    declaration, and then a ledger line in `preset-menu-shape.test.ts` for
+    each tier a ruleset does not offer, keyed by game and not by ruleset, so
+    the reason for Two stars and the reason for Three share a line.
+
 ## Capabilities
 
 ### Modified Capabilities

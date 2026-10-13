@@ -17,6 +17,7 @@ import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, num, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { presetGrid } from "../../engine/preset-grid.ts";
+import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { encodeRegionWalls, readRegionWalls } from "../../engine/wall-runs.ts";
 
 // --- difficulty -------------------------------------------------------------
@@ -74,12 +75,37 @@ export type StarbattleMove =
 
 export interface StarbattleUi {
   cursor: GridCursor;
+  /** The player's preference: a star placed also crosses out the squares it
+   * rules out. */
+  autoCross: boolean;
 }
 
 // --- params -----------------------------------------------------------------
 
-/** The most stars a row, column or region is asked to hold. */
-const MAX_STARS = 3;
+/** The puzzles the board plays, by the stars to a row less one. */
+const RULESETS: readonly Ruleset[] = [
+  {
+    name: "One star",
+    rule: "Every row, column and region holds one star. This is the puzzle also known as <em>Queens</em>.",
+  },
+  {
+    name: "Two stars",
+    rule: "Every row, column and region holds two stars. This is the puzzle also known as <em>Two Not Touch</em>.",
+  },
+  {
+    name: "Three stars",
+    rule: "Every row, column and region holds three stars.",
+  },
+];
+
+/** The stars to a row as the ruleset's place in {@link RULESETS}, which is
+ * also what the params string's `s` reads and writes as the number itself. */
+const starsField = {
+  get: (p: StarbattleParams): number => p.stars,
+  set: (p: StarbattleParams, stars: number): void => {
+    p.stars = stars;
+  },
+};
 
 /**
  * The smallest grid that has a board at each number of stars. Two rows next
@@ -103,10 +129,11 @@ export const paramConfig: ParamConfigItem<StarbattleParams>[] = [
     bounds: { min: MIN_SIZE[1], max: MAX_SIZE },
     label: { slot: "size", words: squareSize("size") },
   }),
-  numberItem<StarbattleParams>("stars", "Stars", "stars", {
-    doc: "How many stars every row, every column and every region holds. With one star the puzzle is the one also known as Queens.",
-    bounds: { min: 1, max: MAX_STARS },
-    label: { slot: "tail", words: (p) => starsWords(p.stars) },
+  rulesetItem<StarbattleParams>(RULESETS, {
+    get: (p) => p.stars - 1,
+    set: (p, index) => {
+      p.stars = index + 1;
+    },
   }),
   difficultyItem(DIFF_NAMES, "diff", {
     doc: "<p><em>Easy</em> puzzles can be finished by looking at one row, column or region at a time, or at one row or column and the regions in it.</p><p><em>Normal</em> puzzles need several rows or columns side by side counted against the regions in them.</p><p><em>Tricky</em> puzzles need a star tried in a square: it would complete its own row, column or region and leave another without room.</p>",
@@ -117,7 +144,10 @@ const BOARDS: StarbattleParams[] = [
   { size: 5, stars: 1, diff: DIFF_EASY },
   { size: 6, stars: 1, diff: DIFF_EASY },
   { size: 8, stars: 1, diff: DIFF_EASY },
+  { size: 8, stars: 2, diff: DIFF_EASY },
+  { size: 9, stars: 2, diff: DIFF_EASY },
   { size: 10, stars: 2, diff: DIFF_EASY },
+  { size: 12, stars: 3, diff: DIFF_EASY },
 ];
 
 export function defaultParams(): StarbattleParams {
@@ -126,15 +156,19 @@ export function defaultParams(): StarbattleParams {
 
 export function presets(): PresetMenu<StarbattleParams> {
   return presetGrid(paramConfig, BOARDS, {
-    // A Tricky board of two stars takes two seconds and more to deal
-    // (measured 2026-10-12), so the menu stops at Normal there.
-    tiers: (board) => (board.stars > 1 ? [DIFF_EASY, DIFF_NORMAL] : null),
+    // Measured 2026-10-12: a Tricky board of two stars takes two seconds and
+    // more to deal where one turns up at all, and three stars have dealt
+    // only Easy boards.
+    tiers: (board) =>
+      board.stars === 1
+        ? null
+        : [DIFF_EASY, board.stars === 2 ? DIFF_NORMAL : DIFF_EASY],
   });
 }
 
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   size(paramConfig, "grid-size"),
-  num(paramConfig, "s", "stars"),
+  num(paramConfig, "s", starsField),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 

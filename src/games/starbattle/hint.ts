@@ -32,9 +32,11 @@ import {
 import {
   BLANK,
   executeMove,
+  STAR,
   type StarbattleMark,
   type StarbattleMove,
   type StarbattleState,
+  type StarbattleUi,
 } from "./state.ts";
 
 /** How far ahead the plan is computed. A player rarely follows more than a
@@ -125,6 +127,8 @@ function stepOf(board: StarbattleBoard, firing: StarbattleFiring): StarbattleSte
  */
 export function starbattleHint(
   state: StarbattleState,
+  _aux?: string,
+  ui?: StarbattleUi,
 ): HintResult<StarbattleMove, unknown, StarbattleRung> {
   const { size, stars, regions } = state;
   const board = new StarbattleBoard(size, stars, regions, state.grid.slice());
@@ -140,7 +144,13 @@ export function starbattleHint(
   // the board itself has no answer.
   if (pass.impossible()) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps: plan.map((firing) => stepOf(board, firing)) };
+  // With the player's preference on, a star brings crosses the plan did not
+  // make, so the plan ends with its first star and the next is asked from
+  // the board that leaves (docs/hints-marks.md § "A move with side effects
+  // ends the plan").
+  const first = plan.findIndex((firing) => firing.mark === STAR);
+  const shown = ui?.autoCross && first >= 0 ? plan.slice(0, first + 1) : plan;
+  return { ok: true, steps: shown.map((firing) => stepOf(board, firing)) };
 }
 
 /**
@@ -185,6 +195,11 @@ export function starbattleMakesStep(
     (i) => state.grid[i] as StarbattleMark,
     (i) => after.grid[i] as StarbattleMark,
   );
+  // A star placed with the player's preference on brings the crosses it
+  // rules out, after it in the move. The step asked for the star, and those
+  // crosses are no part of what is judged.
+  const [placed, ...brought] = move.cells;
+  if (placed.mark === STAR) for (const { index } of brought) changes.delete(index);
   const { verdict, left } = trackTargets({
     targets: step.move.cells,
     changes,

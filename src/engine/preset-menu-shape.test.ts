@@ -50,6 +50,11 @@ function kindItems(g: AnyGame): Item[] {
  * refuses needs no entry: the check finds that by asking `paramsError`.
  */
 const TIERS_NOT_OFFERED: Record<string, Record<string, string>> = {
+  starbattle: {
+    Normal: "one star and two offer it; three stars have dealt only Easy boards",
+    Tricky:
+      "one star offers it; with two a board takes two seconds and more to deal, and with three none has been dealt",
+  },
   group: {
     Hard: "the menu's 6x6 and 8x8 refuse it with the identity shown, and a 12x12 takes eleven seconds",
     Unreasonable:

@@ -36,13 +36,16 @@ it has no answer to compare with and SHALL report nothing.
 A Star Battle params string SHALL be the grid's size as a bare number, `s`
 and the stars to a row, and in the full form `d` and the tier's letter (`e`,
 `n`, `t`). A string that leaves the tier out SHALL decode as Easy, and one
-that leaves the stars out SHALL decode as one star.
+that leaves the stars out SHALL decode as one star. The stars to a row SHALL
+be the game's ruleset, One star, Two stars or Three stars, so a board's title
+leads with it and the menu has a section for each.
 
 #### Scenario: A board's own string
 
 - **WHEN** a 10x10 board of two stars at Normal is encoded in full, and
   again in the form a board's ID carries
-- **THEN** the strings are `10s2dn` and `10s2`
+- **THEN** the strings are `10s2dn` and `10s2`, and its title is "Two
+  stars: 10x10 Normal"
 
 ### Requirement: Params: A grid too small for its stars is refused
 
@@ -112,20 +115,35 @@ board they do not finish, which only a pasted ID can be, Solve SHALL refuse.
 - **THEN** every cell holds the answer's star or cross and the board is
   solved
 
-### Requirement: Controls: The cross is the first click and the drag
+### Requirement: Controls: The star is the left button and the cross the right
 
-Star Battle's input is its declared target verbs. The left button SHALL
-cross a cell out first and put a star there on its second click, and the
-right button SHALL put the star first, because a board has several times as
-many empty cells as stars and a player crosses most of them out. A drag
-SHALL repeat the pressed cell's change on the cells it passes that held what
-that cell held.
+Star Battle's input is its declared target verbs. The left button SHALL put
+a star on a blank cell and cross it out on its second click, and the right
+button SHALL cross it out first, as the collection's other games place with
+the left button and rule out with the right. A drag SHALL repeat the pressed
+cell's change on the cells it passes that held what that cell held.
 
 #### Scenario: Two left clicks
 
 - **WHEN** a blank cell is clicked twice with the left button
-- **THEN** it holds a cross after the first click and a star after the
+- **THEN** it holds a star after the first click and a cross after the
   second
+
+### Requirement: Preferences: A star can bring the crosses it rules out
+
+Star Battle SHALL have one preference, `auto-cross`, off unless the player
+turns it on. With it on, a move that puts a star on a cell SHALL also cross
+out every blank cell touching it, and the blank cells of the star's row,
+column or region where the star is the last that one holds. It SHALL change
+no cell the player has marked, and removing the star SHALL leave the crosses.
+The crosses are part of the star's move, so one Undo takes both back.
+
+#### Scenario: The last star of a row
+
+- **WHEN** the preference is on and a star is placed that is the last its
+  row holds
+- **THEN** the blank cells touching the star and the blank cells of the row
+  are crossed out in the same move
 
 ### Requirement: Hint: The hint reads only regions, stars and crosses
 
@@ -189,16 +207,18 @@ as the cause.
 
 ### Requirement: Hint: A first click toward a step's mark keeps the step
 
-A step that asks for a star SHALL stay on show when the player's move puts a
-cross on one of its blank cells, and a step that asks for a cross when the
-move puts a star there, since one more click of that button makes the mark
+A step that asks for a cross SHALL stay on show when the player's move puts
+a star on one of its blank cells, and a step that asks for a star when the
+move puts a cross there, since one more click of that button makes the mark
 asked for. The gesture that plays a step SHALL use the button that makes
-each mark in one click.
+each mark in one click. With the `auto-cross` preference on, the crosses a
+star brings SHALL not count against the step that asked for the star, and a
+plan SHALL end with its first star.
 
-#### Scenario: Reaching a hinted star with the left button
+#### Scenario: Reaching a hinted star with the right button
 
-- **WHEN** a step asks for a star on a blank cell and the player left-clicks
-  it twice
+- **WHEN** a step asks for a star on a blank cell and the player
+  right-clicks it twice
 - **THEN** the step is still shown after the first click and is completed by
   the second
 

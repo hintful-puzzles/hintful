@@ -141,7 +141,7 @@ describe("starbattle hint plans", () => {
     if (step.move.kind !== "mark") throw new Error("a step marks squares");
     const { index } = step.move.cells[0];
     expect(state.grid[index]).toBe(BLANK);
-    // The left button reaches a star through a cross.
+    // The right button reaches a star through a cross.
     const copy = { ...step, move: structuredClone(step.move) };
     expect(
       starbattleGame.hintKeepTrack?.(
@@ -162,6 +162,38 @@ describe("starbattle hint plans", () => {
         crossed,
       ),
     ).toBe(step.move.cells.length === 1 ? "completed" : "onTrack");
+  });
+
+  it("with crosses brought by a star, the plan ends at its first star and the star completes its step", () => {
+    const state = deal(BOARDS[1], "auto");
+    const ui = { ...starbattleGame.newUi(state), autoCross: true };
+    let board = state;
+    for (let asked = 0; starbattleGame.status(board) !== "solved"; asked++) {
+      expect(asked).toBeLessThan(state.grid.length);
+      const result = starbattleGame.hint?.(board, undefined, ui);
+      if (!result?.ok) throw new Error("refused");
+      const stars = result.steps.filter(
+        (s) => s.move.kind === "mark" && s.move.cells[0].mark === STAR,
+      );
+      expect(stars.length).toBeLessThanOrEqual(1);
+      if (stars.length === 1) expect(result.steps.at(-1)).toBe(stars[0]);
+      for (const step of result.steps) {
+        if (step.move.kind !== "mark") throw new Error("a step marks squares");
+        // Each square is clicked as the player would click it.
+        for (const { index, mark } of step.move.cells) {
+          if (board.grid[index] === mark) continue;
+          const at = { x: index % state.size, y: (index / state.size) | 0 };
+          const verb =
+            starbattleGame.targetVerbs?.[mark === STAR ? "primary" : "secondary"];
+          const move = verb?.apply(board, at, ui);
+          if (!move || typeof move !== "object") throw new Error("no move");
+          const copy = { ...step, move: structuredClone(step.move) };
+          expect(starbattleGame.hintKeepTrack?.(move, copy, board)).not.toBe("off");
+          board = executeMove(board, move);
+        }
+      }
+    }
+    expect(starbattleGame.findMistakes?.(board)).toEqual([]);
   });
 
   it("a move the step does not ask for drops it", () => {

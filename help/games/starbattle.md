@@ -1,6 +1,8 @@
 # Star Battle
 
-You have a square grid divided into regions by heavy lines. Place stars so that every row, every column and every region holds the same number of them, and no two stars touch, not even at a corner.
+You have a square grid divided into regions by heavy lines. Place stars so that every row, every column and every region holds the same number of them, and no two stars touch, not even at a corner. How many stars is the game mode:
+
+{{rulesets}}
 
 Every puzzle has exactly one solution, and none needs a guess.
 
@@ -10,9 +12,11 @@ Every puzzle has exactly one solution, and none needs a guess.
 
 A cross is your own note that a square holds no star. You need not cross anything out to finish: the puzzle is solved as soon as the stars are all in place. A star turns red when it touches another, or when its row, column or region holds too many.
 
-## Where the puzzle comes from
+With **Cross out the squares a star rules out** turned on in the preferences, placing a star also crosses out the blank squares touching it, and the rest of its row, column or region when the star is the last one that holds. Taking the star away again leaves those crosses for you to clear.
 
-Star Battle was invented by Hans Eendebak for the 2003 World Puzzle Championship. With one star to each row, column and region it is also known as *Queens*, and with two as *Two Not Touch*.
+## Where the puzzles come from
+
+Star Battle was invented by Hans Eendebak for the 2003 World Puzzle Championship.
 
 ## Hints
 

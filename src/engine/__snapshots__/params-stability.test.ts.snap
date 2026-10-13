@@ -690,16 +690,21 @@ bump:h  full=6x7de  brief=6x7"
 
 exports[`encoded params are byte-stable > starbattle 1`] = `
 "default  full=5s1de  brief=5s1
-preset:5x5 Normal, 1 star  full=5s1dn  brief=5s1
-preset:5x5 Tricky, 1 star  full=5s1dt  brief=5s1
-preset:6x6 Easy, 1 star  full=6s1de  brief=6s1
-preset:6x6 Normal, 1 star  full=6s1dn  brief=6s1
-preset:6x6 Tricky, 1 star  full=6s1dt  brief=6s1
-preset:8x8 Easy, 1 star  full=8s1de  brief=8s1
-preset:8x8 Normal, 1 star  full=8s1dn  brief=8s1
-preset:8x8 Tricky, 1 star  full=8s1dt  brief=8s1
-preset:10x10 Easy, 2 stars  full=10s2de  brief=10s2
-preset:10x10 Normal, 2 stars  full=10s2dn  brief=10s2
+preset:One star/One star: 5x5 Normal  full=5s1dn  brief=5s1
+preset:One star/One star: 5x5 Tricky  full=5s1dt  brief=5s1
+preset:One star/One star: 6x6 Easy  full=6s1de  brief=6s1
+preset:One star/One star: 6x6 Normal  full=6s1dn  brief=6s1
+preset:One star/One star: 6x6 Tricky  full=6s1dt  brief=6s1
+preset:One star/One star: 8x8 Easy  full=8s1de  brief=8s1
+preset:One star/One star: 8x8 Normal  full=8s1dn  brief=8s1
+preset:One star/One star: 8x8 Tricky  full=8s1dt  brief=8s1
+preset:Two stars/Two stars: 8x8 Easy  full=8s2de  brief=8s2
+preset:Two stars/Two stars: 8x8 Normal  full=8s2dn  brief=8s2
+preset:Two stars/Two stars: 9x9 Easy  full=9s2de  brief=9s2
+preset:Two stars/Two stars: 9x9 Normal  full=9s2dn  brief=9s2
+preset:Two stars/Two stars: 10x10 Easy  full=10s2de  brief=10s2
+preset:Two stars/Two stars: 10x10 Normal  full=10s2dn  brief=10s2
+preset:Three stars/Three stars: 12x12 Easy  full=12s3de  brief=12s3
 bump:stars  full=5s2de  brief=5s2"
 `;
 

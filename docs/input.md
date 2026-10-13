@@ -377,6 +377,14 @@ What a game decides:
   first**, above the hand-off.
 - **Verb semantics are functions, never flags.** A refusal, a three-state
   cycle or "either button clears" is a line of the verb's `apply`.
+- **The left button places what the puzzle is about, and the right button
+  says "nothing here".** A cross, a dot or any other mark that rules a
+  target out is the `secondary` verb, however much oftener the player makes
+  it than the placement: one meaning a button across the collection is worth
+  more than a click saved in one game (the owner's ruling, 2026-10-13, on
+  Star Battle, which first shipped the other way round). Where the cross is
+  made in bulk, a preference may make it for the player
+  ([`starbattle/index.ts`](../src/games/starbattle/index.ts), `auto-cross`).
 - **Space is always the right button's verb.** A verb that wants another key
   takes `keys`; it does not remap Space.
 - **Keys use the model's spellings**: `letterKey("T")` for a letter in either

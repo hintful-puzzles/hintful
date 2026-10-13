@@ -119,7 +119,10 @@ function trial(t: Trial): Sentence {
       move,
     });
   }
-  const left = `${t.room} ${t.own ? "more" : starWord(t.room)}, not ${t.need}`;
+  // "1 star, not 2"; past one the count says enough, and keeps the sentence
+  // inside the line the collection draws.
+  const of = t.own ? " more" : t.room === 1 ? " star" : "";
+  const left = `${t.room}${of}, not ${t.need}`;
   const does = cause ?? (t.touches ? "touch" : "rule out");
   // Named by its cause, a star's effect needs no outline; otherwise the
   // squares it rules out are the outlined ones.
