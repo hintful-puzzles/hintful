@@ -1,10 +1,11 @@
 ## ADDED Requirements
 
-### Requirement: The palette holds a set of fills for the regions a puzzle gives
+### Requirement: The palette holds a quiet set of fills for the regions a puzzle gives
 
 The palette SHALL hold one set of fills for the surface of regions a puzzle
-gives, with no red and no gray among them. Any two members SHALL stand at
-least the floor two neighbors are held to apart, in both schemes.
+gives: the hues of Map's four fills, member for member, at a strength that
+recedes. Any two members SHALL stand at least the floor two neighbors are
+held to apart, in both schemes.
 
 #### Scenario: Two regions side by side take any two members
 

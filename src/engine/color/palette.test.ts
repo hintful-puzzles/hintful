@@ -288,24 +288,24 @@ describe("the shared color vocabulary", () => {
       return Math.hypot(p[0] - q[0], px - qx, py - qy);
     };
 
-    expect(colors.SIX_FILLS.length).toBe(6);
+    expect(colors.FOUR_FILLS_QUIET.length).toBe(4);
     // Two bars. In the light scheme a mark reads on a fill no worse than on
     // `cellSurface`, the surface the fill replaces: every fill is lighter
     // than it. In the dark scheme no fill can be, since that surface is sunk
-    // below the board, so there each mark has a floor, with the least it
-    // scored on 2026-10-13 beside it. The low ones are the three fills at the
-    // set's upper step.
+    // below the board, so there each mark has a floor. A fill at the set's
+    // upper step is where a mark scores least, and the floors are what a
+    // step lighter would break: a piece stood 2.4 on it, the ring 2.8.
     const marks: [name: string, light: Color, dark: Color, floor: number][] = [
       // A cross, a digit, the border: ink, which the dark scheme inverts.
-      ["ink", roles.INK, roles.PAPER, 7], // 10.57
-      ["a piece", roles.SHADED, inDark(roles.SHADED), 2.3], // 2.40
-      ["an error", roles.ERROR, inDark(roles.ERROR), 2.5], // 2.61
-      ["the hint's ring", roles.HINT_ACTION, inDark(roles.HINT_ACTION), 2.8], // 2.84
-      ["its outline", roles.HINT_EVIDENCE, inDark(roles.HINT_EVIDENCE), 5], // 6.80
-      ["the cursor", roles.CURSOR, inDark(roles.CURSOR), 3], // 4.59
+      ["ink", roles.INK, roles.PAPER, 7],
+      ["a piece", roles.SHADED, inDark(roles.SHADED), 2.3],
+      ["an error", roles.ERROR, inDark(roles.ERROR), 2.5],
+      ["the hint's ring", roles.HINT_ACTION, inDark(roles.HINT_ACTION), 2.8],
+      ["its outline", roles.HINT_EVIDENCE, inDark(roles.HINT_EVIDENCE), 5],
+      ["the cursor", roles.CURSOR, inDark(roles.CURSOR), 3],
     ];
     const surface = roles.cellSurface(BG);
-    for (const fill of colors.SIX_FILLS) {
+    for (const fill of colors.FOUR_FILLS_QUIET) {
       for (const [name, mark] of marks)
         expect(
           contrast(mark, fill),

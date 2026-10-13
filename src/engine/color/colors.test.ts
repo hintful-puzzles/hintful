@@ -142,8 +142,8 @@ describe("the named colors", () => {
       // side by side, so the bar is the floor two neighbors are held to
       // (`MIN_DARK_DISTANCE`, `puzzle/neighbor-contrast.ts`), in both schemes.
       [
-        "six region fills (star battle)",
-        colors.SIX_FILLS.map((c, i) => [`fill${i}`, c] as [string, Color]),
+        "four quiet region fills (star battle)",
+        colors.FOUR_FILLS_QUIET.map((c, i) => [`fill${i}`, c] as [string, Color]),
         0.07,
       ],
       [

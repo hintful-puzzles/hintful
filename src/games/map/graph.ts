@@ -48,6 +48,13 @@ export function gengraph(
   return { graph, ngraph };
 }
 
+/** Each of `n` regions' neighbors, lowest first, from the edge list. */
+export function graphNeighbors(graph: Int32Array, n: number): number[][] {
+  const beside: number[][] = Array.from({ length: n }, () => []);
+  for (const edge of graph) beside[Math.floor(edge / n)].push(edge % n);
+  return beside;
+}
+
 /** Binary-search the index of edge `(i, j)` in `graph`, or -1. */
 export function graphEdgeIndex(
   graph: Int32Array,

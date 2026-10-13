@@ -732,7 +732,7 @@ and which one you reach for is the decision:
 - [`engine/color/colors.ts`](../src/engine/color/colors.ts) holds **the
   palette itself**: the named colors, most at three intensities (base,
   `_WASH`, `_BOLD`), and the sets made to be told apart (`TEN`, `TEN_NAMES`,
-  `EIGHT_FILLS`, `SIX_FILLS`, `FOUR_FILLS`).
+  `EIGHT_FILLS`, `FOUR_FILLS`, `FOUR_FILLS_QUIET`).
 - [`engine/color/palette-games.ts`](../src/engine/color/palette-games.ts)
   holds colors a game defines **relative to its own board**, prefixed with
   its id (`slantGrounded`, `undeadGhost`). Functions, not values.
@@ -782,8 +782,9 @@ names the one it applies.
   `cellSurface`, the line between cells is `surfaceGrid`, thin, and the
   frame around the grid is no heavier than it.
 - **A region the puzzle gives may take a fill in place of `cellSurface`**
-  ("The palette holds a set of fills for the regions a puzzle gives"). The
-  fill is one of `SIX_FILLS`, and `regionFills`
+  ("The palette holds a quiet set of fills for the regions a puzzle gives"). The
+  fill is one of `FOUR_FILLS_QUIET`, Map's four hues at a strength that
+  recedes, and `regionFills`
   ([`engine/region-fill.ts`](../src/engine/region-fill.ts)) says which, so
   that regions sharing a side differ. It says only "these cells are one
   region": the heavy border still tells two regions apart, and everything

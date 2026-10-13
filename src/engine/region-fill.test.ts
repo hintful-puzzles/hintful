@@ -1,15 +1,18 @@
 /**
  * Tier-1 tests for the fills a division's regions take.
  *
- * What a renderer relies on: two regions that share a side differ, whatever
- * the division and however few fills; the answer is the division's alone; and
- * the fills are spread, so a board of ten regions is not two colors and a
- * stray third.
+ * What a renderer relies on from `regionFills`: two regions that share a side
+ * differ, whatever the division and however few fills; the answer is the
+ * division's alone; and the fills are spread, so a board of ten regions is
+ * not two colors and a stray third. What a generator relies on from
+ * `colorRegions` is the order it is asked in, which is the order of its
+ * draws: Map's frozen differential pins that on dealt maps, and the walk's
+ * own shape is pinned here on a graph small enough to read.
  */
 import { describe, expect, it } from "vitest";
 import { growFromSeeds, regionNumbers, scatterSeeds } from "./divide.ts";
 import { randomNew } from "./random/index.ts";
-import { regionFills } from "./region-fill.ts";
+import { colorRegions, regionFills } from "./region-fill.ts";
 
 /** A division of a `w` by `h` grid into `count` regions, drawn from `seed`. */
 function division(w: number, h: number, count: number, seed: string): Int32Array {
@@ -19,7 +22,7 @@ function division(w: number, h: number, count: number, seed: string): Int32Array
 }
 
 /** How many pairs of cells side by side lie in two regions of one fill. */
-function clashes(regions: Int32Array, w: number, fills: Uint8Array): number {
+function clashes(regions: Int32Array, w: number, fills: Int32Array): number {
   let n = 0;
   regions.forEach((r, i) => {
     const right = (i + 1) % w === 0 ? r : regions[i + 1];
@@ -90,5 +93,64 @@ describe("regionFills", () => {
   it("throws where the division needs more fills than it is given", () => {
     // Three regions each beside the other two.
     expect(() => regionFills([0, 0, 1, 2], 2, 2)).toThrow(/2 fills/);
+  });
+});
+
+describe("colorRegions", () => {
+  // A path of three: the middle is beside both ends.
+  const PATH = [[1], [0, 2], [1]];
+  const first = {
+    region: (tied: readonly number[]) => tied[0],
+    order: (free: number[]) => free,
+  };
+
+  it("asks for a region among those tied, then for the order of its fills", () => {
+    const asked: string[] = [];
+    const found = colorRegions(PATH, 2, {
+      region: (tied) => {
+        asked.push(`region ${tied.join(",")}`);
+        return tied[tied.length - 1];
+      },
+      order: (free, r) => {
+        asked.push(`fills ${free.join(",")} of ${r}`);
+        return free.reverse();
+      },
+    });
+    expect(found && [...found]).toEqual([1, 0, 1]);
+    // All three are tied at the start; once an end is filled the middle has
+    // the fewest fills left, and then the other end is the one region left.
+    expect(asked).toEqual([
+      "region 0,1,2",
+      "fills 0,1 of 2",
+      "region 1",
+      "fills 0 of 1",
+      "region 0",
+      "fills 1 of 0",
+    ]);
+  });
+
+  it("takes back a fill that leads to a dead end", () => {
+    // A triangle with a tail: three fills do it, and the first order tried
+    // for the tail's end does not matter to whether one is found.
+    const beside = [[1, 2], [0, 2], [0, 1, 3], [2]];
+    const found = colorRegions(beside, 3, first);
+    expect(found).not.toBeNull();
+    beside.forEach((others, r) => {
+      for (const o of others) expect(found?.[o]).not.toBe(found?.[r]);
+    });
+  });
+
+  it("is null where no coloring exists", () => {
+    expect(
+      colorRegions(
+        [
+          [1, 2],
+          [0, 2],
+          [0, 1],
+        ],
+        2,
+        first,
+      ),
+    ).toBeNull();
   });
 });

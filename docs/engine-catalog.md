@@ -91,7 +91,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-text.ts` — the sentences several games share | another game already says your sentence |
 | – `slide-planner.ts` — sliding-permutation search | the player slides tiles into one arrangement |
 | – `piece.ts` — a piece on its cell | a cell holds a piece, is shaded or is ruled out |
-| – `region-fill.ts` — a fill for each region of a division | the puzzle divides your board into regions |
+| – `region-fill.ts` — a fill for each region of a division | the puzzle divides your board into regions, or its answer is a coloring of them |
 | – `hint-mark.ts` — the ring and the outline | you draw a hint's marks on cells |
 | – `hatch.ts` — the stripes on the line a step names | a hint sentence names a row or column |
 | – `hint-ordinal.ts` — where a cell falls in a forced chain | a hint step walks a chain of cells |
@@ -817,16 +817,24 @@ Exemplar: `src/skeleton/grid/render.ts`.
 
 ### `region-fill.ts` — a fill for each region of a division
 
-Reach for it in `newDrawState` when the puzzle gives the board's regions
-and each is to be colored. `regionFills(regions, w, fills)` takes each
-cell's region as a number (`regionNumbers`, `divide.ts`) and returns a fill
-number for each region: two regions that share a side never take the same
-one, the fills are spread, and the answer is the division's alone, so a
-board wears the same colors each time it is opened. The colors are
-`SIX_FILLS` (`color/colors.ts`), one palette slot each, and
-[`rendering.md`](./rendering.md) § "What a board looks like: pieces on a
-quiet surface" says what a game owes when it takes them. Exemplar:
-`starbattle/render.ts`.
+Reach for it wherever regions are colored so that two sharing a side
+differ. There is one walk, `colorRegions(beside, fills, choice)`: the region
+with the fewest fills left goes next, a fill that leads to a dead end is
+taken back, and `choice` says which of the tied regions and in what order
+its fills are tried. Two callers, which differ only in that choice:
+
+- **A renderer coloring the regions the puzzle gives** calls
+  `regionFills(regions, w, fills)` in `newDrawState`, with each cell's
+  region as a number (`regionNumbers`, `divide.ts`). It draws nothing, so a
+  board wears the same colors each time it is opened, and it spreads the
+  fills. The colors are `FOUR_FILLS_QUIET` (`color/colors.ts`), one palette
+  slot each; [`rendering.md`](./rendering.md) § "What a board looks like:
+  pieces on a quiet surface" says what a game owes when it takes them.
+  Exemplar: `starbattle/render.ts`.
+- **A generator whose answer is a coloring** passes a `choice` that draws.
+  Byte-match critical there: the walk asks once for the region and once for
+  its fills at every step, and Map's frozen differential pins the draws of
+  upstream's four-coloring through it. Exemplar: `map/generator.ts`.
 
 ### `hint-mark.ts` — the ring and the outline
 

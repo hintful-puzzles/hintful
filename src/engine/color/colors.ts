@@ -466,71 +466,64 @@ export const FOUR_FILLS: readonly Color[] = [
   PURPLE_WASH,
 ];
 
-/** The two steps the members of {@link SIX_FILLS} take, a scheme, as
+/** The two steps the members of {@link FOUR_FILLS_QUIET} take, a scheme, as
  * `[lightness, chroma]`. */
-const REGION_STEPS: Record<"upper" | "lower", { light: Step; dark: Step }> = {
-  upper: { light: [0.915, 0.05], dark: [0.36, 0.06] },
-  lower: { light: [0.85, 0.055], dark: [0.285, 0.065] },
+const QUIET_STEPS: Record<"upper" | "lower", { light: Step; dark: Step }> = {
+  upper: { light: [0.92, 0.045], dark: [0.35, 0.05] },
+  lower: { light: [0.875, 0.045], dark: [0.28, 0.055] },
 };
 
-/** A member of {@link SIX_FILLS}: a named color's hue at one of the set's
- * two steps. */
-const regionFill = (name: string, step: "upper" | "lower"): Color => {
+/** A member of {@link FOUR_FILLS_QUIET}: a named color's hue at one of the
+ * set's two steps. */
+const quietFill = (name: string, step: "upper" | "lower"): Color => {
   const { h } = DESIGN[name];
-  const { light, dark } = REGION_STEPS[step];
+  const { light, dark } = QUIET_STEPS[step];
   return token(oklch(light[0], light[1], h), oklch(dark[0], dark[1], h));
 };
 
-/** The yellow of {@link SIX_FILLS}, which says why it is not at the upper
- * step: `[lightness, chroma, hue]`. */
-const REGION_YELLOW = {
-  light: [0.93, 0.08, 100],
-  dark: [REGION_STEPS.upper.dark[0], REGION_STEPS.upper.dark[1], 72],
+/** The yellow of {@link FOUR_FILLS_QUIET}, which says why it is not at the
+ * upper step: `[lightness, chroma, hue]`. */
+const QUIET_YELLOW = {
+  light: [0.93, 0.065, 100],
+  dark: [QUIET_STEPS.upper.dark[0], QUIET_STEPS.upper.dark[1], 88],
 } as const;
 
 /**
- * **Six fills for the regions a puzzle gives**: the whole board is these, and
- * all a fill says is "these squares are one region". Everything the player
+ * **{@link FOUR_FILLS}, quiet**: the same four hues, member for member, for
+ * a board whose regions the puzzle gives. There the whole board is these, and
+ * all a fill says is "these squares are one region": everything the player
  * reads is drawn on it, and the heavy border between two regions is what
- * tells them apart.
+ * tells them apart. In Map the fill is the player's answer, and has to stand
+ * off a region with no color yet; here it has to recede.
  *
- * A step of its own and not six washes. A wash's lightness is an output of
- * the search behind {@link EIGHT_FILLS} and {@link FOUR_FILLS}, so the washes
- * stand 0.16 of lightness apart in the light scheme, and a board of them is
- * uneven: teal's is brighter than the board and green's is two steps under
- * it. Here the fills sit at two steps a scheme, 0.065 of lightness apart in
- * the light scheme and 0.075 in the dark, so that no region is the loud one.
+ * A step of its own and not the four washes. A wash's lightness is an output
+ * of the search behind {@link FOUR_FILLS}, so as a whole board they are
+ * uneven, teal's brighter than the board and red's well under it, and in the
+ * dark scheme too light for a mark to win on: at a wash's 0.42 a star
+ * measured 1.7:1 on its region and the hint's stripes 1.16:1.
+ * `palette.test.ts` holds each mark's floor on these.
  *
- * **Two steps and not one, taken in turn round the hue circle.** Any two
- * members may be the fills of regions side by side, so every pair has to
- * clear the floor two neighbors are held to (`MIN_DARK_DISTANCE`,
- * `puzzle/neighbor-contrast.ts`). At one lightness and a chroma this faint,
- * purple and pink stood 0.036 apart, half of it. Hues next to each other
- * therefore take different steps, and the worst pair is 0.075 in the light
- * scheme and 0.087 in the dark (2026-10-13).
- *
- * **Darker in the dark scheme than a wash**, because a mark has to win on a
- * fill: at a wash's 0.42 a star measured 1.7:1 on its region and the hint's
- * stripes 1.16:1. `palette.test.ts` holds each mark's floor on these.
+ * **Two steps, taken in turn round the hue circle.** Any two members may be
+ * the fills of regions side by side, so every pair has to clear the floor
+ * two neighbors are held to (`MIN_DARK_DISTANCE`,
+ * `puzzle/neighbor-contrast.ts`), which four hues this faint do not at one
+ * lightness. Hues next to each other therefore take different steps.
  *
  * **Yellow is at neither step.** At the upper step's light chroma it is
  * khaki, so it is lighter and stronger, as yellow is. In the dark scheme no
  * yellow is that dark: it is olive, a muddy field (owner, 2026-10-11, of
- * {@link YELLOW_WASH}). So its dark value leaves the hue for a warm brown,
- * which it may, since no member is named to a player.
- *
- * **No red and no gray.** Red's wash is the mistake's (`ERROR_WASH`), and a
- * gray region reads as a wall in the light scheme and a hole in the dark.
+ * {@link YELLOW_WASH}). So its dark value leaves the hue a little way toward
+ * orange, for an ochre, which it may, since no member is named to a player
+ * on a board that takes these. Further, at brown, it is taken for the red
+ * beside it.
  *
  * `regionFills` (`engine/region-fill.ts`) says which region takes which.
  */
-export const SIX_FILLS: readonly Color[] = [
-  token(oklch(...REGION_YELLOW.light), oklch(...REGION_YELLOW.dark)),
-  regionFill("BLUE", "lower"),
-  regionFill("PURPLE", "upper"),
-  regionFill("GREEN", "lower"),
-  regionFill("TEAL", "upper"),
-  regionFill("PINK", "lower"),
+export const FOUR_FILLS_QUIET: readonly Color[] = [
+  quietFill("RED", "lower"),
+  token(oklch(...QUIET_YELLOW.light), oklch(...QUIET_YELLOW.dark)),
+  quietFill("TEAL", "lower"),
+  quietFill("PURPLE", "upper"),
 ];
 
 /**

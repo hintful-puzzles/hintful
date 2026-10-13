@@ -131,7 +131,6 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
   "games/guess/state.ts › newDesc": [
     "rejection sampling over colors, and validateParams keeps the pegs no more than the colors",
   ],
-  "games/map/generator.ts › fourcolorRecurse": ["counts down the colors left to try"],
   "games/mines/generator.ts › minegen": ["counts down the mines to lay"],
   "games/mines/solver.ts › minesolve": [
     "each pass deduces a square or perturbs, and a perturbation settles the set it was asked about or gives up",

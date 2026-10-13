@@ -2,10 +2,11 @@
 
 **Status: built and committed 2026-10-13, not pushed, waiting for the
 owner's word on the look** (`tasks.md` § 5). The session's questions are
-settled in `tasks.md` § 3, and two things in § "What Changes" came out
-otherwise than written: the fills are a set of their own (`SIX_FILLS`) and
-not the washes, and they are spread over a board's regions, not kept to as
-few as it needs.
+settled in `tasks.md` § 3, and three things came out otherwise than written
+below: the fills are a quiet set of their own in Map's four hues
+(`FOUR_FILLS_QUIET`) and not the washes; Map's generator and the renderer
+share one coloring walk; and one question is open for the owner, whether
+Map takes the quiet four too (`tasks.md` § 5.2).
 
 **Where the first session stops.** The owner's word, 2026-10-13: work until
 there is a screenshot of a colored Star Battle board to show them, then wait

@@ -9,7 +9,7 @@
  * heavy wall inside its own box, and the two halves make the region's border.
  */
 
-import { SIX_FILLS } from "../../engine/color/colors.ts";
+import { FOUR_FILLS_QUIET } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   ERROR,
@@ -78,7 +78,7 @@ export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_GRID] = surfaceGrid(defaultBackground);
-  SIX_FILLS.forEach((fill, k) => {
+  FOUR_FILLS_QUIET.forEach((fill, k) => {
     out[COL_REGION + k] = fill;
   });
   out[COL_WALL] = INK;
@@ -190,7 +190,7 @@ export function newDrawState(
   tileSize: number,
 ): StarbattleDrawState {
   const squares = state.size * state.size;
-  const fills = regionFills(state.regions, state.size, SIX_FILLS.length);
+  const fills = regionFills(state.regions, state.size, FOUR_FILLS_QUIET.length);
   return {
     started: false,
     tileSize,

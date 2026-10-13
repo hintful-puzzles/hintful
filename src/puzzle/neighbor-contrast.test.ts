@@ -51,14 +51,12 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   slide: {
     "area:0:20": "a block's lowlight edge beside the floor; its face clears it",
   },
-  // The three region fills at the set's upper step (`SIX_FILLS`). The lower
-  // three clear the margin.
+  // The two region fills at the set's upper step (`FOUR_FILLS_QUIET`). The
+  // lower two clear the margin.
   starbattle: {
-    "area:0:12":
+    "area:0:13":
       "a region's fill beside the board's margin; the board's ink frame is between them",
-    "area:0:14":
-      "a region's fill beside the board's margin; the board's ink frame is between them",
-    "area:0:16":
+    "area:0:15":
       "a region's fill beside the board's margin; the board's ink frame is between them",
   },
   twiddle: {
