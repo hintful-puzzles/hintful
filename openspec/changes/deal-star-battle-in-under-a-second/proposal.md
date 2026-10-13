@@ -10,8 +10,8 @@ The owner, on first playing Star Battle (2026-10-13): dealing a board of two
 stars sometimes takes several seconds, and those boards are the fun ones.
 
 Measured 2026-10-12, a board, the mean over 12 to 40 draws
-(`openspec/changes/add-starbattle/design.md` § "The generator" has the whole
-table, or the archive once that change is archived):
+(`openspec/changes/archive/2026-10-13-add-starbattle/design.md` § "The
+generator" has the whole table):
 
 | Board | Easy | Normal | Tricky |
 | --- | --- | --- | --- |

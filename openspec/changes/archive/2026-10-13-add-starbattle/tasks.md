@@ -59,8 +59,9 @@
 
 ## 6. Acceptance
 
-- [ ] 6.1 The owner plays it. Archive on their word, together with
-      `fit-a-new-game-in-one-session`. The spec is already synced to
+- [x] 6.1 The owner plays it. Accepted 2026-10-13, after the changes of
+      their first play (`design.md` § "The owner's first play"). Archive on
+      their word, together with `fit-a-new-game-in-one-session`. The spec is already synced to
       `openspec/specs/starbattle/spec.md`, because the gate asks a registered
       game for its spec, so the archive skips the spec merge
       (`openspec archive add-starbattle --skip-specs`); a requirement

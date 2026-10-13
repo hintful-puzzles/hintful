@@ -1,9 +1,28 @@
 # color-regions-through-the-engine
 
-**Status: scaffolded 2026-10-13 at the owner's word, not started.** It has
-no `tasks.md` yet. Two of the questions below are the owner's, and the first
-of them decides how much of the rest is built; the others are the session's
-to settle with a drawing each.
+**Status: scaffolded 2026-10-13 at the owner's word, and the next change to
+be taken up.** It has no `tasks.md` yet: the session that takes it up writes
+them. The owner's two questions are answered (§ "The owner's answers"); the
+others are the session's to settle.
+
+**Where the first session stops.** The owner's word, 2026-10-13: work until
+there is a screenshot of a colored Star Battle board to show them, then wait
+for them to approve the look. So build it, run the app, take the screenshot
+in both schemes, show it to the owner (the `herdr-open` skill opens an image
+where `HERDR_PANE_ID` is set; otherwise give the path), and stop. Commit the
+work so it is not lost, and do not push until the owner has approved, since
+a push deploys the look to players. This overrides the brief's "push without
+asking" for this change only.
+
+## The owner's answers (2026-10-13)
+
+- **Which games: Star Battle only, to start**, "and seeing how it goes from
+  there". The other region games are not this change's. The engine helper
+  is still the engine's, so that the next game takes it by a declaration.
+- **Always on, with no preference.**
+- The session's own questions (3 to 6 below) were agreed as recommended:
+  each is settled by what the session sees on the board and shows the owner
+  in the screenshot.
 
 ## Why
 
@@ -50,7 +69,7 @@ every deduction in the game is about a region.
 
 ## Questions
 
-**For the owner.**
+**For the owner**, both answered above.
 
 1. **Which games.** The games whose board is divided into regions the
    puzzle gives, by `git grep -l` over `src/games` on 2026-10-13: Star

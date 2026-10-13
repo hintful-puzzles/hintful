@@ -1,8 +1,11 @@
 # fit-a-new-game-in-one-session
 
-**Status: a draft, filed 2026-10-12. It waits for the owner's word on the
-order of work below.** It has no `tasks.md`; each piece taken up becomes a
-change of its own.
+**Status: done. The six changes of § "The owner's answers" are archived, the
+last of them `add-starbattle`, accepted by the owner on 2026-10-13.** It has
+no `tasks.md`; each piece was a change of its own. What the measurement
+found is `findings.md` in the archived `add-starbattle`: the game was
+written whole in one session, with the context at about 500,000 tokens when
+it first passed its whole verdict.
 
 ## Why
 

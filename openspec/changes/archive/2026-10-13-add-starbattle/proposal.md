@@ -1,7 +1,6 @@
 # add-starbattle
 
-**Status: built 2026-10-13 and waiting for the owner to play it** (§
-"Acceptance"). It is the measurement of `fit-a-new-game-in-one-session`,
+**Status: built and accepted by the owner, 2026-10-13.** It is the measurement of `fit-a-new-game-in-one-session`,
 written from the skeleton, the guides, the one command, the spec rule and
 the region division the five changes before it left. `design.md` holds what
 was decided and measured, and `findings.md` the log.
