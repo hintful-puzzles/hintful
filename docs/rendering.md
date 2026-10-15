@@ -42,9 +42,9 @@ The skeleton's [`render.ts`](../src/skeleton/grid/render.ts) does steps 1 to
    § "A warm frame must match a fresh one" and § "What a board looks like:
    pieces on a quiet surface".
 8. Paint the hint marks after the tile loop, outside any clip.
-9. In the game's own test, paint the board, run the mistake check, and
-   assert the mistake appears on the same draw state's next frame. See
-   § "Prove the overlay repaints".
+9. In the game's own test, paint the mistake overlay and assert what it
+   drew. Its repaint is `warm-repaint.test.ts`'s. See § "Prove the overlay
+   repaints".
 
 ## Sections
 
@@ -271,6 +271,16 @@ have been painted, and every role in the legend to be asked for.
   and event seed in the game's own test (exemplar: `bricks.test.ts`, "takes
   an edge diamond away whole, ground included").
 
+**A game that finds mistakes must have painted its mistake overlay on a warm
+frame.** The run's check puts the overlay on a board already painted, and
+the next event takes it off, which are the two frames a key without the
+overlay gets wrong. Where the seeded run never checks a wrong board, name
+one in the test's `WRONG`: the board and the moves that make it wrong, since
+no desc holds a player's mistake. Find the moves by playing seeded input on
+the run's own deal until `findMistakes` flags the board, then drop each move
+the mistake does not need. A pin the seeded run has caught up with fails
+and is removed.
+
 ### A mark that crosses tiles
 
 **A mark that crosses tiles goes into each tile's key, by piece or by
@@ -295,28 +305,23 @@ misses the cache, so an overlay missing from the diff test still paints.
 - **The hint overlay is guarded for every game with a hint** by
   [`hint-overlay.test.ts`](../src/engine/hint-overlay.test.ts). A game owes
   it nothing.
-- **The mistake overlay needs a paint-twice test of the game's own**,
-  whether the flag rides a sidecar or the tile key. Paint, run
-  `findMistakes()`, redraw the same draw state, and assert the highlight
-  appears on the second paint. Assert too that a third frame without the
-  overlay erases it. No cross-game guard stands in for it:
-  `warm-repaint.test.ts` compares a mistaken frame only when its seeded run
-  reaches one, and requires none, and
-  `src/mistake-overlay-coverage.test.ts` is met by any test that paints the
-  overlay, a cold `renderScenario` `showMistakes` frame included.
-  `renderScenario` paints once and returns its `midend`, so check and
-  redraw through that. Exemplars: `towers.test.ts` ("highlights a mistake even
-  when the cell was already drawn"), `galaxies.test.ts` ("recolors a flagged
-  wall on a board that was already drawn").
-- **Assert the settled frame paints nothing, first.** Warm, redraw once
-  more, assert that frame is empty, and only then turn the overlay on.
-  Otherwise a game that repaints unconditionally passes while proving
-  nothing about its cache.
+- **The mistake overlay is guarded for every game that finds mistakes** by
+  the same test, which requires a warm mistaken frame and compares it, and
+  the frame that takes the overlay off, with a fresh paint (§ "A warm frame
+  must match a fresh one"). A game owes it at most a `WRONG` pin, whether
+  the flag rides a sidecar or the tile key.
+- **What the game's own test owes is the look.**
+  `src/mistake-overlay-coverage.test.ts` requires a test that paints the
+  overlay and asserts what it drew; a `renderScenario` `showMistakes` frame
+  does. A test that also paints twice, as `towers.test.ts` ("highlights a
+  mistake even when the cell was already drawn") does, proves the repaint
+  again in the game's own words, and nothing requires it.
 - **The bug needs an overlay handed to the painter beside the key.** A
   sidecar or a hand-packed side channel is where the stale clause has to be
   (`openspec/postmortems/2026-09-09-tile-loop-inversion-withdrawal.md`). A
   flag folded into the tile key cannot be left out of the diff test; what
-  its test catches is a painter that reads the mistake from anywhere else.
+  goes wrong there is a painter that reads the mistake from anywhere else,
+  and the comparison catches that too.
 
 **A game that repaints its whole frame needs none of this.** With no tile
 cache it adds no sidecar and erases nothing: `redraw` reads the displayed

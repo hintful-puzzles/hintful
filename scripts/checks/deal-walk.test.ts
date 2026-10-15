@@ -20,8 +20,9 @@
  * those sizes for a game with tiers and lists the slow ones.
  *
  * **`DEAL_WALK_CELLS` deals the params it names and nothing else**, each
- * `DEAL_WALK_SEEDS` times whatever they take, which is how the sizes each side
- * of a line are counted before the line is drawn.
+ * `DEAL_WALK_SEEDS` times whatever they take, a size `validateParams` refuses
+ * included, which is how the sizes each side of a line are counted before the
+ * line is drawn or kept.
  *
  * **It can be killed between any two deals and started again.** The cell in
  * flight is written to the state file before its deal, so a run that finds one
@@ -193,7 +194,9 @@ function walk(id: string, statePath: string): void {
           threw: null,
           died: null,
           lost: 0,
-          done: refusal !== null,
+          // A cell named is dealt past its refusal: a bound is measured from
+          // the sizes it refuses.
+          done: refusal !== null && asked === null,
         };
         state.cells.push(cell);
       }

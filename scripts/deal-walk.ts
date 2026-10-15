@@ -28,7 +28,8 @@
  *     DEAL_WALK_CELLS="9dr 8dr" DEAL_WALK_SEEDS=12 npm run deal-walk -- mathrax
  *
  * deals each of those params twelve times, however long they take and however
- * many never come back, and prints the line instead of writing the report.
+ * many never come back, and prints the line instead of writing the report. A
+ * size the game refuses is dealt too, which is how a refusal is measured.
  * A named cell's line also has its deals' tries at their outermost retry loop
  * and its boards by the easiest tier that finishes each, which is the census
  * of a generator still being written: register the game, and name its params.
@@ -171,8 +172,9 @@ const seconds = (ms: number): string =>
 /** A cell as the report's line has it. */
 function renderCell(cell: DealWalkCell): string {
   const name = `\`${cell.label}\``;
-  if (cell.refusal !== null) return `${name} refused`;
-  const parts: string[] = [];
+  if (cell.refusal !== null && cell.ms.length + cell.lost === 0)
+    return `${name} refused`;
+  const parts: string[] = cell.refusal !== null ? ["refused, dealt anyway"] : [];
   if (cell.ms.length > 0) {
     const mean = cell.ms.reduce((a, b) => a + b, 0) / cell.ms.length;
     const worst = Math.max(...cell.ms);

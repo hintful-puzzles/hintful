@@ -718,10 +718,9 @@ reads; no list is edited. What each asks of the game's author:
   the app shell;
   [`module-layering.test.ts`](../src/module-layering.test.ts) also holds
   runtime import cycles at zero.
-- **Mistake overlay**: paint, call `findMistakes()`, redraw the same draw
-  state, and assert the highlight on the second paint, and ideally that a
-  third frame without the overlay erases it. A cold frame proves nothing,
-  since every cell misses the cache on frame one
+- **Mistake overlay**: the game's test paints it and asserts what it drew;
+  its repaint on a warm frame is `warm-repaint.test.ts`'s, which a game
+  whose seeded run checks no wrong board feeds a `WRONG` pin
   ([`rendering.md`](./rendering.md) § "Prove the overlay repaints").
 - **A new `Ui` or draw-state field**, or a new optional `Game` method, moves
   [`capability-surface.test.ts`](../src/capability-surface.test.ts)'s

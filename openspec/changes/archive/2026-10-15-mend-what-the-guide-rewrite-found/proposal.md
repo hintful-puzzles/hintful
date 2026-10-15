@@ -1,6 +1,6 @@
 # mend-what-the-guide-rewrite-found
 
-**Status: scaffolded 2026-10-12, not started.** Filed by
+**Status: done 2026-10-15; item 2 moved to its own change.** Filed by
 `make-the-guides-a-lookup`, whose second readers checked every guide against
 the tree. Each item below is a place where the engine, a guard or a spec
 disagrees with a rule the guides state, found by reading and not yet
@@ -56,13 +56,31 @@ and the population is wider than these seven.
 
 ## What Changes
 
-- The skeleton gains the paint-twice mistake test, or the sidecar, whichever
-  item 1's reading of `engine-drawing` settles on; the coverage guard is
-  held to a warm frame; and the requirement is restated so that it and the
-  skeleton agree.
-- Item 2 waits for the owner (below).
+- **Item 1, as settled (2026-10-15).** The requirement means an overlay
+  handed to the painter *beside* the tile value; a flag folded into the
+  tile value is in the key already, and the delta says so. The warm frame is
+  held where frames are compared, not by a source scan:
+  `warm-repaint.test.ts` already painted a mistaken warm frame in 33 of the
+  45 games that find mistakes, and now requires one of every such game, with
+  a board and the moves that make it wrong (`WRONG`) for the 12 whose seeded
+  run never checks a wrong board (abcd, bridges, crossing, filling, group,
+  guess, mines, net, rome, seismic, signpost, towers). Those 12 are the
+  count the warm bar failed before mending. A planted stale overlay in Keen,
+  in Towers (which passed with it before its pin) and in a stamped skeleton
+  copy each failed the test, so a stamped game inherits the proof with no
+  line of its own, and the skeleton gains no test. The coverage guard keeps
+  counting the per-game assertion of the overlay's *look*, which no
+  comparison of two frames can make, and the guide owes a game that and at
+  most a `WRONG` pin. The same requirement now fails a `findMistakes` that
+  flags nothing.
+- **Item 2** was measured (2026-10-15) and moved, with the question below,
+  to `refuse-a-size-only-for-what-a-wait-does-not-fix`.
 - The engine's headers lose their history, by the shape and not by this
-  list.
+  list. *Done 2026-10-15: the shape found 103 change-id lines and 92 count
+  lines in comments under `src/engine/`, in about eighty files, and finds
+  none now. The rewrite also corrected comments that had gone false (a seed
+  count in `hint-resume.test.ts`, an entry count in
+  `palette-source.test.ts`).*
 
 ## A question for the owner
 
@@ -78,8 +96,8 @@ and 3 can start without an answer.
 
 ## Capabilities
 
-`engine-drawing` for item 1; `engine-difficulty` if item 2 is settled by
-narrowing the rule. See `.openspec.yaml`.
+`engine-drawing` for item 1 (`specs/engine-drawing/spec.md`);
+`engine-difficulty` if item 2 is settled by narrowing the rule.
 
 ## Impact
 

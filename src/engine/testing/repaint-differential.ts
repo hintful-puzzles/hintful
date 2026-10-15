@@ -18,10 +18,10 @@
  * under a fresh "4" in the same ink must differ). Both directions of error
  * convict a cache wrongly, so the raster aims to be exact, not merely cautious.
  * An op that claims more than it paints spills into a neighboring tile, where a
- * fresh paint covers the spill and a warm one rightly does not: the first cut
- * claimed bounding boxes and reported 27 games for that. An op that claims less
- * leaves an older claim standing under a pixel it really repaints: polygons
- * claiming only their centroid convicted Mines. Production draws at `+ 0.5`
+ * fresh paint covers the spill and a warm one rightly does not, so claiming
+ * bounding boxes convicts innocent games. An op that claims less leaves an
+ * older claim standing under a pixel it really repaints, so a polygon claiming
+ * only its centroid convicts Mines. Production draws at `+ 0.5`
  * (`puzzle/drawing.ts`), so a pixel is inside a filled shape exactly when its
  * integer corner is, and a one-pixel stroke covers the pixels its path passes
  * through; rects, polygons, circles and one-pixel lines are rasterized that
@@ -362,13 +362,16 @@ const WALK_STEPS = 200;
  * The board is dealt from `seed` at the default params, or is `board` (a game
  * id, `params:desc`) when a frame the run must reach needs a position no deal
  * reliably gives: the seeded run reaches what is common, and a pinned board is
- * how a game puts its rarer marks in front of it.
+ * how a game puts its rarer marks in front of it. `moves` are played on the
+ * board before the run, and the board they leave is checked as Check & save
+ * checks it: they are how a run reaches a mistake, which no desc can hold.
  */
 export function repaintDifferential(
   game: AnyGame,
   seed: string,
   events: number,
   board?: string,
+  moves: readonly unknown[] = [],
 ): RepaintRun {
   const params = board
     ? game.decodeParams(board.slice(0, board.indexOf(":")))
@@ -472,6 +475,7 @@ export function repaintDifferential(
     );
     const error = m.newGameFromId(id);
     if (error !== null) throw new Error(`${id}: ${error}`);
+    m.playMoves(moves);
     const paint = () => {
       m.redraw(sink);
       sink.ops.length = 0;
@@ -503,6 +507,15 @@ export function repaintDifferential(
     return { m, paint, settle, jump };
   };
   const { m, paint, settle } = begin();
+
+  // The overlay goes on a board already painted, and the next event takes it
+  // off: the two frames a cache that leaves the overlay out of its key gets
+  // wrong.
+  if (moves.length > 0) {
+    lastEvent = "check after the pinned moves";
+    m.check();
+    settle();
+  }
 
   // A hinted game first shows its hint and plays a few of its steps: a random
   // run on an empty board rarely asks for one, and once its moves have made
