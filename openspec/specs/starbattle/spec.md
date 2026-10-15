@@ -142,19 +142,17 @@ cell's change on the cells it passes that held what that cell held.
 
 ### Requirement: Preferences: A star can bring the crosses it rules out
 
-Star Battle SHALL have one preference, `auto-cross`, off unless the player
-turns it on. With it on, a move that puts a star on a cell SHALL also cross
-out every blank cell touching it, and the blank cells of the star's row,
-column or region where the star is the last that one holds. It SHALL change
-no cell the player has marked, and removing the star SHALL leave the crosses.
-The crosses are part of the star's move, so one Undo takes both back.
+Star Battle SHALL declare what a star rules out, for the engine's `auto-cross`
+preference: every blank cell touching a new star, and the blank cells of its
+row, column or region where the star is the last that one holds. Removing the
+star SHALL leave the crosses.
 
 #### Scenario: The last star of a row
 
 - **WHEN** the preference is on and a star is placed that is the last its
   row holds
 - **THEN** the blank cells touching the star and the blank cells of the row
-  are crossed out in the same move
+  are crossed out, and one Undo takes them back with the star
 
 ### Requirement: Hint: The hint reads only regions, stars and crosses
 
@@ -222,9 +220,7 @@ A step that asks for a cross SHALL stay on show when the player's move puts
 a star on one of its blank cells, and a step that asks for a star when the
 move puts a cross there, since one more click of that button makes the mark
 asked for. The gesture that plays a step SHALL use the button that makes
-each mark in one click. With the `auto-cross` preference on, the crosses a
-star brings SHALL not count against the step that asked for the star, and a
-plan SHALL end with its first star.
+each mark in one click.
 
 #### Scenario: Reaching a hinted star with the right button
 

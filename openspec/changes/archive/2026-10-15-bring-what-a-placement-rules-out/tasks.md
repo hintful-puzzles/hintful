@@ -40,6 +40,8 @@ Written 2026-10-15 by the session that took the change up.
       the dialog. A placement brings its marks and one Undo takes both. A
       hint-played placement brings them, and the next step reads them. The
       help pages show the generated sentence.
-- [ ] 3.5 Show the owner (proposal § "For the owner"), with the question of
+- [x] 3.5 Show the owner (proposal § "For the owner"), with the question of
       the move counter: a brought set shows as a move of its own in the
-      timeline, as a drag's marks already do.
+      timeline, as a drag's marks already do. The owner approved both
+      preferences' words and the recommendation to leave the counter as it
+      is, 2026-10-15.

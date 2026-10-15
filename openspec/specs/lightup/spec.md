@@ -326,6 +326,19 @@ Completing the board SHALL hide the keyboard cursor.
   places it, leaving the grid correct
 - **THEN** the board is solved and no cursor is drawn on it
 
+### Requirement: Preferences: A bulb can bring the crosses a full wall rules out
+
+Light Up SHALL declare what a bulb rules out, for the engine's `auto-cross`
+preference. Where a new bulb gives a numbered wall beside it all its lights,
+the wall's other squares that hold neither a bulb nor a cross get a cross.
+
+#### Scenario: The last light of a 2
+
+- **WHEN** the preference is on and a bulb is placed that is the second
+  beside a wall numbered 2
+- **THEN** the wall's other free squares get a cross, and one Undo takes
+  them back with the bulb
+
 ### Requirement: Hint: One Light Up firing is one step
 
 One deduction firing SHALL be one step: a clue firing that forces several
