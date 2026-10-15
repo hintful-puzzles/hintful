@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import { colorToOKLCH, isGrayChroma, type OKLCH } from "../testing/oklch.ts";
 import type { Color } from "../types.ts";
 import { darkValue } from "./color-token.ts";
+import type { ColorWord } from "./color-word.ts";
 import * as colors from "./colors.ts";
 
 /** The same OKLCH distance `scripts/checks/color-dark-check.test.ts` reports, so the
@@ -118,13 +119,13 @@ describe("the named colors", () => {
     const SETS: [name: string, entries: [string, Color][], upstream: number][] = [
       [
         "the ten (flood, guess)",
-        colors.TEN.map((c, i) => [colors.TEN_NAMES[i], c] as [string, Color]),
+        colors.TEN.map((c, i) => [colors.TEN_NAMES[i].light, c] as [string, Color]),
         0.134,
       ],
       [
         "the nine (samegame)",
         colors.TEN.slice(0, 9).map(
-          (c, i) => [colors.TEN_NAMES[i], c] as [string, Color],
+          (c, i) => [colors.TEN_NAMES[i].light, c] as [string, Color],
         ),
         0.127,
       ],
@@ -298,7 +299,10 @@ describe("the named colors", () => {
       const [a, b] = colors.TWO.map(scheme);
       expect(Math.abs(a[0] - b[0])).toBeGreaterThan(0.18);
     }
-    expect(new Set(colors.TWO_NAMES).size).toBe(colors.TWO.length);
+    for (const scheme of ["light", "dark"] as const)
+      expect(new Set(colors.TWO_NAMES.map((w) => w.in(scheme))).size).toBe(
+        colors.TWO.length,
+      );
   });
 
   it("gives each member of the pair a wash of its own hue", () => {
@@ -314,6 +318,78 @@ describe("the named colors", () => {
     // Flood's hint reads "Fill with orange". The only thing between that and a
     // lie is that the word and the color are handed out together.
     expect(colors.TEN_NAMES.length).toBe(colors.TEN.length);
-    expect(new Set(colors.TEN_NAMES).size).toBe(colors.TEN_NAMES.length);
+    for (const scheme of ["light", "dark"] as const)
+      expect(new Set(colors.TEN_NAMES.map((w) => w.in(scheme))).size).toBe(
+        colors.TEN_NAMES.length,
+      );
+  });
+
+  describe("calls each color what a player would, in each scheme", () => {
+    // What each word covers, in OKLCH: a hue arc, and where the word needs it,
+    // a band of lightness or chroma. Wide on purpose: this is not the design
+    // restated, it is English, and it fails a word only when its color has
+    // left it, as Map's dark yellow fill (lightness 0.36) has left "yellow".
+    type Extent = { h?: [number, number]; l?: [number, number]; c?: [number, number] };
+    const WORDS: Record<string, Extent> = {
+      red: { h: [15, 40], c: [0.12, 1] },
+      orange: { h: [45, 75], l: [0.6, 1], c: [0.1, 1] },
+      yellow: { h: [85, 115], l: [0.75, 1] },
+      brown: { h: [30, 100], l: [0, 0.6], c: [0.03, 0.12] },
+      green: { h: [130, 165] },
+      teal: { h: [175, 215] },
+      blue: { h: [230, 270] },
+      violet: { h: [270, 300] },
+      purple: { h: [295, 325], c: [0.12, 1] },
+      pink: { h: [340, 375], l: [0.65, 1] },
+      maroon: { h: [340, 375], l: [0, 0.55] },
+      gray: { c: [0, 0.02] },
+    };
+    const within = (x: number, [lo, hi]: [number, number]) => x >= lo && x <= hi;
+    const fits = (word: string, [l, c, h]: OKLCH): boolean => {
+      const e = WORDS[word];
+      if (!e) throw new Error(`no extent for "${word}": add the word to WORDS`);
+      const hue = h < 0 ? h + 360 : h;
+      return (
+        (!e.h || within(hue, e.h) || within(hue + 360, e.h)) &&
+        (!e.l || within(l, e.l)) &&
+        (!e.c || within(c, e.c))
+      );
+    };
+    // Each set a game names, with every color the word is said of: Map's
+    // hint names a region's fill and a dot of it alike.
+    const NAMED: [
+      set: string,
+      words: readonly ColorWord[],
+      of: readonly (readonly Color[])[],
+    ][] = [
+      ["TEN", colors.TEN_NAMES, [colors.TEN]],
+      ["TWO", colors.TWO_NAMES, [colors.TWO]],
+      ["FOUR", colors.FOUR_NAMES, [colors.FOUR_FILLS, colors.FOUR_FILL_MARKS]],
+    ];
+    it.each(NAMED)("%s", (_, words, sets) => {
+      let checked = 0;
+      for (const set of sets) {
+        expect(set).toHaveLength(words.length);
+        set.forEach((c, i) => {
+          for (const [scheme, value] of [
+            ["light", light(c)],
+            ["dark", dark(c)],
+          ] as const) {
+            const word = words[i].in(scheme);
+            expect(fits(word, value), `${word} in ${scheme}: ${value.join(", ")}`).toBe(
+              true,
+            );
+            checked++;
+          }
+        });
+      }
+      expect(checked).toBe(words.length * sets.length * 2);
+    });
+
+    it("refuses Map's dark fills their light words", () => {
+      // The instrument, against the defect it exists for.
+      expect(fits("yellow", dark(colors.FOUR_FILLS[1]))).toBe(false);
+      expect(fits("pink", dark(colors.FOUR_FILLS[0]))).toBe(false);
+    });
   });
 });

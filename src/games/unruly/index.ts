@@ -97,12 +97,12 @@ const targetVerbs: TargetVerbs<
   geometry: squareGrid({ size: (s) => ({ w: s.w2, h: s.h2 }), border }),
   // empty → one → zero → empty
   primary: {
-    does: `turn it ${colorName(ONE)}`,
+    does: `turn it ${colorName(ONE).only}`,
     apply: place((c) => (c === EMPTY ? ONE : c === ONE ? ZERO : EMPTY)),
   },
   // empty → zero → one → empty
   secondary: {
-    does: `turn it ${colorName(ZERO)}`,
+    does: `turn it ${colorName(ZERO).only}`,
     apply: place((c) => (c === EMPTY ? ZERO : c === ZERO ? ONE : EMPTY)),
   },
   keyOnly: [
@@ -319,7 +319,7 @@ export const unrulyGame: Game<
   hintRungs: UNRULY_RUNGS,
   hintMarks: {
     roles: {
-      ring: `the square to color. It is drawn empty: the sentence says whether it must be ${colorName(ONE)} or ${colorName(ZERO)}.`,
+      ring: `the square to color. It is drawn empty: the sentence says whether it must be ${colorName(ONE).only} or ${colorName(ZERO).only}.`,
       outline:
         "the squares whose colors the step reasons from: the pair that would make three, the full quota, the only places the last one can go, or the row a match would copy.",
       stripes: 'the row or column the sentence calls "this row" or "this column".',

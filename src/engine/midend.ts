@@ -2443,6 +2443,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       type: "status-bar-change",
       statusBarText: text,
       activeHintExplanation: this.displayedHintStep?.explanation,
+      activeHintExplanationDark: this.displayedHintStep?.words?.textIn("dark"),
       hintJourney: this.hintJourney(),
     });
   }

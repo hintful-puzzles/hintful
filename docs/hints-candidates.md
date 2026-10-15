@@ -1073,5 +1073,5 @@ follows. Exemplar: [`map/hint.ts`](../src/games/map/hint.ts).
 - **Name an element by its mark, never by an id the board may not show**:
   "this region", "the outlined pair", "region 1" by the number the hint
   draws. Name a color that is a value by its word, kept beside its fill
-  (`FOUR_NAMES` in `engine/color/colors.ts`), and check the word against the
-  swatch in both schemes.
+  (`FOUR_NAMES` in `engine/color/colors.ts`), which is a word for each
+  scheme: put it in a `phrase`, and list several with `listOf`.

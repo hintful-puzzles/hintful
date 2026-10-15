@@ -62,7 +62,7 @@ describe("a piece", () => {
 describe("a help page's pair placeholder", () => {
   it("is replaced by the member's name", () => {
     expect(expandPair("a {{pair:0}} one and a {{pair:1}} one")).toBe(
-      `a ${TWO_NAMES[0]} one and a ${TWO_NAMES[1]} one`,
+      `a ${TWO_NAMES[0].only} one and a ${TWO_NAMES[1].only} one`,
     );
     expect(expandPair("no placeholder")).toBe("no placeholder");
   });

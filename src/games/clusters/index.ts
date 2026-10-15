@@ -134,8 +134,8 @@ const paintWith =
   };
 
 type ClustersVerb = TargetVerb<ClustersState, ClustersUi, Point, ClustersMove>;
-const FIRST = colorName(F_COLOR_1);
-const SECOND = colorName(F_COLOR_0);
+const FIRST = colorName(F_COLOR_1).only;
+const SECOND = colorName(F_COLOR_0).only;
 const firstVerb: ClustersVerb = {
   does: `color it ${FIRST} (click again for ${SECOND}, and again to clear it)`,
   apply: paintWith((old) => cycleFill(old, F_COLOR_1)),

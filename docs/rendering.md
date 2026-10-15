@@ -750,8 +750,14 @@ its own.
   `REGION_DONE` for a completed fill.
 - **Reach past a meaning to a named color only where the name is
   load-bearing to the player**: a member of a set whose job is to be told
-  apart (`TEN`), or a color the game says out loud (`TEN_NAMES`, exported
-  beside `TEN` so word and color cannot drift).
+  apart (`TEN`), or a color the game says out loud (`TEN_NAMES`, read off
+  `TEN` so word and color cannot drift). A name is a `ColorWord`
+  (`engine/color/color-word.ts`), a word for each scheme, since a dark
+  value can leave its light word (Map's dark yellow is a brown). A sentence
+  takes it as a `phrase` part and is shown in the scheme in force. A text
+  shown alike in every scheme, a help page, a control's `does` or a mark's
+  own words, takes `.only`, which refuses a color with two words.
+  `colors.test.ts` holds every word to its color in both schemes.
 - **A game whose board has spent the default may pick a different named
   color, and says why on the assignment's line or the line above**
   (`engine-colors` § "A departure from a shared role is stated at the

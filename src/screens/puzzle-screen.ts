@@ -3,6 +3,7 @@ import { css, html, nothing, type PropertyValues, type TemplateResult } from "li
 import { query } from "lit/decorators/query.js";
 import { customElement, property, state } from "lit/decorators.js";
 import { styleMap } from "lit/directives/style-map.js";
+import { currentColorScheme } from "../color-scheme.ts";
 import { showAlert } from "../dialogs/alert-dialog.ts";
 import { showToast } from "../dialogs/toast.ts";
 import { assertNever } from "../engine/assert-never.ts";
@@ -426,7 +427,9 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
    */
   private renderWords(): TemplateResult {
     const puzzle = this.puzzle;
-    const explanation = puzzle?.activeHintExplanation || puzzle?.helpMessage;
+    // Read with the scheme, so a scheme changed under a hint re-words it.
+    const explanation =
+      puzzle?.activeHintExplanationIn(currentColorScheme.get()) || puzzle?.helpMessage;
     const status = puzzle?.wantsStatusbar ? puzzle.statusbarText : null;
     return html`
       <div class="words">

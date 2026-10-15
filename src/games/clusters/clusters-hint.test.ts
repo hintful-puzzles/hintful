@@ -231,12 +231,16 @@ describe("hint", () => {
       const kind = d.reason.at.kind;
       if (d.reason.kind === "chain") {
         expect(step.explanation).toMatch(
-          new RegExp(`^Suppose this cell were (${TWO_NAMES.join("|")}):`),
+          new RegExp(
+            `^Suppose this cell were (${TWO_NAMES.map((w) => w.light).join("|")}):`,
+          ),
         );
         expect(hl.chain.length).toBe(d.reason.steps.length);
       } else if (kind === "dotOvercount") {
         expect(step.explanation).toMatch(
-          new RegExp(`already touches its one (?:${TWO_NAMES.join("|")}) tile`),
+          new RegExp(
+            `already touches its one (?:${TWO_NAMES.map((w) => w.light).join("|")}) tile`,
+          ),
         );
         expect(hl.danger).toBeDefined();
       } else if (kind === "surrounded" && d.reason.at.cell !== d.index) {
@@ -263,7 +267,7 @@ describe("hint", () => {
       // The conclusion names the forced color in the necessity voice, in the
       // palette's word for the piece the cell is drawn as.
       expect(step.explanation).toContain(
-        `must be ${TWO_NAMES[d.fill === F_COLOR_0 ? 1 : 0]}`,
+        `must be ${TWO_NAMES[d.fill === F_COLOR_0 ? 1 : 0].light}`,
       );
     });
   });

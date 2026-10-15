@@ -97,7 +97,7 @@ function fullyCapablePuzzle(overrides: FakePuzzle = {}): FakePuzzle {
     dealMessage: "Looking for a board…",
     canStopDeal: true,
     helpMessage: "",
-    activeHintExplanation: "",
+    activeHintExplanationIn: () => "",
     currentMove: 3,
     totalMoves: 7,
     checkpoints: new Set<number>(),

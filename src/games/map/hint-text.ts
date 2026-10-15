@@ -27,9 +27,10 @@
  * {@link Conclusion}s, and the sentence names the one the move carries out.
  */
 
+import type { ColorWord } from "../../engine/color/color-word.ts";
 import { FOUR_NAMES } from "../../engine/color/colors.ts";
-import { joinOr, joinWith } from "../../engine/hint-text.ts";
 import {
+  listOf,
   type MarkKind,
   mark,
   Narration,
@@ -60,7 +61,7 @@ const numbered = (chain: readonly RegionMark[], k: number, words = `region ${k}`
   mark.as("outline", REGION, [chain[k - 1]], words);
 
 /** A color index as its word. */
-export const colorName = (c: number): string => FOUR_NAMES[c];
+export const colorName = (c: number): ColorWord => FOUR_NAMES[c];
 
 /** The colors in a four-bit mask, lowest first. */
 export function colorsOf(mask: number): number[] {
@@ -69,7 +70,11 @@ export function colorsOf(mask: number): number[] {
   return out;
 }
 
-const names = (mask: number): string[] => colorsOf(mask).map(colorName);
+const names = (mask: number): ColorWord[] => colorsOf(mask).map(colorName);
+/** The colors in a mask, "a, b and c". */
+const all = (mask: number): Narration => listOf(names(mask));
+/** The colors in a mask as alternatives, "a, b or c". */
+const either = (mask: number): Narration => listOf(names(mask), "or");
 
 /** The longest chain whose walk is listed region by region. */
 export const WALK_MAX = 5;
@@ -89,23 +94,18 @@ export type Conclusion =
  * color ruled out. */
 function conclude(
   c: Conclusion,
-  cannot: string,
+  cannot: Narration,
 ): { readonly follows?: Narration; readonly move: Narration } {
   switch (c.kind) {
     case "place":
       return { move: phrase`${cannot} and must be ${colorName(c.color)}` };
-    case "strike": {
-      const ns = names(c.struck);
+    case "strike":
       return {
-        follows: phrase`${cannot}`,
-        move: phrase`its ${joinWith(ns)} ${ns.length > 1 ? "dots" : "dot"} must go`,
+        follows: cannot,
+        move: phrase`its ${all(c.struck)} ${names(c.struck).length > 1 ? "dots" : "dot"} must go`,
       };
-    }
     case "mark":
-      return {
-        follows: phrase`${cannot}`,
-        move: phrase`dot ${joinWith(names(c.left))}`,
-      };
+      return { follows: cannot, move: phrase`dot ${all(c.left)}` };
   }
 }
 
@@ -130,7 +130,7 @@ export const say = {
    * to consult. `others` is the three colors its neighbors show. */
   touchesTheRest: (r: number, color: number, others: number): Sentence =>
     so({
-      look: phrase`${thisRegion(r)} touches ${joinWith(names(others))}`,
+      look: phrase`${thisRegion(r)} touches ${all(others)}`,
       move: phrase`it must be ${colorName(color)}`,
     }),
 
@@ -165,8 +165,8 @@ export const say = {
     c: Conclusion,
   ): Sentence =>
     so({
-      look: phrase`${mark.as("outline", REGION, regions, "The outlined pair")} touch and can only be ${joinOr(names(pair))}, so they use both. ${thisRegion(r).capitalized()} touches both`,
-      ...conclude(c, "it can't be either"),
+      look: phrase`${mark.as("outline", REGION, regions, "The outlined pair")} touch and can only be ${either(pair)}, so they use both. ${thisRegion(r).capitalized()} touches both`,
+      ...conclude(c, phrase`it can't be either`),
     }),
 
   /**
@@ -198,13 +198,11 @@ export const say = {
     // its dots follow and names only where it ends.
     const walk =
       last <= WALK_MAX
-        ? joinNarrations(
-            forced.slice(1).map((f, i) => phrase`${at(i + 2)} is ${colorName(f)}`),
-          )
+        ? listOf(forced.slice(1).map((f, i) => phrase`${at(i + 2)} is ${colorName(f)}`))
         : phrase`${mark.as("outline", REGION, chain, "each numbered region")} takes the dot the one before it leaves, down to ${at(last)} being ${hue}`;
     return so({
       look: phrase`If ${at(1)} isn't ${hue}, it's ${colorName(forced[0])}, so ${walk}. Either way ${at(1)} or ${at(last)} is ${hue}, and ${thisRegion(r)} touches both`,
-      ...conclude(c, `it can't be ${hue}`),
+      ...conclude(c, phrase`it can't be ${hue}`),
     });
   },
 
@@ -225,7 +223,7 @@ export const say = {
     const at = (k: number): Narration => numbered(chain, k);
     return so({
       look: phrase`${mark.as("outline", REGION, chain, "Every numbered region")} has a ${hue} dot. If ${at(1)} isn't ${hue}, ${at(2)} must be, and so on every other region to ${at(last)}. Either way ${at(1)} or ${at(last)} is ${hue}, and ${thisRegion(r)} touches both`,
-      ...conclude(c, `it can't be ${hue}`),
+      ...conclude(c, phrase`it can't be ${hue}`),
     });
   },
 
@@ -238,8 +236,8 @@ export const say = {
    */
   pairDot: (r: number, touched: number, two: number): Sentence =>
     so({
-      look: phrase`${thisRegion(r)}'s neighbors show ${joinWith(names(touched))}`,
-      follows: phrase`it can only be ${joinOr(names(two))}`,
+      look: phrase`${thisRegion(r)}'s neighbors show ${all(touched)}`,
+      follows: phrase`it can only be ${either(two)}`,
       move: phrase`dot those`,
     }),
 
@@ -248,7 +246,7 @@ export const say = {
   pairTrim: (r: number, two: number): Sentence =>
     so({
       look: phrase`${thisRegion(r)}'s other dots match its neighbors' colors`,
-      move: phrase`it can only be ${joinOr(names(two))}`,
+      move: phrase`it can only be ${either(two)}`,
     }),
 
   /**
@@ -264,8 +262,8 @@ export const say = {
     two: number,
   ): Sentence =>
     so({
-      look: phrase`${regionK(r, k)} of ${theChain(chain)} touches ${joinWith(names(touched))}`,
-      follows: phrase`it can only be ${joinOr(names(two))}`,
+      look: phrase`${regionK(r, k)} of ${theChain(chain)} touches ${all(touched)}`,
+      follows: phrase`it can only be ${either(two)}`,
       move: phrase`dot those`,
     }),
 
@@ -279,7 +277,7 @@ export const say = {
   ): Sentence =>
     so({
       look: phrase`${regionK(r, k)} of ${theChain(chain)} has other dots that match its neighbors' colors`,
-      move: phrase`it can only be ${joinOr(names(two))}`,
+      move: phrase`it can only be ${either(two)}`,
     }),
 } as const;
 
@@ -290,10 +288,3 @@ const theChain = (chain: readonly RegionMark[]): Narration =>
 /** "Region k": a chain's region the step decides, named by its number. */
 const regionK = (r: number, k: number): Narration =>
   mark.as("ring", REGION, [{ region: r }], `Region ${k}`);
-
-/** {@link joinWith} over narrations: "a, b and c". */
-function joinNarrations(parts: readonly Narration[]): Narration {
-  if (parts.length <= 1) return parts[0] ?? phrase``;
-  const init = parts.slice(0, -1).reduce((acc, p) => phrase`${acc}, ${p}`);
-  return phrase`${init} and ${parts[parts.length - 1]}`;
-}

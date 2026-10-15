@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { ColorWord } from "./color/color-word.ts";
 import {
   CELL,
+  listOf,
   type MarkKind,
   type MarkRef,
   mark,
@@ -152,6 +154,37 @@ describe("narrow", () => {
     const empty = sentence.narrow(() => false);
     expect(empty.text).toBe(sentence.text);
     expect(empty.refs).toEqual([]);
+  });
+});
+
+describe("a color's word follows the scheme", () => {
+  const yellow = new ColorWord("yellow", "brown");
+  const teal = new ColorWord("teal");
+
+  it("is said in the scheme the sentence is shown in", () => {
+    const s = so({
+      look: phrase`${mark.this("ring", CELL, [{ x: 0, y: 0 }], "region")} touches ${listOf([teal, yellow])}`,
+      move: phrase`it must be ${listOf([yellow, teal], "or")}`,
+    });
+    expect(s.text).toBe(
+      "This region touches teal and yellow, so it must be yellow or teal.",
+    );
+    expect(s.textIn("dark")).toBe(
+      "This region touches teal and brown, so it must be brown or teal.",
+    );
+    // A word is no mark.
+    expect(keysOf(s.refs)).toEqual(["ring|cell|0,0"]);
+  });
+
+  it("takes the capital that opens a sentence in both schemes", () => {
+    const s = phrase`${yellow} first.`.capitalized();
+    expect([s.text, s.textIn("dark")]).toEqual(["Yellow first.", "Brown first."]);
+  });
+
+  it("cannot be spliced into a string, and gives one word only when it has one", () => {
+    expect(() => `${yellow}`).toThrow(/spliced/);
+    expect(() => yellow.only).toThrow(/dark scheme/);
+    expect(teal.only).toBe("teal");
   });
 });
 

@@ -198,7 +198,7 @@ describe("every game's page has the one skeleton", () => {
     if (expandPair(page) === page) return;
     pairPages++;
     for (const name of TWO_NAMES)
-      expect(page.toLowerCase(), `help/games/${id}.md`).not.toContain(name);
+      expect(page.toLowerCase(), `help/games/${id}.md`).not.toContain(name.only);
   });
 
   itOverWholeSweep("is not vacuous — some page names the pair", () => {

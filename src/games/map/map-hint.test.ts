@@ -444,7 +444,7 @@ describe("map hint claims hold on the board they are spoken over", () => {
           // What the sentence says about the dots is what they show: every
           // color the walk names is one of that region's dots, and "every
           // numbered region has a pink dot" is true of every one.
-          const COLORS = [0, 1, 2, 3].map(colorName);
+          const COLORS = [0, 1, 2, 3].map((c) => colorName(c).light);
           // The walk as named: region 1's color from "it's X", then each
           // "region k is Y". Every one is a dot of its region, and each differs
           // from the one before, which is the whole of "takes the dot the one
@@ -475,6 +475,34 @@ describe("map hint claims hold on the board they are spoken over", () => {
         checked++;
       });
     expect(checked).toBeGreaterThan(100);
+  });
+
+  it("names each color by the word of the scheme it is shown in", () => {
+    // The dark fills of two of the four are a brown and a maroon, and a
+    // sentence over a dark board says so: the dark words are the light ones,
+    // each color swapped for its dark word, and no other change.
+    const COLORS = [0, 1, 2, 3].map(colorName);
+    const swapped = (text: string) =>
+      COLORS.reduce(
+        (t, w) =>
+          t.replace(new RegExp(`\\b${w.light}\\b`, "gi"), (m) =>
+            m[0] === m[0].toUpperCase()
+              ? w.dark[0].toUpperCase() + w.dark.slice(1)
+              : w.dark,
+          ),
+        text,
+      );
+    const said = new Set<string>();
+    for (const id of pinnedBoards())
+      walk(stateOf(id), plan(stateOf(id)), (_s, step) => {
+        const dark = step.words?.textIn("dark") ?? "";
+        expect(dark, step.explanation).toBe(swapped(step.explanation));
+        for (const w of dark.toLowerCase().split(/\W+/)) said.add(w);
+      });
+    expect(said).toContain("brown");
+    expect(said).toContain("maroon");
+    expect(said).not.toContain("yellow");
+    expect(said).not.toContain("pink");
   });
 
   it("a step never reaches past the easiest rung the board offers", () => {

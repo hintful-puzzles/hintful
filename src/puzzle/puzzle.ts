@@ -2,6 +2,7 @@ import { computed, type Signal, signal } from "@lit-labs/signals";
 import * as Sentry from "@sentry/browser";
 import { proxy, type Remote, releaseProxy, transfer } from "comlink";
 import { assertNever } from "../engine/assert-never.ts";
+import type { Scheme } from "../engine/color/color-word.ts";
 import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
 import type {
   ChangeNotification,
@@ -241,6 +242,10 @@ export class Puzzle {
       case "status-bar-change":
         update(this._statusbarText, message.statusBarText);
         update(this._activeHintExplanation, message.activeHintExplanation ?? "");
+        update(
+          this._activeHintExplanationDark,
+          message.activeHintExplanationDark ?? message.activeHintExplanation ?? "",
+        );
         // Rendered as "Step 2 of 3" beside a multi-leg hint; empty for a
         // single-leg one, which is most of them.
         update(
@@ -330,6 +335,7 @@ export class Puzzle {
   private _autoHintActive = signal<boolean>(false);
   private _helpMessage = signal<string>("");
   private _activeHintExplanation = signal<string>("");
+  private _activeHintExplanationDark = signal<string>("");
   /** "Step 2 of 3" while one deduction plays out over several legs; empty for a
    * single-leg hint and when no hint is displayed. Formatted here rather than
    * in the chrome, so that whatever shows it cannot word it differently. */
@@ -430,8 +436,16 @@ export class Puzzle {
     return this._hintJourney.get();
   }
 
-  public get activeHintExplanation(): string {
-    return this._activeHintExplanation.get();
+  /** The hint's sentence in `scheme`, whose words for a color may differ. */
+  public activeHintExplanationIn(scheme: Scheme): string {
+    return scheme === "dark"
+      ? this._activeHintExplanationDark.get()
+      : this._activeHintExplanation.get();
+  }
+
+  private clearHintExplanation(): void {
+    this._activeHintExplanation.set("");
+    this._activeHintExplanationDark.set("");
   }
 
   public get status(): GameStatus {
@@ -561,7 +575,7 @@ export class Puzzle {
   public async newGame({ canStop = true } = {}): Promise<DealOutcome> {
     this.stopAutoHint("");
     this.setHelpMessage("");
-    this._activeHintExplanation.set("");
+    this.clearHintExplanation();
     const turn = ++this.dealsAsked;
     this.dealStoppable = canStop && this.dealAhead !== null;
     const pendingTimer = setTimeout(() => this._dealPending.set(true), DEAL_PENDING_MS);
@@ -637,14 +651,14 @@ export class Puzzle {
     this.dealAhead?.stopWaiting();
     this.stopAutoHint("");
     this.setHelpMessage("");
-    this._activeHintExplanation.set("");
+    this.clearHintExplanation();
     return this.workerPuzzle.newGameFromId(id);
   }
 
   public async restartGame(): Promise<void> {
     this.stopAutoHint("");
     this.setHelpMessage("");
-    this._activeHintExplanation.set("");
+    this.clearHintExplanation();
     await (await this.board()).restartGame();
   }
 

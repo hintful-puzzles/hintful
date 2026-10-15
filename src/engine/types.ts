@@ -131,6 +131,14 @@ export interface NotifyStatusBarChange {
   statusBarText: string;
   activeHintExplanation?: string;
   /**
+   * The same sentence as the dark scheme says it, where a color it names has
+   * a dark word of its own (`ColorWord`, `color-word.ts`). The worker does not
+   * know the scheme, as with the palette (`Midend.darkPalette`): it sends both,
+   * and the frontend shows the one in force, so a scheme switched while the
+   * hint is up re-words it. Absent for a step with no words.
+   */
+  activeHintExplanationDark?: string;
+  /**
    * Where the displayed hint sits in its **journey**, 1-based, and how many
    * legs the journey has — so the chrome can say "Step 2 of 3" while a single
    * deduction plays out over several moves.

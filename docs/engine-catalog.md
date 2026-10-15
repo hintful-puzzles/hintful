@@ -780,7 +780,10 @@ Write every step's words through it. Exemplar:
   such as `EDGE`.
 - **`phrase` composes a `Narration`** from literal words and `mark.this`,
   `mark.the`, `mark.paren` and `mark.as` references. A literal that says
-  "this", "these" or a role's adjective throws.
+  "this", "these" or a role's adjective throws. A color's `ColorWord`
+  (`color/color-word.ts`) is a part too, so `text` is the light scheme's
+  words and `textIn("dark")` the dark's. `listOf` lists words or narrations,
+  as `joinWith` and `joinOr` list strings.
 - **A step's words are a `Sentence`**, made only by `sentence(said)`, by
   `so({ look, move })`, or by `unshaped(words, kind)` for a declared
   exception. `mark.move(words)` rings the step's own move (`MOVE`). See

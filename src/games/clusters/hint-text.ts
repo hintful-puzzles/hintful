@@ -22,6 +22,7 @@
  * unambiguous there and a disambiguating phrase would be noise.
  */
 
+import type { ColorWord } from "../../engine/color/color-word.ts";
 import { TWO_NAMES } from "../../engine/color/colors.ts";
 import {
   CELL,
@@ -44,7 +45,7 @@ export interface Marked {
 }
 
 /** The word for a color: the palette's, so it is the color the piece is. */
-export const colorName = (fill: ClustersFill): string => TWO_NAMES[pairIndex(fill)];
+export const colorName = (fill: ClustersFill): ColorWord => TWO_NAMES[pairIndex(fill)];
 
 const thisCell = (m: Marked): Narration => mark.this("ring", CELL, [m.target], "cell");
 const thisVeryCell = (m: Marked): Narration =>
@@ -123,11 +124,16 @@ export const say = {
       // "its one" carries the rule (a dot touches exactly one tile of its color),
       // and the rule itself is the help's to state.
       return so({
-        look: phrase`${mark.the("outline", CELL, danger(m), `${t} dot`)} beside ${thisCell(m)} already touches its one ${t} tile`,
+        look: phrase`${mark.the("outline", CELL, danger(m), `${t.only} dot`)} beside ${thisCell(m)} already touches its one ${t} tile`,
         move: thisMust,
       });
     }
-    const neighbor = mark.as("outline", CELL, danger(m), `its outlined ${f} neighbor`);
+    const neighbor = mark.as(
+      "outline",
+      CELL,
+      danger(m),
+      `its outlined ${f.only} neighbor`,
+    );
     if (at.kind === "surrounded") {
       return so({
         look: phrase`Painting ${thisCell(m)} ${t} would seal ${neighbor} off from its own color`,

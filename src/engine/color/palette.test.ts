@@ -390,7 +390,7 @@ describe("the shared color vocabulary", () => {
       colors.TWO.forEach((member, i) => {
         expect(
           apart(hue(member), hue(mark)),
-          `${colors.TWO_NAMES[i]} against ${name}`,
+          `${colors.TWO_NAMES[i].light} against ${name}`,
         ).toBeGreaterThan(30);
       });
   });

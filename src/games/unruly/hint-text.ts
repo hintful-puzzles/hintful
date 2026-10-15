@@ -8,6 +8,7 @@
  * are outlined, and the row or column the sentence calls "this row" is striped.
  */
 
+import type { ColorWord } from "../../engine/color/color-word.ts";
 import { TWO_NAMES } from "../../engine/color/colors.ts";
 import {
   CELL,
@@ -33,8 +34,8 @@ export interface Marked {
 }
 
 /** The word for a piece: the palette's, so it is the color the piece is. */
-export const colorName = (c: number): string => TWO_NAMES[pairIndex(c)];
-const oppositeName = (c: number): string => colorName(c === ONE ? ZERO : ONE);
+export const colorName = (c: number): ColorWord => TWO_NAMES[pairIndex(c)];
+const oppositeName = (c: number): ColorWord => colorName(c === ONE ? ZERO : ONE);
 const lineName = (horizontal: boolean): string => (horizontal ? "row" : "column");
 
 const thisCell = (m: Marked): Narration => mark.this("ring", CELL, [m.target], "cell");
@@ -51,7 +52,7 @@ export const say = {
 
   complete: (reason: R<"complete">, m: Marked): Sentence =>
     so({
-      look: phrase`${thisLine(m, reason.horizontal)} already holds ${mark.paren("outline", CELL, m.evidence, `all its ${colorName(reason.full)} cells`)}`,
+      look: phrase`${thisLine(m, reason.horizontal)} already holds ${mark.paren("outline", CELL, m.evidence, `all its ${colorName(reason.full).only} cells`)}`,
       move: phrase`${thisCell(m)} and every other empty one in it must be ${colorName(reason.fill)}`,
     }),
 

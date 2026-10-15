@@ -44,8 +44,7 @@ export const COL_LIT_LEAD = 14;
 /**
  * The ten tiles, as the hint says them: *"Fill with orange"*. Re-exported from
  * the palette rather than written here, because the sentence is a claim about
- * the board and only a word and a color from the same place keep it true. A
- * scheme may restyle a tile, but not into what a player would call another color.
+ * the board and only a word and a color from the same place keep it true.
  */
 export const COLOR_NAMES = TEN_NAMES;
 

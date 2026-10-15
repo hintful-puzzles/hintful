@@ -27,7 +27,7 @@ export const TWO_SHAPES: readonly [PieceShape, PieceShape] = ["square", "disc"];
  */
 export const SHADED_SHAPE: PieceShape = TWO_SHAPES[0];
 /** @see SHADED_SHAPE */
-export const SHADED_NAME: string = TWO_NAMES[0];
+export const SHADED_NAME: string = TWO_NAMES[0].only;
 /** The word for a cell known not to be shaded, which holds no piece. One word
  * for every such game, so "clear" means one thing across them. */
 export const UNSHADED_NAME = "clear";
@@ -91,7 +91,7 @@ export function expandPair(source: string): string {
   return source.replace(/\{\{pair:([^}]*)\}\}/g, (whole, index: string) => {
     const name = index === "0" ? TWO_NAMES[0] : index === "1" ? TWO_NAMES[1] : null;
     if (name === null) throw new Error(`${whole}: the pair has members 0 and 1`);
-    return name;
+    return name.only;
   });
 }
 

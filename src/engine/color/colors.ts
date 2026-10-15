@@ -17,8 +17,11 @@
  *
  * 1. **True.** Flood's hint says *"Fill with yellow"*, and the hint quality bar
  *    says every sentence a hint utters is a claim that must be checked. A scheme
- *    may give {@link YELLOW} a different shade; it may not make it a color a
- *    player would call something else. That is why the intensity steps are named
+ *    may give {@link YELLOW} a different shade; where a scheme's value is one a
+ *    player would call something else, the color carries that scheme's word
+ *    too (a `ColorWord`, `color-word.ts`), and a sentence says the word of the
+ *    scheme it is shown in. `colors.test.ts` holds every word to its color in
+ *    both. That is why the intensity steps are named
  *    `_WASH` and `_BOLD` — by **role**, not by appearance: the wash step is light
  *    in light mode and *dark* in dark mode (content on top of it has to stay
  *    readable either way), so a name like `_PALE` would be a lie in one of the
@@ -64,6 +67,7 @@
 
 import type { Color } from "../types.ts";
 import { token } from "./color-token.ts";
+import { ColorWord } from "./color-word.ts";
 
 // --- OKLCH → sRGB ------------------------------------------------------
 
@@ -230,12 +234,32 @@ const DESIGN: Record<string, { h: number; light: Steps; dark: Steps }> = {
   },
 };
 
+/** The word for each color a player may hear named, by the color. A set's
+ * names are read off its members ({@link wordOf}), so no list of words can
+ * fall out of step with the colors it names. */
+const WORDS = new Map<Color, ColorWord>();
+
+/** `c`, recorded as called `word`, or `darkWord` in the dark scheme. */
+const named = (c: Color, word: string, darkWord?: string): Color => {
+  WORDS.set(c, new ColorWord(word, darkWord));
+  return c;
+};
+
+const wordOf = (c: Color): ColorWord => {
+  const w = WORDS.get(c);
+  if (!w) throw new Error("a set the player hears named has a color with no word");
+  return w;
+};
+
+/** One step of a color. The base is the color itself, and the only step a
+ * sentence names, so it alone is given the color's word. */
 const of = (name: string, step: keyof Steps): Color => {
   const d = DESIGN[name];
   const light = d.light[step];
   const dark = d.dark[step];
   if (!light || !dark) throw new Error(`${name} has no ${step} step`);
-  return token(oklch(light[0], light[1], d.h), oklch(dark[0], dark[1], d.h));
+  const t = token(oklch(light[0], light[1], d.h), oklch(dark[0], dark[1], d.h));
+  return step === "base" ? named(t, name.toLowerCase()) : t;
 };
 
 // --- the named colors -------------------------------------------------
@@ -384,18 +408,7 @@ export const TEN: readonly Color[] = [
  * hint reads "Fill with orange", and the only thing standing between that and a
  * lie is that the word and the color come from the same place.
  */
-export const TEN_NAMES: readonly string[] = [
-  "red",
-  "yellow",
-  "green",
-  "blue",
-  "orange",
-  "purple",
-  "brown",
-  "teal",
-  "pink",
-  "gray",
-];
+export const TEN_NAMES: readonly ColorWord[] = TEN.map(wordOf);
 
 /**
  * **The two states of a two-state game**, where neither is the important one:
@@ -416,7 +429,10 @@ export const TWO: readonly [Color, Color] = [PURPLE, YELLOW];
 
 /** {@link TWO}, as a player would say them: the words a hint puts in a
  * sentence, exported beside the colors as {@link TEN_NAMES} is. */
-export const TWO_NAMES: readonly [string, string] = ["purple", "yellow"];
+export const TWO_NAMES: readonly [ColorWord, ColorWord] = [
+  wordOf(TWO[0]),
+  wordOf(TWO[1]),
+];
 
 /** The wash of each member of {@link TWO}, indexed alike: a fill in the
  * member's hue that content stays readable on. The roles built on the pair
@@ -455,9 +471,18 @@ type Lch = readonly [l: number, c: number, h: number];
  * as Map's pencil stipples are on a region with no color yet. At the fill's
  * own dark value such a dot measured 1.3:1 there. The light scheme has one
  * value for both.
+ *
+ * `darkWord` is what a player calls a fill whose dark value has left its
+ * name, fill and mark alike: the dark yellow is a brown, and the dark pink a
+ * maroon (owner, 2026-10-15, of Map's hint naming them "yellow" and "pink").
  */
 const REGION_DESIGN = {
-  yellow: { light: [0.935, 0.078, 99], dark: [0.36, 0.06, 85], mark: [0.5, 0.095, 95] },
+  yellow: {
+    light: [0.935, 0.078, 99],
+    dark: [0.36, 0.06, 85],
+    mark: [0.5, 0.095, 95],
+    darkWord: "brown",
+  },
   teal: {
     light: [0.895, 0.066, 190],
     dark: [0.355, 0.057, 192],
@@ -468,29 +493,60 @@ const REGION_DESIGN = {
     dark: [0.35, 0.068, 282],
     mark: [0.45, 0.095, 282],
   },
-  pink: { light: [0.89, 0.056, 9], dark: [0.35, 0.066, 5], mark: [0.47, 0.088, 0] },
+  pink: {
+    light: [0.89, 0.056, 9],
+    dark: [0.35, 0.066, 5],
+    mark: [0.47, 0.088, 0],
+    darkWord: "maroon",
+  },
   green: { light: [0.82, 0.062, 145], dark: [0.28, 0.06, 146] },
   blue: { light: [0.82, 0.062, 233], dark: [0.28, 0.057, 237] },
   peach: { light: [0.835, 0.06, 60], dark: [0.28, 0.06, 56] },
   orchid: { light: [0.826, 0.065, 323], dark: [0.28, 0.065, 323] },
-} as const satisfies Record<string, { light: Lch; dark: Lch; mark?: Lch }>;
+} as const satisfies Record<
+  string,
+  { light: Lch; dark: Lch; mark?: Lch; darkWord?: string }
+>;
+
+type RegionName = keyof typeof REGION_DESIGN;
+
+/** The region palette's order: the first four, then the next four. */
+const REGION_ORDER: readonly RegionName[] = [
+  "yellow",
+  "teal",
+  "violet",
+  "pink",
+  "green",
+  "blue",
+  "peach",
+  "orchid",
+];
 
 const fill = (light: Lch, dark: Lch): Color => token(oklch(...light), oklch(...dark));
+
+/** A region fill's word in the dark scheme: its own, unless it is given one. */
+const darkWordOf = (name: RegionName): string => {
+  const d = REGION_DESIGN[name];
+  return "darkWord" in d ? d.darkWord : name;
+};
 
 /**
  * **The fills of the regions on any board**: see {@link REGION_DESIGN}. A
  * board takes the first four, six or eight, and `regionFills`
  * (`engine/region-fill.ts`) says which region takes which.
  */
-export const REGION_FILLS: readonly Color[] = (
-  ["yellow", "teal", "violet", "pink", "green", "blue", "peach", "orchid"] as const
-).map((name) => fill(REGION_DESIGN[name].light, REGION_DESIGN[name].dark));
+export const REGION_FILLS: readonly Color[] = REGION_ORDER.map((name) =>
+  named(
+    fill(REGION_DESIGN[name].light, REGION_DESIGN[name].dark),
+    name,
+    darkWordOf(name),
+  ),
+);
 
 /** Where Map's four are in {@link REGION_FILLS}, in the order of the numbers
  * a save holds: the pink is where a red was, and the other three are where
  * they were. */
 const MAP_ORDER = [3, 0, 1, 2] as const;
-const MAP_NAMES = ["pink", "yellow", "teal", "violet"] as const;
 
 /**
  * **Four fills that are a player's answer**, for the one set in the
@@ -504,14 +560,17 @@ export const FOUR_FILLS: readonly Color[] = MAP_ORDER.map((k) => REGION_FILLS[k]
 /** {@link FOUR_FILLS} as **marks** on a surface that is not the color: the
  * same in the light scheme, the `mark` step in the dark
  * ({@link REGION_DESIGN}). */
-export const FOUR_FILL_MARKS: readonly Color[] = MAP_NAMES.map((name) =>
-  fill(REGION_DESIGN[name].light, REGION_DESIGN[name].mark),
-);
+export const FOUR_FILL_MARKS: readonly Color[] = MAP_ORDER.map((k) => {
+  const d = REGION_DESIGN[REGION_ORDER[k]];
+  if (!("mark" in d)) throw new Error(`${REGION_ORDER[k]} has no mark step`);
+  return fill(d.light, d.mark);
+});
 
 /**
  * {@link FOUR_FILLS}, as a player would say them. Map's hint names the color a
  * region must take, and as with {@link TEN_NAMES} the word and the color come
  * from one place, so recoloring the set cannot leave a sentence naming the old
- * hue.
+ * hue. Two of them have a word of their own in the dark scheme
+ * ({@link REGION_DESIGN}).
  */
-export const FOUR_NAMES: readonly string[] = ["pink", "yellow", "teal", "violet"];
+export const FOUR_NAMES: readonly ColorWord[] = FOUR_FILLS.map(wordOf);

@@ -196,6 +196,10 @@ export interface MarkedDeadEnd {
  * reads them there, as it reads a {@link puzzleDeadEnd}'s sentence.
  */
 export function markedDeadEnd(words: Narration): MarkedDeadEnd {
+  // A refusal reaches the screen as one sentence, so it cannot follow the
+  // scheme the way a step's words do.
+  if (words.textIn("dark") !== words.text)
+    throw new Error(`"${words.text}" names a color that has a dark word`);
   return { ok: false, error: puzzleDeadEnd(words.text), words };
 }
 

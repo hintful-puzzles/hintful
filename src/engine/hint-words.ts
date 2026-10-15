@@ -18,6 +18,7 @@
  * good.
  */
 
+import { ColorWord, type Scheme } from "./color/color-word.ts";
 import type { RivalsLost } from "./rival-judging.ts";
 import type { Point } from "./types.ts";
 
@@ -148,7 +149,12 @@ interface Reference<E> extends MarkRef<E> {
   words(elements: readonly E[]): string;
 }
 
-type Part = string | Reference<unknown>;
+/** A color's word is a part of its own, so a sentence can be said in either
+ * scheme ({@link Narration.textIn}). */
+type Part = string | ColorWord | Reference<unknown>;
+
+const isReference = (p: Part): p is Reference<unknown> =>
+  typeof p !== "string" && !(p instanceof ColorWord);
 
 function lint(s: string): void {
   const m = UNBOUND.exec(s);
@@ -211,10 +217,10 @@ export class Narration {
   }
 
   /** @internal {@link phrase}'s join: parts already linted. */
-  static join(pieces: readonly (string | Narration)[]): Narration {
+  static join(pieces: readonly (string | ColorWord | Narration)[]): Narration {
     const out: Part[] = [];
     for (const p of pieces) {
-      for (const q of typeof p === "string" ? [p] : p.parts) {
+      for (const q of p instanceof Narration ? p.parts : [p]) {
         const last = out[out.length - 1];
         if (typeof q === "string" && typeof last === "string")
           out[out.length - 1] = last + q;
@@ -224,9 +230,23 @@ export class Narration {
     return new Narration(out);
   }
 
+  /** The words as the light scheme says them, which is how every check on a
+   * sentence reads it. What the player is shown is {@link textIn} the scheme
+   * in force. */
   get text(): string {
+    return this.textIn("light");
+  }
+
+  /** The words in `scheme`: each color named by its word there. */
+  textIn(scheme: Scheme): string {
     return this.parts
-      .map((p) => (typeof p === "string" ? p : p.words(p.elements)))
+      .map((p) =>
+        typeof p === "string"
+          ? p
+          : p instanceof ColorWord
+            ? p.in(scheme)
+            : p.words(p.elements),
+      )
       .join("");
   }
 
@@ -234,7 +254,7 @@ export class Narration {
    * elements a {@link narrow} emptied names none. */
   get refs(): MarkRef[] {
     return this.parts.filter(
-      (p): p is Reference<unknown> => typeof p !== "string" && p.elements.length > 0,
+      (p): p is Reference<unknown> => isReference(p) && p.elements.length > 0,
     );
   }
 
@@ -244,7 +264,7 @@ export class Narration {
   narrow(keep: (role: MarkRole, kind: string, key: string) => boolean): this {
     return this.remade(
       this.parts.map((p) => {
-        if (typeof p === "string") return p;
+        if (!isReference(p)) return p;
         const elements = p.elements.filter((e) =>
           keep(p.role, p.kind.name, p.kind.key(e)),
         );
@@ -265,6 +285,8 @@ export class Narration {
     if (first === undefined) return this;
     if (typeof first === "string")
       return this.remade([first.charAt(0).toUpperCase() + first.slice(1), ...rest]);
+    if (first instanceof ColorWord)
+      return this.remade([first.map(capitalize), ...rest]);
     return this.remade([
       { ...first, words: (els) => capitalize(first.words(els)) },
       ...rest,
@@ -281,9 +303,9 @@ const capitalize = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
  */
 export function phrase(
   strings: TemplateStringsArray,
-  ...values: readonly (string | number | Narration)[]
+  ...values: readonly (string | number | ColorWord | Narration)[]
 ): Narration {
-  const pieces: (string | Narration)[] = [];
+  const pieces: (string | ColorWord | Narration)[] = [];
   strings.forEach((s, i) => {
     lint(s);
     pieces.push(s);
@@ -293,10 +315,29 @@ export function phrase(
       else if (typeof v === "string") {
         lint(v);
         pieces.push(v);
+      } else if (v instanceof ColorWord) {
+        lint(v.light);
+        lint(v.dark);
+        pieces.push(v);
       } else pieces.push(v);
     }
   });
   return Narration.join(pieces);
+}
+
+/** A list of parts, "a, b and c" (or with `"or"`, "a, b or c"): the words a
+ * `joinWith` or `joinOr` (`hint-text.ts`) would say, over parts a string
+ * cannot hold. */
+export function listOf(
+  parts: readonly (ColorWord | Narration)[],
+  conjunction: "and" | "or" = "and",
+): Narration {
+  if (parts.length <= 1) return parts.length ? phrase`${parts[0]}` : phrase``;
+  const init = parts.slice(0, -1).map((p) => phrase`${p}`);
+  const head = init.reduce((acc, p) => phrase`${acc}, ${p}`);
+  return conjunction === "and"
+    ? phrase`${head} and ${parts[parts.length - 1]}`
+    : phrase`${head} or ${parts[parts.length - 1]}`;
 }
 
 /**

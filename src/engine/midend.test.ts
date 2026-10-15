@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mkhighlightBackground } from "./color/color-mkhighlight.ts";
 import { token } from "./color/color-token.ts";
+import { ColorWord } from "./color/color-word.ts";
 import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
 import { DESC_MALFORMED } from "./desc-error.ts";
 import { dealGaveUp, difficultyItem } from "./difficulty.ts";
@@ -11,7 +12,7 @@ import {
   fakeGame,
 } from "./fake-game.ts";
 import type { Game } from "./game.ts";
-import { UI_UPDATE } from "./game.ts";
+import { narratedStep, UI_UPDATE } from "./game.ts";
 import { click, drag, key } from "./hint-gesture.ts";
 import {
   ALREADY_SOLVED,
@@ -20,6 +21,7 @@ import {
   GAME_OVER,
   NO_MOVE_WORTH_MAKING,
 } from "./hint-refusal.ts";
+import { phrase, unshaped } from "./hint-words.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { endParams } from "./params.ts";
 import {
@@ -1441,6 +1443,29 @@ describe("Midend hint plan lifecycle", () => {
   it("hint() stores a plan and displays its first step", () => {
     expect(h.m.hint()).toBeNull();
     expect(explanation()).toBe("Increment the counter to 1");
+  });
+
+  it("sends a step's words in both schemes, for the screen to show the one in force", () => {
+    const base = fakeGame.hint;
+    if (!base) throw new Error("fakeGame.hint missing");
+    const word = new ColorWord("yellow", "brown");
+    h = harness({
+      ...fakeGame,
+      hint: (s) => {
+        const r = base(s);
+        if (!r.ok) return r;
+        const words = unshaped(phrase`Fill it with ${word}.`, "bare");
+        return { ok: true, steps: r.steps.map((st) => narratedStep({ ...st, words })) };
+      },
+    });
+    h.m.newGame();
+    h.m.hint();
+    expect(h.sent("status-bar-change").activeHintExplanation).toBe(
+      "Fill it with yellow.",
+    );
+    expect(h.sent("status-bar-change").activeHintExplanationDark).toBe(
+      "Fill it with brown.",
+    );
   });
 
   it("hint() on a solved game returns an error", () => {

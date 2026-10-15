@@ -1,8 +1,7 @@
 # name-a-color-in-each-scheme
 
-**Status: scaffolded 2026-10-15 at the owner's word, not started.** It
-needs no answer from the owner to start. It has no `tasks.md` yet: the
-session that takes it up writes them after it has measured the names below.
+**Status: implemented 2026-10-15**; `design.md` holds what was measured
+and decided.
 
 ## Why
 
