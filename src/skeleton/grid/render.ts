@@ -28,11 +28,7 @@ import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import {
-  HINT_AREA,
-  HINT_TARGET,
-  OverlaySidecar,
-} from "../../engine/overlay-sidecar.ts";
+import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
@@ -66,7 +62,8 @@ const COL_ERROR = 7;
 /** The surface under a square Check & Save found wrong. */
 export const COL_WRONG = 8;
 const COL_CURSOR = 9;
-/** The ring on the squares a hint step decides. */
+/** The ring on the squares a hint step decides, and the stripes on the
+ * squares two numbers share. */
 export const COL_HINT = 10;
 /** The outline on the numbers it reasons from. */
 export const COL_HINT_EVIDENCE = 11;
@@ -158,7 +155,15 @@ interface Tile {
   tone: WinTone;
 }
 
-function drawTile(dr: GameDrawing, ts: number, x: number, y: number, t: Tile): void {
+function drawTile(
+  dr: GameDrawing,
+  ds: SkeletonDrawState,
+  i: number,
+  x: number,
+  y: number,
+  t: Tile,
+): void {
+  const ts = ds.tileSize;
   const b = border(ts);
   const px = x * ts + b;
   const py = y * ts + b;
@@ -178,6 +183,7 @@ function drawTile(dr: GameDrawing, ts: number, x: number, y: number, t: Tile): v
           ? COL_GIVEN
           : COL_CELL,
   );
+  ds.hint.drawHatch(dr, i, surface, COL_HINT, ts);
 
   if (t.clue !== NO_CLUE) {
     dr.drawText(
@@ -238,9 +244,7 @@ export function redraw(
   const named = stepMarks(hint);
   const targets: readonly MarkCell[] = named.of("ring", CELL);
   const evidence: readonly MarkCell[] = named.of("outline", CELL);
-  ds.hint.clear();
-  for (const c of targets) ds.hint.add(c.y * w + c.x, HINT_TARGET);
-  for (const c of evidence) ds.hint.add(c.y * w + c.x, HINT_AREA);
+  ds.hint.pack(named, (x, y) => y * w + x);
   const markStyle = {
     band: (x: number, y: number) => markBand(ts, x, y),
     targetColor: COL_HINT,
@@ -274,7 +278,7 @@ export function redraw(
         (tile.cursor ? F_CURSOR : 0) |
         (tile.tone << K_TONE);
       if (ds.cache[i] === key && !ds.hint.stale(i)) continue;
-      drawTile(dr, ts, x, y, tile);
+      drawTile(dr, ds, i, x, y, tile);
       ds.cache[i] = key;
       ds.hint.commit(i);
     }

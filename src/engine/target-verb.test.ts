@@ -238,6 +238,33 @@ describe("verbClicks: a hint step's clicks, found by its keep-track", () => {
     expect(gesture).toHaveLength(1);
   });
 
+  it("takes the button that makes the step over one only on the way to it", () => {
+    // A press cycle's keep-track: a mark on a wanted square that is not yet
+    // the wanted one is on the way, and changes nothing about the step.
+    const cycling = {
+      ...rules,
+      hintKeepTrack: (m: M, step: HintStep<M>): HintTrackVerdict => {
+        const wanted = new Map(step.move.set);
+        if (m.set.every(([k, v]) => wanted.has(k) && wanted.get(k) !== v))
+          return "onTrack";
+        return rules.hintKeepTrack(m, step);
+      },
+    };
+    const step = stepOf([
+      ["0,0", "dot"],
+      ["1,0", "dot"],
+    ]);
+    const ui = { cursor: newCursor(), tally: 0 };
+    const gesture = verbClicks(verbs, cycling, state, ui, ds, step, [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+    ]);
+    expect(gesture.map((c) => c.kind === "click" && c.button)).toEqual([
+      "secondary",
+      "secondary",
+    ]);
+  });
+
   it("throws on a target no button's verb keeps on the step", () => {
     const step = stepOf([["1,0", "cross"]]);
     const ui = { cursor: newCursor(), tally: 0 };

@@ -255,10 +255,8 @@ undoes the mark.
   with it, so the mark may be drawn from `drawTile`. A cell whose outline
   changed while it stayed evidence counts as changed; `OverlaySidecar.pack`
   puts the outline sides in its diff key, with nothing to wire. Exemplar:
-  [`filling/render.ts`](../src/games/filling/render.ts). `pack` asks the
-  words for ringed notes, so a game with no notes that calls it is told by
-  `warm-repaint.test.ts` that it never painted one: such a game puts the
-  ring, the stripes and `outlineSides` in its own tile key
+  [`filling/render.ts`](../src/games/filling/render.ts). A game with no
+  notes passes `pack` no `markBits`, and its ringed notes are not asked for
   ([`starbattle/render.ts`](../src/games/starbattle/render.ts)).
 - **Both**, a pixel of real gutter plus some of the cell's own edge. The
   `outer` part makes it an outside-band game, and the erase covers the inside
@@ -835,10 +833,9 @@ shrink mid-hint.
 A game whose input is a press cycle answers `"onTrack"` for a press that is
 on the way to the leg's value, or the first press drops the plan
 (`magnetsKeepTrack` in [`magnets/hint.ts`](../src/games/magnets/hint.ts)).
-Such a game hands `verbClicks` a judge without that allowance: it takes the
-first button whose click the judge keeps, so a press that is only on the way
-is chosen and the gesture does not complete the step (`starbattleMakesStep`
-in [`starbattle/hint.ts`](../src/games/starbattle/hint.ts)).
+`verbClicks` hands the same judge each button's click and takes the one that
+completes the step, then one that shrinks it, so a press only on the way is
+never the gesture's.
 Guard: walk a real journey and assert each leg's verdict is `"completed"`
 (`boats-hint.test.ts`, "completes a journey leg by leg").
 

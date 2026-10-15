@@ -39,8 +39,16 @@ export type SkeletonReason =
   /** One number: it has its count, or needs every open square beside it. */
   | { kind: "count"; clue: number; need: number; open: number }
   /** Two numbers: every open square beside `inner` is also beside `clue`, so
-   * what `clue` needs beyond `inner` falls on its other open squares. */
-  | { kind: "shared"; clue: number; need: number; inner: number; innerNeed: number };
+   * what `clue` needs beyond `inner` falls on its other open squares. `meet`
+   * is the open squares beside `inner`, where the two meet. */
+  | {
+      kind: "shared";
+      clue: number;
+      need: number;
+      inner: number;
+      innerNeed: number;
+      meet: number[];
+    };
 
 /** One deduction: `cells` all take `mark`. */
 export interface SkeletonFiring {
@@ -138,7 +146,14 @@ function findShared(b: SkeletonBoard): SkeletonFiring | null {
       const need = b.need(clue);
       const innerNeed = b.need(inner);
       const beyond = need - innerNeed;
-      const reason: SkeletonReason = { kind: "shared", clue, need, inner, innerNeed };
+      const reason: SkeletonReason = {
+        kind: "shared",
+        clue,
+        need,
+        inner,
+        innerNeed,
+        meet: within,
+      };
       if (beyond === 0) return { reason, cells: rest, mark: CROSSED };
       if (beyond === rest.length) return { reason, cells: rest, mark: FILLED };
     }

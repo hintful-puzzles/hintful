@@ -25,14 +25,9 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import {
-  HintMarks,
-  type MarkBand,
-  type MarkCell,
-  outlineSides,
-} from "../../engine/hint-mark.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import { regionFills } from "../../engine/region-fill.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
@@ -164,15 +159,12 @@ function boxes(ts: number, x: number, y: number, walls: number): [Rect, Rect] {
 
 // --- draw state -------------------------------------------------------------
 
-// The tile key: the mark in bits 0-1, then one bit a cue, two for the win
-// flash's tone, and the hint's marks, the outline as its four sides.
+// The tile key: the mark in bits 0-1, then one bit a cue and two for the win
+// flash's tone. The hint's marks are the sidecar's.
 const F_ERROR = 1 << 2;
 const F_WRONG = 1 << 3;
 const F_CURSOR = 1 << 4;
 const K_TONE = 5;
-const F_STRIPED = 1 << 7;
-const F_RINGED = 1 << 8;
-const K_OUTLINE = 9;
 
 export interface StarbattleDrawState {
   started: boolean;
@@ -184,6 +176,10 @@ export interface StarbattleDrawState {
   /** What each square shows on the canvas, as its tile key; -1 before the
    * first frame. */
   cache: Int32Array;
+  /** The hint step's marks by square, part of the diff key: a mark is
+   * painted over the square's surface and only the square's own repaint
+   * takes it off. */
+  hint: OverlaySidecar;
   /** The ring and the outline, drawn after the tiles. */
   marks: HintMarks;
 }
@@ -200,6 +196,7 @@ export function newDrawState(
     walls: wallsOf(state.size, state.regions),
     surfaces: Uint8Array.from(state.regions, (r) => COL_REGION + fills[r]),
     cache: new Int32Array(squares).fill(-1),
+    hint: new OverlaySidecar(squares),
     marks: new HintMarks(),
   };
 }
@@ -240,8 +237,6 @@ interface Tile {
   wrong: boolean;
   cursor: boolean;
   tone: WinTone;
-  /** Whether the square is on the row, column or region a hint names. */
-  striped: boolean;
 }
 
 function drawTile(
@@ -275,7 +270,7 @@ function drawTile(
         ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD)
         : ds.surfaces[i],
   );
-  if (t.striped) dr.drawHatch(surface, COL_HINT, hatchPeriod(ts));
+  ds.hint.drawHatch(dr, i, surface, COL_HINT, ts);
 
   // A corner where the walls of two other squares meet, in the order
   // `wallsOf` numbers them.
@@ -358,12 +353,7 @@ export function redraw(
   const named = stepMarks(hint);
   const targets: readonly MarkCell[] = named.of("ring", CELL);
   const evidence: readonly MarkCell[] = named.of("outline", CELL);
-  const at = (c: Point): number => c.y * size + c.x;
-  const ringed = new Set(targets.map(at));
-  const outlined = new Set(evidence.map(at));
-  const striped = new Set(named.of("stripes", CELL).map(at));
-  const isOutlined = (x: number, y: number): boolean =>
-    x >= 0 && y >= 0 && x < size && y < size && outlined.has(y * size + x);
+  ds.hint.pack(named, (x, y) => y * size + x);
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -374,23 +364,17 @@ export function redraw(
         wrong: wrong.has(i),
         cursor: ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y,
         tone: flash.win(sweepStep(x, y)),
-        striped: striped.has(i),
       };
-      // A mark is painted over the square's surface and only the square's
-      // own repaint takes it off, so the ring and each side of the outline
-      // are in the key with what the square holds.
       const key =
         tile.mark |
         (tile.error ? F_ERROR : 0) |
         (tile.wrong ? F_WRONG : 0) |
         (tile.cursor ? F_CURSOR : 0) |
-        (tile.tone << K_TONE) |
-        (tile.striped ? F_STRIPED : 0) |
-        (ringed.has(i) ? F_RINGED : 0) |
-        ((outlined.has(i) ? outlineSides(x, y, isOutlined) : 0) << K_OUTLINE);
-      if (ds.cache[i] === key) continue;
+        (tile.tone << K_TONE);
+      if (ds.cache[i] === key && !ds.hint.stale(i)) continue;
       drawTile(dr, ds, i, x, y, tile);
       ds.cache[i] = key;
+      ds.hint.commit(i);
     }
   }
 

@@ -223,6 +223,7 @@ export const skeletonGame: Game<
     roles: {
       ring: "the squares the step decides. The sentence says what they must be.",
       outline: "the numbers it reasons from.",
+      stripes: "the squares two numbers share, where a step reads them together.",
     },
   },
   hintKeepTrack: skeletonKeepTrack,

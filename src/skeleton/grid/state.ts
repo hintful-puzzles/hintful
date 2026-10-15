@@ -93,8 +93,10 @@ const BOARDS: SkeletonParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY },
 ];
 
+/** Normal, so that the first board needs both rungs and its hint draws every
+ * mark the legend lists: the board the cross-game guards deal is this one. */
 export function defaultParams(): SkeletonParams {
-  return { ...BOARDS[0] };
+  return { ...BOARDS[0], diff: DIFF_NORMAL };
 }
 
 export function presets(): PresetMenu<SkeletonParams> {

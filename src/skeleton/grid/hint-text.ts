@@ -6,8 +6,8 @@
  * says what to look at and then what must follow (docs/hints.md
  * § "Writing the narration"). Every word that points at the board is a
  * reference to the mark it points at (`engine/hint-words.ts`): the squares a
- * step decides are ringed, and the numbers it reasons from are outlined and
- * named by their value.
+ * step decides are ringed, the numbers it reasons from are outlined and
+ * named by their value, and the squares two numbers share are striped.
  *
  * A step that decides several squares shrinks as the player makes some of
  * them, and its words are narrowed with it, so every word that counts the
@@ -71,18 +71,21 @@ export const say = {
   /**
    * Two numbers read together. `outer` is beside the ringed squares and
    * `inner` is not, which is how the words tell two numbers of one value
-   * apart: every open square beside `inner` is beside `outer` too.
+   * apart: every open square beside `inner` is beside `outer` too. Those
+   * squares, `meet`, are the area the sentence is about, and are striped.
    */
   shared: (
     outer: Counted,
     inner: Counted,
+    meet: readonly Point[],
     cells: readonly Point[],
     mark_: "shaded" | "clear",
   ): Sentence => {
     const left = outer.need - inner.need;
     const taken = left === 0 ? (inner.need === 1 ? "it" : "them all") : `${inner.need}`;
+    const where = mark.as("stripes", CELL, meet, "where they meet");
     return so({
-      look: phrase`${number(outer.at, outer.value, "the")} beside ${these(cells)} still needs ${outer.need}, and ${number(inner.at, inner.value, "the other outlined")} puts ${taken} where they meet`,
+      look: phrase`${number(outer.at, outer.value, "the")} beside ${these(cells)} still needs ${outer.need}, and ${number(inner.at, inner.value, "the other outlined")} puts ${taken} ${where}`,
       move: mustBe(cells, mark_ === "shaded" ? SHADED_NAME : UNSHADED_NAME),
     });
   },

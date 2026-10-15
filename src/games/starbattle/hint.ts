@@ -175,15 +175,12 @@ export function starbattleKeepTrack(
     step.move.cells.some((t) => t.index === first.index && t.mark !== first.mark)
   )
     return "onTrack";
-  return starbattleMakesStep(move, step, state);
+  return trackMade(move, step, state);
 }
 
-/**
- * The same, for the gesture that plays a step: only a move that makes what
- * the step asks keeps it, so the button chosen for a square is the one that
- * marks it in one click.
- */
-export function starbattleMakesStep(
+/** The verdict on what a move made: the squares the step asks for that it
+ * marked as asked, and nothing else. */
+function trackMade(
   move: StarbattleMove,
   step: HintStep<StarbattleMove>,
   state: StarbattleState,

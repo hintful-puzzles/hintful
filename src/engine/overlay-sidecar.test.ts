@@ -61,6 +61,14 @@ describe("OverlaySidecar", () => {
     expect(s.stale(0)).toBe(true);
   });
 
+  it("leaves ringed notes alone for a game that strikes none", () => {
+    const s = new OverlaySidecar(9);
+    s.pack(said({ targets: [{ x: 0, y: 0 }], marks: [{ x: 1, y: 0, n: 3 }] }), idx);
+    expect(s.packed[0]).toBe(HINT_TARGET);
+    expect(s.packed[1]).toBe(0);
+    expect(s.struck[1]).toBe(0);
+  });
+
   it("keeps a candidate mask's highest values off the roles, and repaints on them", () => {
     // Solo and Unequal reach 31 values. Sharing one word, a strike on 30 once
     // packed exactly as "this cell is the target", and swapping the two

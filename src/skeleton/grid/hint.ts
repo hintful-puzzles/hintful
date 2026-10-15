@@ -62,6 +62,7 @@ function wordsOf(state: SkeletonState, firing: SkeletonFiring): Sentence {
       return say.shared(
         counted(reason.clue, reason.need),
         counted(reason.inner, reason.innerNeed),
+        reason.meet.map(at),
         cells,
         firing.mark === FILLED ? "shaded" : "clear",
       );

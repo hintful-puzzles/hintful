@@ -614,8 +614,9 @@ export function verbGesture<S, U, D, T, M>(
 
 /**
  * The clicks that make a hint step's move, one at each of `targets` in turn:
- * on each, the first button (left, then right) whose verb makes a move the
- * game's `hintKeepTrack` keeps on the step. That is the judge the midend plays
+ * on each, the button (left, then right, where both do as well) whose verb
+ * makes a move the game's `hintKeepTrack` keeps on the step, and that gets
+ * furthest with it. That is the judge the midend plays
  * the gesture against, so the gesture completes the step or the hint walk
  * says why; and the moves are the verbs', so it cannot ask a button for what
  * the button does not do. A click judged to complete the step ends the
@@ -653,17 +654,32 @@ export function verbClicks<S, U, D, T, M, H>(
   const scratch = structuredClone(ui);
   const out: PointerAction[] = [];
   let board = state;
-  /** The first button whose verb on `target` the step keeps, with the step
-   * as that click leaves it; `null` when neither does. */
+  /** The button whose verb on `target` the step keeps and gets furthest
+   * with, with the step as that click leaves it; `null` when neither keeps
+   * it. A keep-track that allows the first press of a two-press cycle keeps
+   * a click that only starts the way, so a click that completes the step
+   * comes first, then one that shrinks it, then the first kept. */
   const kept = (target: T) => {
+    const found = [];
     for (const button of ["primary", "secondary"] as const) {
       const move = verbs[button]?.apply(board, target, scratch) ?? null;
       if (move === null || move === UI_UPDATE) continue;
       const trial = { ...judged, move: structuredClone(judged.move) };
       const verdict = rules.hintKeepTrack(move, trial, board);
-      if (verdict !== "off") return { button, move, trial, verdict };
+      if (verdict === "off") continue;
+      const shrunk = JSON.stringify(trial.move) !== JSON.stringify(judged.move);
+      found.push({
+        button,
+        move,
+        trial,
+        verdict,
+        rank: verdict === "completed" ? 0 : shrunk ? 1 : 2,
+      });
     }
-    return null;
+    return found.reduce<(typeof found)[number] | null>(
+      (best, f) => (best === null || f.rank < best.rank ? f : best),
+      null,
+    );
   };
   for (const target of targets) {
     const found = kept(target);

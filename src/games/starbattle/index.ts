@@ -27,7 +27,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newStarbattleDesc } from "./generator.ts";
-import { starbattleHint, starbattleKeepTrack, starbattleMakesStep } from "./hint.ts";
+import { starbattleHint, starbattleKeepTrack } from "./hint.ts";
 import {
   border,
   colors,
@@ -196,7 +196,7 @@ function hintGesture(
   const { size } = state;
   return verbClicks(
     targetVerbs,
-    { executeMove, hintKeepTrack: starbattleMakesStep },
+    { executeMove, hintKeepTrack: starbattleKeepTrack },
     state,
     ui,
     ds,

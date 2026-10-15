@@ -41,9 +41,10 @@ const mark = (index: number, to: 0 | 1 | 2): SkeletonMove => ({
 
 describe("skeleton params", () => {
   it("round-trip through their string, tier included only in full", () => {
-    const p = { w: 6, h: 4, diff: DIFF_NORMAL };
+    const p = { w: 6, h: 4, diff: DIFF_EASY };
     expect(decodeParams(encodeParams(p, true))).toEqual(p);
-    expect(decodeParams(encodeParams(p, false))).toEqual({ ...p, diff: DIFF_EASY });
+    // The brief form leaves the tier at the default's.
+    expect(decodeParams(encodeParams(p, false))).toEqual({ ...p, diff: DIFF_NORMAL });
   });
 
   it("refuse a board too small or too large", () => {

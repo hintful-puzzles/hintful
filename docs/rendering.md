@@ -159,7 +159,7 @@ painter, and call `ds.<overlay>.commit(i)` after drawing.
 
 | You have | Call | Exemplar |
 | --- | --- | --- |
-| A hint step's marks (ringed cells and notes, outlined and striped cells) | `pack(stepMarks(step), indexFn, markBitsFn)` | [`towers/render.ts`](../src/games/towers/render.ts) |
+| A hint step's marks (ringed cells and notes, outlined and striped cells) | `pack(stepMarks(step), indexFn, markBitsFn)`, with no `markBitsFn` in a game without notes | [`towers/render.ts`](../src/games/towers/render.ts), [`starbattle/render.ts`](../src/games/starbattle/render.ts) |
 | A `findMistakes` cell list | `packCells(mistakes, indexFn)` | `towers/render.ts` `ds.wrong` |
 | An overlay with its own topology | `clear()` then `add(i, bits)` | [`galaxies/render.ts`](../src/games/galaxies/render.ts) `ds.wrongEdges`: a wrong wall is a shared edge, so it lights a different bit in each of its two tiles |
 

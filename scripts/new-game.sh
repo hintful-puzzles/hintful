@@ -122,11 +122,12 @@ What is left to do, and the copy does none of it:
        - help/puzzles.md: its row (help-coverage.test.ts)
        - the snapshots of capability-surface.test.ts and
          params-stability.test.ts (run each with --update and read the diff)
-     and two things the copy has no reason to hold yet refuse it later:
-       - a hint sentence that stripes a row or region needs "stripes" among
-         the roles of hintMarks in index.ts (hint-quality.test.ts)
+     and one thing the copy has no reason to hold yet refuses it later:
        - a help page that says where the puzzle comes from says it under
          "## Where the puzzle comes from" (help-coverage.test.ts)
+     Each of the three hint roles in hintMarks (ring, outline, stripes) is
+     drawn by the copy; one the puzzle's hint never names goes, with its
+     line in the legend (warm-repaint.test.ts holds the two together).
   3. Pin the hint again once the rungs are this puzzle's:
        npm run hint-scan -- src/games/${GAME}/${GAME}-hint.test.ts --all
      and update the snapshots the copy brought with it:

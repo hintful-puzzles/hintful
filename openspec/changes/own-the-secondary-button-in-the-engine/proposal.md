@@ -78,6 +78,28 @@ never sees a right button and cannot grow a branch for one unnoticed. The
 cost is that a stray right click in Flood or Fifteen makes a move where it
 made none; Undo takes it back.
 
+## Also: the right button is the cross
+
+Moved here 2026-10-15 from `own-what-starbattle-wrote-for-the-engine`, item
+5, since it is a second fact about the same button. Star Battle shipped with
+the cross on the left button and was turned round on the owner's first play.
+The rule is in `docs/input.md` § "Targets and verbs", and nothing holds a
+game to it. The engine could: a `ruledOut` verb a game declares in place of
+`secondary`, which the model puts on the right button and Space, whose
+`does` phrase and cross it supplies, and which a guard can then find.
+
+Counted 2026-10-15 from each registered game's `targetVerbs.secondary.does`:
+of the 28 games that declare target verbs, the right button marks a square
+as ruled out in 12 (Black Box, Boats, Dominosa, Light Up, Loopy, Palisade,
+Range, Separate, Spokes, Star Battle, Tents, Tracks), in their own words and
+with their own mark: a cross, water, grass, a faint line, "unused". In 4 it
+starts the left button's cycle from its other end (Bricks, Clusters, Mosaic,
+Pattern), and in the rest it is a move of its own: a flag (Mines), a circle
+(Singles), a turn (Net, Twiddle), a value (Magnets, Slant, Sticks, Subsets,
+Unruly). Galaxies and Flip and Flood have none. Whether the 12 should share
+one declared verb, and its words, is this change's to settle after the
+question above.
+
 ## Capabilities
 
 None at filing; see `.openspec.yaml`. The work modifies `engine-input` ("A
