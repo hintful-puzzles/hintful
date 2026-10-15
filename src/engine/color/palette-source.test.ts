@@ -280,7 +280,7 @@ it("declares no named color nothing can show", () => {
   };
   const byGames = new Set(gameSources().flatMap(({ src }) => imported(src)));
   // The meanings layer and the board-relative layer both build on named colors
-  // (`ERROR` is `RED`; Signpost's region ramp is built from `EIGHT_FILLS`), and
+  // (`ERROR` is `RED`; Signpost's region ramp is built from `REGION_FILLS`), and
   // a color reaching a board through either of them is used.
   const byMeanings = new Set([...imported(paletteSource), ...imported(tableSource)]);
   const table = code(

@@ -68,7 +68,7 @@ const COL_ARROW_BG_DIM = 8;
 const COL_NUMBER = 9;
 const COL_NUMBER_SET = 10;
 const COL_NUMBER_SET_MID = 11;
-const NBACKGROUNDS = 16;
+const NBACKGROUNDS = SIGNPOST_REGION_BACKGROUNDS.length;
 const COL_B0 = 12;
 const COL_M0 = COL_B0 + 1 * NBACKGROUNDS;
 const COL_D0 = COL_B0 + 2 * NBACKGROUNDS;
@@ -117,7 +117,8 @@ const F_FLASH_LEAD = 0x2000;
 // --- palette ----------------------------------------------------------
 
 /**
- * Port of `game_colours`: 12 named colors + four 16-entry ramps. Every value
+ * Port of `game_colours`: 12 named colors + four ramps of one entry a region
+ * background. Every value
  * is a token (the arithmetic that does not involve the host background lives
  * in `palette-games.ts`); what is left here is which slot each one occupies.
  */
@@ -211,7 +212,7 @@ function drawStar(
 function num2col(n: number, num: number): number {
   const set = Math.floor(num / (n + 1));
   if (num <= 0 || set === 0) return COL_B0;
-  return COL_B0 + 1 + ((set - 1) % 15);
+  return COL_B0 + 1 + ((set - 1) % (NBACKGROUNDS - 1));
 }
 
 // --- tile drawing -----------------------------------------------------

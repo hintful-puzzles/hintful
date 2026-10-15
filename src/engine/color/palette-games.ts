@@ -27,34 +27,40 @@
 
 import type { Color } from "../types.ts";
 import { darkValue, divide, mix, scale, token } from "./color-token.ts";
-import { BLUE_BOLD, EIGHT_FILLS, PURPLE_WASH } from "./colors.ts";
+import { BLUE_BOLD, GRAY_WASH, PURPLE_WASH, REGION_FILLS } from "./colors.ts";
 import { INK } from "./palette.ts";
 
 // --- signpost ----------------------------------------------------------
 
 /**
- * Signpost's sixteen **region backgrounds** — the color a square takes from the
- * chain it currently belongs to, so that one unbroken sequence of arrows reads as
- * one object. Their members mean nothing individually beyond "a different chain
- * from that one", so what they owe the player is mutual separation, which is a
- * property of the set and therefore of the palette: {@link EIGHT_FILLS}.
+ * Signpost's **region backgrounds**: the color a square takes from the chain
+ * it belongs to, so that one unbroken sequence of arrows reads as one object.
+ * First the gray of a chain anchored to the real numbers, then a floating
+ * chain's color by its letter: the region palette's eight ({@link
+ * REGION_FILLS}), so a chain is colored as a region is in every other game.
  *
- * The eight authored fills, followed by eight midpoints of consecutive pairs, so
- * a long game with many chains keeps handing out distinguishable colors. The
- * last midpoint pairs fill 7 with the *first* midpoint rather than wrapping to
- * fill 0 — upstream writes the second half into the same array it is reading
- * from, so entry 15 sees entry 8 already filled in. Reproduced deliberately: it
- * is a real color on real boards, and "fixing" it would repaint every game with
- * more than seven chains.
+ * In the order that stands the eight furthest apart from one to the next,
+ * since chains are lettered from the lowest free letter and so the first few
+ * are the ones on the board together. A ninth floating chain takes the first
+ * color again, and its letter tells it apart. The eight are not stretched to
+ * more by mixing two of them: a mix of two fills this faint is a gray near
+ * the others, and two such mixes stood 0.009 apart.
  */
-export const SIGNPOST_REGION_BACKGROUNDS: readonly Color[] = (() => {
-  // The eight fills go in **as themselves**, not re-wrapped: a token is
-  // recognized downstream by identity, so a copy here would leave each fill
-  // referenced by nothing and unable to carry its scheme value.
-  const all = [...EIGHT_FILLS];
-  for (let c = 0; c < 8; c++) all.push(token(mix(all[c], all[c + 1], 0.5)));
-  return all;
-})();
+export const SIGNPOST_REGION_BACKGROUNDS: readonly Color[] = [
+  GRAY_WASH,
+  // yellow, blue, pink, green, violet, peach, teal, orchid
+  ...[0, 5, 3, 4, 2, 6, 1, 7].map((k) => REGION_FILLS[k]),
+];
+
+/** `c` a share of the way toward the ink, in each scheme: the dark scheme's
+ * ink is light, so there the step is toward white from the fill's own dark
+ * value. Authored, because the inversion the app would otherwise apply lands
+ * the mark on its fill. */
+const towardInk = (c: Color, share: number): Color => {
+  const dark = darkValue(c);
+  if (dark === null) throw new Error("a region background authors its dark value");
+  return token(mix(c, INK, share), mix(dark, [1, 1, 1], share));
+};
 
 /**
  * A number or arrow drawn **on** a region, at two strengths: `MID` for a mark
@@ -63,16 +69,15 @@ export const SIGNPOST_REGION_BACKGROUNDS: readonly Color[] = (() => {
  *
  * Both are interpolations toward {@link INK} rather than authored colors,
  * because what they mean is *"this much of the way from the region toward the
- * mark"* — change a region and its two derived strengths follow, which is what
- * keeps sixteen regions from becoming forty-eight independent decisions.
+ * mark"*: change a region and its two derived strengths follow.
  */
 export const SIGNPOST_ON_REGION_MID: readonly Color[] = SIGNPOST_REGION_BACKGROUNDS.map(
-  (c) => token(mix(c, INK, 0.3)),
+  (c) => towardInk(c, 0.3),
 );
 
 /** @see SIGNPOST_ON_REGION_MID */
 export const SIGNPOST_ON_REGION_FAINT: readonly Color[] =
-  SIGNPOST_REGION_BACKGROUNDS.map((c) => token(mix(c, INK, 0.1)));
+  SIGNPOST_REGION_BACKGROUNDS.map((c) => towardInk(c, 0.1));
 
 /** A **set** number at mid strength, on the plain (region 0) background — the
  * one place {@link SIGNPOST_ON_REGION_MID}'s "toward the ink" rule does not

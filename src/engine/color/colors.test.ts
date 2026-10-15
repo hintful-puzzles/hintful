@@ -129,11 +129,6 @@ describe("the named colors", () => {
         0.127,
       ],
       [
-        "eight region fills (signpost)",
-        colors.EIGHT_FILLS.map((c, i) => [`fill${i}`, c] as [string, Color]),
-        0.071,
-      ],
-      [
         "four region fills (map)",
         colors.FOUR_FILLS.map((c, i) => [`fill${i}`, c] as [string, Color]),
         0.077,

@@ -23,6 +23,7 @@ import { mkhighlight } from "./color-mkhighlight.ts";
 import { darkValue } from "./color-token.ts";
 import * as colors from "./colors.ts";
 import * as roles from "./palette.ts";
+import { SIGNPOST_REGION_BACKGROUNDS } from "./palette-games.ts";
 
 /** A light host background, standing in for the frontend's theme color. */
 const BG: Color = [0.827, 0.827, 0.827];
@@ -339,6 +340,32 @@ describe("the shared color vocabulary", () => {
           ).toBeGreaterThan(0.07);
       }
     }
+  });
+
+  it("keeps Signpost's chain colors apart, in both schemes", () => {
+    // Two of its chains once took colors 0.009 apart, mixes of two fills
+    // that had both gone gray. Every chain color is a region fill now, and
+    // any two may be on the board together.
+    const inDark = (c: Color): Color => darkValue(c) ?? c;
+    const apart = (a: Color, b: Color): number => {
+      const plane = ([, c, h]: OKLCH): [number, number] =>
+        isGrayChroma(c)
+          ? [0, 0]
+          : [c * Math.cos((h * Math.PI) / 180), c * Math.sin((h * Math.PI) / 180)];
+      const [p, q] = [colorToOKLCH(a), colorToOKLCH(b)];
+      const [px, py] = plane(p);
+      const [qx, qy] = plane(q);
+      return Math.hypot(p[0] - q[0], px - qx, py - qy);
+    };
+    const chains = SIGNPOST_REGION_BACKGROUNDS.slice(1);
+    expect(chains.length).toBeGreaterThanOrEqual(4);
+    for (const scheme of [(c: Color) => c, inDark])
+      for (let i = 0; i < chains.length; i++)
+        for (let j = i + 1; j < chains.length; j++)
+          expect(
+            apart(scheme(chains[i]), scheme(chains[j])),
+            `${i}/${j}`,
+          ).toBeGreaterThan(0.07);
   });
 
   it("keeps the two-state pair off the hues spent on marks", () => {

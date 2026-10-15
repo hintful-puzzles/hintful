@@ -732,7 +732,7 @@ and which one you reach for is the decision:
 - [`engine/color/colors.ts`](../src/engine/color/colors.ts) holds **the
   palette itself**: the named colors, most at three intensities (base,
   `_WASH`, `_BOLD`), and the sets made to be told apart (`TEN`, `TEN_NAMES`,
-  `EIGHT_FILLS`, `REGION_FILLS`, `FOUR_FILLS`).
+  `REGION_FILLS`, `FOUR_FILLS`).
 - [`engine/color/palette-games.ts`](../src/engine/color/palette-games.ts)
   holds colors a game defines **relative to its own board**, prefixed with
   its id (`slantGrounded`, `undeadGhost`). Functions, not values.
@@ -792,17 +792,25 @@ names the one it applies.
   surface. A mistake's wash and the win flash take its place. Exemplar:
   [`starbattle/render.ts`](../src/games/starbattle/render.ts), on the first
   four.
-  - **Where the fill is the player's answer**, the game takes `FOUR_FILLS`:
-    the same four, stronger in the dark scheme, and `FOUR_NAMES` for the
-    words. Only the first four stand off a region with no color, so such a
-    game has four. Exemplar: Map.
+  - **A region's color is one value a scheme in every game** (the owner,
+    2026-10-15: consistency first), so a yellow region in Map and in Star
+    Battle is one yellow in both schemes.
+  - **Where the fill is the player's answer**, the game takes `FOUR_FILLS`,
+    the first four as themselves in the order its numbers name them, and
+    `FOUR_NAMES` for the words. Only the first four stand off a region with
+    no color, so such a game has four. A dot or a swatch of the color drawn
+    on a surface that is not the color takes `FOUR_FILL_MARKS`, stronger in
+    the dark scheme, where a dot of the fill's own value does not show.
+    Exemplar: Map, its pencil stipples.
+  - **A color that names a group rather than a region**, as Signpost's
+    chains do, is the palette's eight in turn and repeats past the eighth;
+    the group's own label tells two of one color apart. Two fills are never
+    mixed for a ninth: a mix of two fills this faint is a gray near the
+    others.
   - **A game with numbers, notes or `REGION_DONE` in its regions is put to
     the owner with a drawing first.** Measured on the palette, not yet in
     the app: a pencil note and a player's entry read weaker on a dark fill
     than on a plain cell, and `REGION_DONE` is close to the light violet.
-  - **Signpost keeps `EIGHT_FILLS`.** Its chains past the eighth are
-    midpoints of two fills, and midpoints of fills this faint cannot be
-    told apart.
 - **A state is a piece, drawn with `drawPiece`**
   ([`engine/piece.ts`](../src/engine/piece.ts); "A piece is drawn inset on
   its cell"). State is never a step of gray alone.

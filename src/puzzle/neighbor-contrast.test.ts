@@ -41,6 +41,18 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   guess: {
     "mark:1:17": "the outline of a white peg, which is white",
   },
+  // The region palette's first four sit at the margin's own lightness
+  // (`REGION_FILLS`), as in Star Battle.
+  map: {
+    "area:0:2":
+      "a region's fill beside the board's margin; the board's ink frame is between them",
+    "area:0:3":
+      "a region's fill beside the board's margin; the board's ink frame is between them",
+    "area:0:4":
+      "a region's fill beside the board's margin; the board's ink frame is between them",
+    "area:0:5":
+      "a region's fill beside the board's margin; the board's ink frame is between them",
+  },
   pearl: {
     "area:4:16": "a white pearl on the loop; its black outline carries it",
   },

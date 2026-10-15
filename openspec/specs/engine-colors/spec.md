@@ -857,20 +857,6 @@ both schemes.
 - **WHEN** any two members of the set are measured in either scheme
 - **THEN** they stand at least the neighbor floor apart
 
-### Requirement: A fill that is the player's answer is stronger in the dark scheme
-
-Where a region's fill is the player's answer and is named to them, as in Map,
-the game SHALL take the region palette's first four at their answer step:
-the same values in the light scheme, and in the dark scheme a lighter and
-stronger value, at which the color's name is true and a filled region stands
-off one with no color.
-
-#### Scenario: Map's four in the two schemes
-
-- **WHEN** Map's four fills and the region palette's first four are resolved
-- **THEN** they are the same colors in the light scheme
-- **AND** in the dark scheme each of Map's is lighter than its counterpart
-
 ### Requirement: A region's fill stays under everything drawn on it
 
 Every mark the collection draws on a cell SHALL read on every member of the
@@ -887,3 +873,27 @@ mistake's wash or the win flash, SHALL be told from every member.
 
 - **WHEN** a mark is measured on a member in the dark scheme
 - **THEN** it clears the floor the palette's test holds that mark to
+
+### Requirement: A region's color is one value a scheme in every game
+
+Every game that fills regions SHALL take its fills from the region palette as
+themselves, so that one color of the palette is one value in each scheme
+wherever it is drawn.
+
+#### Scenario: Map and Star Battle
+
+- **WHEN** Map's four fills and the region palette's first four are resolved
+  in either scheme
+- **THEN** each of Map's is the same color as its counterpart
+
+### Requirement: A mark of a region's color stands off a surface that is not the color
+
+A dot or a swatch drawn in a fill's color on a surface that is not the color,
+as Map's pencil stipples are on a region with no color yet, SHALL take a
+value of its own for that color that stands off the surface in both schemes.
+
+#### Scenario: A stipple in the dark scheme
+
+- **WHEN** a stipple of each of Map's four colors is measured on a region
+  with no color in the dark scheme
+- **THEN** it is lighter than the fill of the same color

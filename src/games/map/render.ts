@@ -6,7 +6,7 @@
  * layout); the canvas round it is the pencil-mode indicator's room (`origin`).
  */
 
-import { FOUR_FILLS } from "../../engine/color/colors.ts";
+import { FOUR_FILL_MARKS, FOUR_FILLS } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -66,6 +66,10 @@ export const COL_UNCOLORED = 12;
 export const COL_FLASH = 13;
 /** And under the flash's leading edge. */
 export const COL_FLASH_LEAD = 14;
+/** The first of the four colors as a pencil stipple, a dot on a region with
+ * no color yet: stronger than the fill in the dark scheme, where a dot of the
+ * fill's own value does not show on that surface. */
+export const COL_MARK_0 = 15;
 
 const FOUR = 4;
 const FIVE = 5;
@@ -87,6 +91,9 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;
+  FOUR_FILL_MARKS.forEach((mark, c) => {
+    ret[COL_MARK_0 + c] = mark;
+  });
   return ret;
 }
 
@@ -796,8 +803,8 @@ function drawSquare(
           y: coord(y, ts) + Math.floor(((yo + 1) * ts) / 5),
         },
         largeStipples ? Math.floor(ts / 4) : Math.floor(ts / 7),
-        COL_0 + c,
-        COL_0 + c,
+        COL_MARK_0 + c,
+        COL_MARK_0 + c,
       );
     }
 
@@ -1049,8 +1056,8 @@ export function redraw(
             y: cursorY + Math.trunc(((i * 2 - 3) * ts) / 10),
           },
           Math.floor(ts / 8),
-          COL_0 + i,
-          COL_0 + i,
+          COL_MARK_0 + i,
+          COL_MARK_0 + i,
         );
     dr.drawUpdate({ x: ds.dragX, y: ds.dragY, w: ts + 3, h: ts + 3 });
     ds.dragVisible = true;

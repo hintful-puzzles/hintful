@@ -126,7 +126,7 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     "y": 49,
   },
   {
-    "color": 76,
+    "color": 48,
     "h": 48,
     "op": "hatch",
     "period": 16,
@@ -183,7 +183,7 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     "r": 2,
   },
   {
-    "color": 76,
+    "color": 48,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -192,7 +192,7 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     "y": 49,
   },
   {
-    "color": 76,
+    "color": 48,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -201,7 +201,7 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     "y": 49,
   },
   {
-    "color": 76,
+    "color": 48,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -210,7 +210,7 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     "y": 95,
   },
   {
-    "color": 76,
+    "color": 48,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -506,7 +506,7 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     "y": 49,
   },
   {
-    "color": 76,
+    "color": 48,
     "h": 48,
     "op": "hatch",
     "period": 16,
@@ -891,10 +891,10 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     "y": 49,
   },
   {
-    "fill": 76,
+    "fill": 48,
     "fillRgb": "rgb(21, 113, 233)",
     "op": "polygon",
-    "outline": 76,
+    "outline": 48,
     "outlineRgb": "rgb(21, 113, 233)",
     "points": [
       [

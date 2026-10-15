@@ -111,8 +111,8 @@ type Steps = {
  *
  * The lightnesses are not free-hand: they are the result of maximizing the worst
  * pairwise distance inside every set the collection needs a player to tell apart
- * — the ten-member set, Mines' six counts, Signpost's eight region fills, Map's
- * four, the hint vocabulary, and each color's own three steps — subject to each
+ * — the ten-member set, Mines' six counts, the washes as a set of region
+ * fills, the hint vocabulary, and each color's own three steps — subject to each
  * name staying true (a "yellow" at lightness 0.45 is olive; a "blue" at 0.9 is
  * not blue). Where several solutions cleared every bar, the one closest to the
  * lightness each name naturally wants was taken. `colors.test.ts` re-measures
@@ -263,7 +263,7 @@ export const YELLOW_WASH: Color = of("YELLOW", "wash");
  *
  * A step of its own rather than {@link YELLOW_WASH}, for the reason
  * {@link TEAL_WASH_QUIET} is one: that wash's dark lightness is an output of
- * the search behind {@link EIGHT_FILLS} and {@link FOUR_FILLS}. In the light
+ * the search that made the washes a set of region fills. In the light
  * scheme the two are one value. In the dark scheme the wash is a muddy olive
  * as a field (owner, 2026-10-11, asking for more contrast), so the field is
  * lighter and carries the most chroma yellow has at that lightness, which
@@ -295,9 +295,9 @@ export const TEAL_WASH: Color = of("TEAL", "wash");
  * of, so it has to stay close enough to the board that they still win. Its one
  * consumer is `HINT_EVIDENCE_WASH`.
  *
- * A step of its own rather than a retune of {@link TEAL_WASH}, because that one
- * is a member of {@link EIGHT_FILLS} and {@link FOUR_FILLS}: its dark lightness
- * is an *output* of the search that keeps those sets distinguishable.
+ * A step of its own rather than a retune of {@link TEAL_WASH}, because that
+ * one's dark lightness is an *output* of the search that made the washes a
+ * set of region fills distinguishable from one another.
  *
  * The dark value is where two opposed requirements cross: the wash must be
  * *seen* against its board, and the action ring drawn on it (a target cell is
@@ -398,31 +398,6 @@ export const TEN_NAMES: readonly string[] = [
 ];
 
 /**
- * **Eight fills a mark can be drawn on** — Signpost's region backgrounds.
- *
- * The wash step throughout, because a region fill has to follow the board: light
- * under a light scheme, dark under a dark one, with the number and arrow the game
- * draws on top staying readable either way. That is also why a region set cannot
- * simply borrow {@link TEN}: those are colors, and half of them are too dark to
- * write on in light mode and too light in dark mode.
- *
- * Eight washes cannot be as separated as eight colors — a pastel set is close
- * together by construction, which is why upstream's own eight measured 0.071.
- * These measure 0.076 light and 0.100 dark (2026-09-11), so the set is better
- * than the one it replaces without pretending to be something a wash cannot be.
- */
-export const EIGHT_FILLS: readonly Color[] = [
-  GRAY_WASH,
-  RED_WASH,
-  GREEN_WASH,
-  PURPLE_WASH,
-  YELLOW_WASH,
-  BLUE_WASH,
-  PINK_WASH,
-  TEAL_WASH,
-];
-
-/**
  * **The two states of a two-state game**, where neither is the important one:
  * Unruly's two kinds of square. A game takes the pair from here and names no
  * hue of its own, so a different pair is this line, {@link TWO_NAMES} and
@@ -468,65 +443,70 @@ type Lch = readonly [l: number, c: number, h: number];
  *   (`ERROR_WASH`); the owner never liked it in Map (2026-10-13). A gray
  *   region reads as a wall in the light scheme and a hole in the dark.
  *
- * `dark` is the **quiet** value, for a board whose regions the puzzle gives:
- * the whole board is these and everything the player reads is drawn on them,
- * so they are dark enough for a mark to win. At a wash's 0.42 a star measured
- * 1.7:1 on its region and the hint's stripes 1.16:1. The dark yellow leaves
- * its hue a little way toward orange, since a yellow that dark is olive, a
- * muddy field (owner, 2026-10-11, of {@link YELLOW_WASH}).
+ * **One value a scheme, in every game** (the owner, 2026-10-15: consistency
+ * first). In the dark scheme the fills are dark enough for a mark to win on
+ * them, since everything the player reads is drawn there: at a wash's 0.42 a
+ * star measured 1.7:1 on its region and the hint's stripes 1.16:1. The dark
+ * yellow leaves its hue a little way toward orange, since a yellow that dark
+ * is olive, a muddy field (owner, 2026-10-11, of {@link YELLOW_WASH}).
  *
- * `answer` is the dark value where **the fill is the player's answer**, which
- * is Map: lighter and stronger, because there a filled region has to stand
- * off one with no color yet, a stipple of the color has to show on that
- * surface, and the color is named to the player, where at the quiet step the
- * yellow is brown and the pink wine. The light scheme has one value for both.
+ * `mark` is the first four's dark value as a **mark** of the color rather
+ * than a fill: a dot or a swatch drawn on a surface that is not the color,
+ * as Map's pencil stipples are on a region with no color yet. At the fill's
+ * own dark value such a dot measured 1.3:1 there. The light scheme has one
+ * value for both.
  */
 const REGION_DESIGN = {
-  yellow: {
-    light: [0.935, 0.078, 99],
-    dark: [0.36, 0.06, 85],
-    answer: [0.5, 0.095, 95],
-  },
+  yellow: { light: [0.935, 0.078, 99], dark: [0.36, 0.06, 85], mark: [0.5, 0.095, 95] },
   teal: {
     light: [0.895, 0.066, 190],
     dark: [0.355, 0.057, 192],
-    answer: [0.46, 0.074, 192],
+    mark: [0.46, 0.074, 192],
   },
   violet: {
     light: [0.88, 0.055, 277],
     dark: [0.35, 0.068, 282],
-    answer: [0.45, 0.095, 282],
+    mark: [0.45, 0.095, 282],
   },
-  pink: { light: [0.89, 0.056, 9], dark: [0.35, 0.066, 5], answer: [0.47, 0.088, 0] },
+  pink: { light: [0.89, 0.056, 9], dark: [0.35, 0.066, 5], mark: [0.47, 0.088, 0] },
   green: { light: [0.82, 0.062, 145], dark: [0.28, 0.06, 146] },
   blue: { light: [0.82, 0.062, 233], dark: [0.28, 0.057, 237] },
   peach: { light: [0.835, 0.06, 60], dark: [0.28, 0.06, 56] },
   orchid: { light: [0.826, 0.065, 323], dark: [0.28, 0.065, 323] },
-} as const satisfies Record<string, { light: Lch; dark: Lch; answer?: Lch }>;
+} as const satisfies Record<string, { light: Lch; dark: Lch; mark?: Lch }>;
 
 const fill = (light: Lch, dark: Lch): Color => token(oklch(...light), oklch(...dark));
 
 /**
- * **The fills of the regions a puzzle gives**, quiet in both schemes: see
- * {@link REGION_DESIGN}. A board takes the first four, six or eight, and
- * `regionFills` (`engine/region-fill.ts`) says which region takes which.
+ * **The fills of the regions on any board**: see {@link REGION_DESIGN}. A
+ * board takes the first four, six or eight, and `regionFills`
+ * (`engine/region-fill.ts`) says which region takes which.
  */
 export const REGION_FILLS: readonly Color[] = (
   ["yellow", "teal", "violet", "pink", "green", "blue", "peach", "orchid"] as const
 ).map((name) => fill(REGION_DESIGN[name].light, REGION_DESIGN[name].dark));
 
+/** Where Map's four are in {@link REGION_FILLS}, in the order of the numbers
+ * a save holds: the pink is where a red was, and the other three are where
+ * they were. */
+const MAP_ORDER = [3, 0, 1, 2] as const;
+const MAP_NAMES = ["pink", "yellow", "teal", "violet"] as const;
+
 /**
  * **Four fills that are a player's answer**, for the one set in the
  * collection whose size is a *theorem*: four colors suffice to color any
- * planar map, which is Map's puzzle.
- *
- * The first four of the region palette, at its `answer` step in the dark
- * scheme ({@link REGION_DESIGN}). In the order of the numbers a save holds:
- * the pink is where a red was, and the other three are where they were.
+ * planar map, which is Map's puzzle. The region palette's first four,
+ * themselves, so a Map region and a Star Battle region of one color are one
+ * color in both schemes.
  */
-export const FOUR_FILLS: readonly Color[] = (
-  ["pink", "yellow", "teal", "violet"] as const
-).map((name) => fill(REGION_DESIGN[name].light, REGION_DESIGN[name].answer));
+export const FOUR_FILLS: readonly Color[] = MAP_ORDER.map((k) => REGION_FILLS[k]);
+
+/** {@link FOUR_FILLS} as **marks** on a surface that is not the color: the
+ * same in the light scheme, the `mark` step in the dark
+ * ({@link REGION_DESIGN}). */
+export const FOUR_FILL_MARKS: readonly Color[] = MAP_NAMES.map((name) =>
+  fill(REGION_DESIGN[name].light, REGION_DESIGN[name].mark),
+);
 
 /**
  * {@link FOUR_FILLS}, as a player would say them. Map's hint names the color a
