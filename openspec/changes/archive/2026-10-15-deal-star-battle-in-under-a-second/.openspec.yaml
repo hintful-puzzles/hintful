@@ -1,0 +1,5 @@
+# No delta: the generation requirements hold as written (cells still move
+# one at a time between regions), and the menu is not in the spec.
+schema: spec-driven
+created: 2026-10-13
+skip_specs: true

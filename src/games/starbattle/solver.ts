@@ -283,59 +283,89 @@ function findExact(b: StarbattleBoard): Found | "contradiction" {
 }
 
 /**
- * The first run of `count` neighboring rows, or columns, whose need for stars
- * equals that of the regions lying wholly inside the run, or of the regions
- * reaching into it, and which leaves cells to cross out.
+ * The first run of neighboring rows, or columns, `count` long for each of
+ * `counts` in turn, whose need for stars equals that of the regions lying
+ * wholly inside the run, or of the regions reaching into it, and which leaves
+ * cells to cross out.
  */
 function findConfinement(
   b: StarbattleBoard,
-  count: number,
+  counts: readonly number[],
 ): (Confinement & { cells: number[] }) | null | "contradiction" {
   const { size } = b;
-  const regionUnits = Array.from({ length: size }, (_, r) => 2 * size + r);
-  const wanting = regionUnits
-    .map((unit) => ({ unit, need: b.need(unit), open: b.open(unit) }))
-    .filter((r) => r.need > 0);
+  const rowOf = (i: number): number => (i / size) | 0;
+  const columnOf = (i: number): number => i % size;
+  // Each region that still wants stars, with the first and last row and
+  // column its open cells reach: a run holds the region when it holds both
+  // ends, and meets it when it meets the span between them.
+  const wanting = Array.from({ length: size }, (_, r) => 2 * size + r).flatMap(
+    (unit) => {
+      const need = b.need(unit);
+      if (need <= 0) return [];
+      const open = b.open(unit);
+      const span = (at: (i: number) => number): [number, number] => [
+        Math.min(...open.map(at)),
+        Math.max(...open.map(at)),
+      ];
+      return [{ unit, need, open, spans: [span(rowOf), span(columnOf)] }];
+    },
+  );
+  const lineNeed = Array.from({ length: 2 * size }, (_, line) => b.need(line));
 
-  for (const base of [0, size]) {
-    for (let first = 0; first + count <= size; first++) {
-      const lines = Array.from({ length: count }, (_, j) => base + first + j);
-      const need = lines.reduce((sum, line) => sum + b.need(line), 0);
-      if (need === 0) continue;
-      const within = (i: number): boolean => {
-        const at = base === 0 ? (i / size) | 0 : i % size;
-        return at >= first && at < first + count;
-      };
+  for (const count of counts) {
+    for (const base of [0, size]) {
+      const axis = base === 0 ? 0 : 1;
+      for (let first = 0; first + count <= size; first++) {
+        const last = first + count - 1;
+        let need = 0;
+        for (let line = base + first; line <= base + last; line++)
+          need += lineNeed[line];
+        if (need === 0) continue;
+        const lines = (): number[] =>
+          Array.from({ length: count }, (_, j) => base + first + j);
+        const within = (i: number): boolean => {
+          const at = axis === 0 ? rowOf(i) : columnOf(i);
+          return at >= first && at <= last;
+        };
 
-      const inside = wanting.filter((r) => r.open.every(within));
-      const insideNeed = inside.reduce((sum, r) => sum + r.need, 0);
-      if (insideNeed > need) return "contradiction";
-      if (insideNeed === need) {
-        const held = new Set(inside.flatMap((r) => r.open));
-        const cells = lines.flatMap((line) => b.open(line)).filter((i) => !held.has(i));
-        if (cells.length > 0)
-          return {
-            lines,
-            regions: inside.map((r) => r.unit),
-            need,
-            rest: "lines",
-            cells,
-          };
-      }
+        const inside = wanting.filter((r) => {
+          const [lo, hi] = r.spans[axis];
+          return lo >= first && hi <= last;
+        });
+        const insideNeed = inside.reduce((sum, r) => sum + r.need, 0);
+        if (insideNeed > need) return "contradiction";
+        if (insideNeed === need) {
+          const held = new Set(inside.flatMap((r) => r.open));
+          const cells = lines()
+            .flatMap((line) => b.open(line))
+            .filter((i) => !held.has(i));
+          if (cells.length > 0)
+            return {
+              lines: lines(),
+              regions: inside.map((r) => r.unit),
+              need,
+              rest: "lines",
+              cells,
+            };
+        }
 
-      const reaching = wanting.filter((r) => r.open.some(within));
-      const reachingNeed = reaching.reduce((sum, r) => sum + r.need, 0);
-      if (reachingNeed < need) return "contradiction";
-      if (reachingNeed === need) {
-        const cells = reaching.flatMap((r) => r.open.filter((i) => !within(i)));
-        if (cells.length > 0)
-          return {
-            lines,
-            regions: reaching.map((r) => r.unit),
-            need,
-            rest: "regions",
-            cells: cells.sort((a, c) => a - c),
-          };
+        const reaching = wanting.filter((r) => {
+          const [lo, hi] = r.spans[axis];
+          return hi >= first && lo <= last && r.open.some(within);
+        });
+        const reachingNeed = reaching.reduce((sum, r) => sum + r.need, 0);
+        if (reachingNeed < need) return "contradiction";
+        if (reachingNeed === need) {
+          const cells = reaching.flatMap((r) => r.open.filter((i) => !within(i)));
+          if (cells.length > 0)
+            return {
+              lines: lines(),
+              regions: reaching.map((r) => r.unit),
+              need,
+              rest: "regions",
+              cells: cells.sort((a, c) => a - c),
+            };
+        }
       }
     }
   }
@@ -349,6 +379,8 @@ function findNeeded(b: StarbattleBoard): Found {
     const need = b.need(unit);
     if (need === 0) continue;
     const open = b.open(unit);
+    // One star has room wherever another open cell is left.
+    if (need === 1 && open.length > 1) continue;
     for (const cell of open) {
       const room = roomFor(
         b.size,
@@ -377,22 +409,27 @@ function findStarved(b: StarbattleBoard, kind: "crowded" | "starved", from = 0):
   // how many of them each unit holds.
   const ruledFor = new Int32Array(grid.length).fill(-1);
   const ruledIn = new Int32Array(b.units.length);
+  // The units a trial touches: its own and those holding a cell it rules out.
+  const hit: number[] = [];
   for (let cell = from; cell < grid.length; cell++) {
     if (grid[cell] !== BLANK) continue;
     const own = b.unitsAt(cell);
-    ruledIn.fill(0);
+    for (const unit of hit) ruledIn[unit] = 0;
+    hit.length = 0;
+    hit.push(...own);
     const rule = (i: number): void => {
       if (i === cell || ruledFor[i] === cell) return;
       ruledFor[i] = cell;
-      for (const unit of b.unitsAt(i)) ruledIn[unit]++;
+      for (const unit of b.unitsAt(i)) if (ruledIn[unit]++ === 0) hit.push(unit);
     };
     for (const i of b.touching(cell)) if (grid[i] === BLANK) rule(i);
     if (kind === "starved")
       for (const unit of own) if (needs[unit] === 1) open[unit].forEach(rule);
 
-    for (let unit = 0; unit < b.units.length; unit++) {
+    // In order of unit, so the unit a firing names is the first that
+    // starves.
+    for (const unit of new Set(hit.sort((a, c) => a - c))) {
       const mine = own.includes(unit);
-      if (!mine && ruledIn[unit] === 0) continue;
       const need = needs[unit] - (mine ? 1 : 0);
       if (need <= 0) continue;
       // One star fits wherever a cell is left, so only a unit that needs
@@ -463,15 +500,10 @@ function ladder(
     kind: "confined" | "banded",
     counts: readonly number[],
   ): Found | "contradiction" => {
-    for (const count of counts) {
-      const found = findConfinement(board, count);
-      if (found === "contradiction") return found;
-      if (found) {
-        const { cells, ...confinement } = found;
-        return { reason: { kind, ...confinement }, cells, mark: CROSSED };
-      }
-    }
-    return null;
+    const found = findConfinement(board, counts);
+    if (found === null || found === "contradiction") return found;
+    const { cells, ...confinement } = found;
+    return { reason: { kind, ...confinement }, cells, mark: CROSSED };
   };
   // Every run of more than one line and fewer than all of them, shortest
   // first.

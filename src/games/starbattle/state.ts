@@ -156,13 +156,14 @@ export function defaultParams(): StarbattleParams {
 
 export function presets(): PresetMenu<StarbattleParams> {
   return presetGrid(paramConfig, BOARDS, {
-    // Measured 2026-10-12: a Tricky board of two stars takes two seconds and
-    // more to deal where one turns up at all, and three stars have dealt
-    // only Easy boards.
-    tiers: (board) =>
-      board.stars === 1
-        ? null
-        : [DIFF_EASY, board.stars === 2 ? DIFF_NORMAL : DIFF_EASY],
+    // Measured 2026-10-15, the 95th of 100 deals: a Tricky board of two
+    // stars takes half a second at 9x9 and a second at 10x10, but 9 at 8x8,
+    // where a board seldom needs it; three stars take two seconds at Normal.
+    tiers: (board) => {
+      if (board.stars === 1) return null;
+      if (board.stars === 3) return [DIFF_EASY, DIFF_EASY];
+      return [DIFF_EASY, board.size > 8 ? DIFF_TRICKY : DIFF_NORMAL];
+    },
   });
 }
 

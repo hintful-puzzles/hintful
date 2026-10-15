@@ -702,8 +702,10 @@ preset:Two stars/Two stars: 8x8 Easy  full=8s2de  brief=8s2
 preset:Two stars/Two stars: 8x8 Normal  full=8s2dn  brief=8s2
 preset:Two stars/Two stars: 9x9 Easy  full=9s2de  brief=9s2
 preset:Two stars/Two stars: 9x9 Normal  full=9s2dn  brief=9s2
+preset:Two stars/Two stars: 9x9 Tricky  full=9s2dt  brief=9s2
 preset:Two stars/Two stars: 10x10 Easy  full=10s2de  brief=10s2
 preset:Two stars/Two stars: 10x10 Normal  full=10s2dn  brief=10s2
+preset:Two stars/Two stars: 10x10 Tricky  full=10s2dt  brief=10s2
 preset:Three stars/Three stars: 12x12 Easy  full=12s3de  brief=12s3
 bump:stars  full=5s2de  brief=5s2"
 `;

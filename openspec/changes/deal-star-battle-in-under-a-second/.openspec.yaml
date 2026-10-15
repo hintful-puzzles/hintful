@@ -1,5 +1,0 @@
-# No delta at filing: the session that takes this up writes the `starbattle`
-# delta for what it changes, and removes this line.
-schema: spec-driven
-created: 2026-10-13
-skip_specs: true

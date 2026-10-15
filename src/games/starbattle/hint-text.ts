@@ -108,7 +108,7 @@ function trial(t: Trial): Sentence {
   if (t.all) {
     if (cause)
       return so({
-        look: phrase`A star on ${here} would ${cause}, leaving ${unit} no open square${t.own ? ` for ${still}` : ""}`,
+        look: phrase`A star on ${here} would ${cause}, leaving ${unit} ${t.own ? `nowhere for ${still}` : "no open square"}`,
         move,
       });
     const does = t.touches ? "touch" : "rule out";

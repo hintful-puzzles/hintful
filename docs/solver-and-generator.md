@@ -1208,8 +1208,28 @@ Rules for any of them:
   failure.** Count the draws a board takes: a few long ones is a wait and is
   dealt, and a thousand thrown away is a failure and is refused, past the
   unit the count follows.
+- **A second answer a move did not touch still stands.** Keep every one the
+  search meets, drop those with a value in the cell a move changed, and ask
+  the search again only when none is left.
+- **A search that met nothing is the dearest one.** It spends its whole
+  budget. Let the cheap move go on alone while it gains, and ask again when
+  it stops gaining or has nothing to move.
+- **Give up a draw that has stopped coming closer.** Count the moves since
+  it last reached its best, not the moves in all: a fresh draw comes right
+  sooner than one that is going round.
+- **Aim at the tier, not under it.** A mend that stops at the first board
+  the tier's deductions finish throws away the ones an easier tier also
+  finishes. Walk such a board on, keeping it finished at the tier, for as
+  many moves as the deal has spent mending: where boards come right
+  quickly, a fresh draw is cheaper than a long walk, and where they come
+  right slowly, the reverse. Exemplar:
+  [`starbattle/generator.ts`](../src/games/starbattle/generator.ts).
 - **Try a neighboring game's mend, and say when it does not carry.**
 - **Measure and say which boards the change deals.**
+- **Time a generator as the browser runs it, not under vitest**, which ran
+  Star Battle's about twice as slow as Chrome (2026-10-15). Node on the
+  code bundled by `rolldown` came within a third of Chrome, a little
+  slower.
 
 ### A division into regions is the engine's
 

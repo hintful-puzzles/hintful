@@ -1,8 +1,7 @@
 # deal-star-battle-in-under-a-second
 
-**Status: scaffolded 2026-10-13 at the owner's word, not started.** It
-needs no answer from the owner to start. It has no `tasks.md` yet: the
-session that takes it up writes them after re-taking the figures below.
+**Status: done 2026-10-15, and archived with its commit.** The figures
+below are as filed; `tasks.md` has them re-taken and what was done.
 
 ## Why
 
