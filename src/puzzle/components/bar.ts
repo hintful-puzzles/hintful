@@ -222,7 +222,7 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
    * whatever its neighbors give up, so a shorter caption would move both.
    */
   private renderCaption(entry: CommandEntry) {
-    const caption = entry.barLabel ?? entry.label;
+    const caption = entry.label;
     return entry.standsInFor === undefined
       ? html`<span part="caption">${caption}</span>`
       : html`<span part="caption" data-room=${entry.standsInFor}><span>${caption}</span></span>`;

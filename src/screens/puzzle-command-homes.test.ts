@@ -187,7 +187,7 @@ async function homes(puzzle: FakePuzzle, barLength: number) {
 
 /** The Bar lengths a window can produce for a game with a hint: the floor,
  * and the whole leading run. */
-const BAR_LENGTHS = [4, 5];
+const BAR_LENGTHS = [4];
 
 /**
  * Commands that are deliberately in no panel, one entry per command with the
@@ -266,7 +266,7 @@ describe("every puzzle command is in exactly one of the three panels", () => {
     const commands = list.flatMap((entry) =>
       entry.kind === "command" ? [entry.id] : [],
     );
-    expect(barCapacity(list)).toBe(5);
+    expect(barCapacity(list)).toBe(4);
 
     const found = await homes(puzzle, barLength);
     expect(found.Bar, "the Bar is the list's leading entries").toEqual(
@@ -368,10 +368,19 @@ describe("every puzzle command is in exactly one of the three panels", () => {
     }
   });
 
-  it("fills the Bar's four with the next entry where a game has no hint", async () => {
+  it("keeps the Bar to its own three where a game has no hint", async () => {
     const found = await homes(fullyCapablePuzzle({ canHint: false }), MIN_BAR_LENGTH);
-    expect(found.Bar).toEqual(["undo", "redo", "check-and-save", "quick-load"]);
-    expect(found.Menu).not.toContain("quick-load");
+    expect(found.Bar).toEqual(["undo", "redo", "check-and-save"]);
+  });
+
+  it("puts Back to last save in the Menu, beside the timeline", async () => {
+    const puzzle = fullyCapablePuzzle();
+    const found = await homes(puzzle, MIN_BAR_LENGTH);
+    expect(found.Bar).not.toContain("quick-load");
+    expect(found.Menu).toContain("quick-load");
+    const list = commandList(puzzle as never, "Light Up");
+    const at = list.findIndex((entry) => entry.id === "quick-load");
+    expect(list[at - 1]?.kind).toBe("timeline");
   });
 
   it("shows the help banner exactly once, whether or not the game can hint", () => {
@@ -395,7 +404,7 @@ describe("every puzzle command is in exactly one of the three panels", () => {
     // type a character are not held to it: the on-screen key panel is an input
     // surface, where the character is the label.
     const puzzle = fullyCapablePuzzle();
-    const bar = await mountBar(puzzle, 5);
+    const bar = await mountBar(puzzle, MIN_BAR_LENGTH);
     const menu = await mountMenu(puzzle, MIN_BAR_LENGTH);
     const controls = await mountControls(puzzle);
     const unlabeled = [
@@ -403,8 +412,8 @@ describe("every puzzle command is in exactly one of the three panels", () => {
       ...(menu.shadowRoot?.querySelectorAll("[part=row]") ?? []),
       ...(controls.shadowRoot?.querySelectorAll("wa-button") ?? []),
     ].filter((el) => (el.textContent ?? "").trim() === "");
-    // Vacuity floor: five commands, the Menu button and the button toggle.
-    expect(bar.shadowRoot?.querySelectorAll("button").length).toBe(7);
+    // Vacuity floor: four commands, the Menu button and the button toggle.
+    expect(bar.shadowRoot?.querySelectorAll("button").length).toBe(6);
     expect(unlabeled.map((el) => el.outerHTML)).toEqual([]);
   });
 });
@@ -449,13 +458,13 @@ describe("what a game brings is in the Game controls, and only there", () => {
 
   it("draws the same Bar for Solo and for Tracks", async () => {
     const solo = commandsIn(
-      (await mountBar(puzzleFor("solo"), 5)).shadowRoot as ParentNode,
+      (await mountBar(puzzleFor("solo"), MIN_BAR_LENGTH)).shadowRoot as ParentNode,
     );
     document.body.replaceChildren();
     const tracks = commandsIn(
-      (await mountBar(puzzleFor("tracks"), 5)).shadowRoot as ParentNode,
+      (await mountBar(puzzleFor("tracks"), MIN_BAR_LENGTH)).shadowRoot as ParentNode,
     );
-    expect(solo).toHaveLength(5);
+    expect(solo).toHaveLength(4);
     expect(tracks).toEqual(solo);
   });
 
@@ -577,7 +586,7 @@ describe("a menu inside the Menu", () => {
     for (const barLength of [0, 3, 4, 5, 6, 9]) {
       const { bar, menu } = cutCommandList(list, barLength);
       expect([...bar, ...menu]).toEqual(list);
-      expect(bar.length).toBe(Math.min(5, Math.max(MIN_BAR_LENGTH, barLength)));
+      expect(bar.length).toBe(Math.min(4, Math.max(MIN_BAR_LENGTH, barLength)));
     }
   });
 });

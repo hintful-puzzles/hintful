@@ -38,8 +38,6 @@ export interface CommandEntry {
   readonly group: CommandGroup;
   readonly icon: string;
   readonly label: string;
-  /** The caption on the Bar, where it must be shorter than the Menu's row. */
-  readonly barLabel?: string;
   /** The caption this one stands in for, for a moment. The Bar's slot keeps
    * that caption's room meanwhile, so the swap moves no neighbor. */
   readonly standsInFor?: string;
@@ -107,10 +105,6 @@ export function commandList(puzzle: CommandPuzzle, gameName: string): CommandEnt
           standsInFor: CHECK_AND_SAVE,
         })
       : command("bar", "check-and-save", "check-and-save", CHECK_AND_SAVE),
-    command("bar", "quick-load", "back-to-last-save", "Back to last save", {
-      barLabel: "Load",
-      disabled: !savedGames.hasQuickSave(puzzle.puzzleId),
-    }),
 
     {
       kind: "help-link",
@@ -139,6 +133,12 @@ export function commandList(puzzle: CommandPuzzle, gameName: string): CommandEnt
     ),
 
     { kind: "timeline", id: "timeline", group: "board", icon: "history", label: "" },
+    // Beside the timeline, which also takes the board back to an earlier
+    // position, and not on the Bar: it is pressed far less often than the
+    // commands there (owner, 2026-10-16).
+    command("board", "quick-load", "back-to-last-save", "Back to last save", {
+      disabled: !savedGames.hasQuickSave(puzzle.puzzleId),
+    }),
     command("board", "restart-game", "restart-game", "Start over"),
     // Beside Start over and not on the Bar: the two commands that put a
     // board away are together, and neither is pressed often enough to hold a
