@@ -87,6 +87,11 @@ plainly for it.
 
 ## 6. A placement that brings what it rules out
 
+- [x] 6.1 Filed as `bring-what-a-placement-rules-out`. It is a feature a
+      player sees in Tents and Light Up, which wants the owner's look before
+      it ships. It is also wider than Star Battle: `auto-pencil` in the
+      candidate games is the same aid over notes, wired per game.
+
 ## 7. The skeleton's hint stripes a line
 
 - [x] 7.1 The second rung's "where they meet" is a stripes reference to
@@ -102,15 +107,60 @@ plainly for it.
 
 ## 8. A game's spec before its change archives
 
+- [x] 8.1 `spec-subjects.mjs` holds a game with no spec through the delta
+      of the open change that adds it, so a game is committed before its
+      acceptance and its archive merges the spec as any change does. Seen
+      2026-10-15 with Star Battle's spec moved into a probe change: the same
+      1823 requirements read, a title stripped of its subject refused, and
+      the spec removed from both places refused.
+- [x] 8.2 `docs/new-game.md` § "What a game's spec holds", and the
+      requirement in `repo-layout`.
+
 ## 9. `npm run game` runs the gate checks that read one game
+
+- [x] 9.1 It runs `absence-spelling`, `unused-exports`, `spec-subjects` and
+      `openspec validate --all --strict`, about six seconds together
+      (measured 2026-10-15), each shown only where it refuses. A planted
+      `| null | undefined` in an unused export was refused by two of them.
+- [x] 9.2 `docs/testing.md` § "A game's verdict in one command".
 
 ## 10. A census for a generator being written
 
+- [x] 10.1 `npm run deal-walk` with `DEAL_WALK_CELLS` already dealt named
+      params a number of times and timed them. A named cell's line now also
+      has the tries at the deal's outermost retry loop (`countingTries` in
+      `retry-limit.ts`, which tallies every guard by label) and the boards
+      by the easiest tier that finishes each. Seen 2026-10-15 on Star
+      Battle: `8s2dn` took a median of 19 tries and every board was Normal;
+      `8s2de` came out Easy.
+- [x] 10.2 `docs/solver-and-generator.md` § "Bound a generator by its tail,
+      not its median", and the script's header.
+
 ## 11. `presetGrid` and rulesets
+
+- [x] 11.1 `TIERS_NOT_OFFERED` in `preset-menu-shape.test.ts` is keyed by
+      ruleset, and the check compares each ruleset's missing tiers with its
+      own entry. Star Battle's entry was stale: since
+      `deal-star-battle-in-under-a-second` two stars offer every tier, and
+      only three stars leave out Normal and Tricky, now with the figures
+      measured there. The same entry under "Two stars" is refused.
+- [x] 11.2 `docs/mechanics.md` § "The preset menu is a grid".
 
 ## 12. The upstream params table is required of every game not `own`
 
+- [x] 12.1 The table and its check move to
+      `src/puzzle/upstream-params.test.ts`, beside the catalog, and the
+      check requires an entry of exactly the games whose `collection` is not
+      `own`. `engine/params-read-whole.test.ts` keeps the strings no game
+      reads.
+- [x] 12.2 The requirement in `engine-params` said every registered game
+      owes upstream strings, untrue since Star Battle: modified.
+      `docs/mechanics.md` and `docs/new-game.md` point at the new file.
+
 ## 13. Close
 
-- [ ] 13.1 Run Star Battle in the app: a deal, the hint's gesture, its marks.
-- [ ] 13.2 Specs synced, archive, push.
+- [x] 13.1 Run Star Battle in the app: a deal of 8x8 Normal, its hint
+      applied step by step through the gesture `verbClicks` now chooses,
+      and a step whose sentence names a region, striped and ringed through
+      the sidecar (2026-10-15, Chrome).
+- [x] 13.2 Specs synced, archive, push.

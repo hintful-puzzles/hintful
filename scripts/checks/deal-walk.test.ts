@@ -36,7 +36,7 @@ import type { Game, ParamConfigItem } from "../../src/engine/game.ts";
 import { paramsError } from "../../src/engine/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { getTsGame, registeredGameIds } from "../../src/engine/registry.ts";
-import { RetryLimitExceeded } from "../../src/engine/retry-limit.ts";
+import { countingTries, RetryLimitExceeded } from "../../src/engine/retry-limit.ts";
 import { leafPresets } from "../../src/engine/testing/presets.ts";
 import type { DealWalkCell, DealWalkState } from "../deal-walk-report.ts";
 
@@ -135,6 +135,18 @@ function ladders(game: AnyGame): Rung[][] {
 
 const slowest = (cell: DealWalkCell): number => Math.max(0, ...cell.ms);
 
+/** The name of the easiest tier whose deductions finish the board, `none`
+ * where none does, or `untiered`: what a generator still being written deals,
+ * before its tier gate is trusted. */
+function lowestTier(game: AnyGame, params: Params, desc: string): string {
+  const tier = difficultyChoiceItem<Params>(game);
+  if (tier === null || game.difficulty === undefined) return "untiered";
+  const cap = tier.choices.findIndex(
+    (_, c) => game.difficulty?.solveAtCap(params, desc, c) === "solved",
+  );
+  return cap < 0 ? "none" : tier.choices[cap];
+}
+
 /** Whether a ladder ends at this cell: it is past the point of being quick. */
 const ends = (cell: DealWalkCell): boolean =>
   cell.died !== null || cell.threw !== null || slowest(cell) > STOP_MS;
@@ -175,6 +187,8 @@ function walk(id: string, statePath: string): void {
           label,
           refusal,
           ms: [],
+          tries: [],
+          tiers: [],
           gaveUp: 0,
           threw: null,
           died: null,
@@ -188,13 +202,19 @@ function walk(id: string, statePath: string): void {
         state.inFlight = label;
         save();
         const started = performance.now();
+        const tries = new Map<string, number>();
         try {
-          game.newDesc(params, randomNew(`deal-walk-${id}-${label}-${seed}`));
+          const { desc } = countingTries(tries, () =>
+            game.newDesc(params, randomNew(`deal-walk-${id}-${label}-${seed}`)),
+          );
+          if (asked !== null) cell.tiers.push(lowestTier(game, params, desc));
         } catch (e) {
           if (e instanceof RetryLimitExceeded) cell.gaveUp++;
           else cell.threw = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
         }
         cell.ms.push(Math.round(performance.now() - started));
+        // The deal's outermost loop is the guard that tried first.
+        cell.tries.push(tries.values().next().value ?? 0);
         // A slow cell on a ladder is dealt for about as long as the deal that
         // would end the ladder, and no longer: the slow cells are most of a
         // walk. A cell asked for by name has every deal it was promised.

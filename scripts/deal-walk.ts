@@ -29,6 +29,9 @@
  *
  * deals each of those params twelve times, however long they take and however
  * many never come back, and prints the line instead of writing the report.
+ * A named cell's line also has its deals' tries at their outermost retry loop
+ * and its boards by the easiest tier that finishes each, which is the census
+ * of a generator still being written: register the game, and name its params.
  *
  * Settings, all environment variables: `DEAL_WALK_SEEDS` deals a cell at most (4),
  * `DEAL_WALK_STOP_MS` the deal that ends a ladder (10,000),
@@ -176,6 +179,18 @@ function renderCell(cell: DealWalkCell): string {
     parts.push(worst < 100 ? "quick" : `${seconds(mean)} s, slowest ${seconds(worst)}`);
   }
   const deals = cell.ms.length + cell.lost;
+  // A cell asked for by name also says how its deals went, for a generator
+  // still being written.
+  if (cell.tiers.length > 0) {
+    const sorted = [...cell.tries].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    parts.push(`tries median ${median}, most ${sorted[sorted.length - 1]}`);
+    const byTier = new Map<string, number>();
+    for (const t of cell.tiers) byTier.set(t, (byTier.get(t) ?? 0) + 1);
+    parts.push(
+      `boards by easiest tier that finishes them: ${[...byTier].map(([t, n]) => `${t} ${n}`).join(", ")}`,
+    );
+  }
   if (cell.gaveUp > 0) parts.push(`gave up on ${cell.gaveUp} of ${deals}`);
   if (cell.threw !== null) parts.push(`threw ${cell.threw}`);
   if (cell.died !== null) parts.push(`**${cell.died}** on ${cell.lost} of ${deals}`);

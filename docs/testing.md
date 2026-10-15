@@ -253,9 +253,13 @@ blocks at any indent.
 
 Run `npm run game -- <id>` while you write a game, after each concern you
 change. It is about a minute, and it is what a commit staging the game would
-run: the typecheck, biome over the game's directory, the game's own tests,
+run: the typecheck, biome over the game's directory, the gate's node checks
+that read a game's source or its spec in seconds (absence spelling, unused
+exports, the spec's subjects, openspec's strict form), the game's own tests,
 and every cross-game guard that reaches the game, with the other games' cases
-skipped ([`scripts/game.ts`](../scripts/game.ts)).
+skipped ([`scripts/game.ts`](../scripts/game.ts)). The node checks read the
+whole tree, so a refusal there may be another file's, and unused exports
+reads only files git tracks: `git add -N` a new game's files first.
 
 Do not take a green `vitest run src/games/<game>` as the game's coverage. Its
 input paths, save round-trip, params codec and its source text (color

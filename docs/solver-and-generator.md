@@ -1309,6 +1309,13 @@ board somewhere between 1.5 and 4 times the menu's largest. A cell it lists
 is a few deals, enough to find where a ladder leaves a second and not enough
 to place a line; count the sizes each side of a bound before writing it.
 
+**The census of a generator you are writing is the same tool**, with the
+cells named: `DEAL_WALK_CELLS="8s2dn 9s2dt" DEAL_WALK_SEEDS=20 npm run
+deal-walk -- <game>` prints each cell's time, its deals' tries at the
+outermost retry loop, and its boards by the easiest tier that finishes each.
+The game must be registered. Do not write a throwaway test that throws its
+table.
+
 ### A Custom size is not refused for its wait
 
 **Refuse a size in `validateParams` only for what a wait does not fix.** The

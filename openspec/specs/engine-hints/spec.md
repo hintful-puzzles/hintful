@@ -1940,12 +1940,12 @@ one target over values the step accepts) stays the game's own gesture.
 
 ### Requirement: verbClicks chooses each click's button by the verb the step keeps
 
-The engine SHALL choose each target's button by applying each button's declared
-verb there, left before right, and keeping the first whose move the game's
-`hintKeepTrack` judges on the step, judging a copy of the step and applying the
-verbs to a copy of the `Ui`. It SHALL aim each click at the geometry's
-`pointAt`, SHALL end the gesture at the click that completes the step, and
-SHALL throw, naming the target, where no button's verb keeps the step.
+The engine SHALL judge each button's verb at a target with the game's
+`hintKeepTrack`, on copies of the step and the `Ui`, and of the buttons the
+step keeps SHALL take one that completes it, then one that shrinks it, then
+the first, left before right. It SHALL aim each click at `pointAt`, SHALL end
+the gesture at the click that completes the step, and SHALL throw, naming the
+target, where no button's verb keeps the step.
 
 #### Scenario: The button is the one the step keeps
 
@@ -1953,6 +1953,12 @@ SHALL throw, naming the target, where no button's verb keeps the step.
   black while the right button's makes it white
 - **THEN** `verbClicks` clicks the square with the right button, at its
   `pointAt`
+
+#### Scenario: A press only on the way is not the gesture's
+
+- **WHEN** a press cycle's `hintKeepTrack` keeps the left button's click as on
+  the way to the step's mark, and the right button's click makes the mark
+- **THEN** `verbClicks` clicks with the right button
 
 #### Scenario: The step and the Ui are left as they were
 

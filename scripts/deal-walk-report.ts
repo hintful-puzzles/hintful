@@ -11,6 +11,11 @@ export interface DealWalkCell {
   refusal: string | null;
   /** Each deal's time in milliseconds, a deal that gave up included. */
   ms: number[];
+  /** Each deal's tries at its outermost retry loop, 0 where it has none. */
+  tries: number[];
+  /** Each board's easiest tier that finishes it, for a cell asked for by
+   * name (`DEAL_WALK_CELLS`). */
+  tiers: string[];
   /** How many deals ran their retry bound out. */
   gaveUp: number;
   /** The error of a deal that threw anything else, which a player gets as a

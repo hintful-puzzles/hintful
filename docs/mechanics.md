@@ -200,8 +200,9 @@ compatibility decision for the owner.
   returns.
 - **A letter upstream's encoder writes for a setting this game has no field
   for is read by name**, with `unusedLetter` or an arm of its own. Add a new
-  port's upstream strings, from its `encode_params`, to
-  `params-read-whole.test.ts`.
+  port's upstream strings, from its `encode_params`, to `UPSTREAM` in
+  [`upstream-params.test.ts`](../src/puzzle/upstream-params.test.ts), which
+  requires an entry of every game whose catalog `collection` is not `own`.
 - **`validateParams` returns the reason, or `null` for valid**: one
   sentence with its full stop, saying what to change in the dialog's own
   words ("Width times height must be at most 54.", not "Grid is too big")
@@ -391,7 +392,8 @@ What a game does to fit it:
   menu.
 - **A tier left off every board of a ruleset, for a reason other than every
   board refusing it, goes in the test's `TIERS_NOT_OFFERED`** with the
-  reason.
+  reason, under the ruleset's name, so that each ruleset's reason is its
+  own.
 - **A rule modifier, or a second kind of board, has one line after the
   grid.** A second kind of board may instead have a short run of tiers.
 - **The smallest board at the easiest tier goes first.** `puzzle-screen.ts`

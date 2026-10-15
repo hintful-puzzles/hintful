@@ -204,7 +204,7 @@ reproduces is the one outcome to avoid.
 | "Did this move change anything?" by comparing states | The engine's: the midend keeps a move that left the board as it was out of the history. Write no comparison of your own: [`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE". |
 | Editor-only move letters (upstream `#ifdef EDITOR`) | Do not map them, and say so in `design.md`. |
 | "Print this puzzle" | No printing exists. Do not promise it. |
-| A params string upstream's encoder writes (a game ported from upstream) | Record every form the C `encode_params` writes in `UPSTREAM` in [`params-read-whole.test.ts`](../src/engine/params-read-whole.test.ts), so each still decodes. Nothing fails for a port that leaves it out; a game written here has no entry. |
+| A params string upstream's encoder writes (a game ported from upstream) | Record every form the C `encode_params` writes in `UPSTREAM` in [`upstream-params.test.ts`](../src/puzzle/upstream-params.test.ts), so each still decodes. A game whose catalog `collection` is not `own` fails without an entry; a game written here has none. |
 
 ## File anatomy
 
@@ -289,7 +289,10 @@ and that a spec has the subjects its game owes: `Rules`, `Params`,
 `Description` and `Controls` always, `Hint` for a game with a hint, `Status
 bar` for one with a status bar, `Generation` for one with tiers. It reads the
 title and cannot tell that a requirement sits under the wrong subject, so move
-one you find misfiled. Archiving appends the requirements a delta adds to the
+one you find misfiled. A game whose change is not archived yet has its spec
+only as that change's delta, and the check holds the delta: the game is
+committed and pushed before the owner accepts it, and archiving merges the
+spec as for any change. Archiving appends the requirements a delta adds to the
 end of the file; `node scripts/checks/spec-subjects.mjs --fix` puts the spec
 back in order and changes no word.
 

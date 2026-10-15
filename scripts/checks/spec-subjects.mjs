@@ -18,6 +18,9 @@
  * gate"), which is why this is a script of the fast prefix and reads the
  * record, where a test would have read the object.
  *
+ * A game added by a change that is not archived yet has no spec here, only
+ * that change's delta, and the delta is what is held.
+ *
  * Archiving a change appends the requirements it adds to the end of the spec,
  * so a delta that adds one leaves the spec out of order:
  *
@@ -80,6 +83,17 @@ function recordedMembers() {
   return members;
 }
 
+const CHANGES_DIR = "openspec/changes";
+
+/** The delta an open change holds for `game`'s spec, or null. */
+function openDelta(game) {
+  const found = readdirSync(CHANGES_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name !== "archive")
+    .map((entry) => `${CHANGES_DIR}/${entry.name}/specs/${game}/spec.md`)
+    .filter((path) => existsSync(path));
+  return found[0] ?? null;
+}
+
 /** A spec's text as its heading and its requirements, which is all of it. */
 function readParts(path) {
   const markdown = readFileSync(path, "utf8");
@@ -103,9 +117,12 @@ const failures = [];
 let requirementCount = 0;
 let moved = 0;
 for (const game of games) {
-  const path = specPath(game);
-  if (!existsSync(path)) {
-    failures.push(`${path}: the game has no spec`);
+  // A game whose change waits on the owner's acceptance has its spec only as
+  // that change's delta, which archiving merges; until then the delta is
+  // what is held.
+  const path = existsSync(specPath(game)) ? specPath(game) : openDelta(game);
+  if (path === null) {
+    failures.push(`${specPath(game)}: the game has no spec, nor one in an open change`);
     continue;
   }
   const { markdown, requirements, join } = readParts(path);

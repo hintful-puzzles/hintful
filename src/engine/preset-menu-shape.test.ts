@@ -45,20 +45,29 @@ function kindItems(g: AnyGame): Item[] {
   );
 }
 
+/** The key of a game's ledger entry when it has no ruleset. */
+const EVERY_BOARD = "every board";
+
 /**
- * Tiers a game's menu leaves out, with why. A tier every board of the menu
- * refuses needs no entry: the check finds that by asking `paramsError`.
+ * Tiers a game's menu leaves out, with why, by ruleset: the ruleset's name,
+ * or {@link EVERY_BOARD}. A tier every board of the menu refuses needs no
+ * entry: the check finds that by asking `paramsError`.
  */
-const TIERS_NOT_OFFERED: Record<string, Record<string, string>> = {
+const TIERS_NOT_OFFERED: Record<string, Record<string, Record<string, string>>> = {
   starbattle: {
-    Normal: "one star and two offer it; three stars have dealt only Easy boards",
-    Tricky:
-      "one star offers it; with two a board takes two seconds and more to deal, and with three none has been dealt",
+    "Three stars": {
+      Normal:
+        "a 12x12 board takes two seconds, the 95th percentile of 100 deals (2026-10-15)",
+      Tricky:
+        "a 12x12 board takes thirteen seconds, the 95th percentile of 33 deals (2026-10-15)",
+    },
   },
   group: {
-    Hard: "the menu's 6x6 and 8x8 refuse it with the identity shown, and a 12x12 takes eleven seconds",
-    Unreasonable:
-      "6x6 and 8x8 deal it, and it would stand a tier apart from the rest of either board's run",
+    [EVERY_BOARD]: {
+      Hard: "the menu's 6x6 and 8x8 refuse it with the identity shown, and a 12x12 takes eleven seconds",
+      Unreasonable:
+        "6x6 and 8x8 deal it, and it would stand a tier apart from the rest of either board's run",
+    },
   },
 };
 
@@ -120,23 +129,29 @@ describe("a tiered game's menu is a grid", () => {
     if (tier === null) throw new Error("unreachable");
     const ruleset = rulesetField(g);
     const leaves = leafPresets(g);
-    const groups = ruleset
-      ? ruleset.choices.map((_, r) => leaves.filter((l) => ruleset.get(l.params) === r))
-      : [leaves];
-    const missing = new Set<string>();
-    for (const group of groups) {
+    const groups: [string, typeof leaves][] = ruleset
+      ? ruleset.choices.map((name, r) => [
+          name,
+          leaves.filter((l) => ruleset.get(l.params) === r),
+        ])
+      : [[EVERY_BOARD, leaves]];
+    const missing: Record<string, string[]> = {};
+    for (const [name, group] of groups) {
       const held = new Set(group.map((l) => tier.get(l.params)));
-      tier.choices.forEach((name, t) => {
-        if (held.has(t)) return;
-        const dealable = group.some(
-          (l) => paramsError(g, withTier(g, l.params, t), true) === null,
-        );
-        if (dealable) missing.add(name);
-      });
+      const left = tier.choices.filter(
+        (_, t) =>
+          !held.has(t) &&
+          group.some((l) => paramsError(g, withTier(g, l.params, t), true) === null),
+      );
+      if (left.length > 0) missing[name] = left.sort();
     }
-    expect([...missing].sort()).toEqual(
-      Object.keys(TIERS_NOT_OFFERED[id] ?? {}).sort(),
+    const ledger = Object.fromEntries(
+      Object.entries(TIERS_NOT_OFFERED[id] ?? {}).map(([name, reasons]) => [
+        name,
+        Object.keys(reasons).sort(),
+      ]),
     );
+    expect(missing).toEqual(ledger);
   });
 
   it("looked at the tiered games", () => {

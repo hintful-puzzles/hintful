@@ -103,6 +103,26 @@ export function underDealTries<T>(tries: number, deal: () => T): T {
   }
 }
 
+/** The tries every guard has made under {@link countingTries}, by label, or
+ * `null` where nothing counts. */
+let tally: Map<string, number> | null = null;
+
+/**
+ * Run `deal`, writing into `tries` how many tries each guard under it made,
+ * by its label, in the order the guards first tried: so the first is the
+ * deal's outermost loop. For a census of a generator (`npm run deal-walk`),
+ * which wants to know how often a draw comes to nothing.
+ */
+export function countingTries<T>(tries: Map<string, number>, deal: () => T): T {
+  const outer = tally;
+  tally = tries;
+  try {
+    return deal();
+  } finally {
+    tally = outer;
+  }
+}
+
 /**
  * Returns a guard to call once per attempt, at the top of a retry loop. It
  * throws {@link RetryLimitExceeded} when the bound is spent:
@@ -128,6 +148,7 @@ export function retryLimit(label: string, max?: number): () => void {
   let attempts = 0;
   return () => {
     attempts++;
+    tally?.set(label, (tally.get(label) ?? 0) + 1);
     if (deadline !== null) {
       if (performance.now() > deadline)
         throw new RetryLimitExceeded(label, attempts - 1, ", at the deal's deadline");
