@@ -1,5 +1,2 @@
-# No delta at filing: the session that takes this up writes the deltas once
-# it has measured whether auto-pencil joins, and removes this line.
 schema: spec-driven
 created: 2026-10-15
-skip_specs: true

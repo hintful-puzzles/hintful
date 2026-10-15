@@ -12,6 +12,8 @@ orthogonally adjacent to exactly the given number of lights.
 
 A square holding a cross takes no light until you remove the cross (right-click it again), and a square holding a light takes no cross.
 
+A light that gives a numbered wall all its lights rules out the wall's other squares. {{rules-out}}
+
 ## Hints
 
 **Hint** explains the next step rather than simply making it. Each step either puts a bulb in a square or, when a square "can't hold a bulb", marks it with a cross. The hint reasons from the numbers and your own bulbs and crosses, so it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. A *dark* square, in its words, is a blank square no bulb lights yet; a *free* one is a blank square with neither a bulb nor a cross.

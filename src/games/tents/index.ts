@@ -338,6 +338,35 @@ function solve(
  * belongs), and every link no pairing of that solution can hold. Blanks are
  * never mistakes; a non-uniquely-solvable board yields none. The hint takes
  * tents, grass and links as facts, so this must vouch for all three. */
+/**
+ * The open squares each new tent rules out at a glance, as grass: the eight
+ * round it, and the rest of its row or column where it is the last tent the
+ * number asks for.
+ */
+function ruledOut(before: TentsState, after: TentsState): TentsMove | null {
+  const { w, h, grid, numbers } = after;
+  const tentsIn = (cells: readonly number[]) => cells.filter((i) => grid[i] === TENT);
+  const out = new Set<number>();
+  grid.forEach((v, i) => {
+    if (v !== TENT || before.grid[i] === TENT) return;
+    const x = i % w;
+    const y = (i / w) | 0;
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++)
+        if (x + dx >= 0 && x + dx < w && y + dy >= 0 && y + dy < h)
+          out.add((y + dy) * w + x + dx);
+    const row = Array.from({ length: w }, (_, c) => y * w + c);
+    const column = Array.from({ length: h }, (_, r) => r * w + x);
+    if (tentsIn(row).length === numbers[w + y]) for (const c of row) out.add(c);
+    if (tentsIn(column).length === numbers[x]) for (const c of column) out.add(c);
+  });
+  const cells = [...out]
+    .filter((i) => grid[i] === BLANK)
+    .sort((a, b) => a - b)
+    .map((i) => ({ x: i % w, y: (i / w) | 0, v: NONTENT }));
+  return cells.length === 0 ? null : { type: "cells", cells };
+}
+
 function findMistakes(state: TentsState): readonly TentsMistake[] {
   const { ret, soln } = solveFromClues(state);
   if (ret !== 1) return [];
@@ -494,6 +523,8 @@ export const tentsGame: Game<
   },
 
   textFormat,
+
+  rulesOut: { name: "Mark grass on the squares a tent rules out", bring: ruledOut },
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

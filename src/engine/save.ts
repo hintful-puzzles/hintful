@@ -36,6 +36,10 @@ export interface SaveEnvelope {
    * because a move is the game's own shape, which no marker inside the list
    * could be told from. */
   restarts?: { at: number; cheated: boolean }[];
+  /** The entries of `moves` that one Undo takes back with the entry before
+   * them (a drag's later marks, the marks a placement brings), absent when
+   * there are none. A save written without it undoes each entry alone. */
+  joined?: number[];
   /** History cursor at save time (for save-then-undo round-trips). */
   pos: number;
   /** Accumulated timer seconds. */
@@ -106,6 +110,16 @@ function isRestartList(value: unknown, moves: number): boolean {
   });
 }
 
+/** An entry joins the one before it, so the first never does. */
+function isJoinedList(value: unknown, moves: number): boolean {
+  if (value === undefined) return true;
+  if (!Array.isArray(value)) return false;
+  return value.every(
+    (at: unknown) =>
+      typeof at === "number" && Number.isInteger(at) && at > 0 && at < moves,
+  );
+}
+
 function isSaveEnvelope(value: unknown): value is SaveEnvelope {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
@@ -118,6 +132,7 @@ function isSaveEnvelope(value: unknown): value is SaveEnvelope {
     (v["privDesc"] === undefined || typeof v["privDesc"] === "string") &&
     Array.isArray(v["moves"]) &&
     isRestartList(v["restarts"], v["moves"].length) &&
+    isJoinedList(v["joined"], v["moves"].length) &&
     typeof v["pos"] === "number" &&
     typeof v["timerElapsed"] === "number" &&
     (v["hinted"] === undefined || typeof v["hinted"] === "boolean") &&

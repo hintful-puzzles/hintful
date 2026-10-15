@@ -382,9 +382,9 @@ What a game decides:
   target out is the `secondary` verb, however much oftener the player makes
   it than the placement: one meaning a button across the collection is worth
   more than a click saved in one game (the owner's ruling, 2026-10-13, on
-  Star Battle, which first shipped the other way round). Where the cross is
-  made in bulk, a preference may make it for the player
-  ([`starbattle/index.ts`](../src/games/starbattle/index.ts), `auto-cross`).
+  Star Battle, which first shipped the other way round). Where a placement
+  rules the crosses out, the engine's preference can make them for the player
+  (`docs/mechanics.md` § "Preferences", `rulesOut`).
 - **Space is always the right button's verb.** A verb that wants another key
   takes `keys`; it does not remap Space.
 - **Keys use the model's spellings**: `letterKey("T")` for a letter in either

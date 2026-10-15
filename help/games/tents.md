@@ -18,6 +18,10 @@ as grass. Hold Shift while moving the cursor to mark the empty squares
 it passes over as grass, or Ctrl to turn tents it passes over into grass
 as well.
 
+A tent rules out the empty squares round it, which must be grass, and the
+rest of its row or column when it is the last tent the number asks for.
+{{rules-out}}
+
 Warning '!' marks appear to indicate adjacent tents. Numbers round
 the edge of the grid light up red to indicate they do not match the
 number of tents in the row. Groups of tents light up red to indicate

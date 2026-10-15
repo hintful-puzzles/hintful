@@ -126,6 +126,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `win-wave.ts` — the win flash | you draw the win flash |
 | – `pencil-indicator.ts` — the pencil-mode indicator | your game has a pencil mode |
 | – `pencil-prefs.ts` — shared pencil `GamePref` declarations | a notes game declares preferences |
+| – `rules-out.ts` — the key and help words of `Game.rulesOut`'s preference | a placement rules squares out at a glance |
 | – `color/` — the palette | you need a color |
 | RNG and persistence | you draw random numbers or dispatch on a move |
 | – `random/` — the bit-identical RNG | a generator draws a random number |
@@ -1300,6 +1301,12 @@ The factories for the sticky-pencil, keep-highlight and hint-notes
 (`candidateReadingPref`) preferences, each constrained to a `Ui` field, so
 a game without the field fails to compile. The auto-pencil preference takes
 its sentence from the game, because its label names the game's regions.
+
+### `rules-out.ts` — the key and help words of `Game.rulesOut`'s preference
+
+The `auto-cross` key the midend offers to a game declaring `rulesOut`, and
+the help sentence `{{rules-out}}` writes from the game's words for it. The
+behavior is the midend's (`docs/mechanics.md` § "Preferences").
 
 ### `color/` — the palette
 

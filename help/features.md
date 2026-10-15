@@ -330,6 +330,20 @@ While the mode is on, a small pencil shows on the board, so you can always see
 which kind of mark you are about to make. Notes are ordinary moves: ::undo::
 undoes them, and they are saved with your position.
 
+## Marking what a placement rules out {#rules-out}
+
+In some puzzles, placing a piece rules out squares at a glance: in Star
+Battle, no other star can touch a star. Those puzzles have a preference that
+marks them for you as you place, off until you turn it on. Its page in the
+help says what it marks.
+
+**One ::undo:: takes back the placement and the marks together**, as one
+move, and that holds after you save and reload too. Taking the piece away
+later leaves the marks, since they may still be right.
+
+A hint teaches the placement and leaves the marks to the preference: its next
+step is worked out from the board with them on it.
+
 ## The reference panel {#reference}
 
 Some puzzles are about placing a known set of pieces, where the question you

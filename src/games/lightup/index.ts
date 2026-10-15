@@ -76,6 +76,7 @@ import {
   F_BLACK,
   F_IMPOSSIBLE,
   F_LIGHT,
+  F_NUMBERED,
   gridCorrect,
   idx,
   type LightupMove,
@@ -182,6 +183,44 @@ function executeMove(state: LightupState, move: LightupMove): LightupState {
     }
   }
   return next;
+}
+
+/** The squares orthogonally beside `{ x, y }`. */
+function besides(s: LightupState, x: number, y: number): Point[] {
+  return [
+    { x: x - 1, y },
+    { x: x + 1, y },
+    { x, y: y - 1 },
+    { x, y: y + 1 },
+  ].filter((p) => p.x >= 0 && p.y >= 0 && p.x < s.w && p.y < s.h);
+}
+
+/**
+ * The free squares each new bulb rules out at a glance, by a cross: the rest
+ * of those round a numbered wall beside it that has all its lights.
+ */
+function ruledOut(before: LightupState, after: LightupState): LightupMove | null {
+  const { w, flags } = after;
+  const out = new Map<number, Point>();
+  for (let y = 0; y < after.h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = idx(x, y, w);
+      if (!(flags[i] & F_LIGHT) || before.flags[i] & F_LIGHT) continue;
+      for (const clue of besides(after, x, y)) {
+        const c = idx(clue.x, clue.y, w);
+        if (!(flags[c] & F_NUMBERED)) continue;
+        const round = besides(after, clue.x, clue.y);
+        const lit = round.filter((p) => flags[idx(p.x, p.y, w)] & F_LIGHT);
+        if (lit.length !== after.lights[c]) continue;
+        for (const p of round)
+          if (!(flags[idx(p.x, p.y, w)] & (F_BLACK | F_LIGHT | F_IMPOSSIBLE)))
+            out.set(idx(p.x, p.y, w), p);
+      }
+    }
+  const ops = [...out]
+    .sort(([a], [b]) => a - b)
+    .map(([, p]): LightupOp => ({ kind: "impossible", ...p }));
+  return ops.length === 0 ? null : { ops };
 }
 
 function solve(orig: LightupState, curr: LightupState): SolveResult<LightupMove> {
@@ -573,6 +612,10 @@ export const lightupGame: Game<
       },
     },
   ],
+  rulesOut: {
+    name: "Cross out the other squares round a numbered wall once it has all its lights",
+    bring: ruledOut,
+  },
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

@@ -1,9 +1,9 @@
 /**
- * The two Controls sentences every note-taking game's page shares, each
- * generated where the game has what it describes: `{{mark-all}}` for a game
- * with `markAll`, and `{{sticky-pencil}}` for one offering the sticky
- * pencil preference. The help build replaces each before the markdown is
- * rendered.
+ * The Controls sentences the engine writes for a game's page, each generated
+ * where the game has what it describes: `{{mark-all}}` for a game with
+ * `markAll`, `{{sticky-pencil}}` for one offering the sticky pencil
+ * preference, and `{{rules-out}}` for one declaring what a placement rules
+ * out. The help build replaces each before the markdown is rendered.
  *
  * Read by importing the games themselves, as `controls.ts` does. A page
  * without a sentence its game owes, or with one its game does not, fails the
@@ -18,6 +18,7 @@ import {
   STICKY_PENCIL_PLACEHOLDER,
 } from "../src/engine/pencil-prefs.ts";
 import { getTsGame } from "../src/engine/registry.ts";
+import { RULES_OUT_PLACEHOLDER, rulesOutHelp } from "../src/engine/rules-out.ts";
 import "../src/games/index.ts";
 import type { Transform } from "./extra-pages.ts";
 
@@ -54,13 +55,22 @@ export const withNoteControls: Transform = (data) => {
     game?.markAll !== undefined,
     "has a markAll",
   );
-  const source = expand(
+  const sticky = expand(
     id,
     markAll,
     STICKY_PENCIL_PLACEHOLDER,
     STICKY_PENCIL_HELP,
     game !== null && offersStickyPencil(game),
     "offers the sticky pencil preference",
+  );
+  const rulesOut = game?.rulesOut;
+  const source = expand(
+    id,
+    sticky,
+    RULES_OUT_PLACEHOLDER,
+    rulesOutHelp(rulesOut?.name ?? ""),
+    rulesOut !== undefined,
+    "declares rulesOut",
   );
   return { ...data, source };
 };

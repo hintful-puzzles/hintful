@@ -859,6 +859,17 @@ notes declares the shared ones ("Pencil marks: the full note-taking UX").
   in `src/store/settings.ts` applies a small map of defaults on every load.
   When a checkbox comes up "wrong" in the app, read that map before your
   hook.
+- **What a placement rules out at a glance is declared, not a preference.**
+  Where placing a thing rules out squares the player would otherwise cross
+  out by hand (the squares round a star or a tent), declare `rulesOut` on the
+  `Game`: its words, and a `bring(before, after)` that answers with those
+  marks as a move of the game's own. The engine offers the `auto-cross`
+  preference and makes the marks one step of Undo with the move. The hint
+  judges the move alone and ends a plan where marks are brought.
+  `rules-out.test.ts` plays every declaring game's hint with it on. Exemplar:
+  [`starbattle/index.ts`](../src/games/starbattle/index.ts). Notes culled by a
+  placed value are the candidate engine's `auto-pencil` instead, whose plan
+  models the cull and runs on.
 
 ## Timed games
 

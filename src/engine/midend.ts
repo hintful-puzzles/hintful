@@ -66,6 +66,7 @@ import {
   withoutShift,
 } from "./pointer.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
+import { RULES_OUT_PREF } from "./rules-out.ts";
 import { sameShown, sameValue } from "./same-value.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import { endSweep, sweepContinues, sweepPending } from "./target-verb.ts";
@@ -131,6 +132,13 @@ interface BoardLeft {
 /** What a pointer press found, kept so a cancel can put it back. The history
  * fields are the arrays themselves: a move replaces them and never writes
  * into them, so they still hold what the press saw. */
+/** The marks a player's move brings under `Game.rulesOut`, and the board
+ * they leave. */
+interface Brought<State, Move> {
+  move: Move;
+  state: State;
+}
+
 interface OpenPress<State, Move, Ui> {
   ui: Ui;
   history: State[];
@@ -324,9 +332,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * `history[i+1]`, so `moveLog.length === history.length - 1`. */
   private moveLog: (Move | Restart)[] = [];
   /** Parallel to `moveLog`: whether the entry carries on a drag the entry
-   * before it began (`target-verb.ts`, the sweep), so Undo and Redo cross the
-   * two together. Not saved: a reloaded game undoes such a drag a mark at a
-   * time. */
+   * before it began (`target-verb.ts`, the sweep) or is the marks it brought
+   * (`Game.rulesOut`), so Undo and Redo cross the two together. */
   private joined: boolean[] = [];
   private pos = 0;
   /** The board this one replaced, which Undo at this board's first position
@@ -403,6 +410,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * readout is small enough that a player who does not want it can switch it
    * off, where one who does would not know to look. */
   private showTimer = true;
+  /** The {@link RULES_OUT_PREF} preference, off until the player asks for it:
+   * marks they did not make are a surprise to one who has not. */
+  private bringRuledOut = false;
   /** The frontend has paused the timer (the page is hidden). */
   private timerPaused = false;
   /** `game.status` of each state the midend has asked about, so a game whose
@@ -997,6 +1007,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       return true;
     }
     this.gestureRecorded = true;
+    // The marks the move brings are judged by no step: the step is asked
+    // about the player's move alone, and the plan re-validated after both.
+    const brought = this.broughtBy(prev, next);
+    const after = brought?.state ?? next;
     const step = this.currentHintStep;
     if (step !== null) {
       const verdict = this.game.hintKeepTrack?.(move, step, prev) ?? "off";
@@ -1009,7 +1023,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         // leg included. Re-validate all the same, so the plan is not
         // left standing on a step the move already resolved.
         this.advanceHint();
-        this.refreshActiveHint(next);
+        this.refreshActiveHint(after);
         this.hintDisplayed = false;
       } else if (verdict === "off") {
         this.clearHint();
@@ -1021,7 +1035,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         // screen only where it was on screen and is still the same step:
         // a hidden plan stays hidden, and a later step waits to be asked for.
         const idxBefore = this.activeHint?.index ?? -1;
-        this.refreshActiveHint(next);
+        this.refreshActiveHint(after);
         this.hintDisplayed =
           this.hintDisplayed &&
           this.activeHint != null &&
@@ -1030,7 +1044,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
     // A drag's later marks join its first in the history, and one pointer
     // event can pass over several targets: ask again until it has no more.
-    this.commitMove(next, move, joins);
+    this.commitMove(next, move, joins, brought);
     if (dragging && sweepPending(this.ui)) this.interpret(x, y, button);
     return true;
   }
@@ -1083,7 +1097,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * classify/re-validate the hint plan against `next` *before* the
    * commit's redraw paints, keeping the displayed step in sync with the
    * frame. */
-  private commitMove(next: State, move: Move, joins = false): boolean {
+  private commitMove(
+    next: State,
+    move: Move,
+    joins = false,
+    brought: Brought<State, Move> | null = null,
+  ): boolean {
     // Check BEFORE touching history. A game whose `switch` is exhaustive over
     // its move union has no `default` arm, so a move *typed* right and *valued*
     // wrong (an unknown `type` replayed from another build's save, cast rather
@@ -1091,18 +1110,48 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // see. In `history` it would make every later `changedState` and `redraw`
     // throw; refusing it here confines the damage to one move and gives
     // `loadGame` something to report.
-    if (next === undefined || next === null) {
+    const refuse = (made: Move): never => {
       throw new Error(
         `${this.game.id}: executeMove returned no state for move ` +
-          `${JSON.stringify(move)}: the move is not one this build can play`,
+          `${JSON.stringify(made)}: the move is not one this build can play`,
       );
-    }
+    };
+    if (next === undefined || next === null) refuse(move);
+    if (brought !== null && (brought.state === undefined || brought.state === null))
+      refuse(brought.move);
     const prev = this.state;
     this.record(next, move, joins);
-    this.stateReplaced(prev, next);
-    this.setupAnimation(prev, next, 1);
+    if (brought !== null) this.record(brought.state, brought.move, true);
+    const shown = brought?.state ?? next;
+    this.stateReplaced(prev, shown);
+    this.setupAnimation(prev, shown, 1);
     this.afterTransition();
     return true;
+  }
+
+  /** What the player's move from `prev` to `next` brings under the
+   * {@link RULES_OUT_PREF} preference (`Game.rulesOut`), made on `next`. */
+  private broughtBy(prev: State, next: State): Brought<State, Move> | null {
+    const rulesOut = this.game.rulesOut;
+    if (!this.bringRuledOut || !rulesOut) return null;
+    const move = rulesOut.bring(prev, next);
+    return move === null ? null : { move, state: this.game.executeMove(next, move) };
+  }
+
+  /** `steps` to the first whose move brings marks under the
+   * {@link RULES_OUT_PREF} preference: the steps after it were planned
+   * without those marks, so the next plan is made from the board they
+   * leave (docs/hints-marks.md § "A move with side effects ends the plan"). */
+  private untilBrought(steps: HintStep<Move>[]): HintStep<Move>[] {
+    const rulesOut = this.game.rulesOut;
+    if (!this.bringRuledOut || !rulesOut) return steps;
+    let board = this.state;
+    for (const [i, step] of steps.entries()) {
+      const next = this.game.executeMove(board, step.move);
+      if (rulesOut.bring(board, next) !== null) return steps.slice(0, i + 1);
+      board = next;
+    }
+    return steps;
   }
 
   /** The desc of the board in play. Upstream `midend_supersede_game_desc`,
@@ -1405,7 +1454,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       return result.error;
     }
     if (result.steps.length === 0) return "Game returned an empty hint plan";
-    this.activeHint = { steps: result.steps, index: 0 };
+    this.activeHint = { steps: this.untilBrought(result.steps), index: 0 };
     this.advanceHintOnAnimationEnd = false;
     this.hintDisplayed = true;
     // Every displayed step comes from a plan made here, so this is the one
@@ -1555,7 +1604,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         this.hideHintAfterStep = hideAfter;
         this.pendingHintAnim = true;
       }
-      this.commitMove(next, made);
+      this.commitMove(next, made, false, this.broughtBy(this.state, next));
       repaint = false;
       return true;
     };
@@ -1921,6 +1970,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
           ? { type: "boolean", name: p.name }
           : { type: "choices", name: p.name, choicenames: p.choices };
     }
+    const rulesOut = this.game.rulesOut;
+    if (rulesOut) items[RULES_OUT_PREF] = { type: "boolean", name: rulesOut.name };
     items[SHOW_TIMER_PREF] = { type: "boolean", name: "Show timer" };
     return { items };
   }
@@ -1933,6 +1984,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     for (const p of this.game.prefs ?? []) {
       values[p.kw] = p.get(this.ui);
     }
+    if (this.game.rulesOut) values[RULES_OUT_PREF] = this.bringRuledOut;
     values[SHOW_TIMER_PREF] = this.showTimer;
     return values;
   }
@@ -1943,13 +1995,15 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // "highlight crossed edges" or "vertex style" changes what `redraw`
     // paints.
     this.prefValues = { ...this.prefValues, ...values };
-    // The engine's own preference lives on the midend rather than a game's
-    // `Ui`, so it is read here and never reaches `applyPrefs`.
+    // The engine's own preferences live on the midend rather than a game's
+    // `Ui`, so they are read here and never reach `applyPrefs`.
     const showTimer = values[SHOW_TIMER_PREF];
     if (showTimer !== undefined) {
       this.showTimer = asChecked(showTimer);
       this.syncTimer();
     }
+    const bring = values[RULES_OUT_PREF];
+    if (bring !== undefined) this.bringRuledOut = asChecked(bring);
     if (this.history.length > 0) {
       this.applyPrefs();
       // A hint plan is built from the board *and* the preferences (how a hint
@@ -2080,6 +2134,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const restarts = this.moveLog.flatMap((entry, at) =>
       entry instanceof Restart ? [{ at, cheated: entry.cheated }] : [],
     );
+    const joined = this.joined.flatMap((joins, at) => (joins ? [at] : []));
     // `desc` is the board in play, as its id names it. Where that is not the
     // desc state 0 was built from, the move log needs the latter beside it.
     const desc = this.desc;
@@ -2093,6 +2148,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         entry instanceof Restart ? null : serMove(entry),
       ),
       ...(restarts.length > 0 ? { restarts } : {}),
+      ...(joined.length > 0 ? { joined } : {}),
       pos: this.pos,
       timerElapsed: this.timerElapsed,
       ...(this.helped ? { hinted: true } : {}),
@@ -2197,6 +2253,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
     // The replay made every step as a player's, which drops these.
     ({ replaced: this.replaced, undone: this.undone } = neighbors(left));
+    const joined = new Set(env.joined);
+    this.joined = this.moveLog.map((_, at) => joined.has(at));
     this.pos = Math.min(env.pos, this.history.length - 1);
     this.cheated = env.cheated;
     this.timerElapsed = env.timerElapsed;

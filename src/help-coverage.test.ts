@@ -30,6 +30,7 @@ import {
 } from "./engine/pencil-prefs.ts";
 import { expandPair } from "./engine/piece.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
+import { RULES_OUT_PLACEHOLDER } from "./engine/rules-out.ts";
 import { RULESETS_PLACEHOLDER, rulesetField } from "./engine/ruleset.ts";
 import { CONTROLS_PLACEHOLDER } from "./engine/target-verb.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
@@ -241,6 +242,10 @@ describe("every game's page has the one skeleton", () => {
     {
       placeholder: STICKY_PENCIL_PLACEHOLDER,
       owed: (id: string) => offersStickyPencil(getTsGame(id) ?? {}),
+    },
+    {
+      placeholder: RULES_OUT_PLACEHOLDER,
+      owed: (id: string) => getTsGame(id)?.rulesOut !== undefined,
     },
   ];
   let noteSentencePages = 0;
@@ -532,6 +537,11 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     why: "a toolbar button with no keyboard equivalent a touch player can reach",
   },
   reference: { kind: "features", anchor: "reference", why: "the reference panel" },
+  rulesOut: {
+    kind: "features",
+    anchor: "rules-out",
+    why: "a preference that makes the marks a placement rules out",
+  },
   selectReference: {
     kind: "features",
     anchor: "reference",

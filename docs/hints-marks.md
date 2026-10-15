@@ -910,6 +910,12 @@ reads the result after the mistake check has seen it. Exemplar: a number
 landing at the end of a drawn line in
 [`ascent/hint.ts`](../src/games/ascent/hint.ts).
 
+- **Marks a declared rule-out brings end the plan without the game's
+  help.** With the `auto-cross` preference on, the midend cuts a plan after
+  its first step that brings marks, and judges each step by the player's
+  move alone (`Game.rulesOut`, `docs/mechanics.md` § "Preferences"). The
+  game's hint plans as if the preference were off.
+
 ## Re-derive the named technique
 
 **Where a solver returns which cells are forced and carries no reason,

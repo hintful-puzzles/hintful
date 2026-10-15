@@ -71,7 +71,7 @@ export interface StarbattleMistake extends Point {
 }
 
 function newUi(_state: StarbattleState): StarbattleUi {
-  return { cursor: newCursor(), autoCross: false };
+  return { cursor: newCursor() };
 }
 
 const boardOf = (s: StarbattleState): StarbattleBoard =>
@@ -85,31 +85,36 @@ type StarbattleVerb = TargetVerb<StarbattleState, StarbattleUi, Point, Starbattl
  * stay as it is. */
 const markWith =
   (to: (old: StarbattleMark) => StarbattleMark) =>
-  (s: StarbattleState, { x, y }: Point, ui: StarbattleUi): StarbattleMove | null => {
+  (s: StarbattleState, { x, y }: Point): StarbattleMove | null => {
     const index = y * s.size + x;
     const old = s.grid[index] as StarbattleMark;
     const mark = to(old);
     if (mark === old) return null;
-    const cells = [{ index, mark }];
-    if (mark === STAR && ui.autoCross)
-      for (const i of ruledOutBy(s, index)) cells.push({ index: i, mark: CROSSED });
-    return { kind: "mark", cells };
+    return { kind: "mark", cells: [{ index, mark }] };
   };
 
 /**
- * The blank squares a star on `index` rules out at a glance: the ones
- * touching it, and the rest of its row, column or region where the star is
- * the last that one holds. What the player's preference crosses out with the
- * star, after it in the move.
+ * The blank squares each new star rules out at a glance: the ones touching
+ * it, and the rest of its row, column or region where the star is the last
+ * that one holds.
  */
-function ruledOutBy(s: StarbattleState, index: number): number[] {
-  const grid = s.grid.slice();
-  grid[index] = STAR;
-  const board = new StarbattleBoard(s.size, s.stars, s.regions, grid);
-  const out = new Set(board.touching(index));
-  for (const unit of board.unitsAt(index))
-    if (board.need(unit) === 0) for (const i of board.units[unit].cells) out.add(i);
-  return [...out].filter((i) => grid[i] === BLANK).sort((a, b) => a - b);
+function ruledOut(
+  before: StarbattleState,
+  after: StarbattleState,
+): StarbattleMove | null {
+  const board = boardOf(after);
+  const out = new Set<number>();
+  after.grid.forEach((mark, index) => {
+    if (mark !== STAR || before.grid[index] === STAR) return;
+    for (const i of board.touching(index)) out.add(i);
+    for (const unit of board.unitsAt(index))
+      if (board.need(unit) === 0) for (const i of board.units[unit].cells) out.add(i);
+  });
+  const cells: { index: number; mark: StarbattleMark }[] = [...out]
+    .filter((i) => after.grid[i] === BLANK)
+    .sort((a, b) => a - b)
+    .map((index) => ({ index, mark: CROSSED }));
+  return cells.length === 0 ? null : { kind: "mark", cells };
 }
 
 /** One click of a button: blank, then `first`, then the other mark, then
@@ -254,17 +259,7 @@ export const starbattleGame: Game<
   hintKeepTrack: starbattleKeepTrack,
   hintGesture,
 
-  prefs: [
-    {
-      kw: "auto-cross",
-      name: "Cross out the squares a star rules out",
-      type: "boolean",
-      get: (ui) => ui.autoCross,
-      set: (ui, value) => {
-        ui.autoCross = value;
-      },
-    },
-  ],
+  rulesOut: { name: "Cross out the squares a star rules out", bring: ruledOut },
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

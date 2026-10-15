@@ -167,6 +167,26 @@ export type GamePref<Ui> =
       set(ui: Ui, value: number): void;
     };
 
+/**
+ * What a placement rules out at a glance: the squares a star touches, the
+ * rest of a row a tent completes. With the engine's `auto-cross` preference
+ * on, every move the player makes is followed by the marks it brings, as an
+ * entry of Undo joined to the move; the hint judges the move alone, and a
+ * plan ends at its first step that brings marks (docs/hints-marks.md § "A
+ * move with side effects ends the plan").
+ */
+export interface RulesOut<State, Move> {
+  /** The preference's words, in the game's own nouns: "Cross out the squares
+   * a star rules out". */
+  name: string;
+  /** The marks the placements of a move rule out, as a move made on `after`,
+   * or `null` where it rules out nothing. It reads what the move did to the
+   * board rather than the move, so every gesture that places the same thing
+   * brings the same marks, and one that takes a placement away brings none.
+   * It changes no square the player has marked. */
+  bring(before: State, after: State): Move | null;
+}
+
 /** One configurable field of a game's **custom params** — the params
  * analog of `GamePref`, describing the "Custom type…" dialog. The
  * engine builds the app's `ConfigDescription` from this list and parses
@@ -672,6 +692,11 @@ export interface Game<
    * `newUi` so a preference survives starting a new game. Defaults are
    * whatever `newUi` sets. Absent ⇒ the game has no preferences. */
   prefs?: GamePref<Ui>[];
+
+  /** What a placement rules out at a glance, which the engine's `auto-cross`
+   * preference makes for the player with it (`RulesOut`). Absent ⇒ the game
+   * offers no such preference. */
+  rulesOut?: RulesOut<State, Move>;
 
   /** The game's **custom params** configuration form (upstream's
    * `configure`/`custom_params` path), declarative like `prefs`: an

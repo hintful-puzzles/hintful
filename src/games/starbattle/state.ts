@@ -75,9 +75,6 @@ export type StarbattleMove =
 
 export interface StarbattleUi {
   cursor: GridCursor;
-  /** The player's preference: a star placed also crosses out the squares it
-   * rules out. */
-  autoCross: boolean;
 }
 
 // --- params -----------------------------------------------------------------

@@ -12,7 +12,7 @@ Every puzzle has exactly one solution, and none needs a guess.
 
 A cross is your own note that a square holds no star. You need not cross anything out to finish: the puzzle is solved as soon as the stars are all in place. A star turns red when it touches another, or when its row, column or region holds too many.
 
-With **Cross out the squares a star rules out** turned on in the preferences, placing a star also crosses out the blank squares touching it, and the rest of its row, column or region when the star is the last one that holds. Taking the star away again leaves those crosses for you to clear.
+A star rules out the blank squares touching it, and the rest of its row, column or region when the star is the last one that holds. {{rules-out}}
 
 ## Where the puzzles come from
 
