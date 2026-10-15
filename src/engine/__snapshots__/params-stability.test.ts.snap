@@ -409,6 +409,21 @@ bump:barrierProbability  full=3x3b2  brief=3x3
 bump:movetarget  full=3x3b1m1  brief=3x3m1"
 `;
 
+exports[`encoded params are byte-stable > numgame 1`] = `
+"default  full=l1dn  brief=l1
+preset:1 large Easy  full=l1de  brief=l1
+preset:1 large Tricky  full=l1dt  brief=l1
+preset:1 large Hard  full=l1dh  brief=l1
+preset:2 large Easy  full=l2de  brief=l2
+preset:2 large Normal  full=l2dn  brief=l2
+preset:2 large Tricky  full=l2dt  brief=l2
+preset:2 large Hard  full=l2dh  brief=l2
+preset:4 large Easy  full=l4de  brief=l4
+preset:4 large Normal  full=l4dn  brief=l4
+preset:4 large Tricky  full=l4dt  brief=l4
+preset:4 large Hard  full=l4dh  brief=l4"
+`;
+
 exports[`encoded params are byte-stable > palisade 1`] = `
 "default  full=5x5n5de  brief=5x5n5
 preset:Size/5x5 Unreasonable, regions of size 5  full=5x5n5du  brief=5x5n5

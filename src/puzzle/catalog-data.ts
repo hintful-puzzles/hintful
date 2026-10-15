@@ -291,6 +291,14 @@ export const puzzleCatalog = {
     collection: "original",
     family: "rearranging",
   },
+  numgame: {
+    name: "Target",
+    aliases: ["Countdown", "Numbers game", "Digits"],
+    description: "Arithmetic target puzzle",
+    objective: "Combine the numbers with + − × ÷ to make the target.",
+    collection: "own",
+    family: "numbers",
+  },
   palisade: {
     name: "Palisade",
     aliases: ["Five Cells"],

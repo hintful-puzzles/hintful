@@ -305,6 +305,11 @@ search only proves loss; that proof is what lets the hint refuse with
 [`engine/search-outcome.ts`](../src/engine/search-outcome.ts)). Exemplar:
 [`pegs/solver.ts`](../src/games/pegs/solver.ts).
 
+- A search that is exhaustive never runs out of reach, so its hint does not
+  call `searchRefusal`: calling it is what enrolls a game in
+  `hint-resume.test.ts`'s ledger of hints with a reach. A lost position is
+  `hasNoSolution`'s to refuse, before the hint is asked
+  ([`numgame/hint.ts`](../src/games/numgame/hint.ts)).
 - Narrate each claim only where its proof finished. "Only it and the marked
   moves can still finish" needs every rival settled; where some were not,
   the words claim nothing about them.

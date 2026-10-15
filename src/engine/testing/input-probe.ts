@@ -448,6 +448,35 @@ export function boardsReached(
   return { positions, key, pressed, same, cursorPositions: paths.length };
 }
 
+/**
+ * A point that presses each target a target-verb game declares, on the board
+ * the probe holds now: the targets a press can reach, found by sweeping the
+ * board, each at its `pointAt`. None for a game without verbs.
+ */
+export function targetPoints(game: AnyGame, b: ProbeBoard): Point[] {
+  const verbs = game.targetVerbs;
+  if (!verbs) return [];
+  const { state } = b.live();
+  const ds = game.newDrawState(state, b.tileSize);
+  const ui = game.newUi(state);
+  const seen = new Set<string>();
+  const points: Point[] = [];
+  const step = Math.max(1, Math.floor(b.tileSize / 8));
+  for (let x = 0; x < b.size.w; x += step)
+    for (let y = 0; y < b.size.h; y += step) {
+      // Keyed by where it is pressed: a target may be a cyclic object (Loopy's
+      // dots and edges), and `pointAt` names one point a target.
+      const t = verbs.geometry.pointerTarget(state, ds, { x, y }, ui);
+      if (t === null) continue;
+      const at = verbs.geometry.pointAt(state, ds, t, ui);
+      const k = `${at.x},${at.y}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      points.push(at);
+    }
+  return points;
+}
+
 /** Past this many cursor positions the walk stops; a guard reading the walk
  * asserts it stayed under, so a cursor that never repeats cannot pass by
  * running out of budget. */
@@ -1055,6 +1084,9 @@ export function changedUnder(game: AnyGame, id: string): ChangedUnder {
       m.processInput(0, 0, arrows[i % arrows.length]);
       if (typed.length > 0) m.processInput(0, 0, typed[i % typed.length]);
     });
+    // A game none of whose single gestures is a move (Target's is three taps)
+    // is put in play by Solve, so there is a move to take back.
+    if (b.moves() === 0) m.solve();
   };
   play(7);
   round("on a board barely played on");

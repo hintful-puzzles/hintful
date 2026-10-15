@@ -44,6 +44,8 @@ import {
   boardsReached,
   CURSOR_CAP,
   type ProbeBoard,
+  probeBoard,
+  targetPoints,
 } from "./testing/input-probe.ts";
 import type { Point } from "./types.ts";
 
@@ -169,7 +171,7 @@ describe("the model", () => {
     expect(controlsMarkdown(verbs)).toBe(
       "Click a square to fill it. Right-click it (on a touch screen, a long press) " +
         "to dot it.\n\nWith the keyboard, the arrow keys move a cursor around the " +
-        "grid. Enter does what a click does to the square under it, and Space (or D) " +
+        "board. Enter does what a click does to the square under it, and Space (or D) " +
         "what a right-click does.",
     );
   });
@@ -332,14 +334,15 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
     expect(declaring().length).toBeGreaterThanOrEqual(4);
   });
 
+  const click = (b: ProbeBoard, p: Point) => {
+    b.m.processInput(p.x, p.y, LEFT_BUTTON);
+    b.m.processInput(p.x, p.y, LEFT_RELEASE);
+  };
+
   /** A left-click at the first point where one commits a move, so an emptying
    * verb has something to empty. The point is found once and replayed. */
   const primeWithAClick = () => {
     let found: Point | null = null;
-    const click = (b: ProbeBoard, p: Point) => {
-      b.m.processInput(p.x, p.y, LEFT_BUTTON);
-      b.m.processInput(p.x, p.y, LEFT_RELEASE);
-    };
     return (b: ProbeBoard) => {
       if (found) return click(b, found);
       const step = Math.max(2, Math.floor(b.tileSize / 4));
@@ -353,6 +356,29 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
           }
         }
     };
+  };
+
+  /**
+   * The two clicks that arm a move, for a game where no one click commits
+   * one: Target's move is a number, an operator and a second number, so a
+   * click there only selects, and a key compared with it at a fresh board
+   * would agree with a dead one. The first pair of targets after whose clicks
+   * a third commits; none where one click commits, or no three do.
+   */
+  const armingClicks = (game: AnyGame, id: string): Point[] => {
+    const b = probeBoard(game, id);
+    b.reset();
+    const points = targetPoints(game, b);
+    const commits = (run: readonly Point[]) => {
+      b.reset();
+      const before = b.board();
+      for (const p of run) click(b, p);
+      return b.board() !== before;
+    };
+    if (points.some((p) => commits([p]))) return [];
+    for (const p of points)
+      for (const q of points) if (points.some((r) => commits([p, q, r]))) return [p, q];
+    return [];
   };
 
   it.each(
@@ -372,38 +398,63 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
     };
     const fresh = boardsReached(game, id, () => {}, pairAt);
     const primed = boardsReached(game, id, primeWithAClick(), pairAt);
+    const arming = armingClicks(game, id);
+    const armed =
+      arming.length > 0
+        ? boardsReached(
+            game,
+            id,
+            (b) => {
+              for (const p of arming) click(b, p);
+            },
+            pairAt,
+          )
+        : null;
 
     /** Each position where the key's board is not among the press's, named by
      * the point the press was made at. A key that changed no board anywhere
-     * agrees with a dead button, so it is refused first. */
+     * agrees with a dead button, so it is refused first, on the boards it was
+     * pressed on together. */
     const disagree = (
-      r: BoardsReached,
-      byKey: readonly unknown[],
-      byPress: readonly (readonly unknown[])[],
+      runs: readonly {
+        r: BoardsReached;
+        byKey: readonly unknown[];
+        byPress: readonly (readonly unknown[])[];
+      }[],
     ) => {
       expect(
-        r.positions.some(({ board }, i) => !r.same(byKey[i], board)),
+        runs.some(({ r, byKey }) =>
+          r.positions.some(({ board }, i) => !r.same(byKey[i], board)),
+        ),
         "the key changes no board anywhere",
       ).toBe(true);
-      return r.positions
-        .filter((_, i) => !byPress[i].some((board) => r.same(byKey[i], board)))
-        .map(({ at }) => `(${at.x}, ${at.y})`);
+      return runs.flatMap(({ r, byKey, byPress }) =>
+        r.positions
+          .filter((_, i) => !byPress[i].some((board) => r.same(byKey[i], board)))
+          .map(({ at }) => `(${at.x}, ${at.y})`),
+      );
     };
-    for (const r of [fresh, primed]) {
+    /** A key against a button, on a fresh board and, where one click commits
+     * no move, on the board the arming clicks leave. */
+    const against = (code: number, button: number) =>
+      [fresh, ...(armed ? [armed] : [])].map((r) => ({
+        r,
+        byKey: r.key(code),
+        byPress: r.pressed([button]),
+      }));
+    for (const r of [fresh, primed, ...(armed ? [armed] : [])]) {
       expect(r.cursorPositions, "the cursor walk ran out of budget").toBeLessThan(
         CURSOR_CAP,
       );
       expect(r.positions.length, "the cursor rests on no target").toBeGreaterThan(1);
     }
 
-    const left = fresh.pressed([LEFT_BUTTON]);
     expect(
-      disagree(fresh, fresh.key(CURSOR_SELECT), left),
+      disagree(against(CURSOR_SELECT, LEFT_BUTTON)),
       "Enter against a left-click at its target",
     ).toEqual([]);
-    const space = verbs.secondary ? fresh.pressed([RIGHT_BUTTON]) : left;
     expect(
-      disagree(fresh, fresh.key(CURSOR_SELECT2), space),
+      disagree(against(CURSOR_SELECT2, verbs.secondary ? RIGHT_BUTTON : LEFT_BUTTON)),
       "Space against its button at its target",
     ).toEqual([]);
 
@@ -417,7 +468,7 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
       for (const k of verb.keys)
         for (const code of k.codes)
           expect(
-            disagree(primed, primed.key(code), presses),
+            disagree([{ r: primed, byKey: primed.key(code), byPress: presses }]),
             `${k.name} (code ${code}) against its button at its target`,
           ).toEqual([]);
     }
@@ -443,7 +494,7 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
       for (const k of verb.keys)
         for (const code of k.codes)
           expect(
-            disagree(sighted, sighted.key(code), byPointer),
+            disagree([{ r: sighted, byKey: sighted.key(code), byPress: byPointer }]),
             `${verb.does}: ${k.name} (code ${code}) against its ${route.kind} route at its target`,
           ).toEqual([]);
     }

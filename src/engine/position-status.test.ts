@@ -39,7 +39,12 @@ import {
   RIGHT_RELEASE,
 } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
-import { type AnyGame, probeBoard, probePoints } from "./testing/input-probe.ts";
+import {
+  type AnyGame,
+  probeBoard,
+  probePoints,
+  targetPoints,
+} from "./testing/input-probe.ts";
 
 beforeAll(registerAllGames);
 
@@ -148,7 +153,31 @@ describe("a game's status is judged from the board alone", () => {
       if (breaks(inputs)) continue;
       pb.reset();
       if (pb.m.solve() !== null) throw new Error(`${id}: Solve refused a second time`);
-      if (!breaks(backward)) unbroken.push(id);
+      if (breaks(backward)) continue;
+      // A move picked in parts (Target's number, operator and number) takes
+      // three clicks at targets, which no walk of one input a point assembles.
+      // Only for a game no one click of which moves the board, which the walks
+      // above have already tried. Each try starts from the solved board: a move
+      // it made is undone, then Solve is undone and redone, so the game drops
+      // whatever the clicks selected.
+      const at = targetPoints(game, pb);
+      const clicks = (points: readonly { x: number; y: number }[]) => {
+        const before = pb.moves();
+        for (const { x, y } of points) {
+          pb.m.processInput(x, y, LEFT_BUTTON);
+          pb.m.processInput(x, y, LEFT_RELEASE);
+        }
+        const moved = pb.moves() !== before;
+        const broke = moved && game.status(pb.live().state) !== "solved";
+        if (moved) pb.m.undo();
+        pb.m.undo();
+        pb.m.redo();
+        return { moved, broke };
+      };
+      const oneMoves = at.some((p) => clicks([p]).moved);
+      const inThree = () =>
+        at.some((p) => at.some((q) => at.some((r) => clicks([p, q, r]).broke)));
+      if (oneMoves || !inThree()) unbroken.push(id);
     }
     expect(unbroken.sort()).toEqual(Object.keys(UNBREAKABLE).sort());
     expect(walked).toBeGreaterThanOrEqual(40);

@@ -36,6 +36,8 @@ const REFUSED: Record<string, string> = {
   inertia: "3x3:Swgbwwbbb",
   // Four loose ends, which no arrangement joins into one network.
   netslide: "2x2:1111",
+  // Six small numbers, which make nothing as large as 100, and a target of 952.
+  numgame: "l0dn:1,1,2,2,3,3=952",
   // Two pegs in opposite corners, which never meet.
   pegs: "5x5random:PHHHHHHHHHHHHHHHHHHHHHHHP",
   // One tile of color 3, which no removal can take.

@@ -529,6 +529,9 @@ describe("the keyboard can commit a move, not merely move a cursor", () => {
           [c],
           [c, CURSOR_SELECT],
           [c, c, CURSOR_SELECT],
+          // A move picked in parts: one target, a key, then another target
+          // (Target's number, operator, number).
+          [CURSOR_SELECT, c, CURSOR_RIGHT, CURSOR_SELECT],
         ]),
       ];
 

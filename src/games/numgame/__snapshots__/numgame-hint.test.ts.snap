@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`numgame: pinned hint positions > says, at each pin 1`] = `
+{
+  "first": "153 takes 3 operations at the fewest, as 17 × 9. First, 25 − 8 = 17.",
+  "last": "Last, 17 × 9 = 153, the target.",
+  "next": "Next, 10 − 1 = 9.",
+  "only": "17 × 9 = 153, the target.",
+}
+`;

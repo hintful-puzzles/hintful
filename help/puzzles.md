@@ -57,6 +57,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | [Star Battle](../starbattle) | [help](starbattle) | Queens, Two Not Touch |
 | [Sticks](../sticks)      | [help](sticks)   | Tatebo-Yokobo (タテボーヨコボー)                                                        |
 | [Subsets](../subsets)    | [help](subsets)  | Sabusettorinku (サブセットリンク)                                                       |
+| [Target](../numgame)     | [help](numgame)  | Countdown numbers round, Digits                                                 |
 | [Tents](../tents)        | [help](tents)    |                                                                                 |
 | [Towers](../towers)      | [help](towers)   | Skyscrapers                                                                     |
 | [Tracks](../tracks)      | [help](tracks)   |                                                                                 |

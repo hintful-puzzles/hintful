@@ -2,61 +2,176 @@
 
 ## Context
 
-This is the odd one out among the seven remaining changes. The other four game
-proposals (Group, Slide, Sokoban, Path) port an existing `struct game`; numgame
-has none. `numgame.c` is a **standalone command-line solver** for the Countdown
-numbers game — upstream states plainly it "hasn't even started on writing a
-Puzzles user interface yet." So this change *designs a game* over an existing
-solver, and the design work dwarfs the transcription.
+The other greenfield change (Path) and every port before it had a `struct
+game` to follow. `numgame.c` is a standalone command-line solver for the
+Countdown numbers game, and upstream "hasn't even started on writing a Puzzles
+user interface". This change designs a game over that solver.
 
-Because of that, this document records **open questions, not settled decisions**
-— the settling happens with the owner if and when the change is scheduled.
+## D1 — The game is built (owner, 2026-10-15)
 
-## D1 — Should this game exist? (the gating question)
+The scaffold asked whether a mental-arithmetic puzzle belongs in the
+collection, and recommended "not now". The owner chose to build it, with
+classic Countdown rules. The collection's goal is the app stores' puzzle
+games (`docs/doctrine.md` § "The goal"), and target-number games (Countdown
+apps, NYT's Digits, "Make 24") are among them.
 
-The collection is a *logic*-puzzle collection. A Countdown game is
-mental-arithmetic — closer to a maths drill than a deduction puzzle. It may not
-fit the character, and there is no user demand signal (it was never shipped by
-upstream in 20 years). **Recommendation: treat this change as a placeholder for
-a deliberate owner decision, defaulting to "not now".** The value of scaffolding
-it is that the shape and the solver-reuse are captured so the decision is
-informed, not that the work is queued.
+## D2 — The rules: Countdown's numbers round
 
-## D2 — What is invented vs transcribed
+- Six numbers, each drawn without replacement from Countdown's cards: two each
+  of 1 to 10 (the small numbers) and one each of 25, 50, 75 and 100 (the large
+  numbers). The params choose how many are large, 0 to 4, as a contestant does.
+- A target from 100 to 999.
+- A move combines two numbers with `+`, `−`, `×` or `÷` into one. Every result
+  is a positive whole number: a subtraction that would give zero or less, and a
+  division with a remainder, are not moves. A number is used at most once, and
+  the numbers need not all be used.
+- The puzzle is solved when a number on the board equals the target exactly.
+  (Countdown awards points for coming close; a puzzle has one goal.)
 
-- **Transcribe faithfully:** the BFS solver. It exhaustively enumerates
-  reachable values and counts distinct derivations — the exact primitive a
-  generator and a hint need. It is small and well-understood. Its `tree234`
-  dedup becomes a `Map`/`Set` keyed by value (a pure lookup; the playbook's leaf
-  rule).
-- **Invent from scratch:** everything a player touches — how sources and derived
-  numbers are shown, how an operation is expressed as a move, how the board
-  animates, win detection. There is no upstream reference and no differential
-  possible for any of it.
+Upstream's `rules_countdown` allows a negative intermediate. Positive-only is
+Countdown's own rule, and it makes no target unreachable that a negative would
+reach: `x − (a − b)` with `a < b` is `x + (b − a)`, and a product or quotient
+of two negatives is that of their opposites.
 
-## D3 — The only differential available is arithmetic
+**One move, two taps of numbers and one of an operator.** The order in which a
+player taps the two numbers decides only where the result goes (the second
+tapped number's place, as NYT's Digits does). `−` and `÷` always take the
+smaller from or into the larger: the other order is never a legal move, except
+`x ÷ x`, which is the same either way. So the tile order never makes a move
+illegal, and the player is never punished for reading `75, 3, −` as `3 − 75`.
 
-There is no C *game* to byte-match, so the generator/codec/UI cannot be
-differential-checked the way every other port is. The **solver's arithmetic
-results** can be: for a fixed set of number sets, the reachable-value → ways map
-must match the C utility. That is the whole differential surface. Everything
-else rests on ordinary behavioral tests. This is a real weakening of the usual
-assurance and should be stated plainly to the owner — it is a consequence of
-there being no game upstream, not a shortcut.
+## D3 — The solver: values reachable from each subset
 
-## D4 — Difficulty is genuinely unsolved upstream
+Every combination of `k` numbers takes exactly `k − 1` operations. So "the
+fewest operations that make the target" is the smallest subset of the numbers
+on the board whose reachable values include it, less one. The solver computes,
+for each subset of the numbers (at most 63), the values made by using **all**
+of it, from its splits into two smaller subsets, and keeps one derivation per
+value (the first found, in a fixed order, so a plan is a function of the
+board).
 
-`numgame.c`'s TODO block discusses why path-counting overstates difficulty
-(associativity and tree-structured calculations inflate the count) and never
-resolves it. Do **not** inherit that rabbit hole for v1. A simple heuristic —
-number of operations required, presence of a non-trivial step (a division, a
-large intermediate) — is enough to grade a first version, and can be refined
-later. Record the heuristic chosen; do not promise upstream's unbuilt analysis.
+That is the C's search over the same rules, organized by subset rather than by
+a breadth-first walk over multisets (`numgame.c` notes the BFS's path counts
+overstate difficulty and never resolved it, D4). The C's `tree234`s become a
+`Map` per subset. Nothing else is transcribed: the C's rationals, its
+concatenation flag and its other rule sets serve variants this game does not
+have.
 
-## Risks
+**What stands in for an oracle** (the C cannot be run: `reference/README.md`).
+The test suite holds the subset solver to a second, independent search, a
+plain recursion over the multiset of numbers, on fixed and random boards: the
+two agree on every reachable value and its fewest operations. Every derivation
+the solver emits is replayed through the game's own `executeMove` and must
+make the value it is filed under.
 
-- **It is a build, not a port**, so the usual "faithful transcription is the
-  low-risk path" does not apply to the 80% that is UI/UX/difficulty.
-- **No game-level oracle** (D3) — assurance is weaker than every other port.
-- **Character fit** (D1) is unresolved and may kill the change outright, which
-  is fine and is the point of scoping it cheaply now.
+## D4 — Difficulty: the fewest operations the target needs
+
+Three tiers, by the fewest operations that make the target: Easy two, Normal
+three, Hard four or more. A one-operation target is never dealt.
+
+This is the measure upstream's TODO circles: its path counts are inflated by
+associativity and by tree-shaped calculations. The fewest operations is
+neither, and it is a fact a player can check and the hint can state. It is
+monotone in its cap, which `Game.difficulty` needs: a target made in two is
+made within three. So `solveAtCap` answers "solved" where the target is made
+within the tier's operations, "unsolved" where only more will do, and
+"impossible" where it cannot be made.
+
+Not taken on: how obvious an operation is, and how many ways a target has.
+Both are refinements of a tier, and neither changes what the hint can say.
+
+## D5 — The board
+
+- **Six tiles**, two rows of three, in the desc's order (large numbers first,
+  as Countdown lays out its cards). A combination empties the first-tapped
+  tile's place and puts the result in the second's, so the board never
+  reflows and a tile never moves under the player's finger.
+- **A tile the player made says how**: its sum, small, under its value
+  ("75 − 3"). The board then reads as the player's working.
+- **The target** above the tiles; **the four operators** in a row below.
+- **What a tap does.** A number selects it; the same number again deselects
+  it; another number moves the selection while no operator is chosen; an
+  operator chooses it (again, unchooses it). With a number and an operator
+  chosen, the numbers that would not make a legal move are dimmed and a tap on
+  one does nothing; a tap on any other makes the move. Every board change
+  clears the selection.
+- **Keyboard**: the arrows move a cursor over the six places, Enter and Space
+  tap the one under it, `+ - * /` (and `x`) choose an operator, Escape clears
+  the selection.
+- **The secondary button means nothing** (`ignoresSecondaryButton`).
+- **Animation**: the first number slides into the second's place.
+
+## D6 — Solve, the mistake check, a lost position
+
+- **Solve** plays a shortest line from the position on the board where one
+  exists, and else from the dealt numbers.
+- **No mistake check** (`notApplicable`): any combination that leaves the
+  target reachable is fine, so there is no one answer to compare a move with.
+- **A lost position** is one whose numbers can no longer make the target, and
+  `hasNoSolution` says so with a `markedDeadEnd`. The proof is the solver's
+  full enumeration, cheap at six numbers (measured in the tests).
+
+## D7 — The hint
+
+A Countdown move is never forced, so the hint is a search hint
+(`docs/hints-search.md`), and the solver makes it exact: what it says is
+proved, not measured.
+
+- **The plan is a shortest line from the board on display**, offered whole,
+  one step a combination. Its potential is the fewest operations still
+  needed, which every step lowers by exactly one, so a recomputed plan cannot
+  cycle (`docs/hints-search.md` § "Recompute-stable plans").
+- **What it teaches is the plan's shape.** The last operation of a shortest
+  line splits the target into two numbers made from separate tiles ("952 is
+  900 + 52"). That is the Countdown player's method: get near with a product,
+  then adjust. The first step says the fewest operations and the split; each
+  step says which half it builds, and the last says it makes the target. The
+  split is derived once, from the plan, and carried on its steps
+  (§ "Hold a stable subgoal").
+- **Marks**: the two numbers of a step are ringed, and its operator.
+
+## D8 — Names, and where the game sits
+
+- The id stays `numgame`, upstream's name for the file. It is in every shared
+  link and save, so it is not changed lightly.
+- The name a player sees is **Target**, with the aliases *Countdown*, *Numbers
+  game* and *Digits*, which are what a player searches for. The family is
+  "Numbers & letters".
+
+## Findings: what building it cost (the baseline measurement)
+
+Every question this build stopped to answer that was not about the puzzle,
+kept as it happened (proposal § "Also: this is a baseline measurement").
+
+Measured 2026-10-15, one session. The puzzle's own work (solver, generator,
+rules, sentences) was the smaller part; these are the rest, most costly first.
+
+1. **The scaffold has one skeleton, a grid solved by deduction.** For a game
+   of moves on a board that is not a grid, every file of the copy was
+   replaced, and the copied tests were deleted and rewritten. What the copy
+   gave was its file names and its closing checklist. A second skeleton (moves
+   and search, no grid) is the obvious engine candidate.
+2. **A board that is not a grid is built by hand.** The layout, the hit
+   test, a cursor over rows of different widths, and a cache keyed per element
+   (two words for a value past 2^31) came to about 150 lines with no shared
+   helper or exemplar. `squareGrid` and `HintMarks` serve a grid of cells only;
+   the hint ring here is `drawMarkSides` called by each element.
+3. **Three cross-game guards assumed that one input is one move.** A move
+   here is three taps, two of which change only the selection, and the
+   target-verb guard (Enter against a click), the keyboard-commit probe and the
+   drag-cancel probe each found nothing to compare. Each was generalized in this
+   change: the target-verb guard arms the move with the clicks that precede the
+   committing one, the keyboard probe tries "pick, key, move, pick", and the
+   drag-cancel probe puts a board in play with Solve where no single gesture
+   moves it.
+4. **The hint gesture is hand-written.** `verbClicks` needs every click to make
+   a move the step keeps, so a gesture whose first taps only select cannot use
+   it.
+5. **`searchRefusal` enrolls a game in the "search can run out" ledger by
+   being called.** An exhaustive search that cannot run out had to avoid the
+   helper. The derivation reads "uses the shared outcome" as "has a reach".
+6. **A tiered game that does not deduce gets a deduction's refusal.** Without
+   `hasNoSolution`, an unreachable target would have been refused as needing
+   "trial and error", the words the tier contract's load check has.
+7. **The generated Controls paragraph said "around the grid"** for every
+   game; it now says "around the board".

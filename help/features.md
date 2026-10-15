@@ -49,7 +49,7 @@ tuned or turned off in the
 the hold time and the audio feedback.
 
 **In puzzles that have no use for a right-click, these gestures are switched
-off** — Cube, Fifteen, Filling, Flip, Flood, Pegs and Sokoban. There, holding
+off** — Cube, Fifteen, Filling, Flip, Flood, Pegs, Sokoban and Target. There, holding
 your finger still simply presses; you can rest a finger on a peg while you decide
 where to jump it, and the drag still works when you move.
 

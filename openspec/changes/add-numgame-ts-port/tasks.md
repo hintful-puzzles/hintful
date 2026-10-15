@@ -1,75 +1,42 @@
 # Tasks — add-numgame-ts-port
 
-**Status: speculative / not scheduled.** This is a build-from-scratch, not a
-port. Do the design decisions (§0) *before* committing to implementation — the
-answer to "should this game exist at all" may end the change here.
+## 0. Decide whether to build it
 
-## 0. Decide whether to build it (owner gate, before any code)
+- [x] 0.1 Confirm with the owner that the game belongs: yes, with Countdown
+      rules (2026-10-15, design D1).
+- [x] 0.2 Fix the rules: Countdown's numbers round (design D2).
+- [x] 0.3 Fix the difficulty model: the fewest operations the target needs
+      (design D4).
 
-- [ ] 0.1 Confirm with the owner that a mental-arithmetic puzzle belongs in a
-      logic-puzzle collection at all. If no, archive this change as
-      "considered, declined" and stop.
-- [ ] 0.2 Decide the game's exact rules: pure Countdown (`+ − × ÷`, no
-      fractional intermediate results, use each source at most once) or a
-      variant (Flippo etc.). Record the choice; it drives everything below.
-- [ ] 0.3 Decide the difficulty model — a simple "number of operations / uses a
-      non-obvious step" heuristic vs. taking on upstream's unsolved path-count
-      analysis. Recommend the simple one for v1; record why.
+## 1. The solver
 
-## 1. Port the solver (the one existing asset)
+- [x] 1.1 `solver.ts`: the values each subset of the numbers makes, with one
+      derivation each, and the fewest operations to a target (design D3).
+- [x] 1.2 The oracle: an independent multiset search in the tests agrees on
+      every reachable value and its fewest operations; every derivation
+      replays through `executeMove` to its value.
 
-- [ ] 1.1 Transcribe `numgame.c`'s breadth-first exhaustive solver into
-      `src/games/numgame/solver.ts`: from a multiset of numbers, produce
-      every reachable value and the count of distinct ways to make each.
-- [ ] 1.2 Differential-check the solver's *arithmetic* against the C utility:
-      for a set of number sets, the reachable-value map matches
-      (`puzzles/auxiliary/numgame-trace.c` if the C is still present; otherwise
-      a fixed hand-computed fixture, since numgame.c is slated for deletion).
-- [ ] 1.3 Port the `tree234`-backed dedup idiomatically (a `Set`/`Map` keyed by
-      value — the ordering is a pure lookup, per the playbook's leaf rule). Do
-      NOT transcribe tree234.
+## 2. The game
 
-## 2. Invent the game (no upstream reference)
+- [x] 2.1 Params (large numbers, tier), codec, presets, Custom dialog.
+- [x] 2.2 Desc codec and state; `executeMove`; `status`.
+- [x] 2.3 Generator: a target needing exactly the tier's operations.
+- [x] 2.4 `difficulty`, `solve`, `hasNoSolution`, `notApplicable`.
+- [x] 2.5 Input: taps, keyboard, the selection on the `Ui`.
 
-- [ ] 2.1 Params: number count, source-number range, target range, difficulty.
-      Encode/decode, validate.
-- [ ] 2.2 Generator over the solver: pick sources + a target that is reachable,
-      uniquely-ish, and at the requested difficulty; reject too-easy/too-many-
-      solution targets.
-- [ ] 2.3 State + move model: the player builds an expression from source tiles
-      and operators; a move applies one operation combining two available
-      numbers into a new one (or an undo). Win when a built number equals the
-      target.
-- [ ] 2.4 `newUi`, input handling (tile selection + operator), and a text
-      format if sensible.
+## 3. Render and hint
 
-## 3. Render + present (no upstream reference)
+- [x] 3.1 The board (design D5), its tile cache, the win flash, the
+      animation; a tier-2.5 render test.
+- [x] 3.2 The hint (design D7): plan, sentences, marks, gesture, pins.
 
-- [ ] 3.1 Design the board: source tiles, the running set of derived numbers,
-      operator affordances, the target, and progress feedback. Tier-2.5 render
-      tests.
-- [ ] 3.2 Solve button (reveal one exact solution from the solver) and a hint
-      that narrates one useful combining step.
+## 4. Registration and close-out
 
-## 4. Tests
-
-- [ ] 4.1 Tier-1 solver/generator/codec tests; tier-2.5 render scenarios.
-- [ ] 4.2 The solver-arithmetic differential from §1.2.
-
-## 5. Registration and stage 1 close-out
-
-- [ ] 5.1 Register in `src/games/index.ts`.
-- [ ] 5.2 Add a catalog entry + the two icon PNGs (numgame was never
-      cataloged, so both are new — see `puzzle-icons` spec).
-- [ ] 5.3 Full gate green; `openspec validate add-numgame-ts-port --strict`.
-- [ ] 5.4 Dev-verify in the browser.
-
-## 6. Stage 2 — on owner acceptance only
-
-- [ ] 6.1 Add `numgame` to `src/puzzle/catalog-data.ts` (+ the two icon PNGs) so
-      it is playable; `catalog-registry.test.ts` holds catalog and registry
-      together. (This task used to read "delete `puzzles/unfinished/numgame.c`
-      and its `unfinished/CMakeLists` entry" — there is no CMake any more, and the
-      source now lives at `reference/numgame.c` in this change, traveling into
-      the archive with it.)
-- [ ] 6.2 Archive, then commit game + archive together.
+- [x] 4.1 Register in `src/games/index.ts` and the catalog; the hand-kept
+      records the scaffold lists.
+- [x] 4.2 Help page; the spec delta rewritten for what was built.
+- [x] 4.3 Icons, captured from the running game.
+- [ ] 4.4 `npm run game -- numgame` green; play it in the app with pointer,
+      keyboard and touch; a fresh subagent reads the hint against the board.
+- [ ] 4.5 Findings recorded in `design.md`; commit, push; bring to the owner
+      for acceptance, then archive.

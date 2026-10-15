@@ -63,6 +63,7 @@ values, keys of its own, pixel coordinates in its state.
 | Targets and verbs | your game is "aim at a target, and each button does something there" |
 | – A key-only verb and its pointer route | a key does something no single click does |
 | – A target that is not a grid square | the player aims at an edge, a clue, a block or a scrolled tile |
+| – A move picked in parts | a move takes several presses, each picking one part of it |
 | – A drag game declares its click half | your game has a drag of its own and a click beside it |
 | – A mark that drags is a sweep | a button's verb is a mark the player wants on several targets |
 | – A mark outside the verbs that drags | a clue marked done, a notes-mode mark, or the one button your own drag leaves free |
@@ -449,7 +450,24 @@ Exemplars: `borderGridGeometry` in
 [`engine/border-grid.ts`](../src/engine/border-grid.ts) (an edge between two
 cells); [`magnets/index.ts`](../src/games/magnets/index.ts) (tiles and the
 clues round them); [`net/index.ts`](../src/games/net/index.ts) (a scrolled
-origin).
+origin); [`numgame/index.ts`](../src/games/numgame/index.ts) (a board that
+is no grid: six places and four buttons).
+
+### A move picked in parts
+
+**Where a move takes several presses, one verb picks a part a press**, and
+holds what is picked on the `Ui` until the last part makes the move: Target's
+number, operator and second number. Every board change clears what was
+picked (`changedState`). The guards arm such a move with the presses before
+its last, so nothing is declared for them. Two things are the game's own:
+
+- **Its `hintGesture` taps each part**, from the selection as it stands.
+  `verbClicks` needs every click to make a move the step keeps, which a click
+  that only picks does not.
+- **A key for a part picks the part under the cursor too** where nothing is
+  picked yet, so the keyboard needs no more presses than the pointer.
+
+Exemplar: [`numgame/index.ts`](../src/games/numgame/index.ts).
 
 ### A drag game declares its click half
 

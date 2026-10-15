@@ -775,7 +775,7 @@ export function controlsMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): st
     .join("");
   return (
     `${pointer.join(" ")}${sweepWords(verbs)}\n\n` +
-    `With the keyboard, the arrow keys move a cursor around the grid. ` +
+    `With the keyboard, the arrow keys move a cursor around the board. ` +
     `${keyboard}${keyOnly}`
   );
 }
