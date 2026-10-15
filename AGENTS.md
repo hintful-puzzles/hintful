@@ -55,6 +55,9 @@ incident only what a later session acts on: the rule, and the shape to look for.
   specific concern. The owner's word is needed for three things only:
   player-visible work where you are genuinely unsure which answer is better,
   anything they asked for by name, and a compatibility break (asked before).
+  **A session is never done while a question the owner asked, or a doubt
+  they voiced about the solution, is open**: answer it, then wait for their
+  word before archiving or handing off.
 - **A decision is persisted by a commit, or it did not happen.** Never cite an
   agent-private note to the owner.
 - **Do not file a new change for one game's issue, with four exceptions**:
@@ -183,8 +186,9 @@ with openspec, through its skills; one change per coherent unit of work.
   proposal, design, tasks or spec delta, or move from one to another, open it
   with the `herdr-open` skill so they can follow along. Once per file, not per
   edit: each call replaces what they are reading.
-- **When a change is archived, pick the next one yourself and hand it to a
-  fresh session; never ask which.** Read the open changes, take one that can
+- **When a change is archived, and nothing the owner asked or doubted is
+  open, pick the next one yourself and hand it to a fresh session; never ask
+  which.** Read the open changes, take one that can
   start without an answer from the owner, commit, push and leave the tree
   clean, then call `mcp__continue-session__continueInNewSession` with the
   prompt `Hi, please take on openspec/changes/<id>` as the last action of the
