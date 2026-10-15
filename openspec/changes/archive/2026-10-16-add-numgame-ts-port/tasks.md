@@ -36,7 +36,7 @@
       records the scaffold lists.
 - [x] 4.2 Help page; the spec delta rewritten for what was built.
 - [x] 4.3 Icons, captured from the running game.
-- [ ] 4.4 `npm run game -- numgame` green; play it in the app with pointer,
+- [x] 4.4 `npm run game -- numgame` green; play it in the app with pointer,
       keyboard and touch; a fresh subagent reads the hint against the board.
-- [ ] 4.5 Findings recorded in `design.md`; commit, push; bring to the owner
+- [x] 4.5 Findings recorded in `design.md`; commit, push; bring to the owner
       for acceptance, then archive.
