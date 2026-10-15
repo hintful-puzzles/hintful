@@ -403,13 +403,15 @@ What a game decides:
   the player's position nor read by replay belongs outside the `Ui`.
 
 [`target-verb.test.ts`](../src/engine/target-verb.test.ts) plays every
-declaring game: Enter at every cursor position on a target reaches exactly the
-boards a left-click reaches, Space those of its button, each verb key those of
-its button. An arm that handles Enter differently from the click fails there.
+declaring game: at every cursor position on a target, Enter leaves the board a
+left-click leaves at that target's `pointAt`, Space that of its button, each
+verb key that of its button. An arm that handles Enter differently from the
+click fails there, and so does one that acts on the square beside the cursor.
 
 The model is not for a drag game's drag, nor for a keyboard that walks
 something other than the targets. Measure such a game with `boardsReached`
-(`testing/input-probe.ts`) before bending the model to it.
+(`testing/input-probe.ts`), naming where a press addresses what its cursor
+rests on, before bending the model to it.
 
 ### A key-only verb and its pointer route
 
@@ -424,8 +426,9 @@ pointer's route to the same move.** It does not typecheck without
   game reads where a press lands.
 
 The Controls paragraph says the route, and `target-verb.test.ts` holds it to
-what the key does, comparing boards as the player sees them (`boardsReached`
-with `bySight`). Exemplars: [`net/index.ts`](../src/games/net/index.ts)
+what the key does at the same target, comparing boards as the player sees
+them (`boardsReached` with `bySight`). The route is pressed at the target's
+`pointAt`, so a `notes` route's `where` is that point. Exemplars: [`net/index.ts`](../src/games/net/index.ts)
 (`repeat` and `notes`); the skeleton's
 [`index.ts`](../src/skeleton/grid/index.ts) (`cycle`).
 

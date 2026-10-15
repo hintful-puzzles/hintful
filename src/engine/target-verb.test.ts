@@ -3,12 +3,15 @@
  * game declaring `Game.targetVerbs` — the declaration held to the behavior.
  *
  * The cross-game half is what makes the generated Controls paragraph true. The
- * paragraph says Enter does what a click does and Space what a right-click does,
- * and each verb's own keys what its button does; so for every declaring game,
- * the boards a key reaches at every cursor position must be exactly the boards
- * its button reaches at every point on the board. A game whose `interpretMove`
- * forgot to hand a button to the model, or handled a key in an arm of its own
- * that disagrees with the verb, fails here.
+ * paragraph says Enter does what a click does to the square under the cursor,
+ * Space what a right-click does, and each verb's own keys what its button does;
+ * so for every declaring game, at every cursor position the arrows reach, the
+ * board a key leaves must be the board its button leaves pressed at that
+ * target's `pointAt`. Paired by target, and not compared as two sets of
+ * boards, because a key acting on the square beside the cursor leaves a board
+ * a click on that neighbor leaves too. A game whose `interpretMove` forgot to
+ * hand a button to the model, or handled a key in an arm of its own that
+ * disagrees with the verb, fails here.
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
@@ -37,6 +40,7 @@ import {
 } from "./target-verb.ts";
 import {
   type AnyGame,
+  type BoardsReached,
   boardsReached,
   CURSOR_CAP,
   type ProbeBoard,
@@ -353,50 +357,76 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
 
   it.each(
     registeredGameIds().filter((id) => getTsGame(id)?.targetVerbs),
-  )("%s: each key reaches the boards its button does", (id) => {
+  )("%s: each key does at the cursor what its button does there", (id) => {
     const game = getTsGame(id) as unknown as AnyGame;
     const verbs = game.targetVerbs;
     if (!verbs) throw new Error(`${id} declares no verbs`);
-    // Keys are pressed where the cursor rests on a target, which is all the
-    // paragraph speaks for; a rest on none is an arm's (Subsets' tally band).
-    const onTarget = (s: unknown, ui: unknown) =>
-      verbs.geometry.cursorTarget(s, ui) !== null;
-    const fresh = boardsReached(game, id, () => {}, onTarget);
-    const primed = boardsReached(game, id, primeWithAClick(), onTarget);
+    const { geometry } = verbs;
+    // Keys are pressed where a shown cursor rests on a target, which is all the
+    // paragraph speaks for: a hidden cursor's first key only shows it, and a
+    // rest on none is an arm's (Subsets' tally band).
+    const pairAt = (s: unknown, ui: unknown, ds: unknown) => {
+      if (!(ui as TargetVerbUi).cursor.visible) return null;
+      const t = geometry.cursorTarget(s, ui);
+      return t === null ? null : geometry.pointAt(s, ds, t, ui);
+    };
+    const fresh = boardsReached(game, id, () => {}, pairAt);
+    const primed = boardsReached(game, id, primeWithAClick(), pairAt);
+
+    /** Each position where the key's board is not among the press's, named by
+     * the point the press was made at. A key that changed no board anywhere
+     * agrees with a dead button, so it is refused first. */
+    const disagree = (
+      r: BoardsReached,
+      byKey: readonly unknown[],
+      byPress: readonly (readonly unknown[])[],
+    ) => {
+      expect(
+        r.positions.some(({ board }, i) => !r.same(byKey[i], board)),
+        "the key changes no board anywhere",
+      ).toBe(true);
+      return r.positions
+        .filter((_, i) => !byPress[i].some((board) => r.same(byKey[i], board)))
+        .map(({ at }) => `(${at.x}, ${at.y})`);
+    };
     for (const r of [fresh, primed]) {
       expect(r.cursorPositions, "the cursor walk ran out of budget").toBeLessThan(
         CURSOR_CAP,
       );
-      expect(r.keyPositions, "the cursor rests on no target").toBeGreaterThan(1);
+      expect(r.positions.length, "the cursor rests on no target").toBeGreaterThan(1);
     }
 
-    const left = fresh.click(LEFT_BUTTON);
-    expect(left.size, "a left-click reaches no board").toBeGreaterThan(0);
-    expect(fresh.key(CURSOR_SELECT), "Enter against a left-click").toEqual(left);
-    const space = verbs.secondary ? fresh.click(RIGHT_BUTTON) : left;
-    expect(fresh.key(CURSOR_SELECT2), "Space against its button").toEqual(space);
+    const left = fresh.pressed([LEFT_BUTTON]);
+    expect(
+      disagree(fresh, fresh.key(CURSOR_SELECT), left),
+      "Enter against a left-click at its target",
+    ).toEqual([]);
+    const space = verbs.secondary ? fresh.pressed([RIGHT_BUTTON]) : left;
+    expect(
+      disagree(fresh, fresh.key(CURSOR_SELECT2), space),
+      "Space against its button at its target",
+    ).toEqual([]);
 
     const slots = [
       [verbs.primary, LEFT_BUTTON],
       [verbs.secondary, RIGHT_BUTTON],
     ] as const;
     for (const [verb, button] of slots) {
-      if (!verb) continue;
-      // Only a verb with keys has anything to compare, and the comparison is
-      // vacuous over no boards.
-      if (!verb.keys?.length) continue;
-      const clicks = primed.click(button);
-      expect(clicks.size, `${verb.does}: no board`).toBeGreaterThan(0);
+      if (!verb?.keys?.length) continue;
+      const presses = primed.pressed([button]);
       for (const k of verb.keys)
         for (const code of k.codes)
-          expect(primed.key(code), `${k.name} against its button`).toEqual(clicks);
+          expect(
+            disagree(primed, primed.key(code), presses),
+            `${k.name} (code ${code}) against its button at its target`,
+          ).toEqual([]);
     }
     // A key-only verb has no button of its own, so its declared pointer route
     // is what it must agree with, and the paragraph says both. Boards are
     // compared as the player sees them: a half turn and two quarter turns leave
     // one picture, whatever the state records about the last turn.
     if (!verbs.keyOnly?.length) return;
-    const sighted = boardsReached(game, id, primeWithAClick(), onTarget, {
+    const sighted = boardsReached(game, id, primeWithAClick(), pairAt, {
       bySight: true,
     });
     for (const verb of verbs.keyOnly) {
@@ -404,28 +434,18 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
       const button = route.button === "primary" ? LEFT_BUTTON : RIGHT_BUTTON;
       const byPointer =
         route.kind === "repeat"
-          ? sighted.presses(Array(route.times).fill(button))
+          ? sighted.pressed(Array(route.times).fill(button))
           : route.kind === "cycle"
-            ? sighted.presses(Array(CYCLE_PRESSES).fill(button), { every: true })
-            : sighted.presses([button], { before: [PENCIL_MODE_BUTTON] });
+            ? sighted.pressed(Array(CYCLE_PRESSES).fill(button), { every: true })
+            : sighted.pressed([button], { before: [PENCIL_MODE_BUTTON] });
       // Each code on its own: a dead key, or a dead case of a letter, would
-      // hide in the union beside a live one.
+      // hide beside a live one.
       for (const k of verb.keys)
-        for (const code of k.codes) {
-          const what = `${verb.does}: ${k.name} (code ${code})`;
-          const byKey = sighted.key(code);
-          expect(byKey.size, `${what} reaches no board`).toBeGreaterThan(0);
-          if (route.kind === "repeat") {
-            expect(byKey, `${what} against ${route.times} presses`).toEqual(byPointer);
-            continue;
-          }
-          const unreached = [...byKey].filter((board) => !byPointer.has(board));
+        for (const code of k.codes)
           expect(
-            unreached.length,
-            `${what}: ${unreached.length} of ${byKey.size} boards it reaches ` +
-              `are not on its ${route.kind} route`,
-          ).toBe(0);
-        }
+            disagree(sighted, sighted.key(code), byPointer),
+            `${verb.does}: ${k.name} (code ${code}) against its ${route.kind} route at its target`,
+          ).toEqual([]);
     }
   });
 });

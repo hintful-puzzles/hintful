@@ -40,6 +40,7 @@ import { copyUi, restoreUi } from "../ui-snapshot.ts";
 import { NO_FLASH } from "../win-wave.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./render-scenario.ts";
+import { sameState } from "./same-state.ts";
 
 export type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
 export type AnyMidend = Midend<unknown, unknown, unknown, unknown, unknown>;
@@ -56,8 +57,8 @@ export interface ProbeBoard {
   /** The midend's current move number, as its last notification reported it. */
   readonly moves: () => number;
   /** How many moves the game has been asked to execute on this board, by
-   * whether the state each returned reads as the one it was given
-   * ({@link board}'s digest). Counted where the midend calls `executeMove`,
+   * whether the state each returned holds the values of the one it was given
+   * (`sameState`). Counted where the midend calls `executeMove`,
    * so a move the midend then keeps out of the history is counted too. */
   readonly executions: () => { readonly changed: number; readonly unchanged: number };
   /** How many times the midend has asked for a repaint. */
@@ -81,15 +82,6 @@ export interface ProbeBoard {
   readonly live: () => { readonly state: unknown; readonly ui: unknown };
   /** {@link board}'s digest of any state this board has held, memoized. */
   readonly digestOf: (state: unknown) => string;
-  /**
-   * What the player sees of the state the midend holds: its frame, painted
-   * with a fresh `Ui` and draw state so neither a cursor nor an animation tells
-   * two boards apart. Two moves that leave the same picture are one move to a
-   * player whatever bookkeeping the state keeps: Net records which way its last
-   * turn went, so a half turn and two quarter turns differ in the state and not
-   * on screen.
-   */
-  readonly seen: () => string;
   /** The whole frame of `state` under `ui`, painted on a fresh draw state. */
   readonly paint: (state: unknown, ui: unknown) => string;
 }
@@ -153,6 +145,7 @@ export function probeBoard(
   // state is known by the params and desc it was built from; a state a move
   // made is not one, and is always asked afresh.
   const dealtAs = new WeakMap<object, string>();
+  const deals = new Map<string, unknown>();
   const verdicts = new Map<string, unknown>();
   const asDealt = <T>(question: string, state: unknown, ask: () => T): T => {
     const board = typeof state === "object" && state ? dealtAs.get(state) : undefined;
@@ -169,11 +162,20 @@ export function probeBoard(
       if (answer !== null) answers++;
       return answer;
     },
+    // A state is immutable (docs/mechanics.md), so a board dealt again is
+    // handed out as the one object it was the first time. Every move from it
+    // then shares what it did not change, and `sameState` compares two boards
+    // a walk reached from separate resets without walking Loopy's grid.
     newState: (p, desc) => {
-      current = game.newState(p, desc);
-      if (typeof current === "object" && current)
-        dealtAs.set(current, `${game.encodeParams(p, true)}:${desc}`);
-      return current;
+      const board = `${game.encodeParams(p, true)}:${desc}`;
+      let state = deals.get(board);
+      if (state === undefined) {
+        state = game.newState(p, desc);
+        deals.set(board, state);
+        if (typeof state === "object" && state) dealtAs.set(state, board);
+      }
+      current = state;
+      return state;
     },
     ...(difficulty && {
       difficulty: {
@@ -203,7 +205,7 @@ export function probeBoard(
     },
     executeMove: (...args) => {
       current = game.executeMove(...args);
-      if (digestOf(current) === digestOf(args[0])) unchanged++;
+      if (sameState(current, args[0])) unchanged++;
       else changed++;
       return current;
     },
@@ -242,8 +244,6 @@ export function probeBoard(
     return seen;
   };
   const stateDigest = () => digestOf(current);
-  // By digest, not by identity: a board replayed from the deal is built afresh.
-  const frames = new Map<string, string>();
   const palette = m.getColorPalette(DEFAULT_BACKGROUND);
   const paint = (state: unknown, ui: unknown) => {
     const dr = new RecordingDrawing(palette);
@@ -258,15 +258,6 @@ export function probeBoard(
       NO_FLASH,
     );
     return JSON.stringify(dr.ops);
-  };
-  const frameNow = () => {
-    const d = stateDigest();
-    let frame = frames.get(d);
-    if (frame === undefined) {
-      frame = paint(current, game.newUi(current));
-      frames.set(d, frame);
-    }
-    return frame;
   };
   return {
     params,
@@ -284,7 +275,6 @@ export function probeBoard(
     held: () => `${digest(liveUi)}|${fingerprint(m)}`,
     live: () => ({ state: current, ui: liveUi }),
     digestOf,
-    seen: frameNow,
     paint,
   };
 }
@@ -305,126 +295,120 @@ function digest(value: unknown): string {
   });
 }
 
-/** What one input reaches from a position: the boards it leaves behind. */
+/** A cursor position a key is pressed at, and the point a press pairs with. */
+export interface KeyPosition {
+  /** The arrow presses that walk the cursor here from the opening position. */
+  readonly path: readonly number[];
+  /** Where a press addresses what the cursor rests on. */
+  readonly at: Point;
+  /** The state here, before anything is pressed. */
+  readonly board: unknown;
+}
+
+/** What a key and a press each leave at one cursor position. */
 export interface BoardsReached {
-  /** Each distinct board a press-and-release of `button` left, across every
-   * probe point. A press that changed no board adds nothing. */
-  readonly click: (button: number) => ReadonlySet<string>;
-  /** Each distinct board left by pressing and releasing `buttons` in turn at
-   * one probe point, after pressing the keys `before` — the Marks key, for a
-   * route in notes mode. `every` keeps the board after each press as well as
-   * the last, which is what a cycle passes through. */
-  readonly presses: (
+  /** Every position a key is pressed at, in the order the walk met them. */
+  readonly positions: readonly KeyPosition[];
+  /** At each of {@link positions}, the state `code` left, which is the
+   * position's own where it changed nothing. */
+  readonly key: (code: number) => readonly unknown[];
+  /** At each of {@link positions}, the states left by pressing and releasing
+   * `buttons` in turn at its point, after pressing the keys `before` — the
+   * Marks key, for a route in notes mode. `every` keeps the state before the
+   * first press and after each, which is what a cycle passes through;
+   * otherwise only the last is kept. */
+  readonly pressed: (
     buttons: readonly number[],
     options?: { readonly before?: readonly number[]; readonly every?: boolean },
-  ) => ReadonlySet<string>;
-  /** Each distinct board `code` left, pressed at every cursor position the
-   * arrows reach. */
-  readonly key: (code: number) => ReadonlySet<string>;
-  /** How many cursor positions the arrows reached — the key half's power. */
+  ) => readonly (readonly unknown[])[];
+  /** Whether two of those states are one board: the same values, or with
+   * `bySight` the same frame. */
+  readonly same: (a: unknown, b: unknown) => boolean;
+  /** How many cursor positions the arrows reached — the walk's power. */
   readonly cursorPositions: number;
-  /** How many of those `keyAt` let a key be pressed at. */
-  readonly keyPositions: number;
 }
 
 /**
- * **What each button and key does, as a set of boards** — Task 0 of
- * `derive-target-verb-input`, kept as the instrument its guard reads.
+ * **What a key does at the cursor, beside what a press does at the same
+ * target** — the instrument the target-verb guard reads.
  *
- * A pointer button is pressed and released at every probe point from the
- * opening position; a key is pressed at every position the arrow keys can walk
- * the cursor to. Comparing the two sets asks "does Enter at the cursor do what a
- * left-click at a target does?" without knowing where any target is on screen,
- * so no game's geometry is written down here.
+ * The arrows walk the cursor to every position they reach. At each, `pairAt`
+ * names the point a press addresses what the cursor rests on, or `null` where
+ * no key is pressed: a position resting on no target (Subsets' tally band)
+ * belongs to an arm of the game's own. The walk still passes through such
+ * positions. A key and a press are then each played from that one position,
+ * so a key that acts on the square beside the cursor leaves a board the press
+ * does not, though a press on the neighbor would leave it too.
  *
  * `prime` is played first on every attempt, because a verb that empties a square
- * has nothing to do on a fresh board. `keyAt` narrows the positions a key is
- * pressed at: the target-verb guard presses only where the cursor rests on a
- * target, because a position resting on none (Subsets' tally band) belongs to
- * an arm of the game's own, and the paragraph the guard checks says nothing
- * about it. The walk still passes through such positions.
+ * has nothing to do on a fresh board. `pairAt` is handed a draw state for the
+ * position, built at the probe's tile size as the midend builds its own.
+ *
+ * Boards are compared as states (`sameState`), and every attempt starts from
+ * the one dealt state, so what two boards share is never walked. With
+ * `bySight`, two states that differ are compared again by their frames,
+ * painted with a fresh `Ui` and draw state so neither a cursor nor an
+ * animation tells them apart. Two moves that leave one picture are one move to
+ * a player whatever bookkeeping the state keeps: Net records which way its last
+ * turn went, so a half turn and two quarter turns differ in the state and not
+ * on screen.
  */
 export function boardsReached(
   game: AnyGame,
   id: string,
-  prime: (b: ProbeBoard) => void = () => {},
-  keyAt: (state: unknown, ui: unknown) => boolean = () => true,
+  prime: (b: ProbeBoard) => void,
+  pairAt: (state: unknown, ui: unknown, ds: unknown) => Point | null,
   options: { readonly bySight?: boolean } = {},
 ): BoardsReached {
   const b = probeBoard(game, id);
-  const { m, size, tileSize } = b;
-  // A board by its state, or with `bySight` by its frame (`ProbeBoard.seen`),
-  // where two moves are compared by what they leave on screen.
-  const boardOf = options.bySight ? b.seen : b.board;
-  // A board changes only through a committed move, so while the move count
-  // stands where the deal left it, the board is the deal's: serialized once
-  // here rather than once per attempt, which for Loopy's grid is most of the
-  // cost of a walk.
+  const { m, tileSize } = b;
   let startMoves = 0;
   const start = () => {
     b.reset();
     prime(b);
     startMoves = b.moves();
   };
-  start();
-  const startBoard = boardOf();
-  const boardNow = () => (b.moves() === startMoves ? startBoard : boardOf());
-  const pointArgs: Point[] = [];
-  const step = Math.max(2, Math.floor(tileSize / 4));
-  for (let x = 1; x < size.w; x += step)
-    for (let y = 1; y < size.h; y += step) pointArgs.push({ x, y });
+  const stateNow = () => b.live().state;
 
-  const click = (button: number) => {
-    const out = new Set<string>();
-    for (const p of pointArgs) {
-      start();
-      m.processInput(p.x, p.y, button);
-      m.processInput(p.x, p.y, button + (LEFT_RELEASE - LEFT_BUTTON));
-      const after = boardNow();
-      if (after !== startBoard) out.add(after);
+  const frames = new WeakMap<object, string>();
+  const frameOf = (state: unknown) => {
+    if (typeof state !== "object" || state === null)
+      return b.paint(state, game.newUi(state));
+    let frame = frames.get(state);
+    if (frame === undefined) {
+      frame = b.paint(state, game.newUi(state));
+      frames.set(state, frame);
     }
-    return out;
+    return frame;
   };
-
-  const presses: BoardsReached["presses"] = (buttons, options = {}) => {
-    const out = new Set<string>();
-    for (const p of pointArgs) {
-      start();
-      for (const k of options.before ?? []) m.processInput(0, 0, k);
-      for (const button of buttons) {
-        m.processInput(p.x, p.y, button);
-        m.processInput(p.x, p.y, button + (LEFT_RELEASE - LEFT_BUTTON));
-        if (options.every) {
-          const now = boardNow();
-          if (now !== startBoard) out.add(now);
-        }
-      }
-      const after = boardNow();
-      if (after !== startBoard) out.add(after);
-    }
-    return out;
-  };
+  const same = (x: unknown, y: unknown) =>
+    sameState(x, y) || (options.bySight === true && frameOf(x) === frameOf(y));
 
   // Every cursor position the arrows reach, as the key presses that reach it.
   // A position is the `Ui` together with the board, since an arrow that moves
-  // the board (a sliding puzzle) is a different position too.
+  // the board (a sliding puzzle) is a different position too. A board changes
+  // only through a committed move, so while the move count stands where the
+  // deal left it, the board is the deal's and is not written out.
   const arrows = [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT];
   const replay = (path: readonly number[]) => {
     start();
     for (const k of path) m.processInput(0, 0, k);
   };
   // The `Ui` is mutated in place, so it is serialized afresh every time.
-  const where = () => `${digest(b.live().ui)}|${boardNow()}`;
-  // Whether a key is pressed at the position just replayed, asked during the
-  // walk so no path is replayed again only to ask it.
-  const pressHere = () => {
+  const where = () =>
+    `${digest(b.live().ui)}|${b.moves() === startMoves ? "" : b.board()}`;
+  const positions: KeyPosition[] = [];
+  // The position just replayed, kept when a key is pressed there: asked during
+  // the walk so no path is replayed again only to ask it.
+  const keep = (path: number[]) => {
     const { state, ui } = b.live();
-    return keyAt(state, ui);
+    const at = pairAt(state, ui, game.newDrawState(state, tileSize));
+    if (at !== null) positions.push({ path, at, board: state });
   };
   replay([]);
   const met = new Set([where()]);
   const paths: number[][] = [[]];
-  const keyPaths: number[][] = pressHere() ? [[]] : [];
+  keep([]);
   for (let i = 0; i < paths.length && paths.length < CURSOR_CAP; i++)
     for (const a of arrows) {
       const path = [...paths[i], a];
@@ -433,29 +417,35 @@ export function boardsReached(
       if (met.has(at)) continue;
       met.add(at);
       paths.push(path);
-      if (pressHere()) keyPaths.push(path);
+      keep(path);
     }
 
-  const key = (code: number) => {
-    const out = new Set<string>();
-    for (const path of keyPaths) {
+  const key = (code: number) =>
+    positions.map(({ path }) => {
       replay(path);
-      const moves = b.moves();
-      const before = boardNow();
       m.processInput(0, 0, code);
-      if (b.moves() === moves) continue;
-      const after = boardOf();
-      if (after !== before) out.add(after);
-    }
-    return out;
+      return stateNow();
+    });
+
+  const press = ({ x, y }: Point, button: number) => {
+    m.processInput(x, y, button);
+    m.processInput(x, y, button + (LEFT_RELEASE - LEFT_BUTTON));
   };
-  return {
-    click,
-    presses,
-    key,
-    cursorPositions: paths.length,
-    keyPositions: keyPaths.length,
-  };
+  const pressed: BoardsReached["pressed"] = (buttons, options = {}) =>
+    positions.map(({ path, at }) => {
+      replay(path);
+      for (const k of options.before ?? []) m.processInput(0, 0, k);
+      const out: unknown[] = [];
+      if (options.every) out.push(stateNow());
+      for (const button of buttons) {
+        press(at, button);
+        if (options.every) out.push(stateNow());
+      }
+      if (!options.every) out.push(stateNow());
+      return out;
+    });
+
+  return { positions, key, pressed, same, cursorPositions: paths.length };
 }
 
 /** Past this many cursor positions the walk stops; a guard reading the walk

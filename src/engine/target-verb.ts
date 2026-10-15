@@ -21,8 +21,9 @@
  * — handles those arms in its own `interpretMove` before handing the rest here.
  *
  * `target-verb.test.ts` holds a declaration to the behavior: for every game
- * declaring `Game.targetVerbs`, Enter at the cursor reaches exactly the boards a
- * left-click reaches, and Space exactly those of its declared pointer verb.
+ * declaring `Game.targetVerbs`, Enter at every cursor position leaves the board
+ * a left-click leaves at `pointAt` of the cursor's target, and Space the board
+ * of its declared pointer verb.
  */
 
 import {

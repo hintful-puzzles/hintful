@@ -34,6 +34,7 @@ import {
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import { sameState } from "./testing/same-state.ts";
 import { itOverWholeSweep, perCommit } from "./testing/slow.ts";
 import { NO_FLASH } from "./win-wave.ts";
 
@@ -311,50 +312,6 @@ const SEEDS = ["hr-a", "hr-b", "hr-c", "hr-d", "hr-e"];
  * depth genuinely finds things.
  */
 const BREADTH_SEEDS = SEEDS.slice(0, 1);
-
-/**
- * Whether two states hold the same values in every field: a move that leaves
- * its board so is a step that does nothing.
- *
- * **What the two share by reference is not walked.** A move returns a new
- * state that keeps whatever it did not change, and for Loopy that is the grid,
- * a cyclic structure of every dot, edge and face that cost more to write out
- * once per step than the plan cost to compute (25 s of this file, 2026-10-12).
- * A move that changed shared structure in place would read here as a step
- * that does nothing, which is the louder of the two ways to be wrong about it.
- */
-function sameState(a: unknown, b: unknown, met = new Map<object, object>()): boolean {
-  if (Object.is(a, b)) return true;
-  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null)
-    return false;
-  // A pair met again is on a cycle; it is equal unless something else differs.
-  if (met.get(a) === b) return true;
-  met.set(a, b);
-  if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return false;
-  if (ArrayBuffer.isView(a) && !(a instanceof DataView)) {
-    const x = a as unknown as ArrayLike<number>;
-    const y = b as unknown as ArrayLike<number>;
-    if (x.length !== y.length) return false;
-    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
-    return true;
-  }
-  if (a instanceof Set || a instanceof Map) {
-    const x = [...a];
-    const y = [...(b as Set<unknown>)];
-    return x.length === y.length && x.every((v, i) => sameState(v, y[i], met));
-  }
-  const keys = Object.keys(a);
-  if (keys.length !== Object.keys(b).length) return false;
-  return keys.every(
-    (k) =>
-      Object.hasOwn(b, k) &&
-      sameState(
-        (a as Record<string, unknown>)[k],
-        (b as Record<string, unknown>)[k],
-        met,
-      ),
-  );
-}
 
 /** A structural key for a game state — typed arrays rendered as plain arrays so
  * two states compare equal iff every field matches. Used to detect a `hint()`
