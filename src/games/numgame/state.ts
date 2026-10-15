@@ -171,11 +171,30 @@ export function combined(
   return { value, made: { a, op, b } };
 }
 
-function played(slots: readonly (Tile | null)[], step: Step): (Tile | null)[] {
+/**
+ * The step with its places in the order the board plays them: the result
+ * lands in the larger number's place (the lower place between equals), so
+ * which number the player picked first changes nothing, and a hint's step is
+ * followed whichever way round it is tapped.
+ */
+export function normalized(slots: readonly (Tile | null)[], step: Step): Step {
   const { from, into, op } = step;
+  const x = slots[from]?.value ?? 0;
+  const y = slots[into]?.value ?? 0;
+  const lands = x > y || (x === y && from < into) ? from : into;
+  return lands === into ? step : { from: into, into: from, op };
+}
+
+function played(slots: readonly (Tile | null)[], given: Step): (Tile | null)[] {
   // Read from the save, so checked for shape before it is trusted.
-  if (!Number.isInteger(from) || !Number.isInteger(into) || !OPS.includes(op))
-    throw new Error(`numgame: not a combination: ${JSON.stringify(step)}`);
+  if (
+    !Number.isInteger(given.from) ||
+    !Number.isInteger(given.into) ||
+    !OPS.includes(given.op)
+  )
+    throw new Error(`numgame: not a combination: ${JSON.stringify(given)}`);
+  const step = normalized(slots, given);
+  const { from, into, op } = step;
   const tile = combined(slots, step);
   if (tile === null)
     throw new Error(`numgame: ${from} ${op} ${into} is not a combination here`);

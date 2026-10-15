@@ -168,19 +168,25 @@ export class Reach {
 }
 
 /** The place an expression's value ends up in when {@link stepsOf} plays it:
- * a combination's result takes the place of its smaller operand. */
+ * a combination's result lands in its larger operand's place, the lower place
+ * between equals, as `normalized` in `state.ts` plays every move. */
 function placeOf(e: Expr): number {
-  return e.kind === "number" ? e.place : placeOf(e.b);
+  return e.kind === "number" ? e.place : landing(e).into;
+}
+
+/** A combination's two places, its result's landing place as `into`. `a` is
+ * never the smaller operand. */
+function landing(e: Expr & { kind: "combine" }): { from: number; into: number } {
+  const pa = placeOf(e.a);
+  const pb = placeOf(e.b);
+  const intoA = e.a.value > e.b.value || pa < pb;
+  return intoA ? { from: pb, into: pa } : { from: pa, into: pb };
 }
 
 /** The combinations that play `e`, the larger operand's side first. */
 export function stepsOf(e: Expr): Step[] {
   if (e.kind === "number") return [];
-  return [
-    ...stepsOf(e.a),
-    ...stepsOf(e.b),
-    { from: placeOf(e.a), into: placeOf(e.b), op: e.op },
-  ];
+  return [...stepsOf(e.a), ...stepsOf(e.b), { ...landing(e), op: e.op }];
 }
 
 /** The numbers on a board, with their places: what {@link Reach} searches. */

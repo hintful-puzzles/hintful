@@ -33,12 +33,16 @@ Countdown's own rule, and it makes no target unreachable that a negative would
 reach: `x − (a − b)` with `a < b` is `x + (b − a)`, and a product or quotient
 of two negatives is that of their opposites.
 
-**One move, two taps of numbers and one of an operator.** The order in which a
-player taps the two numbers decides only where the result goes (the second
-tapped number's place, as NYT's Digits does). `−` and `÷` always take the
-smaller from or into the larger: the other order is never a legal move, except
-`x ÷ x`, which is the same either way. So the tile order never makes a move
-illegal, and the player is never punished for reading `75, 3, −` as `3 − 75`.
+**One move, two taps of numbers and one of an operator, in either order.**
+`−` and `÷` always take the smaller from or into the larger: the other order is
+never a legal move, except `x ÷ x`, which is the same either way. The result
+lands in the larger number's place (the lower place between equals). The
+first version put it in the second-tapped number's place, as NYT's Digits
+does; the hint review found that a player who followed a step tapping its two
+numbers the other way round dropped the plan, and its next step read as a
+restart. A place means nothing in this puzzle, so the order of the taps now
+means nothing either, and "the smaller slides onto the larger" is as easy to
+predict.
 
 ## D3 — The solver: values reachable from each subset
 
@@ -83,9 +87,9 @@ Both are refinements of a tier, and neither changes what the hint can say.
 ## D5 — The board
 
 - **Six tiles**, two rows of three, in the desc's order (large numbers first,
-  as Countdown lays out its cards). A combination empties the first-tapped
-  tile's place and puts the result in the second's, so the board never
-  reflows and a tile never moves under the player's finger.
+  as Countdown lays out its cards). A combination empties the smaller
+  number's place and puts the result in the larger's, so the board never
+  reflows and no tile moves but the one combined.
 - **A tile the player made says how**: its sum, small, under its value
   ("75 − 3"). The board then reads as the player's working.
 - **The target** above the tiles; **the four operators** in a row below.
@@ -99,7 +103,7 @@ Both are refinements of a tier, and neither changes what the hint can say.
   tap the one under it, `+ - * /` (and `x`) choose an operator, Escape clears
   the selection.
 - **The secondary button means nothing** (`ignoresSecondaryButton`).
-- **Animation**: the first number slides into the second's place.
+- **Animation**: the smaller number slides onto the larger.
 
 ## D6 — Solve, the mistake check, a lost position
 

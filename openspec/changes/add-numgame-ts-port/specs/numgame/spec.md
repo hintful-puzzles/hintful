@@ -4,21 +4,21 @@
 
 ### Requirement: Rules: Numgame's board and what solves it
 
-The board SHALL be six places, each holding a number or nothing, and a target. A move SHALL combine the numbers in two places with +, −, × or ÷, empty the first place and put the result in the second, recording how it was made. The puzzle SHALL be solved when a number on the board equals the target, whichever place holds it.
+The board SHALL be six places, each holding a number or nothing, and a target. A move SHALL combine the numbers in two places with +, −, × or ÷, empty one place and put the result in the other, recording how it was made. The puzzle SHALL be solved when a number on the board equals the target, whichever place holds it.
 
 #### Scenario: Making the target wins
 
 - **WHEN** on `l4dh:100,75,50,25,6,3=952` the player makes 23800 and then divides it by 25
-- **THEN** the place that held 25 holds 952 and the game's status is solved
+- **THEN** the place that held 23800 holds 952 and the game's status is solved
 
 ### Requirement: Rules: Every result is a positive whole number
 
-A combination SHALL be a move only where its result is a positive whole number. − and ÷ SHALL take the smaller number from or into the larger, whichever was picked first, so the order of the two numbers decides only where the result goes. A subtraction of equal numbers and a division with a remainder SHALL NOT be moves.
+A combination SHALL be a move only where its result is a positive whole number. − and ÷ SHALL take the smaller number from or into the larger. The result SHALL take the larger number's place, the lower place between equals, and the smaller's place SHALL be emptied, so the order the two were picked in changes nothing. A subtraction of equal numbers and a division with a remainder SHALL NOT be moves.
 
 #### Scenario: Subtraction takes the smaller from the larger
 
 - **WHEN** 3 is combined with 75 by −, 3 picked first
-- **THEN** the result is 72, in 75's place
+- **THEN** the result is 72, in 75's place, and 3's place is empty
 
 #### Scenario: A division with a remainder is refused
 
@@ -73,16 +73,16 @@ A tap on a number SHALL select it, or deselect it if selected, or move the selec
 #### Scenario: Three taps make a move
 
 - **WHEN** the player taps 100, then +, then 6
-- **THEN** 100 + 6 is played and 106 stands in 6's place
+- **THEN** 100 + 6 is played and 106 stands in 100's place
 
 ### Requirement: Hint: A shortest line, told by its last operation
 
-The hint SHALL offer a shortest line of combinations from the board on display, one step each. The first step SHALL say how many operations the target takes at the fewest and the two numbers its last operation combines; each later step SHALL say which of those two it works toward, where it does not make it; the last SHALL say it makes the target. Each step SHALL ring its two numbers and its operator.
+The hint SHALL offer a shortest line of combinations from the board on display, one step each. The first step SHALL say the fewest operations the target needs and the two numbers its last operation combines; a step SHALL say which of those two it works toward, or the split, where it makes one; the last SHALL say it makes the target. Each step SHALL ring its two numbers and its operator.
 
 #### Scenario: The famous board's first step
 
 - **WHEN** a hint is asked on `l4dh:100,75,50,25,6,3=952`
-- **THEN** the plan has five steps and the first says that 952 takes 5 operations at the fewest
+- **THEN** the plan has five steps and the first says that 952 needs at least 5 operations
 
 ### Requirement: Hint: A lost board is refused with the way back
 
@@ -95,7 +95,7 @@ Where the numbers on the board can no longer make the target, the hint SHALL ref
 
 ### Requirement: Look: A made number says how it was made
 
-A number the player made SHALL show beneath its value the operation that made it, larger operand first. A number as dealt SHALL sit on the given surface, a made one on the plain one. With a number and an operator chosen, the numbers they cannot combine with SHALL be grayed. A move SHALL slide the first number onto the second's place.
+A number the player made SHALL show beneath its value the operation that made it, larger operand first. A number as dealt SHALL sit on the given surface, a made one on the plain one. With a number and an operator chosen, the numbers they cannot combine with SHALL be grayed. A move SHALL slide the smaller number onto the larger's place.
 
 #### Scenario: A made number shows its sum
 

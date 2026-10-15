@@ -46,10 +46,15 @@ const sum = (c: Combination): Narration => {
   return phrase`${mark.as("ring", TILE, [hi.place], String(hi.value))} ${mark.as("ring", SIGN, [c.op], OP_SIGN[c.op])} ${mark.as("ring", TILE, [lo.place], String(lo.value))} = ${String(c.makes)}`;
 };
 
-/** The combination, and the half of the split it builds toward where it does
- * not make that half itself. */
-const toward = (c: Combination, half: number): Narration =>
-  c.makes === half ? sum(c) : phrase`${sum(c)}, toward ${String(half)}`;
+/** The split as the board writes a sum: `927 + 25`. */
+const splitText = (s: Split): string => `${s.a} ${OP_SIGN[s.op]} ${s.b}`;
+
+/** The combination, and the half of the split it builds: toward that half,
+ * or, where it makes the half, the split it is for. */
+const toward = (c: Combination, split: Split, half: number): Narration =>
+  c.makes === half
+    ? phrase`${sum(c)}, for ${splitText(split)}`
+    : phrase`${sum(c)}, toward ${String(half)}`;
 
 const operations = (n: number): string => (n === 1 ? "1 operation" : `${n} operations`);
 
@@ -66,20 +71,23 @@ export interface Split {
  * Every step reads as a leg of one line: the first says how few operations
  * the target takes and how the line's last one splits it, and each leg after
  * says which half it builds. A count of operations is the solver's whole
- * search, so "at the fewest" is proved, never estimated.
+ * search, so "at least" is proved, never estimated.
  */
 export const say = {
   /** The first combination of a line of several. */
   first: (split: Split, c: Combination, half: number): Sentence =>
     sentence({
-      look: phrase`${String(split.target)} takes ${operations(split.fewest)} at the fewest, as ${String(split.a)} ${OP_SIGN[split.op]} ${String(split.b)}`,
-      move: toward(c, half),
+      look: phrase`${String(split.target)} needs at least ${operations(split.fewest)}, ending with ${splitText(split)}`,
+      move: toward(c, split, half),
       relation: { kind: "sequence", at: "first" },
     }),
 
   /** A combination between the first and the last. */
-  next: (c: Combination, half: number): Sentence =>
-    sentence({ move: toward(c, half), relation: { kind: "sequence", at: "next" } }),
+  next: (split: Split, c: Combination, half: number): Sentence =>
+    sentence({
+      move: toward(c, split, half),
+      relation: { kind: "sequence", at: "next" },
+    }),
 
   /** The combination that makes the target, after others. */
   last: (c: Combination): Sentence =>

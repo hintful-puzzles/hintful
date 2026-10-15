@@ -10,7 +10,7 @@ Every target can be made exactly.
 
 {{controls}}
 
-The result takes the place of the second number you picked, and says how it was made beneath its value. − and ÷ always take the smaller number from or into the larger, whichever you picked first. Once a number and an operator are picked, the numbers they cannot combine with are grayed out.
+The smaller number slides onto the larger, and the result takes the larger's place and says how it was made beneath its value. Which of the two you pick first makes no difference: − and ÷ always take the smaller number from or into the larger. Once a number and an operator are picked, the numbers they cannot combine with are grayed out.
 
 You can also pick an operator with its key: +, −, * (or x) and /. With no number picked, the key picks the number under the cursor as well, so from the keyboard a move is a number, an operator's key and Enter on the second number. Escape puts down the number you picked. Undo takes back a combination.
 
@@ -20,7 +20,7 @@ This is the numbers round of the British television quiz *Countdown*, where the 
 
 ## Hints
 
-**Hint** shows a shortest way to the target from the numbers you have now, one combination a step. The first step says how few operations the target takes and what its last operation is: 952 as 23800 ÷ 25, say. Each step after says which of those two numbers it is working toward, so you can see the shape of the calculation before you make it.
+**Hint** shows a shortest way to the target from the numbers you have now, one combination a step. The first step says how few operations the target needs and what its last operation is: 952 ending with 927 + 25, say. Each step after says which of those two numbers it is working toward, so you can see the shape of the calculation before you make it.
 
 {{hint-marks}}
 

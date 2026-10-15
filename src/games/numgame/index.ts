@@ -58,6 +58,7 @@ import {
   type NumgameState,
   type NumgameUi,
   newState,
+  normalized,
   OPS_AT_EASIEST,
   PLACES,
   paramConfig,
@@ -116,7 +117,7 @@ const tap: TargetVerb<NumgameState, NumgameUi, Target, NumgameMove> = {
       ui.selected = t;
       return UI_UPDATE;
     }
-    const step = { from: ui.selected, into: t, op: ui.op };
+    const step = normalized(s.slots, { from: ui.selected, into: t, op: ui.op });
     return combined(s.slots, step) === null ? null : { kind: "combine", ...step };
   },
 };

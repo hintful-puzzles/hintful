@@ -396,7 +396,9 @@ export function redraw(
   const board = moving && prev ? prev : state;
   const slots = board.slots.map((t, i) => (moving?.from === i ? null : t));
 
-  const marks = stepMarks(hint);
+  // A step's marks are of the board it was asked on, and mid-slide that board
+  // is being left, its first number in flight, so they wait for the slide.
+  const marks = stepMarks(moving ? undefined : hint);
   const ringedTiles = new Set(marks.of("ring", TILE));
   const ringedSigns = new Set(marks.of("ring", SIGN));
   const legal = (place: number): boolean =>

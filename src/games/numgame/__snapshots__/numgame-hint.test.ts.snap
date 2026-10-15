@@ -2,9 +2,9 @@
 
 exports[`numgame: pinned hint positions > says, at each pin 1`] = `
 {
-  "first": "153 takes 3 operations at the fewest, as 17 × 9. First, 25 − 8 = 17.",
+  "first": "153 needs at least 3 operations, ending with 17 × 9. First, 25 − 8 = 17, for 17 × 9.",
   "last": "Last, 17 × 9 = 153, the target.",
-  "next": "Next, 10 − 1 = 9.",
+  "next": "Next, 10 − 1 = 9, for 17 × 9.",
   "only": "17 × 9 = 153, the target.",
 }
 `;

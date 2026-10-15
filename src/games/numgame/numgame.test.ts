@@ -77,11 +77,25 @@ describe("numgame desc", () => {
 describe("numgame moves", () => {
   const start = newState(P, DESC);
 
-  it("puts the result in the second number's place and empties the first's", () => {
-    const s = executeMove(start, combo(0, "+", 4));
-    expect(s.slots[0]).toBeNull();
-    expect(s.slots[4]).toEqual({ value: 106, made: { a: 100, op: "+", b: 6 } });
+  it("puts the result in the larger number's place and empties the smaller's, either way round", () => {
+    for (const m of [combo(0, "+", 4), combo(4, "+", 0)]) {
+      const s = executeMove(start, m);
+      expect(s.slots[4]).toBeNull();
+      expect(s.slots[0]).toEqual({ value: 106, made: { a: 100, op: "+", b: 6 } });
+    }
     expect(start.slots[0]?.value).toBe(100);
+  });
+
+  it("puts the result of two equal numbers in the lower place", () => {
+    const twos = newState(P, "2,2,3,4,5,6=100");
+    expect(executeMove(twos, combo(1, "*", 0)).slots.map((t) => t?.value)).toEqual([
+      4,
+      undefined,
+      3,
+      4,
+      5,
+      6,
+    ]);
   });
 
   it("takes the smaller from or into the larger, whichever was tapped first", () => {
@@ -92,7 +106,7 @@ describe("numgame moves", () => {
   it.each([
     ["a remainder", combo(1, "/", 4)],
     ["a difference of nothing", combo(2, "-", 2)],
-    ["an empty place", combo(0, "+", 4)],
+    ["an empty place", combo(5, "+", 4)],
   ])("refuses %s", (_why, move) => {
     const s = executeMove(start, combo(0, "+", 5));
     expect(() => executeMove(s, move)).toThrow();
@@ -108,15 +122,15 @@ describe("numgame moves", () => {
   it("is solved when a number on the board is the target", () => {
     let s: NumgameState = start;
     for (const m of [
-      combo(0, "+", 4), // 106
-      combo(4, "*", 5), // 318
-      combo(5, "*", 1), // 23850
-      combo(1, "-", 2), // 23800
+      combo(0, "+", 4), // 106, in 100's place
+      combo(0, "*", 5), // 318
+      combo(0, "*", 1), // 23850
+      combo(0, "-", 2), // 23800
     ]) {
       s = executeMove(s, m);
       expect(numgameGame.status(s)).toBe("ongoing");
     }
-    expect(numgameGame.status(executeMove(s, combo(2, "/", 3)))).toBe("solved");
+    expect(numgameGame.status(executeMove(s, combo(0, "/", 3)))).toBe("solved");
   });
 });
 
@@ -130,7 +144,8 @@ describe("numgame input", () => {
     const ui = numgameGame.newUi(start);
     expect(tap(ui, 0)).toBe(UI_UPDATE);
     expect(tap(ui, opElement("+"))).toBe(UI_UPDATE);
-    expect(tap(ui, 4)).toEqual(combo(0, "+", 4));
+    // 100 is the larger, so it takes the result.
+    expect(tap(ui, 4)).toEqual(combo(4, "+", 0));
   });
 
   it("moves the selection while no operator is chosen, and drops it on a second tap", () => {
@@ -172,7 +187,7 @@ describe("numgame input", () => {
     expect(ui).toMatchObject({ selected: 0, op: "+" });
     press(CURSOR_DOWN);
     press(CURSOR_RIGHT);
-    expect(press(CURSOR_SELECT)).toEqual(combo(0, "+", 4));
+    expect(press(CURSOR_SELECT)).toEqual(combo(4, "+", 0));
   });
 
   it("reaches the operators with the cursor", () => {
@@ -283,7 +298,8 @@ describe("numgame completion", () => {
   });
 
   it("starts again from the numbers dealt where the board as played is lost", () => {
-    const lost = executeMove(executeMove(start, combo(0, "*", 1)), combo(1, "*", 2));
+    // 100 × 75 × 50 = 375000, with 25, 6 and 3 left.
+    const lost = executeMove(executeMove(start, combo(0, "*", 1)), combo(0, "*", 2));
     expect(numgameGame.hasNoSolution?.(lost)).toMatchObject({ ok: false });
     const solved = numgameGame.solve?.(start, lost);
     if (!solved?.ok) throw new Error("expected a solution");
@@ -305,12 +321,12 @@ describe("numgame save", () => {
     const { midend } = renderScenario({
       game: numgameGame,
       id: ID,
-      moves: [combo(0, "+", 4), combo(4, "*", 5)],
+      moves: [combo(0, "+", 4), combo(0, "*", 5)],
     });
     const loaded = new Midend(numgameGame);
     expect(loaded.loadGame(midend.saveGame())).toBeNull();
     expect(loaded.formatAsText()).toBe(
-      "Target: 952\n-  75  50\n25  -  318 (106 × 3)\n",
+      "Target: 952\n318 (106 × 3)  75  50\n25  -  -\n",
     );
   });
 });

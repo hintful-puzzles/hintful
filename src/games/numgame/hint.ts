@@ -4,7 +4,7 @@
  *
  * No combination is ever forced, so this is a search hint
  * (docs/hints-search.md), but an exact one: the solver's search is
- * exhaustive, so "at the fewest" is proved. What a step teaches is the line's
+ * exhaustive, so "at least" is proved. What a step teaches is the line's
  * shape, the target split by the line's last operation into two numbers made
  * from separate tiles; the split is read once, from the plan, and every step
  * says which half it builds (§ "Hold a stable subgoal").
@@ -20,7 +20,12 @@ import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts"
 import { phrase } from "../../engine/hint-words.ts";
 import { type Combination, type Split, say } from "./hint-text.ts";
 import { findLine, reachOf, type Step, stepsOf } from "./solver.ts";
-import { executeMove, type NumgameMove, type NumgameState } from "./state.ts";
+import {
+  executeMove,
+  type NumgameMove,
+  type NumgameState,
+  normalized,
+} from "./state.ts";
 
 /** Where a step stands in its line. */
 export const NUMGAME_RUNGS = ["first", "next", "last", "only"] as const;
@@ -69,7 +74,7 @@ export function numgameHint(
           ? (["first", say.first(split, c, half)] as const)
           : i === line.length - 1
             ? (["last", say.last(c)] as const)
-            : (["next", say.next(c, half)] as const);
+            : (["next", say.next(split, c, half)] as const);
     const move: NumgameMove = { kind: "combine", ...step };
     steps.push({
       move,
@@ -97,18 +102,18 @@ function combination(board: NumgameState, step: Step): Combination {
   };
 }
 
-/** A combination is settled by its two places and its operator, so the step's
- * own lands exactly the board the plan expects; anything else drops the plan,
- * the same two numbers the other way round included, since the result would
- * stand in the other place. */
+/** A combination is settled by its two numbers and its operator, so the step's
+ * own, picked in either order, lands exactly the board the plan expects;
+ * anything else drops the plan. */
 export function numgameKeepTrack(
   m: NumgameMove,
   step: Plan | HintStep<NumgameMove>,
-  _s: NumgameState,
+  s: NumgameState,
 ): HintTrackVerdict {
   const want = step.move;
   if (m.kind !== "combine" || want.kind !== "combine") return "off";
-  return m.from === want.from && m.into === want.into && m.op === want.op
+  const made = normalized(s.slots, m);
+  return made.from === want.from && made.into === want.into && made.op === want.op
     ? "completed"
     : "off";
 }

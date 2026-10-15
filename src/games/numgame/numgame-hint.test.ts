@@ -83,16 +83,17 @@ describe("numgame hint plans", () => {
     }
   });
 
-  it("keeps a step its own combination makes, and drops it for any other", () => {
+  it("keeps a step its combination makes in either order, and drops it for any other", () => {
     const { state, step } = pinned("first");
     if (step.move.kind !== "combine") throw new Error("a step combines");
     const { from, into, op } = step.move;
     const keep = numgameGame.hintKeepTrack;
     expect(keep?.(step.move, step, state)).toBe("completed");
-    // The same two numbers the other way round put the result in the other place.
     expect(keep?.({ kind: "combine", from: into, into: from, op }, step, state)).toBe(
-      "off",
+      "completed",
     );
+    const other = op === "+" ? "*" : "+";
+    expect(keep?.({ kind: "combine", from, into, op: other }, step, state)).toBe("off");
   });
 });
 
