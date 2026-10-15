@@ -19,6 +19,7 @@
 
 import { Dsf } from "./dsf.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
+import { adjacentCells } from "./redivide.ts";
 import { shuffle } from "./shuffle.ts";
 
 /** The rectangle to divide. */
@@ -490,4 +491,18 @@ export function regionNumbers(regions: Dsf, cells: number): Int32Array {
     }
     return number;
   });
+}
+
+/**
+ * The division `regions` numbers, as the forest the region-wall desc is
+ * written from (`encodeRegionWalls`): the inverse of {@link regionNumbers},
+ * for a generator that edits its regions as numbers, since a region joined in
+ * a `Dsf` cannot give a cell back.
+ */
+export function regionForest(p: DividedGrid, regions: Int32Array): Dsf {
+  const joined = new Dsf(p.w * p.h);
+  regions.forEach((r, i) => {
+    for (const j of adjacentCells(p, i)) if (regions[j] === r) joined.merge(i, j);
+  });
+  return joined;
 }

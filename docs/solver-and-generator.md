@@ -1260,12 +1260,14 @@ states what it wants:
   fold single cells in, because they want pairs and a merge under a largest
   size deals regions at that size.
 - **Where the regions are the board's only clue, a division dealt at random
-  seldom has one answer, and the game mends it.** Star Battle's regions grown
-  round its stars gave no board its ladder finishes in 300 draws at 8x8. The
-  mend moves one cell at a time between two regions that are there: a cell
-  holding a star of a second answer `solvedPositions` found, or one the
-  ladder left open, kept unless more cells are left open. Run it with the
-  ladder capped at the tier asked for. Exemplar: `mend` in
+  seldom has one answer, and the engine mends it.** Star Battle's regions
+  grown round its stars gave no board its ladder finishes in 300 draws at
+  8x8. `mendDivision`
+  ([`mend-division.ts`](../src/engine/mend-division.ts)) moves one cell at a
+  time between two regions that are there: a cell that breaks a second
+  answer the game's search met, or one its ladder left open, kept unless
+  more cells are left open. The game supplies the judge, with its ladder
+  capped at the tier asked for. Exemplar: `judgeOf` in
   [`starbattle/generator.ts`](../src/games/starbattle/generator.ts).
   `redivide.ts` mends only regions of one size.
 - **Moving a division onto a walk here keeps its boards only if the draws

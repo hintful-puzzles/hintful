@@ -10,10 +10,14 @@
 
 import { solvedPositions } from "../../engine/answer-search.ts";
 import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
-import { growFromSeeds, mergeToCount, regionNumbers } from "../../engine/divide.ts";
-import { Dsf } from "../../engine/dsf.ts";
-import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { adjacentCells } from "../../engine/redivide.ts";
+import {
+  growFromSeeds,
+  mergeToCount,
+  regionForest,
+  regionNumbers,
+} from "../../engine/divide.ts";
+import { type MendJudge, mendDivision } from "../../engine/mend-division.ts";
+import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { StarbattleBoard, solveStarbattle } from "./solver.ts";
@@ -169,169 +173,34 @@ function otherAnswers(
  * hands its stars over at a glance. */
 const smallestRegion = (p: StarbattleParams): number => 2 * p.stars;
 
-/** Whether the region of `cell` is still one piece, and large enough,
- * without it. */
-function sparable(p: StarbattleParams, regions: Int32Array, cell: number): boolean {
-  const grid = { w: p.size, h: p.size };
-  const rest: number[] = [];
-  regions.forEach((r, i) => {
-    if (r === regions[cell] && i !== cell) rest.push(i);
-  });
-  if (rest.length < smallestRegion(p)) return false;
-  const left = new Set(rest);
-  const stack = [rest[0]];
-  left.delete(rest[0]);
-  for (let i = stack.pop(); i !== undefined; i = stack.pop())
-    for (const j of adjacentCells(grid, i)) if (left.delete(j)) stack.push(j);
-  return left.size === 0;
-}
-
-/** The moves of a cell at one board before it is given up, for each cell of
- * its area. A board that needs more is going round in circles. */
-const MENDS_PER_CELL = 2;
-
-/** The moves a board may make without leaving fewer cells open than it ever
- * has before it is given up: a fresh draw comes right sooner than one that
- * has stopped coming closer (measured 2026-10-15 in the change
- * `deal-star-battle-in-under-a-second`). */
-const STALL = 30;
-
-/** After a search that met no second answer, the moves that may go by
- * without one leaving fewer cells open before the search is asked again. The
- * search is the costly part of a move, and a board it found nothing in
- * seldom gains a second answer from a cell the ladder left open. */
-const QUIET = 20;
-
 /**
- * Change `regions` until the ladder, capped at `cap`, finishes the board and
- * capped a tier lower does not, and say whether that was reached. The stars
- * at `answer` fit the regions before and after.
- *
- * Each pass takes one cell where `answer` has no star into a region beside
- * it, the regions staying connected. Where the board has another answer the
- * cell is one of its stars: the region it joins then holds a star too many in
- * that answer and the one it left a star too few. Where it has none, the cell
- * is one the ladder left open, and the move is kept unless it leaves more
- * cells open than before.
- *
- * A board the easier ladder finishes too takes moves that keep it finished
- * at `cap` until the easier one stops on it, for as many moves as the deal
- * has made toward a board that comes right, `spent.moves`, which this adds
- * to: past that, starting again is as cheap. Where a board is quick to come right that is soon, and
- * where it is slow, a board that came right is worth a long walk.
+ * The mend's judge (`engine/mend-division.ts`): the ladder capped at `cap`
+ * on the regions as they stand, a second answer's stars, and the ladder a
+ * tier lower. A star of a second answer moved to another region leaves that
+ * region a star too many in it.
  */
-function mend(
+function judgeOf(
   p: StarbattleParams,
   regions: Int32Array,
   answer: ReadonlySet<number>,
   cap: number,
-  rng: RandomState,
-  spent: { moves: number },
-): boolean {
+): MendJudge<Uint8Array> {
   const { size, stars } = p;
-  const grid = { w: size, h: size };
-  const deduce = (tier = cap): { marks: Uint8Array; open: number } => {
+  const deduce = (tier: number) => {
     const marks = new Uint8Array(size * size);
     solveStarbattle(new StarbattleBoard(size, stars, regions, marks), tier);
-    return { marks, open: marks.reduce((n, m) => n + (m === BLANK ? 1 : 0), 0) };
+    const open = Array.from(marks.keys()).filter((i) => marks[i] === BLANK);
+    return { open, position: marks };
   };
-
-  /** Each way to take one of `from` into a region beside it. */
-  const waysFrom = (from: Iterable<number>): [cell: number, to: number][] => {
-    const ways: [cell: number, to: number][] = [];
-    for (const cell of from) {
-      if (answer.has(cell) || !sparable(p, regions, cell)) continue;
-      for (const j of adjacentCells(grid, cell))
-        if (regions[j] !== regions[cell]) ways.push([cell, regions[j]]);
-    }
-    return ways;
+  return {
+    deduce: () => deduce(cap),
+    others: (marks) => otherAnswers(p, regions, answer, marks, cap),
+    tooEasy: cap === 0 ? null : () => deduce(cap - 1).open.length === 0,
   };
-
-  /** Move a cell, and keep the move where `keep` says so of the board it
-   * makes. Gives the cell where the move was kept. */
-  const move = (
-    ways: readonly [cell: number, to: number][],
-    keep: (next: ReturnType<typeof deduce>) => boolean,
-  ): number | null => {
-    const [cell, to] = ways[randomUpto(rng, ways.length)];
-    const was = regions[cell];
-    regions[cell] = to;
-    const next = deduce();
-    if (!keep(next)) {
-      regions[cell] = was;
-      return null;
-    }
-    at = next;
-    return cell;
-  };
-
-  let at = deduce();
-  // Second answers the search has met that still fit the regions. A move
-  // breaks those with a star in the cell it moves and leaves the rest, so the
-  // search is asked only when none is left.
-  let others: number[][] = [];
-  // Whether the board has changed since the search was last asked. A move
-  // taken back leaves the board as it was.
-  let changed = true;
-  // The search last met no second answer, and the moves since one last left
-  // fewer cells open.
-  let quiet = false;
-  let sinceGain = 0;
-  let fewest = at.open;
-  let sinceFewest = 0;
-  // The moves the walk toward a harder board has left.
-  let walk: number | null = null;
-  for (let moves = 0; moves < MENDS_PER_CELL * size * size; moves++) {
-    if (at.open === 0) {
-      // A move taken back leaves the easier ladder where it was.
-      if (cap === 0 || (changed && deduce(cap - 1).open > 0)) return true;
-      walk ??= spent.moves;
-      if (walk-- <= 0) return false;
-      const ways = waysFrom(regions.keys());
-      if (ways.length === 0) return false;
-      changed = move(ways, (next) => next.open === 0) !== null;
-      continue;
-    }
-    if (sinceFewest >= STALL) return false;
-    spent.moves++;
-    const resting = quiet && sinceGain < QUIET;
-    if (changed && others.length === 0 && !resting) {
-      others = otherAnswers(p, regions, answer, at.marks, cap);
-      quiet = others.length === 0;
-      sinceGain = 0;
-    }
-    changed = false;
-    const other = others.length > 0 ? others[0] : null;
-    let ways = waysFrom(
-      other ?? Array.from(at.marks.keys()).filter((i) => at.marks[i] === BLANK),
-    );
-    // Another answer none of whose stars can move is broken up from
-    // anywhere: the next pass meets a different one.
-    if (ways.length === 0 && other) ways = waysFrom(at.marks.keys());
-    if (ways.length === 0) {
-      if (!resting) return false;
-      // The open cells have nowhere to go: ask the search after all.
-      sinceGain = QUIET;
-      changed = true;
-      continue;
-    }
-    const before = at.open;
-    const cell = move(ways, (next) => other !== null || next.open <= at.open);
-    sinceGain = at.open < before ? 0 : sinceGain + 1;
-    if (cell !== null) {
-      changed = true;
-      others = others.filter((stars) => !stars.includes(cell));
-    }
-    if (at.open < fewest) {
-      fewest = at.open;
-      sinceFewest = 0;
-    } else sinceFewest++;
-  }
-  return false;
 }
 
 /** A board the ladder finishes when capped at `cap`, as each cell's region.
- * `null` where this draw came to nothing. `spent` is as {@link mend} has
+ * `null` where this draw came to nothing. `spent` is as `mendDivision` has
  * it. */
 function drawRegions(
   p: StarbattleParams,
@@ -346,17 +215,17 @@ function drawRegions(
   const cells = new Int32Array(p.size);
   for (const r of regions) cells[r]++;
   if (cells.some((n) => n < smallestRegion(p))) return null;
-  return mend(p, regions, new Set(seeds), cap, rng, spent) ? regions : null;
-}
-
-/** The regions as the forest the desc is written from. */
-function joinedCells(size: number, regions: Int32Array): Dsf {
-  const grid = { w: size, h: size };
-  const joined = new Dsf(size * size);
-  regions.forEach((r, i) => {
-    for (const j of adjacentCells(grid, i)) if (regions[j] === r) joined.merge(i, j);
+  const answer = new Set(seeds);
+  const mended = mendDivision({
+    grid: { w: p.size, h: p.size },
+    regions,
+    fixed: answer,
+    smallest: smallestRegion(p),
+    judge: judgeOf(p, regions, answer, cap),
+    rng,
+    spent,
   });
-  return joined;
+  return mended ? regions : null;
 }
 
 export function newStarbattleDesc(
@@ -376,6 +245,8 @@ export function newStarbattleDesc(
         cap,
       );
     if (solvableAtExactlyTier(capped, p.diff))
-      return { desc: encodeDesc(joinedCells(p.size, regions), p.size) };
+      return {
+        desc: encodeDesc(regionForest({ w: p.size, h: p.size }, regions), p.size),
+      };
   }
 }

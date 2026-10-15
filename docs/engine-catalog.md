@@ -60,6 +60,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `divvy.ts` — random equal-omino partition | a generator divides a rectangle into equal regions |
 | – `redivide.ts` — divide a few regions of a partition again | a generator mends a division into regions of one size where it fails |
 | – `divide.ts` — regions of unequal size | a generator divides a grid into regions that differ in size |
+| – `mend-division.ts` — mend a division until it has one answer | a board's regions are its only clue |
 | – `laydomino.ts` — random domino tiling | a generator tiles a board with dominoes |
 | – `symmetric-blacks.ts` — symmetric black-square placement | a generator places black squares symmetrically |
 | – `loopgen.ts` — random loop generation | a generator needs a random closed loop |
@@ -415,12 +416,27 @@ wherever the rule allows, `mergeToCount` joins them toward a number of
 regions and returns `null` where the rule cannot be met, `growFromSeeds`
 grows a region round each cell it is given (`scatterSeeds` draws them), and
 `growToSize` grows one region at a time to a size the game draws.
-`regionNumbers` reads any division as a number for each cell. Which walk
+`regionNumbers` reads any division as a number for each cell, and
+`regionForest` turns those numbers back into the `Dsf` a desc is written
+from. Which walk
 suits which rule is
 [`solver-and-generator.md`](./solver-and-generator.md) § "A division into
 regions is the engine's". Byte-match critical: `mergeNeighbors` and
 `growFromSeeds` are upstream's draws, which Rome's and Map's fixtures pin.
 Exemplars: `rome/generator.ts`, `map/generator.ts`, `seismic/generator.ts`.
+
+### `mend-division.ts` — mend a division until it has one answer
+
+Reach for it in a generator whose regions are the board's only clue, after
+the division is dealt round the answer. `mendDivision` moves one cell at a
+time into a region beside it, each region staying connected and no smaller
+than the game's least size, until the game's deductions finish the board and
+its easier tier does not. The game hands it a judge: what its deductions
+leave open, the second answers its search meets (as the cells that break
+each), and whether the tier below finishes the board too. It also names the
+cells that never move, where the answer has what a region counts. The search
+is usually `solvedPositions` from `answer-search.ts`. Exemplar:
+`starbattle/generator.ts`.
 
 ### `laydomino.ts` — random domino tiling
 
