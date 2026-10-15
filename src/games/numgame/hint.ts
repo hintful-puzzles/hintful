@@ -1,25 +1,22 @@
 /**
- * Numgame's hint: a shortest line of combinations from the board on display,
- * offered whole, one step a combination (`add-numgame-ts-port` design D7).
+ * Numgame's hint: one combination of a shortest line from the board on
+ * display, the one that works on the biggest number (`add-numgame-ts-port`
+ * design D7). A request gives away one operation and no more of the line.
  *
  * No combination is ever forced, so this is a search hint
  * (docs/hints-search.md), but an exact one: the solver's search is
- * exhaustive, so "at least" is proved. What a step teaches is the line's
- * shape, the target split by the line's last operation into two numbers made
- * from separate tiles; the split is read once, from the plan, and every step
- * says which half it builds (§ "Hold a stable subgoal").
+ * exhaustive, so the count of operations the step states is proved.
  *
- * The plan cannot cycle when recomputed: each step lowers the fewest
- * operations still needed by exactly one, since the rest of the line still
- * makes the target and no shorter line can exist (§ "Recompute-stable
- * plans").
+ * A recomputed hint cannot cycle: each step lowers the fewest operations
+ * still needed by exactly one, since the rest of the line still makes the
+ * target and no shorter line can exist (§ "Recompute-stable plans").
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
 import { phrase } from "../../engine/hint-words.ts";
-import { type Combination, type Split, say } from "./hint-text.ts";
-import { findLine, reachOf, type Step, stepsOf } from "./solver.ts";
+import { type Combination, say } from "./hint-text.ts";
+import { findLine, nextStep, reachOf, type Step } from "./solver.ts";
 import {
   executeMove,
   type NumgameMove,
@@ -27,8 +24,8 @@ import {
   normalized,
 } from "./state.ts";
 
-/** Where a step stands in its line. */
-export const NUMGAME_RUNGS = ["first", "next", "last", "only"] as const;
+/** A combination on the way to the target, or the one that makes it. */
+export const NUMGAME_RUNGS = ["step", "last"] as const;
 export type NumgameRung = (typeof NUMGAME_RUNGS)[number];
 
 type Plan = HintStep<NumgameMove, unknown, NumgameRung>;
@@ -53,39 +50,15 @@ export function numgameHint(
   if (found.kind !== "found" || expr === undefined || expr.kind === "number")
     throw new Error(`numgame: no line to hint on a board that is ${found.kind}`);
 
-  const line = found.line;
-  const split: Split = {
-    target: state.target,
-    fewest: line.length,
-    a: expr.a.value,
-    op: expr.op,
-    b: expr.b.value,
-  };
-  const onA = stepsOf(expr.a).length;
-  const steps: Plan[] = [];
-  let board = state;
-  line.forEach((step, i) => {
-    const c = combination(board, step);
-    const half = i < onA ? split.a : split.b;
-    const [rung, words] =
-      line.length === 1
-        ? (["only", say.only(c)] as const)
-        : i === 0
-          ? (["first", say.first(split, c, half)] as const)
-          : i === line.length - 1
-            ? (["last", say.last(c)] as const)
-            : (["next", say.next(split, c, half)] as const);
-    const move: NumgameMove = { kind: "combine", ...step };
-    steps.push({
-      move,
-      rung,
-      explanation: words.text,
-      words,
-      ...(i > 0 ? { continuesPrevious: true } : {}),
-    });
-    board = executeMove(board, move);
-  });
-  return { ok: true, steps };
+  const fewest = found.line.length;
+  const step = nextStep(expr);
+  const c = combination(state, step);
+  const [rung, words] =
+    fewest === 1
+      ? (["last", say.last(c)] as const)
+      : (["step", say.step(state.target, fewest, c)] as const);
+  const move: NumgameMove = { kind: "combine", ...step };
+  return { ok: true, steps: [{ move, rung, explanation: words.text, words }] };
 }
 
 /** The step's two numbers on `board`, and what they make. */

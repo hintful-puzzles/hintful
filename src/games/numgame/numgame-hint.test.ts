@@ -27,16 +27,12 @@ const pinned = describeHintPins({
   params: [{ large: 1, diff: 1 }],
   pins: {
     /** Held on 24 of 36 positions walked. */
-    first: "l1dn:25,1,8,5,10,3=153",
+    step: "l1dn:25,1,8,5,10,3=153",
     /** Held on 12 of 36 positions walked. */
-    next: "l1dn:25,1,8,5,10,3=153",
-    /** Held on 24 of 36 positions walked. */
-    last: "l1dn:25,1,8,5,10,3=153",
-    /** Held on 12 of 36 positions walked. */
-    only: {
+    last: {
       id: "l1dn:25,1,8,5,10,3=153",
       moves:
-        '[{"kind":"combine","from":0,"into":2,"op":"-"},{"kind":"combine","from":4,"into":1,"op":"-"}]',
+        '[{"kind":"combine","from":2,"into":0,"op":"-"},{"kind":"combine","from":1,"into":4,"op":"-"}]',
     },
   },
 });
@@ -54,26 +50,40 @@ function deal(p: NumgameParams, seed: string): NumgameState {
 describe("numgame hint plans", () => {
   it.each(
     BOARDS,
-  )("make the target in its fewest operations, $large large at tier $diff", (p) => {
+  )("give one operation a request, each a shortest line's, $large large at tier $diff", (p) => {
     for (const seed of ["plan a", "plan b"]) {
       let state = deal(p, seed);
-      const fewest = reachOf(state.slots).fewestOps(state.target);
-      const result = numgameGame.hint?.(state);
-      if (!result?.ok) throw new Error(`refused on ${seed}`);
-      expect(result.steps).toHaveLength(fewest ?? -1);
-      for (const step of result.steps) {
+      let fewest = reachOf(state.slots).fewestOps(state.target) ?? -1;
+      while (numgameGame.status(state) !== "solved") {
+        const result = numgameGame.hint?.(state);
+        if (!result?.ok) throw new Error(`refused on ${seed}`);
+        expect(result.steps).toHaveLength(1);
+        const [step] = result.steps;
         expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
         state = executeMove(state, step.move);
+        // One operation fewer still needed, so asking again never cycles.
+        const left = reachOf(state.slots).fewestOps(state.target);
+        expect(left).toBe(fewest - 1);
+        fewest = left ?? -1;
       }
-      expect(numgameGame.status(state)).toBe("solved");
     }
   });
 
-  it("rings exactly the two numbers and the operator each step combines", () => {
-    const state = deal({ large: 2, diff: 3 }, "rings");
+  it("works on the biggest number first", () => {
+    const state = newState({ large: 4, diff: 3 }, "100,75,50,25,6,3=952");
     const result = numgameGame.hint?.(state);
     if (!result?.ok) throw new Error("refused");
-    for (const step of result.steps) {
+    expect(result.steps[0].explanation).toBe(
+      "952 needs at least 5 operations. One of them: 100 + 3 = 103.",
+    );
+  });
+
+  it("rings exactly the two numbers and the operator a step combines", () => {
+    for (const seed of ["rings a", "rings b", "rings c"]) {
+      const state = deal({ large: 2, diff: 3 }, seed);
+      const result = numgameGame.hint?.(state);
+      if (!result?.ok) throw new Error("refused");
+      const [step] = result.steps;
       if (step.move.kind !== "combine") throw new Error("a step combines");
       const marks = stepMarks(step);
       expect([...marks.of("ring", TILE)].sort()).toEqual(
@@ -84,7 +94,7 @@ describe("numgame hint plans", () => {
   });
 
   it("keeps a step its combination makes in either order, and drops it for any other", () => {
-    const { state, step } = pinned("first");
+    const { state, step } = pinned("step");
     if (step.move.kind !== "combine") throw new Error("a step combines");
     const { from, into, op } = step.move;
     const keep = numgameGame.hintKeepTrack;
@@ -99,7 +109,7 @@ describe("numgame hint plans", () => {
 
 describe("numgame hint frame", () => {
   it("rings the step's numbers and its operator", () => {
-    const { recording } = renderPinnedHint(numgameGame, pinned("first"));
+    const { recording } = renderPinnedHint(numgameGame, pinned("step"));
     expect(recording.ops.some((op) => paintsWith(op, COL_HINT))).toBe(true);
   });
 });

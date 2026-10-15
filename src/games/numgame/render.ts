@@ -56,9 +56,10 @@ export const SLIDE_S = 0.18;
 
 const COL_BACKGROUND = 0;
 const COL_EDGE = 1;
-/** A number the player made, and an operator's button. */
+/** An operator's button. */
 const COL_CELL = 2;
-/** A number as dealt. */
+/** A number, dealt or made: one ground, so a made number does not read as
+ * a different kind of tile; its sum beneath its value is what tells it. */
 const COL_GIVEN = 3;
 /** The selected number and the chosen operator. */
 const COL_SELECTED = 4;
@@ -184,7 +185,6 @@ export const opElement = (op: Op): number => OP_BASE + OPS.indexOf(op);
  * then the flags. */
 const KEY_WORDS = 7;
 const F_PRESENT = 1;
-const F_GIVEN = 1 << 1;
 const F_SELECTED = 1 << 2;
 const F_DIM = 1 << 3;
 const F_CURSOR = 1 << 4;
@@ -257,10 +257,9 @@ function fitting(text: string, width: number, most: number): number {
   return Math.max(6, Math.floor(Math.min(most, width / (0.62 * text.length))));
 }
 
-function ground(look: Look, given: number, plain: number): number {
+function ground(look: Look, base: number): number {
   if (look.tone) return winSlot(look.tone, COL_FLASH, COL_FLASH_LEAD);
-  if (look.flags & F_SELECTED) return COL_SELECTED;
-  return look.flags & F_GIVEN ? given : plain;
+  return look.flags & F_SELECTED ? COL_SELECTED : base;
 }
 
 function drawElement(
@@ -294,7 +293,7 @@ function drawElement(
     dr.drawRect(r, COL_EDGE);
     dr.drawRect(
       { x: r.x + 1, y: r.y + 1, w: r.w - 2, h: r.h - 2 },
-      ground(look, COL_CELL, COL_CELL),
+      ground(look, COL_CELL),
     );
     dr.drawText(
       { x: cx, y: r.y + Math.floor(r.h / 2) },
@@ -306,7 +305,7 @@ function drawElement(
     dr.drawRect(r, COL_EDGE);
     dr.drawRect(
       { x: r.x + 1, y: r.y + 1, w: r.w - 2, h: r.h - 2 },
-      ground(look, COL_GIVEN, COL_CELL),
+      ground(look, COL_GIVEN),
     );
     const s = String(look.value);
     if (look.made) {
@@ -420,7 +419,6 @@ export function redraw(
       op: null,
       flags:
         (t ? F_PRESENT : 0) |
-        (t && t.made === null ? F_GIVEN : 0) |
         (t && ui.selected === place ? F_SELECTED : 0) |
         (t && !legal(place) ? F_DIM : 0) |
         (ringedTiles.has(place) ? F_RING : 0),
@@ -472,7 +470,7 @@ export function redraw(
           value: tile.value,
           made: tile.made,
           op: null,
-          flags: F_PRESENT | (tile.made === null ? F_GIVEN : 0),
+          flags: F_PRESENT,
           tone: 0,
         },
         at,

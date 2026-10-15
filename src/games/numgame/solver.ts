@@ -189,6 +189,27 @@ export function stepsOf(e: Expr): Step[] {
   return [...stepsOf(e.a), ...stepsOf(e.b), { ...landing(e), op: e.op }];
 }
 
+/**
+ * The combination of `e` to make first: of those whose two numbers are on the
+ * board already, the one that works on the biggest number, the first in
+ * {@link stepsOf}'s order between equals. Any of them leaves a line one
+ * operation shorter, so which one is the hint's choice to make.
+ */
+export function nextStep(e: Expr & { kind: "combine" }): Step {
+  let best: Expr & { kind: "combine" } = e;
+  let found = false;
+  const visit = (n: Expr): void => {
+    if (n.kind === "number") return;
+    visit(n.a);
+    visit(n.b);
+    if (n.a.kind !== "number" || n.b.kind !== "number") return;
+    if (!found || n.a.value > best.a.value) best = n;
+    found = true;
+  };
+  visit(e);
+  return { ...landing(best), op: best.op };
+}
+
 /** The numbers on a board, with their places: what {@link Reach} searches. */
 export function reachOf(slots: readonly ({ value: number } | null)[]): Reach {
   const values: number[] = [];

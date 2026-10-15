@@ -75,14 +75,14 @@ A tap on a number SHALL select it, or deselect it if selected, or move the selec
 - **WHEN** the player taps 100, then +, then 6
 - **THEN** 100 + 6 is played and 106 stands in 100's place
 
-### Requirement: Hint: A shortest line, told by its last operation
+### Requirement: Hint: One operation of a shortest line, and no more
 
-The hint SHALL offer a shortest line of combinations from the board on display, one step each. The first step SHALL say the fewest operations the target needs and the two numbers its last operation combines; a step SHALL say which of those two it works toward, or the split, where it makes one; the last SHALL say it makes the target. Each step SHALL ring its two numbers and its operator.
+A hint SHALL give one combination: of the shortest line from the board on display, one whose two numbers are on the board, the one working on the biggest number. It SHALL say the fewest operations the target needs and offer the combination as one of them, or, where it is the last, that it makes the target. It SHALL ring the two numbers and the operator, and SHALL say nothing more of the line.
 
-#### Scenario: The famous board's first step
+#### Scenario: The famous board's hint
 
 - **WHEN** a hint is asked on `l4dh:100,75,50,25,6,3=952`
-- **THEN** the plan has five steps and the first says that 952 needs at least 5 operations
+- **THEN** it reads "952 needs at least 5 operations. One of them: 100 + 3 = 103."
 
 ### Requirement: Hint: A lost board is refused with the way back
 
@@ -95,7 +95,7 @@ Where the numbers on the board can no longer make the target, the hint SHALL ref
 
 ### Requirement: Look: A made number says how it was made
 
-A number the player made SHALL show beneath its value the operation that made it, larger operand first. A number as dealt SHALL sit on the given surface, a made one on the plain one. With a number and an operator chosen, the numbers they cannot combine with SHALL be grayed. A move SHALL slide the smaller number onto the larger's place.
+A number the player made SHALL show beneath its value the operation that made it, larger operand first. A number SHALL sit on the given surface whether dealt or made. With a number and an operator chosen, the numbers they cannot combine with SHALL be grayed. A move SHALL slide the smaller number onto the larger's place.
 
 #### Scenario: A made number shows its sum
 

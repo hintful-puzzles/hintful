@@ -30,10 +30,10 @@ exports[`numgame frame > draws the board 1`] = `
     "y": 83,
   },
   {
-    "color": 2,
+    "color": 3,
     "h": 62,
     "op": "rect",
-    "rgb": "rgb(194, 194, 194)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 62,
     "x": 17,
     "y": 84,

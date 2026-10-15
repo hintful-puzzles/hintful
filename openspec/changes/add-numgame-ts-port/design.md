@@ -121,18 +121,24 @@ A Countdown move is never forced, so the hint is a search hint
 (`docs/hints-search.md`), and the solver makes it exact: what it says is
 proved, not measured.
 
-- **The plan is a shortest line from the board on display**, offered whole,
-  one step a combination. Its potential is the fewest operations still
-  needed, which every step lowers by exactly one, so a recomputed plan cannot
-  cycle (`docs/hints-search.md` § "Recompute-stable plans").
-- **What it teaches is the plan's shape.** The last operation of a shortest
-  line splits the target into two numbers made from separate tiles ("952 is
-  900 + 52"). That is the Countdown player's method: get near with a product,
-  then adjust. The first step says the fewest operations and the split; each
-  step says which half it builds, and the last says it makes the target. The
-  split is derived once, from the plan, and carried on its steps
-  (§ "Hold a stable subgoal").
+- **A hint is one operation of a shortest line from the board on display**,
+  and gives away nothing more of it (owner, 2026-10-15): "952 needs at least 5
+  operations. One of them: 100 + 3 = 103." The count is proved by the
+  solver's whole search, and the rest of the line is the player's to find.
+  Of the line's combinations whose two numbers are on the board, the hint
+  takes the one working on the biggest number.
+- **Its potential is the fewest operations still needed**, which every hinted
+  step lowers by exactly one, so asking again cannot cycle
+  (`docs/hints-search.md` § "Recompute-stable plans").
+- **Withdrawn: the whole line, told by its last operation's split** ("952
+  needs at least 5 operations, ending with 927 + 25. First, …"), offered as
+  one plan of steps. It gave the solution away, the owner found on playing it.
 - **Marks**: the two numbers of a step are ringed, and its operator.
+
+A number made by the player sits on the same ground as a dealt one, which
+the first version did not do: a made number on the plain surface read as
+disabled in the dark scheme (owner, 2026-10-15). Its sum beneath its value
+tells it apart.
 
 ## D8 — Names, and where the game sits
 

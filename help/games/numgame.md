@@ -20,7 +20,7 @@ This is the numbers round of the British television quiz *Countdown*, where the 
 
 ## Hints
 
-**Hint** shows a shortest way to the target from the numbers you have now, one combination a step. The first step says how few operations the target needs and what its last operation is: 952 ending with 927 + 25, say. Each step after says which of those two numbers it is working toward, so you can see the shape of the calculation before you make it.
+**Hint** gives you one combination and no more: how few operations the target still needs from the numbers you have now, and one of them, starting with the work on the biggest number. "952 needs at least 5 operations. One of them: 100 + 3 = 103." The rest of the way is yours to find, and the next hint picks up from wherever you are.
 
 {{hint-marks}}
 
