@@ -20,7 +20,7 @@ This is the numbers round of the British television quiz *Countdown*, where the 
 
 ## Hints
 
-**Hint** gives you one combination and no more: how few operations the target still needs from the numbers you have now, and one of them, starting with the work on the biggest number. "952 needs at least 5 operations. One of them: 100 + 3 = 103." The rest of the way is yours to find, and the next hint picks up from wherever you are.
+**Hint** gives you one combination and no more: how few operations you can still finish in from the numbers you have now, how many different combinations start a way that short, and one of them, starting with the work on the biggest number. "You can finish in 5 more operations, starting 4 ways. One of them: 100 + 3 = 103." Where only one combination starts a way that short, the hint says so. The rest of the way is yours to find, and the next hint picks up from wherever you are.
 
 {{hint-marks}}
 

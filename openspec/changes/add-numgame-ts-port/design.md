@@ -122,11 +122,15 @@ A Countdown move is never forced, so the hint is a search hint
 proved, not measured.
 
 - **A hint is one operation of a shortest line from the board on display**,
-  and gives away nothing more of it (owner, 2026-10-15): "952 needs at least 5
-  operations. One of them: 100 + 3 = 103." The count is proved by the
-  solver's whole search, and the rest of the line is the player's to find.
-  Of the line's combinations whose two numbers are on the board, the hint
-  takes the one working on the biggest number.
+  and gives away nothing more of it (owner, 2026-10-15): "You can finish in 5
+  more operations, starting 4 ways. One of them: 100 + 3 = 103." The count of
+  operations is proved by the solver's whole search; the ways are the
+  distinct boards a first combination leaves on a line that short, each
+  judged by `judgeRivals`, so "only one first combination does it, so …" is said only
+  where every other start was proved longer (owner, 2026-10-16: say there are
+  several ways, or that there is one). The target is on the board, so the
+  words do not repeat it. Of the line's combinations whose two numbers are on
+  the board, the hint takes the one working on the biggest number.
 - **Its potential is the fewest operations still needed**, which every hinted
   step lowers by exactly one, so asking again cannot cycle
   (`docs/hints-search.md` § "Recompute-stable plans").

@@ -15,17 +15,20 @@
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
 import { phrase } from "../../engine/hint-words.ts";
+import { judgeRivals } from "../../engine/rival-judging.ts";
 import { type Combination, say } from "./hint-text.ts";
-import { findLine, nextStep, reachOf, type Step } from "./solver.ts";
+import { findLine, nextStep, OPS, reachOf, type Step } from "./solver.ts";
 import {
+  combined,
   executeMove,
   type NumgameMove,
   type NumgameState,
   normalized,
 } from "./state.ts";
 
-/** A combination on the way to the target, or the one that makes it. */
-export const NUMGAME_RUNGS = ["step", "last"] as const;
+/** A combination of several ways to start, the one way to start, or the
+ * combination that makes the target. */
+export const NUMGAME_RUNGS = ["starts", "onlyStart", "last"] as const;
 export type NumgameRung = (typeof NUMGAME_RUNGS)[number];
 
 type Plan = HintStep<NumgameMove, unknown, NumgameRung>;
@@ -53,12 +56,75 @@ export function numgameHint(
   const fewest = found.line.length;
   const step = nextStep(expr);
   const c = combination(state, step);
-  const [rung, words] =
-    fewest === 1
-      ? (["last", say.last(c)] as const)
-      : (["step", say.step(state.target, fewest, c)] as const);
   const move: NumgameMove = { kind: "combine", ...step };
+  if (fewest === 1) {
+    const words = say.last(c);
+    return {
+      ok: true,
+      steps: [{ move, rung: "last", explanation: words.text, words }],
+    };
+  }
+
+  // The rivals are the other ways to start: each combination on the board
+  // that leaves a different board, judged by whether the target is then one
+  // operation nearer. The search is exhaustive, so each rival is settled.
+  const own = boardKey(executeMove(state, move));
+  const rivals = [...startsFrom(state).entries()].filter(([key]) => key !== own);
+  const { claim } = judgeRivals(rivals, rivals.length, ([, after], allowance) => {
+    allowance.left--;
+    return reachOf(after.slots).fewestOps(after.target) === fewest - 1
+      ? "finishes"
+      : "lost";
+  });
+  const [rung, words] =
+    claim.kind === "none" || claim.kind === "only"
+      ? (["onlyStart", say.onlyStart(fewest, c, claim.relation)] as const)
+      : claim.kind === "every" ||
+          claim.kind === "onlyThese" ||
+          claim.kind === "alsoThese"
+        ? ([
+            "starts",
+            say.starts(
+              fewest,
+              1 + (claim.kind === "every" ? rivals.length : claim.goods.length),
+              c,
+              claim.relation,
+            ),
+          ] as const)
+        : unsettledClaim();
   return { ok: true, steps: [{ move, rung, explanation: words.text, words }] };
+}
+
+/** An exhaustive search leaves no rival unsettled. */
+function unsettledClaim(): never {
+  throw new Error("numgame: a rival start was left unsettled");
+}
+
+/** A board as the player sees it: the values on it, wherever they stand. */
+function boardKey(s: NumgameState): string {
+  return s.slots
+    .flatMap((t) => (t ? [t.value] : []))
+    .sort((x, y) => x - y)
+    .join(",");
+}
+
+/** Every combination the board allows, one for each board it leaves: two
+ * equal numbers combined with a third are one start, whichever is used. */
+function startsFrom(s: NumgameState): Map<string, NumgameState> {
+  const out = new Map<string, NumgameState>();
+  s.slots.forEach((x, from) => {
+    s.slots.forEach((y, into) => {
+      if (!x || !y || from >= into) return;
+      for (const op of OPS) {
+        const step = normalized(s.slots, { from, into, op });
+        if (combined(s.slots, step) === null) continue;
+        const after = executeMove(s, { kind: "combine", ...step });
+        const key = boardKey(after);
+        if (!out.has(key)) out.set(key, after);
+      }
+    });
+  });
+  return out;
 }
 
 /** The step's two numbers on `board`, and what they make. */

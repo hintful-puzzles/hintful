@@ -14,7 +14,7 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { SIGN, TILE } from "./hint-text.ts";
 import { numgameGame } from "./index.ts";
 import { COL_HINT } from "./render.ts";
-import { reachOf } from "./solver.ts";
+import { combine, OPS, reachOf } from "./solver.ts";
 import {
   executeMove,
   type NumgameParams,
@@ -26,8 +26,10 @@ const pinned = describeHintPins({
   game: numgameGame,
   params: [{ large: 1, diff: 1 }],
   pins: {
-    /** Held on 24 of 36 positions walked. */
-    step: "l1dn:25,1,8,5,10,3=153",
+    /** Held on 14 of 36 positions walked. */
+    starts: "l1dn:25,1,8,5,10,3=153",
+    /** Held on 10 of 36 positions walked. */
+    onlyStart: "l1dn:100,8,10,1,2,4=129",
     /** Held on 12 of 36 positions walked. */
     last: {
       id: "l1dn:25,1,8,5,10,3=153",
@@ -69,13 +71,44 @@ describe("numgame hint plans", () => {
     }
   });
 
-  it("works on the biggest number first", () => {
+  it("works on the biggest number first, and counts the ways to start", () => {
     const state = newState({ large: 4, diff: 3 }, "100,75,50,25,6,3=952");
     const result = numgameGame.hint?.(state);
     if (!result?.ok) throw new Error("refused");
     expect(result.steps[0].explanation).toBe(
-      "952 needs at least 5 operations. One of them: 100 + 3 = 103.",
+      "You can finish in 5 more operations, starting 4 ways. One of them: 100 + 3 = 103.",
     );
+    // The count, by a plain recursion that shares only `combine` with the
+    // hint: the distinct boards one combination leaves from which 952 is
+    // four combinations away.
+    const within = (nums: readonly number[], left: number): boolean =>
+      nums.includes(952) ||
+      (left > 0 &&
+        nums.some((x, i) =>
+          nums.some((y, j) =>
+            j <= i
+              ? false
+              : OPS.some((op) => {
+                  const r = combine(x, op, y);
+                  const rest = nums.filter((_, k) => k !== i && k !== j);
+                  return r !== null && within([...rest, r], left - 1);
+                }),
+          ),
+        ));
+    const starts = new Set<string>();
+    const nums = state.dealt;
+    nums.forEach((x, i) => {
+      nums.forEach((y, j) => {
+        if (j <= i) return;
+        for (const op of OPS) {
+          const r = combine(x, op, y);
+          if (r === null) continue;
+          const after = [...nums.filter((_, k) => k !== i && k !== j), r];
+          if (within(after, 4)) starts.add([...after].sort((a, b) => a - b).join(","));
+        }
+      });
+    });
+    expect(starts.size).toBe(4);
   });
 
   it("rings exactly the two numbers and the operator a step combines", () => {
@@ -94,7 +127,7 @@ describe("numgame hint plans", () => {
   });
 
   it("keeps a step its combination makes in either order, and drops it for any other", () => {
-    const { state, step } = pinned("step");
+    const { state, step } = pinned("starts");
     if (step.move.kind !== "combine") throw new Error("a step combines");
     const { from, into, op } = step.move;
     const keep = numgameGame.hintKeepTrack;
@@ -109,7 +142,7 @@ describe("numgame hint plans", () => {
 
 describe("numgame hint frame", () => {
   it("rings the step's numbers and its operator", () => {
-    const { recording } = renderPinnedHint(numgameGame, pinned("step"));
+    const { recording } = renderPinnedHint(numgameGame, pinned("starts"));
     expect(recording.ops.some((op) => paintsWith(op, COL_HINT))).toBe(true);
   });
 });

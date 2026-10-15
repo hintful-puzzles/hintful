@@ -77,12 +77,12 @@ A tap on a number SHALL select it, or deselect it if selected, or move the selec
 
 ### Requirement: Hint: One operation of a shortest line, and no more
 
-A hint SHALL give one combination: of the shortest line from the board on display, one whose two numbers are on the board, the one working on the biggest number. It SHALL say the fewest operations the target needs and offer the combination as one of them, or, where it is the last, that it makes the target. It SHALL ring the two numbers and the operator, and SHALL say nothing more of the line.
+A hint SHALL give one combination of a shortest line from the board on display, of those ready to play the one on the biggest number. It SHALL say the fewest operations left and how many distinct boards a first combination leaves on a line that short; where that is one, that only one does it. Where the combination makes the target, it SHALL say so. It SHALL ring the two numbers and the operator, and say nothing more of the line.
 
 #### Scenario: The famous board's hint
 
 - **WHEN** a hint is asked on `l4dh:100,75,50,25,6,3=952`
-- **THEN** it reads "952 needs at least 5 operations. One of them: 100 + 3 = 103."
+- **THEN** it reads "You can finish in 5 more operations, starting 4 ways. One of them: 100 + 3 = 103."
 
 ### Requirement: Hint: A lost board is refused with the way back
 

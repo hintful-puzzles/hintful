@@ -3,6 +3,7 @@
 exports[`numgame: pinned hint positions > says, at each pin 1`] = `
 {
   "last": "17 × 9 = 153, the target.",
-  "step": "153 needs at least 3 operations. One of them: 25 − 8 = 17.",
+  "onlyStart": "You can finish in 3 more operations, and only one first combination does it, so 100 × 10 = 1000.",
+  "starts": "You can finish in 3 more operations, starting 4 ways. One of them: 25 − 8 = 17.",
 }
 `;
