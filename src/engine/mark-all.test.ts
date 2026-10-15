@@ -2,22 +2,18 @@
  * Cross-game guarantee: **the Mark-all press only ever adds or removes pencil
  * marks — it never resets them.**
  *
- * This exists because the collection shipped the opposite for months and nothing
- * caught it. Every `pencilAll` implementation filled *every* empty cell with the
- * full candidate set, so pressing Mark-all (or asking for a hint, whose opener
- * reuses the same move) on a board with **some** narrowed cells and **some** blank
- * ones threw away the player's own deductions. It went unnoticed because the
- * usual latch — "does any empty cell lack notes?" — hides it whenever every empty
- * cell already has at least one note, which is the common case; you only see it on
- * the mixed board. Owner-reported on Salad, twice (the hint's opener, then the
- * button), and then fixed across all ten games that offer the press.
+ * A `pencilAll` that fills *every* empty cell with the full candidate set makes
+ * pressing Mark-all (or asking for a hint, whose opener reuses the same move) on
+ * a board with **some** narrowed cells and **some** blank ones throw away the
+ * player's own deductions. The usual latch — "does any empty cell lack notes?" —
+ * hides that whenever every empty cell already has at least one note, which is
+ * the common case; you only see it on the mixed board, so that is the board
+ * these properties are pinned on.
  *
  * The properties pinned here are deliberately representation-agnostic, and a new
  * game with a Mark-all press joins by **shipping the press** — the roster is
  * derived from `markAll` and the notes are read through the one field name
- * every note-taking game uses. Each game used to write a row here saying where
- * its notes lived, because the collection spelled that field three ways; that
- * ended with `unify-the-note-taking-vocabulary`.
+ * every note-taking game uses.
  */
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
@@ -39,18 +35,13 @@ interface Row {
 }
 
 /**
- * Every game with a `markAll` — **derived, not written down**.
+ * Every game with a `markAll` — **derived, not written down**, so a game
+ * shipping the press is guarded here the day it ships, and no row can be
+ * forgotten. Every note-taking game keeps its notes in the one `pencil` field.
  *
- * This was ten hand-written rows, each naming the game *and* the field its notes
- * lived in, because the collection spelled that field three ways (`pencil`,
- * `marks`, `pencils`). `unify-the-note-taking-vocabulary` made it one word, and
- * the roster went with it: a game shipping the press is guarded here the day it
- * ships, and a row can no longer be forgotten.
- *
- * The enrollment check this replaces compared the roster with the flag. Now that
- * the roster *is* the flag, that comparison is a tautology and asserts nothing;
- * the real question — does the flag match what the game *does* — is the
- * behavioral check below, which is where it belonged all along.
+ * The roster *is* the flag, so comparing the two would assert nothing; the
+ * real question — does the flag match what the game *does* — is the
+ * behavioral check below.
  */
 const MARK_ALL_GAMES: Row[] = registeredGameIds()
   .sort()
@@ -94,10 +85,10 @@ describe("the press is the engine's, whatever a game types with M", () => {
    * and that the letter does the same exactly where the board's keypad has no
    * such letter.
    *
-   * Written for two defects the letter had while each game read it for itself
-   * (`own-the-mark-all-press-in-the-engine`): the button entered 22 in the
-   * selected square of a Solo grid of 22 numbers, where M is that number, and
-   * Group answered a capital M only, on boards with no element m at all.
+   * The shapes it catches: a button that types the letter, so it enters a
+   * number in the selected square of a Solo grid large enough that M is a
+   * number, and a letter matched by case, so Group answers a capital M only on
+   * boards with no element m at all.
    *
    * Every board the gate slice offers. The cost is generation, which `dealt`
    * shares with every other sweep.
@@ -185,7 +176,7 @@ describe("the chrome can tell a bare board from a marked one", () => {
    * control reads it to say `Fill` or `Update`. It is computed **generically**,
    * off the shared `pencil` field, rather than asked of each game — so what has
    * to be true is that the generic read tracks the press in every game that
-   * offers it. A game whose notes moved somewhere else would report a
+   * offers it. A game keeping its notes somewhere else would report a
    * permanently bare board and the label would silently freeze on `Fill`.
    */
   for (const row of MARK_ALL_GAMES) {
@@ -238,11 +229,11 @@ describe("the Mark-all press converges", () => {
 describe("the Mark-all press never resets a note the player narrowed", () => {
   for (const row of MARK_ALL_GAMES) {
     it(`${row.name}: a fill leaves every already-noted cell bit-for-bit alone`, () => {
-      // Every board the gate slice offers. The regression this pins was a fill
-      // that *rewrote* every empty cell, and whether a game's fill rewrites or
+      // Every board the gate slice offers. The regression this pins is a fill
+      // that *rewrites* every empty cell, and whether a game's fill rewrites or
       // adds is decided in the same code that decides what a cage, an X
-      // diagonal or a jigsaw block culls — Solo has three such modes and this
-      // used to walk a 4x4 board of none of them.
+      // diagonal or a jigsaw block culls, so one plain board per game would
+      // miss Solo's modes.
       for (const { title, params } of gatePresets(row.name, row.game)) {
         const at = `${row.name}/${title}`;
         // A board whose every blank cell is down to one candidate has nothing

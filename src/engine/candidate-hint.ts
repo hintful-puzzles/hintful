@@ -63,8 +63,7 @@ export interface NoteEncoding {
   /**
    * Every note a blank square at cell index `i` could carry — what a fill-all
    * puts there. Default: values `1..values`, which is the whole board's answer
-   * for a Latin game and is why this went unstated until a game needed a
-   * different one.
+   * for a Latin game.
    *
    * **It is per cell, not per board.** Rome's arrows are bounded by the grid
    * edge (a top-row square can never point up) and Seismic's by its region's
@@ -216,7 +215,7 @@ export interface CandidatePlanPrefs {
  *
  * `autoPencil` defaults **off**: with no `ui` (tests/harness) the hint teaches the
  * trivial row/column/region eliminations as explicit strikes rather than folding
- * them into placements (matches the games' default-auto-pencil-off preference).
+ * them into placements (matches the games' auto-pencil preference, off by default).
  * The reading defaults to {@link DEFAULT_CANDIDATE_READING}, which is not the
  * game's own default: a game that offers the reading passes
  * `ui ?? newUi(state)`, and `candidate-reading.test.ts` holds a hint asked for
@@ -316,7 +315,7 @@ export interface AvailableFirings<R> {
  * player does not have. A later firing whose `reads` is empty cannot be vouched
  * for and is not offered. The rule is the same for a strike and a placement,
  * so a placement a clue or a cage forces is offered where its premise holds,
- * not only once nothing else is left (`offer-recorded-placements-by-premise`).
+ * not only once nothing else is left.
  *
  * `reads` is asked about a strike firing as its live teachable records, and
  * about a placement as the placement alone; for a placement it should leave
@@ -792,9 +791,9 @@ export interface CandidateMoveAdapter<M> {
    * `{ type: "pencilAdd", marks }`. */
   add?(marks: Mark[]): M;
   /** Build the fill-all in the game's own move shape. Defaults to
-   * `{ type: "pencilAll" }`. Its counterpart `read` has always been asked
-   * through the dialect; this is the writing half, which three helpers spelled
-   * for themselves until Rome's `kind`-keyed moves needed it. */
+   * `{ type: "pencilAll" }`. The writing half of what `read` asks through the
+   * dialect, for a game whose moves have another shape (Rome's are
+   * `kind`-keyed). */
   populate?(): M;
   /** Build a placement of `n` at `(x, y)` in the game's own move shape, for a
    * hint plan to emit; `autoElim` is the auto-pencil preference, for a dialect

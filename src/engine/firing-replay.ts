@@ -1,8 +1,7 @@
 /**
  * The audit of what a recorded firing's premise names: whether each strike and
  * placement the candidate walk offers by its premise (`availableFirings`) would
- * still be concluded from a solver state that keeps only that premise
- * (`guard-recorded-firing-premises`).
+ * still be concluded from a solver state that keeps only that premise.
  *
  * The walk offers a recorded firing when its premise holds no mark the board
  * has yet to show, which is sound only if the premise names every cell whose

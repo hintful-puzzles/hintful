@@ -166,10 +166,9 @@ export interface CapabilitySet {
    * trains its readers to re-baseline without reading.
    *
    * The `Ui` half cannot see the whole of the drag or pencil vocabulary,
-   * because half of it is remembered by the renderer: nine private
-   * `drawPencilIndicator` copies shared `pencilModeShown` and no instrument in
-   * the tree could see them (`promote-the-pencil-indicator`). jscpd could not
-   * either, because each copy computed its own box. */
+   * because half of it is remembered by the renderer (`pencilModeShown`, for
+   * one). A private copy of that vocabulary shows here and nowhere else: jscpd
+   * misses one that computes its own box. */
   readonly drawState: string[];
 }
 

@@ -2,8 +2,8 @@
  * Coloring the regions of a division, so that two regions that share a side
  * never take the same fill.
  *
- * One walk, {@link colorRegions}, and two callers that differ only in what
- * they do where the division leaves a choice. Map's generator draws: the
+ * One walk, {@link colorRegions}, whose callers differ only in what they do
+ * where the division leaves a choice. Map's generator draws: the
  * coloring is the puzzle's answer, and a seed deals its own. A board that
  * colors the regions the puzzle gives takes {@link regionFills}, which draws
  * nothing, so the board wears the same fills each time it is opened.

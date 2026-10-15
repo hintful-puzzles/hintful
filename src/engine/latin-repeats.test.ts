@@ -1,5 +1,5 @@
 /**
- * The Latin cube's **repeated symbol** (`add-latin-repeats-support`): the last
+ * The Latin cube's **repeated symbol**: the last
  * symbol may appear `times` times per line, which is what a pseudo-Latin puzzle
  * — Salad's empty square — needs expressed *in the cube* rather than faked with
  * a full square whose surplus symbols are reinterpreted as holes.

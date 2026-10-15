@@ -1,13 +1,12 @@
 /**
  * Tier-1 tests for the shared omino partitioner (`divvy_rectangle`).
  *
- * Written by `audit-test-suite-strength` §5: 231 lines reached by Solo's jigsaw
- * sub-blocks, Palisade's regions and Separate's k-omino partition, with no test
- * file of its own. Its guarantees lived in those three games' frozen
- * differentials — which do catch a defect, but as a differing description string
- * rather than as "a region came out disconnected".
+ * The partitioner behind Solo's jigsaw sub-blocks, Palisade's regions and
+ * Separate's k-omino partition. Those games' frozen differentials catch a
+ * defect too, but as a differing description string rather than as "a region
+ * came out disconnected".
  *
- * What is asserted here is the *contract* the three callers rely on and that a
+ * What is asserted here is the *contract* the callers rely on and that a
  * reader would call the point of the code: a partition of every cell into
  * connected regions of exactly `k`. The RNG draw order is deliberately not
  * restated — the module's doc comment calls it byte-match critical and the
@@ -16,7 +15,7 @@
  *
  * **One path here is deliberately not covered, and was measured rather than
  * assumed:** `divvyRectangle`'s retry loop never iterates for any shape below —
- * instrumented, 0 retries across every case and all 25 sweep seeds. So a mutant
+ * instrumented, no case or sweep seed here retries. So a mutant
  * planted after the first attempt survives, correctly: the retry is a guard
  * against a rare failed attempt, not a path these inputs take. Don't read that
  * survivor as a missing assertion.

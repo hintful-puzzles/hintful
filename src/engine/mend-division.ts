@@ -1,8 +1,8 @@
 /**
  * Mending a division into regions until a game's deductions finish it, for a
  * board whose regions are its only clue. Such a division dealt at random
- * seldom has one answer (none of 300 Star Battle boards at 8x8 with one star,
- * measured 2026-10-12), so the generator moves single cells between regions
+ * seldom has one answer (a random 8x8 one-star Star Battle division almost
+ * never does), so the generator moves single cells between regions
  * that are there, keeping each region connected and no smaller than a least
  * size, until it has.
  *
@@ -62,8 +62,7 @@ const MENDS_PER_CELL = 2;
 
 /** The moves a board may make without leaving fewer cells open than it ever
  * has before it is given up: a fresh draw comes right sooner than one that
- * has stopped coming closer (measured on Star Battle 2026-10-15, in the
- * change `deal-star-battle-in-under-a-second`). */
+ * has stopped coming closer (measured on Star Battle). */
 const STALL = 30;
 
 /** After a search that met no second answer, the moves that may go by

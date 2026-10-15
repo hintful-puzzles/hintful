@@ -439,8 +439,8 @@ describe("availableFirings", () => {
 
   it("offers a firing past an unmade placement whose premise does not touch it", () => {
     // A clue strike far from the solver's next placement is as true now as
-    // after it, and withholding it made the plan jump away from the line it was
-    // working (`towers-implicit-strike-window`).
+    // after it, and withholding it makes the plan jump away from the line it is
+    // working.
     const [grid, pencil] = board(
       [0, 0, 0, 0],
       [bits(1), bits(1, 2), bits(1, 2), bits(1, 2)],

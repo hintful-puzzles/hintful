@@ -1,11 +1,9 @@
 /**
  * Tier-1 tests for the shared symmetric black-square placer.
  *
- * Written by `audit-test-suite-strength` §5: 151 lines shared by seven files.
- * `sticks.test.ts` imported the `SYMM_*` *constants*, but `placeSymmetricBlacks`
- * itself had no direct test at all — its guarantees lived in Light Up's and
- * Sticks' frozen differentials, which do catch its defects but report them as a
- * differing description string rather than as the rule that broke.
+ * Without these, `placeSymmetricBlacks`'s guarantees live only in Light Up's
+ * and Sticks' frozen differentials, which do catch its defects but report them
+ * as a differing description string rather than as the rule that broke.
  *
  * The module's own doc comment calls its RNG draw order byte-match critical, so
  * these state the *symmetry* it produces (which is what a reader would call the
@@ -17,7 +15,7 @@
  * `if (!rotate) rw += wodd` to drop its guard changes the 4-fold *region size*
  * on an odd-width board — so it changes which boards exist without breaking any
  * symmetry, and it survives everything here. Light Up's and Sticks' frozen
- * differentials fail on it (3 tests), which is the right place for it to be
+ * differentials fail on it, which is the right place for it to be
  * caught. What survives these tests should be the byte-match layer and nothing
  * else; if you add a case here, check which side of that line it falls on.
  */

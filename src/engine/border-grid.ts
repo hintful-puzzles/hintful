@@ -5,8 +5,7 @@
  * cells with a tri-state — wall / not-a-wall / undecided — and differ only in
  * what constrains the regions (Palisade counts each cell's walls, Separate fixes
  * region sizes and keeps marked cells apart). The mechanic the player operates
- * is one design: jscpd measured 466 duplicated lines between the two games
- * before this module and 213 after (2026-09-05).
+ * is one design, so it is written once.
  *
  * WHAT LIVES HERE is only what would have to change in both games at once to
  * keep them correct: the edge bit vocabulary, the geometry that turns a tile

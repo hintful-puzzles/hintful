@@ -232,15 +232,13 @@ export function solvedPositions<Position, Solution>(
  * what a game allows a pasted one. A strip stops only when the search can no
  * longer prove one answer, so it takes a board up to whatever the search is
  * allowed: this is how hard a stripped board is, and under a game's whole
- * budget every board came out at the edge of it (ABCD, 2026-10-10: a median
- * of 1,728 positions of 2,000 on a 6x6, where a board with every clue showing
- * needs 9).
+ * budget every stripped board lands at the edge of it, far beyond what a
+ * board with every clue showing needs.
  *
- * Measured in each game that strips, the same day: at 30 a dealt board needs
- * a median of 3 to 29 positions, and trying one thing and following the
- * deduction from it finishes nearly every one. At 10 a number that breaks a
- * rule the moment it is written settled 24 of 66 Filling boards, which is a
- * deduction the solver lacks and not a search.
+ * The figure is set so that a dealt board stays one that trying one thing and
+ * following the deduction from it finishes. Much lower, and the budget starts
+ * settling rules the solver lacks as deductions (a number that breaks a rule
+ * the moment it is written, in Filling), which is not a search.
  */
 export const DEALING_BUDGET = 30;
 

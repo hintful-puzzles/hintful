@@ -159,7 +159,7 @@ export function num<P>(
      * Palisade and Separate read a bare `9` as a 9×9 board in regions of 9, so
      * their region count defaults to the width; Map's default region count is
      * `w × h / 8`. Without this the field would fall back to `defaultParams()`,
-     * which is a different board — so the hook exists because three games need
+     * which is a different board — so the hook exists because these games need
      * it, not to be general.
      */
     whenAbsent?: (p: P) => void;

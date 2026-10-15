@@ -35,8 +35,8 @@ const RENDERERS = import.meta.glob<Record<string, unknown>>("../games/*/render.t
  *
  * Asserted as an exact set rather than used to skip, so a second game quietly
  * washing its evidence fails here until somebody writes down why it may. The
- * target has no such list: it is ringed in every game, no exceptions (owner,
- * 2026-08-22).
+ * target has no such list: it is ringed in every game, no exceptions (the
+ * owner's rule).
  */
 const EVIDENCE_WASH_GAMES = new Set([
   // Dark squares, where the premise is that the square is *not lit* — which a
@@ -92,20 +92,16 @@ function renderersById(): Map<string, Record<string, unknown>> {
  *
  * **Every board the gate slice offers, two seeds each** — and that ordering is
  * the point. A fill hides in a rung the opener never reaches, which is why this
- * walks six steps deep (the earlier survey found Clusters' chain frames only
- * past the third step of a Tricky board); but it also hides in a *renderer
- * branch* the first preset never enters, and this walked six seeds of one
- * board until `slice-the-first-leaf-hint-guards-by-axis`. Six boards of
- * `2x2 Trivial` say nothing about how Solo marks a Killer cage, and nothing at
- * all about twenty of Loopy's twenty-one tilings, each of which is a different
- * geometry drawn by a different branch. Breadth of board is what this guard's
- * subject varies with; the seeds were standing in for it.
+ * walks six steps deep (a chain frame, Clusters' on a Tricky board, can first
+ * appear past the third step); but it also hides in a *renderer branch* the
+ * first preset never enters. Seeds of `2x2 Trivial` say nothing about how Solo
+ * marks a Killer cage, nor about Loopy's other tilings, each of which is a
+ * different geometry drawn by a different branch. Breadth of board is what
+ * this guard's subject varies with, not seeds.
  *
- * Cost, measured 2026-09-20 (load 2.9, the box 18.4 GB into swap, so an upper
- * bound): **1.1 s → 20.9 s** for 210 boards → 292. Two thirds of the rise is
- * the coverage that was missing — Loopy 5.3 s for its twenty-one tilings and
- * Solo 3.9 s for its ten modes and tiers. It does not touch the gate's wall
- * clock, which is set by the longest file rather than by this one.
+ * Most of its cost is that breadth — Loopy's tilings and Solo's modes and
+ * tiers. It does not touch the gate's wall clock, which is set by the longest
+ * file rather than by this one.
  */
 function hintFrames(
   id: string,

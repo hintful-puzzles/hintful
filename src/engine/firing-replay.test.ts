@@ -1,7 +1,7 @@
 /**
  * The premise audit (`firing-replay.ts`): the instrument on a toy solver, then
  * every candidate walk's recorded firings, checked to follow from the premise
- * their steps name (`guard-recorded-firing-premises`).
+ * their steps name.
  */
 import { describe, expect, it } from "vitest";
 import {

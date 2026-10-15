@@ -107,27 +107,24 @@ describe("the shared color vocabulary", () => {
 
   it("keeps the hint emphases distinct, in both schemes", () => {
     // These are one meaning at several jobs — the move, the evidence the
-    // deduction rests on, and the two reference premises — and seven games put
-    // two or three of them on screen at once. The first two used to be shades of
-    // one blue eight hundredths of a lightness apart; they are a hue apart now,
-    // and this is what says so.
+    // deduction rests on, and the two reference premises — and a hint frame
+    // can put two or three of them on screen at once. The first two are a hue
+    // apart, and this is what says so.
     //
-    // **Both schemes, because one is not evidence for the other** — the lesson
-    // `hand-author-dark-palette` paid for, and this guard was measuring the
-    // light column only. It matters here rather than academically: the pairs are
-    // *not* equally separated in the two schemes, so the next person to retune
-    // one of these learns about it from a red test rather than from a hint frame
-    // where the target and its evidence read as one mark.
+    // **Both schemes, because one is not evidence for the other.** It matters
+    // here rather than academically: the pairs are *not* equally separated in
+    // the two schemes, so the next person to retune one of these learns about
+    // it from a red test rather than from a hint frame where the target and its
+    // evidence read as one mark.
     //
-    // It did exactly that job on 2026-08-21: an attempt at the contrast fix
-    // asked for chroma 0.077 at lightness 0.28, the sRGB gamut clamp silently
-    // returned 0.050 at 0.293, and this failed at **0.106**. A bound the
-    // arithmetic cannot be trusted to predict is one worth asserting.
+    // The sRGB gamut clamp can silently return less chroma, at a different
+    // lightness, than a color asks for, so a bound the arithmetic cannot be
+    // trusted to predict is one worth asserting.
     //
-    // `disambiguate-hint-deixis` is what makes it load-bearing rather than
-    // tidy: that change ties the acted-on element to the evidence *in prose*
-    // wherever both are shown, and the rule it wrote down says a pair which
-    // differs **only** by hue needs the marks fixed, not the sentence. These
+    // It is load-bearing rather than tidy: a hint ties the acted-on element to
+    // the evidence *in prose* wherever both are shown, and the rule for that
+    // says a pair which differs **only** by hue needs the marks fixed, not the
+    // sentence. These
     // pairs earn their exemption by differing in weight as well — `HINT_ACTION`
     // carries ~2.5× the chroma of `HINT_EVIDENCE` in either scheme — and an
     // exemption resting on a number is worth exactly as much as the assertion
@@ -200,18 +197,14 @@ describe("the shared color vocabulary", () => {
     const DARK_BOARD: Color = [0.106, 0.106, 0.106];
 
     // **A mark has to be visible against the board it is drawn on, in both
-    // schemes**, and this is the bound that replaces the one the fill regime
-    // needed. That one asked whether a *derived* foreground stayed legible on
-    // the evidence wash — a real obligation while games drew their digits on it,
-    // and the reason `TEAL_WASH_DEEP` existed. Nothing is drawn on the evidence
-    // any more: it is an outline, and the wash is kept only where the cells
-    // under it are empty. So the obligation moves rather than lapsing, and it
-    // moves to the side that was *also* failing — at the lightness that
-    // legibility demanded, the wash scored 1.15:1 against a dark board, a mark
-    // nobody could see.
+    // schemes**. Nothing is drawn on the evidence: it is an outline, and the
+    // wash is kept only where the cells under it are empty, so the obligation
+    // is the mark's contrast with the board, not a foreground's with the mark.
+    // A wash light enough to carry digits scores near 1:1 against a dark
+    // board, a mark nobody could see.
     //
     // Both directions in both schemes, deliberately: a bound in one direction
-    // only is exactly how the previous value drifted to the top of its band.
+    // only lets a value drift to the top of its band.
     for (const [name, mark, bar] of [
       // The outline is read *against* the board, so it wants a real margin.
       ["HINT_EVIDENCE", roles.HINT_EVIDENCE, 3],
@@ -231,18 +224,17 @@ describe("the shared color vocabulary", () => {
       ).toBeGreaterThan(bar);
     }
 
-    // **And the bound in the other direction, which is the one that was
-    // missing.** The three assertions above are all floors: they say each mark
-    // is visible enough. Nothing said the *wash* must stay quiet enough for the
-    // marks that land on it — and a target cell is very often inside the region
-    // the deduction reasons from, so the action ring is drawn straight onto this
-    // fill. Left unbounded, the dark wash went to the visible end of its band
-    // and the ring measured **1.69:1** on it: the evidence shouting, the
-    // conclusion whispering.
+    // **And the bound in the other direction.** The three assertions above are
+    // all floors: they say each mark is visible enough. This one says the
+    // *wash* stays quiet enough for the marks that land on it — and a target
+    // cell is very often inside the region the deduction reasons from, so the
+    // action ring is drawn straight onto this fill. Left unbounded, the dark
+    // wash drifts to the visible end of its band, where the ring on it is
+    // barely legible: the evidence shouting, the conclusion whispering.
     //
     // The two requirements move in opposite directions along one axis, so light
-    // mode's own 3.94 is not reachable in dark at a wash anyone can see; 3 is a
-    // floor with real slack rather than a tuned target (dark scores 3.54).
+    // mode's own score is not reachable in dark at a wash anyone can see; 3 is
+    // a floor with real slack under both schemes rather than a tuned target.
     for (const [name, fg] of [
       ["the action ring", roles.HINT_ACTION],
       ["the evidence outline", roles.HINT_EVIDENCE],
@@ -260,7 +252,7 @@ describe("the shared color vocabulary", () => {
 
   it("keeps a region's fill under everything drawn on it, in both schemes", () => {
     // A fill is the whole board of a game that takes it, so every mark the
-    // collection draws on a cell lands on each of the six: there is no member
+    // collection draws on a cell lands on each of them: there is no member
     // a game can keep its star or its hint off. Measured on the set, then,
     // and not on one game's frames.
     const inDark = (c: Color): Color => darkValue(c) ?? c;

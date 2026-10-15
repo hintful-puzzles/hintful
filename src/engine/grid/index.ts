@@ -11,10 +11,10 @@
  *   (`Grid`/`GridFace`/`GridEdge`/`GridDot`) and the shared `makeConsistent`
  *   incidence builder.
  * - [`grid-tilings.ts`](./grid-tilings.ts) — the tiling types, the size
- *   dispatch (`gridSizeFor`, all 18 tilings), `gridValidateParams`, the
+ *   dispatch (`gridSizeFor`, every tiling), `gridValidateParams`, the
  *   `TilingBuilder` and the square tiling; `grid-tilings-basic.ts`,
  *   `grid-tilings-hex.ts` and `grid-tilings-dodec.ts` hold the other periodic
- *   tilings, and `tilings/` the four aperiodic ones.
+ *   tilings, and `tilings/` the aperiodic ones.
  * - [`grid-geometry.ts`](./grid-geometry.ts) — `gridNearestEdge` (input
  *   hit-testing) and `gridFindIncenter` (label placement). The only floating
  *   point in the module, and display/input only — never desc, generation or

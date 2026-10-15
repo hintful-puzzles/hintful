@@ -11,41 +11,33 @@
  * that can never fire**, and the only symptom is a player pressing a key and
  * nothing happening.
  *
- * Three disguises, all shipped:
+ * Three disguises:
  *
- * - `MOD_NUM_KEYPAD | '7'` — the *reason* long recorded for this one was wrong
- *   (the frontend does set the bit), but the gap is real: a numpad key only
- *   arrives as a digit with Num Lock on, and Inertia's diagonals were
- *   keypad-only;
- * - `button == ' '` — Space arrives as `CURSOR_SELECT2`, so Slide's Solve route
- *   could not be walked;
- * - `button === 8` for Backspace — the key map sends **127**. This one had
- *   reached **fourteen of the fifty-seven games**.
+ * - `MOD_NUM_KEYPAD | '7'` — the frontend does set the bit, but a numpad key
+ *   only arrives as a digit with Num Lock on, so a keypad-only arm is one most
+ *   players cannot reach;
+ * - `button == ' '` — Space arrives as `CURSOR_SELECT2`;
+ * - `button === 8` for Backspace — the key map sends **127**.
  *
  * ## 2. No game may privately restate what `engine/pointer.ts` already owns
  *
- * Every instance of §1 began as a local copy of a frontend fact — `const
- * BACKSPACE = 8` beside the code that used it. The copies are how the collection
- * drifts: `isMouseDown` and its two siblings were promoted to `pointer.ts` after
- * *27* ports had each written their own, and three games still had theirs.
+ * §1's defect starts as a local copy of a frontend fact — `const BACKSPACE = 8`
+ * beside the code that uses it. The copies are how the collection drifts.
  *
  * So this asserts the general rule rather than re-listing victims: a game may
  * not declare a name one of the engine's **fact modules** exports —
- * `pointer.ts`, and since 2026-09-12 `decimal.ts`, `desc-alphabet.ts` and
- * `run-length.ts`, the modules holding facts no game may restate. The names are
+ * `pointer.ts`, `decimal.ts`, `desc-alphabet.ts` and `run-length.ts`, the
+ * modules holding facts no game may restate. The names are
  * derived from each module's actual export list, so a helper added there is
  * guarded the day it lands — nobody has to remember this test exists. The list
  * of modules is an input this scan consumes, not a statement about any game.
  *
- * ## 3. The digit keys moved to `decimal.test.ts`
+ * ## 3. The digit keys are guarded in `decimal.test.ts`
  *
- * The one fact §2 could not see, because it was never given a name to shadow:
- * *which codes are the digit keys*. Twenty games had spelled it as a literal,
- * so a third scan keyed on the codes *against the button*, and recorded its
- * blind spot — a helper receiving the button under yet another name. Once no
- * desc site spelled a digit code either, that scan widened to any operand in
- * any game source, which closes the blind spot for the digits by construction,
- * and it lives beside the fact it guards.
+ * The one fact §2 cannot see, because it has no name to shadow: *which codes
+ * are the digit keys*. That scan keys on a digit code as any operand in any
+ * game source, so a helper receiving the button under another name cannot hide
+ * one, and it lives beside the fact it guards.
  *
  * See docs/input.md § "The numeric keypad never arrives".
  */
@@ -97,8 +89,8 @@ const factModuleSources: Record<string, string> = import.meta.glob<string>(
  * Every code the **on-screen key panel** can deliver, read from the live
  * registry. `puzzle-keys` sends a `KeyLabel.button` straight to
  * `Puzzle.processKey`, so the panel is a second emitter and the key map is not
- * the whole frontend — a distinction this test originally got wrong, asserting
- * that 8 could not be sent while twelve games' `clearKey` was sending it.
+ * the whole frontend: a game's `clearKey` can send a code the key map never
+ * does.
  *
  * Derived rather than listed, so a game that adds a bespoke key is covered on
  * the day it registers.
@@ -223,9 +215,8 @@ describe("no game tests a button this frontend cannot send", () => {
   const sources = gameSources();
 
   it("reads a plausible key map and a plausible set of game sources", () => {
-    // The vacuity guard, and it has already earned its place: the first cut of
-    // the parser read only bare numbers, missed every `PuzzleButton.NAME`
-    // entry, and this assertion is what said so.
+    // The vacuity guard: a parser that read only bare numbers would miss every
+    // `PuzzleButton.NAME` entry, and this assertion is what says so.
     expect(emittableFromKeyMap.size).toBeGreaterThanOrEqual(8);
     expect(emittableFromKeyMap).toContain(DELETE);
     expect(emittableFromKeyMap).toContain(ESCAPE);
@@ -243,8 +234,8 @@ describe("no game tests a button this frontend cannot send", () => {
   it("finds the comparisons it claims to check", () => {
     // The second half of the vacuity guard, and the one that matters more: the
     // codes above are useless if nothing is scanned against them. Games do
-    // compare buttons to numeric literals — letter keys, since the digits moved
-    // to `digitOf` — and if that stops being true this regex has gone stale
+    // compare buttons to numeric literals — letter keys, the digits going
+    // through `digitOf` — and if that stops being true this regex has gone stale
     // rather than the collection having become clean.
     const hits = sources.flatMap((f) => [...f.text.matchAll(COMPARISON)]);
     expect(hits.length).toBeGreaterThan(10);
@@ -335,13 +326,12 @@ describe("no game tests a button this frontend cannot send", () => {
 
   it("has no named constant standing in for an unsendable code", () => {
     // The literal scan above cannot see `const KEY_BACKSPACE = 8; … button ===
-    // KEY_BACKSPACE`. Seven games had exactly that.
+    // KEY_BACKSPACE`.
     //
-    // **This test's first cut matched on the constant's NAME** — BACKSPACE,
-    // DELETE, ESCAPE — and it passed while ABCD and Crossing sat there with
-    // `const CLEAR = 8`. That is this repo's most-repeated defect aimed at its
-    // own guard: it measured a neighbor of the thing it guards. What actually
-    // identifies the defect is the *value*, and what separates it from the many
+    // **The constant's NAME does not identify it**: matching on BACKSPACE,
+    // DELETE, ESCAPE misses `const CLEAR = 8`, and would measure a neighbor of
+    // the thing it guards. What identifies the defect is the *value*, and what
+    // separates it from the many
     // legitimate `= 8`s (`COL_CURSOR`, `DIR_MAX`, `F_DOT_BLACK`) is that the
     // constant is then **compared against a button**. So match on both.
     const copies: string[] = [];

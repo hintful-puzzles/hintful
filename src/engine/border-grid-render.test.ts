@@ -1,17 +1,16 @@
 /**
- * The border-grid renderer's contract, and that both its games use it.
+ * The border-grid renderer's contract, and that its games use it.
  *
  * **The strongest guard on this module is not in this file.** Palisade and
  * Separate each ship a tier-2.5 render scenario whose snapshot records every
- * draw call with its coordinates and its resolved color — 225 and 237 ops — and
- * the extraction that created this module left both byte-identical. That is a
- * far better test of a renderer than any assertion here, because it exercises
- * the pieces *in composition* against a frozen frame.
+ * draw call with its coordinates and its resolved color. That is a far better
+ * test of a renderer than any assertion here, because it exercises the pieces
+ * *in composition* against a frozen frame.
  *
  * What this file adds is the two things those snapshots structurally cannot say:
- * that a *third* game cannot quietly re-implement the mechanic beside them, and
+ * that another game cannot quietly re-implement the mechanic beside them, and
  * what each piece means on its own, so a failure names the piece rather than
- * two games at once.
+ * every game at once.
  */
 
 import { describe, expect, it } from "vitest";

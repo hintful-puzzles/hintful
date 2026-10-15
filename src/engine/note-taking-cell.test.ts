@@ -3,9 +3,9 @@
  *
  * Two halves, and the split is deliberate:
  *
- *  - **The arms**, unit-tested against a bare `Ui`. Eleven games' pointer
- *    presses now resolve here, so this is where "what does a right press do to
- *    the highlight" is *stated* rather than inferred from eleven copies.
+ *  - **The arms**, unit-tested against a bare `Ui`. Every note-taking game's
+ *    pointer press resolves here, so this is where "what does a right press do
+ *    to the highlight" is *stated* rather than inferred from each game's copy.
  *  - **The population**, derived from the registry by the *shape* of each
  *    game's `newUi()` — a game is a note-taking game iff it carries the three
  *    fields, which is a fact about the game rather than a roster somebody has
@@ -364,9 +364,8 @@ describe("the enrolled population is derived, not listed", () => {
     // The membership *is* asserted, unlike the population: a game acquiring
     // the fields should be a decision somebody makes, and a member losing them
     // should fail here rather than silently leave the guards below. Map and
-    // Rome joined in `share-the-selected-cell-highlight`, through their tap:
-    // each press is the start of a drag, and only a release that commits
-    // nothing selects.
+    // Rome are members through their tap: each press is the start of a drag,
+    // and only a release that commits nothing selects.
     expect(noteTaking.ids).toEqual([
       "abcd",
       "crossing",
@@ -405,17 +404,16 @@ describe("the enrolled population is derived, not listed", () => {
   });
 
   // The reverse direction, and the one a behavioral test structurally cannot
-  // see: a twelfth game could carry the three fields and hand-roll the press
-  // arm beside them, which is precisely how eleven copies came to exist. What
+  // see: a new game could carry the three fields and hand-roll the press arm
+  // beside them, which is how copies of it multiply. What
   // is being asserted is that no such code exists, so it has to be a source
   // scan — the same reasoning as `emittable-keys.test.ts`'s.
   //
-  // **Two spellings, because there are two gestures**, not because a name was
-  // once different: a game whose press is the selection calls
-  // `pressNoteTakingCell`, and a game whose press might become a drag resolves
-  // at the release through `tapNoteTakingCell`. Keying on the first alone would
-  // have convicted Rome and Map the day they moved to the second, which is
-  // `docs/method.md` § "A scan that keys on a name" aimed at this file.
+  // **Two spellings, because there are two gestures**: a game whose press is
+  // the selection calls `pressNoteTakingCell`, and a game whose press might
+  // become a drag resolves at the release through `tapNoteTakingCell`. Keying
+  // on the first alone would convict Rome and Map, which is `docs/method.md`
+  // § "A scan that keys on a name" aimed at this file.
   it("every enrolled game routes its pointer press through a shared arm", () => {
     const arms = ["pressNoteTakingCell(", "tapNoteTakingCell("];
     const missing = arms

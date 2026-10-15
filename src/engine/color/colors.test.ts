@@ -4,10 +4,9 @@
  *
  * "These ten colors can be told apart" is a relation between members, so it
  * cannot be established one color at a time, and it cannot be established by
- * looking: `hand-author-dark-palette` F2 recorded a screenshot saying Flood had
- * regressed while the measurement said it had improved by nearly 3×, and the
- * screenshot was about to cost a correct change. An eye comparing two dark greens
- * adjacent to seven other colors is not a reliable instrument.
+ * looking: a screenshot can show a set as worse when the measurement shows it
+ * better. An eye comparing two dark greens adjacent to seven other colors is not
+ * a reliable instrument.
  *
  * So every constraint the design was built against is re-checked here, in **both**
  * schemes, against the numbers upstream's hand-written sets actually measured.
@@ -114,8 +113,8 @@ describe("the named colors", () => {
 
   describe("a set meant to be told apart is designed as a set", () => {
     // The bars are what upstream's hand-written sets measured. Every one of them
-    // has to be beaten in BOTH schemes, which is the whole reason this change
-    // exists: dark mode was never authored for a set, only derived per color.
+    // has to be beaten in BOTH schemes: a set's dark values are authored as a
+    // set, never derived per color.
     const SETS: [name: string, entries: [string, Color][], upstream: number][] = [
       [
         "the ten (flood, guess)",
@@ -294,7 +293,7 @@ describe("the named colors", () => {
   it("keeps the two-state pair apart in lightness, in both schemes", () => {
     // What a color-blind player has when hue fails. The bar is above 0.155,
     // the gap between two states of a board the owner called too close to
-    // play by (2026-10-04).
+    // play by.
     for (const scheme of [light, dark]) {
       const [a, b] = colors.TWO.map(scheme);
       expect(Math.abs(a[0] - b[0])).toBeGreaterThan(0.18);

@@ -1,11 +1,9 @@
 /**
  * Tier-1 tests for the shared Net/Netslide wire model.
  *
- * Written by `audit-test-suite-strength`. `wires.ts` is 413 lines shared by nine
- * files and had **no test file of its own** — its every guarantee lived in two
- * games' frozen differentials, which do catch its defects (the audit confirmed
- * that by mutation) but only after a full generate-and-compare run, and only
- * with a diff that names a description string rather than the rule that broke.
+ * `wires.ts` is shared by both games, whose frozen differentials do catch its
+ * defects, but only after a full generate-and-compare run, and only with a
+ * diff that names a description string rather than the rule that broke.
  * Coverage several layers away is adequate protection and poor feedback; these
  * assertions are the feedback.
  *
@@ -248,8 +246,8 @@ describe("the description codec", () => {
 
 /**
  * `growSpanningTree` builds the *solved* grid every Net/Netslide board is
- * scrambled from, and had no local test of any kind: its rules were pinned only
- * by two games' frozen descs, which move for any reason at all. What follows
+ * scrambled from, and the games' frozen descs move for any reason at all, so
+ * they pin none of its rules by name. What follows
  * asserts the three properties its doc comment claims — spanning, acyclic, no
  * full crosses — plus the boundary rule, as structure rather than as values, so
  * a deliberate change to the RNG draw order (which is the differential's

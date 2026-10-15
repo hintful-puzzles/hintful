@@ -126,11 +126,9 @@ const accepted = new Map<string, number>();
  * board must draw.
  *
  * **What this can see.** Only a `newState` or a `redraw` that throws something
- * other than a refusal. Measured when it was written, with every desc
- * accepted: 21 games' boards threw on some mutant, and the other 36 built and
- * drew every one, the empty desc included, because their parsers then skipped
- * what they did not recognize and a typed array swallows an out-of-range write.
- * Agreement between the verdict and the board needs no test: the verdict is
+ * other than a refusal. A parser that skips what it does not recognize builds
+ * and draws every mutant, the empty desc included, since a typed array
+ * swallows an out-of-range write; that is invisible here. Agreement between the verdict and the board needs no test: the verdict is
  * the board's own build (`loadDesc`).
  *
  * **The cap.** One board per value of each preset axis, on the smallest board
@@ -193,17 +191,12 @@ describe("a near-miss game ID", () => {
 
   // How many accepted near misses reached `newState`, collection-wide. Several
   // games accept none (an exact validator refuses every one-edit change), so the
-  // floor is on the sum: a mutator or a slice that went blind would drop it. It
-  // was 4,668 when written and 3,443 once every game read its desc strictly
-  // (`read-descs-through-one-cursor`), since a near miss a strict parser refuses
-  // never reaches `newState`. It was 2,629 once loading asked a board for its
-  // one answer (`play-only-boards-with-one-answer`): one edit to a puzzle with
-  // one answer usually leaves it with several or none. It was 1,270 once
-  // loading asked whether deduction finishes the board
-  // (`retire-the-unchecked-board-options`): a solver that gives up proves
-  // neither, and such a board used to load. It was 1,028 once nine untiered
-  // games that had not been asking did
-  // (`refuse-a-board-an-untiered-solver-cannot-finish`).
+  // floor is on the sum: a mutator or a slice that went blind would drop it.
+  // Loading refuses most near misses before `newState`: a strict parser refuses
+  // a malformed one, and one edit to a puzzle with one answer usually leaves it
+  // with several or none, which the answer check and the deduction check
+  // refuse. A stricter loader lowers the sum, and the floor with it; a blind
+  // sweep falls far below either.
   itOverWholeSweep("loaded enough accepted near misses to mean something", () => {
     expect(accepted.size).toBe(REGISTERED_GAME_COUNT);
     const total = [...accepted.values()].reduce((a, b) => a + b, 0);

@@ -2,17 +2,15 @@
  * A board of given params, dealt once per worker and shared by every
  * cross-game sweep that asks for it.
  *
- * **Dealing is where a sweep's time goes, not checking.** Measured 2026-10-08
- * over the six games that cost most: following a hint plan to the end of a
- * board took under 0.1 s on every preset but three, while dealing one took up
- * to 19.5 s (Group's 8x8 at Hard, which the Custom dialog offers and no preset
- * holds). Each sweep seeded its own deal from its own name, so about a dozen
- * guards each dealt that board afresh, and Group was 16% of the suite's test
- * time. The suite runs with `isolate: false`, so a module-level cache is one
- * per worker and every file in it reads the same boards.
+ * **Dealing is where a sweep's time goes, not checking.** Following a hint
+ * plan to the end of a board is quick on nearly every preset, while dealing
+ * the dearest boards (Group's larger Hard ones) takes many seconds, and a
+ * sweep that seeded its own deal would deal them afresh for every guard. The
+ * suite runs with `isolate: false`, so a module-level cache is one per worker
+ * and every file in it reads the same boards.
  *
- * **What this gives up is that each guard used to see a different board of
- * the same params.** Nothing relied on that: a guard that needs a property to
+ * **What this gives up is that each guard could see a different board of the
+ * same params.** Nothing relies on that: a guard that needs a property to
  * hold across boards takes several with `n`, and one that needs a particular
  * board pins its description (docs/testing.md § "Pinning a hint's
  * positions"). What it buys beside the time is that a failure in one guard
@@ -36,8 +34,8 @@ interface Dealing<Params> {
 /**
  * The tries a deal that is known to end may make. The app finds a rare board
  * because its deadline counts no tries (`retry-limit.ts`), and a generator
- * called directly gives up at the house count, which a board found once in
- * 100,000 tries (Bridges, five islands on a 10x10 at Tricky) is far past. It
+ * called directly gives up at the house count, which a rare board (Bridges,
+ * five islands on a 10x10 at Tricky) is far past. It
  * is a bound all the same, so that a cell which loses its tier fails and does
  * not spin.
  */

@@ -7,15 +7,15 @@
  * about their tiers the same way, so a property that is *about* tiers can only
  * be asserted one game at a time, by hand. The property in question is
  * cap-monotonicity (a board solvable with the ladder capped at `d` is solvable
- * at every cap above `d`), and it is not theoretical: Boats shipped a solver
- * that solved boards at a *lower* cap which it failed at a higher one, which
- * silently broke Check & Save on every Easy board, because "solvable at Easy"
- * and "solvable at Tricky" were both true statements about different code paths
- * and nothing compared them. `difficulty-contract.test.ts` is the shared guard.
+ * at every cap above `d`), and it is not theoretical: a solver can solve a
+ * board at a *lower* cap that it fails at a higher one, which silently breaks
+ * Check & Save on that tier's boards, because "solvable at Easy" and
+ * "solvable at Tricky" are true statements about different code paths and
+ * nothing else compares them. `difficulty-contract.test.ts` is the shared guard.
  *
  * **Why the accessors, rather than a documented field name.** The obstacle is
  * not that the params field is spelled `diff` in some games and `difficulty` in
- * others. It is that several games do not hold a number there at all — Galaxies,
+ * others. It is that a game need not hold a number there at all — Galaxies,
  * Keen, Spokes and others type it as a string union or an enum, each with its
  * own private `diffToLevel`. A cross-game caller cannot write
  * `{ ...p, diff: cap }` for those, because `cap` is an index and the field is
@@ -43,7 +43,7 @@ import type { ParamConfigItem } from "./game.ts";
  * - `"solved"` — the solver reached the unique solution within the cap.
  * - `"unsolved"` — it ran out of technique (stuck, or the board is ambiguous at
  *   this cap). This is the *only* honest reading of most solvers' `0`, which is
- *   why "stuck" and "ambiguous" are not separate members: several games cannot
+ *   why "stuck" and "ambiguous" are not separate members: many solvers cannot
  *   distinguish them and a member no adapter can populate faithfully is worse
  *   than none.
  * - `"impossible"` — it proved the board inconsistent. Kept distinct from
@@ -350,9 +350,9 @@ export function dealGaveUp(tier: string | null): string {
  * before `tier`, so a board the easier ladder already cracks is rejected
  * without ever paying for the deeper solve — and a generator that retries in a
  * loop pays the cheap half far more often than the expensive one. That ordering
- * is not a micro-optimization: it measured making Clusters' whole generator
- * *faster than it had been before it had tiers* (10×10 Tricky worst case
- * 25.0 s → 10.9 s). It also leaves a game free to
+ * is not a micro-optimization: it is what keeps a tiered generator such as
+ * Clusters' no slower than the same generator without tiers. It also leaves a
+ * game free to
  * answer both questions from a single fixpoint if its tiers are nested rungs of
  * one — this helper never dictates how many passes a verdict costs, only which
  * question is asked first.

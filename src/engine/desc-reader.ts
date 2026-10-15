@@ -5,17 +5,16 @@
  * A parser reading a desc keeps making one decision: a separator or a number
  * that is not there is missing either because the desc *ended*, which is
  * {@link DESC_TOO_SHORT}, or because something else is in its place, which is
- * that character. When `read-descs-through-one-cursor` read every parser, about
- * forty-five sites in two dozen games made it by hand and some twenty-five
- * more made it wrong; {@link DescReader.expect}, {@link DescReader.char} and {@link DescReader.int}
+ * that character. Made by hand at every site, it is easy to make wrong;
+ * {@link DescReader.expect}, {@link DescReader.char} and {@link DescReader.int}
  * make it once.
  *
  * The second job is that a game reads its desc **once**. {@link readDesc} runs
  * one parser and returns a {@link DescParse}, which `newState` takes the value
  * of with `descValue`; the engine's verdict on the desc is that same parse
- * (`loadDesc`). Two loops, a validator's and a parser's, once disagreed in
- * silence, because a typed array swallows a stray write: validators accepted
- * what their parsers skipped in about half the collection.
+ * (`loadDesc`). Two loops, a validator's and a parser's, can disagree in
+ * silence, because a typed array swallows a stray write: a validator accepts
+ * what its parser skips.
  *
  * WHAT DOES NOT LIVE HERE is any game's grammar: what a letter means, how runs
  * chunk, which characters a value may be. Those are the puzzle's and its frozen
@@ -91,9 +90,9 @@ export class DescReader {
    * {@link DESC_OUT_OF_RANGE}.
    *
    * The bound is required because a desc is a player's text: an unbounded
-   * number reaches a typed array and wraps, and two games read a different
-   * board from the one their validator accepted that way. Leading zeros are
-   * read, as every game's hand loop read them.
+   * number reaches a typed array and wraps, and the game reads a different
+   * board from the one its validator accepted. Leading zeros are read, as
+   * upstream's parsers read them.
    */
   int(lo: number, hi: number): number {
     const c = this.#next();

@@ -2,17 +2,15 @@
  * The note-taking cell: the input mechanic the pencil-mark games share.
  *
  * The mechanic the player operates is one design — *highlight a cell, type a
- * value into it, pencil candidate marks in it* — and Abcd, Crossing, Group,
- * Keen, Mathrax, Salad, Seismic, Solo, Towers, Undead and Unequal each carried
- * their own copy of it (`jscpd`: 514 duplicated lines across their `index.ts`
- * files, 2026-09-05).
+ * value into it, pencil candidate marks in it* — so it is written once, for
+ * every game that imports it.
  *
  * WHAT LIVES HERE is only what would have to change in every copy at once to
  * keep them correct, by [`border-grid.ts`](./border-grid.ts)'s test: what a
  * left and a right press do to the highlight, how the fork's sticky pencil mode
  * behaves, the rule that a pointer press hands the cursor's provenance back to
- * the mouse — and the highlight's *picture*, which each game drew for itself
- * until five of them had drifted into four different colors for it.
+ * the mouse — and the highlight's *picture*, which drifts into different
+ * colors when each game draws its own.
  *
  * WHAT DOES NOT live here is everything about the *puzzle*. Each game keeps its
  * own coordinate mapping, its own symbol vocabulary (digits, letters past nine,
@@ -29,13 +27,13 @@
  * about the puzzle.
  *
  * WHAT WAS EVALUATED AND DECLINED, recorded so it is not re-proposed each time.
- * `jscpd` still reports a ~28-line clone between Keen, Solo, Towers and
- * Unequal's entry blocks. It is the *move literal* —
+ * `jscpd` reports a clone between several games' entry blocks. It is the
+ * *move literal* —
  * `{ type: "set", x, y, n, pencil, autoElim }` — plus the two predicates around
  * it that read each game's own `grid` and `pencil` arrays. Lifting it would mean
  * a shared `Move`, and a shared move type couples save formats that have no
- * reason to be identical. The remaining duplication is four games agreeing about
- * their own data, which is where the line is.
+ * reason to be identical. That duplication is games agreeing about their own
+ * data, which is where the line is.
  */
 
 import { type GameDrawing, UI_UPDATE, type UiUpdate } from "./game.ts";
@@ -211,9 +209,8 @@ function applyPress(
 // highlight the mode switch must not move — which a press that had hidden or
 // moved the highlight has already destroyed.
 //
-// The two differences a player could see, before `own-the-select-or-drag-gesture`
-// took the gesture off the games, were both that press: a repeat tap re-selected
-// for ever, and a sticky right tap on something that could take no mark hid the
+// A press that commits shows a player two defects: a repeat tap re-selects for
+// ever, and a sticky right tap on something that can take no mark hides the
 // highlight instead of leaving it alone. `select-or-drag.test.ts` holds every
 // member to one answer, driving each game's own `interpretMove`.
 

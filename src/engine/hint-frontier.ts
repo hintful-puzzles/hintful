@@ -5,8 +5,7 @@
  * A candidate-elimination board routinely offers several independent firings at
  * one position, and a plan that takes whichever its scan reaches first walks
  * the player from one side of the board to the other for no reason the player
- * can see (`sequence-hints-in-cell-games`, `findings.md`). The rule is the
- * owner's (`order-hints-from-the-frontier` D1): stay where the work is, leave
+ * can see. The rule is the owner's: stay where the work is, leave
  * only when nothing there fires, and among the firings at hand take the
  * cheapest. So continuity is the primary key and the game's own rung order the
  * tiebreak: a naked single beside the last step beats a strike beside it, and

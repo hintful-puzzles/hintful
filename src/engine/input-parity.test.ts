@@ -24,8 +24,8 @@
  *     reaches the game. The second is the reverse direction, and it is the one
  *     that separates "the wiring is connected" from "the input is reachable".
  *
- * ON THE INSTRUMENT (this repo's standing rule, and it bit four times while
- * this file was being written). A behavioral probe over generic geometry can
+ * ON THE INSTRUMENT (docs/method.md § "Check the instrument before the
+ * finding"). A behavioral probe over generic geometry can
  * only ever observe *"the board did not change"*, and there are many innocent
  * reasons for that:
  *
@@ -36,7 +36,7 @@
  *  - Seismic caps entry at the cell's region size, so 6..9 do nothing on a
  *    board whose regions are all smaller.
  *
- * Each of those masqueraded as a dead binding. So the questions asked below are
+ * Each of those reads as a dead binding. So the questions asked below are
  * ones a game's semantics cannot make innocent, and every probe that needs
  * something to act on is primed first.
  *
@@ -49,8 +49,7 @@
  *
  * The probes themselves live in
  * [`testing/input-probe.ts`](./testing/input-probe.ts) so this file and
- * `puzzle/shortcuts.test.ts` ask them identically — they each had their own
- * copy, and the copies had already drifted.
+ * `puzzle/shortcuts.test.ts` ask them identically; two copies drift.
  *
  * The sweeps are also frontend-faithful, which is load-bearing rather than
  * decorative: `view-interactive.ts` installs `pointerTracking` only `if
@@ -102,14 +101,12 @@ const REGISTERED = registeredGameIds();
  * Games with no keyboard at all, each with the reason — and the reason must
  * also be in that game's spec, not only here. The list is the point: it makes
  * "this game has no keyboard" a decision somebody made rather than a condition
- * nobody noticed, which is precisely the state that left nine games touch-dead
- * for months.
+ * nobody noticed.
  */
 const NO_KEYBOARD: Record<string, string> = {
   // Empty, and meant to stay so: every game in the collection has a keyboard.
-  // Loopy was the last entry — its input is per-edge across eighteen tilings,
-  // so it needed an interaction designed rather than a binding added
-  // (`add-loopy-keyboard-control`: the cursor is a dot, an arrow picks one of
+  // A game whose input is not per-cell needs an interaction designed rather
+  // than a binding added (Loopy's cursor is a dot, and an arrow picks one of
   // its edges). A game added here must record its reason in its own spec too.
 };
 
@@ -119,10 +116,9 @@ const NO_KEYBOARD: Record<string, string> = {
  * is the thing this list exists to prevent.
  */
 const INERT_PANEL_KEYS: Record<string, string[]> = {
-  // Empty, and meant to stay so. Seismic sat here once, offering four digits
-  // no generated region could hold, because its keypad copied the *format*
-  // bound where the *generator* bound was wanted; it now derives the keypad
-  // from the generator (`maxGeneratedRegionSize`).
+  // Empty, and meant to stay so. A keypad is bounded by what the *generator*
+  // can deal, not by what the *format* allows (Seismic's derives from
+  // `maxGeneratedRegionSize`), or it offers digits no board can hold.
 };
 
 /**
@@ -169,7 +165,7 @@ describe("a game does not claim a button it did not act on", () => {
    * `puzzle-key-unhandled` exactly when the game declines a key, and that is
    * what lets a bare letter be an app shortcut without a per-game roster
    * (`src/puzzle/shortcuts.ts`). A game claiming every code takes `u`, `r`, `n`
-   * and `h` away from its own players — which is what Ascent did.
+   * and `h` away from its own players.
    */
   it("the probe codes really are unactionable", () => {
     // Checking the instrument before the finding: every reason these codes are
@@ -224,8 +220,8 @@ describe("a game does not claim a button it did not act on", () => {
       ).toBe(id in CLAIMS_UNACTIONABLE);
 
       // A code nothing acts on cannot have moved the board either. This is the
-      // one direction "did the board change" is safe to ask in (constraint C1
-      // of `close-the-consumed-probe-blind-spot`): there is no innocent reason
+      // one direction "did the board change" is safe to ask in: there is no
+      // innocent reason
       // for a code with no meaning to write to the grid.
       expect(boardChanged, `${id} changed the board for a meaningless code`).toBe(
         false,
@@ -253,17 +249,15 @@ describe("a long press cannot silently swallow a gesture", () => {
    * than merely compatible.
    *
    * **The question is "did anything observable happen", not "was it consumed".**
-   * Consumption is what this guard used to ask, and it was satisfied by a bare
-   * repaint: 16 of 57 games consumed `RIGHT_BUTTON` without ever committing a
-   * move, so for those the biconditional held whatever the game did. Ascent made
-   * that concrete — its `finishTyping` tail answered any in-grid pointer button,
-   * so deleting its entire right-button arm left this guard green.
+   * Consumption is satisfied by a bare repaint: a game that consumes
+   * `RIGHT_BUTTON` without ever committing a move would hold the biconditional
+   * whatever it did, and a typing tail that answers any in-grid pointer button
+   * hides the deletion of an entire right-button arm.
    *
    * `secondaryMeaning` asks the sharper question, and it is one question rather
-   * than a list of special cases: the collection's three legitimate answers —
-   * commit a move (34 games), change what the next input does (16), fold onto
-   * the primary button (Slide) — are all "something observable changed", now or
-   * next. Nothing is declared; a game joins by *having* the behavior.
+   * than a list of special cases: the collection's legitimate answers — commit
+   * a move, change what the next input does, fold onto the primary button
+   * (Slide) — are all "something observable changed", now or next. Nothing is declared; a game joins by *having* the behavior.
    */
   const declared: string[] = [];
   const observed: string[] = [];
@@ -327,7 +321,7 @@ describe("keyboard reachability is a recorded decision for every game", () => {
       // Coverage is derived through the real `Midend`, never by grepping a
       // game's `index.ts` for `CURSOR_UP`: Palisade and Separate have no direct
       // `CURSOR_*` reference and full cursor handling, via `border-grid.ts`.
-      // A check that reads one file convicts two games that are fine, which is
+      // A check that reads one file convicts games that are fine, which is
       // how a guard gets turned off rather than fixed.
       expect(
         responds || id in NO_KEYBOARD,
@@ -469,8 +463,8 @@ describe("every on-screen key a game offers reaches that game", () => {
       ).toEqual(INERT_PANEL_KEYS[id] ?? []);
 
       // The panel's Clear sends `CLEAR_BUTTON` and the keyboard's Backspace
-      // sends `DELETE`, so a game can honor one and not the other. Unequal did,
-      // with its help page promising Backspace.
+      // sends `DELETE`, so a game can honor one and not the other while its
+      // help page promises Backspace.
       if (panel.some((k) => k.button === CLEAR_BUTTON))
         expect(
           reaches(DELETE),
@@ -492,9 +486,9 @@ describe("every on-screen key a game offers reaches that game", () => {
 describe("the keyboard can commit a move, not merely move a cursor", () => {
   /**
    * A cursor that goes everywhere and does nothing is not a keyboard. This
-   * asks the whole question `audit-input-mode-parity` D1 asks — is the input
-   * *reachable* — by finding one
-   * keyboard sequence per game that actually changes the board.
+   * asks the whole question of the input-parity bar — is the input
+   * *reachable* — by finding one keyboard sequence per game that actually
+   * changes the board.
    *
    * Two-step interactions are the reason the probe is not a single keypress:
    * Pegs, Map, Rectangles, Samegame, Signpost, Slide and Untangle all pick

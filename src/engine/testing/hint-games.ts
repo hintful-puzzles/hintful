@@ -35,8 +35,8 @@ export const HINT_GAMES: [string, AnyGame][] = REGISTERED_GAMES.filter(
  * **It bounds what the *gate* walks**, in `hint-quality.test.ts` and
  * `hint-resume.test.ts`, because a search is the one hint shape whose cost explodes
  * with board size: the walk is quadratic in it twice over (one full search per
- * move, and more moves on a bigger board). Measured 2026-09-09, the two members
- * were **43% of the whole suite's test time** — Sixteen 30%, Netslide 13%.
+ * move, and more moves on a bigger board), so walked at every size these games
+ * would be a large share of the whole suite's test time.
  *
  * Which games may *refuse* as a search past its reach is a different question,
  * answered by {@link SEARCH_REACH_GAMES}: Guess and Pegs search without this
@@ -52,10 +52,10 @@ export const SEARCH_PLANNING_GAMES: readonly string[] =
  * to `searchRefusal`, which names it for them; never declared.
  *
  * `hint-resume.test.ts` excuses exactly these its walk's completion promise,
- * with a ledger saying why each has a reach. It was derived from calling the
- * slide planner until `add-pegs-hint`, which keyed it on a name: Guess already
- * gave this refusal from its own enumeration and was not excused, and Pegs'
- * beam-and-proof search would not have been either.
+ * with a ledger saying why each has a reach. It is keyed on the refusal's name
+ * rather than on calling the slide planner, because a hint can search without
+ * the planner (Guess's enumeration, Pegs' beam-and-proof search) and still
+ * give this refusal.
  */
 export const SEARCH_REACH_GAMES: readonly string[] = HINT_GAMES.map(
   ([id]) => id,
@@ -122,22 +122,21 @@ export function markRoles(highlights: unknown): number {
  * tier, the `axisSlice` in the gate, and in both every value the Custom dialog
  * offers that no preset holds (`dealtBoards`).
  *
- * This is the one place the gate's preset population is decided, because every
- * cross-game sweep but one used to decide it for itself and all of those
- * decided it wrong. They walked `firstLeaf` — by convention the smallest and
- * easiest board a game offers — or synthesized params from it with a `withTier`
- * that writes only the tier field, so no board any of them had ever run on
- * carried a cage, a jigsaw block, an X diagonal, an Adjacent clue, a Tectonic
- * region, a multiplication-only Keen or any Loopy tiling but Squares. Three of
- * them have *narration* as their subject, while Killer alone adds four cage
- * sentences. `docs/testing.md` § "How a cross-game guard finds its
- * population" rule 6 names the tell: a guard that builds its inputs with a
- * `with*` rather than reading them off something the game offers.
+ * This is the one place the gate's preset population is decided, because a
+ * sweep that decides it for itself decides it wrong. Walking `firstLeaf` — by
+ * convention the smallest and easiest board a game offers — or synthesizing
+ * params from it with a `withTier` that writes only the tier field never runs
+ * a board carrying a cage, a jigsaw block, an X diagonal, an Adjacent clue, a
+ * Tectonic region, a multiplication-only Keen or any Loopy tiling but Squares,
+ * and a sweep whose subject is *narration* misses every sentence those add.
+ * `docs/testing.md` § "How a cross-game guard finds its population" rule 6
+ * names the tell: a guard that builds its inputs with a `with*` rather than
+ * reading them off something the game offers.
  *
  * **Which sweeps still build their own is asserted rather than counted** —
  * `hint-enrollment.test.ts` scans the suite for the two calls and holds the
- * result to a ledger with a reason per entry, because three of the sweeps found
- * that way were inside the file whose main walk had already been fixed once.
+ * result to a ledger with a reason per entry, because a sweep fixed once does
+ * not stay fixed, even beside one that was.
  *
  * **Difficulty needs no special case**: it is a `"choices"` item like any
  * other, so a slice *replaces* a `tiers.map(withTier(base))` loop rather than
@@ -153,13 +152,11 @@ export function markRoles(highlights: unknown): number {
  *
  * **A searching hint takes its modes and not its sizes everywhere.** Its cost is
  * superlinear in board size — one full search per move, and more moves to make
- * — and `retire-tests-that-do-not-earn-their-runtime` measured the two members
- * of {@link SEARCH_PLANNING_GAMES} at 43% of all test time. So they get
- * `scalarEnds: false`: every mode on the smallest board offering it, and no
- * large board at all. That is derived from the same axes as everyone else's
- * slice rather than being a count of presets to keep — one of the two counts
- * this replaced was three, chosen because three happened to reach Netslide's
- * three barrier modes, which stops being true the day Netslide gains a fourth.
+ * — so the members of {@link SEARCH_PLANNING_GAMES} get `scalarEnds: false`:
+ * every mode on the smallest board offering it, and no large board at all.
+ * That is derived from the same axes as everyone else's slice rather than being
+ * a count of presets to keep, because a count chosen to reach a game's modes
+ * stops reaching them the day the game gains one.
  *
  * **What the slice does not walk, and what does.** Every preset in between — a
  * mode at a size other than its smallest, a tier at a size other than the

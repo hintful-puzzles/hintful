@@ -2,19 +2,18 @@
  * The cross-game difficulty guards — the reason `Game.difficulty` exists.
  *
  * The central one is cap-monotonicity (*a board solvable with the ladder capped
- * at `d` is solvable at every cap above `d`*). It was **false** on Boats, and
- * that silently broke Check & Save on every Easy board — because "solvable at
- * Easy" and "solvable at Tricky" were both true statements about different code
- * paths and nothing compared them.
+ * at `d` is solvable at every cap above `d`*). Where it is **false**, Check &
+ * Save breaks silently on the lower tier's boards, because "solvable at Easy"
+ * and "solvable at Tricky" are true statements about different code paths and
+ * nothing else compares them.
  *
  * **The enrolled set is derived, not listed.** A game is tiered iff it offers a
  * difficulty choice in its custom-params form, which is the tiers a player can
  * actually pick; every such game must declare the contract, and every game
  * declaring the contract must offer such a choice. A hand-maintained list would
- * eventually go stale, and the naming convention that would replace it has
- * already failed once — a `DIFF_*` grep surveying tiered games missed Bridges,
- * whose tiers are a plain `difficulty: number` against a `DIFFICULTY_NAMES`
- * array. A guard blind to a game cannot fire on it.
+ * eventually go stale, and a naming convention misses games: a `DIFF_*` grep
+ * does not see tiers held as a plain `difficulty: number` against a
+ * `DIFFICULTY_NAMES` array. A guard blind to a game cannot fire on it.
  *
  * **The tier list is derived from the same place** (`difficultyTiers`): the
  * form's difficulty choices decide both *whether* a game is tiered and *what
@@ -76,8 +75,7 @@ for (const { id, game } of registered) {
   if (tiers && contract) tiered.push({ id, game, contract, tiers });
 }
 
-/* **`firstLeaf` stays narrow on purpose here**, where
- * `slice-the-first-leaf-hint-guards-by-axis` widened eleven of its siblings to
+/* **`firstLeaf` stays narrow on purpose here**, where its sibling guards read
  * `gatePresets`. The three cases below that read it — the form/contract
  * coupling, the codec round-trip and the no-mutation rule — generate no board
  * at all: they ask whether `withTier` writes a field `tierOf` and the codec can
@@ -111,14 +109,10 @@ describe("the tiered-game set is derived from the registry", () => {
   it("inspected every registered game", () => {
     // THE GUARD ON THE INSTRUMENT. Every assertion below iterates `tiered`, and
     // an empty or shrunken `tiered` makes all of them pass having checked
-    // nothing — the shape this repo has now hit six times (`grid.test.ts`'s
-    // `d.edges.length === d.order`, `touch-input.test.ts` counting the catalog
-    // while its sweep skipped on the registry, the silently-empty
-    // `import.meta.glob`, and both halves of the help-link check). So count what
-    // was looked at, not only what offended.
+    // nothing. So count what was looked at, not only what offended
+    // (docs/method.md § "Count what the check looked at").
     //
-    // The floor is deliberately below the true count (57 games, 28 tiered when
-    // written): it separates "working" from "enumerating nothing", and is not a
+    // The floor is deliberately below the true count: it separates "working" from "enumerating nothing", and is not a
     // ratchet that a legitimate change would have to bump.
     expect(registered.length).toBeGreaterThan(50);
     expect(tiered.length).toBeGreaterThan(25);
@@ -181,9 +175,8 @@ for (const { id, game, contract, tiers } of tiered) {
 
     it("never names a tier in a preset title that is not that preset's tier", () => {
       // THE COPY NOBODY COUNTED: tier words written by hand in a preset title,
-      // where no other test looks. Solo's menu once said "3x3 Intermediate" while
-      // its Custom dialog offered "Tricky", and Galaxies' said "7x7 Normal" for a
-      // tier named Easy.
+      // where no other test looks: a menu saying "7x7 Normal" for a preset whose
+      // tier the Custom dialog calls Easy.
       //
       // **Stated as a prohibition, so it needs no exemption list.** "Every title
       // carries its tier" would be the stronger rule and would need one: Salad's
@@ -193,7 +186,7 @@ for (const { id, game, contract, tiers } of tiered) {
       // if it uses one of the collection's difficulty words it must be its own.
       //
       // What this therefore cannot catch: a title naming a tier in words outside
-      // the scale ("3x3 Basic"), which is what both defects above actually were.
+      // the scale ("3x3 Basic").
       // Deriving the titles is what fixed those; this stops the next one that
       // reaches for a real tier word.
       const SCALE = new Set([...tierNames(5), "Unreasonable"]);
@@ -277,10 +270,9 @@ for (const { id, game, contract, tiers } of tiered) {
       //
       // Seed-deterministic and bounded, never clock-gated (docs/testing.md § "Seed-deterministic, never clock-gated").
       //
-      // **Four boards per tier, and the number was measured rather than guessed.**
-      // One board a tier passed a solver that failed at a higher cap on 7 of 8
-      // of its easiest boards: the first seed happened to be one of the eighth.
-      // One sample misses that rate 1 time in 8, and four about 1 time in 4,000.
+      // **Four boards per tier, sized by the miss rate.** A solver that fails at
+      // a higher cap on 7 of 8 boards escapes one sample 1 time in 8, and four
+      // about 1 time in 4,000.
       //
       // The hook walks the first board of each tier, which catches a solver
       // that fails on every board; the four are walked on every push.
@@ -322,21 +314,19 @@ for (const { id, game, contract, tiers } of tiered) {
     });
 
     it("deals boards that need the tier the preset claims", () => {
-      // THE PROPERTY `engine-difficulty` NAMES AND NOTHING CHECKED. "A difficulty tier
-      // binds the board it generates" has been a requirement since the byte-match
-      // oracle was released, and `engine/difficulty.ts`'s `solvableAtExactlyTier`
-      // is its one expression — but no test in the collection ever compared the
-      // tier a board was *generated* at with the tier it *needs*. The monotonicity
-      // test above computes exactly that number and uses it only as a floor.
+      // THE PROPERTY `engine-difficulty` NAMES: "A difficulty tier binds the
+      // board it generates", whose one expression is `engine/difficulty.ts`'s
+      // `solvableAtExactlyTier`. This compares the tier a board was *generated*
+      // at with the tier it *needs*; the monotonicity test above computes that
+      // number and uses it only as a floor.
       //
       // **The rule has two spellings, and this is what makes them meet.** A
       // generator states tier acceptance in its own terms; `solveAtCap` states it
       // again for every cross-game consumer. A game's own tests exercise only the
       // first, so a contract whose cap is *wider* than the tier it names is
-      // invisible: Undead bounded Easy at three arc-consistency passes in its
-      // generator and ran arc-consistency unbounded in its contract, so all three
-      // of its Normal presets graded as Easy-solvable while every Undead test
-      // passed (`assert-that-tiers-bind`).
+      // invisible: a generator that bounds Easy at three arc-consistency passes
+      // while its contract runs arc-consistency unbounded grades its Normal
+      // boards as Easy-solvable, and every test of that game passes.
       //
       // ON THE KEY, which is the part not to simplify away. This walks **the
       // presets a player can pick**, reading each one's own tier — NOT
@@ -345,11 +335,10 @@ for (const { id, game, contract, tiers } of tiered) {
       // hard tier to the collection's smallest preset asks something no generator
       // can answer (a 4x4 Solo board cannot be Hard however its params are
       // labeled), and `validateParams` accepting a params record is not evidence a
-      // board can carry the tier in it. Keyed that way, the first version of this
-      // test convicted Solo, Group, Undead and Unequal across ten cases; keyed on
-      // what the menu offers, it reports three, in one game, and they were real.
+      // board can carry the tier in it. Keyed that way, this test convicts games
+      // whose menus are fine.
       //
-      // Cost: the full matrix is ~150 s. The gate slice keeps **one preset per
+      // Cost: the full matrix is too slow for every commit. The gate slice keeps **one preset per
       // declared tier** — tier is the axis the property is about, so a slice that
       // dropped to a single preset would stop measuring it — and the slow tier
       // walks every preset with more seeds.
@@ -476,8 +465,7 @@ describe("the tier-binding sweep", () => {
 
   itOverWholeSweep("graded enough boards to mean something", () => {
     // The floor separates "working" from "enumerating nothing" and is set well
-    // below the gate slice's true count (~90 boards over 29 games when written),
-    // so it is not a ratchet a legitimate change has to bump. A structural change
+    // below the gate slice's true count, so it is not a ratchet a legitimate change has to bump. A structural change
     // that shrank the walk — a `tierOf` returning undefined, a presets menu
     // flattening — fails here instead of quietly measuring less and passing.
     expect(boardsThatBound).toBeGreaterThan(50);

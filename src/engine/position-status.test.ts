@@ -4,8 +4,7 @@
  *
  * The midend derives everything historical (the solver was used, when to
  * flash, when the clock runs) and reports the board's status *now*, so a game
- * that keeps a record of having been solved reintroduces exactly what
- * `derive-completion-from-the-position` removed: a broken solved board that
+ * that keeps a record of having been solved shows a broken solved board that
  * still says COMPLETED!, refuses a hint as "already solved" and stops the clock.
  *
  * ON THE INSTRUMENT, precisely — the two halves are not equally strong:
@@ -22,13 +21,11 @@
  *    instrument (docs/method.md, "A scan that keys on a name"), and it is here for
  *    the games the behavioral half cannot see.
  *
- * WHY NOT "a board with a mistake is not solved", which was the first cut: it
- * is false. Loopy's and Net's `findMistakes` flag a wrong *note* (a corner, a
- * pair, a side), and a wrong note does not unsolve a board whose lines are
- * right. The walk found both on its first run.
+ * WHY NOT "a board with a mistake is not solved": it is false. Loopy's and
+ * Net's `findMistakes` flag a wrong *note* (a corner, a pair, a side), and a
+ * wrong note does not unsolve a board whose lines are right.
  *
- * Proved to fail by planting a latch in Keen (`derive-completion-from-the-
- * position`, tasks 2.2): Keen lands in the unbroken list.
+ * Proved to fail by planting a latch in Keen: Keen lands in the unbroken list.
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
@@ -46,7 +43,7 @@ import { type AnyGame, probeBoard, probePoints } from "./testing/input-probe.ts"
 
 beforeAll(registerAllGames);
 
-/** The names a completion record went by before the engine owned the history. */
+/** The names a game's own completion record goes by. */
 const RECORD_KEYS = [
   "completed",
   "complete",

@@ -2,9 +2,7 @@
  * How the local hooks narrow the cross-game sweeps to some games' cases.
  *
  * A cross-game guard runs one case per game, and nearly all of a game commit's
- * test time is those cases for games it did not touch: measured 2026-09-27 on a
- * Pearl-only change, 518 s of 593 s was per-game cases and 105 s of that was
- * Pearl's (`measure-the-suites-per-commit-cost`).
+ * test time is those cases for games it did not touch.
  *
  * **In a push, a skipped case is one the pushed commits could not have turned
  * red**, which needs both:

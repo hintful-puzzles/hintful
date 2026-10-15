@@ -123,9 +123,9 @@ describe("HintFrontier", () => {
  * never declared.
  *
  * The key is the **shape both entry points share**, not either one's full
- * name: `runLatinCandidatePlan` does not contain `runCandidatePlan`, and when
- * the row/column preset arrived this derivation silently dropped six of its
- * seven games (`docs/method.md` § "A scan that keys on a name"). The comment
+ * name: `runLatinCandidatePlan` does not contain `runCandidatePlan`, so a key on
+ * one full name silently drops the other's games (`docs/method.md` § "A scan
+ * that keys on a name"). The comment
  * stripper transpiles, which erases the type arguments, so a call written
  * `runCandidatePlan<M, H, …>({` reaches the scan as `runCandidatePlan({`.
  */
@@ -153,16 +153,15 @@ const PLAN_IMPORTERS: readonly string[] = (() => {
  * that passed over an available firing which did read it, read off the plans by
  * `planContinuity` and not by the games' own candidate lists.
  *
- * Measured on this corpus (every leaf preset, two seeds) when the frontier
- * landed: **3.9–8.3%** per game, against **14.8–32.1%** for the scan order it
- * replaced. The residual is firings the frontier is deliberately not offered —
+ * On this corpus (every leaf preset, two seeds) the frontier's share sits
+ * below the bound and plain solver scan order's sits well above it. The
+ * residual is firings the frontier is deliberately not offered —
  * strikes whose premise holds a mark the board has yet to show, and singles it
  * has not recorded.
  * So the bound separates the two with room on both sides, and a game that
  * stops building its candidate lists, or a comparator that stops preferring
  * continuity, fails it. Never assert on the jumps alone: some are forced, and a
- * guard that fails on a forced jump gets switched off rather than fixed
- * (`order-hints-from-the-frontier` D6).
+ * guard that fails on a forced jump gets switched off rather than fixed.
  */
 const MAX_AVOIDABLE = 0.1;
 
@@ -170,9 +169,8 @@ const MAX_AVOIDABLE = 0.1;
  * The readings each game's plan is walked under: both, for a game whose `Ui`
  * carries a `candidateReading` (the player may pick either, so either plan
  * ships), and otherwise `null`, the game's own. Derived from the `Ui` as
- * `candidate-reading.test.ts` derives it. Walking the default alone once left
- * Rome's implicit plan unmeasured while players could choose it
- * (`rome-implicit-continuity`).
+ * `candidate-reading.test.ts` derives it. Walking the default alone would leave
+ * a plan players can choose unmeasured.
  */
 const OFFERING = enrolledIn((g) => typeof g.ui["candidateReading"] === "string").ids;
 const readingsOf = (id: string): readonly (CandidateReading | null)[] =>

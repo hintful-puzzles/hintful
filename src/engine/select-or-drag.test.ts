@@ -9,18 +9,17 @@
  * makes. So every case below drives the game's own `interpretMove` through a
  * real `Midend`, press and release, exactly as the frontend does.
  *
- * Two rules, both of which Rome and Map failed before
- * `own-the-select-or-drag-gesture` moved the gesture into the engine:
+ * Two rules:
  *
  *  1. **A tap on the selected cell puts the highlight away** — or the game
  *     answers the re-press some other way, which it can only do by recording
  *     it. What is banned is the third outcome, a repeat tap that *changes
- *     nothing*: their press hid the highlight to begin a possible drag, so by
- *     the release the "is it already selected?" the arm asks had been thrown
- *     away, and the tap re-selected what was already selected for ever.
+ *     nothing*: a press that hides the highlight to begin a possible drag has,
+ *     by the release, thrown away the "is it already selected?" the arm asks,
+ *     and the tap re-selects what is already selected for ever.
  *  2. **With sticky pencil mode on, a right tap never hides a showing
  *     highlight.** The sticky toggle is a *mode switch*: it deliberately leaves
- *     the highlight alone, and "alone" meant "hidden" in a game whose press had
+ *     the highlight alone, and "alone" means "hidden" in a game whose press has
  *     already taken it down.
  *
  * **Neither rule carries a roster of exemptions.** Rule 1's escape is derived
@@ -29,7 +28,7 @@
  * decision about that puzzle — and a member is still required to put the
  * highlight away *somewhere*, so a game cannot buy its way out by answering
  * every re-press with a twitch. Rule 2 needs no escape: it is stated without
- * the qualifier the defect wore ("on a cell that can take no mark") because it
+ * the qualifier "on a cell that can take no mark" because it
  * holds unqualified, every other path through the sticky branch ending with the
  * highlight shown. The carve-out is exercised deliberately rather than hoped
  * for — the sweep counts the taps that took it, per member, and a member that

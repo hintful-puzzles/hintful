@@ -164,17 +164,14 @@ function wantedValues(
  * discipline: a mode costs about what the game's easiest board costs, and only
  * a scalar axis's far end buys a large board.
  *
- * **What this replaces, and why keying on tier alone was not enough.** The slice
- * keyed a tiered game on its tier and took the first preset of each. Difficulty
- * is one axis of several, so every preset that shared a tier with a plainer
- * board earlier in the menu was de-duplicated away: Solo walked no X board, no
- * jigsaw board and no Killer board, Unequal walked no Adjacent board, Seismic no
- * Tectonic board, Group no identity-hidden board, Keen no multiplication-only
- * board. Salad fared worst: every preset it offered carried the *same* tier, so
- * eleven collapsed to one board and one of its two game modes was never walked
- * at all. That is the same collapse the untiered games had already paid for
- * once (`fix-sixteen-hint-recompute-stability`); tier was never *the* axis, it
- * was one of them.
+ * **Why tier alone is not the key.** Difficulty is one axis of several, so
+ * keying a tiered game on its tier and taking the first preset of each would
+ * de-duplicate away every preset that shares a tier with a plainer board
+ * earlier in the menu: Solo would walk no X, jigsaw or Killer board, Unequal no
+ * Adjacent board, Seismic no Tectonic board, Group no identity-hidden board,
+ * Keen no multiplication-only board. A game whose presets all carry the *same*
+ * tier (Salad) would collapse to one board and leave a game mode unwalked.
+ * Tier is one axis, not *the* axis.
  *
  * Difficulty needs no special case here: it is a `"choices"` item like any
  * other, so "one preset per tier" falls out of the same rule that reaches the
@@ -225,8 +222,8 @@ export interface UnofferedValue<Params> {
  *
  * A menu is the list its author wrote, and a dialog is the whole of what the
  * game deals, so the two differ by exactly the boards a slice of the menu can
- * never reach. Salad's Normal tier was one, and its hint threw on 71 of 1,195
- * such boards while every preset it had was Easy.
+ * never reach: a tier no preset names, say, which no slice-fed hint guard
+ * would otherwise deal.
  *
  * **Writing one field onto a preset is the form `gatePresets`' comment warns
  * against, and here it is the only form there is.** That warning is about a

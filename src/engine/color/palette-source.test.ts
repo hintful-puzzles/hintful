@@ -16,8 +16,8 @@
  * 1. **no color literal** — `[0.2, 1, 0.2]` in a game is a value nobody can
  *    restyle;
  * 2. **no channel-indexing the background** — `bg[0] * 0.9` is the same decision
- *    written as arithmetic, and it is how most of the collection's derived
- *    colors were originally spelled;
+ *    written as arithmetic, and the commonest way a ported game spells a
+ *    derived color;
  * 3. **no importing the color combinators** — `mix`/`scale`/`divide`
  *    are how the *table* builds one color out of others; a game reaching for
  *    them is a game deciding a color.
@@ -28,8 +28,8 @@
  * reason.
  *
  * What it deliberately does not attempt: a game could still compute a color from
- * variables the rules do not name. That is a review matter, and the rules above
- * cover every spelling the collection actually used across 57 games. A game is
+ * variables the rules do not name. That is a review matter; the rules above
+ * cover every spelling the collection has used. A game is
  * free to call a **named derivation** from the table (`slantGrid(background)`) or
  * the shared bevel trio (`mkhighlightSpecific(GRID_DARK)`) — those are the
  * intended shape, not an exception to it.
@@ -68,8 +68,7 @@ const tableSource: string = Object.values(
  * A glob is **not** an import specifier, so a bulk rewriter that repoints
  * imports after a file move leaves it behind — and an unmatched glob yields
  * `{}` rather than an error, so all three assertions below would pass over
- * nothing. That is why `finds the game sources at all` exists, and it is what
- * caught this pattern when the file moved into `engine/color/`. */
+ * nothing. That is why `finds the game sources at all` exists. */
 const sourceModules = import.meta.glob<string>("../../games/**/*.ts", {
   query: "?raw",
   import: "default",
@@ -81,9 +80,8 @@ const sourceModules = import.meta.glob<string>("../../games/**/*.ts", {
  *
  * Matched on the source snippet rather than a line number so it survives edits,
  * and kept per file so a snippet allowed in one game is not allowed everywhere.
- * It has two entries and should stay about that size: across 57 games, 174 of the
- * 175 three-number literals in the collection *were* colors, which is what makes
- * this rule worth having at all.
+ * It should stay about this size: nearly every three-number literal in a game
+ * is a color, which is what makes this rule worth having at all.
  */
 const NOT_COLORS: Record<string, { snippet: string; why: string }[]> = {
   "cube/render.ts": [
@@ -104,9 +102,8 @@ const NOT_COLORS: Record<string, { snippet: string; why: string }[]> = {
  * Every non-test game source, keyed `<game>/<file>`.
  *
  * The key is cut at `games/` rather than by stripping a fixed `"../games/"`
- * prefix, because the prefix depends on how deep *this file* sits and it moved
- * once already (`group-crowded-source-directories`). A fixed strip that no
- * longer matches does not fail — it leaves `../abcd/render.ts`, so `rel` still
+ * prefix, because the prefix depends on how deep *this file* sits, and a move
+ * changes that. A fixed strip that no longer matches does not fail — it leaves `../abcd/render.ts`, so `rel` still
  * reads plausibly and `rel.split("/")[0]` silently becomes `".."`. Path
  * arithmetic keyed to depth is the one thing an import sweep cannot see, so
  * this one states its assumption and throws when it does not hold.
@@ -258,11 +255,10 @@ describe("a per-game token belongs to the game it names", () => {
 /**
  * A **named color with no consumer** is a color decision nobody can see.
  *
- * The same rule the per-game half has had all along, now over `colors.ts`,
- * because the consolidation made it reachable: Crossing's down-run was the only
- * consumer of `ORANGE_WASH`, and when it moved to the bold step the wash sat in
- * the table declaring a shade of orange that nothing on any board could show.
- * That is exactly the state the palette is small in order to avoid.
+ * The same rule as the per-game half, over `colors.ts`: when a color's last
+ * consumer moves to another shade, the color stays in the table declaring a
+ * shade nothing on any board can show. That is exactly the state the palette is
+ * small in order to avoid.
  *
  * "Used" spans all three ways a color reaches a board: a game imports it, a
  * meaning in `palette.ts` is defined over it, or one of the sets in `colors.ts`

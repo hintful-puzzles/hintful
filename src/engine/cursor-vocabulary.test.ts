@@ -3,10 +3,9 @@
  * the guard behind the `engine-input` requirement "One keyboard-cursor vocabulary
  * across games".
  *
- * Before `unify-cross-game-vocabulary` the same three values went by ten
- * spellings of the flag and eight of the position, so nothing above the games
- * could ask where the cursor was. Renaming them fixes today; this file is what
- * stops the drift coming back one game at a time, which is how it arrived.
+ * While each game spells the cursor its own way, nothing above the games can
+ * ask where the cursor is. This file stops the spellings drifting apart again
+ * one game at a time.
  *
  * ON THE INSTRUMENT. Two of the three checks are **derived**, and say so:
  *
@@ -20,7 +19,7 @@
  * The third check is a source pattern over the retired spellings, and that one
  * is a list; it is here because it names the failure in the terms a session
  * would reintroduce it in (`hshow`, `cshow`, `curVisible`, …). The structural
- * check above is the one that holds when somebody invents an eleventh spelling.
+ * check above is the one that holds when somebody invents a new spelling.
  *
  * The shadowing half of the contract — a game re-declaring a `pointer.ts`
  * helper such as `moveCursor` — is guarded in `emittable-keys.test.ts`, derived
@@ -101,11 +100,10 @@ describe("one keyboard-cursor vocabulary", () => {
   });
 
   it("reveals and moves on one arrow press, in every game with a cursor", () => {
-    // The player-visible half of the contract, and the one that had no net at
-    // all: five games (Pearl, Range, Signpost, Sixteen, Tracks) spent the first
-    // press on the reveal, and every one of their suites stayed green when that
-    // was changed. Nothing below any individual game could see it, because the
-    // question is only interesting across the collection.
+    // The player-visible half of the contract: a game that spends the first
+    // press on the reveal keeps its own suite green. Nothing below any
+    // individual game can see it, because the question is only interesting
+    // across the collection.
     const stalled: string[] = [];
     let checked = 0;
     for (const { id, ui } of uis()) {

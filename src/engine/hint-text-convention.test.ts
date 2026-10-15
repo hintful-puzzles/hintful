@@ -28,8 +28,8 @@ const SEEDS = [0, 1, 2];
  * **The widening is almost free here, and it is not symmetric.** This returns
  * on the first speaking step, so a game that speaks costs what it always cost —
  * one board — and only a *silent* game walks the whole slice, which is the case
- * the answer has to be right about. Reading the easiest preset alone
- * (`slice-the-first-leaf-hint-guards-by-axis`) could call a game silent on the
+ * the answer has to be right about. Reading the easiest preset alone could
+ * call a game silent on the
  * strength of a board with no deduction to narrate, and then demand that its
  * `hint-text.ts` be deleted.
  */

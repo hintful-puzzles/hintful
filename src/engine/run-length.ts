@@ -25,14 +25,12 @@
  * harder version of this one; bending it through a token iterator would mean
  * handing the caller an index back and re-entering the scan, which is longer
  * than the loop it replaces. Those games read through `desc-reader.ts`'s
- * cursor instead, which is that loop with the index kept for them
- * (`read-descs-through-one-cursor`).
+ * cursor instead, which is that loop with the index kept for them.
  *
  * **And the alphabet under the grammar does not generalize either**, which is
  * the extraction that survives the objection above and should not be
- * attempted. Measured 2026-09-12 (`record-the-letter-run-no-go`): 26 games
- * outside this module write or read a letter run by hand across ~69 sites, and
- * they disagree about what the letters mean. `a` is 0 in Clusters, 1 in Sticks,
+ * attempted. The games outside this module that write or read a letter run by
+ * hand disagree about what the letters mean. `a` is 0 in Clusters, 1 in Sticks,
  * Range and Ascent, 2 in Tents; runs chunk at `> 24`, `> 26` and `>= 26`; and
  * `z` ends a run in most but *continues* one in Tents and Clusters. Ascent
  * takes the base letter as an argument, because one of its descs carries three

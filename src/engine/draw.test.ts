@@ -14,8 +14,8 @@ import { opsOfKind, RecordingDrawing } from "./testing/recording-drawing.ts";
  * These helpers take colors as bare palette indices and no game is involved, so
  * the recorder gets an empty palette: its `rgb` labels read `color#<n>` and the
  * assertions below use the index, which is what a helper's contract is stated
- * in. The point of using it anyway is that it records EVERY primitive — the two
- * local doubles this replaced each saw exactly one.
+ * in. The point of using it anyway is that it records EVERY primitive, so a
+ * helper that draws something extra is seen.
  */
 function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"] } {
   const dr = new RecordingDrawing([]);
@@ -128,13 +128,11 @@ describe("drawRectOutline", () => {
 
 describe("drawThickRectOutline", () => {
   /*
-   * This is tested here rather than through a game because of what the
-   * promotion measured: with the helper wired into all eight games, deleting a
-   * whole side of the frame failed **one** test in the collection (Crossing's).
-   * The other seven draw their error or mistake frame in a code path no
-   * snapshot reaches — Tents' and Magnets' render-scenario snapshots contain
-   * zero mistake ops. A primitive eight games share needs a check at its own
-   * level, not eight chances that one game's frame happens to be observed.
+   * This is tested here rather than through a game because most games that
+   * call it draw their error or mistake frame in a code path no snapshot
+   * reaches, so deleting a whole side of the frame can pass every game's tests.
+   * A primitive several games share needs a check at its own level, not a
+   * chance that one game's frame happens to be observed.
    */
   it("draws four bands that cover exactly the frame, and nothing inside it", () => {
     const { dr, ops: all } = recordingDrawing();

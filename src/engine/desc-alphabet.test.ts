@@ -43,8 +43,8 @@ describe("the desc digit alphabet", () => {
   });
 
   it("refuses a value it cannot write, rather than writing punctuation", () => {
-    // Upstream's arithmetic ran off the end of `A`-`Z` silently, which is how
-    // two games shipped a description their own `validateDesc` rejects.
+    // Upstream's arithmetic runs off the end of `A`-`Z` silently, writing a
+    // description the game's own `validateDesc` rejects.
     expect(() => n2c(DESC_ALPHABET_SIZE)).toThrow(RangeError);
     expect(() => n2c(-1)).toThrow(RangeError);
     expect(() => n2c(1.5)).toThrow(RangeError);

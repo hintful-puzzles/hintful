@@ -1,9 +1,8 @@
 /**
  * "a 8" is the article trap (docs/hints.md § "Name a square by its
  * value"): a sentence that puts "a" before a number reads wrong at 8, 11 and
- * 18. Six sentences in four games shipped it until the hint text moved into
- * one file per game and a single sweep could see them all. Each is pinned here
- * at the value that exposed it, beside a value that must keep "a".
+ * 18. Each sentence that has made it is pinned here at the value that exposed
+ * it, beside a value that must keep "a".
  */
 
 import { describe, expect, it } from "vitest";

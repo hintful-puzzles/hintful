@@ -40,8 +40,7 @@ describe("solvableAtExactlyTier", () => {
   });
 
   it("rejects a board the tier below already solves", () => {
-    // The defect `grade-difficulty-tiers-honestly` fixed four times: a board
-    // offered as Extreme that a Normal solver cracks is a Normal board wearing
+    // A board offered as Extreme that a Normal solver cracks is a Normal board wearing
     // a label.
     expect(solvableAtExactlyTier(solverOver([1, 2, 3]), 2)).toBe(false);
   });
@@ -60,8 +59,6 @@ describe("solvableAtExactlyTier", () => {
     // loop and rejects far more candidates than it accepts, so the common path
     // is the rejection — and paying for the deep solve before discovering the
     // easy ladder already cracked the board is pure waste.
-    // `add-clusters-difficulty-tiers` (D3) measured this ordering making the
-    // whole generator faster than it had been before it had tiers.
     //
     // Asserted on call ORDER, not on a timing: a test that asserted only the
     // boolean would pass with the expensive solve run first and this property
@@ -142,7 +139,7 @@ describe("the difficulty item over the fake game", () => {
 
 describe("the conventional tier names", () => {
   // The whole table in one place, so a reader can see what the collection's
-  // menus say without running 29 games. `adopt-conventional-tier-names`.
+  // menus say without running every game.
   it.each([
     [2, false, ["Easy", "Normal"]],
     [3, false, ["Easy", "Normal", "Tricky"]],

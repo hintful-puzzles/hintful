@@ -60,7 +60,7 @@ export interface HintPlanSpec<Board, Firing, Status> {
    * applies as it detects), so it must read only facts the firing itself cannot
    * have created.
    *
-   * Two games derive it from move legality, from opposite directions. Galaxies
+   * A game may derive it from move legality, from either direction. Galaxies
    * hides a firing whose move the game would **refuse** (an arrow drawn inside a
    * closed region); Tracks hides one whose **contrary** move the game would
    * refuse, because then the player's board has already decided it. Both are

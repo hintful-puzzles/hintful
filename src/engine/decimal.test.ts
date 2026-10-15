@@ -1,16 +1,11 @@
 /**
  * The decimal digit fact, and the guard that no game restates it.
  *
- * The scan below is the desc-side successor of the digit-key scan that
- * `emittable-keys.test.ts` § 3 carried until 2026-09-12. That one looked for a
- * digit code *against the button*, under every name the collection gives the
- * button, and stated its blind spot: a helper receiving the button under yet
- * another name. Once no desc site spelled a digit code either, the scan could
- * widen to **any operand position in any game source**, and the blind spot
- * closed for the digits by construction — the name the value travels under no
- * longer matters. What it still cannot see, stated: a constant holding a digit
- * code and passed as an *argument* (Salad's `BASE_DIGIT` was one), which is
- * the same shape one level up.
+ * The scan below looks for a digit code in **any operand position in any game
+ * source**, so it does not depend on the name the value travels under: a scan
+ * keyed on the button's names would miss a helper receiving the button under
+ * yet another one. What it cannot see, stated: a constant holding a digit code
+ * and passed as an *argument*, which is the same shape one level up.
  */
 import { describe, expect, it } from "vitest";
 import { digitValue, isDigit, parseLeadingInt } from "./decimal.ts";
@@ -83,7 +78,7 @@ describe("parseLeadingInt", () => {
  * `'0'`, `'1'` and `'9'` in decimal, and every digit in hex. A range test or an
  * offset always spells the zero code (`48`, or `49` for a range from one), so
  * this loses no real site — while `50`–`56` in decimal are left out on
- * purpose: `if (w > 50)` is a count, and three games write one.
+ * purpose: `if (w > 50)` is a count, and games write one.
  */
 const DIGIT_CODE = "(?:48|49|57|0x3[0-9])";
 
@@ -157,9 +152,7 @@ describe("no game restates the decimal digit fact", () => {
     // Comment-stripped, because a comment is not a use: `// 97 = 'a'` and a
     // `untangle.c:57` citation would otherwise both hit.
     const hits = codeLinesMatching(ids, /./).filter(({ line }) => restates(line));
-    // Roughly 110 sites in some 40 files restated it before `decimal.ts`
-    // (measured 2026-09-12, `share-the-desc-digit-fact` D1). Excusing a line —
-    // a pixel offset that happens to be `- 48` — goes in a ledger asserted
+    // Excusing a line — a pixel offset that happens to be `- 48` — goes in a ledger asserted
     // equal to what the scan found, never in a narrower regex.
     expect(hits.map((h) => `${h.id}: ${h.line}`)).toEqual([]);
   });

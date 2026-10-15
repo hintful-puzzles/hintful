@@ -1,9 +1,9 @@
 /**
  * **A departure from a shared role is stated at the assignment.**
  *
- * The audit found seventeen games with seventeen "deliberately different"
- * cursors and read that as seventeen decisions; it was one decision plus a
- * handful of collisions, and only some of the collisions said so. This guard
+ * A "deliberately different" cursor in each of many games reads as many
+ * decisions, when it is usually one decision plus collisions, and only a
+ * stated reason tells them apart. This guard
  * reads every game's palette source and, for each slot whose *name* says what it
  * means — a cursor, a held or dragged item, a hint mark, a mistake — requires
  * either the shared role or a reason on the assignment line or the line above
@@ -66,9 +66,8 @@ interface Assignment {
 const ASSIGNMENT =
   /^\s*(?:out|ret|colors|palette)\[(COL_[A-Z0-9_]+)\]\s*=\s*(.+?);\s*(\/\/.*)?$/;
 
-/** `value, // COL_X ...` — the positional form five games use (Bridges,
- * Fifteen, Sixteen, Pegs, Untangle), where the slot is named in the trailing
- * comment. That comment is the *label*, not a reason: only text beyond the
+/** `value, // COL_X ...` — the positional form (Bridges, Fifteen and
+ * others), where the slot is named in the trailing comment. That comment is the *label*, not a reason: only text beyond the
  * label counts as one. */
 const POSITIONAL = /^\s*([^/]+?),\s*\/\/\s*(?:\d+\s+)?(COL_[A-Z0-9_]+)(.*)$/;
 

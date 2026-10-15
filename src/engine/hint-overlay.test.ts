@@ -1,14 +1,13 @@
 /**
  * Cross-game guarantee: a hint overlay reaches the render cache.
  *
- * The defect class (docs/rendering.md § "The tile cache and the diff key"; `unify-hint-framework` seam S4): an
+ * The defect class (docs/rendering.md § "The tile cache and the diff key"): an
  * overlay is applied *on top of* a cell, so it usually isn't part of the
  * cell's packed tile value — and if it also isn't compared in the game's
  * cache-miss branch, it only repaints when the cell's tile coincidentally
- * changed that frame. A hint (like Check-&-Save's mistake overlay, which
- * shipped exactly this bug on Towers) is requested a frame *after* the
- * move that drew the board, when nothing else has changed — so the
- * overlay simply never appears.
+ * changed that frame. A hint (like Check-&-Save's mistake overlay) is
+ * requested a frame *after* the move that drew the board, when nothing else
+ * has changed — so the overlay simply never appears.
  *
  * The guard drives the production path: warm the midend's drawstate with
  * a settled frame, prove the next frame paints nothing (or note the game
@@ -26,16 +25,14 @@ import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 
 /*
- * One board of each params set, because the boards are now the gate slice rather than
- * three of each game's easiest preset
- * (`slice-the-first-leaf-hint-guards-by-axis`).
+ * One board of each params set in the gate slice.
  *
  * **The defect this guards is a missing comparison in a cache-miss branch**, so
  * it is a property of the *renderer branch* a board enters, not of the board:
  * it fires on every board that reaches the branch, or on none. What a second
- * seed of one preset could never do is enter a second branch, and Solo's Killer
- * cages, Seismic's Tectonic regions and twenty of Loopy's twenty-one tilings
- * are each a branch this walked no board of.
+ * seed of one preset can never do is enter a second branch, and Solo's Killer
+ * cages, Seismic's Tectonic regions and every Loopy tiling but Squares are
+ * each a branch the easiest preset's seeds never reach.
  */
 
 /** How many opening steps we will play through looking for one that carries

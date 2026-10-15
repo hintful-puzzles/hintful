@@ -9,9 +9,9 @@
  * carries: the midend finds one by its type, so a game with a drag joins by
  * having one.
  *
- * Why it matters concretely: a release after an Undo made a move in thirty
- * games, some of them moves no play of that board could reach, and Inertia's
- * threw. Each had its drag in fields the engine could not see.
+ * Why it matters concretely: in a game that keeps its drag in fields the
+ * engine cannot see, a release after an Undo makes a move, sometimes one no
+ * play of that board could reach, or throws.
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
@@ -137,9 +137,9 @@ describe("a gesture does not survive the board changing under it", () => {
 describe("a drag does not survive a state replacement", () => {
   it("finds a non-trivial population, derived from what the games carry", () => {
     // The vacuity guard. An empty sweep would make every assertion below pass
-    // over nothing and report health — the shape this repo has hit repeatedly.
-    // Six games carry one today; the floor is deliberately lower than that so
-    // the guard fails on a broken probe rather than on a game being converted.
+    // over nothing and report health. The floor is deliberately below the
+    // count of games that carry a drag, so the guard fails on a broken probe
+    // rather than on a game being converted.
     expect(builtGames().length).toBeGreaterThanOrEqual(57);
     expect(dragGames().length).toBeGreaterThanOrEqual(4);
   });
@@ -170,13 +170,11 @@ describe("a drag does not survive a state replacement", () => {
   });
 
   it("a release after the cancel commits nothing", () => {
-    // The assertion that matters, and the one an earlier version of this file
-    // missed. Ending `drag.live` only protects a game that *asks* `drag.live`:
-    // Tents gated its drag branch on `dragButton >= 0`, Tracks on `painting`
-    // and Bridges on `dragged`, and all three would have committed a move from
-    // an anchor the undo invalidated — the same defect `changedState` was added
-    // to Pegs for. So this drives a real press, replaces the state under it,
-    // and releases.
+    // The assertion that matters. Ending `drag.live` only protects a game that
+    // *asks* `drag.live`: a drag branch gated on a field of the game's own (a
+    // `dragButton >= 0`, a `painting` flag) commits a move from an anchor the
+    // undo invalidated. So this drives a real press, replaces the state under
+    // it, and releases.
     let exercised = 0;
     const unarmed: string[] = [];
     for (const { id, game } of dragGames()) {
@@ -216,7 +214,7 @@ describe("a drag does not survive a state replacement", () => {
   });
 
   it("a game with no Ui at all is not a crash", () => {
-    // `newUi` is optional and two games genuinely have nothing to remember, so
+    // `newUi` is optional and some games genuinely have nothing to remember, so
     // the sweep has to treat "no object" as "nothing to cancel".
     const empty = builtGames().filter((g) => Object.keys(g.ui).length === 0);
     expect(empty.length).toBeGreaterThan(0);

@@ -310,9 +310,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private params: Params;
   /** The params of the board on screen, fixed when that board starts. Kept
    * apart from `params` because choosing a type is a request for the *next*
-   * board: when it wrote the one field, a save, a restart or an id emitted
-   * before the new board arrived paired the old desc with the new difficulty,
-   * and the board reopened at a tier it was never dealt at. Upstream
+   * board: were it the one field, a save, a restart or an id emitted before
+   * the new board arrives would pair the old desc with the new difficulty, and
+   * the board would reopen at a tier it was never dealt at. Upstream
    * `me->curparams`. */
   private boardParams: Params;
   /** The desc `history[0]` was built from, and so the one a save's move log
@@ -641,8 +641,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * costs one solve and holds for every board a generator dealt. Otherwise the
    * pin is wrong and the board is raised to the lowest tier above it that
    * solves it: a record written by a build that mislabeled the board (the
-   * remembered board and the autosave both pin the tier) otherwise reopened it
-   * at the wrong tier on every visit, and its hint refused partway. A pin is
+   * remembered board and the autosave both pin the tier) would otherwise
+   * reopen at the wrong tier on every visit, and its hint refuse partway. A pin is
    * never lowered — a hand-written id may name a harder tier than its board
    * needs, and every rule that tier allows still applies to the board.
    *
@@ -1755,7 +1755,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** Game-reported status of the board on display, upgraded to
    * solved-with-help if the solver was used (mirrors midend.c). It is the
    * board's status *now*: a solved board the player breaks reads ongoing
-   * again, everywhere (`derive-completion-from-the-position`). */
+   * again, everywhere. */
   private currentStatus(): GameStatus {
     const s = this.statusOf(this.state);
     if (s === "solved" && this.cheated) return "solved-with-help";
@@ -2424,11 +2424,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.announcedId = this.boardId;
     this.emit({
       type: "game-id-change",
-      // One id for every job (`one-game-id`). The params are FULL, so the tier
-      // travels with the board; an id without it (upstream's game IDs omit
-      // difficulty) is graded on the way in (`withBoardTier`). No seed is
-      // emitted: a seed names a board only through the generator, which this
-      // project changes (`share-boards-not-seeds`).
+      // One id for every job. The params are FULL, so the tier travels with
+      // the board; an id without it (upstream's game IDs omit difficulty) is
+      // graded on the way in (`withBoardTier`). No seed is emitted: a seed
+      // names a board only through the generator, which this project changes.
       currentGameId: this.announcedId,
     });
   }

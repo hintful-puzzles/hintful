@@ -60,9 +60,8 @@ function solveByHints(
   let state = game.newState(params, desc);
   // Generous cap, so only a genuine loop or non-convergence trips it: twice
   // the length the game's own first plan claims, and never below 800 for a
-  // hint that plans one step at a time. A fixed 800 was not far above every
-  // honest plan: a 50×50 Mosaic plan is some 1,350 steps (measured
-  // 2026-09-30).
+  // hint that plans one step at a time. A fixed cap would sit below the honest
+  // plan of a large board, such as a 50×50 Mosaic.
   const first = game.hint?.(state, aux);
   const planned = first?.ok ? first.steps.length : 0;
   const cap = Math.max(800, 2 * planned);
@@ -124,8 +123,8 @@ function solveByHints(
  * spaced moves and follow the plan between them, and CI asks after every move.
  *
  * The walk is quadratic in a plan's length, a whole plan computed again for
- * each of its moves, and Loopy's 21 boards were 6,656 moves and 44 s of hint
- * computation (2026-10-12). At 64 a plan of 64 steps or fewer is still walked
+ * each of its moves, which on a game of long plans such as Loopy is most of the
+ * walk's cost. At 64 a plan of 64 steps or fewer is still walked
  * one move at a time, which is every board of the searching hints the hooks
  * walk and every Solo board.
  *
@@ -170,8 +169,7 @@ const BOUNDED_SEARCH_HINTS = SEARCH_REACH_GAMES;
  * assertion here still passing, so the equality is this sweep's vacuity guard
  * as well as its ledger.
  *
- * **The second sentence is load-bearing since
- * `retire-tests-that-do-not-earn-their-runtime`.** A member whose walk the gate
+ * **The second sentence is load-bearing.** A member whose walk the gate
  * slices to its modes' smallest boards (the slide planner's, see `gatePresets`)
  * has to name the test that still walks a full-size board on every commit; one
  * the gate walks whole says so. A new member joins the derivation by *having*
@@ -183,8 +181,8 @@ const SEARCH_REACH: Record<string, string> = {
   blackbox:
     "Once every laser is fired and none settles a square on its own, searches " +
     "for balls that send every laser where it went, within a budget. Measured " +
-    "when the hint was written (125 boards over every preset), the search was " +
-    "needed on some boards and never came near the budget, and no walk refused. " +
+    "over every preset, the search is needed on some boards and does not come " +
+    "near the budget, and no walk has refused. " +
     "Largest board on every commit: this walk.",
   guess:
     "Enumerates the answers that still fit, and a huge custom board can exhaust " +
@@ -193,7 +191,7 @@ const SEARCH_REACH: Record<string, string> = {
   pegs:
     "Finds a line of jumps by beam search and proves a position lost by an " +
     "exhaustive one with a budget, and positions random play leaves on the " +
-    "33-hole and larger boards outrun the proof (`add-pegs-hint` design D1). A " +
+    "33-hole and larger boards outrun the proof. A " +
     "walk that follows the hint never leaves a soluble position, so it has not " +
     "been seen refusing here. Largest board on every commit: this walk, which " +
     "the gate does not slice for Pegs.",
@@ -201,10 +199,8 @@ const SEARCH_REACH: Record<string, string> = {
     "Finds a line of pushes by a best-first search from both ends, and every " +
     "dealt board is one it finishes from the opening; a position the player " +
     "reaches can still be past it, since a found line costs every push of " +
-    "every position on the way (`strengthen-the-sokoban-solver` design D9). " +
-    "A hinted push shortens the " +
-    "plan wherever some push does, which is all but about one push in three " +
-    "hundred (`teach-sokoban-push-order` design D1), so a cycle here would be " +
+    "every position on the way. A hinted push shortens the plan wherever some " +
+    "push does, which is nearly every push, so a cycle here would be " +
     "a defect in that rule and not the search's reach. Largest board on every " +
     "commit: this walk, which the gate does not slice for Sokoban.",
   netslide:
@@ -216,11 +212,11 @@ const SEARCH_REACH: Record<string, string> = {
   sixteen:
     "Plans by searching for the finished board. Its tangled endgames are a " +
     "dozen moves out with a branching factor of 40, which no arrangement of " +
-    "this machinery reaches (`fix-sixteen-deep-local-minima`). Largest board " +
+    "this machinery reaches. Largest board " +
     "on every commit: sixteen.test.ts drives a 5x5 endgame only the exact " +
     "bidirectional search can cross, and walks that board with a fresh search " +
     "per move for recompute stability. The deep-search walks over its tangled " +
-    "5x5 boards are DEFERRED by owner decision (2026-09-09) — the hint is " +
+    "5x5 boards are DEFERRED by owner decision — the hint is " +
     "settled and not expected to change — so a regression in the tangle " +
     "measure specifically is caught by " +
     "`npm run test:slow -- src/games/sixteen`, not by the gate. Verified both " +
@@ -229,59 +225,41 @@ const SEARCH_REACH: Record<string, string> = {
 };
 
 /**
- * **What this file's walk costs at the gate's slice, measured 2026-09-20 back
- * to back on one box** (16 GB, load
- * 3.6–5.1, **125 MB free and 18.6 of 19.4 GB of swap in use** — deep in paging,
- * so read the seconds as upper bounds and the ratio as the figure that
- * survives): **25.1 s → 67.0 s** as the walk went 88 → 141 boards, against 280
- * for every preset. Attributed per added board, the split is
- * the one to remember: **covering the modes is nearly free and covering the
- * sizes is not.** Unequal's Adjacent board costs 34 ms, Seismic's Tectonic 3 ms,
- * Group's identity-hidden 11 ms, Keen's multiplication-only 95 ms, Salad's
- * Numbers 9 ms — because the slice takes each value on the *smallest* preset
- * offering it. The two large line items are Loopy's eighteen tilings (18.9 s)
- * and one largest board per game (~22.5 s, of which Mathrax 9×9 is 7.7 s and
- * Keen 9×9 4.9 s).
+ * **What this file's walk costs at the gate's slice: covering the modes is
+ * nearly free and covering the sizes is not**, because the slice takes each
+ * value on the *smallest* preset offering it. The large line items are Loopy's
+ * tilings and one largest board per game.
  *
- * The three sibling sweeps below reached the slice later
- * (`slice-the-first-leaf-hint-guards-by-axis`), which took the **file** from
- * 67 s to 93 s: the walk holds ~60 s of that, the no-op and purity blocks ~20 s
- * and ~10 s, and the Latin naked-single block 5 s. {@link BREADTH_SEEDS} is
- * what the first two traded to afford it.
+ * The three sibling sweeps below take the same slice, and
+ * {@link BREADTH_SEEDS} is what the first two trade to afford it.
  *
- * The walk read `firstLeaf` alone until `refuse-honestly-at-every-tier`, so the
- * collection's strongest hint guarantee had never seen a Hard board, an
- * `Unreasonable` board or any mode variant; widened, it found thirteen refusals
- * across seven games that the narrow form could not reach, saying three
- * different things. What decides the population now is `gatePresets`, shared
- * with every other cross-game sweep.
+ * The population is `gatePresets`, shared with every other cross-game sweep, so
+ * the walk sees every tier and mode variant: a hint's refusals live on the Hard
+ * and `Unreasonable` boards and the variants, which the easiest board alone
+ * never reaches.
  *
  * Narration across *every* preset of every game is per-commit regardless, in
  * `hint-quality.test.ts`'s `lintCases`, which adds each preset at one seed; what
  * that sweep asks is whether the sentences are readable, not whether the plan
  * converges, so the two do not substitute for each other.
  *
- * **Proved rather than assumed** (2026-09-20): capping Solo's hint recorder at
+ * **Proved rather than assumed**: capping Solo's hint recorder at
  * `DIFF_KSINGLE` instead of the board's own `kdiff` — the hint grown weaker than
- * the solver that graded the board, a Killer-only defect — leaves the tier-keyed
- * slice **green at 111 passed** and turns this one red on
- * `solo-3x3 Killer-hr-a`. (Solo's own `solo-hint.test.ts` catches that plant
+ * the solver that graded the board, a Killer-only defect — leaves a slice keyed
+ * on tier alone green and turns this one red on `solo-3x3 Killer-hr-a`. (Solo's own `solo-hint.test.ts` catches that plant
  * too; what no per-game file asserts for most of the collection is this walk's
  * property, which is convergence from arbitrary reached positions.)
  *
  * **The exception, and it is the whole reason this file is affordable: a game
  * that plans by *searching* walks no large board at all** — every mode on the
  * smallest preset offering it, which `gatePresets` derives from the same axes
- * as everyone else's slice. Measured 2026-09-09
- * (`retire-tests-that-do-not-earn-their-runtime`), Sixteen's single 5×5 walk
- * was the most expensive test in the collection and Netslide's 5×5 the third;
- * between them the two members of `SEARCH_PLANNING_GAMES` were 43% of all test
- * time. A search pays for board size twice over — one full search per move, and
- * more moves to make — so for these two the last preset is not "one extra
- * walk", it is most of the suite.
+ * as everyone else's slice. A search pays for board size twice over — one full
+ * search per move, and more moves to make — so for the members of
+ * `SEARCH_PLANNING_GAMES` the last preset is not "one extra walk", it is most of
+ * the suite.
  *
  * **This is a deferral, not a retirement, and what still covers the large board
- * is recorded per member in `SEARCH_REACH` above** — Sixteen's five hand-picked
+ * is recorded per member in `SEARCH_REACH` above** — Sixteen's hand-picked
  * 5×5 endgames in `sixteen.test.ts`, Netslide's every-preset walk in
  * `netslide-reconstruct.test.ts`, both on every commit. The hand-picked boards
  * are sharper than a random one: they are the positions the hint actually gave
@@ -295,21 +273,14 @@ const SEEDS = ["hr-a", "hr-b", "hr-c", "hr-d", "hr-e"];
  * compute one hint and judge it, rather than walking a board to solved.
  *
  * **Breadth of board bought with depth of seed — the same number of boards,
- * chosen differently.** Those two sweeps read `firstLeaf` at five seeds until
- * `slice-the-first-leaf-hint-guards-by-axis`: 175 boards, every one of them the
- * smallest and easiest configuration its game offers. One seed of the slice is
- * 143 boards covering every tier and every mode in the collection. What was
- * traded away is sampling, and it is the cheap half here, because the property
- * is a code path rather than a coincidence: a rung that emits a stale step, or
- * a `hint()` that mutates, does it on every board that reaches the rung.
- *
- * Priced rather than assumed (2026-09-20, load 3.5, the box 19.0 GB into swap,
- * so upper bounds): at two seeds the two blocks measured 39.1 s and 19.4 s
- * against a whole-file budget of 122 s, and the second seed was buying a repeat
- * of a configuration the first had already walked.
- *
- * `SEEDS` itself is unchanged, because the walk it belongs to is the one whose
- * depth genuinely finds things.
+ * chosen differently.** Several seeds of `firstLeaf` would be as many boards,
+ * every one of them the smallest and easiest configuration its game offers; one
+ * seed of the slice covers every tier and every mode in the collection. What
+ * is traded away is sampling, and it is the cheap half here, because the
+ * property is a code path rather than a coincidence: a rung that emits a stale
+ * step, or a `hint()` that mutates, does it on every board that reaches the
+ * rung, and a second seed buys a repeat of a configuration the first already
+ * walked.
  */
 const BREADTH_SEEDS = SEEDS.slice(0, 1);
 
@@ -338,8 +309,7 @@ function stateKey(s: unknown): string {
 }
 
 describe("a kept hint plan never contains a step that does nothing", () => {
-  // The engine guarantees a displayed step is never stale (openspec
-  // `fix-stale-hint-step`). The Towers-specific trigger (auto-pencil resolving a
+  // The engine guarantees a displayed step is never stale. The Towers-specific trigger (auto-pencil resolving a
   // later step) has its own end-to-end test; this is the cross-game invariant
   // that catches the *intrinsic* form for every hint game — a plan whose own
   // steps, replayed in order (the exact-follow path), include one that is
@@ -532,28 +502,16 @@ describe("a hint can solve from any mid-game position", () => {
         const search = permitsSearch(game, params);
         const bounded = BOUNDED_SEARCH_HINTS.includes(name);
         // **This walk buys breadth over presets; the seed count is not the dial
-        // to turn, and that was priced rather than assumed.** One seed either
-        // way: the slow tier widens the *presets* (209 cases, ~2 min), the gate
-        // slices by the axis a game varies — 76 cases, 69 s measured 2026-09-08
-        // on this box at load 4.7, so read that as an upper bound rather than a
-        // clean figure. Adding the untiered games' last preset took it from 65
-        // walks to 76; the eleven it added are each a game's *largest* board,
-        // which is why eleven walks in six cost roughly as much as the first 65.
+        // to turn.** One seed either way: the slow tier widens the *presets*,
+        // and the gate slices by the axis a game varies, where a game's
+        // *largest* board costs as much as many small ones.
         //
-        // Five seeds — the count `SEEDS` carried when this walked a single
-        // preset — was tried over every preset and **withdrawn**: 50 minutes of
-        // wall clock without reporting. Two was tried next and was still north
-        // of 20. A once-per-refactoring-round check that takes tens of minutes
-        // has not been made thorough, it has been made unrunnable
-        // (`docs/testing.md` § "Right-sizing the gate": a slow tier nobody invokes is not
-        // coverage), and this walk is quadratic in board size twice over — one
-        // full hint recompute per move, and more moves on a bigger board.
-        //
-        // **The depth `SEEDS` used to buy is not lost**: the three guards above
-        // in this file — no-op-free plans, hint purity, Latin naked-single
-        // honesty — still run all five seeds, and a seed-specific plan bug shows
-        // up in those rather than here. What was missing was never another seed
-        // on the easiest board; it was ever looking at a hard one.
+        // More seeds over every preset make a check that takes tens of minutes,
+        // which is not thorough but unrunnable (`docs/testing.md` §
+        // "Right-sizing the gate": a slow tier nobody invokes is not coverage),
+        // because this walk is quadratic in board size twice over — one full
+        // hint recompute per move, and more moves on a bigger board. Another
+        // seed on the easiest board finds less than looking at a hard one.
         const seeds = SEEDS.slice(0, 1);
         for (const seed of seeds) {
           expect(() =>
@@ -575,17 +533,17 @@ describe("the resume walk", () => {
   itOverWholeSweep("covered enough boards to mean something", () => {
     // **The floor has to sit above the ways the slice can silently collapse,**
     // not merely above zero — that is what makes it a vacuity guard rather than
-    // a decoration. Three counts, measured 2026-09-20: one board per game is
-    // 35, the tier keying this replaced was 88, and the axis slice is 141.
-    // A floor at 100 therefore separates "sliced by axis" from both collapses,
-    // with 41 walks of slack under the true count, so it is not a ratchet a
-    // legitimate change has to bump.
+    // a decoration: one board per game, or a slice keyed on tier alone, both
+    // walk well under 100, and the axis slice walks well over it. The floor
+    // therefore separates "sliced by axis" from both collapses, with slack
+    // under the true count, so it is not a ratchet a legitimate change has to
+    // bump.
     expect(walkedCases).toBeGreaterThan(100);
   });
 
   itOverWholeSweep("judged enough frames to mean something", () => {
-    // About 19,000 steps at the hook's slice (measured 2026-10-11). The floor
-    // sits far above one small board a game and far below that.
+    // The floor sits far above one small board a game and far below what the
+    // hook's slice judges.
     expect(framesJudged).toBeGreaterThan(5000);
   });
 });

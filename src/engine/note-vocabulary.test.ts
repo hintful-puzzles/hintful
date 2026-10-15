@@ -1,18 +1,15 @@
 /**
  * One note-taking vocabulary: **a game's candidate marks live in `pencil`**.
  *
- * Thirteen games keep the player's provisional per-cell candidates in a typed
- * array, and they spelled it three ways — `pencil` (7), `marks` (5), `pencils`
- * (1). The engine had already committed to the word everywhere else it speaks:
+ * The games that keep the player's provisional per-cell candidates hold them
+ * in a typed array, named with the word the engine speaks everywhere else:
  * `Ui.pencilMode`, `pencilSticky`, `pencilKeepHighlight`, `pencil-prefs.ts`,
- * `pencil-indicator.ts`, the `pencilAll`/`pencilStrike` move vocabulary. Only
- * the field the marks actually live in disagreed.
+ * `pencil-indicator.ts`, the `pencilAll`/`pencilStrike` move vocabulary.
  *
- * **What it cost while it disagreed**, which is the argument for the guard
- * rather than for the rename: `mark-all.test.ts` carried ten hand-written rows,
- * one per game, whose entire job was to say *where this game's notes are* — the
- * last per-game roster in the cross-game guards. It is derived now
- * (`unify-the-note-taking-vocabulary`).
+ * **What a second spelling costs**, which is the argument for the guard: a
+ * cross-game guard such as `mark-all.test.ts` can find a game's notes only by
+ * name, and a game spelling them its own way needs a hand-written roster row
+ * saying *where this game's notes are*.
  *
  * ON THE INSTRUMENT. This forbids the **retired spellings as a typed-array field
  * declaration**, rather than trying to enumerate the games that have notes.
@@ -45,7 +42,7 @@ const NOT_CANDIDATE_NOTES: Record<string, string> = {
 
 /**
  * A **solver's** own candidate scratch is out of scope, as a rule rather than as
- * three ledger entries.
+ * ledger entries.
  *
  * The convention is about where *the player's* notes live — the array a pencil
  * press writes, Mark-all fills and the renderer draws. A solver's working

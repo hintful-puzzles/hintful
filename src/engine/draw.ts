@@ -10,8 +10,7 @@ import type { DrawTextOptions, Point, Rect } from "./types.ts";
  * centered in a tile is not something a puzzle decides, so a call site that
  * named the alignment would have to be read to find out it asked for the same
  * thing as every other. A game drawing fixed-width or non-centered text writes
- * the options it needs instead — eight sites do, and they are the ones where
- * the choice is real.
+ * the options it needs instead, which is where the choice is real.
  */
 export function glyphFont(size: number): DrawTextOptions {
   return { align: "center", baseline: "mathematical", fontType: "variable", size };
@@ -183,7 +182,7 @@ export function drawRectOutline(
  *
  * **What stays with the game** is the two things it actually chooses: how thick
  * the frame is (`ts/10`, `ts/16`, or its own) and whether it is inset from the
- * cell (five games inset by `ts/20`; three draw flush to a span). Pass the rect
+ * cell (by `ts/20`, say, or flush to a span). Pass the rect
  * you want framed and the thickness you want — this only draws it.
  *
  * The four rects are emitted top, left, bottom, right. All four are one color,

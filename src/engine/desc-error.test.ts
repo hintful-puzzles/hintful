@@ -140,12 +140,12 @@ describe("a game's own description error", () => {
   });
 
   it("does not word the exactly-one situation itself", () => {
-    // Exact matching is blind to this one: Inertia, Sokoban and Slide each
-    // wrote "has no X" / "has more than one X" with a different noun, so no two
-    // sentences were equal and the check above passed all three.
+    // Exact matching is blind to this one: games write "has no X" / "has more
+    // than one X" each with its own noun, so no two sentences are equal and the
+    // check above passes them all.
     const own = calls.flatMap(({ sentence, where }) =>
       // "has more than one", not "more than one": Rome's goal in "a region of
-      // more than one square" is a size, and the looser key convicted it.
+      // more than one square" is a size, and a looser key convicts it.
       sentence !== null && /has more than one /.test(sentence) ? [where] : [],
     );
     expect(own, "use descNeedsOne(noun, found)").toEqual([]);

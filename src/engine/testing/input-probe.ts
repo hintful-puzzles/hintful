@@ -468,16 +468,15 @@ export function fingerprint(m: AnyMidend): string {
  * A save alone is not the player's view of the game, and treating it as one
  * under-reports: Signpost's backward grab is held in its `Ui` and never
  * serialized, so the drag highlight a secondary press puts on screen is
- * invisible to {@link fingerprint}. Nine games' pencil-mode press is the same
- * shape. Scoring those "no secondary meaning" would demand
+ * invisible to {@link fingerprint}. A pencil-mode press held in the `Ui` is
+ * the same shape. Scoring those "no secondary meaning" would demand
  * `ignoresSecondaryButton` from games that have one, turning off the promotion
  * they handle — the exact defect the flag exists to prevent, arrived at from
  * the other direction.
  *
- * Guess was the founding example and is no longer one: its peg holds reached
- * the save the day it grew an `encodeUi`. A `Ui` field is frame-only until the
- * game decides to persist it, which is exactly why the population here is an
- * observation rather than a list.
+ * A `Ui` field is frame-only until the game decides to persist it with an
+ * `encodeUi`, which is exactly why the population here is an observation
+ * rather than a list.
  *
  * So the observation is the union: a change the *save* records, or a change the
  * *frame* shows. That is the honest reading of "did anything happen", and it
@@ -640,8 +639,7 @@ export interface SecondaryMeaning {
  *
  * **On not reopening "did the board change".** Its **negation as a conviction**
  * is banned — "the board did not change, therefore this input is dead" falsely
- * convicted four games, because an eraser on a fresh board correctly changes
- * nothing. Used the other way, as one of several *sufficient* signs that the
+ * convicts a game whose eraser, on a fresh board, correctly changes nothing. Used the other way, as one of several *sufficient* signs that the
  * button does mean something, it cannot convict anyone: a game is only ever
  * reported meaningless when it is invisible under **every** observation below.
  */

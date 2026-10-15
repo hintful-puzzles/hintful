@@ -1,17 +1,13 @@
 /**
  * The pencil-mode indicator's own test, and the reason it exists.
  *
- * Before this helper the nine games each painted their own indicator, and every
- * one of them was covered only through a render snapshot. That turned out to
- * cover almost none of it: `RecordingDrawing` keeps `drawUpdate` **out** of
- * `ops` on purpose (it is bookkeeping, not paint), so deleting the
- * invalidation from all nine games at once failed **zero** tests in the
- * collection — measured, not assumed, by doing exactly that. The invalidation
- * is what erases the glyph on a real canvas when the mode goes off, so its
- * absence is the difference between a working indicator and one that never
- * comes back down.
- *
- * Nine copies made that nine tests nobody wrote. One helper makes it one.
+ * A render snapshot cannot cover this: `RecordingDrawing` keeps `drawUpdate`
+ * **out** of `ops` on purpose (it is bookkeeping, not paint), so a game whose
+ * indicator dropped the invalidation would pass every snapshot. The
+ * invalidation is what erases the glyph on a real canvas when the mode goes
+ * off, so its absence is the difference between a working indicator and one
+ * that never comes back down. One helper makes that one test here, rather than
+ * one per game.
  */
 
 import { describe, expect, it } from "vitest";
@@ -69,7 +65,7 @@ describe("repaintPencilIndicator", () => {
   });
 
   it("invalidates the box whenever it paints, in both directions", () => {
-    // The assertion the nine games' snapshots could not make: `drawUpdate` is
+    // The assertion a game's snapshot cannot make: `drawUpdate` is
     // kept out of `ops` deliberately, so only `updates` can see it. Without
     // this the glyph is drawn into a region the frontend never blits.
     for (const [was, now] of [
@@ -92,8 +88,7 @@ describe("repaintPencilIndicator", () => {
   it("paints on a draw state that has never painted, though nothing changed", () => {
     // A fresh draw state — a new game, or a resize — has an empty canvas under
     // the indicator, so "unchanged" is not "already on screen". `null` carries
-    // that, which is why there is no first-frame argument: the nine games this
-    // replaced each passed their own flag for it, spelled three ways.
+    // that, which is why there is no first-frame argument.
     const dr = paint({ pencilModeShown: null }, false);
     expect(boxRects(dr)).toBe(1);
     expect(glyphOps(dr)).toBe(0);

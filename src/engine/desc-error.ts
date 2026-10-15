@@ -6,9 +6,8 @@
  * it was. So the kinds are what went wrong from the player's side: a character
  * that cannot be there, a description that ends too soon or runs on too long, a
  * number out of range, a value used twice, clues that contradict each other, or
- * a layout this puzzle's IDs never have. They are worded once here because ~150 messages across 52 games had
- * spelled about six situations (`own-the-player-facing-messages`), "invalid
- * character" alone at least ten ways.
+ * a layout this puzzle's IDs never have. They are worded once here because a
+ * situation every game meets should read the same in every game.
  *
  * **A {@link DescError} is made here or nowhere.** It is a branded string, so
  * a parse cannot fail with a sentence a game typed; a game with a reason
@@ -80,8 +79,7 @@ export function descBadCharacter(ch?: string): DescError {
 /**
  * A board that must have exactly one of something — Inertia's and Sokoban's
  * starting square, Slide's main piece — and has `found` of them. The noun is the
- * game's; the situation is the collection's, which is why three games' own
- * sentences for it were one.
+ * game's; the situation is the collection's.
  */
 export function descNeedsOne(noun: string, found: number): DescError {
   if (found === 1) throw new RangeError(`descNeedsOne: one ${noun} is not an error`);

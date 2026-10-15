@@ -325,11 +325,11 @@ export function lineMaybeColor(background: Color): Color {
 
 /**
  * **Ruled out**: an edge the player has marked as definitely *not* a line — the
- * sibling of {@link lineMaybeColor}, and used by the same three games (Loopy's
- * `COL_FAINT`, Palisade's and Separate's `COL_LINE_NO`).
+ * sibling of {@link lineMaybeColor}, in the role of upstream's Loopy
+ * `COL_FAINT` and Palisade's and Separate's `COL_LINE_NO`.
  *
  * A mid gray in both schemes: clearly a step off the board, clearly not ink. A
- * tenth off the board (`background × 0.9`, as the ports first wrote it) reads as
+ * tenth off the board (`background × 0.9`, as upstream's Loopy has it) reads as
  * *board*: on a dark board the edge could not be told from no edge, which
  * matters most to a keyboard player, whose cursor walks the edges and needs to
  * see where they are. Disabled still has to be *discernible*.
@@ -493,7 +493,7 @@ export function clueDoneColor(background: Color): Color {
  * there, where a black block reads as a cell that has sunk (a selected one),
  * and not ink, which would make the walls the brightest thing on a dark
  * board. A wall a quarter of the way from the floor toward its bevel could not
- * be told from the floor on a phone (owner, 2026-10-03). A digit on a wall is
+ * be told from the floor on a phone. A digit on a wall is
  * the pinned `WHITE`.
  */
 export function wallFill(background: Color): Color {

@@ -11,13 +11,14 @@
  * game lacking it either has a reason in the puzzle's rules or is unfinished
  * work. Members whose absence says nothing either way (`difficulty`,
  * `textFormat`, and the affordances such as `hover` and `reference`) stay
- * optional and outside; `derive-the-draft-label`'s design records why.
+ * optional and outside.
  */
 
 import type { Game } from "./game.ts";
 
 /** Each section, in the order the help lists them, with the name a player
- * knows the feature by. A hint is never not applicable (owner, 2026-09-28). */
+ * knows the feature by. A hint is never not applicable: a game without one is
+ * a draft (docs/mechanics.md § "Contract sections, and what makes a draft"). */
 const SECTIONS = [
   { member: "hint", feature: "Hints", mayBeNotApplicable: false },
   {

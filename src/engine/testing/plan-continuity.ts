@@ -1,8 +1,6 @@
 /**
  * How often a hint plan leaves the ground its previous step worked on while a
- * firing that continued it was available — the instrument behind
- * `sequence-hints-in-cell-games` (`findings.md`), kept as the guard for
- * `HintFrontier`.
+ * firing that continued it was available — the guard for `HintFrontier`.
  *
  * It reads a plan from the outside, through nothing but what every
  * candidate-elimination step carries, so it cannot share a blind spot with the
@@ -18,8 +16,7 @@
  *   narrowed for a placement to the placed value along its evidence (a hidden 7
  *   in a row reads only the row's 7s);
  * - **a candidate** at a position is a later firing of the same plan that reads
- *   nothing written between the two, so it was available then (Loopy's
- *   definition in `order-hints-from-the-frontier`);
+ *   nothing written between the two, so it was available then;
  * - **a firing continues** another when it reads a cell the other wrote.
  *
  * Populate and the obvious-clean opening read the whole board and are set

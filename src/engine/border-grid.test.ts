@@ -1,10 +1,9 @@
 // Tier-1 tests for the shared border-marking mechanic (Palisade + Separate).
 //
-// The games' own suites already exercise this through their differentials and
-// render snapshots, which is what proved the extraction was a no-op. These tests
-// exist for the opposite reason: to pin the mechanic's contract *directly*, so a
-// future change to it fails here — naming the rule it broke — rather than only
-// as a moved fixture in two games.
+// The games' own suites exercise this through their differentials and render
+// snapshots. These tests pin the mechanic's contract *directly*, so a change
+// to it fails here — naming the rule it broke — rather than only as a moved
+// fixture in the games that use it.
 import { describe, expect, it } from "vitest";
 import {
   BORDER,

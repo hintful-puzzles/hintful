@@ -1,7 +1,7 @@
 /**
- * What every game's `paramConfig` owes, now that the Custom dialog, the preset
+ * What every game's `paramConfig` owes, since the Custom dialog, the preset
  * titles, the type header, the bounds check and the help's Parameters section
- * are all built from it (`declare-params-in-one-place`).
+ * are all built from it.
  */
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
@@ -54,9 +54,9 @@ describe("every paramConfig item says what it means", () => {
     });
   });
 
-  // The help's "names every mode" guard, moved from the page to the field: a
-  // choice that is a word is a mode the player picks, and the doc beside it is
-  // where the page says what it is (Unequal's Adjacent went unexplained).
+  // The help's "names every mode" guard, kept on the field: a choice that is a
+  // word is a mode the player picks, and the doc beside it is where the page
+  // says what it is, or the mode goes unexplained.
   it.each(ids)("%s: a choices field's doc names each word choice", (id) => {
     const g = game(id);
     const tiers = difficultyChoiceItem(g);

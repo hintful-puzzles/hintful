@@ -81,13 +81,11 @@ export const CONTRADICTION_UNLOCALIZED =
  * {@link FIX_MISTAKES_FIRST}: the board is *sound*, the reasoning has simply run
  * out — which is what a tier named `Unreasonable` promises can happen.
  *
- * **There is one situation here, not two, and that is a measurement rather than
- * a judgment** (2026-09-08): walking every preset of every hinting game found
- * **thirteen refusals and every one was on a board whose tier permits search**;
- * nothing refused on a deduction-complete tier at any size, in any mode. A
- * wording that hedges about whether trial and error is expected therefore
- * describes a state no player occupies. `hint-resume.test.ts` holds that: a
- * refusal outside a search-permitting tier fails the walk.
+ * **There is one situation here, not two**: a hint refuses only on a board
+ * whose tier permits search, and `hint-resume.test.ts` holds that — a refusal
+ * outside a search-permitting tier fails its walk of every hinting game's
+ * boards. A wording that hedges about whether trial and error is
+ * expected therefore describes a state no player occupies.
  *
  * **The wording is Galaxies', the one that went through owner acceptance**, and
  * the only one that tells the player what to *do*. A refusal that says only
@@ -124,15 +122,16 @@ export const NO_MOVE_WORTH_MAKING = "No move here would get you closer.";
  *
  * The distinction is not a nicety. Sixteen's tangled endgames are solvable
  * boards a dozen moves from home on which every single slide looks worse, and
- * the player meeting them had followed thirty hints to get there; being told
- * that no move would help is both false and a reason to stop playing.
+ * the player meeting them may have followed dozens of hints to get there;
+ * being told that no move would help is both false and a reason to stop
+ * playing.
  *
  * **So it says what to do instead, in the two ways that work.** Playing on
  * changes the board, and a board the search could not reach is often one move
  * from one it can; revealing the answer ends the game but is honest about doing
  * so. The control it names is the Menu's `Show solution…` — deliberately not
  * `Auto-solve for me`, which is *continuous hinting* and would refuse for the
- * same reason the hint just did. Naming it would have been advice that cannot
+ * same reason the hint just did. Naming it would be advice that cannot
  * work, on the one screen a player has just been let down on.
  *
  * `hint-resume.test.ts` accepts this as an honest end to its walk, but only

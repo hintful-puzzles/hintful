@@ -72,7 +72,7 @@ const minesish: Game<MinesishParams, MinesishState, MinesishMove, null, null> = 
   colors: (bg) => [bg],
   computeSize: () => ({ w: 10, h: 10 }),
   // Required members this double has nothing to say about; see
-  // `Game.newDrawState` (`audit-vestigial-contract-surface`).
+  // `Game.newDrawState`.
   newDrawState: () => null,
   redraw: () => {},
 };

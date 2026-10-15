@@ -474,7 +474,7 @@ export const LATIN_POPULATE_RUNGS = LATIN_RUNGS.filter(
  *   taking it is what this preset *is*;
  * - `singleReason` is {@link singleReasonOf}. Once `Reg` is a
  *   {@link RowColRegion} it is the only inhabitant of that signature, so the
- *   question has one answer rather than six games agreeing;
+ *   question has one answer rather than every game agreeing;
  * - the setup sentences and the conclusions, from the game's `notes`
  *   vocabulary.
  *
@@ -588,8 +588,7 @@ class CandidateWalk<
         // the board, and every strike and hidden single after the opening
         // reads the notes as written. With none stale there is nothing to set
         // up, so there is no opening: holding the strikes back behind one
-        // passed over the strike that continued a placement
-        // (`towers-implicit-strike-window`).
+        // would pass over the strike that continues a placement.
         let cleaned = false;
         this.setUp = {
           done: () =>
@@ -704,7 +703,7 @@ class CandidateWalk<
    * and a hidden single on the value's holders beside each note-less cell of
    * its line. Without them the frontier cannot see that a placement continues
    * into the single it completes, and `plan-continuity.ts` counts the single
-   * available before it was (`rome-implicit-continuity`).
+   * available before it was.
    */
   private single(m: Mark, why: SingleWhy<WholeRegion<Reg>>): Firing<M, H, Reason> {
     // A plan with a setup of its own types its steps without this rung
@@ -876,7 +875,7 @@ class CandidateWalk<
    * it hatches may run through them (Towers' facing clues). A note leg acts on
    * a cell only because the firing reads it, so its cell stays premise, or a
    * placement resting on a product the board has not placed yet is offered
-   * (Group's associativity, `guard-recorded-firing-premises`). */
+   * (Group's associativity). */
   private evidence(f: Firing<M, H, Reason>): Point[] {
     const acted = new Set(
       f

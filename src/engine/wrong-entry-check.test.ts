@@ -5,7 +5,7 @@
  * A game's `findMistakes` can be its rule checker alone. An entry that is
  * wrong and breaks nothing yet then passes it, the hint finds the board
  * doomed, and the player is told "these entries contradict each other" with no
- * cell marked. Bricks, Clusters and Subsets each shipped that.
+ * cell marked.
  *
  * So for every game with `findMistakes`, `solve` and a hint, this deals one
  * board and plays single gestures on it, each from the opening position and
@@ -25,19 +25,19 @@
  *  - **A game the gestures enter nothing wrong in**, which is {@link UNREACHED},
  *    asserted to be exactly the games that came back with none.
  *
- * ON {@link GESTURES}, measured 2026-10-11. Each of the three defects above,
- * put back, failed on its first or second gesture, so the count is set by the
- * games that are hard to enter anything in, and those are the ones that drag:
- * Ascent's first wrong entry came at gesture 105 and Boats' at 120, and at 180
- * they have one and two where most games have dozens. The last test holds that
- * floor, so a change to the gestures that loses a game says so. A wrong entry
+ * ON {@link GESTURES}. Each defect above, planted, fails on its first or
+ * second gesture, so the count is set by the games that are hard to enter
+ * anything in, and those are the ones that drag: Ascent and Boats need over a
+ * hundred gestures for a first wrong entry, and at this count have one or two
+ * where most games have dozens. The last test holds that floor, so a change to
+ * the gestures that loses a game says so. A wrong entry
  * that takes a particular drag to make is seen thinly or not at all.
  *
  * THE SECOND QUESTION: A RIGHT ENTRY. A hint carries on from wherever the
  * player is, so from a position with nothing wrong on it the hint finishes the
- * board, on a tier that allows no trial and error. Range's did not: one white
- * mark the answer agrees with left a board its rules ran out on, because a
- * rule concluded less from a board that said more. `hint-resume.test.ts`
+ * board, on a tier that allows no trial and error. A rule that concludes less
+ * from a board that says more breaks that: one white mark the answer agrees
+ * with leaves a Range board its rules run out on. `hint-resume.test.ts`
  * cannot see that, since its walk passes only through positions the hint's
  * own order makes. Two kinds of position are asked here:
  *  - **a gesture whose moves leave the solved board solved**, with no mistake
@@ -47,12 +47,11 @@
  *    They are not replayed on the answer, which refuses a Signpost link it
  *    already has and is unsolved by a toggled mark.
  *
- * Measured 2026-10-11 with Range's rule put back: the gestures found it once
- * in 180, the steps alone three times in 42 and the pairs five times in 60.
- * A second and a third blind gesture cost a third of a second each over the
- * file and found nothing the first did not, in any game, and neither did
- * larger subsets of the plan, which caught Range's rule in none of 39: the
- * steps around the one played early make up for it.
+ * Why both, and no more: with such a rule planted in Range, the gestures find
+ * it rarely and the steps and pairs several times each. A second blind
+ * gesture costs a third of a second over the file and finds nothing the first
+ * does not, and larger subsets of the plan never catch the rule: the steps
+ * around the one played early make up for it.
  */
 import { describe, expect, it } from "vitest";
 import { permitsSearch } from "./difficulty.ts";

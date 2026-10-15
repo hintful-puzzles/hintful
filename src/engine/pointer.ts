@@ -385,8 +385,8 @@ export function startDrag(drag: GridDrag, x: number, y: number): void {
  * Move a live drag's near end to `(x, y)`, and report whether that changed
  * anything.
  *
- * The return value is not decoration: several games already hand-roll this
- * predicate to suppress a repaint for a drag event that landed on the cell it
+ * The return value is not decoration: a game needs this predicate to
+ * suppress a repaint for a drag event that landed on the cell it
  * was already on, and it is the same predicate every time. `false` for a drag
  * that is not running, so a stray move event cannot start one.
  */
@@ -420,7 +420,7 @@ export function endDrag(drag: GridDrag): boolean {
  * where every game keeps it, and a deep walk would be a contract nobody asked
  * for over data the engine does not own.
  *
- * A game need not have a `Ui` at all — `newUi` is optional and two games have
+ * A game need not have a `Ui` at all — `newUi` is optional, for a game with
  * genuinely nothing to remember — so anything that is not an object is simply
  * nothing to cancel.
  */

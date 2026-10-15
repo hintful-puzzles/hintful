@@ -87,10 +87,9 @@ function pencilIndicatorSize(tileSize: number): number {
  * **Where the glyph goes, in every game: the canvas's top-right corner**, inset
  * by a hair so it does not touch the edge.
  *
- * The position was each game's own until this, and the collection had drifted
- * into three answers — top-right in five games, top-left in three, a strip below
- * the board in three — so the one cue that says "your typing goes into notes
- * now" moved when the player changed puzzle. It is computed from the canvas
+ * A position each game chose for itself drifts into several answers, and then
+ * the one cue that says "your typing goes into notes now" moves when the player
+ * changes puzzle. It is computed from the canvas
  * rather than from a cell or a clue ring, so it means the same thing whatever a
  * game's margins are made of; **a game with nothing at its top-right reserves
  * the room** (a border wide enough, or a canvas grown to make one), exactly as
@@ -110,9 +109,8 @@ export function pencilIndicatorBox(canvas: Size, tileSize: number): PencilIndica
  * is no `firstFrame` argument. A fresh draw state — a new game, or a resize —
  * has an empty canvas under the indicator, so it must paint even when the mode
  * has not changed; `null` is never equal to a boolean, so that falls out of the
- * same comparison. The nine games this replaced each passed their own flag for
- * it, under three different spellings, and the thing that actually knows
- * whether anything has been painted is the cache.
+ * same comparison. The thing that actually knows whether anything has been
+ * painted is the cache, not a flag each game passes.
  */
 export interface PencilIndicatorCache {
   pencilModeShown: boolean | null;
@@ -133,8 +131,8 @@ export interface PencilIndicatorBox {
  * {@link PencilIndicatorCache}).
  *
  * The cache lives here rather than at each call site because it is the part
- * that was drifting: nine games had three spellings of the same guard, and
- * establishing that they agreed took two passes over the collection.
+ * that drifts: a guard each game spells its own way has to be checked across
+ * the collection to show the spellings agree.
  *
  * The box is invalidated whether or not the glyph was drawn — the `drawUpdate`
  * is what erases the glyph when the mode goes off, so it is not conditional on

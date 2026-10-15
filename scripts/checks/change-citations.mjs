@@ -135,11 +135,14 @@ const NOT_A_LIVE_CHANGE = {
 
 /**
  * Below these, the input is broken rather than the tree clean. The file floor is
- * well under the ~67 scanned (10 markdown, 57 source) so it is not a ratchet,
- * but far enough above zero that a `SCANNED` that stopped matching a whole root
- * fails here rather than reporting health over a third of the tree.
+ * well under the files scanned so it is not a ratchet, but far enough above
+ * zero that a `SCANNED` that stopped matching a whole root fails here rather
+ * than reporting health over a third of the tree. The token floor only proves
+ * the key still matches: citations leave as comments lose their history
+ * (`docs/new-game.md` § "Comments, and what earns one"), so it sits well below
+ * what the tree cites and is lowered, never met by adding citations.
  */
-const FLOORS = { files: 40, tokens: 100, archive: 200, postmortems: 1 };
+const FLOORS = { files: 40, tokens: 30, archive: 200, postmortems: 1 };
 
 const fail = (msg) => {
   console.error(`change-citations: ${msg}`);

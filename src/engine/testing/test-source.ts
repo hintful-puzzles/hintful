@@ -3,12 +3,10 @@
  * tests rather than on what they test.
  *
  * **A rule about how a guard is written needs this, and nothing else can give
- * it.** `slice-the-first-leaf-hint-guards-by-axis` found every cross-game sweep
- * but one building its own board population out of `firstLeaf` and `withTier`,
- * including three inside the file whose main walk had already been fixed. The
- * lesson there is not the count: it is that a sweep fixed once is not a sweep
- * that stays fixed, and the only thing that makes such a rule stick is a check
- * that reads the tests.
+ * it.** Whether a cross-game sweep builds its own board population out of
+ * `firstLeaf` and `withTier` is a fact about a test, and a sweep fixed once is
+ * not a sweep that stays fixed: the only thing that makes such a rule stick is
+ * a check that reads the tests.
  *
  * A module of its own because importing it reads every test file, which makes
  * the importer run whole on any commit that touches one (`code-lines.ts` says

@@ -2,10 +2,9 @@
  * What Solve says when it will not solve.
  *
  * `SolveResult`'s error is one of these and nothing else: the type is the
- * union of their literal types, so a game cannot return a sentence of its own.
- * Thirty-three spellings of seven situations were the reason
- * (`own-the-player-facing-messages`), and a player who meets the same situation
- * in two games should read the same words.
+ * union of their literal types, so a game cannot return a sentence of its own:
+ * a player who meets the same situation in two games should read the same
+ * words.
  *
  * **A situation a hint can also meet is worded once, for both.** A finished
  * board and a solver that cannot settle the puzzle are the same fact whether

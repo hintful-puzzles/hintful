@@ -1,11 +1,9 @@
 /**
  * Cross-game guarantees on hint narration *form* (never content).
  *
- * `docs/hints.md` § "Writing the narration" is a list of narration rules
- * that were, until this file, enforced per-game or by review alone — and
- * narration quality is the broadest hint-defect class in the history (8 games;
- * see `unify-hint-framework` §0.2). Three of its rules are pure form, so
- * they are guarded here for every hinting game at once:
+ * `docs/hints.md` § "Writing the narration" is a list of narration rules,
+ * and narration quality is the broadest class of hint defect. The rules that
+ * are pure form are guarded here for every hinting game at once:
  *
  *  - **Every step shows something** (§ "Show the evidence as an area"): board
  *    marks, words, or both.
@@ -26,8 +24,8 @@
  *    teachable tier, the Custom-dialog corner neither of those reaches — and
  *    into the middle of the game, in its own block, because the first
  *    preset's opening plan is where the long sentences never are.
- *  - **No step asks the player to carry a chain it never lays out**
- *    (`audit-guessing-tier-names`): a bounded chain is a legitimate
+ *  - **No step asks the player to carry a chain it never lays out**: a
+ *    bounded chain is a legitimate
  *    *Tactic* and may be narrated — but with the chain **shown on the
  *    board**, ordered and anchored at both ends, rather than compressed
  *    into a claim; an unbounded search may not be narrated at all.
@@ -37,8 +35,7 @@
  *    place it can never fire.
  *
  * Form only: no assertion here ever touches *what* a hint says about the
- * board — flattening a good hint to satisfy a guard is the failure mode
- * this change's spec explicitly forbids.
+ * board — flattening a good hint to satisfy a guard is a failure, not a fix.
  */
 import { describe, expect, it } from "vitest";
 import { difficultyTiers, withTier } from "./difficulty.ts";
@@ -71,11 +68,8 @@ const SEEDS = perCommit([0], [0, 1, 2]);
  * 2026-09-10: *"a character limit as a linter, and a way to override it for a
  * few particularly complex hints"*).
  *
- * Measured before it was set, over 15,132 steps in 30 games: median 84, p75
- * 110, p90 147. 120 is the line Netslide and Spokes had each already drawn for
- * themselves, and it flags the 139-character Tracks sentence the owner
- * shortened by hand when asking for this — a limit that would not have caught
- * the sentence that prompted it would not be the one asked for.
+ * 120 sits above a typical step and below the long tail, and it is the line
+ * Netslide and Spokes each draw for themselves.
  */
 const NARRATION_LIMIT = 120;
 
@@ -111,7 +105,7 @@ const BOATS_RINGS_THE_WATER =
  * So a shared-engine sentence's roster is **the games that actually reach it in
  * the walk, not the games that could** — those are different sets, and the
  * difference is invisible from the code: Mathrax's solver records `forcing` and
- * its narration would say this, yet 100,249 plan steps never chose one, because
+ * its narration would say this, yet the walk's plans never choose one, because
  * the frontier finishes the board on cheaper rungs first. Reading a roster off
  * the solver is therefore an inference, and the reverse half is what turns it
  * into a measurement.
@@ -126,9 +120,8 @@ const BOATS_RINGS_THE_WATER =
  *
  * **A sentence the walk cannot be relied on to hear names a board that speaks
  * it** (`spokenOn`, a `params:desc` per game). Rect's is the case: its line
- * sentence fires on few boards, and three seeds a preset missed all of them,
- * so the listing read as dead on every push while a probe heard the sentence
- * 131 times on one preset. A pinned board is an input, where a wider walk
+ * sentence fires on few boards, so the seeds a preset walks can miss all of
+ * them and read a live listing as dead. A pinned board is an input, where a wider walk
  * would be a bigger sample of the same kind, and it is checked on every commit
  * rather than at push: "every pinned board still speaks its sentence".
  */
@@ -151,21 +144,15 @@ const LONG_NARRATIONS: {
   spokenOn?: Record<string, string>;
 }[] = [
   {
-    // Not Mathrax, though its solver records `forcing`: measured over all nine
-    // presets × 3 seeds × both auto-pencil settings, 100,249 plan steps spoke
-    // this sentence **zero** times, because the frontier takes its clue strikes
-    // and singles first and the board finishes before a chain is ever the best
-    // candidate.
+    // Not Mathrax, though its solver records `forcing`: its plans do not speak
+    // this sentence, because the frontier takes its clue strikes and singles
+    // first and the board finishes before a chain is ever the best candidate.
     //
     // Group is the near-miss in the other direction, and is listed on the
     // measurement rather than on the inference: it reaches this sentence at
-    // **Hard only** (measured 2026-10-06 over 12 deals a cell: 26 times at
-    // 12x12 Hard and 9 at 8x8 Hard, and zero at 8x8, 10x10 and 12x12 Normal
-    // and Tricky, at 10x10 Hard, and at 12x12 Tricky with the identity
-    // hidden). Neither Hard board is a shipped preset: both are reachable
-    // through the Custom dialog alone.
-    // So the board is pinned. `lintCases`' last-preset rule used to reach it,
-    // until the preset list was regrouped and its last entry became an 8x8.
+    // **Hard only**, on boards no shipped preset holds and `lintCases`' rules
+    // do not reach, which only the Custom dialog offers. So the board is
+    // pinned.
     games: ["group", "keen", "salad", "solo", "towers", "unequal"],
     rungs: ["forcing"],
     spokenOn: {
@@ -192,7 +179,7 @@ const LONG_NARRATIONS: {
       "Killer's region rule under a cage-sum strike is two premises: what the " +
       "row, column or block leaves its open cells, which the player needs to " +
       "see worked out because nothing on the board records it, and then the " +
-      "min/max or combination rung on that sum (`teach-solo-cage-splits`).",
+      "min/max or combination rung on that sum.",
   },
   {
     games: ["rome"],
@@ -228,10 +215,9 @@ const LONG_NARRATIONS: {
   },
   {
     // An entry of its own because a pin excuses every rung of its entry from
-    // the walk, and the board speaks only this one. Measured 2026-10-06 over 6
-    // deals a preset, the sentence ran over the limit on 3 of them at 10x10
-    // Normal and 2 at 10x10 Tricky, and on none at 10x10 Hard or below 10x10:
-    // live on shipped boards, and missed by the one seed those presets walk.
+    // the walk, and the board speaks only this one. The sentence runs over the
+    // limit on some 10x10 boards below Hard and on none smaller: live on
+    // shipped boards, and too rare for the one seed those presets walk.
     games: ["boats"],
     rungs: ["onlyRunsLeft"],
     spokenOn: {
@@ -271,8 +257,8 @@ const LONG_NARRATIONS: {
   },
   {
     // An entry of its own, as Boats' pinned rung is: over the limit only with
-    // the second sentence, on 2 of the first 5 deals at 10x10 Normal
-    // (2026-10-08) and on no board the walk takes.
+    // the second sentence, on some 10x10 Normal boards and on none the walk
+    // takes.
     games: ["pearl"],
     rungs: ["whiteCannotTurn"],
     spokenOn: { pearl: "10x10dt:BaBbBBkWcBfBcBaBWeWfBWWaBdWcBcWdWdWWcWWbWWkWa" },
@@ -371,7 +357,7 @@ const LONG_NARRATIONS: {
   },
   {
     // An entry of its own for the same reason: all three reasons meet on few
-    // boards, 2 of the first 10 deals at 7x7 (2026-10-08).
+    // boards, too few for the walk to be relied on to hear it.
     games: ["signpost"],
     rungs: ["onlyBefore"],
     spokenOn: {
@@ -435,14 +421,12 @@ const LONG_NARRATIONS: {
  * weaker, which is the test for whether a word belongs to the shared vocabulary
  * or to {@link IDIOMS}.
  *
- * **Two entries are here because the sweep below finally heard them**
- * (`slice-the-first-leaf-hint-guards-by-axis`). A lexical rule's vocabulary can
- * only be as wide as the sentences it is run over, and this one was run over
- * each game's easiest opening plan, so two constructions the collection has
- * used all along were missing:
+ * **A lexical rule's vocabulary can only be as wide as the sentences it is run
+ * over**, and two constructions are heard only beyond each game's easiest
+ * opening plan:
  *
  *  - *"…can take one line at most"* — a proved bound, which is what `at most`
- *    always is here. Loopy writes it six ways, and Bridges, Clusters, Slant and
+ *    always is here. Loopy writes it several ways, and Bridges, Clusters, Slant and
  *    Unequal write it too; Loopy's corner rung is the one whose necessity is
  *    carried by nothing else, and it fires at Hard.
  *  - *"none of its remaining edges can be walls"* — a negated possibility, the
@@ -475,16 +459,11 @@ function exemptByForm(step: HintStep<unknown>): boolean {
  * Games whose hints narrate **moves** rather than deductions, with the reason
  * each is exempt from the necessity-voice rule — the ledger, not the roster.
  *
- * **The population is derived and the exceptions are declared**, which is the
- * way round this repo settled on (`audit-declared-versus-derived-capabilities`;
- * `docs/testing.md` § "How a cross-game guard finds its population").
- * It was the other way round until then: an opt-in set of eighteen names, which
- * had silently missed **six** hinting games — Boats, Bricks, Group, Salad,
- * Sticks and Subsets — every one of them deductive, and five of them passing
- * this check across 72–153 steps the whole time nothing ran it. That is
- * `testing/hint-games.ts`'s own defect one level down, and it has the same fix:
- * a guard blind to a game cannot fire on it, so a game must have to be
- * *removed* rather than added.
+ * **The population is derived and the exceptions are declared**
+ * (`docs/testing.md` § "How a cross-game guard finds its population"). An
+ * opt-in roster silently misses every game nobody added, and a guard blind to
+ * a game cannot fire on it, so a game must have to be *removed* rather than
+ * added.
  */
 const NARRATES_MOVES: Record<string, string> = {
   fifteen: "sliding-tile: a step names the tile to slide, not a forced fact",
@@ -493,11 +472,10 @@ const NARRATES_MOVES: Record<string, string> = {
   flood: "objective: a step names the color to flood with",
   inertia:
     "movement: the one thing it can prove is a gem's unreachability, and its " +
-    "steps narrate the consequence a slide has (`add-inertia-hint`)",
+    "steps narrate the consequence a slide has",
   pegs:
     "search: no jump is forced by logic; a step names the jump and what was " +
-    "checked about it, a necessity only where every rival was proved lost " +
-    "(`add-pegs-hint`)",
+    "checked about it, a necessity only where every rival was proved lost",
   untangle:
     "objective: a step names how many crossings a point's lines make before " +
     "and after the move, not a forced fact",
@@ -511,8 +489,8 @@ const DEDUCTIVE = new Set(
 
 /**
  * The vocabulary of a conclusion the player is asked to take on trust because
- * the reasoning behind it was *not laid out* — `audit-guessing-tier-names`'s
- * Check / Tactic / Search taxonomy, which splits on whether the reasoning is a
+ * the reasoning behind it was *not laid out* — the Check / Tactic / Search
+ * taxonomy (`docs/solver-and-generator.md` § "Check, Tactic, Search"), which splits on whether the reasoning is a
  * **bounded chain the player can be walked through**:
  *
  * - **Check** — place, look, one rule breaks. Narrate directly.
@@ -522,29 +500,26 @@ const DEDUCTIVE = new Set(
  *   compressed into a claim the player can only check by redoing the deduction.
  *   The stricter form (a display-only leg per link, so the player advances one
  *   inference at a time) was designed and set aside by an owner decision:
- *   holding a *hypothesis* in your head is fine, holding the *chain* is not
- *   (`walk-tactic-hint-chains` D1–D2). This list was emptied by seven games
- *   meeting the revised bar, not by seven walks.
+ *   holding a *hypothesis* in your head is fine, holding the *chain* is not.
  * - **Search** — run the whole solver from a hypothesis, or branch and
  *   backtrack. `Unreasonable` only, and never narrated at all.
  *
- * Promoted here from `galaxies-hint.test.ts`, where it guarded one game out of
- * thirty: a rule enforced in one place is not enforced.
+ * It is checked for every hinting game at once: a rule enforced in one game is
+ * not enforced.
  *
- * **It matches the compressed chain, not the hypothesis.** The first cut also
- * caught "if this cell were …" and instantly failed Clusters on *"If this cell
- * were blue, at most one neighbor could ever match it"* — a sound single-step
- * refutation, i.e. a Check, and exactly what the rule permits everywhere. A
- * hypothesis framing is not the defect; asking the reader to carry it forward
- * unaided is.
+ * **It matches the compressed chain, not the hypothesis.** A pattern on "if
+ * this cell were …" would fail Clusters on *"If this cell were blue, at most
+ * one neighbor could ever match it"* — a sound single-step refutation, i.e. a
+ * Check, and exactly what the rule permits everywhere. A hypothesis framing is
+ * not the defect; asking the reader to carry it forward unaided is.
  *
  * **What this cannot see, stated rather than implied.** A Search that describes
- * itself as though it were a Check slips through — Undead's removed arm said
- * *"If this cell were a vampire, the sightline clues and monster counts could no
- * longer all be met"*, wordwise indistinguishable from a one-glance refutation.
- * So this is a backstop. The guarantee for the Search rungs is structural:
- * `UndeadReason` and Dominosa's tag no longer *contain* one, so narrating it is
- * a compile error rather than a string a test might miss.
+ * itself as though it were a Check slips through — *"If this cell were a
+ * vampire, the sightline clues and monster counts could no longer all be
+ * met"* is wordwise indistinguishable from a one-glance refutation. So this is
+ * a backstop. The guarantee for the Search rungs is structural: `UndeadReason`
+ * and Dominosa's tag do not *contain* one, so narrating it is a compile error
+ * rather than a string a test might miss.
  */
 const SPECULATIVE =
   /\btr(?:y|ied|ies)\b|\bbreak the board\b|following (?:a|the) chain\b|following the forced\b|\bin turn\b|\bfurther along\b|\beventually\b/i;
@@ -580,18 +555,18 @@ const IDIOMS: Record<string, (step: NarratedStep) => boolean> = {
   // owner settled its words on 2026-09-19, and `loopy/hint-text.ts` records what
   // each clause is doing and why it says it that way; the "so … :" join is the
   // engine's form for a look, what follows from it, and the move. Reached only
-  // at Hard, which is why the walk met it for the first time when it started
-  // reading the presets menu rather than the first preset.
+  // at Hard, so only a walk over the presets menu, not the first preset, hears
+  // it.
   loopy: (s) => /leaves this \d+ short: that edge is out/.test(s.explanation),
 };
 
 /**
- * The em-dash, retired from narration (owner, 2026-09-09).
+ * The em-dash, kept out of narration (owner, 2026-09-09).
  *
- * It was the collection's default connective before this rule — **141 of them
- * across 26 files**, almost all standing in for the comma or the sentence break
- * before a concluding `so …` clause. Nothing about the teaching depended on the
- * character, so the rewrite cost no reasoning; what it must never buy is a
+ * Where it would appear, it almost always stands in for the comma or the
+ * sentence break before a concluding `so …` clause. Nothing about the teaching
+ * depends on the character, so writing around it costs no reasoning; what it
+ * must never buy is a
  * *shorter* hint, since deleting the clause is the flattening this file's header
  * forbids.
  *
@@ -636,18 +611,15 @@ describe("the necessity rule reaches every hinting game it should", () => {
 /**
  * Boards per game for the form rules below — the gate slice, one seed each.
  *
- * **This block is about sentences, and it had never heard most of them.** It
- * read `firstLeaf` at three seeds until
- * `slice-the-first-leaf-hint-guards-by-axis`: three boards of `2x2 Trivial` for
- * Solo, whose Killer mode alone adds four cage sentences, and one board of
- * Squares for Loopy's twenty-one tilings. A form rule — is the step visible, is
- * the conclusion in the necessity voice, is there an em-dash — is a property of
- * the *sentence*, so the question is how many distinct sentences the walk
- * hears, and a second seed of one preset hears the same ones again.
+ * **This block is about sentences.** A form rule — is the step visible, is the
+ * conclusion in the necessity voice, is there an em-dash — is a property of the
+ * *sentence*, so the question is how many distinct sentences the walk hears,
+ * and a second seed of one preset hears the same ones again, where another
+ * preset hears new ones (Solo's Killer cages, Loopy's other tilings).
  *
- * `lintCases` below already walks every preset, but only for *length*; the
+ * `lintCases` below walks every preset too, but only for *length*; the
  * necessity voice, the visibility rule and the speculative-chain rule are this
- * block's, and they stopped at the first preset.
+ * block's.
  */
 const FORM_SEEDS = SEEDS.slice(0, 1);
 
@@ -752,8 +724,8 @@ function formDefects(step: HintStep<unknown>, searching: boolean): string[] {
 /**
  * How many steps of one board the walk below checks. The local hooks stop
  * at 400: a board's later steps are spoken by the rungs its earlier ones were,
- * and one board, Mosaic's 50x50 with its 1,355 steps, was 52 s of the walk's
- * 110 s (2026-10-08). Every step of every board is checked in CI.
+ * and the largest boards (Mosaic's 50x50) run to many times that, at most of
+ * the walk's cost. Every step of every board is checked in CI.
  */
 const BOUND_STEPS = perCommit(400, Number.POSITIVE_INFINITY);
 
@@ -874,39 +846,31 @@ describe("a bound hint's words name exactly the marks it draws", () => {
  *
  * It needs its own sweep because the block above samples
  * `firstLeaf(game.presets())` — each game's *easiest* preset — and a trial rung
- * is tier-gated, so it never fires there. Proved rather than assumed: planting
- * "further along" in Bricks' lookahead narration left the block above green,
- * because Bricks' first preset is Easy and Easy never reaches that arm. The
- * check was therefore guarding nothing on precisely the tiers it exists for.
+ * is tier-gated, so it never fires there: planting "further along" in Bricks'
+ * lookahead narration leaves the block above green, because Bricks' first
+ * preset is Easy and Easy never reaches that arm.
  *
- * **Tier is only one axis, and this used to walk off the end of games that have
- * no tiers at all.** `if (!contract || !tiers) continue` skipped the whole case,
- * so twelve of the thirty hinting games — Sixteen, Netslide, Palisade, Inertia,
- * Pattern, Range and the rest — were outside it entirely, and the per-game
- * vacuity guard below could not say so because it only ran for the games that
- * got as far as running. A game with no tiers varies by *preset* instead, and is
- * walked that way. (`hint-resume.test.ts` had the same blind spot in a milder
- * form, sampling one preset rather than none; both were found by
- * `fix-sixteen-endgame-stranding`. If you add a sweep over games, the question
- * to ask is what axis each game varies, not what axis you keyed on.)
+ * **Tier is only one axis.** A game with no tiers at all (Sixteen, Netslide,
+ * Palisade and others) varies by *preset* instead, and is walked that way; a
+ * sweep keyed on tier would skip it whole, and a per-game vacuity guard that
+ * runs only for the games that get as far as running could not say so. If you
+ * add a sweep over games, the question to ask is what axis each game varies,
+ * not what axis you keyed on.
  */
 /**
  * The cases an **untiered** game contributes: its presets, which is the axis
  * such a game actually varies (a sweep keyed on tier alone collapses them all
- * to one and walks a single board — the blindness `hint-resume.test.ts` paid
- * for first).
+ * to one and walks a single board).
  *
  * **A game that plans by searching walks its three smallest presets in the
  * gate.** The property under test here is the *wording* of an explanation, and
  * a planner's narration vocabulary does not change with board size — but a
  * search's cost does, steeply. Three is not arbitrary: it is what reaches every
- * mode Netslide varies (its nine presets are three barrier/wrapping modes at
- * each of three sizes, ordered smallest-first), and it keeps Sixteen's 3×3, 4×3
- * and 4×4 while dropping the two boards that carry the search cost. The slow
- * tier walks all of them.
- *
- * Measured 2026-09-09 (`retire-tests-that-do-not-earn-their-runtime`): the two
- * members of `SEARCH_PLANNING_GAMES` were 62% of this file's test time.
+ * mode Netslide varies (its presets are three barrier/wrapping modes at each
+ * of three sizes, ordered smallest-first), and it keeps Sixteen's small boards
+ * while dropping the large ones that carry the search cost. The slow tier
+ * walks all of them. Unsliced, `SEARCH_PLANNING_GAMES` would be most of this
+ * file's test time.
  */
 function untieredCases(
   id: string,
@@ -923,18 +887,19 @@ function untieredCases(
 describe("no hint leaves a chain for the player to carry, at any tier", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: every tier`, () => {
-      // **One board per value of every axis the game varies**, which subsumes
-      // the per-tier loop this used to build with `withTier` on the first
-      // preset: difficulty is a `"choices"` axis like any other, so the slice
-      // already carries a board at each tier — and carries it at the size the
-      // menu offers that tier at, which is a board the player can pick rather
-      // than a tier label written onto the smallest grid in the game.
+      // **One board per value of every axis the game varies**, rather than a
+      // per-tier loop with `withTier` on the first preset: difficulty is a
+      // `"choices"` axis like any other, so the slice already carries a board
+      // at each tier — and carries it at the size the menu offers that tier
+      // at, which is a board the player can pick rather than a tier label
+      // written onto the smallest grid in the game.
       //
       // The `withTier` form is the tell `docs/testing.md` § "How a
       // cross-game guard finds its population" rule 6 names: it writes the tier
-      // field and nothing else, so it never produced a Killer board, an
+      // field and nothing else, so it never produces a Killer board, an
       // Adjacent board or a Tectonic one, and a trial rung that fires only in a
-      // mode was outside this sweep as surely as it was outside the block above.
+      // mode would be outside this sweep as surely as it is outside the block
+      // above.
       const cases = gatePresets(name, game).map((e) => ({
         label: `preset "${e.title}"`,
         params: e.params,
@@ -962,8 +927,7 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
         }
       }
       // The "how many did I actually look at?" guard: without it, a game whose
-      // every case failed to generate would pass while asserting nothing. It
-      // now also covers the games that used to be skipped before reaching it.
+      // every case failed to generate would pass while asserting nothing.
       expect(checked, `${name}: nothing produced a hint to check`).toBeGreaterThan(0);
     });
   }
@@ -974,40 +938,27 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
  * where long sentences are rarest: a firing that needs more room to explain
  * usually needs more of the board decided first.
  *
- * **As deep as the census that set the limit, not shallower.** The first cut
- * walked eight plans to save time, and the ledger's own two-way check caught
- * it: Light Up's two discount arms fired nowhere in eight plans, so their
- * entry matched nothing and read as dead while the sentences were still being
- * spoken deeper in the game. A shallow walk turns a live ledger entry into a
- * false "delete me", which is the rot the check exists to stop.
+ * **Deep, not shallow.** A firing that fires only deeper in the game (Light
+ * Up's two discount arms) is not heard by a walk of a few plans, so its entry
+ * matches nothing and reads as dead while the sentence is still being spoken.
+ * A shallow walk turns a live ledger entry into a false "delete me", which is
+ * the rot the check exists to stop.
  *
- * **And as wide as the modes a player can pick.** The first walk took every
- * tier of each game's *easiest preset* only, and a review of the text files
- * (2026-09-10) found thirty-odd sentences over the limit that it never heard:
- * Unequal's Adjacent mode, Solo's Killer and X, Salad's Number Ball are each
- * reached by a preset and by no tier of the first one. So every leaf preset is
- * walked too, on one seed, beside the tiers' three; the search-planning games
- * keep their sliced preset list, which is what their cost is sliced for.
+ * **And as wide as the modes a player can pick.** Unequal's Adjacent mode,
+ * Solo's Killer and X, Salad's Number Ball are each reached by a preset and by
+ * no tier of the first one. So every leaf preset is walked too, on one seed,
+ * beside the tiers' three; the search-planning games keep their sliced preset
+ * list, which is what their cost is sliced for. One seed per extra preset sits
+ * between the tiers alone and every preset on every seed.
  *
- * Cost, 2026-09-10: 43 s of test time for this block, measured at load
- * average 19–41 with 34% memory free — an upper bound, not a cost. The same
- * walk as a standalone census measured 16 s. Spokes, Palisade, Crossing and
- * Sticks hold most of it; slicing those four is the lever if it ever matters.
- * Walking every preset on every seed measured 103 s as a census against 49 s
- * for the tiers alone (load 12, swap 22 GB used: upper bounds both); one seed
- * per extra preset is the middle of that.
- *
- * Cost of {@link lintCases}' third rule, 2026-09-20, load 5–6 (upper bounds,
- * same box, same session, so the ratios are the usable part): 36 s for the
- * block without it, 43 s with it at one seed, 83 s at three. It is not spread
- * evenly — four games hold ~40 s of the 47, and all four for the same reason,
- * that generating a *large* board at a *hard* tier is the expensive corner:
- * Group ~18 s, Salad ~12 s, Solo ~6 s, Spokes ~3 s. Three seeds rather than
- * one because the rule's whole job is to let the close-out case decide a
- * negative, and a negative from a sample of one is not evidence — Group speaks
- * its chain sentence on three of six 12x12 Hard seeds, so one seed is a coin
- * flip on whether a live listing reads as dead. Slicing those four games is
- * the lever if this ever matters.
+ * {@link lintCases}' third rule is not spread evenly in cost: generating a
+ * *large* board at a *hard* tier is the expensive corner, and a few games
+ * (Group, Salad, Solo, Spokes) hold most of it. Slicing those is the lever if
+ * this ever matters. Three seeds rather than one because the rule's whole job
+ * is to let the close-out case decide a negative, and a negative from a sample
+ * of one is not evidence — Group speaks its chain sentence on only some large
+ * Hard seeds, so one seed is a coin flip on whether a live listing reads as
+ * dead.
  */
 const LINT_ROUNDS = 30;
 
@@ -1022,11 +973,11 @@ const LINT_ROUNDS = 30;
  * every push to `main`, so this narrows what a hook costs and never what
  * protects the branch.
  *
- * **Why this rule and not the rest of the block.** Measured: the rule is 47 s
- * of the block's 83, and the block is selected on essentially every commit —
- * the per-commit selector maps any staged path under `src/games/` to every
- * guard that reads game source as text, and this is one, so a one-line edit to
- * one game was paying the whole 47 s. What it protects is not the code the
+ * **Why this rule and not the rest of the block.** The rule is most of the
+ * block's cost, and the block is selected on essentially every commit — the
+ * per-commit selector maps any staged path under `src/games/` to every guard
+ * that reads game source as text, and this is one, so a one-line edit to one
+ * game would pay for the whole rule. What it protects is not the code the
  * commit is changing: the forward half, which catches a sentence you just
  * wrote too long, runs on every commit at every tier and every preset and is
  * untouched. What defers to push is the *rot* half — a ledger listing that has
@@ -1058,23 +1009,20 @@ const CORNER_WALKED = !PRECOMMIT_HOOK_RUN;
  * `presets × tiers` the other two both miss: they walk every tier of the
  * *smallest* board and every board at *its own* tier, so a combination a player
  * reaches only through the Custom dialog — a big grid turned up to a hard tier —
- * is walked by neither. Group is the case that found it
- * (`derive-the-narration-ledger-population`): its shipped presets stop at 8x8
- * Tricky and 12x12 Normal, and it speaks the shared Latin chain sentence
- * **only** at 12x12 Hard, 44 times in 2,007 steps. Every tier of its 6x6 and
- * every preset at its own tier: zero, across 12 seeds each. So the roster was
- * right and the walk was short, which is the failure mode that matters most
- * here — a listing the walk cannot reach reads as a dead exemption, and the
- * close-out case would have had it deleted.
+ * is walked by neither. Group is the case: its shipped presets stop short of
+ * a large board at Hard, and only there does it speak the shared Latin chain
+ * sentence. A walk that misses the corner is short while the roster is right,
+ * which is the failure mode that matters most here — a listing the walk cannot
+ * reach reads as a dead exemption, and the close-out case would have it
+ * deleted.
  *
  * **"Hardest teachable" excludes a declared search tier**, which is where the
  * cost lives and where there is nothing to hear: a hint refuses on a board that
  * needs a guess (docs/hints.md § "The quality bar" rule 6), so the plan stops
- * early — Group's 6x6 yields 27 steps at Unreasonable against 253 at Hard — and
- * generation there is by far the most expensive thing in the cross product
- * (12x12 Unreasonable ran past 25 minutes for 12 boards and was abandoned;
- * 12x12 Hard was 116 s). The tier is derived from its *name*, the way
- * `hint-resume.test.ts` and `difficulty-contract.test.ts` already do it:
+ * early, and generation there is by far the most expensive thing in the cross
+ * product, a large board taking many times what it takes at Hard. The tier is
+ * derived from its *name*, as `hint-resume.test.ts` and
+ * `difficulty-contract.test.ts` do it:
  * `tierNames(n, { search: true })` puts "Unreasonable" last, so the game has
  * already said so for its own reasons.
  *
@@ -1083,7 +1031,7 @@ const CORNER_WALKED = !PRECOMMIT_HOOK_RUN;
  * game ever orders them otherwise this walks a different board rather than a
  * wrong one, and the close-out case is what would notice. It is the last of
  * {@link untieredCases} rather than of `leafPresets`, so a search-planning
- * game's sliced list is sliced here too — for those two the board is the last
+ * game's sliced list is sliced here too — for those games the board is the last
  * of the three the gate keeps, and the whole list in the slow tier.
  */
 function lintCases(
@@ -1130,10 +1078,9 @@ function lintCases(
  *
  * Keyed by the pair, not by the entry: a listing is what the ledger asks a
  * reader to believe, so a listing is the unit the check has to hold. Keyed by
- * entry alone it passed as soon as *any* listed game reached the sentence,
- * which on the ten single-game entries is the same thing and on the shared
- * Latin chain entry is not — that is how Mathrax sat on it while speaking it
- * zero times in 100,249 plan steps (`derive-the-narration-ledger-population`).
+ * entry alone it would pass as soon as *any* listed game reached the sentence,
+ * which on a single-game entry is the same thing and on the shared Latin chain
+ * entry is not: a game could sit on that entry while never speaking it.
  */
 const ledgerUsed = new Set<string>();
 /** Steps walked per game, so the close-out case can tell "this game's walk
@@ -1265,9 +1212,8 @@ describe("hint narration stays readable at a glance", () => {
     // And per game, because the check below is a negative *per listing*: a game
     // whose every case refused to generate would read as dead on every entry it
     // is listed on, and the collection-wide floor above cannot say so — it is
-    // met many times over by the games that did walk. Measured 2026-09-20, the
-    // listed games walk 320 (Subsets) to 3,007 (Solo) steps each, so 200 is
-    // clear of the smallest and nowhere near "examined nothing".
+    // met many times over by the games that did walk. The floor sits below what
+    // the smallest listed game walks, and nowhere near "examined nothing".
     for (const g of new Set(LONG_NARRATIONS.flatMap((e) => e.games))) {
       const n = lintedPerGame.get(g) ?? 0;
       expect(

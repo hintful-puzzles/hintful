@@ -1,11 +1,9 @@
 /**
  * **The pencil-mode indicator is in the same place in every game that has one.**
  *
- * The collection had drifted into three answers — a border corner in five games,
- * a top-left gutter in three, a strip below the board in three, and a tile-cache
- * bit in one — so the single cue that says *your typing goes into notes now*
- * moved when the player changed puzzle. {@link pencilIndicatorBox} now decides,
- * and this asserts that every game obeys it rather than merely importing it.
+ * The single cue that says *your typing goes into notes now* must not move when
+ * the player changes puzzle, so {@link pencilIndicatorBox} decides where it
+ * goes, and this asserts that every game obeys it rather than merely importing it.
  *
  * **What is asserted is where the pixels land, not which helper was called.** A
  * game that computed the same corner by hand would pass, which is correct — the
