@@ -83,6 +83,19 @@ Measured by the designer on the palette, none of it in this change:
 - [x] 7.1 The owner saw six fills (2026-10-13): "I love it! Maybe just a bit
       fainter", then asked for Map's four and mechanism, then for the red
       to go and a palette for the catalog.
-- [ ] 7.2 Show the owner Star Battle and Map on the region palette, in both
-      schemes. Committed and **not pushed** until they have seen it.
-- [ ] 7.3 On the owner's word: push, and archive.
+- [x] 7.2 Show the owner Star Battle and Map on the region palette, in both
+      schemes. They saw it (2026-10-15) and asked for a recommendation on
+      the three taste calls rather than settling them. Each was kept as
+      built:
+      - **Pink where the red was.** It is the one hue that keeps the four a
+        quarter turn apart; orange, the other candidate, stands 38 degrees
+        from yellow and beside the error's red.
+      - **Map's dark yellow, a mustard.** It is today's yellow, a little
+        stronger, and a lighter one costs the mistake outline and the hint's
+        ring on it, which are already the weakest marks in Map.
+      - **No ink edge on Map's stipples.** Measured on the plain cell in the
+        light scheme, the weakest new stipple (violet, 1.23:1, 0.086 apart)
+        stands where the weakest old one did (red, 1.16:1, 0.092), and at
+        size all four read as four colors. An edge on every dot of a filled
+        field of marks would be the busiest thing on the board.
+- [x] 7.3 Push, and archive.
