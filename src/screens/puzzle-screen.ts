@@ -440,15 +440,21 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           status ? html`<div class="status" role="status">${status}</div>` : nothing
         }
         ${
-          explanation
-            ? html`<div class="hint" role="status">
-                ${
-                  puzzle?.hintJourney
-                    ? html`<span class="hint-journey">${puzzle.hintJourney}</span>`
-                    : nothing
-                }
-                ${explanation}
-              </div>`
+          // In a game with a hint, the hint's room is kept whether or not a
+          // hint is showing, so showing one does not shrink the board.
+          explanation || puzzle?.canHint
+            ? html`<div class="hint-room">${
+                explanation
+                  ? html`<div class="hint" role="status">
+                      ${
+                        puzzle?.hintJourney
+                          ? html`<span class="hint-journey">${puzzle.hintJourney}</span>`
+                          : nothing
+                      }
+                      ${explanation}
+                    </div>`
+                  : nothing
+              }</div>`
             : nothing
         }
         ${
@@ -1551,6 +1557,20 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         text-align: center;
         color: var(--app-color-text-secondary);
         font-variant-numeric: tabular-nums;
+      }
+
+      /* The room a hint of --hint-room-lines lines takes, kept in a game with
+       * a hint so that showing one leaves the board where it was. A longer
+       * hint grows past it rather than be cut off. */
+      .hint-room {
+        --hint-room-lines: 2;
+        min-height: calc(
+          var(--hint-room-lines) * var(--app-font-size-support) *
+            var(--wa-line-height-normal) + 1rem + 2px + var(--wa-space-xs)
+        );
+      }
+      :host(:not([shape="wide"])) .hint-room {
+        --hint-room-lines: 3;
       }
 
       .hint {
