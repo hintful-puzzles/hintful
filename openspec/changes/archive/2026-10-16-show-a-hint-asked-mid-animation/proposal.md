@@ -1,7 +1,8 @@
 # show-a-hint-asked-mid-animation
 
 **Status: filed 2026-10-16, from the hint review of `add-numgame-ts-port`.
-Seen in the app on Target and Fifteen; not yet diagnosed.**
+Seen in the app on Target and Fifteen; diagnosed and fixed 2026-10-16
+(`tasks.md` 1.1).**
 
 ## Why
 
@@ -39,4 +40,5 @@ then may be answered against the step being left.
 
 ## Impact
 
-- `app-shell` or `engine-hints`, whichever holds the stepper's two beats.
+- `engine-hints`: the midend answers a hint asked mid-animation with the next
+  step. No game changes.

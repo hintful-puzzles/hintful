@@ -1491,6 +1491,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   hint(): string | null {
+    // An executed step still animating has already been played, so the answer
+    // is the step after it: settle it now, or its settle would hide the step
+    // this press shows.
+    if (this.advanceHintOnAnimationEnd) this.settleHint();
     if (this.activeHint) {
       // A valid plan is stored: re-validate it against the current state
       // (a kept plan's later step may have been resolved by a followed

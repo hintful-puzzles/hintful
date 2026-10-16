@@ -2043,6 +2043,24 @@ describe("Midend executeHint plays the stored plan", () => {
     expect(c.hintCalls()).toBe(1);
     expect(h.m.formatAsText()).toBe("count=2");
   });
+
+  it("answers a hint asked while the applied step animates with the next step", () => {
+    // The stepper's two beats pressed quickly: Apply, then Hint before the
+    // applied move lands. The answer is the step after the one in flight, and
+    // the settle must not take it down again.
+    const c = countingHintGame();
+    h = harness({ ...c.game, animLength: () => 1 });
+    h.m.newGame();
+    h.m.hint();
+    h.m.executeHint(true); // step 1 in flight
+    expect(h.m.hint()).toBeNull();
+    expect(h.m.activeHintStep()?.explanation).toBe("Increment the counter to 2");
+    h.m.timer(2); // the move lands
+    expect(h.m.activeHintStep()?.explanation).toBe("Increment the counter to 2");
+    expect(explanation()).toBe("Increment the counter to 2");
+    h.m.executeHint(true);
+    expect(h.m.formatAsText()).toBe("count=2");
+  });
 });
 
 describe("Midend executeHint plays a step's gesture, never its move", () => {
