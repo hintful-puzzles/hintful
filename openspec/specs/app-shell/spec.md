@@ -816,9 +816,9 @@ The Bar and the Menu SHALL be drawn from one ordered list of commands. The Bar
 SHALL show the leading entries of that list and a button that opens the Menu,
 and the Menu SHALL hold every entry the Bar does not show, in the list's
 order: its contents are a suffix of the list and never a selection from it.
-The first four entries SHALL be on the Bar at every size: Undo, Redo, Hint and
-Check & save, or in a game with no hint Undo, Redo, Check & save and Back to
-last save.
+The Bar SHALL show Undo, Redo, Hint and Check & save at every size, and Undo,
+Redo and Check & save in a game with no hint. Back to last save SHALL be the
+Menu's row after the move number.
 
 #### Scenario: The Menu on a phone
 
@@ -829,9 +829,9 @@ last save.
 
 #### Scenario: A game with no hint
 
-- **WHEN** a player on a phone opens the Menu of a game that has no hint
-- **THEN** it does not contain Back to last save, which is the Bar's fourth
-  entry there
+- **WHEN** a player opens the Menu of a game that has no hint
+- **THEN** the Bar shows Undo, Redo and Check & save, and Back to last save is
+  in the Menu after the move number
 
 ### Requirement: Every control in a panel carries a visible label
 
@@ -1001,7 +1001,9 @@ not of commands.
 The hint's explanation, and the status line of a game that prints one, SHALL be
 shown under the board at every window size, and in no panel. Showing or
 clearing a hint SHALL NOT move any control in a panel, and neither SHALL the
-Hint control's own caption changing to say what the next press does.
+Hint control's own caption changing to say what the next press does. In a game
+with a hint, the room of a two-line hint, three in a window that is not wide,
+SHALL be kept under the board while no hint shows.
 
 #### Scenario: A hint is shown on a desktop
 
@@ -1009,6 +1011,17 @@ Hint control's own caption changing to say what the next press does.
 - **THEN** the explanation appears under the board
 - **AND** every control in the Bar, the Game controls and the Menu is where it
   was before the press
+
+#### Scenario: A short hint leaves the board as it was
+
+- **WHEN** a player presses Hint and the explanation fits in two lines
+- **THEN** the board is the same size as before the press, and stays so when
+  the hint is cleared
+
+#### Scenario: A long hint is not cut off
+
+- **WHEN** the explanation needs more lines than the room keeps
+- **THEN** it is shown whole, and the board gives up the height beyond the room
 
 ### Requirement: A player can choose where the panels dock
 
