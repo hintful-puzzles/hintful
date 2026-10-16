@@ -440,6 +440,21 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           status ? html`<div class="status" role="status">${status}</div>` : nothing
         }
         ${
+          // Apart from the hint: the board in play takes moves and hints while
+          // a deal is looked for, and the way out stays in reach through them.
+          // Above the hint, which stands on the panel under it.
+          puzzle?.dealMessage
+            ? html`<div class="deal" @click=${this.handleChromeClick}>
+                <span role="status">${puzzle.dealMessage}</span>
+                ${
+                  puzzle.canStopDeal
+                    ? html`<button type="button" data-command="stop-deal">Stop</button>`
+                    : nothing
+                }
+              </div>`
+            : nothing
+        }
+        ${
           // In a game with a hint, the hint's room is kept whether or not a
           // hint is showing, so showing one does not shrink the board.
           explanation || puzzle?.canHint
@@ -455,20 +470,6 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                     </div>`
                   : nothing
               }</div>`
-            : nothing
-        }
-        ${
-          // Apart from the hint: the board in play takes moves and hints while
-          // a deal is looked for, and the way out stays in reach through them.
-          puzzle?.dealMessage
-            ? html`<div class="deal" @click=${this.handleChromeClick}>
-                <span role="status">${puzzle.dealMessage}</span>
-                ${
-                  puzzle.canStopDeal
-                    ? html`<button type="button" data-command="stop-deal">Stop</button>`
-                    : nothing
-                }
-              </div>`
             : nothing
         }
       </div>
@@ -1381,6 +1382,9 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         flex-direction: column;
         align-items: stretch;
         padding: var(--app-spacing);
+        /* Short of the full spacing under the board, so the hint under it
+         * reads as the board's neighbor. */
+        padding-block-end: 0.75rem;
       }
 
       .menu-dock {
@@ -1389,10 +1393,13 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         background-color: var(--app-color-rail);
       }
 
+      /* The board stands at the foot of its area, on the hint under it, and
+       * whatever height it does not use is left above it. */
       puzzle-view-interactive {
         flex: 1 1 auto;
         min-height: 5rem; /* allows flexing */
         min-width: 5rem;
+        align-items: flex-end;
 
         --spacing: var(--app-spacing);
         --background-color: var(--wa-color-surface-default);
@@ -1406,6 +1413,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
        * window is as tight the other way. */
       :host(:not([shape="wide"])) .board-area {
         padding: var(--wa-space-xs);
+        padding-block-end: 0.5rem;
       }
       :host(:not([shape="wide"])) puzzle-view-interactive {
         --spacing: var(--wa-space-xs);
@@ -1546,9 +1554,11 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         padding-inline: var(--wa-space-xs);
       }
 
+      .status {
+        margin-block-end: var(--wa-space-xs);
+      }
       .status,
       .hint {
-        margin-block-end: var(--wa-space-xs);
         font-size: var(--app-font-size-support);
         line-height: var(--wa-line-height-normal);
       }
@@ -1561,9 +1571,13 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
 
       /* The room a hint of --hint-room-lines lines takes, kept in a game with
        * a hint so that showing one leaves the board where it was. A longer
-       * hint grows past it rather than be cut off. */
+       * hint grows past it rather than be cut off. The hint sits at its
+       * foot, so the space it leaves is between it and the board. */
       .hint-room {
         --hint-room-lines: 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
         min-height: calc(
           var(--hint-room-lines) * var(--app-font-size-support) *
             var(--wa-line-height-normal) + 1rem + 2px + var(--wa-space-xs)
@@ -1573,12 +1587,48 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         --hint-room-lines: 3;
       }
 
+      /* The hint is a piece of the chrome under it, drawn out of it: it stands
+       * on that panel's top edge with no rule between them, and rises out of
+       * it when it appears. Its last pixel lies over the Bar's hairline, and
+       * it is positioned so that it paints above the Bar. */
       .hint {
+        position: relative;
+        z-index: 1;
+        margin-block-end: -1px;
         padding: 0.5rem 0.625rem;
         border: 1px solid var(--app-color-hint-border);
-        border-radius: var(--app-radius-hint);
+        border-block-end: none;
+        border-start-start-radius: var(--app-radius-hint);
+        border-start-end-radius: var(--app-radius-hint);
         background-color: var(--app-color-hint-surface);
         color: var(--app-color-hint-ink);
+        animation: hint-emerge 180ms ease-out;
+      }
+      /* The hint fills the room kept for it, its words centered in it, so the
+       * room a short hint leaves over is inside it and not a gap under the
+       * board. */
+      .hint-room > .hint {
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      /* Moved down and cut at the same height, so the part showing is always
+       * the part above the panel it rises from. */
+      @keyframes hint-emerge {
+        from {
+          transform: translateY(100%);
+          clip-path: inset(0 0 100% 0);
+        }
+        to {
+          transform: none;
+          clip-path: inset(0);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .hint {
+          animation: none;
+        }
       }
 
       .deal {

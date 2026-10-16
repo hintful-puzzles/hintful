@@ -330,7 +330,8 @@ Its keys come from `requestKeys`, the note toggle from the key whose code is
 The rest binds work on the app shell. Normative: `app-shell`, "The puzzle
 screen is three panels, and every command is in exactly one", "The Bar and
 the Menu are one ordered list, cut once", "The Bar carries the button toggle",
-"A hint's words sit under the board" and "Only the Menu scrolls".
+"A hint's words sit under the board", "The hint rises out of the panel under
+it, and the board stands on it" and "Only the Menu scrolls".
 
 - **Add a command as an entry of
   [`command-list.ts`](../src/puzzle/command-list.ts)**, placed by how often

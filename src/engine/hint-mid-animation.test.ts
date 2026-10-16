@@ -19,9 +19,11 @@ const LAND_S = 60;
 
 describe("a hint asked mid-animation shows the next step", () => {
   const animated: string[] = [];
+  let walked = 0;
 
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: the step shown mid-animation outlives the landing`, () => {
+      walked++;
       const [first] = gatePresets(name, game);
       expect(first, `${name}: no preset to walk`).toBeDefined();
       const midend = new Midend(game);
@@ -43,8 +45,10 @@ describe("a hint asked mid-animation shows the next step", () => {
     });
   }
 
-  // A sweep in which no game animated would pass having tested nothing.
-  it("met games whose hinted move animates", () => {
+  // A sweep in which no game animated would pass having tested nothing. A run
+  // filtered to some games walks only those, which may animate nothing.
+  it("met games whose hinted move animates", (ctx) => {
+    ctx.skip(walked < HINT_GAMES.length, "the run was filtered to some games");
     expect(animated.length).toBeGreaterThan(0);
   });
 });
