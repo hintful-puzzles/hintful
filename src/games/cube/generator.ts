@@ -4,9 +4,9 @@
  * keeping its `random_upto` call sequence so a seeded game ID deals the
  * same board.
  *
- * There is no solver: Cube is a route/dexterity puzzle. Every painted
- * board is winnable by rolling, so generation is a single pass with no
- * uniqueness loop.
+ * Cube is a route puzzle with no single answer, so generation is a single
+ * pass with no uniqueness loop. The hint's search finishes every preset's
+ * board from its opening (`solver.ts`), so no deal is checked against it.
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";

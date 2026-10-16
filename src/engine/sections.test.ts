@@ -27,13 +27,17 @@ describe("contract sections", () => {
   });
 
   it("makes a game without a hint a draft, and a complete game not one", () => {
-    const hintless = games().filter((g) => g.hint === undefined);
-    // Known positives, and the rule that no reason can excuse a missing hint.
-    expect(hintless.length).toBeGreaterThan(0);
+    const palisade = getTsGame("palisade");
+    if (!palisade) throw new Error("palisade is not registered");
+    // Every game ships a hint, so the positive is a finished game with its
+    // hint taken away, and the rule holds for any game that lands without one.
+    const hintless = [
+      { ...palisade, hint: undefined },
+      ...games().filter((g) => g.hint === undefined),
+    ];
     for (const game of hintless) expect(draftSections(game)).toContain("Hints");
     // Known negative: Palisade is the exemplar of a finished game.
-    const palisade = getTsGame("palisade");
-    expect(palisade && draftSections(palisade)).toEqual([]);
+    expect(draftSections(palisade)).toEqual([]);
   });
 
   it("gives every reason as a sentence a player can read", () => {

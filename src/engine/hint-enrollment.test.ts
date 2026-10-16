@@ -42,11 +42,10 @@ describe("the hint-guard enrolled set is derived, and non-vacuous", () => {
     // game, and both deserve to fail loudly rather than to quietly shrink the
     // hint guards' coverage.
     expect(HINT_GAMES.length).toBeGreaterThanOrEqual(30);
-    // …and strictly fewer than the whole registry, because the collection
-    // deliberately keeps some games hintless for now (owner, 2026-09-04: they
-    // are the corpus for assessing the framework work). An enrolled set equal to
-    // the registry would mean the filter stopped filtering.
-    expect(HINT_GAMES.length).toBeLessThan(REGISTERED_GAME_COUNT);
+    // Every game has a hint since Cube's, and a port that lands without one is
+    // a draft, so the enrolled set is the registry or a little short of it,
+    // never longer.
+    expect(HINT_GAMES.length).toBeLessThanOrEqual(REGISTERED_GAME_COUNT);
   });
 
   it("hands every guard a usable pair", () => {

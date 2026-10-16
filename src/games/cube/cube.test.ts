@@ -18,8 +18,9 @@ import {
 import { randomNew } from "../../engine/random/index.ts";
 import { newDesc } from "./generator.ts";
 import { Direction, enumGridSquares, gridArea } from "./grid.ts";
-import { type CubeUi, cubeGame, executeMove } from "./index.ts";
+import { type CubeUi, cubeGame } from "./index.ts";
 import type { CubeDrawState } from "./render.ts";
+import { executeMove } from "./roll.ts";
 import { SOLIDS, SolidType } from "./solids.ts";
 import {
   type CubeParams,
@@ -290,7 +291,7 @@ describe("cube Game wiring", () => {
     expect(cubeGame.solve).toBeUndefined();
     expect(cubeGame.textFormat).toBeUndefined();
     expect(cubeGame.statusbarText).toBeDefined();
-    expect(cubeGame.hint).toBeUndefined();
+    expect(cubeGame.hint).toBeDefined();
     expect(cubeGame.findMistakes).toBeUndefined();
   });
 

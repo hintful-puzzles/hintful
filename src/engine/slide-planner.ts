@@ -33,6 +33,8 @@
  *   player is closer, and the next request recomputes.
  */
 
+import { hashWords, PositionStore } from "./position-store.ts";
+
 /**
  * One slide of a whole line, wrapping around.
  *
@@ -293,26 +295,23 @@ function sameLineMovesCompose(
 }
 
 /**
- * A board squeezed into a handful of 31-bit words, and hashed.
+ * A board squeezed into a handful of 31-bit words, and hashed, for a
+ * {@link PositionStore}.
  *
  * The exact search below is the expensive half of a hint and it runs on
  * *every* board (see `exactSearch`), so what it costs per board is the
- * constraint on the whole design. Measured on Sixteen 5×5, one board through the obvious
- * string-key-in-a-`Map` route costs about 2 µs, and a search that crosses the
- * endgame visits two million of them: four to six seconds, per hint. The same
- * search on the storage below is a little under one second, because a board
- * stops being an object at all — five words in a shared pool, addressed by
- * index.
+ * constraint on the whole design: measured on Sixteen 5×5, a little under one
+ * second in the store against four to six through a string-keyed `Map`.
  *
  * Thirty-one bits per word, not thirty-two: a cell is never allowed to straddle
  * a word boundary (the packing arithmetic is then a shift and a mask, with no
  * carry), and the top bit is left alone so a word never comes back negative.
  * Five bits a cell for a Sixteen tile, four for a Netslide wire mask.
  *
- * `pack` leaves the packed board in `buf`, which `SearchSide.find` and
- * `SearchSide.add` read from — **one buffer, no allocation per successor**,
- * which is the point. The two sides of the search share one packer, and never
- * hold a packed board across a `pack` call.
+ * `pack` leaves the packed board in `buf`, which the stores read from — **one
+ * buffer, no allocation per successor**, which is the point. The two sides of
+ * the search share one packer, and never hold a packed board across a `pack`
+ * call.
  */
 class BoardPacker {
   /** How many words one board occupies. */
@@ -353,119 +352,6 @@ class BoardPacker {
     const mask = this.mask;
     for (let i = 0; i < out.length; i++) {
       out[i] = (words[offset + ((i / perWord) | 0)] >>> ((i % perWord) * bits)) & mask;
-    }
-  }
-}
-
-function hashWords(words: Int32Array, offset: number, count: number): number {
-  let hash = 0x811c9dc5;
-  for (let k = 0; k < count; k++) {
-    hash ^= words[offset + k];
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
-}
-
-/**
- * One end of the bidirectional search: every board it has reached, in the order
- * it reached them, with an open-addressed index for "have I seen this board?".
- *
- * Nodes are appended level by level, so a level's frontier is simply the
- * contiguous index range the previous level appended — there is no frontier
- * array, and no per-node object anywhere.
- *
- * `parent`, `move` and `depth` are read by the path reconstruction and are
- * deliberately public. `move` is an index into the puzzle's move list, `-1` at
- * the root; for the backward side it is the move as the *search* applied it,
- * which the reconstruction inverts to read the path forwards.
- *
- * Memory, since the caller's `maxStates` is what bounds it: a node costs
- * `words` + 3 words in the pools, plus up to two slots in the index, so a
- * 2.5-million-state Sixteen search peaks around 200 MB across both sides.
- */
-class SearchSide {
-  count = 0;
-  parent: Int32Array;
-  move: Int32Array;
-  depth: Int32Array;
-  private boards: Int32Array;
-  private capacity = 1 << 12;
-  /** Slot → node index + 1; 0 means empty. Linear probing, grown at half full. */
-  private table = new Int32Array(1 << 13);
-  private mask = this.table.length - 1;
-
-  constructor(
-    private readonly packer: BoardPacker,
-    root: Int32Array,
-  ) {
-    this.boards = new Int32Array(this.capacity * packer.words);
-    this.parent = new Int32Array(this.capacity);
-    this.move = new Int32Array(this.capacity);
-    this.depth = new Int32Array(this.capacity);
-    this.add(packer.pack(root), -1, -1, 0);
-  }
-
-  /** The node holding the packer's current board, or -1. */
-  find(hash: number): number {
-    const { buf, words } = this.packer;
-    for (let slot = hash & this.mask; ; slot = (slot + 1) & this.mask) {
-      const entry = this.table[slot];
-      if (entry === 0) return -1;
-      const base = (entry - 1) * words;
-      let same = true;
-      for (let k = 0; k < words; k++) {
-        if (this.boards[base + k] !== buf[k]) {
-          same = false;
-          break;
-        }
-      }
-      if (same) return entry - 1;
-    }
-  }
-
-  /** Append the packer's current board, and return its index. */
-  add(hash: number, parent: number, move: number, depth: number): number {
-    if (this.count === this.capacity) this.growPools();
-    if (this.count * 2 >= this.table.length) this.growTable();
-
-    const { buf, words } = this.packer;
-    const index = this.count++;
-    const base = index * words;
-    for (let k = 0; k < words; k++) this.boards[base + k] = buf[k];
-    this.parent[index] = parent;
-    this.move[index] = move;
-    this.depth[index] = depth;
-    this.insert(hash, index);
-    return index;
-  }
-
-  private insert(hash: number, index: number): void {
-    let slot = hash & this.mask;
-    while (this.table[slot] !== 0) slot = (slot + 1) & this.mask;
-    this.table[slot] = index + 1;
-  }
-
-  /** Board `index` back into `out`. */
-  unpack(index: number, out: Int32Array): void {
-    this.packer.unpack(this.boards, index * this.packer.words, out);
-  }
-
-  private growPools(): void {
-    this.capacity *= 2;
-    const boards = new Int32Array(this.capacity * this.packer.words);
-    boards.set(this.boards);
-    this.boards = boards;
-    this.parent = grown(this.parent, this.capacity);
-    this.move = grown(this.move, this.capacity);
-    this.depth = grown(this.depth, this.capacity);
-  }
-
-  private growTable(): void {
-    this.table = new Int32Array(this.table.length * 2);
-    this.mask = this.table.length - 1;
-    const { words } = this.packer;
-    for (let i = 0; i < this.count; i++) {
-      this.insert(hashWords(this.boards, i * words, words), i);
     }
   }
 }
@@ -547,9 +433,12 @@ function bidirectionalPlan(
     if (goal[i] > maxValue) maxValue = goal[i];
   }
   const packer = new BoardPacker(cellBits(maxValue), n);
-  const fwd = new SearchSide(packer, start);
-  const bwd = new SearchSide(packer, goal);
+  const fwd = new PositionStore(packer.words);
+  fwd.add(packer.buf, packer.pack(start), -1, -1, 0);
+  const bwd = new PositionStore(packer.words);
+  bwd.add(packer.buf, packer.pack(goal), -1, -1, 0);
 
+  const packed = new Int32Array(packer.words);
   const node = new Int32Array(n);
   const scratch = new Int32Array(n);
   let fwdFrom = 0;
@@ -602,17 +491,18 @@ function bidirectionalPlan(
       // and a path one move too long is worse than no path at all (see above).
       if (fwd.count + bwd.count >= caps.maxStates) return null;
 
-      side.unpack(ni, node);
+      side.read(ni, packed);
+      packer.unpack(packed, 0, node);
       const prevMove = side.move[ni];
       for (let mi = 0; mi < moves.length; mi++) {
         if (redundant(prevMove, mi)) continue;
 
         slidePieces(node, scratch, w, h, moves[mi]);
         const hash = packer.pack(scratch);
-        if (side.find(hash) >= 0) continue;
-        const added = side.add(hash, ni, mi, depth);
+        if (side.find(packer.buf, hash) >= 0) continue;
+        const added = side.add(packer.buf, hash, ni, mi, depth);
 
-        const met = other.find(hash);
+        const met = other.find(packer.buf, hash);
         if (met >= 0 && depth + other.depth[met] < bestTotal) {
           bestTotal = depth + other.depth[met];
           bestFwd = forward ? added : met;

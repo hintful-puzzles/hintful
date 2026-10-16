@@ -14,16 +14,21 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   INK,
   MOVED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import { strokeScaledPolygon } from "../../engine/draw.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { type Bbox, enumGridSquares, findBbox } from "./grid.ts";
+import { SQUARE } from "./hint-text.ts";
 import { SOLIDS, transformPoly } from "./solids.ts";
-import type { CubeParams, CubeState, KeyPair } from "./state.ts";
+import type { CubeMove, CubeParams, CubeState, KeyPair } from "./state.ts";
 
 export const ROLLTIME = 0.13;
 export const PREFERRED_TILE_SIZE = 48;
@@ -38,6 +43,10 @@ export const COL_CELL = 4; // a plain square
 export const COL_SOLID = 5;
 export const COL_FLASH = 6; // a square of the arena the win flash's body is on
 export const COL_FLASH_LEAD = 7; // and one its leading edge is on
+/** The square a hint step rolls onto: its ring. */
+export const COL_HINT = 8;
+/** The painted square a hint step works toward: its outline. */
+export const COL_HINT_EVIDENCE = 9;
 
 export interface CubeDrawState {
   tileSize: number;
@@ -61,6 +70,8 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_SOLID] = givenSurface(defaultBackground);
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;
+  ret[COL_HINT] = HINT_ACTION;
+  ret[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
   return ret;
 }
 
@@ -94,6 +105,7 @@ export function redraw(
   _ui: unknown,
   animTime: number,
   flash: Flash,
+  hint?: HintStep<CubeMove>,
 ): void {
   const gs = ds.tileSize;
   const bb = ds.bbox;
@@ -163,6 +175,27 @@ export function redraw(
     );
   }
 
+  // The hint's marks, inside the squares they name. Painted after the solid,
+  // which overhangs the squares beside it (the icosahedron's covers most of
+  // one), and the square a hint rolls onto is always one of those.
+  const marks = stepMarks(hint);
+  const thickness = Math.max(2, Math.round(gs / 16));
+  const markSquare = (i: number, color: number) => {
+    const sq = grid[i];
+    const corners: Point[] = [];
+    for (let j = 0; j < sq.npoints; j++) {
+      corners.push({
+        x: Math.trunc(sq.points[2 * j] * gs) + ds.ox,
+        y: Math.trunc(sq.points[2 * j + 1] * gs) + ds.oy,
+      });
+    }
+    const center = {
+      x: Math.trunc(sq.x * gs) + ds.ox,
+      y: Math.trunc(sq.y * gs) + ds.oy,
+    };
+    strokeScaledPolygon(dr, corners, center, 0.75, color, thickness);
+  };
+
   // Compute and draw the polyhedron.
   const poly = transformPoly(solid, grid[square].flip, pkey[0], pkey[1], angle);
 
@@ -208,6 +241,9 @@ export function redraw(
     }
     dr.drawPolygon(coords, st.faceColors[i] ? COL_PAINT : COL_SOLID, COL_BORDER);
   }
+
+  for (const i of marks.of("outline", SQUARE)) markSquare(i, COL_HINT_EVIDENCE);
+  for (const i of marks.of("ring", SQUARE)) markSquare(i, COL_HINT);
 
   dr.drawUpdate({ x: 0, y: 0, w: xsize, h: ysize });
 }

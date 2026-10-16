@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cube: pinned hint positions > says, at each pin 1`] = `
+{
+  "collect": "Roll onto the ringed square: a plain face picks up its paint, leaving 5 painted squares.",
+  "come-round": "Working on the outlined square: a painted face would land on it from here. Instead: roll onto the ringed square.",
+  "drop": "Roll onto the ringed square: the face that lands leaves its paint, to pick up again later.",
+  "forced-drop": "Every way to pick paint up puts some down first. Roll onto the ringed square: the face that lands leaves its paint.",
+  "travel": "Working on the outlined square: roll onto the ringed square.",
+}
+`;

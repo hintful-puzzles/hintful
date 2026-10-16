@@ -8,7 +8,7 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { gridArea } from "./grid.ts";
-import { cubeGame, executeMove } from "./index.ts";
+import { cubeGame } from "./index.ts";
 import {
   COL_BACKGROUND,
   COL_BORDER,
@@ -19,6 +19,7 @@ import {
   COL_PAINT,
   COL_SOLID,
 } from "./render.ts";
+import { executeMove } from "./roll.ts";
 import { SOLIDS, SolidType } from "./solids.ts";
 import { type CubeParams, newState } from "./state.ts";
 

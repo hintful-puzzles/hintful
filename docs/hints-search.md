@@ -238,6 +238,16 @@ potential, a non-negative integer every hinted move provably lowers.
   first rival whose line is. The search must be deterministic and its budget
   only truncate, so a line's length is a function of the position
   ([`sokoban/hint.ts`](../src/games/sokoban/hint.ts)).
+- Where the natural count can rise on the way (a plan must put down what it
+  will pick up again), staging on the count cycles: after a step back, the
+  recomputed plan undoes it. Take the least, over a window of targets a few
+  below the count, of a weight per unit left at the target plus the moves
+  to reach it, searched only through positions at most the window above the
+  target, with staying put in the minimum. A move along the line to the
+  target that sets the least lowers it by one, and the target stays in the
+  next position's window. Make the weight more than any line to the next
+  unit takes, or the value has no move that lowers it
+  ([`cube/solver.ts`](../src/games/cube/solver.ts), `potential`).
 - A potential holds only where some move lowers it, so count the positions
   where none does. A search that is not shortest has no potential a local
   rule can complete: call the result "measured", not proved.
@@ -248,7 +258,9 @@ potential, a non-negative integer every hinted move provably lowers.
 
 The guard is `src/engine/hint-resume.test.ts`: ask, apply the first step,
 throw the plan away, ask again, to solved. It runs for every game with a
-`hint`, so run it on yours before polishing any narration. A test that
+`hint`, so run it on yours before polishing any narration, with
+`npm run game -- <id>` ([`testing.md`](./testing.md) § "A game's verdict in
+one command"): a name filter still walks every game's boards. A test that
 follows whole plans is how the midend plays a followed hint, and cannot see
 a cycle, because following the plan is the one path that never recomputes.
 

@@ -33,11 +33,13 @@ describe("the draft label", () => {
       const missing = game === null ? [] : draftSections(game);
       expect(`${id}: ${drafts[id] ?? []}`).toBe(`${id}: ${missing}`);
     }
-    // A positive and a known negative, so equality over two empty maps cannot
-    // pass. The positive is any draft still without a hint rather than a game
-    // named here, which would stop being one the day it gains its hint.
-    expect(Object.values(drafts).some((missing) => missing.includes("Hints"))).toBe(
-      true,
+    // Every game ships a hint, so the build may list no draft at all. The
+    // positive is then the sections' own: a finished game with its hint taken
+    // away is a draft, so a `draftSections` that stopped finding drafts could
+    // not make both sides empty. And a known negative.
+    const palisade = getTsGame("palisade");
+    expect(palisade && draftSections({ ...palisade, hint: undefined })).toContain(
+      "Hints",
     );
     expect(drafts["palisade"]).toBeUndefined();
   });

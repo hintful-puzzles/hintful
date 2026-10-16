@@ -3,16 +3,17 @@
  * from the blue grid squares onto the solid's faces. Idiomatic TS port of
  * `puzzles/cube.c`.
  *
- * Cube is a route/dexterity puzzle: no solver, no hints, no
- * mistake-checking, no text format — just rolling. The hard part is the
- * 3-D geometry (in `solids.ts`) and the two grid topologies (`grid.ts`).
+ * Cube is a route puzzle: no roll is wrong, only longer, so there is no
+ * mistake-checking and no text format. Its hint plans a line of rolls by
+ * search (`solver.ts`, `hint.ts`). The hard part is the 3-D geometry (in
+ * `solids.ts`) and the two grid topologies (`grid.ts`); a roll is `roll.ts`.
  * State carries only key-point indices + a roll angle + paint; the
  * transformed geometry is re-derived each frame in `render.ts`.
  */
 
-import { rejectMove } from "../../engine/assert-never.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
+import { click } from "../../engine/hint-gesture.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
   cursorDelta,
@@ -25,6 +26,7 @@ import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { Direction } from "./grid.ts";
+import { CUBE_RUNGS, hint, hintKeepTrack } from "./hint.ts";
 import {
   type CubeDrawState,
   colors,
@@ -34,15 +36,7 @@ import {
   ROLLTIME,
   redraw,
 } from "./render.ts";
-import {
-  alignPolyKeys,
-  flipPoly,
-  lowestFace,
-  SOLIDS,
-  type Solid,
-  sqr,
-  transformPoly,
-} from "./solids.ts";
+import { allFacesPainted, DIR_CHARS, executeMove, findMoveDest } from "./roll.ts";
 import {
   type CubeMove,
   type CubeParams,
@@ -58,143 +52,6 @@ import {
 
 /** Cube has no per-game UI state (upstream's `new_ui` returns NULL). */
 export type CubeUi = Record<string, never>;
-
-// --- shared move logic ------------------------------------------------
-
-/**
- * The square that rolling `direction` from `state.current` lands on, and
- * `skey`, the two corners of the current square the solid rolls over; null
- * if the roll runs off the grid. Mirrors `find_move_dest`.
- */
-function findMoveDest(
-  state: CubeState,
-  direction: Direction,
-): { dest: number; skey: [number, number] } | null {
-  const sq = state.grid[state.current];
-  const mask = sq.directions[direction];
-  if (mask === 0) return null;
-
-  const skey: number[] = [];
-  for (let i = 0; i < sq.npoints; i++) if (mask & (1 << i)) skey.push(i);
-  const near = (s2: typeof sq, j: number, k: number) =>
-    sqr(s2.points[j * 2] - sq.points[k * 2]) +
-      sqr(s2.points[j * 2 + 1] - sq.points[k * 2 + 1]) <
-    0.1;
-
-  // The destination is the other square sharing both rolled-over corners.
-  for (let i = 0; i < state.grid.length; i++) {
-    if (i === state.current) continue;
-    const s2 = state.grid[i];
-    let match = 0;
-    for (let j = 0; j < s2.npoints; j++) {
-      if (near(s2, j, skey[0])) match++;
-      if (near(s2, j, skey[1])) match++;
-    }
-    if (match === 2) return { dest: i, skey: [skey[0], skey[1]] };
-  }
-  return null;
-}
-
-/** Move letters, indexed by the orthogonal `Direction`s. */
-const DIR_CHARS: readonly CubeMove["dir"][] = ["L", "R", "U", "D"];
-
-export function executeMove(from: CubeState, move: CubeMove): CubeState {
-  // Cube's move has no discriminant to narrow to `never`, so check the one
-  // field the dispatch reads: an unknown letter from another build must be
-  // rejected as unrecognized, not reported as a roll into a wall.
-  const direction: Direction = DIR_CHARS.indexOf(move.dir);
-  if (direction < 0) rejectMove(move, "cube: executeMove");
-
-  const roll = findMoveDest(from, direction);
-  if (!roll) throw new Error("cube: illegal move");
-  const { dest, skey } = roll;
-
-  const solid = SOLIDS[from.solidIndex];
-  const grid = from.grid;
-
-  // The two source-square corners we roll over, as solid vertex indices.
-  const allPkey = alignPolyKeys(solid, grid[from.current]);
-  if (!allPkey) throw new Error("cube: source alignment failed");
-  const pkey: [number, number] = [allPkey[skey[0]], allPkey[skey[1]]];
-
-  let angle = dihedralAngle(solid, pkey);
-
-  // HACK (from cube.c): for the cube, both +angle and -angle align, so
-  // disambiguate the UP roll by hand.
-  if (solid.order === 4 && direction === Direction.Up) angle = -angle;
-
-  // Roll, reflect onto the destination square, and check the result
-  // seats correctly; if not, the rotation went the wrong way — flip the
-  // sign and try once more (mirrors cube.c's try-both approach).
-  let poly = transformPoly(solid, grid[from.current].flip, pkey[0], pkey[1], angle);
-  flipPoly(poly, grid[dest].flip);
-  if (!alignPolyKeys(poly, grid[dest])) {
-    angle = -angle;
-    poly = transformPoly(solid, grid[from.current].flip, pkey[0], pkey[1], angle);
-    flipPoly(poly, grid[dest].flip);
-    if (!alignPolyKeys(poly, grid[dest]))
-      throw new Error("cube: could not seat solid after roll");
-  }
-
-  // Map the face permutation the roll induced: the rolled solid is
-  // congruent to the original with faces permuted, so each original
-  // face's color follows the rolled face whose normal matches it.
-  const faceColors = new Int32Array(solid.nfaces).fill(-1);
-  for (let i = 0; i < solid.nfaces; i++) {
-    for (let j = 0; j < poly.nfaces; j++) {
-      let dist = 0;
-      for (let k = 0; k < 3; k++)
-        dist += sqr(poly.normals[j * 3 + k] - solid.normals[i * 3 + k]);
-      if (dist < 0.1) faceColors[i] = from.faceColors[j];
-    }
-  }
-
-  const blue = new Uint8Array(from.blue);
-  const movecount = from.movecount + 1;
-
-  // Swap paint between the resting face and the landed-on square, unless
-  // already complete (a finished solid may roll freely as a small reward).
-  if (!allFacesPainted(from)) {
-    const lf = lowestFace(solid);
-    [faceColors[lf], blue[dest]] = [blue[dest], faceColors[lf]];
-  }
-
-  // Resting key points for the static (non-animated) display.
-  const restKeys = alignPolyKeys(solid, grid[dest]);
-  if (!restKeys) throw new Error("cube: rest alignment failed");
-
-  return {
-    ...from,
-    current: dest,
-    faceColors,
-    blue,
-    movecount,
-    dpkey: [restKeys[0], restKeys[1]],
-    dgkey: [0, 1],
-    spkey: pkey,
-    sgkey: skey,
-    previous: from.current,
-    angle,
-  };
-}
-
-/** Dihedral angle across the edge between solid vertices `pkey[0]` and
- * `pkey[1]`: acos of the dot product of the two faces sharing it. */
-function dihedralAngle(solid: Solid, pkey: [number, number]): number {
-  const f: number[] = [];
-  for (let i = 0; i < solid.nfaces; i++) {
-    let match = 0;
-    for (let j = 0; j < solid.order; j++) {
-      const v = solid.faces[i * solid.order + j];
-      if (v === pkey[0] || v === pkey[1]) match++;
-    }
-    if (match === 2) f.push(i);
-  }
-  let dp = 0;
-  for (let i = 0; i < 3; i++)
-    dp += solid.normals[f[0] * 3 + i] * solid.normals[f[1] * 3 + i];
-  return Math.acos(Math.min(1, Math.max(-1, dp)));
-}
 
 // --- input ------------------------------------------------------------
 
@@ -290,11 +147,6 @@ function statusbarText(state: CubeState): string {
   return `Moves: ${state.movecount}`;
 }
 
-/** Every face of the solid carries paint. */
-function allFacesPainted(state: CubeState): boolean {
-  return state.faceColors.every((c) => c);
-}
-
 /** A roll moves paint between a square and a face and never makes or loses
  * any, so a board is finished only by exactly a solid's worth of paint. */
 function hasNoSolution(state: CubeState): boolean {
@@ -359,6 +211,30 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   notApplicable: {
     findMistakes:
       "Every position of the solid is a step on the way to the answer, so no roll can be wrong, only longer.",
+  },
+
+  hint,
+  hintRungs: CUBE_RUNGS,
+  hintMarks: {
+    roles: {
+      ring: "the square to roll onto, in the hint's color.",
+      outline:
+        "the painted square the hint is working toward, in a second color: *the outlined square*, in its words. It stays outlined through every roll on the way to it.",
+    },
+  },
+  hintKeepTrack,
+  // A tap on the square the roll lands on, which `directionFromClick` reads
+  // as a roll toward it.
+  hintGesture(s, _ui, ds, m) {
+    const roll = findMoveDest(s, DIR_CHARS.indexOf(m.dir));
+    if (!roll) return [];
+    const sq = s.grid[roll.dest];
+    return [
+      click({
+        x: Math.trunc(sq.x * ds.tileSize) + ds.ox,
+        y: Math.trunc(sq.y * ds.tileSize) + ds.oy,
+      }),
+    ];
   },
 
   statusbarText,

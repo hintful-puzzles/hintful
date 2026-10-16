@@ -13,3 +13,16 @@ squares.
   size
 - **THEN** a step names a roll, marks the square it rolls to, and says what it
   collects or sets up
+
+#### Scenario: A hint asked again after every roll still finishes
+
+- **WHEN** a player on any preset takes only the first roll of each hint and
+  asks again, from the opening or from a position they wandered into
+- **THEN** the rolls finish the board, since every hinted roll lowers a
+  number the hint measures
+
+#### Scenario: Paint that must go down is said to
+
+- **WHEN** no painted square can be picked up without first putting paint
+  down
+- **THEN** the step says so, and rings the square the paint goes on

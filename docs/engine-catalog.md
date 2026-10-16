@@ -91,6 +91,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-words.ts` — a hint's words bound to its marks | you write a hint step's sentence |
 | – `hint-text.ts` — the sentences several games share | another game already says your sentence |
 | – `slide-planner.ts` — sliding-permutation search | the player slides tiles into one arrangement |
+| – `position-store.ts` — the positions a breadth-first search reached | a hint searches breadth-first |
 | – `piece.ts` — a piece on its cell | a cell holds a piece, is shaded or is ruled out |
 | – `region-fill.ts` — a fill for each region of a division | the puzzle divides your board into regions, or its answer is a coloring of them |
 | – `hint-mark.ts` — the ring and the outline | you draw a hint's marks on cells |
@@ -822,6 +823,16 @@ exact search's reach, and it may reach exactly one ply further than the
 ungated search, which is what makes gating it safe. Exemplars:
 `sixteen/index.ts` with `deepSearch`, `netslide/hint.ts` without. See
 `hints-search.md` § "Sliding-permutation games".
+
+### `position-store.ts` — the positions a breadth-first search reached
+
+Reach for it when a hint searches breadth-first and stores what it has
+seen. The game packs a position into a fixed number of words in a buffer it
+reuses, and the store keeps them in one pool with an open-addressed index,
+parent links and `lineTo`; a level's frontier is the index range the level
+before appended. Measured, it is several times faster than a string key in
+a `Map`, which costs about 2 µs a position. Exemplars: `cube/solver.ts`,
+and the exact search in `slide-planner.ts`.
 
 ### `piece.ts` — a piece on its cell
 

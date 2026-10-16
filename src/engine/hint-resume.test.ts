@@ -184,6 +184,13 @@ const SEARCH_REACH: Record<string, string> = {
     "over every preset, the search is needed on some boards and does not come " +
     "near the budget, and no walk has refused. " +
     "Largest board on every commit: this walk.",
+  cube:
+    "Plans by breadth-first searches toward a few squares fewer painted, " +
+    "within an allowance of positions, and a custom arena far larger than " +
+    "the presets can outrun it. Every preset measured stays under a quarter " +
+    "of it, and every hinted roll lowers a potential, so no walk has cycled " +
+    "or refused. Largest board on every commit: this walk, and " +
+    "cube-hint.test.ts walks every preset to solved on recomputed hints.",
   guess:
     "Enumerates the answers that still fit, and a huge custom board can exhaust " +
     "the enumeration budget before finding one. No preset reaches it. Largest " +

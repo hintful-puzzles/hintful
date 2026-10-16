@@ -1117,10 +1117,10 @@ export const MODULES = [
         within: "bidirectionalPlan",
         why: "the first meet in a level is taken rather than the cheapest, so the search answers before its budget check and can return a path where it should refuse",
         find:
-          "        const met = other.find(hash);\n" +
+          "        const met = other.find(packer.buf, hash);\n" +
           "        if (met >= 0 && depth + other.depth[met] < bestTotal) {",
         replace:
-          "        const met = other.find(hash);\n" +
+          "        const met = other.find(packer.buf, hash);\n" +
           "        if (met >= 0 && bestFwd < 0) {",
       },
       {
