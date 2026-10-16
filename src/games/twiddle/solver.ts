@@ -50,10 +50,68 @@ interface Effect {
   readonly od: Uint8Array;
 }
 
+/**
+ * A turn's part in the technique its sequence was built by, which is what the
+ * hint teaches:
+ *
+ * - `turn`: a single turn;
+ * - a **cycle** `X Y X⁻¹ Y⁻¹` of two overlapping blocks: `first`, `second`,
+ *   `firstBack`, `secondBack` (cut after `firstBack` it is a **tuck**);
+ * - a cycle of two smaller cycles: `small1`, `small2`, `small1Back`,
+ *   `small2Back`;
+ * - **lining up** `S C S⁻¹`: `lineUp`, the inner roles, `lineBack`;
+ * - a **twist**, two routes to the same tiles, one played back: `twist`,
+ *   `twistBack`;
+ * - a **swap**, a single turn of a block (`swap`) and then small sequences
+ *   inside it, which keep their own roles: together they leave two tiles of
+ *   the block exchanged;
+ * - `learned`, a searched sequence, which has no technique to name.
+ */
+export type Role =
+  | "turn"
+  | "first"
+  | "second"
+  | "firstBack"
+  | "secondBack"
+  | "small1"
+  | "small2"
+  | "small1Back"
+  | "small2Back"
+  | "lineUp"
+  | "lineBack"
+  | "twist"
+  | "twistBack"
+  | "swap"
+  | "learned";
+
 interface Word {
   readonly effect: Effect;
   readonly turns: readonly Turn[];
+  /** Each turn's part, one for one with `turns`. */
+  readonly roles: readonly Role[];
 }
+
+/**
+ * The turns with every turn canceled by its own inverse next to it, which a
+ * conjugate's setup and its inner word can bring together: such a pair does
+ * nothing, and a hint would say "turn it" and then "turn it back".
+ */
+function reduced(turns: readonly Turn[], roles: readonly Role[]): [Turn[], Role[]] {
+  const ts: Turn[] = [];
+  const rs: Role[] = [];
+  turns.forEach((t, i) => {
+    if (ts.length > 0 && ts[ts.length - 1] === (t ^ 1)) {
+      ts.pop();
+      rs.pop();
+    } else {
+      ts.push(t);
+      rs.push(roles[i]);
+    }
+  });
+  return [ts, rs];
+}
+
+const fill = (n: number, r: Role): Role[] => Array.from({ length: n }, () => r);
 
 /** A library sequence, with what the planner reads off it. */
 interface Sequence extends Word {
@@ -188,15 +246,45 @@ class Library {
       for (let c = 0; c < size; c++) d[e.src[c]] = c;
       return d;
     });
-    const word = (ts: readonly Turn[]): Word => this.word(ts);
-    const commutator = (a: Word, b: Word): Word =>
-      word([...a.turns, ...b.turns, ...undo(a.turns), ...undo(b.turns)]);
-    const conjugate = (s: Word, c: Word): Word => ({
-      effect: compose(compose(s.effect, c.effect), inverse(s.effect)),
-      turns: [...s.turns, ...c.turns, ...undo(s.turns)],
-    });
-    const single: Word[] = turns.map((effect, t) => ({ effect, turns: [t] }));
-    const setups: Word[] = [{ effect: identity, turns: [] }, ...single];
+    const word = (ts: readonly Turn[], roles: readonly Role[]): Word =>
+      this.word(ts, roles);
+    /** `a b a⁻¹ b⁻¹`: a cycle of two blocks' turns, or of two smaller cycles. */
+    const commutator = (a: Word, b: Word, of: "blocks" | "cycles"): Word => {
+      const [r1, r2, r3, r4]: Role[] =
+        of === "blocks"
+          ? ["first", "second", "firstBack", "secondBack"]
+          : ["small1", "small2", "small1Back", "small2Back"];
+      return word(
+        [...a.turns, ...b.turns, ...undo(a.turns), ...undo(b.turns)],
+        [
+          ...fill(a.turns.length, r1),
+          ...fill(b.turns.length, r2),
+          ...fill(a.turns.length, r3),
+          ...fill(b.turns.length, r4),
+        ],
+      );
+    };
+    const conjugate = (s: Word, c: Word): Word => {
+      const [ts, roles] = reduced(
+        [...s.turns, ...c.turns, ...undo(s.turns)],
+        [
+          ...fill(s.turns.length, "lineUp"),
+          ...c.roles,
+          ...fill(s.turns.length, "lineBack"),
+        ],
+      );
+      return {
+        effect: compose(compose(s.effect, c.effect), inverse(s.effect)),
+        turns: ts,
+        roles,
+      };
+    };
+    const single: Word[] = turns.map((effect, t) => ({
+      effect,
+      turns: [t],
+      roles: ["turn"],
+    }));
+    const setups: Word[] = [{ effect: identity, turns: [], roles: [] }, ...single];
 
     // Commutators of two blocks' quarter and half turns.
     const blocks = turns.length / 2;
@@ -209,7 +297,11 @@ class Library {
           if (a === b) continue;
           for (const x of powers(a))
             for (const y of powers(b)) {
-              const c = commutator(word(x), word(y));
+              const c = commutator(
+                word(x, fill(x.length, "turn")),
+                word(y, fill(y.length, "turn")),
+                "blocks",
+              );
               const k = keyOf(c.effect);
               if (seen.has(k) || supportOf(c.effect).length === 0) continue;
               seen.add(k);
@@ -233,7 +325,7 @@ class Library {
             let meet = 0;
             for (const c of supportOf(b.effect)) if (inA.has(c) && ++meet > 1) break;
             if (meet !== 1) continue;
-            const c = commutator(a, b);
+            const c = commutator(a, b, "cycles");
             const k = keyOf(c.effect);
             if (seen.has(k)) continue;
             seen.add(k);
@@ -254,7 +346,16 @@ class Library {
       for (const same of byPerm.values())
         for (const a of same)
           for (const b of same)
-            if (a !== b) twists.push(word([...a.turns, ...undo(b.turns)]));
+            if (a !== b)
+              twists.push(
+                word(
+                  [...a.turns, ...undo(b.turns)],
+                  [
+                    ...fill(a.turns.length, "twist"),
+                    ...fill(b.turns.length, "twistBack"),
+                  ],
+                ),
+              );
     }
 
     // Every placing of the small sequences, by conjugating with single turns.
@@ -297,9 +398,10 @@ class Library {
           .sort((a, b) => a.turns.length - b.turns.length)
           .slice(0, ODD_FACTORS);
         for (const x of inside) {
-          const gx = word([...g.turns, ...x.turns]);
+          const gx = word([...g.turns, ...x.turns], ["swap", ...x.roles]);
           odd.push(gx);
-          for (const y of inside) odd.push(word([...gx.turns, ...y.turns]));
+          for (const y of inside)
+            odd.push(word([...gx.turns, ...y.turns], [...gx.roles, ...y.roles]));
         }
       }
       close(odd);
@@ -336,10 +438,17 @@ class Library {
     for (const i of used) this.addRests(this.sequences[i]);
   }
 
-  private word(ts: readonly Turn[]): Word {
+  /** What one turn does. */
+  turnEffect(t: Turn): Effect {
+    return this.turns[t];
+  }
+
+  private word(turns: readonly Turn[], roles: readonly Role[]): Word {
+    const [ts, rs] = reduced(turns, roles);
     return {
       effect: ts.reduce<Effect>((e, t) => compose(e, this.turns[t]), this.identity),
       turns: ts,
+      roles: rs,
     };
   }
 
@@ -349,7 +458,7 @@ class Library {
     if (this.restsOf.has(s)) return;
     this.restsOf.add(s);
     for (let k = 1; k < s.turns.length; k++) {
-      const rest = sequenceOf(this.word(s.turns.slice(k)));
+      const rest = sequenceOf(this.word(s.turns.slice(k), s.roles.slice(k)));
       if (!rest) continue;
       const key = keyOf(rest.effect);
       const had = this.restKeys.get(key);
@@ -371,7 +480,7 @@ class Library {
 
   /** Take a learned way into the library for `stage`. */
   private adopt(turns: readonly Turn[], stage: number): void {
-    const s = sequenceOf(this.word(turns));
+    const s = sequenceOf(this.word(turns, fill(turns.length, "learned")));
     if (!s) return;
     this.sequences.push(s);
     const [c, p] = this.stageTable(stage);
@@ -542,6 +651,11 @@ function played(b: Board, e: Effect): Board {
 export interface Segment {
   readonly stage: number;
   readonly turns: readonly Turn[];
+  /** Each turn's part in the technique: a remainder keeps its sequence's
+   * roles from where it starts, and a cut drops the roles it cuts. */
+  readonly roles: readonly Role[];
+  /** The segment is the rest of a sequence, whose first turns it lacks. */
+  readonly remainder: boolean;
 }
 
 export interface TwiddlePlan {
@@ -595,6 +709,28 @@ export function planTwiddle(state: TwiddleState): TwiddlePlan {
       }
     }
     return { cost: best, at };
+  };
+
+  /** `turns` played from `b` up to the first turn that leaves every cell to
+   * `stage` right: a sequence's last turns can only put back tiles after the
+   * stage's, which the plan from there does not need. */
+  const cutAt = (
+    b: Board,
+    turns: readonly Turn[],
+    roles: readonly Role[],
+    stage: number,
+  ) => {
+    let at = b;
+    for (let k = 0; k < turns.length; k++) {
+      at = played(at, lib.turnEffect(turns[k]));
+      if (prefix(at, null, 0) > stage)
+        return {
+          turns: turns.slice(0, k + 1),
+          roles: roles.slice(0, k + 1),
+          board: at,
+        };
+    }
+    return { turns, roles, board: at };
   };
 
   // Rows-only boards repeat each number, so a remainder can rebuild a
@@ -668,7 +804,24 @@ export function planTwiddle(state: TwiddleState): TwiddlePlan {
         stage < size &&
         stageState(board, null, stage).cost > 0 &&
         before.numbers.some((v, q) => v === goal[stage] && bestRest?.dest[q] !== q);
-      segments.push({ stage: carried ? stage : stage - 1, turns: bestRest.turns });
+      if (carried)
+        segments.push({
+          stage,
+          turns: bestRest.turns,
+          roles: bestRest.roles,
+          remainder: true,
+        });
+      else {
+        const cut = cutAt(before, bestRest.turns, bestRest.roles, stage - 1);
+        segments.push({
+          stage: stage - 1,
+          turns: cut.turns,
+          roles: cut.roles,
+          remainder: true,
+        });
+        board = cut.board;
+        stage = prefix(board, null, 0);
+      }
       if (stage === size) return { segments, solves: true };
     }
     // The stage plan: sequences off the policy until the tile is home.
@@ -676,8 +829,15 @@ export function planTwiddle(state: TwiddleState): TwiddlePlan {
       const at = stageState(board, null, stage);
       if (at.cost === 0 || at.cost >= INF) break;
       const s = lib.sequences[lib.policy[stage][at.at]];
-      segments.push({ stage, turns: s.turns });
-      board = played(board, s.effect);
+      const after = played(board, s.effect);
+      if (stageState(after, null, stage).cost === 0) {
+        const cut = cutAt(board, s.turns, s.roles, stage);
+        segments.push({ stage, turns: cut.turns, roles: cut.roles, remainder: false });
+        board = cut.board;
+      } else {
+        segments.push({ stage, turns: s.turns, roles: s.roles, remainder: false });
+        board = after;
+      }
     }
   }
   throw new Error("twiddle: the plan did not finish");

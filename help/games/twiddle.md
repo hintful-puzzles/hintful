@@ -42,13 +42,42 @@ orientation matters, the right way up.
 While a block clear of the finished tiles can reach the tile, the hint turns
 that block to *carry it toward its place*, or to *put it in place*. At the end
 of a row, and in the last rows, every block covers a finished tile, so the
-tile goes in by a run of turns, which the hint gives one at a time: *"8 turns
-put it in place, finished tiles intact"*. Partway through the run, finished
-tiles are moved; by the last turn they are all back.
+tile goes in by a run of turns that moves finished tiles out and brings them
+all back. The hint gives a run one turn at a time and says which part of a
+technique each turn is, striping the finished tiles a turn lifts out or
+brings back.
+
+### The techniques
+
+- **A tuck**: turn a block that holds finished tiles, which lifts them out of
+  the way; turn another block, which moves the tile into the space; turn the
+  first block back. The finished tiles return, and the tile comes in with
+  them. This is how the end of a row is filled.
+- **A cycle**: turn a block, turn a second block that overlaps it, turn the
+  first block back, turn the second block back. A tile that only one of the
+  two turns moved is put back by that block's turn back, so only tiles
+  carried from one block into the other end up somewhere new. Where the two
+  blocks share one square, exactly three tiles go round.
+- **Lining up**: before a cycle or a tuck, turn a block to bring the tiles
+  it should work on into its blocks; after it, turn that block back. Every
+  tile the lining up moved returns, except those the cycle moved on.
+- **Small cycles**: with 4×4 blocks no two blocks share only one square, so
+  the cycle is built from two smaller cycles in place of two turns: the first
+  small cycle, the second, the first undone, the second undone.
+- **A swap**: with 2×2 blocks, or any odd size, one turn and then a cycle
+  inside the same block leaves two tiles exchanged, which no cycle on its own
+  can do.
+- **A twist** (when orientation matters): move the same tiles the same way
+  twice by two routes, the second played backwards. The tiles end where they
+  started, turned round.
+
+A 3×3 (or any odd) block turns about a center square, so a tile always stays
+on squares of its own checkerboard color.
 
 Follow it or go your own way: when you make a different turn, the next hint
 plans again from there. If you stop partway through a run, the next hint
-puts the moved tiles back as it goes on.
+reads the turns left as a technique of their own and puts the moved tiles
+back as it goes on.
 
 ## Twiddle parameters
 

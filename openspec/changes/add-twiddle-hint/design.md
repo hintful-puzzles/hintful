@@ -98,12 +98,38 @@ and the tile is outlined.
 
 - **A free turn** says "to put it in place" or "to carry it toward its
   place". Rungs `home` and `carry`.
-- **A run** is one journey. Its first turn says "N turns put it in place,
-  finished tiles intact. First, turn …". Each later turn says which turn of
-  the N it is, since the one before need not still be on screen. Rung `run`.
-- **A run that puts tiles before its goal in place too** names them by
-  number ("5 turns put tiles 20 to 22 in place"). This is the rest of a run
-  the player broke off, or a run that fills several on its way. Rung `fill`.
+- **A run** is one journey, and each turn says its part in a technique a
+  player can learn and reuse, with the names the owner chose (2026-10-16):
+  a **tuck** (`X Y X⁻¹`), a **cycle** (`X Y X⁻¹ Y⁻¹`), **lining up**
+  (`S … S⁻¹`), **small cycles** (a cycle of two cycles, for 4×4 blocks,
+  narrated by phase), a **swap** (a turn, then a cycle inside its block), a
+  **twist**. Beside the part, it says what the board will show: finished
+  tiles it lifts out ("lifting the striped tiles"), finished tiles that come
+  back ("the striped tiles return"), the tile landing ("it is in place").
+  Stripes mark those tiles where they stand, and only on the step whose words
+  name them. A finished tile is named when the run first lifts it and when it
+  goes back for good; the goal tile is "in place" only on the turn after
+  which it stays. No turn says which turn of the run it is: the hint's counter
+  shows that (owner, 2026-10-16). Rung `run`.
+- **Parts are read off the turns played, not off how the library built
+  them.** Each turn is paired with the nearest later turn that undoes it:
+  interleaved pairs are a cycle, a pair around unpaired turns a tuck, a pair
+  around other pairs a lining up, and an unpaired turn that leaves the tile
+  where it is lines up the technique the run plays next (its undo was cut).
+  So a cut, a free reduction or a remainder's missing start never leaves a
+  "turn the first block back" with no first block. The build roles add only
+  what pairing cannot see: the small cycles' phases, a twist's two routes, a
+  swap's first turn, and that a learned sequence was found by search. On
+  2026-10-16, 7 of 474 run and free steps across every preset had no part to
+  name and say only the turn.
+- Words in the library are free-reduced: a turn followed by its own inverse
+  is canceled, so a hint never says "turn it" and then "turn it back".
+- **A run that puts tiles before its goal in place too** (the rest of a run
+  the player broke off, or one that fills several on its way) reads the same.
+  Rung `fill`.
+- **A run stops at the turn that completes its stage.** A library sequence's
+  last turns can only put back tiles after the stage's, which the plan from
+  there does not need, so the planner cuts them.
 - A run always ends with its tile in place. Every segment of a stage, from
   the first that is not a free turn to the tile's arrival, is one run, so no
   step promises a square short of home.

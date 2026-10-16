@@ -22,10 +22,11 @@ import {
 import { drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
-import { BLOCK, TILE } from "./hint-text.ts";
+import { BLOCK, LIFTED, TILE } from "./hint-text.ts";
 import type { TwiddleMove, TwiddleState, TwiddleUi } from "./state.ts";
 
 // --- constants --------------------------------------------------------
@@ -68,6 +69,8 @@ const CUR_BOTTOM = 4;
 const CUR_LEFT = 8;
 /** Beside the four side bits, which carry the hint's ring: the outline. */
 const MARK_OUTLINE = 16;
+/** And the stripes: a finished tile a run lifts out, or that comes back. */
+const MARK_STRIPES = 32;
 
 // --- geometry ---------------------------------------------------------
 
@@ -98,7 +101,7 @@ export function animLength(n: number): number {
 export interface TwiddleDrawState {
   started: boolean;
   /** Per-cell cache of the win flash's tone on the tile, above its two bits
-   * the hint's five mark bits, and above those the packed `number*4 +
+   * the hint's six mark bits, and above those the packed `number*4 +
    * orient`; `-1` forces a redraw (unknown, or inside the animating block). */
   cache: Int32Array;
   tileSize: number;
@@ -271,11 +274,21 @@ function drawTile(
     );
   }
 
+  // Stripes across the face, under the number so it stays legible. A mark
+  // names the cell a tile ends a turn on, so it stands still while the tile
+  // turns into it.
+  if (marks & MARK_STRIPES)
+    dr.drawHatch(
+      { x: px + hw, y: py + hw, w: ts - 2 * hw, h: ts - 2 * hw },
+      COL_HINT_EVIDENCE,
+      hatchPeriod(ts),
+    );
+
   dr.drawText(center, glyphFont(ts / 3), COL_TEXT, String(num));
 
   // The hint's marks sit on the bevel, never on the number: the ring on the
   // sides of the block's outer edge, the outline just inside the bevel.
-  if (!rot && marks) {
+  if (marks) {
     const band = (r: Rect, c: number) => dr.drawRect(r, c);
     if (marks & CUR_TOP) band({ x: px, y: py, w: ts, h: hw }, COL_HINT);
     if (marks & CUR_BOTTOM) band({ x: px, y: py + ts - hw, w: ts, h: hw }, COL_HINT);
@@ -315,9 +328,11 @@ export function redraw(
   const hinted = stepMarks(activeHint);
   const ringed = hinted.of("ring", BLOCK)[0] ?? null;
   const outlined = new Set(hinted.of("outline", TILE));
+  const stripedCells = new Set(hinted.of("stripes", LIFTED));
   /** The hint's mark bits on a cell. */
   const marksAt = (tx: number, ty: number): number => {
     let m = outlined.has(ty * w + tx) ? MARK_OUTLINE : 0;
+    if (stripedCells.has(ty * w + tx)) m |= MARK_STRIPES;
     if (ringed) {
       const inX = tx >= ringed.x && tx < ringed.x + n;
       const inY = ty >= ringed.y && ty < ringed.y + n;
@@ -398,7 +413,7 @@ export function redraw(
     const marks = marksAt(tx, ty);
     const t = inBlock
       ? -1
-      : ((((state.numbers[i] * 4 + state.orient[i]) << 5) | marks) << 2) | lit;
+      : ((((state.numbers[i] * 4 + state.orient[i]) << 6) | marks) << 2) | lit;
 
     let cc = false;
     if (cmoved) {

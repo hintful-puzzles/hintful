@@ -1317,8 +1317,8 @@ exports[`the frames a hint draws > rings the block's outer edge and outlines the
 exports[`twiddle: pinned hint positions > says, at each pin 1`] = `
 {
   "carry": "Working on the outlined 1: turn the ringed block anticlockwise to carry it toward its row.",
-  "fill": "Working on the outlined 2: 2 turns put it and 3 others in place. First, turn the ringed block clockwise.",
+  "fill": "Working on the outlined 2: turn the ringed block clockwise.",
   "home": "Working on the outlined 1: turn the ringed block anticlockwise to put it in place.",
-  "run": "Working on tile 1: 4 turns put it in place, finished tiles intact. First, turn the ringed block clockwise.",
+  "run": "Working on tile 1: start a cycle: turn the ringed block clockwise.",
 }
 `;

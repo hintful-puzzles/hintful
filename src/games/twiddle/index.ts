@@ -307,6 +307,8 @@ export const twiddleGame: Game<
     roles: {
       ring: "what the step decides: the block to turn.",
       outline: "the tile the step is working on.",
+      stripes:
+        "finished tiles that a turn of a run lifts out of place, or that come back on it.",
     },
   },
   hintKeepTrack,
