@@ -217,16 +217,14 @@ Two rules make a sweep across the collection affordable:
 
 ## Which hintless game comes next
 
-Every game is to have a hint, and a new game ships with its hint. The
-remaining hintless games are also how framework work is assessed: a target
-contract is tested by writing a real hint against it.
+Every game is to have a hint, and a new game ships with its hint. Each
+remaining hintless game has a change of its own, `add-<game>-hint` (owner,
+2026-10-16), taken one at a time.
 
-- The framework leads. A hintless game is pulled in beside the framework
-  change it checks, at most one per change.
-- An open framework change names its game in a "Hints to pull in" section.
-  The others wait in the change `hintless-games-in-reserve`.
-- Choose the game that presses hardest on what is being built, not the next
-  one alphabetically. The cheapest hint is the worst assessment.
+- A hint change is also a source of engine work: what it writes that another
+  game already wrote is filed as the engine's (§ "What a session files").
+- Take the one whose search or plan already exists first; its proposal says
+  where it stands.
 
 ## Pushing and deploying
 

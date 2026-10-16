@@ -1,7 +1,12 @@
 # hintless-games-in-reserve
 
-**Status: scaffolded, not started (2026-09-29).** Each game gets its own change
-when it is taken up; this one holds the reserve and the decision point.
+**Status: split and retired (2026-10-16).** The owner asked for the reserve
+to become "a series of individual hint implementations, to be easy to pick
+off one by one, and to use as inspiration sources for new engine improvements
+and overall refactoring". The four games left, read from the registry that
+day, each have a change: `add-slide-hint`, `add-twiddle-hint`,
+`add-samegame-hint` and `add-cube-hint`. What follows is the reserve as it
+stood.
 
 ## Why
 
