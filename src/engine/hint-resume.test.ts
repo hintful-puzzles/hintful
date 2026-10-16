@@ -223,6 +223,12 @@ const SEARCH_REACH: Record<string, string> = {
     "but it is the same planner and the same bound. Largest board on every " +
     "commit: netslide-reconstruct.test.ts walks EVERY preset (5x5 wrapping " +
     "included) to completion on recomputed hints, with no aux at all.",
+  twiddle:
+    "Puts the tiles in place in reading order from a library of turn " +
+    "sequences built for the board's shape, and refuses only where that " +
+    "library holds no way on, which no preset has met. Largest board on every " +
+    "commit: twiddle-hint.test.ts walks every preset, and custom shapes " +
+    "beside them, to solved with a fresh hint per turn and no refusal allowed.",
   sixteen:
     "Plans by searching for the finished board. Its tangled endgames are a " +
     "dozen moves out with a branching factor of 40, which no arrangement of " +

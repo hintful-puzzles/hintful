@@ -11,6 +11,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   INK,
 } from "../../engine/color/palette.ts";
 import {
@@ -18,11 +20,13 @@ import {
   twiddleGentleLowlight,
 } from "../../engine/color/palette-games.ts";
 import { drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
-import type { TwiddleState, TwiddleUi } from "./state.ts";
+import { BLOCK, TILE } from "./hint-text.ts";
+import type { TwiddleMove, TwiddleState, TwiddleUi } from "./state.ts";
 
 // --- constants --------------------------------------------------------
 
@@ -50,7 +54,11 @@ export const COL_WELL = 9;
 export const COL_FLASH = 10;
 /** The face of a tile the win flash's leading edge is on. */
 export const COL_FLASH_LEAD = 11;
-export const NCOLORS = 12;
+/** The hint's ring: the block to turn. */
+export const COL_HINT = 12;
+/** The hint's outline: the tile it serves, and the square a run brings it to. */
+export const COL_HINT_EVIDENCE = 13;
+export const NCOLORS = 14;
 
 // --- cursor edge flags ------------------------------------------------
 
@@ -58,6 +66,8 @@ const CUR_TOP = 1;
 const CUR_RIGHT = 2;
 const CUR_BOTTOM = 4;
 const CUR_LEFT = 8;
+/** Beside the four side bits, which carry the hint's ring: the outline. */
+const MARK_OUTLINE = 16;
 
 // --- geometry ---------------------------------------------------------
 
@@ -87,9 +97,9 @@ export function animLength(n: number): number {
 
 export interface TwiddleDrawState {
   started: boolean;
-  /** Per-cell cache of the win flash's tone on the tile and, above its two
-   * bits, the packed `number*4 + orient`; `-1` forces a redraw (unknown, or
-   * inside the animating block). */
+  /** Per-cell cache of the win flash's tone on the tile, above its two bits
+   * the hint's five mark bits, and above those the packed `number*4 +
+   * orient`; `-1` forces a redraw (unknown, or inside the animating block). */
   cache: Int32Array;
   tileSize: number;
   /** Cached cursor top-left in rotation-origin space; `< 0` when hidden. */
@@ -161,6 +171,7 @@ function drawTile(
   face: number,
   rot: Rotation | null,
   cedges: number,
+  marks: number,
 ): void {
   if (rot) dr.clip(rot.block);
 
@@ -262,6 +273,24 @@ function drawTile(
 
   dr.drawText(center, glyphFont(ts / 3), COL_TEXT, String(num));
 
+  // The hint's marks sit on the bevel, never on the number: the ring on the
+  // sides of the block's outer edge, the outline just inside the bevel.
+  if (!rot && marks) {
+    const band = (r: Rect, c: number) => dr.drawRect(r, c);
+    if (marks & CUR_TOP) band({ x: px, y: py, w: ts, h: hw }, COL_HINT);
+    if (marks & CUR_BOTTOM) band({ x: px, y: py + ts - hw, w: ts, h: hw }, COL_HINT);
+    if (marks & CUR_LEFT) band({ x: px, y: py, w: hw, h: ts }, COL_HINT);
+    if (marks & CUR_RIGHT) band({ x: px + ts - hw, y: py, w: hw, h: ts }, COL_HINT);
+    if (marks & MARK_OUTLINE) {
+      const i = hw;
+      const s = ts - 2 * hw;
+      band({ x: px + i, y: py + i, w: s, h: hw }, COL_HINT_EVIDENCE);
+      band({ x: px + i, y: py + i + s - hw, w: s, h: hw }, COL_HINT_EVIDENCE);
+      band({ x: px + i, y: py + i, w: hw, h: s }, COL_HINT_EVIDENCE);
+      band({ x: px + i + s - hw, y: py + i, w: hw, h: s }, COL_HINT_EVIDENCE);
+    }
+  }
+
   if (rot) dr.unclip();
   dr.drawUpdate({ x: px, y: py, w: ts, h: ts });
 }
@@ -277,10 +306,30 @@ export function redraw(
   ui: TwiddleUi,
   animTime: number,
   flash: Flash,
+  activeHint?: HintStep<TwiddleMove>,
 ): void {
   const ts = ds.tileSize;
   const { w, h, n } = state;
   const hw = highlightWidth(ts);
+
+  const hinted = stepMarks(activeHint);
+  const ringed = hinted.of("ring", BLOCK)[0] ?? null;
+  const outlined = new Set(hinted.of("outline", TILE));
+  /** The hint's mark bits on a cell. */
+  const marksAt = (tx: number, ty: number): number => {
+    let m = outlined.has(ty * w + tx) ? MARK_OUTLINE : 0;
+    if (ringed) {
+      const inX = tx >= ringed.x && tx < ringed.x + n;
+      const inY = ty >= ringed.y && ty < ringed.y + n;
+      if (inX && inY) {
+        if (ty === ringed.y) m |= CUR_TOP;
+        if (ty === ringed.y + n - 1) m |= CUR_BOTTOM;
+        if (tx === ringed.x) m |= CUR_LEFT;
+        if (tx === ringed.x + n - 1) m |= CUR_RIGHT;
+      }
+    }
+    return m;
+  };
 
   const cx = ui.cursor.visible ? ui.cursor.x : -n;
   const cy = ui.cursor.visible ? ui.cursor.y : -n;
@@ -346,7 +395,10 @@ export function redraw(
     const inBlock =
       rot !== null && tx >= lastx && tx < lastx + n && ty >= lasty && ty < lasty + n;
     const lit = flash.win(sweepStep(tx, ty));
-    const t = inBlock ? -1 : ((state.numbers[i] * 4 + state.orient[i]) << 2) | lit;
+    const marks = marksAt(tx, ty);
+    const t = inBlock
+      ? -1
+      : ((((state.numbers[i] * 4 + state.orient[i]) << 5) | marks) << 2) | lit;
 
     let cc = false;
     if (cmoved) {
@@ -383,6 +435,7 @@ export function redraw(
         // (the win flash can repaint it while a new move animates).
         inBlock ? rot : null,
         cedges,
+        marks,
       );
       ds.cache[i] = t;
     }
@@ -422,5 +475,7 @@ export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
   out[COL_WELL] = cellSurface(bg);
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
   return out;
 }

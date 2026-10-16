@@ -22,8 +22,10 @@ import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Color, Point } from "../../engine/types.ts";
+import { hint, hintKeepTrack, TWIDDLE_RUNGS, type TwiddleRung } from "./hint.ts";
 import {
   animLength,
   border,
@@ -216,7 +218,10 @@ export const twiddleGame: Game<
   TwiddleState,
   TwiddleMove,
   TwiddleUi,
-  TwiddleDrawState
+  TwiddleDrawState,
+  unknown,
+  unknown,
+  TwiddleRung
 > = {
   id: "twiddle",
 
@@ -295,6 +300,22 @@ export const twiddleGame: Game<
 
   solve: () => ({ ok: true, move: { type: "solve" } }),
   hasNoSolution,
+
+  hint,
+  hintRungs: TWIDDLE_RUNGS,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides: the block to turn.",
+      outline: "the tile the step is working on.",
+    },
+  },
+  hintKeepTrack,
+  hintGesture: (s, ui, ds, m, step) =>
+    m.type === "rotate"
+      ? verbClicks(targetVerbs, { executeMove, hintKeepTrack }, s, ui, ds, step, [
+          { x: m.x, y: m.y },
+        ])
+      : [],
 
   textFormat,
   statusbarText,

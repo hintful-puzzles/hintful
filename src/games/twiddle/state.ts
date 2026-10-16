@@ -212,7 +212,7 @@ export function isComplete(
 /** The desc's orientation letters, indexed by orientation (`u` is upright). */
 const ORIENT_LETTERS = "uldr";
 
-function encodeDesc(
+export function encodeDesc(
   numbers: Int32Array,
   orient: Uint8Array,
   wh: number,

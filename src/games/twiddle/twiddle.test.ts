@@ -418,9 +418,8 @@ describe("Twiddle game object", () => {
     expect(twiddleGame.statusbarText).toBeDefined();
     expect(twiddleGame.solve).toBeDefined();
     expect(twiddleGame.textFormat).toBeDefined();
-    // Permutation puzzle: no mistake checking, no hint.
+    // Permutation puzzle: no mistake checking.
     expect(twiddleGame.findMistakes).toBeUndefined();
-    expect(twiddleGame.hint).toBeUndefined();
   });
 
   it("formats as text, with orientation arrows when orientable", () => {
