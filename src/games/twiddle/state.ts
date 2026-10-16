@@ -54,6 +54,9 @@ export type TwiddleMove =
 export interface TwiddleUi {
   /** Cursor position in the `(w-n+1) × (h-n+1)` rotation-origin space. */
   cursor: GridCursor;
+  /** The block a click would turn, by its top-left square, while the mouse
+   * is over the board; null otherwise. Mouse only: touch has no hover. */
+  hoverBlock: { x: number; y: number } | null;
 }
 
 // --- params ----------------------------------------------------------

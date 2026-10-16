@@ -8,7 +8,8 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import type { Game, UiUpdate } from "../../engine/game.ts";
+import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import {
@@ -71,7 +72,7 @@ const KEY_D = 0x44;
 // --- ui ---------------------------------------------------------------
 
 function newUi(_state: TwiddleState): TwiddleUi {
-  return { cursor: newCursor() };
+  return { cursor: newCursor(), hoverBlock: null };
 }
 
 // --- input ------------------------------------------------------------
@@ -83,6 +84,25 @@ function rotateMove(x: number, y: number, dir: 1 | -1): TwiddleMove {
 /** A target is a block, named by its top-left square: the cursor moves over the
  * `(w-n+1) × (h-n+1)` block origins, and a click lands on the block whose
  * *center* it is nearest, which is why the inset grows by (n-1) half-tiles. */
+const blockGrid = squareGrid<TwiddleState, TwiddleDrawState>({
+  size: (s) => ({ w: s.w - s.n + 1, h: s.h - s.n + 1 }),
+  border: (ts, s) => border(ts) + ((s.n - 1) * ts) / 2,
+});
+
+/** The block a point on the board turns: the one whose center is nearest,
+ * among those holding the square under it. Every square answers; a point off
+ * the squares is no target. Upstream answered only within a tile of a block's
+ * center, which left most of a board of 3×3 blocks dead to a click. */
+function blockAt(s: TwiddleState, ds: TwiddleDrawState, p: Point): Point | null {
+  const ts = ds.tileSize;
+  const b = border(ts);
+  if (p.x < b || p.y < b || p.x >= b + s.w * ts || p.y >= b + s.h * ts) return null;
+  const inset = b + ((s.n - 1) * ts) / 2;
+  const along = (v: number, size: number) =>
+    Math.min(Math.max(fromCoord(v, ts, inset), 0), size - s.n);
+  return { x: along(p.x, s.w), y: along(p.y, s.h) };
+}
+
 const targetVerbs: TargetVerbs<
   TwiddleState,
   TwiddleUi,
@@ -91,10 +111,8 @@ const targetVerbs: TargetVerbs<
   TwiddleMove
 > = {
   geometry: {
-    ...squareGrid<TwiddleState, TwiddleDrawState>({
-      size: (s) => ({ w: s.w - s.n + 1, h: s.h - s.n + 1 }),
-      border: (ts, s) => border(ts) + ((s.n - 1) * ts) / 2,
-    }),
+    ...blockGrid,
+    pointerTarget: (s, ds, p) => blockAt(s, ds, p),
     noun: "block",
   },
   primary: {
@@ -106,6 +124,21 @@ const targetVerbs: TargetVerbs<
     apply: (_s, { x, y }) => rotateMove(x, y, -1),
   },
 };
+
+/** Outline the block a click would turn while the mouse is over the board.
+ * Null when it has not changed, so a sweep within one block repaints nothing. */
+function hover(
+  state: TwiddleState,
+  ui: TwiddleUi,
+  ds: TwiddleDrawState,
+  p: Point | null,
+): UiUpdate | null {
+  const next = p === null ? null : blockAt(state, ds, p);
+  const was = ui.hoverBlock;
+  if (next?.x === was?.x && next?.y === was?.y) return null;
+  ui.hoverBlock = next;
+  return UI_UPDATE;
+}
 
 function interpretMove(
   state: TwiddleState,
@@ -290,6 +323,7 @@ export const twiddleGame: Game<
 
   targetVerbs,
   interpretMove,
+  hover,
   executeMove,
   finishesByDeduction: nothingToDeduce,
   status,

@@ -59,7 +59,10 @@ export const COL_FLASH_LEAD = 11;
 export const COL_HINT = 12;
 /** The hint's outline: the tile it serves, and the square a run brings it to. */
 export const COL_HINT_EVIDENCE = 13;
-export const NCOLORS = 14;
+/** The dot at every block's pivot: the cursor's color, which marks where a
+ * click acts. */
+export const COL_PIVOT = 14;
+export const NCOLORS = 15;
 
 // --- cursor edge flags ------------------------------------------------
 
@@ -101,13 +104,11 @@ export function animLength(n: number): number {
 export interface TwiddleDrawState {
   started: boolean;
   /** Per-cell cache of the win flash's tone on the tile, above its two bits
-   * the hint's six mark bits, and above those the packed `number*4 +
-   * orient`; `-1` forces a redraw (unknown, or inside the animating block). */
+   * the hint's six mark bits, above those the four sides of a cursor or hover
+   * outline, and above those the packed `number*4 + orient`; `-1` forces a
+   * redraw (unknown, or inside the animating block). */
   cache: Int32Array;
   tileSize: number;
-  /** Cached cursor top-left in rotation-origin space; `< 0` when hidden. */
-  curX: number;
-  curY: number;
 }
 
 export function newDrawState(state: TwiddleState, tileSize: number): TwiddleDrawState {
@@ -115,8 +116,6 @@ export function newDrawState(state: TwiddleState, tileSize: number): TwiddleDraw
     started: false,
     cache: new Int32Array(state.w * state.h).fill(-1),
     tileSize,
-    curX: -state.n,
-    curY: -state.n,
   };
 }
 
@@ -187,29 +186,17 @@ function drawTile(
   const c01 = rotate(px, py + ts - 1, rot);
 
   // Right side.
-  dr.drawPolygon(
-    [c11, c10, center],
-    rot ? rot.rightColor : COL_LOWLIGHT,
-    rot ? rot.rightColor : cedges & CUR_RIGHT ? COL_LOWCURSOR : COL_LOWLIGHT,
-  );
+  const right = rot ? rot.rightColor : COL_LOWLIGHT;
+  dr.drawPolygon([c11, c10, center], right, right);
   // Bottom side.
-  dr.drawPolygon(
-    [c11, c01, center],
-    rot ? rot.bottomColor : COL_LOWLIGHT,
-    rot ? rot.bottomColor : cedges & CUR_BOTTOM ? COL_LOWCURSOR : COL_LOWLIGHT,
-  );
+  const bottom = rot ? rot.bottomColor : COL_LOWLIGHT;
+  dr.drawPolygon([c11, c01, center], bottom, bottom);
   // Left side.
-  dr.drawPolygon(
-    [c00, c01, center],
-    rot ? rot.leftColor : COL_HIGHLIGHT,
-    rot ? rot.leftColor : cedges & CUR_LEFT ? COL_HIGHCURSOR : COL_HIGHLIGHT,
-  );
+  const left = rot ? rot.leftColor : COL_HIGHLIGHT;
+  dr.drawPolygon([c00, c01, center], left, left);
   // Top side.
-  dr.drawPolygon(
-    [c00, c10, center],
-    rot ? rot.topColor : COL_HIGHLIGHT,
-    rot ? rot.topColor : cedges & CUR_TOP ? COL_HIGHCURSOR : COL_HIGHLIGHT,
-  );
+  const top = rot ? rot.topColor : COL_HIGHLIGHT;
+  dr.drawPolygon([c00, c10, center], top, top);
 
   // The blank center area.
   if (rot) {
@@ -286,10 +273,22 @@ function drawTile(
 
   dr.drawText(center, glyphFont(ts / 3), COL_TEXT, String(num));
 
+  const band = (r: Rect, c: number) => dr.drawRect(r, c);
+  // The block the keyboard cursor is on, or the mouse would turn: a band on
+  // the bevel of the block's outer edge, the hint's ring in the cursor color,
+  // so either reads as one thing and neither as a move made.
+  if (cedges) {
+    if (cedges & CUR_TOP) band({ x: px, y: py, w: ts, h: hw }, COL_HIGHCURSOR);
+    if (cedges & CUR_LEFT) band({ x: px, y: py, w: hw, h: ts }, COL_HIGHCURSOR);
+    if (cedges & CUR_BOTTOM)
+      band({ x: px, y: py + ts - hw, w: ts, h: hw }, COL_LOWCURSOR);
+    if (cedges & CUR_RIGHT)
+      band({ x: px + ts - hw, y: py, w: hw, h: ts }, COL_LOWCURSOR);
+  }
+
   // The hint's marks sit on the bevel, never on the number: the ring on the
   // sides of the block's outer edge, the outline just inside the bevel.
   if (marks) {
-    const band = (r: Rect, c: number) => dr.drawRect(r, c);
     if (marks & CUR_TOP) band({ x: px, y: py, w: ts, h: hw }, COL_HINT);
     if (marks & CUR_BOTTOM) band({ x: px, y: py + ts - hw, w: ts, h: hw }, COL_HINT);
     if (marks & CUR_LEFT) band({ x: px, y: py, w: hw, h: ts }, COL_HINT);
@@ -346,9 +345,23 @@ export function redraw(
     return m;
   };
 
-  const cx = ui.cursor.visible ? ui.cursor.x : -n;
-  const cy = ui.cursor.visible ? ui.cursor.y : -n;
-  const cmoved = cx !== ds.curX || cy !== ds.curY;
+  // The blocks outlined in the cursor color: the keyboard cursor's, and the
+  // one the mouse would turn.
+  const outlinedBlocks = [
+    ...(ui.cursor.visible ? [{ x: ui.cursor.x, y: ui.cursor.y }] : []),
+    ...(ui.hoverBlock ? [ui.hoverBlock] : []),
+  ];
+  const cursorAt = (tx: number, ty: number): number => {
+    let e = 0;
+    for (const b of outlinedBlocks) {
+      if (tx < b.x || tx >= b.x + n || ty < b.y || ty >= b.y + n) continue;
+      if (tx === b.x) e |= CUR_LEFT;
+      if (ty === b.y) e |= CUR_TOP;
+      if (tx === b.x + n - 1) e |= CUR_RIGHT;
+      if (ty === b.y + n - 1) e |= CUR_BOTTOM;
+    }
+    return e;
+  };
 
   if (!ds.started) {
     drawRecessedBorder(
@@ -411,30 +424,16 @@ export function redraw(
       rot !== null && tx >= lastx && tx < lastx + n && ty >= lasty && ty < lasty + n;
     const lit = flash.win(sweepStep(tx, ty));
     const marks = marksAt(tx, ty);
+    const cedges = cursorAt(tx, ty);
     const t = inBlock
       ? -1
-      : ((((state.numbers[i] * 4 + state.orient[i]) << 6) | marks) << 2) | lit;
+      : ((((((state.numbers[i] * 4 + state.orient[i]) << 4) | cedges) << 6) | marks) <<
+          2) |
+        lit;
 
-    let cc = false;
-    if (cmoved) {
-      if (tx === cx || tx === cx + n - 1 || ty === cy || ty === cy + n - 1) cc = true;
-      if (
-        tx === ds.curX ||
-        tx === ds.curX + n - 1 ||
-        ty === ds.curY ||
-        ty === ds.curY + n - 1
-      )
-        cc = true;
-    }
-
-    if (ds.cache[i] !== t || t === -1 || cc) {
+    if (ds.cache[i] !== t || t === -1) {
       const x = coord(tx, ts);
       const y = coord(ty, ts);
-      let cedges = 0;
-      if (tx === cx && ty >= cy && ty <= cy + n - 1) cedges |= CUR_LEFT;
-      if (ty === cy && tx >= cx && tx <= cx + n - 1) cedges |= CUR_TOP;
-      if (tx === cx + n - 1 && ty >= cy && ty <= cy + n - 1) cedges |= CUR_RIGHT;
-      if (ty === cy + n - 1 && tx >= cx && tx <= cx + n - 1) cedges |= CUR_BOTTOM;
 
       drawTile(
         dr,
@@ -456,8 +455,21 @@ export function redraw(
     }
   }
 
-  ds.curX = cx;
-  ds.curY = cy;
+  // A dot at every block's pivot, so each square shows which blocks hold it.
+  // Drawn over the tiles every frame: a tile repaints for its own reasons and
+  // a dot on a grid corner spans four, and a pivot stands still while its
+  // block turns about it. An even block's pivot is a grid corner, in the gap
+  // between tiles; an odd block's is its center square, where the dot sits
+  // below the number.
+  const r = Math.max(2, Math.round(ts / 26));
+  const odd = n % 2 === 1;
+  for (let by = 0; by <= h - n; by++)
+    for (let bx = 0; bx <= w - n; bx++) {
+      const px = coord(bx, ts) + (n * ts) / 2;
+      const py = coord(by, ts) + (n * ts) / 2 + (odd ? ts * 0.32 : 0);
+      dr.drawCircle({ x: px, y: py }, r, COL_PIVOT, COL_PIVOT);
+      dr.drawUpdate({ x: px - r, y: py - r, w: 2 * r + 1, h: 2 * r + 1 });
+    }
 }
 
 // --- palette ----------------------------------------------------------
@@ -492,5 +504,6 @@ export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  out[COL_PIVOT] = CURSOR;
   return out;
 }

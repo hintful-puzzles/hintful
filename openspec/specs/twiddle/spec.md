@@ -179,16 +179,20 @@ every orientation, and SHALL count as one move.
 
 ### Requirement: Controls: A click rotates the block centered on it
 
-A click SHALL be offset by `(n−1)/2` tiles, so that it selects the block
-centered on the click, and a click whose block falls outside `0 ≤ x ≤ w−n`,
-`0 ≤ y ≤ h−n` SHALL make no move. Which way each button and the select keys
-turn a block SHALL be what `targetVerbs` declares (`engine-input`, "The
-engine owns a declaring game's press and select keys").
+A click on a square SHALL turn the block, among those holding that square,
+whose center is nearest the click, and a click off the squares SHALL make no
+move. Which way each button and the select keys turn a block SHALL be what
+`targetVerbs` declares (`engine-input`, "The engine owns a declaring game's
+press and select keys").
+
+#### Scenario: Every square answers a click
+
+- **WHEN** a click lands anywhere on any square, for blocks of side 2, 3 or 4
+- **THEN** it turns a block that holds that square
 
 #### Scenario: Click geometry constrains legal rotations
 
-- **WHEN** a click selects a region that would extend past the grid edge
-  (its top-left corner outside `0 ≤ x ≤ w−n`, `0 ≤ y ≤ h−n`)
+- **WHEN** a click lands in the border outside every square
 - **THEN** no move is produced
 
 ### Requirement: Controls: The Twiddle cursor moves over the rotation origins
@@ -326,3 +330,17 @@ left SHALL alone be repainted, with its own face.
 
 - **WHEN** the flash has passed a tile
 - **THEN** that tile alone is repainted, with its own face
+
+### Requirement: Look: Twiddle shows which block a click turns
+
+Twiddle SHALL draw a dot at every block's center, on the grid corner for a
+block of even side and below the number of the middle square for one of odd
+side. While the mouse is over the board, the block a click would turn SHALL be
+outlined, in the same band and color as the keyboard cursor, and the outline
+SHALL go when the pointer leaves.
+
+#### Scenario: Hovering a square outlines the block a click turns
+
+- **WHEN** the mouse moves over a square
+- **THEN** the block a click there would turn is outlined, and nothing is
+  outlined once the pointer leaves the board

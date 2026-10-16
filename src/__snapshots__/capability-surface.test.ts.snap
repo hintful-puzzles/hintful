@@ -2091,8 +2091,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "cache",
-      "curX",
-      "curY",
       "started",
       "tileSize",
     ],
@@ -2106,6 +2104,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintKeepTrack",
       "hintMarks",
       "hintRungs",
+      "hover",
       "notApplicable",
       "paletteScheme",
       "paramConfig",
@@ -2119,6 +2118,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "cursor",
+      "hoverBlock",
     ],
   },
   {

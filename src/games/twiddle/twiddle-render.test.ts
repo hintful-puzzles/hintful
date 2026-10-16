@@ -22,6 +22,7 @@ import {
   COL_HIGHLIGHT,
   COL_LOWCURSOR,
   COL_LOWLIGHT,
+  COL_PIVOT,
   COL_TILE,
 } from "./render.ts";
 import { newState, type TwiddleParams, type TwiddleState } from "./state.ts";
@@ -44,7 +45,7 @@ function params(): TwiddleParams {
   return { w: 3, h: 3, n: 2, rowsonly: false, orientable: false, movetarget: 0 };
 }
 
-const UI = { cursor: newCursor() };
+const UI = { cursor: newCursor(), hoverBlock: null };
 
 function fresh(state: TwiddleState) {
   const ds = newDrawState(state, TS);
@@ -110,22 +111,82 @@ describe("Twiddle rendering", () => {
     expect(settled?.y).toBe(96); // coord(1) + ts/2
   });
 
-  it("draws cursor-colored edges around the cursor region", () => {
+  /** The cursor-colored bands a frame draws. */
+  const cursorBands = (ops: RecordingDrawing["ops"]) =>
+    ops.filter(
+      (o) =>
+        o.op === "rect" && (o.color === COL_HIGHCURSOR || o.color === COL_LOWCURSOR),
+    ).length;
+
+  it("draws a band round the outer edge of the cursor's block", () => {
     const state = solved3x3();
     const ds = fresh(state);
     redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH);
 
     const { dr, ops } = recordingDrawing();
-    // Cursor visible at origin (0,0): the region's edge bevels recolor
-    // their *outline* to the cursor colors.
-    redraw(dr, ds, null, state, 0, { cursor: newCursor(0, 0, true) }, 0, NO_FLASH);
-    expect(
-      ops.some(
-        (o) =>
-          o.op === "polygon" &&
-          (o.outline === COL_HIGHCURSOR || o.outline === COL_LOWCURSOR),
-      ),
-    ).toBe(true);
+    redraw(
+      dr,
+      ds,
+      null,
+      state,
+      0,
+      { cursor: newCursor(0, 0, true), hoverBlock: null },
+      0,
+      NO_FLASH,
+    );
+    // A 2×2 block: each of its four tiles bands its two outer sides.
+    expect(cursorBands(ops)).toBe(8);
+  });
+
+  it("outlines the block the mouse would turn the same way, and rubs it out when it leaves", () => {
+    const state = solved3x3();
+    const ds = fresh(state);
+    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH);
+
+    const over = recordingDrawing();
+    redraw(
+      over.dr,
+      ds,
+      null,
+      state,
+      0,
+      { cursor: newCursor(), hoverBlock: { x: 1, y: 1 } },
+      0,
+      NO_FLASH,
+    );
+    expect(cursorBands(over.ops)).toBe(8);
+
+    const gone = recordingDrawing();
+    redraw(gone.dr, ds, null, state, 0, UI, 0, NO_FLASH);
+    expect(cursorBands(gone.ops)).toBe(0);
+    // The block's four tiles repaint without it.
+    expect(opsOfKind(gone.ops, "text")).toHaveLength(4);
+  });
+
+  it("dots every block's pivot, at grid corners for an even block and below the number for an odd one", () => {
+    const even = solved3x3();
+    const ops = recordingDrawing();
+    redraw(ops.dr, fresh(even), null, even, 0, UI, 0, NO_FLASH);
+    const dots = opsOfKind(ops.ops, "circle").filter((o) => o.fill === COL_PIVOT);
+    // Four 2×2 blocks on 3×3, centered on the grid's inner corners.
+    expect(dots.map((d) => [d.cx, d.cy])).toEqual([
+      [72, 72],
+      [120, 72],
+      [72, 120],
+      [120, 120],
+    ]);
+
+    const odd = newState(
+      { ...params(), w: 4, h: 4, n: 3 },
+      Array.from({ length: 16 }, (_, i) => i + 1).join(","),
+    );
+    const oddOps = recordingDrawing();
+    redraw(oddOps.dr, fresh(odd), null, odd, 0, UI, 0, NO_FLASH);
+    const oddDots = opsOfKind(oddOps.ops, "circle").filter((o) => o.fill === COL_PIVOT);
+    expect(oddDots).toHaveLength(4);
+    // Below the number of the first block's center square.
+    expect(oddDots[0].cx).toBe(24 + 48 + 24);
+    expect(oddDots[0].cy).toBeGreaterThan(24 + 48 + 24);
   });
 });
 

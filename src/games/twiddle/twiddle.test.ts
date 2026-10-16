@@ -307,10 +307,50 @@ describe("Twiddle input", () => {
     expect(move).toMatchObject({ type: "rotate", dir: -1 });
   });
 
-  it("ignores a click whose region would fall off the edge", () => {
-    // Click far outside the board.
+  it("ignores a click off the squares", () => {
+    // In the border, outside every square.
     const { move } = interpret(s, LEFT_BUTTON, { x: 5, y: 5 });
     expect(move).toBeNull();
+  });
+
+  it("turns a block holding the clicked square, from anywhere on any square", () => {
+    // Every point of every square, on 2×2, 3×3 and 4×4 blocks: a click turns
+    // a block that holds the square under it.
+    for (const [w, n] of [
+      [4, 2],
+      [5, 3],
+      [6, 4],
+    ]) {
+      const q = params({ w, h: w, n });
+      const board = stateFromNumbers(
+        q,
+        Array.from({ length: w * w }, (_, i) => i + 1),
+      );
+      for (let py = 24; py < 24 + w * 48; py += 6)
+        for (let px = 24; px < 24 + w * 48; px += 6) {
+          const { move } = interpret(board, LEFT_BUTTON, { x: px, y: py });
+          if (move === null || typeof move === "symbol" || move.type !== "rotate")
+            throw new Error(`${w}n${n}: (${px},${py}) turned nothing`);
+          const sx = Math.floor((px - 24) / 48);
+          const sy = Math.floor((py - 24) / 48);
+          expect(
+            sx >= move.x && sx < move.x + n && sy >= move.y && sy < move.y + n,
+          ).toBe(true);
+        }
+    }
+  });
+
+  it("outlines the block a click would turn while the mouse hovers, and nothing once it leaves", () => {
+    const ui = twiddleGame.newUi(s);
+    const ds = preferredDrawState(twiddleGame, s);
+    const hover = twiddleGame.hover;
+    if (!hover) throw new Error("Twiddle declares a hover");
+    expect(hover(s, ui, ds, { x: 120, y: 120 })).toBe(UI_UPDATE);
+    expect(ui.hoverBlock).toEqual({ x: 1, y: 1 });
+    // Within the same block's catchment nothing repaints.
+    expect(hover(s, ui, ds, { x: 125, y: 118 })).toBeNull();
+    expect(hover(s, ui, ds, null)).toBe(UI_UPDATE);
+    expect(ui.hoverBlock).toBeNull();
   });
 
   it("moves the cursor (clamped) and reveals it", () => {
