@@ -27,7 +27,7 @@
 import { Dsf } from "../../engine/dsf.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { solveBoard } from "./solver.ts";
+import { SEARCH_BUDGET, solveBoard } from "./solver.ts";
 import {
   ANCHOR,
   EMPTY,
@@ -86,13 +86,20 @@ function generateBoard(
   board[ty * w + tx + 1] = EMPTY;
   board[(ty + 1) * w + tx + 1] = EMPTY;
 
+  // A board past the hint's search budget counts as insoluble, as one past the
+  // move limit does, so every board dealt can be searched from its opening
+  // (docs/hints-search.md § "Deal only what the search can finish"): the board
+  // dealt is the last one this found soluble.
+  const minMoves = (): number =>
+    solveBoard(w, h, board, forcefield, tx, ty, movelimit, false, SEARCH_BUDGET).moves;
+
   // 3. Gradually remove singletons until the game becomes soluble. The check
   // happens *before* each removal, so the board kept is the first that solves.
   let moves = -1;
   scan: for (let x = w - 1; x >= 0; x--) {
     for (let y = h - 1; y >= 0; y--) {
       if (board[y * w + x] !== ANCHOR) continue;
-      moves = solveBoard(w, h, board, forcefield, tx, ty, movelimit).moves;
+      moves = minMoves();
       if (moves >= 0) break scan;
       board[y * w + x] = EMPTY;
     }
@@ -104,7 +111,7 @@ function generateBoard(
   // main block. Divergence is free where the C has no defined behavior
   // (docs/solver-and-generator.md § "Divergence and what it costs" rule 1):
   // the missing check draws no randomness and runs only where the C aborts.
-  if (moves < 0) moves = solveBoard(w, h, board, forcefield, tx, ty, movelimit).moves;
+  if (moves < 0) moves = minMoves();
   if (moves < 0)
     throw new Error("slide: no board of this size is soluble within the move limit");
 
@@ -169,7 +176,7 @@ function generateBoard(
       }
     }
 
-    const solved = solveBoard(w, h, board, forcefield, tx, ty, movelimit).moves;
+    const solved = minMoves();
     if (solved < 0) {
       // Didn't work. Revert the merge, and remember not to retry this pair.
       board.set(unmerged);

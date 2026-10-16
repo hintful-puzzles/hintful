@@ -38,7 +38,24 @@
  * reproduced exactly.
  */
 
-import { EMPTY, isAnchor, isDist, MAINANCHOR, type SlideStep } from "./state.ts";
+import type { SearchOutcome } from "../../engine/search-outcome.ts";
+import {
+  EMPTY,
+  isAnchor,
+  isDist,
+  MAINANCHOR,
+  type SlideState,
+  type SlideStep,
+} from "./state.ts";
+
+/**
+ * Positions one search may keep, for the hint, Solve and the generator alike.
+ * The worst of 48 seeded 6×8 deals (the largest board there is) kept 189k,
+ * and a player's wandering moved that by under a fifth, so this is over three
+ * times what a dealt board needs; the generator deals no board past it
+ * (`add-slide-hint` design D1).
+ */
+export const SEARCH_BUDGET = 600_000;
 
 export interface SolveOutcome {
   /** Minimum number of moves, or `-1` when unsolvable (or not solvable within
@@ -46,6 +63,11 @@ export interface SolveOutcome {
   moves: number;
   /** The move sequence, when `wantPath` was set and a solution was found. */
   path: SlideStep[] | null;
+  /** Positions the search kept, the start among them. */
+  positions: number;
+  /** The search stopped at its `budget` before settling the question, so
+   * `moves: -1` proves nothing. */
+  outOfBudget: boolean;
 }
 
 interface BoardNode {
@@ -82,6 +104,10 @@ function sameBoard(a: Uint8Array, b: Uint8Array): boolean {
  * `movelimit >= 0` abandons the search as soon as a board at that depth is
  * dequeued, so the answer is "solvable in at most `movelimit` moves, and here
  * is the minimum" or `-1`. Pass `-1` for no limit.
+ *
+ * `budget` caps the positions kept, start included: a search that would keep
+ * more stops with `outOfBudget`. Counted in positions, never in time, so a
+ * board gets the same answer on every machine.
  */
 export function solveBoard(
   w: number,
@@ -92,6 +118,7 @@ export function solveBoard(
   ty: number,
   movelimit: number,
   wantPath = false,
+  budget = Number.POSITIVE_INFINITY,
 ): SolveOutcome {
   const wh = w * h;
 
@@ -120,6 +147,7 @@ export function solveBoard(
   const movequeue = new Int32Array(wh + 1);
 
   let solution: BoardNode | null = null;
+  let outOfBudget = false;
 
   search: while (qhead < queue.length) {
     const b = queue[qhead++];
@@ -207,21 +235,26 @@ export function solveBoard(
 
           const nd = scratch.slice();
           const nb: BoardNode = { data: nd, dist: b.dist + 1, prev: b };
-          bucket.push(nb);
-          queue.push(nb);
           if (nd[ty * w + tx] === MAINANCHOR) {
             solution = nb;
             break search;
           }
+          if (queue.length >= budget) {
+            outOfBudget = true;
+            break search;
+          }
+          bucket.push(nb);
+          queue.push(nb);
         }
       }
     }
   }
 
-  if (!solution) return { moves: -1, path: null };
+  const positions = queue.length;
+  if (!solution) return { moves: -1, path: null, positions, outOfBudget };
 
   const moves = solution.dist;
-  if (!wantPath) return { moves, path: null };
+  if (!wantPath) return { moves, path: null, positions, outOfBudget };
 
   // Backtrack, diffing each consecutive pair of boards to recover which
   // block's anchor moved and where to. Exactly one square stops being an
@@ -244,5 +277,23 @@ export function solveBoard(
     cur = prev;
   }
 
-  return { moves, path };
+  return { moves, path, positions, outOfBudget };
+}
+
+/** A shortest line of slides from `s` to the exit, within
+ * {@link SEARCH_BUDGET}: the one search the hint and Solve share. */
+export function findExit(s: SlideState): SearchOutcome<SlideStep> {
+  const { path, outOfBudget } = solveBoard(
+    s.w,
+    s.h,
+    s.board,
+    s.forcefield,
+    s.tx,
+    s.ty,
+    -1,
+    true,
+    SEARCH_BUDGET,
+  );
+  if (path) return { kind: "found", line: path };
+  return { kind: outOfBudget ? "out-of-reach" : "lost" };
 }

@@ -1006,8 +1006,7 @@ describe("slide capabilities", () => {
     expect(m.check()).toMatchObject({ mistakesChecked: false });
   });
 
-  it("ships no hint and no keypad", () => {
-    expect(slideGame.hint).toBeUndefined();
+  it("ships no keypad", () => {
     expect(slideGame.requestKeys).toBeUndefined();
   });
 

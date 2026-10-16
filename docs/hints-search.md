@@ -228,7 +228,10 @@ potential, a non-negative integer every hinted move provably lowers.
   `nextLeg`).
 - Where the game has no natural potential, the potential is the true
   distance to the goal, and only a search that returns a genuinely shortest
-  plan has it (§ "Sliding-permutation games").
+  plan has it (§ "Sliding-permutation games"). The rest of a shortest line
+  is a shortest line, so a request from a board on the last line can take
+  its remainder: the words stay the same and no search runs
+  ([`slide/hint.ts`](../src/games/slide/hint.ts), `lineFrom`).
 - A best-first search is not shortest, so the line found after a move need
   not be the rest of the line found before it. Offer a move only if the line
   the search finds after it is shorter than the one it finds now, else the
@@ -378,6 +381,14 @@ check without searching the whole board
   mover lifted off, and after it. "No way before, a way after" alone fires
   on every move that merely lets the player out;
 - a run of one piece to its goal, told as one journey.
+
+Where every move can be undone, nothing is lost and judging rivals has one
+verdict, so say what the plan shows the move is for. In a shortest line
+every move has a reason the line itself holds: the first later move that
+could not be made with the squares this one leaves still filled. Find it by
+walling those squares off and testing each later move, and name its piece
+([`slide/hint.ts`](../src/games/slide/hint.ts), `roomFor`). Test the claim
+another way, by playing the line on without the move.
 
 ## Deal only what the search can finish
 

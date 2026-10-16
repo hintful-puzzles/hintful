@@ -44,8 +44,8 @@ import {
   mkhighlight,
   mkhighlightSpecific,
 } from "../../engine/color/color-mkhighlight.ts";
-import { RED } from "../../engine/color/colors.ts";
-import { FLASH, FLASH_LEAD } from "../../engine/color/palette.ts";
+import { ORANGE, ORANGE_BOLD, RED } from "../../engine/color/colors.ts";
+import { FLASH, FLASH_LEAD, HINT_EVIDENCE } from "../../engine/color/palette.ts";
 import {
   slideBlockBase,
   slideMainBlockBase,
@@ -54,8 +54,11 @@ import {
 } from "../../engine/color/palette-games.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as gridCoord } from "../../engine/geometry.ts";
+import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, PaletteScheme, Point, Rect, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -69,6 +72,7 @@ import {
   EMPTY,
   isDist,
   MAINANCHOR,
+  type SlideMove,
   type SlideState,
   type SlideUi,
   WALL,
@@ -116,7 +120,11 @@ export const paletteScheme: Partial<PaletteScheme> = {
 export const COL_FLASH = 22;
 /** The same, under the flash's leading edge. */
 export const COL_FLASH_LEAD = 23;
-export const NCOLORS = 24;
+/** A hint's ring, its outline, and its stripes. */
+export const COL_HINT = 24;
+export const COL_HINT_EVIDENCE = 25;
+const COL_HINT_STRIPES = 26;
+export const NCOLORS = 27;
 
 /** Upstream `raise_colour`: two parts `src` to one part `limit`. */
 function raise(src: Color, limit: Color): Color {
@@ -189,6 +197,18 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = RED;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
+
+  // The hint's ring is orange, not the collection's blue: blue is the key
+  // block's, which the help names and the hint rings, and a blue ring on it
+  // would vanish (docs/hints-marks.md § "When the game has already spent the
+  // hint hue"). Green is the exit's and red the cursor's; orange is opposite
+  // the key block in hue, and the cursor's red is corner brackets where the
+  // ring is a band round a whole block.
+  out[COL_HINT] = ORANGE;
+  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  // The stripes take the bold step of the same hue: at the hatch's opacity the
+  // base step is too near the light floor to show (`hatch-contrast.test.ts`).
+  out[COL_HINT_STRIPES] = ORANGE_BOLD;
 
   return out;
 }
@@ -265,14 +285,26 @@ export interface SlideDrawState {
    * (drag, cursor, gate, flash) is part of this one word, so they
    * all sit in the diff key by construction (docs/rendering.md § "The tile cache and the diff key"). */
   grid: Int32Array;
+  /** The displayed hint's marks, which have no room in `grid`'s word. */
+  hint: OverlaySidecar;
 }
 
 export function newDrawState(state: SlideState, tileSize: number): SlideDrawState {
   return {
     tileSize,
     grid: new Int32Array(state.w * state.h).fill(-1),
+    hint: new OverlaySidecar(state.w * state.h),
   };
 }
+
+/** A square's hint marks: the sides of the ring and of the outline it carries,
+ * in `hint-mark.ts`'s side bits. */
+interface TileMarks {
+  readonly ring: number;
+  readonly outline: number;
+}
+
+const NO_MARKS: TileMarks = { ring: 0, outline: 0 };
 
 // --- the fiddly bit: one section of one tile ---------------------------
 
@@ -589,10 +621,13 @@ function drawTile(
   gx: number,
   gy: number,
   val: number,
+  i: number,
+  marks: TileMarks,
 ): void {
   const ts = ds.tileSize;
   const tx = gridCoord(gx, ts, BORDER);
   const ty = gridCoord(gy, ts, BORDER);
+  const box = { x: tx, y: ty, w: ts, h: ts };
 
   // Background: the floor, or the target area's green.
   let cc = val & BG_TARGET ? COL_TARGET : COL_BACKGROUND;
@@ -601,8 +636,11 @@ function drawTile(
   const lit = litColor(val);
   if (lit >= 0) cc = lit;
 
-  dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, cc);
+  dr.drawRect(box, cc);
   if (val & BG_FORCEFIELD) drawGate(dr, ts, tx, ty, val);
+  // Under the block, so a destination square the block already covers keeps
+  // the block whole and the stripes show on the floor it moves onto.
+  ds.hint.drawHatch(dr, i, box, COL_HINT_STRIPES, ts);
 
   // Foreground: a section of a block, or of the wall.
   if (val & FG_WALL) {
@@ -621,6 +659,14 @@ function drawTile(
 
     drawPiecepart(dr, ts, tx, ty, (val >> FG_MAINPIECESH) & PIECE_MASK, cl, cc, ch);
   }
+
+  // The hint's bands lie inside the square, over the block's bevel, the
+  // border they stand in for: squares tile exactly, so a square whose marks
+  // change repaints and takes its old band with it. The ring is drawn last of
+  // the two, so it wins a side they share.
+  const band = { box, outer: 0, inner: highlightWidth(ts) };
+  drawMarkSides(dr, band, marks.outline, COL_HINT_EVIDENCE);
+  drawMarkSides(dr, band, marks.ring, COL_HINT);
 
   // Topmost: the keyboard cursor, as the collection's four corner brackets.
   // They sit *beside* the content rather than over it, so a block's bevel and
@@ -681,9 +727,23 @@ export function redraw(
   ui: SlideUi,
   _animTime: number,
   flash: Flash,
+  hint?: HintStep<SlideMove>,
 ): void {
   const { w, h } = state;
   const wh = w * h;
+
+  // The hint's marks, from its words alone. The ring and the outline each
+  // name one block, so a side is drawn wherever the neighbor is not marked
+  // alike, and each comes out as one shape round its block.
+  const marks = stepMarks(hint);
+  const at = (x: number, y: number): number => y * w + x;
+  ds.hint.pack(marks, at);
+  const ringed = new Set(marks.of("ring", CELL).map((c) => at(c.x, c.y)));
+  const outlined = new Set(marks.of("outline", CELL).map((c) => at(c.x, c.y)));
+  const sides = (set: Set<number>, x: number, y: number): number =>
+    set.has(at(x, y))
+      ? outlineSides(x, y, (nx, ny) => nx >= 0 && nx < w && set.has(at(nx, ny)))
+      : 0;
 
   // The board we display, which is not state's board while a block is held:
   // the held block is drawn where it would land if it were put down now. That
@@ -784,9 +844,14 @@ export function redraw(
         val |= findPiecepart(w, h, dsf, x, y) << FG_MAINPIECESH;
       }
 
-      if (val !== ds.grid[i]) {
-        drawTile(dr, ds, x, y, val);
+      if (val !== ds.grid[i] || ds.hint.stale(i)) {
+        const tile =
+          ringed.has(i) || outlined.has(i)
+            ? { ring: sides(ringed, x, y), outline: sides(outlined, x, y) }
+            : NO_MARKS;
+        drawTile(dr, ds, x, y, val, i, tile);
         ds.grid[i] = val;
+        ds.hint.commit(i);
       }
     }
 }

@@ -166,9 +166,12 @@ export function nearestReachable(
  */
 export function executeMove(state: SlideState, move: SlideMove): SlideState {
   if (move.kind === "solution") {
+    const start: SlideState = move.restart
+      ? { ...state, board: state.dealt, lastmoved: -1, lastmovedPos: -1, movecount: 0 }
+      : state;
     return move.moves.reduce(
       (s, step) => executeMove(s, { kind: "move", from: step.from, to: step.to }),
-      state,
+      start,
     );
   }
   if (move.kind !== "move") return assertNever(move, "slide: executeMove");

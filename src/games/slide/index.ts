@@ -18,7 +18,9 @@
  *  - **A guess-free-generation obligation.** That binds logic puzzles; Slide is
  *    a movement puzzle whose "solver" is a shortest-path search, with no
  *    difficulty tiers (`maxmoves` bounds solution *length*).
- *  - **An explained hint**, so far. One would be a solver-path hint of its own.
+ *
+ * The hint is the search's (`hint.ts`): a shortest line, offered a chain at a
+ * time, each slide saying what it makes room for.
  */
 
 import type {
@@ -28,8 +30,9 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
+import { coord, fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
+import { drag } from "../../engine/hint-gesture.ts";
 import { numberItem, parseConfigInt } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -47,9 +50,11 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
+import { hint, hintKeepTrack, SLIDE_RUNGS } from "./hint.ts";
+import { HINT_MARKS } from "./hint-text.ts";
 import { computeReachable, executeMove, nearestReachable } from "./moves.ts";
 import {
   BORDER,
@@ -61,7 +66,7 @@ import {
   redraw,
   type SlideDrawState,
 } from "./render.ts";
-import { solveBoard } from "./solver.ts";
+import { findExit } from "./solver.ts";
 import {
   cancelGrab,
   decodeParams,
@@ -247,28 +252,21 @@ function moveSlideCursor(
 // --- solve ------------------------------------------------------------
 
 /**
- * Play the shortest route from here to the exit.
+ * Play the shortest route from here to the exit, or from the board as dealt
+ * where here is past the search's budget: the hint's own search
+ * (`solveBySearch`).
  *
  * Divergence: upstream solves the *initial* board, though its own comment says
  * "from the current position", and a route from the start is illegal from any
  * later position (docs/solver-and-generator.md § "Divergence and what it
- * costs" rule 3). We solve `curr`.
+ * costs" rule 3). We solve `curr` first.
  */
-function solve(_orig: SlideState, curr: SlideState): SolveResult<SlideMove> {
-  const { path } = solveBoard(
-    curr.w,
-    curr.h,
-    curr.board,
-    curr.forcefield,
-    curr.tx,
-    curr.ty,
-    -1,
-    true,
-  );
-  // The search is exhaustive and every slide can be undone, so no path from
-  // here means none from the start either.
-  if (!path) return { ok: false, error: NO_SOLUTION };
-  return { ok: true, move: { kind: "solution", moves: path } };
+function solve(orig: SlideState, curr: SlideState): SolveResult<SlideMove> {
+  return solveBySearch(orig, curr, findExit, (from, line) => ({
+    kind: "solution",
+    moves: line,
+    restart: from !== curr,
+  }));
 }
 
 // --- params form ------------------------------------------------------
@@ -345,6 +343,23 @@ export const slideGame: Game<
   },
 
   solve,
+
+  hint,
+  hintMarks: HINT_MARKS,
+  hintRungs: SLIDE_RUNGS,
+  hintKeepTrack,
+  // The drag a player makes: press the block's anchor square and let go
+  // where the anchor lands, which the drag lands on exactly because it is
+  // reachable (`nearestReachable` at distance 0).
+  hintGesture(s, _ui, ds, m) {
+    if (m.kind !== "move") return [];
+    const at = (i: number): Point => ({
+      x: coord(i % s.w, ds.tileSize, BORDER) + Math.floor(ds.tileSize / 2),
+      y: coord(Math.floor(i / s.w), ds.tileSize, BORDER) + Math.floor(ds.tileSize / 2),
+    });
+    return [drag(at(m.from), at(m.to))];
+  },
+
   textFormat,
   statusbarText,
 

@@ -201,6 +201,10 @@ export interface SlideState {
   readonly lastmoved: number;
   readonly lastmovedPos: number;
   readonly movecount: number;
+  /** The board as dealt, which a Solve from the deal replays from (a
+   * `solution` move with `restart`). Shared by every state, as `forcefield`
+   * is. */
+  readonly dealt: Uint8Array;
 }
 
 /** The main block's anchor sits on the target. */
@@ -279,7 +283,10 @@ export function cursorPos(ui: SlideUi, w: number): number {
  */
 export type SlideMove =
   | { kind: "move"; from: number; to: number }
-  | { kind: "solution"; moves: readonly SlideStep[] };
+  /** `restart`: the moves run from the board as dealt, where Solve found no
+   * line from the player's position. Absent from a save made before it
+   * existed, which meant from the position. */
+  | { kind: "solution"; moves: readonly SlideStep[]; restart?: boolean };
 
 // --- desc codec -------------------------------------------------------
 
@@ -409,6 +416,7 @@ export function newState(p: SlideParams, desc: string): SlideState {
     lastmoved: -1,
     lastmovedPos: -1,
     movecount: 0,
+    dealt: board.slice(),
   };
 }
 

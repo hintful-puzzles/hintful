@@ -612,7 +612,9 @@ mandate.
   the hint at the same moment, the hint moves.** Two roles agreeing about
   what they point at is when a shared color confuses most. Exemplar:
   [`galaxies/render.ts`](../src/games/galaxies/render.ts), whose hint is
-  purple beside the drag preview's `DRAG_ADD`.
+  purple beside the drag preview's `DRAG_ADD`. Where blue, green and red
+  are all spent and the hint marks the blue thing, take orange, opposite it
+  in hue ([`slide/render.ts`](../src/games/slide/render.ts)).
 - **Where the thing holding the hue is the cursor, the cursor moves.** A
   cursor color is the game's own, and hint blue is learned across the
   collection. Exemplar: [`sticks/render.ts`](../src/games/sticks/render.ts).

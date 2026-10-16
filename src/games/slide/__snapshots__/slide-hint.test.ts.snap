@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`slide: pinned hint positions > says, at each pin 1`] = `
+{
+  "keyBlock": "Slide the ringed key block into the striped space: from there it can be out in 19 moves.",
+  "keyOut": "Slide the ringed key block into the striped space: that brings it onto the exit.",
+  "makesRoom": "Slide the ringed block into the striped space: that makes room for the outlined block.",
+  "makesRoomForKey": "Slide the ringed block into the striped space: that makes room for the key block.",
+  "movesOn": "Slide the ringed block into the striped space: it moves on from there later.",
+  "roomLater": "Slide the ringed block into the striped space: that makes room for the outlined block.",
+}
+`;

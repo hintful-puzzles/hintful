@@ -1703,6 +1703,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "grid",
+      "hint",
       "tileSize",
     ],
     "id": "slide",
@@ -1710,6 +1711,11 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "changedState",
       "finishesByDeduction",
+      "hint",
+      "hintGesture",
+      "hintKeepTrack",
+      "hintMarks",
+      "hintRungs",
       "notApplicable",
       "paletteScheme",
       "paramConfig",

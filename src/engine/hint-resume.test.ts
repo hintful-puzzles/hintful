@@ -203,6 +203,13 @@ const SEARCH_REACH: Record<string, string> = {
     "push does, which is nearly every push, so a cycle here would be " +
     "a defect in that rule and not the search's reach. Largest board on every " +
     "commit: this walk, which the gate does not slice for Sokoban.",
+  slide:
+    "Plans by an exhaustive breadth-first search for the exit, capped in " +
+    "positions, and the generator deals no board past the cap. The worst " +
+    "dealt board measured kept under a third of it and wandering barely moves " +
+    "that, so it has not been seen refusing. Largest board on every commit: " +
+    "this walk, which the gate does not slice for Slide, and 6x8 is the " +
+    "largest board Slide allows.",
   netslide:
     "Plans by searching for an arrangement that powers the grid. Has not been " +
     "seen refusing — its finish condition is weak, so its distances are short — " +
