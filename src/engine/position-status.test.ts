@@ -76,6 +76,7 @@ const UNBREAKABLE: Record<string, string> = {
   mosaic: "a solved board accepts only the cursor keys",
   net: "Solve locks every tile, a locked tile does not turn, and unlocking is a notes-mode tap",
   pegs: "a solved board has one peg left, and one peg has nothing to jump over",
+  samegame: "a solved board is empty, and an empty board has no group to remove",
 };
 
 function games(): [string, AnyGame][] {

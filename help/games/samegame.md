@@ -22,6 +22,26 @@ wrapping round at the edges. Enter highlights the group under the
 cursor and removes it on a second press; Space highlights it, and lets
 go of it on a second press.
 
+## Hints
+
+**Hint** shows a group to remove next, one that still leaves a board that can
+be cleared. It searches for a way to clear the board from wherever you are,
+so it carries on from your own moves too. It is about clearing the board,
+not about the score: the group it picks is not always the one that scores
+the most.
+
+{{hint-marks}}
+
+The step says why it picked that group where it can show it. A square that
+is the last of its color can never be removed, so a hint warns you off a
+group whose removal would leave one, or would leave no two squares of one
+color side by side. Where it has checked every other group, it says which of
+them could also go next. Otherwise it points out a square with no partner of
+its color beside it that the removal brings one to.
+
+If no way to clear the board is left, the hint says so, and the thing to do
+is undo. **Show solution** clears the board for you.
+
 ## Same Game parameters
 
 {{parameters}}

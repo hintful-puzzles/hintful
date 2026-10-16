@@ -4,14 +4,27 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import {
+  drawMarkSides,
+  type HintMarkStyle,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  MarkOutlines,
+} from "../../engine/hint-mark.ts";
+import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
-import type { SamegameState, SamegameUi } from "./state.ts";
+import type { SamegameMove, SamegameState, SamegameUi } from "./state.ts";
 
 // --- tile-size metrics ------------------------------------------------
 
@@ -53,11 +66,24 @@ export const COL_LIFTED = 13;
 /** The frame round the field. */
 const COL_GRID = 14;
 /** The cursor on a tile. */
-const COL_ON_TILE = 15;
+export const COL_ON_TILE = 15;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 16;
 export const COL_FLASH_LEAD = 17;
-const NCOLORS = 18;
+/** The ring round the group a hint step removes. */
+export const COL_HINT = 18;
+/** The outline round the squares and groups it reasons from. */
+export const COL_HINT_EVIDENCE = 19;
+const NCOLORS = 20;
+
+/**
+ * The stripes on a group a hint step names, and the keyline inside its ring
+ * and outline: black, because the squares come in every hue and the hint's
+ * own blue is one of them. Black stripes measured at least 1.44:1 against
+ * every square in both schemes, where blue ones measured 1.00 on a blue square
+ * (`add-samegame-hint` design D4).
+ */
+export const COL_HINT_KEY = COL_ON_TILE;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = new Array<Color>(NCOLORS);
@@ -74,6 +100,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
   return out;
 }
 
@@ -97,6 +125,10 @@ export interface SamegameDrawState {
   /** Per-cell cache of the last-drawn packed tile value; `-1` forces a
    * redraw (the no-BigInt Int32Array cache pattern). */
   grid: Int32Array;
+  /** The hint step's marks by square, part of the diff key. */
+  hint: OverlaySidecar;
+  /** The ring and the outline, drawn after the tiles. */
+  marks: HintMarks;
 }
 
 export function newDrawState(
@@ -109,7 +141,46 @@ export function newDrawState(
     tilegap: gap(tileSize),
     margin: -1,
     grid: new Int32Array(state.w * state.h).fill(-1),
+    hint: new OverlaySidecar(state.w * state.h),
+    marks: new HintMarks(),
   };
+}
+
+/** Where a hint mark sits around square `(x, y)`: in the gap round the tile
+ * and a little way into it. `key` widens it inward by the keyline, a
+ * thirty-second of a tile, which at one pixel was lost on a big board. */
+function markBand(ds: SamegameDrawState, x: number, y: number, key: boolean): MarkBand {
+  const ts = ds.tileSize;
+  return {
+    box: { x: coord(x, ts), y: coord(y, ts), w: ds.tileinner, h: ds.tileinner },
+    outer: ds.tilegap,
+    inner: Math.max(2, ts >> 4) + (key ? Math.max(1, ts >> 5) : 0),
+  };
+}
+
+/** Paint the marks' bands in their own colors, over the keyline `HintMarks`
+ * has just painted a little wider. */
+function paintBands(
+  dr: GameDrawing,
+  targets: readonly MarkCell[],
+  evidence: readonly MarkCell[],
+  style: HintMarkStyle,
+): void {
+  const outlines = new MarkOutlines(targets, evidence, style);
+  for (const c of evidence)
+    drawMarkSides(
+      dr,
+      style.band(c.x, c.y),
+      outlines.evidenceSides(c.x, c.y),
+      style.evidenceColor,
+    );
+  for (const c of targets)
+    drawMarkSides(
+      dr,
+      style.band(c.x, c.y),
+      outlines.targetSides(c.x, c.y),
+      style.targetColor,
+    );
 }
 
 // --- tile drawing -----------------------------------------------------
@@ -123,6 +194,7 @@ export function newDrawState(
 function tileRedraw(
   dr: GameDrawing,
   ds: SamegameDrawState,
+  i: number,
   x: number,
   y: number,
   dright: boolean,
@@ -160,9 +232,11 @@ function tileRedraw(
   // Draw the background if any of it will be visible.
   if (outerW !== tileW || outerH !== tileH || outerCol === bgcolor)
     dr.drawRect({ x: cx, y: cy, w: tileW, h: tileH }, bgcolor);
-  // Draw the piece.
+  // Draw the piece, and the stripes of a group the hint names over it,
+  // gaps and all, so a group's stripes run on from square to square.
   if (outerCol !== bgcolor)
     dr.drawRect({ x: cx, y: cy, w: outerW, h: outerH }, outerCol);
+  ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: outerW, h: outerH }, COL_HINT_KEY, ts);
   if (innerCol !== outerCol)
     dr.drawRect(
       {
@@ -227,6 +301,9 @@ export function redraw(
   ui: SamegameUi,
   _animTime: number,
   flash: Flash,
+  hint?: HintStep<SamegameMove>,
+  _mistakes?: readonly never[],
+  deadEnd?: MarkedDeadEnd,
 ): void {
   const ts = ds.tileSize;
   const { w, h } = state;
@@ -237,7 +314,30 @@ export function redraw(
   const stuckLit = flash.time > 0 && Math.floor(flash.time / FLASH_FRAME) % 2 === 0;
   const margin = stuckLit ? COL_LIFTED : COL_CELL;
   const marginChanged = ds.margin !== margin;
-  if (marginChanged) drawFrame(dr, w, h, ts, margin);
+  if (marginChanged) {
+    drawFrame(dr, w, h, ts, margin);
+    ds.marks.reset();
+  }
+
+  // The displayed step's marks, read from its words and from nowhere else.
+  // Each is painted twice: in the keyline's black a little wider, then in its
+  // own color, so a ring shows even round a group of its own hue.
+  const named = stepMarks(hint ?? deadEnd);
+  const targets: readonly MarkCell[] = named.of("ring", CELL);
+  const evidence: readonly MarkCell[] = named.of("outline", CELL);
+  ds.hint.pack(named, (x, y) => y * w + x);
+  const style = (key: boolean): HintMarkStyle => ({
+    band: (x, y) => markBand(ds, x, y, key),
+    targetColor: key ? COL_HINT_KEY : COL_HINT,
+    evidenceColor: key ? COL_HINT_KEY : COL_HINT_EVIDENCE,
+    // A step rings one group, so its squares are one shape.
+    joinTargets: () => true,
+    // Two groups the step outlines never share a color where they touch.
+    joinEvidence: (a, b) => state.tiles[a.y * w + a.x] === state.tiles[b.y * w + b.x],
+  });
+  ds.marks.eraseBeforeTiles(dr, targets, evidence, style(true), margin, (x, y) => {
+    if (x >= 0 && x < w && y >= 0 && y < h) ds.grid[y * w + x] = -1;
+  });
 
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
@@ -270,12 +370,17 @@ export function redraw(
       tile |= tone << TILE_TONE_SHIFT;
 
       // The margin's repaint covers the field, so every tile follows it.
-      if (ds.grid[i] !== tile || marginChanged) {
+      if (ds.grid[i] !== tile || marginChanged || ds.hint.stale(i)) {
         const bgcolor = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : margin;
-        tileRedraw(dr, ds, x, y, dright, dbelow, tile, bgcolor);
+        tileRedraw(dr, ds, i, x, y, dright, dbelow, tile, bgcolor);
         ds.grid[i] = tile;
+        ds.hint.commit(i);
       }
     }
   }
   ds.margin = margin;
+
+  // After the tiles, because a mark straddles the gap between two of them.
+  ds.marks.paint(dr, targets, evidence, style(true));
+  paintBands(dr, targets, evidence, style(false));
 }

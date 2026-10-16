@@ -1,7 +1,13 @@
-import { rejectMove } from "../../engine/assert-never.ts";
-import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
+import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+import {
+  type Game,
+  type SolveResult,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/game.ts";
+import { coord, fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
+import { click } from "../../engine/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -13,7 +19,16 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
+import {
+  hasNoSolution,
+  hint,
+  hintKeepTrack,
+  SAMEGAME_RUNGS,
+  type SamegameRung,
+} from "./hint.ts";
+import { HINT_MARKS } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -23,12 +38,12 @@ import {
   redraw,
   type SamegameDrawState,
 } from "./render.ts";
+import { findClearing } from "./solver.ts";
 import {
   check,
   decodeParams,
   defaultParams,
   encodeParams,
-  hasNoSolution,
   isCleared,
   isStuck,
   newDesc,
@@ -162,13 +177,15 @@ function interpretMove(
 // --- move execution ---------------------------------------------------
 
 export function executeMove(state: SamegameState, move: SamegameMove): SamegameState {
-  // Samegame's move is one object shape rather than a union, so there is no
-  // discriminant to narrow to `never`: check the fields the dispatch reads.
-  if (move.type !== "remove" || !Array.isArray(move.tiles)) {
-    rejectMove(move, "samegame: executeMove");
-  }
-
   const { w, h } = state;
+  if (move.type === "solve") {
+    const tiles = new Array<number>(w * h).fill(0);
+    return { ...state, tiles, impossible: check(tiles, w, h).impossible };
+  }
+  if (move.type !== "remove") return assertNever(move, "samegame: executeMove");
+  // A move read back from a save is checked for the field the removal reads.
+  if (!Array.isArray(move.tiles)) rejectMove(move, "samegame: executeMove");
+
   const tiles = state.tiles.slice();
   for (const idx of move.tiles) {
     if (idx < 0 || idx >= w * h) throw new Error(`Move index ${idx} out of range`);
@@ -177,6 +194,15 @@ export function executeMove(state: SamegameState, move: SamegameMove): SamegameS
   const score = state.score + npoints(state.scoresub, move.tiles.length);
   snuggle(tiles, w, h); // shift blanks down and to the left
   return { ...state, tiles, score, impossible: check(tiles, w, h).impossible };
+}
+
+// --- solve -----------------------------------------------------------
+
+/** The emptied board, where a clearing is found from the player's position or
+ * else from the dealt one, which the generator makes clearable. The fallback
+ * keeps the hint's out-of-reach refusal honest when it sends the player here. */
+function solve(orig: SamegameState, curr: SamegameState): SolveResult<SamegameMove> {
+  return solveBySearch(orig, curr, findClearing, () => ({ type: "solve" }));
 }
 
 // --- status bar -------------------------------------------------------
@@ -209,7 +235,10 @@ export const samegameGame: Game<
   SamegameState,
   SamegameMove,
   SamegameUi,
-  SamegameDrawState
+  SamegameDrawState,
+  never,
+  unknown,
+  SamegameRung
 > = {
   id: "samegame",
 
@@ -235,7 +264,23 @@ export const samegameGame: Game<
     transposeParams:
       "Squares fall down and emptied columns close up to the left, so a board turned on its side would be a different puzzle.",
   },
+  solve,
   hasNoSolution,
+
+  hint,
+  hintMarks: HINT_MARKS,
+  hintRungs: SAMEGAME_RUNGS,
+  hintKeepTrack,
+  // The two clicks a player makes on a square of the group: one highlights
+  // it, the next removes it. One click where it is already highlighted.
+  hintGesture(s, ui, ds, m) {
+    if (m.type !== "remove") return [];
+    const i = m.tiles[0];
+    const ts = ds.tileSize;
+    const center = (n: number) => coord(n, ts, Math.floor(ts / 2)) + Math.floor(ts / 2);
+    const tap = click({ x: center(i % s.w), y: center(Math.floor(i / s.w)) });
+    return ui.selected[i] ? [tap] : [tap, tap];
+  },
 
   textFormat,
   statusbarText,

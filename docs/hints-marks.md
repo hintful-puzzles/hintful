@@ -622,6 +622,12 @@ mandate.
   does in [`spokes/render.ts`](../src/games/spokes/render.ts) and
   [`subsets/render.ts`](../src/games/subsets/render.ts); say why at the
   assignment.
+- **Where the pieces come in every hue, no hint color is free**, so the marks
+  keep their colors and take an edge that shows on all of them: a black
+  keyline inside the ring and the outline, and black stripes, measured over
+  every piece color in both schemes in `puzzle/hatch-contrast.test.ts`.
+  Exemplar: [`samegame/render.ts`](../src/games/samegame/render.ts),
+  `COL_HINT_KEY`.
 
 ## A hint that suppresses a game's aid dismisses on a UI update
 

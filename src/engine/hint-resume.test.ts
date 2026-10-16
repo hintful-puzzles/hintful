@@ -195,6 +195,13 @@ const SEARCH_REACH: Record<string, string> = {
     "walk that follows the hint never leaves a soluble position, so it has not " +
     "been seen refusing here. Largest board on every commit: this walk, which " +
     "the gate does not slice for Pegs.",
+  samegame:
+    "Finds an order of removals by a depth-first search that restarts with " +
+    "its ties broken another way, within a budget, and proves a position " +
+    "lost when one restart searches everything. Every opening measured on " +
+    "every preset clears far inside the budget, and of 4,000 positions random " +
+    "play left, one outran it. Largest board on every commit: " +
+    "samegame-hint.test.ts, which walks a 15x20 board on recomputed hints.",
   sokoban:
     "Finds a line of pushes by a best-first search from both ends, and every " +
     "dealt board is one it finishes from the opening; a position the player " +

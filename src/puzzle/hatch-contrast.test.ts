@@ -18,6 +18,7 @@ import { opsOfKind, RecordingDrawing } from "../engine/testing/recording-drawing
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import type { Color } from "../engine/types.ts";
 import * as magnets from "../games/magnets/render.ts";
+import * as samegame from "../games/samegame/render.ts";
 import { schemeOf, schemePalettes } from "./scheme-palettes.ts";
 
 const relLum = (c: Color): number => {
@@ -197,5 +198,28 @@ describe("Magnets under the hatch", () => {
         ).toBeGreaterThanOrEqual(Math.min(before * 0.72, 4.5));
       }
     }
+  });
+});
+
+// The check above measures a stripe against the board's background, and Same
+// Game's stripes lie on its squares, which come in every hue.
+describe("Same Game under the hatch", () => {
+  it("shows its stripes on a square of every color, in both schemes", () => {
+    const { light, dark } = schemePalettes("samegame");
+    let measured = 0;
+    for (const [scheme, palette] of [
+      ["light", light],
+      ["dark", dark],
+    ] as const) {
+      for (let c = 1; c <= 9; c++) {
+        const square = palette[c];
+        expect(
+          contrast(over(square, palette[samegame.COL_HINT_KEY]), square),
+          `color ${c} in ${scheme}`,
+        ).toBeGreaterThan(VISIBLE);
+        measured++;
+      }
+    }
+    expect(measured).toBe(18);
   });
 });

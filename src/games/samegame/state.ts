@@ -38,9 +38,10 @@ export interface SamegameState {
 
 /** Remove the listed grid indices (upstream's `M12,13,...` string). The
  * indices are a connected same-color region of size ≥ 2, enforced at
- * `interpretMove` time; `executeMove` only range-checks. Plain JSON data, so
- * the default move codec suffices. */
-export type SamegameMove = { type: "remove"; tiles: number[] };
+ * `interpretMove` time; `executeMove` only range-checks. Or Solve's, which
+ * empties the board and scores nothing. Plain JSON data, so the default move
+ * codec suffices. */
+export type SamegameMove = { type: "remove"; tiles: number[] } | { type: "solve" };
 
 /** The picked-but-not-yet-removed selection lives here, not in the game
  * state (upstream `game_ui`): selecting a region then changing your mind

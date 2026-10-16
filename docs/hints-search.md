@@ -308,6 +308,12 @@ search only proves loss; that proof is what lets the hint refuse with
 [`engine/search-outcome.ts`](../src/engine/search-outcome.ts)). Exemplar:
 [`pegs/solver.ts`](../src/games/pegs/solver.ts).
 
+- An ordered depth-first search is heavy-tailed: an early wrong turn buries
+  it. Restart it with its ties broken another way and its memo of lost
+  positions shared, which proves as much as one long search and finds far
+  more ([`samegame/solver.ts`](../src/games/samegame/solver.ts); measured in
+  `add-samegame-hint` design D2, where twenty restarts and a long last try
+  lost boards that a hundred and ten short ones did not).
 - A search that is exhaustive never runs out of reach, so its hint does not
   call `searchRefusal`: calling it is what enrolls a game in
   `hint-resume.test.ts`'s ledger of hints with a reach. A lost position is
