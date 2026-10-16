@@ -87,7 +87,6 @@ const arrows = (goods: readonly Marked[]): Narration =>
   mark.as("outline", JUMP, goods, (els) =>
     els.length > 1 ? "the jumps with arrows" : "the jump with an arrow",
   );
-const count = (n: number): string => (n === 3 ? "Three" : "Six");
 
 /**
  * Every sentence runs from what to look at, through what follows from it, to
@@ -183,10 +182,11 @@ export const say = {
       rival,
     ),
 
-  /** The first jump of a package. */
+  /** The first jump of a package. The hint's counter shows how many jumps it
+   * takes, so the words do not. */
   packageStart: (m: Marked, p: Package): Sentence =>
     sentence({
-      look: phrase`${count(p.jumps)} jumps clear ${theShape(p)} and change nothing else`,
+      look: phrase`A run of jumps clears ${theShape(p)} and changes nothing else`,
       move: lower(m),
       relation: { kind: "sequence", at: "first" },
     }),

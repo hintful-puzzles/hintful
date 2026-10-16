@@ -335,9 +335,7 @@ describe("the hint's sentences", () => {
     const r = hint(s0);
     if (!r.ok) throw new Error(r.error);
     expect(r.steps.length).toBeGreaterThan(1);
-    expect(r.steps[0].explanation).toMatch(
-      new RegExp(`^${["", "", "Two", "Three", "Four", "Five"][r.steps.length]} pushes`),
-    );
+    expect(r.steps[0].explanation).toMatch(/^A run of pushes/);
     let s = s0;
     let barrel = -1;
     r.steps.forEach((st, i) => {

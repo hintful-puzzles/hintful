@@ -63,9 +63,10 @@ that is what the hint says next, where it applies:
   it is where you would have to stand. Once the ringed barrel is
   pushed, the outlined one can be taken to a target without moving
   anything else.
-- **Two pushes put this barrel on a target.** When the search's line
-  pushes one barrel several times running and ends with it on a
-  target, the hint counts the pushes and shows them one after another.
+- **A run of pushes puts this barrel on a target.** When the search's
+  line pushes one barrel several times running and ends with it on a
+  target, the hint shows the pushes one after another, counting them
+  above the sentence.
 
 When none of that applies, it says what the push does that you can
 see: that it puts the barrel on a target, or that it lets you out when

@@ -50,10 +50,6 @@ export type Stuck = "corner" | "dead" | "frozen";
 
 const WAY = ["left", "up", "right", "down"] as const;
 
-/** How many pushes a run takes, in words; a run is told only this far. */
-const COUNT: Record<number, string> = { 2: "Two", 3: "Three", 4: "Four", 5: "Five" };
-export const LONGEST_RUN = 5;
-
 const thisBarrel = (p: Push): Narration => mark.this("ring", PUSH, [p], "barrel");
 /** The move, mid-sentence. */
 const pushIt = (p: Push): Narration => phrase`push ${thisBarrel(p)} ${WAY[p.dir]}`;
@@ -147,10 +143,11 @@ export const say = {
       relation: { kind: "effect", effect: phrase`that opens a way` },
     }),
 
-  /** The first of `n` pushes of one barrel that end with it on a target. */
-  runFirst: (m: Push, n: number): Sentence =>
+  /** The first of the pushes of one barrel that end with it on a target. The
+   * hint's counter shows how many there are, so the words do not. */
+  runFirst: (m: Push): Sentence =>
     sentence({
-      look: phrase`${COUNT[n]} pushes put ${thisBarrel(m)} on a target`,
+      look: phrase`A run of pushes puts ${thisBarrel(m)} on a target`,
       move: phrase`push it ${WAY[m.dir]}`,
       relation: { kind: "sequence", at: "first" },
     }),

@@ -24,6 +24,9 @@
  *    teachable tier, the Custom-dialog corner neither of those reaches — and
  *    into the middle of the game, in its own block, because the first
  *    preset's opening plan is where the long sentences never are.
+ *  - **No step restates the counter** (§ "Keep the narration terse"): a leg
+ *    of a journey never says which leg it is or how many there are, which
+ *    the chrome shows as "Step 2 of 7". Held in the bound walk.
  *  - **No step asks the player to carry a chain it never lays out**: a
  *    bounded chain is a legitimate
  *    *Tactic* and may be narrated — but with the chain **shown on the
@@ -721,6 +724,89 @@ function formDefects(step: HintStep<unknown>, searching: boolean): string[] {
   return [];
 }
 
+const SPELLED = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+];
+const ORDINAL = [
+  "zeroth",
+  "first",
+  "second",
+  "third",
+  "fourth",
+  "fifth",
+  "sixth",
+  "seventh",
+  "eighth",
+  "ninth",
+  "tenth",
+  "eleventh",
+  "twelfth",
+];
+
+/** The ways a sentence writes these numbers, as an alternation: "3|three" for
+ * a count, "3|third" for a place. */
+const spellings = (ns: readonly number[], words: readonly string[]): string =>
+  [...new Set(ns.flatMap((n) => [String(n), words[n] ?? ""]))]
+    .filter((s) => s !== "")
+    .join("|");
+
+/** The nouns a sentence counts a journey's legs in: the gesture each leg is. */
+const LEG_NOUNS =
+  "turns?|moves?|jumps?|push(?:es)?|steps?|slides?|legs?|clicks?|taps?|flips?|swaps?|rotations?|shifts?|press(?:es)?|placements?";
+
+/**
+ * Where a step's words restate its place in its journey, which the hint's
+ * chrome already shows as "Step `leg` of `legs`" (`StatusBarChange.hintJourney`,
+ * owner 2026-10-16: *"there's no reason to say 'turn 2 of the 7', as that's
+ * already there on the hint element"*). Three shapes, each built from this
+ * step's own numbers so a count the board shows (a clue of 3, "needs 2 more
+ * squares") never matches by coincidence of value alone: "`leg` of (the)
+ * `legs`" or "the last of `legs`", "`leg`/`legs`", and a count of the journey's
+ * legs, whole or still to go, in the gesture's own noun ("Three jumps", "the
+ * next 4 turns").
+ */
+function journeyDefects(text: string, leg: number, legs: number): string[] {
+  if (legs < 2) return [];
+  const edge = (body: string): RegExp =>
+    new RegExp(`(?:^|\\W)(?:${body})(?:\\W|$)`, "i");
+  const shapes: [RegExp, string][] = [
+    [
+      edge(
+        `(?:${spellings([leg], ORDINAL)}|(?:the )?last) of (?:the )?(?:${spellings([legs], SPELLED)})`,
+      ),
+      "its place",
+    ],
+    [edge(`${leg}\\s*/\\s*${legs}`), "its place"],
+    [
+      edge(
+        `(?:${spellings(
+          [legs, legs - leg + 1, legs - leg].filter((n) => n > 0),
+          SPELLED,
+        )})\\s+(?:more\\s+)?(?:${LEG_NOUNS})`,
+      ),
+      "how many legs it has",
+    ],
+  ];
+  return shapes
+    .filter(([shape]) => shape.test(text))
+    .map(
+      ([, what]) =>
+        `restates ${what} in its journey (step ${leg} of ${legs}), which the hint's counter already shows`,
+    );
+}
+
 /**
  * How many steps of one board the walk below checks. The local hooks stop
  * at 400: a board's later steps are spoken by the rungs its earlier ones were,
@@ -733,6 +819,23 @@ const BOUND_STEPS = perCommit(400, Number.POSITIVE_INFINITY);
  * exception and the searching check met real steps. */
 const formsSeen = new Map<string, number>();
 
+/** Steps of a journey of two or more legs the walk held to `journeyDefects`,
+ * so the close-out can tell the rule met real journeys. */
+let journeyLegsChecked = 0;
+
+/** Where `steps[i]` sits in its journey, 1-based, and the journey's length:
+ * the same grouping by `continuesPrevious` the midend's counter makes. */
+function journeyOf(
+  steps: readonly HintStep<unknown>[],
+  i: number,
+): { leg: number; legs: number } {
+  let first = i;
+  while (first > 0 && steps[first].continuesPrevious === true) first--;
+  let last = i;
+  while (last + 1 < steps.length && steps[last + 1].continuesPrevious === true) last++;
+  return { leg: i - first + 1, legs: last - first + 1 };
+}
+
 /**
  * Both readings of a note-less cell for a game whose `Ui` offers the choice
  * (`candidateReading`), since the player may pick either and the implicit one
@@ -743,6 +846,39 @@ function readingsOf(game: AnyGame, params: unknown): readonly (string | null)[] 
   const ui = game.newUi(game.newState(params, desc)) as Record<string, unknown>;
   return typeof ui["candidateReading"] === "string" ? ["implicit", "populate"] : [null];
 }
+
+describe("a step's words leave its place in the journey to the counter", () => {
+  it("flags the counter's facts and passes a count the board shows", () => {
+    const flagged = (text: string, leg: number, legs: number): boolean =>
+      journeyDefects(text, leg, legs).length > 0;
+    expect(
+      flagged(
+        "Turn the ringed block clockwise, turn 2 of the 7 that put it in place.",
+        2,
+        7,
+      ),
+    ).toBe(true);
+    expect(flagged("Turn the ringed block clockwise, the last of the 7.", 7, 7)).toBe(
+      true,
+    );
+    expect(
+      flagged("Six jumps clear the striped block and change nothing else.", 1, 6),
+    ).toBe(true);
+    expect(flagged("The next 3 turns put it in place.", 2, 4)).toBe(true);
+    expect(flagged("Push it left (2/3).", 2, 3)).toBe(true);
+    // A clue or a count of squares that happens to equal the journey's.
+    expect(
+      flagged(
+        "This row needs 3 more +s and only these 3 squares can still take one.",
+        1,
+        3,
+      ),
+    ).toBe(false);
+    expect(flagged("This 3's other edges can give it 2 at most.", 2, 3)).toBe(false);
+    // One leg: the counter shows nothing, so the words may.
+    expect(flagged("Two pushes put this barrel on a target.", 1, 1)).toBe(false);
+  });
+});
 
 describe("a bound hint's words name exactly the marks it draws", () => {
   it("every hinted game is bound", () => {
@@ -775,11 +911,15 @@ describe("a bound hint's words name exactly the marks it draws", () => {
         ui: unknown,
         step: Parameters<typeof bindingDefects>[3],
         at: string,
+        { leg, legs }: { leg: number; legs: number },
       ): void => {
         checked++;
         for (const d of bindingDefects(game, state, ui, step))
           defects.push(`${at}: "${step.explanation}": ${d}`);
         for (const d of formDefects(step, SEARCHING.has(name)))
+          defects.push(`${at}: "${step.explanation}": ${d}`);
+        if (legs > 1) journeyLegsChecked++;
+        for (const d of journeyDefects(step.explanation, leg, legs))
           defects.push(`${at}: "${step.explanation}": ${d}`);
         const form = step.words?.form;
         if (form) {
@@ -811,14 +951,21 @@ describe("a bound hint's words name exactly the marks it draws", () => {
               // the steps before it.
               for (const [i, step] of res.steps.entries()) {
                 if (walked++ >= BOUND_STEPS) break;
-                check(state, ui, step, `${at} round ${round} step ${i}`);
+                const journey = journeyOf(res.steps, i);
+                check(state, ui, step, `${at} round ${round} step ${i}`, journey);
                 // `null` is a step already resolved: the midend skips it.
                 const live = game.refreshHintStep
                   ? game.refreshHintStep(step, state)
                   : step;
                 if (live === null) continue;
                 if (live !== step)
-                  check(state, ui, live, `${at} round ${round} step ${i}, refreshed`);
+                  check(
+                    state,
+                    ui,
+                    live,
+                    `${at} round ${round} step ${i}, refreshed`,
+                    journey,
+                  );
                 state = game.executeMove(state, live.move);
               }
             }
@@ -838,6 +985,10 @@ describe("a bound hint's words name exactly the marks it draws", () => {
     expect(seen).toContain("unshaped:evident");
     expect(seen).toContain("searching forced:lost");
     expect(seen.filter((k) => k.startsWith("searching ")).length).toBeGreaterThan(2);
+    expect(
+      journeyLegsChecked,
+      "no step of a multi-leg journey was held to its counter",
+    ).toBeGreaterThan(0);
   });
 });
 

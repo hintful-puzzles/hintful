@@ -53,7 +53,7 @@ import {
   searchVerdict,
   type Unfinished,
 } from "../../engine/search-outcome.ts";
-import { LONGEST_RUN, type Stuck, say, stuckBarrel } from "./hint-text.ts";
+import { type Stuck, say, stuckBarrel } from "./hint-text.ts";
 import {
   DIRS,
   type Finish,
@@ -305,7 +305,7 @@ export function hint(
     ok: true,
     steps: run.map((p, i) =>
       i === 0
-        ? step(p, "run", say.runFirst(p, run.length))
+        ? step(p, "run", say.runFirst(p))
         : step(p, "run", i < run.length - 1 ? say.runNext(p) : say.runLast(p), true),
     ),
   };
@@ -358,10 +358,13 @@ function clearedBy(
   );
 }
 
+const LONGEST_RUN = 5;
+
 /**
  * The pushes `line` opens with that take one barrel to a target, when there
  * are at least two and each lowers the potential: the line the search finds
  * after it is shorter than the one before. `next` is the line after the first.
+ * A run is told over at most `LONGEST_RUN` pushes.
  */
 function runHome(
   board: SokobanBoard,

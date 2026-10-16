@@ -5294,7 +5294,7 @@ exports[`sokoban: pinned hint positions > says, at each pin 1`] = `
   "only": "No other push of this barrel can still finish, so push it up.",
   "onlyThese": "This barrel can still finish only along the arrows. One of them: push it right.",
   "plain": "Push this barrel down.",
-  "run": "Three pushes put this barrel on a target. First, push it left.",
+  "run": "A run of pushes puts this barrel on a target. First, push it left.",
   "trap": "This barrel's striped push would jam it so it can never move. One way to avoid that: push it left.",
   "trapCorner": "This barrel's striped push would wedge it in a corner it can never leave. One way to avoid that: push it down.",
   "trapDead": "This barrel's striped push would leave it where no push can bring it to a target. One way to avoid that: push it left.",

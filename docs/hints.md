@@ -524,6 +524,11 @@ Say the why in one sentence, within 120 characters. Cut to the single premise
 the highlight does not already show, lean on implied values ("the region of N"
 already says to write N), and do not repeat the number.
 
+Leave a journey's count to the chrome. A step whose journey has two or more
+legs shows "Step 2 of 7" above its sentence, so the words never say which leg
+it is or how many there are ("turn 2 of the 7", "Three jumps clear…"). The
+bound walk in `hint-quality.test.ts` holds every leg to it (`journeyDefects`).
+
 `hint-quality.test.ts` ("hint narration stays readable at a glance") holds
 every step to the limit, over every tier and preset into the middle game and
 each game's last preset at its hardest teachable tier. A sentence over the
