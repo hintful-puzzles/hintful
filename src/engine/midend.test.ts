@@ -11,7 +11,7 @@ import {
   type FakeState,
   fakeGame,
 } from "./fake-game.ts";
-import type { Game } from "./game.ts";
+import type { Game, HintStep } from "./game.ts";
 import { narratedStep, UI_UPDATE } from "./game.ts";
 import { click, drag, key } from "./hint-gesture.ts";
 import {
@@ -21,7 +21,7 @@ import {
   GAME_OVER,
   NO_MOVE_WORTH_MAKING,
 } from "./hint-refusal.ts";
-import { phrase, unshaped } from "./hint-words.ts";
+import { CELL, mark, phrase, stepMarks, unshaped } from "./hint-words.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { endParams } from "./params.ts";
 import {
@@ -1463,9 +1463,71 @@ describe("Midend hint plan lifecycle", () => {
     expect(h.sent("status-bar-change").activeHintExplanation).toBe(
       "Fill it with yellow.",
     );
-    expect(h.sent("status-bar-change").activeHintExplanationDark).toBe(
-      "Fill it with brown.",
-    );
+    expect(h.sent("status-bar-change").activeHintSpans?.dark).toEqual([
+      { text: "Fill it with brown.", ref: null },
+    ]);
+  });
+
+  /** `fakeGame` whose every step outlines (0,0) and rings (1,0), and whose
+   * redraw records the step it is handed. */
+  function twoMarkGame() {
+    const base = fakeGame.hint;
+    if (!base) throw new Error("fakeGame.hint missing");
+    const drawn: (HintStep<FakeMove> | null)[] = [];
+    const game: typeof fakeGame = {
+      ...fakeGame,
+      hint: (s) => {
+        const r = base(s);
+        if (!r.ok) return r;
+        const words = unshaped(
+          phrase`From ${mark.as("outline", CELL, [{ x: 0, y: 0 }], "the left cell")}, fill ${mark.as("ring", CELL, [{ x: 1, y: 0 }], "the right one")}.`,
+          "evident",
+        );
+        return { ok: true, steps: r.steps.map((st) => narratedStep({ ...st, words })) };
+      },
+      redraw: (...args) => {
+        drawn.push(args[8] ?? null);
+      },
+    };
+    return { game, drawn: () => drawn[drawn.length - 1] };
+  }
+
+  it("draws a focused reference's marks alone, and sends which it is", () => {
+    const g = twoMarkGame();
+    h = harness(g.game);
+    h.m.newGame();
+    h.m.hint();
+    expect(h.sent("status-bar-change").activeHintSpans?.light).toEqual([
+      { text: "From ", ref: null },
+      { text: "the left cell", ref: 0 },
+      { text: ", fill ", ref: null },
+      { text: "the right one", ref: 1 },
+      { text: ".", ref: null },
+    ]);
+    h.m.focusHintReference(1);
+    h.m.redraw(recordingDrawing().dr);
+    const marks = stepMarks(g.drawn());
+    expect(marks.of("ring", CELL)).toEqual([{ x: 1, y: 0 }]);
+    expect(marks.of("outline", CELL)).toEqual([]);
+    expect(g.drawn()?.explanation).toBe("From the left cell, fill the right one.");
+    expect(h.sent("status-bar-change").hintFocus).toBe(1);
+    h.m.focusHintReference(null);
+    h.m.redraw(recordingDrawing().dr);
+    expect(stepMarks(g.drawn()).of("outline", CELL)).toEqual([{ x: 0, y: 0 }]);
+    expect(h.sent("status-bar-change").hintFocus).toBeNull();
+  });
+
+  it("ends a focus with the step it was set on", () => {
+    const g = twoMarkGame();
+    h = harness(g.game);
+    h.m.newGame();
+    h.m.hint();
+    h.m.focusHintReference(0);
+    h.m.processInput(0, 0, LEFT_BUTTON); // completes the step
+    h.m.hint();
+    h.m.redraw(recordingDrawing().dr);
+    expect(stepMarks(g.drawn()).of("ring", CELL)).toEqual([{ x: 1, y: 0 }]);
+    expect(h.sent("status-bar-change").hintFocus).toBeNull();
   });
 
   it("hint() on a solved game returns an error", () => {

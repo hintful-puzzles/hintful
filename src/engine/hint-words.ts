@@ -20,7 +20,7 @@
 
 import { ColorWord, type Scheme } from "./color/color-word.ts";
 import type { RivalsLost } from "./rival-judging.ts";
-import type { Point } from "./types.ts";
+import type { HintSpan, Point } from "./types.ts";
 
 /** What a mark means. The engine owns the three, and a game adds one only when
  * none fits, saying why in its change. */
@@ -255,6 +255,41 @@ export class Narration {
   get refs(): MarkRef[] {
     return this.parts.filter(
       (p): p is Reference<unknown> => isReference(p) && p.elements.length > 0,
+    );
+  }
+
+  /** The words in `scheme` as runs of text, each reference its own run with
+   * its index in {@link refs}, so the chrome can let a player point at one. */
+  spansIn(scheme: Scheme): HintSpan[] {
+    const out: HintSpan[] = [];
+    let index = 0;
+    for (const p of this.parts) {
+      const named = isReference(p) && p.elements.length > 0;
+      const text =
+        typeof p === "string"
+          ? p
+          : p instanceof ColorWord
+            ? p.in(scheme)
+            : p.words(p.elements);
+      const last = out[out.length - 1];
+      if (named) out.push({ text, ref: index++ });
+      else if (last && last.ref === null) last.text += text;
+      else out.push({ text, ref: null });
+    }
+    return out;
+  }
+
+  /** The same words naming only the {@link refs} entry at `index`: every other
+   * reference keeps its words and names nothing. */
+  only(index: number): this {
+    let at = 0;
+    return this.remade(
+      this.parts.map((p) => {
+        if (!isReference(p) || p.elements.length === 0) return p;
+        if (at++ === index) return p;
+        const frozen = p.words(p.elements);
+        return { ...p, elements: [], words: () => frozen };
+      }),
     );
   }
 

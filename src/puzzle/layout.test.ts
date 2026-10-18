@@ -234,7 +234,19 @@ describe("the puzzle screen's grid", () => {
           reference: false,
         }).areas,
       ),
-    ).toBe('"top" "board" "words" "controls" "bar"');
+    ).toBe('"top" "board" "controls" "words" "bar"');
+  });
+
+  it("stands the hint's words on the Bar, or the window's foot, in every layout", () => {
+    for (const state of everyState()) {
+      const grid = gridLayout(state);
+      const words = rectangleOf(grid.areas, "words");
+      const under = grid.areas[(words?.rows[1] ?? 0) + 1];
+      const label = JSON.stringify(state);
+      if (state.bar === "bottom")
+        expect(under?.[words?.columns[0] ?? 0], label).toBe("bar");
+      else expect(under, label).toBeUndefined();
+    }
   });
 });
 

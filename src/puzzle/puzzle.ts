@@ -14,6 +14,7 @@ import type {
   DealtBoard,
   FontInfo,
   GameStatus,
+  HintSpan,
   KeyLabel,
   PaletteScheme,
   Point,
@@ -242,10 +243,18 @@ export class Puzzle {
       case "status-bar-change":
         update(this._statusbarText, message.statusBarText);
         update(this._activeHintExplanation, message.activeHintExplanation ?? "");
-        update(
-          this._activeHintExplanationDark,
-          message.activeHintExplanationDark ?? message.activeHintExplanation ?? "",
-        );
+        // Compared by value: the engine sends fresh runs each time. Other
+        // words are another step, and the engine has ended the focus with
+        // the step it was set on; the same words keep it, and the engine is
+        // told again where a message it sent first has not caught up.
+        if (
+          JSON.stringify(this._activeHintSpans.get()) !==
+          JSON.stringify(message.activeHintSpans ?? null)
+        ) {
+          this._activeHintSpans.set(message.activeHintSpans ?? null);
+          this._hintPinned.set(null);
+          this.hintHover = null;
+        } else if (message.hintFocus !== this.hintFocus) this.sendHintFocus();
         // Rendered as "Step 2 of 3" beside a multi-leg hint; empty for a
         // single-leg one, which is most of them.
         update(
@@ -335,7 +344,13 @@ export class Puzzle {
   private _autoHintActive = signal<boolean>(false);
   private _helpMessage = signal<string>("");
   private _activeHintExplanation = signal<string>("");
-  private _activeHintExplanationDark = signal<string>("");
+  private _activeHintSpans = signal<{ light: HintSpan[]; dark: HintSpan[] } | null>(
+    null,
+  );
+  /** The reference of the hint's words the player pressed, and the one a mouse
+   * is over; the board draws the marks of the second, or else the first. */
+  private _hintPinned = signal<number | null>(null);
+  private hintHover: number | null = null;
   /** "Step 2 of 3" while one deduction plays out over several legs; empty for a
    * single-leg hint and when no hint is displayed. Formatted here rather than
    * in the chrome, so that whatever shows it cannot word it differently. */
@@ -436,16 +451,49 @@ export class Puzzle {
     return this._hintJourney.get();
   }
 
-  /** The hint's sentence in `scheme`, whose words for a color may differ. */
-  public activeHintExplanationIn(scheme: Scheme): string {
-    return scheme === "dark"
-      ? this._activeHintExplanationDark.get()
-      : this._activeHintExplanation.get();
+  /** The hint's sentence in `scheme`, whose words for a color may differ, as
+   * runs that each are one reference to a mark or literal words. Empty when
+   * no hint is shown; one literal run for a step with no references. */
+  public activeHintSpansIn(scheme: Scheme): readonly HintSpan[] {
+    const spans = this._activeHintSpans.get();
+    if (spans) return spans[scheme];
+    const text = this._activeHintExplanation.get();
+    return text ? [{ text, ref: null }] : [];
+  }
+
+  /** The reference of the hint's words the player pressed, or `null`. */
+  public get hintPinned(): number | null {
+    return this._hintPinned.get();
+  }
+
+  /** The reference whose marks alone the board draws, or `null`. */
+  private get hintFocus(): number | null {
+    return this.hintHover ?? this._hintPinned.get();
+  }
+
+  /** Press a reference of the hint's words: the board draws its marks alone,
+   * until it or another is pressed. */
+  public pinHintReference(index: number): void {
+    this._hintPinned.set(this._hintPinned.get() === index ? null : index);
+    this.sendHintFocus();
+  }
+
+  /** A mouse is over a reference of the hint's words, or has left them. */
+  public hoverHintReference(index: number | null): void {
+    this.hintHover = index;
+    this.sendHintFocus();
+  }
+
+  private sendHintFocus(): void {
+    const index = this.hintFocus;
+    void (async () => (await this.board()).focusHintReference(index))();
   }
 
   private clearHintExplanation(): void {
     this._activeHintExplanation.set("");
-    this._activeHintExplanationDark.set("");
+    this._activeHintSpans.set(null);
+    this._hintPinned.set(null);
+    this.hintHover = null;
   }
 
   public get status(): GameStatus {

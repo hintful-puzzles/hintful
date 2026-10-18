@@ -109,6 +109,9 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   executeHint(hideAfter = false): string | null {
     return this.engine.executeHint(hideAfter);
   }
+  focusHintReference(index: number | null): void {
+    this.engine.focusHintReference(index);
+  }
   currentAnimationMs(): number {
     return this.engine.currentAnimationMs();
   }

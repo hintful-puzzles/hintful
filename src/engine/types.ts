@@ -126,18 +126,29 @@ export type NotifyParamsChange = {
   params: string;
 };
 
+/** A run of a hint sentence's words: one reference to a mark, by its index
+ * in the words' references (`Narration.refs`), or literal words (`ref` null). */
+export interface HintSpan {
+  text: string;
+  ref: number | null;
+}
+
 export interface NotifyStatusBarChange {
   type: "status-bar-change";
   statusBarText: string;
   activeHintExplanation?: string;
   /**
-   * The same sentence as the dark scheme says it, where a color it names has
-   * a dark word of its own (`ColorWord`, `color-word.ts`). The worker does not
-   * know the scheme, as with the palette (`Midend.darkPalette`): it sends both,
-   * and the frontend shows the one in force, so a scheme switched while the
-   * hint is up re-words it. Absent for a step with no words.
+   * The same sentence in runs, each reference to a mark its own run, as each
+   * scheme says it: a color it names may have a dark word of its own
+   * (`ColorWord`, `color-word.ts`). The worker does not know the scheme, as
+   * with the palette (`Midend.darkPalette`): it sends both, and the frontend
+   * shows the one in force, so a scheme switched while the hint is up re-words
+   * it. Absent for a step with no words.
    */
-  activeHintExplanationDark?: string;
+  activeHintSpans?: { light: HintSpan[]; dark: HintSpan[] };
+  /** The run's `ref` whose marks alone are drawn (`focusHintReference`), or
+   * `null` when the step is drawn whole. */
+  hintFocus: number | null;
   /**
    * Where the displayed hint sits in its **journey**, 1-based, and how many
    * legs the journey has — so the chrome can say "Step 2 of 3" while a single

@@ -197,6 +197,9 @@ export interface EngineCore {
   solve(): string | null;
   hint(): string | null;
   executeHint(hideAfter?: boolean): string | null;
+  /** Draw the displayed step's marks for the reference of its words at
+   * `index` alone (`Narration.refs`), or for all of them with `null`. */
+  focusHintReference(index: number | null): void;
   /** Duration in milliseconds of the animation currently armed (e.g. by
    * the slow-motion move `executeHint` just played), or 0 when nothing
    * is animating. The auto-hint loop paces each step by this so a move
@@ -398,6 +401,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * Auto-play (`executeHint`) keeps the display on through its
    * settle-advance so back-to-back steps preview naturally. */
   private hintDisplayed = false;
+  /** The reference of the displayed step's words the player is pointing at,
+   * and that step drawn with its words narrowed to it. Kept with the step it
+   * was set on, so it ends when another step, or none, is displayed. */
+  private hintFocus: {
+    step: HintStep<Move>;
+    index: number;
+    drawn: HintStep<Move>;
+  } | null = null;
   /** The mistake overlay currently displayed (game-specific highlight
    * data), or null. Midend-only, never in game state, never persisted;
    * shown until the next transition, exactly like a displayed hint. */
@@ -1275,6 +1286,32 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * narrate. */
   private get displayedHintStep(): HintStep<Move> | null {
     return this.hintDisplayed ? this.currentHintStep : null;
+  }
+
+  /** The focus on the displayed step, ending one left on a step no longer
+   * displayed. */
+  private get displayedHintFocus(): { index: number; drawn: HintStep<Move> } | null {
+    if (this.hintFocus !== null && this.hintFocus.step !== this.displayedHintStep)
+      this.hintFocus = null;
+    return this.hintFocus;
+  }
+
+  /** The step as `redraw` paints it: narrowed to the focused reference. */
+  private get drawnHintStep(): HintStep<Move> | null {
+    return this.hintFocus?.drawn ?? this.displayedHintStep;
+  }
+
+  focusHintReference(index: number | null): void {
+    const step = this.displayedHintStep;
+    const words = step?.words;
+    const before = this.displayedHintFocus?.index ?? null;
+    this.hintFocus =
+      step && words && index !== null && index >= 0 && index < words.refs.length
+        ? { step, index, drawn: { ...step, words: words.only(index) } }
+        : null;
+    if ((this.hintFocus?.index ?? null) === before) return;
+    this.emitStatusBar();
+    this.requestRedraw();
   }
 
   /** Does this `UI_UPDATE` put the hint away? Asked only while a plan is stored
@@ -2399,7 +2436,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // keeps the game's `animTime / its-anim-length` progress correct.
       this.animTime / this.animScale,
       wave ?? (this.flashTime > 0 ? ownFlash(this.flashTime) : NO_FLASH),
-      this.displayedHintStep ?? undefined,
+      this.drawnHintStep ?? undefined,
       this.activeMistakes ?? undefined,
       this.activeDeadEnd ?? undefined,
     );
@@ -2500,11 +2537,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
           this.game.statusbarText(this.state, this.ui),
         )
       : "";
+    const words = this.displayedHintStep?.words;
     this.emit({
       type: "status-bar-change",
       statusBarText: text,
       activeHintExplanation: this.displayedHintStep?.explanation,
-      activeHintExplanationDark: this.displayedHintStep?.words?.textIn("dark"),
+      activeHintSpans: words && {
+        light: words.spansIn("light"),
+        dark: words.spansIn("dark"),
+      },
+      hintFocus: this.displayedHintFocus?.index ?? null,
       hintJourney: this.hintJourney(),
     });
   }

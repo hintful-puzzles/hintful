@@ -1,0 +1,49 @@
+# show-what-a-hint-names
+
+## Why
+
+The owner (2026-10-18), from a phone screenshot of ABCD: the hint drawn as a
+tab rising out of the panel under it "looks really weird with game-specific
+buttons". On a phone the panel under the hint is the Game controls: separate
+outlined keys on the page, with no surface for a tab to rise out of, so the
+hint's open foot runs into the keys and reads as part of the keypad, not as
+what the Hint button in the Bar said. Their requirements for the fix: opening a
+hint does not move the board, and a player can apply the hint to the board by
+hand while reading it.
+
+They also asked that a hint's words lead to what they name: "how about if you
+could click/tap any of the references in the hint, and have it highlight the
+referred element on the board?" The sentence "the outlined cells fit only 2
+apart … this cell must be A" asks the player to find which marks are "the
+outlined cells" and which is "this cell" by elimination.
+
+## What Changes
+
+- **The hint stands on the Bar.** The words row goes under the Game controls
+  where those are under the board, so the hint is the Bar's offshoot in every
+  layout, or the window's edge where the Bar is at the side. Its room is kept
+  as before, so a hint still moves neither the board nor a control, and the
+  keys stay in reach while it shows.
+- **Every reference in a hint's words is a control.** Pressing one shows the
+  marks that reference names, and no other mark of the step, until it is
+  pressed again, another is pressed, or the step on display changes. A mouse
+  over one shows its marks while it is there. The words are drawn as the
+  references the step was built from (`Narration`), so no game writes
+  anything: every bound game paints its marks from the words (`stepMarks`), and
+  the engine hands the renderer the step with its words narrowed to the one
+  reference.
+
+Considered and declined: tinting each reference in the color of its mark. A
+role has no one color across the collection: a game picks its own palette slot
+for each role, some draw one role in several colors by the kind of move, and
+some have spent the hint blue on something else. A tint would be false in
+those games; pressing shows the marks themselves, which cannot be.
+
+## Impact
+
+- `app-shell`: the hint's place, and the references as controls.
+  `src/puzzle/layout.ts`, `src/screens/puzzle-screen.ts`, `src/puzzle/puzzle.ts`.
+- `engine-hints`: a displayed step's words go to the frontend as spans with
+  their references, and the midend narrows the drawn step to one.
+  `src/engine/hint-words.ts`, `src/engine/midend.ts`, `src/engine/types.ts`.
+- No game changes; no save, ID or preference changes.

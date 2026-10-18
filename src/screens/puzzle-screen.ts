@@ -8,6 +8,7 @@ import { showAlert } from "../dialogs/alert-dialog.ts";
 import { showToast } from "../dialogs/toast.ts";
 import { assertNever } from "../engine/assert-never.ts";
 import { MARK_ALL_BUTTON, PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
+import type { HintSpan } from "../engine/types.ts";
 import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
 import { MIN_BAR_LENGTH } from "../puzzle/command-list.ts";
 import type { PuzzleBarFitEvent, SwapButtonsEvent } from "../puzzle/components/bar.ts";
@@ -428,8 +429,13 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   private renderWords(): TemplateResult {
     const puzzle = this.puzzle;
     // Read with the scheme, so a scheme changed under a hint re-words it.
-    const explanation =
-      puzzle?.activeHintExplanationIn(currentColorScheme.get()) || puzzle?.helpMessage;
+    const spans = puzzle?.activeHintSpansIn(currentColorScheme.get()) ?? [];
+    const explanation = spans.length
+      ? spans
+      : puzzle?.helpMessage
+        ? [{ text: puzzle.helpMessage, ref: null }]
+        : null;
+    const pinned = puzzle?.hintPinned ?? null;
     const status = puzzle?.wantsStatusbar ? puzzle.statusbarText : null;
     return html`
       <div class="words">
@@ -460,13 +466,13 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           explanation || puzzle?.canHint
             ? html`<div class="hint-room">${
                 explanation
-                  ? html`<div class="hint" role="status">
+                  ? html`<div class="hint" role="status" @click=${this.handleChromeClick}>
                       ${
                         puzzle?.hintJourney
                           ? html`<span class="hint-journey">${puzzle.hintJourney}</span>`
                           : nothing
                       }
-                      ${explanation}
+                      <span>${this.renderHintSpans(explanation, pinned)}</span>
                     </div>`
                   : nothing
               }</div>`
@@ -474,6 +480,36 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         }
       </div>
     `;
+  }
+
+  /**
+   * A hint's words, each reference to a mark a control that shows that mark
+   * alone, so the words lead to the board. What follows a reference up to the
+   * next space ("'s", ",", ".") is kept on its line, so a line never opens
+   * with it.
+   */
+  private renderHintSpans(spans: readonly HintSpan[], pinned: number | null) {
+    const puzzle = this.puzzle;
+    const glued = (i: number): string => {
+      const next = spans[i + 1];
+      return next && next.ref === null ? (/^\S*/.exec(next.text)?.[0] ?? "") : "";
+    };
+    return spans.map(({ text, ref }, i) => {
+      if (ref === null)
+        return spans[i - 1]?.ref != null ? text.slice(glued(i - 1).length) : text;
+      return html`<span class="hint-ref-run"><button
+          type="button"
+          class="hint-ref"
+          aria-pressed=${pinned === ref ? "true" : "false"}
+          @click=${() => puzzle?.pinHintReference(ref)}
+          @pointerenter=${(e: PointerEvent) => {
+            if (e.pointerType === "mouse") puzzle?.hoverHintReference(ref);
+          }}
+          @pointerleave=${(e: PointerEvent) => {
+            if (e.pointerType === "mouse") puzzle?.hoverHintReference(null);
+          }}
+        >${text}</button>${glued(i)}</span>`;
+    });
   }
 
   /**
@@ -1572,7 +1608,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       /* The room a hint of --hint-room-lines lines takes, kept in a game with
        * a hint so that showing one leaves the board where it was. A longer
        * hint grows past it rather than be cut off. The hint sits at its
-       * foot, so the space it leaves is between it and the board. */
+       * foot, on the Bar, and is as tall as its words: the room a short hint
+       * leaves is above it. */
       .hint-room {
         --hint-room-lines: 2;
         display: flex;
@@ -1580,7 +1617,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         justify-content: flex-end;
         min-height: calc(
           var(--hint-room-lines) * var(--app-font-size-support) *
-            var(--wa-line-height-normal) + 1rem + 2px + var(--wa-space-xs)
+            var(--wa-line-height-normal) + 0.625rem + 2px + var(--wa-space-xs)
         );
       }
       :host(:not([shape="wide"])) .hint-room {
@@ -1595,7 +1632,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         position: relative;
         z-index: 1;
         margin-block-end: -1px;
-        padding: 0.5rem 0.625rem;
+        padding: 0.3125rem 0.625rem;
         border: 1px solid var(--app-color-hint-border);
         border-block-end: none;
         border-start-start-radius: var(--app-radius-hint);
@@ -1603,15 +1640,6 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         background-color: var(--app-color-hint-surface);
         color: var(--app-color-hint-ink);
         animation: hint-emerge 180ms ease-out;
-      }
-      /* The hint fills the room kept for it, its words centered in it, so the
-       * room a short hint leaves over is inside it and not a gap under the
-       * board. */
-      .hint-room > .hint {
-        flex: 1 0 auto;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
       }
       /* Moved down and cut at the same height, so the part showing is always
        * the part above the panel it rises from. */
@@ -1653,6 +1681,47 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           color: var(--app-color-text);
           font: inherit;
           cursor: pointer;
+        }
+      }
+
+      /* A reference is a pill in the run of words: tinted to say it can be
+       * pressed, and filled in the hint's ink while pressed. Its padding is
+       * inline, so the line it sits in keeps its height, and a pill that wraps
+       * is rounded on each line. Only its target is enlarged for a finger. */
+      /* No break between a pill and what is glued to it; the pill's own words
+       * still wrap, since a break inside it is the pill's to allow. */
+      .hint-ref-run {
+        white-space: nowrap;
+      }
+      .hint-ref {
+        all: unset;
+        white-space: normal;
+        position: relative;
+        cursor: pointer;
+        padding: 0.0625em 0.4em;
+        border-radius: 999px;
+        background-color: color-mix(in srgb, var(--app-color-hint-ink) 9%, transparent);
+        box-shadow: inset 0 0 0 1px
+          color-mix(in srgb, var(--app-color-hint-ink) 22%, transparent);
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+
+        &::after {
+          content: "";
+          position: absolute;
+          inset: -0.5rem 0;
+        }
+        &:hover {
+          background-color: color-mix(in srgb, var(--app-color-hint-ink) 16%, transparent);
+        }
+        &[aria-pressed="true"] {
+          background-color: var(--app-color-hint-ink);
+          box-shadow: none;
+          color: var(--app-color-hint-surface);
+        }
+        &:focus-visible {
+          outline: 2px solid var(--wa-color-focus);
+          outline-offset: 1px;
         }
       }
 

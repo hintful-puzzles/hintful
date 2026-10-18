@@ -186,9 +186,6 @@ table.puzzles-list td:not(:last-child) {
 .icon-mouse-right-button {
   --icon: url(/src/assets/mouse-right-button.svg);
 }
-.icon-pause {
-  --icon: url(/node_modules/lucide-static/icons/pause.svg);
-}
 .icon-play {
   --icon: url(/node_modules/lucide-static/icons/play.svg);
 }
@@ -209,6 +206,9 @@ table.puzzles-list td:not(:last-child) {
 }
 .icon-show-solution {
   --icon: url(/node_modules/lucide-static/icons/sparkles.svg);
+}
+.icon-stop {
+  --icon: url(/node_modules/lucide-static/icons/square.svg);
 }
 .icon-timer {
   --icon: url(/node_modules/lucide-static/icons/timer.svg);

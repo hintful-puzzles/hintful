@@ -45,6 +45,9 @@ export interface BoardSurface {
    * Hint-button stepper) hides the plan once the step settles instead of
    * previewing the next step; auto-play leaves it false. */
   executeHint(hideAfter?: boolean): string | null;
+  /** Draw the displayed hint step's marks for one reference of its words
+   * alone, or for all of them with `null` (`EngineCore.focusHintReference`). */
+  focusHintReference(index: number | null): void;
   /** Milliseconds of the animation currently armed (e.g. the slow-motion
    * move `executeHint` just played), or 0 when nothing is animating. The
    * auto-hint loop paces each step by this. */

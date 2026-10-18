@@ -64,8 +64,9 @@ you turn on or a key on the on-screen keypad for it.
 
 ## Hints {#hints}
 
-Many puzzles here have a ::hint:: **Next hint** button, high in the panel
-beside the board (or in the bar along the bottom, on a phone). It doesn't simply reveal a move. It shows you the next move *and
+Many puzzles here have a ::hint:: **Hint** button, in the bar along the bottom
+of the screen (or down its side, in a window too short for that). It doesn't
+simply reveal a move. It shows you the next move *and
 explains why that move is forced*, so that what you take away is a technique you
 can use again by yourself rather than one square you didn't work out.
 
@@ -78,18 +79,25 @@ in a sliding-tile puzzle, its own help page says why under *Not in this game*.
 Hint works in two beats:
 
 * **Press once to see it.** The board marks what the hint is talking about and
-  the explanation appears directly under the button. Nothing has been played — the move
-  is still yours to make, and you're free to make a different one.
+  the explanation appears just above the bar, without moving the board or any
+  key. Nothing has been played — the move is still yours to make, with the
+  puzzle's own keys still in reach, and you're free to make a different one.
 
-* **Press again to play it.** A second press, with nothing done in between,
-  plays that one step in slow motion and stops there. Ask again for the next.
+* **Press again to play it.** The button now says **Apply the hint**. A second
+  press, with nothing done in between, plays that one step in slow motion and
+  stops there. Ask again for the next.
 
 Anything you do in between — a move of your own, undo, redo — puts the hint back
 to the first beat, so a second press always *shows* before it plays.
 
-::play:: **Auto Hint**, beside the Hint button, does this continuously at about
-a second a step, waiting for each move's animation in the puzzles that have one.
-::pause:: pauses it, and it stops by itself when the puzzle is solved or when
+**The underlined words in an explanation point at the board.** Tap or click
+one, "this cell" or "the outlined cells", and the board shows only the marks
+those words mean; tap it again to see every mark once more. With a mouse,
+holding the pointer over the words does the same while it is there.
+
+::play:: **Auto-solve for me**, in the Menu, plays hint after hint at about a
+second a step, waiting for each move's animation in the puzzles that have one.
+::stop:: **Stop auto-solving** stops it, and it stops by itself when the puzzle is solved or when
 the hint runs out of things to say.
 
 ### What the marks mean {#hint-marks}
@@ -106,6 +114,9 @@ they're worth learning once.
   reasoning *from*, as opposed to what it concludes. Where a puzzle's evidence is
   squares that are empty by nature, this is a soft shade rather than an outline,
   since there's nothing there to read through it.
+
+* **Stripes across a row, column or region are the line the explanation
+  names**, when it says "this row" or "the striped region".
 
 * **Small numbers in the corners of squares give the order** the steps fall in,
   when a hint walks a chain of consequences. They're numbers rather than arrows

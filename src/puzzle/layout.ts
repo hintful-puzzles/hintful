@@ -78,7 +78,8 @@ export function menuFits(
 }
 
 /** Every region of the puzzle screen's grid. `top` is the readout row and
- * `words` the status line and the hint's explanation, under the board. */
+ * `words` the status line and the hint's explanation, under the board and
+ * under the Game controls where those are under it. */
 export type Region =
   | "top"
   | "board"
@@ -143,10 +144,12 @@ export function gridLayout(state: LayoutState): GridLayout {
   const rows: { size: string; region: Region }[] = [
     { size: "auto", region: "top" },
     { size: "minmax(0, 1fr)", region: "board" },
-    { size: "auto", region: "words" },
   ];
   if (referenceUnder) rows.push({ size: REFERENCE_ROW, region: "reference" });
   if (!controlsBeside) rows.push({ size: "auto", region: "controls" });
+  // Under the Game controls, so the hint stands on the Bar it was asked from
+  // and never on a game's keys, and the keys stay where they are under it.
+  rows.push({ size: "auto", region: "words" });
   if (!barBeside) rows.push({ size: "auto", region: "bar" });
 
   const ordered = state.controlsSide === "right" ? columns : [...columns].reverse();
