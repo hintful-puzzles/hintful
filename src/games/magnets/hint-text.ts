@@ -153,24 +153,6 @@ const wouldBreak = (pole: number, c: Cause): Narration =>
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
 
-/** "row", "column", or "row or column" when a reason holds along both. */
-const axesWord = (axes: ReadonlySet<Axis>): string =>
-  axes.size === 2 ? "row's or column's" : `${[...axes][0]}'s`;
-
-/** A met line named from the counted one: "this column", "the column beside
- * it", "a row". */
-const placed = (axis: Axis, place: LinePlace): string =>
-  place === "same"
-    ? `this ${axis}`
-    : place === "beside"
-      ? `the ${axis} beside it`
-      : `a ${axis}`;
-
-const orList = (said: readonly string[]): string =>
-  said.length === 1
-    ? said[0]
-    : `${said.slice(0, -1).join(", ")} or ${said[said.length - 1]}`;
-
 const orJoin = (said: readonly Narration[]): Narration =>
   said
     .slice(1)
@@ -193,27 +175,16 @@ function wouldDo(pole: number, rs: readonly RuleOut[]): Narration {
   switch (first.kind) {
     case "touch":
       return phrase`touch ${outlined(at, `a ${glyph(pole)}`)}`;
-    case "full": {
-      const axes = new Set(rs.flatMap((r) => (r.kind === "full" ? [r.axis] : [])));
-      return phrase`exceed ${clue(clues, `its ${axesWord(axes)} clue`)}`;
-    }
+    case "full":
+      return phrase`exceed ${clue(clues, clues.length > 1 ? "a clue" : "its clue")}`;
     case "partnerTouch":
       return phrase`put a ${o} beside ${outlined(at, `a ${o}`)}`;
-    case "partnerFull": {
-      const has = (place: LinePlace) =>
-        rs.some((r) => r.kind === "partnerFull" && r.place === place);
-      const lines = PLACES.flatMap((place) => {
-        const here = rs.find((r) => r.kind === "partnerFull" && r.place === place);
-        if (!here || here.kind !== "partnerFull") return [];
-        // After "this column", its neighbor is "the one beside it".
-        if (place === "beside" && has("same")) return ["the one beside it"];
-        return [placed(here.axis, place)];
-      });
-      return phrase`put one ${o} too many in ${clue(clues, orList(lines))}`;
-    }
+    // The clue its partner's pole would overrun is outlined, so the words
+    // need not say which line it counts.
+    case "partnerFull":
+      return phrase`exceed ${clue(clues, "a clue")} with its ${o}`;
   }
 }
-const PLACES: readonly LinePlace[] = ["same", "beside", "across"];
 
 /** Every distinct thing a pole would do across the ruled-out squares, one
  * clause per kind in a fixed order so one board always reads the same:
@@ -249,11 +220,11 @@ const anywhereElse = (
     ? ""
     : phrase`; a ${glyph(pole)} ${outlined(ruled, where(tiles))} would ${wouldDoAny(pole, rs)}`;
 
-/** Where the ruled-out squares are: "in either outlined tile", or "anywhere
- * else" when the outlines do not make them tiles. */
+/** Where the ruled-out squares are: "in either outlined tile", or "elsewhere"
+ * when the outlines do not make them tiles. */
 const where = (tiles: number): string =>
   tiles === 0
-    ? "anywhere else"
+    ? "elsewhere"
     : tiles === 1
       ? "in the outlined tile"
       : tiles === 2
@@ -411,11 +382,11 @@ export const say = {
     const rest = anywhereElse(pole, elsewhere.why, elsewhere.ruled, elsewhere.tiles);
     return n === 1
       ? so({
-          look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, more(n, pole))} and only ${ring(m.targets, "this square")} can still take one${rest}`,
+          look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, more(n, pole))} and only ${ring(m.targets, "this square")} can take one${rest}`,
           move: phrase`it must be ${glyph(pole)}`,
         })
       : so({
-          look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, more(n, pole))} and only ${ring(m.targets, `these ${n} squares`)} can still take one${rest}`,
+          look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, more(n, pole))} and only ${ring(m.targets, `these ${n} squares`)} can take one${rest}`,
           move: phrase`they must be ${glyphs(pole)}`,
         });
   },
@@ -477,10 +448,10 @@ export const say = {
     const need = clue(m.clues, more(n, pole));
     const head =
       n === 1
-        ? phrase`${thisLine(m, axis)} needs ${need} and only ${ring(m.targets, "this tile")} can still give it`
+        ? phrase`${thisLine(m, axis)} needs ${need} and only ${ring(m.targets, "this tile")} can give it`
         : along > 0
           ? phrase`${thisLine(m, axis)} needs ${need}, one per magnet, and just ${n} tiles can give one`
-          : phrase`${thisLine(m, axis)} needs ${need} and just ${n} tiles can still give one`;
+          : phrase`${thisLine(m, axis)} needs ${need} and just ${n} tiles can give one`;
     const rest = anywhereElse(pole, elsewhere.why, elsewhere.ruled, elsewhere.tiles);
     // A tile lying along the line takes a second sentence of look: the count
     // picks the tile, then its far end is ruled out to pick the end.

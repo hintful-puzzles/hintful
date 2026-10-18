@@ -102,8 +102,12 @@ export const say = {
   // it makes (`engine/hint-text.ts`'s `Premise`). The struck cells are named
   // there, by the notes the step rings.
 
+  // The clue's other towers are already in sight deeper in, so the one it
+  // still needs is the nearest cell, which must stand taller than every
+  // tower between them. The strike after it says what goes, so the sentence
+  // cannot read as placing anything.
   lineFull: (c: ClueSight, n: number): Narration =>
-    phrase`${clue(c)} already sees all but one of its towers deeper in ${line(c, "the line")}, so the cell nearest the clue must be tall enough to keep everything between it and them hidden. Height ${n} is too short for that`,
+    phrase`${clue(c)} already sees ${c.value - 1} ${c.value === 2 ? "tower" : "towers"} in ${line(c, "the line")}, so the cell nearest it must top all between; height ${n} can't`,
 
   // "height N", never "a N": the article trap (docs/hints.md § "Name a
   // square by its value").

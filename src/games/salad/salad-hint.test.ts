@@ -190,7 +190,7 @@ describe("salad hint — the three signature techniques", () => {
     // The standing bar: no "just because" fallback (docs/solver-and-generator.md § "Guess-free generation"). Every
     // narration must match one of the arms the game knows how to say.
     const KNOWN =
-      /(sees [A-C1-9] first|fit \S+ only in the outlined squares|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|square in this (?:row|column) rules out|too, for the same (?:row|column)|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
+      /(sees [A-C1-9] first|fit \S+ only in the outlined squares|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|(?:their|its) empty-square marks? must go|ruled out in this square|square in this (?:row|column) rules out|too, for the same (?:row|column)|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
     for (const p of [LETTERS, NUMBERS, { ...LETTERS, diff: DIFF_HARD }]) {
       for (const t of walk(p, "bar-1").texts) {
         expect(t, `unnamed technique: ${t}`).toMatch(KNOWN);
@@ -257,8 +257,8 @@ describe("salad hint — journeys and highlights", () => {
         } else {
           // The near arm outlines the squares it walks across, known empty; the
           // square it decides is outlined too only when it is the whole premise,
-          // the one the clue sees straight away ("this square is nearest to it").
-          const whole = /nearest to it/.test(step.explanation);
+          // the one the clue sees straight away ("this square is nearest it").
+          const whole = /is nearest it/.test(step.explanation);
           for (const t of hl.targets) expect(inArea(t)).toBe(whole);
           near++;
         }
@@ -286,10 +286,8 @@ describe("salad hint — narration arms", () => {
       [{ x: 4, y: 3, n: 3 }],
       s,
     );
-    expect(t.premise.text).toMatch(
-      /outlined square furthest from it already holds a letter/,
-    );
-    expect(t.premise.text).toMatch(/keeps the C somewhere in the outlined run/);
+    expect(t.premise.text).toMatch(/outlined square furthest from it holds a letter/);
+    expect(t.premise.text).not.toMatch(/run/);
     // Past the blocking square, which the conclusion names.
     expect(t.where).toBe("past it");
   });
@@ -321,7 +319,7 @@ describe("salad hint — narration arms", () => {
         { mode: GAMEMODE_LETTERS, order: 4, nums: 3 },
       ).premise.text,
     ).toMatch(
-      /one of them is already marked later in the row, which keeps the A in the square nearest the clue$/,
+      /and the row's empty square is marked later, keeping it in the square nearest it$/,
     );
   });
 
@@ -453,7 +451,7 @@ describe("salad hint — a square a set rules out as empty", () => {
     const walked = descWalk(BOARD);
     expect(walked.solved).toBe(true);
     expect(walked.texts).toContain(
-      "The outlined squares account for both empty squares of their column, so we must cross out the X here.",
+      "The outlined squares account for both empty squares of their column, so the X here must go.",
     );
   });
 
@@ -518,7 +516,7 @@ describe("salad hint — a square a set rules out as empty", () => {
       { mode: GAMEMODE_LETTERS, order: 4, nums: 3 },
     );
     expect(t.premise.text).toBe(
-      "Square 1 is X or A, and every numbered square has just two pencil marks left, so each forces the next. If square 1 is X, this square's row already has it; if A, square 2 is driven to X, in line with this square. Either way, X is ruled out here",
+      "Square 1 is X or the numbered chain forces square 2 to X, both in line with this square",
     );
   });
 });

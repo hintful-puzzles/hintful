@@ -263,7 +263,7 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
       [{ x: 1, y: 4, n: 5 }],
     ).premise;
     expect(forcing.text).toBe(
-      "Cell 1 is 5 or 2, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 5, this cell's row already has it; if 2, cell 3 is driven to 5, in line with this cell. Either way, 5 is ruled out here",
+      "Cell 1 is 5 or the numbered chain forces cell 3 to 5, both in line with this cell",
     );
     // Every numbered cell is outlined with its ordinal; "this cell" is the
     // struck one, ringed.
@@ -286,16 +286,16 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
   it("concludes by the move: a strike, a placement, or the values left", () => {
     const say = candidateConclusions({ value: String });
     // A value struck in two cells is named once.
-    expect(say.strike([4, 2, 4], {})).toBe("we must cross out 2 and 4");
+    expect(say.strike([4, 2, 4], {})).toBe("2 and 4 must go");
     expect(say.strike([5], { where: "from these cells" })).toBe(
-      "we must cross out the 5 from these cells",
+      "the 5 must go from these cells",
     );
     expect(say.strike([1, 2], { struck: "its identity marks" })).toBe(
-      "we must cross out its identity marks",
+      "its identity marks must go",
     );
     // A premise that already named the values is referred back to.
-    expect(say.strike([3], { named: true })).toBe("we must cross it out");
-    expect(say.strike([2, 3], { named: true })).toBe("we must cross them out");
+    expect(say.strike([3], { named: true })).toBe("it must go");
+    expect(say.strike([2, 3], { named: true })).toBe("they must go");
     expect(say.place(3)).toBe("this cell must be 3");
     expect(say.keep([1, 5])).toBe("pencil in only 1 and 5");
   });

@@ -268,7 +268,7 @@ describe("mathrax hint", () => {
       const res = mathraxGame.hint?.(populated);
       expect(res?.ok).toBe(true);
       if (!res?.ok) continue;
-      const modal = /can only|can't|must (be|cross)/i;
+      const modal = /can only|can't|must (be|go)/i;
       const isSetup = (s: (typeof res.steps)[number]) =>
         s.rung === "populate" || s.rung === "clean";
       for (const s of res.steps) {

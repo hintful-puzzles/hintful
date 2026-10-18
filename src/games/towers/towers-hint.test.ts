@@ -140,7 +140,7 @@ describe("towers hint", () => {
     const clean = steps[populateAt + 1];
     expect(clean.move.type).toBe("pencilStrike");
     expect(clean.continuesPrevious).toBe(true);
-    expect(clean.explanation).toMatch(/cross out|clear the easy/i);
+    expect(clean.explanation).toMatch(/must go|clear the easy/i);
     expect(clean.move.marks.length).toBeGreaterThan(0);
     // Every struck candidate is genuinely obvious: the value already stands in
     // that cell's row or column on the board the populate journey produced.
@@ -228,7 +228,7 @@ describe("towers hint", () => {
     // A deduction concludes either with a positive necessity ("can only be/sit"
     // for a placement) or with the necessity-voiced strike action ("we must
     // cross out the N") for an elimination — never a bare "is/are/stays".
-    const modal = /can only|can't|must (be|stay|hold|cross)/i;
+    const modal = /can only|can't|must (be|stay|hold|go)/i;
     for (const s of res.steps) {
       expect(s.explanation).toMatch(modal);
     }
@@ -543,7 +543,7 @@ describe("towers hintKeepTrack", () => {
         ).toBe(1);
         const n = m.marks[0].n;
         // Every elimination conclusion names the concrete struck height.
-        expect(step.explanation).toContain(`cross out the ${n}`);
+        expect(step.explanation).toContain(`the ${n} must go`);
       }
     }
     expect(checked).toBeGreaterThan(0);

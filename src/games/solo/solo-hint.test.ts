@@ -501,7 +501,7 @@ describe("solo hint", () => {
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // The bare "cross out" is the obvious-clean setup step's.
-    const modal = /can only|can't|must (be|sit|cross)|cross out/i;
+    const modal = /can only|can't|must (be|sit|go)|clear the easy ones/i;
     for (const s of res.steps) {
       if ((s.move as SoloMove).type === "pencilAll") continue;
       expect(s.explanation, s.explanation).toMatch(modal);

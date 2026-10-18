@@ -113,13 +113,13 @@ describe("Mosaic's hint", () => {
       "needs more than",
       "needsMore",
       STATE_MARKED,
-      /needs \d more .+ than .+, and only \d/,
+      /needs \d more .+ than .+, so these squares outside .+ block must be/,
     ],
     [
       "needs as many as",
       "sameNeed",
       STATE_BLANK,
-      /empty squares are all in .+ block, and both/,
+      /both need .+, and the .+ all lie in .+ block/i,
     ],
   ] as const)("a step where one number %s another is drawn and said", (_, rung, mark, words) => {
     const { recording, hint } = renderPinnedHint(mosaicGame, pinned(rung));
@@ -205,8 +205,12 @@ describe("Mosaic's hint", () => {
               ? ["left", "right"]
               : ["right", "left"];
         seen.add(a as string);
+        // Named with the value, or, where the sentence opens on both, by place
+        // alone ("Both 5s … the lower one's … the upper one's").
         expect(step.explanation).toMatch(
-          new RegExp(`^The ${a} ${at(first)}\\b.* the ${b} ${at(other)}\\b`),
+          new RegExp(
+            `^The ${a} ${at(first)}\\b.* the ${b} ${at(other)}\\b|^Both ${at(first)}s .* the ${a} one's .* the ${b} one's`,
+          ),
         );
         expect(step.explanation).not.toContain("other");
       }

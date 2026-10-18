@@ -220,8 +220,8 @@ Exemplar: `regionsOf` and `noRepeatRegionNames` in
 Return from `strikeWords` a `Premise`
 ([`engine/hint-text.ts`](../src/engine/hint-text.ts)): the clause saying why
 the values go, and no ending. The walk ends it with the plan's `conclude`
-words for the move the step turns out to make: "so we must cross out 2 and
-4" as a strike, and under the implicit reading "so this cell must be 3" or
+words for the move the step turns out to make: "so 2 and 4 must go" as a
+strike, and under the implicit reading "so this cell must be 3" or
 "so pencil in only 1 and 5" (§ "Two readings of an unmarked cell").
 Requirements: "A candidate strike SHALL end in the walk's conclusion", "A
 premise says how its conclusion refers to the struck notes".

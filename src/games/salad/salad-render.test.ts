@@ -245,7 +245,7 @@ describe("salad hint frames", () => {
     // budget of the clue, so the squares beyond it lose that candidate. The
     // outlined run is where it *can* be — the premise as an area, not one cell.
     const { recording, hint } = hintFrame("confinedRun");
-    expect(hint?.explanation).toMatch(/has room for only \d+ empty square/);
+    expect(hint?.explanation).toMatch(/after at most \d+ empty square/);
     // The run is a **contour**: a side wherever the neighbor across it is not
     // also evidence, so a contiguous run of `n` squares comes out as `2n + 2`
     // thin sides rather than `4n` per-square rings or one solid wash.
@@ -273,7 +273,7 @@ describe("salad hint frames", () => {
     // square's contour is a ring — four sides, which is what the neighbor rule
     // gives when nothing beside it is evidence.
     const { recording, hint } = hintFrame("nearestSquare");
-    expect(hint?.explanation).toMatch(/and this square is nearest to it/);
+    expect(hint?.explanation).toMatch(/and this square is nearest it/);
     expectRing(recording.ops, COL_HINT_CELL);
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(
       true,

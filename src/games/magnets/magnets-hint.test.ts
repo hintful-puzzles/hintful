@@ -326,7 +326,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     // why it counts dominoes, or the count reads as false.
     expect(first.explanation).toBe(
       "This column needs 3 more +s, one per magnet, and just 3 tiles can give one; " +
-        "a + in either outlined tile would put one − too many in the column beside it, " +
+        "a + in either outlined tile would exceed a clue with its −, " +
         "so these 2 squares must be +s.",
     );
     const h = picture(first);
@@ -392,7 +392,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
       /^This column needs 2 more \+s, one per magnet, and just 2 tiles/,
     );
     expect(third.explanation).toMatch(
-      /^This column needs one more \+ and only this tile can still give it;/,
+      /^This column needs one more \+ and only this tile can give it;/,
     );
   });
 });
@@ -543,7 +543,7 @@ describe("magnets hint sentences", () => {
       expect(text, text).not.toContain("—");
       // The ledger's pattern for these, so a rewording cannot slip off it.
       expect(text, text).toMatch(
-        / anywhere else would | outlined tile would | at its far end would /,
+        / elsewhere would | outlined tile would | at its far end would /,
       );
     }
   });
@@ -586,9 +586,7 @@ describe("magnets hint sentences", () => {
         0,
       ),
     );
-    expect(s.text).toContain(
-      "a + anywhere else would touch a + or put a − beside a −,",
-    );
+    expect(s.text).toContain("a + elsewhere would touch a + or put a − beside a −,");
     // One clause names both touched poles.
     const touched = s.refs.find((r) => r.kind === SQUARE && r.elements.includes(4));
     expect(touched?.elements).toEqual([4, 5]);

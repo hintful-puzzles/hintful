@@ -185,7 +185,7 @@ export function thisCell(at: Point, cell = "cell"): Narration {
  * A strike's words before their conclusion: why the struck values go, as a
  * clause the walk finishes with the move it makes (`candidate-plan.ts`'s
  * `StrikeWords`). "No way to make this cage multiply to 5 puts 2, 3 or 4 in this
- * cell" ends in "so we must cross out 2, 3 and 4" on a cell with notes, and in
+ * cell" ends in "so 2, 3 and 4 must go" on a cell with notes, and in
  * "so this cell must be 1" on one without.
  *
  * `where` names the cells a strike reaches beyond the one the premise is about,
@@ -197,7 +197,7 @@ export function thisCell(at: Point, cell = "cell"): Narration {
  * them (Group's identity marks are a different element in every cell) or say
  * less than a word does (Rome's "the rest"). `named` says the premise has
  * already named the struck values ("puts 2 or 3 in this cell"), so a strike
- * refers back to them ("so we must cross them out") rather than listing them
+ * refers back to them ("so they must go") rather than listing them
  * twice. Neither changes what a folded step concludes: that names the values
  * left, which the premise never has.
  */
@@ -212,7 +212,7 @@ export interface Premise {
  * How a candidate step ends, by the move it makes. The walk decides which; the
  * game's vocabulary words it:
  *
- * - `strike` — the struck values go ("we must cross out 2 and 4");
+ * - `strike` — the struck values go ("2 and 4 must go");
  * - `place` — a cell with no notes has one value left ("this cell must be 3");
  * - `keep` — a cell with no notes has several left, and the step writes them
  *   ("pencil in only 1 and 5").
@@ -237,11 +237,18 @@ export function candidateConclusions(vocab: {
   return {
     strike: (values, { where, struck, named }) => {
       const ns = distinct([...values]);
-      const at = where ? ` ${where}` : "";
-      if (struck) return `we must cross out ${struck}${at}`;
-      if (named) return `we must cross ${ns.length === 1 ? "it" : "them"} out${at}`;
-      const what = ns.length === 1 ? `the ${v(ns[0])}` : joinWith(ns.map(v));
-      return `we must cross out ${what}${at}`;
+      // "Must go" is the necessity voice in the fewest words. A where that
+      // says what they go from follows it; one that picks them out ("beyond
+      // that") stays with them.
+      const goes = (what: string): string =>
+        !where
+          ? `${what} must go`
+          : where.startsWith("from ")
+            ? `${what} must go ${where}`
+            : `${what} ${where} must go`;
+      if (struck) return goes(struck);
+      if (named) return goes(ns.length === 1 ? "it" : "they");
+      return goes(ns.length === 1 ? `the ${v(ns[0])}` : joinWith(ns.map(v)));
     },
     place: (n) => `this ${cell} must be ${v(n)}`,
     // Short where it can be: the list is as long as the values left, and
@@ -471,20 +478,30 @@ export function forcingChainPremise(
   struck: Note,
   vocab: LatinVocab,
   region: string,
-  /** How the last link lines up with this cell, given the words for it; a
-   * row/column game's chain always ends in line with it, Solo's can end in its
-   * block or diagonal. */
-  lastTie: ((here: Narration) => Narration) | null = null,
+  /** The region the last link shares with this cell where it is not a row or
+   * column: a row/column game's chain always ends in line with it, Solo's can
+   * end in its block or diagonal. */
+  lastShares: string | null = null,
 ): Narration {
   const v = vocab.value;
   const cell = vocab.cell ?? "cell";
   const chain = forcingChainArea(reason);
   const last = chain.length;
-  const other = v(reason.chain[0].n);
   const s = v(struck.n);
   const here = thisCell(struck, cell);
   const link = (i: number, words: string): Narration =>
     mark.as("outline", CELL, [chain[i - 1]], words);
-  const tie = lastTie ? lastTie(here) : phrase`in line with ${here}`;
-  return phrase`${link(1, `${cap(cell)} 1`)} is ${s} or ${other}, and ${mark.as("outline", CELL, chain, `every numbered ${cell}`)} has just two ${vocab.noun}s left, so each forces the next. If ${link(1, `${cell} 1`)} is ${s}, ${here}'s ${region} already has it; if ${other}, ${link(last, `${cell} ${last}`)} is driven to ${s}, ${tie}. Either way, ${s} is ruled out here`;
+  const lines = region === "row" || region === "column";
+  const tie =
+    lastShares === null && lines
+      ? phrase`both in line with ${here}`
+      : lastShares === region
+        ? phrase`both in ${here}'s ${region}`
+        : lastShares === null
+          ? phrase`in ${here}'s ${region} and in line with it`
+          : phrase`in ${here}'s ${region} and ${lastShares}`;
+  // "The chain forces" is the rule that carries it, which the board does not
+  // show: each numbered cell, down to two values, forces the next. Not "in
+  // turn", which the speculative-chain guard reads as a chain left unshown.
+  return phrase`${link(1, `${cap(cell)} 1`)} is ${s} or ${mark.as("outline", CELL, chain, "the numbered chain")} forces ${link(last, `${cell} ${last}`)} to ${s}, ${tie}`;
 }

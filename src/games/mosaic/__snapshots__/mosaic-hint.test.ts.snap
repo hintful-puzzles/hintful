@@ -20250,7 +20250,7 @@ exports[`mosaic: pinned hint positions > says, at each pin 1`] = `
 {
   "met": "This 0 allows no purple squares, so these squares must be clear.",
   "needsAll": "This 4 needs all 4 of its squares purple, so these squares must be purple.",
-  "needsMore": "This 7 needs 3 more purple squares than this 4, and only 3 of its empty squares are outside the 4's block, so these squares must be purple.",
-  "sameNeed": "This 8's empty squares are all in this 3's block, and both still need 2 purple squares, so the 3 gets its 2 there: these squares must be clear.",
+  "needsMore": "This 7 needs 3 more purple squares than this 4, so these squares outside the 4's block must be purple.",
+  "sameNeed": "This 8 and this 3 both need 2 purple squares, and the 8's all lie in the 3's block, so these squares must be clear.",
 }
 `;

@@ -531,6 +531,13 @@ Say the why in one sentence, within 120 characters. Cut to the single premise
 the highlight does not already show, lean on implied values ("the region of N"
 already says to write N), and do not repeat the number.
 
+**Delete the words that describe what a mark shows.** Each reference is a pill
+the player presses to blink its marks, so the words need only name the thing:
+"this clue", not "this column's bottom clue"; "the outlined 3s and 2s", not
+"a pair of 3s in one column and a pair of 2s in the next". Keep the premise and
+the reason, which no mark shows, and the rule the step teaches where the help
+does not already state it.
+
 Leave a journey's count to the chrome. A step whose journey has two or more
 legs shows "Step 2 of 7" above its sentence, so the words never say which leg
 it is or how many there are ("turn 2 of the 7", "Three jumps clear…"). The
@@ -619,8 +626,10 @@ sentence is often written once.
 Make the conclusion clause match the move's type:
 
 - **An elimination says which candidates are ruled out and why**, ending on
-  the strike that names the value ("…so we must cross out the 4"), not an
-  abstract "so it can't go here".
+  the strike that names the value ("…so the 4 must go"), not an abstract "so
+  it can't go here". "Must go" is the necessity voice in two words; an
+  imperative ("so cross out the 4") reads as a suggestion, and the necessity
+  rule refuses it.
 - **A placement keeps the positive necessity voice** ("it can only be 4").
 - **Never imply a placement the rule does not establish.** A sentence that
   claims a unique value belongs to a step that places it: `pencilStrike` is

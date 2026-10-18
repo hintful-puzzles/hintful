@@ -74,20 +74,10 @@ const thisLine = (line: Line, cells: Squares): Narration =>
 const thisSquareAndTheRest = (at: Point): Narration =>
   phrase`${mark.this("ring", CELL, [at], "square")} and the rest of it`;
 
-/** A border clue named by where the player sees it, as a sentence opener:
- * the line it looks along, striped, and the clue itself, lit. */
-function clueName(side: Side, clue: number, line: Squares): Narration {
-  const axis = side === "top" || side === "bottom" ? "col" : "row";
-  const which =
-    side === "top"
-      ? "top clue"
-      : side === "bottom"
-        ? "bottom clue"
-        : side === "left"
-          ? "left-hand clue"
-          : "right-hand clue";
-  return phrase`${thisLine(axis, line).capitalized()}'s ${mark.as("outline", CLUE, [clue], which)}`;
-}
+/** A border clue as a sentence opener, outlined: the outline says which, and
+ * the squares the sentence counts are outlined along its line. */
+const thisClue = (clue: number): Narration =>
+  mark.this("outline", CLUE, [clue], "clue").capitalized();
 
 /** A line's full quota of `k` empty squares, as the object of "already has".
  * Reads correctly at the degenerate extreme too: `nums = order − 1` leaves
@@ -129,14 +119,14 @@ export function say(mode: number) {
       at: Point,
     ): Narration => {
       const clue = sym(clueVal);
-      const lead = phrase`${clueName(c.side, c.clue, c.line)} sees ${clue} first`;
+      const lead = phrase`${thisClue(c.clue)} sees ${clue} first`;
       const k = between.length;
       // With nothing skipped, the square it decides is the whole run the clue
       // sees across, so it is outlined as the premise as well as ringed.
       const gap =
         k === 0
-          ? phrase` and ${mark.as("outline", CELL, [at], "this square")} is nearest to it`
-          : phrase`, and ${mark.as("outline", CELL, between, k === 1 ? "the square between" : `the ${count(k, "square")} between`)} ${k === 1 ? "is" : "are"} marked empty`;
+          ? phrase`, and ${mark.as("outline", CELL, [at], "this square")} is nearest it`
+          : phrase` past ${mark.as("outline", CELL, between, count(k, "empty square"))}`;
       return phrase`${lead}${gap}, which leaves only ${clue} for ${square(at)}`;
     },
 
@@ -157,30 +147,23 @@ export function say(mode: number) {
       },
     ): Narration => {
       const clue = sym(p.clueVal);
-      const named = clueName(c.side, c.clue, c.line);
+      const named = thisClue(c.clue);
       if (p.blockedAt) {
-        return phrase`${named} sees ${clue} first, and ${mark.the("outline", CELL, [p.blockedAt], "square")} furthest from it already holds a ${noun}, which keeps the ${clue} somewhere in ${mark.the("outline", whole(CELL), p.run, "run")}`;
+        return phrase`${named} sees ${clue} first, and ${mark.the("outline", CELL, [p.blockedAt], "square")} furthest from it holds a ${noun}`;
       }
       const bound =
         p.reach === 0
-          ? mark.as("outline", CELL, p.run, "in the square nearest the clue")
-          : mark.as(
-              "outline",
-              CELL,
-              p.run,
-              `within the first ${count(p.reach + 1, "square")} from the clue`,
-            );
-      // "later in the row", not "further along": the phrase this used to say is
-      // the collection's word for a deduction the reader has to carry on by
-      // themselves ("a contradiction further along", engine/hint-text.ts), and
-      // `hint-quality.test.ts` forbids it for that reason. Here it meant a
-      // *place* on the line, which the axis name says without the ambiguity.
-      const tighten =
-        p.tightenedBy > 0
-          ? ` and ${p.tightenedBy === 1 ? "one of them is" : `${p.tightenedBy} of them are`} already marked later in the ${p.axis}`
-          : ``;
-      const axis = p.axis === "row" ? "row" : "col";
-      return phrase`${named} sees ${clue} first, so every square before its ${clue} must be empty. ${thisLine(axis, c.line).capitalized()} has room for only ${count(p.holes, "empty square")}${tighten}, which keeps the ${clue} ${bound}`;
+          ? mark.as("outline", CELL, p.run, "in the square nearest it")
+          : mark.as("outline", CELL, p.run, `in the first ${p.reach + 1}`);
+      // Every square before the symbol a clue sees is empty (the help's rule),
+      // so it comes after no more empty squares than the line has left. Those
+      // already marked later in the line are not left: "later", not "further
+      // along", which is the collection's word for a deduction the reader
+      // carries on by themselves, and `hint-quality.test.ts` forbids it.
+      const room = p.holes - p.tightenedBy;
+      if (room === 0)
+        return phrase`${named} sees ${clue} first, and the ${p.axis}'s ${p.holes === 1 ? "empty square is" : "empty squares are"} marked later, keeping it ${bound}`;
+      return phrase`${named} sees ${clue} first, after at most ${count(room, "empty square")}, keeping it ${bound}`;
     },
 
     /** Where a far border strike crosses the clue's symbol out: past the

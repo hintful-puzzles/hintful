@@ -79,12 +79,11 @@ function thisRegion(region: SoloRegion, cells: RegionCells): Narration {
 const thisCage = (cage: readonly Point[]): Narration =>
   mark.this("stripes", whole(CELL), cage, "killer cage");
 
-/** How a chain's last link lines up with this cell, where it is not by row or
- * column (the shared sentence's own default). */
-function lastTie(region: SoloRegion): ((here: Narration) => Narration) | null {
-  if (region.kind === "block") return (here) => phrase`in ${here}'s block`;
-  if (region.kind === "diag0" || region.kind === "diag1")
-    return (here) => phrase`on ${here}'s diagonal`;
+/** The region a chain's last link shares with this cell, where it is not a row
+ * or column (the shared sentence's own default). */
+function lastTie(region: SoloRegion): string | null {
+  if (region.kind === "block") return "block";
+  if (region.kind === "diag0" || region.kind === "diag1") return "diagonal";
   return null;
 }
 
@@ -244,7 +243,7 @@ export const say = {
   ): Narration =>
     origin.kind === "cage" && origin.placed === 0
       ? phrase`${thisCage(open).capitalized()} must total ${clue}, and its other cells leave no room for ${any(ns)}`
-      : phrase`${cageSum(open, origin, clue, cells)}; the others leave no room for ${any(ns)}`,
+      : phrase`${cageSum(open, origin, clue, cells)}; the others rule out ${all(ns)}`,
 
   /** No way to make a {@link CageSum}'s clue over `open` uses `ns` in the struck
    * cell `at`. */
@@ -258,7 +257,7 @@ export const say = {
   ): Narration =>
     origin.kind === "cage" && origin.placed === 0
       ? phrase`No way to make ${thisCage(open)} total ${clue} uses ${any(ns)} in ${thisCell(at)}`
-      : phrase`${cageSum(open, origin, clue, cells)}; no way to make that uses ${any(ns)} here`,
+      : phrase`${cageSum(open, origin, clue, cells)}; no such sum uses ${any(ns)} here`,
 };
 
 // The sums below lean on the picture: the region they name is striped, the
@@ -290,7 +289,7 @@ function cageSum(
     case "cage":
       return phrase`${mark.as("stripes", whole(CELL), open, "This killer cage's open cells")} make ${clue}`;
     case "region":
-      return phrase`${thisRegion(origin.region, cells).capitalized()}'s whole cages and digits leave ${clue} for ${mark.the("outline", CELL, open, "cell")}`;
+      return phrase`${thisRegion(origin.region, cells).capitalized()}'s whole cages and digits leave ${mark.the("outline", CELL, open, "cell")} ${clue}`;
     case "outside":
       return phrase`${outsideRest(origin, cells)}, so ${clue} for ${mark.as("outline", CELL, open, "its other cells")}`;
   }

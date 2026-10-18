@@ -43,14 +43,20 @@ export class Words {
   private readonly label: (c: Clue) => string;
 
   constructor(clues: readonly Clue[]) {
-    this.label = apartByPosition(
+    // Where two share a value, their places tell them apart and the outline
+    // says which square each is: "the lower 3", not "the lower outlined 3".
+    const apart = apartByPosition(
       clues,
       (c) => c.at,
-      (c) => `outlined ${c.value}`,
+      (c) => String(c.value),
     );
+    this.label = (c) => {
+      const name = apart(c);
+      return name === String(c.value) ? `outlined ${name}` : name;
+    };
   }
 
-  /** "the outlined 3", "the upper outlined 1". */
+  /** "the outlined 3", "the upper 1". */
   clue(c: Clue): Narration {
     return mark.as("outline", CELL, [c.at], `the ${this.label(c)}`);
   }
@@ -70,13 +76,13 @@ export interface Premise {
   readonly proves: "safe" | "mine";
 }
 
-/** "the ringed squares must be safe" / "… must be a mine" / "… must all be
- * mines", agreeing with the ringed squares however a followed step has
+/** "these squares must be safe" / "this square must be a mine" / "… must all
+ * be mines", agreeing with the ringed squares however a followed step has
  * re-counted them. */
 function conclusion(at: readonly Point[], kind: "safe" | "mine"): Narration {
   return mark.as("ring", CELL, at, (els) => {
     const one = els.length === 1;
-    const subject = one ? "the ringed square" : "the ringed squares";
+    const subject = one ? "this square" : "these";
     if (kind === "safe") return `${subject} must be safe`;
     return one ? `${subject} must be a mine` : `${subject} must all be mines`;
   });
@@ -119,7 +125,7 @@ export const say = {
   full: (w: Words, c: Clue, hasMines: boolean, unopened: number): Premise => ({
     proves: "mine",
     words: hasMines
-      ? phrase`${w.clue(c)} still needs ${minesWord(unopened)} and has just ${unopened} unopened ${plural(unopened, "square", "squares")} left around it`
+      ? phrase`${w.clue(c)} still needs ${minesWord(unopened)} and has just ${unopened} unopened ${plural(unopened, "square", "squares")} left`
       : phrase`${w.clue(c)} has exactly ${unopened} unopened ${plural(unopened, "square", "squares")} around it`,
   }),
 };
@@ -130,7 +136,7 @@ export interface SideWords {
   readonly subject: Narration;
   /** "the outlined 3's", "the striped squares'". */
   readonly possessive: Narration;
-  /** "needs 2 mines", "still needs 2 mines", "hold exactly 2 mines". */
+  /** "needs 2 mines", "needs 2 more", "hold exactly 2 mines". */
   readonly needs: string;
   /** Whether the side is the one region the sentence stripes. */
   readonly striped: boolean;
@@ -153,11 +159,11 @@ export function numberSide(
   return {
     subject: w.clue(c),
     possessive: w.clues(c),
-    needs: `${hasMines ? "still needs" : "needs"} ${minesWord(need)}`,
+    needs: hasMines ? `needs ${need} more` : `needs ${minesWord(need)}`,
     striped: false,
     singular: true,
     own: stripes
-      ? phrase`${w.clues(c)} ${mark.as("stripes", CELL, stripes, (els) => (els.length === 1 ? "striped square" : "striped squares"))}`
+      ? phrase`${w.clues(c)} ${mark.as("stripes", CELL, stripes, (els) => (els.length === 1 ? "square" : "squares"))}`
       : phrase`${w.clues(c)} unopened squares`,
   };
 }
@@ -256,7 +262,7 @@ export const sayPair = {
    * they can hold: the other side's own squares are mines. */
   more: (inner: SideWords, outer: SideWords, innerNeed: number): Premise => ({
     proves: "mine",
-    words: phrase`${outer.subject} ${outer.needs}, and at most ${innerNeed} can be among ${inner.own}`,
+    words: phrase`${outer.subject} ${outer.needs}, but at most ${innerNeed} fits in ${inner.own}`,
   }),
 };
 

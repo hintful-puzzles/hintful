@@ -320,19 +320,12 @@ function narrate(reason: SinglesReason, named: Named, state: SinglesState): Sent
         (p) => Math.abs(p.x - corner.x) + Math.abs(p.y - corner.y) === 1,
       );
       if (!side) throw new Error("corner2: the pair has no square beside the corner");
-      return say.corner2(m, pair, side, numAt(pair[0]), numAt(corner));
+      return say.corner2(m, pair, side, numAt(pair[0]));
     }
     case "offset": {
       // quad = [A1, B1, A2, B2]: the A-pair shares one line, the B-pair the next.
       const [a1, b1, a2, b2] = reason.quad;
-      return say.offset(
-        m,
-        [a1, a2],
-        [b1, b2],
-        numAt(a1),
-        numAt(b1),
-        a1.x === a2.x ? "column" : "row",
-      );
+      return say.offset(m, [a1, a2], [b1, b2], numAt(a1), numAt(b1));
     }
     case "adjBlack":
       return say.adjBlack(m);

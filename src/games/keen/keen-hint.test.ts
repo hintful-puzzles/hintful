@@ -299,7 +299,7 @@ describe("keen hint", () => {
     // A strike concludes "must cross out …" / "must cross them out"; a placement
     // "it can only be N"; never a bare "is/are/stays". (Populate is the lone
     // instruction.)
-    const modal = /can only|can't|must (be|cross)/i;
+    const modal = /can only|can't|must (be|go)/i;
     for (const s of res.steps) {
       if ((s.move as KeenMove).type === "pencilAll") continue;
       expect(s.explanation).toMatch(modal);

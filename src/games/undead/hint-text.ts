@@ -74,7 +74,7 @@ export const say = {
   /** A later cell of the same sightline firing. */
   sightlineNext: (m: Marked): Sentence =>
     sentence({
-      move: phrase`we must cross out ${struck(m, (b) => `the ${joinMonsters(b, "and")}`)} in ${thisCell(m)} too`,
+      move: phrase`${struck(m, (b) => `the ${joinMonsters(b, "and")}`)} in ${thisCell(m)} must go too`,
       relation: { kind: "again", basis: sightline(m, "the same sightline") },
     }),
 
@@ -93,7 +93,7 @@ export const say = {
     };
     return so({
       look: phrase`${sightline(m, "This sightline")}'s ${a} and ${b} leave no room for a ${joinMonsters(bits)} in ${thisCell(m)}`,
-      move: phrase`we must cross out ${struck(m, them)}`,
+      move: phrase`${struck(m, them)} must go`,
     });
   },
 
@@ -102,7 +102,7 @@ export const say = {
     return so({
       look: phrase`No ${name}s are left to place`,
       follows: phrase`no undecided cell can be one`,
-      move: phrase`we must cross out ${struck(m, () => `the ${name}`)} in ${thisCell(m)}`,
+      move: phrase`${struck(m, () => `the ${name}`)} in ${thisCell(m)} must go`,
     });
   },
 

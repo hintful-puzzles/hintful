@@ -597,7 +597,7 @@ describe("the sentences at their extremes", () => {
     const ending = (n: number, count: number): string =>
       count === 1
         ? ", so pencil in only 1, 2, 3 and 4."
-        : `, so we must cross out ${say.starved(n, count)}.`;
+        : `, so ${say.starved(n, count)} must go.`;
     for (const tectonic of [false, true]) {
       all.push(
         say.clean(tectonic)([]).text,
@@ -611,9 +611,7 @@ describe("the sentences at their extremes", () => {
           say.hidden([at], at, n).text,
           say.regionsFull(at, n, tectonic).text,
         );
-        all.push(
-          `${say.cull(at, n, tectonic).text}, so we must cross out ${say.culled(n)}.`,
-        );
+        all.push(`${say.cull(at, n, tectonic).text}, so ${say.culled(n)} must go.`);
         for (const count of [1, 2, 6])
           all.push(
             `${say.starve([at], n, targets(count), tectonic).text}${ending(n, count)}`,

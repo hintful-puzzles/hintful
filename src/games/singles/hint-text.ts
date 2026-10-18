@@ -126,7 +126,7 @@ export const say = {
       ? ""
       : phrase`, like ${mark.the("outline", CELL, [inner], innerWords)}`;
     return so({
-      look: phrase`${cornerRef} matches ${mark.the("outline", CELL, sides, "neighbor", "both its")}; keeping it ${C} would make both ${B} and box it in`,
+      look: phrase`Left ${C}, ${cornerRef} would box itself in with ${mark.as("outline", CELL, sides, `its two ${n}s`)} ${B}`,
       move: phrase`${forced} must be ${B}${like}`,
     });
   },
@@ -136,14 +136,14 @@ export const say = {
   /** The corner `t` itself matches both neighboring `n`s. */
   corner3Corner: (m: Marked, t: number, n: number): Sentence =>
     so({
-      look: phrase`${mark.this("ring", CELL, m.targets, `corner ${t}`)} matches ${mark.the("outline", CELL, m.evidence, String(n), "both")}; keeping it ${C} would make both ${B} and box it in`,
+      look: phrase`Left ${C}, ${mark.this("ring", CELL, m.targets, `corner ${t}`)} would box itself in with ${mark.as("outline", CELL, m.evidence, `both ${n}s beside it`)} ${B}`,
       move: phrase`it must be ${B}`,
     }),
 
   /** The inner `t` matches the two `n`s flanking the corner `c`. */
   corner3Inner: (m: Marked, t: number, n: number, c: number): Sentence =>
     so({
-      look: phrase`${mark.this("ring", CELL, m.targets, `inner ${t}`)} matches ${mark.the("outline", CELL, m.evidence, String(n), "both")} flanking ${mark.the("outline", CELL, m.strand, `corner ${c}`)}; keeping it ${C} would make both ${B} and box the corner in`,
+      look: phrase`Left ${C}, ${mark.this("ring", CELL, m.targets, `inner ${t}`)} would make ${mark.as("outline", CELL, m.evidence, `both ${n}s`)} flanking ${mark.as("outline", CELL, m.strand, `corner ${c}`)} ${B} and box the corner in`,
       move: phrase`it must be ${B}`,
     }),
 
@@ -153,49 +153,38 @@ export const say = {
   // consequence (the corner's neighbor black, the corner boxed in) → the
   // deduction. The pair is (corner, side) or (side, inner), so it always sits
   // in the corner block, and `side` is the member beside the corner either way.
-  /** A touching pair of `p`s at the corner `c`, `side` the one beside it. */
-  corner2: (
-    m: Marked,
-    pair: readonly Point[],
-    side: Point,
-    p: number,
-    c: number,
-  ): Sentence =>
+  /** A touching pair of `p`s at the corner, `side` the one beside it. */
+  corner2: (m: Marked, pair: readonly Point[], side: Point, p: number): Sentence =>
     so({
-      look: phrase`${mark.as("outline", CELL, pair, `A touching pair of ${p}s`)} sits at the corner, so one must be ${B}. Shading ${mark.this("ring", CELL, m.targets, String(m.num(m.targets[0])))} would force ${mark.as("outline", CELL, [side], `the ${p} beside the corner`)} ${B}, leaving ${mark.as("outline", CELL, m.strand, `the corner ${c}`)} boxed in`,
+      look: phrase`${mark.as("outline", CELL, pair, `The corner's ${p}s`)} need a ${B}; shading ${mark.this("ring", CELL, m.targets, String(m.num(m.targets[0])))} forces ${mark.as("outline", CELL, [side], "the side one")}, boxing ${mark.as("outline", CELL, m.strand, "the corner")} in`,
       move: phrase`it must stay ${C}`,
     }),
 
   // The A-pair (n) shares one line, the B-pair (k) the next. Lead with the
-  // *indication* — the spotted pattern, a pair of n in one line and a pair of
-  // k in the next — so the player learns to recognize it, then give the
-  // consequence. The pairs can sit ANYWHERE along those lines, so never say
-  // "overlap"/"between them"; "lined up so that" + the marks carry the exact
-  // arrangement. (Article-free — "one of the Ns" sidesteps "a 4" vs "an 8".)
-  /** A pair of `n`s (`a`) in one `line` and a pair of `k`s (`b`) in the next. */
+  // *indication* — the spotted pattern, the two pairs by their values — so the
+  // player learns to recognize it, then give the consequence. The pairs can sit
+  // ANYWHERE along those lines, so never say "overlap"/"between them"; the
+  // outlines carry the exact arrangement.
+  /** A pair of `n`s (`a`) in one line and a pair of `k`s (`b`) in the next. */
   offset: (
     m: Marked,
     a: readonly Point[],
     b: readonly Point[],
     n: number,
     k: number,
-    line: "row" | "column",
   ): Sentence => {
-    const first = mark.as("outline", CELL, a, `a pair of ${n}s`);
-    const second = mark.as(
+    const pairs = mark.as(
       "outline",
       CELL,
-      b,
-      n === k ? "another pair" : `a pair of ${k}s`,
+      [...a, ...b],
+      n === k ? `The outlined ${n}s` : `The outlined ${n}s and ${k}s`,
     );
-    const forced =
-      n === k ? `two of the ${n}s` : `one of the ${n}s and one of the ${k}s`;
     return so({
-      look: phrase`There's ${first} in one ${line} and ${second} in the next, lined up so that shading ${ringed(
+      look: phrase`${pairs} mean shading ${ringed(
         m,
         (v) => `the ringed ${v}`,
         () => "either ringed square",
-      )} would force ${forced} to be ${B} next to each other, and ${B} squares can't touch`,
+      )} forces two ${B} squares to touch`,
       move: phrase`${ringed(
         m,
         () => "it",
@@ -214,7 +203,7 @@ export const say = {
         m,
         (v) => `This ${v} touches`,
         (els) => `These squares (${joinNums(els.map(m.num))}) touch`,
-      )} ${mark.paren("outline", CELL, m.evidence, `a ${B} square`)}, and ${B} squares can't touch`,
+      )} ${mark.paren("outline", CELL, m.evidence, `a ${B} square`)}`,
       move: phrase`${they(m)} must be ${C}`,
     }),
 

@@ -251,13 +251,11 @@ describe("Mines hint: the deductions", () => {
     // A sentence that names both (a continuation leg may name just one).
     const twins = walked
       .flatMap(({ steps }) => steps.map(([, step]) => step.explanation))
-      .filter(
-        (t) => (t.match(/\b(?:upper|lower|left|right) outlined \d/g) ?? []).length >= 2,
-      );
+      .filter((t) => (t.match(/\b(?:upper|lower|left|right) \d/g) ?? []).length >= 2);
     expect(twins.length).toBeGreaterThan(0);
     for (const t of twins) {
-      const [, a] = /(upper|left) outlined/.exec(t) ?? [];
-      const [, b] = /(lower|right) outlined/.exec(t) ?? [];
+      const [, a] = /(upper|left) \d/.exec(t) ?? [];
+      const [, b] = /(lower|right) \d/.exec(t) ?? [];
       expect(a !== undefined && b !== undefined, t).toBe(true);
     }
   });

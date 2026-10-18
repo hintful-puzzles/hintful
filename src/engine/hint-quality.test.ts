@@ -147,44 +147,6 @@ const LONG_NARRATIONS: {
   spokenOn?: Record<string, string>;
 }[] = [
   {
-    // Not Mathrax, though its solver records `forcing`: its plans do not speak
-    // this sentence, because the frontier takes its clue strikes and singles
-    // first and the board finishes before a chain is ever the best candidate.
-    //
-    // Group is the near-miss in the other direction, and is listed on the
-    // measurement rather than on the inference: it reaches this sentence at
-    // **Hard only**, on boards no shipped preset holds and `lintCases`' rules
-    // do not reach, which only the Custom dialog offers. So the board is
-    // pinned.
-    games: ["group", "keen", "salad", "solo", "towers", "unequal"],
-    rungs: ["forcing"],
-    spokenOn: {
-      group:
-        "12dx:1_2_3_4_5_6_7_8_9_10_11_12_2k3a7g9a4f9a3b5k6b2c1c9_7k8h6b9k10_5b9g11k12f5d",
-    },
-    why:
-      "The Latin chain Tactic (`latin-hint.ts`). engine-hints requires a narrated " +
-      "chain to name both ends, cite its links by position and say when the " +
-      "conclusion rests on a case split, and that is three clauses.",
-  },
-  {
-    games: ["mosaic"],
-    rungs: ["needsMore", "sameNeed"],
-    why:
-      "A comparison of two numbers is three facts and none is on the board: " +
-      "which two, how their needs differ, and where the squares only one of " +
-      "them counts lie. The sentences run to about 140 characters.",
-  },
-  {
-    games: ["solo"],
-    rungs: ["cageMinMax", "cageSums"],
-    why:
-      "Killer's region rule under a cage-sum strike is two premises: what the " +
-      "row, column or block leaves its open cells, which the player needs to " +
-      "see worked out because nothing on the board records it, and then the " +
-      "min/max or combination rung on that sum.",
-  },
-  {
     games: ["rome"],
     rungs: ["opposite"],
     why:
@@ -193,14 +155,6 @@ const LONG_NARRATIONS: {
       "axis is either pointed straight back at (a loop) or repeated (a second " +
       "arrow of that direction in the area), and the same-area premise is what " +
       "makes the second one illegal.",
-  },
-  {
-    games: ["singles"],
-    rungs: ["offset"],
-    why:
-      "The owner-endorsed indication-first offset narration " +
-      '(hints.md § "Lead with the indication"): its opener alone, the pattern the player learns ' +
-      "to spot, is 65 characters.",
   },
   {
     games: ["lightup"],
@@ -276,15 +230,6 @@ const LONG_NARRATIONS: {
       "a second sentence on purpose.",
   },
   {
-    games: ["salad"],
-    rungs: ["borderFar", "borderNear"],
-    why:
-      "Salad's border-clue deductions carry two premises each: the symbol the " +
-      "clue sees first, and either the line's empty-square budget or the marked " +
-      "gap before this square. The strike list follows, so the long cases are " +
-      "the ones where the budget or the gap has to be counted out.",
-  },
-  {
     games: ["magnets"],
     rungs: ["lineExact", "onlyEndLeft"],
     why:
@@ -300,15 +245,6 @@ const LONG_NARRATIONS: {
       "A Tactic chain. engine-hints requires the narration to name both ends and " +
       'cite the links by their numbers on the board, and "from it" is the ' +
       "deixis tie clusters-hint.test.ts checks.",
-  },
-  {
-    games: ["towers"],
-    rungs: ["lineFull"],
-    why:
-      "The line-full rule strikes the shortest heights from the cell nearest the " +
-      "clue without placing anything, and the guide records a first cut that " +
-      "implied a placement: the wording that stops that misreading needs both " +
-      'sentences (hints.md § "Conclude with the action the move makes").',
   },
   {
     games: ["map"],
@@ -328,30 +264,6 @@ const LONG_NARRATIONS: {
       "name both ends, cite the links by their numbers on the board, and state " +
       "the case split. The walk names each link's color, which is what made it " +
       "readable at a glance (owner playtest, 2026-09-25), and costs a clause per link.",
-  },
-  {
-    games: ["singles"],
-    rungs: ["corner2", "corner3", "corner4"],
-    why:
-      'The owner-directed corner family (hints.md § "Name a square by its value": ' +
-      "concrete values read far clearer): each arm is a proof by " +
-      "contradiction whose links are values the player can check, and the " +
-      "box-in step is the one a shorter sentence would drop.",
-  },
-  {
-    // Over by one character, and only where four squares are listed and three
-    // of their numbers have two digits, which needs a board wider than nine.
-    games: ["singles"],
-    rungs: ["adjBlack"],
-    spokenOn: {
-      singles:
-        "12x12dk:b2124355c74756c52b1ac39725a5a63313c6a452b7c331a281372a46842b746a49b2a1178526443c6883c3ba519162b8b287154b7733a54b3b2a5c214cb66257895abb44a161b7b5",
-    },
-    why:
-      "The squares a purple square forces clear are listed by their numbers so " +
-      "the player need not hunt the rings, and the rule that forces them is the " +
-      "whole of the reason: neither half can go, and the list is as long as the " +
-      "square has open neighbors.",
   },
   {
     games: ["signpost"],
@@ -393,26 +305,6 @@ const LONG_NARRATIONS: {
       "on two premises: which clues could cross it at all, and why none of " +
       "their rectangles stands. Without the first the player cannot tell the " +
       "edge is closed to every clue, and without the second, why.",
-  },
-  {
-    games: ["mines"],
-    rungs: ["pair"],
-    why:
-      "Two numbers that share squares, in its three forms: one needs more than " +
-      "the other allows in the shared squares; one's squares all lie inside " +
-      "the other's, which needs more than they can hold; or they lie inside " +
-      "and both need the same. Each has to name both numbers, what each needs " +
-      "and the shared squares, or the conclusion does not follow, and two " +
-      "numbers of one value add where each sits.",
-  },
-  {
-    games: ["mines"],
-    rungs: ["full"],
-    why:
-      "A number that already touches some of its mines needs the rest in its " +
-      "last unopened squares; 'still' is what tells the player the flagged " +
-      "mines around it are counted, and two numbers of one value add where " +
-      "each sits.",
   },
 ];
 

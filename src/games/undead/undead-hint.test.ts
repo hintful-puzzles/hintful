@@ -270,7 +270,7 @@ describe("undead hint plan", () => {
         expect(e.length).toBeGreaterThan(0);
         if (step.move.type === "pencilStrike") {
           // a strike rules a candidate out — strike voice, never "is/are"
-          expect(/cross out|rules the/.test(e), e).toBe(true);
+          expect(/must go|rules the/.test(e), e).toBe(true);
         } else if (step.move.type === "set") {
           expect(/can only be/.test(e), e).toBe(true);
         }

@@ -3,14 +3,14 @@
 exports[`abcd: pinned hint positions > says, at each pin 1`] = `
 {
   "clean": "Now clear the easy ones: cross out any letter already beside, above or below the cell.",
-  "dup": "The B just placed rules out B in every cell beside, above or below it, so we must cross out those Bs.",
-  "multiNoteStrike": "This row must hold no B, so we must cross out the Bs in it.",
+  "dup": "The B just placed rules out B in every cell beside, above or below it, so those Bs must go.",
+  "multiNoteStrike": "This row must hold no B, so the Bs in it must go.",
   "note": "No letter stands next to this cell yet, so pencil in every one.",
   "packed": "This row needs 3 As, and the outlined cells fit only 3 apart, so each stretch is full: this cell must be A.",
   "populate": "Start by penciling every candidate letter into each empty cell, so there is something to cross out.",
   "regionsFull": "Every other letter is already touching this cell, even at a corner, so it can only be C.",
   "runs": "This row needs 3 As, and the outlined cells fit only 3 apart, so each stretch is full: this cell must be A.",
-  "satisfied": "This row must hold no B, so we must cross out the Bs in it.",
+  "satisfied": "This row must hold no B, so the Bs in it must go.",
   "single": "Every other letter has been ruled out in this cell, so it can only be C.",
 }
 `;

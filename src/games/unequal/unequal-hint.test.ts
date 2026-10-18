@@ -163,7 +163,7 @@ describe("unequal hint", () => {
       // placement "it can only be N"; never a bare "is/are/stays". (The populate
       // fill and the bulk obvious-clean are setup instructions, not deductions,
       // so they are exempt.)
-      const modal = /can only|can't|must (be|cross)/i;
+      const modal = /can only|can't|must (be|go)/i;
       const isSetup = (s: (typeof res.steps)[number]) =>
         s.rung === "populate" || s.rung === "clean";
       for (const s of res.steps) {

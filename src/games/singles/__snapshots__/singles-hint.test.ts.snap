@@ -1222,12 +1222,12 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
 
 exports[`singles: pinned hint positions > says, at each pin 1`] = `
 {
-  "adjBlack": "These squares (6, 3, 1 and 2) touch a purple square (outlined), and purple squares can't touch, so they must be clear.",
+  "adjBlack": "These squares (6, 3, 1 and 2) touch a purple square (outlined), so they must be clear.",
   "boxedIn": "This 6 is the outlined clear square's last neighbor that isn't purple, so it must be clear to keep that square joined.",
-  "corner2": "A touching pair of 4s sits at the corner, so one must be purple. Shading this 2 would force the 4 beside the corner purple, leaving the corner 1 boxed in, so it must stay clear.",
-  "corner3": "This inner 3 matches both outlined 3s flanking the outlined corner 6; keeping it clear would make both purple and box the corner in, so it must be purple.",
-  "corner4": "This corner 5 matches both its outlined neighbors; keeping it clear would make both purple and box it in, so it and the 5 diagonally inside must be purple.",
-  "offset": "There's a pair of 2s in one column and another pair in the next, lined up so that shading the ringed 5 would force two of the 2s to be purple next to each other, and purple squares can't touch, so it must be clear.",
+  "corner2": "The corner's 4s need a purple; shading this 2 forces the side one, boxing the corner in, so it must stay clear.",
+  "corner3": "Left clear, this inner 3 would make both 3s flanking corner 6 purple and box the corner in, so it must be purple.",
+  "corner4": "Left clear, this corner 5 would box itself in with its two 5s purple, so it and the 5 diagonally inside must be purple.",
+  "offset": "The outlined 2s mean shading the ringed 5 forces two purple squares to touch, so it must be clear.",
   "oneCell": "The outlined 6s sit one square apart, so one of them must be purple: the 2 between them must be clear.",
   "pair": "The outlined 4s touch, so one of them stays clear and uses up the 4 in this row: the ringed 4 must be purple.",
   "sameLine": "This 2 shares this row with the outlined clear 2, which already uses that number, so it must be purple.",

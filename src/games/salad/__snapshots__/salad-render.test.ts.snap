@@ -103,16 +103,6 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 40,
   },
   {
-    "color": 19,
-    "h": 40,
-    "op": "hatch",
-    "period": 13,
-    "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 80,
-    "y": 40,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -446,16 +436,6 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
-    "w": 40,
-    "x": 80,
-    "y": 80,
-  },
-  {
-    "color": 19,
-    "h": 40,
-    "op": "hatch",
-    "period": 13,
-    "rgb": "rgb(21, 113, 233)",
     "w": 40,
     "x": 80,
     "y": 80,
@@ -799,16 +779,6 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 120,
   },
   {
-    "color": 19,
-    "h": 40,
-    "op": "hatch",
-    "period": 13,
-    "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 80,
-    "y": 120,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -1132,16 +1102,6 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
-    "w": 40,
-    "x": 80,
-    "y": 160,
-  },
-  {
-    "color": 19,
-    "h": 40,
-    "op": "hatch",
-    "period": 13,
-    "rgb": "rgb(21, 113, 233)",
     "w": 40,
     "x": 80,
     "y": 160,
@@ -10593,11 +10553,11 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
 
 exports[`salad: pinned hint positions > says, at each pin 1`] = `
 {
-  "confinedRun": "This column's bottom clue sees B first, so every square before its B must be empty. This column has room for only 1 empty square, which keeps the B within the first 2 squares from the clue, so we must cross out the B beyond that.",
+  "confinedRun": "This clue sees B first, after at most 1 empty square, keeping it in the first 2, so the B beyond that must go.",
   "emptyMarker": "We already know which 3 squares of this row hold its numbers, so this square and the rest of it must be empty.",
-  "nearestSquare": "This column's bottom clue sees B first and this square is nearest to it, which leaves only B for this square, so we must cross out A and C.",
+  "nearestSquare": "This clue sees B first, and this square is nearest it, which leaves only B for this square, so A and C must go.",
   "placement": "Every other number has been ruled out in this square, so it can only be 3.",
-  "strikeAfterPlacing": "The A just placed can't repeat in its row and column, so we must cross out the A from the other squares there.",
+  "strikeAfterPlacing": "The A just placed can't repeat in its row and column, so the A must go from the other squares there.",
   "symbolMarker": "This column already has both of its empty squares, so this square and the rest of it must hold a number.",
 }
 `;

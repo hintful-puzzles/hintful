@@ -451,7 +451,7 @@ describe("the sentences at their extremes", () => {
 
   it("fits at a glance for every letter, count and line, conclusions included", () => {
     const all: string[] = [say.populate];
-    const conclusion = ", so we must cross out the other Is in it.";
+    const conclusion = ", so the other Is in it must go.";
     for (const diag of [false, true]) {
       all.push(
         say.clean(diag)([at(1)]).text,
@@ -465,9 +465,7 @@ describe("the sentences at their extremes", () => {
             say.regionsFull(at(n), diag).text,
             say.alsoForced(lineOf(word), at(n)).text,
           );
-        all.push(
-          `${say.cull(at(n), n, diag).text}, so we must cross out ${say.culled(n)}.`,
-        );
+        all.push(`${say.cull(at(n), n, diag).text}, so ${say.culled(n)} must go.`);
         for (const word of ["row", "column"] as const)
           for (let k = 0; k <= 9; k++) {
             all.push(`${say.satisfied(lineOf(word), n, k, [at(n)]).text}${conclusion}`);

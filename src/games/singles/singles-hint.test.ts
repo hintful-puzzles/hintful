@@ -196,7 +196,7 @@ describe("deduceHintPlan records the deduction reason", () => {
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const step = res.steps[0];
-    expect(step.explanation).toContain("box it in");
+    expect(step.explanation).toContain("box itself in");
     expect(step.explanation).toContain("4");
     expect(step.explanation).not.toContain("one white per line");
     // One firing forces both diagonal cells, shaded.
@@ -257,12 +257,12 @@ describe("hint", () => {
   it("offset: narration names the pair values and walks the contradiction arc", () => {
     const { step } = pinned("offset");
     expect(step.explanation).toMatch(/\d/); // concrete value(s)
-    expect(step.explanation).toContain("can't touch");
+    expect(step.explanation).toContain("to touch");
     expect(step.explanation).not.toContain("across from it");
     // "overlap" was geometrically false — the pairs can span a whole line.
     expect(step.explanation).not.toContain("overlap");
     // Leads with the indication — names the spotted pattern first.
-    expect(step.explanation).toMatch(/^There's a pair of \d+s in one (column|row)/);
+    expect(step.explanation).toMatch(/^The outlined \d+s/);
   });
 
   it("gives every step visible evidence (an area to shade or a premise to ring)", () => {
@@ -309,11 +309,8 @@ describe("hint", () => {
     // Narration opens on the spotted pattern, names the actual numbers, and
     // follows the contradiction arc (the touching pair → shading the target →
     // trapping the corner), never the confusing "two corner squares".
-    expect(cornerStep?.explanation).toMatch(
-      /^A touching pair of 3s sits at the corner/,
-    );
-    expect(cornerStep?.explanation).toContain("corner 4");
-    expect(cornerStep?.explanation).toContain("boxed in");
+    expect(cornerStep?.explanation).toMatch(/^The corner's 3s/);
+    expect(cornerStep?.explanation).toContain("boxing the corner in");
     expect(cornerStep?.explanation).not.toContain("two corner squares");
   });
 
