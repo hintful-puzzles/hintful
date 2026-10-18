@@ -22,4 +22,4 @@
 - [x] 3.1 Run the app and walk a plan: the icosahedron preset walked to
       solved in the app on hints alone (115 rolls), ring and outline read
       against each step; the marks moved above the solid, which hid them.
-- [ ] 3.2 The owner plays it.
+- [x] 3.2 The owner plays it. Accepted 2026-10-18.
