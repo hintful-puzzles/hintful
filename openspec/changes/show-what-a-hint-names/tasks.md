@@ -22,4 +22,8 @@
       dark, by mouse, touch and keyboard.
 - [x] 1.7 Docs: `hints.md`, `input.md`; the help page's Hints section, which
       also misplaced the Hint button and misnamed Auto-solve and its stop.
+- [x] 1.4b Pressing a reference blinks its marks with the rest drawn, not
+      draws them alone (the owner, 2026-10-18, on the deploy); the guard
+      that a hiding ends with its step now sees the stale read it once let
+      through.
 - [ ] 1.8 The owner's acceptance; archive.

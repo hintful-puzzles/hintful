@@ -197,9 +197,10 @@ export interface EngineCore {
   solve(): string | null;
   hint(): string | null;
   executeHint(hideAfter?: boolean): string | null;
-  /** Draw the displayed step's marks for the reference of its words at
-   * `index` alone (`Narration.refs`), or for all of them with `null`. */
-  focusHintReference(index: number | null): void;
+  /** Draw the displayed step without the marks of the reference of its words
+   * at `index` (`Narration.refs`), or with all of them with `null`: the
+   * frontend alternates the two to make that reference's marks blink. */
+  hideHintReference(index: number | null): void;
   /** Duration in milliseconds of the animation currently armed (e.g. by
    * the slow-motion move `executeHint` just played), or 0 when nothing
    * is animating. The auto-hint loop paces each step by this so a move
@@ -401,10 +402,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * Auto-play (`executeHint`) keeps the display on through its
    * settle-advance so back-to-back steps preview naturally. */
   private hintDisplayed = false;
-  /** The reference of the displayed step's words the player is pointing at,
-   * and that step drawn with its words narrowed to it. Kept with the step it
-   * was set on, so it ends when another step, or none, is displayed. */
-  private hintFocus: {
+  /** The reference of the displayed step's words whose marks are hidden for
+   * a moment of their blink, and that step drawn without them. Kept with the
+   * step it was set on, so it ends when another step, or none, is displayed. */
+  private hintHidden: {
     step: HintStep<Move>;
     index: number;
     drawn: HintStep<Move>;
@@ -1288,30 +1289,28 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return this.hintDisplayed ? this.currentHintStep : null;
   }
 
-  /** The focus on the displayed step, ending one left on a step no longer
-   * displayed. */
-  private get displayedHintFocus(): { index: number; drawn: HintStep<Move> } | null {
-    if (this.hintFocus !== null && this.hintFocus.step !== this.displayedHintStep)
-      this.hintFocus = null;
-    return this.hintFocus;
+  /** The hidden reference of the displayed step, ending one left on a step
+   * no longer displayed. */
+  private get displayedHintHidden(): { index: number; drawn: HintStep<Move> } | null {
+    if (this.hintHidden !== null && this.hintHidden.step !== this.displayedHintStep)
+      this.hintHidden = null;
+    return this.hintHidden;
   }
 
-  /** The step as `redraw` paints it: narrowed to the focused reference. */
+  /** The step as `redraw` paints it: without the hidden reference's marks. */
   private get drawnHintStep(): HintStep<Move> | null {
-    return this.hintFocus?.drawn ?? this.displayedHintStep;
+    return this.displayedHintHidden?.drawn ?? this.displayedHintStep;
   }
 
-  focusHintReference(index: number | null): void {
+  hideHintReference(index: number | null): void {
     const step = this.displayedHintStep;
     const words = step?.words;
-    const before = this.displayedHintFocus?.index ?? null;
-    this.hintFocus =
+    const before = this.displayedHintHidden?.index ?? null;
+    this.hintHidden =
       step && words && index !== null && index >= 0 && index < words.refs.length
-        ? { step, index, drawn: { ...step, words: words.only(index) } }
+        ? { step, index, drawn: { ...step, words: words.without(index) } }
         : null;
-    if ((this.hintFocus?.index ?? null) === before) return;
-    this.emitStatusBar();
-    this.requestRedraw();
+    if ((this.hintHidden?.index ?? null) !== before) this.requestRedraw();
   }
 
   /** Does this `UI_UPDATE` put the hint away? Asked only while a plan is stored
@@ -2546,7 +2545,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         light: words.spansIn("light"),
         dark: words.spansIn("dark"),
       },
-      hintFocus: this.displayedHintFocus?.index ?? null,
       hintJourney: this.hintJourney(),
     });
   }

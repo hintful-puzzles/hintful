@@ -146,9 +146,6 @@ export interface NotifyStatusBarChange {
    * it. Absent for a step with no words.
    */
   activeHintSpans?: { light: HintSpan[]; dark: HintSpan[] };
-  /** The run's `ref` whose marks alone are drawn (`focusHintReference`), or
-   * `null` when the step is drawn whole. */
-  hintFocus: number | null;
   /**
    * Where the displayed hint sits in its **journey**, 1-based, and how many
    * legs the journey has — so the chrome can say "Step 2 of 3" while a single

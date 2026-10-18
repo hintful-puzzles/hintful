@@ -24,14 +24,18 @@ outlined cells" and which is "this cell" by elimination.
   layout, or the window's edge where the Bar is at the side. Its room is kept
   as before, so a hint still moves neither the board nor a control, and the
   keys stay in reach while it shows.
-- **Every reference in a hint's words is a control.** Pressing one shows the
-  marks that reference names, and no other mark of the step, until it is
-  pressed again, another is pressed, or the step on display changes. A mouse
-  over one shows its marks while it is there. The words are drawn as the
-  references the step was built from (`Narration`), so no game writes
-  anything: every bound game paints its marks from the words (`stepMarks`), and
-  the engine hands the renderer the step with its words narrowed to the one
-  reference.
+- **Every reference in a hint's words is a pill.** Pressing one, or a mouse
+  coming over it, blinks the marks that reference names three times while
+  every other mark of the step stays drawn. A first cut drew the pressed
+  reference's marks alone; the owner (2026-10-18): "I don't like that you made
+  clicking on a reference remove the other referred elements … they should
+  all stay up, but … the one … referring to would just get an additional
+  temporary highlight effect." The words are drawn as the references the step
+  was built from (`Narration`), so no game writes anything: every bound game
+  paints its marks from the words (`stepMarks`), and the engine hands the
+  renderer the step with the one reference's elements taken out, which the
+  frontend alternates with the whole step. A glow would need each game to
+  draw it; a blink is the highlight the engine can give every game.
 
 Considered and declined: tinting each reference in the color of its mark. A
 role has no one color across the collection: a game picks its own palette slot

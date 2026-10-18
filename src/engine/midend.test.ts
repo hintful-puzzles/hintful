@@ -1492,7 +1492,7 @@ describe("Midend hint plan lifecycle", () => {
     return { game, drawn: () => drawn[drawn.length - 1] };
   }
 
-  it("draws a focused reference's marks alone, and sends which it is", () => {
+  it("draws a step without a hidden reference's marks, and every other mark", () => {
     const g = twoMarkGame();
     h = harness(g.game);
     h.m.newGame();
@@ -1504,30 +1504,29 @@ describe("Midend hint plan lifecycle", () => {
       { text: "the right one", ref: 1 },
       { text: ".", ref: null },
     ]);
-    h.m.focusHintReference(1);
+    const redraws = h.redraws();
+    h.m.hideHintReference(1);
+    expect(h.redraws()).toBeGreaterThan(redraws);
     h.m.redraw(recordingDrawing().dr);
     const marks = stepMarks(g.drawn());
-    expect(marks.of("ring", CELL)).toEqual([{ x: 1, y: 0 }]);
-    expect(marks.of("outline", CELL)).toEqual([]);
+    expect(marks.of("ring", CELL)).toEqual([]);
+    expect(marks.of("outline", CELL)).toEqual([{ x: 0, y: 0 }]);
     expect(g.drawn()?.explanation).toBe("From the left cell, fill the right one.");
-    expect(h.sent("status-bar-change").hintFocus).toBe(1);
-    h.m.focusHintReference(null);
+    h.m.hideHintReference(null);
     h.m.redraw(recordingDrawing().dr);
-    expect(stepMarks(g.drawn()).of("outline", CELL)).toEqual([{ x: 0, y: 0 }]);
-    expect(h.sent("status-bar-change").hintFocus).toBeNull();
+    expect(stepMarks(g.drawn()).of("ring", CELL)).toEqual([{ x: 1, y: 0 }]);
   });
 
-  it("ends a focus with the step it was set on", () => {
+  it("ends a hidden reference with the step it was set on", () => {
     const g = twoMarkGame();
     h = harness(g.game);
     h.m.newGame();
     h.m.hint();
-    h.m.focusHintReference(0);
+    h.m.hideHintReference(1);
     h.m.processInput(0, 0, LEFT_BUTTON); // completes the step
     h.m.hint();
     h.m.redraw(recordingDrawing().dr);
     expect(stepMarks(g.drawn()).of("ring", CELL)).toEqual([{ x: 1, y: 0 }]);
-    expect(h.sent("status-bar-change").hintFocus).toBeNull();
   });
 
   it("hint() on a solved game returns an error", () => {

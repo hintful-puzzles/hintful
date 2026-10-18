@@ -54,6 +54,12 @@ const AUTO_HINT_STEP_MS = 1000;
  */
 export const HINT_PENDING_MS = 300;
 
+/** A pressed reference's marks blink this many times, off and on this long
+ * each (`Puzzle.blinkHintReference`): long enough to see, and under the 3
+ * flashes a second that WCAG's flash threshold counts from. */
+const HINT_BLINKS = 3;
+const HINT_BLINK_MS = 220;
+
 /** The banner's wording for a pending hint; the Hint control says it too. */
 export const HINT_PENDING_MESSAGE = "Thinking…";
 
@@ -244,17 +250,14 @@ export class Puzzle {
         update(this._statusbarText, message.statusBarText);
         update(this._activeHintExplanation, message.activeHintExplanation ?? "");
         // Compared by value: the engine sends fresh runs each time. Other
-        // words are another step, and the engine has ended the focus with
-        // the step it was set on; the same words keep it, and the engine is
-        // told again where a message it sent first has not caught up.
+        // words are another step, which a blink begun on these must not reach.
         if (
           JSON.stringify(this._activeHintSpans.get()) !==
           JSON.stringify(message.activeHintSpans ?? null)
         ) {
           this._activeHintSpans.set(message.activeHintSpans ?? null);
-          this._hintPinned.set(null);
-          this.hintHover = null;
-        } else if (message.hintFocus !== this.hintFocus) this.sendHintFocus();
+          this.stopHintBlink();
+        }
         // Rendered as "Step 2 of 3" beside a multi-leg hint; empty for a
         // single-leg one, which is most of them.
         update(
@@ -347,10 +350,10 @@ export class Puzzle {
   private _activeHintSpans = signal<{ light: HintSpan[]; dark: HintSpan[] } | null>(
     null,
   );
-  /** The reference of the hint's words the player pressed, and the one a mouse
-   * is over; the board draws the marks of the second, or else the first. */
-  private _hintPinned = signal<number | null>(null);
-  private hintHover: number | null = null;
+  /** The reference of the hint's words whose marks are blinking, and the
+   * timers that step the blink. */
+  private _hintBlinking = signal<number | null>(null);
+  private hintBlinkTimers: ReturnType<typeof setTimeout>[] = [];
   /** "Step 2 of 3" while one deduction plays out over several legs; empty for a
    * single-leg hint and when no hint is displayed. Formatted here rather than
    * in the chrome, so that whatever shows it cannot word it differently. */
@@ -461,39 +464,45 @@ export class Puzzle {
     return text ? [{ text, ref: null }] : [];
   }
 
-  /** The reference of the hint's words the player pressed, or `null`. */
-  public get hintPinned(): number | null {
-    return this._hintPinned.get();
+  /** The reference of the hint's words whose marks are blinking, or `null`. */
+  public get hintBlinking(): number | null {
+    return this._hintBlinking.get();
   }
 
-  /** The reference whose marks alone the board draws, or `null`. */
-  private get hintFocus(): number | null {
-    return this.hintHover ?? this._hintPinned.get();
+  /** Blink the marks of a reference of the hint's words, the rest of the
+   * step's marks staying as they are, and end on every mark shown. A blink
+   * already running is replaced. Off and on {@link HINT_BLINK_MS} each, so
+   * it flashes under 3 times a second. */
+  public blinkHintReference(index: number): void {
+    this.stopHintBlink();
+    this._hintBlinking.set(index);
+    for (let i = 0; i < 2 * HINT_BLINKS; i++) {
+      const hidden = i % 2 === 0 ? index : null;
+      this.hintBlinkTimers.push(
+        setTimeout(() => this.hideHintReference(hidden), i * HINT_BLINK_MS),
+      );
+    }
+    this.hintBlinkTimers.push(
+      setTimeout(() => this._hintBlinking.set(null), 2 * HINT_BLINKS * HINT_BLINK_MS),
+    );
   }
 
-  /** Press a reference of the hint's words: the board draws its marks alone,
-   * until it or another is pressed. */
-  public pinHintReference(index: number): void {
-    this._hintPinned.set(this._hintPinned.get() === index ? null : index);
-    this.sendHintFocus();
+  private stopHintBlink(): void {
+    for (const t of this.hintBlinkTimers) clearTimeout(t);
+    this.hintBlinkTimers = [];
+    if (this._hintBlinking.get() === null) return;
+    this._hintBlinking.set(null);
+    this.hideHintReference(null);
   }
 
-  /** A mouse is over a reference of the hint's words, or has left them. */
-  public hoverHintReference(index: number | null): void {
-    this.hintHover = index;
-    this.sendHintFocus();
-  }
-
-  private sendHintFocus(): void {
-    const index = this.hintFocus;
-    void (async () => (await this.board()).focusHintReference(index))();
+  private hideHintReference(index: number | null): void {
+    void (async () => (await this.board()).hideHintReference(index))();
   }
 
   private clearHintExplanation(): void {
     this._activeHintExplanation.set("");
     this._activeHintSpans.set(null);
-    this._hintPinned.set(null);
-    this.hintHover = null;
+    this.stopHintBlink();
   }
 
   public get status(): GameStatus {

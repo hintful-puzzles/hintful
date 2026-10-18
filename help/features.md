@@ -90,10 +90,10 @@ Hint works in two beats:
 Anything you do in between — a move of your own, undo, redo — puts the hint back
 to the first beat, so a second press always *shows* before it plays.
 
-**The underlined words in an explanation point at the board.** Tap or click
-one, "this cell" or "the outlined cells", and the board shows only the marks
-those words mean; tap it again to see every mark once more. With a mouse,
-holding the pointer over the words does the same while it is there.
+**The words in pills point at the board.** Tap or click one, "this cell" or
+"the outlined cells", and the marks those words mean blink a few times, while
+the rest stay where they are. With a mouse, moving the pointer onto the words
+does the same.
 
 ::play:: **Auto-solve for me**, in the Menu, plays hint after hint at about a
 second a step, waiting for each move's animation in the puzzles that have one.

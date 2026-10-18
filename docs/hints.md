@@ -300,11 +300,12 @@ kind, and `marks.of("outline", CELL)` is what the words outline, once each,
 carrying what the reference named (an outlined cell keeps its chain ordinal).
 Nothing else is a source for a mark. A highlight field may carry data that is
 not a mark (a ghost glyph, a route, an animation), painted only where a named
-mark is. Because nothing else is, the engine can draw one reference alone: a
+mark is. Because nothing else is, the engine can take one reference out: a
 player who presses a reference's words in the hint sees that reference's marks
-and no others (`Narration.only`, `Midend.focusHintReference`), with no code in
-the game. So a reference's words are what a player presses, and the fewer
-words around the mark's own name a reference takes, the less it underlines.
+blink while the rest stay drawn (`Narration.without`,
+`Midend.hideHintReference`), with no code in the game. So a reference's words
+are what a player presses, and the fewer words around the mark's own name a
+reference takes, the shorter its pill.
 The glyph a role
 takes on a kind is the game's. The shared painters
 read the words too: `OverlaySidecar.pack(stepMarks(hint), …)` for candidate

@@ -98,7 +98,7 @@ function fullyCapablePuzzle(overrides: FakePuzzle = {}): FakePuzzle {
     canStopDeal: true,
     helpMessage: "",
     activeHintSpansIn: () => [],
-    hintPinned: null,
+    hintBlinking: null,
     currentMove: 3,
     totalMoves: 7,
     checkpoints: new Set<number>(),

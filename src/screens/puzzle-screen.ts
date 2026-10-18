@@ -435,7 +435,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       : puzzle?.helpMessage
         ? [{ text: puzzle.helpMessage, ref: null }]
         : null;
-    const pinned = puzzle?.hintPinned ?? null;
+    const blinking = puzzle?.hintBlinking ?? null;
     const status = puzzle?.wantsStatusbar ? puzzle.statusbarText : null;
     return html`
       <div class="words">
@@ -472,7 +472,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                           ? html`<span class="hint-journey">${puzzle.hintJourney}</span>`
                           : nothing
                       }
-                      <span>${this.renderHintSpans(explanation, pinned)}</span>
+                      <span>${this.renderHintSpans(explanation, blinking)}</span>
                     </div>`
                   : nothing
               }</div>`
@@ -483,12 +483,12 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   }
 
   /**
-   * A hint's words, each reference to a mark a control that shows that mark
-   * alone, so the words lead to the board. What follows a reference up to the
+   * A hint's words, each reference to a mark a control that blinks that mark
+   * on the board, so the words lead to it. What follows a reference up to the
    * next space ("'s", ",", ".") is kept on its line, so a line never opens
    * with it.
    */
-  private renderHintSpans(spans: readonly HintSpan[], pinned: number | null) {
+  private renderHintSpans(spans: readonly HintSpan[], blinking: number | null) {
     const puzzle = this.puzzle;
     const glued = (i: number): string => {
       const next = spans[i + 1];
@@ -499,14 +499,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         return spans[i - 1]?.ref != null ? text.slice(glued(i - 1).length) : text;
       return html`<span class="hint-ref-run"><button
           type="button"
-          class="hint-ref"
-          aria-pressed=${pinned === ref ? "true" : "false"}
-          @click=${() => puzzle?.pinHintReference(ref)}
+          class="hint-ref ${blinking === ref ? "blinking" : ""}"
+          @click=${() => puzzle?.blinkHintReference(ref)}
           @pointerenter=${(e: PointerEvent) => {
-            if (e.pointerType === "mouse") puzzle?.hoverHintReference(ref);
-          }}
-          @pointerleave=${(e: PointerEvent) => {
-            if (e.pointerType === "mouse") puzzle?.hoverHintReference(null);
+            if (e.pointerType === "mouse") puzzle?.blinkHintReference(ref);
           }}
         >${text}</button>${glued(i)}</span>`;
     });
@@ -1685,7 +1681,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       }
 
       /* A reference is a pill in the run of words: tinted to say it can be
-       * pressed, and filled in the hint's ink while pressed. Its padding is
+       * pressed, and filled in the hint's ink while its marks blink. Its padding is
        * inline, so the line it sits in keeps its height, and a pill that wraps
        * is rounded on each line. Only its target is enlarged for a finger. */
       /* No break between a pill and what is glued to it; the pill's own words
@@ -1714,7 +1710,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         &:hover {
           background-color: color-mix(in srgb, var(--app-color-hint-ink) 16%, transparent);
         }
-        &[aria-pressed="true"] {
+        &.blinking {
           background-color: var(--app-color-hint-ink);
           box-shadow: none;
           color: var(--app-color-hint-surface);

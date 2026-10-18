@@ -58,14 +58,16 @@ with a gap of no more than 12px, and SHALL NOT touch it.
 
 ### Requirement: A hint's references show what they name
 
-Each reference in a displayed hint's words SHALL be a control. Pressing one
-SHALL show that reference's marks alone, until it is pressed again, another is
-pressed, or the step changes; a mouse over one SHALL show them while there. It
-SHALL be reachable by keyboard and say whether it is pressed.
+Each reference in a displayed hint's words SHALL be a control, reachable by
+keyboard. Pressing one, or a mouse coming over it, SHALL blink that
+reference's marks a few times, under three flashes a second, while every other
+mark of the step stays drawn, and SHALL end with every mark drawn. A blink
+SHALL end when the step changes.
 
 #### Scenario: A player presses "this cell"
 
 - **WHEN** a hint says "the outlined cells … this cell must be A" and the
   player presses "this cell"
-- **THEN** the board shows the ring on that cell and no outline or stripes
-- **AND** pressing it again shows every mark of the step
+- **THEN** the ring on that cell goes off and on, and the outline and stripes
+  stay drawn throughout
+- **AND** once the blink ends, every mark of the step is drawn

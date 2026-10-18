@@ -279,14 +279,14 @@ export class Narration {
     return out;
   }
 
-  /** The same words naming only the {@link refs} entry at `index`: every other
-   * reference keeps its words and names nothing. */
-  only(index: number): this {
+  /** The same words with the {@link refs} entry at `index` naming nothing: it
+   * keeps its words, and every other reference is as it was. */
+  without(index: number): this {
     let at = 0;
     return this.remade(
       this.parts.map((p) => {
         if (!isReference(p) || p.elements.length === 0) return p;
-        if (at++ === index) return p;
+        if (at++ !== index) return p;
         const frozen = p.words(p.elements);
         return { ...p, elements: [], words: () => frozen };
       }),
