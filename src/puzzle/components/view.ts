@@ -414,14 +414,22 @@ export class PuzzleView extends SignalWatcher(LitElement) {
   }
 
   /** Every reference's marks repainted in its own color for as long as the
-   * hint shows, so its pill and its marks match. */
+   * hint shows, so its pill and its marks match. The largest marks are laid
+   * first: a reference whose marks lie inside another's ("region 1" of "the
+   * chain") would otherwise be painted over, and its pill name a color the
+   * board does not show. */
   private showHintColors(): void {
     const marks = this.renderedHintMarks;
     const colors = this.puzzle?.hintReferenceColors ?? [];
     let pixels: Uint8ClampedArray<ArrayBuffer> | null = null;
     if (marks) {
       pixels = new Uint8ClampedArray(marks.width * marks.height * 4);
-      marks.refs.forEach((r, i) => {
+      const size = marks.refs.map((r) =>
+        r.alpha.reduce((n, a) => (a > 0 ? n + 1 : n), 0),
+      );
+      const order = marks.refs.map((_, i) => i).sort((a, b) => size[b] - size[a]);
+      order.forEach((i) => {
+        const r = marks.refs[i];
         const color = colors[i];
         if (!color) return;
         const hex = (k: number) => Number.parseInt(color.slice(k, k + 2), 16);
