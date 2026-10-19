@@ -31,10 +31,12 @@
       Battle light and dark (ring, outline and stripes), every pill matching
       its marks. In the light scheme Map's three outline greens read alike;
       raised with the owner (§ 1.8).
-- [ ] 1.8 The owner's word on the three light outline greens: no three
-      greens at the light board's lightness separate well (three searches,
-      by lightness, by hue and over all nine), and the vivid lime that stood
-      apart was the one that vanished on a pale fill.
+- [x] 1.8 The three light outline greens read as one. The owner
+      (2026-10-19): "There shouldn't be any requirement for all of a pool's
+      colors to be 'the same color' - we just need them to have similar
+      emotional connotation". The outlines are green, teal and brown now,
+      calm all three, told apart at a glance in both schemes on Map's chain
+      step (light and dark, pills matching).
 - [x] 1.9 Filed: a repainted mark on a game's own content
       (`keep-a-repainted-mark-off-the-content-under-it`), seen in Samegame,
       whose keyline the repaint turns green.

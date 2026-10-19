@@ -579,9 +579,12 @@ export const FOUR_NAMES: readonly ColorWord[] = FOUR_FILLS.map(wordOf);
 /**
  * **The colors a hint's references take**, three to a role: each reference
  * in a hint's words its own, its marks repainted in it and its words tinted
- * with it (`Puzzle.hintReferenceColorsIn`). A role keeps a family of hues, as
- * the owner asked (2026-10-19): blues for what a step decides, greens for
- * what it reasons from, warm for the line it names.
+ * with it (`Puzzle.hintReferenceColorsIn`). A role's colors share what they
+ * say, not a hue (the owner, 2026-10-19: "we just need them to have similar
+ * emotional connotation"): cool and assertive for what a step decides, calm
+ * for what it reasons from, warm for the line it names. Within a role they
+ * must be told apart at a glance, which in the light scheme hue does and
+ * lightness alone does not: three greens there read as one.
  *
  * Each is a mark drawn on a cell, so each meets the bars `palette.test.ts`
  * holds every mark to, in both schemes: it reads on the cell surface and on
@@ -589,8 +592,7 @@ export const FOUR_NAMES: readonly ColorWord[] = FOUR_FILLS.map(wordOf);
  * The light column is what that costs: a mark reads on the light board only
  * at lightness 0.58 or below, so a lime is an olive there and an amber a
  * bronze (owner, 2026-10-19: the deeper light shades over the vivid ones that
- * vanished on a pale fill). Within that, the lightnesses are the ones that
- * hold any two of the nine furthest apart, 0.094 in light and 0.139 in dark.
+ * vanished on a pale fill).
  *
  * The first ring is the hint's own {@link BLUE}, so a step with one ringed
  * reference looks as it did before a reference had a color of its own.
@@ -601,9 +603,9 @@ const REFERENCE_DESIGN = {
     { light: [0.42, 0.2, 276], dark: [0.74, 0.127, 276] },
   ],
   outline: [
-    { light: [0.54, 0.14, 150], dark: [0.62, 0.161, 150] },
-    { light: [0.48, 0.085, 175], dark: [0.74, 0.131, 175] },
-    { light: [0.42, 0.111, 133], dark: [0.78, 0.2, 133] },
+    { light: [0.54, 0.16, 142], dark: [0.62, 0.18, 142] },
+    { light: [0.46, 0.072, 195], dark: [0.76, 0.12, 195] },
+    { light: [0.42, 0.07, 55], dark: [0.7, 0.08, 55] },
   ],
   stripes: [
     { light: [0.58, 0.156, 45], dark: [0.84, 0.089, 45] },

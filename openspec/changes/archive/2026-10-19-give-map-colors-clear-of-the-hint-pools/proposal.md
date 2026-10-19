@@ -5,7 +5,8 @@ decision: "if we can just change Map's own colors so that we don't need an
 exception, that'd be better" than letting a game choose its hint pool.
 **Rescoped 2026-10-19 by its measurement** (below): Map's colors need not
 move, and the defect is the pools' own. The owner chose the proposed shades
-(2026-10-19); open on the light outline greens (`tasks.md` 1.8).
+(2026-10-19), and that a role's colors share a connotation rather than a
+hue, so the outlines are green, teal and brown (`tasks.md` 1.8).
 
 ## Why
 
@@ -48,15 +49,13 @@ the palette, so none of the palette's guards measures them. Measured
   was painted over, so its pill named a color the board did not show.
 - Map's fills, its help and `FOUR_NAMES` do not change.
 
-## The question
+## The owner's answers
 
 Shades that clear every bar exist (a search, 2026-10-19), but in the light
 scheme a mark reads on the surface only at lightness 0.57 or below, so the
-light pools turn deep: the cyan ring a teal-blue, the lime outline an olive,
-the amber stripe a bronze. The dark pools stay bright. Light, today →
-proposed: rings `#1c7ed6 #7048e8 #22b8cf` → `#1571e9 #19819d #3931b6`,
-outlines `#0ca678 #82c91e #2b8a3e` → `#18843f #136d5b #33590b`, stripes
-`#f76707 #f59f00 #d6336c` → `#c25516 #b1165f #895610`. Dark: rings
-`#2d82f8 #75dafc #95a3fa`, outlines `#1fa04e #2ac5a6 #82d133`, stripes
-`#fcb99b #f45693 #b8751a`. The owner chose today's by eye; whether the deeper
-light pools are better is theirs to say.
+light pools turn deep: the cyan ring a teal-blue, the amber stripe a bronze.
+The owner chose the deeper shades over the vivid ones from a comparison on
+the cell surface and Map's four fills. Three greens that deep read as one,
+and the owner: "There shouldn't be any requirement for all of a pool's
+colors to be 'the same color' - we just need them to have similar emotional
+connotation". The values are `REFERENCE_DESIGN` in `colors.ts`.
