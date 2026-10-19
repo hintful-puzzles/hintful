@@ -53,6 +53,7 @@
       situation when we'd not want the colors to be distinct"). A first cut
       tinted each pill in its marks' own color, which two references in one
       role share.
-- [ ] 1.4h A game names its pool where the default clashes with its own
-      colors (Map's regions).
-- [ ] 1.8 The owner's acceptance; archive.
+- [x] 1.4h Moved to `give-map-colors-clear-of-the-hint-pools`: the owner
+      (2026-10-19) would rather Map's own colors moved than a game choose
+      a pool, so that no game needs an exception.
+- [x] 1.8 The owner's acceptance (2026-10-19: "Fabulous, accepted"); archive.

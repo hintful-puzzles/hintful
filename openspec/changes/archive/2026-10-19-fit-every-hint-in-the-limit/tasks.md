@@ -21,8 +21,10 @@
       as dropping a premise or reading wrong: Net's "(across the edge)" and
       walls cut, "sealing all three off", "Pointing all but down", "the
       striped loop"; Magnets' "Its far end touches a +".
-- [ ] 1.5 Delete each ledger entry its sentences no longer need; the ledger
-      empty. Eight deleted so far (the chain, Mosaic, Solo's cages, Singles'
+- [x] 1.5 Delete each ledger entry its sentences no longer need. The owner
+      (2026-10-19) accepted what is left for now, so the requirement for
+      no exception is withdrawn and the spec's ledger requirement stands.
+      Eight deleted (the chain, Mosaic, Solo's cages, Singles'
       offset, corners and adjBlack, Salad's border clues, Towers' line-full,
       Mines' pair and full), and four more (Pearl's square and
       whiteCannotTurn, with its pinned board; Magnets' lineExact; Rect's
@@ -32,4 +34,7 @@
       and run-on groups beside a fit, Rect's mixed line.
 - [x] 1.6 Docs: `hints.md` § "Keep the narration terse" and § "Conclude with
       the action the move makes", `hints-candidates.md`.
-- [ ] 1.7 Read the new sentences in the app against their marks.
+- [x] 1.7 Read the new sentences in the app against their marks: Twiddle,
+      Solo, Tracks and Net's pinned wrapping boards; the owner read them
+      on the deploy and accepted (2026-10-19). The rule that a reference
+      names its mark in words goes on in `name-every-reference-by-its-mark`.

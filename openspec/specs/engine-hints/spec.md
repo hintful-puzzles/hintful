@@ -1865,9 +1865,9 @@ so the sentence never names a note the step no longer strikes.
 
 #### Scenario: One of two struck notes is already gone
 
-- **WHEN** a stored step reads "…so we must cross out 1 and 2" and the 1 has
-  been struck by the time it is shown
-- **THEN** the refreshed step reads "…so we must cross out 2" and rings only the 2
+- **WHEN** a stored step reads "…so 1 and 2 must go" and the 1 has been struck
+  by the time it is shown
+- **THEN** the refreshed step reads "…so the 2 must go" and rings only the 2
 
 ### Requirement: Every hinted game SHALL be bound
 
@@ -2634,3 +2634,23 @@ shown.
   applied move is still animating
 - **THEN** the next step's words and marks are shown, they are still shown once
   the move lands, and pressing the control again applies that step
+
+### Requirement: The midend can draw a displayed step without one reference's marks
+
+The midend SHALL send a displayed step's words as spans, each with the index of
+the reference it is, and SHALL take one of them to hide. While one is hidden,
+it SHALL draw the step with that reference naming nothing and every other
+reference as it was. The hiding SHALL belong to the step it was set on and end
+when another step is displayed.
+
+#### Scenario: A hidden reference is drawn without its marks
+
+- **WHEN** a step's words name a ring and an outline and the frontend hides
+  the ring's reference
+- **THEN** the step the renderer is given names the outline and no ring, and
+  its explanation is unchanged
+
+#### Scenario: The hiding ends with its step
+
+- **WHEN** a reference is hidden and the player's move completes the step
+- **THEN** the next step is drawn with every mark

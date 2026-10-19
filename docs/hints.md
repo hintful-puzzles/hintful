@@ -533,12 +533,17 @@ Say the why in one sentence, within 120 characters. Cut to the single premise
 the highlight does not already show, lean on implied values ("the region of N"
 already says to write N), and do not repeat the number.
 
-**Delete the words that describe what a mark shows.** Each reference is a pill
-the player presses to light up its marks, so the words need only name the thing:
-"this clue", not "this column's bottom clue"; "the outlined 3s and 2s", not
-"a pair of 3s in one column and a pair of 2s in the next". Keep the premise and
-the reason, which no mark shows, and the rule the step teaches where the help
-does not already state it.
+**A reference names a thing on the board, and says which mark it is.** The
+sentence has to read against the board without a press: "the striped
+column", "the outlined 6", "the ringed square", never a bare "here" or
+"this" beside other marks, and never a clause as the pill ("means none below
+either"). The owner (2026-10-19, of Tracks): "before, it was possible to look
+at the hint against the board and understand what's going on, but now it's
+impossible without clicking." Each pill and its marks share a color of their
+own, which ties the two but does not stand in for the words. Cut the rest:
+"the outlined 3s and 2s", not "a pair of 3s in one column and a pair of 2s in
+the next". Keep the premise and the reason, which no mark shows, and the rule
+the step teaches where the help does not already state it.
 
 Leave a journey's count to the chrome. A step whose journey has two or more
 legs shows "Step 2 of 7" above its sentence, so the words never say which leg

@@ -307,16 +307,16 @@ wall" or "has none".
 
 For a multi-edge firing the first leg SHALL state why the moves are forced
 together. For `equivalentEdges`: the two highlighted edges border the same
-region and therefore share a fate (both walls or both open), which together
-with the clue's count forces the result. For `numberExhausted`: the clue's
-count leaves its remaining edges a single possible state. The first leg SHALL
-phrase the conclusion across the set ("draw them all", "both must be walls").
+region and therefore share a fate, which together with the clue's count forces
+the result. For `numberExhausted`: the clue's count leaves its remaining edges
+a single possible state. The first leg SHALL phrase the conclusion across the
+set ("draw them all", "both must be walls").
 
 #### Scenario: The coupled pair's first leg states the shared fate
 
 - **WHEN** the next deduction is an `equivalentEdges` firing of two edges
 - **THEN** the first leg's explanation states that the two edges share a fate
-  (both walls or both open) and names the clue that decides them
+  and names the clue that decides them
 
 ### Requirement: Hint: Palisade's marks and its keep-track verdict are the border grid's
 
@@ -430,8 +430,7 @@ stripe the region the edges border, and SHALL NOT mark the clue's cell.
 - **WHEN** the plan on `23d2e2c2e232` reaches a 2 with two undecided edges
   into one region, where walls on both would exceed it
 - **THEN** the step says "Both edges border the same region, so they share a
-  fate: both walls or both open. Walling both would exceed clue 2, so neither
-  can be a wall."
+  fate; walling both would exceed clue 2, so neither can be a wall."
 
 #### Scenario: The clue that decides the edges is not marked
 

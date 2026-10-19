@@ -441,19 +441,17 @@ SHALL place each of their tiles that way round.
 
 In the Normal tier's part the hint SHALL count a line's tiles, one lying along
 it counting once. Where the line needs as many more of a pole as it has
-undecided tiles, each SHALL be a magnet and take a `?`. Where it needs as many
-more as it has tiles that can still give one, a tile able to take the pole at
-only one of its squares there SHALL take it. For `−` on a line with a `+`
-number, that count takes in the tiles that can still give a `+`, so it
-concludes only when none can.
+undecided tiles, each SHALL be a magnet and take a `?`. Where it needs as many more as it has tiles that can still give
+one, a tile able to take the pole at only one of its squares there SHALL take
+it. For `−` on a line with a `+` number, that count takes in the tiles that can
+still give a `+`, so it concludes only when none can.
 
 #### Scenario: A tile lying along the column counts once
 
 - **WHEN** the hint is asked of the 5x6 board
   `..31.,...2..,.0...,.2..3.,LRLRTTLRTBBLRBTLRLRBTTTTTBBBBB` with its second
   column's bottom tile neutral
-- **THEN** its step begins "This column needs 3 more +s, one per magnet, and
-  just 3 tiles can give one"
+- **THEN** its step begins "This column needs 3 more +s from just 3 tiles"
 
 #### Scenario: Every undecided tile is needed
 

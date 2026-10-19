@@ -486,11 +486,11 @@ sum-combination, or a deduced extra-cage.
 
 The indication of a step that fires on a region SHALL be that region, named
 by its kind (a killer cage with its clue or the sum the clue leaves), and its
-conclusion SHALL be "we must cross out" what an elimination strikes, and "must
-be" or "can only be" the number a placement enters. The indication of a step
-with no firing region SHALL be what the player looks at: the cell for a
-single, the number just placed for the cull after it, and the notes for a step
-that sets them up.
+conclusion SHALL be that what an elimination strikes "must go", and "must be"
+or "can only be" the number a placement enters. The indication of a step with
+no firing region SHALL be what the player looks at: the cell for a single, the
+number just placed for the cull after it, and the notes for a step that sets
+them up.
 
 #### Scenario: A strike's sentence names its region and ends in necessity
 
@@ -503,8 +503,8 @@ that sets them up.
 
 - **WHEN** a step strikes one number, or several, or numbers its reasoning has
   just listed
-- **THEN** it concludes "we must cross out the 5", or "we must cross out 1 and
-  2", or "we must cross them out" ("it" for one)
+- **THEN** it concludes "the 5 must go", or "1 and 2 must go", or "they must
+  go" ("it" for one)
 
 #### Scenario: The cull after a placement names where the number cannot repeat
 
