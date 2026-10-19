@@ -81,6 +81,99 @@ export function nearestMarked(
   return best;
 }
 
+/** Black or white, whichever stands farther from `color` (0–255 a channel)
+ * in WCAG contrast: the edge {@link edged} gives it. */
+export function edgeFor(
+  color: readonly [number, number, number],
+): readonly [number, number, number] {
+  const lin = (v: number) => {
+    const s = v / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  const y = 0.2126 * lin(color[0]) + 0.7152 * lin(color[1]) + 0.0722 * lin(color[2]);
+  // Contrast with black, (y + 0.05) / 0.05, against with white, 1.05 / (y + 0.05).
+  return (y + 0.05) ** 2 > 0.05 * 1.05 ? [0, 0, 0] : [255, 255, 255];
+}
+
+/** How a mark takes its edge: round it, on the pixels beside it, or within
+ * it, on its own outermost pixels, for a mark the game draws under its
+ * content, whose neighbors are that content. */
+export type EdgeSide = "outside" | "inside";
+
+/** The marks as RGBA in `color`, edged `reach` pixels wide in `edge`. A mark
+ * in one color vanishes on content of its own lightness, and a game may draw
+ * anything under its marks; of two colors far apart in lightness, one stands
+ * clear of whatever is under it. Outside, the edge is as opaque as the most
+ * of the mark within its reach; inside, it takes whatever share of a pixel
+ * the least of the mark within its reach leaves, so a rim keeps its
+ * antialiasing either way. Only the pixels within `reach` of `box` are
+ * looked at. */
+export function edged(
+  { alpha, box }: ReferenceMarks,
+  width: number,
+  color: readonly [number, number, number],
+  edge: readonly [number, number, number],
+  reach: number,
+  side: EdgeSide,
+): Uint8ClampedArray<ArrayBuffer> {
+  const out = new Uint8ClampedArray(alpha.length * 4);
+  if (!box) return out;
+  const height = alpha.length / width;
+  const x0 = Math.max(0, box.x - reach);
+  const x1 = Math.min(width - 1, box.x + box.w - 1 + reach);
+  const y0 = Math.max(0, box.y - reach);
+  const y1 = Math.min(height - 1, box.y + box.h - 1 + reach);
+  // The most (outside) or least (inside) of the mark within `reach` of each
+  // pixel: a square's, taken across and then down. Off the canvas counts as
+  // no mark. Marks are sparse and this runs on every step, so the work is
+  // led by the mark's pixels: outside, each spreads its coverage over its
+  // reach; inside, only the mark's own pixels look round them.
+  const across = new Uint8ClampedArray(alpha.length);
+  const near = new Uint8ClampedArray(alpha.length);
+  const spread = (
+    from: Uint8ClampedArray,
+    to: Uint8ClampedArray,
+    step: number,
+    at: (p: number) => number,
+    size: number,
+  ) => {
+    for (let y = y0; y <= y1; y++)
+      for (let x = x0; x <= x1; x++) {
+        const p = y * width + x;
+        if ((side === "outside" ? from : alpha)[p] === 0) continue;
+        const c = at(p);
+        const lo = Math.max(0, c - reach);
+        const hi = Math.min(size - 1, c + reach);
+        if (side === "outside") {
+          const v = from[p];
+          for (let i = lo; i <= hi; i++) {
+            const q = p + (i - c) * step;
+            if (to[q] < v) to[q] = v;
+          }
+        } else {
+          let v = lo > c - reach || hi < c + reach ? 0 : 255;
+          for (let i = lo; i <= hi; i++) v = Math.min(v, from[p + (i - c) * step]);
+          to[p] = v;
+        }
+      }
+  };
+  spread(alpha, across, 1, (p) => p % width, width);
+  spread(across, near, width, (p) => Math.floor(p / width), height);
+  for (let y = y0; y <= y1; y++)
+    for (let x = x0; x <= x1; x++) {
+      const p = y * width + x;
+      // The pixel's coverage, and how much of it is the mark's own color.
+      const cover = side === "outside" ? near[p] : alpha[p];
+      if (cover === 0) continue;
+      const own = side === "outside" ? alpha[p] : Math.min(near[p], alpha[p]);
+      const i = p * 4;
+      for (let k = 0; k < 3; k++)
+        out[i + k] = (color[k] * own + edge[k] * (cover - own)) / cover;
+      out[i + 3] = cover;
+    }
+  return out;
+}
+
 /** The marks as RGBA in one color, as opaque as each pixel is theirs. */
 export function tinted(
   alpha: Uint8ClampedArray,

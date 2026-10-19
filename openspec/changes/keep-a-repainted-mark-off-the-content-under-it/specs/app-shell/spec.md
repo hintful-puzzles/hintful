@@ -11,3 +11,9 @@ app applies to every game. No game SHALL choose its references' colors.
 - **WHEN** a Samegame hint outlines a group of green pieces
 - **THEN** the outline is told from the pieces it surrounds, in light and in
   dark
+
+#### Scenario: Stripes under a game's content
+
+- **WHEN** a hint stripes a row whose squares hold glyphs
+- **THEN** the stripes' edge lies within their bands, and no glyph is
+  painted over

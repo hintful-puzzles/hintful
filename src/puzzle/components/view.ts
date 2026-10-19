@@ -21,8 +21,11 @@ import { computeAvailableCanvasSize } from "../canvas-sizing.ts";
 import { puzzleContext } from "../contexts.ts";
 import { darkModePalette } from "../dark-palette.ts";
 import type { HintReferenceMarks } from "../engine-surface.ts";
-import { tinted } from "../mark-flash.ts";
+import { edged, edgeFor, tinted } from "../mark-flash.ts";
 import { HINT_FLASH_MS, type Puzzle } from "../puzzle.ts";
+
+/** How wide the edge round a repainted mark is, in CSS pixels. */
+const MARK_EDGE_PX = 1;
 
 /**
  * The `<puzzle-view>` component renders a puzzle using the drawing API.
@@ -419,7 +422,8 @@ export class PuzzleView extends SignalWatcher(LitElement) {
   }
 
   /** Every reference's marks repainted in its own color for as long as the
-   * hint shows, so its pill and its marks match. The largest marks are laid
+   * hint shows, so its pill and its marks match, each edged so that it reads
+   * on whatever the game drew under it (`edged`). The largest marks are laid
    * first: a reference whose marks lie inside another's ("region 1" of "the
    * chain") would otherwise be painted over, and its pill name a color the
    * board does not show. */
@@ -439,7 +443,15 @@ export class PuzzleView extends SignalWatcher(LitElement) {
         const color = colors[i];
         if (!color) return;
         const hex = (k: number) => Number.parseInt(color.slice(k, k + 2), 16);
-        const layer = tinted(r.alpha, [hex(1), hex(3), hex(5)]);
+        const rgb = [hex(1), hex(3), hex(5)] as const;
+        const reach = Math.max(1, Math.round(MARK_EDGE_PX * this.canvasDpr));
+        // Stripes run under the game's content, which an edge beside them
+        // would cover, so theirs eats into the band; and half as wide, since
+        // across a diagonal band a square's reach goes √2 as far.
+        const stripes = marks.roles[i] === "stripes";
+        const layer = stripes
+          ? edged(r, marks.width, rgb, edgeFor(rgb), Math.max(1, reach >> 1), "inside")
+          : edged(r, marks.width, rgb, edgeFor(rgb), reach, "outside");
         for (let p = 3; p < layer.length; p += 4)
           if (layer[p] > 0) pixels?.set(layer.subarray(p - 3, p + 1), p - 3);
       });

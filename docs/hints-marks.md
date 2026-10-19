@@ -606,9 +606,15 @@ What follows is the frame the game draws. While a hint shows, the app
 repaints each reference's marks in a color of its own from
 `HINT_REFERENCE_COLORS` (`engine/color/colors.ts`), held to the bars every
 mark is on the cell surface and the region fills (`palette.test.ts`), so
-the game's own hint color is under the repaint. A repainted mark on the
-game's own content, such as Samegame's keyline turned the outline's color,
-is open in `openspec/changes/keep-a-repainted-mark-off-the-content-under-it`.
+the game's own hint color is under the repaint. The repaint gives every mark
+an edge in black or white, whichever stands farther from its color
+(`edgeFor` and `edged` in `puzzle/mark-flash.ts`): round a ring or an
+outline, and inside a stripe's band, since the game's content is drawn over
+the stripes. Of two colors that far apart one reads on whatever the game
+drew, so no game picks its references' colors, and a repainted mark reads at
+2.1:1 or better on any content in both schemes (`mark-flash.test.ts`). The
+choices below are what a player sees where the repaint is not drawn: in Copy
+image, which takes the game's canvas, and until a step's marks are measured.
 
 - **Where the game's blue carries information about the puzzle, the hint
   moves**, and where two washes would coexist, the displayed hint suppresses
@@ -631,11 +637,11 @@ is open in `openspec/changes/keep-a-repainted-mark-off-the-content-under-it`.
   [`subsets/render.ts`](../src/games/subsets/render.ts); say why at the
   assignment.
 - **Where the pieces come in every hue, no hint color is free**, so the marks
-  keep their colors and take an edge that shows on all of them: a black
-  keyline inside the ring and the outline, and black stripes, measured over
-  every piece color in both schemes in `puzzle/hatch-contrast.test.ts`.
-  Exemplar: [`samegame/render.ts`](../src/games/samegame/render.ts),
-  `COL_HINT_KEY`.
+  keep their colors and take an edge that shows on all of them, as the
+  repaint does: a black keyline inside the ring and the outline, and black
+  stripes, measured over every piece color in both schemes in
+  `puzzle/hatch-contrast.test.ts`. Exemplar:
+  [`samegame/render.ts`](../src/games/samegame/render.ts), `COL_HINT_KEY`.
 
 ## A hint that suppresses a game's aid dismisses on a UI update
 
