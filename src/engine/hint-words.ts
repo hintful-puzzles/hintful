@@ -288,17 +288,17 @@ export class Narration {
     return out;
   }
 
-  /** The same words with the {@link refs} entry at `index` naming nothing: it
-   * keeps its words, and every other reference is as it was. */
-  without(index: number): this {
-    let at = 0;
-    return this.remade(
-      this.parts.map((p) => {
-        if (!isReference(p) || p.elements.length === 0) return p;
-        if (at++ !== index) return p;
-        const frozen = p.words(p.elements);
-        return { ...p, elements: [], words: () => frozen };
-      }),
+  /** The same words with no mark the {@link refs} entry at `index` draws:
+   * its elements are taken out of every reference that names them in its
+   * role, since another reference naming one ("here" … "this") would draw it
+   * still. */
+  withoutMarksOf(index: number): this {
+    const ref = this.refs[index];
+    if (!ref) return this;
+    const keys = new Set(ref.elements.map((e) => ref.kind.key(e)));
+    return this.narrow(
+      (role, kind, key) =>
+        !(role === ref.role && kind === ref.kind.name && keys.has(key)),
     );
   }
 

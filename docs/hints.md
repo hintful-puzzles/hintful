@@ -303,7 +303,7 @@ not a mark (a ghost glyph, a route, an animation), painted only where a named
 mark is. Because nothing else is, the engine can take one reference out: a
 player who presses a reference's words in the hint sees that reference's marks
 light up while the rest stay drawn, with no code in the game: the worker draws
-the step with and without them (`Narration.without`,
+the step with and without them (`Narration.withoutMarksOf`,
 `Midend.hideHintReference`), and the pixels that differ are theirs
 (`markPixels`). So a reference's words
 are what a player presses, and the fewer words around the mark's own name a

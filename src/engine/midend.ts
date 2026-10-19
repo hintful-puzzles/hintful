@@ -1308,7 +1308,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const before = this.displayedHintHidden?.index ?? null;
     this.hintHidden =
       step && words && index !== null && index >= 0 && index < words.refs.length
-        ? { step, index, drawn: { ...step, words: words.without(index) } }
+        ? { step, index, drawn: { ...step, words: words.withoutMarksOf(index) } }
         : null;
     if ((this.hintHidden?.index ?? null) !== before) this.requestRedraw();
   }

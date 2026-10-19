@@ -1470,7 +1470,9 @@ describe("Midend hint plan lifecycle", () => {
 
   /** `fakeGame` whose every step outlines (0,0) and rings (1,0), and whose
    * redraw records the step it is handed. */
-  function twoMarkGame() {
+  function twoMarkGame(
+    said = phrase`From ${mark.as("outline", CELL, [{ x: 0, y: 0 }], "the left cell")}, fill ${mark.as("ring", CELL, [{ x: 1, y: 0 }], "the right one")}.`,
+  ) {
     const base = fakeGame.hint;
     if (!base) throw new Error("fakeGame.hint missing");
     const drawn: (HintStep<FakeMove> | null)[] = [];
@@ -1479,10 +1481,7 @@ describe("Midend hint plan lifecycle", () => {
       hint: (s) => {
         const r = base(s);
         if (!r.ok) return r;
-        const words = unshaped(
-          phrase`From ${mark.as("outline", CELL, [{ x: 0, y: 0 }], "the left cell")}, fill ${mark.as("ring", CELL, [{ x: 1, y: 0 }], "the right one")}.`,
-          "evident",
-        );
+        const words = unshaped(said, "evident");
         return { ok: true, steps: r.steps.map((st) => narratedStep({ ...st, words })) };
       },
       redraw: (...args) => {
@@ -1515,6 +1514,22 @@ describe("Midend hint plan lifecycle", () => {
     h.m.hideHintReference(null);
     h.m.redraw(recordingDrawing().dr);
     expect(stepMarks(g.drawn()).of("ring", CELL)).toEqual([{ x: 1, y: 0 }]);
+  });
+
+  it("hides a reference's marks where another reference names them too", () => {
+    // Tracks: "No track here … so this must carry track", both the one cell.
+    const ring = () => mark.as("ring", CELL, [{ x: 1, y: 0 }], "here");
+    const g = twoMarkGame(
+      phrase`None ${ring()}, by ${mark.as("outline", CELL, [{ x: 0, y: 0 }], "the left cell")}, so fill ${ring()}.`,
+    );
+    h = harness(g.game);
+    h.m.newGame();
+    h.m.hint();
+    h.m.hideHintReference(0);
+    h.m.redraw(recordingDrawing().dr);
+    const marks = stepMarks(g.drawn());
+    expect(marks.of("ring", CELL)).toEqual([]);
+    expect(marks.of("outline", CELL)).toEqual([{ x: 0, y: 0 }]);
   });
 
   it("ends a hidden reference with the step it was set on", () => {
