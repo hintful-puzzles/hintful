@@ -291,8 +291,8 @@ In Adjacent mode the hint SHALL rule out of a cell each number that fits none
 of the numbers still open in a neighbor: across a bar, a number with nothing
 open one away from it there, and across a gap with no bar, a number that every
 open number there equals or is one away from. It SHALL say "A bar joins this
-cell to a neighbor with nothing open one away from" those numbers, or "No bar
-joins this cell to a neighbor whose every open number clashes with" them.
+cell to its neighbor with nothing open one away from" those numbers, or "No bar
+joins this cell to its neighbor, whose numbers all clash with" them.
 
 #### Scenario: A bar beside a neighbor down to two numbers
 
@@ -306,8 +306,8 @@ joins this cell to a neighbor whose every open number clashes with" them.
 
 - **WHEN** the step's cell has no pencil marks and the hint reads an unmarked
   cell as holding every number its row and column do not
-- **THEN** the step pencils in the numbers left, and its sentence ends "so
-  pencil in only" those numbers after the same premise
+- **THEN** the step pencils in the numbers left, and its sentence ends "so this
+  cell can only be" those numbers after the same premise
 
 ### Requirement: Hint: Unequal's hint reasons no harder than the board's tier
 

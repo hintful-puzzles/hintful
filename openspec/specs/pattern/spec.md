@@ -326,7 +326,7 @@ cells out of reach.
   one gap between each
 - **THEN** four steps shade the runs, each saying its run "has nowhere to
   slide", and three more clear the gaps, each saying "No run of this column's
-  clue can reach this cell, so it must be clear."
+  outlined clue can reach the ringed cell, so that cell must be clear."
 
 ### Requirement: Hint: Pattern's hint takes the first line a named technique decides
 

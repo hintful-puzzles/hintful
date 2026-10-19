@@ -910,21 +910,21 @@ SHALL draw the rest. Each step outlines the clue, and the last marks that dot.
 #### Scenario: A 0 is said in its own words
 
 - **WHEN** a 0 has open edges
-- **THEN** the step reads "This 0 takes no lines, so its edges can't be
-  lines." and rules them all out
+- **THEN** the step reads "This 0 takes no lines, so each ringed edge can't be
+  a line." and rules them all out
 
 #### Scenario: A 1 with one edge left
 
 - **WHEN** all but one of a 1's edges are ruled out
-- **THEN** the step reads "Only one of this 1's edges isn't ruled out, so it
-  must be a line."
+- **THEN** the step reads "Only one of this 1's edges isn't ruled out, so the
+  ringed edge must be a line."
 
 #### Scenario: A clue that must spare its edge at a dot
 
 - **WHEN** a 3 in a square has four open edges and one of its dots has a line
 - **THEN** the step draws the two edges that do not meet at that dot, saying
-  the 3 "can spare one open edge and must spare it at the outlined dot, which
-  has a line"
+  the 3 "can spare one edge and must spare it at the outlined dot, which has a
+  line"
 
 ### Requirement: Hint: A dot's count settles its open edges
 
@@ -942,8 +942,8 @@ step marks the dot its sentence calls "the outlined dot".
 #### Scenario: A full dot with one edge left
 
 - **WHEN** a dot has two lines and one open edge
-- **THEN** the step reads "The outlined dot already has its two lines, so this
-  edge can't be a line."
+- **THEN** the step reads "The outlined dot already has its two lines, so the
+  ringed edge can't be a line."
 
 ### Requirement: Hint: An edge that would close a loop is settled by what the loop leaves out
 
@@ -1003,7 +1003,7 @@ exactly one line SHALL draw the third edge.
 - **WHEN** a corner noted as needing a line has the only two open edges of a
   dot with no line
 - **THEN** the step reads "The marked corner needs a line; the outlined dot
-  takes both or neither, so both must be lines."
+  takes both or neither, so both ringed edges must be lines."
 
 #### Scenario: The loop leaves by the third edge
 
@@ -1077,15 +1077,15 @@ two are alike, opposites where they differ.
 #### Scenario: Two edges of a 3
 
 - **WHEN** a 3 has two lines and two open edges
-- **THEN** the step reads "Only these two of this 3's edges are still open,
-  and it needs 1 more, so they must be opposites."
+- **THEN** the step reads "Only these two edges of this 3 are still open, and
+  it needs 1 more, so they must be opposites."
 
 #### Scenario: A match and an opposite chained
 
 - **WHEN** one edge matches a shared edge and another is that edge's opposite,
   both pairs being on the board
-- **THEN** the step reads "One of these edges matches the edge the marked
-  pairs share and the other is its opposite, so they must be opposites."
+- **THEN** the step reads "One of these edges matches the marked edge the
+  marked pairs share and the other its opposite, so they must be opposites."
 
 ### Requirement: Hint: A corner of exactly one line and a pair of opposites are noted from each other
 

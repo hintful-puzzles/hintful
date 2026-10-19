@@ -503,8 +503,8 @@ them up.
 
 - **WHEN** a step strikes one number, or several, or numbers its reasoning has
   just listed
-- **THEN** it concludes "the 5 must go", or "1 and 2 must go", or "they must
-  go" ("it" for one)
+- **THEN** it concludes "the 5 must go", or "1 and 2 must go", naming the
+  numbers in every case
 
 #### Scenario: The cull after a placement names where the number cannot repeat
 

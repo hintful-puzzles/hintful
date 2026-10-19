@@ -338,7 +338,7 @@ A cage step's narration SHALL name the cage by its clue's goal ("sum to N",
 
 - **WHEN** a cage with the clue `8+` allows neither 1 nor 4 in one of its cells
 - **THEN** the step reads "No way to make this cage sum to 8 puts 1 or 4 in this
-  cell, so they must go."
+  cell, so 1 and 4 must go."
 
 #### Scenario: A cage places a digit along its row
 

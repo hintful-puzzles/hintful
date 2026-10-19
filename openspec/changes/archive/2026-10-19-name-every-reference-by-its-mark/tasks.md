@@ -35,5 +35,9 @@
       Beyond the length walk, a wider walk (every preset, four seeds) hears
       Mines' `count` at 139 and Signpost's `onlyBefore` at 132, both over the
       limit before this change too (131, 128), which the walk does not reach.
-- [ ] 1.5 Run the app: read each reworded kind of step against its marks,
+- [x] 1.5 Run the app: read each reworded kind of step against its marks,
       with no press, in light and dark.
+      Tracks' `sharedFate` and Magnets' `lineFull` in light, Keen's cage
+      strike and Inertia's slide in dark, each read against its frame:
+      every pill names a mark on the board. Tracks' "turn track" read
+      unclearly there and became "send track".
