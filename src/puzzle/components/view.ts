@@ -6,6 +6,7 @@ import { query } from "lit/decorators/query.js";
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { currentColorScheme } from "../../color-scheme.ts";
+import type { Scheme } from "../../engine/color/color-word.ts";
 import type { FontInfo, Size } from "../../engine/types.ts";
 import {
   colorToOKLCH,
@@ -49,7 +50,7 @@ export class PuzzleView extends SignalWatcher(LitElement) {
   protected renderedPuzzleParams: string | null = null;
 
   @state()
-  protected renderedColorScheme?: string;
+  protected renderedColorScheme?: Scheme;
 
   @state()
   protected renderedHintFlashing: number | null = null;
@@ -59,7 +60,7 @@ export class PuzzleView extends SignalWatcher(LitElement) {
 
   /** The marks of a flashing reference of the hint's words, over the board. */
   private flashCanvas: HTMLCanvasElement | null = null;
-  /** Every reference's marks in its own color (`hintReferenceColors`). */
+  /** Every reference's marks in its own color (`hintReferenceColorsIn`). */
   private colorCanvas: HTMLCanvasElement | null = null;
 
   @query("[part=content]")
@@ -89,7 +90,11 @@ export class PuzzleView extends SignalWatcher(LitElement) {
   }
 
   protected override async updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.has("renderedHintMarks")) this.showHintColors();
+    if (
+      changedProperties.has("renderedHintMarks") ||
+      changedProperties.has("renderedColorScheme")
+    )
+      this.showHintColors();
     if (
       changedProperties.has("renderedHintFlashing") ||
       (changedProperties.has("renderedHintMarks") && this.renderedHintFlashing !== null)
@@ -420,7 +425,8 @@ export class PuzzleView extends SignalWatcher(LitElement) {
    * board does not show. */
   private showHintColors(): void {
     const marks = this.renderedHintMarks;
-    const colors = this.puzzle?.hintReferenceColors ?? [];
+    const colors =
+      this.puzzle?.hintReferenceColorsIn(this.renderedColorScheme ?? "light") ?? [];
     let pixels: Uint8ClampedArray<ArrayBuffer> | null = null;
     if (marks) {
       pixels = new Uint8ClampedArray(marks.width * marks.height * 4);

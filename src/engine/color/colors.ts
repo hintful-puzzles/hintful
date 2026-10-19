@@ -65,6 +65,7 @@
  * in **both** schemes.
  */
 
+import type { MarkRole } from "../hint-words.ts";
 import type { Color } from "../types.ts";
 import { token } from "./color-token.ts";
 import { ColorWord } from "./color-word.ts";
@@ -574,3 +575,53 @@ export const FOUR_FILL_MARKS: readonly Color[] = MAP_ORDER.map((k) => {
  * ({@link REGION_DESIGN}).
  */
 export const FOUR_NAMES: readonly ColorWord[] = FOUR_FILLS.map(wordOf);
+
+/**
+ * **The colors a hint's references take**, three to a role: each reference
+ * in a hint's words its own, its marks repainted in it and its words tinted
+ * with it (`Puzzle.hintReferenceColorsIn`). A role keeps a family of hues, as
+ * the owner asked (2026-10-19): blues for what a step decides, greens for
+ * what it reasons from, warm for the line it names.
+ *
+ * Each is a mark drawn on a cell, so each meets the bars `palette.test.ts`
+ * holds every mark to, in both schemes: it reads on the cell surface and on
+ * every region fill, and keeps more than 30° off the two-state pair's hues.
+ * The light column is what that costs: a mark reads on the light board only
+ * at lightness 0.58 or below, so a lime is an olive there and an amber a
+ * bronze (owner, 2026-10-19: the deeper light shades over the vivid ones that
+ * vanished on a pale fill). Within that, the lightnesses are the ones that
+ * hold any two of the nine furthest apart, 0.094 in light and 0.139 in dark.
+ *
+ * The first ring is the hint's own {@link BLUE}, so a step with one ringed
+ * reference looks as it did before a reference had a color of its own.
+ */
+const REFERENCE_DESIGN = {
+  ring: [
+    { light: [0.56, 0.097, 222], dark: [0.84, 0.106, 222] },
+    { light: [0.42, 0.2, 276], dark: [0.74, 0.127, 276] },
+  ],
+  outline: [
+    { light: [0.54, 0.14, 150], dark: [0.62, 0.161, 150] },
+    { light: [0.48, 0.085, 175], dark: [0.74, 0.131, 175] },
+    { light: [0.42, 0.111, 133], dark: [0.78, 0.2, 133] },
+  ],
+  stripes: [
+    { light: [0.58, 0.156, 45], dark: [0.84, 0.089, 45] },
+    { light: [0.5, 0.191, 0], dark: [0.68, 0.2, 0] },
+    { light: [0.5, 0.103, 68], dark: [0.62, 0.128, 68] },
+  ],
+} as const satisfies Record<
+  MarkRole,
+  readonly { readonly light: Lch; readonly dark: Lch }[]
+>;
+
+const designed = (role: MarkRole): Color[] =>
+  REFERENCE_DESIGN[role].map((d) => fill(d.light, d.dark));
+
+/** {@link REFERENCE_DESIGN}, a role to its colors in the order references
+ * take them. */
+export const HINT_REFERENCE_COLORS: Readonly<Record<MarkRole, readonly Color[]>> = {
+  ring: [BLUE, ...designed("ring")],
+  outline: designed("outline"),
+  stripes: designed("stripes"),
+};

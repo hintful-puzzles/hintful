@@ -2,7 +2,9 @@ import { computed, type Signal, signal } from "@lit-labs/signals";
 import * as Sentry from "@sentry/browser";
 import { proxy, type Remote, releaseProxy, transfer } from "comlink";
 import { assertNever } from "../engine/assert-never.ts";
+import { darkValue } from "../engine/color/color-token.ts";
 import type { Scheme } from "../engine/color/color-word.ts";
+import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
 import type { MarkRole } from "../engine/hint-words.ts";
 import type {
@@ -63,17 +65,17 @@ export const HINT_PENDING_MS = 300;
  * fading back (`Puzzle.flashHintReference`). One flash, so nothing strobes. */
 export const HINT_FLASH_MS = 1000;
 
-/** The colors a hint's references take, a pool to a role (the owner,
- * 2026-10-19: "I can't imagine any situation when we'd not want the colors to
- * be distinct"): a role keeps its family of hues, blue for what a step
- * decides, green for what it reasons from, warm for the line it names, and
- * each reference in it its own shade, its marks repainted in it. Clear of the
- * error red, and strong enough to read on either scheme's board. */
-const HINT_COLOR_POOLS: Readonly<Record<MarkRole, readonly string[]>> = {
-  ring: ["#1c7ed6", "#7048e8", "#22b8cf"],
-  outline: ["#0ca678", "#82c91e", "#2b8a3e"],
-  stripes: ["#f76707", "#f59f00", "#d6336c"],
-};
+/** A color's value in `scheme`, as the canvas overlay and CSS take it. */
+function hexIn(c: Color, scheme: Scheme): string {
+  const v = scheme === "dark" ? (darkValue(c) ?? c) : c;
+  return `#${v
+    .map((x) =>
+      Math.round(x * 255)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
 
 /** Whether two references draw the same marks ("here" … "this"). */
 function sameMarks(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
@@ -499,11 +501,13 @@ export class Puzzle {
     return this._hintMarks.get();
   }
 
-  /** The color of each reference of the hint's words, from its role's pool,
-   * that its marks are repainted in and its pill is tinted with. `null` for a
+  /** The color of each reference of the hint's words in `scheme`, from its
+   * role's (`HINT_REFERENCE_COLORS`; the owner, 2026-10-19: "I can't imagine
+   * any situation when we'd not want the colors to be distinct"), that its
+   * marks are repainted in and its pill is tinted with. `null` for a
    * reference that draws nothing. References that draw the same marks share
    * one. */
-  public get hintReferenceColors(): readonly (string | null)[] {
+  public hintReferenceColorsIn(scheme: Scheme): readonly (string | null)[] {
     const marks = this._hintMarks.get();
     if (!marks) return [];
     const colors: (string | null)[] = [];
@@ -511,12 +515,12 @@ export class Puzzle {
     marks.refs.forEach((r, i) => {
       const same = marks.refs.findIndex((o) => sameMarks(o.alpha, r.alpha));
       const role = marks.roles[i] ?? "outline";
-      const pool = HINT_COLOR_POOLS[role];
+      const pool = HINT_REFERENCE_COLORS[role];
       const next = taken[role] ?? 0;
       if (r.box === null) colors.push(null);
       else if (same < i) colors.push(colors[same]);
       else {
-        colors.push(pool[next % pool.length]);
+        colors.push(hexIn(pool[next % pool.length], scheme));
         taken[role] = next + 1;
       }
     });

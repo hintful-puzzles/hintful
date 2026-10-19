@@ -4,8 +4,8 @@
 decision: "if we can just change Map's own colors so that we don't need an
 exception, that'd be better" than letting a game choose its hint pool.
 **Rescoped 2026-10-19 by its measurement** (below): Map's colors need not
-move, and the defect is the pools' own. **Blocked on the owner's choice of
-the pools' light-scheme shades** (§ "The question").
+move, and the defect is the pools' own. The owner chose the proposed shades
+(2026-10-19); open on the light outline greens (`tasks.md` 1.8).
 
 ## Why
 

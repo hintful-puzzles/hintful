@@ -334,6 +334,83 @@ describe("the shared color vocabulary", () => {
     }
   });
 
+  it("keeps a hint reference's colors to the bars a mark is held to, in both schemes", () => {
+    // A reference's marks are repainted in its color over whatever they sit
+    // on, so each color is a mark on the cell surface and on every region
+    // fill. The bars are the ring's: in light no worse than `HINT_ACTION` on
+    // the surface, which a fill only lightens; in dark the ring's floor on
+    // the darkest of them. The lime, amber and cyan these replaced read at
+    // 1.14-1.36:1 on the light surface.
+    const inDark = (c: Color): Color => darkValue(c) ?? c;
+    const relLum = (c: Color): number => {
+      const lin = (v: number) =>
+        v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+    };
+    const contrast = (a: Color, b: Color): number => {
+      const [hi, lo] = [relLum(a), relLum(b)].sort((p, q) => q - p);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+    const striped = (under: Color, stripe: Color): Color =>
+      [0, 1, 2].map(
+        (i) => under[i] * (1 - HATCH_OPACITY) + stripe[i] * HATCH_OPACITY,
+      ) as unknown as Color;
+    const apart = (a: Color, b: Color): number => {
+      const plane = ([, c, h]: OKLCH): [number, number] =>
+        isGrayChroma(c)
+          ? [0, 0]
+          : [c * Math.cos((h * Math.PI) / 180), c * Math.sin((h * Math.PI) / 180)];
+      const [p, q] = [colorToOKLCH(a), colorToOKLCH(b)];
+      const [px, py] = plane(p);
+      const [qx, qy] = plane(q);
+      return Math.hypot(p[0] - q[0], px - qx, py - qy);
+    };
+    const surface = roles.cellSurface(BG);
+    const under = {
+      light: [surface, ...colors.REGION_FILLS],
+      dark: [inDark(surface), ...colors.REGION_FILLS.map(inDark)],
+    };
+    const all = Object.entries(colors.HINT_REFERENCE_COLORS).flatMap(([role, pool]) =>
+      pool.map((c, i): [string, Color] => [`${role} ${i}`, c]),
+    );
+    expect(all.length).toBeGreaterThanOrEqual(9);
+    for (const [name, c] of all) {
+      expect(contrast(c, surface), `${name} on the surface in light`).toBeGreaterThan(
+        2.5,
+      );
+      for (const fill of under.light)
+        expect(
+          contrast(c, fill),
+          `${name} on ${key(fill)} in light`,
+        ).toBeGreaterThanOrEqual(contrast(c, surface));
+      for (const on of under.dark)
+        expect(
+          contrast(inDark(c), on),
+          `${name} on ${key(on)} in dark`,
+        ).toBeGreaterThan(2.8);
+      if (name.startsWith("stripes"))
+        for (const [scheme, list] of Object.entries(under))
+          for (const on of list) {
+            const s = scheme === "light" ? c : inDark(c);
+            expect(
+              contrast(striped(on, s), on),
+              `${name} striped on ${key(on)} in ${scheme}`,
+            ).toBeGreaterThan(1.25);
+          }
+    }
+    // Any two may name references in one step, at the floor two neighbors
+    // are held to.
+    for (let i = 0; i < all.length; i++)
+      for (let j = i + 1; j < all.length; j++) {
+        const pair = `${all[i][0]}/${all[j][0]}`;
+        expect(apart(all[i][1], all[j][1]), `${pair} in light`).toBeGreaterThan(0.07);
+        expect(
+          apart(inDark(all[i][1]), inDark(all[j][1])),
+          `${pair} in dark`,
+        ).toBeGreaterThan(0.07);
+      }
+  });
+
   it("keeps Signpost's chain colors apart, in both schemes", () => {
     // Two of its chains once took colors 0.009 apart, mixes of two fills
     // that had both gone gray. Every chain color is a region fill now, and
@@ -362,8 +439,9 @@ describe("the shared color vocabulary", () => {
 
   it("keeps the two-state pair off the hues spent on marks", () => {
     // A piece in a mark's hue swallows the mark drawn over it. The marks are
-    // the error, the cursor, every hint role, and orange, which a game with
-    // the pair gives a hint premise no shared role names.
+    // the error, the cursor, every hint role and every color a hint's
+    // reference is repainted in, and orange, which a game with the pair gives
+    // a hint premise no shared role names.
     const hue = (c: Color): number => colorToOKLCH(c)[2];
     const apart = (a: number, b: number): number => {
       const d = Math.abs(a - b) % 360;
@@ -378,6 +456,10 @@ describe("the shared color vocabulary", () => {
           entry[1] === colors.ORANGE),
     );
     expect(marks.map(([name]) => name)).toContain("HINT_ACTION");
+    for (const [role, pool] of Object.entries(colors.HINT_REFERENCE_COLORS))
+      pool.forEach((c, i) => {
+        marks.push([`${role} reference ${i}`, c]);
+      });
     for (const [name, mark] of marks)
       colors.TWO.forEach((member, i) => {
         expect(

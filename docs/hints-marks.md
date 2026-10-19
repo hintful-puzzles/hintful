@@ -602,6 +602,14 @@ taking the default, and decide which role is the cross-game one before
 deciding who yields.** `COL_HINT` blue is the collection's default, not a
 mandate.
 
+What follows is the frame the game draws. While a hint shows, the app
+repaints each reference's marks in a color of its own from
+`HINT_REFERENCE_COLORS` (`engine/color/colors.ts`), held to the bars every
+mark is on the cell surface and the region fills (`palette.test.ts`), so
+the game's own hint color is under the repaint. A repainted mark on the
+game's own content, such as Samegame's keyline turned the outline's color,
+is open in `openspec/changes/keep-a-repainted-mark-off-the-content-under-it`.
+
 - **Where the game's blue carries information about the puzzle, the hint
   moves**, and where two washes would coexist, the displayed hint suppresses
   the game's own, so one meaning of a washed square is on screen (§ "A hint

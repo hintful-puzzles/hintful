@@ -15,12 +15,26 @@
 - [x] 1.3 A reference's marks inside another's are painted over them
       (`view.ts`): on a Map chain step, "Region 1"'s color had no pixel on the
       board, and has 1,104 after.
-- [ ] 1.4 The owner's choice of the light-scheme shades (proposal § "The
-      question").
-- [ ] 1.5 The pools as palette colors with a value per scheme, resolved for
-      the scheme the board is drawn in (overlay, pills, leader line).
-- [ ] 1.6 The guards take the pools: the pair's hue rule, the bars on a
-      region fill and the cell surface, and the shades apart from each
-      other; each seen failing on today's shades first.
-- [ ] 1.7 Run the app: Map, Star Battle and a striping game, a hint shown on
-      each, light and dark.
+- [x] 1.4 The owner's choice of the light-scheme shades (2026-10-19:
+      "Proposed", from a comparison of today's and the proposed on the cell
+      surface and Map's four fills, both schemes).
+- [x] 1.5 The pools as `HINT_REFERENCE_COLORS` in `colors.ts`, a value per
+      scheme, resolved for the scheme the board is drawn in
+      (`Puzzle.hintReferenceColorsIn`: overlay, pills, leader line), and
+      repainted when the scheme changes under a hint.
+- [x] 1.6 The guards take them (`palette.test.ts`): the pair's hue rule, the
+      bars on the cell surface and every region fill, stripes visible, any
+      two apart; seen failing on today's violet (2.71:1 on the dark surface,
+      20° from the pair's purple). The dead-color guard counts the app's
+      overlay as a consumer.
+- [x] 1.7 Run the app (2026-10-19): Map's chain step light and dark, Star
+      Battle light and dark (ring, outline and stripes), every pill matching
+      its marks. In the light scheme Map's three outline greens read alike;
+      raised with the owner (§ 1.8).
+- [ ] 1.8 The owner's word on the three light outline greens: no three
+      greens at the light board's lightness separate well (three searches,
+      by lightness, by hue and over all nine), and the vivid lime that stood
+      apart was the one that vanished on a pale fill.
+- [x] 1.9 Filed: a repainted mark on a game's own content
+      (`keep-a-repainted-mark-off-the-content-under-it`), seen in Samegame,
+      whose keyline the repaint turns green.

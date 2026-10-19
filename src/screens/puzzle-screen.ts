@@ -231,7 +231,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     if (!near) return;
     const to = { x: b.left + near.x * scale, y: b.top + near.y * scale };
     const color =
-      this.puzzle?.hintReferenceColors[at.ref] ?? "var(--app-color-hint-ink)";
+      this.puzzle?.hintReferenceColorsIn(currentColorScheme.get())[at.ref] ??
+      "var(--app-color-hint-ink)";
     const ns = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(ns, "svg");
     svg.classList.add("hint-leader");
@@ -500,14 +501,15 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   private renderWords(): TemplateResult {
     const puzzle = this.puzzle;
     // Read with the scheme, so a scheme changed under a hint re-words it.
-    const spans = puzzle?.activeHintSpansIn(currentColorScheme.get()) ?? [];
+    const scheme = currentColorScheme.get();
+    const spans = puzzle?.activeHintSpansIn(scheme) ?? [];
     const explanation = spans.length
       ? spans
       : puzzle?.helpMessage
         ? [{ text: puzzle.helpMessage, ref: null }]
         : null;
     const flashing = puzzle?.hintFlashing ?? null;
-    const colors = puzzle?.hintReferenceColors ?? [];
+    const colors = puzzle?.hintReferenceColorsIn(scheme) ?? [];
     // Read here, so the leader is drawn again when the marks are measured.
     this.leaderFor =
       flashing === null ? null : { ref: flashing, marks: puzzle?.hintMarks ?? null };

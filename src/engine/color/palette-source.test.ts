@@ -260,9 +260,10 @@ describe("a per-game token belongs to the game it names", () => {
  * shade nothing on any board can show. That is exactly the state the palette is
  * small in order to avoid.
  *
- * "Used" spans all three ways a color reaches a board: a game imports it, a
- * meaning in `palette.ts` is defined over it, or one of the sets in `colors.ts`
- * itself gathers it up (`RED` is in `TEN`, which is what Flood imports).
+ * "Used" spans all four ways a color reaches a board: a game imports it, a
+ * meaning in `palette.ts` is defined over it, one of the sets in `colors.ts`
+ * itself gathers it up (`RED` is in `TEN`, which is what Flood imports), or
+ * the app paints it over the board (a hint's reference colors).
  */
 it("declares no named color nothing can show", () => {
   const imported = (src: string): string[] => {
@@ -278,7 +279,20 @@ it("declares no named color nothing can show", () => {
   // The meanings layer and the board-relative layer both build on named colors
   // (`ERROR` is `RED`; Signpost's region ramp is built from `REGION_FILLS`), and
   // a color reaching a board through either of them is used.
-  const byMeanings = new Set([...imported(paletteSource), ...imported(tableSource)]);
+  // The app paints a hint's reference colors itself, over any game's board.
+  const byApp = Object.values(
+    import.meta.glob<string>("../../puzzle/puzzle.ts", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }),
+  );
+  expect(byApp).toHaveLength(1);
+  const byMeanings = new Set([
+    ...imported(paletteSource),
+    ...imported(tableSource),
+    ...byApp.flatMap(imported),
+  ]);
   const table = code(
     Object.values(
       import.meta.glob<string>("./colors.ts", {
