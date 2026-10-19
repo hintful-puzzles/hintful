@@ -36,8 +36,8 @@ import type {
   Size,
 } from "../engine/types.ts";
 import { Drawing } from "./drawing.ts";
-import type { PuzzleEngineSurface } from "./engine-surface.ts";
-import { markPixels } from "./mark-flash.ts";
+import type { HintReferenceMarks, PuzzleEngineSurface } from "./engine-surface.ts";
+import { markAlpha, markBox, markColor, type ReferenceMarks } from "./mark-flash.ts";
 
 export class TsWorkerPuzzle implements PuzzleEngineSurface {
   private drawing?: Drawing;
@@ -110,20 +110,35 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   executeHint(hideAfter = false): string | null {
     return this.engine.executeHint(hideAfter);
   }
-  hintReferencePixels(index: number): ImageData | null {
+  hintReferenceMarks(count: number): HintReferenceMarks | null {
     const drawing = this.drawing;
     if (!drawing || !this.paletteReady) return null;
-    // One task, so the frame without the marks is never shown: an
+    // One task, so no frame without a reference's marks is ever shown: an
     // OffscreenCanvas presents what it holds when the worker yields.
     this.engine.redraw(drawing);
     const shown = drawing.pixels();
-    this.engine.hideHintReference(index);
-    this.engine.redraw(drawing);
-    const hidden = drawing.pixels();
+    const refs: ReferenceMarks[] = [];
+    for (let i = 0; i < count; i++) {
+      this.engine.hideHintReference(i);
+      this.engine.redraw(drawing);
+      const alpha = markAlpha(shown.data, drawing.pixels().data);
+      refs.push({
+        alpha,
+        color: markColor(shown.data, alpha),
+        box: markBox(alpha, shown.width),
+      });
+    }
     this.engine.hideHintReference(null);
     this.engine.redraw(drawing);
-    const marks = new ImageData(markPixels(shown.data, hidden.data), shown.width);
-    return transfer(marks, [marks.data.buffer]);
+    return transfer(
+      {
+        width: shown.width,
+        height: shown.height,
+        refs,
+        roles: this.engine.hintReferenceRoles(),
+      },
+      refs.map((r) => r.alpha.buffer),
+    );
   }
   currentAnimationMs(): number {
     return this.engine.currentAnimationMs();

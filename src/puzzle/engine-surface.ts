@@ -8,6 +8,7 @@
  * contract.
  */
 
+import type { MarkRole } from "../engine/hint-words.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -25,6 +26,16 @@ import type {
   ReferenceModel,
   Size,
 } from "../engine/types.ts";
+import type { ReferenceMarks } from "./mark-flash.ts";
+
+/** Each reference's marks on a canvas of `width` by `height` pixels, and the
+ * role each reference names them in. */
+export interface HintReferenceMarks {
+  readonly width: number;
+  readonly height: number;
+  readonly refs: readonly ReferenceMarks[];
+  readonly roles: readonly MarkRole[];
+}
 
 /**
  * The methods that read or act on **the board in play**, and so have nothing
@@ -45,9 +56,10 @@ export interface BoardSurface {
    * Hint-button stepper) hides the plan once the step settles instead of
    * previewing the next step; auto-play leaves it false. */
   executeHint(hideAfter?: boolean): string | null;
-  /** The pixels of the marks of one reference of the displayed hint's words
-   * (`markPixels`), the canvas left as it was; `null` with no canvas. */
-  hintReferencePixels(index: number): ImageData | null;
+  /** The marks of each of the first `count` references of the displayed
+   * hint's words on the canvas (`markAlpha`), the canvas left as it was;
+   * `null` with no canvas. */
+  hintReferenceMarks(count: number): HintReferenceMarks | null;
   /** Milliseconds of the animation currently armed (e.g. the slow-motion
    * move `executeHint` just played), or 0 when nothing is animating. The
    * auto-hint loop paces each step by this. */

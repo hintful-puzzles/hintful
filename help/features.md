@@ -93,7 +93,9 @@ to the first beat, so a second press always *shows* before it plays.
 **The words in pills point at the board.** Tap or click one, "this cell" or
 "the outlined cells", and the marks those words mean light up for a second,
 white on a dark board and black on a light one, while the rest stay as they
-are. With a mouse, moving the pointer onto the words does the same.
+are, and a line leads from the words to them. With a mouse, moving the
+pointer onto the words does the same. Each pill is tinted in the color of
+the marks it means.
 
 ::play:: **Auto-solve for me**, in the Menu, plays hint after hint at about a
 second a step, waiting for each move's animation in the puzzles that have one.

@@ -15,6 +15,7 @@ import type { PuzzleBarFitEvent, SwapButtonsEvent } from "../puzzle/components/b
 import type { PuzzleEvent } from "../puzzle/components/context.ts";
 import type { PuzzleKeyUnhandledEvent } from "../puzzle/components/view-interactive.ts";
 import { dealNewGame } from "../puzzle/deal-actions.ts";
+import type { HintReferenceMarks } from "../puzzle/engine-surface.ts";
 import {
   gridLayout,
   gridTemplateAreas,
@@ -22,7 +23,8 @@ import {
   type WindowShape,
   windowShape,
 } from "../puzzle/layout.ts";
-import type { Puzzle } from "../puzzle/puzzle.ts";
+import { nearestMarked } from "../puzzle/mark-flash.ts";
+import { HINT_FLASH_MS, type Puzzle } from "../puzzle/puzzle.ts";
 import {
   CHECK_OUT_OF_REACH,
   checkAndSave,
@@ -184,8 +186,76 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     }
   }
 
+  /** The flashing reference and the marks it was measured in, read where the
+   * words render; the leader drawn for it, so one is drawn once. */
+  private leaderFor: { ref: number; marks: HintReferenceMarks | null } | null = null;
+  private leaderDrawn: { ref: number; marks: HintReferenceMarks | null } | null = null;
+  private leader?: SVGSVGElement;
+
+  /**
+   * A line from the pressed pill to the nearest edge of its marks on the
+   * board, in the pill's color, fading with the flash: while it is pressed
+   * only, since a standing line across the board reads as a wire or an edge
+   * in the games made of lines.
+   */
+  private drawLeader(): void {
+    const at = this.leaderFor;
+    const drawn = this.leaderDrawn;
+    if (at?.ref === drawn?.ref && at?.marks === drawn?.marks) return;
+    this.leaderDrawn = at;
+    this.leader?.remove();
+    this.leader = undefined;
+    const marks = at?.marks;
+    const ref = at && marks?.refs[at.ref];
+    if (!marks || !ref?.box) return;
+    const root = this.shadowRoot;
+    const pill = root?.querySelector<HTMLElement>(
+      `.hint[role=status] .hint-ref[data-ref="${at.ref}"]`,
+    );
+    const board = root
+      ?.querySelector("puzzle-view-interactive")
+      ?.shadowRoot?.querySelector("canvas:not(.hint-flash):not(.hint-colors)");
+    if (!pill || !board) return;
+    const b = board.getBoundingClientRect();
+    const scale = b.width / marks.width;
+    const p = pill.getBoundingClientRect();
+    const from = { x: p.left + p.width / 2, y: p.top };
+    // The nearest pixel the marks hold, not the nearest edge of the box round
+    // them: marks spread over the board leave their box mostly bare.
+    const near = nearestMarked(
+      ref.alpha,
+      marks.width,
+      (from.x - b.left) / scale,
+      (from.y - b.top) / scale,
+    );
+    if (!near) return;
+    const to = { x: b.left + near.x * scale, y: b.top + near.y * scale };
+    const color =
+      this.puzzle?.hintReferenceColors[at.ref] ?? "var(--app-color-hint-ink)";
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.classList.add("hint-leader");
+    svg.setAttribute("aria-hidden", "true");
+    const line = document.createElementNS(ns, "line");
+    for (const [k, v] of Object.entries({ x1: from.x, y1: from.y, x2: to.x, y2: to.y }))
+      line.setAttribute(k, String(v));
+    const dot = document.createElementNS(ns, "circle");
+    for (const [k, v] of Object.entries({ cx: to.x, cy: to.y, r: 3.5 }))
+      dot.setAttribute(k, String(v));
+    svg.style.setProperty("--ref-color", color);
+    svg.append(line, dot);
+    root?.append(svg);
+    this.leader = svg;
+    svg.animate([{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], {
+      duration: HINT_FLASH_MS,
+      easing: "ease-in",
+      fill: "forwards",
+    });
+  }
+
   protected override updated(changedProperties: PropertyValues) {
     super.updated(changedProperties);
+    this.drawLeader();
     // A modal dialog is opened by a call, not by an attribute.
     const over = this.menuOver;
     if (over && this.menuOpen) this.keepClearOfBar(over);
@@ -436,7 +506,11 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       : puzzle?.helpMessage
         ? [{ text: puzzle.helpMessage, ref: null }]
         : null;
-    const flashing = puzzle?.hintFlash?.ref ?? null;
+    const flashing = puzzle?.hintFlashing ?? null;
+    const colors = puzzle?.hintReferenceColors ?? [];
+    // Read here, so the leader is drawn again when the marks are measured.
+    this.leaderFor =
+      flashing === null ? null : { ref: flashing, marks: puzzle?.hintMarks ?? null };
     const status = puzzle?.wantsStatusbar ? puzzle.statusbarText : null;
     return html`
       <div class="words">
@@ -469,7 +543,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                 puzzle?.canHint
                   ? html`<div class="hint hint-sizer" aria-hidden="true" inert>
                       <span class="hint-journey">${LONGEST_JOURNEY}</span>
-                      <span>${this.renderHintSpans(LONGEST_HINT, null)}</span>
+                      <span>${this.renderHintSpans(LONGEST_HINT, null, [])}</span>
                     </div>`
                   : nothing
               }${
@@ -480,7 +554,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                           ? html`<span class="hint-journey">${puzzle.hintJourney}</span>`
                           : nothing
                       }
-                      <span>${this.renderHintSpans(explanation, flashing)}</span>
+                      <span>${this.renderHintSpans(explanation, flashing, colors)}</span>
                     </div>`
                   : nothing
               }</div>`
@@ -494,9 +568,14 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
    * A hint's words, each reference to a mark a control that flashes that mark
    * on the board, so the words lead to it. What follows a reference up to the
    * next space ("'s", ",", ".") is kept on its line, so a line never opens
-   * with it.
+   * with it. A pill is tinted in its marks' color (`colors`), so the words
+   * lead to the marks before any press.
    */
-  private renderHintSpans(spans: readonly HintSpan[], flashing: number | null) {
+  private renderHintSpans(
+    spans: readonly HintSpan[],
+    flashing: number | null,
+    colors: readonly (string | null)[],
+  ) {
     const puzzle = this.puzzle;
     const glued = (i: number): string => {
       const next = spans[i + 1];
@@ -505,9 +584,12 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     return spans.map(({ text, ref }, i) => {
       if (ref === null)
         return spans[i - 1]?.ref != null ? text.slice(glued(i - 1).length) : text;
+      const color = colors[ref];
       return html`<span class="hint-ref-run"><button
           type="button"
-          class="hint-ref ${flashing === ref ? "flashing" : ""}"
+          data-ref=${ref}
+          style=${color ? `--ref-color: ${color}` : nothing}
+          class="hint-ref ${flashing === ref ? "flashing" : ""} ${color ? "colored" : ""}"
           @click=${() => puzzle?.flashHintReference(ref)}
           @pointerenter=${(e: PointerEvent) => {
             if (e.pointerType === "mouse") puzzle?.flashHintReference(ref);
@@ -1718,6 +1800,13 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         &:hover {
           background-color: color-mix(in srgb, var(--app-color-hint-ink) 16%, transparent);
         }
+        &.colored {
+          background-color: color-mix(in srgb, var(--ref-color) 18%, transparent);
+          box-shadow: inset 0 0 0 1.5px var(--ref-color);
+        }
+        &.colored:hover {
+          background-color: color-mix(in srgb, var(--ref-color) 30%, transparent);
+        }
         &.flashing {
           background-color: var(--app-color-hint-ink);
           box-shadow: none;
@@ -1726,6 +1815,24 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         &:focus-visible {
           outline: 2px solid var(--wa-color-focus);
           outline-offset: 1px;
+        }
+      }
+
+      .hint-leader {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 2;
+        overflow: visible;
+        line {
+          stroke: var(--ref-color);
+          stroke-width: 2;
+          stroke-linecap: round;
+        }
+        circle {
+          fill: var(--ref-color);
         }
       }
 

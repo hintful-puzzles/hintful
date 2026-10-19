@@ -19,7 +19,9 @@ import { throttle } from "../../utils/timing.ts";
 import { computeAvailableCanvasSize } from "../canvas-sizing.ts";
 import { puzzleContext } from "../contexts.ts";
 import { darkModePalette } from "../dark-palette.ts";
-import { HINT_FLASH_MS, type HintFlash, type Puzzle } from "../puzzle.ts";
+import type { HintReferenceMarks } from "../engine-surface.ts";
+import { tinted } from "../mark-flash.ts";
+import { HINT_COLORS_DISTINCT, HINT_FLASH_MS, type Puzzle } from "../puzzle.ts";
 
 /**
  * The `<puzzle-view>` component renders a puzzle using the drawing API.
@@ -50,10 +52,15 @@ export class PuzzleView extends SignalWatcher(LitElement) {
   protected renderedColorScheme?: string;
 
   @state()
-  protected renderedHintFlash: HintFlash | null = null;
+  protected renderedHintFlashing: number | null = null;
+
+  @state()
+  protected renderedHintMarks: HintReferenceMarks | null = null;
 
   /** The marks of a flashing reference of the hint's words, over the board. */
-  private flashCanvas?: HTMLCanvasElement;
+  private flashCanvas: HTMLCanvasElement | null = null;
+  /** Every reference's marks in its own color, in the distinct-colors trial. */
+  private colorCanvas: HTMLCanvasElement | null = null;
 
   @query("[part=content]")
   protected contentPart?: HTMLElement;
@@ -77,11 +84,17 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     this.renderedPuzzleGameId = this.puzzle?.currentGameId ?? null;
     this.renderedPuzzleParams = this.puzzle?.currentParams ?? null;
     this.renderedColorScheme = currentColorScheme.get();
-    this.renderedHintFlash = this.puzzle?.hintFlash ?? null;
+    this.renderedHintFlashing = this.puzzle?.hintFlashing ?? null;
+    this.renderedHintMarks = this.puzzle?.hintMarks ?? null;
   }
 
   protected override async updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.has("renderedHintFlash")) this.showHintFlash();
+    if (changedProperties.has("renderedHintMarks")) this.showHintColors();
+    if (
+      changedProperties.has("renderedHintFlashing") ||
+      (changedProperties.has("renderedHintMarks") && this.renderedHintFlashing !== null)
+    )
+      this.showHintFlash();
     if (changedProperties.has("puzzle") && this.canvas) {
       // Changing Puzzle: any existing canvas belongs to another (probably deleted) worker.
       this.destroyCanvas();
@@ -346,45 +359,91 @@ export class PuzzleView extends SignalWatcher(LitElement) {
   }
 
   /**
-   * Lay the flashing reference's marks over the board, white or black, and fade them
-   * back to the board's own over the flash. Before the canvas, so that the
-   * placeholder still follows it; positioned, so it paints on top.
+   * A canvas laid exactly over the board's, holding `pixels`, or none when
+   * there are none. Before the board's canvas, so that the placeholder still
+   * follows it; positioned, so it paints on top.
    */
-  private showHintFlash(): void {
-    const pixels = this.renderedHintFlash?.pixels;
+  private overlay(
+    existing: HTMLCanvasElement | null,
+    className: string,
+    width: number,
+    pixels: Uint8ClampedArray<ArrayBuffer> | null,
+  ): HTMLCanvasElement | null {
     const canvas = this.canvas;
     if (!pixels || !canvas) {
-      this.flashCanvas?.remove();
-      this.flashCanvas = undefined;
-      return;
+      existing?.remove();
+      return null;
     }
-    const overlay = this.flashCanvas ?? document.createElement("canvas");
-    this.flashCanvas = overlay;
-    overlay.className = "hint-flash";
-    // White vanishes on the light board's pale tiles: there it flashes black,
-    // the color farthest from them, as white is on the dark board.
-    overlay.style.filter = this.renderedColorScheme === "dark" ? "" : "invert(1)";
-    overlay.width = pixels.width;
-    overlay.height = pixels.height;
+    const overlay = existing ?? document.createElement("canvas");
+    overlay.className = className;
+    const image = new ImageData(pixels, width);
+    overlay.width = image.width;
+    overlay.height = image.height;
     Object.assign(overlay.style, {
       left: `${canvas.offsetLeft}px`,
       top: `${canvas.offsetTop}px`,
       width: canvas.style.width,
       height: canvas.style.height,
     });
-    overlay.getContext("2d")?.putImageData(pixels, 0, 0);
+    overlay.getContext("2d")?.putImageData(image, 0, 0);
     canvas.before(overlay);
-    overlay.animate([{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], {
-      duration: HINT_FLASH_MS,
-      easing: "ease-in",
-      fill: "forwards",
-    });
+    return overlay;
+  }
+
+  /** Lay the flashing reference's marks over the board, white or black, and
+   * fade them back to the board's own over the flash. */
+  private showHintFlash(): void {
+    const marks = this.renderedHintMarks;
+    const ref = this.renderedHintFlashing;
+    const alpha = ref === null ? null : (marks?.refs[ref]?.alpha ?? null);
+    this.flashCanvas = this.overlay(
+      this.flashCanvas,
+      "hint-flash",
+      marks?.width ?? 0,
+      alpha && tinted(alpha, [255, 255, 255]),
+    );
+    if (!this.flashCanvas) return;
+    // White vanishes on the light board's pale tiles: there it flashes black,
+    // the color farthest from them, as white is on the dark board.
+    this.flashCanvas.style.filter =
+      this.renderedColorScheme === "dark" ? "" : "invert(1)";
+    this.flashCanvas.animate(
+      [{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }],
+      { duration: HINT_FLASH_MS, easing: "ease-in", fill: "forwards" },
+    );
+  }
+
+  /** In the distinct-colors trial, every reference's marks repainted in its
+   * own color for as long as the hint shows. */
+  private showHintColors(): void {
+    const marks = this.renderedHintMarks;
+    const colors = this.puzzle?.hintReferenceColors ?? [];
+    let pixels: Uint8ClampedArray<ArrayBuffer> | null = null;
+    if (HINT_COLORS_DISTINCT && marks) {
+      pixels = new Uint8ClampedArray(marks.width * marks.height * 4);
+      marks.refs.forEach((r, i) => {
+        const color = colors[i];
+        if (!color) return;
+        const hex = (k: number) => Number.parseInt(color.slice(k, k + 2), 16);
+        const layer = tinted(r.alpha, [hex(1), hex(3), hex(5)]);
+        for (let p = 3; p < layer.length; p += 4)
+          if (layer[p] > 0) pixels?.set(layer.subarray(p - 3, p + 1), p - 3);
+      });
+    }
+    this.colorCanvas = this.overlay(
+      this.colorCanvas,
+      "hint-colors",
+      marks?.width ?? 0,
+      pixels,
+    );
   }
 
   protected async updateCanvasSize() {
-    // Drawn at the old size, so no longer over its marks.
+    // Drawn at the old size, so no longer over their marks.
     this.flashCanvas?.remove();
-    this.flashCanvas = undefined;
+    this.flashCanvas = null;
+    this.colorCanvas?.remove();
+    this.colorCanvas = null;
     if (this.canvasSize) {
       const { w, h } = this.canvasSize;
       for (const element of [this.canvas, this.canvasPlaceholder]) {
@@ -480,9 +539,16 @@ export class PuzzleView extends SignalWatcher(LitElement) {
         display: block;
       }
       
-      .hint-flash {
+      .hint-flash,
+      .hint-colors {
         position: absolute;
         pointer-events: none;
+      }
+      .hint-colors {
+        z-index: 1;
+      }
+      .hint-flash {
+        z-index: 2;
       }
 
       canvas + #canvasPlaceholder {

@@ -4,6 +4,7 @@ import { proxy, type Remote, releaseProxy, transfer } from "comlink";
 import { assertNever } from "../engine/assert-never.ts";
 import type { Scheme } from "../engine/color/color-word.ts";
 import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
+import type { MarkRole } from "../engine/hint-words.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -25,10 +26,14 @@ import type {
   TimerReadout,
 } from "../engine/types.ts";
 import { keptBoards } from "../store/kept-boards.ts";
-import { nextAnimationFrame } from "../utils/timing.ts";
+import { nextAnimationFrame, sleep } from "../utils/timing.ts";
 import { puzzleDataMap } from "./catalog.ts";
 import { DealAhead, SLOW_DEAL_MS } from "./deal-ahead.ts";
-import type { BoardSurface, PuzzleEngineSurface } from "./engine-surface.ts";
+import type {
+  BoardSurface,
+  HintReferenceMarks,
+  PuzzleEngineSurface,
+} from "./engine-surface.ts";
 import {
   type PuzzleWorker,
   spawnPuzzleWorker,
@@ -58,11 +63,30 @@ export const HINT_PENDING_MS = 300;
  * fading back (`Puzzle.flashHintReference`). One flash, so nothing strobes. */
 export const HINT_FLASH_MS = 1000;
 
-/** A reference of the hint's words whose marks are flashing, and their pixels
- * on the canvas (`markPixels`), `null` until the worker has found them. */
-export interface HintFlash {
-  readonly ref: number;
-  readonly pixels: ImageData | null;
+/** A trial the owner compares by eye (2026-10-19): each reference of a hint's
+ * words in a color of its own, its marks repainted in it, where the page's
+ * address asks for `hint-colors=distinct`. Otherwise a pill takes the color
+ * its marks are drawn in. */
+export const HINT_COLORS_DISTINCT =
+  typeof location !== "undefined" &&
+  new URLSearchParams(location.search).get("hint-colors") === "distinct";
+
+/** The colors references take in that trial, a pool to a role (the owner,
+ * 2026-10-19): a role keeps its family of hues, blue for what a step
+ * decides, green for what it reasons from, warm for the line it names, and
+ * each reference in it its own shade. Clear of the error red, and strong
+ * enough to read on either scheme's board. */
+const HINT_COLOR_POOLS: Readonly<Record<MarkRole, readonly string[]>> = {
+  ring: ["#1c7ed6", "#7048e8", "#22b8cf"],
+  outline: ["#0ca678", "#82c91e", "#2b8a3e"],
+  stripes: ["#f76707", "#f59f00", "#d6336c"],
+};
+
+/** Whether two references draw the same marks ("here" … "this"). */
+function sameMarks(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
 }
 
 /** The banner's wording for a pending hint; the Hint control says it too. */
@@ -262,6 +286,7 @@ export class Puzzle {
         ) {
           this._activeHintSpans.set(message.activeHintSpans ?? null);
           this.stopHintFlash();
+          this.measureHintMarks();
         }
         // Rendered as "Step 2 of 3" beside a multi-leg hint; empty for a
         // single-leg one, which is most of them.
@@ -355,8 +380,10 @@ export class Puzzle {
   private _activeHintSpans = signal<{ light: HintSpan[]; dark: HintSpan[] } | null>(
     null,
   );
-  private _hintFlash = signal<HintFlash | null>(null);
+  private _hintFlashing = signal<number | null>(null);
   private hintFlashTimer: ReturnType<typeof setTimeout> | null = null;
+  private _hintMarks = signal<HintReferenceMarks | null>(null);
+  private hintMarksToken = 0;
   /** "Step 2 of 3" while one deduction plays out over several legs; empty for a
    * single-leg hint and when no hint is displayed. Formatted here rather than
    * in the chrome, so that whatever shows it cannot word it differently. */
@@ -467,11 +494,41 @@ export class Puzzle {
     return text ? [{ text, ref: null }] : [];
   }
 
-  /** The reference of the hint's words whose marks are flashing, and their
-   * pixels on the canvas once the worker has found them; `null` between
-   * flashes. */
-  public get hintFlash(): HintFlash | null {
-    return this._hintFlash.get();
+  /** The reference of the hint's words whose marks are flashing, or `null`
+   * between flashes. */
+  public get hintFlashing(): number | null {
+    return this._hintFlashing.get();
+  }
+
+  /** Each reference's marks on the canvas, measured once a step is drawn at
+   * rest; `null` with no hint, or until they are. */
+  public get hintMarks(): HintReferenceMarks | null {
+    return this._hintMarks.get();
+  }
+
+  /** The color of each reference of the hint's words: its marks' own, or, where
+   * the page asks for `hint-colors=distinct`, one of its own that the marks are
+   * repainted in (`hintColorsDistinct`). `null` for a reference that draws
+   * nothing. References that draw the same marks share one. */
+  public get hintReferenceColors(): readonly (string | null)[] {
+    const marks = this._hintMarks.get();
+    if (!marks) return [];
+    if (!HINT_COLORS_DISTINCT) return marks.refs.map((r) => r.color);
+    const colors: (string | null)[] = [];
+    const taken: Partial<Record<MarkRole, number>> = {};
+    marks.refs.forEach((r, i) => {
+      const same = marks.refs.findIndex((o) => sameMarks(o.alpha, r.alpha));
+      const role = marks.roles[i] ?? "outline";
+      const pool = HINT_COLOR_POOLS[role];
+      const next = taken[role] ?? 0;
+      if (r.box === null) colors.push(null);
+      else if (same < i) colors.push(colors[same]);
+      else {
+        colors.push(pool[next % pool.length]);
+        taken[role] = next + 1;
+      }
+    });
+    return colors;
   }
 
   /** Flash the marks of a reference of the hint's words, the rest of the
@@ -479,20 +536,35 @@ export class Puzzle {
    * already running is replaced. */
   public flashHintReference(index: number): void {
     this.stopHintFlash();
-    const flash: HintFlash = { ref: index, pixels: null };
-    this._hintFlash.set(flash);
+    this._hintFlashing.set(index);
     this.hintFlashTimer = setTimeout(() => this.stopHintFlash(), HINT_FLASH_MS);
-    void (async () => {
-      const pixels = await (await this.board()).hintReferencePixels(index);
-      // Another flash, or other words, may have come while the worker drew.
-      if (this._hintFlash.get() === flash) this._hintFlash.set({ ...flash, pixels });
-    })();
+    if (!this._hintMarks.get()) this.measureHintMarks();
   }
 
   private stopHintFlash(): void {
     if (this.hintFlashTimer !== null) clearTimeout(this.hintFlashTimer);
     this.hintFlashTimer = null;
-    this._hintFlash.set(null);
+    this._hintFlashing.set(null);
+  }
+
+  /** Measure each reference's marks once the board is at rest: a step's
+   * move may still be sliding when its words arrive. A later measure, or other
+   * words, supersede one under way. */
+  private measureHintMarks(): void {
+    const spans = this._activeHintSpans.get();
+    const token = ++this.hintMarksToken;
+    this._hintMarks.set(null);
+    if (!spans) return;
+    const count = Math.max(-1, ...spans.light.map((s) => s.ref ?? -1)) + 1;
+    if (count === 0) return;
+    void (async () => {
+      const board = await this.board();
+      const moving = await board.currentAnimationMs();
+      if (moving > 0) await sleep(moving + 50);
+      if (token !== this.hintMarksToken) return;
+      const marks = await board.hintReferenceMarks(count);
+      if (token === this.hintMarksToken) this._hintMarks.set(marks);
+    })();
   }
 
   private clearHintExplanation(): void {
@@ -1221,11 +1293,15 @@ export class Puzzle {
       this.captureSentryContext();
     }
     await this.workerPuzzle.resizeDrawing({ w, h }, dpr);
+    // A hint's marks moved with the board.
+    this.measureHintMarks();
   }
 
   public async setDrawingPalette(colors: string[]): Promise<void> {
     this._palette.set(colors);
     await this.workerPuzzle.setDrawingPalette(colors);
+    // And took the new palette's colors.
+    this.measureHintMarks();
   }
 
   /** @see _palette */

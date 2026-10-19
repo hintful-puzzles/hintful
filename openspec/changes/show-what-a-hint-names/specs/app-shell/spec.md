@@ -61,10 +61,11 @@ with a gap of no more than 12px, and SHALL NOT touch it.
 ### Requirement: A hint's references show what they name
 
 Each reference in a displayed hint's words SHALL be a control, reachable by
-keyboard. Pressing one, or a mouse coming over it, SHALL turn that
-reference's marks white on a dark board and black on a light one, once, and
-fade them back to their own color within a second, while every other mark of
-the step stays as it is. A flash SHALL end when the step changes.
+keyboard, and tinted in the color its marks are drawn in. Pressing one, or a
+mouse coming over it, SHALL turn every mark that reference draws white on a
+dark board and black on a light one, once, with a line from the reference to
+them, and fade both within a second, while every other mark of the step stays
+as it is. A flash SHALL end when the step changes.
 
 #### Scenario: A player presses "this cell"
 

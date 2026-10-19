@@ -45,6 +45,7 @@ import {
   type MarkedDeadEnd,
   SEARCH_OUT_OF_REACH,
 } from "./hint-refusal.ts";
+import type { MarkRole } from "./hint-words.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { configNarrowing, onlyError } from "./only.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
@@ -201,6 +202,9 @@ export interface EngineCore {
    * at `index` (`Narration.refs`), or with all of them with `null`: the
    * frontend draws both to find that reference's marks on the canvas. */
   hideHintReference(index: number | null): void;
+  /** The role of each reference of the displayed step's words, in order
+   * (`Narration.refs`); empty with no step displayed. */
+  hintReferenceRoles(): readonly MarkRole[];
   /** Duration in milliseconds of the animation currently armed (e.g. by
    * the slow-motion move `executeHint` just played), or 0 when nothing
    * is animating. The auto-hint loop paces each step by this so a move
@@ -1300,6 +1304,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** The step as `redraw` paints it: without the hidden reference's marks. */
   private get drawnHintStep(): HintStep<Move> | null {
     return this.displayedHintHidden?.drawn ?? this.displayedHintStep;
+  }
+
+  hintReferenceRoles(): readonly MarkRole[] {
+    return this.displayedHintStep?.words?.refs.map((r) => r.role) ?? [];
   }
 
   hideHintReference(index: number | null): void {
