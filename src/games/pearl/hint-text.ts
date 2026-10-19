@@ -82,9 +82,10 @@ const area = (m: Marked, words: string): Narration =>
 
 /** A step that also draws the line on through the white pearl (`several`:
  * pearls) it runs into says so after its own move, whichever deduction it is
- * (the owner's 2026-09-27 request): the run-on is part of the step's move. */
+ * (the owner's 2026-09-27 request): the run-on is part of the step's move, so
+ * a clause of it. */
 const throughNextWhite = (m: Marked): Narration =>
-  phrase`It runs straight on ${mark.as("ring", EDGE, m.white, `through the next white ${m.white.length > 1 ? "pearls" : "pearl"}`)} too`;
+  phrase`and on ${mark.as("ring", EDGE, m.white, `through the next white ${m.white.length > 1 ? "pearls" : "pearl"}`)}`;
 
 /** The look forces the move, and with it any run-on through a white pearl. */
 const forced = (
@@ -96,7 +97,7 @@ const forced = (
   so({
     look,
     follows,
-    move: m.white.length > 0 ? phrase`${move}. ${throughNextWhite(m)}` : move,
+    move: m.white.length > 0 ? phrase`${move}, ${throughNextWhite(m)}` : move,
   });
 
 export const say = {
@@ -144,12 +145,12 @@ export const say = {
     const which =
       opposite === "boardEdge"
         ? "the board's edge is opposite"
-        : "the opposite edge is ruled out";
+        : "the other way is out";
     return forced(
       m,
       phrase`${pearl} must turn, and ${which}`,
       runsOn
-        ? phrase`its line must run ${mark.as("ring", EDGE, [...m.own, ...m.black], "this way through the next square")}`
+        ? phrase`its line must run ${mark.as("ring", EDGE, [...m.own, ...m.black], "this way for two squares")}`
         : phrase`${thisEdge(m)} must be a line`,
     );
   },
@@ -171,8 +172,8 @@ export const say = {
         )
       : forced(
           m,
-          phrase`${area(m, "This white pearl")} has one edge ruled out, and its line runs straight through`,
-          phrase`${own(m, "the line")} must run ${runs(along)}`,
+          phrase`${area(m, "This white pearl")} has one edge ruled out`,
+          phrase`${own(m, "its straight line")} must run ${runs(along)}`,
         ),
 
   // --- the pearls' longer reach ---------------------------------------------
@@ -237,7 +238,7 @@ export const say = {
   closesEarlyWhite: (blocked: Axis, along: Axis, out: LeftOut, m: Marked): Sentence =>
     forced(
       m,
-      phrase`${blocked === "across" ? "Across" : "Up and down"}, ${own(m, "this white pearl")} would close ${area(m, "the outlined line")} into a loop that misses ${misses(out)}`,
+      phrase`${blocked === "across" ? "Across" : "Up and down"}, ${own(m, "this white pearl")} would close ${area(m, "the outlined line")} into a loop missing ${misses(out)}`,
       phrase`it must run ${runs(along)}`,
     ),
 };

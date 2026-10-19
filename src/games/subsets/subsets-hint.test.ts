@@ -623,7 +623,7 @@ describe("collapse exclusion (#2 — why not X)", () => {
     const [d] = deduceHintPlan(state).deductions;
     // The firing's lead letter comes after the rule-outs it rests on.
     const lead = steps[d.marks.length];
-    expect(lead.explanation).toMatch(/For instance, .* (can't go here|already placed)/);
+    expect(lead.explanation).toMatch(/\(.*, say, .*\)/);
     // The blocker cell is outlined so the clause has a referent, and only on
     // the leg that says the clause.
     expect(stepMarks(lead).of("outline", CELL).length).toBeGreaterThan(0);

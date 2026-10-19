@@ -43,6 +43,7 @@
 import { describe, expect, it } from "vitest";
 import { difficultyTiers, withTier } from "./difficulty.ts";
 import type { HintStep } from "./game.ts";
+import { NARRATION_LIMIT } from "./hint-words.ts";
 import { paramsError } from "./params.ts";
 import { dealt } from "./testing/dealt.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
@@ -66,25 +67,8 @@ import {
 /** Which of a params set's shared boards (`dealt`) a walk over several takes. */
 const SEEDS = perCommit([0], [0, 1, 2]);
 
-/**
- * How long a step may be — short enough to read at a glance (owner,
- * 2026-09-10: *"a character limit as a linter, and a way to override it for a
- * few particularly complex hints"*).
- *
- * 120 sits above a typical step and below the long tail, and it is the line
- * Netslide and Spokes each draw for themselves.
- */
-const NARRATION_LIMIT = 120;
-
 /** The hard ceiling: what a ledgered sentence is held to instead. */
 const MAX_NARRATION_CHARS = 300;
-
-/** Why Boats' placing steps run long; two ledger entries share it. */
-const BOATS_RINGS_THE_WATER =
-  "A step that places a boat segment also rings the water boats never " +
-  "touch, by the owner's choice to show that rule on the board rather than " +
-  "spend a step restating it; a bound step names every mark it draws, so " +
-  "the sentence carries one clause for it.";
 
 /**
  * The override: the rungs whose sentences are allowed past
@@ -134,79 +118,12 @@ const PEARL_CARRIES_ON =
   "draws the line on through a white pearl it runs into, and says so in a " +
   "second sentence after its own deduction, whichever deduction that is.";
 
-/** Why Signpost's link steps run long; two ledger entries share it. */
-const SIGNPOST_NAMES_EACH_REASON =
-  "A link's rivals ruled out for all three of Signpost's reasons at once: the " +
-  "sentence names each reason some rival has, and a reason left out would " +
-  "leave a square on the board the player cannot account for.";
-
 const LONG_NARRATIONS: {
   games: string[];
   rungs: string[];
   why: string;
   spokenOn?: Record<string, string>;
 }[] = [
-  {
-    games: ["rome"],
-    rungs: ["opposite"],
-    why:
-      "Rome's opposite rule has two branches, and dropping either is a " +
-      "non-sequitur: an arrow into a square that can only point along its " +
-      "axis is either pointed straight back at (a loop) or repeated (a second " +
-      "arrow of that direction in the area), and the same-area premise is what " +
-      "makes the second one illegal.",
-  },
-  {
-    games: ["lightup"],
-    rungs: ["discountClue", "discountUnlit"],
-    why:
-      "Two premises and a quantifier: one of a set must light the outlined dark square " +
-      "or fill the clue, and a bulb here disqualifies every member. The reach " +
-      "relation is also the deixis tie: the driving clue is never adjacent to or " +
-      "in line with the target (lightup/index.ts, measured).",
-  },
-  {
-    games: ["boats"],
-    rungs: ["centerForced", "givenClue", "lineForced", "refuted"],
-    why: BOATS_RINGS_THE_WATER,
-  },
-  {
-    // An entry of its own because a pin excuses every rung of its entry from
-    // the walk, and the board speaks only this one. The sentence runs over the
-    // limit on some 10x10 boards below Hard and on none smaller: live on
-    // shipped boards, and too rare for the one seed those presets walk.
-    games: ["boats"],
-    rungs: ["onlyRunsLeft"],
-    spokenOn: {
-      boats:
-        "10x10f4dn,4,3,2,1:3,2,0,2,1,5,1,2,2,2,1,5,1,4,3,2,0,3,0,1,mWgWmBlCxWWoWSaWbW",
-    },
-    why: BOATS_RINGS_THE_WATER,
-  },
-  {
-    games: ["palisade"],
-    rungs: ["equivalentEdges"],
-    why:
-      "The collection's hint exemplar, quoted in docs/hints.md § \"The " +
-      'quality bar" and owner-endorsed: the "share a fate" premise and its ' +
-      "gloss are what made the conclusion follow.",
-  },
-  {
-    games: ["palisade"],
-    rungs: ["cluesVersusRegionSize"],
-    why:
-      "A proof by contradiction over two clues at once: opening their shared " +
-      "edge would spend each 3's only open side and seal a region of the wrong " +
-      "size, and each of those clauses carries weight.",
-  },
-  {
-    games: ["boats"],
-    rungs: ["sharedDiagonal"],
-    why:
-      "A two-case argument: the line's water budget forces a boat segment into " +
-      "one of the marked squares, and the conclusion holds whichever it is, " +
-      "which the sentence has to say to be true.",
-  },
   {
     games: ["pearl"],
     rungs: ["closesEarlyThrough", "square"],
@@ -222,14 +139,6 @@ const LONG_NARRATIONS: {
     why: PEARL_CARRIES_ON,
   },
   {
-    games: ["subsets"],
-    rungs: ["collapse"],
-    why:
-      "The owner's 2026-07-21 enhancement (subsets/index.ts, narrateExclusion): " +
-      "a collapse names one competitor set and the visible rule that blocks it, " +
-      "a second sentence on purpose.",
-  },
-  {
     games: ["magnets"],
     rungs: ["lineExact", "onlyEndLeft"],
     why:
@@ -237,49 +146,6 @@ const LONG_NARRATIONS: {
       "square of it cannot take the pole. The owner's 2026-09-22 playtest found " +
       "the second missing, and a step that rests on a fact has to say it " +
       "(magnets spec, the hidden facts a later step names in board terms).",
-  },
-  {
-    games: ["clusters"],
-    rungs: ["chain"],
-    why:
-      "A Tactic chain. engine-hints requires the narration to name both ends and " +
-      'cite the links by their numbers on the board, and "from it" is the ' +
-      "deixis tie clusters-hint.test.ts checks.",
-  },
-  {
-    games: ["map"],
-    rungs: ["sharedPair"],
-    why:
-      "Two premises: the pair are down to the same two colors, and, because " +
-      "they touch, they use both between them. The second is what makes " +
-      '"this region can\'t be either" follow; it is Palisade\'s "share a fate" ' +
-      "premise in Map's terms, and the sentence without it is the non-sequitur " +
-      "that exemplar was fixed for.",
-  },
-  {
-    games: ["map"],
-    rungs: ["forcingChain"],
-    why:
-      "Map's chain Tactic, held to what engine-hints asks of every narrated chain: " +
-      "name both ends, cite the links by their numbers on the board, and state " +
-      "the case split. The walk names each link's color, which is what made it " +
-      "readable at a glance (owner playtest, 2026-09-25), and costs a clause per link.",
-  },
-  {
-    games: ["signpost"],
-    rungs: ["onlyNext"],
-    why: SIGNPOST_NAMES_EACH_REASON,
-  },
-  {
-    // An entry of its own for the same reason: all three reasons meet on few
-    // boards, too few for the walk to be relied on to hear it.
-    games: ["signpost"],
-    rungs: ["onlyBefore"],
-    spokenOn: {
-      signpost:
-        "7x7c:1dcee18gdfc38cdeeeedecdg28a13fbadae7g31h22ahhba35ggbb11acg5aacbh33aag49a",
-    },
-    why: SIGNPOST_NAMES_EACH_REASON,
   },
   {
     games: ["net"],
@@ -298,8 +164,6 @@ const LONG_NARRATIONS: {
   {
     games: ["rect"],
     rungs: ["line"],
-    // Upstream's 10x10 board, which `rect-hint.test.ts` pins for this rung.
-    spokenOn: { rect: "10x10e0.5:a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c" },
     why:
       "A line drawn because every rectangle across the edge is ruled out rests " +
       "on two premises: which clues could cross it at all, and why none of " +

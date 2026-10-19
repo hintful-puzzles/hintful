@@ -12,7 +12,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
 import { hintKeepTrack, refreshHintStep } from "./hint.ts";
-import { colorName, REGION, WALK_MAX } from "./hint-text.ts";
+import { colorName, REGION } from "./hint-text.ts";
 import { mapGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { neighbors } from "./solver.ts";
@@ -33,11 +33,12 @@ const ARMS = [
   "pairPlace",
   "pairStrike",
   "pairMark",
-  // A chain, the same way, and the three ways its sentence tells the walk.
+  // A chain, the same way, and the two shapes its dots take: the color in
+  // every region, or walked by each region taking the dot the one before it
+  // leaves. One sentence tells both.
   "chainPlace",
   "chainStrike",
   "chainMark",
-  "chainWalk",
   "chainLongWalk",
   "chainAlternates",
   "chainDot",
@@ -96,9 +97,7 @@ function armsOf(step: MapHintStep, s: MapState): Arm[] {
       const struck = left(s, t) & ~("color" in want ? 1 << want.color : want.dots);
       const told = ev.every((e) => left(s, e) & struck)
         ? "chainAlternates"
-        : ev.length <= WALK_MAX
-          ? "chainWalk"
-          : "chainLongWalk";
+        : "chainLongWalk";
       return [
         "color" in want ? "chainPlace" : dotted ? "chainStrike" : "chainMark",
         told,
@@ -118,7 +117,6 @@ const DEALT = [
   "chainStrike",
   "chainMark",
   "chainDot",
-  "chainWalk",
   "chainAlternates",
   "chainLongWalk",
 ] as const satisfies readonly Arm[];
@@ -199,19 +197,13 @@ const pinned = describeHintPins({
       moves:
         '[{"ops":[{"op":"color","region":3,"color":1}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":24,"color":1}]}]',
     },
-    /** Held on 50 of 2876 positions walked. */
-    chainWalk: {
-      id: "15x20n30dh:dbfaabsbaacabahbbcfafafbbcablbadabbabaaadbacicccadcaabacddcaacgasbaadbdabaebbcdbdbbahbhbabbabasdtbjaebdfabibccfabadbdaaakcbcacaaaadagbfadbbceacdbbaaaagaabhacaabaabdabaabaaacadcbdicadace,203a2b0b3c0a3a1d3a32201",
-      moves:
-        '[{"ops":[{"op":"color","region":3,"color":1}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":5,"bit":1},{"op":"pencil","region":5,"bit":3}]},{"ops":[{"op":"pencil","region":6,"bit":1},{"op":"pencil","region":6,"bit":2}]},{"ops":[{"op":"pencil","region":17,"bit":2},{"op":"pencil","region":17,"bit":3}]}]',
-    },
     /** Held on 11 of 2876 positions walked. */
     chainAlternates: {
       id: "15x20n30dh:dbcacasbbaaacagbacabgcabbeabhccadafebaiaacjacaaafadafcbaaaafaibahalbdbebbbabfheaaabdbadacabaaaaclaeaacmaaaaafacaeaecbcdaecbbaddbdaaaabacabcdaaaabcaabacabadabaaccaabaadaaaacabadakabeababbdcbbaabccbcaaabahageo,1021a0a1c20d0c01c2b3",
       moves:
         '[{"ops":[{"op":"pencil","region":8,"bit":2},{"op":"pencil","region":8,"bit":3}]},{"ops":[{"op":"pencil","region":14,"bit":2},{"op":"pencil","region":14,"bit":3}]},{"ops":[{"op":"color","region":15,"color":1}]},{"ops":[{"op":"pencil","region":23,"bit":2},{"op":"pencil","region":23,"bit":3}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":25,"bit":0},{"op":"pencil","region":25,"bit":3}]},{"ops":[{"op":"pencil","region":18,"bit":0},{"op":"pencil","region":18,"bit":3}]}]',
     },
-    /** Held on 5 of 2876 positions walked. */
+    /** Held on 55 of 2876 positions walked. */
     chainLongWalk: {
       id: "15x20n30dh:fadcceaamabbiaabbacdbaacaccbcagbbccceacaabbbbacaiaacabgacbbacbbaaacebabacaiejasbabgcbceacdbabaaacacababcbbcafchcffaabaadcafebabcabcbaadaacddebjaacbahaabbaaebcaaaeacdahdcceadbaabacebaeabakbobiacafaa,1a2d0013g03a3a103b12",
       moves:
@@ -304,7 +296,7 @@ function spoken(state: MapState): { s: MapState; step: MapHintStep; arms: Arm[] 
 /** The words of the arms no dealt board speaks, which no pin's snapshot holds. */
 const BUILT_WORDS: Record<Exclude<Arm, DealtArm>, RegExp> = {
   lastDot: /^This region has a single dot/,
-  pairStrike: /^The outlined pair .* must go\.$/,
+  pairStrike: /^This region touches the outlined pair, .* must go\.$/,
   chainTrim: /^Region \d+ of the numbered chain has other dots/,
   pairTrim: /^This region's other dots match .* can only be /,
 };

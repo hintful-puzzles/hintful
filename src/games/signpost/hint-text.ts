@@ -65,11 +65,11 @@ export const say = {
           "stripes",
           CELL,
           h.line,
-          rivals > 1 ? "the other squares" : "the other square",
+          rivals > 1 ? "other squares" : "other square",
         );
         return so({
-          look: phrase`${rest} ${arrow} points at ${ruledOut(f.why, rivals, NEXT)}`,
-          move: phrase`only ${target} can follow it`,
+          look: phrase`${arrow.capitalized()}'s ${rest} ${ruledOut(f.why, rivals, NEXT)}`,
+          move: phrase`only ${target} can follow`,
         });
       }
       case "onlyBefore": {
@@ -81,7 +81,9 @@ export const say = {
           });
         // The outlined squares are the other arrows pointing at it; the help's
         // list of marks says so, which leaves the sentence the reasons.
-        const others = mark.the("outline", CELL, h.others, ["arrow", "arrows"]);
+        const others = mark.as("outline", CELL, h.others, (els) =>
+          els.length > 1 ? "Other arrows" : "Another arrow",
+        );
         return so({
           look: phrase`${others} into ${target} ${ruledOut(f.why, h.others.length, BEFORE)}`,
           move: phrase`${arrow} must lead there`,

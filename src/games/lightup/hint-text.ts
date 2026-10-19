@@ -128,17 +128,18 @@ export const say = {
   // others, so the sentence names it among the squares that could light it.
   /** One of the other outlined squares (plus the dark square itself, when
    * `darkInSet`) must light the dark square. */
-  discountUnlit: (darkInSet: boolean, m: Marked): Sentence =>
+  // "Rule out" is lit, or beside a full clue: the help's rules, which the
+  // outlines let the player check square by square. Where the dark square
+  // could hold a bulb itself, it is among "every square that could light" it.
+  discountUnlit: (m: Marked): Sentence =>
     so({
-      look: darkInSet
-        ? phrase`${darkSquare(m)} must be lit by itself or by ${m.area.length === 1 ? "" : "one of "}${others(m)}, and a bulb here would leave each of them lit or beside a full clue`
-        : phrase`One of ${others(m)} must light ${darkSquare(m)}, and a bulb here would leave each of them lit or beside a full clue`,
+      look: phrase`A bulb here would rule out ${mark.as("outline", CELL, m.area, "every square")} that could light ${darkSquare(m)}`,
       move: phrase`${these(m, "square")} can't hold a bulb`,
     }),
 
   discountClue: (m: Marked): Sentence =>
     so({
-      look: phrase`${clue(m)} needs a bulb in one of ${others(m)}, and a bulb here would leave each of them lit or beside a full clue`,
+      look: phrase`A bulb here would rule out ${mark.as("outline", CELL, m.area, "every square")} left for ${mark.the("outline", CELL, m.clue ? [m.clue] : [], "clue")}'s bulb`,
       move: phrase`${these(m, "square")} can't hold a bulb`,
     }),
 };

@@ -359,11 +359,12 @@ function chains(b: MapBoard): Firing[] {
 }
 
 /**
- * The chain step's sentence, read off the board as it stands once every
- * numbered region shows its two dots: the pattern when every region has a dot
- * of `color`, and otherwise the walk, each region taking the dot the one before
- * it leaves. Read once, before any of the firing's narrowing legs, since a leg
- * placing a color beside the chain would change what its regions show.
+ * The chain step's sentence, checked against the board as it stands once every
+ * numbered region shows its two dots: where the color is not in every region,
+ * each region takes the dot the one before it leaves, and the walk must end on
+ * `color`, or the sentence would misdescribe the dots. Read once, before any
+ * of the firing's narrowing legs, since a leg placing a color beside the chain
+ * would change what its regions show.
  */
 function chainSentence(
   w: Work,
@@ -371,8 +372,8 @@ function chainSentence(
   color: number,
   other: number,
 ): (k: number, c: Conclusion) => Sentence {
-  if (chain.every(({ region }) => colorsLeft(w, region) & (1 << color)))
-    return (k, c) => say.chainAlternates(k, chain, color, c);
+  const said = (k: number, c: Conclusion): Sentence => say.chain(k, chain, color, c);
+  if (chain.every(({ region }) => colorsLeft(w, region) & (1 << color))) return said;
   const forced = [other];
   for (let i = 1; i < chain.length; i++)
     forced.push(colorsOf(colorsLeft(w, chain[i].region) & ~(1 << forced[i - 1]))[0]);
@@ -380,7 +381,7 @@ function chainSentence(
   // so a walk that does not is a board the dots misdescribe.
   if (forced[forced.length - 1] !== color)
     throw new Error(`map hint: chain walk ends on ${forced.at(-1)}, not ${color}`);
-  return (k, c) => say.chain(k, chain, color, forced, c);
+  return said;
 }
 
 /** How a premise-dotting leg speaks: `i` is the region's place in the

@@ -58,8 +58,8 @@ export const say = {
     // never exceeds `k`, so the general arm below cannot reach this.
     if (c === 3 && d === 3) {
       return so({
-        look: phrase`${mark.as("outline", CELL, clues, "Two 3s")} each keep just one side open, and it has to be the one they share, so their region would be exactly 2 cells. Regions here hold ${k}`,
-        move,
+        look: phrase`Open as each 3's only gap, ${theseEdges(edges, "the edge")} between ${mark.as("outline", CELL, clues, "these 3s")} would seal 2 cells where regions hold ${k}`,
+        move: phrase`it must be a wall`,
       });
     }
     // The side-counting behind the bound is left to the outlined clues: this
@@ -176,14 +176,14 @@ export const say = {
     if (multi) {
       const both = theseEdges(edges, "Both edges");
       const same = mark.as("stripes", whole(CELL), region, "the same region");
-      const fate = phrase`${both} border ${same}, so they share a fate: both walls or both open.`;
+      const fate = phrase`${both} border ${same}, so they share a fate;`;
       return kind === "wall"
         ? so({
-            look: phrase`${fate} Leaving both open would leave clue ${c} short of walls`,
+            look: phrase`${fate} leaving both open leaves clue ${c} short`,
             move: phrase`both must be walls`,
           })
         : so({
-            look: phrase`${fate} Walling both would exceed clue ${c}`,
+            look: phrase`${fate} walling both would exceed clue ${c}`,
             move: phrase`neither can be a wall`,
           });
     }

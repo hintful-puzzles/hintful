@@ -232,7 +232,7 @@ describe("hint", () => {
       if (d.reason.kind === "chain") {
         expect(step.explanation).toMatch(
           new RegExp(
-            `^Suppose this cell were (${TWO_NAMES.map((w) => w.light).join("|")}):`,
+            `^If (${TWO_NAMES.map((w) => w.light).join("|")}), this cell forces cells? 1`,
           ),
         );
         expect(hl.chain.length).toBe(d.reason.steps.length);
@@ -255,12 +255,14 @@ describe("hint", () => {
       // board, so wherever one exists the sentence must tie the target to it,
       // and the tie is geometric rather than a color name (`hints.md`: color is
       // never the only cue). `beside this cell` / `its outlined … neighbor` for
-      // the adjacent break, `from it` for a chain, whose break is adjacent to
-      // the last link instead.
+      // the adjacent break, `this cell forces` for a chain, whose break is
+      // adjacent to the last link instead.
       const secondMark = hl.danger !== undefined || hl.chain.length > 0;
       if (secondMark) {
         expect(
-          /beside this cell|its outlined \w+ neighbor|from it/.test(step.explanation),
+          /beside this cell|its outlined \w+ neighbor|from it|this cell forces/.test(
+            step.explanation,
+          ),
           `${step.explanation} — a second mark is shown but "this cell" is not tied to it`,
         ).toBe(true);
       }

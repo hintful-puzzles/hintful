@@ -75,7 +75,7 @@ const lineIntro = (line: BoatsLine, m: BoatsMarks): Narration | string =>
 /** The closing clause naming the water a step's boat squares bring with them,
  * which the step shows and places with it. */
 const follows = (m: BoatsMarks): Narration | string =>
-  m.follows.length ? phrase`, with ${ringed(m.follows, "the water around it")}` : "";
+  m.follows.length ? phrase`, with ${ringed(m.follows, "its water")}` : "";
 
 /** The consequence clause of a refutation — the rule the rejected trial broke,
  * read off the validator's own rejection (docs/hints-marks.md § "Read the
@@ -89,7 +89,7 @@ function breachClause(breach: BoatsBreach, cells: readonly Point[], m: BoatsMark
     case "count":
       // "The striped row", not "this row": the sentence is about a square, and
       // the line the trial broke need not be that square's own.
-      return phrase`${mark.the("stripes", whole(CELL), m.line, breach.line.horizontal ? "row" : "column")} could no longer reach its ${breach.line.clue}`;
+      return phrase`${mark.the("stripes", whole(CELL), m.line, breach.line.horizontal ? "row" : "column")} couldn't reach its ${breach.line.clue}`;
     case "fleet":
       return phrase`it would make ${at("a boat the fleet has no room for")}`;
     case "fleetTotal":
@@ -108,12 +108,12 @@ export const say = {
   givenClue: (t: T<"givenClue">, m: BoatsMarks): Sentence => {
     const side =
       t.shape === SHIP_TOP
-        ? { on: "top", into: "below it", behind: "above it" }
+        ? { on: "top", into: "below it", behind: "above it", go: "down" }
         : t.shape === SHIP_BOTTOM
-          ? { on: "bottom", into: "above it", behind: "below it" }
+          ? { on: "bottom", into: "above it", behind: "below it", go: "up" }
           : t.shape === SHIP_LEFT
-            ? { on: "left", into: "to its right", behind: "to its left" }
-            : { on: "right", into: "to its left", behind: "to its right" };
+            ? { on: "left", into: "to its right", behind: "to its left", go: "right" }
+            : { on: "right", into: "to its left", behind: "to its right", go: "left" };
     const seg = (noun: string): Narration =>
       mark.this("outline", CELL, m.evidence, noun);
     if (t.shape === SHIP_SINGLE)
@@ -135,7 +135,7 @@ export const say = {
       });
     return so({
       look: end,
-      move: phrase`${ringed(m.waters, `the square ${side.behind}`)} must be water, and its boat must continue ${ringed(m.ships, side.into)}${follows(m)}`,
+      move: phrase`${ringed(m.waters, `the square ${side.behind}`)} must be water, and its boat must go ${ringed(m.ships, side.go)}${follows(m)}`,
     });
   },
 
@@ -180,7 +180,7 @@ export const say = {
             move: phrase`${ringed(m.ships, "its one free square")} must hold a boat segment${follows(m)}`,
           })
         : so({
-            look: phrase`${line} still needs one more boat square and has just one free square left`,
+            look: phrase`${line} needs one more boat square and has one free square`,
             move: phrase`${ringed(m.ships, "that square")} must hold a boat segment${follows(m)}`,
           })
       : t.line.deduced
@@ -190,7 +190,7 @@ export const say = {
             move: phrase`${ringed(m.ships, `all ${n} of its free squares`)} must hold boat segments${follows(m)}`,
           })
         : so({
-            look: phrase`${line} still needs ${n} more boat squares and has only ${n} free squares left`,
+            look: phrase`${line} needs ${n} more boat squares and has ${n} free squares`,
             move: phrase`${ringed(m.ships, "each")} must hold a boat segment${follows(m)}`,
           });
   },
@@ -213,8 +213,8 @@ export const say = {
     return so({
       look: phrase`${seg} has ${water}`,
       move: t.vertical
-        ? phrase`its boat must run up and down, through ${ringed(m.ships, "the squares above and below")}${follows(m)}`
-        : phrase`its boat must lie across, through ${ringed(m.ships, "the squares either side")}${follows(m)}`,
+        ? phrase`its boat must fill ${ringed(m.ships, "the squares above and below")}${follows(m)}`
+        : phrase`its boat must fill ${ringed(m.ships, "the squares either side")}${follows(m)}`,
     });
   },
 
@@ -226,7 +226,7 @@ export const say = {
 
   mustExtend: (m: BoatsMarks): Sentence =>
     so({
-      look: phrase`every 1-boat is placed, and water or the edge closes three sides of ${mark.this("outline", CELL, m.evidence, "segment")}`,
+      look: phrase`every 1-boat is placed and ${mark.this("outline", CELL, m.evidence, "segment")} is shut in on three sides`,
       move: phrase`its boat must use ${ringed(m.ships, "the fourth")}${follows(m)}`,
     }),
 
@@ -288,25 +288,24 @@ export const say = {
       : "";
     return t.runs === 1
       ? so({
-          look: phrase`only ${outlined(m.evidence, "one run")} can still hold the ${t.size}-boat`,
+          look: phrase`only ${outlined(m.evidence, "one run")} can hold the ${t.size}-boat`,
           follows: phrase`it must go there`,
           move: phrase`${covered} covered wherever it sits${water}${follows(m)}`,
         })
       : so({
-          look: phrase`only ${outlined(m.evidence, `${t.runs} runs`)} can still hold the ${t.runs} remaining ${t.size}-boats`,
+          look: phrase`only ${outlined(m.evidence, `${t.runs} runs`)} can hold the ${t.runs} remaining ${t.size}-boats`,
           follows: phrase`every one is used`,
           move: phrase`${covered} covered either way${water}${follows(m)}`,
         });
   },
 
-  sharedDiagonal: (t: T<"sharedDiagonal">, m: BoatsMarks): Sentence => {
-    const side = t.line.horizontal ? "above and below" : "either side of";
-    return so({
-      look: phrase`${lineIntro(t.line, m)}${lineRef(t.line, m).capitalized()} can take only ${t.room} more water square${plural(t.room)}`,
-      follows: phrase`one of ${outlined(m.evidence, "these")} must be a boat segment`,
-      move: phrase`either way, ${ringed(m.waters, `the squares ${side} the middle one`)} must be water`,
-    });
-  },
+  // Whichever of them is the boat, the middle one's two sides are beside a
+  // boat segment, so the conclusion holds either way.
+  sharedDiagonal: (t: T<"sharedDiagonal">, m: BoatsMarks): Sentence =>
+    so({
+      look: phrase`${lineIntro(t.line, m)}${outlined(m.evidence, "One of these")} must be a boat, as ${lineRef(t.line, m)} has room for ${t.room} more water`,
+      move: phrase`${ringed(m.waters, "both sides of the middle one")} must be water`,
+    }),
 
   refuted: (t: T<"refuted">, m: BoatsMarks): Sentence => {
     if (t.center) {

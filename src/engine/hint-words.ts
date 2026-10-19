@@ -22,6 +22,15 @@ import { ColorWord, type Scheme } from "./color/color-word.ts";
 import type { RivalsLost } from "./rival-judging.ts";
 import type { HintSpan, Point } from "./types.ts";
 
+/**
+ * How long a step's sentence may be: short enough to read at a glance (owner,
+ * 2026-09-10: *"a character limit as a linter"*), with no exception as the aim
+ * (owner, 2026-10-18). `hint-quality.test.ts` holds every step to it, and a
+ * sentence with an optional clause (an example) drops the clause where it
+ * would run over.
+ */
+export const NARRATION_LIMIT = 120;
+
 /** What a mark means. The engine owns the three, and a game adds one only when
  * none fits, saying why in its change. */
 export type MarkRole = "ring" | "outline" | "stripes";

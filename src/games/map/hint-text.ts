@@ -76,8 +76,13 @@ const all = (mask: number): Narration => listOf(names(mask));
 /** The colors in a mask as alternatives, "a, b or c". */
 const either = (mask: number): Narration => listOf(names(mask), "or");
 
-/** The longest chain whose walk is listed region by region. */
-export const WALK_MAX = 5;
+/** A chain's case split by its ends: region 1 has the color, or the numbered
+ * chain carries it to the last, each region taking the dot the one before it
+ * leaves, and this region touches both ends. */
+function chainEnds(r: number, chain: readonly RegionMark[], hue: ColorWord): Narration {
+  const last = chain.length;
+  return phrase`${numbered(chain, 1)} or, via ${mark.as("outline", REGION, chain, "the chain")}, ${numbered(chain, last)} is ${hue}, both beside ${thisRegion(r)}`;
+}
 
 /** What a narrowing step does to its region, and so how its sentence ends:
  * - `place` — one color is left, and the step colors the region with it;
@@ -156,7 +161,9 @@ export const say = {
    * "Use both" is the premise the conclusion rests on, and it is stated rather
    * than left for the player to supply: without it, "so this region can't be
    * either" does not follow from "both can only be pink or teal" (the
-   * `equivalentEdges` lesson, docs/hints.md § "Writing the narration").
+   * `equivalentEdges` lesson, docs/hints.md § "Writing the narration"). Why
+   * they use both, that they touch and each shows only those two dots, is left
+   * to the board, which draws both.
    */
   pair: (
     r: number,
@@ -165,17 +172,17 @@ export const say = {
     c: Conclusion,
   ): Sentence =>
     so({
-      look: phrase`${mark.as("outline", REGION, regions, "The outlined pair")} touch and can only be ${either(pair)}, so they use both. ${thisRegion(r).capitalized()} touches both`,
+      look: phrase`${thisRegion(r).capitalized()} touches ${mark.as("outline", REGION, regions, "the outlined pair")}, which use both ${all(pair)}`,
       ...conclude(c, phrase`it can't be either`),
     }),
 
   /**
-   * A forcing chain, as the case split it is, walked with its actual colors:
-   * `forced` is what each numbered region is if region 1 isn't `color`, the
-   * last being `color`. A rule ("each loses the color the one before it
-   * takes") asked the player to run the walk themselves; the colors make it a
-   * read (owner playtest, 2026-09-25). This region touches region 1 and the
-   * last, so one of its neighbors is `color` either way.
+   * A forcing chain, as the case split it is: region 1 has `color`, or the
+   * numbered chain carries it to the last, and this region touches both. The
+   * walk was once said link by link with its colors (owner playtest,
+   * 2026-09-25), which no chain the walk deals can fit beside its conclusion
+   * in the narration limit; the dots the chain's regions show are the walk,
+   * and the words name its ends and the rule (owner, 2026-10-18).
    *
    * Map's own sentence rather than `forcingChainPremise`, which is written for
    * a line: its "this cell's row already has it" and the candidate walk's
@@ -187,42 +194,11 @@ export const say = {
     r: number,
     chain: readonly RegionMark[],
     color: number,
-    forced: readonly number[],
-    c: Conclusion,
-  ): Sentence => {
-    const last = forced.length;
-    const hue = colorName(color);
-    const at = (k: number): Narration => numbered(chain, k);
-    // Past a handful of links a listed walk is no longer a glance (and an
-    // eight-region one ran to 270 characters), so a long chain states the rule
-    // its dots follow and names only where it ends.
-    const walk =
-      last <= WALK_MAX
-        ? listOf(forced.slice(1).map((f, i) => phrase`${at(i + 2)} is ${colorName(f)}`))
-        : phrase`${mark.as("outline", REGION, chain, "each numbered region")} takes the dot the one before it leaves, down to ${at(last)} being ${hue}`;
-    return so({
-      look: phrase`If ${at(1)} isn't ${hue}, it's ${colorName(forced[0])}, so ${walk}. Either way ${at(1)} or ${at(last)} is ${hue}, and ${thisRegion(r)} touches both`,
-      ...conclude(c, phrase`it can't be ${hue}`),
-    });
-  },
-
-  /**
-   * A forcing chain whose every region has a dot of the struck color, told as
-   * the pattern a player sees in it rather than walked: the color can only
-   * alternate down the chain (owner playtest, 2026-09-25). The chain always ends
-   * on an even region in this shape, so "every other region" lands on `last`.
-   */
-  chainAlternates: (
-    r: number,
-    chain: readonly RegionMark[],
-    color: number,
     c: Conclusion,
   ): Sentence => {
     const hue = colorName(color);
-    const last = chain.length;
-    const at = (k: number): Narration => numbered(chain, k);
     return so({
-      look: phrase`${mark.as("outline", REGION, chain, "Every numbered region")} has a ${hue} dot. If ${at(1)} isn't ${hue}, ${at(2)} must be, and so on every other region to ${at(last)}. Either way ${at(1)} or ${at(last)} is ${hue}, and ${thisRegion(r)} touches both`,
+      look: chainEnds(r, chain, hue).capitalized(),
       ...conclude(c, phrase`it can't be ${hue}`),
     });
   },

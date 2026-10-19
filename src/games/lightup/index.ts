@@ -370,13 +370,8 @@ function narrate(f: LightupFiring, hl: Marks): Sentence {
       return say.clueSatisfied(f.reason.n, m);
     case "clueSaturated":
       return say.clueSaturated(m);
-    case "discountUnlit": {
-      const dark = f.reason.dark;
-      return say.discountUnlit(
-        f.reason.set.some((c) => sameCell(c, dark)),
-        m,
-      );
-    }
+    case "discountUnlit":
+      return say.discountUnlit(m);
     case "discountClue":
       return say.discountClue(m);
   }

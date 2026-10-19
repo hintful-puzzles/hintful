@@ -132,10 +132,10 @@ describe("rect hint rungs", () => {
 
   it("a line says which of its two reasons rules the crossing out", () => {
     expect(pinned("lineTakes").step.explanation).toMatch(
-      /^Only the outlined \d+ could cross this edge, and it would take the striped square, which the outlined \d+ covers wherever it goes, so the edge must be a line\.$/,
+      /^Only the outlined \d+ can cross this edge, taking the striped square the \d+ always covers, so it must be a line\.$/,
     );
     expect(pinned("lineMisses").step.explanation).toMatch(
-      /^Only the outlined \d+ could cross this edge, and it would miss the outlined square, which no other clue reaches, so the edge must be a line\.$/,
+      /^Only the outlined \d+ can cross this edge, missing the outlined square no other clue reaches, so it must be a line\.$/,
     );
   });
 
@@ -151,7 +151,7 @@ describe("rect hint rungs", () => {
     const res = rectHint(s);
     if (!res.ok) throw new Error(res.error);
     expect(res.steps[0].explanation).toBe(
-      "Only the outlined 12, 24 and 24 could cross this edge, and each would take a striped square, which another outlined clue covers wherever it goes, so the edge must be a line.",
+      "Only the outlined 12, 24 and 24 can cross this edge, each taking a striped square another clue needs, so it must be a line.",
     );
   });
 

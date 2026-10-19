@@ -142,7 +142,7 @@ describe("Pearl render scenarios", () => {
     // The pearl's whole arm, its own edge and the run-on past the next square,
     // and on out through the white pearl that run-on enters.
     expect(hint?.explanation).toMatch(
-      /through the next square\. It runs straight on through the next white pearl too\.$/,
+      /for two squares, and on through the next white pearl\.$/,
     );
     expect(hl?.targets.filter((t) => t.line)).toHaveLength(3);
     // The target is the proposed line, a stroke rather than a laid rect.

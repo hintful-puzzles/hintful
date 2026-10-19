@@ -188,21 +188,39 @@ function wouldDo(pole: number, rs: readonly RuleOut[]): Narration {
 
 /** Every distinct thing a pole would do across the ruled-out squares, one
  * clause per kind in a fixed order so one board always reads the same:
- * "touch a + or exceed its row's clue". */
+ * "touch a + or exceed its clue". Where both kinds of a family are there, the
+ * pole's and its partner's, they are said as one, whose outlines say which:
+ * "make like poles touch", "exceed a clue". Three reasons said kind by kind
+ * cannot fit the narration limit beside the count (owner, 2026-10-18). */
 function wouldDoAny(pole: number, rs: readonly RuleOut[]): Narration {
   const said: Narration[] = [];
-  for (const kind of KINDS) {
-    const ofKind = rs.filter((r) => r.kind === kind);
-    if (ofKind.length > 0) said.push(wouldDo(pole, ofKind));
+  for (const [mine, partners] of FAMILIES) {
+    const own = rs.filter((r) => r.kind === mine);
+    const theirs = rs.filter((r) => r.kind === partners);
+    if (own.length > 0 && theirs.length > 0)
+      said.push(together(mine, [...own, ...theirs]));
+    else if (own.length > 0) said.push(wouldDo(pole, own));
+    else if (theirs.length > 0) said.push(wouldDo(pole, theirs));
   }
   return orJoin(said);
 }
-const KINDS: readonly RuleOut["kind"][] = [
-  "touch",
-  "full",
-  "partnerTouch",
-  "partnerFull",
+const FAMILIES: readonly (readonly [RuleOut["kind"], RuleOut["kind"]])[] = [
+  ["touch", "partnerTouch"],
+  ["full", "partnerFull"],
 ];
+
+/** A family's two kinds said as one. */
+function together(family: RuleOut["kind"], rs: readonly RuleOut[]): Narration {
+  if (family === "touch")
+    return phrase`make ${outlined(
+      rs.flatMap((r) => ("at" in r ? r.at : [])),
+      "like poles",
+    )} touch`;
+  return phrase`exceed ${clue(
+    rs.flatMap((r) => ("clues" in r ? r.clues : [])),
+    "a clue",
+  )}`;
+}
 
 /** "; a + anywhere else would …", or nothing when no empty square is ruled
  * out and the board's placed squares already say it all. `ruled` is the

@@ -1911,7 +1911,7 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
 exports[`signpost: pinned hint positions > says, at each pin 1`] = `
 {
   "onlyBefore": "Only this arrow points at the ringed square, so it must lead there.",
-  "onlyNext": "The other square this arrow points at holds the wrong number, so only the ringed one can follow it.",
-  "onlyNextOfSeveral": "The other square this arrow points at holds the wrong number, so only the ringed one can follow it.",
+  "onlyNext": "This arrow's other square holds the wrong number, so only the ringed one can follow.",
+  "onlyNextOfSeveral": "This arrow's other square holds the wrong number, so only the ringed one can follow.",
 }
 `;

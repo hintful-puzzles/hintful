@@ -38,9 +38,8 @@ function joinAnd(parts: readonly string[]): string {
 
 /**
  * Why the clues with fits across an edge cannot cross it: "Only the outlined 4
- * could cross this edge, and it would take the striped square, which the
- * outlined 21 covers wherever it goes". Several clues share one clause, since
- * a clause each runs to a paragraph.
+ * can cross this edge, taking the striped square the 21 always covers".
+ * Several clues share one clause, since a clause each runs to a paragraph.
  */
 function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narration {
   const at = (i: number): Point => ({ x: i % s.w, y: Math.floor(i / s.w) });
@@ -63,26 +62,35 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
     const striped = several
       ? mark.as("stripes", CELL, takes.map(at), "a striped square")
       : mark.the("stripes", CELL, takes.map(at), "square");
-    const owned = several
-      ? phrase`${mark.as("outline", CELL, owners.map(at), "another outlined clue")} covers wherever it goes`
-      : phrase`${named(owners)} ${owners.length > 1 ? "cover wherever they go" : "covers wherever it goes"}`;
-    why.push(phrase`take ${striped}, which ${owned}`);
+    // The clue that covers it is outlined beside the one crossing, so its
+    // value names it.
+    const owner = mark.as(
+      "outline",
+      CELL,
+      owners.map(at),
+      several ? "another clue" : `the ${joinAnd(owners.map((c) => String(s.grid[c])))}`,
+    );
+    why.push(
+      several
+        ? phrase`taking ${striped} ${owner} needs`
+        : phrase`taking ${striped} ${owner} always ${owners.length > 1 ? "cover" : "covers"}`,
+    );
   }
   if (misses.length > 0) {
     const missed = several
       ? mark.as("outline", CELL, misses.map(at), "an outlined square")
       : mark.the("outline", CELL, misses.map(at), "square");
-    why.push(phrase`miss ${missed}, which no other clue reaches`);
+    why.push(phrase`missing ${missed} no other clue reaches`);
   }
   const edge = mark.this("ring", LINE, [f.edge], "edge");
-  return phrase`Only ${named(f.across.map((c) => c.clue))} could cross ${edge}, and ${several ? "each" : "it"} would ${joinOr(why)}`;
+  return phrase`Only ${named(f.across.map((c) => c.clue))} can cross ${edge}, ${several ? "each " : ""}${joinOr(why)}`;
 }
 
 export const say = {
   firing(s: RectState, f: RectFiring): Sentence {
     const at = (i: number): Point => ({ x: i % s.w, y: Math.floor(i / s.w) });
     if (f.kind === "line")
-      return so({ look: crossings(s, f), move: phrase`the edge must be a line` });
+      return so({ look: crossings(s, f), move: phrase`it must be a line` });
     const n = s.grid[f.clue];
     const rect = mark.this(
       "ring",

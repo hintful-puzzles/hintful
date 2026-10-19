@@ -571,7 +571,7 @@ describe("magnets hint sentences", () => {
     for (const s of all) expect(s, s).toMatch(/must (be|go)|must start/);
   });
 
-  it("lists each reason once, in a fixed order", () => {
+  it("says a pole's and its partner's reason of one family as one", () => {
     const s = say.lineExact(
       M,
       "row",
@@ -586,10 +586,10 @@ describe("magnets hint sentences", () => {
         0,
       ),
     );
-    expect(s.text).toContain("a + elsewhere would touch a + or put a − beside a −,");
-    // One clause names both touched poles.
+    expect(s.text).toContain("a + elsewhere would make like poles touch,");
+    // One clause names every touched pole, its own and its partner's.
     const touched = s.refs.find((r) => r.kind === SQUARE && r.elements.includes(4));
-    expect(touched?.elements).toEqual([4, 5]);
+    expect(touched?.elements).toEqual([4, 5, 3]);
   });
 
   it("names the ruled-out squares by their outlined tiles when it outlines them", () => {

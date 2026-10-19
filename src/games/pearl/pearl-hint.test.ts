@@ -114,7 +114,7 @@ describe("a step draws what the pearls' rules carry on from its lines", () => {
   // Every line a step draws that leaves a black pearl has its run-on through
   // the next square, and every one entering a white pearl leaves by the
   // opposite edge: already on the board, or in the same step.
-  it("over the whole corpus, and the second sentence names the white pearl", () => {
+  it("over the whole corpus, and the run-on clause names the white pearl", () => {
     let carried = 0;
     for (const { p, seed } of CORPUS) {
       for (const { step, before } of walk(deal(p, seed)).seen) {
@@ -147,13 +147,14 @@ describe("a step draws what the pearls' rules carry on from its lines", () => {
               // A white pearl this step's own deduction did not reach.
               if (
                 !before.lines[sq] &&
-                !/white pearl/.test(step.explanation.split(". ")[0])
+                !/white pearl/.test(step.explanation.split(", and on ")[0])
               )
                 whiteCarry = true;
             }
           }
         }
-        if (/next white pearls? too\.$/.test(step.explanation)) carried++;
+        if (/, and on through the next white pearls?\.$/.test(step.explanation))
+          carried++;
         else if (whiteCarry) expect.fail(`unnamed carry: ${step.explanation}`);
       }
     }

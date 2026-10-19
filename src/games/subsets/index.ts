@@ -38,6 +38,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
+import { NARRATION_LIMIT } from "../../engine/hint-words.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -575,7 +576,14 @@ function stepsForFiring(board: SubsetsState, d: SubsetsDeduction): Step[] {
       k === 0 && exclusion
         ? say.exclusion(exclusion, board.n, pointOf(blockerCell(exclusion), board.w))
         : null;
-    const words = say.leg(d, k, legMarks(board, d, exclusion, k), example);
+    // The example of a set that cannot go is an aside: where it would run the
+    // sentence past the limit, the sentence goes without it, and so does the
+    // outline on its blocking cell, which only the example names.
+    const withExample = say.leg(d, k, legMarks(board, d, exclusion, k), example);
+    const words =
+      example && withExample.text.length > NARRATION_LIMIT
+        ? say.leg(d, k, legMarks(board, d, null, k), null)
+        : withExample;
     steps.push({
       move: { kind: "set", type: set.type, pos: d.pos, bit: set.bit },
       rung: d.reason.kind,

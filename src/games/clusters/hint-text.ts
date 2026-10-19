@@ -63,18 +63,18 @@ export const say = {
     const at = d.reason.at;
     const end =
       at.kind === "dotOvercount"
-        ? phrase`${mark.the("outline", CELL, danger(m), "dot")} would touch a second tile of its own color`
+        ? phrase`${mark.the("outline", CELL, danger(m), "dot")} touches a second like it`
         : at.cell === d.index
           ? at.kind === "surrounded"
-            ? phrase`${thisVeryCell(m)} would be sealed off from every ${t} tile`
-            : phrase`${thisVeryCell(m)} could no longer touch two ${t} tiles`
+            ? phrase`${thisVeryCell(m)} is cut off from every ${t} tile`
+            : phrase`${thisVeryCell(m)} can't touch two ${t} tiles`
           : at.kind === "surrounded"
-            ? phrase`${mark.the("outline", CELL, danger(m), "tile")} would be sealed off from its own color`
-            : phrase`${mark.the("outline", CELL, danger(m), "tile")} could no longer touch two of its own color`;
+            ? phrase`${mark.the("outline", CELL, danger(m), "tile")} is cut off from its color`
+            : phrase`${mark.the("outline", CELL, danger(m), "tile")} can't touch two like it`;
     // The chain's break is adjacent to the *last forced cell*, not to the
     // target, so the neighbor relation above is unavailable here. The tie is
-    // instead that the chain runs **from** this cell — the deixis the guard in
-    // `clusters-hint.test.ts` checks. The board's ordinals say which
+    // instead that the chain runs **from** this cell ("this cell forces cells
+    // 1 to 3") — the deixis the guard in `clusters-hint.test.ts` checks. The board's ordinals say which
     // consequence came when; they do not say which mark "this cell" means.
     //
     // The sentence names the two ends and lets the numbers carry the middle:
@@ -88,12 +88,8 @@ export const say = {
       m.chain,
       n === 1 ? "cell 1" : n === 2 ? "cells 1 and 2" : `cells 1 to ${n}`,
     );
-    const run =
-      n === 1
-        ? phrase`${cells} is then forced from it, and`
-        : phrase`${cells} are then forced from it, and by ${n}`;
     return so({
-      look: phrase`Suppose ${thisCell(m)} were ${t}: ${run} ${end}`,
+      look: phrase`If ${t}, ${thisCell(m)} forces ${cells}, and ${end}`,
       move: phrase`${thisCell(m)} must be ${f}`,
     });
   },

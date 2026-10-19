@@ -171,7 +171,10 @@ export const say = {
     n: number,
     pair: number[],
   ): Narration =>
-    phrase`${mark.as("outline", CELL, [side], `Its ${SIDE[n]} neighbor`)} in ${mark.this("stripes", whole(CELL), area, "area")} can only point ${joinOr(pair.map(arrow))}: an arrow into it would close a loop or be the area's second ${arrow(n)}`,
+    // Each of the neighbor's two ways is named with what an arrow into it would
+    // then make: pointed back, a loop; pointed on, two arrows of `n` in the
+    // area.
+    phrase`${mark.as("outline", CELL, [side], `Its ${SIDE[n]} neighbor`)} in ${mark.this("stripes", whole(CELL), area, "area")} can only point ${arrow(pair.find((p) => p !== n) ?? n)} (a loop) or ${arrow(n)} (two ${arrow(n)}s)`,
 
   /** Two squares, `pair`, of the area `region` holding the same two
    * candidates between them. */

@@ -130,18 +130,18 @@ export const say = {
     const attn =
       r.kind === "hiddenSingle"
         ? phrase`${sets} can go nowhere but ${here}`
-        : phrase`only ${sets} can still go in ${here}`;
-    // With an example between them, the sets are named again rather than by a
-    // pronoun whose nearest antecedent would be the example's set.
+        : phrase`only ${sets} ${plural ? "fit" : "fits"} ${here}`;
+    // The example is an aside in brackets, so what follows it still has the
+    // sets as its subject.
     if (exclusion) {
       const has = known
         ? plural
-          ? phrase`${sets.capitalized()} all contain ${L}`
-          : phrase`${sets.capitalized()} contains ${L}`
+          ? `all contain ${L}`
+          : `it contains ${L}`
         : plural
-          ? phrase`None of ${sets} has ${L}`
-          : phrase`${sets.capitalized()} has no ${L}`;
-      return so({ look: phrase`${attn}. ${exclusion} ${has}`, move: act });
+          ? `none has ${L}`
+          : `it has no ${L}`;
+      return so({ look: phrase`${attn} (${exclusion}), and ${has}`, move: act });
     }
     const has = known
       ? plural
@@ -182,12 +182,12 @@ export const say = {
     const label = setLabel(ex.value, n);
     const b = ex.block;
     if (b.kind === "placed")
-      return phrase`For instance, ${label} is already placed ${mark.paren("outline", CELL, [blocker], "on the board")}.`;
+      return phrase`${label}, say, is ${mark.as("outline", CELL, [blocker], "already placed")}`;
     if (b.kind === "arrow") {
       return b.mustContain
-        ? phrase`For instance, the horseshoe to ${outlinedCell([blocker])} needs ${lettersOf(b.letters, n)} present, so ${label} can't go here.`
-        : phrase`For instance, the horseshoe to ${outlinedCell([blocker])} won't allow ${lettersOf(b.letters, n)}, so ${label} can't go here.`;
+        ? phrase`${label}, say, lacks the ${lettersOf(b.letters, n)} the horseshoe to ${outlinedCell([blocker])} needs`
+        : phrase`${label}, say, has the ${lettersOf(b.letters, n)} the horseshoe to ${outlinedCell([blocker])} forbids`;
     }
-    return phrase`For instance, with no horseshoe to ${outlinedCell([blocker], "neighbor")}, neither set may contain the other, but ${label} would, so it can't go here.`;
+    return phrase`${label}, say, can't nest with ${outlinedCell([blocker], "neighbor")}, which has no horseshoe to it`;
   },
 };
