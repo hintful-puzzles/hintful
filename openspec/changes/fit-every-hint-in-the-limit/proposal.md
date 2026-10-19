@@ -41,5 +41,8 @@ the marks show, and keep the premise and the reason.
 
 - `engine-hints`: the strike ending and the chain sentence, and the ledger.
 - Every candidate game's wording through the engine; Mosaic, Salad, Singles,
-  Mines, Magnets, Towers, Solo and Undead through their own `hint-text.ts`.
+  Mines, Magnets, Towers, Solo and Undead through their own `hint-text.ts`,
+  and, after a copy-editor's pass (owner, 2026-10-19), Net, Pearl and Rect.
+- Specs whose scenarios quote a sentence: `keen`, `solo`, `palisade`,
+  `magnets`, `net` and `pearl` (Pearl's quoted run-on was already stale).
 - Help pages are unaffected: none quotes a hint sentence.

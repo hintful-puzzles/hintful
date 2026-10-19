@@ -180,9 +180,10 @@ function wouldDo(pole: number, rs: readonly RuleOut[]): Narration {
     case "partnerTouch":
       return phrase`put a ${o} beside ${outlined(at, `a ${o}`)}`;
     // The clue its partner's pole would overrun is outlined, so the words
-    // need not say which line it counts.
+    // need not say which line it counts, nor which pole: `together` says the
+    // same of both.
     case "partnerFull":
-      return phrase`exceed ${clue(clues, "a clue")} with its ${o}`;
+      return phrase`exceed ${clue(clues, "a clue")}`;
   }
 }
 
@@ -238,16 +239,14 @@ const anywhereElse = (
     ? ""
     : phrase`; a ${glyph(pole)} ${outlined(ruled, where(tiles))} would ${wouldDoAny(pole, rs)}`;
 
-/** Where the ruled-out squares are: "in either outlined tile", or "elsewhere"
+/** Where the ruled-out squares are: "in an outlined tile", or "elsewhere"
  * when the outlines do not make them tiles. */
 const where = (tiles: number): string =>
   tiles === 0
     ? "elsewhere"
     : tiles === 1
       ? "in the outlined tile"
-      : tiles === 2
-        ? "in either outlined tile"
-        : "in any outlined tile";
+      : "in an outlined tile";
 
 /** The squares a line's other squares are ruled out by, as a count premise
  * cites them. */
@@ -258,6 +257,16 @@ export interface Elsewhere {
 }
 
 const NEUTRAL_WORDS = phrase`it must be neutral`;
+
+/** Where the `n` poles a count needs go: "it must go here" for the one, and
+ * the squares by name for some of several ("here" promises one mark, and "it"
+ * one pole): "this square must be +", "these 2 squares must be +s". */
+const placed = (targets: readonly number[], pole: number, n: number): Narration =>
+  n === 1 && targets.length === 1
+    ? phrase`it must go ${ring(targets, "here")}`
+    : targets.length === 1
+      ? phrase`${ring(targets, "this square")} must be ${glyph(pole)}`
+      : phrase`${ring(targets, `these ${targets.length} squares`)} must be ${glyphs(pole)}`;
 
 export const say = {
   /** A marked magnet whose pole `banned` cannot go at this end, so the end
@@ -398,6 +407,13 @@ export const say = {
     elsewhere: Elsewhere,
   ): Sentence => {
     const rest = anywhereElse(pole, elsewhere.why, elsewhere.ruled, elsewhere.tiles);
+    // Where every other empty square is ruled out by name, that leaves the
+    // ringed ones, and the count need not say so too.
+    if (rest !== "")
+      return so({
+        look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, more(n, pole))}${rest}`,
+        move: placed(m.targets, pole, n),
+      });
     return n === 1
       ? so({
           look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, more(n, pole))} and only ${ring(m.targets, "this square")} can take one${rest}`,
@@ -444,9 +460,7 @@ export const say = {
     }),
 
   /** The line needs a `pole` from each tile that can still give one, and
-   * `elsewhere` is why no other square of it can. `along` is how many of
-   * those tiles lie along the line: two squares in it, but one `pole`,
-   * which is what makes the count one of tiles rather than squares. `end`
+   * `elsewhere` is why no other square of it can. `end`
    * is what the step concludes: the squares of the tiles crossing the line
    * (each its tile's only square in it), or one end of a tile lying along
    * it and why its far end cannot take the pole. */
@@ -455,21 +469,16 @@ export const say = {
     axis: Axis,
     pole: number,
     n: number,
-    along: number,
     elsewhere: Elsewhere,
     end: OnlyEnd,
   ): Sentence => {
-    // Counting tiles rather than squares needs saying when one lies along
-    // the line: its two open squares give the line one pole, not two. "Still"
-    // gives way to it, since the clause after says what the board rules out,
-    // and the longest sentences sit near the ledger's ceiling.
+    // The count is of tiles, not squares: a tile lying along the line has
+    // two open squares in it but gives it one pole.
     const need = clue(m.clues, more(n, pole));
     const head =
       n === 1
-        ? phrase`${thisLine(m, axis)} needs ${need} and only ${ring(m.targets, "this tile")} can give it`
-        : along > 0
-          ? phrase`${thisLine(m, axis)} needs ${need}, one per magnet, and just ${n} tiles can give one`
-          : phrase`${thisLine(m, axis)} needs ${need} and just ${n} tiles can give one`;
+        ? phrase`${thisLine(m, axis)} needs ${need} from only ${ring(m.targets, "this tile")}`
+        : phrase`${thisLine(m, axis)} needs ${need} from just ${n} tiles`;
     const rest = anywhereElse(pole, elsewhere.why, elsewhere.ruled, elsewhere.tiles);
     // A tile lying along the line takes a second sentence of look: the count
     // picks the tile, then its far end is ruled out to pick the end.
@@ -478,12 +487,6 @@ export const say = {
         look: phrase`${head}${rest}. A ${glyph(pole)} at ${outlined([end.far], "its far end")} would ${wouldDoAny(pole, [end.why])}`,
         move: phrase`it must go ${ring(m.targets, "here")}`,
       });
-    return so({
-      look: phrase`${head}${rest}`,
-      move:
-        end.squares === 1
-          ? phrase`${ring(m.targets, "this square")} must be ${glyph(pole)}`
-          : phrase`${ring(m.targets, `these ${end.squares} squares`)} must be ${glyphs(pole)}`,
-    });
+    return so({ look: phrase`${head}${rest}`, move: placed(m.targets, pole, n) });
   },
 };

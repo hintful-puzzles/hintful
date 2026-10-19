@@ -325,8 +325,8 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     // four open squares give it three +s at most, not four: the sentence says
     // why it counts dominoes, or the count reads as false.
     expect(first.explanation).toBe(
-      "This column needs 3 more +s, one per magnet, and just 3 tiles can give one; " +
-        "a + in either outlined tile would exceed a clue with its −, " +
+      "This column needs 3 more +s from just 3 tiles; " +
+        "a + in an outlined tile would exceed a clue, " +
         "so these 2 squares must be +s.",
     );
     const h = picture(first);
@@ -389,10 +389,10 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
   it("counts from the board each leg finds, not the one the journey began on", () => {
     const [, second, third] = steps();
     expect(second.explanation).toMatch(
-      /^This column needs 2 more \+s, one per magnet, and just 2 tiles/,
+      /^This column needs 2 more \+s from just 2 tiles/,
     );
     expect(third.explanation).toMatch(
-      /^This column needs one more \+ and only this tile can give it;/,
+      /^This column needs one more \+ from only this tile;/,
     );
   });
 });
@@ -468,20 +468,11 @@ describe("magnets hint sentences", () => {
                   .map((why) => ({ kind: "along" as const, why, far: 8 })),
               ];
               for (const end of ends)
-                for (const along of [0, 1]) {
-                  out.push({
-                    text: say.onlyEndLeft(
-                      M,
-                      axis,
-                      pole,
-                      n,
-                      along,
-                      rest(elsewhere, tiles),
-                      end,
-                    ).text,
-                    reasoned: elsewhere.length > 0 || end.kind === "along",
-                  });
-                }
+                out.push({
+                  text: say.onlyEndLeft(M, axis, pole, n, rest(elsewhere, tiles), end)
+                    .text,
+                  reasoned: elsewhere.length > 0 || end.kind === "along",
+                });
             }
       }
     return out;
@@ -597,8 +588,8 @@ describe("magnets hint sentences", () => {
     const said = (tiles: number) =>
       say.lineExact(M, "row", POSITIVE, 2, rest(partner, tiles)).text;
     expect(said(1)).toContain("a + in the outlined tile would put a − beside a −");
-    expect(said(2)).toContain("a + in either outlined tile would");
-    expect(said(3)).toContain("a + in any outlined tile would");
+    expect(said(2)).toContain("a + in an outlined tile would");
+    expect(said(3)).toContain("a + in an outlined tile would");
   });
 
   it("never cites a marked magnet on a board with none", () => {
@@ -678,9 +669,11 @@ describe("magnets hint sentences", () => {
           }
           // A domino count's squares are each their domino's only square in
           // the hatched line, which is why the count alone decides them.
-          if (
-            /tiles can .*, so these? (\d+ )?squares? must be/.test(step.explanation)
-          ) {
+          const tileCount = /needs .* from (just \d+ tiles|only this tile)/.test(
+            step.explanation,
+          );
+          const farEnd = /at its far end would/.test(step.explanation);
+          if (tileCount && !farEnd) {
             said.crossing++;
             const { line } = h;
             if (!line) throw new Error(`${label}: a count names no line`);
@@ -691,13 +684,13 @@ describe("magnets hint sentences", () => {
               expect(inLine(state.common.dominoes[t]), `${label}: ${t}`).toBe(false);
             }
           }
-          if (/, one per magnet, .* at its far end would/.test(step.explanation)) {
+          if (tileCount && farEnd) {
             said.along++;
           }
-          // "Either outlined tile" is two empty tiles outlined whole on the
-          // board. A placed magnet outlined as evidence is drawn with its
-          // poles, so no + can be read as going in it.
-          const named = /in (the|either|any) outlined tile/.exec(step.explanation);
+          // "An outlined tile" is empty tiles outlined whole on the board. A
+          // placed magnet outlined as evidence is drawn with its poles, so no
+          // + can be read as going in it.
+          const named = /in (the|an) outlined tile/.exec(step.explanation);
           if (named) {
             said.tiles++;
             const area = new Set(h.area);
@@ -711,8 +704,7 @@ describe("magnets hint sentences", () => {
             ).size;
             const msg = `${label}: ${step.explanation}`;
             if (named[1] === "the") expect(whole, msg).toBe(1);
-            else if (named[1] === "either") expect(whole, msg).toBe(2);
-            else expect(whole, msg).toBeGreaterThanOrEqual(3);
+            else expect(whole, msg).toBeGreaterThanOrEqual(2);
             // And every square the clause rules out is in one of them: no empty
             // square of the hatched line is outlined alone.
             const { line } = h;

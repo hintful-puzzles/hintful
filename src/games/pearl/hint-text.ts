@@ -58,9 +58,6 @@ export type LeftOut = "pearl" | "lines";
 
 const runs = (axis: Axis): string => (axis === "across" ? "across" : "up and down");
 
-const beside = (axis: Axis): string =>
-  axis === "across" ? "to its left or right" : "above or below it";
-
 const misses = (out: LeftOut): string => (out === "pearl" ? "a pearl" : "other lines");
 
 /** What stops the square past a black pearl running straight on, said of
@@ -84,8 +81,10 @@ const area = (m: Marked, words: string): Narration =>
  * pearls) it runs into says so after its own move, whichever deduction it is
  * (the owner's 2026-09-27 request): the run-on is part of the step's move, so
  * a clause of it. */
+// The pearls a line runs on through are always white, so the word is left to
+// the board.
 const throughNextWhite = (m: Marked): Narration =>
-  phrase`and on ${mark.as("ring", EDGE, m.white, `through the next white ${m.white.length > 1 ? "pearls" : "pearl"}`)}`;
+  phrase`and on ${mark.as("ring", EDGE, m.white, `through the next ${m.white.length > 1 ? "pearls" : "pearl"}`)}`;
 
 /** The look forces the move, and with it any run-on through a white pearl. */
 const forced = (
@@ -142,15 +141,17 @@ export const say = {
         phrase`${pearl} must turn, and the opposite edge is a line`,
         phrase`${thisEdge(m)} can't be one`,
       );
+    // That a black pearl turns, and runs two squares each way, is the help's
+    // rule; the sentence gives only what rules the other way out.
     const which =
       opposite === "boardEdge"
-        ? "the board's edge is opposite"
-        : "the other way is out";
+        ? "backs onto the board's edge"
+        : "has its opposite edge ruled out";
     return forced(
       m,
-      phrase`${pearl} must turn, and ${which}`,
+      phrase`${pearl} ${which}`,
       runsOn
-        ? phrase`its line must run ${mark.as("ring", EDGE, [...m.own, ...m.black], "this way for two squares")}`
+        ? phrase`its line must run ${mark.as("ring", EDGE, [...m.own, ...m.black], "this way")}`
         : phrase`${thisEdge(m)} must be a line`,
     );
   },
@@ -194,12 +195,12 @@ export const say = {
       phrase`${own(m, "this black pearl's line")} can't run straight through it`,
     ),
 
-  /** Neither neighbor along `blocked` can turn into the pearl, whose edges
-   * the step decides. */
-  whiteCannotTurn: (blocked: Axis, along: Axis, m: Marked): Sentence =>
+  /** Neither neighbor across `along` can turn into the pearl, whose edges
+   * the step decides; the outlines show which two. */
+  whiteCannotTurn: (along: Axis, m: Marked): Sentence =>
     forced(
       m,
-      phrase`Neither ${area(m, `outlined square ${beside(blocked)}`)} can turn into ${own(m, "this white pearl")}`,
+      phrase`Neither ${area(m, "outlined square")} can turn into ${own(m, "this white pearl")}`,
       phrase`its line must run ${runs(along)}`,
     ),
 

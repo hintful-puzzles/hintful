@@ -168,7 +168,7 @@ describe("boards the solver settles", () => {
     const { said, solved } = follow(W5, "19d7aaae8449d5636cad43c44");
     expect(solved).toBe(true);
     expect(said).toContain(
-      "Standing upright, this straight would lead only into the striped squares, where its wire must stop however they turn, sealing them off from the rest, so it must stay across: lock it.",
+      "Standing upright, this straight would lead only into the striped squares, which end its wire however they turn, so it must stay across: lock it.",
     );
   });
 
@@ -179,7 +179,7 @@ describe("boards the solver settles", () => {
     const { said, solved } = follow(W5, id.slice(id.indexOf(":") + 1));
     expect(solved).toBe(true);
     expect(
-      said.some((t) => t.includes("however they turn without closing a loop")),
+      said.some((t) => t.includes("which end or loop its wire however they turn")),
     ).toBe(true);
   });
 });

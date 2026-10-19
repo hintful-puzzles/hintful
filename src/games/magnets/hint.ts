@@ -620,7 +620,6 @@ function tellCount(
         `magnets hint: ${counted.size} dominoes can give the ${n} needed`,
       );
     }
-    const along = [...counted].filter((d) => onLine.has(b.common.dominoes[d])).length;
     const idx = idxOf(legs[k]);
     const end = farEnd(board, idx);
     if (end.kind === "open") {
@@ -635,7 +634,7 @@ function tellCount(
         .map(idxOf)
         .filter((i) => farEnd(board, i).kind === "crosses");
       return {
-        words: say.onlyEndLeft({ line, clues, targets }, axis, pole, n, along, rest, {
+        words: say.onlyEndLeft({ line, clues, targets }, axis, pole, n, rest, {
           kind: "crosses",
           squares: targets.length,
         }),
@@ -649,19 +648,11 @@ function tellCount(
     const j = b.common.dominoes[idx];
     const ev = evidenceOf(board, end.why, pole);
     return {
-      words: say.onlyEndLeft(
-        { line, clues, targets: [idx] },
-        axis,
-        pole,
-        n,
-        along,
-        rest,
-        {
-          kind: "along",
-          why: ruleOutOf(board, end.why, r.line, pole),
-          far: j,
-        },
-      ),
+      words: say.onlyEndLeft({ line, clues, targets: [idx] }, axis, pole, n, rest, {
+        kind: "along",
+        why: ruleOutOf(board, end.why, r.line, pole),
+        far: j,
+      }),
       area: [...area, j, ...ev.area],
       clues,
       line,

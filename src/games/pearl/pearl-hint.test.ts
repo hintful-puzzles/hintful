@@ -153,8 +153,7 @@ describe("a step draws what the pearls' rules carry on from its lines", () => {
             }
           }
         }
-        if (/, and on through the next white pearls?\.$/.test(step.explanation))
-          carried++;
+        if (/, and on through the next pearls?\.$/.test(step.explanation)) carried++;
         else if (whiteCarry) expect.fail(`unnamed carry: ${step.explanation}`);
       }
     }

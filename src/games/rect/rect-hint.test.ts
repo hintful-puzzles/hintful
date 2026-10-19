@@ -39,7 +39,7 @@ function soleCrossing(state: RectState): Crossing | null {
 }
 
 /** Each rung, the two reasons a line has (the fit across the edge takes a
- * square another clue is sure of, or misses one no other clue reaches) and the
+ * square another clue is sure of, or leaves one uncovered) and the
  * shapes of step the keep-track and frame tests read. */
 const pinned = describeHintPins({
   game: rectGame,
@@ -135,7 +135,7 @@ describe("rect hint rungs", () => {
       /^Only the outlined \d+ can cross this edge, taking the striped square the \d+ always covers, so it must be a line\.$/,
     );
     expect(pinned("lineMisses").step.explanation).toMatch(
-      /^Only the outlined \d+ can cross this edge, missing the outlined square no other clue reaches, so it must be a line\.$/,
+      /^Only the outlined \d+ can cross this edge, leaving the outlined square uncovered, so it must be a line\.$/,
     );
   });
 
@@ -151,7 +151,7 @@ describe("rect hint rungs", () => {
     const res = rectHint(s);
     if (!res.ok) throw new Error(res.error);
     expect(res.steps[0].explanation).toBe(
-      "Only the outlined 12, 24 and 24 can cross this edge, each taking a striped square another clue needs, so it must be a line.",
+      "Only the outlined 12, 24 and 24 can cross this edge, taking a striped square another clue needs, so it must be a line.",
     );
   });
 

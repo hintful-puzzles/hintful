@@ -80,10 +80,13 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
     const missed = several
       ? mark.as("outline", CELL, misses.map(at), "an outlined square")
       : mark.the("outline", CELL, misses.map(at), "square");
-    why.push(phrase`missing ${missed} no other clue reaches`);
+    // The starve rung's words: no other clue reaches it, or it would not be
+    // left uncovered.
+    why.push(phrase`leaving ${missed} uncovered`);
   }
   const edge = mark.this("ring", LINE, [f.edge], "edge");
-  return phrase`Only ${named(f.across.map((c) => c.clue))} can cross ${edge}, ${several ? "each " : ""}${joinOr(why)}`;
+  // A plural subject already reads one by one; "each" would only lengthen it.
+  return phrase`Only ${named(f.across.map((c) => c.clue))} can cross ${edge}, ${joinOr(why)}`;
 }
 
 export const say = {

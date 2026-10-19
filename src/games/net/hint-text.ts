@@ -160,7 +160,7 @@ function fitted(p: Fit): Narration | null {
 }
 
 const someStriped = (els: readonly Point[]) =>
-  els.length > 1 ? "some of the striped squares" : "the striped square";
+  els.length > 1 ? "some striped squares" : "the striped square";
 
 /** What a turning that strands the one square beside it would do: "would
  * leave the outlined T no way to fit it and the wall without closing a loop
@@ -193,16 +193,17 @@ export interface Which {
   /** How several turnings point, with no fit clause beside them: "any other
    * way", "any way but right", "right". */
   readonly pointing: string;
-  /** The same, among the ways that fit: "any other way that fits". */
-  readonly fitting: string;
+  /** The same, among the ways that fit, opening the sentence: "Every other
+   * way this T fits the outlined lock". */
+  readonly fitting: (subject: Narration, fit: Narration) => Narration;
 }
 
 /** What a turning that loops or seals would do: "would close a loop through
  * the striped squares", or, when dead ends are what close the group, "would
- * join the striped dead ends, which have no other wire, closing all three off
- * from the rest"; or, when the group is one its wire only runs into, "would
- * lead only into the striped squares, where its wire must stop however they
- * turn, sealing them off from the rest". */
+ * face the striped dead end" or "would join the striped dead ends, which have
+ * no other wire, closing all three off from the rest"; or, when the group is
+ * one its wire only runs into, "would lead only into the striped squares,
+ * which end its wire however they turn". */
 function trapped(p: Premises, piece: string | null): Narration {
   const wraps = p.acrossEdge
     ? p.striped.length > 1
@@ -234,12 +235,16 @@ function trapped(p: Premises, piece: string | null): Narration {
   if (stranded) return stranding(p, stranded, piece);
   if (p.seal && !p.loop && p.deadEnds) {
     const n = p.striped.length;
+    // Two dead ends closed off together are this one and the striped one, in
+    // the help's words: two dead ends can never face each other.
+    if (n === 1)
+      return phrase`would face ${mark.the("stripes", CELL, p.striped, "dead end")}${wraps}`;
     const all = n + 1;
     const closing = all === 2 ? "the two" : `all ${NUMBER[all] ?? String(all)}`;
     return phrase`would join ${mark.the("stripes", CELL, p.striped, "dead end")}${wraps}, which ${n > 1 ? "have" : "has"} no other wire, closing ${closing} off from the rest`;
   }
   if (p.seal && !p.loop && p.runsOn)
-    return phrase`would lead only into ${mark.the("stripes", CELL, p.striped, "square")}${wraps}, where its wire must stop however they turn${p.barLoops ? " without closing a loop" : ""}, sealing them off from the rest`;
+    return phrase`would lead only into ${mark.the("stripes", CELL, p.striped, "square")}${wraps}, which ${p.barLoops ? "end or loop" : "end"} its wire however they turn`;
   const verb =
     p.loop && p.seal
       ? "close a loop through or seal off"
@@ -250,50 +255,59 @@ function trapped(p: Premises, piece: string | null): Narration {
 }
 
 /**
- * What to look at about `subject`: the fit and the turnings that loop or seal.
- * The turning that loops or seals comes first ("Lying across, this straight
- * would …"), so it cannot be read as describing the striped squares after it.
+ * What to look at about `subject`, and the fit its conclusion still has to
+ * name (`null` when the look names it, or there is none). The turning that
+ * loops or seals comes first ("Lying across, this straight would …"), so it
+ * cannot be read as describing the striped squares after it; the fit then
+ * rules out the other ways where the conclusion does its work ("so only one
+ * way fits the outlined lock").
  */
 function look(
   subject: Narration,
   p: Premises,
   which: Which,
   piece: string | null = null,
-): Narration {
+): { look: Narration; fit: Narration | null } {
   const fit = fitted(p);
   if (!p.loop && !p.seal && p.stranded.length === 0)
-    return phrase`${subject} must fit ${fit ?? ""}`;
+    return { look: phrase`${subject} must fit ${fit ?? ""}`, fit: null };
   const trap = trapped(p, piece);
-  if (fit === null) {
-    const lead = p.only !== null ? lying(p.only) : `pointing ${which.pointing}`;
-    return phrase`${lead}, ${subject} ${trap}`;
-  }
-  return p.only !== null
-    ? phrase`${subject} must fit ${fit}, and, ${lying(p.only)}, it ${trap}`
-    : phrase`${subject} must fit ${fit}, and ${which.fitting} ${trap}`;
+  if (p.only !== null)
+    return { look: phrase`${lying(p.only)}, ${subject} ${trap}`, fit };
+  if (fit === null)
+    return { look: phrase`pointing ${which.pointing}, ${subject} ${trap}`, fit: null };
+  return { look: phrase`${which.fitting(subject, fit)} ${trap}`, fit: null };
 }
 
 const OTHER_WAYS: Which = {
   pointing: "any other way",
-  fitting: "any other way that fits",
+  fitting: (subject, fit) => phrase`every other way ${subject} fits ${fit}`,
 };
 
 export const say = {
   /** The first leg of a lock the tile must turn for. */
-  turn: (tile: Point, wires: number, p: Premises): Sentence =>
-    so({
-      look: look(mark.this("ring", CELL, [tile], pieceName(wires)), p, OTHER_WAYS),
-      follows: phrase`only one way fits`,
+  turn: (tile: Point, wires: number, p: Premises): Sentence => {
+    const seen = look(mark.this("ring", CELL, [tile], pieceName(wires)), p, OTHER_WAYS);
+    return so({
+      look: seen.look,
+      follows: seen.fit
+        ? phrase`only one way fits ${seen.fit}`
+        : phrase`only one way fits`,
       move: phrase`turn it`,
-    }),
+    });
+  },
 
   /** A lock whose tile already shows its one way. */
-  lock: (tile: Point, wires: number, p: Premises): Sentence =>
-    so({
-      look: look(mark.this("ring", CELL, [tile], pieceName(wires)), p, OTHER_WAYS),
-      follows: phrase`it must stay ${staying(wires)}`,
+  lock: (tile: Point, wires: number, p: Premises): Sentence => {
+    const seen = look(mark.this("ring", CELL, [tile], pieceName(wires)), p, OTHER_WAYS);
+    return so({
+      look: seen.look,
+      follows: seen.fit
+        ? phrase`it can fit ${seen.fit} only ${staying(wires)}`
+        : phrase`it must stay ${staying(wires)}`,
       move: phrase`lock it`,
-    }),
+    });
+  },
 
   /** The lock after the turn, for the turn's reason. */
   thenLock: (tile: Point, wires: number): Sentence =>
@@ -315,26 +329,37 @@ export const say = {
     const where = mark.this("ring", SIDE, [side], "side");
     const d = dirWords(facing);
     const piece = pieceName(wires);
-    return side.note === NOTE_WIRE
-      ? so({
-          look: look(
-            subject,
-            p,
-            { pointing: `any way but ${d}`, fitting: `any way that fits but ${d}` },
-            piece,
-          ),
-          follows: phrase`it must point ${d}`,
-          move: phrase`note a wire across ${where}`,
-        })
-      : so({
-          look: look(
-            subject,
-            p,
-            { pointing: d, fitting: `any way that fits and points ${d}` },
-            piece,
-          ),
-          follows: phrase`it can never point ${d}`,
-          move: phrase`note no wire across ${where}`,
-        });
+    // With the one turning ruled out first, the fit rules out the rest.
+    const toFit = (fit: Narration | null) => (fit ? phrase`to fit ${fit}, ` : "");
+    if (side.note === NOTE_WIRE) {
+      const seen = look(
+        subject,
+        p,
+        {
+          pointing: `any way but ${d}`,
+          fitting: (s, fit) => phrase`every way ${s} fits ${fit} but ${d}`,
+        },
+        piece,
+      );
+      return so({
+        look: seen.look,
+        follows: phrase`${toFit(seen.fit)}it must point ${d}`,
+        move: phrase`note a wire across ${where}`,
+      });
+    }
+    const seen = look(
+      subject,
+      p,
+      {
+        pointing: d,
+        fitting: (s, fit) => phrase`every way ${s} fits ${fit} pointing ${d}`,
+      },
+      piece,
+    );
+    return so({
+      look: seen.look,
+      follows: phrase`${toFit(seen.fit)}it can never point ${d}`,
+      move: phrase`note no wire across ${where}`,
+    });
   },
 };

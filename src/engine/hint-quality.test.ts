@@ -106,13 +106,13 @@ const MAX_NARRATION_CHARS = 300;
  * collection of dead listings.
  *
  * **A sentence the walk cannot be relied on to hear names a board that speaks
- * it** (`spokenOn`, a `params:desc` per game). Rect's is the case: its line
- * sentence fires on few boards, so the seeds a preset walks can miss all of
- * them and read a live listing as dead. A pinned board is an input, where a wider walk
+ * it** (`spokenOn`, a `params:desc` per game): a sentence that fires on few
+ * boards, which the seeds a preset walks can miss, reading a live listing as
+ * dead. A pinned board is an input, where a wider walk
  * would be a bigger sample of the same kind, and it is checked on every commit
  * rather than at push: "every pinned board still speaks its sentence".
  */
-/** Why Pearl's steps run long; two ledger entries share it. */
+/** Why Pearl's step runs long. */
 const PEARL_CARRIES_ON =
   "The owner's 2026-09-27 request (pearl/hint.ts, carryOn): a step also " +
   "draws the line on through a white pearl it runs into, and says so in a " +
@@ -126,24 +126,16 @@ const LONG_NARRATIONS: {
 }[] = [
   {
     games: ["pearl"],
-    rungs: ["closesEarlyThrough", "square"],
-    why: PEARL_CARRIES_ON,
-  },
-  {
-    // An entry of its own, as Boats' pinned rung is: over the limit only with
-    // the second sentence, on some 10x10 Normal boards and on none the walk
-    // takes.
-    games: ["pearl"],
-    rungs: ["whiteCannotTurn"],
-    spokenOn: { pearl: "10x10dt:BaBbBBkWcBfBcBaBWeWfBWWaBdWcBcWdWdWWcWWbWWkWa" },
+    rungs: ["closesEarlyThrough"],
     why: PEARL_CARRIES_ON,
   },
   {
     games: ["magnets"],
-    rungs: ["lineExact", "onlyEndLeft"],
+    rungs: ["onlyEndLeft"],
     why:
-      "Magnets' count premises carry two: the line's count, and why each other " +
-      "square of it cannot take the pole. The owner's 2026-09-22 playtest found " +
+      "Where a tile lies along the line, its count premise carries three: the " +
+      "line's count of tiles, why each other square of it cannot take the pole, " +
+      "and why the tile's far end cannot. The owner's 2026-09-22 playtest found " +
       "the second missing, and a step that rests on a fact has to say it " +
       "(magnets spec, the hidden facts a later step names in board terms).",
   },
@@ -159,16 +151,18 @@ const LONG_NARRATIONS: {
       "other wire) and counts what is cut off, because the owner found the bare " +
       "'seal off' unreadable in playtest (2026-09-30). When the group is one the " +
       "wire only runs into, through squares not settled yet, the sentence says " +
-      "what makes it a group: the wire must stop there however they turn.",
+      "what makes it a group: they end its wire however they turn. Over the " +
+      "limit where a wrapped grid's edge, a group of dead ends or a run into " +
+      "squares not settled yet stands beside a fit to the notes and locks.",
   },
   {
     games: ["rect"],
     rungs: ["line"],
     why:
-      "A line drawn because every rectangle across the edge is ruled out rests " +
-      "on two premises: which clues could cross it at all, and why none of " +
-      "their rectangles stands. Without the first the player cannot tell the " +
-      "edge is closed to every clue, and without the second, why.",
+      "Over the limit only where both reasons stand beside several clues, on " +
+      "Unreasonable boards: a crossing that would take a square another clue " +
+      "needs, and one that would leave a square uncovered. Each rules out a " +
+      "different clue's rectangle, so neither can go.",
   },
 ];
 
@@ -1091,23 +1085,25 @@ describe("hint narration stays readable at a glance", () => {
     }
   });
 
-  it("every pinned board still speaks its listing's sentence over the limit", () => {
-    let pinned = 0;
-    for (const e of LONG_NARRATIONS) {
-      for (const [g, id] of Object.entries(e.spokenOn ?? {})) {
-        pinned++;
-        expect(e.games, `${g} is pinned on ${e.rungs} without being listed`).toContain(
-          g,
-        );
-        expect(
-          speaksOn(g, id, e.rungs),
-          `${g}: the board pinned for ${e.rungs} no longer speaks it over ${NARRATION_LIMIT} characters. Pin a board that does, or delete the listing.`,
-        ).toBe(true);
+  // Skipped, and so reported, while no listing pins a board: the walk then
+  // reaches every listed sentence itself.
+  it.skipIf(!LONG_NARRATIONS.some((e) => e.spokenOn))(
+    "every pinned board still speaks its listing's sentence over the limit",
+    () => {
+      for (const e of LONG_NARRATIONS) {
+        for (const [g, id] of Object.entries(e.spokenOn ?? {})) {
+          expect(
+            e.games,
+            `${g} is pinned on ${e.rungs} without being listed`,
+          ).toContain(g);
+          expect(
+            speaksOn(g, id, e.rungs),
+            `${g}: the board pinned for ${e.rungs} no longer speaks it over ${NARRATION_LIMIT} characters. Pin a board that does, or delete the listing.`,
+          ).toBe(true);
+        }
       }
-    }
-    // Vacuity: the loop above asserts nothing over a ledger with no pin.
-    expect(pinned).toBeGreaterThan(0);
-  });
+    },
+  );
 
   // Skipped rather than weakened in the two local hooks, so a deferred check is
   // **reported** instead of passing over a walk that could not see its subject.

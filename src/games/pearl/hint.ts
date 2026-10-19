@@ -263,7 +263,7 @@ function premise(
     }
     case "whiteCannotTurn": {
       const blocked = axisOf(reason.axis);
-      return say.whiteCannotTurn(blocked, otherAxis(blocked), m);
+      return say.whiteCannotTurn(otherAxis(blocked), m);
     }
     case "whiteTurnsOpposite":
       return say.whiteTurnsOpposite(f.ops[0].line, m);

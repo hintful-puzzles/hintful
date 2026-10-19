@@ -2,9 +2,9 @@
 
 exports[`net: pinned hint positions > says, at each pin 1`] = `
 {
-  "loop": "Pointing any way but right, the outlined corner would close a loop through some of the striped squares, so it must point right: note a wire across this side.",
-  "loopOnTheWay": "This corner must fit the outlined lock, and, pointing right and down, it would lead only into the striped squares (one across the wrapped edge), where its wire must stop however they turn without closing a loop, sealing them off from the rest, so only one way fits: turn it.",
-  "neighbor": "This T must fit the outlined locks, and, pointing up, down and left, it would leave the outlined straight no way to fit it without closing a loop through the striped squares, so only one way fits: turn it.",
+  "loop": "Pointing any way but right, the outlined corner would close a loop through some striped squares, so it must point right: note a wire across this side.",
+  "loopOnTheWay": "Pointing right and down, this corner would lead only into the striped squares (one across the wrapped edge), which end or loop its wire however they turn, so only one way fits the outlined lock: turn it.",
+  "neighbor": "Pointing up, down and left, this T would leave the outlined straight no way to fit it without closing a loop through the striped squares, so only one way fits the outlined locks: turn it.",
   "sealed": "Lying across, this straight would join the striped dead ends, which have no other wire, closing all three off from the rest, so only one way fits: turn it.",
   "side": "This straight must fit the wall, so only one way fits: turn it.",
   "turn": "This straight must fit the wall, so only one way fits: turn it.",

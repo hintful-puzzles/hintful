@@ -10,7 +10,7 @@ exports[`magnets: pinned hint positions > says, at each pin 1`] = `
   "minus": "This row's empty squares take alternating poles, one more − than +, so this odd-length gap must start with −.",
   "oddGap": "This row's empty squares take alternating poles, one more − than +, so this odd-length gap must start with −.",
   "oneNeutralLeft": "This row has room for just one more neutral square, so this tile lying along it must be a magnet.",
-  "onlyEndLeft": "This row needs 3 more +s, one per magnet, and just 3 tiles can give one, so this square must be +.",
+  "onlyEndLeft": "This row needs 3 more +s from just 3 tiles, so this square must be +.",
   "placement": "This row's empty squares take alternating poles, one more − than +, so this odd-length gap must start with −.",
 }
 `;
