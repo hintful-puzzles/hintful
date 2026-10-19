@@ -290,9 +290,11 @@ describe("the picture holds exactly the number the sentence states", () => {
           if (step.rung !== "clueFull") continue;
           const hl = outlinedBy(step);
           if (hl.clues.length !== 1) continue;
-          // "already has all N of the track squares its clue allows" — so the
+          // "By clue N, this row's track squares are the outlined ones" — so the
           // outline must hold N cells, and each must actually carry track.
-          const m = step.explanation.match(/already has all (\d+) of the track/);
+          const m = step.explanation.match(
+            /By clue (\d+), this \w+'s track squares? (?:is|are)/,
+          );
           if (!m) continue;
           checked++;
           expect(hl.area.length, step.explanation).toBe(Number(m[1]));
@@ -319,9 +321,7 @@ describe("the picture holds exactly the number the sentence states", () => {
         checked++;
         const said = /no crossing is marked yet/.test(step.explanation)
           ? 0
-          : Number(
-              step.explanation.match(/and (\d+) crossings? (?:is|are) marked/)?.[1],
-            );
+          : Number(step.explanation.match(/it has (\d+) outlined crossings?/)?.[1]);
         const hl = outlinedBy(step);
         expect(hl.areaEdges.length, step.explanation).toBe(said);
         // The block is hatched, not outlined: the sentence is about it.
@@ -447,15 +447,15 @@ describe("every narratable premise is reached", () => {
     expect(sentences.size).toBeGreaterThanOrEqual(12);
     const all = [...sentences].join("\n");
     for (const marker of [
-      "has two sides blocked, so it must run through the other two", // bothSidesLeft
-      "of this square but one is blocked", // onlyOneSideLeft
-      "the track squares its clue allows", // clueFull
-      "can leave only", // clueExact
+      "can't cross the outlined sides, so it must run through the ringed", // bothSidesLeft
+      "one way in, and track needs two", // onlyOneSideLeft
+      "track squares are the outlined ones", // clueFull
+      "empty squares, the outlined ones", // clueExact
       "would close a loop", // wouldCloseLoop
       "stranding the outlined track", // wouldStrandTrack
-      "the loose end must run straight on", // looseEndSpans
-      "Track here would carry on", // sharedFate, fill arm
-      "No track here means none", // sharedFate, empty arm
+      "the loose end must run on", // looseEndSpans
+      "The outlined sides send track in this square", // sharedFate, fill arm
+      "Emptying this square empties the outlined one", // sharedFate, empty arm
       "entry to the striped block needs an exit", // crossingParity
     ]) {
       expect(all, `no step ever said "${marker}"`).toContain(marker);
@@ -488,10 +488,10 @@ describe("narration reads correctly at the degenerate extremes", () => {
 
   it("a square with no side left open does not claim it has one", () => {
     expect(say({ kind: "onlyOneSideLeft", x: 0, y: 0, open: 0, ev })).toContain(
-      "Every side of this square is blocked",
+      "block every way into the ringed square",
     );
-    expect(say({ kind: "onlyOneSideLeft", x: 0, y: 0, open: 1, ev })).toMatch(
-      /but one is blocked/i,
+    expect(say({ kind: "onlyOneSideLeft", x: 0, y: 0, open: 1, ev })).toContain(
+      "one way in",
     );
   });
 
@@ -499,16 +499,15 @@ describe("narration reads correctly at the degenerate extremes", () => {
     const b0 = { ...board, numbers: Int32Array.from(board.numbers) };
     b0.numbers[0] = 0;
     expect(narrateText(b0, { kind: "clueFull", line: 0, ev })).toContain(
-      "clue is 0, so no track can run along it",
+      "clue 0, so no track can run along it",
     );
     b0.numbers[0] = 1;
     expect(narrateText(b0, { kind: "clueFull", line: 0, ev })).toContain(
-      "the one track square its clue allows",
+      "track square is the outlined one,",
     );
-    // "all 2 of" is grammatical and reads wrong.
     b0.numbers[0] = 2;
     expect(narrateText(b0, { kind: "clueFull", line: 0, ev })).toContain(
-      "both of the track squares its clue allows",
+      "track squares are the outlined ones,",
     );
   });
 
@@ -516,8 +515,10 @@ describe("narration reads correctly at the degenerate extremes", () => {
     const bFull = { ...board, numbers: Int32Array.from(board.numbers) };
     bFull.numbers[0] = board.h;
     const s = narrateText(bFull, { kind: "clueExact", line: 0, ev });
-    expect(s).toContain("squares long, so every square in it must carry track");
-    expect(s).not.toContain("only 0");
+    expect(s).toContain(
+      "is the length of this column, so every square in it must carry track",
+    );
+    expect(s).not.toContain("0 empty");
   });
 
   it("a parity step with nothing marked yet does not say it crosses 0 times", () => {
@@ -527,7 +528,7 @@ describe("narration reads correctly at the degenerate extremes", () => {
     expect(s).toContain("must be blocked");
     expect(
       say({ kind: "crossingParity", x: 0, y: 0, dir: 8, crossings: 1, ev }),
-    ).toContain("and 1 crossing is marked");
+    ).toContain("and it has 1 outlined crossing,");
   });
 
   // Two arms few boards reach: one firing among 450 small boards, and the
@@ -570,8 +571,9 @@ describe("narration reads correctly at the degenerate extremes", () => {
       empties: true,
       ev,
     });
-    expect(both).toContain("this must be empty, the next track");
-    expect(both).toContain("the next track");
+    expect(both).toContain(
+      "it must be empty, and the ringed one beyond it must carry track",
+    );
   });
 });
 

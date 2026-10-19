@@ -31,10 +31,12 @@ export interface Marked {
 }
 
 const theseCells = (m: Marked): Narration => mark.this("ring", CELL, m.cells, "cell");
-/** "it" or "they" for the decided cells, re-rendered when a step shrinks. */
-const they = (m: Marked): Narration =>
+const ringedCells = (m: Marked): Narration => mark.the("ring", CELL, m.cells, "cell");
+/** "that cell" or "those cells" for the decided cells once the sentence has
+ * named them, re-rendered when a step shrinks. */
+const those = (m: Marked): Narration =>
   mark.as("ring", CELL, m.cells, (els) =>
-    pronoun(CELL, els) === "it" ? "it" : "they",
+    pronoun(CELL, els) === "it" ? "that cell" : "those cells",
   );
 const thisLine = (m: Marked): Narration =>
   mark.this("stripes", LINE, [m.line], m.orient);
@@ -59,8 +61,8 @@ export const say = {
 
   unreachable: (m: Marked): Sentence =>
     so({
-      look: phrase`No run of ${thisLine(m)}'s ${clue(m, "clue")} can reach ${theseCells(m)}`,
-      move: phrase`${they(m)} must be ${UNSHADED_NAME}`,
+      look: phrase`No run of ${thisLine(m)}'s ${clue(m, "outlined clue")} can reach ${ringedCells(m)}`,
+      move: phrase`${those(m)} must be ${UNSHADED_NAME}`,
     }),
 
   lineEmpty: (m: Marked): Sentence =>
@@ -72,7 +74,7 @@ export const say = {
   /** Every fit of the line's runs agrees these cells are `shaded`, or clear. */
   intersection: (m: Marked, shaded: boolean): Sentence =>
     so({
-      look: phrase`Every way ${thisLine(m)}'s ${clue(m, "runs")} can fit ${shaded ? "covers" : "leaves out"} ${theseCells(m)}`,
-      move: phrase`${they(m)} must be ${shaded ? SHADED_NAME : UNSHADED_NAME}`,
+      look: phrase`Every way ${thisLine(m)}'s ${clue(m, "outlined runs")} can fit ${shaded ? "covers" : "leaves out"} ${ringedCells(m)}`,
+      move: phrase`${those(m)} must be ${shaded ? SHADED_NAME : UNSHADED_NAME}`,
     }),
 };

@@ -270,19 +270,21 @@ describe("crossing hint — techniques and narration", () => {
     for (const [k, { f, state }] of found()) {
       texts.set(k, narrateCrossing(state.puzzle, f).text);
     }
-    expect(texts.get("onlyNumber")).toMatch(/so it must be \d+\.$/);
+    expect(texts.get("onlyNumber")).toMatch(/so the ringed squares? must be \d+\.$/);
     expect(texts.get("sharedDigit")).toMatch(
-      /^Every number that (still fits|can still go in) this (across|down) run/,
+      /^Every outlined number still fitting this (across|down) run/,
     );
     expect(texts.get("sharedDigit")).toMatch(/so it must be \d\.$/);
     // The crossing deduction names both runs and never lists candidates with
     // "and" (which would read as "both at once", the opposite of the claim).
     const cross = texts.get("crossRuns") ?? "";
-    expect(cross).toMatch(/^The (across|down) run's numbers leave this square only /);
     expect(cross).toMatch(
-      /; those of the (across|down) run rule out all but (\d), so it must be \2\.$/,
+      /^This (across|down) run's outlined numbers give this square /,
     );
-    expect(cross.split("; those ")[0]).not.toMatch(/ and /);
+    expect(cross).toMatch(
+      /; this (across|down) run's outlined ones only (\d), so it must be \2\.$/,
+    );
+    expect(cross.split("; this ")[0]).not.toMatch(/ and /);
   });
 
   it("keeps every narration terse enough to read in the banner", () => {
@@ -319,7 +321,7 @@ describe("crossing hint — ruling a candidate out", () => {
     if (!res?.ok) throw new Error("hint refused");
     expect(res.steps[0].move).toEqual({ kind: "place", run: 0, number: 0 });
     expect(res.steps[0].explanation).toBe(
-      "Only one 4-digit number left fits the notes in this run, so it must be 1234.",
+      "Only one 4-digit number left fits the notes in this run, so the ringed squares must be 1234.",
     );
   });
 
@@ -340,8 +342,10 @@ describe("crossing hint — ruling a candidate out", () => {
       kind: "pencilStrike",
       marks: [{ x: 0, y: 0, n: 9 }],
     });
-    expect(step.explanation).toMatch(/^No number that still fits this across run/);
-    expect(step.explanation).toMatch(/so rule it out\.$/);
+    expect(step.explanation).toMatch(
+      /^No outlined number still fitting this across run/,
+    );
+    expect(step.explanation).toMatch(/so the 9 must go\.$/);
     // The rule-out is marked on the candidate, not as a placement.
     expect(step.highlights?.marks).toEqual([{ x: 0, y: 0, n: 9 }]);
   });
@@ -505,7 +509,7 @@ describe("crossing hint — every premise is on the board", () => {
       marks: [1, 3, 5, 7, 8].map((n) => ({ x: 0, y: 4, n })),
     });
     expect(first.explanation).toBe(
-      "Every number that still fits this across run puts 1, 3, 5, 7 or 8 in this square, so note them.",
+      "Every outlined number still fitting this across run puts 1, 3, 5, 7 or 8 in this square, so note them.",
     );
     expect(first.highlights?.targets).toEqual([{ x: 0, y: 4 }]);
     expect(second.move.kind).toBe("pencilAdd");
@@ -513,7 +517,7 @@ describe("crossing hint — every premise is on the board", () => {
     expect(second.continuesPrevious).toBeUndefined();
     expect(third.move.kind).toBe("set");
     expect(third.explanation).toMatch(
-      /^The across run's numbers leave this square only 3 or 4; those of the down run/,
+      /^This across run's outlined numbers give this square 3 or 4; this down run's outlined ones/,
     );
   });
 

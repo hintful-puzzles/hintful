@@ -82,7 +82,7 @@ export const say = {
         // The outlined squares are the other arrows pointing at it; the help's
         // list of marks says so, which leaves the sentence the reasons.
         const others = mark.as("outline", CELL, h.others, (els) =>
-          els.length > 1 ? "Other arrows" : "Another arrow",
+          els.length > 1 ? "The outlined arrows" : "The outlined arrow",
         );
         return so({
           look: phrase`${others} into ${target} ${ruledOut(f.why, h.others.length, BEFORE)}`,

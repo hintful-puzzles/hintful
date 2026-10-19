@@ -63,7 +63,7 @@ describe("Tracks hint: the line a sentence names", () => {
     const { recording, step } = hintFrame("namesLine");
     const lines = stepMarks(step).of("stripes", LINE);
     expect(lines).toHaveLength(1);
-    const isColumn = /^This column/.test(step.explanation);
+    const isColumn = /\bthis column\b/i.test(step.explanation);
     expect(lines[0] < P.w).toBe(isColumn);
     const hatches = opsOfKind(recording.ops, "hatch");
     // Every square of the line, and the clue slot at its end.

@@ -382,7 +382,7 @@ function premise(
       const v = grid[across.y * o + across.x];
       return v
         ? { premise: say.paired(clue, pair, target, v) }
-        : { premise: say.open(clue, pair, valuesOf(marks)), named: true };
+        : { premise: say.open(clue, pair, valuesOf(marks)) };
     }
     // The generic Latin arms (dup / set / forcing) read identically to Keen's
     // and Unequal's — narrated once, shared.

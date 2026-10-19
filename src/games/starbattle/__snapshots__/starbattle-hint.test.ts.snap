@@ -6,7 +6,7 @@ exports[`starbattle: pinned hint positions > says, at each pin 1`] = `
   "banded": "These 2 columns need 2 stars, all in the 2 outlined regions, which need only 2, so these squares must be empty.",
   "confined": "This row must put its star in the outlined region, which needs only that one, so these squares must be empty.",
   "crowded": "A star on this square would touch every open square of this region, leaving it no room for a star, so it must be empty.",
-  "exact": "This region needs 1 star and has only 1 open square, so this square must hold a star.",
+  "exact": "This region needs 1 star and has only 1 open square, so the ringed square must hold a star.",
   "full": "This row has its star, so these squares must be empty.",
   "needed": "This region needs 2 stars and without this square has room for only 1, so that square must hold a star.",
   "starved": "A star on this square would complete its region, leaving this row no open square, so it must be empty.",

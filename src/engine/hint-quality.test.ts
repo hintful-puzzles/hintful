@@ -56,6 +56,7 @@ import {
   SEARCH_PLANNING_GAMES,
   SEARCH_REACH_GAMES,
 } from "./testing/hint-games.ts";
+import { referenceDefects } from "./testing/hint-reference.ts";
 import { firstLeaf, leafPresets } from "./testing/presets.ts";
 import {
   itOverWholeSweep,
@@ -138,6 +139,29 @@ const LONG_NARRATIONS: {
       "and why the tile's far end cannot. The owner's 2026-09-22 playtest found " +
       "the second missing, and a step that rests on a fact has to say it " +
       "(magnets spec, the hidden facts a later step names in board terms).",
+  },
+  {
+    games: ["magnets"],
+    rungs: ["lineExact"],
+    why:
+      "The count premise and why every other empty square of the line can't " +
+      "take the pole are two premises, already cut to one clause per kind of " +
+      "reason (owner, 2026-10-18). Naming the ruled-out squares and the poles " +
+      "they would touch by their marks, not 'elsewhere', costs the room on a " +
+      "line needing several poles (name-every-reference-by-its-mark).",
+  },
+  {
+    games: ["ascent"],
+    rungs: ["pointers"],
+    why:
+      "Edges: the step names every missing number that could stand on the " +
+      "square, so the player can check each is ruled out, and the ringed " +
+      "square they point at (name-every-reference-by-its-mark). Where three " +
+      "or more rivals point there, no form that names them all fits.",
+    spokenOn: {
+      ascent:
+        "5x5mEEdh:18_22_15_16_3_1_9_14e10_11e13_2e12_19e6_5a24c25_8_23_21_20_7_4_17",
+    },
   },
   {
     games: ["net"],
@@ -668,6 +692,9 @@ describe("a bound hint's words name exactly the marks it draws", () => {
           defects.push(`${at}: "${step.explanation}": ${d}`);
         for (const d of formDefects(step, SEARCHING.has(name)))
           defects.push(`${at}: "${step.explanation}": ${d}`);
+        if (step.words && game.hintMarks)
+          for (const d of referenceDefects(step.words, game.hintMarks))
+            defects.push(`${at} (${step.rung}): "${step.explanation}": ${d}`);
         if (legs > 1) journeyLegsChecked++;
         for (const d of journeyDefects(step.explanation, leg, legs))
           defects.push(`${at}: "${step.explanation}": ${d}`);

@@ -89,7 +89,7 @@ export const say = {
     if (multi) {
       return kind === "wall"
         ? so({
-            look: phrase`${named} reaches its count only if ${theseEdges(edges, "every remaining edge")} is a wall`,
+            look: phrase`${named} reaches its count only if ${theseEdges(edges, "every ringed edge")} is a wall`,
             move: phrase`draw them all`,
           })
         : so({
@@ -100,7 +100,7 @@ export const say = {
     return kind === "wall"
       ? so({
           look: phrase`${named} needs all its remaining edges to be walls`,
-          move: phrase`${theseEdges(edges, "this one")} must be a wall`,
+          move: phrase`${mark.the("ring", EDGE, edges, "edge")} must be a wall`,
         })
       : so({
           look: phrase`${named} already has all its walls`,
@@ -174,9 +174,9 @@ export const say = {
     // is what makes the clue's count force the edges; without it the sentence
     // reads as a non-sequitur.
     if (multi) {
-      const both = theseEdges(edges, "Both edges");
+      const both = theseEdges(edges, "Both ringed edges");
       const same = mark.as("stripes", whole(CELL), region, "the same region");
-      const fate = phrase`${both} border ${same}, so they share a fate;`;
+      const fate = phrase`${both} border ${same} and share a fate;`;
       return kind === "wall"
         ? so({
             look: phrase`${fate} leaving both open leaves clue ${c} short`,

@@ -617,7 +617,7 @@ export const ascentGame: Game<
   hintRungs: ASCENT_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the square the step fills. When the step fills a whole run at once, a line in the hint's color runs along its only route from one end to the other.",
+      ring: "the square the step fills. When the step fills a whole run at once, a line in the hint's color runs along its only route from one end to the other: *the drawn route*, in its words.",
       outline: `what the step reasons from: the numbers the new one sits between, a dead end's one way in, the squares a missing run has to step through, and in ${EDGES} mode an arrow the step reads.`,
       stripes:
         "the row, column or diagonal an arrow points along, or every square a run of missing numbers can reach.",

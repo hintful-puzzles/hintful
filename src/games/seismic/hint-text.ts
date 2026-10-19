@@ -62,8 +62,8 @@ export const say = {
           NOTE,
           marks,
           tectonic
-            ? "any number already in the cell's area or in a cell touching it"
-            : "any N already in the cell's area or within N cells of it in its row or column",
+            ? "any number already in its cell's area or in a cell touching it"
+            : "any N already in its cell's area or within N cells of it in its row or column",
         )}.`,
         "setup",
       ),
@@ -77,7 +77,7 @@ export const say = {
   ): Sentence => {
     if (every)
       return so({
-        look: phrase`No number stands near enough to rule one out ${mark.as("ring", CELL, [at], "here")} yet`,
+        look: phrase`No number stands near enough to rule one out of ${thisCell(at)} yet`,
         move: phrase`pencil in every one`,
       });
     const one = values.length === 1;
@@ -91,7 +91,7 @@ export const say = {
   singleton: (at: Point): Sentence =>
     so({
       look: phrase`${mark.this("stripes", whole(CELL), [at], "area")} is a single cell`,
-      move: phrase`${mark.as("ring", CELL, [at], "it")} can only be 1`,
+      move: phrase`${thisCell(at)} can only be 1`,
     }),
 
   naked: (at: Note, w: number): Sentence =>
@@ -134,12 +134,12 @@ export const say = {
     const whom =
       targets.length === 1
         ? thisCell(targets[0])
-        : mark.as("ring", CELL, targets, "each of these");
+        : mark.the("ring", CELL, targets, "cell", "each");
     const where = tectonic
       ? phrase`in a cell touching ${whom}`
-      : phrase`in line with ${whom} and within ${cells(n)} of it`;
+      : phrase`within ${cells(n)} of ${whom}, in line with it`;
     const striped = stripedArea(area).capitalized();
-    return phrase`${striped} can put its ${n} only ${where}`;
+    return phrase`${striped}'s ${n} can only go ${where}`;
   },
 
   /** What a starve strikes, named by whose notes they are. */

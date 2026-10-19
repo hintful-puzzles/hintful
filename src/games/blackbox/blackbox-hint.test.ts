@@ -234,7 +234,7 @@ describe("Black Box's hint", () => {
     const { state, said } = follow(s);
     expect(game.status(state)).toBe("solved");
     expect(said.at(-1)).toBe(
-      "Check your answer: the balls you have send every laser where it went.",
+      "Press the ringed button to check your answer: the balls you have send every laser where it went.",
     );
     // Every ball the board holds is guessed by then.
     for (let y = 1; y <= P8.h; y++)

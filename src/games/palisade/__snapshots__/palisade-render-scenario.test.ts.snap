@@ -1859,6 +1859,6 @@ exports[`Palisade render scenarios > matches the opener-frame snapshot 1`] = `
 
 exports[`palisade: pinned hint positions > says, at each pin 1`] = `
 {
-  "equivalentEdges": "Both edges border the same region, so they share a fate; walling both would exceed clue 1, so neither can be a wall.",
+  "equivalentEdges": "Both ringed edges border the same region and share a fate; walling both would exceed clue 1, so neither can be a wall.",
 }
 `;

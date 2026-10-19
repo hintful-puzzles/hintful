@@ -704,8 +704,8 @@ describe("the sentences at their extremes", () => {
     const t = (n: { text: string }): string => n.text;
     expect(t(say.exactSpace(1, 1, m))).toContain("one more bridge");
     expect(t(say.exactSpace(16, 8, m))).toContain("8 more bridges");
-    expect(t(say.everyNeighbor(1, 1, m))).toContain("just one neighbor");
-    expect(t(say.everyNeighbor(4, 2, m))).toContain("either neighbor");
+    expect(t(say.everyNeighbor(1, 1, m))).toContain("just one outlined neighbor");
+    expect(t(say.everyNeighbor(4, 2, m))).toContain("either outlined neighbor");
     expect(t(say.everyNeighbor(16, 4, m))).toContain("any 3 of its 4 neighbors");
     expect(t(say.needsThisWay(3, 0, m))).toContain("no bridges at all");
     expect(t(say.needsThisWay(3, 1, m))).toContain("at most 1 bridge from");
@@ -715,15 +715,15 @@ describe("the sentences at their extremes", () => {
       /^A bridge here .* must be blocked\.$/,
     );
     expect(t(say.wouldSealGroup(2, 1, m))).toMatch(
-      /^Two bridges here .* at most one can run/,
+      /^Two bridges here .* the ringed line can take at most one\.$/,
     );
     expect(t(say.wouldSealGroup(2, 3, m))).toMatch(
-      /^Four bridges here .* at most three can/,
+      /^Four bridges here .* can take at most three\.$/,
     );
     expect(t(say.wouldStarve(5, true, 0, m))).toContain("this 5 itself");
     expect(t(say.wouldStarve(5, false, 0, m))).toContain("the outlined island");
     expect(t(say.wouldStarve(5, false, 1, m))).toMatch(
-      /^Two bridges .* at most one can run/,
+      /^Two bridges .* can take at most one\.$/,
     );
     for (const s of [
       say.exactSpace(16, 8, m),

@@ -8,7 +8,7 @@ exports[`an ordered hint chain carries its order to the canvas > clusters: pinne
 
 exports[`an ordered hint chain carries its order to the canvas > group: pinned hint positions > says, at each pin 1`] = `
 {
-  "numberedChain": "Cell 1 is b or the numbered chain forces cell 10 to b, both in line with this cell, so pencil in only f, h and i.",
+  "numberedChain": "Cell 1 is b or the numbered chain forces cell 10 to b, both in line with this cell, so this cell can only be f, h or i.",
 }
 `;
 
@@ -20,7 +20,7 @@ exports[`an ordered hint chain carries its order to the canvas > keen: pinned hi
 
 exports[`an ordered hint chain carries its order to the canvas > rome: pinned hint positions > says, at each pin 1`] = `
 {
-  "numberedChain": "Following the arrows from the square below leads back here, so pencil in only left and right.",
+  "numberedChain": "The numbered arrows from the square below lead back here, so this square must point left or right.",
 }
 `;
 
@@ -32,7 +32,7 @@ exports[`an ordered hint chain carries its order to the canvas > salad: pinned h
 
 exports[`an ordered hint chain carries its order to the canvas > solo: pinned hint positions > says, at each pin 1`] = `
 {
-  "numberedChain": "Cell 1 is 2 or the numbered chain forces cell 3 to 2, in this cell's block and in line with it, so pencil in only 4 and 9.",
+  "numberedChain": "Cell 1 is 2 or the numbered chain forces cell 3 to 2, in this cell's block and in line with it, so this cell can only be 4 or 9.",
 }
 `;
 
@@ -44,6 +44,6 @@ exports[`an ordered hint chain carries its order to the canvas > towers: pinned 
 
 exports[`an ordered hint chain carries its order to the canvas > unequal: pinned hint positions > says, at each pin 1`] = `
 {
-  "numberedChain": "Cell 1 is 4 or the numbered chain forces cell 3 to 4, both in line with this cell, so pencil in only 1 and 2.",
+  "numberedChain": "Cell 1 is 4 or the numbered chain forces cell 3 to 4, both in line with this cell, so this cell can only be 1 or 2.",
 }
 `;

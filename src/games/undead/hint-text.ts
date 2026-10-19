@@ -51,12 +51,16 @@ function joinMonsters(bits: number, conj: "or" | "and" = "or"): string {
 const bitsOf = (notes: readonly Note[]): number => notes.reduce((b, k) => b | k.n, 0);
 
 /** The cells the step decides, as "this cell" / "these cells". */
-const thisCell = (m: Marked, noun: "cell" | "one" = "cell"): Narration =>
-  mark.this("ring", CELL, m.targets, noun);
+const thisCell = (m: Marked): Narration => mark.this("ring", CELL, m.targets, "cell");
 
-/** The struck pencil marks, in words that follow them when a step shrinks. */
-const struck = (m: Marked, words: (bits: number) => string): Narration =>
-  mark.as("ring", NOTE, m.notes, (els) => words(bitsOf(els)));
+/** The struck pencil marks, "the ringed ghost and vampire", in words that
+ * follow them when a step shrinks. Several cells' notes of one monster are
+ * "the ringed ghosts". */
+const struck = (m: Marked): Narration =>
+  mark.as("ring", NOTE, m.notes, (els) => {
+    const cells = new Set(els.map((e) => CELL.key(e))).size;
+    return `the ringed ${joinMonsters(bitsOf(els), "and")}${cells > 1 ? "s" : ""}`;
+  });
 
 const sightline = (m: Marked, words: string): Narration =>
   mark.as("outline", CELL, m.area, words);
@@ -74,7 +78,7 @@ export const say = {
   /** A later cell of the same sightline firing. */
   sightlineNext: (m: Marked): Sentence =>
     sentence({
-      move: phrase`${struck(m, (b) => `the ${joinMonsters(b, "and")}`)} in ${thisCell(m)} must go too`,
+      move: phrase`${struck(m)} in ${thisCell(m)} must go too`,
       relation: { kind: "again", basis: sightline(m, "the same sightline") },
     }),
 
@@ -82,27 +86,18 @@ export const say = {
   // (help/games/undead.md); the step says only what this sightline's two
   // clues decide (docs/hints.md § "Rules belong in the help").
   /** The sightline's clues `a` and `b` leave no room for `bits` in the cell. */
-  sightline: (a: number, b: number, bits: number, m: Marked): Sentence => {
-    const them = (left: number): string => {
-      const kinds = MONSTERS.filter((k) => left & k).length;
-      return kinds === 1
-        ? `the ${joinMonsters(left)}`
-        : kinds === 2
-          ? "both"
-          : "all three";
-    };
-    return so({
+  sightline: (a: number, b: number, bits: number, m: Marked): Sentence =>
+    so({
       look: phrase`${sightline(m, "This sightline")}'s ${a} and ${b} leave no room for a ${joinMonsters(bits)} in ${thisCell(m)}`,
-      move: phrase`${struck(m, them)} must go`,
-    });
-  },
+      move: phrase`${struck(m)} must go`,
+    }),
 
   total: (monster: number, m: Marked): Sentence => {
     const name = monsterName(monster);
     return so({
       look: phrase`No ${name}s are left to place`,
       follows: phrase`no undecided cell can be one`,
-      move: phrase`${struck(m, () => `the ${name}`)} in ${thisCell(m)} must go`,
+      move: phrase`${struck(m)} in ${thisCell(m)} must go`,
     });
   },
 
@@ -110,7 +105,7 @@ export const say = {
     const name = monsterName(monster);
     return so({
       look: phrase`Exactly as many cells can still hold a ${name} as there are ${name}s left to place`,
-      move: phrase`${thisCell(m, "one")} can only be a ${name}`,
+      move: phrase`${thisCell(m)} can only be a ${name}`,
     });
   },
 

@@ -14,7 +14,7 @@
  * number out of a run; the run the sentence names is striped.
  */
 
-import { indefinite, joinOr } from "../../engine/hint-text.ts";
+import { indefinite, joinOr, joinWith } from "../../engine/hint-text.ts";
 import {
   CELL,
   type MarkKind,
@@ -72,12 +72,13 @@ const thisSquare = (m: Marked): Narration =>
   mark.this("ring", CELL, m.targets, "square");
 const thisRun = (m: Marked, words: string): Narration =>
   mark.as("stripes", CELL, m.run, words);
-const fits = (m: Marked, words: string): Narration =>
-  mark.as("outline", LISTED, m.fitting, words);
+/** The listed numbers still fitting the run, under `det` ("Every", "No"). */
+const fitting = (m: Marked, det: string, horizontal: boolean): Narration =>
+  phrase`${mark.as("outline", LISTED, m.fitting, `${det} outlined number`)} still fitting ${thisRun(m, `this ${way(horizontal)} run`)}`;
 /** A whole-run placement's conclusion: the run's empty squares take the
  * listed number. */
 const mustBe = (m: Marked, num: string): Narration =>
-  phrase`${mark.as("ring", CELL, m.targets, "it")} must be ${mark.as("ring", LISTED, m.number === null ? [] : [m.number], num)}`;
+  phrase`${mark.the("ring", CELL, m.targets, "square")} must be ${mark.as("ring", LISTED, m.number === null ? [] : [m.number], num)}`;
 
 export const say = {
   /** The run (`horizontal`, `len` squares) can only be `num`. */
@@ -121,19 +122,18 @@ export const say = {
    * are the evidence, so the sentence names no cause: a digit and a note
    * both show in the square. */
   onlyRun: (f: Firing<"onlyRun">, num: string, m: Marked): Sentence => {
-    const ruledOut = mark.as("outline", CELL, m.against, (els) =>
-      els.length === 1 ? "the outlined square rules" : "the outlined squares rule",
-    );
+    const against = mark.the("outline", CELL, m.against, "square");
     const listed = mark.as("ring", LISTED, m.number === null ? [] : [m.number], num);
+    const others = f.others === 1 ? "run clashes" : "runs clash";
     return so({
-      look: phrase`${listed} still fits only ${thisRun(m, "this run")}: ${ruledOut} it out of the other unfilled ${f.others === 1 ? "run" : "runs"}`,
-      move: phrase`it must go ${mark.as("ring", CELL, m.targets, "here")}`,
+      look: phrase`${listed} still fits only ${thisRun(m, "this run")}: the other ${others} with ${against}`,
+      move: phrase`it must go in ${mark.the("ring", CELL, m.targets, "square")}`,
     });
   },
 
   sharedDigit: (f: Firing<"sharedDigit">, horizontal: boolean, m: Marked): Sentence =>
     so({
-      look: phrase`Every ${fits(m, "number that still fits")} ${thisRun(m, `this ${way(horizontal)} run`)} has ${indefinite(String(f.digit))} ${f.digit} in ${thisSquare(m)}`,
+      look: phrase`${fitting(m, "Every", horizontal)} has ${indefinite(String(f.digit))} ${f.digit} in ${thisSquare(m)}`,
       move: phrase`it must be ${f.digit}`,
     }),
 
@@ -149,7 +149,7 @@ export const say = {
     const [near, far] = leadAcross ? ["across", "down"] : ["down", "across"];
     const small = leadAcross ? f.acrossDigits : f.downDigits;
     return so({
-      look: phrase`${thisRun(m, `The ${near} run's`)} ${fits(m, "numbers")} leave ${thisSquare(m)} only ${joinOr(small)}; ${mark.as("outline", LISTED, m.otherFitting, "those")} ${mark.as("stripes", CELL, m.otherRun, `of the ${far} run`)} rule out all but ${f.digit}`,
+      look: phrase`${thisRun(m, `This ${near} run`)}'s ${mark.as("outline", LISTED, m.fitting, "outlined numbers")} give ${thisSquare(m)} ${joinOr(small)}; ${mark.as("stripes", CELL, m.otherRun, `this ${far} run`)}'s ${mark.as("outline", LISTED, m.otherFitting, "outlined ones")} only ${f.digit}`,
       move: phrase`it must be ${f.digit}`,
     });
   },
@@ -157,18 +157,21 @@ export const say = {
   /** Always two digits or more: a run leaving one would pin the square. */
   noteDigits: (f: Firing<"noteDigits">, horizontal: boolean, m: Marked): Sentence =>
     so({
-      look: phrase`Every ${fits(m, "number that still fits")} ${thisRun(m, `this ${way(horizontal)} run`)} puts ${joinOr(f.digits)} in ${thisSquare(m)}`,
+      look: phrase`${fitting(m, "Every", horizontal)} puts ${joinOr(f.digits)} in ${thisSquare(m)}`,
       move: phrase`note them`,
     }),
 
   noteStrike: (f: Firing<"noteStrike">, horizontal: boolean, m: Marked): Sentence => {
     const ds = joinOr(f.digits);
-    const struck = mark.as("ring", NOTE, m.notes, (els) =>
-      els.length === 1 ? "it" : "them",
-    );
+    // Named by value even though the premise just did: "it" is no thing on
+    // the board.
+    const struck = mark.as("ring", NOTE, m.notes, (els) => {
+      const ns = [...new Set(els.map((e) => e.n))].sort((a, b) => a - b);
+      return ns.length === 1 ? `the ${ns[0]}` : joinWith(ns.map(String));
+    });
     return so({
-      look: phrase`No ${fits(m, "number that still fits")} ${thisRun(m, `this ${way(horizontal)} run`)} puts ${f.digits.length === 1 ? `${indefinite(ds)} ${ds}` : ds} in ${thisSquare(m)}`,
-      move: phrase`rule ${struck} out`,
+      look: phrase`${fitting(m, "No", horizontal)} puts ${f.digits.length === 1 ? `${indefinite(ds)} ${ds}` : ds} in ${thisSquare(m)}`,
+      move: phrase`${struck} must go`,
     });
   },
 };

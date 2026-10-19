@@ -111,15 +111,13 @@ const outlined = (els: readonly number[], words: string): Narration =>
   mark.as("outline", SQUARE, els, words);
 const clue = (els: readonly number[], words: string): Narration =>
   mark.as("outline", CLUE, els, words);
-/** The line the sentence counts along: "This row". */
+/** The line the sentence counts along: "this row". */
 const thisLine = (m: LineMarks, axis: Axis): Narration =>
-  mark.as("stripes", LINE, [m.line], `This ${axis}`);
-/** A line named by a cause: striped when it is the one hatched. */
-const lineWord = (hatched: LineEl | null, words: string): Narration | string =>
-  hatched ? mark.as("stripes", LINE, [hatched], words) : words;
-
-/** Whose line a clause is about: the square the sentence is on, or the far end. */
-type Where = "here" | "there";
+  mark.as("stripes", LINE, [m.line], `this ${axis}`);
+/** A line named by a cause, "row", striped when it is the one hatched: the
+ * stripes legend's word for what it marks. */
+const lineWord = (hatched: LineEl | null, axis: Axis): Narration | string =>
+  hatched ? mark.as("stripes", LINE, [hatched], axis) : axis;
 
 /** How a met count was met: a marked magnet lying along the line brings one +
  * and one − to it whichever way round it turns, and the help says so. */
@@ -128,18 +126,24 @@ const counting = (c: { marked: boolean }): string =>
 
 type Full = Cause & { kind: "full" };
 
-/** "its row's clue", with the row striped when it is the one hatched. */
-const itsClue = (c: Full): Narration =>
-  phrase`its ${lineWord(c.hatched, c.axis)}'s ${clue([c.clue], "clue")}`;
+/** "its row's clue", with the row striped when it is the one hatched. The clue
+ * is drawn in a color, and the outline legend teaches its word. */
+const itsClues = (
+  hatched: LineEl | null,
+  axis: Axis,
+  clues: readonly number[],
+  noun: string,
+): Narration => phrase`its ${lineWord(hatched, axis)}'s ${clue(clues, noun)}`;
+
+const itsClue = (c: Full): Narration => itsClues(c.hatched, c.axis, [c.clue], "clue");
 
 /** Why `pole` cannot go at the square: "beside another +", "as its row already
  * has all its +s". */
-function because(pole: number, c: Cause, where: Where): Narration {
+function because(pole: number, c: Cause): Narration {
   if (c.kind === "touch")
     return phrase`beside ${outlined([c.at], `another ${glyph(pole)}`)}`;
-  const whose = where === "here" ? "as its" : "whose";
   // "Already" gives way to the counting clause, which says the same thing.
-  return phrase`${whose} ${lineWord(c.hatched, c.axis)} ${c.marked ? "" : "already "}has ${clue([c.clue], `all its ${glyphs(pole)}`)}${counting(c)}`;
+  return phrase`as its ${lineWord(c.hatched, c.axis)} ${c.marked ? "" : "already "}has ${clue([c.clue], `all its ${glyphs(pole)}`)}${counting(c)}`;
 }
 
 /** What `pole` at a square would do: "touch a +", "exceed its row's clue". Two
@@ -213,7 +217,9 @@ const FAMILIES: readonly (readonly [RuleOut["kind"], RuleOut["kind"]])[] = [
 /** A family's two kinds said as one. */
 function together(family: RuleOut["kind"], rs: readonly RuleOut[]): Narration {
   if (family === "touch")
-    return phrase`make ${outlined(
+    return phrase`make ${mark.as(
+      "outline",
+      SQUARE,
       rs.flatMap((r) => ("at" in r ? r.at : [])),
       "like poles",
     )} touch`;
@@ -223,7 +229,7 @@ function together(family: RuleOut["kind"], rs: readonly RuleOut[]): Narration {
   )}`;
 }
 
-/** "; a + anywhere else would …", or nothing when no empty square is ruled
+/** "; a + in an outlined tile would …", or nothing when no empty square is ruled
  * out and the board's placed squares already say it all. `ruled` is the
  * squares the clause rules out, with the far halves of their tiles when the
  * step outlines them; `tiles` is how many tiles they make when the step
@@ -239,11 +245,11 @@ const anywhereElse = (
     ? ""
     : phrase`; a ${glyph(pole)} ${outlined(ruled, where(tiles))} would ${wouldDoAny(pole, rs)}`;
 
-/** Where the ruled-out squares are: "in an outlined tile", or "elsewhere"
- * when the outlines do not make them tiles. */
+/** Where the ruled-out squares are: "in an outlined tile", or "in an outlined
+ * square" when the outlines do not make them tiles. */
 const where = (tiles: number): string =>
   tiles === 0
-    ? "elsewhere"
+    ? "in an outlined square"
     : tiles === 1
       ? "in the outlined tile"
       : "in an outlined tile";
@@ -258,15 +264,29 @@ export interface Elsewhere {
 
 const NEUTRAL_WORDS = phrase`it must be neutral`;
 
-/** Where the `n` poles a count needs go: "it must go here" for the one, and
- * the squares by name for some of several ("here" promises one mark, and "it"
- * one pole): "this square must be +", "these 2 squares must be +s". */
-const placed = (targets: readonly number[], pole: number, n: number): Narration =>
-  n === 1 && targets.length === 1
-    ? phrase`it must go ${ring(targets, "here")}`
-    : targets.length === 1
-      ? phrase`${ring(targets, "this square")} must be ${glyph(pole)}`
-      : phrase`${ring(targets, `these ${targets.length} squares`)} must be ${glyphs(pole)}`;
+/** "this row's clues", the clue digits a count reads, and the verb agreeing
+ * with them: `verb` is its singular and plural. */
+const itsLineClues = (
+  m: LineMarks,
+  axis: Axis,
+  verb: readonly [string, string],
+): Narration =>
+  phrase`${thisLine(m, axis)}'s ${clue(m.clues, plural(m.clues.length, "clue", "clues"))} ${plural(m.clues.length, ...verb)}`;
+
+/** "each ringed tile", which agrees with one tile or several. */
+const eachTile = (targets: readonly number[]): Narration =>
+  mark.the("ring", SQUARE, targets, "tile", "each");
+
+/** "in the ringed square", where a pole must go. */
+const inRinged = (targets: readonly number[]): Narration =>
+  phrase`in ${ring(targets, "the ringed square")}`;
+
+/** Where the poles a count needs go, the squares by name: "this square must
+ * be +", "these 2 squares must be +s". */
+const placed = (targets: readonly number[], pole: number): Narration =>
+  targets.length === 1
+    ? phrase`${ring(targets, "this square")} must be ${glyph(pole)}`
+    : phrase`${ring(targets, `these ${targets.length} squares`)} must be ${glyphs(pole)}`;
 
 export const say = {
   /** A marked magnet whose pole `banned` cannot go at this end, so the end
@@ -278,8 +298,8 @@ export const say = {
     cause: Cause,
   ): Sentence =>
     so({
-      look: phrase`${outlined([partner], "This magnet")}'s ${glyph(banned)} can't go ${ring(targets, "here")}, ${because(banned, cause, "here")}`,
-      move: phrase`${ring(targets, "this end")} must be ${glyph(other(banned))}`,
+      look: phrase`${outlined([partner], "This magnet")}'s ${ring(targets, "ringed end")} can't be ${glyph(banned)}, ${because(banned, cause)}`,
+      move: phrase`it must be ${glyph(other(banned))}`,
     }),
 
   /** A marked magnet whose pole `banned` cannot go at the far end, so it goes
@@ -291,8 +311,8 @@ export const say = {
     cause: Cause,
   ): Sentence =>
     so({
-      look: phrase`${outlined([partner], "This magnet")}'s ${glyph(banned)} can't go at ${outlined([partner], "the other end")}, ${because(banned, cause, "there")}`,
-      move: phrase`it must go ${ring(targets, "here")}`,
+      look: phrase`${outlined([partner], "This magnet's other end")} can't be ${glyph(banned)}, ${because(banned, cause)}`,
+      move: phrase`${ring(targets, "the ringed end")} must be ${glyph(banned)}`,
     }),
 
   // A tile is a magnet or neutral, so "it can't be a magnet" would only
@@ -312,7 +332,7 @@ export const say = {
    * would add one more. */
   alongFull: (targets: readonly number[], pole: number, c: Full): Sentence =>
     so({
-      look: phrase`${ring(targets, "This tile")} lies along ${lineWord(c.hatched, `a ${c.axis}`)} with ${clue([c.clue], `all its ${glyphs(pole)}`)}${counting(c)}`,
+      look: phrase`${ring(targets, "This tile")} lies along a ${lineWord(c.hatched, c.axis)} with ${clue([c.clue], `all its ${glyphs(pole)}`)}${counting(c)}`,
       move: NEUTRAL_WORDS,
     }),
 
@@ -354,7 +374,7 @@ export const say = {
     } else if (plus.kind === "full" && minus.kind === "full") {
       why =
         plus.axis === minus.axis
-          ? phrase`a + or − would exceed its ${lineWord(plus.hatched, plus.axis)}'s ${clue([plus.clue, minus.clue], "clues")}`
+          ? phrase`a + or − would exceed ${itsClues(plus.hatched, plus.axis, [plus.clue, minus.clue], "clues")}`
           : phrase`a + would exceed ${itsClue(plus)}, and a − ${clue([minus.clue], `its ${minus.axis}'s`)}`;
     } else {
       const [touch, full, filled] =
@@ -372,16 +392,16 @@ export const say = {
   /** Every empty square of the line needs a pole. */
   polesEverywhere: (m: LineMarks, axis: Axis): Sentence =>
     so({
-      look: phrase`${thisLine(m, axis)}'s ${clue(m.clues, m.clues.length > 1 ? "clues need" : "clue needs")} a + or − in every one of its empty squares`,
-      move: phrase`${ring(m.targets, "each tile there")} must be a magnet`,
+      look: phrase`${itsLineClues(m, axis, ["needs", "need"])} a + or − in every one of its empty squares`,
+      move: phrase`${eachTile(m.targets)} must be a magnet`,
     }),
 
   /** The line has room for one more neutral square: none of its tiles
    * lying along it can be neutral. */
   oneNeutralLeft: (m: LineMarks, axis: Axis, tiles: number): Sentence =>
     so({
-      look: phrase`${thisLine(m, axis)} has ${clue(m.clues, "room for just one more neutral square")}`,
-      move: phrase`${ring(m.targets, plural(tiles, "this tile", "these tiles"))} lying along it must be ${plural(tiles, "a magnet", "magnets")}`,
+      look: phrase`${itsLineClues(m, axis, ["leaves", "leave"])} room for just one more neutral square`,
+      move: phrase`${ring(m.targets, plural(tiles, "the ringed tile", "each ringed tile"))} lying along it must be a magnet`,
     }),
 
   /** The line needs as many more `pole`s as it has undecided tiles. */
@@ -393,7 +413,7 @@ export const say = {
         })
       : so({
           look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, more(n, pole))} and has only ${n} undecided tiles`,
-          move: phrase`${ring(m.targets, "each")} must be a magnet`,
+          move: phrase`${eachTile(m.targets)} must be a magnet`,
         }),
 
   /** The line needs `n` more `pole`s and has exactly `n` squares that can
@@ -412,7 +432,7 @@ export const say = {
     if (rest !== "")
       return so({
         look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, more(n, pole))}${rest}`,
-        move: placed(m.targets, pole, n),
+        move: placed(m.targets, pole),
       });
     return n === 1
       ? so({
@@ -429,7 +449,7 @@ export const say = {
    * `neutralExact` premise with no marked magnet in the line to set aside. */
   noPolesLeft: (m: LineMarks, axis: Axis): Sentence =>
     so({
-      look: phrase`${thisLine(m, axis)}'s ${clue(m.clues, m.clues.length > 1 ? "clues leave" : "clue leaves")} no room for another + or −`,
+      look: phrase`${itsLineClues(m, axis, ["leaves", "leave"])} no room for another + or −`,
       move: phrase`${ring(m.targets, "all its empty squares")} must be neutral`,
     }),
 
@@ -443,11 +463,11 @@ export const say = {
   ): Sentence =>
     n === 1
       ? so({
-          look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, "one more neutral square")} and only ${ring(m.targets, "this one")} isn't in ${outlined(marked, "a marked magnet")}`,
+          look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, "1 more neutral square")}; only ${ring(m.targets, "the ringed one")} isn't in ${mark.paren("outline", SQUARE, marked, "a marked magnet")}`,
           move: NEUTRAL_WORDS,
         })
       : so({
-          look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, `${n} more neutral squares`)} and only ${ring(m.targets, `these ${n}`)} aren't in ${outlined(marked, "marked magnets")}`,
+          look: phrase`${thisLine(m, axis)} needs ${clue(m.clues, `${n} more neutral squares`)}; only ${ring(m.targets, `these ${n}`)} aren't in ${mark.paren("outline", SQUARE, marked, "marked magnets")}`,
           move: phrase`they must be neutral`,
         }),
 
@@ -485,8 +505,8 @@ export const say = {
     if (end.kind === "along")
       return so({
         look: phrase`${head}${rest}. A ${glyph(pole)} at ${outlined([end.far], "its far end")} would ${wouldDoAny(pole, [end.why])}`,
-        move: phrase`it must go ${ring(m.targets, "here")}`,
+        move: phrase`it must go ${inRinged(m.targets)}`,
       });
-    return so({ look: phrase`${head}${rest}`, move: placed(m.targets, pole, n) });
+    return so({ look: phrase`${head}${rest}`, move: placed(m.targets, pole) });
   },
 };

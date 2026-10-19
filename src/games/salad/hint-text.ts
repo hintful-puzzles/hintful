@@ -122,12 +122,11 @@ export function say(mode: number) {
       const lead = phrase`${thisClue(c.clue)} sees ${clue} first`;
       const k = between.length;
       // With nothing skipped, the square it decides is the whole run the clue
-      // sees across, so it is outlined as the premise as well as ringed.
-      const gap =
-        k === 0
-          ? phrase`, and ${mark.as("outline", CELL, [at], "this square")} is nearest it`
-          : phrase` past ${mark.as("outline", CELL, between, count(k, "empty square"))}`;
-      return phrase`${lead}${gap}, which leaves only ${clue} for ${square(at)}`;
+      // sees across, so it is outlined as the premise as well as ringed, and
+      // named once, by its outline: the ring is its conclusion's.
+      if (k === 0)
+        return phrase`${lead}, and ${mark.the("outline", CELL, [at], "square")} is nearest it, which leaves only ${clue} there`;
+      return phrase`${lead} past ${mark.as("outline", CELL, between, count(k, "empty square"))}, which leaves only ${clue} for ${square(at)}`;
     },
 
     /** The clue's own symbol cannot sit this far in: cut off at the square

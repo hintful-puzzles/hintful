@@ -440,7 +440,7 @@ function premise(reason: HintReason, marks: readonly Mark[], o: number): Premise
     case "adjacent":
       return { premise: say.adjacent(pair(reason), reason.bar, reason.v, o) };
     case "adjacentSet":
-      return { premise: say.adjacentSet(pair(reason), reason.bar, ns, o), named: true };
+      return { premise: say.adjacentSet(pair(reason), reason.bar, ns, o) };
     // The generic Latin arms (dup / set / forcing) read identically to Keen's
     // — narrated once, shared.
     default:
@@ -627,7 +627,7 @@ export const unequalGame: Game<
     roles: {
       ring: "the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.",
       outline:
-        'what the step reasons from: the two cells either side of a sign or bar (the ringed one, and "the cell across" it), the cells that already account for the numbers being crossed out, the number just placed, or the numbered cells of a chain.',
+        'what the step reasons from: the two cells either side of a sign, of a bar, or of no bar at all (the ringed one, and "the outlined smaller side" or "larger side" across it, or "its neighbor"), the cells that already account for the numbers being crossed out, the number just placed, or the numbered cells of a chain.',
       stripes:
         'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },

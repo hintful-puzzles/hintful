@@ -34,8 +34,11 @@ const bits = (...ns: number[]): number => ns.reduce((m, n) => m | (1 << n), 0);
 
 /** Endings that say which the walk chose, and with what. */
 const conclude: Conclusions = {
-  strike: (ns, { where, struck }) =>
-    `struck ${struck ?? ns.join("")}${where ? ` ${where}` : ""}`,
+  cell: "cell",
+  strike: ({ where, struck }) => ({
+    what: (ns) => `struck ${struck ?? ns.join("")}`,
+    after: where ?? "gone",
+  }),
   place: (n) => `placed ${n}`,
   keep: (ns) => `kept ${ns.join("")}`,
 };
@@ -204,7 +207,7 @@ describe("runCandidatePlan", () => {
     const { steps, pencil } = corner(false);
     expect(steps.map((s) => s.explanation)).toEqual([
       "clue 0,0",
-      "Dup strike 4 (cont), so struck 1111.",
+      "Dup strike 4 (cont), so struck 1111 gone.",
     ]);
     expect(steps[0].move).toEqual({
       type: "set",
@@ -262,8 +265,8 @@ describe("runCandidatePlan", () => {
   it("splits a firing's strikes on the game's axis, the later legs continuing", () => {
     const { steps, pencil } = cage((op) => op.x);
     expect(steps.map((s) => s.explanation)).toEqual([
-      "Cage strike 2, so struck 23.",
-      "Cage strike 1 (cont), so struck 2.",
+      "Cage strike 2, so struck 23 gone.",
+      "Cage strike 1 (cont), so struck 2 gone.",
     ]);
     expect(steps[0].continuesPrevious).toBeUndefined();
     expect(steps[1].continuesPrevious).toBe(true);
@@ -274,7 +277,9 @@ describe("runCandidatePlan", () => {
 
   it("keeps a firing whole without an axis, each cell a target once", () => {
     const { steps } = cage();
-    expect(steps.map((s) => s.explanation)).toEqual(["Cage strike 3, so struck 223."]);
+    expect(steps.map((s) => s.explanation)).toEqual([
+      "Cage strike 3, so struck 223 gone.",
+    ]);
     expect(steps[0].highlights?.targets).toEqual([
       { x: 1, y: 0 },
       { x: 2, y: 0 },
@@ -328,7 +333,7 @@ describe("runCandidatePlan", () => {
       const steps = implicitWalk(Uint8Array.from([0, 2, 0, 0, 0, 0, 0, 0, 0]), [
         elim(0, 0, 3),
       ]);
-      expect(steps[0].explanation).toBe("Pair strike 1, so placed 1.");
+      expect(steps[0].explanation).toBe("Pair strike 1, so this cell placed 1.");
       expect(steps[0].move).toMatchObject({ type: "set", x: 0, y: 0, n: 1 });
       // Nothing is struck on the board, so nothing is drawn struck.
       expect(steps[0].highlights?.targets).toEqual([{ x: 0, y: 0 }]);
@@ -337,7 +342,7 @@ describe("runCandidatePlan", () => {
 
     it("folds it into a note of the values left when several are", () => {
       const steps = implicitWalk(new Uint8Array(9), [elim(0, 0, 3)]);
-      expect(steps[0].explanation).toBe("Pair strike 1, so kept 12.");
+      expect(steps[0].explanation).toBe("Pair strike 1, so this cell kept 12.");
       expect(steps[0].move).toEqual({
         type: "pencilAdd",
         marks: [
@@ -352,14 +357,14 @@ describe("runCandidatePlan", () => {
       const blank = implicitWalk(new Uint8Array(9), [elim(0, 0, 3, { x: 1, y: 1 })]);
       expect(blank.slice(0, 2).map((s) => s.explanation)).toEqual([
         "note 1,1 123 every",
-        "Pair strike 1, so kept 12.",
+        "Pair strike 1, so this cell kept 12.",
       ]);
       // The note leg opens the journey the deduction continues.
       expect(blank[1].continuesPrevious).toBe(true);
       const filled = new Uint8Array(9);
       filled[4] = 2;
       expect(implicitWalk(filled, [elim(0, 0, 3, { x: 1, y: 1 })])[0].explanation).toBe(
-        "Pair strike 1, so kept 12.",
+        "Pair strike 1, so this cell kept 12.",
       );
     });
 
@@ -387,8 +392,8 @@ describe("runCandidatePlan", () => {
       });
       expect(steps.slice(0, 3).map((s) => s.explanation)).toEqual([
         "note 0,0 123 every",
-        "Pair strike 1, so kept 12.",
-        "Later strike 1 (cont), so struck 3.",
+        "Pair strike 1, so this cell kept 12.",
+        "Later strike 1 (cont), so struck 3 gone.",
       ]);
     });
 
@@ -413,8 +418,8 @@ describe("runCandidatePlan", () => {
         },
       });
       expect(steps.slice(0, 2).map((s) => s.explanation)).toEqual([
-        "Pair strike 2, so placed 1.",
-        "Pair strike 1 (cont), so placed 2.",
+        "Pair strike 2, so this cell placed 1.",
+        "Pair strike 1 (cont), so this cell placed 2.",
       ]);
     });
 
@@ -466,7 +471,7 @@ describe("runCandidatePlan", () => {
       });
       expect(steps.slice(0, 2).map((s) => s.explanation)).toEqual([
         "note 1,0 123 every",
-        "Pair strike 1, so kept 12.",
+        "Pair strike 1, so this cell kept 12.",
       ]);
       // Read, not drawn: nothing the game did not mark is outlined, and the
       // read cells ride on the step as data a guard can check.

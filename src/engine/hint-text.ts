@@ -138,7 +138,7 @@ export function cleanObviousText(
   // in the help"). The notes it names are the ringed ones it strikes.
   return (marks) =>
     unshaped(
-      phrase`Now clear the easy ones: cross out ${mark.as("ring", NOTE, marks, `any ${noun} already ${placedVerb} in each ${cell}'s ${regions}`)}.`,
+      phrase`Now clear the easy ones: cross out ${mark.as("ring", NOTE, marks, `any ${noun} already ${placedVerb} in its ${cell}'s ${regions}`)}.`,
       "setup",
     );
 }
@@ -195,33 +195,43 @@ export function thisCell(at: Point, cell = "cell"): Narration {
  *
  * `struck` names the struck notes where a list of their values would misstate
  * them (Group's identity marks are a different element in every cell) or say
- * less than a word does (Rome's "the rest"). `named` says the premise has
- * already named the struck values ("puts 2 or 3 in this cell"), so a strike
- * refers back to them ("so they must go") rather than listing them
- * twice. Neither changes what a folded step concludes: that names the values
- * left, which the premise never has.
+ * less than a word does. It never changes what a folded step concludes: that
+ * names the values left, which the premise never has.
+ *
+ * A strike names its values even where the premise just did ("puts 2 in this
+ * cell, so the 2 must go"): the reference is what the player presses, and
+ * "it" is no thing on the board.
  */
 export interface Premise {
   premise: Narration;
   where?: string;
   struck?: string;
-  named?: boolean;
 }
 
 /**
  * How a candidate step ends, by the move it makes. The walk decides which; the
- * game's vocabulary words it:
+ * game's vocabulary words it, and the walk builds the reference, so a
+ * reference is the thing the player presses and never the clause around it:
  *
- * - `strike` — the struck values go ("2 and 4 must go");
- * - `place` — a cell with no notes has one value left ("this cell must be 3");
+ * - `strike` — the struck values go ("2 and 4 must go"): `what` names them,
+ *   from the values a refresh leaves, and `after` follows the reference;
+ * - `place` — a cell with no notes has one value left ("this cell must be
+ *   3");
  * - `keep` — a cell with no notes has several left, and the step writes them
- *   ("pencil in only 1 and 5").
+ *   ("this cell can only be 1 or 5").
+ *
+ * `place` and `keep` are said after the cell.
  *
  * Each is the clause after "so"; the walk supplies the "so" and the full stop.
  */
 export interface Conclusions {
+  /** What the game calls the cell a `place` or `keep` is said of. */
+  readonly cell: string;
   /** `how` is what the premise said about the struck notes. */
-  strike(values: readonly number[], how: Omit<Premise, "premise">): string;
+  strike(how: Omit<Premise, "premise">): {
+    what(values: readonly number[]): string;
+    after: string;
+  };
   place(n: number): string;
   keep(values: readonly number[]): string;
 }
@@ -235,25 +245,26 @@ export function candidateConclusions(vocab: {
   const v = vocab.value;
   const cell = vocab.cell ?? "cell";
   return {
-    strike: (values, { where, struck, named }) => {
-      const ns = distinct([...values]);
+    cell,
+    strike: ({ where, struck }) => {
+      const values = (values: readonly number[]): string => {
+        const ns = distinct([...values]);
+        return ns.length === 1 ? `the ${v(ns[0])}` : joinWith(ns.map(v));
+      };
       // "Must go" is the necessity voice in the fewest words. A where that
       // says what they go from follows it; one that picks them out ("beyond
       // that") stays with them.
-      const goes = (what: string): string =>
-        !where
-          ? `${what} must go`
-          : where.startsWith("from ")
-            ? `${what} must go ${where}`
-            : `${what} ${where} must go`;
-      if (struck) return goes(struck);
-      if (named) return goes(ns.length === 1 ? "it" : "they");
-      return goes(ns.length === 1 ? `the ${v(ns[0])}` : joinWith(ns.map(v)));
+      const from = where?.startsWith("from ") ?? false;
+      const named = struck ? () => struck : values;
+      return {
+        what: where && !from ? (ns) => `${named(ns)} ${where}` : named,
+        after: from ? `must go ${where}` : "must go",
+      };
     },
-    place: (n) => `this ${cell} must be ${v(n)}`,
+    place: (n) => `must be ${v(n)}`,
     // Short where it can be: the list is as long as the values left, and
     // "only" says they are all the cell can be.
-    keep: (values) => `pencil in only ${joinWith(values.map(v))}`,
+    keep: (values) => `can only be ${joinOr(values.map(v))}`,
   };
 }
 
@@ -370,7 +381,7 @@ export function confinedPremise(
     lines.cells,
     `These ${lines.count} ${along}`,
   );
-  return phrase`${striped} fit ${value} only in ${mark.the("outline", CELL, set, cell)}, which take the ${value} of ${lines.count} ${across}`;
+  return phrase`${striped} fit ${value} only in ${mark.the("outline", CELL, set, cell)}, taking the ${value} of ${lines.count} ${across}`;
 }
 
 /** The premise of a generic Latin strike (the placement cull, a set, a forcing
@@ -393,7 +404,6 @@ export function latinPremise(
       if (reason.lines)
         return {
           premise: confinedPremise(reason.lines, reason.cells, v(marks[0].n), cell),
-          named: true,
         };
       // One strike per cell can repeat a value, and the order is the solver's:
       // name each value once, smallest first.

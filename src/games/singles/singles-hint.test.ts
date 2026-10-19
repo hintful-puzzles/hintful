@@ -257,7 +257,7 @@ describe("hint", () => {
   it("offset: narration names the pair values and walks the contradiction arc", () => {
     const { step } = pinned("offset");
     expect(step.explanation).toMatch(/\d/); // concrete value(s)
-    expect(step.explanation).toContain("to touch");
+    expect(step.explanation).toContain("squares touch");
     expect(step.explanation).not.toContain("across from it");
     // "overlap" was geometrically false — the pairs can span a whole line.
     expect(step.explanation).not.toContain("overlap");

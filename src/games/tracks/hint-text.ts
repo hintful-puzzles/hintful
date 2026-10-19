@@ -68,13 +68,6 @@ export interface Marked {
   readonly block: readonly Piece[];
 }
 
-/** Where a neighbor sits, as in "none above" / "none to the left". */
-function towards(dir: number): string {
-  if (dir === U) return "above";
-  if (dir === D) return "below";
-  return dir === L ? "to the left" : "to the right";
-}
-
 /** Which way a track carries on, as in "carry on upward". */
 function onward(dir: number): string {
   if (dir === U) return "upward";
@@ -98,44 +91,53 @@ const cells = (m: Marked, words: string): Narration =>
   mark.as("outline", PIECE, m.cells, words);
 const sides = (m: Marked, words: string): Narration =>
   mark.as("outline", PIECE, m.sides, words);
+const outlinedSides = (m: Marked): Narration =>
+  mark.the("outline", PIECE, m.sides, "side");
+/** The `n` squares a line's count is made of. */
+const outlinedOnes = (m: Marked, n: number): Narration =>
+  mark.as(
+    "outline",
+    PIECE,
+    m.cells,
+    n === 1 ? "the outlined one" : "the outlined ones",
+  );
+/** A line's clue by its value, with the squares it counts. */
+const lineClue = (m: Marked, value: number): Narration =>
+  mark.as("outline", PIECE, [...m.clues, ...m.cells], `clue ${value}`);
 
 export const say = {
   /** A square with `open` sides left, fewer than the two a track needs. */
   onlyOneSideLeft: (open: number, m: Marked): Sentence =>
     open === 0
       ? so({
-          look: phrase`${sides(m, "Every side")} of ${decided(m, "this square")} is blocked`,
+          look: phrase`${outlinedSides(m)} block every way into ${decided(m, "the ringed square")}`,
           follows: phrase`no track can reach it`,
           move: phrase`it must be empty`,
         })
       : so({
-          look: phrase`${sides(m, "Every side")} of ${decided(m, "this square")} but one is blocked, and track needs two`,
+          look: phrase`${outlinedSides(m)} leave ${decided(m, "the ringed square")} one way in, and track needs two`,
           move: phrase`it must be empty`,
         }),
 
   bothSidesLeft: (m: Marked): Sentence =>
     so({
-      look: phrase`The track here has ${sides(m, "two sides blocked")}`,
-      move: phrase`it must run ${decided(m, "through the other two")}`,
+      look: phrase`The track here can't cross ${outlinedSides(m)}`,
+      move: phrase`it must run through ${mark.as("ring", PIECE, m.decided, (els) =>
+        els.length === 1 ? "the ringed one" : "the ringed ones",
+      )}`,
     }),
 
   /** A line whose `target` track squares are all laid. */
   clueFull: (axis: Axis, target: number, m: Marked): Sentence => {
     if (target === 0) {
       return so({
-        look: phrase`${line(m, `This ${axis}`)}'s ${clue(m, "clue")} is 0`,
+        look: phrase`${line(m, `This ${axis}`)} has ${clue(m, "clue 0")}`,
         follows: phrase`no track can run along it at all`,
         move: phrase`${decided(m, "every square in it")} must be empty`,
       });
     }
-    const has =
-      target === 1
-        ? phrase`${cells(m, "the one track square")} ${clue(m, "its clue")} allows`
-        : target === 2
-          ? phrase`${cells(m, "both of the track squares")} ${clue(m, "its clue")} allows`
-          : phrase`${cells(m, `all ${target} of the track squares`)} ${clue(m, "its clue")} allows`;
     return so({
-      look: phrase`${line(m, `This ${axis}`)} already has ${has}`,
+      look: phrase`By ${clue(m, `clue ${target}`)}, ${line(m, `this ${axis}`)}'s track ${plural(target, "square is", "squares are")} ${outlinedOnes(m, target)}`,
       move: phrase`${decided(m, "every other square in it")} must be empty`,
     });
   },
@@ -146,13 +148,12 @@ export const say = {
     const room = len - target;
     if (room === 0) {
       return so({
-        look: phrase`${line(m, `This ${axis}`)}'s ${clue(m, `clue is ${target}`)} and it is ${len} squares long`,
+        look: phrase`${clue(m, `Clue ${target}`)} is the length of ${line(m, `this ${axis}`)}`,
         move: phrase`${decided(m, "every square in it")} must carry track`,
       });
     }
-    const marked = plural(room, "it is already marked", "they are already marked");
     return so({
-      look: phrase`${line(m, `This ${axis}`)} ${clue(m, `can leave only ${room} ${plural(room, "square", "squares")} empty`)} and ${cells(m, marked)}`,
+      look: phrase`By ${clue(m, `clue ${target}`)}, ${line(m, `this ${axis}`)} has ${room} empty ${plural(room, "square", "squares")}, ${outlinedOnes(m, room)}`,
       move: phrase`${decided(m, "every other square in it")} must carry track`,
     });
   },
@@ -174,37 +175,37 @@ export const say = {
    * squares it has. */
   wouldFinishEarly: (axis: Axis, m: Marked): Sentence =>
     so({
-      look: phrase`Joining A's run to B's here would finish the track with ${line(m, `this ${axis}`)}'s ${mark.as("outline", PIECE, [...m.clues, ...m.cells], "clue short")}`,
+      look: phrase`Joining A's run to B's here would finish the track short of ${line(m, `this ${axis}`)}'s ${mark.as("outline", PIECE, [...m.clues, ...m.cells], "outlined clue")}`,
       move: phrase`${thisSide(m)} must be blocked`,
     }),
 
-  // "No way across it": every unfinished square has a side blocked across the
-  // line, which is what the outlined squares and their bars show.
+  // "None of them can cross it": every unfinished square has a side blocked
+  // across the line, which is what the outlined squares and their bars show.
   looseEndSpans: (axis: Axis, m: Marked): Sentence =>
     so({
-      look: phrase`${line(m, `This ${axis}`)} has ${clue(m, "two track squares left")} and ${mark.as("outline", PIECE, [...m.cells, ...m.sides], "no way across it")}`,
-      move: phrase`the loose end must run ${decided(m, "straight on")}`,
+      look: phrase`${line(m, `This ${axis}`)} has ${clue(m, "2 track squares left")}, and none of ${mark.as("outline", PIECE, [...m.cells, ...m.sides], "the outlined ones")} can cross it`,
+      move: phrase`the loose end must run ${mark.paren("ring", PIECE, m.decided, "on")}`,
     }),
 
-  /** Track here would carry on toward `dir`, which the line can afford once:
-   * this square empties and the next fills. */
-  sharedFateBoth: (axis: Axis, dir: number, m: Marked): Sentence =>
+  /** Track here would carry on toward `dir`, which the line, with clue
+   * `value`, can afford once: this square empties and the next fills. */
+  sharedFateBoth: (axis: Axis, dir: number, value: number, m: Marked): Sentence =>
     so({
-      look: phrase`Track ${mark.as("ring", PIECE, m.emptied, "here")} ${sides(m, `would run on ${onward(dir)}`)}, but ${line(m, `this ${axis}`)} ${clue(m, "has one track and one empty left")}`,
-      move: phrase`${mark.as("ring", PIECE, m.emptied, "this")} must be empty, ${mark.as("ring", PIECE, m.filled, "the next")} track`,
+      look: phrase`${outlinedSides(m)} send track in ${mark.this("ring", PIECE, m.emptied, "square")} ${onward(dir)}, but ${line(m, `this ${axis}`)}'s ${lineClue(m, value)} has one track and one empty left`,
+      move: phrase`it must be empty, and ${mark.as("ring", PIECE, m.filled, "the ringed one beyond it")} must carry track`,
     }),
 
-  sharedFateFills: (axis: Axis, dir: number, m: Marked): Sentence =>
+  sharedFateFills: (axis: Axis, dir: number, value: number, m: Marked): Sentence =>
     so({
-      look: phrase`Track ${decided(m, "here")} ${sides(m, `would carry on ${onward(dir)}`)}, but ${line(m, `this ${axis}`)} ${mark.as("outline", PIECE, [...m.clues, ...m.cells], "has room for one more track square")}`,
-      move: phrase`${decided(m, "this")} must be empty`,
+      look: phrase`${outlinedSides(m)} send track in ${mark.this("ring", PIECE, m.decided, "square")} ${onward(dir)}, but ${line(m, `this ${axis}`)}'s ${lineClue(m, value)} allows one more`,
+      move: phrase`it must be empty`,
     }),
 
-  /** No track here means none in the neighbor toward `behind` either. */
-  sharedFateEmpties: (axis: Axis, behind: number, m: Marked): Sentence =>
+  /** No track here means none in the neighbor whose sides are outlined. */
+  sharedFateEmpties: (axis: Axis, value: number, m: Marked): Sentence =>
     so({
-      look: phrase`No track ${decided(m, "here")} ${sides(m, `means none ${towards(behind)} either`)}, but ${line(m, `this ${axis}`)} ${mark.as("outline", PIECE, [...m.clues, ...m.cells], "can spare just one more empty")}`,
-      move: phrase`${decided(m, "this")} must carry track`,
+      look: phrase`Emptying ${mark.this("ring", PIECE, m.decided, "square")} empties ${sides(m, "the outlined one")} too, but ${line(m, `this ${axis}`)}'s ${lineClue(m, value)} spares one more`,
+      move: phrase`it must carry track`,
     }),
 
   // "Every entry needs an exit" is the parity argument in the player's terms:
@@ -213,10 +214,10 @@ export const say = {
   crossingParity: (crossings: number, carries: boolean, m: Marked): Sentence => {
     const marked =
       crossings === 0
-        ? "no crossing is marked yet"
-        : `${crossings} ${plural(crossings, "crossing is", "crossings are")} marked`;
+        ? phrase`no crossing is marked yet`
+        : phrase`it has ${sides(m, `${crossings} outlined ${plural(crossings, "crossing", "crossings")}`)}`;
     return so({
-      look: phrase`Every entry to ${mark.as("stripes", PIECE, m.block, "the striped block")} needs an exit, and ${sides(m, marked)}`,
+      look: phrase`Every entry to ${mark.as("stripes", PIECE, m.block, "the striped block")} needs an exit, and ${marked}`,
       move: phrase`${decided(m, "this last side")} must ${carries ? "carry track" : "be blocked"}`,
     });
   },

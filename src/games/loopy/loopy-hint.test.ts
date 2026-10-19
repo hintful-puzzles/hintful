@@ -924,7 +924,12 @@ describe("Loopy hint: the words and the marks agree", () => {
       const text = step.explanation;
       const marks = marksOf(step);
       const at = `${b.name} step ${i}: "${text}"`;
-      expect(marks.targets, at).toEqual(opsOf(step.move).map((o) => o.edge));
+      // In the order the words name them, which need not be the move's.
+      expect(marks.targets.toSorted(), at).toEqual(
+        opsOf(step.move)
+          .map((o) => o.edge)
+          .toSorted(),
+      );
       if (/both outlined dots/i.test(text)) {
         expect(marks.dots, at).toHaveLength(2);
         kinds.add("both dots");
@@ -1287,18 +1292,18 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
     const ops = opsOf(step.move);
     expect(ops.filter((o) => o.state === LINE_NO)).toHaveLength(1);
     expect(ops.filter((o) => o.state === LINE_YES).length).toBeGreaterThan(1);
-    expect(marksOf(step).targets).toEqual(ops.map((o) => o.edge));
+    expect(marksOf(step).targets.toSorted()).toEqual(ops.map((o) => o.edge).toSorted());
   });
 
   it("names the clue, and says the same thing with a different digit", () => {
     // The clue is the only part that varies. A 2 whose fourth edge is already
     // out reads with 2 throughout, a 3 in a square with 3.
     const m = { ...NO_MARKS, targets: [0, 1, 2], faces: [0], dots: [0, 1] };
-    expect(say.clueBlockedPair(3, m).text).toBe(
+    expect(say.clueBlockedPair(3, 0, m).text).toBe(
       "Both outlined dots already have a line, so joining them leaves this 3 short: that edge is out and the other 3 are lines.",
     );
-    expect(say.clueBlockedPair(2, m).text).toBe(
-      say.clueBlockedPair(3, m).text.replaceAll("3", "2"),
+    expect(say.clueBlockedPair(2, 0, m).text).toBe(
+      say.clueBlockedPair(3, 0, m).text.replaceAll("3", "2"),
     );
   });
 });

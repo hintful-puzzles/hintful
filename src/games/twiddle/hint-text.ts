@@ -104,7 +104,7 @@ const MAX_SENTENCE = 120;
 const dir = (t: Turned): string => (t.clockwise ? "clockwise" : "anticlockwise");
 
 /** "turn the ringed block clockwise", or by its part ("turn the first block
- * back clockwise"), the words naming the ring either way. */
+ * (ringed) back clockwise"), the words naming the ring either way. */
 const turnOf = (t: Turned, name = "the ringed block", back = false): Narration =>
   phrase`turn ${mark.as("ring", BLOCK, [t.block], name)} ${back ? "back " : ""}${dir(t)}`;
 
@@ -154,7 +154,7 @@ function partWords(t: Turned, p: Part, fx: Effects): Narration {
         ? phrase`${turnOf(t)}, so turning the first block back brings it in`
         : phrase`${turnOf(t)} before the first block turns back`;
     case "tuckBack":
-      return phrase`${turnOf(t, "the first block", true)} to finish the tuck`;
+      return phrase`${turnOf(t, "the first block (ringed)", true)} to finish the tuck`;
     case "cycleFirst":
       return phrase`start a cycle: ${turnOf(t)}${liftWords(fx)}`;
     case "cycleSecond":
@@ -162,12 +162,12 @@ function partWords(t: Turned, p: Part, fx: Effects): Narration {
     case "firstBack":
       // What returns, where the board shows it, says more than the rule.
       return fx.returns.length > 0 || fx.lands
-        ? turnOf(t, "the first block", true)
-        : phrase`${turnOf(t, "the first block", true)}: the tiles only it moved go home`;
+        ? turnOf(t, "the first block (ringed)", true)
+        : phrase`${turnOf(t, "the first block (ringed)", true)}: the tiles only it moved go home`;
     case "swapStart":
       return phrase`start a swap: ${turnOf(t)}${liftWords(fx)}`;
     case "secondBack":
-      return phrase`${turnOf(t, "the second block", true)} to finish the cycle`;
+      return phrase`${turnOf(t, "the second block (ringed)", true)} to finish the cycle`;
     case "small":
       return phrase`${turnOf(t)}, ${p.back ? "undoing" : "part of"} the ${p.which === 1 ? "first" : "second"} small cycle${liftWords(fx)}`;
     case "twist":

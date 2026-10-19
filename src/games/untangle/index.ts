@@ -406,7 +406,7 @@ export const untangleGame: Game<
   hintRungs: UNTANGLE_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the move the step decides: the point to move, drawn in the hint's color, with a line in the same color running to the spot to drop it on, which is also drawn as a point. When only a few crossings are left, the hint may move several points together so that none of their lines crosses anything; the other points it will move next are ringed too (*these points* and *the others*, in its words), and it moves them one at a time.",
+      ring: "the move the step decides: the point to move, drawn in the hint's color, with a line in the same color running to the spot to drop it on (*its spot*), which is also drawn as a point. When only a few crossings are left, the hint may move several points together so that none of their lines crosses anything; the other points it will move next are ringed too (*these 3 points* and *the other 2*, in its words), and it moves them one at a time.",
       outline:
         "the crossings the move clears, each with a ring round it, so you can count them.",
     },

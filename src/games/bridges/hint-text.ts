@@ -12,8 +12,8 @@
  * the necessity voice (docs/hints.md § "Writing the narration"). An
  * island is named by its clue digit, which is the one thing about it the player
  * can read off the board, and the island the sentence is about is the one the
- * hint recolors. A *bridge* has no name at all, so every sentence points at one
- * by direction from its island ("this way", "there"), which the drawn hint bar
+ * hint recolors. A *bridge* has no name at all, so every sentence names the
+ * line it runs along by its mark ("the ringed line"), which the drawn hint bar
  * or cross shows.
  *
  * Every word that points at the board is a reference to the mark it points at
@@ -87,8 +87,8 @@ const tooMany = (limit: number): string =>
  * above it the "at most" mark they write with the same gesture. */
 const limited = (m: Marked, limit: number): Narration =>
   limit === 0
-    ? phrase`${decided(m, "this way")} must be blocked`
-    : phrase`at most ${WORDS[limit]} can run ${decided(m, "this way")}`;
+    ? phrase`${decided(m, "the ringed line")} must be blocked`
+    : phrase`${decided(m, "the ringed line")} can take at most ${WORDS[limit]}`;
 
 export const say = {
   /** An island `missing` bridges short of its clue with room for exactly that
@@ -98,11 +98,11 @@ export const say = {
     missing === 1
       ? so({
           look: phrase`${thisClue(m, clue)} still needs one more bridge and has room for exactly one`,
-          move: phrase`it must be drawn ${decided(m, "there")}`,
+          move: phrase`it must be drawn on ${decided(m, "the ringed line")}`,
         })
       : so({
           look: phrase`${thisClue(m, clue)} still needs ${missing} more bridges and has room for exactly ${missing}`,
-          move: phrase`${decided(m, "every one")} must be drawn`,
+          move: phrase`${decided(m, "the ringed bridges")} must all be drawn`,
         }),
 
   /**
@@ -117,27 +117,27 @@ export const say = {
     const island = thisClue(m, clue);
     if (neighbors === 1) {
       return so({
-        look: phrase`${island} has just ${counted(m, "one neighbor")} left to reach`,
-        move: phrase`at least ${decided(m, "one bridge")} must run to it`,
+        look: phrase`${island} has just ${counted(m, "one outlined neighbor")} left to reach`,
+        move: phrase`${decided(m, "the ringed line")} must take at least one bridge`,
       });
     }
     if (neighbors === 2) {
       return so({
-        look: phrase`${island} needs more bridges than ${counted(m, "either neighbor")} could carry alone`,
-        move: phrase`both must take ${decided(m, "at least one")}`,
+        look: phrase`${island} needs more bridges than ${counted(m, "either outlined neighbor")} could carry alone`,
+        move: phrase`${decided(m, "each ringed line")} must take at least one`,
       });
     }
     return so({
       look: phrase`${island} needs more bridges than any ${neighbors - 1} of ${counted(m, `its ${neighbors} neighbors`)} could carry`,
-      move: phrase`each must take ${decided(m, "one")}`,
+      move: phrase`${decided(m, "each ringed line")} must take one`,
     });
   },
 
   wouldCloseLoop: (m: Marked): Sentence =>
     so({
-      look: phrase`${mark.this("outline", PIECE, m.islands, "island")} are already linked by ${mark.the("outline", PIECE, m.spans, "bridge")}`,
-      follows: phrase`one more ${decided(m, "this way")} would close a loop`,
-      move: phrase`it must be blocked`,
+      look: phrase`${mark.this("outline", PIECE, m.islands, "island")} are linked by ${mark.the("outline", PIECE, m.spans, "bridge")}`,
+      follows: phrase`one more would close a loop`,
+      move: phrase`${decided(m, "the ringed line")} must be blocked`,
     }),
 
   /** An island that can draw at most `elsewhere` bridges anywhere but this way. */
@@ -145,11 +145,11 @@ export const say = {
     elsewhere === 0
       ? so({
           look: phrase`${thisClue(m, clue, "'s")} ${counted(m, "other neighbors")} can take no bridges at all`,
-          move: phrase`every bridge it needs must run ${decided(m, "this way")}`,
+          move: phrase`every bridge it needs must run along ${decided(m, "the ringed line")}`,
         })
       : so({
           look: phrase`${thisClue(m, clue)} can take at most ${elsewhere} ${plural(elsewhere, "bridge", "bridges")} from ${counted(m, "its other neighbors")}`,
-          move: phrase`one must run ${decided(m, "this way")}`,
+          move: phrase`one must run along ${decided(m, "the ringed line")}`,
         }),
 
   /** One bridge more than `limit` here would complete a group of `group`
@@ -158,7 +158,7 @@ export const say = {
    * words name with them. */
   wouldSealGroup: (group: number, limit: number, m: Marked): Sentence =>
     so({
-      look: phrase`${tooMany(limit)} here would shut ${mark.as("outline", PIECE, [...m.islands, ...m.spans], `these ${group} islands`)} into a finished group of their own`,
+      look: phrase`${tooMany(limit)} here would shut ${mark.as("outline", PIECE, [...m.islands, ...m.spans], `these ${group} islands`)} off as a finished group`,
       move: limited(m, limit),
     }),
 
@@ -168,8 +168,8 @@ export const say = {
   wouldStarve: (clue: number, self: boolean, limit: number, m: Marked): Sentence =>
     so({
       look: self
-        ? phrase`${tooMany(limit)} here would leave ${thisClue(m, clue, " itself")} unable to reach its count`
-        : phrase`${tooMany(limit)} here would leave ${counted(m, "the outlined island")} unable to reach its own count`,
+        ? phrase`${tooMany(limit)} here would leave ${thisClue(m, clue, " itself")} short of its count`
+        : phrase`${tooMany(limit)} here would leave ${counted(m, "the outlined island")} short of its own count`,
       move: limited(m, limit),
     }),
 
@@ -178,7 +178,7 @@ export const say = {
    * and the bridges linking them. */
   mustReachOut: (clue: number, m: Marked): Sentence =>
     so({
-      look: phrase`Filling ${thisClue(m, clue, "'s")} other links as far as they go would seal off ${mark.as("outline", PIECE, [...m.islands, ...m.spans], "the outlined group")}`,
-      move: phrase`a bridge must run ${decided(m, "this way")}`,
+      look: phrase`Filling ${thisClue(m, clue, "'s")} other links to the full would seal off ${mark.as("outline", PIECE, [...m.islands, ...m.spans], "the outlined group")}`,
+      move: phrase`${decided(m, "the ringed line")} must take a bridge`,
     }),
 };

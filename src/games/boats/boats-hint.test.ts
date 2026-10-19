@@ -346,7 +346,7 @@ describe("boats hint — narration", () => {
     ],
     ["lineForced", /needs .* and has .* free square/],
     ["allWaterPlaced", /Every square of water .* is already marked/],
-    ["centerForced", /middle segment has (water|the board's edge)/],
+    ["centerForced", /middle segment has (outlined water|the board's edge)/],
     ["isolated", /water or the board's edge surrounds this square/],
     ["mustExtend", /shut in on three sides/],
     [
@@ -357,7 +357,10 @@ describe("boats hint — narration", () => {
     ["mustGrow", /unfinished boat can't stop at \d+/],
     ["runTooShort", /every \d+-boat is already placed/],
     ["onlyRunsLeft", /run[s]? can hold the \d+-boat/],
-    ["sharedDiagonal", /must be a boat, as .* has room for \d+ more water/],
+    [
+      "sharedDiagonal",
+      /can take \d+ more water, so one outlined square must be a boat/,
+    ],
     ["refuted", /^If this square (were water|held a boat segment),/],
   ];
 
@@ -382,7 +385,7 @@ describe("boats hint — narration", () => {
     // A "so it is forced" with no named rule is exactly the un-narrated step
     // the spec forbids.
     expect(step?.explanation).toMatch(
-      /(touching corner to corner|couldn't reach its \d+|make a boat the fleet has no room for|more boat squares than the whole fleet|rest of the fleet would no longer fit|given segment's own shape|could no longer be placed legally)/,
+      /(touching corner to corner|couldn't reach its \d+|make a boat \(outlined\) the fleet has no room for|more boat squares than the whole fleet|rest of the fleet would no longer fit|given segment's own shape|could no longer be placed legally)/,
     );
   });
 

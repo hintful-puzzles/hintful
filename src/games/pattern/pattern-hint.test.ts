@@ -189,7 +189,7 @@ describe("pattern hint — narration", () => {
     const t = pinned("intersection").step.explanation;
     expect(t, `bad intersection narration: "${t}"`).toMatch(
       new RegExp(
-        `^Every way this (row|column)'s runs can fit (covers|leaves out) .*, so (it|they) must be (${SHADED_NAME}|${UNSHADED_NAME})\\.$`,
+        `^Every way this (row|column)'s outlined runs can fit (covers|leaves out) .*, so (that cell|those cells) must be (${SHADED_NAME}|${UNSHADED_NAME})\\.$`,
       ),
     );
     expect(t).not.toMatch(/only one arrangement/i);

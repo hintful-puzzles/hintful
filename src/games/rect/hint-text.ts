@@ -60,7 +60,7 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
   const why: Narration[] = [];
   if (takes.length > 0) {
     const striped = several
-      ? mark.as("stripes", CELL, takes.map(at), "a striped square")
+      ? mark.as("stripes", CELL, takes.map(at), "striped square")
       : mark.the("stripes", CELL, takes.map(at), "square");
     // The clue that covers it is outlined beside the one crossing, so its
     // value names it.
@@ -68,11 +68,13 @@ function crossings(s: RectState, f: Extract<RectFiring, { kind: "line" }>): Narr
       "outline",
       CELL,
       owners.map(at),
-      several ? "another clue" : `the ${joinAnd(owners.map((c) => String(s.grid[c])))}`,
+      several
+        ? "another outlined clue"
+        : `the ${joinAnd(owners.map((c) => String(s.grid[c])))}`,
     );
     why.push(
       several
-        ? phrase`taking ${striped} ${owner} needs`
+        ? phrase`taking ${owner}'s ${striped}`
         : phrase`taking ${striped} ${owner} always ${owners.length > 1 ? "cover" : "covers"}`,
     );
   }

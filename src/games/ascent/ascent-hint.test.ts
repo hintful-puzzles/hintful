@@ -707,7 +707,7 @@ describe("every premise, restated from the board, singles out its square", () =>
           board.label,
         ).toBe(true);
       expect(highlights?.hatch, explanation).toContain(firing.cell);
-      expect(explanation).toMatch(/through empty squares/);
+      expect(explanation).toMatch(/steps to the ringed square by the striped squares/);
     }
   });
 });
@@ -840,7 +840,7 @@ describe("positions from the owner's playtest", () => {
     const step = stepOf(first);
     expect(step.move.kind).toBe("places");
     expect(step.explanation).toBe(
-      "Only one route for the run between 33 and 37 leaves the run between 28 and 33 a way through, so it must take the line.",
+      "Only one route for the run between 33 and 37 lets the run between 28 and 33 through, so it must take the drawn route.",
     );
   });
 

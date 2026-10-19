@@ -57,14 +57,6 @@ const ringed = (
     els.length > 1 ? many(els) : one(m.num(els[0])),
   );
 
-/** "it" or "they" for the ringed squares. */
-const they = (m: Marked): Narration =>
-  ringed(
-    m,
-    () => "it",
-    () => "they",
-  );
-
 const outlined = (cells: readonly Point[], n: number): Narration =>
   mark.the("outline", CELL, cells, String(n));
 
@@ -156,7 +148,7 @@ export const say = {
   /** A touching pair of `p`s at the corner, `side` the one beside it. */
   corner2: (m: Marked, pair: readonly Point[], side: Point, p: number): Sentence =>
     so({
-      look: phrase`${mark.as("outline", CELL, pair, `The corner's ${p}s`)} need a ${B}; shading ${mark.this("ring", CELL, m.targets, String(m.num(m.targets[0])))} forces ${mark.as("outline", CELL, [side], "the side one")}, boxing ${mark.as("outline", CELL, m.strand, "the corner")} in`,
+      look: phrase`${mark.as("outline", CELL, pair, `The corner's ${p}s`)} need a ${B}; shading ${mark.this("ring", CELL, m.targets, String(m.num(m.targets[0])))} forces ${mark.as("outline", CELL, [side], `the side ${p}`)}, boxing ${mark.as("outline", CELL, m.strand, "the corner")} in`,
       move: phrase`it must stay ${C}`,
     }),
 
@@ -184,11 +176,14 @@ export const say = {
         m,
         (v) => `the ringed ${v}`,
         () => "either ringed square",
-      )} forces two ${B} squares to touch`,
+      )} makes two ${B} squares touch`,
       move: phrase`${ringed(
         m,
-        () => "it",
-        () => "both",
+        (v) => `that ${v}`,
+        (els) => {
+          const [p, q] = els.map(m.num);
+          return p === q ? `both ${p}s` : `the ${p} and ${q}`;
+        },
       )} must be ${C}`,
     });
   },
@@ -199,12 +194,16 @@ export const say = {
   // hold mixed/repeated values, so list them all.
   adjBlack: (m: Marked): Sentence =>
     so({
-      look: phrase`${ringed(
+      look: phrase`${mark.paren("outline", CELL, m.evidence, `a ${B} square`).capitalized()} touches ${ringed(
         m,
-        (v) => `This ${v} touches`,
-        (els) => `These squares (${joinNums(els.map(m.num))}) touch`,
-      )} ${mark.paren("outline", CELL, m.evidence, `a ${B} square`)}`,
-      move: phrase`${they(m)} must be ${C}`,
+        (v) => `this ${v}`,
+        (els) => `these squares (${joinNums(els.map(m.num))})`,
+      )}`,
+      move: phrase`${ringed(
+        m,
+        (v) => `that ${v}`,
+        () => "those squares",
+      )} must be ${C}`,
     }),
 
   // The forced square(s) and the outlined white square all show the same
@@ -213,12 +212,22 @@ export const say = {
   /** Copies of `t` share a line with the outlined white `t`. */
   sameLine: (m: Marked, t: number): Sentence =>
     so({
-      look: phrase`${ringed(
-        m,
-        () => `This ${t} shares`,
-        () => `These ${t}s share`,
-      )} ${m.line.length > 0 ? thisLine(m) : "a line"} with ${mark.the("outline", CELL, m.evidence, `${C} ${t}`)}, which already uses that number`,
-      move: phrase`${they(m)} must be ${B}`,
+      look:
+        m.line.length > 0
+          ? phrase`${mark.the("outline", CELL, m.evidence, `${C} ${t}`).capitalized()} already holds ${thisLine(m)}'s ${t}`
+          : phrase`${mark.the("outline", CELL, m.evidence, `${C} ${t}`).capitalized()} shares a line with ${ringed(
+              m,
+              () => `the ringed ${t}`,
+              () => `each ringed ${t}`,
+            )}`,
+      move:
+        m.line.length > 0
+          ? phrase`${mark.the("ring", CELL, m.targets, String(t))} must be ${B}`
+          : phrase`${ringed(
+              m,
+              () => `that ${t}`,
+              () => `those ${t}s`,
+            )} must be ${B}`,
     }),
 
   boxedIn: (m: Marked, v: number): Sentence =>

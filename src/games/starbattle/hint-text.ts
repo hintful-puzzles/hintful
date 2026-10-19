@@ -49,9 +49,8 @@ const these = (cells: readonly Point[]): Narration =>
 const mustBeEmpty = (cells: readonly Point[]): Narration =>
   phrase`${these(cells)} must be empty`;
 
-/** "it must be …", over the one ringed square a sentence has already named. */
-const itMustBe = (cell: Point, what: string): Narration =>
-  phrase`${mark.as("ring", CELL, [cell], "it")} must ${what}`;
+/** "it must be …", of the one ringed square a sentence has already named. */
+const itMustBe = (what: string): Narration => phrase`it must ${what}`;
 
 /** "this row", striped. */
 const thisUnit = (unit: UnitSquares): Narration =>
@@ -99,7 +98,7 @@ export interface Trial {
 function trial(t: Trial): Sentence {
   const here = these([t.cell]);
   const unit = thisUnit(t.unit);
-  const move = itMustBe(t.cell, "be empty");
+  const move = itMustBe("be empty");
   const cause =
     t.completes.length === 1 || t.completes.length === 2
       ? `complete its ${t.completes.join(" and ")}`
@@ -170,11 +169,9 @@ export const say = {
   ): Sentence =>
     so({
       look: phrase`${thisUnit(unit)} needs ${needs(need, placed)} and has only ${need} open ${need === 1 ? "square" : "squares"}`,
-      move: mark.as("ring", CELL, cells, (els) =>
-        els.length > 1
-          ? "these squares must hold stars"
-          : "this square must hold a star",
-      ),
+      move: phrase`${mark.as("ring", CELL, cells, (els) =>
+        els.length > 1 ? "each ringed square" : "the ringed square",
+      )} must hold a star`,
     }),
 
   /** A unit that cannot fit its stars without one square. */
@@ -187,7 +184,7 @@ export const say = {
   ): Sentence =>
     so({
       look: phrase`${thisUnit(unit)} needs ${needs(need, placed)} and without ${these([cell])} has room for ${room === 0 ? "none" : `only ${room}`}`,
-      move: mark.as("ring", CELL, [cell], "that square must hold a star"),
+      move: phrase`${mark.as("ring", CELL, [cell], "that square")} must hold a star`,
     }),
 
   /** A star that would touch too much of a unit. */

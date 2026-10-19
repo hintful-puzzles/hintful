@@ -1425,7 +1425,7 @@ exports[`rect: pinned hint positions > says, at each pin 1`] = `
 {
   "blockedByClue": "Elsewhere the 3 would run off the board or take in the outlined clue, so only this rectangle fits.",
   "fit": "Elsewhere the 3 would run off the board or take in the outlined clue, so only this rectangle fits.",
-  "line": "Only the outlined 8 and 4 can cross this edge, taking a striped square another clue needs, so it must be a line.",
+  "line": "Only the outlined 8 and 4 can cross this edge, taking another outlined clue's striped square, so it must be a line.",
   "lineMisses": "Only the outlined 4 can cross this edge, leaving the outlined square uncovered, so it must be a line.",
   "lineTakes": "Only the outlined 4 can cross this edge, taking the striped square the 5 always covers, so it must be a line.",
   "overlap": "Wherever the outlined 18 goes, it covers the striped squares, so the 18 can't use them: it fits only this rectangle.",

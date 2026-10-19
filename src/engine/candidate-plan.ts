@@ -50,7 +50,15 @@ import {
   type Premise,
   populateText,
 } from "./hint-text.ts";
-import { CELL, mark, type Narration, NOTE, type Sentence, so } from "./hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  NOTE,
+  phrase,
+  type Sentence,
+  so,
+} from "./hint-words.ts";
 import {
   availablePlacements,
   type CellRegion,
@@ -1075,14 +1083,7 @@ class CandidateWalk<
     const { plan } = this;
     const x = i % plan.w;
     const y = (i / plan.w) | 0;
-    const {
-      premise,
-      where: _where,
-      struck: _struck,
-      named: _named,
-      rung,
-      ...rest
-    } = words;
+    const { premise, where: _where, struck: _struck, rung, ...rest } = words;
     let bits = this.shown[i];
     for (const m of marks) bits &= ~this.bit(m.n);
     // The view was taken before the firing, so a value an earlier fold placed
@@ -1093,8 +1094,8 @@ class CandidateWalk<
     const left = this.valuesIn(bits);
     // What the fold concludes is said of the ringed cell, so its conclusion
     // names it: "so this cell must be 3".
-    const concluded = (ending: string): Sentence =>
-      so({ look: premise, move: mark.as("ring", CELL, [{ x, y }], ending) });
+    const here = mark.this("ring", CELL, [{ x, y }], plan.conclude.cell);
+    const concluded = (move: Narration): Sentence => so({ look: premise, move });
     const highlightsOf = (said: Sentence): H =>
       ({
         ...rest,
@@ -1109,7 +1110,7 @@ class CandidateWalk<
     if (left.length === 1) {
       const n = left[0];
       folded.set(i, { bits: 0, placed: n });
-      const said = concluded(plan.conclude.place(n));
+      const said = concluded(phrase`${here} ${plan.conclude.place(n)}`);
       return {
         step: {
           move: this.place(x, y, n, plan.autoClean),
@@ -1125,7 +1126,7 @@ class CandidateWalk<
       };
     }
     folded.set(i, { bits, placed: null });
-    const said = concluded(plan.conclude.keep(left));
+    const said = concluded(phrase`${here} ${plan.conclude.keep(left)}`);
     return {
       step: {
         move: addMove(
@@ -1199,13 +1200,12 @@ class CandidateWalk<
     words: RungStrikeWords<H, Reason>,
   ): HintStep<M, H, PlanRung<Reason>> {
     const marks = [...struck];
-    const { premise, where, struck: noun, named, rung, ...rest } = words;
+    const { premise, where, struck: noun, rung, ...rest } = words;
     // The ending names the ringed notes it strikes, and re-renders from them
     // when a refresh finds some already gone.
-    const ending = mark.as("ring", NOTE, marks, (live) =>
-      this.plan.conclude.strike(valuesOf(live), { where, struck: noun, named }),
-    );
-    const said = so({ look: premise, move: ending });
+    const { what, after } = this.plan.conclude.strike({ where, struck: noun });
+    const struckNotes = mark.as("ring", NOTE, marks, (live) => what(valuesOf(live)));
+    const said = so({ look: premise, move: phrase`${struckNotes} ${after}` });
     return {
       move: this.strike(marks),
       rung,

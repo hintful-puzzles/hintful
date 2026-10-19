@@ -197,7 +197,6 @@ function premise(
           n,
           axisOf(n),
         ),
-        named: true,
       };
     case "pair":
       return {

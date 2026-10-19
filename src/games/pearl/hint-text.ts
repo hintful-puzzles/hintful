@@ -84,7 +84,7 @@ const area = (m: Marked, words: string): Narration =>
 // The pearls a line runs on through are always white, so the word is left to
 // the board.
 const throughNextWhite = (m: Marked): Narration =>
-  phrase`and on ${mark.as("ring", EDGE, m.white, `through the next ${m.white.length > 1 ? "pearls" : "pearl"}`)}`;
+  phrase`and on through ${mark.paren("ring", EDGE, m.white, `the next ${m.white.length > 1 ? "pearls" : "pearl"}`)}`;
 
 /** The look forces the move, and with it any run-on through a white pearl. */
 const forced = (
@@ -147,13 +147,22 @@ export const say = {
       opposite === "boardEdge"
         ? "backs onto the board's edge"
         : "has its opposite edge ruled out";
-    return forced(
-      m,
-      phrase`${pearl} ${which}`,
-      runsOn
-        ? phrase`its line must run ${mark.as("ring", EDGE, [...m.own, ...m.black], "this way")}`
-        : phrase`${thisEdge(m)} must be a line`,
-    );
+    if (!runsOn)
+      return forced(
+        m,
+        phrase`${pearl} ${which}`,
+        phrase`${thisEdge(m)} must be a line`,
+      );
+    // The ringed edges already take in a run-on through a white pearl, so the
+    // sentence names that pearl without a reference of its own.
+    const on =
+      m.white.length === 0
+        ? ""
+        : `, and on through the next ${m.white.length > 1 ? "pearls" : "pearl"}`;
+    return so({
+      look: phrase`${pearl} ${which}`,
+      move: phrase`its line must take ${mark.the("ring", EDGE, [...m.own, ...m.black, ...m.white], "edge")}${on}`,
+    });
   },
 
   whiteCarriesOn: (m: Marked): Sentence =>
@@ -174,7 +183,7 @@ export const say = {
       : forced(
           m,
           phrase`${area(m, "This white pearl")} has one edge ruled out`,
-          phrase`${own(m, "its straight line")} must run ${runs(along)}`,
+          phrase`${own(m, "its line")} must run ${runs(along)}`,
         ),
 
   // --- the pearls' longer reach ---------------------------------------------

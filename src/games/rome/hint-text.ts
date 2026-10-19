@@ -119,19 +119,22 @@ export const say = {
     }),
 
   /** How a step ends, by the move it makes, said of the ways a square points.
-   * A strike with a `where` speaks for the other squares it names; one whose
-   * premise named what goes refers back to it. */
+   * A strike with a `where` speaks for the other squares it names. */
   conclude: {
-    // A pair strikes the same arrow from several squares; each is named once.
-    strike: (ns, { where, struck, named }) => {
-      const ways = joinOr([...new Set(ns)].sort((a, b) => a - b).map(arrow));
-      if (where) return `no other square ${where} can point ${ways}`;
-      if (struck) return `${struck} must go`;
-      if (named) return `${ns.length === 1 ? "that arrow" : "those arrows"} must go`;
-      return `this square can't point ${ways}`;
+    cell: "square",
+    strike: ({ where, struck }) => {
+      // A pair strikes the same arrow from several squares; each is named once.
+      const ways = (ns: readonly number[]): string => {
+        const distinct = [...new Set(ns)].sort((a, b) => a - b);
+        return `${joinWith(distinct.map(arrow))} ${ns.length === 1 ? "mark" : "marks"}`;
+      };
+      if (where)
+        return { what: (ns) => `the ringed ${ways(ns)} ${where}`, after: "must go" };
+      if (struck) return { what: () => struck, after: "must go" };
+      return { what: (ns) => `this square's ${ways(ns)}`, after: "must go" };
     },
-    place: (n) => `this square must point ${arrow(n)}`,
-    keep: (ns) => `pencil in only ${joinWith(ns.map(arrow))}`,
+    place: (n) => `must point ${arrow(n)}`,
+    keep: (ns) => `must point ${joinOr(ns.map(arrow))}`,
   } satisfies Conclusions,
 
   // The strike arms below are premises, concluded in the words above.
@@ -146,7 +149,7 @@ export const say = {
    * back to its own square. `n` is the struck direction, so the chain starts at
    * the neighbor it points at. */
   loop: (path: readonly OrderedCell[], n: number): Narration =>
-    phrase`Following ${mark.as("outline", CELL, path, `the arrows from the square ${neighbor(n)}`)} leads back here`,
+    phrase`${mark.as("outline", CELL, path, "The numbered arrows")} from the square ${neighbor(n)} lead back here`,
 
   /** A four-square area, `region`, with only one home left for an arrow, seen
    * as the elimination of that square's other marks. */
@@ -159,7 +162,7 @@ export const say = {
    * square `at`. */
   reach: (group: readonly Point[], at: Point): Narration =>
     phrase`Every square must reach a goal, and only ${mark.as("ring", CELL, [at], "this mark")} still leads into ${mark.the("stripes", whole(CELL), group, "group")}`,
-  reachStruck: "the rest",
+  reachStruck: "its other marks",
 
   /** A neighbor, `side`, that could only point along one axis, which a mark
    * pointing into it would turn into a two-square loop. `n` is the struck
@@ -174,7 +177,7 @@ export const say = {
     // Each of the neighbor's two ways is named with what an arrow into it would
     // then make: pointed back, a loop; pointed on, two arrows of `n` in the
     // area.
-    phrase`${mark.as("outline", CELL, [side], `Its ${SIDE[n]} neighbor`)} in ${mark.this("stripes", whole(CELL), area, "area")} can only point ${arrow(pair.find((p) => p !== n) ?? n)} (a loop) or ${arrow(n)} (two ${arrow(n)}s)`,
+    phrase`${mark.as("outline", CELL, [side], `Its ${SIDE[n]} neighbor`)} in ${mark.this("stripes", whole(CELL), area, "area")} must point ${arrow(pair.find((p) => p !== n) ?? n)} (a loop) or ${arrow(n)} (two ${arrow(n)}s)`,
 
   /** Two squares, `pair`, of the area `region` holding the same two
    * candidates between them. */

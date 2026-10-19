@@ -323,7 +323,7 @@ describe("a saturated hub is one multi-leg journey, one color", () => {
       expect(hl.evidence).toEqual(first.evidence);
     });
     expect(legs[k - 1].explanation).toBe(
-      "…and this one must be a line too, for the outlined hub.",
+      "…and this spoke must be a line too, for the outlined hub.",
     );
 
     // Each leg draws a distinct spoke.

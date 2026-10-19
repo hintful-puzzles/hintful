@@ -141,7 +141,9 @@ describe("Pearl render scenarios", () => {
     expect(stepMarks(hint).of("outline", SQUARE)).toHaveLength(1);
     // The pearl's whole arm, its own edge and the run-on past the next square,
     // and on out through the white pearl that run-on enters.
-    expect(hint?.explanation).toMatch(/this way, and on through the next pearl\.$/);
+    expect(hint?.explanation).toMatch(
+      /must take the ringed edges, and on through the next pearl\.$/,
+    );
     expect(hl?.targets.filter((t) => t.line)).toHaveLength(3);
     // The target is the proposed line, a stroke rather than a laid rect.
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(

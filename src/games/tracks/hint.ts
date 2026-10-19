@@ -169,11 +169,12 @@ export function narrate(
     case "looseEndSpans":
       return say.looseEndSpans(lineOf(b, reason.line).axis, m);
     case "sharedFate": {
-      const { axis } = lineOf(b, reason.line);
+      const { axis, target } = lineOf(b, reason.line);
       const { dir } = reason;
-      if (reason.fills && reason.empties) return say.sharedFateBoth(axis, dir, m);
-      if (reason.fills) return say.sharedFateFills(axis, dir, m);
-      return say.sharedFateEmpties(axis, FLIP(dir), m);
+      if (reason.fills && reason.empties)
+        return say.sharedFateBoth(axis, dir, target, m);
+      if (reason.fills) return say.sharedFateFills(axis, dir, target, m);
+      return say.sharedFateEmpties(axis, target, m);
     }
     case "crossingParity":
       // The track crosses a closed block's border an even number of times, so

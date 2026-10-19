@@ -80,7 +80,7 @@ export const say = {
         })
       : so({
           look: phrase`Only ${these(m, "square")} can still light ${darkSquare(m)}`,
-          move: phrase`${these(m, "one")} must hold a bulb`,
+          move: phrase`it must hold a bulb`,
         }),
 
   /** The clue `n` is met; the ringed free neighbors are left to cross out. */
@@ -105,16 +105,14 @@ export const say = {
    * re-counts. */
   clueSaturated: (m: Marked): Sentence =>
     so({
-      look: phrase`${clue(m)} ${mark.as("ring", CELL, m.targets, (els) =>
-        els.length === 1
-          ? "still needs 1 more bulb and has exactly 1 free neighbor left"
-          : `still needs ${els.length} more bulbs and has exactly ${els.length} free neighbors left`,
-      )}`,
-      move: mark.as("ring", CELL, m.targets, (els) =>
-        els.length === 1
-          ? "the ringed one must be a bulb"
-          : "each ringed one must be a bulb",
-      ),
+      look: phrase`${clue(m)} still needs ${mark.as("ring", CELL, m.targets, (els) =>
+        els.length === 1 ? "1 more bulb" : `${els.length} more bulbs`,
+      )} and has exactly ${mark.as("ring", CELL, m.targets, (els) =>
+        els.length === 1 ? "1 free neighbor" : `${els.length} free neighbors`,
+      )} left`,
+      move: phrase`${mark.as("ring", CELL, m.targets, (els) =>
+        els.length === 1 ? "the ringed one" : "each ringed one",
+      )} must be a bulb`,
     }),
 
   // Several marks are in view (target, evidence set, dark square), so "a bulb
@@ -133,13 +131,13 @@ export const say = {
   // could hold a bulb itself, it is among "every square that could light" it.
   discountUnlit: (m: Marked): Sentence =>
     so({
-      look: phrase`A bulb here would rule out ${mark.as("outline", CELL, m.area, "every square")} that could light ${darkSquare(m)}`,
+      look: phrase`A bulb here rules out ${mark.the("outline", CELL, m.area, "square", "every")} that can light ${darkSquare(m)}`,
       move: phrase`${these(m, "square")} can't hold a bulb`,
     }),
 
   discountClue: (m: Marked): Sentence =>
     so({
-      look: phrase`A bulb here would rule out ${mark.as("outline", CELL, m.area, "every square")} left for ${mark.the("outline", CELL, m.clue ? [m.clue] : [], "clue")}'s bulb`,
+      look: phrase`A bulb here rules out ${mark.the("outline", CELL, m.area, "square", "every")} left for ${mark.the("outline", CELL, m.clue ? [m.clue] : [], "clue")}'s bulb`,
       move: phrase`${these(m, "square")} can't hold a bulb`,
     }),
 };

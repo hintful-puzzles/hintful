@@ -9,7 +9,8 @@
  * Every word that points at the board is a reference to the mark it points at
  * (`engine/hint-words.ts`). A step decides a move, so the point it moves and
  * the spot it moves it to are ringed, whatever their glyph, and so are the
- * other points a journey will move next ("these points", "the others"). The crossings
+ * other points a journey will move next ("these 3 points", "the other 2"). The
+ * spot is "its spot", the end of the line the point is drawn to. The crossings
  * the move clears are what it measures, so they are outlined.
  */
 
@@ -55,7 +56,9 @@ export interface UntangleMarks {
 const thisPoint = (m: UntangleMarks): Narration =>
   mark.this("ring", VERTEX, [m.vertex], "point");
 
-const here = (m: UntangleMarks): Narration => mark.as("ring", SPOT, [m.to], "here");
+/** The spot is drawn as a point at the end of the moving point's line, so it
+ * is named by that relation. */
+const here = (m: UntangleMarks): Narration => mark.as("ring", SPOT, [m.to], "its spot");
 
 /** All of a point's crossings, cleared: the words count them. */
 function allCleared(m: UntangleMarks, before: number): Narration {
@@ -84,21 +87,23 @@ function change(m: UntangleMarks, before: number, after: number): Narration {
       ? phrase`its lines stay clear`
       : phrase`it clears ${allCleared(m, before)}`;
   if (after < before && m.cleared.length) {
-    const k = m.cleared.length;
-    return phrase`it clears ${mark.the("outline", CROSSING, m.cleared, ["one", "ones"], k === 1 ? "the" : `the ${k}`)}, leaving ${after}`;
+    const cleared = mark.as("outline", CROSSING, m.cleared, (els) =>
+      els.length === 1 ? "the outlined one" : `the outlined ${els.length}`,
+    );
+    return phrase`it clears ${cleared}, leaving ${after}`;
   }
   const counts =
     after < before
       ? `it cuts its crossings from ${before} to ${after}`
       : after === before
         ? `it keeps its crossings at ${before}`
-        : `it raises its crossings from ${before} to ${after}`;
+        : `it goes from ${before} crossings to ${after}`;
   return phrase`${counts}${clearing(m)}`;
 }
 
 /** The move every step makes: its point, to its spot. */
 const moveIt = (m: UntangleMarks, point: Narration = thisPoint(m)): Narration =>
-  phrase`move ${point} ${here(m)}`;
+  phrase`move ${point} to ${here(m)}`;
 
 // No move is forced in Untangle, so every step is narrated by its effect on
 // the point's crossings, which is what the hint measured.
@@ -133,7 +138,7 @@ export const say = {
         ? before === 0
           ? "keeps its lines clear"
           : `keeps its crossings at ${before}`
-        : `raises its crossings from ${before} to ${after}`;
+        : `goes from ${before} crossings to ${after}`;
     const effect = phrase`it ${what}${clearing(m)}`;
     // The payoff, when there is one, is the reason for the move; without one,
     // the reason is that nothing better was found.
@@ -147,7 +152,7 @@ export const say = {
           move: moveIt(m),
           relation: {
             kind: "effect",
-            effect: phrase`${effect}, but frees a move that removes ${opens}`,
+            effect: phrase`${effect}, but frees a move removing ${opens}`,
           },
         });
   },
@@ -177,22 +182,22 @@ export const say = {
         [m.vertex, ...m.marked],
         `these ${legs} points`,
       );
-      const does = finishes ? "clears every crossing" : "clears all their crossings";
-      // Short forms ("these 3 points", "goes here"): the first leg carries two
+      const does = finishes ? "clears every crossing" : "clears their lines";
+      // Short forms ("these 3 points", "goes to"): the first leg carries two
       // sentences, and they keep it within a glance.
       return sentence({
         look: phrase`Moving ${all} ${does}`,
-        move: phrase`${point("this one")} goes ${here(m)}`,
+        move: phrase`${point("this point")} goes to ${here(m)}`,
         relation: { kind: "sequence", at: "first", effect },
       });
     }
     return m.marked.length === 0
       ? sentence({
-          move: phrase`${point("this point")} goes ${here(m)}`,
+          move: phrase`${point("this point")} goes to ${here(m)}`,
           relation: { kind: "sequence", at: "last", effect },
         })
       : sentence({
-          move: phrase`${point("this point")} goes ${here(m)}, before ${mark.as("ring", VERTEX, m.marked, "the others")}`,
+          move: phrase`${point("this point")} goes to ${here(m)}, before ${mark.as("ring", VERTEX, m.marked, (els) => (els.length === 1 ? "the other ringed one" : `the other ${els.length}`))}`,
           relation: { kind: "sequence", at: "next", effect },
         });
   },

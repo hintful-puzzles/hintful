@@ -514,7 +514,6 @@ function premise(
         premise: reason.region
           ? say.set(reason.region, reason.cells, ns, cells)
           : say.confined(reason.lines, reason.cells, ns[0]),
-        named: true,
       };
     case "forcing":
       return {
@@ -523,7 +522,6 @@ function premise(
     case "cageMinMax":
       return {
         premise: say.cageMinMax(reason.cells, reason.origin, reason.clue, ns, cells),
-        named: true,
       };
     case "cageSums":
       return {
@@ -535,7 +533,6 @@ function premise(
           ns,
           cells,
         ),
-        named: true,
       };
     default:
       throw new Error(`a ${reason.kind} deduction places`);

@@ -62,12 +62,14 @@ const more = (n: number): string => (n === 1 ? "1 more tent" : `${n} more tents`
 const ringed = (cells: readonly Point[], one: string, many: string): Narration =>
   mark.as("ring", CELL, cells, (els) => (els.length > 1 ? many : one));
 
+/** "the ringed squares", for a premise about them; its conclusion says
+ * "there", which agrees with one square or several. */
 const these = (cells: readonly Point[]): Narration =>
-  mark.this("ring", CELL, cells, "square");
+  ringed(cells, "the ringed square", "the ringed squares");
 
-/** "it must be" / "they must be", over the ringed squares. */
-const mustBe = (cells: readonly Point[]): Narration =>
-  phrase`${ringed(cells, "it", "they")} must be`;
+/** "every ringed square must be", singular over any number of squares. */
+const eachMust = (cells: readonly Point[], be: string): Narration =>
+  phrase`${ringed(cells, "the ringed square", "every ringed square")} must be ${be}`;
 
 /** The line a count is read along, and the number it is read against. */
 export interface Counted {
@@ -82,8 +84,11 @@ const thisLine = (c: Counted): Narration =>
 const number = (c: Counted, words: string): Narration =>
   mark.as("outline", NUMBER, [c.line], words);
 
-const join = (link: HintLink, words: string): Narration =>
-  mark.as("ring", LINK, [link], words);
+/** The link a step asks for, by the legend's word for it. */
+const theLink = (link: HintLink): Narration =>
+  mark.as("ring", LINK, [link], "the link");
+
+const drawLink = (link: HintLink): Narration => phrase`draw ${theLink(link)}`;
 
 export const say = {
   // --- grass --------------------------------------------------------------
@@ -92,17 +97,17 @@ export const say = {
   noTree: (cells: readonly Point[]): Sentence =>
     so({
       look: phrase`Every tent sits beside a tree, and no tree is beside ${these(cells)}`,
-      move: phrase`${mustBe(cells)} grass`,
+      move: phrase`grass must go there`,
     }),
 
   /** Squares every tree beside which already has its tent, shown in `area`. */
   treesDone: (cells: readonly Point[], area: readonly Point[]): Sentence => {
     const has = area.length
-      ? mark.paren("outline", CELL, area, "already has its tent")
+      ? phrase`already has ${mark.paren("outline", CELL, area, "its tent")}`
       : phrase`already has its tent`;
     return so({
       look: phrase`Every tree beside ${these(cells)} ${has}`,
-      move: phrase`${mustBe(cells)} grass`,
+      move: phrase`grass must go there`,
     });
   },
 
@@ -110,7 +115,7 @@ export const say = {
   nextToTent: (cells: readonly Point[], tent: Point): Sentence =>
     so({
       look: phrase`Tents never touch, even diagonally`,
-      move: phrase`${ringed(cells, "the open square", "every open square")} around ${mark.the("outline", CELL, [tent], "tent")} must be grass`,
+      move: phrase`${ringed(cells, "the ringed square", "every ringed square")} around ${mark.the("outline", CELL, [tent], "tent")} must be grass`,
     }),
 
   treeDiagonal: (cell: Point, tree: Point, pair: readonly Point[]): Sentence =>
@@ -129,7 +134,7 @@ export const say = {
     taken: readonly Point[],
     link: HintLink,
   ): Sentence => {
-    const joined = join(link, "joined to it");
+    const joined = phrase`with ${theLink(link)}`;
     const theTree = mark.as("outline", CELL, [tree], "the outlined tree");
     return taken.length
       ? so({
@@ -154,12 +159,12 @@ export const say = {
     link: HintLink,
   ): Sentence => {
     const has = area.length
-      ? mark.paren("outline", CELL, area, "has its tent")
+      ? phrase`has ${mark.paren("outline", CELL, area, "its tent")}`
       : phrase`already has its tent`;
     return so({
-      look: phrase`Every other tree beside ${mark.as("ring", CELL, [tent], "the ringed tent")} ${has}`,
+      look: phrase`Every other tree by ${mark.as("ring", CELL, [tent], "the ringed tent")} ${has}`,
       follows: phrase`it must belong to ${mark.as("ring", CELL, [tree], TREE_AT[to])}`,
-      move: join(link, "join them"),
+      move: drawLink(link),
     });
   },
 
@@ -174,7 +179,7 @@ export const say = {
     link: HintLink,
   ): Sentence => {
     const theTent = mark.as("ring", CELL, [tent], TENT_AT[to]);
-    const joined = join(link, "join them");
+    const joined = drawLink(link);
     if (!taken.length)
       return so({
         look: phrase`${mark.as("ring", CELL, [tree], "The ringed tree")} has no open square beside it`,
@@ -209,26 +214,22 @@ export const say = {
   allOpen: (c: Counted, need: number, cells: readonly Point[]): Sentence =>
     so({
       look: phrase`${thisLine(c)} needs ${number(c, more(need))} and has only ${need === 1 ? "1 open square" : `${need} open squares`}`,
-      move: ringed(
-        cells,
-        "this square must be a tent",
-        "these squares must all be tents",
-      ),
+      move: eachMust(cells, "a tent"),
     }),
 
   /** A line whose open squares have room for exactly `need` tents that do not
    * touch, so the ringed squares must hold one each. */
   noSpareRoom: (c: Counted, need: number, cells: readonly Point[]): Sentence =>
     so({
-      look: phrase`${thisLine(c)} needs ${number(c, more(need))}, and its open squares have room for only ${need} that don't touch`,
-      move: ringed(cells, "this one must be a tent", "these must be tents"),
+      look: phrase`${thisLine(c)} needs ${number(c, more(need))}, and its open squares fit only ${need} that don't touch`,
+      move: eachMust(cells, "a tent"),
     }),
 
   /** The same firing's other leg: squares between those tents, by the rule
    * the first leg's count did not need. */
   betweenThem: (c: Counted, cells: readonly Point[]): Sentence =>
     sentence({
-      move: phrase`${ringed(cells, "the square", "the squares")} between the tents that ${thisLine(c)}'s ${number(c, "number")} needs must be grass`,
+      move: phrase`${these(cells)} between the tents that ${thisLine(c)}'s ${number(c, "number")} needs must be grass`,
       relation: { kind: "again", basis: phrase`tents never touch` },
     }),
 
@@ -237,8 +238,8 @@ export const say = {
     so({
       look:
         need === 1
-          ? phrase`Wherever ${thisLine(c)}'s ${number(c, "last tent")} goes, it touches ${these(cells)} beside it`
-          : phrase`Wherever ${thisLine(c)}'s ${number(c, `${need} remaining tents`)} go, one touches ${ringed(cells, "this square", "each of these squares")} beside it`,
-      move: phrase`${mustBe(cells)} grass`,
+          ? phrase`Wherever ${thisLine(c)}'s ${number(c, "1 remaining tent")} goes, it touches ${these(cells)} beside it`
+          : phrase`Wherever ${thisLine(c)}'s ${number(c, `${need} remaining tents`)} go, one touches ${ringed(cells, "the ringed square", "each ringed square")} beside it`,
+      move: phrase`grass must go there`,
     }),
 };

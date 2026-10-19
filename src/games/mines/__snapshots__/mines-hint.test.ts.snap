@@ -2599,11 +2599,11 @@ exports[`mines: pinned hint positions > says, at each pin 1`] = `
   "count": "All 10 mines are found, so this square must be safe.",
   "firstClick": "No mine is ever laid in the first square you open or beside it, so this square can't hold one: open it to begin.",
   "full": "The outlined 1 has exactly 1 unopened square around it, so this square must be a mine.",
-  "open": "The outlined 1 already touches its mine (outlined), so these must be safe.",
-  "pair": "The outlined 2 needs 2 mines, but the outlined 1 allows at most 1 in the striped squares, so this square must be a mine.",
-  "satisfied": "The outlined 1 already touches its mine (outlined), so these must be safe.",
-  "severalFlags": "The outlined 3 has exactly 3 unopened squares around it, so these must all be mines.",
-  "twoNumbers": "The outlined 2 needs 2 mines, but the outlined 1 allows at most 1 in the striped squares, so this square must be a mine.",
+  "open": "The outlined 1 already touches its mine (outlined), so the ringed squares must be safe.",
+  "pair": "The outlined 2 needs 2 mines; the outlined 1 allows at most 1 in the striped squares, so this square must be a mine.",
+  "satisfied": "The outlined 1 already touches its mine (outlined), so the ringed squares must be safe.",
+  "severalFlags": "The outlined 3 has exactly 3 unopened squares around it, so each ringed one must be a mine.",
+  "twoNumbers": "The outlined 2 needs 2 mines; the outlined 1 allows at most 1 in the striped squares, so this square must be a mine.",
   "winningOpenFlagsTheRest": "The outlined 1 already touches its mine (outlined), so this square must be safe.",
 }
 `;

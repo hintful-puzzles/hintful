@@ -109,10 +109,7 @@ export const say = {
   /** A later leg of the journey: it does not re-explain the why, since leg one
    * carried it and is still on screen, so it serves the same tile. */
   next: (m: Marked, home: boolean): Sentence =>
-    working(
-      m,
-      phrase`take ${tile(m, "it")} on to ${place(m)}${home ? ", where it belongs" : ""}`,
-    ),
+    working(m, phrase`take it on to ${place(m)}${home ? ", where it belongs" : ""}`),
 
   /** The tile sits in the source's row, striped. */
   rowFixed: (m: Marked, home: boolean): Sentence =>

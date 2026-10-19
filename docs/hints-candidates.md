@@ -222,7 +222,10 @@ Return from `strikeWords` a `Premise`
 the values go, and no ending. The walk ends it with the plan's `conclude`
 words for the move the step turns out to make: "so 2 and 4 must go" as a
 strike, and under the implicit reading "so this cell must be 3" or
-"so pencil in only 1 and 5" (§ "Two readings of an unmarked cell").
+"so this cell can only be 1 or 5" (§ "Two readings of an unmarked cell").
+The walk builds the reference: the struck values ("2 and 4") or "this cell",
+never the clause, since a reference is what the player presses
+(`hints.md` § "Keep the narration terse").
 Requirements: "A candidate strike SHALL end in the walk's conclusion", "A
 premise says how its conclusion refers to the struck notes".
 
@@ -230,11 +233,12 @@ premise says how its conclusion refers to the struck notes".
   `candidateConclusions` in the game's own value words, or is written by a
   game whose values are not listable that way (Rome's, in the ways a square
   points).
-- Three optional fields of the premise say how the ending refers to the
+- Two optional fields of the premise say how the ending refers to the
   struck notes: `where` for a strike that reaches past "this cell" ("from the
-  other cells they pass through"), `struck` where a list of values would
-  misstate them, and `named` where the premise already named them, so the
-  ending says "cross them out".
+  other cells they pass through"), and `struck` where a list of values would
+  misstate them. A premise that already named the values is still followed
+  by them ("puts 2 in this cell, so the 2 must go"): "it" is no thing on the
+  board to press.
 
 ## The row/column preset
 
@@ -691,7 +695,7 @@ implicit reading would be a populate done one cell at a time.
 **A strike from one note-less cell is folded into its conclusion.** When a
 strike's marks lie in one blank, note-less cell and its premise has no
 `where`, the step ends in the move the board calls for: "…differ by 3, so
-this cell must be 2", or "…so pencil in only 1 and 4". The limits:
+this cell must be 2", or "…so this cell can only be 1 or 4". The limits:
 
 - A cell an earlier leg of the firing reads is noted first and struck as
   written, since its candidates are that leg's premise. A cage firing notes

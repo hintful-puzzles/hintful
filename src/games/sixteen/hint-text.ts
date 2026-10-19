@@ -20,7 +20,6 @@ import { HINT_SETTING_UP } from "../../engine/hint-text.ts";
 import {
   type MarkKind,
   mark,
-  Narration,
   phrase,
   type Sentence,
   sentence,
@@ -48,14 +47,13 @@ export const say = {
     continues: boolean;
     home: boolean;
   }): Sentence => {
-    const it = mark.as("ring", TILE, [p.tile], "it");
+    // The aim names the tile, so the move can say "it".
+    const tile = mark.as("ring", TILE, [p.tile], `tile ${p.tile}`);
     const to =
       p.onward === null
         ? mark.as("ring", SQUARE, [p.target], "the ringed square")
-        : phrase`${mark.as("ring", SQUARE, [p.target], "the nearer ringed square")}, then ${mark.as("ring", SQUARE, [p.onward], "the other")}`;
-    const tactic = p.continues
-      ? phrase`move ${it} on to ${to}`
-      : phrase`move ${it} to ${to}`;
+        : phrase`${mark.as("ring", SQUARE, [p.target], "the nearer ringed square")}, then ${mark.as("ring", SQUARE, [p.onward], "the other ringed square")}`;
+    const tactic = p.continues ? phrase`move it on to ${to}` : phrase`move it to ${to}`;
     const suffix = p.continues
       ? ""
       : p.home
@@ -64,7 +62,7 @@ export const say = {
     // A continuation leg serves the same aim with nothing more to say: its
     // first leg is still on screen.
     return sentence({
-      aim: Narration.plain(`tile ${p.tile}`),
+      aim: tile,
       move: phrase`${tactic}${suffix}`,
       relation: { kind: "serves" },
     });

@@ -68,9 +68,10 @@ export interface Only {
   readonly relation: Relation;
 }
 
-/** "slide north", pointing at the arrow on the ball. */
+/** "slide north", the direction pointing at the arrow on the ball: the legend
+ * teaches that the words name the arrow by the way it points. */
 const slideWay = (m: Marked): Narration =>
-  mark.as("ring", ARROW, [m.dir], `slide ${DIR_NAMES[m.dir]}`);
+  phrase`slide ${mark.as("ring", ARROW, [m.dir], DIR_NAMES[m.dir])}`;
 
 /** The gem the leg is going for: circled, and an outline in role, since it is
  * what the step works toward rather than what it decides. */

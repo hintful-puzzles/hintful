@@ -104,9 +104,7 @@ export const say = {
    * firing still has to settle and the hub it reasons from, which the leg
    * still shows. */
   continuation: (line: boolean, m: Marked): Sentence => {
-    const rest = mark.as("ring", SPOKE, m.spokes, (els) =>
-      els.length === 1 ? "this one" : "these",
-    );
+    const rest = spokes(m);
     return sentence({
       move: line
         ? phrase`${rest} must be ${m.spokes.length === 1 ? "a line" : "lines"} too`

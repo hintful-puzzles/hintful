@@ -77,7 +77,7 @@ const KILLER: SoloParams = {
 
 const EXTRA_CAGE = /^This (row|column|block) must total (\d+);/;
 const CONFINED =
-  /^These (\d+) (rows|columns) fit (\S+) only in the outlined cells, which take the \S+ of (\d+) (rows|columns),/;
+  /^These (\d+) (rows|columns) fit (\S+) only in the outlined cells, taking the \S+ of (\d+) (rows|columns),/;
 
 const strikes = (step: AnyStep): number =>
   step.move.type === "pencilStrike" ? step.move.marks.length : 0;

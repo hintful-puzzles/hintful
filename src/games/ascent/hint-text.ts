@@ -232,15 +232,18 @@ export const say = {
     const move = phrase`it must be ${n}`;
     if (!line) {
       if (!where)
-        return so({ look: phrase`${ring(at, "This")} is the last empty square`, move });
+        return so({
+          look: phrase`${ring(at, "The ringed square")} is the last empty one`,
+          move,
+        });
       return so({
-        look: phrase`${n} must sit ${where}, and ${ring(at, "this")} is the only empty square that does`,
+        look: phrase`${n} must sit ${where}, and ${ring(at, "the ringed square")} is the only empty one that does`,
         move,
       });
     }
     if (!where)
       return so({
-        look: phrase`${n} must be on ${itsLine(line)}, and ${ring(at, "this")} is its only empty square`,
+        look: phrase`${n} must be on ${itsLine(line)}, and ${ring(at, "the ringed square")} is its only empty one`,
         move,
       });
     return so({
@@ -287,7 +290,7 @@ export const say = {
           ? `with the path's ${n === 1 ? "last" : "first"} number out of reach`
           : `with ${other}'s arrow pointing elsewhere`;
     return so({
-      look: phrase`Only ${outlined([open], "the outlined square")} leads into ${ring(at, "this one")}`,
+      look: phrase`Only ${outlined([open], "the outlined square")} leads into ${ring(at, "the ringed one")}`,
       follows: phrase`the path must end here`,
       move: phrase`${which}, it must be ${n}`,
     });
@@ -328,19 +331,22 @@ export const say = {
     reach: readonly number[],
     byRoute: boolean,
   ): Sentence => {
+    const square = ring(at, "the ringed square");
     const reaches = byRoute
-      ? phrase`${striped(reach, "can step")} ${ring(at, "here")} through empty squares`
-      : phrase`${striped(reach, "can reach")} ${ring(at, "this square")}`;
+      ? phrase`steps to ${square} by ${striped(reach, "the striped squares")}`
+      : phrase`can reach ${square} (${striped(reach, "its area, striped")})`;
     // A single number is named for itself: "Only 3, between 2 and 4, …".
     const who = single
       ? phrase`Only ${n}, ${outlined(run.cells, runWords(run).slice("the run ".length))},`
       : phrase`Only ${runName(run)}`;
     const move = phrase`it must be ${n}`;
     if (single) return so({ look: phrase`${who} ${reaches}`, move });
-    return so({
+    const said = so({
       look: phrase`${who} ${reaches}, and of its numbers only ${n} can`,
       move,
     });
+    if (said.text.length <= GLANCE) return said;
+    return so({ look: phrase`${who} ${reaches}, and only its ${n} can`, move });
   },
 
   /**
@@ -355,7 +361,7 @@ export const say = {
   ): Sentence =>
     so({
       look: phrase`${runName(run)} must step through ${outlined(through, "the outlined squares")}`,
-      move: phrase`${n} can only go ${ring(at, "here")}`,
+      move: phrase`${n} can only go in ${ring(at, "the ringed square")}`,
     }),
 
   /**
@@ -386,7 +392,8 @@ export const say = {
     own: number,
     out: readonly Out[],
   ): Sentence => {
-    const here = ring(at, "here");
+    // The short form, as the rivals' reasons leave little room at a glance.
+    const here = mark.paren("ring", SQUARE, at, "here");
     const move = phrase`it must be ${n}`;
     if (out.length === 0)
       return so({
@@ -399,17 +406,26 @@ export const say = {
     // A number without an arrow points nowhere, so it "could go" here.
     const arrowless = own < 0 || out.some((o) => o.arrow < 0);
     const all = [...out, { m: n, arrow: own }].sort((a, b) => a.m - b.m);
-    const names = all.map((o) =>
-      o.arrow < 0 ? `${o.m} (no arrow)` : outlined([o.arrow], `${o.m}`),
-    );
-    const lead = phrase`Of the missing numbers, only ${listed(names)} ${arrowless ? "could go" : "point"} ${here}`;
-    const why = out.map((o, k) =>
-      k === 0
-        ? phrase`${o.m} is too far from ${nearTarget(o.by)}`
-        : phrase`${o.m} from ${nearTarget(o.by)}`,
-    );
-    const full = so({ look: phrase`${lead}. ${listed(why)}`, move });
+    const named = (o: { m: number; arrow: number }): string | Narration =>
+      o.arrow < 0 ? `${o.m} (no arrow)` : outlined([o.arrow], `${o.m}`);
+    const toIt = arrowless ? "could go" : "point";
+    const those = phrase`Of the missing numbers ${arrowless ? "that could go" : "pointing"} ${here}`;
+    const lead = phrase`Of the missing numbers, only ${listed(all.map(named))} ${toIt} ${here}`;
+    const why = (name: (o: Out) => string | Narration) =>
+      out.map((o, k) =>
+        k === 0
+          ? phrase`${name(o)} is too far from ${nearTarget(o.by)}`
+          : phrase`${name(o)} from ${nearTarget(o.by)}`,
+      );
+    const full = so({ look: phrase`${lead}. ${listed(why((o) => `${o.m}`))}`, move });
     if (full.text.length <= GLANCE) return full;
+    // Each rival with its reason, leaving the one that stands to the
+    // conclusion, which names it.
+    const reasons = so({
+      look: phrase`${those}, ${listed(why(named))}`,
+      move: own >= 0 ? phrase`it must be ${outlined([own], `${n}`)}` : move,
+    });
+    if (reasons.text.length <= GLANCE) return reasons;
     // Too many to name each reason at a glance: they are drawn instead, and the
     // words point at them together. What these words do not name is not drawn
     // (`hint.ts` draws from the words).
@@ -421,14 +437,9 @@ export const say = {
         : striped(lines, "the striped lines");
     // "All but one": the conclusion names the number left, so saying it here
     // too would name it twice.
-    const shorter = [
-      so({ look: phrase`${lead}, and ${drawn} rule out all but one`, move }),
-      so({
-        look: phrase`Of the missing numbers that ${arrowless ? "could go" : "point"} ${here}, ${drawn} rule out all but one`,
-        move,
-      }),
-    ];
-    return shorter.find((s) => s.text.length <= GLANCE) ?? shorter[shorter.length - 1];
+    // It still names each rival, so it may run past the limit
+    // (`LONG_NARRATIONS` in `hint-quality.test.ts`).
+    return so({ look: phrase`${lead}, and ${drawn} rule out all but one`, move });
   },
 
   /**
@@ -448,19 +459,21 @@ export const say = {
     arrows: readonly number[] | null,
   ): Sentence => {
     const path = (words: string) => mark.as("ring", PATH, route, words);
+    // The legend's words for the line, since "the line" would read as an
+    // arrow's in Edges.
+    const drawn = path("the drawn route");
     // Edges: the arrows are why there is one route, so the sentence says so.
-    // The route is "the one drawn", since "the line" would read as an arrow's.
     if (arrows && why.kind === "plain")
       return so({
         look: phrase`With each number on ${outlined(arrows, "its arrow's")} line, ${runName(run)} has only one route`,
-        move: phrase`it must take ${path("the one drawn")}`,
+        move: phrase`it must take ${drawn}`,
       });
     if (why.kind === "must") {
       const look = phrase`No other run reaches ${striped(why.squares, "the striped squares")}`;
       if (arrows) {
         const said = so({
           look,
-          move: phrase`${runName(run)} must take them, on ${path("the one route")} ${outlined(arrows, "its arrows")} allow`,
+          move: phrase`${runName(run)} must take them, on ${drawn} ${outlined(arrows, "its arrows")} allow`,
         });
         if (said.text.length <= GLANCE) return said;
       }
@@ -468,17 +481,17 @@ export const say = {
       // it out.
       return so({
         look,
-        move: phrase`${runName(run)} must take them all, on ${path("the one route")} that does`,
+        move: phrase`${runName(run)} must take them all, along ${drawn}`,
       });
     }
     if (why.kind === "room")
       return so({
-        look: phrase`Only one route for ${runName(run)} leaves ${runName(why.run)} a way through`,
-        move: phrase`it must take ${path("the line")}`,
+        look: phrase`Only one route for ${runName(run)} lets ${runName(why.run)} through`,
+        move: phrase`it must take ${drawn}`,
       });
     return so({
       look: phrase`${runName(run)} has only one route through the empty squares`,
-      move: phrase`it must go along ${path("the line")}`,
+      move: phrase`it must go along ${drawn}`,
     });
   },
 };

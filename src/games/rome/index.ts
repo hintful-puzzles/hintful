@@ -707,7 +707,7 @@ export const romeGame: Game<
     roles: {
       ring: "the square the step decides: the arrow to place, the marks to pencil in, or the marks to cross off, which are drawn with a line through them.",
       outline:
-        'the squares it reasons from: the arrow the area already has, a neighbor that can only point two ways, or the two squares of a pair. A trail of arrows is numbered in the order you follow it from the square next door, when a sentence says "following the arrows … leads back here".',
+        'the squares it reasons from: the arrow the area already has, a neighbor that can only point two ways, or the two squares of a pair. A trail of arrows is numbered in the order you follow it from the square next door, when a sentence says "the numbered arrows … lead back here".',
       stripes:
         'the area the sentence calls "its area" or "this area", or "the striped group": a goal and the squares already leading into it.',
     },

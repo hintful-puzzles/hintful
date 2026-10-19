@@ -294,7 +294,7 @@ describe("Sixteen midend integration — hint persistence", () => {
     const banner = () => h.last("status-bar-change")?.activeHintExplanation;
     expect(h.m.hint()).toBeNull();
     expect(banner()).toBe(
-      "Working on tile 6: move it to the nearer ringed square, then the other (setting up).",
+      "Working on tile 6: move it to the nearer ringed square, then the other ringed square (setting up).",
     );
 
     // Leg 1: slide row 0 left by 1 (cursor at (0,0), shift+left).
@@ -303,7 +303,7 @@ describe("Sixteen midend integration — hint persistence", () => {
     expect(banner()).toBeUndefined();
     expect(h.m.hint()).toBeNull();
     expect(banner()).toBe(
-      "Working on tile 6: move it on to the nearer ringed square, then the other.",
+      "Working on tile 6: move it on to the nearer ringed square, then the other ringed square.",
     );
 
     // Leg 2: slide column 3 down by 1 (cursor right ×3, shift+down).

@@ -580,10 +580,10 @@ describe("the sentences at their extremes", () => {
     expect(say.cull(at, 9, false).text).toContain("within 9 cells of it");
     expect(say.cull(at, 3, true).text).not.toContain("within");
     expect(say.starve([at], 1, targets(1), false).text).toBe(
-      "The striped area can put its 1 only in line with this cell and within 1 cell of it",
+      "The striped area's 1 can only go within 1 cell of this cell, in line with it",
     );
     expect(say.starve([at], 4, targets(3), true).text).toBe(
-      "The striped area can put its 4 only in a cell touching each of these",
+      "The striped area's 4 can only go in a cell touching each ringed cell",
     );
     expect(say.note(at, [2], false, true).text).toBe(
       "Only 2 isn't already in this cell's area or in a cell touching it, so pencil it in.",

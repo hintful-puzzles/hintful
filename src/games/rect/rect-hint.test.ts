@@ -151,7 +151,7 @@ describe("rect hint rungs", () => {
     const res = rectHint(s);
     if (!res.ok) throw new Error(res.error);
     expect(res.steps[0].explanation).toBe(
-      "Only the outlined 12, 24 and 24 can cross this edge, taking a striped square another clue needs, so it must be a line.",
+      "Only the outlined 12, 24 and 24 can cross this edge, taking another outlined clue's striped square, so it must be a line.",
     );
   });
 

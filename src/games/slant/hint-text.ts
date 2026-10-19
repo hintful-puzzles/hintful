@@ -176,17 +176,17 @@ export const say = {
 
   // --- the same-slant mark, placed as a step -----------------------------
 
-  // "From just these two" is the premise: exactly one of two squares side by
+  // "From just the ringed pair" is the premise: exactly one of two squares side by
   // side around a point touches it only when they slant the same way.
   /** Two squares around a clue `c` that must share its one remaining line. */
   markClue: (clue: Point, c: number, src: ClueSources, m: SlantMark): Sentence => {
-    const it = mark.this("outline", CLUE, [clue], `${c} clue`);
+    const it = mark.this("outline", CLUE, [clue], `${c}`);
     const held = has(src);
     return so({
       look:
         held === null
-          ? phrase`${it} needs one line, from just ${joined(m, "these two squares")}`
-          : phrase`${it} has ${held.got} and needs ${c > 1 ? "one more" : "one"} from ${joined(m, "these two")}`,
+          ? phrase`${it} needs one line, from just ${joined(m, "the ringed pair")}`
+          : phrase`${it} has ${held.got} and needs ${c > 1 ? "one more" : "one"} from ${joined(m, "the ringed pair")}`,
       move: phrase`they must slant the same way`,
     });
   },
@@ -197,7 +197,7 @@ export const say = {
     const both =
       clauses.length === 1 ? clauses[0] : phrase`${clauses[0]}, or both ${clauses[1]}`;
     return so({
-      look: phrase`${joined(m, "these two")} can't both ${both}`,
+      look: phrase`${joined(m, "the ringed pair")} can't both ${both}`,
       move: phrase`they must slant the same way`,
     });
   },
@@ -276,8 +276,8 @@ export const say = {
     const head = mark.this("outline", CLUE, twos, "2");
     const theirs = squaresAs(pairs, single ? "its pair" : "their pairs");
     return so({
-      look: phrase`${head} and ${theirs} line up between ${capWords}`,
-      move: phrase`${joined(m, "these two")} must slant the same way`,
+      look: phrase`${head} and ${theirs} lie between ${capWords}`,
+      move: phrase`${joined(m, "the ringed pair")} must slant the same way`,
     });
   },
 
@@ -310,7 +310,7 @@ export const say = {
       : phrase`gives it at most one line and, with ${far}, at least one`;
     return so({
       look: phrase`${squaresAs(pair, "the pair across")} ${mark.this("outline", CLUE, [two], "2")} ${bounds}`,
-      move: phrase`${joined(m, "these two")} must slant the same way`,
+      move: phrase`${joined(m, "the ringed pair")} must slant the same way`,
     });
   },
 

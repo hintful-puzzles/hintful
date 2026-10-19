@@ -11,7 +11,7 @@
  * draws no coordinates, so an island's digit is the only handle a sentence can
  * offer, and the step recolors that island so the words point at something
  * visible (docs/hints.md § "Name a square by its value"). A bridge has no
- * handle at all: the narration says "this way" or "here" and the hint draws the
+ * handle at all: the narration calls it "the ringed line" and the hint draws the
  * bridge, or the cross, that the move would make.
  */
 
@@ -70,7 +70,7 @@ export interface BridgesTarget extends BridgesSpan {
  * The split follows docs/hints-marks.md § "The element-type color legend". The
  * two `COL_HINT` roles are `focus` and `targets`, and they are safe to share a
  * color because they are **different kinds of element**: every sentence names
- * one as an island ("this 5") and the other as a direction ("this way"), which
+ * one as an island ("this 5") and the other as a line ("the ringed line"), which
  * is the test § "Two marks on the board, one 'this cell'" asks first. The
  * evidence roles split the same way and take `COL_HINT_CELL`.
  */

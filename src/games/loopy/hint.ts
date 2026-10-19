@@ -453,7 +453,7 @@ function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks>
       // the reader cannot tell which edge "joining them" means. The edges the
       // step sets are banded by the move itself.
       return {
-        words: (m) => say.clueBlockedPair(clue(r.face), m),
+        words: (m) => say.clueBlockedPair(clue(r.face), r.between, m),
         marks: { faces: [r.face], dots: [...r.dots] },
       };
     case "deadEnd":

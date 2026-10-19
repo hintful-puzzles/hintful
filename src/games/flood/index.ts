@@ -266,7 +266,7 @@ export const floodGame: Game<
   hintRungs: FLOOD_RUNGS,
   hintMarks: {
     roles: {
-      ring: "what the step decides: a black dot on every square the named color's fill would join to your region, so you can see what it gains.",
+      ring: "what the step decides: a black dot on every square the named color's fill would join to your region, so you can see what it gains: *the dotted squares*, in its words.",
     },
   },
   hintKeepTrack,

@@ -1222,18 +1222,18 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
 
 exports[`singles: pinned hint positions > says, at each pin 1`] = `
 {
-  "adjBlack": "These squares (6, 3, 1 and 2) touch a purple square (outlined), so they must be clear.",
+  "adjBlack": "A purple square (outlined) touches these squares (6, 3, 1 and 2), so those squares must be clear.",
   "boxedIn": "This 6 is the outlined clear square's last neighbor that isn't purple, so it must be clear to keep that square joined.",
-  "corner2": "The corner's 4s need a purple; shading this 2 forces the side one, boxing the corner in, so it must stay clear.",
+  "corner2": "The corner's 4s need a purple; shading this 2 forces the side 4, boxing the corner in, so it must stay clear.",
   "corner3": "Left clear, this inner 3 would make both 3s flanking corner 6 purple and box the corner in, so it must be purple.",
   "corner4": "Left clear, this corner 5 would box itself in with its two 5s purple, so it and the 5 diagonally inside must be purple.",
-  "offset": "The outlined 2s mean shading the ringed 5 forces two purple squares to touch, so it must be clear.",
+  "offset": "The outlined 2s mean shading the ringed 5 makes two purple squares touch, so that 5 must be clear.",
   "oneCell": "The outlined 6s sit one square apart, so one of them must be purple: the 2 between them must be clear.",
   "pair": "The outlined 4s touch, so one of them stays clear and uses up the 4 in this row: the ringed 4 must be purple.",
-  "sameLine": "This 2 shares this row with the outlined clear 2, which already uses that number, so it must be purple.",
+  "sameLine": "The outlined clear 2 already holds this row's 2, so the ringed 2 must be purple.",
   "sandwich": "The outlined 6s sit one square apart, so one of them must be purple: the 2 between them must be clear.",
-  "sharedLine": "This 2 shares this row with the outlined clear 2, which already uses that number, so it must be purple.",
+  "sharedLine": "The outlined clear 2 already holds this row's 2, so the ringed 2 must be purple.",
   "split": "Shading this 4 would cut some of the outlined squares off from the rest of the clear region, so it must be clear.",
-  "twoCells": "These 4s share this column with the outlined clear 4, which already uses that number, so they must be purple.",
+  "twoCells": "The outlined clear 4 already holds this column's 4, so the ringed 4s must be purple.",
 }
 `;

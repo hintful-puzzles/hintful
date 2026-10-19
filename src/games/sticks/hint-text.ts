@@ -111,7 +111,7 @@ export const say = {
   /** A line here would join clues showing `vals` into one line. */
   twoClues: (vals: number[], to: To, m: SticksMarks, later: boolean): Sentence => {
     const { bad, move } = frame(to, m);
-    const line = cellsRef(m, "one line");
+    const line = phrase`one line, ${mark.the("outline", CELL, m.cells, "square")}`;
     if (later)
       return continues(
         move,
@@ -170,7 +170,7 @@ export const say = {
     return opens(
       reason.value === 1
         ? phrase`${black} has one open side left, and a ${bad} line here would close it off`
-        : phrase`${black} needs ${cellsRef(m, reason.value === 2 ? "both" : `all ${reason.value}`)} of its open sides, and a ${bad} line here would close one`,
+        : phrase`${black} needs ${cellsRef(m, `${reason.value === 2 ? "both" : `all ${reason.value}`} outlined sides`)}, and a ${bad} line here would close one`,
       move,
     );
   },

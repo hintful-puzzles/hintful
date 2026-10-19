@@ -45,9 +45,9 @@ const thisCell = (p: Painted): Narration =>
   mark.as("ring", CELL, els(p.focus), "this cell");
 const partner = (p: Painted, words = "its partner"): Narration | string =>
   p.others.length > 0 ? phrase` and ${mark.as("ring", CELL, p.others, words)}` : "";
-/** "it", with its partner when there is one. */
-const itAnd = (p: Painted): Narration =>
-  phrase`${mark.as("ring", CELL, els(p.focus), "it")}${partner(p)}`;
+/** "it", with its partner when there is one: the cell itself is named by
+ * {@link thisCell} earlier in the sentence. */
+const itAnd = (p: Painted): Narration => phrase`it${partner(p)}`;
 const ringedDot = (p: Painted, words: string): Narration =>
   mark.as("ring", DOT, els(p.targetDot), words);
 
@@ -56,10 +56,10 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
     case "dotTile": {
       const cells = mark.as("ring", CELL, p.others, (cs) =>
         cs.length === 1
-          ? "this cell"
+          ? "the ringed cell"
           : cs.length === 2
-            ? "both these cells"
-            : `these ${cs.length} cells`,
+            ? "both ringed cells"
+            : `the ${cs.length} ringed cells`,
       );
       // Named by where it is: the dot is *on* the cells being filled, so it is
       // ringed only where a cell around it is not.
@@ -81,9 +81,9 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
     // settled: one shows an arrow, the other shows the dot.
     case "separate":
       return so({
-        look: phrase`${mark.as("outline", CELL, p.area, "These two cells")} ${said.points ? "point at" : "go with"} ${mark.as("outline", DOT, p.refDots, "different dots")}`,
+        look: phrase`${mark.as("outline", CELL, p.area, "These two cells")} ${said.points ? "point at" : "go with"} ${mark.as("outline", DOT, p.refDots, "different outlined dots")}`,
         follows: phrase`they belong to different galaxies`,
-        move: phrase`${mark.as("ring", WALL, p.targetWalls, "a wall")} must run between them`,
+        move: phrase`${mark.the("ring", WALL, p.targetWalls, "edge")} must be a wall`,
       });
 
     // The mirrored wall is very often the board's own rim, and calling that
@@ -92,7 +92,12 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
     // A cell the dot sits in the middle of is its own partner, and its walls
     // mirror to its own other side.
     case "mirrorWall": {
-      const across = mark.as("outline", DOT, p.refDots, `the ${dot(said.black)}`);
+      const across = mark.as(
+        "outline",
+        DOT,
+        p.refDots,
+        `the outlined ${dot(said.black)}`,
+      );
       const pair =
         p.area.length === 1
           ? phrase`${mark.as("outline", CELL, p.area, "The outlined cell")} is its own partner across ${across}`
@@ -100,8 +105,8 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
       const wall = mark.this("ring", WALL, p.targetWalls, "wall");
       return said.edge
         ? so({
-            look: phrase`${pair}; one ${p.area.length === 1 ? "side " : ""}meets ${mark.as("outline", WALL, p.walls, "the board's edge")}`,
-            move: phrase`${wall} must match it`,
+            look: pair,
+            move: phrase`${wall} must match ${mark.as("outline", WALL, p.walls, "the outlined board edge")}`,
           })
         : so({
             look: pair,
@@ -109,19 +114,17 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
           });
     }
 
-    // Its walled sides are drawn on the board, and "every way out" already
+    // Its walled sides are drawn on the board, and "its ways out" already
     // excludes them; that a galaxy is connected is the rule, and the help teaches
     // it (docs/hints.md § "Rules belong in the help").
     case "enclosed": {
-      const lead = mark.as(
-        "outline",
-        CELL,
-        p.area,
-        said.openings === 1 ? "The only way out" : "Every way out",
-      );
+      const ways =
+        said.openings === 1
+          ? phrase`only ${mark.paren("outline", CELL, p.area, "way out")} leads`
+          : phrase`${mark.paren("outline", CELL, p.area, "ways out")} all lead`;
       return so({
-        look: phrase`${lead} of ${thisCell(p)} leads into ${mark.the("stripes", whole(CELL), p.hatch, "galaxy")}`,
-        move: phrase`${itAnd(p)} must belong to ${ringedDot(p, `the ringed ${dot(said.black)}`)}`,
+        look: phrase`${thisCell(p)}'s ${ways} into ${mark.the("stripes", whole(CELL), p.hatch, "galaxy")}`,
+        move: phrase`${itAnd(p)} must join ${ringedDot(p, `the ringed ${dot(said.black)}`)}`,
       });
     }
 
@@ -136,13 +139,13 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
         move: phrase`${itAnd(p)} must belong to ${ringedDot(p, `the ringed ${dot(said.black)}`)}`,
       });
 
-    // "shows how far", not "is everywhere": the acted-on cell carries the action
+    // "join its reach", not "lie in it": the acted-on cell carries the action
     // mark rather than the hatch, so the striped set is the reach minus one
     // square and an absolute claim would be a shade off true.
     case "onlyReach":
       return so({
         look: phrase`No other galaxy reaches ${thisCell(p)}`,
-        move: phrase`${itAnd(p)} must join ${ringedDot(p, `the ringed ${dot(said.black)}`)}, whose reach ${mark.as("stripes", CELL, p.hatch, "the stripes show")}`,
+        move: phrase`${itAnd(p)} must join ${ringedDot(p, `the ringed ${dot(said.black)}`)} and ${mark.as("stripes", CELL, p.hatch, "its striped reach")}`,
       });
 
     case "exclave":

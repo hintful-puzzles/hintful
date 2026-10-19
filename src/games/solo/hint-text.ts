@@ -147,7 +147,7 @@ export const say = {
     placedRulesOut({ px: placed.x, py: placed.y }, g(n), joinOr(regions)),
 
   /** Where the placement's cull strikes from. */
-  dupWhere: "from these cells",
+  dupWhere: "from the other cells there",
 
   /** Every cell of `confined` that can take `n` also lies in one `target`. */
   intersect: (
@@ -242,8 +242,8 @@ export const say = {
     cells: RegionCells,
   ): Narration =>
     origin.kind === "cage" && origin.placed === 0
-      ? phrase`${thisCage(open).capitalized()} must total ${clue}, and its other cells leave no room for ${any(ns)}`
-      : phrase`${cageSum(open, origin, clue, cells)}; the others rule out ${all(ns)}`,
+      ? phrase`${thisCage(open).capitalized()} must total ${clue}; its other cells leave no room for ${any(ns)}`
+      : phrase`${cageSum(open, origin, clue, cells)}, which the others share`,
 
   /** No way to make a {@link CageSum}'s clue over `open` uses `ns` in the struck
    * cell `at`. */
@@ -257,7 +257,7 @@ export const say = {
   ): Narration =>
     origin.kind === "cage" && origin.placed === 0
       ? phrase`No way to make ${thisCage(open)} total ${clue} uses ${any(ns)} in ${thisCell(at)}`
-      : phrase`${cageSum(open, origin, clue, cells)}; no such sum uses ${any(ns)} here`,
+      : phrase`${cageSum(open, origin, clue, cells)}; no such sum has ${any(ns)}`,
 };
 
 // The sums below lean on the picture: the region they name is striped, the

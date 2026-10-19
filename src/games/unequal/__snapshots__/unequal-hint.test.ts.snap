@@ -5489,13 +5489,13 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
 exports[`unequal: pinned hint positions > says, at each pin 1`] = `
 {
   "adjacent": "No bar joins this cell to the 1 beside it, and they can't differ by 1, so the 2 must go.",
-  "adjacentSet": "A bar joins this cell to a neighbor with nothing open one away from 1, so it must go.",
-  "clean": "Now clear the easy ones: cross out any number already standing in each cell's row or column.",
+  "adjacentSet": "A bar joins this cell to its neighbor with nothing open one away from 1, so the 1 must go.",
+  "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
   "dup": "The 5 just placed can't repeat in its row and column, so the 5 must go from the other cells there.",
   "forcing": "Cell 1 is 1 or the numbered chain forces cell 3 to 1, both in line with this cell, so the 1 must go.",
-  "greater": "The larger side of a greater-than sign can't hold the smallest number, so the 1 must go.",
+  "greater": "The larger side of this greater-than sign can't hold the smallest number, so the 1 must go.",
   "hiddenSingle": "Every other cell in this row rules out 2, so this cell must be 2.",
-  "lesser": "The smaller side of a greater-than sign can't hold the largest number, so the 5 must go.",
+  "lesser": "The smaller side of this greater-than sign can't hold the largest number, so the 5 must go.",
   "note": "Nothing in this cell's row or column rules out a number yet, so pencil in every one.",
   "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
@@ -5507,7 +5507,7 @@ exports[`unequal: pinned hint positions > says, at each pin 1`] = `
 exports[`unequal: pinned hint positions > says, at each pin 2`] = `
 {
   "barStrike": "No bar joins this cell to the 1 beside it, and they can't differ by 1, so the 2 must go.",
-  "greaterThanStrike": "The larger side of a greater-than sign can't hold the smallest number, so the 1 must go.",
-  "multiMarkStrike": "Now clear the easy ones: cross out any number already standing in each cell's row or column.",
+  "greaterThanStrike": "The larger side of this greater-than sign can't hold the smallest number, so the 1 must go.",
+  "multiMarkStrike": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
 }
 `;

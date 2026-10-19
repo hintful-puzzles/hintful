@@ -830,7 +830,7 @@ describe("Sixteen hint", () => {
     // Tile 7's journey ends at index 1 (its home is index 6), so the
     // first leg carries the "(setting up)" why for the whole journey.
     expect(step1.explanation).toBe(
-      "Working on tile 7: move it to the nearer ringed square, then the other (setting up).",
+      "Working on tile 7: move it to the nearer ringed square, then the other ringed square (setting up).",
     );
     expect(hl1.ultimatePos).toBe(1);
 
@@ -1075,11 +1075,11 @@ describe("Sixteen hint rendering", () => {
     for (const step of result.steps) {
       const hl = step.highlights as SixteenHintHighlights;
       // A previewed two-leg journey (first leg, not a continuation) reads
-      // "move it to the nearer ringed square, then the other" and carries a
-      // distinct ultimatePos.
+      // "move it to the nearer ringed square, then the other ringed square"
+      // and carries a distinct ultimatePos.
       if (hl.ultimatePos !== null && !step.continuesPrevious) {
         expect(step.explanation).toMatch(
-          /^Working on tile \d+: move it to the nearer ringed square, then the other/,
+          /^Working on tile \d+: move it to the nearer ringed square, then the other ringed square/,
         );
         expect(hl.ultimatePos).not.toBe(hl.targetPos);
       }

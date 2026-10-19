@@ -11,7 +11,7 @@
  * Every word that points at the board is a reference to the mark it points at
  * (`engine/hint-words.ts`): a clue is outlined in its slot beside the grid, the
  * line it sees along is striped through both clue slots, and the cell a
- * placement decides is ringed ("here", "this cell").
+ * placement decides is ringed ("this cell").
  *
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads.
@@ -56,8 +56,8 @@ const clue = (c: ClueSight, words = `Clue ${c.value}`): Narration =>
   mark.as("outline", CELL, [c.at], words);
 const line = (c: ClueSight, words: string): Narration =>
   mark.as("stripes", whole(CELL), c.line, words);
-/** "here": the ringed cell a placement decides. */
-const here = (at: Point): Narration => mark.as("ring", CELL, [at], "here");
+/** The ringed cell a placement decides, and the height it takes. */
+const sits = (n: number, at: Point): Narration => phrase`${thisCell(at)} must be ${n}`;
 
 export const say = {
   /** Clue `c` sees every tower in its line, so height `n` sits at `at`. A
@@ -66,7 +66,7 @@ export const say = {
   fullLine: (c: ClueSight, n: number, at: Point, continues: boolean): Sentence =>
     continues
       ? sentence({
-          move: phrase`height ${n} can only sit ${here(at)}`,
+          move: sits(n, at),
           relation: {
             kind: "again",
             basis: phrase`${line(c, "the same line")} from ${clue(c, `clue ${c.value}`)}`,
@@ -75,14 +75,14 @@ export const say = {
       : so({
           look: phrase`${clue(c)} sees every tower in ${line(c, "this line")}`,
           follows: phrase`heights must climb 1, 2, … from the clue`,
-          move: phrase`height ${n} can only sit ${here(at)}`,
+          move: sits(n, at),
         }),
 
   tallestNearest: (c: ClueSight, n: number, at: Point): Sentence =>
     so({
       look: phrase`${clue(c)} sees one tower in ${line(c, "its line")}`,
       follows: phrase`the tallest must stand next to it`,
-      move: phrase`height ${n} can only sit ${here(at)}`,
+      move: sits(n, at),
     }),
 
   /** Two clues at the two ends of one line. */
@@ -95,7 +95,7 @@ export const say = {
     so({
       look: phrase`${mark.as("outline", CELL, clues, "These facing clues")} sum to one more than the grid size`,
       follows: phrase`${mark.as("stripes", whole(CELL), sight, "their line")}'s tallest is pinned`,
-      move: phrase`height ${n} can only sit ${here(at)}`,
+      move: sits(n, at),
     }),
 
   // The strike arms below are premises, which the walk concludes with the move

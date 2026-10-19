@@ -235,7 +235,7 @@ describe("each deduction is narrated in its own vocabulary", () => {
         galaxy: [{ x: 5, y: 3 }],
       }).replace("black dot", "white dot"),
     ).toBe(
-      "The only way out of this cell leads into the striped galaxy, so it must belong to the ringed white dot.",
+      "This cell's only way out (outlined) leads into the striped galaxy, so it must join the ringed white dot.",
     );
   });
 });
@@ -410,7 +410,7 @@ describe("the picture carries the argument", () => {
     const said = [
       { word: /outlined/, mark: (s: Step) => s.highlights?.area.length ?? 0 },
       {
-        word: /striped|stripes show/,
+        word: /striped/,
         mark: (s: Step) => s.highlights?.hatch.length ?? 0,
       },
     ];
@@ -559,7 +559,7 @@ describe("following the plan", () => {
     const live = galaxiesGame.refreshHintStep?.(found.step, s);
     if (!live) throw new Error("the step was left half made");
     expect(live.highlights?.targets).toHaveLength(2);
-    expect(live.explanation).toMatch(/so both these cells must belong to/);
+    expect(live.explanation).toMatch(/so both ringed cells must belong to/);
     expect(bindingDefects(galaxiesGame, s, galaxiesGame.newUi(s), live)).toEqual([]);
   });
 

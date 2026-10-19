@@ -26,22 +26,21 @@ export const TILE: MarkKind<number> = { name: "tile", key: (t) => `${t}` };
 const slid = (tile: number, words: string): Narration =>
   mark.as("ring", TILE, [tile], words);
 
-/** The slide, toward the goal tile the plan is working on. */
-const toward = (goal: number, move: Narration): Sentence =>
+/** The slide, toward the goal tile the plan is working on. When the goal is
+ * the tile that slides, the aim is what names it, and the move says "it". */
+const toward = (goal: number, move: Narration, slides = false): Sentence =>
   sentence({
-    aim: Narration.plain(`tile ${goal}`),
+    aim: slides ? slid(goal, `tile ${goal}`) : Narration.plain(`tile ${goal}`),
     move,
     relation: { kind: "serves" },
   });
 
 export const say = {
   /** The goal tile lands in its solved cell. */
-  goalHome: (goal: number): Sentence =>
-    toward(goal, phrase`slide ${slid(goal, "it")} into place`),
+  goalHome: (goal: number): Sentence => toward(goal, phrase`slide it into place`, true),
 
   /** The goal tile slides nearer its home. */
-  goalCloser: (goal: number): Sentence =>
-    toward(goal, phrase`slide ${slid(goal, "it")} closer`),
+  goalCloser: (goal: number): Sentence => toward(goal, phrase`slide it closer`, true),
 
   /** The goal tile slides one cell further from home. It lands where the
    * hole was, so the hole is left one cell nearer home than the tile:
@@ -49,7 +48,8 @@ export const say = {
   goalReposition: (goal: number): Sentence =>
     toward(
       goal,
-      phrase`slide ${slid(goal, "it")} back a step, leaving the hole between it and its home`,
+      phrase`slide it back a step, leaving the hole between it and its home`,
+      true,
     ),
 
   /** Another tile, displaced earlier in the rotation, lands in its own home. */

@@ -63,7 +63,7 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 | – Two marks of one kind: tie them, and never by color | a step marks two elements of one kind and says "this cell" |
 | – Name a square by its value | a step's squares hold numbers, or two of them hold the same one |
 | – The premise must single out the conclusion | another move would satisfy the premise a sentence states |
-| – Keep the narration terse | a sentence runs past 120 characters, or the length ledger fails |
+| – Keep the narration terse | a sentence runs past 120 characters, the length ledger fails, or a reference fails `hint-reference.ts` |
 | – The sentences live in one file per game | you add, move or reword a sentence |
 | – No em-dashes | a sentence wants a dash |
 | – Conclude with the action the move makes | a step strikes candidates, or its words claim a placement |
@@ -544,6 +544,26 @@ own, which ties the two but does not stand in for the words. Cut the rest:
 "the outlined 3s and 2s", not "a pair of 3s in one column and a pair of 2s in
 the next". Keep the premise and the reason, which no mark shows, and the rule
 the step teaches where the help does not already state it.
+
+`testing/hint-reference.ts` holds every step of the bound walk to it, reading
+each reference's own words. A reference passes as the move, as a role's word
+(or "numbered", for a chain), as a value (a number, a letter, an operator),
+as a phrase the game's legend teaches for the role, or as a noun phrase that
+is "this cell" or names its thing by a relation ("its partner", "the same
+row"). It fails as a clause, as a bare pro-form ("it", "here", "the rest"),
+as words that open on no determiner, and as "this cell" said in two roles of
+one kind. So:
+
+- **Put the verb outside the reference.** "so [the ringed squares] must all
+  be mines", not "so [these must all be mines]". A literal "it" after the
+  reference is fine: only the pill is pressed.
+- **A struck note is named by its value**, even just after the premise named
+  it: "puts 2 in this cell, so the 2 must go".
+- **"Ringed" is the ring's word in every game**, whatever the game draws:
+  each legend says what its ring looks like, and no single word is true of a
+  band, a fill, an arrow and a dot. Where "ringed" would mislead, the legend
+  teaches the game's own shape in the words the sentence uses (“the dotted
+  squares”), and the guard accepts that phrase for that role.
 
 Leave a journey's count to the chrome. A step whose journey has two or more
 legs shows "Step 2 of 7" above its sentence, so the words never say which leg

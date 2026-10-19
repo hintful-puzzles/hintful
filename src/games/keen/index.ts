@@ -316,7 +316,6 @@ function premise(reason: HintReason, marks: readonly Mark[]): Premise {
     case "cage":
       return {
         premise: say.cage(reason.cells, reason.op, reason.value, ns, marks[0]),
-        named: true,
       };
     case "cageLine":
       return {

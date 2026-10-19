@@ -350,7 +350,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     expect(picture(second).targets).toEqual([at(2, 3)]);
     expect(picture(third).targets).toEqual([at(2, 5)]);
     expect(third.explanation).toContain(
-      "A + at its far end would touch a +, so it must go here.",
+      "A + at its far end would touch a +, so it must go in the ringed square.",
     );
     expect(picture(third).area).toEqual(expect.arrayContaining([at(2, 4), at(2, 3)]));
   });
@@ -534,7 +534,7 @@ describe("magnets hint sentences", () => {
       expect(text, text).not.toContain("—");
       // The ledger's pattern for these, so a rewording cannot slip off it.
       expect(text, text).toMatch(
-        / elsewhere would | outlined tile would | at its far end would /,
+        / outlined square would | outlined tile would| at its far end would /,
       );
     }
   });
@@ -577,7 +577,7 @@ describe("magnets hint sentences", () => {
         0,
       ),
     );
-    expect(s.text).toContain("a + elsewhere would make like poles touch,");
+    expect(s.text).toContain("a + in an outlined square would make like poles touch,");
     // One clause names every touched pole, its own and its partner's.
     const touched = s.refs.find((r) => r.kind === SQUARE && r.elements.includes(4));
     expect(touched?.elements).toEqual([4, 5, 3]);
@@ -610,8 +610,8 @@ describe("magnets hint sentences", () => {
     const one = say.lineExact(M, "row", POSITIVE, 1, rest([], 0)).text;
     expect(one).toContain("one more +");
     expect(one).toContain("this square");
-    expect(say.oneNeutralLeft(M, "column", 1).text).toContain("this tile");
-    expect(say.neutralExact(M, "row", 1, [2]).text).toContain("this one");
+    expect(say.oneNeutralLeft(M, "column", 1).text).toContain("the ringed tile");
+    expect(say.neutralExact(M, "row", 1, [2]).text).toContain("the ringed one");
   });
 
   it("rings as many squares as the sentence names, in every plan", () => {
@@ -663,7 +663,9 @@ describe("magnets hint sentences", () => {
           if (many) {
             said.many++;
             expect(rings, `${label}: ${step.explanation}`).toBe(Number(many[1]));
-          } else if (/\bthis (square|end)\b|\bmust go here\b/.test(step.explanation)) {
+          } else if (
+            /\bthis square\b|\bthe ringed (square|end)\b/.test(step.explanation)
+          ) {
             said.one++;
             expect(rings, `${label}: ${step.explanation}`).toBe(1);
           }

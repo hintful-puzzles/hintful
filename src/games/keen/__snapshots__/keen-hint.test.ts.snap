@@ -6098,16 +6098,16 @@ exports[`keen hint render > a hidden-single placement hatches the whole line and
 
 exports[`keen: pinned hint positions > says, at each pin 1`] = `
 {
-  "cage": "No way to make this cage sum to 7 puts 1 or 2 in this cell, so pencil in only 3 and 4.",
+  "cage": "No way to make this cage sum to 7 puts 1 or 2 in this cell, so this cell can only be 3 or 4.",
   "cageLine": "This cage must multiply to 10, and every way to fill it places a 1 in its row, so 1 and 2 must go.",
-  "clean": "Now clear the easy ones: cross out any number already standing in each cell's row or column.",
+  "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
   "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells there.",
   "forcing": "Cell 1 is 3 or the numbered chain forces cell 5 to 3, both in line with this cell, so the 3 must go.",
   "hiddenSingle": "Every other cell in this column rules out 3, so this cell must be 3.",
   "note": "Nothing in this cell's row or column rules out a number yet, so pencil in every one.",
   "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
-  "set": "These 3 columns fit 5 only in the outlined cells, which take the 5 of 3 rows, so pencil in only 1, 2, 3, 4 and 6.",
+  "set": "These 3 columns fit 5 only in the outlined cells, taking the 5 of 3 rows, so this cell can only be 1, 2, 3, 4 or 6.",
   "single": "Every other number has been ruled out in this cell, so it can only be 5.",
 }
 `;
@@ -6122,8 +6122,8 @@ exports[`keen: pinned hint positions > says, at each pin 2`] = `
 
 exports[`keen: pinned hint positions > says, at each pin 3`] = `
 {
-  "cage": "No way to make this cage have a ratio of 2 puts 5 in this cell, so it must go.",
-  "cageRuledOut": "No way to make this cage have a ratio of 2 puts 5 in this cell, so it must go.",
-  "strikeOfSeveral": "No way to make this cage sum to 8 puts 1 or 4 in this cell, so they must go.",
+  "cage": "No way to make this cage have a ratio of 2 puts 5 in this cell, so the 5 must go.",
+  "cageRuledOut": "No way to make this cage have a ratio of 2 puts 5 in this cell, so the 5 must go.",
+  "strikeOfSeveral": "No way to make this cage sum to 8 puts 1 or 4 in this cell, so 1 and 4 must go.",
 }
 `;

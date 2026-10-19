@@ -455,7 +455,7 @@ function premise(reason: HintReason, marks: readonly Mark[], w: number): Premise
       };
     case "set":
       return reason.lines
-        ? { premise: say.confined(reason.lines, reason.cells, n), named: true }
+        ? { premise: say.confined(reason.lines, reason.cells, n) }
         : { premise: say.set(reason.cells, n) };
     case "forcing":
       return { premise: say.forcing(reason, marks[0], reason.shares) };

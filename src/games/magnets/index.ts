@@ -284,7 +284,7 @@ export const magnetsGame: Game<
     roles: {
       ring: "what the step decides: one end of a magnet, or a whole tile to make neutral or to mark ?.",
       outline:
-        'what the step reasons from: the magnet a pole would touch, the tiles elsewhere in the line that can\'t take the pole ("either outlined tile"), and the numbers it reads. The number a step counts with is drawn in the hint color, and the number of a line it only cites, because that line already has all its + or − poles, in a second color: "its row", "the column beside it".',
+        'what the step reasons from: the magnet a pole would touch (two of them are "like poles"), the tiles elsewhere in the line that can\'t take the pole ("either outlined tile"), and the clues it reads. A clue a step counts with is drawn in the hint color, and the clue of a line it only cites, because that line already has all its + or − poles, in a second color: "its row\'s clue".',
       stripes:
         'the row or column the sentence calls "this row" or "this column", running on through its numbers.',
     },

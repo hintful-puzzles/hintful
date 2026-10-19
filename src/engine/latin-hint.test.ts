@@ -285,18 +285,22 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
 
   it("concludes by the move: a strike, a placement, or the values left", () => {
     const say = candidateConclusions({ value: String });
-    // A value struck in two cells is named once.
-    expect(say.strike([4, 2, 4], {})).toBe("2 and 4 must go");
-    expect(say.strike([5], { where: "from these cells" })).toBe(
-      "the 5 must go from these cells",
+    // The reference names the struck values, a value struck in two cells
+    // once, and what follows it says they go.
+    const said = (ns: number[], how: Parameters<typeof say.strike>[0]): string => {
+      const { what, after } = say.strike(how);
+      return `[${what(ns)}] ${after}`;
+    };
+    expect(said([4, 2, 4], {})).toBe("[2 and 4] must go");
+    expect(said([3], {})).toBe("[the 3] must go");
+    expect(said([5], { where: "from the other cells there" })).toBe(
+      "[the 5] must go from the other cells there",
     );
-    expect(say.strike([1, 2], { struck: "its identity marks" })).toBe(
-      "its identity marks must go",
+    expect(said([5], { where: "beyond that" })).toBe("[the 5 beyond that] must go");
+    expect(said([1, 2], { struck: "its identity marks" })).toBe(
+      "[its identity marks] must go",
     );
-    // A premise that already named the values is referred back to.
-    expect(say.strike([3], { named: true })).toBe("it must go");
-    expect(say.strike([2, 3], { named: true })).toBe("they must go");
-    expect(say.place(3)).toBe("this cell must be 3");
-    expect(say.keep([1, 5])).toBe("pencil in only 1 and 5");
+    expect(say.place(3)).toBe("must be 3");
+    expect(say.keep([1, 5])).toBe("can only be 1 or 5");
   });
 });

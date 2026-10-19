@@ -76,16 +76,21 @@ export interface Premise {
   readonly proves: "safe" | "mine";
 }
 
-/** "these squares must be safe" / "this square must be a mine" / "… must all
- * be mines", agreeing with the ringed squares however a followed step has
- * re-counted them. */
+/** "the ringed squares must be safe" / "each ringed one must be a mine". The
+ * verb is literal, so the reference's words alone agree with however many
+ * squares a followed step has left ringed. One square is "this square", the
+ * shortest name for it, since the step rings no other. */
 function conclusion(at: readonly Point[], kind: "safe" | "mine"): Narration {
-  return mark.as("ring", CELL, at, (els) => {
-    const one = els.length === 1;
-    const subject = one ? "this square" : "these";
-    if (kind === "safe") return `${subject} must be safe`;
-    return one ? `${subject} must be a mine` : `${subject} must all be mines`;
-  });
+  const subject = mark.as("ring", CELL, at, (els) =>
+    els.length === 1
+      ? "this square"
+      : kind === "safe"
+        ? "the ringed squares"
+        : "each ringed one",
+  );
+  return kind === "safe"
+    ? phrase`${subject} must be safe`
+    : phrase`${subject} must be a mine`;
 }
 
 const capital = (n: Narration): Narration => n.capitalized();
@@ -229,7 +234,7 @@ export const sayPair = {
     shared: Narration,
   ): Premise => ({
     proves: "mine",
-    words: phrase`${heavy.subject} ${heavy.needs}, but ${light.subject} ${light.singular ? "allows" : "allow"} at most ${lightNeed} in ${shared}`,
+    words: phrase`${heavy.subject} ${heavy.needs}; ${light.subject} ${light.singular ? "allows" : "allow"} at most ${lightNeed} in ${shared}`,
   }),
 
   /** What a leg after `split`'s mines rests on: the light side's mines are

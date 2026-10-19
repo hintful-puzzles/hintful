@@ -1181,13 +1181,13 @@ describe("the shared setup narration", () => {
       "row or column",
       "square",
     )([]).text;
-    expect(clean).toContain("each square's");
+    expect(clean).toContain("its square's");
     expect(clean).not.toContain("cell");
-    expect(clean).toContain("already standing in each square's row or column");
+    expect(clean).toContain("already standing in its square's row or column");
 
     expect(populateText("number")).toContain("into each empty cell");
     expect(
       cleanObviousText("number", "placed", "row, column or block")([]).text,
-    ).toContain("each cell's row, column or block");
+    ).toContain("its cell's row, column or block");
   });
 });

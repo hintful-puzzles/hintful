@@ -136,7 +136,7 @@ describe("dominosa hint — narration + plan", () => {
   it("a placement step names the domino and uses the necessity voice", () => {
     const { step: place } = pinned("placement");
     // Necessity voice: forced move.
-    expect(place.explanation).toMatch(/must go here/);
+    expect(place.explanation).toMatch(/must go on the ringed spot/);
     // Names a domino value (e.g. "3–4").
     expect(place.explanation).toMatch(/\d[–-]\d/);
   });

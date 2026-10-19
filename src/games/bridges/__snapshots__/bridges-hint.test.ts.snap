@@ -2,13 +2,13 @@
 
 exports[`bridges: pinned hint positions > says, at each pin 1`] = `
 {
-  "everyNeighbor": "This 3 needs more bridges than either neighbor could carry alone, so both must take at least one.",
-  "exactSpace": "This 4 still needs 4 more bridges and has room for exactly 4, so every one must be drawn.",
-  "mustReachOut": "Filling this 3's other links as far as they go would seal off the outlined group, so a bridge must run this way.",
-  "needsThisWay": "This 2 can take at most 1 bridge from its other neighbors, so one must run this way.",
-  "severalBridges": "This 3 needs more bridges than either neighbor could carry alone, so both must take at least one.",
-  "wouldCloseLoop": "These islands are already linked by the outlined bridges, so one more this way would close a loop: it must be blocked.",
-  "wouldSealGroup": "A bridge here would shut these 2 islands into a finished group of their own, so this way must be blocked.",
-  "wouldStarve": "Two bridges here would leave the outlined island unable to reach its own count, so at most one can run this way.",
+  "everyNeighbor": "This 3 needs more bridges than either outlined neighbor could carry alone, so each ringed line must take at least one.",
+  "exactSpace": "This 4 still needs 4 more bridges and has room for exactly 4, so the ringed bridges must all be drawn.",
+  "mustReachOut": "Filling this 3's other links to the full would seal off the outlined group, so the ringed line must take a bridge.",
+  "needsThisWay": "This 2 can take at most 1 bridge from its other neighbors, so one must run along the ringed line.",
+  "severalBridges": "This 3 needs more bridges than either outlined neighbor could carry alone, so each ringed line must take at least one.",
+  "wouldCloseLoop": "These islands are linked by the outlined bridges, so one more would close a loop: the ringed line must be blocked.",
+  "wouldSealGroup": "A bridge here would shut these 2 islands off as a finished group, so the ringed line must be blocked.",
+  "wouldStarve": "Two bridges here would leave the outlined island short of its own count, so the ringed line can take at most one.",
 }
 `;

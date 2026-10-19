@@ -342,9 +342,11 @@ describe("every premise the corpus reaches is reached", () => {
       "This row already has its 1 tent, so its open squares must be grass.",
     );
     expect(say.allOpen(column, 1, one).text).toMatch(
-      /1 open square, so this square must be a tent/,
+      /1 open square, so the ringed square must be a tent/,
     );
-    expect(say.noSpareRoom(row, 2, one).text).toMatch(/this one must be a tent\.$/);
+    expect(say.noSpareRoom(row, 2, one).text).toMatch(
+      /the ringed square must be a tent\.$/,
+    );
   });
 });
 

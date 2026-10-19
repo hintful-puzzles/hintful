@@ -76,7 +76,7 @@ export const say = {
           : `all ${n} of its ${UNSHADED_NAME} cells`;
     return so({
       look: phrase`${theClue(m, n)} already sees ${mark.paren("outline", CELL, m.area, seen)}`,
-      move: phrase`${mark.as("ring", CELL, [m.target], `the cell just past ${pronoun(CELL, m.area)}`)} must be ${SHADED_NAME}`,
+      move: phrase`${mark.as("ring", CELL, [m.target], `the ringed cell just past ${pronoun(CELL, m.area)}`)} must be ${SHADED_NAME}`,
     });
   },
 

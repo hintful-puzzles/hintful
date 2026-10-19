@@ -38,6 +38,8 @@ function domino(a: number, b: number): string {
   return a <= b ? `${a}–${b}` : `${b}–${a}`;
 }
 
+const RINGED = "the ringed spot";
+
 const at = (spot: Spot, words: string): Narration =>
   mark.as("ring", SPOT, [spot], words);
 
@@ -57,11 +59,11 @@ export const say = {
     if (technique === "squareOnly")
       return so({
         look: phrase`${outlined(evidence, "square")} has only one neighbor left to pair with`,
-        move: phrase`the ${dom} domino must go ${at(spot, "here")}`,
+        move: phrase`the ${dom} domino must go on ${at(spot, RINGED)}`,
       });
     return so({
       look: phrase`The ${dom} domino has only one spot left where it fits`,
-      move: phrase`it must go ${at(spot, "here")}`,
+      move: phrase`it must go on ${at(spot, RINGED)}`,
     });
   },
 
@@ -90,7 +92,7 @@ export const say = {
       case "squareSingleDomino":
         return so({
           look: phrase`${outlined(evidence, "square")} can only be part of the ${dom} domino`,
-          move: phrase`${dom} can't sit ${at(spot, "here")} instead`,
+          move: phrase`${dom} can't sit on ${at(spot, RINGED)} instead`,
         });
       case "mustOverlap":
         return so({
@@ -99,23 +101,23 @@ export const say = {
         });
       case "localDuplicate":
         return so({
-          look: phrase`${indefinite(dom, true)} ${dom} domino ${at(spot, "here")} would force a second ${dom} at ${outlined(evidence, "square")}, but each domino is used once`,
+          look: phrase`${indefinite(dom, true)} ${dom} domino on ${at(spot, RINGED)} would force another at ${outlined(evidence, "square")}, but each domino is used once`,
           move: phrase`it can't`,
         });
       case "localDuplicate2":
         return so({
-          look: phrase`A domino ${at(spot, "here")} would leave ${outlined(evidence, "square", "both")} needing one and the same domino, a duplicate`,
+          look: phrase`A domino on ${at(spot, RINGED)} would leave ${outlined(evidence, "square", "both")} needing the same domino, a duplicate`,
           move: phrase`it can't`,
         });
       case "parity":
         return so({
-          look: phrase`A domino ${at(spot, "here")} would split the empty squares into odd-sized regions, which dominoes can't fill`,
-          move: phrase`it can't go there`,
+          look: phrase`A domino on ${at(spot, RINGED)} would split the empty squares into odd-sized regions dominoes can't fill`,
+          move: phrase`it can't`,
         });
       case "set":
         return so({
           look: phrase`${outlined(evidence, "square")} can only hold one set of dominoes, which uses the ${dom}`,
-          move: phrase`${dom} can't sit ${at(spot, "here")} as well`,
+          move: phrase`${dom} can't sit on ${at(spot, RINGED)} as well`,
         });
     }
   },

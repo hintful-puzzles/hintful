@@ -8,7 +8,7 @@ exports[`slant: pinned hint positions > says, at each pin 1`] = `
   "deadend": "The outlined squares leave two corners of this square one way out each, so it must slant the other way or seal a loop.",
   "equiv": "The outlined mark links this square to the outlined square, so it must be a backslash too.",
   "loop": "Diagonals in the outlined squares join two corners of this square, so it must slant the other way to avoid a loop.",
-  "mark-clue": "This 1 clue needs one line, from just these two squares, so they must slant the same way.",
-  "mark-v": "These two can't both slant away from either 3, so they must slant the same way.",
+  "mark-clue": "This 1 needs one line, from just the ringed pair, so they must slant the same way.",
+  "mark-v": "The ringed pair can't both slant away from either 3, so they must slant the same way.",
 }
 `;
