@@ -37,6 +37,7 @@ import type {
 } from "../engine/types.ts";
 import { Drawing } from "./drawing.ts";
 import type { PuzzleEngineSurface } from "./engine-surface.ts";
+import { markPixels } from "./mark-flash.ts";
 
 export class TsWorkerPuzzle implements PuzzleEngineSurface {
   private drawing?: Drawing;
@@ -109,8 +110,20 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   executeHint(hideAfter = false): string | null {
     return this.engine.executeHint(hideAfter);
   }
-  hideHintReference(index: number | null): void {
+  hintReferencePixels(index: number): ImageData | null {
+    const drawing = this.drawing;
+    if (!drawing || !this.paletteReady) return null;
+    // One task, so the frame without the marks is never shown: an
+    // OffscreenCanvas presents what it holds when the worker yields.
+    this.engine.redraw(drawing);
+    const shown = drawing.pixels();
     this.engine.hideHintReference(index);
+    this.engine.redraw(drawing);
+    const hidden = drawing.pixels();
+    this.engine.hideHintReference(null);
+    this.engine.redraw(drawing);
+    const marks = new ImageData(markPixels(shown.data, hidden.data), shown.width);
+    return transfer(marks, [marks.data.buffer]);
   }
   currentAnimationMs(): number {
     return this.engine.currentAnimationMs();

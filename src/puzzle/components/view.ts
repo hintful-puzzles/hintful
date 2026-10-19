@@ -19,7 +19,7 @@ import { throttle } from "../../utils/timing.ts";
 import { computeAvailableCanvasSize } from "../canvas-sizing.ts";
 import { puzzleContext } from "../contexts.ts";
 import { darkModePalette } from "../dark-palette.ts";
-import type { Puzzle } from "../puzzle.ts";
+import { HINT_FLASH_MS, type HintFlash, type Puzzle } from "../puzzle.ts";
 
 /**
  * The `<puzzle-view>` component renders a puzzle using the drawing API.
@@ -49,6 +49,12 @@ export class PuzzleView extends SignalWatcher(LitElement) {
   @state()
   protected renderedColorScheme?: string;
 
+  @state()
+  protected renderedHintFlash: HintFlash | null = null;
+
+  /** The marks of a flashing reference of the hint's words, over the board. */
+  private flashCanvas?: HTMLCanvasElement;
+
   @query("[part=content]")
   protected contentPart?: HTMLElement;
 
@@ -71,9 +77,11 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     this.renderedPuzzleGameId = this.puzzle?.currentGameId ?? null;
     this.renderedPuzzleParams = this.puzzle?.currentParams ?? null;
     this.renderedColorScheme = currentColorScheme.get();
+    this.renderedHintFlash = this.puzzle?.hintFlash ?? null;
   }
 
   protected override async updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has("renderedHintFlash")) this.showHintFlash();
     if (changedProperties.has("puzzle") && this.canvas) {
       // Changing Puzzle: any existing canvas belongs to another (probably deleted) worker.
       this.destroyCanvas();
@@ -337,7 +345,46 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     }
   }
 
+  /**
+   * Lay the flashing reference's marks over the board, white or black, and fade them
+   * back to the board's own over the flash. Before the canvas, so that the
+   * placeholder still follows it; positioned, so it paints on top.
+   */
+  private showHintFlash(): void {
+    const pixels = this.renderedHintFlash?.pixels;
+    const canvas = this.canvas;
+    if (!pixels || !canvas) {
+      this.flashCanvas?.remove();
+      this.flashCanvas = undefined;
+      return;
+    }
+    const overlay = this.flashCanvas ?? document.createElement("canvas");
+    this.flashCanvas = overlay;
+    overlay.className = "hint-flash";
+    // White vanishes on the light board's pale tiles: there it flashes black,
+    // the color farthest from them, as white is on the dark board.
+    overlay.style.filter = this.renderedColorScheme === "dark" ? "" : "invert(1)";
+    overlay.width = pixels.width;
+    overlay.height = pixels.height;
+    Object.assign(overlay.style, {
+      left: `${canvas.offsetLeft}px`,
+      top: `${canvas.offsetTop}px`,
+      width: canvas.style.width,
+      height: canvas.style.height,
+    });
+    overlay.getContext("2d")?.putImageData(pixels, 0, 0);
+    canvas.before(overlay);
+    overlay.animate([{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], {
+      duration: HINT_FLASH_MS,
+      easing: "ease-in",
+      fill: "forwards",
+    });
+  }
+
   protected async updateCanvasSize() {
+    // Drawn at the old size, so no longer over its marks.
+    this.flashCanvas?.remove();
+    this.flashCanvas = undefined;
     if (this.canvasSize) {
       const { w, h } = this.canvasSize;
       for (const element of [this.canvas, this.canvasPlaceholder]) {
@@ -433,6 +480,11 @@ export class PuzzleView extends SignalWatcher(LitElement) {
         display: block;
       }
       
+      .hint-flash {
+        position: absolute;
+        pointer-events: none;
+      }
+
       canvas + #canvasPlaceholder {
         /* Hide the placeholder when the canvas is in the DOM */
         display: none;

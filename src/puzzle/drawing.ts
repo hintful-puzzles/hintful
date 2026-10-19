@@ -83,6 +83,11 @@ export class Drawing implements GameDrawing<Blitter> {
     return this.canvas.convertToBlob(options);
   }
 
+  /** Every pixel of the canvas, at its backing resolution. */
+  public pixels(): ImageData {
+    return this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+  }
+
   /*
    * GameDrawing
    */

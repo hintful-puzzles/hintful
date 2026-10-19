@@ -91,9 +91,9 @@ Anything you do in between — a move of your own, undo, redo — puts the hint 
 to the first beat, so a second press always *shows* before it plays.
 
 **The words in pills point at the board.** Tap or click one, "this cell" or
-"the outlined cells", and the marks those words mean blink a few times, while
-the rest stay where they are. With a mouse, moving the pointer onto the words
-does the same.
+"the outlined cells", and the marks those words mean light up for a second,
+white on a dark board and black on a light one, while the rest stay as they
+are. With a mouse, moving the pointer onto the words does the same.
 
 ::play:: **Auto-solve for me**, in the Menu, plays hint after hint at about a
 second a step, waiting for each move's animation in the puzzles that have one.

@@ -393,7 +393,9 @@ describe("every puzzle command is in exactly one of the three panels", () => {
       const words = mountWords(
         fullyCapablePuzzle({ canHint, helpMessage: NOT_STARTED }),
       );
-      const banners = [...words.querySelectorAll(".hint")].map((el) =>
+      // The banner a player sees and hears, not the unseen hint that sizes
+      // its room.
+      const banners = [...words.querySelectorAll(".hint[role=status]")].map((el) =>
         el.textContent?.trim(),
       );
       expect(banners, `canHint: ${canHint}`).toEqual([NOT_STARTED]);

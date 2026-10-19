@@ -302,8 +302,10 @@ Nothing else is a source for a mark. A highlight field may carry data that is
 not a mark (a ghost glyph, a route, an animation), painted only where a named
 mark is. Because nothing else is, the engine can take one reference out: a
 player who presses a reference's words in the hint sees that reference's marks
-blink while the rest stay drawn (`Narration.without`,
-`Midend.hideHintReference`), with no code in the game. So a reference's words
+light up while the rest stay drawn, with no code in the game: the worker draws
+the step with and without them (`Narration.without`,
+`Midend.hideHintReference`), and the pixels that differ are theirs
+(`markPixels`). So a reference's words
 are what a player presses, and the fewer words around the mark's own name a
 reference takes, the shorter its pill.
 The glyph a role
@@ -532,7 +534,7 @@ the highlight does not already show, lean on implied values ("the region of N"
 already says to write N), and do not repeat the number.
 
 **Delete the words that describe what a mark shows.** Each reference is a pill
-the player presses to blink its marks, so the words need only name the thing:
+the player presses to light up its marks, so the words need only name the thing:
 "this clue", not "this column's bottom clue"; "the outlined 3s and 2s", not
 "a pair of 3s in one column and a pair of 2s in the next". Keep the premise and
 the reason, which no mark shows, and the rule the step teaches where the help

@@ -6,8 +6,9 @@ The hint's explanation, and the status line of a game that prints one, SHALL be
 shown under the board, and under the Game controls where they are under it, at
 every window size, and in no panel. Showing or clearing a hint SHALL NOT move
 the board or any control in a panel, nor SHALL the Hint control's caption
-changing. In a game with a hint, the room of a two-line hint, three in a window
-that is not wide, SHALL be kept while no hint shows.
+changing. In a game with a hint, the room the longest hint the engine allows
+takes at the window's width SHALL be kept while no hint shows, in every game
+alike.
 
 #### Scenario: A hint is shown on a desktop
 
@@ -24,7 +25,8 @@ that is not wide, SHALL be kept while no hint shows.
 
 #### Scenario: A short hint leaves the board as it was
 
-- **WHEN** a player presses Hint and the explanation fits in two lines
+- **WHEN** a player presses Hint in any game at any window size, and the
+  explanation is within the engine's length limit
 - **THEN** the board is the same size as before the press, and stays so when
   the hint is cleared
 
@@ -59,15 +61,15 @@ with a gap of no more than 12px, and SHALL NOT touch it.
 ### Requirement: A hint's references show what they name
 
 Each reference in a displayed hint's words SHALL be a control, reachable by
-keyboard. Pressing one, or a mouse coming over it, SHALL blink that
-reference's marks a few times, under three flashes a second, while every other
-mark of the step stays drawn, and SHALL end with every mark drawn. A blink
-SHALL end when the step changes.
+keyboard. Pressing one, or a mouse coming over it, SHALL turn that
+reference's marks white on a dark board and black on a light one, once, and
+fade them back to their own color within a second, while every other mark of
+the step stays as it is. A flash SHALL end when the step changes.
 
 #### Scenario: A player presses "this cell"
 
 - **WHEN** a hint says "the outlined cells … this cell must be A" and the
   player presses "this cell"
-- **THEN** the ring on that cell goes off and on, and the outline and stripes
-  stay drawn throughout
-- **AND** once the blink ends, every mark of the step is drawn
+- **THEN** the ring on that cell turns white on a dark board and fades back,
+  and the outline and stripes stay as they are throughout
+- **AND** within a second of the press, every mark of the step is as it was

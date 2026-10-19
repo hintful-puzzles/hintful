@@ -54,11 +54,16 @@ const AUTO_HINT_STEP_MS = 1000;
  */
 export const HINT_PENDING_MS = 300;
 
-/** A pressed reference's marks blink this many times, off and on this long
- * each (`Puzzle.blinkHintReference`): long enough to see, and under the 3
- * flashes a second that WCAG's flash threshold counts from. */
-const HINT_BLINKS = 3;
-const HINT_BLINK_MS = 220;
+/** How long a pressed reference's marks stay lit, from turning white to
+ * fading back (`Puzzle.flashHintReference`). One flash, so nothing strobes. */
+export const HINT_FLASH_MS = 1000;
+
+/** A reference of the hint's words whose marks are flashing, and their pixels
+ * on the canvas (`markPixels`), `null` until the worker has found them. */
+export interface HintFlash {
+  readonly ref: number;
+  readonly pixels: ImageData | null;
+}
 
 /** The banner's wording for a pending hint; the Hint control says it too. */
 export const HINT_PENDING_MESSAGE = "Thinking…";
@@ -250,13 +255,13 @@ export class Puzzle {
         update(this._statusbarText, message.statusBarText);
         update(this._activeHintExplanation, message.activeHintExplanation ?? "");
         // Compared by value: the engine sends fresh runs each time. Other
-        // words are another step, which a blink begun on these must not reach.
+        // words are another step, whose marks a flash begun on these is not.
         if (
           JSON.stringify(this._activeHintSpans.get()) !==
           JSON.stringify(message.activeHintSpans ?? null)
         ) {
           this._activeHintSpans.set(message.activeHintSpans ?? null);
-          this.stopHintBlink();
+          this.stopHintFlash();
         }
         // Rendered as "Step 2 of 3" beside a multi-leg hint; empty for a
         // single-leg one, which is most of them.
@@ -350,10 +355,8 @@ export class Puzzle {
   private _activeHintSpans = signal<{ light: HintSpan[]; dark: HintSpan[] } | null>(
     null,
   );
-  /** The reference of the hint's words whose marks are blinking, and the
-   * timers that step the blink. */
-  private _hintBlinking = signal<number | null>(null);
-  private hintBlinkTimers: ReturnType<typeof setTimeout>[] = [];
+  private _hintFlash = signal<HintFlash | null>(null);
+  private hintFlashTimer: ReturnType<typeof setTimeout> | null = null;
   /** "Step 2 of 3" while one deduction plays out over several legs; empty for a
    * single-leg hint and when no hint is displayed. Formatted here rather than
    * in the chrome, so that whatever shows it cannot word it differently. */
@@ -464,45 +467,38 @@ export class Puzzle {
     return text ? [{ text, ref: null }] : [];
   }
 
-  /** The reference of the hint's words whose marks are blinking, or `null`. */
-  public get hintBlinking(): number | null {
-    return this._hintBlinking.get();
+  /** The reference of the hint's words whose marks are flashing, and their
+   * pixels on the canvas once the worker has found them; `null` between
+   * flashes. */
+  public get hintFlash(): HintFlash | null {
+    return this._hintFlash.get();
   }
 
-  /** Blink the marks of a reference of the hint's words, the rest of the
-   * step's marks staying as they are, and end on every mark shown. A blink
-   * already running is replaced. Off and on {@link HINT_BLINK_MS} each, so
-   * it flashes under 3 times a second. */
-  public blinkHintReference(index: number): void {
-    this.stopHintBlink();
-    this._hintBlinking.set(index);
-    for (let i = 0; i < 2 * HINT_BLINKS; i++) {
-      const hidden = i % 2 === 0 ? index : null;
-      this.hintBlinkTimers.push(
-        setTimeout(() => this.hideHintReference(hidden), i * HINT_BLINK_MS),
-      );
-    }
-    this.hintBlinkTimers.push(
-      setTimeout(() => this._hintBlinking.set(null), 2 * HINT_BLINKS * HINT_BLINK_MS),
-    );
+  /** Flash the marks of a reference of the hint's words, the rest of the
+   * step's marks staying as they are, for {@link HINT_FLASH_MS}. A flash
+   * already running is replaced. */
+  public flashHintReference(index: number): void {
+    this.stopHintFlash();
+    const flash: HintFlash = { ref: index, pixels: null };
+    this._hintFlash.set(flash);
+    this.hintFlashTimer = setTimeout(() => this.stopHintFlash(), HINT_FLASH_MS);
+    void (async () => {
+      const pixels = await (await this.board()).hintReferencePixels(index);
+      // Another flash, or other words, may have come while the worker drew.
+      if (this._hintFlash.get() === flash) this._hintFlash.set({ ...flash, pixels });
+    })();
   }
 
-  private stopHintBlink(): void {
-    for (const t of this.hintBlinkTimers) clearTimeout(t);
-    this.hintBlinkTimers = [];
-    if (this._hintBlinking.get() === null) return;
-    this._hintBlinking.set(null);
-    this.hideHintReference(null);
-  }
-
-  private hideHintReference(index: number | null): void {
-    void (async () => (await this.board()).hideHintReference(index))();
+  private stopHintFlash(): void {
+    if (this.hintFlashTimer !== null) clearTimeout(this.hintFlashTimer);
+    this.hintFlashTimer = null;
+    this._hintFlash.set(null);
   }
 
   private clearHintExplanation(): void {
     this._activeHintExplanation.set("");
     this._activeHintSpans.set(null);
-    this.stopHintBlink();
+    this.stopHintFlash();
   }
 
   public get status(): GameStatus {

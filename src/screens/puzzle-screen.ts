@@ -38,6 +38,7 @@ import { closeOnBackdropClick } from "../utils/dialog.ts";
 import { preventDoubleTapZoomOnButtons } from "../utils/events.ts";
 import { debounced, sleep } from "../utils/timing.ts";
 import { windowSize } from "../utils/window-size.ts";
+import { LONGEST_HINT, LONGEST_JOURNEY } from "./longest-hint.ts";
 import { Screen } from "./screen.ts";
 
 // Register components
@@ -435,7 +436,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       : puzzle?.helpMessage
         ? [{ text: puzzle.helpMessage, ref: null }]
         : null;
-    const blinking = puzzle?.hintBlinking ?? null;
+    const flashing = puzzle?.hintFlash?.ref ?? null;
     const status = puzzle?.wantsStatusbar ? puzzle.statusbarText : null;
     return html`
       <div class="words">
@@ -465,6 +466,13 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           // hint is showing, so showing one does not shrink the board.
           explanation || puzzle?.canHint
             ? html`<div class="hint-room">${
+                puzzle?.canHint
+                  ? html`<div class="hint hint-sizer" aria-hidden="true" inert>
+                      <span class="hint-journey">${LONGEST_JOURNEY}</span>
+                      <span>${this.renderHintSpans(LONGEST_HINT, null)}</span>
+                    </div>`
+                  : nothing
+              }${
                 explanation
                   ? html`<div class="hint" role="status" @click=${this.handleChromeClick}>
                       ${
@@ -472,7 +480,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                           ? html`<span class="hint-journey">${puzzle.hintJourney}</span>`
                           : nothing
                       }
-                      <span>${this.renderHintSpans(explanation, blinking)}</span>
+                      <span>${this.renderHintSpans(explanation, flashing)}</span>
                     </div>`
                   : nothing
               }</div>`
@@ -483,12 +491,12 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   }
 
   /**
-   * A hint's words, each reference to a mark a control that blinks that mark
+   * A hint's words, each reference to a mark a control that flashes that mark
    * on the board, so the words lead to it. What follows a reference up to the
    * next space ("'s", ",", ".") is kept on its line, so a line never opens
    * with it.
    */
-  private renderHintSpans(spans: readonly HintSpan[], blinking: number | null) {
+  private renderHintSpans(spans: readonly HintSpan[], flashing: number | null) {
     const puzzle = this.puzzle;
     const glued = (i: number): string => {
       const next = spans[i + 1];
@@ -499,10 +507,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         return spans[i - 1]?.ref != null ? text.slice(glued(i - 1).length) : text;
       return html`<span class="hint-ref-run"><button
           type="button"
-          class="hint-ref ${blinking === ref ? "blinking" : ""}"
-          @click=${() => puzzle?.blinkHintReference(ref)}
+          class="hint-ref ${flashing === ref ? "flashing" : ""}"
+          @click=${() => puzzle?.flashHintReference(ref)}
           @pointerenter=${(e: PointerEvent) => {
-            if (e.pointerType === "mouse") puzzle?.blinkHintReference(ref);
+            if (e.pointerType === "mouse") puzzle?.flashHintReference(ref);
           }}
         >${text}</button>${glued(i)}</span>`;
     });
@@ -1601,23 +1609,23 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         font-variant-numeric: tabular-nums;
       }
 
-      /* The room a hint of --hint-room-lines lines takes, kept in a game with
-       * a hint so that showing one leaves the board where it was. A longer
-       * hint grows past it rather than be cut off. The hint sits at its
-       * foot, on the Bar, and is as tall as its words: the room a short hint
-       * leaves is above it. */
+      /* The room the longest hint takes at this width, kept in a game with a
+       * hint so that showing one leaves the board where it was: an unseen
+       * hint of the longest words a hint may say is stacked under the real
+       * one. A longer hint grows past it rather than be cut off. The hint
+       * sits at its foot, on the Bar, and is as tall as its words: the room
+       * a short hint leaves is above it. */
       .hint-room {
-        --hint-room-lines: 2;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        min-height: calc(
-          var(--hint-room-lines) * var(--app-font-size-support) *
-            var(--wa-line-height-normal) + 0.625rem + 2px + var(--wa-space-xs)
-        );
+        display: grid;
+        padding-block-start: var(--wa-space-xs);
+        > * {
+          grid-area: 1 / 1;
+          align-self: end;
+        }
       }
-      :host(:not([shape="wide"])) .hint-room {
-        --hint-room-lines: 3;
+      .hint-sizer {
+        visibility: hidden;
+        animation: none;
       }
 
       /* The hint is a piece of the chrome under it, drawn out of it: it stands
@@ -1681,7 +1689,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       }
 
       /* A reference is a pill in the run of words: tinted to say it can be
-       * pressed, and filled in the hint's ink while its marks blink. Its padding is
+       * pressed, and filled in the hint's ink while its marks flash. Its padding is
        * inline, so the line it sits in keeps its height, and a pill that wraps
        * is rounded on each line. Only its target is enlarged for a finger. */
       /* No break between a pill and what is glued to it; the pill's own words
@@ -1710,7 +1718,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         &:hover {
           background-color: color-mix(in srgb, var(--app-color-hint-ink) 16%, transparent);
         }
-        &.blinking {
+        &.flashing {
           background-color: var(--app-color-hint-ink);
           box-shadow: none;
           color: var(--app-color-hint-surface);

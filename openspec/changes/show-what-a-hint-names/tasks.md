@@ -26,4 +26,15 @@
       draws them alone (the owner, 2026-10-18, on the deploy); the guard
       that a hiding ends with its step now sees the stale read it once let
       through.
+- [x] 1.4c One flash for a pressed reference, not a blink (the owner,
+      2026-10-19): the worker finds its marks' pixels by drawing the step
+      with and without them (`markPixels`), and the view fades them from
+      white (black on the light board) back over a second. Seen in Twiddle
+      and Solo, light and dark.
+- [x] 1.4d The hint's room measured by an unseen hint of `NARRATION_LIMIT`
+      characters and a fifth (`longest-hint.ts`), not a count of lines (the
+      owner, 2026-10-19: no exceptions). The 210 snapshot sentences of 100
+      to 120 characters fit it at 360, 412, 900, 1000 and 1400 wide; six
+      hints each in Untangle, Magnets, Net, Pearl and Rect at 412x915 and
+      1000x686 moved no board.
 - [ ] 1.8 The owner's acceptance; archive.

@@ -36,6 +36,21 @@ outlined cells" and which is "this cell" by elimination.
   renderer the step with the one reference's elements taken out, which the
   frontend alternates with the whole step. A glow would need each game to
   draw it; a blink is the highlight the engine can give every game.
+- **The pressed reference's marks flash once, and the blink is gone.** The
+  owner (2026-10-19): "the blinking is too much. How about just a short turn
+  to white … and have it go back to itself in a second?" A recolor is still
+  one no game should draw, so the worker draws the step with and without the
+  reference in one task, never shown, and the pixels that differ are its
+  marks in any game's shapes and colors; the app lays them over the board in
+  white and fades them back over a second. On the light board white is lost
+  on the pale tiles, so there they are black.
+- **The hint's room is measured by the longest hint the engine allows.** The
+  owner (2026-10-19): "I don't want any exceptions … all games' boards give
+  sufficient berth to the hint element." Two lines, three where the window is
+  not wide, let Untangle's three-line hint move the board at 1000 by 686. The
+  room now holds an unseen hint of `NARRATION_LIMIT` characters and a fifth
+  more, which a word breaking late on each line can take, with a journey line
+  over it, at the window's own width.
 
 Considered and declined: tinting each reference in the color of its mark. A
 role has no one color across the collection: a game picks its own palette slot

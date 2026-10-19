@@ -199,7 +199,7 @@ export interface EngineCore {
   executeHint(hideAfter?: boolean): string | null;
   /** Draw the displayed step without the marks of the reference of its words
    * at `index` (`Narration.refs`), or with all of them with `null`: the
-   * frontend alternates the two to make that reference's marks blink. */
+   * frontend draws both to find that reference's marks on the canvas. */
   hideHintReference(index: number | null): void;
   /** Duration in milliseconds of the animation currently armed (e.g. by
    * the slow-motion move `executeHint` just played), or 0 when nothing
@@ -402,8 +402,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * Auto-play (`executeHint`) keeps the display on through its
    * settle-advance so back-to-back steps preview naturally. */
   private hintDisplayed = false;
-  /** The reference of the displayed step's words whose marks are hidden for
-   * a moment of their blink, and that step drawn without them. Kept with the
+  /** The reference of the displayed step's words whose marks are hidden, and
+   * that step drawn without them. Kept with the
    * step it was set on, so it ends when another step, or none, is displayed. */
   private hintHidden: {
     step: HintStep<Move>;
