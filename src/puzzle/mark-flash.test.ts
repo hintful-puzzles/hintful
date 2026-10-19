@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { NARRATION_LIMIT } from "../engine/hint-words.ts";
 import { LONGEST_HINT } from "../screens/longest-hint.ts";
-import { markAlpha, markBox, markColor, nearestMarked, tinted } from "./mark-flash.ts";
+import { markAlpha, markBox, nearestMarked, tinted } from "./mark-flash.ts";
 
 describe("a reference's marks", () => {
   // A 3x2 canvas: the marks are two ring pixels and a rim pixel.
@@ -21,21 +21,6 @@ describe("a reference's marks", () => {
 
   it("are the pixels that differ without them, as much as they differ", () => {
     expect([...alpha]).toEqual([0, 255, 60, 0, 255, 0]);
-  });
-
-  it("take the color their wholly-marked pixels are drawn in", () => {
-    expect(markColor(shown, alpha)).toBe("#3c78e6");
-  });
-
-  it("take their color from their most-marked pixels where none is wholly", () => {
-    const faint = [70, 60, 50, 255];
-    const stripes = new Uint8ClampedArray([...faint, ...board]);
-    expect(
-      markColor(
-        stripes,
-        markAlpha(stripes, new Uint8ClampedArray([...board, ...board])),
-      ),
-    ).toBe("#463c32");
   });
 
   it("lie in the box round every pixel they touch", () => {

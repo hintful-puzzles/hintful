@@ -21,7 +21,7 @@ import { puzzleContext } from "../contexts.ts";
 import { darkModePalette } from "../dark-palette.ts";
 import type { HintReferenceMarks } from "../engine-surface.ts";
 import { tinted } from "../mark-flash.ts";
-import { HINT_COLORS_DISTINCT, HINT_FLASH_MS, type Puzzle } from "../puzzle.ts";
+import { HINT_FLASH_MS, type Puzzle } from "../puzzle.ts";
 
 /**
  * The `<puzzle-view>` component renders a puzzle using the drawing API.
@@ -59,7 +59,7 @@ export class PuzzleView extends SignalWatcher(LitElement) {
 
   /** The marks of a flashing reference of the hint's words, over the board. */
   private flashCanvas: HTMLCanvasElement | null = null;
-  /** Every reference's marks in its own color, in the distinct-colors trial. */
+  /** Every reference's marks in its own color (`hintReferenceColors`). */
   private colorCanvas: HTMLCanvasElement | null = null;
 
   @query("[part=content]")
@@ -413,13 +413,13 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     );
   }
 
-  /** In the distinct-colors trial, every reference's marks repainted in its
-   * own color for as long as the hint shows. */
+  /** Every reference's marks repainted in its own color for as long as the
+   * hint shows, so its pill and its marks match. */
   private showHintColors(): void {
     const marks = this.renderedHintMarks;
     const colors = this.puzzle?.hintReferenceColors ?? [];
     let pixels: Uint8ClampedArray<ArrayBuffer> | null = null;
-    if (HINT_COLORS_DISTINCT && marks) {
+    if (marks) {
       pixels = new Uint8ClampedArray(marks.width * marks.height * 4);
       marks.refs.forEach((r, i) => {
         const color = colors[i];

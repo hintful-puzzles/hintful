@@ -37,7 +37,7 @@ import type {
 } from "../engine/types.ts";
 import { Drawing } from "./drawing.ts";
 import type { HintReferenceMarks, PuzzleEngineSurface } from "./engine-surface.ts";
-import { markAlpha, markBox, markColor, type ReferenceMarks } from "./mark-flash.ts";
+import { markAlpha, markBox, type ReferenceMarks } from "./mark-flash.ts";
 
 export class TsWorkerPuzzle implements PuzzleEngineSurface {
   private drawing?: Drawing;
@@ -124,7 +124,6 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
       const alpha = markAlpha(shown.data, drawing.pixels().data);
       refs.push({
         alpha,
-        color: markColor(shown.data, alpha),
         box: markBox(alpha, shown.width),
       });
     }

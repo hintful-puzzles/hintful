@@ -13,11 +13,10 @@ export interface MarkBox {
 }
 
 /** One reference's marks: how much each canvas pixel is theirs (0–255, one
- * byte a pixel), the color they are drawn in, and where they lie; `color`
- * and `box` are `null` for a reference that draws nothing. */
+ * byte a pixel), and where they lie; `box` is `null` for a reference that
+ * draws nothing. */
 export interface ReferenceMarks {
   readonly alpha: Uint8ClampedArray<ArrayBuffer>;
-  readonly color: string | null;
   readonly box: MarkBox | null;
 }
 
@@ -39,33 +38,6 @@ export function markAlpha(
     out[p] = Math.min(255, d * 3);
   }
   return out;
-}
-
-/** The color the marks are drawn in: the commonest among their most-marked
- * pixels, so a rim blended with the board does not count. The most, not
- * wholly: stripes laid faintly under content never differ wholly. */
-export function markColor(
-  shown: Uint8ClampedArray,
-  alpha: Uint8ClampedArray,
-): string | null {
-  let most = 0;
-  for (const a of alpha) if (a > most) most = a;
-  if (most === 0) return null;
-  const counts = new Map<number, number>();
-  let best = -1;
-  let bestCount = 0;
-  for (let p = 0; p < alpha.length; p++) {
-    if (alpha[p] < most * 0.8) continue;
-    const i = p * 4;
-    const rgb = (shown[i] << 16) | (shown[i + 1] << 8) | shown[i + 2];
-    const n = (counts.get(rgb) ?? 0) + 1;
-    counts.set(rgb, n);
-    if (n > bestCount) {
-      best = rgb;
-      bestCount = n;
-    }
-  }
-  return best < 0 ? null : `#${best.toString(16).padStart(6, "0")}`;
 }
 
 /** The smallest box round every pixel the marks touch. */

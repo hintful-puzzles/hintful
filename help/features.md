@@ -94,8 +94,9 @@ to the first beat, so a second press always *shows* before it plays.
 "the outlined cells", and the marks those words mean light up for a second,
 white on a dark board and black on a light one, while the rest stay as they
 are, and a line leads from the words to them. With a mouse, moving the
-pointer onto the words does the same. Each pill is tinted in the color of
-the marks it means.
+pointer onto the words does the same. Each pill has a color of its own, and
+the marks it means are drawn in it: blues for what the hint decides, greens
+for what it reasons from, and warm colors for the line or region it names.
 
 ::play:: **Auto-solve for me**, in the Menu, plays hint after hint at about a
 second a step, waiting for each move's animation in the puzzles that have one.

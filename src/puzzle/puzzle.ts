@@ -63,19 +63,12 @@ export const HINT_PENDING_MS = 300;
  * fading back (`Puzzle.flashHintReference`). One flash, so nothing strobes. */
 export const HINT_FLASH_MS = 1000;
 
-/** A trial the owner compares by eye (2026-10-19): each reference of a hint's
- * words in a color of its own, its marks repainted in it, where the page's
- * address asks for `hint-colors=distinct`. Otherwise a pill takes the color
- * its marks are drawn in. */
-export const HINT_COLORS_DISTINCT =
-  typeof location !== "undefined" &&
-  new URLSearchParams(location.search).get("hint-colors") === "distinct";
-
-/** The colors references take in that trial, a pool to a role (the owner,
- * 2026-10-19): a role keeps its family of hues, blue for what a step
+/** The colors a hint's references take, a pool to a role (the owner,
+ * 2026-10-19: "I can't imagine any situation when we'd not want the colors to
+ * be distinct"): a role keeps its family of hues, blue for what a step
  * decides, green for what it reasons from, warm for the line it names, and
- * each reference in it its own shade. Clear of the error red, and strong
- * enough to read on either scheme's board. */
+ * each reference in it its own shade, its marks repainted in it. Clear of the
+ * error red, and strong enough to read on either scheme's board. */
 const HINT_COLOR_POOLS: Readonly<Record<MarkRole, readonly string[]>> = {
   ring: ["#1c7ed6", "#7048e8", "#22b8cf"],
   outline: ["#0ca678", "#82c91e", "#2b8a3e"],
@@ -506,14 +499,13 @@ export class Puzzle {
     return this._hintMarks.get();
   }
 
-  /** The color of each reference of the hint's words: its marks' own, or, where
-   * the page asks for `hint-colors=distinct`, one of its own that the marks are
-   * repainted in (`hintColorsDistinct`). `null` for a reference that draws
-   * nothing. References that draw the same marks share one. */
+  /** The color of each reference of the hint's words, from its role's pool,
+   * that its marks are repainted in and its pill is tinted with. `null` for a
+   * reference that draws nothing. References that draw the same marks share
+   * one. */
   public get hintReferenceColors(): readonly (string | null)[] {
     const marks = this._hintMarks.get();
     if (!marks) return [];
-    if (!HINT_COLORS_DISTINCT) return marks.refs.map((r) => r.color);
     const colors: (string | null)[] = [];
     const taken: Partial<Record<MarkRole, number>> = {};
     marks.refs.forEach((r, i) => {

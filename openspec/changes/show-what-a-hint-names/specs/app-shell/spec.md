@@ -61,8 +61,7 @@ with a gap of no more than 12px, and SHALL NOT touch it.
 ### Requirement: A hint's references show what they name
 
 Each reference in a displayed hint's words SHALL be a control, reachable by
-keyboard, and tinted in the color its marks are drawn in. Pressing one, or a
-mouse coming over it, SHALL turn every mark that reference draws white on a
+keyboard. Pressing one, or a mouse coming over it, SHALL turn every mark that reference draws white on a
 dark board and black on a light one, once, with a line from the reference to
 them, and fade both within a second, while every other mark of the step stays
 as it is. A flash SHALL end when the step changes.
@@ -74,3 +73,16 @@ as it is. A flash SHALL end when the step changes.
 - **THEN** the ring on that cell turns white on a dark board and fades back,
   and the outline and stripes stay as they are throughout
 - **AND** within a second of the press, every mark of the step is as it was
+
+### Requirement: Each of a hint's references has a color of its own
+
+While a hint shows, each reference in its words SHALL take a color of its own
+from a family of colors for its role, and its marks on the board and its words
+SHALL be drawn in that color. References that name the same marks SHALL share
+one.
+
+#### Scenario: Two outlined clues
+
+- **WHEN** a hint names two outlined clues and a ringed square
+- **THEN** each clue's outline and words take a different color from the
+  outline family, and the ring and its words one from the ring family

@@ -41,15 +41,18 @@
       same ones ("No track here … so this must carry track"; the owner,
       2026-10-19: "clicking the 'here' and 'this' don't seem to highlight
       anything"): `Narration.withoutMarksOf`.
-- [x] 1.4f Each pill tinted in its marks' color, read off the canvas
-      (`markColor`), and a leader line from the pressed pill to its marks,
-      fading with the flash (the owner, 2026-10-19: "a faint line from the
-      pill to the referred element … the pill, line and outline the same
-      color"). A standing line was declined: across a board made of lines it
-      reads as a wire or an edge.
-- [ ] 1.4g Trial for the owner's eye: `?hint-colors=distinct` repaints each
-      reference's marks in a shade of its own from its role's pool (the
-      owner: "'pools' of hint colors for the same semantic group … the
-      engine asks a color from it"). Keep one of the two, and, if the pools,
-      let a game name its pool where the default clashes.
+- [x] 1.4f A leader line from the pressed pill to its marks, fading with the
+      flash (the owner, 2026-10-19: "a faint line from the pill to the
+      referred element … the pill, line and outline the same color"). A
+      standing line was declined: across a board made of lines it reads as a
+      wire or an edge.
+- [x] 1.4g Each reference in a color of its own from its role's pool, its
+      marks repainted in it and its pill tinted with it (the owner: "'pools'
+      of hint colors for the same semantic group … the engine asks a color
+      from it"; and, of a trial behind an address flag, "I can't imagine any
+      situation when we'd not want the colors to be distinct"). A first cut
+      tinted each pill in its marks' own color, which two references in one
+      role share.
+- [ ] 1.4h A game names its pool where the default clashes with its own
+      colors (Map's regions).
 - [ ] 1.8 The owner's acceptance; archive.
