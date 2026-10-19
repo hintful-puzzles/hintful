@@ -12,7 +12,11 @@
       on a raised cell. With an edge in black or white, whichever is farther
       from the mark, the least on any game was 2.29 light, 2.40 dark; black
       alone left light at 1.78, white alone dark at 1.56.)
-- [ ] 1.2 Choose the repaint's edge with the owner, from screenshots.
+- [x] 1.2 Choose the repaint's edge with the owner, from screenshots.
+      (Owner, 2026-10-19, on the before/after sheet: "happy with both", the
+      edge on every mark and the stripes' rim, "aiming in general to get rid
+      of per-game exceptions as much as possible, and just have the engine
+      determine all of this sort of presentation logic".)
 - [x] 1.3 The edge, in the repaint, for every game: `edgeFor` and `edged` in
       `puzzle/mark-flash.ts`, one CSS pixel round a ring or an outline. A
       stripe takes it inside its band, half as wide: an edge beside a band
