@@ -2,8 +2,8 @@
 
 ## 1. The owner's answer
 
-- [ ] 1.1 Wait for the owner's answer to the proposal's question. Nothing
-      below starts before it.
+- [x] 1.1 Wait for the owner's answer to the proposal's question. Nothing
+      below starts before it. The owner chose (a), 2026-10-20.
 
 ## 2. On (a)
 

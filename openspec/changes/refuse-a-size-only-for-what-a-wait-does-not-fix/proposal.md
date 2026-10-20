@@ -1,6 +1,6 @@
 # refuse-a-size-only-for-what-a-wait-does-not-fix
 
-**Status: waiting on the owner's answer (below). Filed 2026-10-15** from
+**Status: the owner answered (a) on 2026-10-20. Filed 2026-10-15** from
 item 2 of `mend-what-the-guide-rewrite-found`, which measured it and
 archived without it. Every figure here carries that date; re-check it
 before relying on it.
