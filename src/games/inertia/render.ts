@@ -20,8 +20,8 @@ import {
   FLASH,
   FLASH_LEAD,
   GOAL,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   surfaceGrid,
   wallFill,
@@ -73,7 +73,7 @@ export const COL_HINT = 9;
  * hint says go this way"). */
 export const COL_AIM = 10;
 /** Appended: the ring round the gem a hint is going for. The hint's two roles
- * get two cues (docs/hints-marks.md § "The element-type color legend"): the
+ * get two cues (docs/hints-marks.md § "The engine colors the marks"): the
  * direction is the hint's *arrow* in its action color, the subgoal gem a
  * *ring* in its evidence color. */
 export const COL_HINT_GOAL = 11;
@@ -100,11 +100,11 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_GLINT] = WHITE;
   ret[COL_GEM] = GOAL;
   ret[COL_WALL] = wallFill(defaultBackground);
-  ret[COL_HINT] = HINT_ACTION;
+  ret[COL_HINT] = HINT_RING;
   ret[COL_AIM] = DRAG_ADD;
   // The subgoal is an outline in role (`theGem`, hint-text.ts), so it takes
   // the color an outline has in every game.
-  ret[COL_HINT_GOAL] = HINT_EVIDENCE;
+  ret[COL_HINT_GOAL] = HINT_OUTLINE;
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;
 

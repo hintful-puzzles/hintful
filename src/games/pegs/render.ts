@@ -20,8 +20,8 @@ import {
   FLASH_LEAD,
   GRID_DARK,
   HELD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawMoveArrow, drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
@@ -122,8 +122,8 @@ export function colors(defaultBackground: Color): Color[] {
   // board together: picking a peg up turns the one into the other.
   out[COL_CURSOR] = CURSOR;
   out[COL_HELD] = HELD;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   return out;
 }
 
@@ -190,7 +190,7 @@ function drawTile(
     dr.drawRect({ x, y, w: ts, h: ts }, COL_GRID);
     dr.drawRect(face, bgColor);
   }
-  if (jumps.striped) dr.drawHatch(face, COL_HINT, hatchPeriod(ts));
+  if (jumps.striped) dr.drawHatch(face, hatchPeriod(ts));
 
   let outlined = false;
   let ringed = false;

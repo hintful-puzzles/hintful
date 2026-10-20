@@ -11,8 +11,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import {
@@ -267,7 +267,6 @@ function drawTile(
   if (marks & MARK_STRIPES)
     dr.drawHatch(
       { x: px + hw, y: py + hw, w: ts - 2 * hw, h: ts - 2 * hw },
-      COL_HINT_EVIDENCE,
       hatchPeriod(ts),
     );
 
@@ -502,8 +501,8 @@ export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
   out[COL_WELL] = cellSurface(bg);
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_PIVOT] = CURSOR;
   return out;
 }

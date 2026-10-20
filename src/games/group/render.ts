@@ -17,8 +17,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -113,11 +113,11 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_DIAGONAL] = surfaceGrid(bg);
   out[COL_MISTAKE] = ERROR;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   // Both hint marks are outlines on the cell's border, so both take a strong
-  // color and differ in shape, not weight. `HINT_EVIDENCE` also colors the chain
+  // color and differ in shape, not weight. `HINT_OUTLINE` also colors the chain
   // ordinal; its doc comment says why the index and what it indexes are one role.
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
@@ -301,7 +301,7 @@ function drawTile(
   const id = ds.id;
   let tile = tileIn;
 
-  // Hint overlay (docs/hints-marks.md § "The element-type color legend"): both
+  // Hint overlay (docs/hints-marks.md § "The engine colors the marks"): both
   // cell-level marks are drawn by `redraw` on the cell's own border, so a hint
   // never paints over the elements it is talking about. What is left here is
   // `struck` (bit `n`): the candidates this firing rules out, crossed through.
@@ -340,7 +340,7 @@ function drawTile(
   );
   if (x === y)
     dr.drawLine({ x: cx, y: cy }, { x: cx + cw - 1, y: cy + ch - 1 }, COL_DIAGONAL, 1);
-  if (hatched) dr.drawHatch({ x: cx, y: cy, w: cw, h: ch }, COL_HINT, hatchPeriod(ts));
+  if (hatched) dr.drawHatch({ x: cx, y: cy, w: cw, h: ch }, hatchPeriod(ts));
 
   // Dividers.
   if (tile & DF_DIVIDER_TOP) dr.drawRect({ x: cx, y: cy, w: cw, h: 1 }, COL_GRID);

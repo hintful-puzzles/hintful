@@ -8,7 +8,7 @@
  * sit at the cell's edge, beside the piece and the ring.
  */
 
-import { ORANGE, WHITE } from "../../engine/color/colors.ts";
+import { WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -16,10 +16,8 @@ import {
   ERROR_TEXT,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_BLACKREF,
-  HINT_EVIDENCE,
-  HINT_WHITEREF,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   RULED_OUT,
   SHADED,
@@ -66,17 +64,12 @@ export const COL_ERROR = 9;
 /** The number on a piece drawn in {@link COL_ERROR}. */
 export const COL_ERROR_TEXT = 10;
 export const COL_HINT = 11; // the cell(s) the displayed hint forces
-export const COL_HINT_CELL = 12; // an undecided cell the deduction reasons from
-export const COL_HINT_STRAND = 13; // the corner a corner-deduction protects
-// A decided premise cell the reason *cites* is outlined in a color fixed by
-// its kind, so a cited blacked-out square and a cited kept one read as
-// distinct from the forced cell and from each other. The cell's own piece or
-// ring is the cue that is not a color.
-export const COL_HINT_BLACKREF = 14;
-export const COL_HINT_WHITEREF = 15;
+/** A cell the deduction reasons from, decided or not, and the corner a
+ * corner-deduction protects. */
+export const COL_HINT_CELL = 12;
 /** The ground of a cell under the win flash's leading edge, where `COL_FLASH`
  * is under its body. */
-export const COL_FLASH_LEAD = 16;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -92,13 +85,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
-  // A third hint part with its own hue: the corner cell a corner deduction
-  // keeps open, which is neither the acted-on cell nor the evidence.
-  out[COL_HINT_STRAND] = ORANGE;
-  out[COL_HINT_BLACKREF] = HINT_BLACKREF;
-  out[COL_HINT_WHITEREF] = HINT_WHITEREF;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -194,7 +182,7 @@ function tileRedraw(
   );
   // The hatch goes under the piece: it marks the line, and the piece is what
   // the line holds.
-  if (f & DS_HINT_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
+  if (f & DS_HINT_LINE) dr.drawHatch(inner, hatchPeriod(ts));
 
   if (shaded) {
     drawPiece(dr, inner, SHADED_SHAPE, error ? COL_ERROR : COL_SHADED);
@@ -218,18 +206,11 @@ function tileRedraw(
   // of them are bands at the cell's edge, beside the piece and the ring. The
   // band lies inside the cell (`outer` 0), so this cell's own repaint — which
   // its hint bits are part of the cache key for — is what erases a mark that
-  // moves. A decided premise cell is the reason by its state, and its band
-  // takes the color of its kind.
+  // moves.
   const band = { box: inner, outer: 0, inner: markT(ts) };
   if (f & DS_HINT_TARGET) drawMarkSides(dr, band, MARK_ALL, COL_HINT);
-  else if (f & DS_HINT_STRAND) drawMarkSides(dr, band, MARK_ALL, COL_HINT_STRAND);
-  else if (f & DS_HINT_EVID)
-    drawMarkSides(
-      dr,
-      band,
-      MARK_ALL,
-      shaded ? COL_HINT_BLACKREF : f & DS_CIRCLE ? COL_HINT_WHITEREF : COL_HINT_CELL,
-    );
+  else if (f & (DS_HINT_STRAND | DS_HINT_EVID))
+    drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
 
   if (dnum) {
     const buf = String(num);

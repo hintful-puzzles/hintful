@@ -22,8 +22,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -80,7 +80,7 @@ export const COL_DONE = 6;
 // Fork addition: the yellow body of the pencil-mode indicator glyph (a classic
 // #2 school pencil). Appended past the upstream enum.
 export const COL_PENCIL_BODY = 7;
-// Fork additions: the explained-hint legend (see docs/hints-marks.md § "The element-type color legend").
+// Fork additions: the explained-hint legend (see docs/hints-marks.md § "The engine colors the marks").
 export const COL_HINT = 8; // the acted-on cell's ring (drawn once per frame in redraw)
 /** The driving clue's line of sight, outlined (same pass), **and** a forcing
  * chain's ordinal — one index, because the number indexes the evidence. */
@@ -106,12 +106,12 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_DONE] = clueDoneColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   // Both hint marks are outlines on the cell's border, so both take a strong
   // color and differ in shape rather than in weight — a line of sight's contour
-  // against one cell's ring. `HINT_EVIDENCE` covers the chain ordinal too; see
+  // against one cell's ring. `HINT_OUTLINE` covers the chain ordinal too; see
   // its doc comment for why the index and the thing it indexes are one role.
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_LINE] = surfaceGrid(bg);
@@ -309,7 +309,7 @@ function drawTile(
     COL_FLASH_LEAD,
   );
   // On a raised tower's top face, so the line reads at the height the tower is.
-  if (hatched) dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+  if (hatched) dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, hatchPeriod(ts));
 
   // A tower's top face is outlined as the tower is. A flat cell draws the grid
   // line on its left and bottom edges only (and the frame where it is on the

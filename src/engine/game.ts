@@ -310,9 +310,11 @@ export interface GameDrawing<Blitter = unknown> {
     outlineColor: number,
   ): void;
   drawText(origin: Point, options: DrawTextOptions, color: number, text: string): void;
-  /** Translucent diagonal bands of `color` over `rect`, `period` apart and
-   * aligned to the canvas so neighboring rects join (`engine/hatch.ts`). */
-  drawHatch(rect: Rect, color: number, period: number): void;
+  /** A hint's stripes: translucent diagonal bands of the stripes ink
+   * (`HINT_STRIPES`, the last entry of every palette, `resolvePalette`) over
+   * `rect`, `period` apart and aligned to the canvas so neighboring rects
+   * join (`engine/hatch.ts`). */
+  drawHatch(rect: Rect, period: number): void;
   blitterNew(size: Size): Blitter;
   blitterFree(blitter: Blitter): void;
   blitterSave(blitter: Blitter, origin: Point): void;

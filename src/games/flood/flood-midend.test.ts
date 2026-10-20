@@ -7,6 +7,7 @@ import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { floodGame } from "./index.ts";
+import { COL_HINT } from "./render.ts";
 
 function harness() {
   const h = driveMidend(floodGame);
@@ -84,8 +85,9 @@ describe("Flood midend lifecycle", () => {
     const h = harness();
     expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
     expect(h.m.hint()).toBeNull();
-    // The hint marks the next-fill squares with a circle in the mark color
-    // (palette index 1).
-    expect(opsOfKind(h.painted(), "circle").some((o) => o.fill === 1)).toBe(true);
+    // The hint marks the next-fill squares with a circle in the ring's ink.
+    expect(opsOfKind(h.painted(), "circle").some((o) => o.fill === COL_HINT)).toBe(
+      true,
+    );
   });
 });

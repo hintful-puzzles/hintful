@@ -20,8 +20,8 @@ import {
   FLASH_LEAD,
   GRID_DARK,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   PENCIL_BODY,
   pencilColor,
@@ -122,8 +122,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -340,7 +340,7 @@ function drawTile(
   // The tiles a hint's loop runs through, or its turning would seal off:
   // hatched under the wires, which stay readable over it.
   if (notes & HINT_STRIPES)
-    dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+    dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, hatchPeriod(ts));
 
   // Keyboard cursor: an inset ring.
   if (tile & TILE_KEYBOARD_CURSOR) {

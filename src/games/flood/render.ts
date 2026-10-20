@@ -1,5 +1,10 @@
 import { BLACK, TEN, TEN_NAMES } from "../../engine/color/colors.ts";
-import { FLASH, FLASH_LEAD, surfaceGrid } from "../../engine/color/palette.ts";
+import {
+  FLASH,
+  FLASH_LEAD,
+  HINT_RING,
+  surfaceGrid,
+} from "../../engine/color/palette.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -31,7 +36,7 @@ export const DEFEAT_FLASH_FRAME = 0.1;
 // --- color palette indices -------------------------------------------
 
 const COL_BACKGROUND = 0;
-/** A mark drawn on a tile: the cursor, the hint's dot, the lost board's blink. */
+/** A mark drawn on a tile: the cursor, the lost board's blink. */
 const COL_MARK = 1;
 const COL_1 = 2; // COL_1..COL_10 are 2..11
 /** The line between two regions, and the frame round the field. */
@@ -40,6 +45,8 @@ const COL_GRID = 12;
 export const COL_LIT = 13;
 /** A tile the flash's leading edge is on. */
 export const COL_LIT_LEAD = 14;
+/** The dot on a square the hint's fill joins. */
+export const COL_HINT = 15;
 
 /**
  * The ten tiles, as the hint says them: *"Fill with orange"*. Re-exported from
@@ -58,6 +65,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_LIT] = FLASH;
   out[COL_LIT_LEAD] = FLASH_LEAD;
+  out[COL_HINT] = HINT_RING;
   return out;
 }
 
@@ -153,8 +161,8 @@ function drawTile(
     dr.drawCircle(
       { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) },
       Math.floor(ts / 6),
-      COL_MARK,
-      COL_MARK,
+      COL_HINT,
+      COL_HINT,
     );
   }
 

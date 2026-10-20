@@ -159,7 +159,7 @@ function drawStripes(
   y: number,
   marks: number,
 ): void {
-  if (marks & MARK_STRIPES) dr.drawHatch(face(ts, x, y), COL_HINT, hatchPeriod(ts));
+  if (marks & MARK_STRIPES) dr.drawHatch(face(ts, x, y), hatchPeriod(ts));
 }
 
 /** A ring, an outline or a mistake's frame at the edge of the tile's face, over

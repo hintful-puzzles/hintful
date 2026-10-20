@@ -4,20 +4,18 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
-  drawMarkSides,
   type HintMarkStyle,
   HintMarks,
   type MarkBand,
   type MarkCell,
-  MarkOutlines,
 } from "../../engine/hint-mark.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -76,15 +74,6 @@ export const COL_HINT = 18;
 export const COL_HINT_EVIDENCE = 19;
 const NCOLORS = 20;
 
-/**
- * The stripes on a group a hint step names, and the keyline inside its ring
- * and outline: black, because the squares come in every hue and the hint's
- * own blue is one of them. Black stripes measured at least 1.44:1 against
- * every square in both schemes, where blue ones measured 1.00 on a blue square
- * (`add-samegame-hint` design D4).
- */
-export const COL_HINT_KEY = COL_ON_TILE;
-
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = new Array<Color>(NCOLORS);
   out[COL_BACKGROUND] = defaultBackground;
@@ -100,8 +89,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = surfaceGrid(defaultBackground);
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   return out;
 }
 
@@ -147,40 +136,14 @@ export function newDrawState(
 }
 
 /** Where a hint mark sits around square `(x, y)`: in the gap round the tile
- * and a little way into it. `key` widens it inward by the keyline, a
- * thirty-second of a tile, which at one pixel was lost on a big board. */
-function markBand(ds: SamegameDrawState, x: number, y: number, key: boolean): MarkBand {
+ * and a little way into it. */
+function markBand(ds: SamegameDrawState, x: number, y: number): MarkBand {
   const ts = ds.tileSize;
   return {
     box: { x: coord(x, ts), y: coord(y, ts), w: ds.tileinner, h: ds.tileinner },
     outer: ds.tilegap,
-    inner: Math.max(2, ts >> 4) + (key ? Math.max(1, ts >> 5) : 0),
+    inner: Math.max(2, ts >> 4),
   };
-}
-
-/** Paint the marks' bands in their own colors, over the keyline `HintMarks`
- * has just painted a little wider. */
-function paintBands(
-  dr: GameDrawing,
-  targets: readonly MarkCell[],
-  evidence: readonly MarkCell[],
-  style: HintMarkStyle,
-): void {
-  const outlines = new MarkOutlines(targets, evidence, style);
-  for (const c of evidence)
-    drawMarkSides(
-      dr,
-      style.band(c.x, c.y),
-      outlines.evidenceSides(c.x, c.y),
-      style.evidenceColor,
-    );
-  for (const c of targets)
-    drawMarkSides(
-      dr,
-      style.band(c.x, c.y),
-      outlines.targetSides(c.x, c.y),
-      style.targetColor,
-    );
 }
 
 // --- tile drawing -----------------------------------------------------
@@ -236,7 +199,7 @@ function tileRedraw(
   // gaps and all, so a group's stripes run on from square to square.
   if (outerCol !== bgcolor)
     dr.drawRect({ x: cx, y: cy, w: outerW, h: outerH }, outerCol);
-  ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: outerW, h: outerH }, COL_HINT_KEY, ts);
+  ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: outerW, h: outerH }, ts);
   if (innerCol !== outerCol)
     dr.drawRect(
       {
@@ -320,22 +283,20 @@ export function redraw(
   }
 
   // The displayed step's marks, read from its words and from nowhere else.
-  // Each is painted twice: in the keyline's black a little wider, then in its
-  // own color, so a ring shows even round a group of its own hue.
   const named = stepMarks(hint ?? deadEnd);
   const targets: readonly MarkCell[] = named.of("ring", CELL);
   const evidence: readonly MarkCell[] = named.of("outline", CELL);
   ds.hint.pack(named, (x, y) => y * w + x);
-  const style = (key: boolean): HintMarkStyle => ({
-    band: (x, y) => markBand(ds, x, y, key),
-    targetColor: key ? COL_HINT_KEY : COL_HINT,
-    evidenceColor: key ? COL_HINT_KEY : COL_HINT_EVIDENCE,
+  const style: HintMarkStyle = {
+    band: (x, y) => markBand(ds, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_EVIDENCE,
     // A step rings one group, so its squares are one shape.
     joinTargets: () => true,
     // Two groups the step outlines never share a color where they touch.
     joinEvidence: (a, b) => state.tiles[a.y * w + a.x] === state.tiles[b.y * w + b.x],
-  });
-  ds.marks.eraseBeforeTiles(dr, targets, evidence, style(true), margin, (x, y) => {
+  };
+  ds.marks.eraseBeforeTiles(dr, targets, evidence, style, margin, (x, y) => {
     if (x >= 0 && x < w && y >= 0 && y < h) ds.grid[y * w + x] = -1;
   });
 
@@ -381,6 +342,5 @@ export function redraw(
   ds.margin = margin;
 
   // After the tiles, because a mark straddles the gap between two of them.
-  ds.marks.paint(dr, targets, evidence, style(true));
-  paintBands(dr, targets, evidence, style(false));
+  ds.marks.paint(dr, targets, evidence, style);
 }

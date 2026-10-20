@@ -33,8 +33,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -121,12 +121,12 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_KILLER] = soloKiller(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   // Both hint marks are outlines in the cell's gutter, so both take a strong
   // color and differ in shape rather than in weight — a region's contour
-  // against one cell's ring. `HINT_EVIDENCE` covers the chain ordinal too; see
+  // against one cell's ring. `HINT_OUTLINE` covers the chain ordinal too; see
   // its doc comment for why the index and the thing it indexes are one role.
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_LINE] = surfaceGrid(bg);
@@ -134,8 +134,7 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 /** Highlight payload a Solo hint step carries (built in `index.ts`). The
- * element-type legend (docs/hints-marks.md § "The element-type color legend"):
- * the cells the reason rests on outlined `COL_HINT_CELL` in the gutter, the
+ * marks (docs/hints-marks.md § "The engine colors the marks"): the cells the reason rests on outlined `COL_HINT_CELL` in the gutter, the
  * acted-on cell(s) ringed `COL_HINT`, the ruled-out candidate(s) shown struck.
  * The region a sentence names is hatched from the step's marks, not from here. */
 export interface SoloHint {
@@ -277,7 +276,7 @@ function drawNumber(
   const cell = y * cr + x;
   const colKiller = hl & HL_KSUM ? COL_ERROR : COL_KILLER;
 
-  // Hint overlay (docs/hints-marks.md § "The element-type color legend"): both
+  // Hint overlay (docs/hints-marks.md § "The engine colors the marks"): both
   // cell-level marks are read in `redraw`, which draws the target's ring and the
   // evidence region's outline in the gutter. What is left here is `struck`, the
   // set of candidates this firing rules out (bit n ⇒ candidate n), crossed
@@ -349,7 +348,7 @@ function drawNumber(
         1,
       );
   }
-  ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
+  ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, ts);
 
   // Corner juts: a GRIDEXTRA square where the diagonal neighbor is a different
   // block (so the grid corner shows through the merged region).
@@ -550,7 +549,7 @@ function drawPencilMarks(
     const gy = pt + (((fontsize * (2 * dy + 1)) / 2) | 0);
     dr.drawText({ x: gx, y: gy }, glyphFont(fontsize), COL_PENCIL, digitChar(i + 1));
     // A hint-ruled-out candidate keeps its normal pencil color with a
-    // same-color strikethrough — the "ruled out" cue (docs/hints-marks.md § "The element-type color legend").
+    // same-color strikethrough — the "ruled out" cue (docs/hints-marks.md § "The engine colors the marks").
     if (struck & (1 << (i + 1))) {
       const r = Math.max(2, (fontsize / 3) | 0);
       dr.drawLine({ x: gx - r, y: gy }, { x: gx + r, y: gy }, COL_PENCIL, 2);

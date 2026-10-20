@@ -47,7 +47,7 @@ type AnyStep = any;
 // 1.91:1 against a pencil mark in light and 1.96 in dark, painting over the
 // digits the hint talks about, and no palette color fixes that without landing
 // next to `ERROR_WASH`. A ring sits beside the content, so it can use the
-// emphatic `HINT_ACTION` blue.
+// emphatic `HINT_RING` blue.
 
 const NORMAL: KeenParams = { w: 6, diff: "normal", multiplicationOnly: false };
 const HARD: KeenParams = { w: 6, diff: "hard", multiplicationOnly: false };
@@ -508,7 +508,6 @@ describe("keen hint render", () => {
     // line is the hatch, and nothing in it is a particular reason.
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(hatches).toHaveLength(SMALL.w);
-    for (const h of hatches) expect(h.color).toBe(COL_HINT);
     const isRow = /in this row/.test(hint?.explanation ?? "");
     expect(new Set(hatches.map((h) => (isRow ? h.y : h.x))).size).toBe(1);
     expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);

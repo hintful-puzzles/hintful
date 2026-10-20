@@ -44,8 +44,13 @@ import {
   mkhighlight,
   mkhighlightSpecific,
 } from "../../engine/color/color-mkhighlight.ts";
-import { ORANGE, ORANGE_BOLD, RED } from "../../engine/color/colors.ts";
-import { FLASH, FLASH_LEAD, HINT_EVIDENCE } from "../../engine/color/palette.ts";
+import { RED } from "../../engine/color/colors.ts";
+import {
+  FLASH,
+  FLASH_LEAD,
+  HINT_OUTLINE,
+  HINT_RING,
+} from "../../engine/color/palette.ts";
 import {
   slideBlockBase,
   slideMainBlockBase,
@@ -120,11 +125,10 @@ export const paletteScheme: Partial<PaletteScheme> = {
 export const COL_FLASH = 22;
 /** The same, under the flash's leading edge. */
 export const COL_FLASH_LEAD = 23;
-/** A hint's ring, its outline, and its stripes. */
+/** A hint's ring, and its outline. */
 export const COL_HINT = 24;
 export const COL_HINT_EVIDENCE = 25;
-const COL_HINT_STRIPES = 26;
-export const NCOLORS = 27;
+export const NCOLORS = 26;
 
 /** Upstream `raise_colour`: two parts `src` to one part `limit`. */
 function raise(src: Color, limit: Color): Color {
@@ -198,17 +202,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
 
-  // The hint's ring is orange, not the collection's blue: blue is the key
-  // block's, which the help names and the hint rings, and a blue ring on it
-  // would vanish (docs/hints-marks.md § "When the game has already spent the
-  // hint hue"). Green is the exit's and red the cursor's; orange is opposite
-  // the key block in hue, and the cursor's red is corner brackets where the
-  // ring is a band round a whole block.
-  out[COL_HINT] = ORANGE;
-  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
-  // The stripes take the bold step of the same hue: at the hatch's opacity the
-  // base step is too near the light floor to show (`hatch-contrast.test.ts`).
-  out[COL_HINT_STRIPES] = ORANGE_BOLD;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
 
   return out;
 }
@@ -640,7 +635,7 @@ function drawTile(
   if (val & BG_FORCEFIELD) drawGate(dr, ts, tx, ty, val);
   // Under the block, so a destination square the block already covers keeps
   // the block whole and the stripes show on the floor it moves onto.
-  ds.hint.drawHatch(dr, i, box, COL_HINT_STRIPES, ts);
+  ds.hint.drawHatch(dr, i, box, ts);
 
   // Foreground: a section of a block, or of the wall.
   if (val & FG_WALL) {

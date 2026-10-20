@@ -416,17 +416,6 @@ be shown as evidence.
 - **THEN** it calls it the white dot or the black dot, or names it by the mark
   drawn on it
 
-### Requirement: Hint: The hint's action color is not the drag's
-
-The hint's action color SHALL be distinct from the association drag's, which
-marks the same objects, a dot and a cell, while the player follows a hint.
-
-#### Scenario: A hint and a drag are on screen together
-
-- **WHEN** a hint step is displayed
-- **THEN** its evidence and its action are drawn in the hint legend's two
-  colors, neither of them the drag preview's
-
 ### Requirement: Hint: A stored plan survives the player working ahead
 
 A stored plan SHALL survive the player working ahead: a step whose tile the

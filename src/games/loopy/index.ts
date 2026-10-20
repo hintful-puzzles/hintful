@@ -891,7 +891,7 @@ export const loopyGame: Game<
   hint,
   hintMarks: {
     roles: {
-      ring: "what the step decides, in blue: a band along an edge it sets, solid when it must be a line and broken when it can't be one, or a note it places, called “this corner” or “these two edges”.",
+      ring: "what the step decides: a band along an edge it sets, solid when it must be a line and broken when it can't be one, or a note it places, called “this corner” or “these two edges”.",
       outline:
         "what the step reasons from: the clue it counts (“this 3”) outlined, the dot it reasons about (“the outlined dot”) ringed, a band under the edges it cites, such as the loop an edge would close (“the marked lines”), the line or ruled-out edge a pair ties to (“the marked line”, “the marked ruled-out edge”) or the edge two pairs share (“the marked edge”), and the notes it cites (“the marked corner”, “each marked corner”, “the marked pair”, “the marked pairs”), highlighted.",
     },

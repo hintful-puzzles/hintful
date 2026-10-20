@@ -28,7 +28,8 @@ import {
   FLASH,
   FLASH_LEAD,
   HELD,
-  HINT_ACTION,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
@@ -500,8 +501,9 @@ export const untangleGame: Game<
       // rest: the pair.
       TWO[0],
       FLASH, // 9 COL_FLASH
-      HINT_ACTION, // 10 COL_HINT
+      HINT_RING, // 10 COL_HINT
       FLASH_LEAD, // 11 COL_FLASH_LEAD
+      HINT_OUTLINE, // 12 COL_HINT_CELL
     ];
   },
   computeSize: (p: UntangleParams, tileSize: number): Size => {

@@ -16,8 +16,8 @@ import {
   ERROR_WASH,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   RULED_OUT,
   SHADED,
@@ -85,8 +85,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_WRONG] = ERROR_WASH;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
@@ -270,7 +270,7 @@ function drawTile(
         ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD)
         : ds.surfaces[i],
   );
-  ds.hint.drawHatch(dr, i, surface, COL_HINT, ts);
+  ds.hint.drawHatch(dr, i, surface, ts);
 
   // A corner where the walls of two other squares meet, in the order
   // `wallsOf` numbers them.

@@ -17,9 +17,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_BLACKREF,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   RULED_OUT,
   SHADED,
@@ -68,10 +67,9 @@ export const COL_ERROR = 7;
 export const COL_CURSOR = 8;
 export const COL_HINT = 9; // the cell the displayed hint forces — ringed
 export const COL_HINT_CELL = 10; // the deduction's premise/area cells — outlined
-export const COL_HINT_SHADEDREF = 11; // a cited shaded premise (doubled outline)
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 12;
-export const COL_FLASH_LEAD = 13;
+export const COL_FLASH = 11;
+export const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -88,11 +86,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
-  // The cross-game "a shaded square is the reason" hue (Singles' too), apart
-  // from the action ring so premise and move don't read as the same color.
-  out[COL_HINT_SHADEDREF] = HINT_BLACKREF;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -114,7 +109,7 @@ export function computeSize(p: RangeParams, ts: number): Size {
 const F_ERROR = 1 << 16;
 const F_CURSOR = 1 << 17;
 const F_MISTAKE = 1 << 19;
-const F_HINT_CLUE = 1 << 21; // the clue driving the deduction — digit in COL_HINT
+const F_HINT_CLUE = 1 << 21; // the clue driving the deduction — digit in COL_HINT_CELL
 /** The win flash's tone on the cell, in two bits above the hint's. */
 const WIN_SHIFT = 25;
 const F_HINT_HATCH = 1 << 24; // on the run the sentence names — hatched
@@ -123,7 +118,7 @@ const F_HINT_HATCH = 1 << 24; // on the run the sentence names — hatched
  * the forced cell, shaded or clear alike (the narration says which mark),
  * ringed in COL_HINT; the `area` is the deduction's evidence, outlined in
  * COL_HINT_CELL; a `shadedRef` is a shaded premise cell, which keeps its piece
- * and takes a doubled outline in COL_HINT_SHADEDREF. */
+ * and takes a doubled outline in COL_HINT_CELL. */
 const HINT_FLAG = { none: 0, target: 1 << 20, area: 1 << 22, shadedRef: 1 << 23 };
 type HintKind = keyof typeof HINT_FLAG;
 
@@ -155,7 +150,7 @@ function drawCell(
   cursor: boolean,
   tone: WinTone,
   hintKind: HintKind,
-  /** This clue drives the displayed deduction, so its digit draws `COL_HINT`
+  /** This clue drives the displayed deduction, so its digit draws `COL_HINT_CELL`
    * (see `RangeHint.clue`). The clue is *inside* the outlined area or striped
    * run it drives, so it keeps that mark and changes only its digit. */
   clueRef = false,
@@ -181,7 +176,7 @@ function drawCell(
 
   drawRectOutline(dr, x, y, ts + 1, ts + 1, COL_GRID);
   dr.drawRect(box, surface);
-  if (hatched) dr.drawHatch(box, COL_HINT, hatchPeriod(ts));
+  if (hatched) dr.drawHatch(box, hatchPeriod(ts));
 
   // Content before the marks, which sit at the cell's edge beside it. A
   // violation is told by the frame below, so a shaded piece keeps its color.
@@ -193,7 +188,7 @@ function drawCell(
     dr.drawText(
       { x: tx, y: ty },
       glyphFont(Math.floor((ts * 3) / 5)),
-      error ? COL_ERROR : clueRef ? COL_HINT : COL_TEXT,
+      error ? COL_ERROR : clueRef ? COL_HINT_CELL : COL_TEXT,
       String(value),
     );
   }
@@ -212,8 +207,8 @@ function drawCell(
   if (hintKind === "area") drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
   if (hintKind === "target") drawMarkSides(dr, band, MARK_ALL, COL_HINT);
   if (hintKind === "shadedRef") {
-    drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_HINT_SHADEDREF);
-    drawRectOutline(dr, x + 2, y + 2, ts - 3, ts - 3, COL_HINT_SHADEDREF);
+    drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_HINT_CELL);
+    drawRectOutline(dr, x + 2, y + 2, ts - 3, ts - 3, COL_HINT_CELL);
   }
 
   dr.drawUpdate({ x, y, w: ts + 1, h: ts + 1 });

@@ -25,8 +25,8 @@ import {
   FLASH,
   FLASH_LEAD,
   GRID_MID,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -99,9 +99,10 @@ export const COL_PENCIL_BODY = 10;
  * used mkhighlight's near-white, which the dark-mode pass inverts to
  * near-black. */
 export const COL_CURSOR = 11;
-/** The hint's action color: its target rings, hatch and the clue it reads. */
+/** The hint's action color: its target rings. */
 export const COL_HINT = 12;
-/** The hint's evidence color: the outline of the squares a reason rests on. */
+/** The hint's evidence color: the outline of the squares a reason rests on,
+ * and the clue it reads. */
 export const COL_HINT_CELL = 13;
 export const COL_CELL = 14; // the surface of a cell the player fills
 export const COL_FLASH_LEAD = 15;
@@ -124,8 +125,8 @@ export function colors(defaultBackground: Color): Color[] {
   // A fill under the letter and its notes: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
   out[COL_CURSOR] = highlightWash(inner);
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(outer);
   out[COL_LINE] = surfaceGrid(outer);
   return out;
@@ -376,7 +377,7 @@ function drawTile(
     COL_FLASH,
     COL_FLASH_LEAD,
   );
-  ds.hint.drawHatch(dr, i, box, COL_HINT, ts);
+  ds.hint.drawHatch(dr, i, box, ts);
 
   if (letter !== EMPTY) {
     dr.drawText(
@@ -503,16 +504,22 @@ export function redraw(
   ds.hint.pack(marks, index, (m) => valueBit(m.n - 1));
 
   // Clues (redraw only those whose look changed). The hint hatches the named
-  // line on through its clue slots, and draws the count it reads in its color.
+  // line on through its clue slots, and recolors the count it reads.
   const clueErr = computeClueErrors(state);
   const read = marks.of("outline", CLUE)[0] ?? -1;
-  // The clue's line: `numbers` holds the row clues, then the column clues.
-  const readLine = read < 0 ? -1 : Math.floor(read / n);
-  const lineHatched = read >= 0 && marks.of("stripes", CELL).length > 0;
+  // The striped line, numbered as `numbers` holds its clues: the rows, then
+  // the columns. A line of one square is a row.
+  const striped = marks.of("stripes", CELL);
+  const stripedLine =
+    striped.length === 0
+      ? -1
+      : striped.every((c) => c.y === striped[0].y)
+        ? striped[0].y
+        : h + striped[0].x;
   for (const horizontal of [true, false]) {
     const amx = horizontal ? h : w;
     for (let a = 0; a < amx; a++) {
-      const hatched = lineHatched && readLine === (horizontal ? a : h + a);
+      const hatched = stripedLine === (horizontal ? a : h + a);
       for (let i = 0; i < n; i++) {
         const pos = horizontal ? horClue(a, i, n) : verClue(a, i, n, h);
         const look =
@@ -526,11 +533,11 @@ export function redraw(
         const oy = horizontal ? oi : oo;
         const slot = { x: ox, y: oy, w: ts - 1, h: ts - 1 };
         dr.drawRect(slot, COL_OUTERBG);
-        if (look & CLUE_HATCHED) dr.drawHatch(slot, COL_HINT, hatchPeriod(ts));
+        if (look & CLUE_HATCHED) dr.drawHatch(slot, hatchPeriod(ts));
         const clue = state.numbers[pos];
         if (clue !== NO_NUMBER) {
           const color =
-            look & CLUE_ERR ? COL_ERROR : look & CLUE_READ ? COL_HINT : COL_TEXT;
+            look & CLUE_ERR ? COL_ERROR : look & CLUE_READ ? COL_HINT_CELL : COL_TEXT;
           drawTileText(dr, ox, oy, ts, color, String(clue));
         }
         dr.drawUpdate(slot);

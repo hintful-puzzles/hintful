@@ -527,30 +527,6 @@ mark is a band on a cell's border box.
 - **THEN** the frame draws the bundle at the new count with only the added bars
   in the action color
 
-### Requirement: Hint: A Bridges hint recolors an island's rim and clue digit
-
-An island SHALL be marked by recoloring its own rim and clue digit, which is a
-ring and not a fill: `COL_HINT` for the island a sentence names,
-`COL_HINT_CELL` for one it merely counts, and never both for one island. A
-step SHALL recolor an island in the action color only when its sentence names
-it. A premise that counts a group the island belongs to, and does not name the
-island, SHALL mark every member alike, so "these N islands" points at N marks
-of one color and not at one mark of each.
-
-#### Scenario: A sealed group is marked in one color
-
-- **WHEN** a step blocks a bridge because it would shut a group of islands
-  into a finished group of their own
-- **THEN** every island of that group, the one the bridge would start from
-  included, takes the evidence color and none takes the action color
-
-#### Scenario: A hint explains an island with exactly enough room left
-
-- **WHEN** an island's remaining count equals the bridges it can still take and a
-  hint is requested
-- **THEN** the step's narration states that count, its move draws exactly that
-  many bridges, and the island it names is the one the hint recolors
-
 ### Requirement: Hint: A Bridges hint asks its stages in order after every step
 
 The hint SHALL ask its stages in this order and take the first that fires,
@@ -576,6 +552,29 @@ the way.
 - **WHEN** the stages run into a contradiction on a board whose mistake check
   reports nothing, which can only be a board Solve cannot finish
 - **THEN** the hint refuses, and shows no step it derived on the way
+
+### Requirement: Hint: A Bridges hint recolors an island's rim and clue digit as an outline
+
+An island SHALL be marked by recoloring its own rim and clue digit, which is a
+ring and not a fill, in `COL_HINT_CELL`: the island a sentence names is a
+reference of its own, and the islands it merely counts another. A premise
+that counts a group the island belongs to, and does not name the island,
+SHALL mark every member alike, so "these N islands" points at N marks of one
+reference and not at one mark of each.
+
+#### Scenario: A sealed group is marked as one reference
+
+- **WHEN** a step blocks a bridge because it would shut a group of islands
+  into a finished group of their own
+- **THEN** every island of that group, the one the bridge would start from
+  included, is recolored as one reference
+
+#### Scenario: A hint explains an island with exactly enough room left
+
+- **WHEN** an island's remaining count equals the bridges it can still take and a
+  hint is requested
+- **THEN** the step's narration states that count, its move draws exactly that
+  many bridges, and the island it names is the one the hint recolors
 
 ### Requirement: Look: Every Bridges mark is in the tile diff key
 

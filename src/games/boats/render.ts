@@ -42,8 +42,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   SHADED,
   surfaceGrid,
@@ -136,8 +136,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_COUNT_ERROR] = ERROR;
   out[COL_COLLISION_ERROR] = ERROR;
   out[COL_COLLISION_TEXT] = ERROR_TEXT;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -574,7 +574,7 @@ export function redraw(
     const ty = BORDER + (column ? (h + 1) * ts : (i - w) * ts + half);
     const cell = { x: tx - half, y: ty - half, w: ts, h: ts };
     dr.drawRect(cell, COL_BACKGROUND);
-    if (hatched) dr.drawHatch(cell, COL_HINT, hatchPeriod(ts));
+    if (hatched) dr.drawHatch(cell, hatchPeriod(ts));
     dr.drawUpdate(cell);
     dr.drawText(
       { x: tx, y: ty },
@@ -654,7 +654,7 @@ export function redraw(
             : COL_WATER;
       dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, surface);
       if (hintBit & HINT_LINE)
-        dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+        dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, hatchPeriod(ts));
       drawRectOutline(dr, tx, ty, ts + 1, ts + 1, COL_GRID);
 
       if (isShip(ship)) {

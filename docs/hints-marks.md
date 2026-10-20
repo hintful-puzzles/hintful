@@ -23,8 +23,9 @@ already does it.
    it names (`hints.md` § "Bind the words to the marks").
 2. Declare the roles the steps name as `hintMarks.roles` in `index.ts`, and
    put `{{hint-marks}}` in the `## Hints` section of `help.md`.
-3. In `render.ts`, export `COL_HINT` as `HINT_ACTION` and an evidence color
-   as `HINT_EVIDENCE` (§ "Guarding the mark's shape").
+3. In `render.ts`, export a `COL_HINT` slot holding `HINT_RING` and a
+   `COL_HINT_CELL` slot holding `HINT_OUTLINE`, and draw each mark in its
+   role's ink and nothing else (§ "The engine colors the marks").
 4. In `redraw`, read the marks with `stepMarks(hint)` and from nowhere else,
    and fold them into the draw state's `OverlaySidecar`, so that `stale` and
    `commit` put them in the tile's diff key.
@@ -52,9 +53,9 @@ already does it.
 | – A mark on something that is not a cell | your game decides edges, spans, regions or faces |
 | – A piece is ringed as one shape | a step's target or evidence is a piece of several squares |
 | – A square the move brings along takes a lighter mark | one move decides a deduced square and another that follows from it |
-| – Why a fill cannot work, whatever color it is | you are about to fill a hinted cell, or retune a hint color |
+| – Why a fill cannot work, whatever color it is | you are about to fill a hinted cell |
 | – Where the band goes, and who rubs it out | you write `markBand`, or a mark is left behind or painted over |
-| – Outline or wash: what the evidence cells carry | you draw the evidence cells |
+| – Outline the evidence | you draw the evidence cells |
 | – Guarding the mark's shape | you test a hint frame, or `hint-mark.test.ts` fails |
 | Show the evidence as an area | a step reasons over more than one cell |
 | – Evidence for a count is what rules the other squares out | a premise says a line or region needs N more and only N can supply one |
@@ -67,9 +68,7 @@ already does it.
 | – Evidence for a connectivity deduction | a technique reasons over what is joined to what |
 | Hatch the line the sentence names | a sentence says "this row", "this column" or names a region |
 | – Two regions in one sentence take two mark shapes | a sentence names two regions |
-| The element-type color legend | a step names more than one kind of element, or you pick a hint color |
-| – Mark a premise in the action color only where the sentence names it | a premise element is recolored |
-| – When the game has already spent the hint hue | hint blue already means something in your game |
+| The engine colors the marks | you draw a mark, recolor a clue, or are about to pick a hint color |
 | A hint that suppresses a game's aid dismisses on a UI update | a displayed hint hides or takes over something the game draws |
 | Number a chain's cells in order | a step shows a chain of forced consequences |
 | Show the what-if walk statically | a step's reason is a hypothesis followed to a contradiction |
@@ -137,8 +136,8 @@ orientation.
 ## Shade vs ring
 
 **The acted-on cell is ringed in every game, with no exceptions, and an
-evidence area is outlined unless the game can say that nothing is drawn on
-it.** Both marks sit on the cell's border and never behind its content.
+evidence area is outlined.** Both marks sit on the cell's border and never
+behind its content.
 
 The engine gives [`engine/hint-mark.ts`](../src/engine/hint-mark.ts):
 `MarkBand` says where a cell's band sits, `HintMarks` paints the ring and the
@@ -231,7 +230,7 @@ fill role for the action color (requirement "The palette carries no fill for
 the acted-on color"), so the question is not reopened by retuning.
 
 A mark on the border is read against a surface and not through it, so it can
-take a strong color: `HINT_ACTION`.
+take a strong color, as the engine's are.
 
 ### Where the band goes, and who rubs it out
 
@@ -269,28 +268,19 @@ Bound the inner reach by the content, by arithmetic on the glyph's geometry
 and not by eye, and record the bound at the game's `markBand`. Requirement "A
 mark outside the content box is driven by the drawstate".
 
-### Outline or wash: what the evidence cells carry
+### Outline the evidence
 
-**Outline the evidence wherever its cells carry anything the player has to
-read**: digits, pencil marks, clue glyphs, a placed piece, a background that
-means something. `outlineSides` paints a side wherever the neighbor across it
-is not also evidence, so a contiguous region comes out as one contour and a
-scattered set as one ring a cell.
+**Outline the evidence, never wash it**: its cells carry what the player has
+to read, and even an empty cell's surface is part of its premise (Light Up's
+unlit square is told by not being yellow). `outlineSides` paints a side
+wherever the neighbor across it is not also evidence, so a contiguous region
+comes out as one contour and a scattered set as one ring a cell.
 
-- **Wash only where the game can say nothing is drawn on the cells.**
-  `hint-mark.test.ts` asserts the set of washing games exactly, so a new one
-  fails until it records why it may (requirement "An evidence wash is kept
-  only where nothing is drawn on it"). A digit reading well on a pale fill is
-  not enough: at the lightness that needs, the wash is invisible against a
-  dark board.
-- **One shape for one role.** Do not wash one kind of evidence cell and ring
-  another.
+- **One shape for one role.** Do not outline one kind of evidence cell and
+  mark another some other way.
 - **Never drop the evidence mark.** Where a sentence says "this cage" and the
   target sits in a different one, the mark is the only thing saying which.
-- **Give an outline the bold color step, `HINT_EVIDENCE`**, and not a base
-  step: `color-dark-check` flags a base step as soft in one scheme and bright
-  in the other (requirement "An evidence mark on a border takes a bold
-  step"). The chain ordinal takes the same color, being an index into the
+- **The chain ordinal takes the outline's ink**, being an index into the
   evidence and not a role of its own.
 - **A line or region the sentence names is not evidence**: it is striped
   (§ "Hatch the line the sentence names").
@@ -303,8 +293,8 @@ what a fill also satisfies.
 - [`hint-mark.test.ts`](../src/engine/hint-mark.test.ts) walks every hinting
   game and fails on a rect in a hint color that is cell-sized and thick in
   both directions. It finds a game's hint colors by reading the `COL_HINT`
-  export of its `render.ts`, so export that name for the hint's action color
-  and for nothing else
+  and `COL_HINT_CELL` exports of its `render.ts`, so export those names for
+  the ring's and the outline's slots and for nothing else
   ([`method.md`](./method.md) § "A scan that keys on a name").
 - In the game's own test,
   [`mark-shape.ts`](../src/engine/testing/mark-shape.ts) gives `expectRing`
@@ -487,7 +477,7 @@ Exemplar: `componentSquares` and `incidentSquares` in
 
 **A step whose sentence names a row or column stripes that line**:
 translucent diagonal bands over its squares and on through its clue slots, in
-the action color ([`engine/hatch.ts`](../src/engine/hatch.ts)). **A region
+the engine's stripes ink ([`engine/hatch.ts`](../src/engine/hatch.ts)). **A region
 the sentence is about is striped the same way**: a cage, a block, a run, an
 area. Requirements "A hint hatches the one line its sentence names" and "A
 hint hatches the region its sentence is about".
@@ -502,22 +492,23 @@ hint hatches the region its sentence is about".
   parallel and playing the same part, the claim being about every square of
   each.
 - **A second line is named by where it lies, never as "this"**: "the column
-  beside it", with its clue in the evidence color. A step about one piece
-  that names two lines stripes neither and colors both clues as reasons.
-- **A recolored clue digit is an outline, not a role of its own.** A count
-  the sentence reads may take the action color and a clue cited as a reason
-  the evidence color; both are outline references, told apart by their nouns.
-  A clue slot outside the grid is a kind of its own (requirement "A recolored
-  clue is an outline reference").
+  beside it", with its clue recolored. A step about one piece that names two
+  lines stripes neither and recolors both clues as reasons.
+- **A recolored clue digit is an outline, not a role of its own**, drawn in
+  `HINT_OUTLINE`: a count the sentence reads and a clue cited as a reason are
+  both outline references, told apart by their nouns. A clue slot outside the
+  grid is a kind of its own (requirement "A recolored clue is an outline
+  reference"). Its hatch, where its line is striped, follows the stripes and
+  not the clue: hiding the clue's reference must leave the stripes drawn.
 - **No line is named by a number the board does not draw.** Say "this row"
   over the stripes, or name a destination by the mark on it;
   `hint-quality.test.ts` rejects "row 3" in any sentence.
 
 To draw it: a game on `OverlaySidecar` names the cells as stripes in its
-words and calls `ds.hint.drawHatch(dr, i, rect, COL_HINT, ts)` after the
+words and calls `ds.hint.drawHatch(dr, i, rect, ts)` after the
 cell's background and before its content
 ([`rome/render.ts`](../src/games/rome/render.ts)). A game with its own tile
-word calls `dr.drawHatch(tileRect, COL_HINT, hatchPeriod(ts))` at the same
+word calls `dr.drawHatch(tileRect, hatchPeriod(ts))` at the same
 point and puts the flag in the tile's diff key (`drawTileCol` and `drawNum`
 in [`magnets/render.ts`](../src/games/magnets/render.ts)). The bands are laid
 on the canvas and not the rect, so tiles striped one at a time join. A clue
@@ -527,8 +518,10 @@ arrive on it and leave.
 `HATCH_OPACITY` is 0.3, and two guards in `puzzle/hatch-contrast.test.ts`
 bracket it: a floor near 0.27, stripes visible on every hatching game's board
 in both schemes, and a ceiling near 0.35, no symbol losing more than a
-quarter of its contrast unless it stays at 4.5:1. A game's legibility check
-under the hatch goes in that file, because the app's palettes are built in
+quarter of its contrast unless it stays at 4.5:1. The app repaints stripes at
+the hatch's own coverage, so the bars hold for every stripes color a
+reference can take, and a game's legibility check under the hatch measures
+each. It goes in that file, because the app's palettes are built in
 `src/puzzle/`, which no game may import. The same file holds the cross-game
 guard "a step that names a line or region draws it, and only then". Stripes
 work where a flat tint cannot because half the surface keeps its own color
@@ -547,101 +540,40 @@ The border grid's hint layer
 by `border-grid-render.ts`) carries both marks. Exemplar:
 [`separate/hint-text.ts`](../src/games/separate/hint-text.ts).
 
-## The element-type color legend
+## The engine colors the marks
 
-**When a narration names more than one kind of board element, each kind gets
-its own highlight, the same one in every step that cites it.** Premise cells
-that play different roles must not share a color. The normative rule is
-[`engine-hints`](../openspec/specs/engine-hints/spec.md) requirement "A hint
-naming several kinds of element colors them by a stable legend".
+**A game draws its marks' shapes, and the engine decides their colors and
+edges.** While a hint shows, the app repaints each reference's marks in a
+color of its own from `HINT_REFERENCE_COLORS`
+([`engine/color/colors.ts`](../src/engine/color/colors.ts)), the color its
+words are tinted with, edged in black or white so that it reads on whatever
+lies under it (`edgeFor` and `edged` in
+[`puzzle/mark-flash.ts`](../src/puzzle/mark-flash.ts)). Copy image lays the
+same repaint over the board (`Puzzle.getImage`). The normative rule is
+[`app-shell`](../openspec/specs/app-shell/spec.md) requirement "The engine
+colors every hint mark".
 
-- **Carry the roles as separate lists and apply them with a stated
-  precedence** (target, then the extra role, then evidence), and test that
-  the roles are disjoint. Exemplar: `strandOf` in
-  [`singles/index.ts`](../src/games/singles/index.ts) and
-  `COL_HINT_STRAND` in its `render.ts`, a third role for a cell the step
-  protects.
-- **Color is never the only carrier.** Every legend color is paired with a
-  cue that is not color (ring, outline, glyph or position), and a color's
-  name never goes in the narration (requirement "A legend color is never the
-  only cue").
-- **The legend is about kinds of premise, not cells.** Forced moves that
-  share a fate all take the one target color, and two cells of one kind are
-  not colored apart.
-- **A foreground highlight contrasts with the cell it sits on.** A struck
-  candidate digit stays in `COL_PENCIL` with a strikethrough of the same
-  color, in a cell that is ringed and never filled (requirement "A highlight
-  on a board element stays legible against its cell").
-- **Reuse the two cross-game readings**: teal for a cited black square and
-  violet for a cited white one. Pick a different hue where a premise ring is
-  not one decided color, and one premise color, not a split by cell, where
-  the ring set is mixed.
-- **A hint that narrates only a move is exempt.** A movement game names one
-  kind of element, the thing moved, so there is no premise kind to tell
-  apart.
+- **Draw a ring in `HINT_RING` and an outline in `HINT_OUTLINE`**, each in a
+  palette slot of its own, and a mark in nothing else. A recolored clue digit
+  is an outline. [`hint-ink.test.ts`](../src/engine/hint-ink.test.ts) hides
+  each reference of the steps every hinting game opens with, and fails on a
+  mark drawn in another role's ink or in a slot only a hint uses.
+- **Stripes are the engine's**: `drawHatch` takes no color, and draws in the
+  stripes ink `resolvePalette` adds to every palette.
+- **A mark that restyles the content keeps the content's color**, as a struck
+  candidate stays `COL_PENCIL`; the repaint finds it by what it changes.
+- **Pick no hint color, and add no keyline.** The app finds an ink's marks by
+  drawing the inks in black and then white, so a mark is found whole on
+  content of any color, and it keeps the ink's own coverage: stripes stay as
+  translucent as the hatch.
+- **Color is never the only carrier**, and a color's name goes neither in a
+  sentence nor in the `hintMarks` legend (requirement "A legend color is
+  never the only cue"). A reference's color depends on the step, so the words
+  tell references apart by their nouns, and the marks by their shapes.
 
-What a game's hint draws is its `hintMarks` legend, which its help page's
-`## Hints` section shows, and its `render.ts`. Read the nearest game's before
-adding a hint to a similar one.
-
-### Mark a premise in the action color only where the sentence names it
-
-**A premise element takes the action color only when the step's words name
-that element, and the evidence color when they only count it.** A step whose
-sentence is about a group marks every member of the group alike, the
-acted-from one included, so "these 2 islands" points at two marks of one
-color. A mark the sentence never accounts for is one the player has to
-explain to themselves. Exemplar: the rim and digit recoloring in
-[`bridges/render.ts`](../src/games/bridges/render.ts), with requirement "A
-Bridges hint recolors an island's rim and clue digit" in its spec.
-
-### When the game has already spent the hint hue
-
-**Check the hint color against the game's existing legend in OKLCH before
-taking the default, and decide which role is the cross-game one before
-deciding who yields.** `COL_HINT` blue is the collection's default, not a
-mandate.
-
-What follows is the frame the game draws. While a hint shows, the app
-repaints each reference's marks in a color of its own from
-`HINT_REFERENCE_COLORS` (`engine/color/colors.ts`), held to the bars every
-mark is on the cell surface and the region fills (`palette.test.ts`), so
-the game's own hint color is under the repaint. The repaint gives every mark
-an edge in black or white, whichever stands farther from its color
-(`edgeFor` and `edged` in `puzzle/mark-flash.ts`): round a ring or an
-outline, and inside a stripe's band, since the game's content is drawn over
-the stripes. Of two colors that far apart one reads on whatever the game
-drew, so no game picks its references' colors, and a repainted mark reads at
-2.1:1 or better on any content in both schemes (`mark-flash.test.ts`). The
-choices below are what a player sees where the repaint is not drawn: in Copy
-image, which takes the game's canvas, and until a step's marks are measured.
-
-- **Where the game's blue carries information about the puzzle, the hint
-  moves**, and where two washes would coexist, the displayed hint suppresses
-  the game's own, so one meaning of a washed square is on screen (§ "A hint
-  that suppresses a game's aid dismisses on a UI update"). Exemplar:
-  [`crossing/render.ts`](../src/games/crossing/render.ts), whose hint is
-  green.
-- **Where a transient affordance holds blue and lands on the same objects as
-  the hint at the same moment, the hint moves.** Two roles agreeing about
-  what they point at is when a shared color confuses most. Exemplar:
-  [`galaxies/render.ts`](../src/games/galaxies/render.ts), whose hint is
-  purple beside the drag preview's `DRAG_ADD`. Where blue, green and red
-  are all spent and the hint marks the blue thing, take orange, opposite it
-  in hue ([`slide/render.ts`](../src/games/slide/render.ts)).
-- **Where the thing holding the hue is the cursor, the cursor moves.** A
-  cursor color is the game's own, and hint blue is learned across the
-  collection. Exemplar: [`sticks/render.ts`](../src/games/sticks/render.ts).
-  When green and blue are both spent, the cursor takes purple, as `COL_CURSOR`
-  does in [`spokes/render.ts`](../src/games/spokes/render.ts) and
-  [`subsets/render.ts`](../src/games/subsets/render.ts); say why at the
-  assignment.
-- **Where the pieces come in every hue, no hint color is free**, so the marks
-  keep their colors and take an edge that shows on all of them, as the
-  repaint does: a black keyline inside the ring and the outline, and black
-  stripes, measured over every piece color in both schemes in
-  `puzzle/hatch-contrast.test.ts`. Exemplar:
-  [`samegame/render.ts`](../src/games/samegame/render.ts), `COL_HINT_KEY`.
+Until a step's marks are measured, through a move's animation, the board
+shows the inks. Each is its role's first reference color, so a step with one
+reference of each role looks the same before and after.
 
 ## A hint that suppresses a game's aid dismisses on a UI update
 
@@ -691,7 +623,7 @@ order is declared and drawn as an ordinal".
   renderer never numbers by array index.
 - **Wire it in the tile painter.** Take `ds.hint.order[i]` and pass it to
   `drawHintOrdinal` ([`engine/hint-ordinal.ts`](../src/engine/hint-ordinal.ts))
-  with the game's evidence color. Unwired, the chain is outlined, the
+  with the game's outline slot. Unwired, the chain is outlined, the
   sentence cites "cell 3", and no number shows.
 - **Bottom-right, in every game**, the one corner free wherever a chain is
   drawn, so the mark is learned once. Pass `inset` where a ring shares the

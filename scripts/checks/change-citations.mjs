@@ -120,7 +120,6 @@ const SCANNED = /^(docs\/.*\.md|AGENTS\.md|src\/.*\.ts)$/;
  */
 const NOT_A_LIVE_CHANGE = {
   "auto-mark-complete": "a `Ui` preference key (Bridges); named in rendering.md",
-  "color-dark-check": "a test file, `scripts/checks/color-dark-check.test.ts`",
   "puzzle-key-unhandled": "a DOM event `view-interactive.ts` raises",
   "game-state-change":
     "a midend notification type (`NotifyGameStateChange`); named in mechanics.md",

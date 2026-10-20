@@ -705,7 +705,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       "toggle-pencil-mode": this.handleTogglePencilMode,
       "toggle-auto-hint": this.handleAutoHintToggle,
       "switch-puzzle": this.openPuzzleSwitcher,
-      "copy-image": () => this.puzzle?.copyImage(),
+      "copy-image": () => this.puzzle?.copyImage(currentColorScheme.get()),
       "enter-gameid": this.showEnterGameIDDialog,
       "load-game": this.showLoadGameDialog,
       "new-game": () => this.puzzle && dealNewGame(this.puzzle),
@@ -962,7 +962,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     const puzzle = this.puzzle;
     if (!puzzle) return;
     const { captureIcons } = await import("../puzzle/icon-capture.ts");
-    await captureIcons(puzzle, this.puzzleId);
+    await captureIcons(puzzle, this.puzzleId, currentColorScheme.get());
   }
 
   /**

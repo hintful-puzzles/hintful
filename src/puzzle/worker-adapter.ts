@@ -37,7 +37,7 @@ import type {
 } from "../engine/types.ts";
 import { Drawing } from "./drawing.ts";
 import type { HintReferenceMarks, PuzzleEngineSurface } from "./engine-surface.ts";
-import { markAlpha, markBox, type ReferenceMarks } from "./mark-flash.ts";
+import { inkCoverage, markAlpha, markBox, type ReferenceMarks } from "./mark-flash.ts";
 
 export class TsWorkerPuzzle implements PuzzleEngineSurface {
   private drawing?: Drawing;
@@ -115,27 +115,48 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     if (!drawing || !this.paletteReady) return null;
     // One task, so no frame without a reference's marks is ever shown: an
     // OffscreenCanvas presents what it holds when the worker yields.
-    this.engine.redraw(drawing);
-    const shown = drawing.pixels();
-    const refs: ReferenceMarks[] = [];
-    for (let i = 0; i < count; i++) {
-      this.engine.hideHintReference(i);
-      this.engine.redraw(drawing);
-      const alpha = markAlpha(shown.data, drawing.pixels().data);
-      refs.push({
-        alpha,
-        box: markBox(alpha, shown.width),
+    /** The board drawn with each reference's marks hidden in turn, and
+     * with all of them. */
+    const frames = () => {
+      const shown = drawing.pixels();
+      const hidden = Array.from({ length: count }, (_, i) => {
+        this.engine.hideHintReference(i);
+        this.engine.redraw(drawing);
+        return drawing.pixels().data;
       });
-    }
-    this.engine.hideHintReference(null);
+      this.engine.hideHintReference(null);
+      return { shown, hidden };
+    };
     this.engine.redraw(drawing);
+    const drawn = frames();
+    // A mark in an ink is measured by its coverage, from the inks drawn in
+    // white and in black: by its difference it measures faint on content of
+    // its own color, and a translucent one, the stripes, heavier than it is
+    // drawn. A mark in any other color is measured by its difference. The
+    // game's cache is keyed on what it draws, not on the colors, so a full
+    // repaint puts each ink on every mark, and the last one restores them.
+    const inks = this.engine.hintInkIndices();
+    const inInk = (color: string) => {
+      drawing.overrideColors(inks, color);
+      this.engine.forceRedraw(drawing);
+      return frames();
+    };
+    const white = inInk("#fff");
+    const black = inInk("#000");
+    drawing.overrideColors(inks, null);
+    this.engine.forceRedraw(drawing);
+    const { width, height } = drawn.shown;
+    const refs: ReferenceMarks[] = drawn.hidden.map((hidden, i) => {
+      const alpha = markAlpha(drawn.shown.data, hidden);
+      const ink = inkCoverage(
+        { shown: white.shown.data, hidden: white.hidden[i] },
+        { shown: black.shown.data, hidden: black.hidden[i] },
+      );
+      for (let p = 0; p < alpha.length; p++) if (ink[p] > 0) alpha[p] = ink[p];
+      return { alpha, box: markBox(alpha, width) };
+    });
     return transfer(
-      {
-        width: shown.width,
-        height: shown.height,
-        refs,
-        roles: this.engine.hintReferenceRoles(),
-      },
+      { width, height, refs, roles: this.engine.hintReferenceRoles() },
       refs.map((r) => r.alpha.buffer),
     );
   }

@@ -22,8 +22,8 @@ import {
   ERROR,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   RULED_OUT,
   surfaceGrid,
@@ -108,8 +108,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_LINE] = INK;
   out[COL_RULED_OUT] = RULED_OUT;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 

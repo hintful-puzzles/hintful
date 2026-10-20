@@ -19,8 +19,8 @@ import {
   ERROR,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -494,8 +494,8 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_LIT] = FLASH;
   ret[COL_LIT_LEAD] = FLASH_LEAD;
   ret[COL_WELL] = guessAnswerWell(defaultBackground);
-  ret[COL_HINT] = HINT_ACTION;
-  ret[COL_HINT_CELL] = HINT_EVIDENCE;
+  ret[COL_HINT] = HINT_RING;
+  ret[COL_HINT_CELL] = HINT_OUTLINE;
   ret[COL_WRONG] = ERROR;
 
   return ret;
@@ -531,7 +531,7 @@ function drawPeg(
   // fills all of its box but the corners, and keeps its own color.
   const lit = tone !== WIN_NONE ? winSlot(tone, COL_LIT, COL_LIT_LEAD) : null;
   dr.drawRect(box, lit ?? COL_BACKGROUND);
-  if (hatched) dr.drawHatch(box, COL_HINT, hatchPeriod(ts));
+  if (hatched) dr.drawHatch(box, hatchPeriod(ts));
   const fill = col ? COL_EMPTY + col : (lit ?? COL_EMPTY);
   if (ds.pegrad > 0) {
     dr.drawCircle(
@@ -590,7 +590,7 @@ function guessRedraw(
     // The whole strip, so the stripe runs through the gaps no peg repaints.
     if (hatched && force) {
       dr.drawRect(rowBox(ds, guess), COL_BACKGROUND);
-      dr.drawHatch(rowBox(ds, guess), COL_HINT, hatchPeriod(ds.tileSize));
+      dr.drawHatch(rowBox(ds, guess), hatchPeriod(ds.tileSize));
     }
   }
 
@@ -675,7 +675,7 @@ function hintRedraw(
   const hh = hinth + gap * 2;
 
   dr.drawRect(rect(hx, hy, hw, hh), COL_BACKGROUND);
-  if (hatched) dr.drawHatch(rect(hx, hy, hw, hh), COL_HINT, hatchPeriod(ds.tileSize));
+  if (hatched) dr.drawHatch(rect(hx, hy, hw, hh), hatchPeriod(ds.tileSize));
 
   for (let i = 0; i < npegs; i++) {
     const scol = src ? src.feedback[i] : 0;

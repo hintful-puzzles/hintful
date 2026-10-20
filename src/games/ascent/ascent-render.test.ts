@@ -283,9 +283,7 @@ describe("ascent hint frames", () => {
       const { recording, marks } = hintFrame(kind);
       for (const t of marks.targets) expect(marks.hatch).toContain(t);
       // Every striped cell is hatched, a hexagon on rects that stay inside it.
-      const hatches = recording.ops.filter(
-        (o) => o.op === "hatch" && o.color === COL_HINT,
-      );
+      const hatches = recording.ops.filter((o) => o.op === "hatch");
       expect(marks.hatch.length).toBeGreaterThan(0);
       expect(hatches).toHaveLength(marks.hatch.length * perCell);
       expect(recording.ops).toMatchSnapshot();
@@ -321,9 +319,7 @@ describe("ascent hint frames", () => {
   it("Edges: stripes the line an arrow points along when the sentence names it", () => {
     const { recording, marks } = hintFrame("edgesLine");
     expect(marks.hatch.length).toBeGreaterThan(0);
-    const hatches = recording.ops.filter(
-      (o) => o.op === "hatch" && o.color === COL_HINT,
-    );
+    const hatches = recording.ops.filter((o) => o.op === "hatch");
     expect(hatches).toHaveLength(marks.hatch.length);
     expect(recording.ops).toMatchSnapshot();
   });
@@ -335,9 +331,7 @@ describe("ascent hint frames", () => {
     // Its own arrow and each arrow named: outlined, never striped.
     expect(marks.area.length).toBeGreaterThanOrEqual(2);
     for (const a of marks.area) expect(marks.hatch).not.toContain(a);
-    const hatches = recording.ops.filter(
-      (o) => o.op === "hatch" && o.color === COL_HINT,
-    );
+    const hatches = recording.ops.filter((o) => o.op === "hatch");
     expect(hatches).toHaveLength(marks.hatch.length);
     expect(recording.ops).toMatchSnapshot();
   });

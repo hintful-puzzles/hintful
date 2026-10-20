@@ -572,7 +572,6 @@ describe("towers hint render", () => {
     // overlaps and so paints a hatched neighbor again.
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(5 + 2);
-    for (const h of hatches) expect(h.color).toBe(COL_HINT);
     // One strip, read off the step's cells: a raised tower's hatch sits on its
     // top face, offset from the cell below it, so the drawn rects do not share
     // a coordinate.

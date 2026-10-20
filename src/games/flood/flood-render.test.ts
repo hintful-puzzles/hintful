@@ -11,7 +11,13 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { NO_FLASH, ownFlash } from "../../engine/win-wave.ts";
 import { say } from "./hint-text.ts";
 import { floodGame } from "./index.ts";
-import { COL_LIT, COL_LIT_LEAD, type FloodDrawState, redraw } from "./render.ts";
+import {
+  COL_HINT,
+  COL_LIT,
+  COL_LIT_LEAD,
+  type FloodDrawState,
+  redraw,
+} from "./render.ts";
 import { type FloodMove, type FloodState, newState } from "./state.ts";
 
 const PALETTE = floodGame.colors(DEFAULT_BACKGROUND);
@@ -92,7 +98,7 @@ describe("Flood redraw", () => {
     redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH, hint);
     // The shared recorder keeps a circle's fill AND outline separately, where
     // the local double kept one number called `color` — so this now says which.
-    expect(ops.some((o) => o.op === "circle" && o.fill === 1)).toBe(true);
+    expect(ops.some((o) => o.op === "circle" && o.fill === COL_HINT)).toBe(true);
   });
 
   it("spreads the win flash from the top-left corner, lifting the tiles it is on", () => {

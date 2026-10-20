@@ -421,7 +421,7 @@ describe("Mines hint: render (tier 2.5)", () => {
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_EVIDENCE)).toBe(
       true,
     );
-    expect(ops.some((o) => o.op === "hatch" && o.color === COL_HINT)).toBe(true);
+    expect(ops.some((o) => o.op === "hatch")).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 });

@@ -12,7 +12,7 @@ import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.t
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { SlantHint } from "./hint.ts";
 import { slantGame } from "./index.ts";
-import { COL_GRID, COL_HINT, COL_HINT_CELL, COL_HINT_REF } from "./render.ts";
+import { COL_GRID, COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { DIFF_EASY, DIFF_HARD } from "./state.ts";
 
 const lit = (step: HintStep<unknown>): SlantHint => {
@@ -61,10 +61,10 @@ describe("Slant hint render scenarios", () => {
     // The target and any siblings are **ringed**, four thin rects each and none
     // solid: a blue square in Slant would read as a slash already placed.
     expectRing(recording.ops, COL_HINT, 1 + (h.siblings?.length ?? 0));
-    // The driving clue's digit recolors COL_HINT (the clue↔move tie).
-    expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(
-      true,
-    );
+    // The driving clue's digit is recolored, as an outline.
+    expect(
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+    ).toBe(true);
     // Other clue digits still drawn; the grid frame is present.
     expect(recording.ops.some((o) => o.op === "text")).toBe(true);
     expect(recording.ops.some((o) => "color" in o && o.color === COL_GRID)).toBe(true);
@@ -86,12 +86,12 @@ describe("Slant hint render scenarios", () => {
     for (const s of chain) expect(isThin(s)).toBe(true);
   });
 
-  it("equivalence frame: the cited anchor rings COL_HINT_REF", () => {
+  it("equivalence frame: the cited anchor is outlined in COL_HINT_CELL", () => {
     const { recording, h } = hintFrame("equivalence");
 
     expect(h.ref).toBeDefined();
     expectRing(recording.ops, COL_HINT);
-    expect(recording.ops.some((o) => "color" in o && o.color === COL_HINT_REF)).toBe(
+    expect(recording.ops.some((o) => "color" in o && o.color === COL_HINT_CELL)).toBe(
       true,
     );
   });

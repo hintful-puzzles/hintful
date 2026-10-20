@@ -29,21 +29,6 @@ const RENDERERS = import.meta.glob<Record<string, unknown>>("../games/*/render.t
   eager: true,
 });
 
-/**
- * The games whose **evidence** is a wash rather than an outline, with the claim
- * each is making: *nothing is drawn on these cells*.
- *
- * Asserted as an exact set rather than used to skip, so a second game quietly
- * washing its evidence fails here until somebody writes down why it may. The
- * target has no such list: it is ringed in every game, no exceptions (the
- * owner's rule).
- */
-const EVIDENCE_WASH_GAMES = new Set([
-  // Dark squares, where the premise is that the square is *not lit* — which a
-  // teal shade preserves, because it is not yellow.
-  "lightup",
-]);
-
 interface Op {
   op: string;
   color?: number;
@@ -69,9 +54,8 @@ function solidFills(ops: readonly Op[], color: number, cell: number): Op[] {
  * game that exports it is swept with no entry anywhere.
  */
 const MARKS_NO_CELL: Record<string, string> = {
-  fifteen: "the tile to slide, and its color is the renderer's own",
-  flood: "the squares the next fill joins, each with a dot of that fill's color",
-  sixteen: "the arrow to press and the tiles it moves, in the renderer's own color",
+  fifteen: "the tile to slide, filled in the ring's ink",
+  sixteen: "the arrow to press and the tiles it moves, in the ring's ink",
 };
 
 /** Every `render.ts` in the games tree, by puzzle id. */
@@ -154,13 +138,6 @@ describe("a hint marks beside the content, never behind it", () => {
     expect(HINT_GAMES.map(([id]) => id).filter((id) => !checked.has(id))).toEqual(
       Object.keys(MARKS_NO_CELL).sort(),
     );
-    // And the wash list names real games, so a rename cannot leave a dead
-    // exemption behind that silently stops guarding anything.
-    for (const id of EVIDENCE_WASH_GAMES)
-      expect(
-        HINT_GAMES.some(([g]) => g === id),
-        `${id} is not a hint game`,
-      ).toBe(true);
   });
 
   for (const [id, game] of CHECKED) {
@@ -177,11 +154,11 @@ describe("a hint marks beside the content, never behind it", () => {
           fills,
           `${id} fills a cell with its hint-target color: ${JSON.stringify(fills[0])}`,
         ).toHaveLength(0);
-        if (typeof evidence === "number" && !EVIDENCE_WASH_GAMES.has(id)) {
+        if (typeof evidence === "number") {
           const washes = solidFills(ops, evidence, cell);
           expect(
             washes,
-            `${id} washes a cell with its evidence color, and is not on the wash list: ${JSON.stringify(washes[0])}`,
+            `${id} washes a cell with its evidence color: ${JSON.stringify(washes[0])}`,
           ).toHaveLength(0);
         }
       }

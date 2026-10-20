@@ -32,7 +32,7 @@ import {
   COL_FLASH_LEAD,
   COL_GIVEN,
   COL_HINT,
-  COL_HINT_REF,
+  COL_HINT_CELL,
   newDrawState,
   PLACE_ANIM_TIME,
   redraw,
@@ -250,14 +250,11 @@ describe("Unruly redraw", () => {
     // The row is hatched, every cell of it whatever it holds, over its own fill.
     const hatches = opsOfKind(ops, "hatch");
     expect(hatches).toHaveLength(state.w2);
-    for (const h of hatches) expect(h.color).toBe(COL_HINT);
     expect(new Set(hatches.map((h) => h.y)).size).toBe(1);
-    // Premise ring: COL_HINT_REF outline strips around the cited clue — a
-    // distinct color from the COL_HINT move, so premise and move don't read
-    // as the same element type (the element-type color legend).
+    // Premise ring: COL_HINT_CELL outline strips around the cited clue.
     expect(
       opsOfKind(ops, "rect").filter(
-        (o) => o.color === COL_HINT_REF && !(o.w === TS - 1 && o.h === TS - 1),
+        (o) => o.color === COL_HINT_CELL && !(o.w === TS - 1 && o.h === TS - 1),
       ).length,
     ).toBeGreaterThanOrEqual(4);
   });

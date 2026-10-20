@@ -19,8 +19,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   playerEntryColor,
@@ -83,7 +83,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR_WASH;
   out[COL_USER] = playerEntryColor(bg);
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   // The evidence is **outlined rather than washed**, though Filling is the
   // strongest case for a wash in the collection: its premise is a digit, which
   // reads well on a pale fill (3.41:1 in light, 4.04:1 in dark). But the wash
@@ -93,7 +93,7 @@ export function colors(defaultBackground: Color): Color[] {
   // loses however it is tuned. An outline is read *against* the board, so it
   // can take teal's **bold** step ("dark in light mode, light in dark mode"),
   // standing off the board by a similar margin in both schemes.
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -209,8 +209,7 @@ function drawSquare(
               ? COL_CELL
               : COL_GIVEN;
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, bg);
-  if (flags & HINT_LINE)
-    dr.drawHatch({ x: px, y: py, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+  if (flags & HINT_LINE) dr.drawHatch({ x: px, y: py, w: ts, h: ts }, hatchPeriod(ts));
 
   // Thin grid lines on the top and left edges (interior lines come from each
   // cell's own top/left).

@@ -35,8 +35,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -130,8 +130,8 @@ export function colors(background: Color): Color[] {
   out[COL_NUM_ERROR] = ERROR;
   out[COL_NUM_PENCIL] = pencilColor(background);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   // A fill under the digit and its notes: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
   out[COL_CURSOR] = highlightWash(background);
@@ -332,7 +332,7 @@ function drawTile(
     COL_FLASH,
     COL_FLASH_LEAD,
   );
-  ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
+  ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: cw, h: ch }, ts);
 
   // A cell whose *diagonal* neighbor is in another region owes that corner the
   // piece of wall where the two walls round it meet — drawn after the fill,

@@ -30,8 +30,8 @@ import {
   ERROR_TEXT,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -124,8 +124,8 @@ export function colors(defaultBackground: Color): Color[] {
   // told from the red leaves it is drawn under.
   out[COL_ERRTRUNK] = RED_BOLD;
   out[COL_MISTAKE] = ERROR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -437,11 +437,7 @@ function drawTile(
   );
   // The line the hint's sentence names, under the content so it stays whole.
   if (hintWord & HINT_LINE_BIT) {
-    dr.drawHatch(
-      { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-      COL_HINT,
-      hatchPeriod(ts),
-    );
+    dr.drawHatch({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, hatchPeriod(ts));
   }
 
   const over = (err & ERR_OVERCOMMITTED) !== 0;
@@ -627,9 +623,18 @@ export function redraw(
     joinTargets: (a, b) => hintLinks[a.y * w + a.x] === dirTo(b.x - a.x, b.y - a.y),
   };
   const outlines = new MarkOutlines(hintTargets, area, markStyle);
-  const striped = new Set(marks.of("stripes", CELL).map((p) => p.y * w + p.x));
+  const stripes = marks.of("stripes", CELL);
+  const striped = new Set(stripes.map((p) => p.y * w + p.x));
   const counted = new Set(marks.of("outline", NUMBER));
   const onLine = (x: number, y: number): boolean => striped.has(y * w + x);
+  // The striped line, numbered as the edge numbers are: the columns, then the
+  // rows. A line of one square is a row.
+  const stripedLine =
+    stripes.length === 0
+      ? -1
+      : stripes.every((p) => p.y === stripes[0].y)
+        ? w + stripes[0].y
+        : stripes[0].x;
 
   // Draw the grid squares whose packed word changed.
   for (let y = 0; y < h; y++) {
@@ -657,20 +662,20 @@ export function redraw(
   // After every tile, and every frame: `HintMarks.paint` always draws.
   ds.marks.paint(dr, hintTargets, area, markStyle);
 
-  // Edge numbers. The clue a hint counts with takes the action color, and its
-  // line's hatch runs on through the clue's slot.
+  // Edge numbers. The clue a hint counts with is recolored, and a striped
+  // line's hatch runs on through its clue's slot.
   const numberSize = Math.floor(ts / 2);
   for (let k = 0; k < w + h; k++) {
-    const hatched = counted.has(k);
-    const color = errors.num[k] ? COL_ERROR : hatched ? COL_HINT : COL_INK;
-    const key = errors.num[k] | (hatched ? 2 : 0);
+    const hatched = stripedLine === k;
+    const color = errors.num[k] ? COL_ERROR : counted.has(k) ? COL_HINT_CELL : COL_INK;
+    const key = errors.num[k] | (hatched ? 2 : 0) | (counted.has(k) ? 4 : 0);
     if (ds.numbersDrawn[k] === key) continue;
     const column = k < w;
     const box = column
       ? { x: coord(k, ts), y: coord(h, ts) + 1, w: ts, h: brBorder(ts) - 1 }
       : { x: coord(w, ts) + 1, y: coord(k - w, ts), w: brBorder(ts) - 1, h: ts };
     dr.drawRect(box, COL_BACKGROUND);
-    if (hatched) dr.drawHatch(box, COL_HINT, hatchPeriod(ts));
+    if (hatched) dr.drawHatch(box, hatchPeriod(ts));
     dr.drawText(
       column
         ? { x: coord(k, ts) + Math.floor(ts / 2), y: coord(h + 1, ts) }

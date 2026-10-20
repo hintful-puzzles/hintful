@@ -21,6 +21,7 @@ import {
   COL_ERROR,
   COL_GRID,
   COL_HINT,
+  COL_HINT_CELL,
   COL_LINK,
   COL_MISTAKE,
   COL_TREELEAF,
@@ -133,16 +134,14 @@ describe("tents render scenarios", () => {
     return result;
   };
 
-  it("line-count frame: the line hatched, its clue in the action color, targets ringed", () => {
+  it("line-count frame: the line hatched, its clue recolored, targets ringed", () => {
     const { recording, hint } = frame("lineCount");
     expect(stepMarks(hint).of("outline", NUMBER)).toHaveLength(1);
     expect(hint?.explanation).toMatch(/^This (row|column) /);
-    expect(recording.ops.some((o) => o.op === "hatch" && o.color === COL_HINT)).toBe(
-      true,
-    );
-    expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(
-      true,
-    );
+    expect(recording.ops.some((o) => o.op === "hatch")).toBe(true);
+    expect(
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+    ).toBe(true);
     expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(
       true,
     );
@@ -159,9 +158,7 @@ describe("tents render scenarios", () => {
     expect(striped.size).toBeGreaterThan(0);
     expect(targets.length).toBeGreaterThan(0);
     expect(targets.every((p) => !striped.has(`${p.x},${p.y}`))).toBe(true);
-    expect(recording.ops.some((o) => o.op === "hatch" && o.color === COL_HINT)).toBe(
-      true,
-    );
+    expect(recording.ops.some((o) => o.op === "hatch")).toBe(true);
     expect(recording.ops).toMatchSnapshot();
   });
 

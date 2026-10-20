@@ -21,8 +21,8 @@ import {
   ERROR,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -107,21 +107,21 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   // Both hint marks are outlines in the grid gutter, so both take a strong
   // color and differ in shape rather than in weight — a cage's contour against
-  // one cell's ring. `HINT_EVIDENCE` covers the chain ordinal too; see its doc
+  // one cell's ring. `HINT_OUTLINE` covers the chain ordinal too; see its doc
   // comment for why the index and the thing it indexes are one role.
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_LINE] = surfaceGrid(bg);
   return out;
 }
 
-/** Highlight payload a Keen hint step carries (built in `index.ts`). The
- * element-type legend (docs/hints-marks.md § "The element-type color legend"): the driving cage's cells shaded
- * `COL_HINT_CELL`, the acted-on cell(s) **ringed** `COL_HINT`, the ruled-out
- * candidate(s) shown struck. */
+/** Highlight payload a Keen hint step carries (built in `index.ts`). The marks
+ * (docs/hints-marks.md § "The engine colors the marks"): the driving cage's
+ * cells outlined `COL_HINT_CELL`, the acted-on cell(s) **ringed** `COL_HINT`,
+ * the ruled-out candidate(s) shown struck. */
 export interface KeenHint {
   /** The driving cage's cells (evidence), shaded `COL_HINT_CELL`. A forcing
    * chain's cells additionally carry their place in it, drawn as an ordinal. */
@@ -275,7 +275,7 @@ function drawTile(
     COL_FLASH,
     COL_FLASH_LEAD,
   );
-  ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
+  ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, ts);
 
   // Corner juts: a GRIDEXTRA square where the diagonal neighbor is a different
   // cage (so the grid corner shows).
@@ -349,7 +349,7 @@ function drawTile(
           const cy = pt + (((fontsize * (2 * dy + 1)) / 2) | 0);
           dr.drawText({ x: cx, y: cy }, glyphFont(fontsize), COL_PENCIL, String(i));
           // A hint-ruled-out candidate keeps its normal pencil color with a
-          // same-color strikethrough — the "ruled out" cue (docs/hints-marks.md § "The element-type color legend").
+          // same-color strikethrough — the "ruled out" cue (docs/hints-marks.md § "The engine colors the marks").
           if (struck & (1 << i)) {
             const r = Math.max(2, (fontsize / 3) | 0);
             dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);

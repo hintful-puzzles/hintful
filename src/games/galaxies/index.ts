@@ -4,7 +4,7 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import { BLACK, PURPLE, WHITE } from "../../engine/color/colors.ts";
+import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -13,7 +13,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -1287,14 +1288,8 @@ export const galaxiesGame: Game<
     // Mistake highlight: a strong red that reads on both white and black
     // region fills and the page background.
     ret[COL_MISTAKE] = ERROR;
-    // The hint takes **purple**, not the collection's hint blue, because blue
-    // is the drag's. Both ring a *dot* — a cell→dot drag rings every dot the
-    // cell may join, the hint the one it must — and they are on screen
-    // together the moment the player drags to follow the hint. Purple is the
-    // collection's answer when blue and green are both taken. Evidence keeps
-    // the cross-game `HINT_EVIDENCE` teal, a different hue from both.
-    ret[COL_HINT] = PURPLE;
-    ret[COL_HINT_CELL] = HINT_EVIDENCE;
+    ret[COL_HINT] = HINT_RING;
+    ret[COL_HINT_CELL] = HINT_OUTLINE;
     return ret;
   },
 

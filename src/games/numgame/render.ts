@@ -16,7 +16,7 @@ import {
   FLASH_LEAD,
   GOAL_WASH,
   givenSurface,
-  HINT_ACTION,
+  HINT_RING,
   highlightWash,
   INK,
   surfaceGrid,
@@ -85,7 +85,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_DIM] = clueDoneColor(defaultBackground);
   out[COL_TARGET] = GOAL_WASH;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;

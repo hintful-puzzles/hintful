@@ -496,8 +496,8 @@ describe("the frames a hint draws", () => {
     const line = hl.hatch ?? [];
     expect(line.length).toBe(5);
     expect(opsOfKind(ops, "hatch")).toHaveLength(5 + RUNS_PARAMS.n);
-    // The count the sentence reads is drawn in the action color.
-    expect(ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(true);
+    // The count the sentence reads is recolored, as an outline.
+    expect(ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL)).toBe(true);
     // The stretches the sentence counts are outlined.
     expect(hl.area.length).toBeGreaterThan(1);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);

@@ -6,8 +6,7 @@ in a row or column, no two shaded squares share an edge, and the squares left
 clear stay connected: what its params refuse and its description format, its
 controls and its show-black-numbers preference, how the board is drawn, its
 solver's techniques and the test its generator adds to the collection's,
-mistake-checking, and an explained deduction hint with its own colors of
-marks.
+mistake-checking, and an explained deduction hint and its marks.
 
 ## Requirements
 
@@ -304,53 +303,6 @@ band at the cell's edge, beside the piece and the ring, or stripes.
 - **WHEN** a hint cites an undecided number as a premise
 - **THEN** the cell is banded at its edge and its digit is untouched
 
-### Requirement: Hint: The forced cell, the number premises and the corner have their own colors
-
-The forced cell(s) (the move) SHALL be banded `COL_HINT`. An undecided number
-premise (the matching numbers a deduction reasons over) SHALL be banded
-`COL_HINT_CELL`. The protected corner of a corner deduction SHALL be banded
-`COL_HINT_STRAND`. The row or column a sentence names SHALL be striped in
-`COL_HINT`.
-
-#### Scenario: A cell a hint says to shade is drawn empty
-
-- **WHEN** a displayed step concludes that an undecided cell must be shaded
-- **THEN** the cell is banded `COL_HINT` and holds no piece
-
-#### Scenario: Number premises and corners take their own colors
-
-- **WHEN** a hint cites undecided matching numbers, or a corner deduction
-  protects a corner
-- **THEN** the numbers are banded `COL_HINT_CELL`, their digits untouched, and
-  the protected corner is banded `COL_HINT_STRAND`
-
-#### Scenario: The line a pair shares is striped
-
-- **WHEN** a hint for an adjacent equal pair is displayed
-- **THEN** the row or column the pair shares is striped in `COL_HINT`
-
-### Requirement: Hint: A decided premise in a Singles hint takes the color of its state
-
-Where the evidence is an already-decided cell whose black or circled state is
-itself the reason (an adjacent shaded square; a circled cell using up a
-number), it SHALL be banded in the palette's reference slot for that state,
-`COL_HINT_BLACKREF` or `COL_HINT_WHITEREF`, so a decided premise and the
-forced cell are not drawn in the same color. The cell's own piece or ring
-SHALL stay drawn as the cue that is not a color.
-
-#### Scenario: A cited shaded square rings distinct from the forced cell
-
-- **WHEN** an `adjBlack` hint is displayed (a shaded square forces an adjacent
-  cell to be not shaded)
-- **THEN** the cited shaded premise is banded `COL_HINT_BLACKREF` and the forced
-  cell is banded `COL_HINT`, in different colors
-
-#### Scenario: A cited ringed white square uses the white-reference color
-
-- **WHEN** a `sameLine` or `boxedIn` hint is displayed (a circled square is
-  the reason)
-- **THEN** the cited circled premise is banded `COL_HINT_WHITEREF`
-
 ### Requirement: Hint: Three or four matching numbers at a Singles corner are shaded
 
 In the 2×2 block at a corner of the grid the hint SHALL shade: the corner
@@ -419,6 +371,30 @@ no last way out is left either.
   neighboring-line pair
 - **THEN** the plan holds that step, though the solver certifies an Easy board
   without it
+
+### Requirement: Hint: The forced cell is banded as a ring, and every premise as an outline
+
+The forced cell(s) (the move) SHALL be banded `COL_HINT`. A premise, an
+undecided matching number, a decided cell whose state is the reason, or the
+corner a corner deduction protects, SHALL be banded `COL_HINT_CELL`, and keep
+its own digit, piece or ring. The row or column a sentence names SHALL be
+striped.
+
+#### Scenario: A cell a hint says to shade is drawn empty
+
+- **WHEN** a displayed step concludes that an undecided cell must be shaded
+- **THEN** the cell is banded `COL_HINT` and holds no piece
+
+#### Scenario: Premises and corners are outlined
+
+- **WHEN** a hint cites undecided matching numbers, a shaded or circled
+  square, or a corner deduction protects a corner
+- **THEN** each is banded `COL_HINT_CELL`, what it holds untouched
+
+#### Scenario: The line a pair shares is striped
+
+- **WHEN** a hint for an adjacent equal pair is displayed
+- **THEN** the row or column the pair shares is striped
 
 ### Requirement: Look: Singles draws pieces on a quiet surface
 

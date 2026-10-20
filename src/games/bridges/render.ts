@@ -20,8 +20,8 @@ import {
   GRID_MID,
   givenSurface,
   HELD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
 } from "../../engine/color/palette.ts";
@@ -174,9 +174,7 @@ const HL_CROSS = 0x08;
 /** The argument counts the bridge already here. */
 const HL_CITED = 0x10;
 const HL_MASK = 0x1f;
-/** The island whose arithmetic forces the step. */
-const HI_FOCUS = 0x01;
-/** An island the argument counts. */
+/** An island the step's words outline. */
 const HI_CITED = 0x02;
 const HI_MASK = 0x03;
 // Shifts within an island square's hint word.
@@ -246,8 +244,8 @@ export function colors(defaultBackground: Color): Color[] {
     // from, and the cursor *fills* the island under its clue digit, which is
     // the "you are here" wash Solo's family draws its cursor cell with.
     highlightWash(background),
-    HINT_ACTION, // COL_HINT
-    HINT_EVIDENCE, // COL_HINT_CELL
+    HINT_RING, // COL_HINT
+    HINT_OUTLINE, // COL_HINT_CELL
     cellSurface(background), // COL_ISLAND
     FLASH_LEAD, // COL_FLASH_LEAD
   ];
@@ -554,15 +552,13 @@ function drawIsland(
   const orad = islandRadius(ts);
   const irad = orad - lineWidth(ts);
   const fg =
-    ihint & HI_FOCUS
-      ? COL_HINT
-      : ihint & HI_CITED
-        ? COL_HINT_CELL
-        : (idata & DI_COLMASK) === DI_COL_SELECTED
-          ? COL_SELECTED
-          : (idata & DI_COLMASK) === DI_COL_WARNING
-            ? COL_WARNING
-            : COL_FOREGROUND;
+    ihint & HI_CITED
+      ? COL_HINT_CELL
+      : (idata & DI_COLMASK) === DI_COL_SELECTED
+        ? COL_SELECTED
+        : (idata & DI_COLMASK) === DI_COL_WARNING
+          ? COL_WARNING
+          : COL_FOREGROUND;
   // The win flash fills the island's face, under its rim and its count.
   const bg =
     (idata & DI_COLMASK) === DI_COL_FLASH
@@ -850,14 +846,12 @@ function hintWords(
   const marks = stepMarks(hint);
   const hl = hint?.highlights;
 
-  // Islands: the focus wins over a citation, so "this 5" is never ambiguous
-  // with "the outlined islands" (docs/hints.md § "Two marks of one
-  // kind: tie them, and never by color").
+  // Islands: "this 5" and "the outlined islands" are two references, told
+  // apart by the colors the app repaints each in.
   const pieces = marks.of("outline", PIECE);
   for (const i of pieces) {
     if ("x1" in i) continue;
-    const focus = hl?.focus?.x === i.x && hl.focus.y === i.y;
-    out[s.idx(i.x, i.y)] |= (focus ? HI_FOCUS : HI_CITED) << H_I_ISLAND_SHIFT;
+    out[s.idx(i.x, i.y)] |= HI_CITED << H_I_ISLAND_SHIFT;
   }
 
   /** Set `bits` on every cell strictly between the span's two islands. */

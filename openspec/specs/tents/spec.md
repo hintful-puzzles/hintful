@@ -392,8 +392,8 @@ outline and its stripes stand for SHALL be the legend's (`hintMarks`).
 #### Scenario: A line count's picture
 
 - **WHEN** the displayed step counts a row
-- **THEN** the row is hatched, its clue is in the action color and the squares
-  the step decides are ringed
+- **THEN** the row is hatched, its clue is recolored as an outline and the
+  squares the step decides are ringed
 
 ### Requirement: Hint: A Tents step's links are followed as its squares are
 

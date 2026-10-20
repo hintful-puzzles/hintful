@@ -183,14 +183,8 @@ export class OverlaySidecar {
 
   /** Hatch cell `i`'s `rect` when it lies on the named line or region. Call it after the
    * cell's background and before its content, so the content stays whole. */
-  drawHatch(
-    dr: GameDrawing,
-    i: number,
-    rect: Rect,
-    color: number,
-    tileSize: number,
-  ): void {
-    if (this.hatched[i]) dr.drawHatch(rect, color, hatchPeriod(tileSize));
+  drawHatch(dr: GameDrawing, i: number, rect: Rect, tileSize: number): void {
+    if (this.hatched[i]) dr.drawHatch(rect, hatchPeriod(tileSize));
   }
 
   /** True when cell `i` carries any overlay this frame. */

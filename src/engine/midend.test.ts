@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mkhighlightBackground } from "./color/color-mkhighlight.ts";
-import { token } from "./color/color-token.ts";
+import { darkValue, token } from "./color/color-token.ts";
 import { ColorWord } from "./color/color-word.ts";
+import { HINT_STRIPES } from "./color/palette.ts";
 import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
 import { DESC_MALFORMED } from "./desc-error.ts";
 import { dealGaveUp, difficultyItem } from "./difficulty.ts";
@@ -835,7 +836,8 @@ describe("Midend palette + teardown (adapter-facing)", () => {
     // An *absent* index is meaningful: it means "adapt this by calculation",
     // which is what lets the scheme be authored token by token.
     const dark = new Midend(withPalette).darkPalette([1, 1, 1]);
-    expect(dark).toEqual({ 1: [1, 1, 1] });
+    // Index 3 is the stripes ink `resolvePalette` adds after the game's three.
+    expect(dark).toEqual({ 1: [1, 1, 1], 3: [...(darkValue(HINT_STRIPES) ?? [])] });
     expect(Object.hasOwn(dark, "0")).toBe(false);
     expect(Object.hasOwn(dark, "2")).toBe(false);
   });

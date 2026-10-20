@@ -40,8 +40,8 @@ import {
   GOAL,
   GOAL_WASH,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   pencilColor,
@@ -171,8 +171,8 @@ export function colors(background: Color): Color[] {
   out[COL_ERRORBG] = ERROR_WASH;
   out[COL_GOALBG] = GOAL_WASH;
   out[COL_GOAL] = GOAL;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   // A fill under the arrow and its marks: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
   out[COL_CURSOR] = highlightWash(background);
@@ -471,7 +471,7 @@ export function redraw(
         COL_FLASH,
         COL_FLASH_LEAD,
       );
-      ds.hint.drawHatch(dr, i1, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
+      ds.hint.drawHatch(dr, i1, { x: cx, y: cy, w: cw, h: ch }, ts);
 
       // A square whose *diagonal* neighbor is in another region owes that
       // corner the piece of outline where the two outlines round it meet. An
@@ -518,7 +518,7 @@ export function redraw(
         const q = ts * 0.12;
         // A mark this hint rules out keeps its own color and takes a
         // strikethrough in the same color — the collection's "ruled out" cue
-        // (docs/hints-marks.md § "The element-type color legend"). The hint
+        // (docs/hints-marks.md § "The engine colors the marks"). The hint
         // says what to cross off; it never crosses it off for the player.
         const struck = ds.hint.struck[i1];
         const markAt = (bit: number, mx: number, my: number, n: number): void => {

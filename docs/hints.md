@@ -408,10 +408,9 @@ picks the target out. The defect is a cell marked against another cell.
 
 Never tie by color. The palette is scheme-relative, so a hue named in prose
 is false under the other scheme and unreadable to a color-blind player. Two
-marks that differ only by hue are marks to fix. The action color against the
-evidence color is not such a pair, since it differs in weight, which
-`palette.test.ts` ("keeps the hint emphases distinct, in both schemes")
-asserts.
+marks that differ only by hue are marks to fix, and a reference's color is
+the engine's and changes from step to step (`hints-marks.md` § "The engine
+colors the marks").
 
 Tie by something the code guarantees, cheapest first:
 
@@ -490,8 +489,8 @@ the glyph is the game's. Put the glyph:
 
 - **On the clue's square, and inside it**, because the square can also be one
   the step decides and a ring owns the border. Mosaic circles the number;
-  Range redraws the digit in the action color.
-- **Legible on every surface the clue is drawn on.** Where the evidence color
+  Range redraws the digit in the outline's ink.
+- **Legible on every surface the clue is drawn on.** Where the outline's ink
   hardly differs in lightness from the surface, the glyph takes the number's
   own ink: the shape is the mark, not the color.
 - **Under one reference with the area.** The block and the circle are one

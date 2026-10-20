@@ -14,8 +14,8 @@ import {
   cellSurface,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
@@ -104,8 +104,8 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_UNLIT_DIAG] = WHITE;
   ret[COL_LIT_DIAG] = BLACK;
   ret[COL_CURSOR] = CURSOR;
-  ret[COL_HINT] = HINT_ACTION;
-  ret[COL_HINT_CELL] = HINT_EVIDENCE;
+  ret[COL_HINT] = HINT_RING;
+  ret[COL_HINT_CELL] = HINT_OUTLINE;
   return ret;
 }
 
@@ -208,7 +208,7 @@ function drawTile(
   dr.drawRect(inner, tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_SURFACE);
 
   // Under the piece: the bands mark the square, and the piece is what it holds.
-  if (stripes) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
+  if (stripes) dr.drawHatch(inner, hatchPeriod(ts));
 
   const piece = (isUnlit: boolean, grown: number): void =>
     drawPiece(

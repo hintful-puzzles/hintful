@@ -35,8 +35,8 @@ import {
   ERROR,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   lineMaybeColor,
   lineNoColor,
@@ -84,8 +84,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = INK;
   out[COL_ERROR] = ERROR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CORRECT] = REGION_DONE;
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
   out[COL_LINE_NO] = lineNoColor(background);

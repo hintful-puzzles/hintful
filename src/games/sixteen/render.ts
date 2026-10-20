@@ -13,7 +13,7 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
+  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import {
@@ -142,7 +142,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT] = INK;
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   out[COL_TILE] = givenSurface(background);
   out[COL_ARROW] = lowlight;
   out[COL_CURSOR] = CURSOR;

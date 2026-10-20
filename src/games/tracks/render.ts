@@ -25,8 +25,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   PAPER,
   RULED_OUT,
@@ -87,24 +87,9 @@ export const COL_DRAGOFF = 9;
 export const COL_ERROR = 10;
 export const COL_FLASH = 11;
 export const COL_ERROR_BACKGROUND = 12;
-/**
- * The hint's action color, past the end of the C enum.
- *
- * **The collection's default blue, kept rather than moved**, although
- * `COL_DRAGON` is the same `DRAG_ADD` blue Galaxies moved its hint away from
- * (docs/hints-marks.md § "The element-type color legend"). Galaxies' reason
- * does not transfer: there the drag ring and the hint ring pointed at
- * *different* dots, so one hue made two contradictory claims about the same
- * object. Here the drag preview recolors a square's own rails and crosses while
- * a hint is drawn as a border ring, an edge stub or an edge cross, and the two
- * only ever coincide when the player is dragging to place what the hint just
- * asked for, where agreeing is the point. Tracks' other spent hue is
- * `COL_CURSOR` green, the per-game affordance the Sticks precedent says should
- * yield rather than blue.
- */
+/** The ring's ink, past the end of the C enum: what a step decides. */
 export const COL_HINT = 13;
-/** The hint's evidence color: teal, the collection's, distinct in hue from the
- * action so the words map to the picture. */
+/** The outline's ink: what a step reasons from, and the clue it counts with. */
 export const COL_HINT_CELL = 14;
 /** The player's no-track crosses, on squares and edges. Their own slot rather
  * than the rails' `COL_TRACK`, which upstream shared: a rail is the picture
@@ -138,8 +123,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_DRAGOFF] = DRAG_REMOVE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_NOTRACK] = RULED_OUT;
   return out;
 }
@@ -587,7 +572,7 @@ function drawSquare(
     h: m.tile - m.gridLineAll,
   };
   dr.drawRect(inner, bg);
-  if (hint & H_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(m.tile));
+  if (hint & H_LINE) dr.drawHatch(inner, hatchPeriod(m.tile));
 
   // Cursor outline (center, or nudged onto an edge).
   if (flags & DS_CURSOR) {
@@ -705,7 +690,7 @@ function drawClue(
     h: m.tile - m.gridLineAll,
   };
   if (bg >= 0) dr.drawRect(slot, bg);
-  if (hatched) dr.drawHatch(slot, COL_HINT, hatchPeriod(m.tile));
+  if (hatched) dr.drawHatch(slot, hatchPeriod(m.tile));
   dr.drawText({ x: cx, y: cy }, glyphFont(tsz), col, String(clue));
 }
 
@@ -804,7 +789,7 @@ export function redraw(
         w,
         state.numbers.numbers[i],
         i,
-        key & 1 ? COL_ERROR : key & 2 ? COL_HINT : COL_CLUE,
+        key & 1 ? COL_ERROR : key & 2 ? COL_HINT_CELL : COL_CLUE,
         key & 1 ? COL_ERROR_BACKGROUND : COL_BACKGROUND,
         (key & 4) !== 0,
       );

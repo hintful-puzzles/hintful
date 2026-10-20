@@ -133,9 +133,7 @@ describe("signpost hint frame", () => {
     // The square it arrives at is ringed: four thin sides, not a fill.
     expectRing(opsOfKind(ops, "rect"), COL_HINT);
     // Every square the arrow points at is striped, and nothing else.
-    expect(opsOfKind(ops, "hatch").filter((o) => o.color === COL_HINT)).toHaveLength(
-      h.line.length,
-    );
+    expect(opsOfKind(ops, "hatch")).toHaveLength(h.line.length);
     expect(ops).toMatchSnapshot();
   });
 });

@@ -238,9 +238,7 @@ export interface SinglesHint {
 }
 
 /** What a step's sentence names. `evidence` are the deduction's premise
- * cells — `redraw` outlines an undecided one in the evidence color and a
- * decided black/circle cell, whose state *is* the reason, in that state's own
- * color. `line` is the row or column the sentence names ("in the line",
+ * cells, which `redraw` outlines, decided or not. `line` is the row or column the sentence names ("in the line",
  * "shares a line with"), hatched; empty when it names none
  * (docs/hints-marks.md § "Hatch the line the sentence names"). */
 interface Named {
@@ -515,7 +513,7 @@ export const singlesGame: Game<
     roles: {
       ring: "the square the step decides. It is drawn empty: the sentence says whether to shade it or circle it.",
       outline:
-        "the squares the step reasons from, such as two matching numbers one square apart. One you have already shaded or circled is outlined in a color of its own, one for shaded and another for circled, and the corner a step keeps from being boxed in has a color of its own too.",
+        "the squares the step reasons from, such as two matching numbers one square apart. One you have already shaded or circled is outlined as well, and so is the corner a step keeps from being boxed in.",
       stripes: 'the row or column the sentence calls "this row" or "this column".',
     },
   },

@@ -181,41 +181,17 @@ hints, the first leg of each unflagged.
 - **AND** a displayed leg is counted within the journey, and auto-play
   animates the legs back to back as one multi-part move
 
-### Requirement: A hint naming several kinds of element colors them by a stable legend
-
-Where a game's hint narration names more than one distinct kind of board
-element (a filled cell as premise and the forced cell as conclusion, a clue and
-a region), the game's `redraw` SHALL distinguish the kinds with a stable
-per-game color legend: each kind takes one highlight color in all that game's
-hints, and only the kinds a given hint names are highlighted. The legend
-governs premise and element kinds: equivalent forced moves SHALL still share
-the single target color.
-
-#### Scenario: A hint naming multiple element types colors them by a stable legend
-
-- **WHEN** a game's displayed hint step narrates two distinct board-element
-  types (for example a cited filled/decided premise cell and the forced target
-  cell)
-- **THEN** `redraw` highlights each type in its own legend color, and does not
-  render both in the single target color
-
-#### Scenario: A legend color is the same across different hints of one game
-
-- **WHEN** two different hints of the same game each name the same element type
-  (for example "a shaded square" appears as a premise in two different
-  deductions)
-- **THEN** that element type is drawn in the same legend color in both hints
-
 ### Requirement: A legend color is never the only cue
 
-Each legend color SHALL be paired with a non-color cue (ring against shade
-against fill, the drawn digit or clue, or position) so the mapping from color
-to kind survives for colorblind players. Color SHALL NOT be the sole carrier.
+A reference's color SHALL be paired with a non-color cue (ring against
+outline against stripes, the drawn digit or clue, or position) so that what a
+mark stands for survives for colorblind players. Color SHALL NOT be the sole
+carrier, and a color's name SHALL NOT appear in a sentence or in the help's
+list of marks.
 
 #### Scenario: Two kinds of element are highlighted in one step
 
-- **WHEN** a displayed step highlights two kinds of element in their legend
-  colors
+- **WHEN** a displayed step marks two kinds of element
 - **THEN** each is also told apart by a distinguishing non-color cue
 
 ### Requirement: Hint explanation surfaces independent of the status bar
@@ -529,28 +505,11 @@ inside the cell instead, so it cannot be read as that object.
 - **THEN** the hint's marks are inset inside the cell instead, so that neither
   mark can be read as one of those objects
 
-### Requirement: An evidence wash is kept only where nothing is drawn on it
-
-An evidence area SHALL be drawn as a wash only where its cells carry no
-content. The test is whether the fill would hide the premise, where hiding
-includes making it unreadable by contrast and not only covering it. A game that
-keeps a wash is asserting that nothing is drawn on it, and SHALL record that
-reason where it names the role. A kept wash SHALL be tuned to be visible
-against its board, and not to keep content legible through it.
-
-#### Scenario: A wash is kept only where nothing is drawn on it
-
-- **WHEN** a game keeps an evidence wash and not an outline
-- **THEN** its evidence cells carry no content the player must read, and the game
-  records that reason where it names the role
-- **AND** the cross-game guard names that game explicitly, so a further game
-  taking the same allowance fails until its reason is written down
-
 ### Requirement: The palette carries no fill for the acted-on color
 
 The palette SHALL carry no fill counterpart to the acted-on color. A fill
 behind content cannot be rescued by choosing a different color: a wash pale
-enough to keep a pencil mark legible collides with the evidence wash, and the
+enough to keep a pencil mark legible is invisible on the dark board, and the
 only hues that clear it sit beside `ERROR_WASH`, which would make the cell a
 hint points at resemble the cell that is wrong.
 
@@ -559,21 +518,6 @@ hint points at resemble the cell that is wrong.
 - **WHEN** a change proposes filling the acted-on cell in a retuned hint color
 - **THEN** it is answered with this requirement, and the palette gains no fill
   for that role
-
-### Requirement: An evidence mark on a border takes a bold step
-
-Because a mark on a border is read against a surface and not through it, it
-SHALL take a strong color and not a wash step. The evidence mark SHALL take a
-step whose lightness differs between schemes (a `_BOLD`), so that it stands off
-the board by a similar margin in each: a step at one lightness under both
-schemes reads soft on a pale board and bright on a dark one.
-
-#### Scenario: An outline is drawn in each scheme
-
-- **WHEN** an evidence outline is drawn under the light scheme and under the
-  dark one
-- **THEN** its color is the bold step of its hue in each, dark on the light
-  board and light on the dark one
 
 ### Requirement: The chain ordinal is the evidence role
 
@@ -1792,13 +1736,14 @@ on a kind remains the game's.
 ### Requirement: A recolored clue is an outline reference
 
 A clue drawn recolored is a glyph for a role, not a role of its own: a clue the
-step reasons from SHALL be an outline reference, whatever color the game paints
-it.
+step reasons from SHALL be an outline reference, and SHALL be drawn in the
+outline's ink.
 
 #### Scenario: A step reasons from a clue the game recolors
 
-- **WHEN** a game paints a clue a step reasons from in a hint color
-- **THEN** the step's words refer to that clue as outlined
+- **WHEN** a game recolors a clue a step reasons from
+- **THEN** the step's words refer to that clue as outlined, and the game draws
+  it in `HINT_OUTLINE`
 
 ### Requirement: A bound hint step's words SHALL name exactly the marks it draws
 
@@ -2688,3 +2633,16 @@ teach the phrase its sentences use for the mark instead.
 
 - **WHEN** a Flood step names the squares a fill would join
 - **THEN** it names them in a phrase its ring legend contains
+
+### Requirement: An evidence area is outlined, never washed
+
+An evidence area SHALL be outlined and never washed, in every game: its cells
+carry what the player reads, and even an empty cell's surface is part of its
+premise. An outline in the outline ink reads on any content once the engine
+edges it, where a wash in that ink would cover the cell.
+
+#### Scenario: Evidence cells that hold nothing
+
+- **WHEN** a step reasons from cells that hold nothing, as Light Up's unlit
+  squares
+- **THEN** they are outlined, and keep their own surface

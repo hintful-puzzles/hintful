@@ -16,8 +16,8 @@ import {
   FLASH,
   FLASH_LEAD,
   GOAL,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   lineNoColor,
   SHADED,
@@ -89,11 +89,11 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HIGHLIGHT_1] = RED;
   out[COL_HIGHLIGHT_2] = GREEN;
   out[COL_MISTAKE] = ERROR;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   // Both hint marks are outlines on the square's own border, so both take a
   // strong color: every Dominosa square carries a number, so a fill behind one
   // is exactly what has no working value.
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_REFERENCE] = GOAL;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -323,7 +323,7 @@ function drawTile(
     dr.drawRect({ x: sx + span - t, y: sy, w: t, h: span }, COL_REFERENCE);
   }
 
-  // Hint: recolor the suggested barrier edge blue (a thick COL_HINT bar).
+  // Hint: the suggested barrier edge as a thick COL_HINT bar.
   if (flags & (DF_HINT_EDGE_L | DF_HINT_EDGE_R | DF_HINT_EDGE_T | DF_HINT_EDGE_B)) {
     const th = Math.max(2, Math.floor(ts / 12));
     if (flags & DF_HINT_EDGE_T)

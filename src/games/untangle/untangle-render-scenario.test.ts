@@ -36,6 +36,7 @@ import {
   COL_FLASH,
   COL_FLASH_LEAD,
   COL_HINT,
+  COL_HINT_CELL,
   COL_LINE,
   COL_OUTLINE,
   COL_POINT,
@@ -130,7 +131,7 @@ describe("Untangle render scenarios", () => {
     const cleared = stepMarks(hint).of("outline", CROSSING);
     expect(cleared.length).toBeGreaterThan(0);
     const rings = recording.ops.filter(
-      (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT,
+      (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT_CELL,
     );
     expect(rings).toHaveLength(2 * cleared.length);
 
@@ -172,9 +173,7 @@ describe("Untangle render scenarios", () => {
     const rings = recording.ops.filter(
       (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT,
     );
-    expect(rings).toHaveLength(
-      2 * (marked.length + marks.of("outline", CROSSING).length),
-    );
+    expect(rings).toHaveLength(2 * marked.length);
     const ts = untangleGame.preferredTileSize ?? 32;
     for (const v of marked) {
       const p = s.pts[v];

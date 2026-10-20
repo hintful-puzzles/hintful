@@ -22,9 +22,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_BLACKREF,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -69,16 +68,15 @@ export const COL_CURSOR = 4;
 export const COL_CELL = 5;
 export const COL_GROUNDED = 6;
 export const COL_HINT = 7; // forced square(s), ringed on their own border
-export const COL_HINT_CELL = 8; // evidence area, outlined
-export const COL_HINT_REF = 9; // a cited filled anchor (a doubled ring)
-export const COL_PENCIL = 10; // the player's same-slant marks
-export const COL_PENCIL_BODY = 11; // the notes-mode indicator's pencil
+export const COL_HINT_CELL = 8; // evidence area and cited anchors, outlined
+export const COL_PENCIL = 9; // the player's same-slant marks
+export const COL_PENCIL_BODY = 10; // the notes-mode indicator's pencil
 /** The lifted disc under a clue. */
-export const COL_GIVEN = 12;
+export const COL_GIVEN = 11;
 /** The ground of a square the win flash is on: its body, and its leading
  * edge. */
-export const COL_FLASH = 13;
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH = 12;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -96,9 +94,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GROUNDED] = slantGrounded(background);
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
-  out[COL_HINT_REF] = HINT_BLACKREF;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   return out;
@@ -211,7 +208,7 @@ function drawClue(
   hint: boolean,
 ): void {
   if (v < 0) return;
-  const tcol = err ? COL_ERROR : hint ? COL_HINT : COL_INK;
+  const tcol = err ? COL_ERROR : hint ? COL_HINT_CELL : COL_INK;
   dr.drawCircle(
     { x: coord(x, ts), y: coord(y, ts) },
     clueRadius(ts),
@@ -347,14 +344,14 @@ function drawTile(
     const sx = coord(x, ts) + inset;
     const sy = coord(y, ts) + inset;
     const span = ts - 2 * inset;
-    dr.drawRect({ x: sx, y: sy, w: span, h: 1 }, COL_HINT_REF);
-    dr.drawRect({ x: sx, y: sy + span - 1, w: span, h: 1 }, COL_HINT_REF);
-    dr.drawRect({ x: sx, y: sy, w: 1, h: span }, COL_HINT_REF);
-    dr.drawRect({ x: sx + span - 1, y: sy, w: 1, h: span }, COL_HINT_REF);
-    dr.drawRect({ x: sx + 1, y: sy + 1, w: span - 2, h: 1 }, COL_HINT_REF);
-    dr.drawRect({ x: sx + 1, y: sy + span - 2, w: span - 2, h: 1 }, COL_HINT_REF);
-    dr.drawRect({ x: sx + 1, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_REF);
-    dr.drawRect({ x: sx + span - 2, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_REF);
+    dr.drawRect({ x: sx, y: sy, w: span, h: 1 }, COL_HINT_CELL);
+    dr.drawRect({ x: sx, y: sy + span - 1, w: span, h: 1 }, COL_HINT_CELL);
+    dr.drawRect({ x: sx, y: sy, w: 1, h: span }, COL_HINT_CELL);
+    dr.drawRect({ x: sx + span - 1, y: sy, w: 1, h: span }, COL_HINT_CELL);
+    dr.drawRect({ x: sx + 1, y: sy + 1, w: span - 2, h: 1 }, COL_HINT_CELL);
+    dr.drawRect({ x: sx + 1, y: sy + span - 2, w: span - 2, h: 1 }, COL_HINT_CELL);
+    dr.drawRect({ x: sx + 1, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_CELL);
+    dr.drawRect({ x: sx + span - 2, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_CELL);
   }
 
   // The acted-on square's ring, and the evidence region's outline — both on the

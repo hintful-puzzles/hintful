@@ -336,7 +336,7 @@ export function drawBorderTile(
   // finished. The outline is inset in the body because the square's border is
   // where the hint's own forced edges are drawn.
   if (colors.hintEdge !== undefined && flags & F_HINT_REGION)
-    dr.drawHatch(body, colors.hintEdge, hatchPeriod(ts));
+    dr.drawHatch(body, hatchPeriod(ts));
   if (colors.hintEvidence !== undefined && flags & F_HINT_CELL) {
     drawMarkSides(
       dr,

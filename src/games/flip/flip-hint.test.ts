@@ -249,7 +249,6 @@ describe("Flip hint frame", () => {
     const hatched = ops.filter((o) => o.op === "hatch");
     expect(striped(step).length).toBeGreaterThan(0);
     expect(hatched.length).toBe(striped(step).length);
-    expect(hatched.every((o) => o.color === COL_HINT)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 

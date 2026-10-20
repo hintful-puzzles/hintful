@@ -38,8 +38,8 @@ import {
 } from "./state.ts";
 
 /**
- * What a step paints, in two roles (docs/hints-marks.md § "The element-type
- * color legend"):
+ * What a step paints, in two roles (docs/hints-marks.md § "The engine colors
+ * the marks"):
  *
  *  - the **action** — the cells the association claims, the walls it draws,
  *    and the dot it points at. One color, because they are one move.

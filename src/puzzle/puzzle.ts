@@ -36,6 +36,7 @@ import type {
   HintReferenceMarks,
   PuzzleEngineSurface,
 } from "./engine-surface.ts";
+import { repainted } from "./mark-flash.ts";
 import {
   type PuzzleWorker,
   spawnPuzzleWorker,
@@ -64,6 +65,9 @@ export const HINT_PENDING_MS = 300;
 /** How long a pressed reference's marks stay lit, from turning white to
  * fading back (`Puzzle.flashHintReference`). One flash, so nothing strobes. */
 export const HINT_FLASH_MS = 1000;
+
+/** How wide the edge round a repainted mark is, in CSS pixels. */
+const MARK_EDGE_PX = 1;
 
 /** A color's value in `scheme`, as the canvas overlay and CSS take it. */
 function hexIn(c: Color, scheme: Scheme): string {
@@ -1288,9 +1292,23 @@ export class Puzzle {
       this._size = `${w}x${h} @ ${dpr}x`;
       this.captureSentryContext();
     }
+    this.drawingDpr = dpr;
     await this.workerPuzzle.resizeDrawing({ w, h }, dpr);
     // A hint's marks moved with the board.
     this.measureHintMarks();
+  }
+
+  private drawingDpr = 1;
+
+  /** The displayed hint's marks repainted in each reference's color over the
+   * canvas (`repainted`), as RGBA at the canvas's size; `null` until they are
+   * measured. What the board shows over the game's frame, and what Copy image
+   * lays over it. */
+  public hintRepaintIn(scheme: Scheme): Uint8ClampedArray<ArrayBuffer> | null {
+    const marks = this._hintMarks.get();
+    if (!marks) return null;
+    const reach = Math.max(1, Math.round(MARK_EDGE_PX * this.drawingDpr));
+    return repainted(marks, this.hintReferenceColorsIn(scheme), reach);
   }
 
   public async setDrawingPalette(colors: string[]): Promise<void> {
@@ -1305,19 +1323,32 @@ export class Puzzle {
     return this._palette.get();
   }
 
-  public async getImage(options?: ImageEncodeOptions): Promise<Blob> {
-    return this.workerPuzzle.getImage(options);
+  /** The board as the player sees it: the canvas, with a displayed hint's
+   * marks in the colors the screen shows them in under `scheme`. */
+  public async getImage(scheme: Scheme, options?: ImageEncodeOptions): Promise<Blob> {
+    const repaint = this.hintRepaintIn(scheme);
+    const marks = this._hintMarks.get();
+    const image = await this.workerPuzzle.getImage(options);
+    if (!repaint || !marks) return image;
+    const canvas = new OffscreenCanvas(marks.width, marks.height);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("getImage: no 2d context");
+    context.drawImage(await createImageBitmap(image), 0, 0);
+    const layer = new OffscreenCanvas(marks.width, marks.height);
+    layer.getContext("2d")?.putImageData(new ImageData(repaint, marks.width), 0, 0);
+    context.drawImage(layer, 0, 0);
+    return canvas.convertToBlob(options);
   }
 
   /**
-   * Place an image of the current puzzle on the clipboard.
-   * This must be called from within a user event handler.
+   * Place an image of the current puzzle, as `getImage` takes it in `scheme`,
+   * on the clipboard. This must be called from within a user event handler.
    * (And in Safari, there can't be any intervening async calls in that handler.)
    */
-  public copyImage(type: string = "image/png") {
+  public copyImage(scheme: Scheme, type: string = "image/png") {
     // For Safari's "transient user activation" security policy, the call to
     // clipboard.write must be synchronous (but the data can be a promise).
-    const blobPromise = this.getImage({ type });
+    const blobPromise = this.getImage(scheme, { type });
     return navigator.clipboard.write([new ClipboardItem({ [type]: blobPromise })]);
   }
 

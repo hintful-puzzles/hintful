@@ -20,6 +20,7 @@
  * restore, and a captured drag sprite is not what these tests assert.
  */
 
+import { HINT_STRIPES } from "../color/palette.ts";
 import type { GameDrawing } from "../game.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../types.ts";
 
@@ -107,7 +108,15 @@ const roundRect = (r: Rect): Rect => ({
 export class RecordingDrawing implements GameDrawing {
   readonly ops: DrawOp[] = [];
 
-  constructor(private readonly palette: readonly Color[]) {}
+  private readonly palette: readonly Color[];
+
+  /** `palette` is a game's, from `resolvePalette` or straight from its
+   * `colors()`: the stripes ink a hatch is drawn in is added where it is not
+   * already the last entry. */
+  constructor(palette: readonly Color[]) {
+    this.palette =
+      palette.at(-1) === HINT_STRIPES ? palette : [...palette, HINT_STRIPES];
+  }
 
   /** A palette index as a stable `rgb(r, g, b)` label (components 0..255). An
    * index with no palette entry (e.g. a game drawing with a color it forgot to
@@ -206,7 +215,8 @@ export class RecordingDrawing implements GameDrawing {
     });
   }
 
-  drawHatch(rect: Rect, color: number, period: number): void {
+  drawHatch(rect: Rect, period: number): void {
+    const color = this.palette.length - 1;
     this.ops.push({
       op: "hatch",
       ...roundRect(rect),

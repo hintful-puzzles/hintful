@@ -25,8 +25,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   REGION_DONE,
   surfaceGrid,
@@ -95,8 +95,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT] = INK;
   out[COL_CURSOR] = CURSOR;
   out[COL_MISTAKE] = ERROR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -171,11 +171,7 @@ function drawTile(
   );
   // The line or area the hint's sentence names, under the clue.
   if (bgflags & F_STRIPES)
-    dr.drawHatch(
-      { x: cx + 1, y: cy + 1, w: tile - 1, h: tile - 1 },
-      COL_HINT,
-      hatchPeriod(tile),
-    );
+    dr.drawHatch({ x: cx + 1, y: cy + 1, w: tile - 1, h: tile - 1 }, hatchPeriod(tile));
 
   if (num) {
     dr.drawText(

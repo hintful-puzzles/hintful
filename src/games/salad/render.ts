@@ -24,8 +24,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PAPER,
@@ -102,7 +102,7 @@ export const COL_E_HOLE = 16;
 export const COL_MISTAKE = 17;
 /** Fork addition: the yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 18;
-// Fork additions: the explained-hint legend (docs/hints-marks.md § "The element-type color legend").
+// Fork additions: the explained-hint legend (docs/hints-marks.md § "The engine colors the marks").
 /** The square(s) / candidate(s) / entry the deduction acts on. */
 export const COL_HINT = 19;
 /** The deduction's evidence — a clue's line of sight, or a whole line, outlined
@@ -141,13 +141,13 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_E_HOLE] = ERROR;
   out[COL_MISTAKE] = ERROR;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   // Both hint marks are outlines on the square's border. A Salad square carries
   // a letter, a ghosted preview and up to three struck notes, so an evidence
   // wash would have to be pale enough to read all of that through — and at that
-  // lightness it stops reading as a mark at all. `HINT_EVIDENCE` covers the
+  // lightness it stops reading as a mark at all. `HINT_OUTLINE` covers the
   // chain ordinal too; see its doc comment for why they are one role.
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   // A cell fill under the letter and notes: the "you are here" wash the Latin
   // family draws its cursor cell with (palette.ts, `CURSOR`).
   out[COL_CURSOR] = highlightWash(background);
@@ -593,7 +593,7 @@ export function redraw(
         COL_FLASH,
         COL_FLASH_LEAD,
       );
-      ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
+      ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, ts);
 
       dr.drawPolygon(
         [
@@ -706,7 +706,7 @@ export function redraw(
         ds.borderfs[spot.j] & FD_ERROR
           ? COL_E_BORDERCLUE
           : ds.borderfs[spot.j] & FD_HINT
-            ? COL_HINT
+            ? COL_HINT_CELL
             : COL_BORDERCLUE;
       const erase = {
         x: spot.tx + spot.inset,

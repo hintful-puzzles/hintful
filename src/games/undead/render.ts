@@ -22,8 +22,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -75,7 +75,7 @@ import {
 } from "./state.ts";
 
 /** Highlight payload an Undead hint step carries (built in `index.ts`). See
- * docs/hints-marks.md § "The element-type color legend". Coordinates are
+ * docs/hints-marks.md § "The engine colors the marks". Coordinates are
  * interior (1-based) grid cells, matching `redraw`/`findMistakes`. */
 export interface UndeadHint {
   /** The driving sightline's bounce path, outlined `COL_HINT_CELL` (evidence). */
@@ -104,7 +104,7 @@ export const COL_ZOMBIE = 7;
 export const COL_VAMPIRE = 8;
 export const COL_DONE = 9;
 export const COL_PENCIL_BODY = 10;
-// The explained-hint legend (docs/hints-marks.md § "The element-type color legend").
+// The explained-hint legend (docs/hints-marks.md § "The engine colors the marks").
 export const COL_HINT = 11; // the cell(s)/candidate(s) the deduction acts on
 export const COL_HINT_CELL = 12; // the driving sightline's bounce path (evidence)
 export const COL_CELL = 13; // the surface of a cell the player fills
@@ -131,11 +131,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_VAMPIRE] = undeadVampire(bg);
   out[COL_DONE] = clueDoneColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_ACTION;
-  // Both hint marks are outlines on the cell's border, so both take a strong
-  // color: a wash is sized to be read *through*, an outline is read *against*.
-  // See `HINT_EVIDENCE` for why the role is teal's bold step.
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 

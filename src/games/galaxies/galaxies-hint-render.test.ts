@@ -111,7 +111,7 @@ describe("a displayed hint reaches the canvas", () => {
   });
 
   it("never rings a dot standing on a cell it has filled", () => {
-    // The purple-on-purple case: the ring's own color on its own color. A
+    // The ring-on-ring case: the ring's own color on its own color. A
     // dot's-own-cells step is the one that hits it — no focus, because every
     // cell it claims is equally the point, and the dot is standing on them.
     const { recording, hl } = hintFrame("aDotsOwnCells");

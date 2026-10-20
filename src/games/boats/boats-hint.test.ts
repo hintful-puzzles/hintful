@@ -724,7 +724,6 @@ describe("boats hint — rendering", () => {
     const slot = isColumn ? line[0].x : w + line[0].y;
     const numbered = state.borderClues[slot] !== NO_CLUE;
     expect(hatches).toHaveLength(line.length + (numbered ? 1 : 0));
-    for (const op of hatches) expect(op.color).toBe(COL_HINT);
   });
 
   it("paints no hint color at all when no hint is displayed", () => {

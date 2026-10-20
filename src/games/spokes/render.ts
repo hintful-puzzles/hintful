@@ -30,8 +30,8 @@ import {
   GRID_DARK,
   givenSurface,
   HELD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
@@ -128,8 +128,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = PURPLE;
   out[COL_HUB] = cellSurface(defaultBackground);
   out[COL_SATISFIED] = givenSurface(defaultBackground);
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -167,7 +167,7 @@ export interface SpokesDrawState {
    * (docs/rendering.md § "The tile cache and the diff key"). */
   wrong: OverlaySidecar;
   /** Hint overlay, per cell: bits `0..7` ⇒ spoke `d` is a hint *line*
-   * (`COL_HINT`, "draw this"), {@link HINT_RING} ⇒ ring this hub as evidence
+   * (`COL_HINT`, "draw this"), {@link HUB_OUTLINE} ⇒ ring this hub as evidence
    * (`COL_HINT_CELL`), bits `9..16` (see {@link hintMarkBit}) ⇒ spoke `d` is a
    * hint *mark* (a `COL_HINT` ring round its rim dot, "rule this out"). Its
    * own sidecar for the same reason as {@link wrong}. */
@@ -187,9 +187,9 @@ const CORNER_WRONG = 4;
 const CORNER_HINT = 8;
 /** Hint sidecar bit that rings a hub as evidence (`COL_HINT_CELL`); bits
  * `0..7` are the hint-line spokes, so this sits above them. */
-const HINT_RING = 1 << 8;
+const HUB_OUTLINE = 1 << 8;
 /** Hint sidecar bit for spoke `d` as a *mark* to rule out (a `COL_HINT` ring
- * round its rim dot). These sit above {@link HINT_RING}, disjoint from the
+ * round its rim dot). These sit above {@link HUB_OUTLINE}, disjoint from the
  * line bits `0..7`. */
 const hintMarkBit = (d: number): number => 1 << (9 + d);
 
@@ -331,7 +331,7 @@ export function redraw(
     ds.hint.add(sp.index, bit(sp.dir));
     if (inside) ds.hint.add(far, bit(sp.dir ^ 4));
   }
-  for (const e of marks.of("outline", HUB)) ds.hint.add(e, HINT_RING);
+  for (const e of marks.of("outline", HUB)) ds.hint.add(e, HUB_OUTLINE);
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -427,7 +427,7 @@ export function redraw(
       }
 
       // Evidence ring: a light-blue annulus just outside the hub rim.
-      if (hintBits & HINT_RING) {
+      if (hintBits & HUB_OUTLINE) {
         dr.drawCircle(
           { x: tx, y: ty },
           radius + HINT_RING_WIDTH,

@@ -33,8 +33,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   playerEntryColor,
   RULED_OUT,
@@ -136,8 +136,8 @@ export function colors(background: Color): Color[] {
   // Purple, because Subsets has spent the usual two: the hint's decided slot is
   // blue and the player's own entries are green.
   out[COL_CURSOR] = PURPLE;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   // The "could still go here" spotlight is its own third emphasis, not the hint
   // action again: this deduction genuinely has three parts and the middle one is
   // the interesting one, so it keeps a hue of its own.
@@ -384,13 +384,7 @@ export function redraw(
                 : COL_CELL,
           );
           // The cell the hint's sentence names, under its letters.
-          ds.hint.drawHatch(
-            dr,
-            i,
-            { x: tx, y: ty, w: ts - 1, h: ts - 1 },
-            COL_HINT,
-            ts,
-          );
+          ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts - 1, h: ts - 1 }, ts);
 
           const wrong = (ds.mistakes.packed[i] & (MISTAKE_SLOT << cn)) !== 0;
           if (state.known[i] & bit) {

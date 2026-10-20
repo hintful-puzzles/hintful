@@ -18,8 +18,8 @@ import {
   GOAL_WASH,
   GRID_DARK,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   pencilColor,
@@ -343,8 +343,8 @@ export function ascentColors(defaultBackground: Color): Color[] {
   ret[COL_ARROW] = YELLOW_WASH;
   ret[COL_TARGET] = GOAL_WASH;
   ret[COL_OFFERED] = pencilColor(background);
-  ret[COL_HINT] = HINT_ACTION;
-  ret[COL_HINT_CELL] = HINT_EVIDENCE;
+  ret[COL_HINT] = HINT_RING;
+  ret[COL_HINT_CELL] = HINT_OUTLINE;
   ret[COL_CELL] = cellSurface(background);
   ret[COL_GIVEN] = givenSurface(background);
   ret[COL_GRID] = surfaceGrid(background);
@@ -760,7 +760,7 @@ export function redrawAscent(
       for (const rect of hex
         ? hexHatchRects(cx, cy, tileSize)
         : [{ x: tx + 1, y: ty + 1, w: tileSize - 1, h: tileSize - 1 }])
-        dr.drawHatch(rect, COL_HINT, hatchPeriod(tileSize));
+        dr.drawHatch(rect, hatchPeriod(tileSize));
 
     // The cut corners show the board, over the fill and the hatch and under
     // the lines that cross them.

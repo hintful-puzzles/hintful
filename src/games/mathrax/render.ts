@@ -29,8 +29,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -103,8 +103,8 @@ export const COL_PENCIL_BODY = 8;
 export const COL_FLASH = 9;
 export const COL_FLASH_LEAD = 14;
 export const COL_CURSOR = 10;
-/** The hint's two marks (docs/hints-marks.md § "The element-type color
- * legend"): a ring around the cell the deduction acts on, and an outline around
+/** The hint's two marks (docs/hints-marks.md § "The engine colors the
+ * marks"): a ring around the cell the deduction acts on, and an outline around
  * the cells it reasons from. Both replace a cell's own border rather than its
  * background, so neither has to be read through the digits it surrounds. */
 export const COL_HINT = 11;
@@ -132,14 +132,14 @@ export function colors(background: Color): Color[] {
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   // Both hint marks sit on a cell's own border, which is read against the board
   // rather than through it, so both take the palette's strong hint colors.
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
 /** Highlight payload a Mathrax hint step carries (built in `index.ts`). The
- * element-type legend (docs/hints-marks.md § "The element-type color legend"):
- * the clue's cells shaded `COL_HINT_CELL`, the acted-on cell ringed `COL_HINT`,
+ * marks (docs/hints-marks.md § "The engine colors the marks"): the clue's
+ * cells outlined `COL_HINT_CELL`, the acted-on cell ringed `COL_HINT`,
  * the ruled-out candidates struck through among the pencil marks. */
 export interface MathraxHint {
   /** The cells the deduction reasons from — a clue's diagonal pair, all four
@@ -299,7 +299,7 @@ function drawTile(
     COL_FLASH,
     COL_FLASH_LEAD,
   );
-  ds.hint.drawHatch(dr, i, cell, COL_HINT, ts);
+  ds.hint.drawHatch(dr, i, cell, ts);
 
   // The cell's own outline.
   dr.drawPolygon(
@@ -403,7 +403,7 @@ function drawPencilMarks(
     const cy = ty + ((((4 * hy + 3) * ts) / (4 * hh + 2)) | 0);
     // A struck candidate keeps its pencil color, so it still reads as the
     // player's note; the same-color strikethrough is what says the hint rules it
-    // out (docs/hints-marks.md § "The element-type color legend").
+    // out (docs/hints-marks.md § "The engine colors the marks").
     dr.drawText({ x: cx, y: cy }, glyphFont(fontsz), COL_PENCIL, String(n));
     if (struck & (1 << n)) {
       const r = Math.max(2, (fontsz / 3) | 0);

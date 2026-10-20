@@ -14,8 +14,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   MOVED,
   surfaceGrid,
@@ -70,8 +70,8 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_SOLID] = givenSurface(defaultBackground);
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;
-  ret[COL_HINT] = HINT_ACTION;
-  ret[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  ret[COL_HINT] = HINT_RING;
+  ret[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   return ret;
 }
 

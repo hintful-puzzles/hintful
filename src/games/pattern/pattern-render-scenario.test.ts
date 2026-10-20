@@ -20,7 +20,7 @@ import {
   COL_CLEAR_MARK,
   COL_GRID,
   COL_HINT,
-  COL_HINT_BLACKREF,
+  COL_HINT_CELL,
 } from "./render.ts";
 import { deduceHintPlan } from "./solver.ts";
 import { GRID_EMPTY, GRID_FULL } from "./state.ts";
@@ -67,7 +67,6 @@ describe("Pattern hint render scenarios", () => {
     const hatches = opsOfKind(recording.ops, "hatch");
     const [line] = stepMarks(hint).of("stripes", LINE);
     expect(hatches).toHaveLength((line < P.w ? P.h : P.w) + 1);
-    for (const h of hatches) expect(h.color).toBe(COL_HINT);
     // One strip: every rect's center across the line within a pixel or two of
     // the others (the clue strip starts at the cell's edge, a cell inside its
     // grid lines).
@@ -113,9 +112,9 @@ describe("Pattern hint render scenarios", () => {
     }
   });
 
-  it("ringed-premise frame: a cited black mark rings COL_HINT_BLACKREF", () => {
+  it("ringed-premise frame: a cited black mark is outlined in COL_HINT_CELL", () => {
     // A step that cites an already-placed black mark (an overlap anchored by
-    // an earlier deduction) rings it teal.
+    // an earlier deduction) outlines it.
     const position = pinned("citesBlack");
     const [cited] = deduceHintPlan(position.state);
     const { recording, hint } = renderPinnedHint(patternGame, position);
@@ -124,9 +123,8 @@ describe("Pattern hint render scenarios", () => {
     expect(stepMarks(hint).of("outline", CELL)).toEqual(
       expect.arrayContaining(cited.blackRefs.map((i) => cellAt(i, P.w))),
     );
-    // The cited black premise is ringed in the black-reference color.
     expect(
-      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_BLACKREF),
+      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL),
     ).toBe(true);
   });
 });

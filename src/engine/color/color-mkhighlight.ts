@@ -10,6 +10,7 @@
  */
 import type { Color, PaletteScheme } from "../types.ts";
 import { darkValue, token } from "./color-token.ts";
+import { HINT_STRIPES } from "./palette.ts";
 
 const K = Math.sqrt(3) / 6;
 
@@ -100,12 +101,16 @@ export function mkhighlight(defaultBackground: Color): {
  * exact for a gray, which is all the app hands (pure white, and the light
  * host's gray). A tinted background can land a rounding error inside K and
  * move again in a channel's last place.
+ *
+ * The last entry is the engine's, not the game's: the stripes ink every hatch
+ * is drawn in (`GameDrawing.drawHatch`), so no game picks the color of a
+ * hint's stripes.
  */
 export function resolvePalette(
   game: { colors(defaultBackground: Color): Color[] },
   hostBackground: Color,
 ): Color[] {
-  return game.colors(mkhighlightBackground(hostBackground));
+  return [...game.colors(mkhighlightBackground(hostBackground)), HINT_STRIPES];
 }
 
 /** A game's {@link PaletteScheme}, with what it left out filled in. */

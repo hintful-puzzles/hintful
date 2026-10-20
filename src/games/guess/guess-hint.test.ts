@@ -670,7 +670,6 @@ describe("the hint frame", () => {
     expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toEqual([]);
     const hatches = opsOfKind(ops, "hatch");
     expect(hatches).toHaveLength(1 + p.npegs + 1);
-    for (const h of hatches) expect(h.color).toBe(COL_HINT);
     const [strip] = hatches;
     for (const h of hatches) {
       expect(h.y).toBeGreaterThanOrEqual(strip.y);

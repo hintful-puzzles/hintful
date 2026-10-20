@@ -14,7 +14,7 @@ import {
   FLASH,
   FLASH_LEAD,
   GRID_DARK,
-  HINT_ACTION,
+  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -99,10 +99,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BARRIER] = GRID_DARK;
   out[COL_LOWLIGHT] = netslideLowlight(defaultBackground);
   out[COL_TEXT] = INK;
-  // The same blue Sixteen marks a hinted tile with — the two are the same kind of
-  // game and should read the same way. Ink wires and powered wires both
-  // stay legible on it.
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   out[COL_CURSOR] = CURSOR;
   return out;
 }
@@ -255,7 +252,7 @@ function drawTile(
     h: ts - TILE_BORDER,
   };
   dr.drawRect(face, background);
-  if (tile & HINT_LINE) dr.drawHatch(face, COL_HINT, hatchPeriod(ts));
+  if (tile & HINT_LINE) dr.drawHatch(face, hatchPeriod(ts));
 
   const cx = TILE_BORDER + (ts - TILE_BORDER) / 2 - 0.5;
   const cy = cx;

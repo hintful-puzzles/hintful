@@ -307,9 +307,8 @@ export interface PatternHint {
 
 /** Narrate *why* the cells are forced, naming the marks the renderer draws for
  * them: the target cells ringed, never pre-filled (the narration says shaded
- * or clear); the row or column hatched and its clue in the action color; and
- * the already-placed marks the deduction leans on, outlined in their own
- * kind's reference color (the cross-game element-type legend). The words are
+ * or clear); the row or column hatched and its clue recolored; and the
+ * already-placed marks the deduction leans on, outlined. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
 function narrate(m: PatternHintMove, w: number): Sentence {
   const at = (i: number) => cellAt(i, w);
@@ -487,7 +486,7 @@ export const patternGame: Game<
   hintMarks: {
     roles: {
       ring: `the cells the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
-      outline: `what the step reasons from: the numbers of its row or column, drawn in the hint color, and any squares already marked ${SHADED_NAME} or ${UNSHADED_NAME} that hold a run in place, outlined in a color of their own.`,
+      outline: `what the step reasons from: the numbers of its row or column, drawn in the hint color, and any squares already marked ${SHADED_NAME} or ${UNSHADED_NAME} that hold a run in place, outlined.`,
       stripes: "the row or column the sentence names, running on through its numbers.",
     },
   },

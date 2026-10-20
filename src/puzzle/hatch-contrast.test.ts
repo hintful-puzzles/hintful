@@ -7,6 +7,8 @@
  * not off a constant, and blended over its board the way the canvas blends it.
  */
 import { describe, expect, it } from "vitest";
+import { darkValue } from "../engine/color/color-token.ts";
+import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { HATCH_OPACITY } from "../engine/hatch.ts";
 import type { Narration } from "../engine/hint-words.ts";
 import { Midend } from "../engine/index.ts";
@@ -18,7 +20,6 @@ import { opsOfKind, RecordingDrawing } from "../engine/testing/recording-drawing
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import type { Color } from "../engine/types.ts";
 import * as magnets from "../games/magnets/render.ts";
-import * as samegame from "../games/samegame/render.ts";
 import { schemeOf, schemePalettes } from "./scheme-palettes.ts";
 
 const relLum = (c: Color): number => {
@@ -180,46 +181,29 @@ describe("Magnets under the hatch", () => {
       [magnets.COL_NEUTRAL, magnets.COL_BACKGROUND],
     ];
     const { light, dark } = schemePalettes("magnets");
+    // Each of the stripes' colors, as the app repaints a reference's stripes
+    // in its own at the hatch's coverage.
     for (const [scheme, palette] of [
       ["light", light],
       ["dark", dark],
     ] as const) {
-      for (const [fill, symbol] of pairs) {
-        const under = palette[fill];
-        const before = contrast(palette[symbol], under);
-        // A stripe may cost a symbol 0.28 of its contrast, or anything that
-        // still leaves it at 4.5:1. The share is a fact about the fill and the
-        // stripe and not about the symbol (both terms carry the symbol's
-        // luminance, which cancels), and on the cell surface it measured 0.26
-        // (2026-10-07). The `?` there is the weakest: 3.60 under the stripe.
-        expect(
-          contrast(palette[symbol], over(under, palette[magnets.COL_HINT])),
-          `symbol ${symbol} on fill ${fill} in ${scheme}`,
-        ).toBeGreaterThanOrEqual(Math.min(before * 0.72, 4.5));
+      for (const [n, color] of HINT_REFERENCE_COLORS.stripes.entries()) {
+        const stripe = scheme === "light" ? color : (darkValue(color) ?? color);
+        for (const [fill, symbol] of pairs) {
+          const under = palette[fill];
+          const before = contrast(palette[symbol], under);
+          // A stripe may cost a symbol 0.28 of its contrast, or anything that
+          // still leaves it at 4.5:1. The share is a fact about the fill and
+          // the stripe and not about the symbol (both terms carry the symbol's
+          // luminance, which cancels), and on the cell surface it measured
+          // 0.26 (2026-10-07). The `?` there is the weakest: 3.60 under the
+          // stripe.
+          expect(
+            contrast(palette[symbol], over(under, stripe)),
+            `symbol ${symbol} on fill ${fill} under stripes ${n} in ${scheme}`,
+          ).toBeGreaterThanOrEqual(Math.min(before * 0.72, 4.5));
+        }
       }
     }
-  });
-});
-
-// The check above measures a stripe against the board's background, and Same
-// Game's stripes lie on its squares, which come in every hue.
-describe("Same Game under the hatch", () => {
-  it("shows its stripes on a square of every color, in both schemes", () => {
-    const { light, dark } = schemePalettes("samegame");
-    let measured = 0;
-    for (const [scheme, palette] of [
-      ["light", light],
-      ["dark", dark],
-    ] as const) {
-      for (let c = 1; c <= 9; c++) {
-        const square = palette[c];
-        expect(
-          contrast(over(square, palette[samegame.COL_HINT_KEY]), square),
-          `color ${c} in ${scheme}`,
-        ).toBeGreaterThan(VISIBLE);
-        measured++;
-      }
-    }
-    expect(measured).toBe(18);
   });
 });

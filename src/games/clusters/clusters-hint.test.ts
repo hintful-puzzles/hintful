@@ -30,7 +30,14 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { type ClustersHintHighlights, clustersGame } from "./index.ts";
-import { COL_0, COL_1, COL_HINT, COL_HINT_CELL, COL_HINT_DANGER } from "./render.ts";
+import {
+  border,
+  COL_0,
+  COL_1,
+  COL_HINT,
+  COL_HINT_CELL,
+  PREFERRED_TILE_SIZE,
+} from "./render.ts";
 import {
   type ClustersDeduction,
   type ClustersRuleKind,
@@ -378,7 +385,7 @@ describe("hint rendering (tier 2.5)", () => {
   it("every hint role is a color the board does not already use", () => {
     const palette = clustersGame.colors([1, 1, 1]);
     const key = (i: number) => palette[i].join(",");
-    const roles = [COL_HINT, COL_HINT_CELL, COL_HINT_DANGER];
+    const roles = [COL_HINT, COL_HINT_CELL];
     for (const role of roles) {
       for (const tile of [COL_0, COL_1]) {
         expect(
@@ -387,8 +394,8 @@ describe("hint rendering (tier 2.5)", () => {
         ).not.toBe(key(tile));
       }
     }
-    // …and the hint roles are distinct from one another, so a target, its
-    // evidence and its contradiction never collapse into one mark.
+    // …and the hint roles are distinct from one another, so a target and its
+    // evidence never collapse into one mark.
     //
     // The chain ordinal is deliberately *not* a fourth role: it is drawn in
     // `COL_HINT_CELL` because a number saying where a cell falls in the chain is
@@ -427,9 +434,25 @@ describe("hint rendering (tier 2.5)", () => {
     };
     const widths = ops.map(width).filter((v): v is number => v !== null);
     expect(Math.min(...widths)).toBeLessThan(Math.max(...widths) / 2);
-    // One ring, which is four bands: doubled, it crossed the piece.
+    // One ring round the danger tile, which is four bands: doubled, it
+    // crossed the piece.
+    const danger = hl.danger;
+    if (!danger) throw new Error("the pinned chain has no danger tile");
+    const ts = PREFERRED_TILE_SIZE;
+    const side = ts - 3;
+    const rt = Math.max(2, Math.floor(ts / 12));
+    const px = danger.x * ts + border(ts) + 1;
+    const py = danger.y * ts + border(ts) + 1;
     expect(
-      ops.filter((o) => o.op === "rect" && o.color === COL_HINT_DANGER),
+      ops.filter(
+        (o) =>
+          o.op === "rect" &&
+          o.color === COL_HINT_CELL &&
+          Math.min(o.w, o.h) === rt &&
+          Math.max(o.w, o.h) === side &&
+          (o.x === px || o.x === px + side - rt) &&
+          (o.y === py || o.y === py + side - rt),
+      ),
     ).toHaveLength(4);
 
     // …and each carries its **ordinal**: an unordered set of shaded cells

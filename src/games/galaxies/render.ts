@@ -54,8 +54,7 @@ export const COL_MISTAKE = 9;
  * during a keyboard drag. See `DRAG_ADD`'s doc comment. */
 export const COL_DRAG = 10;
 /** The displayed hint's *action*: the cells an association claims, the wall it
- * draws, and a ring on the dot it points at. Purple rather than the
- * collection's hint blue — see the assignment in `index.ts` `colors()`. */
+ * draws, and a ring on the dot it points at. */
 export const COL_HINT = 11;
 /** The displayed hint's *evidence*: the cells, walls and dots the deduction
  * reasons over. */
@@ -371,11 +370,7 @@ function drawSquare(
         : COL_CELL;
   dr.drawRect({ x: lx, y: ly, w: tileSize, h: tileSize }, bg);
   if (hint & HINT_REGION_CELL)
-    dr.drawHatch(
-      { x: lx, y: ly, w: tileSize, h: tileSize },
-      COL_HINT,
-      hatchPeriod(tileSize),
-    );
+    dr.drawHatch({ x: lx, y: ly, w: tileSize, h: tileSize }, hatchPeriod(tileSize));
 
   // Grid lines (top-left only — neighbors will draw their own)
   // Ink inside a black dot's region, whose fill the surface grid sinks into.

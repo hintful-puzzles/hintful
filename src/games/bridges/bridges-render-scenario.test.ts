@@ -121,12 +121,12 @@ describe("Bridges render scenarios", () => {
     // the color is on the outer circle's `fill`/`outline` and what survives is
     // a ring the width of one line.
     expect(
-      recording.ops.some((o) => o.op === "circle" && o.outline === COL_HINT),
-      "the focus island's rim is not in the action color",
+      recording.ops.some((o) => o.op === "circle" && o.outline === COL_HINT_CELL),
+      "the focus island's rim is not in the outline's ink",
     ).toBe(true);
     expect(
-      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT),
-      "the focus island's clue digit is not in the action color",
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+      "the focus island's clue digit is not in the outline's ink",
     ).toBe(true);
 
     // No hint mark is a fill. The cross-game guard says this too; a

@@ -17,8 +17,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   RULED_OUT,
   surfaceGrid,
@@ -82,8 +82,8 @@ const PAIR_DISC = 1;
 
 /** A tile the displayed hint step rings or outlines, in its cache word beside
  * the cursor's flag, so a mark coming or going repaints it. */
-const HINT_RING = 1 << 17;
-const HINT_OUTLINE = 1 << 18;
+const TILE_RING = 1 << 17;
+const TILE_OUTLINE = 1 << 18;
 /** A square the check found wrong, in the same word, for the same reason. The
  * midend refuses a hint while the check finds anything, so its frame never
  * shares a square with a hint's mark. */
@@ -154,8 +154,8 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_TEXT] = INK;
   // The laser you just fired, lit up for a beat — not the solved flash.
   ret[COL_FLASHTEXT] = GREEN;
-  ret[COL_HINT] = HINT_ACTION;
-  ret[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  ret[COL_HINT] = HINT_RING;
+  ret[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   ret[COL_WIN] = FLASH;
   ret[COL_WIN_LEAD] = FLASH_LEAD;
   return ret;
@@ -172,9 +172,9 @@ function drawHintMark(
 ): void {
   const ts = ds.tileSize;
   const thick = Math.max(2, Math.floor(ts / 12));
-  if (flags & HINT_OUTLINE)
+  if (flags & TILE_OUTLINE)
     drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_HINT_EVIDENCE);
-  if (flags & HINT_RING)
+  if (flags & TILE_RING)
     drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_HINT);
   if (flags & MISTAKE)
     drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_WRONG);
@@ -191,16 +191,16 @@ function hintFlags(
     const i = gridIdx(state.w, x, y);
     out.set(i, (out.get(i) ?? 0) | flag);
   };
-  for (const p of marks.of("ring", CELL)) add(p.x, p.y, HINT_RING);
+  for (const p of marks.of("ring", CELL)) add(p.x, p.y, TILE_RING);
   for (const [role, flag] of [
-    ["ring", HINT_RING],
-    ["outline", HINT_OUTLINE],
+    ["ring", TILE_RING],
+    ["outline", TILE_OUTLINE],
   ] as const)
     for (const l of marks.of(role, LASER)) {
       const rc = range2grid(state.w, state.h, l);
       if (rc) add(rc.x, rc.y, flag);
     }
-  if (marks.of("ring", BUTTON).length > 0) add(0, 0, HINT_RING);
+  if (marks.of("ring", BUTTON).length > 0) add(0, 0, TILE_RING);
   return out;
 }
 
@@ -339,7 +339,7 @@ function drawLaserTile(
   if (gsTile !== dsTile || force) {
     const fired =
       (gsTile &
-        ~(LASER_WRONG | LASER_OMITTED | FLAG_CURSOR | HINT_RING | HINT_OUTLINE)) !==
+        ~(LASER_WRONG | LASER_OMITTED | FLAG_CURSOR | TILE_RING | TILE_OUTLINE)) !==
       0;
     const surface = fired ? COL_SETTLED : COL_BACKGROUND;
     dr.clip(rect(dx, dy, ts + 1, ts + 1));

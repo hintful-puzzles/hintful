@@ -12,6 +12,7 @@
  * developer's machine while producing an icon.
  */
 
+import type { Scheme } from "../engine/color/color-word.ts";
 import { sleep } from "../utils/timing.ts";
 import type { Puzzle } from "./puzzle.ts";
 
@@ -53,8 +54,12 @@ function downloadBlob(blob: Blob, filename: string): void {
  * filenames `src/assets/icons/` expects. Must be called from a user
  * gesture (the "Capture icons" button) so the downloads aren't blocked.
  */
-export async function captureIcons(puzzle: Puzzle, puzzleId: string): Promise<void> {
-  const sourceBlob = await puzzle.getImage({ type: "image/png" });
+export async function captureIcons(
+  puzzle: Puzzle,
+  puzzleId: string,
+  scheme: Scheme,
+): Promise<void> {
+  const sourceBlob = await puzzle.getImage(scheme, { type: "image/png" });
   const bitmap = await createImageBitmap(sourceBlob);
   try {
     for (const size of ICON_SIZES) {

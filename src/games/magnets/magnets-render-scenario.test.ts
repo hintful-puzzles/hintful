@@ -188,7 +188,9 @@ describe("magnets render scenarios", () => {
     const { recording, step } = hintFrame("markCountingClues");
     // One ring around both ends, not a ring per square.
     expectPieceRing(recording.ops, COL_HINT);
-    const hinted = recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT);
+    const hinted = recording.ops.filter(
+      (o) => o.op === "text" && o.color === COL_HINT_CELL,
+    );
     expect(hinted.length).toBe(countedClues(step).length);
     expect(recording.ops).toMatchSnapshot();
   });
@@ -201,7 +203,6 @@ describe("magnets render scenarios", () => {
     // One per square of the line, and one for each clue slot at its ends.
     const length = line.roworcol === ROW ? P.w : P.h;
     expect(hatches).toHaveLength(length + 2);
-    for (const h of hatches) expect(h.color).toBe(COL_HINT);
     // All in one strip: every hatch shares the line's x (a column) or y (a row).
     const along = new Set(hatches.map((h) => (line.roworcol === ROW ? h.y : h.x)));
     expect(along.size).toBe(1);

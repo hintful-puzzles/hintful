@@ -36,6 +36,7 @@
  * mode, as Spokes' pure-white `COL_DONE` once did.
  */
 
+import type { MarkRole } from "../hint-words.ts";
 import type { Color } from "../types.ts";
 import { divide, mix, scale, token } from "./color-token.ts";
 import {
@@ -44,11 +45,9 @@ import {
   GRAY,
   GRAY_BOLD,
   GREEN,
-  PINK,
+  HINT_REFERENCE_COLORS,
   RED,
   RED_WASH,
-  TEAL_BOLD,
-  TEAL_WASH_QUIET,
   TWO,
   TWO_WASH,
   WHITE,
@@ -159,8 +158,7 @@ export const ERROR_TEXT: Color = PAPER;
 
 /**
  * A **red fill behind content that must stay readable** — the fill counterpart to
- * {@link ERROR}'s stroke, in the same way {@link HINT_EVIDENCE_WASH} is the fill
- * counterpart to {@link HINT_EVIDENCE}. Filling's `COL_ERROR`, Mathrax's and Rome's
+ * {@link ERROR}'s stroke. Filling's `COL_ERROR`, Mathrax's and Rome's
  * `COL_ERRORBG`, Mines' contradicted count.
  *
  * A named color rather than a function of the background, because `RED_WASH`
@@ -171,78 +169,37 @@ export const ERROR_WASH: Color = RED_WASH;
 // --- hints ------------------------------------------------------------
 
 /**
- * The thing the deduction acts on, drawn *on* the board: the **ring** around the
- * acted-on cell, a forced edge, a line, a mark.
+ * **The colors a game draws a hint's marks in**, one to a mark role: each the
+ * role's first reference color (`HINT_REFERENCE_COLORS`). While a hint shows,
+ * the app repaints each reference's marks in a color of its own, edged to read
+ * on whatever lies under them; these are what a step shows until then, so a
+ * step with one reference of each role looks the same before as after.
  *
- * **There is deliberately no fill counterpart, and its absence is the rule**: a
- * hint mark goes *beside* content, never behind it. A fill for this role has no
- * working value at all — it scores 1.91:1 against a pencil mark in light and
- * 1.96:1 in dark, and a joint search over both hint roles, every hue and both
- * schemes returns no feasible arrangement, because the pale end of a
- * twelve-color palette holds exactly one cool wash and the evidence has it. Do
- * not add one back: ringing the cell removes the constraint rather than trading
- * it, which is why this role has the *emphatic* blue and not a pale one.
- * `hint-mark.ts` is the mechanism; `docs/hints-marks.md` § "Shade vs ring" is the
- * rule.
+ * A game draws a ring in {@link HINT_RING} and an outline in
+ * {@link HINT_OUTLINE}, and its marks in nothing else (`hint-ink.test.ts`);
+ * the engine draws every hatch in {@link HINT_STRIPES}. The engine finds a
+ * game's ink slots by reference (`Midend.hintInkIndices`) to repaint them
+ * while it measures the marks. A slot holding the same color for another
+ * meaning is repainted with them, and changes nothing measured: it is drawn
+ * alike with a reference's marks and without them.
+ *
+ * There is no fill among them: a hint mark goes beside content, never behind
+ * it (`docs/hints-marks.md` § "Shade vs ring").
  */
-export const HINT_ACTION: Color = BLUE;
+export const HINT_RING: Color = HINT_REFERENCE_COLORS.ring[0];
 
-/**
- * The *evidence* a deduction rests on — the row, region or area the hint is
- * reasoning from, rather than the cell it is acting on — **drawn as a mark**: the
- * region's outline, and the small ordinal `drawHintOrdinal` puts in a chain
- * cell's corner to say where in the chain it falls.
- *
- * Those two are **one role, not two that agree**. The ordinal is not a fourth
- * hint color, it is an *index into the evidence*; a hue of its own would claim
- * the ordered cells were a different kind of premise from the unordered ones,
- * which is exactly what they are not. Giving them separate names that happen to
- * hold the same value is the coincidence this module's two-layer split exists to
- * prevent, because restyling one would silently fail to restyle the other.
- *
- * A **different hue** from {@link HINT_ACTION}, rather than a third shade of the
- * same blue. A hint often marks an evidence region and a target cell at once,
- * and two blues eight hundredths of a lightness apart are all but the same
- * color; the distinction the player actually needs — *this is what I am
- * reasoning from, that is what I am concluding* — survives a hue change and does
- * not survive a shade change.
- *
- * Teal's **bold** step, not its base. A line drawn *against* a board wants a step
- * whose lightness differs between schemes, and bold is the one defined that way
- * ("dark in light mode, light in dark mode"): it stands off the board by 0.48 /
- * 0.64, where the base sits at L 0.72 under both and comes out a soft line on a
- * pale board and a bright one on a dark board. `color-dark-check` measures
- * precisely that and flags the base.
- */
-export const HINT_EVIDENCE: Color = TEAL_BOLD;
+/** {@link HINT_RING}'s counterpart for an outline. */
+export const HINT_OUTLINE: Color = HINT_REFERENCE_COLORS.outline[0];
 
-/**
- * The same "this is the evidence" meaning as a **fill**, for a game whose
- * evidence cells carry nothing the player has to read: Light Up's unlit
- * squares.
- *
- * A game reaching for this is claiming *nothing is drawn here*. Where content
- * does sit on the evidence, a wash loses whichever way it is tuned: pale enough
- * to read a derived foreground through, and it stops reading as a mark (it
- * measured **1.15:1 against its own board in dark mode** at the lightness that
- * legibility needed). An outline has no such trade-off.
- *
- * "Nothing is drawn here" excludes the game's content, not the hint's own marks:
- * the action ring often lands on this fill and has to win against it, which is
- * why the role takes teal's *quiet* wash — see {@link TEAL_WASH_QUIET}.
- */
-export const HINT_EVIDENCE_WASH: Color = TEAL_WASH_QUIET;
+/** {@link HINT_RING}'s counterpart for stripes. */
+export const HINT_STRIPES: Color = HINT_REFERENCE_COLORS.stripes[0];
 
-/** A hint premise that refers to a **black/filled** reference cell, where the
- * hint needs to point at two kinds of evidence at once (Range, Light Up). */
-export const HINT_BLACKREF: Color = GREEN;
-
-/** The counterpart premise color, referring to a **white/empty** reference
- * cell. Distinct in hue from {@link HINT_BLACKREF} so the two premises are
- * never confused with each other, and not purple: that is {@link SHADED},
- * and an outline in the piece's color round a cell that holds no piece says
- * the opposite of what it cites. */
-export const HINT_WHITEREF: Color = PINK;
+/** The hint inks by the role they draw. */
+export const HINT_INK: Readonly<Record<MarkRole, Color>> = {
+  ring: HINT_RING,
+  outline: HINT_OUTLINE,
+  stripes: HINT_STRIPES,
+};
 
 // --- pencil marks -----------------------------------------------------
 

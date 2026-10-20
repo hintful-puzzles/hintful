@@ -19,6 +19,7 @@ import { colorToOKLCH, isGrayChroma, type OKLCH } from "../testing/oklch.ts";
 import type { Color } from "../types.ts";
 import "../../games/index.ts";
 import { HATCH_OPACITY } from "../hatch.ts";
+import type { MarkRole } from "../hint-words.ts";
 import { mkhighlight } from "./color-mkhighlight.ts";
 import { darkValue } from "./color-token.ts";
 import * as colors from "./colors.ts";
@@ -54,27 +55,28 @@ describe("the shared color vocabulary", () => {
     // Checked by **identity**, not by value: a copy of `RED` is the right color
     // with its scheme decision silently removed, and by value the two are
     // indistinguishable.
-    const palette = new Set<Color>(
-      Object.values(colors).flatMap((v: unknown): Color[] => {
-        if (!Array.isArray(v)) return [];
-        // Either a color, or one of the sets built out of them.
+    const named = (v: unknown): Color[] => {
+      // A color, one of the sets built out of them, or sets by name.
+      if (Array.isArray(v))
         return typeof v[0] === "number" ? [v as Color] : (v as Color[]);
-      }),
-    );
+      if (v && typeof v === "object") return Object.values(v).flatMap(named);
+      return [];
+    };
+    const palette = new Set<Color>(Object.values(colors).flatMap(named));
     // INK and PAPER are the two exceptions, and they earn it: they are *maximum
     // contrast against the surface*, so they must be adapted by the scheme rather
     // than authored — which is exactly what a named color may not be.
     const exempt = new Set<Color>([roles.INK, roles.PAPER]);
     let checked = 0;
     for (const [name, value] of Object.entries(roles)) {
-      if (typeof value === "function") continue;
-      const color = value as Color;
-      if (exempt.has(color)) continue;
-      expect(
-        palette.has(color),
-        `${name} holds a color value instead of referencing one from colors.ts`,
-      ).toBe(true);
-      checked++;
+      for (const color of named(value)) {
+        if (exempt.has(color)) continue;
+        expect(
+          palette.has(color),
+          `${name} holds a color value instead of referencing one from colors.ts`,
+        ).toBe(true);
+        checked++;
+      }
     }
     // A roles module of nothing but functions would satisfy the loop silently.
     expect(checked, "no plain-color role was checked").toBeGreaterThan(10);
@@ -105,30 +107,13 @@ describe("the shared color vocabulary", () => {
     expect(decisions).toContain(4);
   });
 
-  it("keeps the hint emphases distinct, in both schemes", () => {
-    // These are one meaning at several jobs — the move, the evidence the
-    // deduction rests on, and the two reference premises — and a hint frame
-    // can put two or three of them on screen at once. The first two are a hue
-    // apart, and this is what says so.
-    //
-    // **Both schemes, because one is not evidence for the other.** It matters
-    // here rather than academically: the pairs are *not* equally separated in
-    // the two schemes, so the next person to retune one of these learns about
-    // it from a red test rather than from a hint frame where the target and its
-    // evidence read as one mark.
-    //
-    // The sRGB gamut clamp can silently return less chroma, at a different
-    // lightness, than a color asks for, so a bound the arithmetic cannot be
-    // trusted to predict is one worth asserting.
-    //
-    // It is load-bearing rather than tidy: a hint ties the acted-on element to
-    // the evidence *in prose* wherever both are shown, and the rule for that
-    // says a pair which differs **only** by hue needs the marks fixed, not the
-    // sentence. These
-    // pairs earn their exemption by differing in weight as well — `HINT_ACTION`
-    // carries ~2.5× the chroma of `HINT_EVIDENCE` in either scheme — and an
-    // exemption resting on a number is worth exactly as much as the assertion
-    // that keeps the number true.
+  it("keeps the hint inks distinct, in both schemes", () => {
+    // A step is drawn in the inks until its marks are measured and each
+    // reference repainted in its own color (`HINT_RING`), and a frame puts a
+    // ring, an outline and stripes on screen at once. The inks are reference
+    // colors, which the test below holds to a mark's bars; this one says the
+    // three stay told apart, and that each is its role's first color, so a
+    // step looks the same before its marks are measured as after.
     const d = (a: Color, b: Color): number => {
       const plane = (c: OKLCH): [number, number] =>
         isGrayChroma(c[1])
@@ -143,111 +128,20 @@ describe("the shared color vocabulary", () => {
       const [bx, by] = plane([bl, ...brest] as OKLCH);
       return Math.hypot(al - bl, ax - bx, ay - by);
     };
-    /** The same pair as the scheme actually paints it. */
     const inDark = (c: Color): Color => darkValue(c) ?? c;
-    // Every pair among the hint roles, taken from what the palette exports
-    // under the prefix: a hint draws any two of them on one frame, and a role
-    // added later is measured against the rest without being listed here.
-    const hintRoles = Object.entries(roles).filter(
-      (entry): entry is [string, Color] =>
-        entry[0].startsWith("HINT_") && Array.isArray(entry[1]),
-    );
-    const measured = new Set(hintRoles.map(([, color]) => color));
-    for (const named of [
-      roles.HINT_ACTION,
-      roles.HINT_EVIDENCE,
-      roles.HINT_EVIDENCE_WASH,
-      roles.HINT_BLACKREF,
-      roles.HINT_WHITEREF,
-    ])
-      expect(measured.has(named), "a hint role the prefix did not find").toBe(true);
-    for (const [i, [xName, x]] of hintRoles.entries())
-      for (const [yName, y] of hintRoles.slice(i + 1)) {
+    const inks = Object.entries(roles.HINT_INK);
+    expect(inks.map(([role]) => role).sort()).toEqual(["outline", "ring", "stripes"]);
+    for (const [role, ink] of inks)
+      expect(ink, `the ${role} ink`).toBe(
+        colors.HINT_REFERENCE_COLORS[role as MarkRole][0],
+      );
+    for (const [i, [xName, x]] of inks.entries())
+      for (const [yName, y] of inks.slice(i + 1)) {
         expect(d(x, y), `${xName} vs ${yName} in light`).toBeGreaterThan(0.12);
         expect(d(inDark(x), inDark(y)), `${xName} vs ${yName} in dark`).toBeGreaterThan(
           0.12,
         );
       }
-    // The acted-on color is the emphatic one in both schemes — the property a
-    // reader who cannot compare hues is left with, and what lets a narration say
-    // "this cell" *at all* once it has tied it to the evidence in words.
-    // Measured against the *wash*, which is the only hint role that is a fill;
-    // the evidence **mark** is a line read against the board and is emphatic by
-    // design, so a chroma comparison against it would say nothing.
-    for (const resolveScheme of [(c: Color) => c, inDark]) {
-      const action = colorToOKLCH(resolveScheme(roles.HINT_ACTION));
-      const wash = roles.HINT_EVIDENCE_WASH;
-      expect(action[1], `${key(wash)} vs the action color`).toBeGreaterThan(
-        colorToOKLCH(resolveScheme(wash))[1] * 2,
-      );
-    }
-    // ...and the one that is a fill stays a fill.
-    expect(colorToOKLCH(roles.HINT_EVIDENCE_WASH)[0]).toBeGreaterThan(0.75);
-
-    const relLum = (c: Color): number => {
-      const lin = (v: number) =>
-        v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-      return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
-    };
-    const contrast = (a: Color, b: Color): number => {
-      const [hi, lo] = [relLum(a), relLum(b)].sort((p, q) => q - p);
-      return (hi + 0.05) / (lo + 0.05);
-    };
-    const LIGHT_BOARD: Color = [0.827, 0.827, 0.827];
-    const DARK_BOARD: Color = [0.106, 0.106, 0.106];
-
-    // **A mark has to be visible against the board it is drawn on, in both
-    // schemes**. Nothing is drawn on the evidence: it is an outline, and the
-    // wash is kept only where the cells under it are empty, so the obligation
-    // is the mark's contrast with the board, not a foreground's with the mark.
-    // A wash light enough to carry digits scores near 1:1 against a dark
-    // board, a mark nobody could see.
-    //
-    // Both directions in both schemes, deliberately: a bound in one direction
-    // only lets a value drift to the top of its band.
-    for (const [name, mark, bar] of [
-      // The outline is read *against* the board, so it wants a real margin.
-      ["HINT_EVIDENCE", roles.HINT_EVIDENCE, 3],
-      ["HINT_ACTION", roles.HINT_ACTION, 3],
-      // A fill covers a whole cell, so it reads at far less — the bar is what
-      // the light scheme's own tint scores against its own board (1.288), so
-      // the dark value is chosen to reach parity rather than to hit a threshold
-      // somebody invented.
-      ["HINT_EVIDENCE_WASH", roles.HINT_EVIDENCE_WASH, 1.28],
-    ] as [string, Color, number][]) {
-      expect(contrast(mark, LIGHT_BOARD), `${name} on a light board`).toBeGreaterThan(
-        bar,
-      );
-      expect(
-        contrast(inDark(mark), DARK_BOARD),
-        `${name} on a dark board`,
-      ).toBeGreaterThan(bar);
-    }
-
-    // **And the bound in the other direction.** The three assertions above are
-    // all floors: they say each mark is visible enough. This one says the
-    // *wash* stays quiet enough for the marks that land on it — and a target
-    // cell is very often inside the region the deduction reasons from, so the
-    // action ring is drawn straight onto this fill. Left unbounded, the dark
-    // wash drifts to the visible end of its band, where the ring on it is
-    // barely legible: the evidence shouting, the conclusion whispering.
-    //
-    // The two requirements move in opposite directions along one axis, so light
-    // mode's own score is not reachable in dark at a wash anyone can see; 3 is
-    // a floor with real slack under both schemes rather than a tuned target.
-    for (const [name, fg] of [
-      ["the action ring", roles.HINT_ACTION],
-      ["the evidence outline", roles.HINT_EVIDENCE],
-    ] as [string, Color][]) {
-      expect(
-        contrast(fg, roles.HINT_EVIDENCE_WASH),
-        `${name} on the evidence wash in light`,
-      ).toBeGreaterThan(3);
-      expect(
-        contrast(inDark(fg), inDark(roles.HINT_EVIDENCE_WASH)),
-        `${name} on the evidence wash in dark`,
-      ).toBeGreaterThan(3);
-    }
   });
 
   it("keeps a region's fill under everything drawn on it, in both schemes", () => {
@@ -293,8 +187,8 @@ describe("the shared color vocabulary", () => {
       ["ink", roles.INK, roles.PAPER, 7],
       ["a piece", roles.SHADED, inDark(roles.SHADED), 2.3],
       ["an error", roles.ERROR, inDark(roles.ERROR), 2.5],
-      ["the hint's ring", roles.HINT_ACTION, inDark(roles.HINT_ACTION), 2.8],
-      ["its outline", roles.HINT_EVIDENCE, inDark(roles.HINT_EVIDENCE), 5],
+      ["the hint's ring", roles.HINT_RING, inDark(roles.HINT_RING), 2.8],
+      ["its outline", roles.HINT_OUTLINE, inDark(roles.HINT_OUTLINE), 2.8],
       ["the cursor", roles.CURSOR, inDark(roles.CURSOR), 3],
     ];
     const surface = roles.cellSurface(BG);
@@ -315,7 +209,8 @@ describe("the shared color vocabulary", () => {
       ] as const) {
         // The hint's stripes, at the bar `hatch-contrast.test.ts` holds them
         // to on a board.
-        const hint = scheme === "light" ? roles.HINT_ACTION : inDark(roles.HINT_ACTION);
+        const hint =
+          scheme === "light" ? roles.HINT_STRIPES : inDark(roles.HINT_STRIPES);
         expect(
           contrast(striped(on, hint), on),
           `stripes on ${key(fill)} in ${scheme}`,
@@ -337,7 +232,7 @@ describe("the shared color vocabulary", () => {
   it("keeps a hint reference's colors to the bars a mark is held to, in both schemes", () => {
     // A reference's marks are repainted in its color over whatever they sit
     // on, so each color is a mark on the cell surface and on every region
-    // fill. The bars are the ring's: in light no worse than `HINT_ACTION` on
+    // fill. The bars are the ring's: in light no worse than `HINT_RING` on
     // the surface, which a fill only lightens; in dark the ring's floor on
     // the darkest of them. The lime, amber and cyan these replaced read at
     // 1.14-1.36:1 on the light surface.
@@ -447,15 +342,14 @@ describe("the shared color vocabulary", () => {
       const d = Math.abs(a - b) % 360;
       return Math.min(d, 360 - d);
     };
-    const marks = Object.entries({ ...roles, ORANGE: colors.ORANGE }).filter(
+    const marks = Object.entries(roles).filter(
       (entry): entry is [string, Color] =>
         Array.isArray(entry[1]) &&
         (entry[0].startsWith("HINT_") ||
           entry[1] === roles.ERROR ||
-          entry[1] === roles.CURSOR ||
-          entry[1] === colors.ORANGE),
+          entry[1] === roles.CURSOR),
     );
-    expect(marks.map(([name]) => name)).toContain("HINT_ACTION");
+    expect(marks.map(([name]) => name)).toContain("HINT_RING");
     for (const [role, pool] of Object.entries(colors.HINT_REFERENCE_COLORS))
       pool.forEach((c, i) => {
         marks.push([`${role} reference ${i}`, c]);

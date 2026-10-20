@@ -24,12 +24,7 @@
  */
 
 import { valueBit } from "../../engine/candidate-bits.ts";
-import {
-  BLUE_BOLD,
-  GREEN,
-  GREEN_BOLD,
-  ORANGE_BOLD,
-} from "../../engine/color/colors.ts";
+import { BLUE_BOLD, ORANGE_BOLD } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   clueDoneColor,
@@ -37,6 +32,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PAPER,
@@ -166,8 +163,8 @@ export const COL_RUNTEXT = 19;
  * *down* from the board survives the dark-mode pass, where a step up inverts.
  * A wash rather than a hue, because a held clue previews a ghosted digit on
  * this square and has to stay readable — and every hue is spoken for here
- * anyway: blue and amber are the two run directions, green is the hint, red is
- * an error.
+ * anyway: blue and amber are the two run directions, red is an error, and the
+ * hint's marks take the engine's colors.
  */
 export const COL_SELECTED = 20;
 /** The cursor's corners on a wall: paper, which reads on the wall's strong
@@ -194,8 +191,8 @@ export function colors(background: Color): Color[] {
   out[COL_PENCIL] = pencilColor(background);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   out[COL_GHOST] = crossingGhost(background);
-  // Not `HELD`: green is the hint, and blue would say "across" round a down
-  // clue. Held is a box, not a color — see `COL_HELD`'s declaration.
+  // Not `HELD`: green is a hint's outline, and blue would say "across" round a
+  // down clue. Held is a box, not a color — see `COL_HELD`'s declaration.
   out[COL_HELD] = INK;
   // **One color per direction**, on the board and in the clue list alike, so
   // the player never has to learn a link between a dark square and light text;
@@ -217,19 +214,8 @@ export function colors(background: Color): Color[] {
   // green does not read there. The paper's tone is the wall's opposite.
   out[COL_WALLCURSOR] = PAPER;
   out[COL_SELECTED] = highlightWash(background);
-  // The hint pair is a **deliberate departure** from the collection's blue
-  // `COL_HINT`: blue already means "this is a horizontal run" here, and a hint
-  // mark the player reads as "across" is worse than a hint in an unfamiliar
-  // hue, so the hint takes green — the far corner of the wheel from both
-  // dimension hues. Both marks are outlines rather than fills, so the run wash
-  // and the hint occupy different pixels and can be on screen together.
-  //
-  // Green's **bold** step for the evidence outline, not its base — the base sits
-  // at one lightness under both schemes and comes out a soft line on a pale
-  // board and a bright one on a dark board, which `color-dark-check` measures.
-  // The target keeps the base, as the emphatic end of its own hue.
-  out[COL_HINT] = GREEN;
-  out[COL_HINT_CELL] = GREEN_BOLD; // the evidence outline, per the note above
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -515,7 +501,7 @@ function drawCell(
       COL_FLASH,
       COL_FLASH_LEAD,
     );
-    ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
+    ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, ts);
   }
 
   // A tile's body: the square inside the grid lines `drawRectOutline` ends with.
@@ -546,7 +532,7 @@ function drawCell(
       COL_FLASH,
       COL_FLASH_LEAD,
     );
-    ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
+    ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, ts);
     dr.drawText(
       { x: tileCenter(x, ts), y: tileCenter(y, ts) },
       textOpts(Math.floor(ts / 2), "center", "mathematical"),
@@ -872,9 +858,8 @@ export function redraw(
   const markRun = (r: number): void => {
     // A displayed hint owns the board's coloring: a washed square must not
     // mean two things at once ("this run passes through your selection" /
-    // "this run is the hint's evidence"), and the hint's own green is
-    // deliberately nothing like either dimension hue. Dismissing the hint
-    // brings the wash straight back.
+    // "this run is the hint's evidence"). Dismissing the hint brings the wash
+    // straight back.
     if (hint) return;
     const mark = runs[r].horizontal ? acrossWash : downWash;
     for (const i of runs[r].cells) mark[i] = 1;

@@ -16,8 +16,8 @@ import {
   FLASH_LEAD,
   givenSurface,
   HELD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -143,8 +143,8 @@ export function buildPalette(background: Color): Color[] {
   ret[COL_DRAG_ORIGIN] = HELD;
   // A tenth off the surface the chainless square is painted in.
   ret[COL_ARROW_BG_DIM] = signpostArrowDim(cellSurface(background));
-  ret[COL_HINT] = HINT_ACTION;
-  ret[COL_HINT_CELL] = HINT_EVIDENCE;
+  ret[COL_HINT] = HINT_RING;
+  ret[COL_HINT_CELL] = HINT_OUTLINE;
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;
 
@@ -306,8 +306,7 @@ function tileRedraw(
   if (ty > BORDER) dr.drawRect({ x: tx, y: ty, w: ts, h: 1 }, COL_GRID);
   if (tx > BORDER) dr.drawRect({ x: tx, y: ty, w: 1, h: ts }, COL_GRID);
   // The line a hint's sentence names, under everything the square shows.
-  if (f & F_HINT_LINE)
-    dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+  if (f & F_HINT_LINE) dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, hatchPeriod(ts));
 
   // Large outward-pointing arrow (or star for the final immutable cell).
   const asz = Math.floor((7 * ts) / 32);

@@ -123,7 +123,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 35,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -173,7 +173,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 35,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -391,7 +391,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 67,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -477,7 +477,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 67,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -554,7 +554,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 35,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -576,7 +576,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -653,7 +653,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 35,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -675,7 +675,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -752,7 +752,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 195,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -802,7 +802,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 195,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -852,7 +852,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -938,7 +938,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 67,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -960,7 +960,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1046,7 +1046,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 67,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1068,7 +1068,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 99,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1145,7 +1145,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1167,7 +1167,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 99,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1244,7 +1244,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1321,7 +1321,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 195,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1371,7 +1371,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 195,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1421,7 +1421,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1443,7 +1443,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1520,7 +1520,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1542,7 +1542,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1564,7 +1564,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 67,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1641,7 +1641,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 99,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1663,7 +1663,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 67,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1740,7 +1740,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 99,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1762,7 +1762,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1839,7 +1839,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1972,7 +1972,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1994,7 +1994,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2071,7 +2071,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2093,7 +2093,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 67,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2115,7 +2115,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2192,7 +2192,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 67,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2269,7 +2269,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2346,7 +2346,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2368,7 +2368,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 163,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2445,7 +2445,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 163,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2523,7 +2523,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2600,7 +2600,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 35,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2732,7 +2732,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 195,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2809,7 +2809,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 163,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2831,7 +2831,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 195,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2908,7 +2908,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 163,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -3070,7 +3070,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 195,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -3120,7 +3120,7 @@ exports[`slant rendering > draws clue circles and slashes on the initial frame (
   {
     "cx": 131,
     "cy": 195,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,

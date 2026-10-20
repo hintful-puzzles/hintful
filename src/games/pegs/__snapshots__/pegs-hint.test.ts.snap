@@ -693,7 +693,7 @@ exports[`pegs hint > draws a trap's rings, outline and stripes (tier 2.5) 1`] = 
     "fillRgb": "color#-1",
     "op": "circle",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "r": 15,
   },
   {
@@ -703,7 +703,7 @@ exports[`pegs hint > draws a trap's rings, outline and stripes (tier 2.5) 1`] = 
     "fillRgb": "color#-1",
     "op": "circle",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "r": 14,
   },
   {
@@ -1225,11 +1225,11 @@ exports[`pegs hint > draws a trap's rings, outline and stripes (tier 2.5) 1`] = 
     "y": 116,
   },
   {
-    "color": 8,
+    "color": 11,
     "h": 32,
     "op": "hatch",
     "period": 11,
-    "rgb": "rgb(21, 113, 233)",
+    "rgb": "rgb(194, 85, 22)",
     "w": 32,
     "x": 83,
     "y": 116,
@@ -1283,11 +1283,11 @@ exports[`pegs hint > draws a trap's rings, outline and stripes (tier 2.5) 1`] = 
     "y": 116,
   },
   {
-    "color": 8,
+    "color": 11,
     "h": 32,
     "op": "hatch",
     "period": 11,
-    "rgb": "rgb(21, 113, 233)",
+    "rgb": "rgb(194, 85, 22)",
     "w": 32,
     "x": 116,
     "y": 116,
@@ -1331,11 +1331,11 @@ exports[`pegs hint > draws a trap's rings, outline and stripes (tier 2.5) 1`] = 
     "y": 116,
   },
   {
-    "color": 8,
+    "color": 11,
     "h": 32,
     "op": "hatch",
     "period": 11,
-    "rgb": "rgb(21, 113, 233)",
+    "rgb": "rgb(194, 85, 22)",
     "w": 32,
     "x": 149,
     "y": 116,
@@ -2343,7 +2343,7 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   {
     "color": 9,
     "op": "line",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "thickness": 2,
     "x1": 131,
     "x2": 131,
@@ -2352,10 +2352,10 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
   {
     "fill": 9,
-    "fillRgb": "rgb(14, 88, 91)",
+    "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
         131,
@@ -2422,7 +2422,7 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   {
     "color": 9,
     "op": "line",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "thickness": 2,
     "x1": 164,
     "x2": 164,
@@ -2431,10 +2431,10 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
   {
     "fill": 9,
-    "fillRgb": "rgb(14, 88, 91)",
+    "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
         164,
@@ -2549,7 +2549,7 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   {
     "color": 9,
     "op": "line",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "thickness": 2,
     "x1": 98,
     "x2": 98,
@@ -2558,10 +2558,10 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
   {
     "fill": 9,
-    "fillRgb": "rgb(14, 88, 91)",
+    "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
         98,
@@ -2618,7 +2618,7 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   {
     "color": 9,
     "op": "line",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "thickness": 2,
     "x1": 131,
     "x2": 131,
@@ -2627,10 +2627,10 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
   {
     "fill": 9,
-    "fillRgb": "rgb(14, 88, 91)",
+    "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
         131,
@@ -2687,7 +2687,7 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   {
     "color": 9,
     "op": "line",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "thickness": 2,
     "x1": 164,
     "x2": 164,
@@ -2696,10 +2696,10 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
   {
     "fill": 9,
-    "fillRgb": "rgb(14, 88, 91)",
+    "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
         164,
@@ -2794,7 +2794,7 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   {
     "color": 9,
     "op": "line",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "thickness": 2,
     "x1": 98,
     "x2": 98,
@@ -2803,10 +2803,10 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
   {
     "fill": 9,
-    "fillRgb": "rgb(14, 88, 91)",
+    "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
         98,
@@ -2883,7 +2883,7 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   {
     "color": 9,
     "op": "line",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "thickness": 2,
     "x1": 131,
     "x2": 131,
@@ -2892,10 +2892,10 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
   {
     "fill": 9,
-    "fillRgb": "rgb(14, 88, 91)",
+    "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
         131,
@@ -2952,7 +2952,7 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   {
     "color": 9,
     "op": "line",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "thickness": 2,
     "x1": 164,
     "x2": 164,
@@ -2961,10 +2961,10 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
   {
     "fill": 9,
-    "fillRgb": "rgb(14, 88, 91)",
+    "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
         164,
@@ -3021,7 +3021,7 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   {
     "color": 9,
     "op": "line",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "thickness": 2,
     "x1": 98,
     "x2": 98,
@@ -3030,10 +3030,10 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
   {
     "fill": 9,
-    "fillRgb": "rgb(14, 88, 91)",
+    "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
     "outline": 9,
-    "outlineRgb": "rgb(14, 88, 91)",
+    "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
         98,

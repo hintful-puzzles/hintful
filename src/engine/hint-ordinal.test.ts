@@ -32,7 +32,7 @@
  * without one.
  */
 import { describe, expect, it } from "vitest";
-import { HINT_EVIDENCE } from "./color/palette.ts";
+import { HINT_OUTLINE } from "./color/palette.ts";
 import { difficultyTiers, withTier } from "./difficulty.ts";
 import { paramsError } from "./params.ts";
 import { CHAIN_PINS, declaredOrder } from "./testing/hint-chain-pins.ts";
@@ -52,10 +52,10 @@ function rgbOf(color: Color): string {
 /** The ordinal's color as that label — computed once, so a game whose palette
  * index drifted would fail rather than quietly match a neighbor.
  *
- * It is `HINT_EVIDENCE`, and by construction rather than by coincidence: the
+ * It is `HINT_OUTLINE`, and by construction rather than by coincidence: the
  * number is an *index into* the evidence, so it is the same role as the evidence
  * outline it numbers rather than a fourth hint color. */
-const ORDINAL_RGB = rgbOf(HINT_EVIDENCE);
+const ORDINAL_RGB = rgbOf(HINT_OUTLINE);
 
 /**
  * The boards the scan looks for a chain on: **the gate slice, every tier of

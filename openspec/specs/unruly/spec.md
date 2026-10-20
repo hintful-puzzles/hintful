@@ -237,44 +237,6 @@ a bare conclusion.
 - **THEN** every step carries an outlined premise cell or a striped line, never
   a bare conclusion
 
-### Requirement: Hint: The named line is hatched in the color of the move
-
-The line the sentence names SHALL be hatched `COL_HINT`.
-
-#### Scenario: A completed-count hint hatches its line
-
-- **WHEN** a `complete` hint is displayed
-- **THEN** every cell of the row or column it names is hatched `COL_HINT`
-
-### Requirement: Hint: A cited premise is ringed apart from the move
-
-The cited premise or pivotal cells the deduction reasons over SHALL be ringed
-`COL_HINT_REF`, not `COL_HINT`, so the cited premise is not drawn in the same
-color as the forced move: the like pair in `threes`, the completed quota in
-`complete`, the full reference line in `unique`, and in `nearcomplete` the
-reserved window with the piece beside it when there is one. The cell SHALL keep
-its own appearance inside the ring: a piece stays visible, and an empty
-reserved-window cell stays empty.
-
-#### Scenario: A reserved window is ringed and stays empty
-
-- **WHEN** a `nearcomplete` hint is displayed
-- **THEN** the empty cells of its reserved window are ringed `COL_HINT_REF`
-- **AND** they are drawn empty inside the ring
-
-### Requirement: Hint: Unruly uses a single premise ring color
-
-Unruly SHALL use a single premise ring color, not one per kind of piece: its
-ringed cells are not uniformly one kind, since `unique` rings a balanced line
-holding both and `nearcomplete` rings empty cells, so a state-derived ring
-color is ill-defined.
-
-#### Scenario: A reference line of both kinds rings in one color
-
-- **WHEN** a `unique` hint is displayed
-- **THEN** every cell of the reference line is ringed `COL_HINT_REF`, whichever
-  piece it holds
-
 ### Requirement: Hint: Unruly's hint tries the simplest technique first
 
 The hint SHALL try its techniques in this order: three in a row, a line with
@@ -298,6 +260,31 @@ line with one empty cell SHALL be told as a completed count.
   other, and no three in a row is pending
 - **THEN** the step fills the last cell with the other kind, and its sentence
   says the row already holds all its cells of the first
+
+### Requirement: Hint: The named line is striped
+
+The line the sentence names SHALL be striped, every cell of it whatever it
+holds.
+
+#### Scenario: A completed-count hint stripes its line
+
+- **WHEN** a `complete` hint is displayed
+- **THEN** every cell of the row or column it names is striped
+
+### Requirement: Hint: A cited premise is outlined apart from the move
+
+The cited premise or pivotal cells the deduction reasons over SHALL be
+outlined `COL_HINT_CELL`, and the forced move ringed `COL_HINT`: the like pair
+in `threes`, the completed quota in `complete`, the full reference line in
+`unique`, and in `nearcomplete` the reserved window with the piece beside it
+when there is one. The cell SHALL keep its own appearance inside the outline:
+a piece stays visible, and an empty reserved-window cell stays empty.
+
+#### Scenario: A reserved window is outlined and stays empty
+
+- **WHEN** a `nearcomplete` hint is displayed
+- **THEN** the empty cells of its reserved window are outlined `COL_HINT_CELL`
+- **AND** they are drawn empty inside the outline
 
 ### Requirement: Look: Unruly draws pieces on a quiet surface
 

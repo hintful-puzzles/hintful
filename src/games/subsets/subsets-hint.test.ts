@@ -669,7 +669,6 @@ describe("hint rendering (tier 2.5)", () => {
     // letter square of the cell; the spotlight frame stays the aid's.
     const hatches = ops.filter((o) => o.op === "hatch");
     expect(hatches.length).toBe(4);
-    expect(hatches.every((o) => o.color === COL_HINT)).toBe(true);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_SPOT)).toBe(false);
     expect(ops).toMatchSnapshot();
   });

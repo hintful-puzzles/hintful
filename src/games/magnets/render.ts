@@ -22,8 +22,8 @@ import {
   ERROR,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
 } from "../../engine/color/palette.ts";
@@ -85,10 +85,8 @@ export const COL_POSITIVE = 9;
 export const COL_NOT = 10;
 // Fork mistake overlay, appended past the upstream enum.
 export const COL_MISTAKE = 11;
-/** The hint's action ring. The collection's blue, although the `?` mark is
- * blue too: the ring is a band on a square's border and the `?` a glyph in its
- * middle, so the two never read as one shape, and a ring on a domino about to
- * be marked `?` agrees with the mark rather than contradicting it. */
+/** The hint's ring: a band on a square's border, where the `?` mark is a
+ * glyph in its middle, so the two never read as one shape. */
 export const COL_HINT = 12;
 /** The hint's evidence outline. */
 export const COL_HINT_CELL = 13;
@@ -118,8 +116,8 @@ export function colors(defaultBackground: Color): Color[] {
   // lost a quarter of its contrast under the hint's hatch.
   out[COL_NOT] = BLUE_BOLD;
   out[COL_MISTAKE] = ERROR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -257,7 +255,7 @@ function drawTileCol(
   const i = y * ds.w + x;
   const other = dominoes[i];
   const hatchSquare = () => {
-    if (hatch) dr.drawHatch({ x: cx, y: cy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+    if (hatch) dr.drawHatch({ x: cx, y: cy, w: ts, h: ts }, hatchPeriod(ts));
   };
   if (other === i) {
     hatchSquare();
@@ -391,7 +389,7 @@ function drawNum(
   }
 
   dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, cursor ? COL_CURSOR : COL_BACKGROUND);
-  if (hatched) dr.drawHatch({ x: cx, y: cy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+  if (hatched) dr.drawHatch({ x: cx, y: cy, w: ts, h: ts }, hatchPeriod(ts));
   if (num >= 0) {
     dr.drawText(
       { x: cx + Math.floor(ts / 2), y: cy + Math.floor(ts / 2) },
@@ -424,10 +422,10 @@ function getCountColor(
     rowcol === COLUMN
       ? clueIndex(w, h, index, which === POSITIVE ? -1 : h)
       : clueIndex(w, h, which === POSITIVE ? -1 : w, index);
-  // The clue a hint counts with takes the action color, tying the line the
-  // sentence calls "this row" to its count (docs/hints-marks.md § "Off-board
+  // The clue a hint counts with is recolored, tying the line the sentence
+  // calls "this row" to its count (docs/hints-marks.md § "Off-board
   // evidence").
-  if (hinted.has(idx)) return COL_HINT;
+  if (hinted.has(idx)) return COL_HINT_CELL;
   // A met line cited as a reason is evidence, and named in words by where it
   // is ("the column beside it"), never "this".
   if (reasons.has(idx)) return COL_HINT_CELL;
@@ -479,8 +477,7 @@ export function redraw(
   // A domino the hint decides, or reasons from, is one ring around its squares
   // in that role. The line the sentence counts is the hatch, so no outline has
   // to trace it.
-  // An outlined clue is the count read, in the action color, unless the step
-  // cites it as a reason.
+  // An outlined clue is the count read, unless the step cites it as a reason.
   const marks = stepMarks(hint);
   const cited = new Set(hint?.highlights?.reasonClues);
   const hintedClues = new Set<number>();

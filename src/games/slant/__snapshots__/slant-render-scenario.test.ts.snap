@@ -179,7 +179,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 195,
     "cy": 35,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -189,10 +189,10 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
-    "rgb": "rgb(21, 113, 233)",
+    "rgb": "rgb(40, 132, 32)",
     "size": 16,
     "text": "1",
     "x": 195,
@@ -229,7 +229,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 195,
     "cy": 35,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -239,10 +239,10 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
-    "rgb": "rgb(21, 113, 233)",
+    "rgb": "rgb(40, 132, 32)",
     "size": 16,
     "text": "1",
     "x": 195,
@@ -279,7 +279,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 35,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -356,7 +356,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 35,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -433,7 +433,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 99,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -510,7 +510,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 99,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -532,7 +532,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 131,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -609,7 +609,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 131,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -722,7 +722,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 195,
     "cy": 35,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -732,10 +732,10 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
-    "rgb": "rgb(21, 113, 233)",
+    "rgb": "rgb(40, 132, 32)",
     "size": 16,
     "text": "1",
     "x": 195,
@@ -772,7 +772,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 195,
     "cy": 35,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -782,10 +782,10 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
-    "rgb": "rgb(21, 113, 233)",
+    "rgb": "rgb(40, 132, 32)",
     "size": 16,
     "text": "1",
     "x": 195,
@@ -822,7 +822,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 35,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -899,7 +899,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 35,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -921,7 +921,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 67,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -998,7 +998,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 99,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1020,7 +1020,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 67,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1097,7 +1097,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 99,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1119,7 +1119,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 131,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1196,7 +1196,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 131,
     "cy": 67,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1218,7 +1218,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 163,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1295,7 +1295,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 163,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1428,7 +1428,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 67,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1505,7 +1505,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 67,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1527,7 +1527,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 99,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1604,7 +1604,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 99,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1681,7 +1681,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 163,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1758,7 +1758,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 163,
     "cy": 99,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1780,7 +1780,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 195,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1830,7 +1830,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 195,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -1935,7 +1935,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 67,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2012,7 +2012,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 99,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2034,7 +2034,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 67,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2111,7 +2111,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 99,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2133,7 +2133,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 131,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2210,7 +2210,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 131,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2232,7 +2232,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 163,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2309,7 +2309,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 195,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2331,7 +2331,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 163,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2381,7 +2381,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 195,
     "cy": 131,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2431,7 +2431,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 35,
     "cy": 195,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2508,7 +2508,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 67,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2530,7 +2530,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 35,
     "cy": 195,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2607,7 +2607,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 67,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2684,7 +2684,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 131,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2761,7 +2761,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 131,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2783,7 +2783,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 163,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2860,7 +2860,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 163,
     "cy": 163,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2938,7 +2938,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 35,
     "cy": 195,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,
@@ -2988,7 +2988,7 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   {
     "cx": 35,
     "cy": 195,
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 2,

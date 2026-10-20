@@ -68,7 +68,6 @@ describe("Tracks hint: the line a sentence names", () => {
     const hatches = opsOfKind(recording.ops, "hatch");
     // Every square of the line, and the clue slot at its end.
     expect(hatches).toHaveLength((isColumn ? P.h : P.w) + 1);
-    for (const op of hatches) expect(op.color).toBe(COL_HINT);
   });
 });
 
@@ -138,8 +137,10 @@ describe("Tracks render scenarios", () => {
   it("a step that counts with a clue recolors that clue's digit", () => {
     const { recording, step } = hintFrame("countsWithClue");
     const clues = cluesOf(step);
-    const hinted = recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT);
-    expect(hinted.length, "the cited clue's digit is not in the hint color").toBe(
+    const hinted = recording.ops.filter(
+      (o) => o.op === "text" && o.color === COL_HINT_CELL,
+    );
+    expect(hinted.length, "the cited clue's digit is not in the outline's ink").toBe(
       clues.length,
     );
   });

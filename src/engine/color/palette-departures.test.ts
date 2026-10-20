@@ -43,13 +43,7 @@ const ROLES: Record<string, { slot: RegExp; roles: readonly string[] }> = {
   drag: { slot: /DRAG/, roles: ["DRAG_ADD", "DRAG_REMOVE", "HELD"] },
   hint: {
     slot: /HINT/,
-    roles: [
-      "HINT_ACTION",
-      "HINT_EVIDENCE",
-      "HINT_EVIDENCE_WASH",
-      "HINT_BLACKREF",
-      "HINT_WHITEREF",
-    ],
+    roles: ["HINT_RING", "HINT_OUTLINE", "HINT_STRIPES"],
   },
   mistake: { slot: /ERR|MISTAKE|WRONG/, roles: ["ERROR", "ERROR_TEXT", "ERROR_WASH"] },
 };

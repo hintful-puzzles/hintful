@@ -9,7 +9,7 @@
  * every mark drawn at a cell's edge lands beside the piece.
  */
 
-import { ORANGE, TWO } from "../../engine/color/colors.ts";
+import { TWO } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -18,7 +18,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
+  HINT_OUTLINE,
+  HINT_RING,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
@@ -67,10 +68,10 @@ export const COL_1 = 5;
 export const COL_CURSOR = 6;
 export const COL_ERROR = 7;
 export const COL_ERROR_TEXT = 8;
-// The action cell rings COL_HINT, the line the sentence names is hatched in
-// it, and the cited premise cells ring COL_HINT_REF, distinct from the move.
+// The action cell rings COL_HINT, and the cited premise cells are outlined
+// COL_HINT_CELL.
 export const COL_HINT = 9;
-export const COL_HINT_REF = 10;
+export const COL_HINT_CELL = 10;
 /** The ground of a cell the win flash is on. */
 export const COL_FLASH = 11;
 /** The ground of a cell the win flash's leading edge is on. */
@@ -87,13 +88,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  out[COL_HINT] = HINT_ACTION;
-  // Cited premise / pivotal cells. A single ring color (not the cross-game
-  // black/white-ref pair): Unruly's ring set is mixed — pieces of one kind, a
-  // balanced reference row holding both, and empty reserved windows — so a
-  // state-derived color is ill-defined. Orange keeps it clear of the blue
-  // move and of both pieces.
-  out[COL_HINT_REF] = ORANGE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
@@ -112,7 +108,7 @@ const FF_MISTAKE = 0x2000;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
 const FF_HINT_TARGET = 0x4000; // the forced cell (COL_HINT ring)
 const FF_HINT_LINE = 0x10000; // a cell of the line the sentence names (hatched)
-const FF_HINT_RING = 0x20000; // a cited premise / pivotal cell (COL_HINT_REF outline)
+const FF_HINT_RING = 0x20000; // a cited premise / pivotal cell (COL_HINT_CELL outline)
 
 // --- geometry -----------------------------------------------------------
 /** The board's pixel origin. Exported so `interpretMove` reads the same number
@@ -195,7 +191,7 @@ function drawTile(
   );
   // The hatch goes under the piece: it marks the line, and the piece is what
   // the line holds.
-  if (tile & FF_HINT_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
+  if (tile & FF_HINT_LINE) dr.drawHatch(inner, hatchPeriod(ts));
 
   const piece = (v: Cell, grown: number): void => {
     if (v === EMPTY) return;
@@ -277,14 +273,13 @@ function drawTile(
 
   // Hint ring around a cited premise cell. Its own color stays visible: for a
   // filled premise that color *is* the evidence; for an empty reserved window
-  // the ring marks the spared cells. COL_HINT_REF, not the move's COL_HINT, so
-  // premise and move don't read as the same element type.
+  // the ring marks the spared cells.
   if (tile & FF_HINT_RING) {
     const t = Math.max(1, Math.floor(ts / 12));
-    dr.drawRect({ x: px, y: py, w: ts - 1, h: t }, COL_HINT_REF);
-    dr.drawRect({ x: px, y: py + ts - 1 - t, w: ts - 1, h: t }, COL_HINT_REF);
-    dr.drawRect({ x: px, y: py, w: t, h: ts - 1 }, COL_HINT_REF);
-    dr.drawRect({ x: px + ts - 1 - t, y: py, w: t, h: ts - 1 }, COL_HINT_REF);
+    dr.drawRect({ x: px, y: py, w: ts - 1, h: t }, COL_HINT_CELL);
+    dr.drawRect({ x: px, y: py + ts - 1 - t, w: ts - 1, h: t }, COL_HINT_CELL);
+    dr.drawRect({ x: px, y: py, w: t, h: ts - 1 }, COL_HINT_CELL);
+    dr.drawRect({ x: px + ts - 1 - t, y: py, w: t, h: ts - 1 }, COL_HINT_CELL);
   }
 
   // The forced cell is **ringed**, in the same shape and place a cited premise

@@ -318,9 +318,8 @@ it("declares no named color nothing can show", () => {
  * `palette-games.ts`, and a role no game takes is a decision nothing on any
  * board shows.
  *
- * A hint role owes one game and not two: what `HINT_EVIDENCE_WASH` means is
- * settled by the hint vocabulary it is a member of, whichever games' evidence
- * happens to be empty cells.
+ * A hint ink owes no game: the engine reads every one (`HINT_INK`), and draws
+ * the stripes in its own (`resolvePalette`).
  */
 it("declares no shared role fewer than two games take", () => {
   const takenBy = new Map<string, Set<string>>();
@@ -334,7 +333,7 @@ it("declares no shared role fewer than two games take", () => {
     .map((name) => ({
       name,
       games: [...(takenBy.get(name) ?? [])].sort(),
-      owed: name.startsWith("HINT_") ? 1 : 2,
+      owed: name.startsWith("HINT_") ? 0 : 2,
     }))
     .filter(({ games, owed }) => games.length < owed)
     .map(({ name, games }) => `${name}: ${games.join(", ") || "no game"}`);

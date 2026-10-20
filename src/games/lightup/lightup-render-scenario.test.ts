@@ -1,8 +1,8 @@
 /**
  * Tier-2.5 render scenarios for the Light Up hint: drive a real Midend to
  * a displayed hint step and capture `redraw`. Targeted op assertions (the
- * blue `COL_HINT` targets, the `COL_HINT_CELL` evidence shade, the violet
- * dark-square ring) plus one snapshot so a render regression is a
+ * `COL_HINT` target rings, the `COL_HINT_CELL` rings on the evidence and the
+ * clue) plus one snapshot so a render regression is a
  * reviewable text diff (`vitest -u` re-baselines an intended change; the
  * targeted assertions survive a careless `-u`).
  *
@@ -15,15 +15,7 @@ import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { lightupGame } from "./index.ts";
-import {
-  COL_GRID,
-  COL_HINT,
-  COL_HINT_CELL,
-  COL_HINT_CLUE,
-  COL_HINT_DARKREF,
-  COL_HINT_LITERF,
-  COL_LIGHT,
-} from "./render.ts";
+import { COL_GRID, COL_HINT, COL_HINT_CELL, COL_LIGHT } from "./render.ts";
 import type { LightupParams } from "./state.ts";
 
 const EASY: LightupParams = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
@@ -92,7 +84,7 @@ describe("Light Up hint render scenarios", () => {
     // place) — four thin rects each, and no solid one.
     expectRing(recording.ops, COL_HINT, h.targets.length);
     // The driving clue's wall is ringed, and no digit takes a hint color.
-    expectRing(recording.ops, COL_HINT_CLUE);
+    expectRing(recording.ops, COL_HINT_CELL);
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(
       false,
     );
@@ -105,23 +97,17 @@ describe("Light Up hint render scenarios", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("forcedLight frame: corridor shaded, dark square ringed violet, one blue target", () => {
+  it("forcedLight frame: corridor and dark square ringed, one ringed target", () => {
     const { recording, h } = hintFrame("forcedLight");
     expect(h.dark).toBeDefined();
-    // One ringed target; corridor evidence cues (shade on a dark square,
-    // green ring on a lit one, so at least one of the two cues must appear);
-    // the violet ring.
     expectRing(recording.ops, COL_HINT);
+    // The evidence is ringed, never washed.
     expect(
-      recording.ops.some(
-        (o) =>
-          (o.op === "rect" && o.color === COL_HINT_CELL) ||
-          (o.op === "line" && o.color === COL_HINT_LITERF),
-      ),
+      recording.ops.some((o) => o.op === "line" && o.color === COL_HINT_CELL),
     ).toBe(true);
     expect(
-      recording.ops.some((o) => "color" in o && o.color === COL_HINT_DARKREF),
-    ).toBe(true);
+      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL),
+    ).toBe(false);
   });
 
   it("clueSatisfied frame: grouped impossible-mark targets are all ringed", () => {
@@ -130,15 +116,12 @@ describe("Light Up hint render scenarios", () => {
     expectRing(recording.ops, COL_HINT, h.targets.length);
   });
 
-  it("discount frame: the dark square rings violet over its shaded rule-out set", () => {
+  it("discount frame: the dark square and its rule-out set are ringed", () => {
     const { recording, h } = hintFrame("discount");
     expect(h.kind).toBe("impossible");
     expect(h.targets.length).toBe(1);
     expect(
-      recording.ops.some((o) => "color" in o && o.color === COL_HINT_DARKREF),
-    ).toBe(true);
-    expect(
-      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "line" && o.color === COL_HINT_CELL),
     ).toBe(true);
   });
 });

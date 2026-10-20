@@ -20,12 +20,7 @@ import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { type SinglesHint, type SinglesRung, singlesGame } from "./index.ts";
-import {
-  COL_HINT,
-  COL_HINT_BLACKREF,
-  COL_HINT_CELL,
-  COL_HINT_WHITEREF,
-} from "./render.ts";
+import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { deduceHintPlan, solveSpecific } from "./solver.ts";
 import {
   DIFF_ANY,
@@ -431,34 +426,23 @@ describe("singles hint render", () => {
     // filled — four thin rects and no solid one.
     const forced = (step.highlights as SinglesHint).targets;
     expectRing(ops, COL_HINT, forced.length);
-    expect(
-      markSides(ops, COL_HINT_CELL).length > 0 ||
-        // a decided premise is ringed in its own legend color rather than here
-        markSides(ops, COL_HINT_BLACKREF).length > 0 ||
-        markSides(ops, COL_HINT_WHITEREF).length > 0,
-    ).toBe(true);
+    expect(markSides(ops, COL_HINT_CELL).length).toBeGreaterThan(0);
     // Numbers are still rendered (clue digits not hidden by the overlay).
     expect(ops.some((o) => o.op === "text")).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 
-  it("rings a cited shaded square in COL_HINT_BLACKREF, distinct from the blue target", () => {
-    // An adjBlack frame: a decided black square forces a neighbor white. The
-    // black premise must ring in the black-ref legend color, not the same blue
-    // as the forced cell.
+  it("outlines a cited shaded square, apart from the ringed target", () => {
+    // An adjBlack frame: a decided black square forces a neighbor white.
     const { recording } = hintFrame("adjBlack");
     const ops = recording.ops;
-    const color = (c: number) => ops.some((o) => "color" in o && o.color === c);
-    expect(color(COL_HINT_BLACKREF)).toBe(true); // cited black premise ring
-    expect(color(COL_HINT)).toBe(true); // forced cell, a different color
-    expect(COL_HINT_BLACKREF).not.toBe(COL_HINT);
+    expect(markSides(ops, COL_HINT_CELL).length).toBeGreaterThan(0);
+    expect(markSides(ops, COL_HINT).length).toBeGreaterThan(0);
   });
 
-  it("outlines a cited circled square in COL_HINT_WHITEREF", () => {
-    // A sameLine frame: a circled white square forces line-mates shaded. The
-    // white premise is outlined in the white-ref legend color.
+  it("outlines a cited circled square", () => {
+    // A sameLine frame: a circled white square forces line-mates shaded.
     const { recording } = hintFrame("sameLine");
-    const ops = recording.ops;
-    expect(ops.some((o) => "color" in o && o.color === COL_HINT_WHITEREF)).toBe(true);
+    expect(markSides(recording.ops, COL_HINT_CELL).length).toBeGreaterThan(0);
   });
 });

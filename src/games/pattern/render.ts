@@ -16,9 +16,8 @@ import {
   ERROR,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_BLACKREF,
-  HINT_WHITEREF,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   SHADED,
   surfaceGrid,
@@ -61,18 +60,16 @@ export const COL_GRID = 5;
 export const COL_CURSOR = 6;
 export const COL_ERROR = 7;
 export const COL_CURSOR_GUIDE = 8;
-// Hint colors. The forced cell is ringed COL_HINT, the reasoned line is
-// hatched in it, and a cited full / empty cell is outlined COL_HINT_BLACKREF /
-// COL_HINT_WHITEREF (the cross-game element-type legend).
+// Hint inks. The forced cell is ringed COL_HINT, and a cited cell and the
+// reasoned line's clue are outlined COL_HINT_CELL.
 export const COL_HINT = 9;
-export const COL_HINT_BLACKREF = 10;
-export const COL_HINT_WHITEREF = 11;
+export const COL_HINT_CELL = 10;
 /** The faint cross on a cell known to be empty. */
-export const COL_CLEAR_MARK = 12;
+export const COL_CLEAR_MARK = 11;
 /** The ground of a cell the win flash is on, whatever it holds: its body, and
  * its leading edge. */
-export const COL_FLASH = 13;
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH = 12;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -88,9 +85,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR_GUIDE] = CURSOR;
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_BLACKREF] = HINT_BLACKREF;
-  out[COL_HINT_WHITEREF] = HINT_WHITEREF;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
@@ -153,8 +149,7 @@ const K_MISTAKE = 1 << 3;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
 const K_HINT_TARGET = 1 << 4; // a forced cell (COL_HINT highlight)
 const K_HINT_LINE = 1 << 5; // a cell of the reasoned line (hatched)
-const K_HINT_BLACKREF = 1 << 6; // a cited full cell (COL_HINT_BLACKREF outline)
-const K_HINT_WHITEREF = 1 << 7; // a cited empty cell (COL_HINT_WHITEREF outline)
+const K_HINT_CITED = 1 << 6; // a cited cell (COL_HINT_CELL outline)
 const K_WIN_SHIFT = 8; // the win flash's tone on the cell, in two bits
 
 function gridSquare(
@@ -202,7 +197,7 @@ function gridSquare(
   if (val === GRID_EMPTY)
     drawClearSquare(dr, surface, lit ?? COL_CLEAR, COL_CLEAR_MARK, content);
   else dr.drawRect(surface, lit ?? COL_CELL);
-  if (hintBits & K_HINT_LINE) dr.drawHatch(surface, COL_HINT, hatchPeriod(ts));
+  if (hintBits & K_HINT_LINE) dr.drawHatch(surface, hatchPeriod(ts));
   if (val === GRID_FULL) drawPiece(dr, content, SHADED_SHAPE, COL_FULL);
 
   if (hintBits & K_HINT_TARGET) {
@@ -218,17 +213,9 @@ function gridSquare(
     );
   }
 
-  if (hintBits & (K_HINT_BLACKREF | K_HINT_WHITEREF)) {
+  if (hintBits & K_HINT_CITED) {
     const t = Math.max(1, Math.floor(ts / 10));
-    drawThickRectOutline(
-      dr,
-      dx,
-      dy,
-      dw,
-      dh,
-      t,
-      hintBits & K_HINT_BLACKREF ? COL_HINT_BLACKREF : COL_HINT_WHITEREF,
-    );
+    drawThickRectOutline(dr, dx, dy, dw, dh, t, COL_HINT_CELL);
   }
 
   if (mistake) {
@@ -287,7 +274,7 @@ function drawNumbers(
 
   dr.clip({ x: rx, y: ry, w: rw, h: rh });
   dr.drawRect({ x: rx, y: ry, w: rw, h: rh }, COL_BACKGROUND);
-  if (hatched) dr.drawHatch({ x: rx, y: ry, w: rw, h: rh }, COL_HINT, hatchPeriod(ts));
+  if (hatched) dr.drawHatch({ x: rx, y: ry, w: rw, h: rh }, hatchPeriod(ts));
 
   const fontsize = Math.floor((ts + 0.5) / (fontLarge ? 1.2 : 1.8));
   const half = Math.floor(ts / 2);
@@ -409,8 +396,7 @@ export function redraw(
       const mistake = mistakeSet?.has(i) ?? false;
       let hintBits = 0;
       if (hintTargets.has(i)) hintBits = K_HINT_TARGET;
-      else if (hintRefs.has(i))
-        hintBits = grid[i] === GRID_FULL ? K_HINT_BLACKREF : K_HINT_WHITEREF;
+      else if (hintRefs.has(i)) hintBits = K_HINT_CITED;
       if (inReasonedLine(x, y)) hintBits |= K_HINT_LINE;
       const key =
         val |
@@ -432,11 +418,11 @@ export function redraw(
     if (color === COL_TEXT && ((cx >= 0 && i === cx) || (cy >= 0 && i === cy + w))) {
       color = COL_CURSOR_GUIDE;
     }
-    // The reasoned line's clue takes the action color and its strip the hatch,
-    // so the stripe runs from the count to the end of the line. A line with no
-    // clue has its strip hatched but no numbers to recolor, so the hatch keys
-    // the repaint beside the color.
-    if (hintClues.has(i)) color = COL_HINT;
+    // The reasoned line's clue is recolored and its strip hatched, so the
+    // stripe runs from the count to the end of the line. A line with no clue
+    // has its strip hatched but no numbers to recolor, so the hatch keys the
+    // repaint beside the color.
+    if (hintClues.has(i)) color = COL_HINT_CELL;
     const hatched = hintLines.includes(i);
     const key = color * 2 + (hatched ? 1 : 0);
     if (ds.numColors[i] !== key) {

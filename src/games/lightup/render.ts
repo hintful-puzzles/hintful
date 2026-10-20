@@ -16,11 +16,8 @@ import {
   ERROR_TEXT,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_BLACKREF,
-  HINT_EVIDENCE,
-  HINT_EVIDENCE_WASH,
-  HINT_WHITEREF,
+  HINT_OUTLINE,
+  HINT_RING,
   RULED_OUT,
   surfaceGrid,
   wallFill,
@@ -62,25 +59,23 @@ export const COL_LIGHT = 3; // white: bulbs and clue digits
 export const COL_LIT = 4; // yellow lit-square fill
 export const COL_ERROR = 5;
 export const COL_CURSOR = 6;
-// Fork hint colors.
-export const COL_HINT = 7; // forced cell(s), blue ring (highlight only)
-export const COL_HINT_CELL = 8; // evidence: the shade on a *dark* square
-export const COL_HINT_LITERF = 9; // cited lit/bulb premise (green ring)
-export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (pink ring)
+// Fork hint inks.
+export const COL_HINT = 7; // forced cell(s), ringed
+/** The evidence and the squares a deduction is about, ringed, and the ring
+ * round a hint's driving clue, on its wall. */
+export const COL_HINT_CELL = 8;
 /** The player's "no light here" cross. */
-export const COL_RULED_OUT = 11;
-export const COL_CELL = 12; // the surface of an open square no bulb lights
+export const COL_RULED_OUT = 9;
+export const COL_CELL = 10; // the surface of an open square no bulb lights
 /** The ground of an open square under the completion flash's body. The slot
  * for its leading edge is {@link COL_FLASH_LEAD}. */
-export const COL_FLASH = 13;
+export const COL_FLASH = 11;
 /** The line round a bulb. */
-export const COL_BULB_RIM = 14;
-/** The ring round a hint's driving clue, on its wall. */
-export const COL_HINT_CLUE = 15;
+export const COL_BULB_RIM = 12;
 /** A wrong clue's digit, on its badge. */
-export const COL_ERROR_TEXT = 16;
+export const COL_ERROR_TEXT = 13;
 /** The ground of an open square under the completion flash's leading edge. */
-export const COL_FLASH_LEAD = 17;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -104,13 +99,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE_WASH;
-  out[COL_HINT_CLUE] = HINT_EVIDENCE;
-  out[COL_HINT_LITERF] = HINT_BLACKREF;
-  // The unlit square is the *empty* reference cell, so it takes the white-ref
-  // premise color (Pattern's and Singles' empty reference is the same pink).
-  out[COL_HINT_DARKREF] = HINT_WHITEREF;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_RULED_OUT] = RULED_OUT;
   return out;
 }
@@ -141,9 +131,9 @@ const DF_WRONG = 512;
 /** Fork addition: the show-lit-blobs pref, in the key so a toggle repaints. */
 const DF_BLOBS_PREF = 1024;
 // Fork additions: the displayed hint step, in the key so hint changes repaint.
-const DF_HINT_TARGET = 2048; // forced cell — blue COL_HINT ring
-const DF_HINT_AREA = 4096; // evidence — shade when dark, green ring when lit
-const DF_HINT_DARKREF = 8192; // the unlit square the deduction is about — pink ring
+const DF_HINT_TARGET = 2048; // forced cell — COL_HINT ring
+const DF_HINT_AREA = 4096; // evidence — ringed
+const DF_HINT_DARKREF = 8192; // the unlit square the deduction is about — ringed
 const DF_HINT_CLUE = 16384; // driving clue: its wall ringed
 
 export interface LightupDrawState {
@@ -247,7 +237,7 @@ function tileRedraw(
         dr,
         { box: { x: dx + m, y: dy + m, w: side, h: side }, outer: 0, inner: t },
         MARK_ALL,
-        COL_HINT_CLUE,
+        COL_HINT_CELL,
       );
       drawRectOutline(
         dr,
@@ -260,19 +250,15 @@ function tileRedraw(
     }
   } else {
     // Hint roles (fork): the target is **ringed** COL_HINT, so a light or blob
-    // already on it stays visible. A *dark* evidence square is shaded
-    // COL_HINT_CELL, which keeps its premise (not lit: the shade is not
-    // yellow); a *lit* one's premise is the yellow itself, so it keeps its
-    // fill and takes a ring instead.
+    // already on it stays visible. An evidence square is ringed COL_HINT_CELL
+    // and keeps its fill, which is its premise: lit or not.
     const tone = ((dsFlags >> DF_WIN_SHIFT) & 3) as WinTone;
     const fill =
       tone !== WIN_NONE
         ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-        : dsFlags & DF_HINT_AREA && !(dsFlags & DF_LIT)
-          ? COL_HINT_CELL
-          : dsFlags & DF_LIT
-            ? COL_LIT
-            : COL_CELL;
+        : dsFlags & DF_LIT
+          ? COL_LIT
+          : COL_CELL;
     dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, COL_GRID);
     dr.drawRect(box, fill);
     if (dsFlags & DF_HINT_TARGET) {
@@ -283,8 +269,7 @@ function tileRedraw(
         COL_HINT,
       );
     }
-    if (dsFlags & DF_HINT_AREA && dsFlags & DF_LIT) ring(COL_HINT_LITERF);
-    if (dsFlags & DF_HINT_DARKREF) ring(COL_HINT_DARKREF);
+    if (dsFlags & (DF_HINT_AREA | DF_HINT_DARKREF)) ring(COL_HINT_CELL);
     if (dsFlags & DF_LIGHT) {
       const lcol = dsFlags & DF_OVERLAP ? COL_ERROR : COL_LIGHT;
       dr.drawCircle(

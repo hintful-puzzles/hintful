@@ -14,8 +14,8 @@ import {
   ERROR_TEXT,
   FLASH,
   FLASH_LEAD,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
@@ -87,8 +87,8 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_ERRTEXT] = ERROR_TEXT;
   ret[COL_MISTAKE] = ERROR;
   ret[COL_CURSOR] = CURSOR;
-  ret[COL_HINT] = HINT_ACTION;
-  ret[COL_HINT_CELL] = HINT_EVIDENCE;
+  ret[COL_HINT] = HINT_RING;
+  ret[COL_HINT_CELL] = HINT_OUTLINE;
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;
   FOUR_FILL_MARKS.forEach((mark, c) => {

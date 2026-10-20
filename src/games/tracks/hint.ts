@@ -75,10 +75,10 @@ export interface TracksHintEdge {
 /**
  * What one step's sentence names, in five roles.
  *
- * The split follows docs/hints-marks.md § "The element-type color legend": the
- * squares and edges a step *decides* take the action color, the squares and
- * edges it *reasons from* take the evidence color, and the clue it counts with
- * has its own digit recolored. `targets` and `targetEdges` are separate roles
+ * The split follows the mark roles (docs/hints-marks.md § "The engine colors
+ * the marks"): the squares and edges a step *decides* are rings, the squares
+ * and edges it *reasons from* outlines, and the clue it counts with has its
+ * own digit recolored. `targets` and `targetEdges` are separate roles
  * only because Tracks decides two different kinds of thing, not because their
  * fates differ: a firing that forces four edges forces all four the same way,
  * and they are all drawn identically (equivalent moves share a color).

@@ -3240,7 +3240,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 3,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3268,7 +3268,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 3,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3306,7 +3306,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 3,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3413,7 +3413,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 3,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3520,7 +3520,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 3,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3558,7 +3558,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 3,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3675,7 +3675,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 3,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3782,7 +3782,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 35,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3820,7 +3820,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 35,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3927,7 +3927,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 35,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4034,7 +4034,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 35,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4141,7 +4141,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 35,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4169,7 +4169,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 35,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4207,7 +4207,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 35,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4314,7 +4314,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4421,7 +4421,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4528,7 +4528,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4546,7 +4546,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4564,7 +4564,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4582,7 +4582,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4689,7 +4689,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4796,7 +4796,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 99,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4913,7 +4913,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 99,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4941,7 +4941,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 99,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4969,7 +4969,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 99,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5086,7 +5086,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 99,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5124,7 +5124,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 99,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5142,7 +5142,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 99,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5160,7 +5160,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 131,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5198,7 +5198,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 131,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5226,7 +5226,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 131,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5254,7 +5254,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 131,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5272,7 +5272,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 131,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5389,7 +5389,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 131,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5407,7 +5407,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 131,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5425,7 +5425,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 163,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5542,7 +5542,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5570,7 +5570,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5598,7 +5598,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5622,7 +5622,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "fontType": "variable",
     "op": "text",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "size": 10,
     "text": "1",
     "x": 128,
@@ -5638,7 +5638,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5656,7 +5656,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5674,7 +5674,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5692,7 +5692,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5799,7 +5799,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5906,7 +5906,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 195,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6023,7 +6023,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 195,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6061,7 +6061,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6159,37 +6159,37 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     ],
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 2,
     "op": "rect",
-    "rgb": "rgb(232, 139, 33)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 29,
     "x": 132,
     "y": 196,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 29,
     "op": "rect",
-    "rgb": "rgb(232, 139, 33)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 2,
     "x": 132,
     "y": 196,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 2,
     "op": "rect",
-    "rgb": "rgb(232, 139, 33)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 29,
     "x": 132,
     "y": 223,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 29,
     "op": "rect",
-    "rgb": "rgb(232, 139, 33)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 2,
     "x": 159,
     "y": 196,
@@ -6200,7 +6200,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "fontType": "variable",
     "op": "text",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "size": 10,
     "text": "2",
     "x": 158,
@@ -6216,7 +6216,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6234,7 +6234,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "y": 195,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6266,7 +6266,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "h": 3,
     "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 33,
     "x": 98,
     "y": 162,
@@ -6275,7 +6275,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "h": 33,
     "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 3,
     "x": 98,
     "y": 162,
@@ -6284,7 +6284,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "h": 3,
     "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 33,
     "x": 98,
     "y": 192,
@@ -6293,7 +6293,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "h": 33,
     "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 3,
     "x": 128,
     "y": 162,
@@ -6302,7 +6302,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "h": 3,
     "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 33,
     "x": 130,
     "y": 194,
@@ -6311,7 +6311,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "h": 33,
     "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 3,
     "x": 130,
     "y": 194,
@@ -6320,7 +6320,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "h": 3,
     "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 33,
     "x": 130,
     "y": 224,
@@ -6329,7 +6329,7 @@ exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and 
     "color": 9,
     "h": 33,
     "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
+    "rgb": "rgb(40, 132, 32)",
     "w": 3,
     "x": 160,
     "y": 194,
@@ -6403,7 +6403,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 3,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6441,7 +6441,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 3,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6459,7 +6459,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 3,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6576,7 +6576,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 3,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6594,7 +6594,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 3,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6612,7 +6612,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 3,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6630,7 +6630,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 3,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6648,7 +6648,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 35,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6765,7 +6765,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 35,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6803,7 +6803,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 35,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6821,7 +6821,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 35,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6839,7 +6839,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 35,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6956,7 +6956,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 35,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6974,7 +6974,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 35,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6992,7 +6992,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7010,7 +7010,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7028,7 +7028,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7046,7 +7046,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 67,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -7084,7 +7084,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7102,7 +7102,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 67,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -7219,7 +7219,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 67,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7237,7 +7237,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 99,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -7275,7 +7275,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 99,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7293,7 +7293,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 99,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -7331,7 +7331,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 99,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7349,7 +7349,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 99,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7367,7 +7367,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 99,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7385,7 +7385,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 99,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7403,7 +7403,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 131,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7421,7 +7421,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 131,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -7538,7 +7538,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 131,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7556,7 +7556,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 131,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7574,7 +7574,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 131,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -7612,7 +7612,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 131,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7630,7 +7630,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 131,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -7747,7 +7747,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7765,7 +7765,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7783,7 +7783,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7801,7 +7801,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7819,7 +7819,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7837,7 +7837,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 163,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -7875,7 +7875,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 163,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7893,7 +7893,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7911,7 +7911,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7929,7 +7929,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7947,7 +7947,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7965,7 +7965,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7983,7 +7983,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8001,7 +8001,7 @@ exports[`hint rendering (tier 2.5) > a direct hint frame paints the COL_HINT tar
     "y": 195,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

@@ -99,8 +99,8 @@ describe("the named colors", () => {
     // duplication this table exists to remove.
     //
     // **Keyed on the value in *both* schemes**, because that is what a token is
-    // (`color-token.ts`: value plus scheme behavior). `TEAL_WASH_QUIET` is
-    // `TEAL_WASH` in light and darker in dark — a good second name that a
+    // (`color-token.ts`: value plus scheme behavior). `YELLOW_FIELD` is
+    // `YELLOW_WASH` in light and lighter in dark — a good second name that a
     // light-only key would reject. Two names agreeing in *both* schemes are
     // still two names for one color, and still fail.
     const seen = new Map<string, string>();

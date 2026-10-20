@@ -14,6 +14,7 @@
 
 import { paletteSchemeOf, resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
+import { HINT_INK } from "./color/palette.ts";
 import { completionStatus } from "./completion-status.ts";
 import { freshSeed, generate } from "./deal.ts";
 import { DESC_MALFORMED, loadDesc, loadVerdict, readBoard } from "./desc-error.ts";
@@ -205,6 +206,9 @@ export interface EngineCore {
   /** The role of each reference of the displayed step's words, in order
    * (`Narration.refs`); empty with no step displayed. */
   hintReferenceRoles(): readonly MarkRole[];
+  /** The palette indices holding a hint ink (`HINT_INK`): what the frontend
+   * repaints while it measures a reference's marks. */
+  hintInkIndices(): readonly number[];
   /** Duration in milliseconds of the animation currently armed (e.g. by
    * the slow-motion move `executeHint` just played), or 0 when nothing
    * is animating. The auto-hint loop paces each step by this so a move
@@ -1308,6 +1312,15 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   hintReferenceRoles(): readonly MarkRole[] {
     return this.displayedHintStep?.words?.refs.map((r) => r.role) ?? [];
+  }
+
+  hintInkIndices(): readonly number[] {
+    const inks = new Set<Color>(Object.values(HINT_INK));
+    // Which slot holds an ink does not depend on the background: white is
+    // one the app hands.
+    return resolvePalette(this.game, [1, 1, 1]).flatMap((c, i) =>
+      inks.has(c) ? [i] : [],
+    );
   }
 
   hideHintReference(index: number | null): void {

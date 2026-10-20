@@ -17,8 +17,8 @@ import {
   FLASH,
   FLASH_LEAD,
   GOAL as GOAL_COLOR,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   MOVED,
   surfaceGrid,
@@ -100,8 +100,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_WALL] = wallFill(defaultBackground);
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_AIM] = DRAG_ADD;
   return out;
 }
@@ -211,11 +211,7 @@ function drawTile(
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
   dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, floor);
   if (marks.striped)
-    dr.drawHatch(
-      { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-      COL_HINT,
-      hatchPeriod(ts),
-    );
+    dr.drawHatch({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, hatchPeriod(ts));
 
   if (v === WALL) {
     // A flat block, on the tile inside its grid line.

@@ -36,7 +36,7 @@ More information: https://www.nikoli.co.jp/en/puzzles/nansuke/
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it. It reasons from the digits you have entered and from your pencil marks, which it reads as the only digits a square can still take. So it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. Since blue and amber already mean across and down here, the hint's marks are green.
+**Hint** explains the next step rather than simply making it. It reasons from the digits you have entered and from your pencil marks, which it reads as the only digits a square can still take. So it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first.
 
 {{hint-marks}}
 

@@ -253,10 +253,10 @@ describe("salad hint frames", () => {
     expect(outline.length).toBeGreaterThan(4);
     for (const s of outline) expect(isThin(s)).toBe(true);
     // The premise is only visible if the clue glyph is part of the highlight:
-    // it is redrawn in COL_HINT rather than the usual clue color.
-    expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(
-      true,
-    );
+    // it is redrawn in COL_HINT_CELL rather than the usual clue color.
+    expect(
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+    ).toBe(true);
     // Each square acted on is ringed in COL_HINT, so its struck notes stay
     // legible.
     expectRing(
@@ -275,9 +275,9 @@ describe("salad hint frames", () => {
     const { recording, hint } = hintFrame("nearestSquare");
     expect(hint?.explanation).toMatch(/and the outlined square is nearest it/);
     expectRing(recording.ops, COL_HINT_CELL);
-    expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(
-      true,
-    );
+    expect(
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+    ).toBe(true);
   });
 
   it("previews an empty-square marker as a cross in the hint color", () => {

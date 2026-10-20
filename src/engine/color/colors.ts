@@ -42,7 +42,6 @@
  *
  * The third step is Mines': 1-blue against 4-navy and 3-red against 5-maroon
  * are pairs a wash cannot supply, because a wash of blue is a fill, not a digit.
- * Teal alone has a fourth, {@link TEAL_WASH_QUIET}, which says why.
  *
  * **A color carries only the steps something asks for**, which is why orange has
  * no wash and yellow, purple and pink have no bold. An intensity nobody
@@ -104,7 +103,6 @@ type Step = readonly [l: number, c: number];
 type Steps = {
   base: Step;
   wash?: Step;
-  washQuiet?: Step;
   field?: Step;
   fieldMark?: Step;
   bold?: Step;
@@ -183,26 +181,13 @@ const DESIGN: Record<string, { h: number; light: Steps; dark: Steps }> = {
   },
   GREEN: {
     h: 148,
-    light: { base: [0.64, 0.174], wash: [0.81, 0.07], bold: [0.42, 0.115] },
-    dark: { base: [0.72, 0.196], wash: [0.4, 0.07], bold: [0.84, 0.16] },
+    light: { base: [0.64, 0.174], wash: [0.81, 0.07] },
+    dark: { base: [0.72, 0.196], wash: [0.4, 0.07] },
   },
   TEAL: {
     h: 200,
-    light: {
-      base: [0.72, 0.115],
-      wash: [0.94, 0.072],
-      // Identical to `wash`: the quiet step differs only in dark mode.
-      washQuiet: [0.94, 0.072],
-      bold: [0.42, 0.067],
-    },
-    dark: {
-      base: [0.72, 0.115],
-      wash: [0.48, 0.077],
-      // Chroma 0.06 because teal cannot carry the wash's 0.077 this dark: asking
-      // for it makes the gamut clamp silently return a different color.
-      washQuiet: [0.3, 0.06],
-      bold: [0.84, 0.134],
-    },
+    light: { base: [0.72, 0.115], wash: [0.94, 0.072] },
+    dark: { base: [0.72, 0.115], wash: [0.48, 0.077] },
   },
   BLUE: {
     h: 258,
@@ -286,9 +271,9 @@ export const YELLOW_WASH: Color = of("YELLOW", "wash");
  * @see YELLOW — the **field**: a fill that covers about half of a board, the
  * state that is not the shaded one. Its consumer is `CLEAR`.
  *
- * A step of its own rather than {@link YELLOW_WASH}, for the reason
- * {@link TEAL_WASH_QUIET} is one: that wash's dark lightness is an output of
- * the search that made the washes a set of region fills. In the light
+ * A step of its own rather than {@link YELLOW_WASH}, because that wash's dark
+ * lightness is an output of the search that made the washes a set of region
+ * fills. In the light
  * scheme the two are one value. In the dark scheme the wash is a muddy olive
  * as a field (owner, 2026-10-11, asking for more contrast), so the field is
  * lighter and carries the most chroma yellow has at that lightness, which
@@ -308,32 +293,11 @@ export const YELLOW_FIELD_MARK: Color = of("YELLOW", "fieldMark");
 export const GREEN: Color = of("GREEN", "base");
 /** @see GREEN */
 export const GREEN_WASH: Color = of("GREEN", "wash");
-/** @see GREEN */
-export const GREEN_BOLD: Color = of("GREEN", "bold");
 
 /** Teal. */
 export const TEAL: Color = of("TEAL", "base");
 /** @see TEAL */
 export const TEAL_WASH: Color = of("TEAL", "wash");
-/**
- * @see TEAL — the **quiet** wash: a fill the hint's own marks are drawn on top
- * of, so it has to stay close enough to the board that they still win. Its one
- * consumer is `HINT_EVIDENCE_WASH`.
- *
- * A step of its own rather than a retune of {@link TEAL_WASH}, because that
- * one's dark lightness is an *output* of the search that made the washes a
- * set of region fills distinguishable from one another.
- *
- * The dark value is where two opposed requirements cross: the wash must be
- * *seen* against its board, and the action ring drawn on it (a target cell is
- * often inside the evidence region) must be seen against *the wash*. At the
- * ordinary dark wash the ring scored **1.69:1**, against 3.94 in light.
- * Lightness 0.30 matches light mode's own visibility (1.31 against 1.29) and
- * leaves the ring 3.54.
- */
-export const TEAL_WASH_QUIET: Color = of("TEAL", "washQuiet");
-/** @see TEAL */
-export const TEAL_BOLD: Color = of("TEAL", "bold");
 
 /** Blue. */
 export const BLUE: Color = of("BLUE", "base");
@@ -590,9 +554,15 @@ export const FOUR_NAMES: readonly ColorWord[] = FOUR_FILLS.map(wordOf);
  * holds every mark to, in both schemes: it reads on the cell surface and on
  * every region fill, and keeps more than 30° off the two-state pair's hues.
  * The light column is what that costs: a mark reads on the light board only
- * at lightness 0.58 or below, so a lime is an olive there and an amber a
- * bronze (owner, 2026-10-19: the deeper light shades over the vivid ones that
+ * at lightness 0.58 or so and below, so a lime is an olive there and an amber
+ * a bronze (owner, 2026-10-19: the deeper light shades over the vivid ones that
  * vanished on a pale fill).
+ *
+ * Stripes are laid under a symbol at the hatch's coverage, so theirs are also
+ * held to the bar Magnets' symbols are under the hatch
+ * (`hatch-contrast.test.ts`), each at the nearest lightness that keeps it: the
+ * light red and bronze lighter and the dark amber darker than they were set
+ * (owner, 2026-10-20: retune the stripes rather than relax the bar).
  *
  * The first ring is the hint's own {@link BLUE}, so a step with one ringed
  * reference looks as it did before a reference had a color of its own.
@@ -608,9 +578,9 @@ const REFERENCE_DESIGN = {
     { light: [0.42, 0.07, 55], dark: [0.7, 0.08, 55] },
   ],
   stripes: [
-    { light: [0.58, 0.156, 45], dark: [0.84, 0.089, 45] },
-    { light: [0.5, 0.191, 0], dark: [0.68, 0.2, 0] },
-    { light: [0.5, 0.103, 68], dark: [0.62, 0.128, 68] },
+    { light: [0.58, 0.156, 45], dark: [0.83, 0.089, 45] },
+    { light: [0.59, 0.191, 0], dark: [0.68, 0.2, 0] },
+    { light: [0.52, 0.103, 68], dark: [0.62, 0.128, 68] },
   ],
 } as const satisfies Record<
   MarkRole,

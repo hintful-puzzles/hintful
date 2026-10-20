@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { HINT_EVIDENCE } from "../../engine/color/palette.ts";
+import { HINT_OUTLINE } from "../../engine/color/palette.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -638,7 +638,7 @@ describe("map hint rendering", () => {
       `rgb(${c.map((v) => Math.round(v * 255)).join(", ")})`;
     const numbers = new Set(
       recording.ops.flatMap((o) =>
-        o.op === "text" && o.rgb === rgb(HINT_EVIDENCE) ? [o.text] : [],
+        o.op === "text" && o.rgb === rgb(HINT_OUTLINE) ? [o.text] : [],
       ),
     );
     expect([...numbers].sort()).toEqual(

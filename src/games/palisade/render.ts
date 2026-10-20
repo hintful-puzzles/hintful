@@ -37,8 +37,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   lineMaybeColor,
   lineNoColor,
@@ -71,7 +71,7 @@ export const COL_GRID = 2; // == COL_CLUE == COL_LINE_YES
 export const COL_LINE_MAYBE = 3;
 export const COL_LINE_NO = 4;
 export const COL_ERROR = 5;
-export const COL_HINT = 6; // every edge the deduction forces this step (blue)
+export const COL_HINT = 6; // every edge the deduction forces this step
 export const COL_HINT_CELL = 7; // referenced-cell outline, inset inside the cell
 export const COL_CORRECT = 8; // a completed, correct region
 /** The keyboard cursor's box, which upstream drew in the grid's own ink. */
@@ -92,8 +92,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = INK;
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CORRECT] = REGION_DONE;
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
   out[COL_LINE_NO] = lineNoColor(background);

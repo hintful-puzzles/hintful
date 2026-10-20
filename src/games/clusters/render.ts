@@ -13,7 +13,7 @@
  * `tileSize / 2` — and `computeSize` subtracts 1 to meet the outer grid line.
  */
 
-import { BLACK, ORANGE, TWO, WHITE } from "../../engine/color/colors.ts";
+import { BLACK, TWO, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -22,8 +22,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
@@ -61,26 +61,24 @@ export const COL_0_DOT = 4; // the dot on a given `F_COLOR_0` piece
 export const COL_1_DOT = 5; // the dot on a given `F_COLOR_1` piece
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
-// Hint legend: the forced cell is ringed COL_HINT; the tile the refuted
-// coloring would break — the one element the narration calls "outlined" — gets a
-// COL_HINT_DANGER ring (an outline, because the tile's own color *is*
-// part of the premise; thin and orange so it cannot be confused with the red
-// live-error frame); a lookahead chain's what-if cells are outlined
-// COL_HINT_CELL with a small piece of the color each would be forced to.
+// Hint marks: the forced cell is ringed COL_HINT; the tile the refuted
+// coloring would break gets a thin COL_HINT_CELL ring, an outline because the
+// tile's own color *is* part of the premise; a lookahead chain's what-if cells
+// are outlined COL_HINT_CELL with a small piece of the color each would be
+// forced to.
 export const COL_HINT = 8;
-/** The chain's outline, **and** a chain cell's ordinal — one index, because the
+/** The outlines, **and** a chain cell's ordinal — one index, because the
  * number indexes the evidence. */
 export const COL_HINT_CELL = 9;
-export const COL_HINT_DANGER = 10;
 /** The surface of a cell. */
-export const COL_CELL = 11;
+export const COL_CELL = 10;
 /** The surface under a given. */
-export const COL_GIVEN = 12;
+export const COL_GIVEN = 11;
 /** The surface under a tile Check & Save found wrong. */
-export const COL_WRONG = 13;
+export const COL_WRONG = 12;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 14;
-export const COL_FLASH_LEAD = 15;
+export const COL_FLASH = 13;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -100,14 +98,10 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   // The chain is outlined rather than washed, so it takes the mark form of the
-  // evidence role, which covers the chain ordinal too (see `HINT_EVIDENCE`).
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
-  // A third hint premise no shared role names — the tile the refuted coloring
-  // would break — in the one strong accent the board and the two hint marks
-  // leave free.
-  out[COL_HINT_DANGER] = ORANGE;
+  // evidence role, which covers the chain ordinal too (see `HINT_OUTLINE`).
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -131,7 +125,7 @@ const K_LIT = 11; // bits 11-12: the win flash's tone on this cell
 // Hint-overlay bits, packed per cell into the OverlaySidecar, which is part of
 // the diff key (docs/rendering.md § "Overlay sidecars").
 const HB_TARGET = 1; // the forced cell — COL_HINT mark
-const HB_DANGER = 1 << 1; // tile that would break — COL_HINT_DANGER ring
+const HB_DANGER = 1 << 1; // tile that would break — a thin COL_HINT_CELL ring
 const HB_CHAIN_0 = 1 << 2; // what-if cell forced `F_COLOR_0` in the hypothetical
 const HB_CHAIN_1 = 1 << 3; // what-if cell forced `F_COLOR_1` in the hypothetical
 //
@@ -270,12 +264,12 @@ function drawTile(
 
   // The danger ring, last so nothing paints over it. One thin ring at the
   // cell's edge, beside the piece: doubled, it has to cross the piece, and two
-  // rings a pixel apart read as an orange fill. It is told from the red
-  // live-error frame by hue and by being half as thick.
+  // rings a pixel apart read as a fill. It is told from the red live-error
+  // frame by hue and by being half as thick.
   const rt = Math.max(2, Math.floor(ts / 12));
   if (hintBits & HB_DANGER) {
     const side = ts - 3;
-    drawThickRectOutline(dr, px + 1, py + 1, side, side, rt, COL_HINT_DANGER);
+    drawThickRectOutline(dr, px + 1, py + 1, side, side, rt, COL_HINT_CELL);
   }
 
   // The order this consequence falls in, drawn after the ring and inside it

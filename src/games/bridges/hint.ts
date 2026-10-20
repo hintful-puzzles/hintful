@@ -67,12 +67,8 @@ export interface BridgesTarget extends BridgesSpan {
 /**
  * What one step is about, in four roles; its words name the ones it marks.
  *
- * The split follows docs/hints-marks.md § "The element-type color legend". The
- * two `COL_HINT` roles are `focus` and `targets`, and they are safe to share a
- * color because they are **different kinds of element**: every sentence names
- * one as an island ("this 5") and the other as a line ("the ringed line"), which
- * is the test § "Two marks on the board, one 'this cell'" asks first. The
- * evidence roles split the same way and take `COL_HINT_CELL`.
+ * The focus island is outlined, as the cited ones are, and the sentence names
+ * it on its own ("this 5"), so the app repaints it in a color of its own.
  */
 export interface BridgesHighlights {
   /** The spans the step decides; several when one premise forces them all. */
@@ -124,14 +120,14 @@ export function narrate(
 /**
  * Does this firing's sentence name the island the move runs from?
  *
- * Four of the seven do ("This 5 still needs…"), and those recolor it in the
- * action color so the words point at it. **The other three do not, and they
+ * Four of the seven do ("This 5 still needs…"), and those recolor it so the
+ * words point at it. **The other three do not, and they
  * must not recolor it either**: a mark on the board that no sentence mentions
  * is one the player has to account for on their own, and here it would be worse
  * than that. Two of the three count a *group* the source island belongs to, so
  * marking it apart would say two islands play different parts in an argument
  * that treats them the same, and "these 2 islands" would point at one mark of
- * each color (docs/hints-marks.md § "The element-type color legend").
+ * each color (docs/hints-marks.md § "The engine colors the marks").
  */
 function namesFocus(reason: BridgesReason): boolean {
   switch (reason.kind) {

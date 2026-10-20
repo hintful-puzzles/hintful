@@ -22,7 +22,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newSoloDesc } from "./generator.ts";
 import { noRepeatRegionNames, regionsOf, soloGame } from "./index.ts";
-import { COL_HINT, COL_PENCIL, digitChar } from "./render.ts";
+import { COL_PENCIL, digitChar } from "./render.ts";
 import {
   type HintReason,
   recordSoloDeductions,
@@ -970,7 +970,6 @@ describe("solo hint render", () => {
     expect(region.length).toBeGreaterThan(0);
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(region.length);
-    for (const h of hatches) expect(h.color).toBe(COL_HINT);
     // The struck candidate keeps its COL_PENCIL digit, crossed through in COL_PENCIL.
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,

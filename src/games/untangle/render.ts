@@ -49,6 +49,8 @@ export const COL_NEIGHBOR = 8;
 export const COL_FLASH = 9;
 export const COL_HINT = 10;
 export const COL_FLASH_LEAD = 11;
+/** The ring round a crossing a hint step removes. */
+export const COL_HINT_CELL = 12;
 
 /** Radius (px) of the ring round a crossing a hint step removes — just wider
  * than a point, so a ring is never mistaken for one. */
@@ -220,8 +222,8 @@ export function redrawUntangle(
   // one the player can see. Unfilled, so the crossing stays visible inside.
   for (const c of marks.of("outline", CROSSING)) {
     const center = { x: Math.trunc(c.x * ts), y: Math.trunc(c.y * ts) };
-    dr.drawCircle(center, CROSSING_RING, -1, COL_HINT);
-    dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT);
+    dr.drawCircle(center, CROSSING_RING, -1, COL_HINT_CELL);
+    dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT_CELL);
   }
   // On a journey, ring the marked points still to move after this one, so
   // the count in the narration is one the player can see.

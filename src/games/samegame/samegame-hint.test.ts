@@ -30,7 +30,7 @@ import {
   type SamegameRung,
 } from "./hint.ts";
 import { executeMove, samegameGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE, COL_HINT_KEY } from "./render.ts";
+import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import {
   findClearing,
   type Group,
@@ -351,21 +351,16 @@ describe("samegame hint", () => {
     expect(asked).toBeGreaterThan(20);
   });
 
-  it("draws a trap's ring with its keyline, the victim's outline and the rival's stripes", () => {
+  it("draws a trap's ring, the victim's outline and the rival's stripes", () => {
     const pin = pinned("lastOfColor");
     const { recording } = renderPinnedHint(G, pin);
     const rects = (color: number) =>
       recording.ops.filter((o) => o.op === "rect" && o.color === color).length;
     expect(rects(COL_HINT)).toBeGreaterThan(0);
     expect(rects(COL_HINT_EVIDENCE)).toBeGreaterThan(0);
-    // The keyline under both, one pixel wider.
-    expect(rects(COL_HINT_KEY)).toBeGreaterThanOrEqual(
-      rects(COL_HINT) + rects(COL_HINT_EVIDENCE),
-    );
     const rival = stepMarks(pin.step).of("stripes", CELL);
     const hatches = recording.ops.filter((o) => o.op === "hatch");
     expect(hatches.length).toBe(rival.length);
-    for (const h of hatches) expect(h.color).toBe(COL_HINT_KEY);
   });
 });
 

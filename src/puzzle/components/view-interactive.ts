@@ -224,7 +224,7 @@ export class PuzzleViewInteractive extends PuzzleView {
         return;
       }
       event.preventDefault();
-      await this.puzzle.copyImage();
+      await this.puzzle.copyImage(this.renderedColorScheme ?? "light");
       return;
     }
 

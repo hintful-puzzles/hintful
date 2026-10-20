@@ -23,7 +23,6 @@ import {
   COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
-  COL_HINT_SHADEDREF,
   COL_RULED_OUT,
   COL_SHADED,
   colors,
@@ -64,10 +63,9 @@ function makeState(w: number, h: number, grid: number[]): RangeState {
 }
 
 describe("hint color legend", () => {
-  it("rings a cited black premise in COL_HINT_SHADEDREF, distinct from the COL_HINT target", () => {
+  it("outlines a cited black premise in COL_HINT_CELL, apart from the COL_HINT target", () => {
     // The adjacency deduction shape: a black square (the premise) at the center
-    // forces a neighbor white (the target). The element-type legend must draw
-    // the cited black square and the forced cell in *different* colors.
+    // forces a neighbor white (the target), each in its own role's ink.
     const grid = [EMPTY, EMPTY, EMPTY, EMPTY, BLACK, EMPTY, EMPTY, EMPTY, EMPTY];
     const state = makeState(3, 3, grid);
     const words = say.adjacency({
@@ -87,9 +85,9 @@ describe("hint color legend", () => {
     const rec = new RecordingDrawing(palette);
     const ds = newDrawState(state, 32);
     redraw(rec, ds, null, state, 1, noCursor, 0, NO_FLASH, step);
-    // The cited black square rings COL_HINT_SHADEDREF (an outline — `line` ops,
-    // not a body fill).
-    expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_SHADEDREF)).toBe(
+    // The cited black square takes a doubled outline (`line` ops, not a body
+    // fill).
+    expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_CELL)).toBe(
       true,
     );
     // The forced cell is ringed in COL_HINT (drawn as `rect` sides) — a
@@ -234,7 +232,7 @@ describe("render scenario snapshot", () => {
     // its own shaded line of sight and that run can hold a second clue of the
     // same value (seen live on 9x6 `range-a`), so the value alone is not a name.
     expect(marks.of("outline", CLUE)).toHaveLength(1);
-    expect(ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(true);
+    expect(ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL)).toBe(true);
     expect(result.recording.ops).toMatchSnapshot();
   });
 });

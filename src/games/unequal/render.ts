@@ -21,8 +21,8 @@ import {
   FLASH_LEAD,
   GRID_MID,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -129,12 +129,12 @@ export function colors(defaultBackground: Color): Color[] {
   // the player's own digits here, and a fill has to keep them legible.
   out[COL_CURSOR] = highlightWash(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT] = HINT_RING;
   // Both hint marks are outlines drawn beside the cell, so both take a strong
   // color and differ in shape rather than in weight — a clue pair's contour
-  // against one cell's ring. `HINT_EVIDENCE` covers the chain ordinal too; see
+  // against one cell's ring. `HINT_OUTLINE` covers the chain ordinal too; see
   // its doc comment for why the index and the thing it indexes are one role.
-  out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_LINE] = surfaceGrid(bg);
@@ -142,9 +142,9 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 /** Highlight payload an Unequal hint step carries (built in `index.ts`). The
- * element-type legend (docs/hints-marks.md § "The element-type color legend"): the driving clue's cells outlined
- * `COL_HINT_CELL`, the acted-on cell(s) ringed `COL_HINT`, the ruled-out
- * candidate(s) shown struck. Outline and ring sit in the gap around a cell, so
+ * marks (docs/hints-marks.md § "The engine colors the marks"): the driving
+ * clue's cells outlined `COL_HINT_CELL`, the acted-on cell(s) ringed
+ * `COL_HINT`, the ruled-out candidate(s) shown struck. Outline and ring sit in the gap around a cell, so
  * neither covers what the cell holds. */
 export interface UnequalHint {
   /** The driving clue's cells (evidence), outlined `COL_HINT_CELL`. A forcing
@@ -458,7 +458,7 @@ function drawCell(
   const ox = coord(x, ts);
   const oy = coord(y, ts);
 
-  // Hint overlay (docs/hints-marks.md § "The element-type color legend"): both
+  // Hint overlay (docs/hints-marks.md § "The engine colors the marks"): both
   // cell-level marks are read in `redraw`, which rings the target and outlines
   // the evidence region in the gap around the cell, so a hint never paints over
   // the digits it is talking about. What is left here is `struck`, the set of
@@ -473,7 +473,7 @@ function drawCell(
     COL_FLASH,
     COL_FLASH_LEAD,
   );
-  if (hatched) dr.drawHatch({ x: ox, y: oy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+  if (hatched) dr.drawHatch({ x: ox, y: oy, w: ts, h: ts }, hatchPeriod(ts));
 
   rectOutline(dr, ox, oy, ts, ts, COL_LINE);
   dr.drawUpdate({ x: ox, y: oy, w: ts, h: ts });
@@ -517,7 +517,7 @@ function drawCell(
 /** Pencil-mark grid (upstream `draw_hints`, stolen from solo). A candidate in
  * `struck` (bit `1 << n`) is a hint-ruled-out mark, drawn in its normal pencil
  * color with a same-color strikethrough — high-contrast, reads as a real note,
- * and the line is the "ruled out" cue (docs/hints-marks.md § "The element-type color legend"). */
+ * and the line is the "ruled out" cue (docs/hints-marks.md § "The engine colors the marks"). */
 function drawHints(
   dr: GameDrawing,
   ts: number,

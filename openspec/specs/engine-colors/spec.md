@@ -127,36 +127,6 @@ color that reads in light mode can land on the board there.
   against the pure white the app supplies in dark mode
 - **THEN** the resulting color is visibly distinct from the board in both cases
 
-### Requirement: A color is a shared role only where two games mean the same by it
-
-A color SHALL be a shared role only where two or more games mean the same
-thing by it; a hint role (`HINT_ACTION` and its siblings) owes one game, since
-the hint vocabulary settles its meaning. A color one game derives for its own
-board SHALL be declared in the engine's table of game-local colors, under a
-name that begins with the game's id; a named color a game takes directly is
-not in that table. A member of a set told apart from its other members SHALL
-NOT be a shared role.
-
-#### Scenario: A game-specific color stays game-specific
-
-- **WHEN** a color is derived for one game's board only
-- **THEN** it is declared game-local under that game's id, so the declaration is a
-  recorded decision and not an omission
-- **AND** the suite fails when another game imports it
-
-#### Scenario: A role one game is left holding
-
-- **WHEN** a shared role outside the hint vocabulary is taken by one game, or by
-  none
-- **THEN** the suite fails and names the role and the game
-
-#### Scenario: The evidence fill has one game
-
-- **WHEN** one game alone has evidence cells that hold nothing, and fills them
-  with `HINT_EVIDENCE_WASH`
-- **THEN** the fill stays a shared role, and the distances the hint roles owe
-  each other are measured with it among them
-
 ### Requirement: A game contains no color value
 
 A game SHALL NOT contain a color value. Every color a game shows SHALL be a
@@ -307,57 +277,6 @@ preserves it.
 - **WHEN** a color scheme is introduced or restyled
 - **THEN** the members of the named set remain distinguishable from one another
 - **AND** this is verified by measurement, not by inspection
-
-### Requirement: The hint emphases stay distinguishable in both schemes
-
-Hint-role colors SHALL stay distinguishable in each scheme, not only in light.
-Every pair among the acted-on color (`HINT_ACTION`), the evidence
-(`HINT_EVIDENCE`), the evidence drawn as a fill (`HINT_EVIDENCE_WASH`) and the
-two premise references (`HINT_BLACKREF`, `HINT_WHITEREF`) SHALL stay more than
-0.12 apart in OKLCH in each scheme.
-
-#### Scenario: A scheme's hint colors converge
-
-- **WHEN** a color edit brings two hint roles within 0.12 in either scheme
-- **THEN** the palette guard fails, naming the pair and the scheme
-
-### Requirement: The two premise references each cite one state of a cell
-
-`HINT_BLACKREF` SHALL color a hint's reference to a cell cited as a reason
-for being in the game's filled state: shaded, full, lit, or holding a line.
-`HINT_WHITEREF` SHALL color a reference to a cell cited for being in the
-other: marked empty, circled, unlit. A game SHALL draw each as an outline or
-a band, never a fill; a game whose hints cite one state takes that color alone.
-`HINT_WHITEREF` SHALL NOT be the hue of the shaded piece.
-
-#### Scenario: A step that cites both states
-
-- **WHEN** a step's reason rests on a cell already full and a cell already
-  marked empty
-- **THEN** the full cell's outline is `HINT_BLACKREF`, the empty cell's is
-  `HINT_WHITEREF`, and the cell the step acts on is ringed in the acted-on
-  color
-
-#### Scenario: A cell cited for something other than its state
-
-- **WHEN** a step cites a cell for where it lies and not for a state it is in,
-  as it cites an undecided cell beside a clue
-- **THEN** it is marked in the evidence color, and in neither reference
-
-### Requirement: The acted-on hint color outweighs the evidence fill
-
-The acted-on hint color SHALL carry more than twice the chroma of the evidence
-fill in each scheme. A narration ties two marks together in words only where
-the marks differ by something other than hue, and a solid acted-on color
-against a wash qualifies because it differs in weight, the cue left to a
-reader who cannot compare hues.
-
-#### Scenario: The acted-on color loses its weight
-
-- **WHEN** the acted-on hint color's chroma falls to twice the wash's or below,
-  in either scheme
-- **THEN** the palette guard fails, because the narration's exemption for
-  solid-against-wash marks no longer holds
 
 ### Requirement: A dark-scheme palette swap keeps its bevel lit from one side
 
@@ -698,35 +617,6 @@ call them, and two shapes, each indexed alike.
 - **WHEN** a game takes the pair's first member
 - **THEN** its color, its word and its shape are each the first of their list
 
-### Requirement: The pair's colors keep off the marks' hues and stand apart in lightness
-
-The two-state pair's colors SHALL be none of the hues spent on marks drawn
-over a board: the error's, the cursor's, those of the hint roles, and the
-orange in which a game that uses the pair outlines a hint premise no shared
-role names. A game that paints the pair, a role made of it or one of its
-washes SHALL give no mark of its own a color in either of the pair's hues.
-They SHALL stand apart in lightness in both schemes, for a player who cannot
-tell the hues.
-
-#### Scenario: A cursor over a finished region
-
-- **WHEN** a game washes a finished region in the pair's first hue, as Filling
-  does, and draws its keyboard cursor as a ring over the cell
-- **THEN** the ring is the shared cursor's green and not a purple, which the
-  wash would swallow in the dark scheme
-
-#### Scenario: The pair survives a loss of hue
-
-- **WHEN** the pair's two colors are measured in either scheme
-- **THEN** their lightnesses stand apart by more than a stated gap
-- **AND** their shapes differ
-
-#### Scenario: A third hint premise on a board of the pair
-
-- **WHEN** a game that uses the pair marks a hint premise that is neither the
-  evidence nor one of the two premise references
-- **THEN** it outlines it in orange, which is neither piece's hue
-
 ### Requirement: A game that uses the pair names no hue or shape of its own
 
 A game that uses the two-state pair SHALL name no hue or shape of its own for
@@ -937,3 +827,64 @@ references.
 - **WHEN** a Map hint is shown over regions of all four colors
 - **THEN** every reference's color stands clear of every region fill, in
   light and in dark, and no fill has moved
+
+### Requirement: A shared role is two games' meaning, and a hint ink is the engine's
+
+A color SHALL be a shared role only where two or more games mean the same
+thing by it; a hint ink (`HINT_RING` and its siblings) owes no game, since
+the engine reads every one. A color one game derives for its own board SHALL
+be declared in the engine's table of game-local colors, under a name that
+begins with the game's id; a named color a game takes directly is not in that
+table. A member of a set told apart from its other members SHALL NOT be a
+shared role.
+
+#### Scenario: A game-specific color stays game-specific
+
+- **WHEN** a color is derived for one game's board only
+- **THEN** it is declared game-local under that game's id, so the declaration is a
+  recorded decision and not an omission
+- **AND** the suite fails when another game imports it
+
+#### Scenario: A role one game is left holding
+
+- **WHEN** a shared role outside the hint inks is taken by one game, or by
+  none
+- **THEN** the suite fails and names the role and the game
+
+### Requirement: The hint inks are their roles' first reference colors, kept apart
+
+Each hint ink SHALL be its role's first reference color, and the three inks
+(`HINT_RING`, `HINT_OUTLINE`, `HINT_STRIPES`) SHALL stay more than 0.12 apart
+in OKLCH in each scheme.
+
+#### Scenario: A scheme's hint inks converge
+
+- **WHEN** a color edit brings two hint inks within 0.12 in either scheme
+- **THEN** the palette guard fails, naming the pair and the scheme
+
+#### Scenario: A reference color is retuned
+
+- **WHEN** the first color of a role's reference colors changes
+- **THEN** the role's ink changes with it
+
+### Requirement: The two-state pair keeps off every mark's hue and stands apart in lightness
+
+The two-state pair's colors SHALL be none of the hues spent on marks drawn
+over a board: the error's, the cursor's, and those of the hint inks and the
+reference colors. A game that paints the pair, a role made of it or one of its
+washes SHALL give no mark of its own a color in either of the pair's hues.
+They SHALL stand apart in lightness in both schemes, for a player who cannot
+tell the hues.
+
+#### Scenario: A cursor over a finished region
+
+- **WHEN** a game washes a finished region in the pair's first hue, as Filling
+  does, and draws its keyboard cursor as a ring over the cell
+- **THEN** the ring is the shared cursor's green and not a purple, which the
+  wash would swallow in the dark scheme
+
+#### Scenario: The pair survives a loss of hue
+
+- **WHEN** the pair's two colors are measured in either scheme
+- **THEN** their lightnesses stand apart by more than a stated gap
+- **AND** their shapes differ

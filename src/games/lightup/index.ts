@@ -285,9 +285,9 @@ function findMistakes(state: LightupState): readonly LightupMistake[] {
 
 /** Plan data for a Light Up hint step. `kind` is the mark the step places on
  * its `targets`, which `hintKeepTrack` and `refreshHintStep` read. `dark` is
- * the unlit square the deduction is about (pink ring) and `clue` the driving
- * clue, whose digit recolors: the words outline both alongside the rest of the
- * evidence, and the renderer reads them here to tell the three glyphs apart. */
+ * the unlit square the deduction is about and `clue` the driving clue: the
+ * words outline both alongside the rest of the evidence, and the renderer
+ * reads them here to tell the clue's ring on its wall from a square's. */
 export interface LightupHint {
   kind: "light" | "impossible";
   targets: Point[];
@@ -296,9 +296,8 @@ export interface LightupHint {
 }
 
 /** A step's highlights, and its `area`: the deduction's evidence besides the
- * dark square and the clue, shaded light-blue when the square is dark and
- * ringed green when it is lit (the fill would hide the "already lit"
- * premise). */
+ * dark square and the clue, ringed so that its fill, lit or not, stays its
+ * premise. */
 type Marks = LightupHint & { area: Point[] };
 
 const sameCell = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
@@ -579,7 +578,7 @@ export const lightupGame: Game<
     roles: {
       ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a cross.',
       outline:
-        "what the step reasons from, told apart by the sentence's nouns and drawn three ways: “the outlined clue” has a ring round its wall; “the outlined dark square”, which still has to be lit, has a pink double ring; and the other squares the reason rests on, such as a clue's bulbs, are shaded when dark and have a green double ring when lit.",
+        "what the step reasons from, told apart by the sentence's nouns: “the outlined clue” has a ring round its wall, and “the outlined dark square”, which still has to be lit, and the other squares the reason rests on, such as a clue's bulbs, have a double ring.",
     },
   },
   hintKeepTrack,

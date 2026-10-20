@@ -381,19 +381,6 @@ follows the plan. It SHALL never include the target cell itself.
 - **THEN** the later step's outlined line of sight includes the cell the
   earlier step whitened
 
-### Requirement: Hint: A shaded premise of a Range hint takes a color of its own
-
-The doubled outline of a cited shaded square, the adjacent one in an
-`adjacency` deduction, SHALL be drawn in `COL_HINT_SHADEDREF`.
-
-#### Scenario: A cited black square rings distinct from the forced cell
-
-- **WHEN** an `adjacency` hint is displayed (a shaded square forces an adjacent
-  cell to be not shaded)
-- **THEN** the cited shaded premise takes a doubled outline in
-  `COL_HINT_SHADEDREF` and the forced cell is ringed `COL_HINT`, in different
-  colors
-
 ### Requirement: Hint: Range's hint stops where its rules do
 
 On an Unreasonable board as on any other, the steps of Range's hint SHALL be
@@ -422,6 +409,18 @@ set in the same pass.
 - **THEN** the plan shades the square beside each 1, as a clue that sees its
   count, and only then clears the two squares beside the middle one, as
   neighbors of a shaded square, though those were forced from the start
+
+### Requirement: Hint: A shaded premise of a Range hint takes a doubled outline
+
+The cited shaded square of an `adjacency` deduction SHALL take a doubled
+outline in `COL_HINT_CELL`, and keep its piece.
+
+#### Scenario: A cited black square is outlined apart from the forced cell
+
+- **WHEN** an `adjacency` hint is displayed (a shaded square forces an adjacent
+  cell to be not shaded)
+- **THEN** the cited shaded premise takes a doubled outline in `COL_HINT_CELL`
+  and the forced cell is ringed `COL_HINT`
 
 ### Requirement: Look: Range draws a shaded cell as the collection's shaded piece
 

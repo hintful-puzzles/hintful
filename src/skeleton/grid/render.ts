@@ -17,8 +17,8 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_ACTION,
-  HINT_EVIDENCE,
+  HINT_OUTLINE,
+  HINT_RING,
   INK,
   RULED_OUT,
   SHADED,
@@ -82,8 +82,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_WRONG] = ERROR_WASH;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  out[COL_HINT] = HINT_RING;
+  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
@@ -183,7 +183,7 @@ function drawTile(
           ? COL_GIVEN
           : COL_CELL,
   );
-  ds.hint.drawHatch(dr, i, surface, COL_HINT, ts);
+  ds.hint.drawHatch(dr, i, surface, ts);
 
   if (t.clue !== NO_CLUE) {
     dr.drawText(

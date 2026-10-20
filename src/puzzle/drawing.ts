@@ -54,6 +54,22 @@ export class Drawing implements GameDrawing<Blitter> {
     return hadPalette;
   }
 
+  /** Paint the palette's `indices` in `color` until called with `null`; the
+   * rest of the palette is left as it is. */
+  overrideColors(indices: readonly number[], color: string | null): void {
+    if (color === null) {
+      if (this.overridden) this.palette = this.overridden;
+      this.overridden = null;
+      return;
+    }
+    this.overridden ??= this.palette;
+    const palette = [...this.overridden];
+    for (const i of indices) palette[i] = color;
+    this.palette = palette;
+  }
+
+  private overridden: string[] | null = null;
+
   // The font is chosen once, at `attachCanvas`, from the host page's computed
   // style. There is no `setFontInfo`, because nothing would call it without a
   // font preference to trigger it: add both together or neither.
@@ -185,14 +201,14 @@ export class Drawing implements GameDrawing<Blitter> {
     this.context.stroke();
   }
 
-  drawHatch({ x, y, w, h }: Rect, color: number, period: number): void {
+  drawHatch({ x, y, w, h }: Rect, period: number): void {
     if (w < 1 || h < 1 || period < 2) return;
     this.context.save();
     this.context.beginPath();
     this.context.rect(x, y, w, h);
     this.context.clip();
     this.context.globalAlpha = HATCH_OPACITY;
-    this.setUpContext({ fillColor: color });
+    this.setUpContext({ fillColor: this.palette.length - 1 });
     this.context.beginPath();
     for (const band of hatchBands({ x, y, w, h }, period)) {
       this.context.moveTo(band[0].x, band[0].y);
