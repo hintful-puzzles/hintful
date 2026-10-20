@@ -1,5 +1,5 @@
 /**
- * Twiddle's hint: the planner's segments (`solver.ts`), one step a turn.
+ * Twiddle's hint: the staged planner's segments (`solver.ts`), one step a turn.
  *
  * A stage's tile travels by free turns, which move no finished tile, each its
  * own step, until the plan needs a sequence. From there to the tile's arrival
@@ -13,8 +13,9 @@
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import type { Role, Segment } from "../../engine/permutation-planner.ts";
 import { type Goal, type Inner, type Part, say, type Turned } from "./hint-text.ts";
-import { planTwiddle, type Role, type Segment, type Turn, turnMove } from "./solver.ts";
+import { planTwiddle, type Turn, turnMove } from "./solver.ts";
 import { doRotate, type TwiddleMove, type TwiddleState } from "./state.ts";
 
 /** What a step's turn does for the tile it serves. */
@@ -70,13 +71,13 @@ export function hint(
     const fixedFrom = firstWrong(stage);
     // A free turn is its own step; anything else runs to the stage's end.
     const free =
-      segs[i].turns.length === 1 && fixedFrom < 0 && clear(segs[i].turns[0], stage);
+      segs[i].moves.length === 1 && fixedFrom < 0 && clear(segs[i].moves[0], stage);
     const turns: Turn[] = [];
     /** Each turn's part, read off the segment it came from. */
     const parts: ((lands: readonly boolean[]) => Part)[] = [];
     const take = (seg: Segment) => {
       const first = turns.length;
-      turns.push(...seg.turns);
+      turns.push(...seg.moves);
       for (const p of partsOf(seg, first)) parts.push(p);
     };
     if (free) take(segs[i++]);
@@ -182,7 +183,7 @@ function partsOf(
   seg: Segment,
   offset: number,
 ): ((lands: readonly boolean[]) => Part)[] {
-  const { turns, roles } = seg;
+  const { moves: turns, roles } = seg;
   const has = (r: Role) => !seg.remainder && roles.includes(r);
   const inner: Inner | null = has("swap")
     ? "swap"

@@ -92,6 +92,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-words.ts` — a hint's words bound to its marks | you write a hint step's sentence |
 | – `hint-text.ts` — the sentences several games share | another game already says your sentence |
 | – `slide-planner.ts` — sliding-permutation search | the player slides tiles into one arrangement |
+| – `permutation-planner.ts` — a staged plan over any permutation moves | the hint should place pieces in reading order, the way a person solves |
 | – `position-store.ts` — the positions a breadth-first search reached | a hint searches breadth-first |
 | – `piece.ts` — a piece on its cell | a cell holds a piece, is shaded or is ruled out |
 | – `region-fill.ts` — a fill for each region of a division | the puzzle divides your board into regions, or its answer is a coloring of them |
@@ -848,6 +849,19 @@ exact search's reach, and it may reach exactly one ply further than the
 ungated search, which is what makes gating it safe. Exemplars:
 `sixteen/index.ts` with `deepSearch`, `netslide/hint.ts` without. See
 `hints-search.md` § "Sliding-permutation games".
+
+### `permutation-planner.ts` — a staged plan over any permutation moves
+
+Reach for it when every move permutes the cells the same way whatever the
+board holds (and may turn the pieces it moves), and the hint should place
+pieces in reading order, keeping the finished ones. The game supplies its
+generator moves as `Effect`s (`effectOf` runs the game's own move function on
+an identity board), the board and the finished board; `planByStage` returns
+segments whose `roles` name each move's part in a technique for the
+narration. Move `2i` is generator `i` and `2i + 1` undoes it. Pieces that
+share a value are interchangeable. A move that depends on the board, such as
+Fifteen's gap, does not fit. Exemplar: `twiddle/solver.ts`, narrated in
+`twiddle/hint.ts`.
 
 ### `position-store.ts` — the positions a breadth-first search reached
 

@@ -26,15 +26,16 @@ const G = twiddleGame;
 const presetParams: TwiddleParams[] = leafPresets(G).map((p) => p.params);
 
 /** Shapes no preset deals: oblong, the block as wide or as tall as the board,
- * orientation on a larger board, rows-only at a size the preset does not
- * have, and a short shuffle. Orientation with an odd block is not here: its
- * hint can run out late in the game (`design.md` § "Known limit"). */
+ * orientation on a larger board and with an odd block, rows-only at a size
+ * the preset does not have, and a short shuffle. */
 const customParams: TwiddleParams[] = [
   "5x3",
   "3x5n3",
   "5x3n3",
   "3n3",
   "4o",
+  "4n3o",
+  "5n3o",
   "4r",
   "5x4n3",
   "3m5",

@@ -440,6 +440,15 @@ board, its finished board, its legal moves, a `heuristic(board)` and the
 budgets, and never decides when the exact search runs. Exemplar:
 [`netslide/hint.ts`](../src/games/netslide/hint.ts).
 
+The other planner for moves that permute cells is
+[`engine/permutation-planner.ts`](../src/engine/permutation-planner.ts),
+which places pieces in reading order the way a person does and has no reach
+to run out of. Measured on Sixteen and Netslide, its plans run two to three
+times longer than a search's, and its first request on a 5×5 board builds
+for seconds. So it suits a game whose moves no search reaches far enough
+with, such as Twiddle's large blocks, and a game a search finishes stays on
+`planSlides`.
+
 - Hand the planner the board the player sees, one integer a cell, not
   labeled pieces. With identical pieces a target that tells them apart can
   be unreachable while the finished picture is two moves away.
