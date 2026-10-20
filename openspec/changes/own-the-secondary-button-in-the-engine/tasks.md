@@ -1,6 +1,7 @@
 # Tasks
 
-**Waits on `proposal.md` § "The question for the owner": fold or drop.**
+**The owner chose the fold, and a declared verb for "rule it out" that keeps
+each game's own marks (`proposal.md` § "The owner's answers", 2026-10-20).**
 
 ## 1. The probe and the guard
 
@@ -20,13 +21,24 @@
 - [ ] 2.3 Inertia, Slide and Untangle declare the fact; `asPrimary` and
       Untangle's class tests go. Their specs and help pages follow.
 
-## 3. Verify
+## 3. The ruled-out verb
 
-- [ ] 3.1 The guard is green over all 57, and fails again with one game's
-      declaration removed and with one fold put back.
-- [ ] 3.2 In the app, with a mouse and with touch: a right click, a
+- [ ] 3.1 A `ruledOut` verb in `TargetVerbs`, in place of `secondary`, which
+      the model puts on the right button and Space; the game keeps its
+      `does` and its mark.
+- [ ] 3.2 The twelve games whose right button rules a target out declare it
+      (re-count from `targetVerbs` first), and a guard the declaration makes
+      possible holds them, seen failing first.
+- [ ] 3.3 `docs/input.md` § "Targets and verbs" names the verb where it
+      states the rule.
+
+## 4. Verify
+
+- [ ] 4.1 The guard is green over every registered game, and fails again
+      with one game's declaration removed and with one fold put back.
+- [ ] 4.2 In the app, with a mouse and with touch: a right click, a
       right-button drag, a held finger, and the bar, in one game of each of
       today's three kinds.
-- [ ] 3.3 `docs/input.md` § "A touch hold arrives as the right button"
+- [ ] 4.3 `docs/input.md` § "A touch hold arrives as the right button"
       states the ways that are left.
-- [ ] 3.4 Gate, commit, archive, push.
+- [ ] 4.4 Gate, commit, archive, push.

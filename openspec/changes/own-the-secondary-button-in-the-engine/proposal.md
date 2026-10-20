@@ -1,8 +1,10 @@
 # own-the-secondary-button-in-the-engine
 
 **Status: filed 2026-10-12 at the owner's word ("I really want this to be
-consistently managed in the engine"). It waits on one answer, § "The question
-for the owner". Every figure was measured 2026-10-12.**
+consistently managed in the engine"). The owner answered both questions on
+2026-10-20, § "The owner's answers". Every figure was measured 2026-10-12;
+Target (`numgame`), added 2026-10-15, declares the flag too, which makes the
+first row eight games.**
 
 ## Why
 
@@ -57,7 +59,18 @@ seven other games), and nothing has asked since.
 - **The flag is renamed if its meaning moves** (it would read "has no
   secondary action", not "ignores the button").
 
-## The question for the owner
+## The owner's answers
+
+Asked and answered 2026-10-20:
+
+1. **The right button folds onto the left** in every game with no secondary
+   action: a right click and a right drag do what the left button does, in
+   all eleven (the eight that declare the flag today, and Inertia, Slide and
+   Untangle). The table below was the question.
+2. **The engine owns "rule it out" as a declared verb, and each game keeps
+   its own mark and words** (§ "Also: the right button is the cross"). The
+   engine puts the verb on the right button and Space, and a guard can find
+   every game that has one. No player sees a change from it.
 
 **In a game with no secondary action, what does a mouse's right button do?**
 Today it does nothing in seven and the primary action in three. Managed in
