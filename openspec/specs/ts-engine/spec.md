@@ -718,17 +718,18 @@ a check, because nothing else observes it when it lies.
 
 #### Scenario: A flag declared against the behavior fails
 
-- **WHEN** a game sets `ignoresSecondaryButton` but a right-button press
-  changes its board somewhere
+- **WHEN** a game sets `ignoresSecondaryButton` but a right-button gesture
+  somewhere does what the left button's would not
 - **THEN** the cross-game guard fails, naming the game
 
 ### Requirement: Each flag of the contract is held to its derivation
 
-`ignoresSecondaryButton` SHALL be set if and only if the game consumes no
-`RIGHT_BUTTON` press anywhere on its board. `canMarkAll` SHALL be set if and
-only if the game's `interpretMove` returns a move for an `M` press. A source
-scan standing in for a derivation SHALL read the game's code with comments
-removed: a mention in prose is not a use.
+`ignoresSecondaryButton` SHALL be set if and only if no secondary gesture on
+the game's board changes anything the player can perceive that the primary
+gesture would not. `canMarkAll` SHALL be set if and only if the game's
+`interpretMove` returns a move for an `M` press. A source scan standing in for
+a derivation SHALL read the game's code with comments removed: a mention in
+prose is not a use.
 
 #### Scenario: A flag the behavior calls for but the game omits fails
 

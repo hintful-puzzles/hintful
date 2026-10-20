@@ -20,6 +20,7 @@ import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
+  rulingOut,
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
@@ -149,7 +150,7 @@ const targetVerbs: TargetVerbs<
   }),
   sweep: { holds: (s, { x, y }) => s.grid[y * s.size + x] },
   primary: star,
-  secondary: cross,
+  secondary: rulingOut(cross),
   keyOnly: [
     {
       does: "clear it",

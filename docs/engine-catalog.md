@@ -250,7 +250,8 @@ and a verb per button, each returning the game's own `Move`.
 `interpretTargetVerbs` owns the parking, the reveal-first select, Enter and
 Space, and `controlsMarkdown` writes the help's Controls paragraph from the
 same declaration. `squareGrid` is the common geometry; `letterKey`,
-`digitKey` and `ERASE_KEYS` the common keys. A drag game's own arms call
+`digitKey` and `ERASE_KEYS` the common keys; `rulingOut` declares a right
+button that marks a target as holding nothing. A drag game's own arms call
 `pressTarget` and `buttonVerb`; a hint's click steps come from `verbClicks`
 (`hints.md` § "Every step is a gesture"). `target-verb.test.ts` holds a
 declaring game's keys to its buttons. Adopting it: [`input.md`](./input.md)

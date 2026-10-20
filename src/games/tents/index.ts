@@ -47,6 +47,7 @@ import {
   buttonVerb,
   interpretTargetVerbs,
   pressTarget,
+  rulingOut,
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
@@ -134,7 +135,7 @@ const targetVerbs: TargetVerbs<TentsState, TentsUi, TentsDrawState, Point, Tents
   {
     geometry: squareGrid({ size: (s) => s, border: () => TLBORDER }),
     primary: tentVerb,
-    secondary: grassVerb,
+    secondary: rulingOut(grassVerb),
     keyOnly: [
       {
         does: "put a tent on it",

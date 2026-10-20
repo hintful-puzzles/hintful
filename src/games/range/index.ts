@@ -36,6 +36,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import {
   interpretTargetVerbs,
+  rulingOut,
   squareGrid,
   type TargetVerbs,
   verbGesture,
@@ -116,10 +117,10 @@ const targetVerbs: TargetVerbs<RangeState, RangeUi, RangeDrawState, Point, Range
   {
     geometry: squareGrid({ size: (s) => s, border }),
     primary: { does: `color it ${SHADED_NAME}`, apply: cycleAt(false) },
-    secondary: {
+    secondary: rulingOut({
       does: `mark it with a cross, if you know it should not be ${SHADED_NAME}`,
       apply: cycleAt(true),
-    },
+    }),
     sweep: { holds: (s, { x: c, y: r }) => s.grid[idx(r, c, s.w)] },
   };
 

@@ -14,6 +14,7 @@ import { cursorDelta, newCursor, stripModifiers } from "../../engine/pointer.ts"
 import { registerGame } from "../../engine/registry.ts";
 import {
   interpretTargetVerbs,
+  rulingOut,
   squareGrid,
   type TargetVerbs,
   verbClicks,
@@ -84,10 +85,10 @@ const targetVerbs: TargetVerbs<
     does: `turn it ${SHADED_NAME}, then ${UNSHADED_NAME}, then empty again`,
     apply: toggle(false),
   },
-  secondary: {
+  secondary: rulingOut({
     does: `turn it ${UNSHADED_NAME}, then ${SHADED_NAME}, then empty again`,
     apply: toggle(true),
-  },
+  }),
   sweep: {
     holds: (s, { x, y }) => s.cells[y * s.width + x] & STATE_MARK_MASK,
   },

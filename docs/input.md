@@ -37,8 +37,8 @@ already; a copy changes the verbs and keeps the shape.
 7. Make every action reachable with the two buttons alone, clicks and drags,
    and from the keyboard alone, to completion (§ "One pointer, two buttons",
    § "The input-parity bar").
-8. Declare `Game.ignoresSecondaryButton` exactly when the right button means
-   nothing (§ "A touch hold arrives as the right button").
+8. Declare `Game.ignoresSecondaryButton` exactly when the right button has
+   no action of its own (§ "A touch hold arrives as the right button").
 9. Run the app with a finger-sized pointer and with the keyboard alone.
 
 Then take from the table what the game has beyond this: a drag, typed
@@ -160,7 +160,7 @@ questions the guards ask, so two guards cannot drift apart.
   nothing to erase on a fresh board, and a Clear key on an empty cell is a
   legitimate no-op. A change is a sufficient sign that an input means
   something; report a game as meaningless only when it is invisible under
-  every observation (`secondaryMeaning`).
+  every observation (`secondaryAction`).
 - **Never credit a game because it consumed the input.** Consuming
   `RIGHT_BUTTON` with a bare repaint is not a meaning: ask what the player
   can perceive, now or after the next input, in the frame or the save.
@@ -268,17 +268,19 @@ its drag and release follow (`detectSecondaryButton`, `src/utils/touch.ts`).
 "Press, pause to aim, then drag" is such a press, so **every press-and-drag
 gesture must survive the promotion**. Choose by what the right button means:
 
-- **Nothing: declare `Game.ignoresSecondaryButton`.** The view then skips the
-  detection, and delivers the press at once. `input-parity.test.ts` asserts
-  the biconditional: the flag is declared exactly when the secondary gesture
-  changes nothing a player can perceive, in the frame or the save. A pencil
-  press through `pressNoteTakingCell` counts as a meaning with no
+- **Nothing of its own: declare `Game.ignoresSecondaryButton`, and test only
+  the left button's codes.** The view then skips the detection and delivers
+  the press at once, the bar offers no "Right click" toggle, and the midend
+  hands the game a mouse's right button as the left, so a right click plays
+  as a click. `input-parity.test.ts` asserts the biconditional: the flag is
+  declared exactly when no secondary gesture changes anything a player can
+  perceive, in the frame or the save, that the primary gesture would not,
+  and a declaring game does nothing with a right button handed to it
+  directly. A game never folds the right button onto the left itself. A
+  pencil press through `pressNoteTakingCell` counts as an action with no
   `RIGHT_BUTTON` branch of the game's own. The flag is not upstream's
-  `REQUIRE_RBUTTON` inverted: a game may use the right button without needing
-  it.
-- **A meaning, but the promoted gesture should do the primary thing: fold
-  right onto left** at the top of `interpretMove`. Exemplar: `asPrimary()` in
-  [`inertia/index.ts`](../src/games/inertia/index.ts).
+  `REQUIRE_RBUTTON` inverted: a game may use the right button without
+  needing it.
 - **A meaning the drag keeps: continue the drag on the button class.** Test
   `isMouseDrag` and `isMouseRelease`, not `LEFT_DRAG`, so a promoted press
   starts and finishes its own right-button drag. Exemplar:
@@ -382,12 +384,16 @@ What a game decides:
   cycle or "either button clears" is a line of the verb's `apply`.
 - **The left button places what the puzzle is about, and the right button
   says "nothing here".** A cross, a dot or any other mark that rules a
-  target out is the `secondary` verb, however much oftener the player makes
-  it than the placement: one meaning a button across the collection is worth
-  more than a click saved in one game (the owner's ruling, 2026-10-13, on
-  Star Battle, which first shipped the other way round). Where a placement
-  rules the crosses out, the engine's preference can make them for the player
-  (`docs/mechanics.md` § "Preferences", `rulesOut`).
+  target out is the `secondary` verb, declared as `secondary:
+  rulingOut({ … })` with the game's own words and mark, or a cycle whose
+  first press makes that mark. `primary` does not typecheck with it, however
+  much oftener the player makes the mark than the placement: one meaning a
+  button across the collection is worth more than a click saved in one game
+  (the owner's ruling, 2026-10-13, on Star Battle, which first shipped the
+  other way round). Where a placement rules the crosses out, the engine's
+  preference can make them for the player (`docs/mechanics.md` §
+  "Preferences", `rulesOut`), and `target-verb.test.ts` holds such a game to
+  a ruling-out right button.
 - **Space is always the right button's verb.** A verb that wants another key
   takes `keys`; it does not remap Space.
 - **Keys use the model's spellings**: `letterKey("T")` for a letter in either

@@ -67,6 +67,7 @@ import {
   ERASE_KEYS,
   interpretTargetVerbs,
   pressTarget,
+  rulingOut,
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
@@ -194,7 +195,7 @@ const targetVerbs: TargetVerbs<BoatsState, BoatsUi, BoatsDrawState, Point, Boats
       },
     },
     primary: boatVerb,
-    secondary: waterVerb,
+    secondary: rulingOut(waterVerb),
     keyOnly: [
       {
         does: "empty it",

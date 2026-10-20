@@ -32,7 +32,9 @@ import { getTsGame, registeredGameIds } from "./registry.ts";
 import {
   controlsMarkdown,
   interpretTargetVerbs,
+  isRulingOut,
   type KeyOnlyVerb,
+  rulingOut,
   squareGrid,
   type TargetVerbs,
   type TargetVerbUi,
@@ -110,6 +112,24 @@ describe("the model", () => {
     const ui = { cursor: newCursor() };
     expect(run(ui, CURSOR_RIGHT)).toBe(UI_UPDATE);
     expect(ui.cursor).toEqual({ x: 1, y: 0, visible: true });
+  });
+
+  it("a ruling-out verb goes on the right button and nowhere else", () => {
+    const dot = rulingOut(verbs.primary);
+    const ruling: TargetVerbs<S, TargetVerbUi, typeof ds, Point, M> = {
+      ...verbs,
+      secondary: dot,
+    };
+    const reversed: TargetVerbs<S, TargetVerbUi, typeof ds, Point, M> = {
+      ...verbs,
+      // @ts-expect-error The left button places; a ruling-out verb is the right's.
+      primary: dot,
+    };
+    expect([isRulingOut(ruling.secondary), isRulingOut(verbs.secondary)]).toEqual([
+      true,
+      false,
+    ]);
+    expect(reversed.primary).toBe(dot);
   });
 
   it("a game with no second verb takes Space as a second Enter", () => {
@@ -498,5 +518,23 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
             `${verb.does}: ${k.name} (code ${code}) against its ${route.kind} route at its target`,
           ).toEqual([]);
     }
+  });
+});
+
+describe("the marks a placement rules out are the right button's", () => {
+  /**
+   * `Game.rulesOut` makes, for the player, the marks a placement rules out:
+   * the marks the right button makes by hand. A game declaring it without a
+   * ruling-out right button has its crosses on the wrong button, or no
+   * button for them at all.
+   */
+  it("every game that brings them declares its right button as ruling out", () => {
+    const bringing = registeredGameIds().filter(
+      (id) => getTsGame(id)?.rulesOut !== undefined,
+    );
+    expect(bringing.length, "no game brings the marks it rules out").toBeGreaterThan(0);
+    expect(
+      bringing.filter((id) => !isRulingOut(getTsGame(id)?.targetVerbs?.secondary)),
+    ).toEqual([]);
   });
 });

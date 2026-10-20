@@ -45,7 +45,7 @@
  * sign that an input means something, which is how the secondary-button guard
  * asks a far sharper question than "was it consumed" without re-opening the
  * rejected one: a game is reported meaningless only when it is invisible under
- * every observation. See `secondaryMeaning` in `testing/input-probe.ts`.
+ * every observation. See `secondaryAction` in `testing/input-probe.ts`.
  *
  * The probes themselves live in
  * [`testing/input-probe.ts`](./testing/input-probe.ts) so this file and
@@ -87,7 +87,7 @@ import {
   probeBoard as board,
   fingerprint,
   probePoints,
-  secondaryMeaning,
+  secondaryAction,
   UNACTIONABLE,
   unactionableClaims,
 } from "./testing/input-probe.ts";
@@ -243,21 +243,20 @@ describe("a long press cannot silently swallow a gesture", () => {
   /**
    * The trap `docs/input.md` § "A touch hold arrives as the right button"
    * describes, stated so it cannot be innocent. `Game.ignoresSecondaryButton`
-   * declares that the secondary button means nothing in this game, and the flag
-   * turns off `detectSecondaryButton` entirely — so a wrong answer in either
-   * direction costs a real gesture, and the two are asserted **equal** rather
+   * declares that the secondary button has no action of its own in this game:
+   * the view then promotes no press, the bar offers no "Right click" toggle,
+   * and the midend hands the game a right button as the left. A wrong answer
+   * either way costs something real, so the two are asserted **equal** rather
    * than merely compatible.
    *
-   * **The question is "did anything observable happen", not "was it consumed".**
-   * Consumption is satisfied by a bare repaint: a game that consumes
-   * `RIGHT_BUTTON` without ever committing a move would hold the biconditional
-   * whatever it did, and a typing tail that answers any in-grid pointer button
-   * hides the deletion of an entire right-button arm.
+   * **The question is "did anything observable happen that the primary
+   * gesture would not have done", not "was it consumed".** Consumption is
+   * satisfied by a bare repaint, and a right button folded onto the left by
+   * the game's own hand is consumed and acts, with nothing of its own.
    *
-   * `secondaryMeaning` asks the sharper question, and it is one question rather
-   * than a list of special cases: the collection's legitimate answers — commit
-   * a move, change what the next input does, fold onto the primary button
-   * (Slide) — are all "something observable changed", now or next. Nothing is declared; a game joins by *having* the behavior.
+   * A declaring game is also held to doing nothing at all with the button it
+   * is never handed, so a fold or a branch left in it fails here rather than
+   * lying dead.
    */
   const declared: string[] = [];
   const observed: string[] = [];
@@ -266,24 +265,29 @@ describe("a long press cannot silently swallow a gesture", () => {
     const game = getTsGame(id) as AnyGame | undefined;
     if (!game) continue;
 
-    it(`${id}: declares ignoresSecondaryButton iff it ignores it`, () => {
-      const { used, evidence } = secondaryMeaning(game, id);
-      if (!used) observed.push(id);
-      if (game.ignoresSecondaryButton) declared.push(id);
+    it(`${id}: declares ignoresSecondaryButton iff it has no secondary action`, () => {
+      const { kind, evidence } = secondaryAction(game, id);
+      const declares = game.ignoresSecondaryButton ?? false;
+      if (kind !== "own") observed.push(id);
+      if (declares) declared.push(id);
 
-      expect(
-        game.ignoresSecondaryButton ?? false,
-        used
-          ? `${id} has a secondary meaning (${evidence}), so it must NOT set ` +
-              "ignoresSecondaryButton — setting it would turn off a long press " +
-              "the game handles"
-          : `${id} does nothing observable with RIGHT_BUTTON — no move, no ` +
-              "change to what the next input does, no fold onto the primary " +
-              "button — so it MUST set ignoresSecondaryButton. Otherwise every " +
-              "long press and two-finger tap a touch player makes is silently " +
-              "dropped, and a press-and-drag gesture dies whenever they pause " +
-              "to aim.",
-      ).toBe(!used);
+      const wrong =
+        kind === "own"
+          ? declares &&
+            `${id} has a secondary action of its own (${evidence}), so it must ` +
+              "NOT set ignoresSecondaryButton, which would turn off a long " +
+              "press the game handles and hand it the primary button in its place"
+          : declares
+            ? kind === "primary" &&
+              `${id} declares ignoresSecondaryButton, so the midend never ` +
+                `hands it the right button, yet it acts on one (${evidence}): ` +
+                "take the branch or fold out of the game"
+            : `${id} has no secondary action of its own ` +
+              `(${evidence ?? "the right button does nothing"}), so it MUST ` +
+              "set ignoresSecondaryButton. Otherwise a touch press held to aim " +
+              "waits out the long-press detection, and the bar offers a toggle " +
+              "that changes nothing.";
+      expect(wrong || null).toBeNull();
     });
   }
 

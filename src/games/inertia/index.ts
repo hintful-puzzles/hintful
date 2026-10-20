@@ -28,9 +28,6 @@ import {
   LEFT_RELEASE,
   MOD_NUM_KEYPAD,
   numpadDirection,
-  RIGHT_BUTTON,
-  RIGHT_DRAG,
-  RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
@@ -141,34 +138,14 @@ function aimedDirection(s: InertiaState, ts: number, p: Point): number {
   return s.board.at(s.px + DX[dir], s.py + DY[dir]) === WALL ? -1 : dir;
 }
 
-/**
- * Inertia has no use for a secondary button — so take it as the primary one.
- *
- * This is what makes the swipe work with a finger: on touch, a press that stays
- * put for `holdTime` (350ms) arrives as a **right** button
- * (`detectSecondaryButton`), and "hold the ball, then drag" is exactly such a
- * press — so without this the gesture would die when the player paused to aim.
- *
- * `Game.ignoresSecondaryButton` would save the swipe as well, but only by
- * stopping the promotion: a mouse's right click would still arrive as
- * `RIGHT_BUTTON`, and would stop sending the ball toward the square clicked.
- */
-function asPrimary(button: number): number {
-  if (button === RIGHT_BUTTON) return LEFT_BUTTON;
-  if (button === RIGHT_DRAG) return LEFT_DRAG;
-  if (button === RIGHT_RELEASE) return LEFT_RELEASE;
-  return button;
-}
-
 function interpretMove(
   s: InertiaState,
   ui: InertiaUi,
   ds: InertiaDrawState,
   p: Point,
-  rawButton: number,
+  button: number,
 ): InertiaMove | null | UiUpdate {
   const ts = ds.tileSize;
-  const button = asPrimary(rawButton);
   let dir = -1;
 
   if (button === LEFT_BUTTON) {
@@ -233,6 +210,9 @@ export const inertiaGame: Game<
   InertiaRung
 > = {
   id: "inertia",
+  // A click and the swipe from the ball are the whole of the pointer input,
+  // so a held finger aiming the swipe stays the swipe.
+  ignoresSecondaryButton: true,
 
   defaultParams,
   presets() {

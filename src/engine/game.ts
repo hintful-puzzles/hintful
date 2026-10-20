@@ -356,21 +356,23 @@ export interface Game<
    */
   markAll?(state: State): Move | null;
   /**
-   * The game has **no meaning for the secondary button at all**, so the
-   * frontend must not manufacture one: `view-interactive.ts` skips
-   * `detectSecondaryButton` entirely for such a game, and a finger that rests
-   * before it drags stays a left press.
+   * The game has **no action of its own for the secondary button**, and the
+   * engine does the rest: `view-interactive.ts` skips `detectSecondaryButton`,
+   * so a finger that rests before it drags stays a left press and arrives at
+   * once; the bar offers no "Right click" toggle; and the midend hands the
+   * game a mouse's right button as the left, so a right click plays as a left
+   * click and the game never sees a button it has nothing for.
    *
-   * Without it, a touch press is promoted to `RIGHT_BUTTON` after a 350 ms
-   * hold, and a game that never tests `RIGHT_BUTTON` drops the whole gesture:
-   * "press, pause to aim, then drag" *is* a press that stays put, so Pegs' drag
-   * would die whenever the player stopped to think.
+   * Without it, a touch press waits out a 350 ms hold and is then promoted to
+   * `RIGHT_BUTTON`, so "press, pause to aim, then drag" would arrive as a
+   * button the game does not use.
    *
    * **Exactly guarded, so it cannot drift**: `input-parity.test.ts` asserts the
-   * biconditional, that a game declares this **iff** it consumes `RIGHT_BUTTON`
-   * nowhere on a real board. Do not set it to suppress an affordance you merely
-   * dislike; the sweep will convict the declaration on the day the game grows a
-   * secondary meaning.
+   * biconditional, that a game declares this **iff** no secondary gesture on a
+   * real board does anything the primary one would not, and that a declaring
+   * game does nothing with a `RIGHT_BUTTON` handed to it directly. Do not set
+   * it to suppress an affordance you merely dislike; the sweep will convict
+   * the declaration on the day the game grows a secondary action.
    *
    * It is not upstream's `REQUIRE_RBUTTON` inverted: a third category exists
    * and is the largest. Tracks *uses* the right button without *needing* it,

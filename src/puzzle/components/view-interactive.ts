@@ -382,13 +382,10 @@ export class PuzzleViewInteractive extends PuzzleView {
       button = swapButtons(button);
     }
 
-    // A game with no secondary meaning must not have one manufactured for it.
-    // The detector promotes a finger that stays within 8 px for 350 ms to
-    // `RIGHT_BUTTON`, and "press, pause to aim, then drag" is exactly such a
-    // press — so for a game that never tests `RIGHT_BUTTON` the promotion drops
-    // the whole gesture, only on touch, and only for the player who stopped to
-    // think. Skipping detection also delivers the press immediately instead of
-    // holding it for the detection window.
+    // A game with no secondary action has nothing for the detector to find.
+    // It promotes a finger that stays within 8 px for 350 ms to
+    // `RIGHT_BUTTON`, and holds every press for that window to see; skipping
+    // it delivers the press at once.
     const secondary = !this.puzzle.ignoresSecondaryButton;
 
     // event may be mutated after this await
@@ -545,9 +542,8 @@ export class PuzzleViewInteractive extends PuzzleView {
   private handleContextMenu(event: PointerEvent) {
     // Cancel the context menu unconditionally. Canceling only where the puzzle
     // wanted the right button would need the press's answer from the worker,
-    // which arrives after this event. `Game.ignoresSecondaryButton` is not that
-    // flag: it marks games with no secondary meaning at all, where a
-    // right-click does nothing either way.
+    // which arrives after this event. A game with no secondary action
+    // (`Game.ignoresSecondaryButton`) wants it too, as its left button.
     event.preventDefault();
   }
 

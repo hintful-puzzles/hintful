@@ -342,8 +342,9 @@ changed; losing it would read as a dropped keypress.
 ### Requirement: Controls: Either pointer button moves a Slide block
 
 The right button's press, drag and release SHALL do what the left button's
-do, so that a touch held still before it drags, which arrives as the right
-button, still moves its block.
+do. Slide binds nothing to the secondary button and declares
+`ignoresSecondaryButton`, so a touch held still before it drags stays a left
+press, and a mouse's right button reaches the game as the left one.
 
 #### Scenario: A press held before the drag
 

@@ -26,6 +26,9 @@ import { CELL, mark, phrase, stepMarks, unshaped } from "./hint-words.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { endParams } from "./params.ts";
 import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
   CURSOR_SELECT,
   CURSOR_UP,
   LEFT_BUTTON,
@@ -36,6 +39,8 @@ import {
   MOD_SHFT,
   newCursor,
   RIGHT_BUTTON,
+  RIGHT_DRAG,
+  RIGHT_RELEASE,
   stripModifiers,
 } from "./pointer.ts";
 import { RetryLimitExceeded } from "./retry-limit.ts";
@@ -443,6 +448,25 @@ describe("Midend moves / undo / redo", () => {
   it("a non-move input returns false and changes nothing", () => {
     expect(h.m.processInput(0, 0, 0x9999)).toBe(false);
     expect(h.state()).toMatchObject({ currentMove: 0, totalMoves: 0 });
+  });
+
+  it("hands a game with no secondary action the left button for the right", () => {
+    const seen: number[] = [];
+    const h = harness({
+      ...fakeGame,
+      ignoresSecondaryButton: true,
+      interpretMove: (_s, _ui, _ds, _p, button) => {
+        seen.push(button);
+        return null;
+      },
+    });
+    h.m.newGame();
+    // The cursor codes sit just above `RIGHT_RELEASE`: a fold widened into a
+    // range would take them too.
+    const keys = [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_SELECT];
+    for (const b of [RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE, ...keys])
+      h.m.processInput(0, 0, b);
+    expect(seen).toEqual([LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE, ...keys]);
   });
 
   describe("a key the game declines with Shift on it", () => {

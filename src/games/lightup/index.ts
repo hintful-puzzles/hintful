@@ -43,6 +43,7 @@ import {
 import {
   interpretTargetVerbs,
   letterKey,
+  rulingOut,
   squareGrid,
   type TargetVerbs,
   verbGesture,
@@ -133,11 +134,11 @@ const targetVerbs: TargetVerbs<
 > = {
   geometry: squareGrid({ size: (s) => s, border }),
   primary: { does: "place or remove a light", apply: toggle("light") },
-  secondary: {
+  secondary: rulingOut({
     does: "place or remove a cross, marking a square you think holds no light",
     keys: [letterKey("I")],
     apply: toggle("impossible"),
-  },
+  }),
   // The cross only: a row of bulbs light each other, so it is never wanted.
   sweep: {
     holds: (s, { x, y }) => s.flags[idx(x, y, s.w)] & (F_LIGHT | F_IMPOSSIBLE),

@@ -113,13 +113,50 @@ Unruly). Galaxies and Flip and Flood have none. Whether the 12 should share
 one declared verb, and its words, is this change's to settle after the
 question above.
 
+## What the work found
+
+Written 2026-10-20, while implementing.
+
+- **Rectangles was credited on incidental evidence.** Asked the player's
+  question, the probe first found nothing of Rectangles' own: its secondary
+  drag erases only the edges inside the box it spans, and the primary drag
+  over that box draws its outline and erases the same edges. The old guard
+  passed Rectangles because a right press hides the cursor as a left press
+  does. A prime that drags to one neighbor, followed by a secondary drag to
+  another, leaves an edge inside a larger box, and there the eraser's board
+  is its own. With that prime the census matched the table in § "Why".
+- **Seventeen games rule a target out, not twelve.** Five more right buttons
+  first make a mark that says "not this": Bricks', Mosaic's and Pattern's
+  cycles start at clear, Singles' circle says a square stays clear, and
+  Subsets' says "rule it out". Star Battle's right button is a cycle that
+  starts at its cross and is among the twelve, so these five are the same
+  shape, and all seventeen declare it. No player sees a change.
+- **The verb is a marked `secondary`, not a slot of its own.** A separate
+  `ruledOut` slot would have to be taught to every reader that indexes the
+  verbs by button (the sweep, `verbClicks`, `buttonVerb`, the Controls
+  paragraph). `secondary: rulingOut({ … })` marks the verb instead, `primary`
+  refuses a marked verb at the type level, and `isRulingOut` finds every
+  game that has one. It is named `rulingOut` because Light Up, Star Battle
+  and Tents each have a `ruledOut` of their own, the function their
+  `Game.rulesOut` calls.
+- **The flag keeps its name.** What a game declares by
+  `ignoresSecondaryButton` has not moved: it does nothing with the right
+  button. What moved is the engine's answer, and renaming it would have
+  touched some thirty files for no reader's benefit.
+- **A finger swipe in emulated touch first went the wrong way, on HEAD as
+  well as here.** The instrument was at fault: Chrome's touch emulation
+  switches the page to its coarse-pointer layout, which moves the board, so
+  coordinates measured with a mouse aim at another square. Measured under
+  emulation, the held finger aims and plays as it should.
+
 ## Capabilities
 
-None at filing; see `.openspec.yaml`. The work modifies `engine-input` ("A
-game with no secondary meaning is not given a synthetic one", "The
-secondary-button declaration is held to the behavior", "A secondary meaning
-is derived from what the player can perceive") and `ts-engine`, and the specs
-of Inertia, Slide and Untangle where they state the fold.
+The work modifies `engine-input` ("A game with no secondary meaning is not
+given a synthetic one", "The secondary-button declaration is held to the
+behavior", "A secondary meaning is derived from what the player can
+perceive") and adds two requirements to it, the fold and the ruling-out
+verb. It also modifies `ts-engine`, and the specs of Inertia and Slide where
+they state the fold.
 
 ## Impact
 

@@ -237,17 +237,21 @@ can make).
 
 ### Requirement: Controls: The swipe works on the secondary button
 
-The whole swipe gesture SHALL also work on the **secondary** button, because on
-touch a press that stays put for the long-press interval is delivered as one,
-and a press that stays put is exactly what holding the ball to aim looks like.
-Inertia binds nothing else to the secondary button. It folds that button onto
-the primary by hand and does not declare `ignoresSecondaryButton`, so that a
-mouse's right click plays as its left does.
+The whole swipe gesture SHALL also work on the **secondary** button. Inertia
+binds nothing to the secondary button and declares `ignoresSecondaryButton`,
+so a held finger aiming the swipe is never promoted to it, and a mouse's
+right button reaches the game as the left one.
 
 #### Scenario: A held finger still aims
 
-- **WHEN** a press on the ball arrives as the secondary button, is dragged out
-  to the east and released
+- **WHEN** a touch press on the ball is held still past the long-press
+  interval, dragged out to the east and released
+- **THEN** the ball sets off east
+
+#### Scenario: A right-button swipe plays as a left one
+
+- **WHEN** a mouse presses the ball with the right button, drags out to the
+  east and releases
 - **THEN** the ball sets off east
 
 ### Requirement: Hint: The hint plans for the nearest gem the ball can safely take

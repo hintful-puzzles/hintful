@@ -69,6 +69,7 @@ import { registerGame } from "../../engine/registry.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
+  rulingOut,
   type TargetGeometry,
   type TargetVerbs,
   verbClicks,
@@ -571,12 +572,12 @@ const targetVerbs: TargetVerbs<
       "(yellow)",
     apply: lineVerb(LEFT_BUTTON),
   },
-  secondary: {
+  secondary: rulingOut({
     does:
       "mark it as definitely not part of the loop (faint gray), and again to " +
       "return it to undecided",
     apply: lineVerb(RIGHT_BUTTON),
-  },
+  }),
   keyOnly: [
     {
       does: "return the edge under the cursor to undecided",

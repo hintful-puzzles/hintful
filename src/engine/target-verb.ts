@@ -158,15 +158,47 @@ export interface Sweep<State, DrawState, Target> {
   readonly says?: string;
 }
 
+/** What {@link rulingOut} sets on a verb. */
+const RULING_OUT: unique symbol = Symbol("rulingOut");
+
+/** A verb that says a target holds nothing: see {@link rulingOut}. */
+export interface RulingOutVerb<State, Ui, Target, Move>
+  extends TargetVerb<State, Ui, Target, Move> {
+  readonly [RULING_OUT]: true;
+}
+
+/**
+ * `verb`, declared as the one that rules a target out: a cross, water,
+ * grass, a faint line, "unused" — whatever mark says "nothing goes here",
+ * with the game's own words and its own mark, or a cycle whose first press
+ * makes that mark. Only `secondary` takes it, so the left button places what
+ * the puzzle is about and the right button rules it out in every game, and
+ * {@link isRulingOut} finds every game that has one.
+ */
+export function rulingOut<S, U, T, M>(
+  verb: TargetVerb<S, U, T, M>,
+): RulingOutVerb<S, U, T, M> {
+  return { ...verb, [RULING_OUT]: true };
+}
+
+/** Whether `verb` was declared with {@link rulingOut}. */
+export function isRulingOut(verb?: object): boolean {
+  return verb !== undefined && RULING_OUT in verb;
+}
+
 /** A game's whole target-verb input: its geometry and the verbs by button. */
 export interface TargetVerbs<State, Ui, DrawState, Target, Move> {
   readonly geometry: TargetGeometry<State, Ui, DrawState, Target>;
   /** What a drag on from a press repeats; nothing, where absent. */
   readonly sweep?: Sweep<State, DrawState, Target>;
-  /** The left button, and Enter at the cursor. */
-  readonly primary: TargetVerb<State, Ui, Target, Move>;
+  /** The left button, and Enter at the cursor. Never a {@link rulingOut}
+   * verb. */
+  readonly primary: TargetVerb<State, Ui, Target, Move> & {
+    readonly [RULING_OUT]?: never;
+  };
   /** The right button, and Space at the cursor. A game without one takes
-   * Space as a second Enter. */
+   * Space as a second Enter. Where it rules a target out, it is declared
+   * with {@link rulingOut}. */
   readonly secondary?: TargetVerb<State, Ui, Target, Move>;
   /** Verbs no button applies directly, each with its keys and the pointer's
    * route to the same move: Net's half turn, or an erase key whose result the

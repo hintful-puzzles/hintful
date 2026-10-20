@@ -34,6 +34,7 @@ import { isMouseDown, newCursor, stripModifiers } from "../../engine/pointer.ts"
 import { registerGame } from "../../engine/registry.ts";
 import {
   interpretTargetVerbs,
+  rulingOut,
   squareGrid,
   type TargetVerbs,
   verbGesture,
@@ -134,10 +135,10 @@ const targetVerbs: TargetVerbs<
 > = {
   geometry,
   primary: { does: `turn it ${SHADED_NAME}`, apply: mark("black") },
-  secondary: {
+  secondary: rulingOut({
     does: `circle it, marking a square you are sure should stay ${UNSHADED_NAME}`,
     apply: mark("circle"),
-  },
+  }),
   sweep: { holds: (s, { x, y }) => s.flags[y * s.w + x] & (F_BLACK | F_CIRCLE) },
 };
 

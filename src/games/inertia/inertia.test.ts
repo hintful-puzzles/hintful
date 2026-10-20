@@ -416,27 +416,6 @@ describe("inertia swipe", () => {
     expect(inertiaGame.interpretMove(s, u, ds, center(2, 0), RELEASE)).toBe(UI_UPDATE);
   });
 
-  it("survives a touch long-press, which arrives as the right button", () => {
-    // On touch, a press that stays put for 350ms is delivered as a *right*
-    // button (the frontend reads it as a long-press) — and "hold the ball, then
-    // drag" is exactly a press that stays put. So the whole gesture has to work
-    // on the secondary button too, or it would die the moment a player paused
-    // to aim.
-    const { s, ds, u, center, ball } = swipeBoard();
-    const R_PRESS = 0x0202;
-    const R_DRAG = 0x0205;
-    const R_RELEASE = 0x0208;
-
-    expect(inertiaGame.interpretMove(s, u, ds, ball, R_PRESS)).toBe(UI_UPDATE);
-    expect(u.aiming).toBe(true);
-    expect(inertiaGame.interpretMove(s, u, ds, center(4, 2), R_DRAG)).toBe(UI_UPDATE);
-    expect(u.aimDir).toBe(E);
-    expect(inertiaGame.interpretMove(s, u, ds, center(4, 2), R_RELEASE)).toEqual({
-      type: "move",
-      dir: E,
-    });
-  });
-
   it("ignores drag and release when no swipe is under way", () => {
     const { s, ds, u, center } = swipeBoard();
     expect(inertiaGame.interpretMove(s, u, ds, center(4, 2), DRAG)).toBeNull();

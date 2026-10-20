@@ -756,9 +756,10 @@ and the shell's controls follow them:
   consumers already tolerate. Exemplar: `textFormat` in
   [`abcd/state.ts`](../src/games/abcd/state.ts).
 - **A game declares only what the midend needs synchronously and cannot read
-  off a method**: `ignoresSecondaryButton`, where the secondary button means
-  nothing. A touch hold then stays a left press ([`input.md`](./input.md) §
-  "A touch hold arrives as the right button").
+  off a method**: `ignoresSecondaryButton`, where the secondary button has
+  no action of its own. A touch hold then stays a left press, and a right
+  click arrives as a left one ([`input.md`](./input.md) § "A touch hold
+  arrives as the right button").
 - **Printing has no implementation.** A print feature would be written from
   scratch, so do not promise one without designing it.
 

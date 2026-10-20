@@ -131,6 +131,19 @@ interface BoardLeft {
   played: boolean;
 }
 
+/**
+ * `button` with the right button read as the left, for a game with no
+ * secondary action (`Game.ignoresSecondaryButton`): a mouse's right click
+ * plays as a left click, and the game never sees a button it has nothing for. A pointer press carries no modifier bits, so
+ * the three codes are compared whole.
+ */
+function asPrimary(button: number): number {
+  if (button === RIGHT_BUTTON) return LEFT_BUTTON;
+  if (button === RIGHT_DRAG) return LEFT_DRAG;
+  if (button === RIGHT_RELEASE) return LEFT_RELEASE;
+  return button;
+}
+
 /** What a pointer press found, kept so a cancel can put it back. The history
  * fields are the arrays themselves: a move replaces them and never writes
  * into them, so they still hold what the press saw. */
@@ -891,12 +904,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return true;
   }
 
-  processInput(x: number, y: number, button: number): boolean {
+  processInput(x: number, y: number, rawButton: number): boolean {
     // No board, no drawstate, nothing to interpret against. The app does not
     // send input before a game exists; this is what makes `interpretMove`'s
     // non-null `ds` true rather than merely usually-true.
     if (this.drawState === null) return false;
 
+    const button = this.game.ignoresSecondaryButton ? asPrimary(rawButton) : rawButton;
     const pointer = stripModifiers(button);
     if (isMouseDown(pointer)) {
       this.press = {

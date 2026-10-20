@@ -42,6 +42,7 @@ import {
   endSweep,
   interpretTargetVerbs,
   pressTarget,
+  rulingOut,
   sweepOpen,
   sweepTo,
   type TargetGeometry,
@@ -291,7 +292,7 @@ const targetVerbs: TargetVerbs<
 > = {
   geometry,
   primary: trackVerb,
-  secondary: noTrackVerb,
+  secondary: rulingOut(noTrackVerb),
   // A left drag from a square that carries track lays segments on the edges
   // it crosses, opened by `interpretMove` at the first one. One from any other
   // square, and every right drag, is the square drag, `interpretMove`'s own:

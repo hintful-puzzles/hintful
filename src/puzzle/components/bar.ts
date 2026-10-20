@@ -90,8 +90,8 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
   /**
    * The button toggle: one slot that, while it is on, sends a press on the
    * board as the right mouse button and a long press as the left. It is how a tap reaches a game's second
-   * action without a long press. Absent in a game that ignores the secondary
-   * button, which has nothing to swap to, and for a player who has turned it
+   * action without a long press. Absent in a game with no secondary action,
+   * which has nothing to swap to, and for a player who has turned it
    * off in Preferences.
    */
   private get showsButtonToggle(): boolean {

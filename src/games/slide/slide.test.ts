@@ -31,9 +31,6 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-  RIGHT_BUTTON,
-  RIGHT_DRAG,
-  RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
@@ -655,22 +652,6 @@ describe("slide input", () => {
     expect(pointer(s, ui, at(3, 1), LEFT_RELEASE)).toBeNull();
   });
 
-  it("treats a touch long-press as a primary drag", () => {
-    // `detectSecondaryButton` delivers a finger that stays put for 350ms as
-    // RIGHT_BUTTON, which is exactly "press, pause to aim, then drag" — the
-    // gesture Slide is entirely built from (docs/input.md § "A touch hold arrives as the right button").
-    const { s, ui } = scenario();
-    expect(pointer(s, ui, at(3, 1), RIGHT_BUTTON)).toBe(UI_UPDATE);
-    expect(ui.grabbed).toBe(true);
-    pointer(s, ui, at(4, 3), RIGHT_DRAG);
-    expect(ui.grabCurrpos).toBe(idx(4, 3));
-    expect(pointer(s, ui, at(4, 3), RIGHT_RELEASE)).toEqual({
-      kind: "move",
-      from: idx(3, 1),
-      to: idx(4, 3),
-    });
-  });
-
   it("cancels a dangling drag when the board changes under it", () => {
     // Upstream's `game_changed_state` is empty, so a drag held across an undo
     // left `game_redraw` asserting on a block that no longer fits.
@@ -857,39 +838,7 @@ describe("slide keyboard control", () => {
     expect(ui.cursor.visible).toBe(true);
     expect([ui.cursor.x, ui.cursor.y]).toEqual([1, 1]);
   });
-
-  /**
-   * `asPrimary` folds `RIGHT_*` onto `LEFT_*` so a touch long-press still drags,
-   * and the risk is that the fold widens one day into a range that swallows the
-   * cursor buttons — which sit immediately above `RIGHT_RELEASE`. Asserting the
-   * *mapping* rather than an outcome is what makes that fail here rather than in
-   * a player's hands.
-   */
-  it("passes cursor and cancel keys through untouched by the right→left fold", () => {
-    const { s, ui } = scenario();
-    // A touch gesture is in flight — the state that installs the fold.
-    pointer(s, ui, at(3, 1), RIGHT_BUTTON);
-    expect(ui.grabbed).toBe(true);
-
-    // The keyboard still does exactly what it does with no gesture in flight.
-    expect(press(s, ui, CURSOR_RIGHT)).toBe(UI_UPDATE);
-    expect(ui.grabCurrpos).toBe(idx(4, 1));
-
-    for (const button of [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, 27, 127]) {
-      expect(asPrimaryFold(button)).toBe(button);
-    }
-  });
 });
-
-/** What `asPrimary` would do to `button`, expressed as the three codes it
- * actually names. Kept here rather than exported so the guard is a statement of
- * the intended mapping, not a copy of the implementation. */
-function asPrimaryFold(button: number): number {
-  if (button === RIGHT_BUTTON) return LEFT_BUTTON;
-  if (button === RIGHT_DRAG) return LEFT_DRAG;
-  if (button === RIGHT_RELEASE) return LEFT_RELEASE;
-  return button;
-}
 
 // --- Solve, through a real Midend --------------------------------------
 

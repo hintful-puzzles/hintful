@@ -52,6 +52,7 @@ import {
   buttonVerb,
   interpretTargetVerbs,
   pressTarget,
+  rulingOut,
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
@@ -242,7 +243,7 @@ const targetVerbs: TargetVerbs<
   SpokesDrawState,
   Point,
   SpokesMove
-> = { geometry, primary: lineVerb, secondary: markVerb };
+> = { geometry, primary: lineVerb, secondary: rulingOut(markVerb) };
 
 function interpretMove(
   state: SpokesState,

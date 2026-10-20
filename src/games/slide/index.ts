@@ -44,9 +44,6 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
   moveCursor,
-  RIGHT_BUTTON,
-  RIGHT_DRAG,
-  RIGHT_RELEASE,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -91,25 +88,6 @@ import {
 // --- input ------------------------------------------------------------
 
 /**
- * Fold the right button onto the left. Slide's whole pointer vocabulary is one
- * press-and-drag, and a touch that holds still arrives as `RIGHT_BUTTON`
- * (docs/input.md § "A touch hold arrives as the right button"), so
- * "press a block, pause to aim, then drag" would die exactly when the player
- * stops to think.
- *
- * It names the three codes rather than a range, so no cursor, select or cancel
- * key can reach the pointer arms disguised as a press. The "right→left fold"
- * test in `slide.test.ts` asserts the mapping rather than an outcome, so a fold
- * widened to a range fails it.
- */
-function asPrimary(button: number): number {
-  if (button === RIGHT_BUTTON) return LEFT_BUTTON;
-  if (button === RIGHT_DRAG) return LEFT_DRAG;
-  if (button === RIGHT_RELEASE) return LEFT_RELEASE;
-  return button;
-}
-
-/**
  * Pick up the block covering `(cx, cy)`, held by that square, and work out —
  * once — every square its anchor can be slid to. Returns false when there is
  * no block there.
@@ -151,7 +129,7 @@ function interpretMove(
   p: Point,
   rawButton: number,
 ): SlideMove | null | UiUpdate {
-  const button = asPrimary(stripModifiers(rawButton));
+  const button = stripModifiers(rawButton);
   const { w, h } = state;
   const ts = ds.tileSize;
 
@@ -311,6 +289,9 @@ export const slideGame: Game<
   SlideDrawState
 > = {
   id: "slide",
+  // One press-and-drag is the whole of the pointer input, so a held finger
+  // that pauses to aim stays that drag.
+  ignoresSecondaryButton: true,
 
   defaultParams,
   presets,

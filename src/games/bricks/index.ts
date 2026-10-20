@@ -54,6 +54,7 @@ import {
   ERASE_KEYS,
   interpretTargetVerbs,
   pressTarget,
+  rulingOut,
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
@@ -228,7 +229,7 @@ const targetVerbs: TargetVerbs<
 > = {
   geometry,
   primary: shadeVerb,
-  secondary: unshadeVerb,
+  secondary: rulingOut(unshadeVerb),
   // A numpad digit that moves the cursor (all but 0 and 5) is taken by the
   // move arm first, so only the main row's digits and those two reach here.
   keyOnly: [

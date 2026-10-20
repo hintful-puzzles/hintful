@@ -53,6 +53,7 @@ import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
+  rulingOut,
   type TargetGeometry,
   type TargetVerbs,
   verbGesture,
@@ -389,12 +390,12 @@ const targetVerbs: TargetVerbs<
           ? "unknown"
           : "cleared",
   },
-  secondary: {
+  secondary: rulingOut({
     does: "rule it out of that cell's set, going round the other way",
     apply: setSlot((t) =>
       t === "unknown" ? "cleared" : t === "cleared" ? "known" : "unknown",
     ),
-  },
+  }),
   keyOnly: [
     {
       does: "leave the letter under the cursor undecided",

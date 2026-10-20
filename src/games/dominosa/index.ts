@@ -37,6 +37,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import {
   interpretTargetVerbs,
+  rulingOut,
   type TargetGeometry,
   type TargetVerbs,
   verbGesture,
@@ -243,14 +244,14 @@ const targetVerbs: TargetVerbs<
     does: "place or remove a domino covering them",
     apply: (_s, { d1, d2 }) => ({ type: "domino", d1, d2 }),
   },
-  secondary: {
+  secondary: rulingOut({
     does:
       "place or remove a line between them, if you think a domino definitely " +
       "cannot go there",
     // A line can't go beside a placed domino.
     apply: (s, { d1, d2 }) =>
       s.grid[d1] !== d1 || s.grid[d2] !== d2 ? null : { type: "edge", d1, d2 },
-  },
+  }),
   // A pair is taken near the middle of the edge its two squares share.
   sweep: {
     holds(s, { d1, d2 }) {

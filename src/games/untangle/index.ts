@@ -51,9 +51,9 @@ import {
   CURSOR_SELECT2,
   CURSOR_UP,
   isCursorMove,
-  isMouseDown,
-  isMouseDrag,
-  isMouseRelease,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
   MOD_SHFT,
   stripModifiers,
 } from "../../engine/pointer.ts";
@@ -162,6 +162,8 @@ export const untangleGame: Game<
   UntangleRung
 > = {
   id: "untangle",
+  // Dragging a point is the only gesture, so a held finger stays that drag.
+  ignoresSecondaryButton: true,
   preferredTileSize: PREFERRED_TILE_SIZE,
 
   // --- params --------------------------------------------------------
@@ -230,7 +232,7 @@ export const untangleGame: Game<
     const tileSize = ds.tileSize;
     const { x, y } = pt;
 
-    if (isMouseDown(button)) {
+    if (button === LEFT_BUTTON) {
       const p = pointUnderMouse(s, tileSize, x, y);
       if (p >= 0) {
         ui.dragPoint = p;
@@ -240,11 +242,11 @@ export const untangleGame: Game<
       }
       return null;
     }
-    if (isMouseDrag(button) && ui.dragPoint >= 0) {
+    if (button === LEFT_DRAG && ui.dragPoint >= 0) {
       placeDraggedPoint(s, ui, tileSize, x, y);
       return UI_UPDATE;
     }
-    if (isMouseRelease(button) && ui.dragPoint >= 0) {
+    if (button === LEFT_RELEASE && ui.dragPoint >= 0) {
       // Always commits: the drag target was clamped into the play area.
       const p = ui.dragPoint;
       ui.dragPoint = -1;
@@ -252,7 +254,7 @@ export const untangleGame: Game<
       ui.justDragged = ds.dragPoint === p;
       return placeMove(p, ui.newPoint);
     }
-    if (isMouseDrag(button) || isMouseRelease(button)) {
+    if (button === LEFT_DRAG || button === LEFT_RELEASE) {
       return null; // drag/release with no active drag
     }
 

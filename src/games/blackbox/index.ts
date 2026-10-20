@@ -27,6 +27,7 @@ import { registerGame } from "../../engine/registry.ts";
 import { MULTIPLE_SOLUTIONS } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
+  rulingOut,
   type TargetGeometry,
   type TargetVerbs,
   verbClicks,
@@ -219,7 +220,7 @@ const targetVerbs: TargetVerbs<
       return played(s, ui, { type: "fire", rangeno });
     },
   },
-  secondary: {
+  secondary: rulingOut({
     does:
       "mark a square inside the box as definitely known, so it takes no ball, " +
       "or a square around the edge to mark the whole row or column it looks into",
@@ -230,7 +231,7 @@ const targetVerbs: TargetVerbs<
         ? played(s, ui, { type: "toggleColumnLock", x: t.x })
         : played(s, ui, { type: "toggleRowLock", y: t.y });
     },
-  },
+  }),
   // Balls and locks inside the box. A beam is a move and not a mark, so a
   // drag from the edge, or out to it, repeats nothing.
   sweep: {

@@ -340,9 +340,9 @@ export interface PuzzleStaticAttributes {
    * of its fixed inventory with found status. Gates the toolbar reference
    * button. */
   hasReference: boolean;
-  /** The game has no meaning for the secondary button, so the view must not
-   * synthesize one from a long press or a two-finger tap — see
-   * `Game.ignoresSecondaryButton`. */
+  /** The game has no action of its own for the secondary button, so the view
+   * does not detect one from a long press or a two-finger tap, and the bar
+   * offers no toggle — see `Game.ignoresSecondaryButton`. */
   ignoresSecondaryButton: boolean;
   wantsStatusbar: boolean;
   /** `Game.paletteScheme`, with what the game left out filled in. */

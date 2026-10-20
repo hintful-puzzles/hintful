@@ -630,57 +630,75 @@ export function unactionableClaims(game: AnyGame, id: string): UnactionableResul
   return { claims, boardChanged: fingerprint(m) !== before };
 }
 
-/** What a game did with the secondary button, and the evidence for it. */
-export interface SecondaryMeaning {
-  /** Whether `RIGHT_BUTTON` means anything at all in this game. */
-  readonly used: boolean;
-  /** How it showed itself — for the failure message, and for a reader who
-   * wants to know *which* of the three shapes this game has. */
+/** What a game does with the secondary button, and the evidence for it. */
+export interface SecondaryAction {
+  /**
+   * `own` where some secondary gesture leaves a game that neither the same
+   * sequence without it nor the same sequence on the primary button leaves;
+   * `primary` where every gesture that changed anything did what the primary
+   * one does; `none` where none changed anything.
+   */
+  readonly kind: "own" | "primary" | "none";
+  /** Where it showed itself, for the failure message: the first gesture that
+   * did something, or the first that did something of its own. */
   readonly evidence: string | null;
 }
 
+/** A gesture's steps with each secondary pointer code read as the primary
+ * one, as the midend reads them for a game that declares
+ * `Game.ignoresSecondaryButton`. */
+const PRIMARY_OF: ReadonlyMap<number, number> = new Map([
+  [RIGHT_BUTTON, LEFT_BUTTON],
+  [RIGHT_DRAG, LEFT_DRAG],
+  [RIGHT_RELEASE, LEFT_RELEASE],
+]);
+
 /**
- * **Does the secondary button mean anything in this game?**
+ * **Does the secondary button do anything of its own in this game?**
  *
- * `Game.ignoresSecondaryButton` exists because the promotion is pure loss for a
- * game with no secondary meaning: `detectSecondaryButton` turns a held press
- * into `RIGHT_BUTTON`, the game tests no such button, and the whole gesture
- * disappears — only on touch, and only for the player who paused to aim. The
- * guard asserts the biconditional, so the answer here decides whether a game
- * *must* declare the flag, and a wrong answer either drops every long press a
- * player makes or turns off a promotion the game handles.
+ * The probe asks the game itself, with its `ignoresSecondaryButton` taken off,
+ * since the midend hands a declaring game the primary button in its place.
+ * The guard holds the answer to the declaration both ways: a game declares
+ * the flag exactly when nothing of its own happens, and a game that declares
+ * it does nothing at all with a secondary button it is never handed, so it
+ * has no branch for one that nobody would notice.
  *
- * The collection has exactly three legitimate answers, all observable and none
- * of them a declaration:
+ * An action of its own takes one of two shapes in the collection, both
+ * observable and neither a declaration:
  *
- *  1. **It commits a move** — the press is the whole interaction.
+ *  1. **It commits a move** the primary button does not make there.
  *  2. **It changes what the next input does** — the pencil-mode press (through
  *     the shared `pressNoteTakingCell`), Guess's peg hold, Samegame's selection
  *     clear, Rome's pencil drag, Signpost's backward grab, Ascent's candidate
  *     cycle. The press commits nothing by itself, so asking only "did the board
  *     change" scores every one of them meaningless.
- *  3. **It folds onto the primary button** (Slide's `asPrimary`) — the
- *     documented alternative to the flag, which makes the gesture work whichever
- *     way the long-press detector resolved it.
  *
- * So the question is *did it change anything observable, now or next*, and the
- * three shapes are one question rather than three special cases.
+ * So the question is *did it change anything observable, now or next, that
+ * the primary gesture would not have*, and the two shapes are one question.
  *
  * **On not reopening "did the board change".** Its **negation as a conviction**
  * is banned — "the board did not change, therefore this input is dead" falsely
- * convicts a game whose eraser, on a fresh board, correctly changes nothing. Used the other way, as one of several *sufficient* signs that the
- * button does mean something, it cannot convict anyone: a game is only ever
- * reported meaningless when it is invisible under **every** observation below.
+ * convicts a game whose eraser, on a fresh board, correctly changes nothing.
+ * Used the other way, as one of several *sufficient* signs that the button
+ * does mean something, it cannot convict anyone: a game is only ever reported
+ * to have no action of its own when that holds under **every** observation
+ * below.
  */
-export function secondaryMeaning(game: AnyGame, id: string): SecondaryMeaning {
-  const { params, tileSize, size, m, reset } = probeBoard(game, id);
+export function secondaryAction(game: AnyGame, id: string): SecondaryAction {
+  const { params, tileSize, size, m, reset } = probeBoard(
+    { ...game, ignoresSecondaryButton: false },
+    id,
+  );
   const panel = game.requestKeys?.(params) ?? [];
 
   /** Where a step acts. A pointer step acts on the board; a key arrives at the
    * origin, which is where `worker-adapter.ts` delivers one. */
-  type Step = { button: number; at: "p" | "q" };
+  type Step = { button: number; at: "p" | "q" | "r" };
   const at = (button: number): Step => ({ button, at: "p" });
   const to = (button: number): Step => ({ button, at: "q" });
+  /** The first neighbor of the press, which a prime can drag to when the
+   * gesture then drags to another. */
+  const aside = (button: number): Step => ({ button, at: "r" });
 
   /**
    * The secondary gestures to try. A press alone is not enough: Rome's
@@ -737,6 +755,13 @@ export function secondaryMeaning(game: AnyGame, id: string): SecondaryMeaning {
    * board. With a one-press prime Ascent is credited only by an incidental
    * cursor hide it shares with the primary press, which is the right verdict
    * reached on evidence that would not survive the game changing.
+   *
+   * The drag to another neighbor is Rectangles': its secondary drag erases the
+   * edges inside the box it spans, and the primary drag draws that box's
+   * outline and erases the same edges. Over a box the prime drew, or over an
+   * empty board, the two leave one board or the secondary leaves none; over a
+   * larger box with one of the prime's edges inside it, the eraser leaves a
+   * board of its own.
    */
   const primes: { label: string; steps: Step[] }[] = [
     { label: "", steps: [] },
@@ -749,13 +774,18 @@ export function secondaryMeaning(game: AnyGame, id: string): SecondaryMeaning {
       label: " after a primary drag",
       steps: [at(LEFT_BUTTON), to(LEFT_DRAG), to(LEFT_RELEASE)],
     },
+    {
+      label: " after a primary drag to another neighbor",
+      steps: [at(LEFT_BUTTON), aside(LEFT_DRAG), aside(LEFT_RELEASE)],
+    },
   ];
 
   /** Replay `steps` from the opening position. */
   const send = (p: Point, q: Point, steps: Step[]) => {
     reset();
+    const r = targets(p)[0] ?? p;
     for (const s of steps) {
-      const target = s.at === "q" ? q : p;
+      const target = s.at === "q" ? q : s.at === "r" ? r : p;
       if (isPointerButton(s.button)) m.processInput(target.x, target.y, s.button);
       else m.processInput(0, 0, s.button);
     }
@@ -779,34 +809,43 @@ export function secondaryMeaning(game: AnyGame, id: string): SecondaryMeaning {
       { x: p.x, y: p.y - tileSize },
     ].filter((q) => q.x >= 0 && q.y >= 0 && q.x < size.w && q.y < size.h);
 
+  let asPrimary: string | null = null;
   for (const p of probePoints(size)) {
     for (const q of targets(p)) {
       for (const prime of primes) {
         // A press the game did not even consume cannot have changed anything,
         // so there is nothing to compare — and this is what keeps the sweep
-        // cheap for the games that genuinely ignore the button, which are the
-        // only ones that ever reach the end of this loop.
+        // cheap for the games that genuinely ignore the button.
         send(p, q, prime.steps);
         const consumed = m.processInput(p.x, p.y, RIGHT_BUTTON);
         m.processInput(p.x, p.y, RIGHT_RELEASE);
         if (!consumed) continue;
 
-        for (const g of gestures)
-          for (const f of followUps)
-            if (
-              play(p, q, [...prime.steps, ...f.steps]) !==
-              play(p, q, [...prime.steps, ...g.steps, ...f.steps])
-            )
+        for (const g of gestures) {
+          const primary = g.steps.map((s) => ({
+            ...s,
+            button: PRIMARY_OF.get(s.button) ?? s.button,
+          }));
+          for (const f of followUps) {
+            const done = play(p, q, [...prime.steps, ...g.steps, ...f.steps]);
+            if (done === play(p, q, [...prime.steps, ...f.steps])) continue;
+            const where = `${g.label} at (${p.x},${p.y})${prime.label} ${f.label}`;
+            if (done !== play(p, q, [...prime.steps, ...primary, ...f.steps]))
               return {
-                used: true,
+                kind: "own",
                 evidence:
-                  `${g.label} at (${p.x},${p.y})${prime.label} ${f.label} ` +
-                  "leaves a different game than the same sequence without it",
+                  `${where} leaves a different game than the same sequence ` +
+                  "without it, and than the same sequence on the primary button",
               };
+            asPrimary ??= `${where} leaves the game the primary gesture leaves`;
+          }
+        }
       }
     }
   }
-  return { used: false, evidence: null };
+  return asPrimary === null
+    ? { kind: "none", evidence: null }
+    : { kind: "primary", evidence: asPrimary };
 }
 
 /** What became of the presses a game claimed and then had canceled. */

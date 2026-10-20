@@ -47,6 +47,7 @@ import {
   buttonVerb,
   interpretTargetVerbs,
   pressTarget,
+  rulingOut,
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
@@ -151,7 +152,7 @@ const targetVerbs: TargetVerbs<
   PatternDrawState,
   Point,
   PatternMove
-> = { geometry, primary: shadeVerb, secondary: clearVerb };
+> = { geometry, primary: shadeVerb, secondary: rulingOut(clearVerb) };
 
 function newUi(_state: PatternState): PatternUi {
   return {

@@ -30,7 +30,7 @@
 import { Dsf } from "./dsf.ts";
 import { fromCoord } from "./geometry.ts";
 import { cursorDelta, type GridCursor } from "./pointer.ts";
-import type { TargetGeometry, TargetVerbs } from "./target-verb.ts";
+import { rulingOut, type TargetGeometry, type TargetVerbs } from "./target-verb.ts";
 
 // --- the edge bit vocabulary -----------------------------------------------
 // A cell stores its four borders in the low nibble and their "definitely not a
@@ -238,12 +238,12 @@ export function borderGridVerbs<
         "to undecided (yellow)",
       apply: (s, e) => toMove(edgeEdits(s, e, true)),
     },
-    secondary: {
+    secondary: rulingOut({
       does:
         "mark it as definitely not a division (faint gray), and again to return " +
         "it to undecided",
-      apply: (s, e) => toMove(edgeEdits(s, e, false)),
-    },
+      apply: (s: State, e: BorderEdge) => toMove(edgeEdits(s, e, false)),
+    }),
     // Along a line of edges or round a corner, each taken near its middle:
     // every corner the drag passes is where four edges' catchments meet.
     sweep: {
