@@ -78,24 +78,22 @@ function narrate(
   then: "another" | "later" | null,
 ): { rung: CubeRung; words: Sentence } {
   const dest = after.current;
+  // A leg that puts paint on the square it then picks up works toward a
+  // square still plain, which no outline can call the painted one; and a roll
+  // onto the goal itself would ring and outline one square.
+  const aim = before.blue[goal] && dest !== goal ? goal : null;
   if (before.blue[dest] && !after.blue[dest]) {
     return { rung: "collect", words: say.collect(dest, paintedCount(after)) };
   }
   if (!before.blue[dest] && after.blue[dest]) {
     return canCollectWithoutDropping(before)
-      ? { rung: "drop", words: say.drop(dest, then) }
-      : { rung: "forced-drop", words: say.forcedDrop(dest) };
+      ? { rung: "drop", words: say.drop(dest, aim, then) }
+      : { rung: "forced-drop", words: say.forcedDrop(dest, aim) };
   }
-  // A leg that puts paint on the square it then picks up works toward a
-  // square still plain, which no outline can call the painted one; and a roll
-  // across the goal itself would ring and outline one square.
-  if (!before.blue[goal] || dest === goal) {
-    return { rung: "travel", words: say.travel(dest, null) };
+  if (aim !== null && landsPainted(before, aim)) {
+    return { rung: "come-round", words: say.comeRound(dest, aim) };
   }
-  if (landsPainted(before, goal)) {
-    return { rung: "come-round", words: say.comeRound(dest, goal) };
-  }
-  return { rung: "travel", words: say.travel(dest, goal) };
+  return { rung: "travel", words: say.travel(dest, aim) };
 }
 
 export function hint(state: CubeState): HintResult<CubeMove, unknown, CubeRung> {

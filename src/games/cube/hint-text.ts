@@ -12,9 +12,9 @@ import {
   mark,
   type Narration,
   phrase,
+  type Said,
   type Sentence,
   sentence,
-  unshaped,
 } from "../../engine/hint-words.ts";
 
 /** A grid square, by its index in the arena. */
@@ -27,6 +27,10 @@ const theRing = (dest: number): Narration => mark.the("ring", SQUARE, [dest], "s
  * works toward rather than what it decides. */
 const theGoal = (goal: number): Narration =>
   mark.the("outline", SQUARE, [goal], "square");
+
+/** The sentence's aim part, where a goal is named. */
+const aimAt = (goal: number | null): Pick<Said, "aim"> =>
+  goal === null ? {} : { aim: theGoal(goal) };
 
 const rollOnto = (dest: number): Narration => phrase`roll onto ${theRing(dest)}`;
 
@@ -50,16 +54,13 @@ export const say = {
     }),
 
   /** The roll changes no paint on its way to the goal: a painted square, or
-   * null where the leg goes on to put paint on the square it picks up, so
-   * that nothing on the board is yet the goal. */
+   * null where no outline can name it (`hint.ts`'s `narrate`). */
   travel: (dest: number, goal: number | null): Sentence =>
-    goal === null
-      ? unshaped(phrase`${rollOnto(dest)}.`.capitalized(), "bare")
-      : sentence({
-          aim: theGoal(goal),
-          move: rollOnto(dest),
-          relation: { kind: "serves" },
-        }),
+    sentence({
+      ...aimAt(goal),
+      move: rollOnto(dest),
+      relation: { kind: "effect", effect: phrase`no paint changes` },
+    }),
 
   /** The goal is one roll away, and that roll would land a painted face on it. */
   comeRound: (dest: number, goal: number): Sentence =>
@@ -70,36 +71,37 @@ export const say = {
       relation: { kind: "answers", how: "Instead" },
     }),
 
-  // A roll that puts paint down names no goal: the square it leaves paint on
-  // is often the one the leg goes on to pick up, which would be ringed and
-  // outlined at once.
-
   /** No square can be picked up from here without putting paint down first,
-   * and this roll puts some down. */
-  forcedDrop: (dest: number): Sentence =>
+   * and this roll puts some down on its way to the goal (null as for
+   * `travel`). */
+  forcedDrop: (dest: number, goal: number | null): Sentence =>
     sentence({
-      look: phrase`every way to pick paint up puts some down first`,
+      ...aimAt(goal),
+      look: phrase`paint must go down before any comes up`,
       move: rollOnto(dest),
-      relation: {
-        kind: "effect",
-        effect: phrase`the face that lands leaves its paint`,
-      },
+      relation: { kind: "effect", effect: phrase`it leaves paint` },
     }),
 
-  /** The roll puts paint down, though some square could be picked up without
-   * doing so. `then` says what the plan does with that paint: picks it up with
-   * another face, picks it up again, or leaves it past the plan's end. */
-  drop: (dest: number, then: "another" | "later" | null): Sentence =>
+  /** The roll puts paint down on its way to the goal (null as for `travel`),
+   * though some square could be picked up without doing so. `then` says what
+   * the plan does with that paint: picks it up with another face, picks it up
+   * again, or leaves it past the plan's end. */
+  drop: (
+    dest: number,
+    goal: number | null,
+    then: "another" | "later" | null,
+  ): Sentence =>
     sentence({
+      ...aimAt(goal),
       move: rollOnto(dest),
       relation: {
         kind: "effect",
         effect:
           then === "another"
-            ? phrase`the face that lands leaves its paint, for another face to pick up`
+            ? phrase`it leaves paint, for another face to pick up`
             : then === "later"
-              ? phrase`the face that lands leaves its paint, to pick up again later`
-              : phrase`the face that lands leaves its paint`,
+              ? phrase`it leaves paint, to pick up again later`
+              : phrase`it leaves paint`,
       },
     }),
 };

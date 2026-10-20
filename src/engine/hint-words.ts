@@ -481,6 +481,16 @@ function premiseOf(said: Said): Narration | null {
   return said.follows ? phrase`${said.look}, so ${said.follows}` : said.look;
 }
 
+/** Whether the words {@link compose} writes open on a sentence with a colon
+ * of its own, so that an aim's colon would make two. */
+function opensOnColon(said: Said): boolean {
+  const r = said.relation;
+  if (r.kind === "effect") return !said.look;
+  if (r.kind === "forced") return said.follows !== undefined;
+  if (r.kind === "sequence" && r.effect) return r.at !== "first" || !said.look;
+  return false;
+}
+
 /** The parts, joined in the relation's words. */
 function compose(said: Said): Narration {
   const { move, relation: r } = said;
@@ -522,10 +532,18 @@ function compose(said: Said): Narration {
   }
 }
 
-/** A step's words, from its parts. */
+/** A step's words, from its parts. An aim is "Working on A: …", or "Working
+ * on A, …" before words whose first sentence has a colon already: one
+ * sentence with two colons reads as a list of three. */
 export function sentence(said: Said): Sentence {
   const body = compose(said);
-  const words = said.aim ? phrase`Working on ${said.aim}: ${body}` : body.capitalized();
+  let words: Narration;
+  if (!said.aim) words = body.capitalized();
+  else if (!opensOnColon(said)) words = phrase`Working on ${said.aim}: ${body}`;
+  else if (said.relation.kind === "sequence")
+    // "First", "Next" and "Last" open the body as a sentence would.
+    throw new Error("hint sentence: an aim before a run's effect needs a look between");
+  else words = phrase`Working on ${said.aim}, ${body}`;
   const r = said.relation;
   const form: Form =
     r.kind === "forced" && r.rivals

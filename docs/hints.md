@@ -248,8 +248,12 @@ as it reads mid-sentence, an optional `aim` (a stable subgoal) and the
 | again | "…and M, for B." (a journey's later leg) |
 | serves | "Working on A: M." |
 
-Any form takes an aim ("Working on A: …"). `sentence` capitalizes the result,
-so a look that opens on a reference needs no `.capitalized()`.
+Any form takes an aim ("Working on A: …"). Where the words after it open on a
+sentence with a colon of its own (an effect with no look, or "L, so F: M."),
+the aim takes a comma instead: "Working on A, M: E.", since one sentence with
+two colons reads as a list. A run's effect after an aim needs a look between
+them. `sentence` capitalizes the result, so a look that opens on a reference
+needs no `.capitalized()`.
 
 - **Rule 3 is checked in a game whose hint searches.** `forced` there must
   carry the proof that every rival was judged lost, a value only `judgeRivals`

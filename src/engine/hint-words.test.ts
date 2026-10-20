@@ -238,6 +238,30 @@ describe("a sentence is its parts, joined in the relation's words", () => {
     );
   });
 
+  it("joins an aim with a comma before a sentence that has its colon", () => {
+    const go = phrase`jump ${cell}`;
+    const aim = phrase`tile 3`;
+    const fx = phrase`it clears two`;
+    expect(
+      sentence({ aim, move: go, relation: { kind: "effect", effect: fx } }).text,
+    ).toBe("Working on tile 3, jump this cell: it clears two.");
+    expect(
+      sentence({ aim, look, move: go, relation: { kind: "effect", effect: fx } }).text,
+    ).toBe(
+      "Working on tile 3: the outlined clue has all its walls. Jump this cell: it clears two.",
+    );
+    expect(so({ aim, look, follows: phrase`nothing reaches it`, move: go }).text).toBe(
+      "Working on tile 3, the outlined clue has all its walls, so nothing reaches it: jump this cell.",
+    );
+    expect(() =>
+      sentence({
+        aim,
+        move: go,
+        relation: { kind: "sequence", at: "next", effect: fx },
+      }),
+    ).toThrow(/needs a look between/);
+  });
+
   it("carries every part's marks", () => {
     expect(keysOf(so({ look, move }).refs)).toEqual([
       "outline|cell|0,0",

@@ -161,7 +161,7 @@ describe("cube hint plan", () => {
 
 describe("whether a square can be picked up without putting paint down", () => {
   it("agrees with a search of the game's own rolls, on positions play wanders into", () => {
-    // The search the claim "every way to pick paint up puts some down first"
+    // The search the claim "paint must go down before any comes up"
     // rests on, against one over whole states that knows nothing of it.
     const brute = (start: CubeState): boolean => {
       const painted = (s: CubeState) => s.blue.reduce((n, b) => n + b, 0);
