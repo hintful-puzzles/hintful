@@ -9,8 +9,13 @@
  * can say a position is lost.
  */
 
+import {
+  exhaustive,
+  type FinishSearch,
+  searchFinish,
+} from "../../engine/finish-search.ts";
 import type { Allowance, Verdict } from "../../engine/rival-judging.ts";
-import type { SearchOutcome } from "../../engine/search-outcome.ts";
+import { type SearchOutcome, searchVerdict } from "../../engine/search-outcome.ts";
 import { GRID_OBST, GRID_PEG, type PegsState } from "./state.ts";
 
 /** A jump as three grid indices: the peg that jumps, the peg it takes, and the
@@ -152,9 +157,8 @@ class PegsBoard {
   }
 }
 
-/** Exact, never hashed: a collision would make a soluble position read as lost.
- * Up to three sixteen-bit words the key is a number, exact below 2^53, which a
- * `Set` holds far faster. */
+/** A board's exact key. Up to three sixteen-bit words it is a number, exact
+ * below 2^53. */
 function keyOf(pegs: Uint8Array): number | string {
   const words: number[] = [];
   for (let i = 0; i < pegs.length; i += 16) {
@@ -214,46 +218,46 @@ function beam(
   return path.reverse();
 }
 
-/**
- * Whether any line of jumps from `pegs` leaves one peg, searched to
- * exhaustion within `budget` positions: the line's offsets, `"lost"` when every
- * line was searched, or `null` past the budget or the `allowance`.
- */
+/** A position as the proof holds it: one board, jumped in place and back, and
+ * its count of pegs, kept since counting afresh at each position, or copying
+ * the board a jump, made the search nearly a third slower (measured
+ * 2026-10-20, `own-the-finishability-search`). */
+interface Position {
+  readonly pegs: Uint8Array;
+  left: number;
+}
+
+function proofSearch(board: PegsBoard): FinishSearch<Position, number> {
+  return {
+    key: (p) => keyOf(p.pegs),
+    finished: (p) => p.left === 1,
+    lostAtAGlance: (p) => board.frozen(p.pegs).length > 0,
+    *children(p) {
+      for (const k of board.legal(p.pegs)) {
+        play(board, p.pegs, k, 0);
+        p.left--;
+        try {
+          yield [k, p] as const;
+        } finally {
+          play(board, p.pegs, k, 1);
+          p.left++;
+        }
+      }
+    },
+  };
+}
+
+/** Whether any line of jumps from `start` leaves one peg, searched to
+ * exhaustion within `budget` positions and the `allowance`: the line as
+ * offsets into `jumps`. */
 function exhaust(
   board: PegsBoard,
   start: Uint8Array,
   budget: number,
-  allowance: Allowance = { left: Number.POSITIVE_INFINITY },
-): number[] | "lost" | null {
-  const pegs = start.slice();
-  let left = pegs.reduce((a, b) => a + b, 0);
-  const lost = new Set<number | string>();
-  const path: number[] = [];
-  let work = 0;
-
-  const dfs = (): boolean | null => {
-    if (left === 1) return true;
-    const key = keyOf(pegs);
-    if (lost.has(key)) return false;
-    if (++work > budget || --allowance.left < 0) return null;
-    if (board.frozen(pegs).length === 0) {
-      for (const k of board.legal(pegs)) {
-        play(board, pegs, k, 0);
-        left--;
-        path.push(k);
-        const r = dfs();
-        if (r !== false) return r;
-        path.pop();
-        play(board, pegs, k, 1);
-        left++;
-      }
-    }
-    lost.add(key);
-    return false;
-  };
-
-  const r = dfs();
-  return r === null ? null : r ? path : "lost";
+  allowance?: Allowance,
+): SearchOutcome<number> {
+  const p = { pegs: start.slice(), left: start.reduce((a, b) => a + b, 0) };
+  return searchFinish(p, proofSearch(board), exhaustive(budget), allowance);
 }
 
 /** What a search established about a position. */
@@ -280,15 +284,14 @@ export function findFinish(s: PegsState, proofBudget = PROOF_BUDGET): Finish {
     if (path) return found(path);
   }
   const r = exhaust(board, pegs, proofBudget);
-  if (r === "lost") return { kind: "lost" };
-  return r === null ? { kind: "out-of-reach" } : found(r);
+  return r.kind === "found" ? found(r.line) : r;
 }
 
 /** Whether `s` is lost, proved within `budget` positions: true only when every
  * line of jumps was searched and none leaves one peg. */
 export function provedLost(s: PegsState, budget: number): boolean {
   const board = new PegsBoard(s);
-  return exhaust(board, board.pegsOf(s), budget) === "lost";
+  return exhaust(board, board.pegsOf(s), budget).kind === "lost";
 }
 
 /**
@@ -305,8 +308,7 @@ export function judge(s: PegsState, allowance: Allowance, proof: number): Verdic
     if (beam(board, pegs, width, allowance)) return "finishes";
   }
   if (allowance.left <= 0) return "unknown";
-  const r = exhaust(board, pegs, proof, allowance);
-  return r === "lost" ? "lost" : r === null ? "unknown" : "finishes";
+  return searchVerdict(exhaust(board, pegs, proof, allowance));
 }
 
 /** The pegs of `s` no jump can ever involve again, as grid indices; empty on a

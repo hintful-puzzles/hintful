@@ -2,15 +2,16 @@
  * Same Game's solver: a search for an order of removals that clears the
  * board, which also proves a board that no order clears.
  *
- * It is a depth-first search that tries first the removal leaving the fewest
- * squares with no partner beside them, and remembers every position it proved
- * lost. One such search is heavy-tailed, since an early mistake buries it in a
- * subtree that cannot clear, so it restarts with the ties broken another way
- * each time, sharing what it proved lost (`add-samegame-hint` design D2). A
- * restart that runs out of positions proves nothing; one that finishes without
- * clearing has searched everything, which is the proof.
+ * It is the engine's search for a finish (`finish-search.ts`), trying first
+ * the removal leaving the fewest squares with no partner beside them, and
+ * restarting with the ties broken another way (`add-samegame-hint` design D2).
  */
 
+import {
+  type FinishSearch,
+  type Plan,
+  searchFinish,
+} from "../../engine/finish-search.ts";
 import type { Allowance, Verdict } from "../../engine/rival-judging.ts";
 import { type SearchOutcome, searchVerdict } from "../../engine/search-outcome.ts";
 import type { SamegameState } from "./state.ts";
@@ -141,75 +142,47 @@ function hasLastOfColor(tiles: Tiles, ncols: number): boolean {
 const isEmpty = (tiles: Tiles, w: number, h: number): boolean =>
   tiles[(h - 1) * w] === 0;
 
-/** Exact, never hashed: a collision would make a clearable position read as
- * lost. A color fits in a character. */
+/** A board's exact key: a color fits in a character. */
 const keyOf = (tiles: Tiles): string => String.fromCharCode(...tiles);
 
 /** A deterministic tie-break that differs from one restart to the next. */
 const salted = (k: number, salt: number): number =>
   (Math.imul(k + 1, 0x9e3779b1) ^ Math.imul(salt + 1, 0x85ebca6b)) >>> 16;
 
-/** How a search spends its positions: `tries` restarts of `restart`
- * positions each, then one last try with whatever is left of `budget`. */
-export interface Plan {
-  readonly budget: number;
-  readonly restart: number;
-  readonly tries: number;
-}
-
-/**
- * A clearing from `start`, a proof that none exists, or neither past the plan's
- * budget or the `allowance`, whichever runs out first. A position counts when
- * it is expanded, which is where the cost is.
- */
-function search(
-  start: Tiles,
+/** The search over boards of `w` by `h` in `ncols` colors. A removal makes a
+ * new board, since the squares that fall and the columns that close up are
+ * not worth undoing. */
+function clearingSearch(
   w: number,
   h: number,
   ncols: number,
-  plan: Plan,
-  allowance: Allowance,
-): SearchOutcome<Group> {
-  if (isEmpty(start, w, h)) return { kind: "found", line: [] };
-  const lost = new Set<string>();
-  let left = plan.budget;
-  for (let salt = 0; salt <= plan.tries && left > 0 && allowance.left > 0; salt++) {
-    const cap = salt < plan.tries ? Math.min(left, plan.restart) : left;
-    let work = 0;
-    const path: Group[] = [];
-    const dfs = (t: Tiles): boolean | null => {
-      const key = keyOf(t);
-      if (lost.has(key)) return false;
-      if (++work > cap || --allowance.left < 0) return null;
-      if (!hasLastOfColor(t, ncols)) {
-        const children = groupsOf(t, w, h).map((g) => {
+): FinishSearch<Tiles, Group> {
+  return {
+    key: keyOf,
+    finished: (t) => isEmpty(t, w, h),
+    lostAtAGlance: (t) => hasLastOfColor(t, ncols),
+    children: (t, salt) =>
+      groupsOf(t, w, h)
+        .map((g) => {
           const after = removed(t, w, h, g);
           return {
             g,
             after,
             rank: loneCount(after, w, h) * 65536 + salted(g[0], salt),
           };
-        });
-        children.sort((a, b) => a.rank - b.rank);
-        for (const { g, after } of children) {
-          path.push(g);
-          if (isEmpty(after, w, h)) return true;
-          const r = dfs(after);
-          if (r !== false) return r;
-          path.pop();
-        }
-      }
-      lost.add(key);
-      return false;
-    };
-    const r = dfs(start);
-    left -= Math.min(work, cap);
-    if (r === true) return { kind: "found", line: path };
-    if (r === false) return { kind: "lost" };
-    // A try that stopped short proved nothing but what it put in `lost`.
-  }
-  return { kind: "out-of-reach" };
+        })
+        .sort((a, b) => a.rank - b.rank)
+        .map(({ g, after }) => [g, after] as const),
+  };
 }
+
+const search = (
+  t: Tiles,
+  s: SamegameState,
+  plan: Plan,
+  allowance?: Allowance,
+): SearchOutcome<Group> =>
+  searchFinish(t, clearingSearch(s.w, s.h, s.ncols), plan, allowance);
 
 /** What a search established about a position: the groups to remove in turn. */
 export type Clearing = SearchOutcome<Group>;
@@ -223,7 +196,7 @@ const FIND: Plan = { budget: 60_000, restart: 500, tries: 110 };
 export function findClearing(s: SamegameState, plan: Plan = FIND): Clearing {
   const tiles = Uint8Array.from(s.tiles);
   if (hasLastOfColor(tiles, s.ncols)) return { kind: "lost" };
-  return search(tiles, s.w, s.h, s.ncols, plan, { left: Number.POSITIVE_INFINITY });
+  return search(tiles, s, plan);
 }
 
 /**
@@ -239,13 +212,6 @@ export function judge(
   const t = Uint8Array.from(tiles);
   if (hasLastOfColor(t, s.ncols)) return "lost";
   return searchVerdict(
-    search(
-      t,
-      s.w,
-      s.h,
-      s.ncols,
-      { budget: proof, restart: proof >> 2, tries: 2 },
-      allowance,
-    ),
+    search(t, s, { budget: proof, restart: proof >> 2, tries: 2 }, allowance),
   );
 }

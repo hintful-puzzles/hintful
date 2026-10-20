@@ -83,6 +83,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `apart-by-position.ts` — two things of one name, told apart | a sentence names two clues of one value |
 | – `rival-judging.ts` — what a searched move's rivals let it say | a hint says something about the other moves |
 | – `search-outcome.ts` — what a budgeted search for a line established | your game can be lost and is solved by search |
+| – `finish-search.ts` — the depth-first search that finds a line or proves none | your hint proves a position lost |
 | – `candidate-hint.ts` — candidate-elimination plan plumbing | your hint strikes pencil notes |
 | – `entry-mistakes.ts` — Check & Save for one value or a set of marks per cell | the player places one value a cell |
 | – `candidate-plan.ts` — the candidate-elimination plan walk | you write a notes game's `buildSteps` |
@@ -688,6 +689,30 @@ dealt. The search, its budgets (counted in positions) and the move Solve
 makes stay the game's. A game that hands its outcome to `searchRefusal` is
 in `SEARCH_REACH_GAMES` (`testing/hint-games.ts`). Exemplar:
 `sokoban/solver.ts`.
+
+### `finish-search.ts` — the depth-first search that finds a line or proves none
+
+Reach for it when a hint must prove a position lost by searching every line
+from it. `searchFinish(start, game, plan, allowance)` owns the memo of
+positions proved lost, the budget in positions, the shared `Allowance` and
+the restarts, and returns a `SearchOutcome`. The game's `FinishSearch` gives
+an exact key, the finished test, a sound and cheap lost-at-a-glance cut, and
+its moves in the order to try them with the position after each; the salt
+it is handed breaks ties another way on each restart. `exhaustive(budget)`
+is one try; a `Plan` with `tries` restarts cures the heavy tail of an
+ordered search where ties are many.
+
+- **One board changed in place is allowed**, and is what Pegs does: yield
+  the same position after each move and change it back in a `finally`,
+  which runs when the search stops drawing moves, early or not. Keep any
+  count the finished test needs on the position rather than recounting it.
+- **Restarts do not help a proof of loss**: every position a cut does not
+  stop is expanded whatever the order, so a short try only repeats work
+  (measured on Pegs in `own-the-finishability-search`, task 1.2). They help
+  where the search also has to find, as in Same Game.
+
+Exemplars: `pegs/solver.ts` (in place, one try) and `samegame/solver.ts`
+(a new board a move, with restarts).
 
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 

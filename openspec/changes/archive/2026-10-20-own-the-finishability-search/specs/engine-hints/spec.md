@@ -5,8 +5,8 @@
 A game whose hint proves a position lost by searching every line from it
 SHALL do so through one engine helper, which owns the memo of positions
 proved lost, the budget in positions and the request's allowance. The game
-SHALL supply only its moves, their order, a position's key and its cheap
-lost-at-a-glance cut.
+SHALL supply only its moves, their order, a position's key, when it is
+finished and its cheap lost-at-a-glance cut.
 
 #### Scenario: Two games prove loss through the helper
 

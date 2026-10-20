@@ -22,8 +22,9 @@ and `index.ts`.
 2. Put the search in the game's `solver.ts`, budgeted in positions and never
    in time, returning a `SearchOutcome`
    ([`engine/search-outcome.ts`](../src/engine/search-outcome.ts)): a line
-   that finishes, a proof that none does, or out of reach. Two searches where
-   one cannot both find and prove (§ "Find with one search, prove with
+   that finishes, a proof that none does, or out of reach. A proof that none
+   does goes through `searchFinish`, and there are two searches where one
+   cannot both find and prove (§ "Find with one search, prove with
    another").
 3. Name the non-negative integer every hinted move lowers, before writing any
    narration, and run `src/engine/hint-resume.test.ts` on the game
@@ -317,13 +318,17 @@ never say a position is lost. So the beam finds, and a budgeted exhaustive
 search only proves loss; that proof is what lets the hint refuse with
 `NO_SOLUTION_FROM_HERE`, and with `SEARCH_OUT_OF_REACH` past the budget
 (`searchRefusal`,
-[`engine/search-outcome.ts`](../src/engine/search-outcome.ts)). Exemplar:
-[`pegs/solver.ts`](../src/games/pegs/solver.ts).
+[`engine/search-outcome.ts`](../src/engine/search-outcome.ts)). The
+exhaustive search is the engine's `searchFinish`
+([`engine/finish-search.ts`](../src/engine/finish-search.ts)); the game
+gives its moves, their order, a position's key and its lost-at-a-glance
+cut. Exemplar: [`pegs/solver.ts`](../src/games/pegs/solver.ts).
 
 - An ordered depth-first search is heavy-tailed: an early wrong turn buries
-  it. Restart it with its ties broken another way and its memo of lost
-  positions shared, which proves as much as one long search and finds far
-  more ([`samegame/solver.ts`](../src/games/samegame/solver.ts); measured in
+  it. Where it must find as well as prove, give `searchFinish` a plan of
+  restarts with the ties broken another way and the memo shared, which
+  proves as much as one long search and finds far more
+  ([`samegame/solver.ts`](../src/games/samegame/solver.ts); measured in
   `add-samegame-hint` design D2, where twenty restarts and a long last try
   lost boards that a hundred and ten short ones did not).
 - A search that is exhaustive never runs out of reach, so its hint does not
