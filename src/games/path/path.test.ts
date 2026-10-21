@@ -184,6 +184,16 @@ describe("path input", () => {
     });
   });
 
+  it("a drag along a line and on past its end carries the line on", () => {
+    const drawn = executeMove(start, set(6, LINE));
+    const move = play(drawn, [
+      [LEFT_BUTTON, at(8)],
+      [LEFT_DRAG, at(10)],
+      [LEFT_RELEASE, at(10)],
+    ]);
+    expect(move).toEqual(set(7, LINE));
+  });
+
   it("a drag stops where a square already has its lines, and at a cross", () => {
     // The 1 in the corner has its line already, so a line from the 2 beside
     // it stops short of it.

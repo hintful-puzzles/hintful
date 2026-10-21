@@ -16,6 +16,9 @@
 - [x] 2.3 Hint marks read on colored lines in both schemes; snapshots
       re-baselined with every moved line explained; help page's look updated.
 
+- [x] 2.4 A drag along a line and on past its end carries the line on rather
+      than taking it up (owner, 2026-10-21, found playing the colored board).
+
 ## 3. The other free-color games
 
 - [x] 3.1 Flood, Guess and Samegame onto the free set where it serves, and

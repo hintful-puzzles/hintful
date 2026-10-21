@@ -26,23 +26,21 @@ export interface EdgeChange {
 }
 
 /**
- * The edges a drag through `cells` sets, as upstream's sketch of the game
- * asks: a drag lays a line along every edge it passes, except that one
- * starting along a line takes lines up, until the first edge it lays one on.
+ * The edges a drag through `cells` sets: a line along every edge it passes,
+ * keeping the lines already there, so that a drag along a line and on past
+ * its end carries the line on. A drag that passes only lines takes them up.
+ * Upstream's sketch of the game took up the lines a drag started along even
+ * where it went on to lay one, and a player tracing a line to continue it
+ * lost it (owner, 2026-10-21).
  */
 export function dragChanges(state: PathState, cells: readonly number[]): EdgeChange[] {
   const g = geometry(state.w, state.h);
+  const passed: number[] = [];
+  for (let k = 1; k < cells.length; k++)
+    passed.push(edgeBetween(g, cells[k - 1], cells[k]));
+  const lays = passed.some((e) => state.edges[e] !== LINE);
   const edges = state.edges.slice();
-  let erasing = true;
-  for (let k = 1; k < cells.length; k++) {
-    const e = edgeBetween(g, cells[k - 1], cells[k]);
-    if (edges[e] === LINE) {
-      if (erasing) edges[e] = OPEN;
-    } else {
-      edges[e] = LINE;
-      erasing = false;
-    }
-  }
+  for (const e of passed) edges[e] = lays ? LINE : OPEN;
   const out: EdgeChange[] = [];
   for (let e = 0; e < g.edgeCount; e++)
     if (edges[e] !== state.edges[e]) out.push({ edge: e, mark: edges[e] as EdgeMark });
@@ -107,9 +105,14 @@ export function extendDrag(state: PathState, drag: PathDrag, to: number): void {
   for (let at = last; at !== to; ) {
     const next = at + step;
     if (drag.cells.includes(next)) return;
+    // Judged on the board as the drag would leave it with this step, since
+    // a step that lays a line keeps the lines the drag has passed.
     const e = edgeBetween(g, at, next);
-    const before = withChanges(state, dragChanges(state, drag.cells));
-    if (!lineFits(state, before, e)) return;
+    if (state.edges[e] === CROSS) return;
+    const cells = [...drag.cells, next];
+    const after = withChanges(state, dragChanges(state, cells));
+    if ([at, next].some((i) => linesAt(state, after, i) > degreeOf(state.ends, i)))
+      return;
     drag.cells.push(next);
     at = next;
   }

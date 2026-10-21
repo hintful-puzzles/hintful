@@ -13,9 +13,9 @@ Every puzzle has exactly one solution, and none needs a guess.
 ## Controls
 
 Drag from square to square to draw a line along the edges you pass. Dragging
-back the way you came takes the line back up again, and a drag that starts
-along a line you have drawn takes lines up instead of drawing them, until it
-reaches an edge with no line. A line stops where it would give a square more
+back the way you came takes the line back up again. A drag along a line you
+have drawn and on past its end carries that line on, and a drag that runs
+only along lines you have drawn takes them up. A line stops where it would give a square more
 lines than it takes, or where you have crossed the edge out. You can also
 click near the edge between two squares to draw or remove a line there.
 
