@@ -120,11 +120,15 @@ export class PathBoard {
   }
 
   /** Whether a line could still go on edge `e`: it is neither line nor cross,
-   * and both its squares take another line. An edge beside a square that has
-   * all its lines is as good as crossed out, so no rung asks the player to
-   * cross it. */
+   * both its squares take another line, and it does not run straight between
+   * two different numbers. Either of the last two a player sees at a glance,
+   * so such an edge is as good as crossed out and no rung asks for its
+   * cross. */
   live(e: number): boolean {
-    return this.edges[e] === OPEN && this.spare(this.g.a[e]) && this.spare(this.g.b[e]);
+    const [i, j] = [this.g.a[e], this.g.b[e]];
+    const [p, q] = [this.ends[i], this.ends[j]];
+    if (p !== NO_END && q !== NO_END && p !== q) return false;
+    return this.edges[e] === OPEN && this.spare(i) && this.spare(j);
   }
 
   /** The {@link live} edges around square `i`. */

@@ -4,6 +4,6 @@ exports[`path: pinned hint positions > says, at each pin 1`] = `
 {
   "forced": "The outlined square has only two edges left for its two lines, so these edges must be lines.",
   "lookahead": "A line here would force the numbered edges and join the outlined 1 to the 3, so this edge must be crossed out.",
-  "pair": "A line here would join the outlined 2 to the 3, so this edge must be crossed out.",
+  "pair": "A line here would join the outlined 1 to the 2, so this edge must be crossed out.",
 }
 `;

@@ -57,9 +57,18 @@ A board SHALL be dealt only where the ladder finishes it, which proves it has ex
 - **WHEN** a board is dealt at Normal
 - **THEN** the Easy rungs alone do not finish it, and with the lookahead they do
 
+### Requirement: Solver: An edge a player sees is closed counts as closed
+
+The ladder SHALL count an edge as closed when it is crossed, when a square beside it has all its lines, or when it lies between two different numbers, and no rung SHALL decide such an edge.
+
+#### Scenario: An edge between two numbers is never a step
+
+- **WHEN** a 2 and a 1 sit side by side
+- **THEN** no hint step asks for a cross on the edge between them
+
 ### Requirement: Solver: The ladder and its lookahead
 
-The ladder SHALL count an edge as closed when it is crossed or when a square beside it has all its lines. Its Easy rungs SHALL be: a square whose open edges are as many as the lines it still needs takes a line on each; and an edge whose line would join two different numbers takes a cross. Its Normal rung SHALL suppose a line or a cross on an open edge, run the Easy rungs from there for at most six firings, and give the edge the other mark where the board breaks.
+The ladder's Easy rungs SHALL be: a square whose open edges are as many as the lines it still needs takes a line on each; and an edge whose line would join two different numbers takes a cross. Its Normal rung SHALL suppose a line or a cross on an open edge, run the Easy rungs from there for at most six firings, and give the edge the other mark where the board breaks.
 
 #### Scenario: The lookahead settles an edge
 

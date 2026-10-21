@@ -51,7 +51,8 @@ you to fix the highlighted mistakes first.
 {{hint-marks}}
 
 An edge beside a square that already has all its lines can never take
-another, so the hint counts it as closed without asking you to cross it out.
+another, and neither can an edge between two different numbers side by side,
+so the hint counts both as closed without asking you to cross them out.
 Most steps are one of two rules at work:
 
 * A square with only as many open edges left as it still needs lines takes a

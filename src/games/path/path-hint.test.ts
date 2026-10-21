@@ -30,9 +30,9 @@ const pinned = describeHintPins({
   game: pathGame,
   params: [{ w: 5, h: 5, diff: DIFF_NORMAL }],
   pins: {
-    /** Held on 389 of 389 positions walked. */
+    /** Held on 348 of 348 positions walked. */
     forced: "5x5dn:1b2b3e4_1c2b3c4",
-    /** Held on 365 of 389 positions walked. */
+    /** Held on 324 of 348 positions walked. */
     pair: {
       id: "5x5dn:1b2_3b3b1a4_5d4a2_5c",
       moves: [
@@ -45,7 +45,7 @@ const pinned = describeHintPins({
         },
       ],
     },
-    /** Held on 197 of 389 positions walked. */
+    /** Held on 156 of 348 positions walked. */
     lookahead: {
       id: "5x5dn:1b2b3e4_1c2b3c4",
       moves:
