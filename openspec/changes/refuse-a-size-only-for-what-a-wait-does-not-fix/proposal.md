@@ -1,6 +1,7 @@
 # refuse-a-size-only-for-what-a-wait-does-not-fix
 
-**Status: the owner answered (a) on 2026-10-20. Filed 2026-10-15** from
+**Status: the owner answered (a) on 2026-10-20, and widened it on
+2026-10-21 (§ "The second answer"). Filed 2026-10-15** from
 item 2 of `mend-what-the-guide-rewrite-found`, which measured it and
 archived without it. Every figure here carries that date; re-check it
 before relying on it.
@@ -54,16 +55,82 @@ Player-visible either way. Recommendation: **(a)**.
   is a reason to refuse; `engine-difficulty` gains the bar a refusal must
   clear. This keeps sizes the measurement deals in seconds refused.
 
+## The answer, and how far it reaches
+
+The owner chose (a), 2026-10-20. A census of every game's `validateParams`
+that day found the same refusal under other words in more games than the
+three: `tooRareToDeal` is by its own contract a size "found too seldom to
+wait for", and several bounds that tell the player no board exists were
+drawn where a deal takes a few seconds. The owner chose to bring them all
+into this change.
+
+**The line.** A size is refused only where the app's deal, under its
+deadline, gives up more often than it finds a board, or never answers; or
+for what no wait fixes at all (memory, a board that does not exist, a deal
+whose time goes on boards it throws away). With a board found once in `m`
+seconds a deal runs the deadline out with chance `e^(-120/m)`, which passes
+one half at `m` ≈ 173 s: that is the mean wait past which a rare size is
+refused. A line is placed from a dozen deals each side, dealt as the app
+deals them.
+
+**The instrument.** `npm run deal-walk` with cells named called the
+generator directly, where a retry loop gives up after 10,000 tries rather
+than at the deadline, so its "gave up" was not the player's. A named cell is
+now dealt by `generate`, under the deadline. The figures in "What was
+measured" above predate that.
+
+## The second answer
+
+Two days into measuring, a line placed that way was seen to be a timing: it
+moves whenever a generator or solver gets faster or slower, and on a slower
+device, so every table would be measured again after every solver change.
+And a player is never trapped by a slow deal: every deal runs in a worker of
+its own, Stop ends it, and after the deadline it says no board was found
+(`dealGaveUp`). A refusal saves at most that wait.
+
+The owner chose, 2026-10-21, to **drop every refusal drawn on time**, so that
+the catalog never needs measuring for it again, and to give the player an
+estimate of the wait if that is straightforward.
+
+**The rule.** A size is refused only for what no speedup changes: a board
+that does not exist, shown by a count or a proof (`noSuchTier`), or a
+structural limit (memory, an encoding, a level the hint cannot open). A size
+that is merely rare or slow is dealt, and the deadline answers it the same
+way in every game. Nothing in the catalog is drawn from a deal's time.
+
+**What that needs of the engine.** The deadline is checked between a
+generator's tries, so a single long search outlives it: Mosaic at 100×100,
+Blackbox with many balls and Signpost on a 2×450 were seen never to answer.
+The page ends a deal's worker at the deadline and reports it as found none,
+so no game can hang a wait whatever its solver does. A type whose last deal
+found nothing is already not dealt ahead until asked (`DealAhead`'s
+`unasked`), so a hopeless Custom type spends no background time.
+
+**The estimate.** No figure is known before a type's first deal on a device,
+which is the wait that matters, so the words say what is known: how long the
+wait has run, that a deal gives up by the deadline, and how long the last
+deal of the type took where one did this visit.
+
 ## What Changes
 
-On (a): the three games' `validateParams` lose the wait refusals and gain,
-where measured, a refusal for a generator that gives up; Net's spec delta;
-`engine-difficulty` states the default (no refusal for a rare tier's wait;
-the deal's deadline answers it). On (b): `docs/solver-and-generator.md` and
-`engine-difficulty`.
+- Every `tooRareToDeal` refusal, every "takes too long to deal" refusal, and
+  every bound drawn from measured deal times or acceptance rates is removed
+  from `validateParams` across the catalog. A refusal backed by a count or a
+  proof (`noSuchTier`) or a structural limit stays. `tooRareToDeal` goes.
+- `DealAhead` ends a deal at the deadline from the page.
+- The pending-deal words give the elapsed wait, the deadline, and the last
+  deal's time of the type.
+- `engine-difficulty`: "A tier too rare to deal says so" is removed; the
+  rule above is stated, with the page's deadline.
+- Game specs and help pages lose the bounds they name; Sokoban's refusal
+  keeps its line and says its real reason.
+- `docs/solver-and-generator.md` § "A Custom size is not refused for its
+  wait" states the rule.
 
 ## Impact
 
-`src/games/{net,signpost,sticks}/`, their help pages where they name a
-limit, `openspec/specs/net/spec.md`, `openspec/specs/engine-difficulty/`,
-`docs/solver-and-generator.md`.
+`src/engine/{deal,difficulty,retry-limit}.ts`, `src/puzzle/{deal-ahead,
+puzzle}.ts` and the chrome's pending-deal words; the validators, tests,
+help pages and specs of every game with a timing refusal;
+`openspec/specs/engine-difficulty/`; `docs/solver-and-generator.md`;
+`scripts/deal-walk.ts`.
