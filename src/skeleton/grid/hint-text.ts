@@ -34,9 +34,10 @@ const needs = (need: number, placed: number): string =>
 const these = (cells: readonly Point[]): Narration =>
   mark.this("ring", CELL, cells, "square");
 
-/** "it must be" / "they must be", over the ringed squares. */
+/** "this square must be" / "these squares must be". A bare "it" or "they"
+ * names no mark, which `hint-quality.test.ts` refuses. */
 const mustBe = (cells: readonly Point[], what: string): Narration =>
-  phrase`${mark.as("ring", CELL, cells, (els) => (els.length > 1 ? "they" : "it"))} must be ${what}`;
+  phrase`${these(cells)} must be ${what}`;
 
 /** A number, by its value. */
 const number = (at: Point, value: number, lead = "the outlined"): Narration =>
@@ -85,7 +86,7 @@ export const say = {
     const taken = left === 0 ? (inner.need === 1 ? "it" : "them all") : `${inner.need}`;
     const where = mark.as("stripes", CELL, meet, "where they meet");
     return so({
-      look: phrase`${number(outer.at, outer.value, "the")} beside ${these(cells)} still needs ${outer.need}, and ${number(inner.at, inner.value, "the other outlined")} puts ${taken} ${where}`,
+      look: phrase`${number(outer.at, outer.value, "the")} beside ${these(cells)} needs ${outer.need}, and ${number(inner.at, inner.value, "the other outlined")} puts ${taken} ${where}`,
       move: mustBe(cells, mark_ === "shaded" ? SHADED_NAME : UNSHADED_NAME),
     });
   },

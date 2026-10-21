@@ -1,73 +1,50 @@
 # Tasks — add-path-ts-port
 
-**Status: speculative / lowest readiness.** Numberlink has no upstream game and
-no upstream solver. The solver is the crux; prove it works (§1) before building
-anything on top of it. If the solver spike fails or the quality bar can't be
-met, the change may end at §1.
-
 ## 0. Decide, and de-risk the crux first
 
-- [ ] 0.1 Confirm with the owner that Numberlink belongs in the collection and
-      that a from-scratch solver + generator is in scope (this is a build, not a
-      port). If no, archive as "considered, declined".
-- [ ] 0.2 **Solver spike, gating.** Write a Numberlink solver good enough to
-      *prove uniqueness* on hand-authored boards. Until this exists, guess-free
-      unique generation is impossible and the rest of the change cannot proceed.
-      Decide the approach (constraint propagation vs. path-DFS with pruning);
-      record it.
+- [x] 0.1 The owner asked for the change to be taken on (2026-10-21,
+      design D0). Rules: every square filled (design D1).
+- [x] 0.2 Solver spike: a deductive ladder proves uniqueness on every dealt
+      board; SAT not needed (design D2).
 
-## 1. The solver (the blocker upstream never resolved)
+## 1. The solver
 
-- [ ] 1.1 `src/games/path/solver.ts`: given a board (numbered endpoints),
-      determine solvability and whether the solution is unique. Uniqueness is the
-      required output — a mere "a solution exists" is not enough to gate a
-      generator.
-- [ ] 1.2 Tier-1 tests over hand-authored boards with known unique / ambiguous /
-      unsolvable status.
+- [x] 1.1 `solver.ts`: the Easy rungs (forced, pair) and the Normal
+      lookahead, run to a fixpoint and one firing at a time.
+- [x] 1.2 `count-answers.ts`, a brute-force counter sharing no code with the
+      ladder; tests on hand-authored and dealt boards.
 
-## 2. The generator (path.c as a starting point, not an oracle)
+## 2. The generator
 
-- [ ] 2.1 Port `path.c`'s path-growing strategy (add-a-path / extend-and-push)
-      into `generator.ts` as the *candidate* producer.
-- [ ] 2.2 Gate every candidate on the §1 solver for a unique solution; reject
-      the rest. Tune against upstream's two named quality failures — too many
-      trivial short paths vs. hopelessly-interwoven grids, and boring
-      straight-line paths (e.g. a whole edge row as one path).
-- [ ] 2.3 The `tree234`/other leaf usage in path.c becomes idiomatic TS (Map/Set
-      lookups; no literal tree234 port).
-- [ ] 2.4 Params (size, difficulty) + desc codec + validate.
+- [x] 2.1 `path.c`'s growing (join pieces end to end, no self-touching).
+- [x] 2.2 Mend where the ladder stalls, strip what it does not need, keep
+      only the exact tier; no straight path of four squares or more.
+- [x] 2.3 No tree234: arrays and Sets.
+- [x] 2.4 Params (size, tier), desc codec, `validateParams`.
 
-## 3. The game (invented from upstream's header sketch)
+## 3. The game
 
-- [ ] 3.1 State + data model: track connections between *adjacent* cells (so the
-      player can mark path sections not yet joined to an endpoint), per
-      upstream's UI notes.
-- [ ] 3.2 Input: click-and-drag to link adjacent cells, tolerating a rook-move
-      drag to an in-line square; win when every pair is joined by a
-      non-crossing path filling the grid (per the chosen ruleset).
-- [ ] 3.3 `newUi`, move model, undo.
+- [x] 3.1 State: a mark on every edge.
+- [x] 3.2 Input: drag, click, right-button crosses and sweep, keyboard.
+- [x] 3.3 `newUi`, the move model, undo through the midend.
 
-## 4. Render + present
+## 4. Render and present
 
-- [ ] 4.1 Render numbered endpoints, drawn links, and completion state; tier-2.5
-      render scenarios.
-- [ ] 4.2 Solve button (from the §1 solver) and a hint narrating one forced link.
+- [x] 4.1 Lines, numbers, crosses, errors, drag preview, cursor, win flash;
+      frame tests.
+- [x] 4.2 Solve, the mistake check, and the hint, with its look-ahead walk
+      numbered on the board.
 
-## 5. Tests + registration (stage 1)
+## 5. Tests and registration
 
-- [ ] 5.1 Tier-1 solver/generator/codec tests; tier-2.5 render scenarios.
-      Assurance is behavioral (generated boards are uniquely solvable), not a
-      C differential — there is no C game or solver to match.
-- [ ] 5.2 Register in `src/games/index.ts`; add a catalog entry
-      + two new icon PNGs (path was never cataloged).
-- [ ] 5.3 Full gate green; `openspec validate add-path-ts-port --strict`;
-      dev-verify in the browser.
+- [x] 5.1 Own, generation and hint tests; the census; the chain pin.
+- [x] 5.2 Registered in `src/games/index.ts` and the catalog, with icons and
+      its help page and row.
+- [ ] 5.3 `npm run game -- path` green; played in the app with pointer,
+      keyboard and touch; a fresh subagent reads the hint against the board.
 
-## 6. Stage 2 — on owner acceptance only
+## 6. Close-out
 
-- [ ] 6.1 Add `path` to `src/puzzle/catalog-data.ts` (+ the two icon PNGs) so it
-      is playable; `catalog-registry.test.ts` holds catalog and registry together.
-      (This task used to read "delete `puzzles/unfinished/path.c` and its build
-      entry" — there is no build entry, and the source now lives at
-      `reference/path.c` in this change, traveling into the archive with it.)
-- [ ] 6.2 Archive, then commit game + archive together.
+- [x] 6.1 Findings recorded in `design.md`; guides updated with what the
+      build taught.
+- [ ] 6.2 Commit and push; bring to the owner for acceptance, then archive.

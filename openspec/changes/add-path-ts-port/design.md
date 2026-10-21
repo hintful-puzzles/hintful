@@ -2,98 +2,136 @@
 
 ## Context
 
-Path is a Numberlink generator experiment, and the least ready of upstream's
-unfinished puzzles. `path.c` has **no `struct game`, no input, no rendering, and
-no solver** — it is purely a grid generator, and upstream's header records both
-that its grids "are not of suitable quality to be used directly as puzzles" and
-that fixing the fatal problem (no unique-solution guarantee) needs a solver it
-never wrote: *"I fear there is no alternative but to write — somehow! — a
-solver."*
+Path is Nikoli's Numberlink. Upstream's `path.c` is a grid generator with no
+`struct game`, no input, no rendering and no solver, whose header says its
+grids "are not of suitable quality to be used directly as puzzles" and that
+fixing them needs a solver it never wrote. This change built the game: the
+solver, a generator over it, the frontend and the hint.
 
-So porting Path is a build, dominated by two things upstream left undone: the
-solver, and the generator's quality. This document is about de-risking those,
-not settling implementation detail.
+## D0 — Building it (owner, 2026-10-21)
 
-## D1 — The solver is the crux and gates the whole change
+The scaffold asked whether Numberlink belongs and whether a from-scratch
+solver and generator is in scope. The owner asked for the change to be taken
+on, which is the answer. Numberlink is among the app stores' puzzle games
+(Flow Free), which is the collection's goal (`docs/doctrine.md` § "The
+goal").
 
-Every logic-puzzle port in this repo meets a **unique-solution generation** bar,
-and a solver is the only way to meet it. Numberlink's is non-trivial: it is
-NP-complete in general, though puzzle-sized boards are tractable. The change
-cannot proceed past a spike until a solver exists that can *prove uniqueness*
-(not merely find a solution) on realistic sizes at acceptable speed.
+## D1 — The rules: every square is filled
 
-**Therefore the solver is a gating spike (task 0.2 / §1), before any game or
-generator work.** If the spike shows uniqueness-proving is too slow at usable
-sizes, that is a finding that legitimately ends the change — better learned in a
-spike than after building a UI on top of an ungateable generator.
+A pair of like numbers is joined by a line through the middles of the squares;
+lines never cross or branch; **every square is used**. That is Flow Free's
+rule and the proposal's "standard ruleset". Nikoli's Numberlink leaves squares
+empty, and that rule is what made upstream's dense grids ambiguous ("a solution
+other than the intended one which leaves many grid squares unfilled"): under
+the fill rule the question does not arise.
 
-Approach is open: constraint propagation (forced links from degree/parity
-constraints) with a bounded search fallback is the likely shape, mirroring how
-the deductive games in this repo grade difficulty. Record the choice in the
-spike.
+## D2 — The solver: a deductive ladder, no SAT
 
-**A SAT/CP encoding is an explicit candidate for that spike** (owner-scoped,
-2026-08-01), and this is the change that decides whether one gets built at all.
-Numberlink is a classic SAT benchmark, and "prove uniqueness" is the query SAT
-answers most naturally: solve, add a clause excluding that solution, solve again.
-Two objections were raised and only one survived:
+The spike (task 0.2) decided against SAT. Every board the generator deals is
+finished by a deductive ladder, which proves it has one answer, so no separate
+uniqueness engine is needed, and none was built.
 
-- *It cannot narrate its reasoning, and this repo's solvers double as hint
-  engines.* **Withdrawn** — several games already ship an *Unreasonable* tier the
-  solver reaches and the hint does not, so "solves it but cannot explain it" is an
-  established shape. A SAT-backed uniqueness gate needs no narration at all; the
-  *hint* would still come from the deductive rungs, which is the same split those
-  games already have.
-- *It would forfeit the byte-match differential.* **Stands, but does not apply
-  here.** On a ported game the generator is solver-gated, so its accept/reject
-  decisions must reproduce C's deductive verdicts exactly, and a SAT uniqueness
-  check would change which puzzles exist. Path has **no C game and no C solver**
-  (D3), so there is nothing to forfeit — which is precisely why the question
-  belongs in this spike and nowhere else.
+- **An edge beside a square that has all its lines counts as closed**, as in
+  Pearl. No rung asks the player to cross such an edge out, which removed a
+  rung ("full") that only did that.
+- **Easy rungs (Checks):** a square with as many open edges as lines it still
+  needs takes a line on each (*forced*); an edge whose line would join two
+  different numbers takes a cross (*pair*).
+- **Normal rung (a Tactic):** suppose a line or a cross on an open edge, run
+  the Easy rungs from there for at most `CHAIN_LIMIT` (6) firings, and if the
+  board breaks (a square crowded or left a dead end, a loop closed, two numbers
+  joined), the edge takes the other mark. The shortest chain is taken. The
+  bound is what keeps it a walk and not a search; it is load-bearing for
+  Normal's name (`docs/solver-and-generator.md` § "Check, Tactic, Search").
+- **Tried and dropped, by measurement.** A cut rung (crossing an edge would
+  shut squares off from the numbers they need, by bridge-finding) and a reach
+  rung (which numbers' paths can reach each square) fired on **no** board at
+  either tier, over hundreds of boards: the Easy rungs settle corridors before
+  a cut can matter, and where the Easy rungs stall the open area is too wide
+  for either. A loop rung fires on no dealt board, because no path of a dealt
+  answer touches itself (D3); inside a supposition a loop is a clash.
+- **What stands in for an oracle** (D5): `count-answers.ts`, a brute-force
+  counter sharing no code with the ladder, finds exactly one answer on every
+  dealt board up to 7x7 in the generation test.
 
-If SAT wins here, **Seismic's region fill is the second consumer** that would
-justify promoting it from Path-local to shared: that fill is already diverged from
-upstream, so it has no oracle to lose either, and its 10×10 feasibility question
-is a SAT query (see the audit archived with `audit-author-known-issues`, §3a). Do
-**not** build a shared constraint engine before this spike — infrastructure ahead
-of the game that pressures it is the mistake
-`openspec/postmortems/2026-05-21-scene-graph-withdrawal.md` records.
+## D3 — The generator: path.c's growing, then mend and strip
 
-## D2 — `path.c` is a seed, not an oracle
+- **Lay** a random cover of paths as `path.c` sketched, by joining pieces end
+  to end from single squares, with `path.c`'s rule that a path never touches
+  itself except along its own line, and paths of three squares or more.
+- **Mend**: run the ladder at the tier asked; where it stalls, cut a path in
+  two at an edge it left open, which adds a pair of numbers. Repeat until the
+  ladder finishes.
+- **Strip**: join paths again, in a random order, wherever the ladder still
+  finishes without the two numbers the join removes. Without this, boards
+  carried a third more numbers than they need.
+- **Exactly the tier**: keep the board only where it needs its tier
+  (`solvableAtExactlyTier`).
+- **Boring paths** (upstream's "the entire bottom row of the grid being taken
+  up by a single path"): no path is a straight run of four squares or more.
 
-Its path-growing strategy (repeatedly add a path, or extend one end and push
-others aside) is a reasonable *candidate producer* and worth reusing. But it is
-explicitly inadequate on its own, so it is subordinated to the new solver's
-uniqueness gate and tuned against the two quality failures upstream names:
+Measured (2026-10-21, 10 boards a cell): 5x5 Easy 4–5 pairs at 3 ms, Normal
+3–4 pairs at 40 ms; 7x7 Easy 7–11 pairs at 19 ms, Normal 7–10 at 0.2 s;
+9x9 Easy 12–15 at 0.14 s, Normal 12–14 at 0.9 s (worst 2.2 s). The presets are
+5x5, 7x7 and 9x9 at each tier. Lookahead chains on dealt Normal boards ran
+1 to 6 firings.
 
-- the add-vs-extend priority knob (add-where-possible gives too many trivial
-  short paths; extend-where-possible gives hopelessly interwoven, non-unique
-  grids) — find the middle, gated by the solver;
-- boring paths (a whole edge row as a single path) — reject or penalize.
+## D4 — The game, from upstream's sketch
 
-Its `tree234` usage becomes idiomatic Map/Set lookups (the leaf rule); do not
-transcribe tree234.
+- **Data model** as upstream sketched: a mark on every edge (nothing, line,
+  cross), so a player can lay a piece of path before it reaches a number.
+- **Input**, following Pearl's, the collection's other loop-drawing game: a
+  drag draws along the edges it passes a rook move at a time, backing up
+  takes the line back, a drag starting along a line erases, and the UI never
+  lets a square take more lines than it takes (upstream's sketch). A click by
+  an edge toggles its line; the right button crosses, and drags crosses
+  through the engine's sweep. Keyboard: Enter starts a line, arrows carry it,
+  Enter draws; Ctrl+arrow draws, Shift+arrow crosses.
+- **Look**: lines in ink, numbers in discs that gray when joined, a line red
+  where its piece joins two numbers or closes a loop.
+- **The name** a player sees is *Path*, upstream's, with the aliases
+  Numberlink, Arukone and Flow.
 
-## D3 — No differential; assurance is behavioral
+## D5 — No differential; assurance is behavioral
 
-There is no C game and no C solver, so there is nothing to byte-match. Assurance
-rests entirely on the solver's own correctness (proven on hand-authored boards
-of known status) and on the invariant that every generated board is uniquely
-solvable. This is weaker than the differential every real port has, and is a
-direct consequence of Path being unfinished — state it to the owner.
+There is no C game or solver. The generation test holds every dealt board to
+one answer by the independent counter, to its tier, and to the no-boring-path
+rule; the ladder census holds that every rung fires on dealt boards.
 
-## D4 — The game is invented from upstream's header sketch
+## Findings: what building it cost (the baseline measurement)
 
-Upstream never built the UI but sketched it in the header: a connection-based
-data model (track links between adjacent cells, so a player can lay path
-sections before joining them to an endpoint) and click-drag-to-link input. That
-sketch is the starting point; the rest is designed by this change and covered by
-behavioral + render tests.
+Every question this build stopped to answer that was not about the puzzle,
+kept as it happened (proposal § "Also: this is a baseline measurement").
+Measured 2026-10-21, one session. Most costly first.
 
-## Risks
-
-- **Solver feasibility (D1)** is the make-or-break unknown; spike it first.
-- **Generator quality (D2)** is an open research-ish problem upstream did not
-  solve; budget for iteration or accept a narrower size/difficulty range.
-- **No oracle (D3)** — weakest assurance of the seven changes.
-- **Greenfield UI (D4)** — no reference beyond a paragraph of intent.
+1. **The skeleton is a grid of cells; Path is a game of edges.** As for
+   Target, every file of the copy was replaced; what it gave was the file
+   names, the test shapes and the closing checklist. Two greenfield games of
+   two other kinds now confirm it: a skeleton per kind of the route table
+   (`docs/new-game.md` § "The route by kind of game") is the engine's next
+   candidate, an edges-and-loops one first.
+2. **Square-grid edges are written per game.** Numbering the edges, a
+   square's four, the edge between two squares: Path wrote `Geometry`, Pearl
+   holds direction bits per square, Tracks its own; `border-grid.ts` serves
+   walls between regions only.
+3. **The line-drawing drag is written per game.** Rook-move steps, cutting
+   back, erase-first-leg, refusing an over-full square: Pearl's and Tracks'
+   are each their own, and Path's is a third (`moves.ts`).
+4. **A hint mark on an edge is written per game.** Pearl and Path each
+   declare an `EDGE` mark kind and pack per-side hint bits into the tile key;
+   about a third of `render.ts` is edges and their marks.
+5. **The skeleton taught a sentence the guard refuses.** Its `mustBe` names
+   the ringed squares "it"/"they", which `hint-quality.test.ts` rejects as a
+   bare pronoun; the skeleton is unregistered, so no guard reads it. Path met
+   the refusal at its first verdict. Fixed in the skeleton in this change.
+6. **The chain-pin scan could not be run.** `hint-chain-pins.ts` says
+   `npm run hint-scan -- src/engine/hint-ordinal.test.ts` prints the pins;
+   the script refused a call in a loop, and the scan crashed when a later
+   seed of a rare cell (Group 8x8 Hard) ran out of tries. Both fixed in this
+   change.
+7. **A desc refusal needs an engine edit.** `descError` is private, so
+   "a number not on two squares" became `DESC_UNPAIRED` in `desc-error.ts`.
+   Cheap, and the design: the sentence is the collection's.
+8. **Measuring before building rungs paid.** Two plausible rungs fired on no
+   board; the throw-from-a-temp-vitest-file trick was the instrument each
+   time, as no census script takes a game's own candidate rung.

@@ -225,6 +225,24 @@ const sourcePath = path.join(ROOT, file);
 const original = readFileSync(sourcePath, "utf8");
 const source = ts.createSourceFile(file, original, ts.ScriptTarget.Latest, true);
 const blocks = pinBlocks(source);
+/** A report's pins as found, to be pasted by hand into a module the file
+ * reads them from. */
+const printed = (report: HintScanReport): string =>
+  `${report.game}: ${report.walked} positions walked on ${report.boards} boards\n` +
+  "  its pins are not a literal in the call: nothing written\n" +
+  Object.entries(report.kinds)
+    .map(
+      ([name, kind]) =>
+        `${String(kind.held).padStart(6)}  ${name}: ${kind.kept ? "kept" : (kind.pin ?? "NOT FOUND")}`,
+    )
+    .join("\n");
+// A call in a loop runs a scan a pass, and its pins come from outside the call
+// (`hint-ordinal.test.ts` reads `CHAIN_PINS`, a game at a time), so nothing
+// can be written there: each report is printed, to be pasted by hand.
+if (blocks.length === 1 && reports.length > 1) {
+  console.log(reports.map(printed).join("\n\n"));
+  process.exit(0);
+}
 if (blocks.length !== reports.length)
   fail(
     `${file} has ${blocks.length} describeHintPins calls and ran ${reports.length} scans; ` +
@@ -241,13 +259,7 @@ for (let i = blocks.length - 1; i >= 0; i--) {
   const head = `${report.game}: ${report.walked} positions walked on ${report.boards} boards`;
   if (block === null) {
     // Pins kept in another module: printed, to be pasted there by hand.
-    const found = Object.entries(report.kinds).map(
-      ([name, kind]) =>
-        `${String(kind.held).padStart(6)}  ${name}: ${kind.kept ? "kept" : (kind.pin ?? "NOT FOUND")}`,
-    );
-    logs.unshift(
-      `${head}\n  its pins are not a literal in the call: nothing written\n${found.join("\n")}`,
-    );
+    logs.unshift(printed(report));
     continue;
   }
   const done = rewrite(source, block, report);

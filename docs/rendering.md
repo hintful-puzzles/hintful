@@ -297,6 +297,19 @@ either.
   is not a grid's, such as an arrow over three squares, at the cost of a key
   that lists marks. Exemplar: [`pegs/render.ts`](../src/games/pegs/render.ts).
 
+**A line drawn as two halves is one stroke where it runs straight.** Lines
+have round ends, so two halves meeting in a square's middle overlap there,
+and their soft edges, drawn twice, darken into a knob that shows at every
+square a line passes. Draw a square's two opposite halves as one stroke, and
+let only a turn meet in the middle. Exemplar: the strokes in
+[`path/render.ts`](../src/games/path/render.ts).
+
+**A cross on a side is drawn by both squares, so the hint's outline goes
+under it.** An outline band painted after the tiles covers half of every
+cross and line on the squares' sides. Draw the outline in the tile, before
+what the square holds, with its sides in the key (`drawMarkSides`,
+`outlineSides`). Exemplars: Pearl and Path.
+
 ### Prove the overlay repaints
 
 **A cold-frame test proves nothing about an overlay.** On frame 1 every cell

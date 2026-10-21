@@ -1189,6 +1189,34 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
+      "cache",
+      "started",
+      "tileSize",
+    ],
+    "id": "path",
+    "members": [
+      "animLength",
+      "difficulty",
+      "findMistakes",
+      "hint",
+      "hintGesture",
+      "hintKeepTrack",
+      "hintMarks",
+      "hintRungs",
+      "paramConfig",
+      "preferredTileSize",
+      "solve",
+      "textFormat",
+      "transposeParams",
+      "validateParams",
+    ],
+    "ui": [
+      "cursor",
+      "drag",
+    ],
+  },
+  {
+    "drawState": [
       "h",
       "numColors",
       "started",

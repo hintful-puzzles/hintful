@@ -36,6 +36,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | [Net](../net)            | [help](net)      | FreeNet, NetWalk                                                                |
 | [Netslide](../netslide)  | [help](netslide) |                                                                                 |
 | [Palisade](../palisade)  | [help](palisade) | Five Cells                                                                      |
+| [Path](../path)          | [help](path)     | Numberlink, Arukone, Flow Free®                                                 |
 | [Pattern](../pattern)    | [help](pattern)  | Nonograms, Picross®                                                             |
 | [Pearl](../pearl)        | [help](pearl)    | Masyu                                                                           |
 | [Pegs](../pegs)          | [help](pegs)     | Peg Solitaire (classic marble jumping puzzle)                                   |

@@ -55,6 +55,12 @@ export const CHAIN_PINS: Record<string, HintPin<unknown>> = {
     moves:
       '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":2},{"x":1,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":3},{"x":2,"y":3,"n":4}]},{"type":"set","x":2,"y":3,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":2},{"x":2,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":3,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":1}]},{"type":"pencilStrike","marks":[{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":4}]},{"type":"set","x":1,"y":0,"n":3,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":3},{"x":2,"y":0,"n":3}]},{"type":"set","x":2,"y":0,"n":4,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":4},{"x":3,"y":0,"n":4},{"x":2,"y":1,"n":4},{"x":2,"y":2,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":2}]}]',
   },
+  /** Held on 61 of 871 positions walked, on 12 boards. */
+  path: {
+    id: "5x5dn:1b2b3e4_1c2b3c4",
+    moves:
+      '[{"kind":"edges","changes":[{"edge":3,"mark":1},{"edge":24,"mark":1}]},{"kind":"edges","changes":[{"edge":1,"mark":1},{"edge":22,"mark":1}]},{"kind":"edges","changes":[{"edge":10,"mark":2}]},{"kind":"edges","changes":[{"edge":32,"mark":2}]}]',
+  },
   /** Held on 266 of 427 positions walked, on 12 boards. */
   rome: "4x4de:2aa10b1d,gXDUdRa",
   /** Held on 3 of 871 positions walked, on 12 boards. */

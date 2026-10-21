@@ -25,6 +25,7 @@
 import { describe, expect, it } from "vitest";
 import type { Game, HintStep } from "../game.ts";
 import { randomNew } from "../random/index.ts";
+import { RetryLimitExceeded } from "../retry-limit.ts";
 import { dealsPromptly } from "./dealt.ts";
 import { type HintScanReport, SCAN_REPORT_MARK } from "./hint-scan-report.ts";
 
@@ -174,7 +175,15 @@ function scanHintPositions<P, S, M, U, D, H, R extends string>(
     if (!dealsPromptly(game, params)) continue;
     const encoded = game.encodeParams(params, true);
     for (let n = 0; n < (scan.seeds ?? 12); n++) {
-      const { desc } = game.newDesc(params, randomNew(`hint-scan-${n}`));
+      // `dealsPromptly` vouches for one seed; another of a rare cell can run
+      // out of tries (Group's 8x8 at Hard), and is passed over the same way.
+      let desc: string;
+      try {
+        desc = game.newDesc(params, randomNew(`hint-scan-${n}`)).desc;
+      } catch (thrown) {
+        if (thrown instanceof RetryLimitExceeded) continue;
+        throw thrown;
+      }
       const id = `${encoded}:${desc}`;
       boards++;
       // One line of play following the hint, and one the game steers.

@@ -50,6 +50,7 @@ import { netGame } from "./net/index.ts";
 import { netslideGame } from "./netslide/index.ts";
 import { numgameGame } from "./numgame/index.ts";
 import { palisadeGame } from "./palisade/index.ts";
+import { pathGame } from "./path/index.ts";
 import { patternGame } from "./pattern/index.ts";
 import { pearlGame } from "./pearl/index.ts";
 import { pegsGame } from "./pegs/index.ts";
@@ -119,6 +120,7 @@ export function registerAllGames(): void {
   registerGame(netslideGame);
   registerGame(numgameGame);
   registerGame(palisadeGame);
+  registerGame(pathGame);
   registerGame(patternGame);
   registerGame(pearlGame);
   registerGame(pegsGame);

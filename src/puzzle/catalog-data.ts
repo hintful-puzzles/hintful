@@ -307,6 +307,15 @@ export const puzzleCatalog = {
     collection: "original",
     family: "regions",
   },
+  path: {
+    name: "Path",
+    aliases: ["Numberlink", "Arukone", "Flow"],
+    description: "Path-joining puzzle",
+    objective:
+      "Join each pair of like numbers with a line, so that the lines fill the grid and never cross.",
+    collection: "own",
+    family: "lines",
+  },
   pattern: {
     name: "Pattern",
     aliases: ["Nonogram", "Picross", "Griddlers", "Paint by Numbers"],

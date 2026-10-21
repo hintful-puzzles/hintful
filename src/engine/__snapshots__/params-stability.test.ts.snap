@@ -438,6 +438,17 @@ bump:h  full=5x6n5de  brief=5x6n5
 bump:k  full=5x5n6de  brief=5x5n6"
 `;
 
+exports[`encoded params are byte-stable > path 1`] = `
+"default  full=7x7dn  brief=7x7
+preset:5x5 Easy  full=5x5de  brief=5x5
+preset:5x5 Normal  full=5x5dn  brief=5x5
+preset:7x7 Easy  full=7x7de  brief=7x7
+preset:9x9 Easy  full=9x9de  brief=9x9
+preset:9x9 Normal  full=9x9dn  brief=9x9
+bump:w  full=8x7dn  brief=8x7
+bump:h  full=7x8dn  brief=7x8"
+`;
+
 exports[`encoded params are byte-stable > pattern 1`] = `
 "default  full=15x15de  brief=15x15
 preset:Pattern/10x10 Easy  full=10x10de  brief=10x10

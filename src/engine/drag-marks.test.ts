@@ -13,6 +13,7 @@
 import { beforeAll, describe, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
 import { noteVerbs } from "../games/net/index.ts";
+import { crossDrag as pathCrossDrag } from "../games/path/index.ts";
 import { crossDrag } from "../games/pearl/index.ts";
 import { markDrag } from "../games/slant/index.ts";
 import { clueDrag as towersClueDrag } from "../games/towers/index.ts";
@@ -30,6 +31,9 @@ const game = (id: string) => getTsGame(id) as unknown as AnyGame;
 describe("a mark declared with dragMarkVerbs is what its drag does", () => {
   it("Pearl: the right button's cross on an edge", () => {
     expectDragRepeatsThePress(game("pearl"), "pearl", crossDrag);
+  });
+  it("Path: the right button's cross on an edge", () => {
+    expectDragRepeatsThePress(game("path"), "path", pathCrossDrag);
   });
   it("Towers: a clue marked done", () => {
     expectDragRepeatsThePress(game("towers"), "towers", towersClueDrag);

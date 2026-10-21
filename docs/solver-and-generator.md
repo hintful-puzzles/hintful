@@ -792,6 +792,12 @@ candidate game that is not on a Latin square:
   refuses there.
 - **Cap the ladder at the tier while grading** (`maxTier`). A board the tier
   cannot use is rejected anyway.
+- **Count a candidate rung's firings on the boards the ladder stalls on
+  before writing its words.** A rung a person would name first may decide
+  nothing the others do not: Path's cut (crossing this edge would shut
+  squares off) and reach (no number's path can get here) fired on none of
+  hundreds of boards at either tier, and a one-edge lookahead finished every
+  board with one answer.
 - **Measure the recursion-only residual before deciding to ship an
   Unreasonable tier.** It may be zero: every uniquely solvable board cracked
   by the ladder, and the rest non-unique and rejected already.
@@ -1181,6 +1187,13 @@ Then one of three mends:
   something a deduction read pays for a solve from nothing. Use both moves,
   since the free one alone has no way back and the dear one alone is slow.
   Exemplar: [`separate/generator.ts`](../src/games/separate/generator.ts).
+- **Add a clue where the ladder stalls, then take back what it did not
+  need.** Where a clue settles what is around it, put one on something the
+  stalled ladder left open, and run the ladder again until it finishes;
+  then remove clues in a random order wherever it still finishes without
+  them. The second half is not optional: Path's boards carried a third more
+  numbers than they needed without it. Exemplar: `mend` and `strip` in
+  [`path/generator.ts`](../src/games/path/generator.ts).
 
 Rules for any of them:
 

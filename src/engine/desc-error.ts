@@ -54,6 +54,12 @@ export const DESC_OUT_OF_RANGE = descError(
 /** A value that must appear once appears twice (a tile of a sliding puzzle). */
 export const DESC_REPEATED = descError("This game ID gives the same number twice.");
 
+/** A value that must appear exactly twice, the two ends of something, does
+ * not: a number of Path given on one square, or on three. */
+export const DESC_UNPAIRED = descError(
+  "This game ID gives a number that is not on exactly two squares.",
+);
+
 /** Clues that are each readable but cannot all hold at once, such as a pair of
  * cells marked both greater and less. */
 export const DESC_CONTRADICTORY = descError(

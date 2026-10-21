@@ -3,6 +3,6 @@
 exports[`skeleton: pinned hint positions > says, at each pin 1`] = `
 {
   "count": "The outlined 1 needs 1 purple square and has only 1 open square beside it, so this square must be purple.",
-  "shared": "The 1 beside this square still needs 1, and the other outlined 1 puts it where they meet, so it must be clear.",
+  "shared": "The 1 beside this square needs 1, and the other outlined 1 puts it where they meet, so this square must be clear.",
 }
 `;
