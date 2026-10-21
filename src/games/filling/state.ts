@@ -89,7 +89,7 @@ export function defaultParams(): FillingParams {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<FillingParams>[] = [
   ...dimensionParamConfig<FillingParams>({
-    doc: "Size of the grid in squares. A board of more than 300 squares is refused, because filling one with regions that obey the rule stops succeeding as the grid grows.",
+    doc: "Size of the grid in squares. Filling a board with regions that obey the rule succeeds less often as the grid grows, so a board much past 300 squares can take a minute or two to appear, or none is found.",
     bounds: { min: 1 },
   }),
   searchTierItem(
@@ -111,21 +111,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 /**
- * The largest board dealt, in squares, at either tier. The generator fills a
- * board with regions by a draw it throws away whole when two equal regions
- * end up side by side with no merge left, and the share of draws that
- * survive falls steeply with the area. Upstream has no bound and draws for
- * ever.
- *
- * Measured 2026-10-10, draws for one fill: 15×15 48, 17×17 290, 15×20 500 |
- * 18×18 890, 20×20 2,800, and at 25×25 none in 200,000. Thin boards are
- * kinder (2×150 23, 5×60 89, 9×33 207) except a strip, 1×300, at 1,300. An
- * Easy board of 300 squares takes a third of a second and an Unreasonable
- * one a little over a second.
- */
-const MAX_AREA = 300;
-
-/**
  * The lengths of a board one square wide that has no Unreasonable puzzle:
  * every clue set of each has been tried, and wherever one has a single answer
  * the solver finishes it (`filling-tier.test.ts`). Every other board has the
@@ -140,9 +125,13 @@ export function validateParams(p: FillingParams, full: boolean): string | null {
   }
   // Generation only: a board that arrives with its description is graded as
   // it loads, whatever its size and whatever tier its ID names.
+  //
+  // No size is refused for its rarity. A fill is thrown away whole when two
+  // equal regions end up side by side with no merge left, and the share that
+  // survive falls steeply with the area (measured 2026-10-10, draws for one
+  // fill: 17×17 290, 20×20 2,800, 25×25 none in 200,000), so a large board
+  // is left to the deal's deadline.
   if (!full) return null;
-  if (p.w * p.h > MAX_AREA)
-    return `Width times height must be at most ${MAX_AREA}; larger boards cannot be generated.`;
   if (
     p.diff === DIFF_UNREASONABLE &&
     Math.min(p.w, p.h) === 1 &&

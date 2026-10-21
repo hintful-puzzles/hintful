@@ -18,7 +18,6 @@ import { COL_WRONG } from "./render.ts";
 import {
   BALL_CORRECT,
   type BlackboxParams,
-  ballLimit,
   encodeBalls,
   gridGet,
   newState,
@@ -90,13 +89,12 @@ describe("Black Box's answer", () => {
     expect(dealt).toBeGreaterThanOrEqual(15);
   });
 
-  it("limits the balls a deal holds, and never a game ID's", () => {
-    const p = { w: 8, h: 8, minballs: 5, maxballs: ballLimit(8, 8) + 1 };
-    expect(validateParams(p, true)).toMatch(/at most 20 balls\.$/);
-    expect(validateParams(p, false)).toBeNull();
-    // Every preset deals within the limit.
-    for (const { params } of leafPresets(game))
-      expect(params.maxballs).toBeLessThanOrEqual(ballLimit(params.w, params.h));
+  it("deals any number of balls fewer than the squares", () => {
+    const p = { w: 8, h: 8, minballs: 5, maxballs: 40 };
+    expect(validateParams(p, true)).toBeNull();
+    expect(
+      validateParams({ w: 20, h: 20, minballs: 40, maxballs: 40 }, true),
+    ).toBeNull();
   });
 
   it("refuses a game ID with several, and Solve has none to show", () => {

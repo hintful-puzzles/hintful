@@ -200,11 +200,12 @@ describe("dealBoard", () => {
   });
 
   it("does not run the generator on params the game refuses to deal", () => {
-    // A 6x6 Group at Hard loads by its desc and is refused when dealing, so
-    // the type can be left there with nobody waiting for a board.
+    // A 5x5 Group at Hard loads by its desc and is refused when dealing, as
+    // no such board exists, so the type can be left there with nobody waiting
+    // for a board.
     const game = gameOf("group");
     const newDesc = vi.fn(game.newDesc);
-    expect(dealBoard({ ...game, newDesc }, "6dx")).toBeNull();
+    expect(dealBoard({ ...game, newDesc }, "5dx")).toBeNull();
     expect(newDesc).not.toHaveBeenCalled();
   });
 

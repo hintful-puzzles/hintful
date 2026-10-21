@@ -127,39 +127,6 @@ those shapes that has one answer.
 - **THEN** none of them has exactly one answer
 - **AND** the same walk over a 3×4 wrapping board finds one that does
 
-### Requirement: Params: Unreasonable Net is bounded on its own measurements
-
-`validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
-board of more than 900 squares, one without wrapping under seven squares wide
-and over 40 long, a wrapping one longer than 80 squares, or longer than 30
-where it is four squares wide, and one with a barrier probability over 0.2,
-each with a reason naming the difficulty. The same board SHALL still be asked
-for at Easy.
-
-#### Scenario: A board past a bound is refused at Unreasonable only
-
-- **WHEN** a 31×30 board, a 6×41 board, a 10×81 wrapping board, a 31×4
-  wrapping board and a 7×7 board with a barrier probability of 0.21 are
-  checked for dealing at each difficulty
-- **THEN** each is refused at Unreasonable and not at Easy
-- **AND** a 30×30, a 7×128, a 6×40, a 10×80 wrapping, a 4×30 wrapping and a
-  7×7 board with a barrier probability of 0.2 are admitted at Unreasonable
-
-### Requirement: Params: Net refuses Unreasonable without wrapping where it is too rare
-
-`validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
-board without wrapping whose shorter side is under five squares, and a 5×5
-one, each as too rare to deal. The hint finishes nearly every such board the
-solver stops on. The same board SHALL still be asked for at Easy, and with
-wrapping at Unreasonable.
-
-#### Scenario: The small boards without wrapping
-
-- **WHEN** a 5×5, a 4×30, a 3×5 and a 2×7 board are asked for at Unreasonable
-- **THEN** each is refused as too rare to deal
-- **AND** a 5×6 and a 7×7 board are admitted, and so are a 5×5 and a 4×4
-  wrapping board
-
 ### Requirement: Params: Net refuses a single square and a grid past a million squares
 
 `validateParams` SHALL refuse a grid whose width and height are both 1, and

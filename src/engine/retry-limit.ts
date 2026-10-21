@@ -51,6 +51,15 @@
  * ({@link underDealTries}). */
 export const MAX_REGENERATE = 10_000;
 
+/**
+ * How long a deal looks for a board before it answers that it found none, in
+ * every game and at every size. `openspec/specs/engine-difficulty/spec.md`,
+ * "A deal is bounded by one deadline, the same in every game", says what the
+ * length is weighed against. Here, apart from `deal.ts`, because the page
+ * holds a deal to it too and imports nothing else of the engine's dealing.
+ */
+export const DEAL_DEADLINE_MS = 120_000;
+
 /** Thrown when a retry loop exhausts its bound, so callers and tests can tell
  * "the generator gave up" from an ordinary bug. `max` is the tries it made. */
 export class RetryLimitExceeded extends Error {

@@ -317,15 +317,6 @@ export function noSuchTier(what: string, tier: string): string {
 }
 
 /**
- * The refusal for a size whose boards at the tier exist and are found too
- * seldom to wait for: `tooRareToDeal("maps of 8 regions", "Normal")`. `what`
- * is plural. Never {@link noSuchTier} for one of these: the board exists.
- */
-export function tooRareToDeal(what: string, tier: string): string {
-  return `${tier} ${what} are too rare to deal.`;
-}
-
-/**
  * What a player is told when a deal found no board (`generate`). It cannot
  * know whether the tier is rare at this size or absent, so it says both.
  * `tier` is `null` for a game without tiers.

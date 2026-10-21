@@ -125,15 +125,12 @@ describe("lightup's 4x4 under a 4-way symmetry at Unreasonable", () => {
   const refusal = (id: string): string | null =>
     paramsError(lightupGame, decodeParams(id), true);
 
-  it("says absent mirrored, where no board was found, and rare turned", () => {
+  it("says absent mirrored, where no board was found, and deals turned", () => {
     expect(refusal("4x4b20s3d2")).toBe(
       "No 4x4 puzzle with 4-way mirror symmetry is Unreasonable.",
     );
-    expect(refusal("4x4b20s4d2")).toBe(
-      "Unreasonable 4x4 puzzles with 4-way rotational symmetry are too rare to deal.",
-    );
-    expect(refusal("4x4b20s4d1")).toBeNull();
-    expect(paramsError(lightupGame, decodeParams("4x4b20s4d2"), false)).toBeNull();
+    expect(refusal("4x4b20s4d2")).toBeNull();
+    expect(refusal("4x4b5s4d2")).toBeNull();
   });
 });
 

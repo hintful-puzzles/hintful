@@ -22,7 +22,7 @@ import {
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier, tooRareToDeal } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import {
   AREA_TOO_LARGE,
   endParams,
@@ -183,12 +183,10 @@ function unreasonableRefusal(p: RectParams): string | null {
   // (`rect-tier.test.ts`), and the hint finishes each board with one answer.
   const none = short === 1 || (short === 2 && long <= 8) || (short === 3 && long <= 4);
   if (none) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
-  // Every board two wide found with the tier has a rectangle of four squares
-  // or more, and the generator draws none of more than a sixth of the board:
-  // under 24 squares a 4 is left to a single square merged into a 3. Measured 2026-10-10: 32 of the 1,396,400
-  // boards of 2×9 with no 1 on them have the tier, and none came in 400,000
-  // draws there or at 2×10; one came in 78,000 at 2×11 and in 7,400 at 2×12.
-  if (short === 2 && long <= 11) return tooRareToDeal(`${p.w}x${p.h} puzzles`, tier);
+  // Two wide from 2×9 the tier exists and is dealt, though seldom: measured
+  // 2026-10-10, 32 of the 1,396,400 boards of 2×9 with no 1 on them have it,
+  // none came in 400,000 draws there or at 2×10, one in 78,000 at 2×11 and
+  // one in 7,400 at 2×12.
   return null;
 }
 

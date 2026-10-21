@@ -41,8 +41,8 @@ const drawn = (rs: RandomState): FillChoice => ({
 /**
  * What a try costs tracks squares times regions: a small map of few regions
  * takes microseconds, and at some sizes a tier is found once in tens of
- * thousands. Where few regions make the tier seldom found
- * (`fewRegionsTierIsSeldom`) a board took, measured 2026-10-06 in squares
+ * thousands. Where few regions make the tier seldom found, 8 at Normal and 9
+ * or 10 above it, a board took, measured 2026-10-06 in squares
  * times regions times maps built, 9 to 144 million from 5x5 to 15x20, the
  * most at a 15x20 of 8 regions at Normal, and 358 million over two boards at
  * a 30x25 of 9 regions at Tricky.

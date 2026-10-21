@@ -10,6 +10,7 @@
 import type { ParamConfigItem, PresetMenu } from "../game.ts";
 import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
 import { paramsError } from "../params.ts";
+import { type Dealing, dealsPromptly } from "./dealt.ts";
 
 /** First leaf preset's params — a small, valid board for each game. */
 export function firstLeaf<P>(menu: PresetMenu<P>): P {
@@ -198,7 +199,7 @@ export function axisSlice<Params, Entry extends { params: Params }>(
 }
 
 /** What {@link unofferedValues} and {@link dealtBoards} read off a game. */
-interface OfferingGame<Params> {
+interface OfferingGame<Params> extends Dealing<Params> {
   paramConfig?: readonly ParamConfigItem<Params>[];
   validateParams?(p: Params, full: boolean): string | null;
 }
@@ -211,14 +212,17 @@ export interface UnofferedValue<Params> {
   readonly kw: string;
   /** The value as the dialog shows it: the choice's own words, or on/off. */
   readonly words: string;
-  /** The smallest preset that accepts the value, with that one field written,
-   * or `null` when every preset refuses it. */
+  /** The smallest preset that accepts the value and deals it promptly, with
+   * that one field written, or `null` when no preset does. */
   readonly board: { title: string; params: Params } | null;
 }
 
 /**
  * Every value of a `"boolean"` or `"choices"` item that no preset holds, each
- * on the first preset in menu order that `paramsError` accepts it on.
+ * on the first preset in menu order that `paramsError` accepts it on and that
+ * deals it under the house count of tries (`dealsPromptly`): a game refuses
+ * only a size with no board, so one it accepts can still be one whose boards
+ * are too rare for a sweep to wait on.
  *
  * A menu is the list its author wrote, and a dialog is the whole of what the
  * game deals, so the two differ by exactly the boards a slice of the menu can
@@ -261,6 +265,7 @@ export function unofferedValues<Params>(
         // built from this item's own type just above.
         (item.set as (p: Params, v: AxisValue) => void)(params, value);
         if (paramsError(game, params, true) !== null) continue;
+        if (!dealsPromptly(game, params)) continue;
         board = { title: `${base.title}, ${item.name}: ${words}`, params };
         break;
       }

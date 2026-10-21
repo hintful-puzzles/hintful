@@ -144,12 +144,10 @@ describe("abcd params codec", () => {
 });
 
 // Generation keeps a random fill only when the solver finds its clues uniquely
-// solvable, and that acceptance rate collapses as the board grows, so a board
-// can be perfectly legal and still have no puzzle that will ever be found.
-describe("abcd generable-size bound", () => {
+// solvable, and that acceptance rate collapses as the board grows. A large
+// board is still dealt: the deal's deadline answers one with none found.
+describe("abcd large boards", () => {
   it("accepts every shipped preset", () => {
-    // The bound must never bar a board the game itself offers. Tightening it
-    // without this test is how a preset silently stops working.
     const menu = abcdGame.presets().submenu ?? [];
     expect(menu.length).toBeGreaterThanOrEqual(11);
     for (const { params: p } of menu) {
@@ -159,61 +157,26 @@ describe("abcd generable-size bound", () => {
   });
 
   it.each([
-    // Measured generable, so they must stay offered.
-    [P(9, 9, 4), "9x9 n4 — 1.2 s"],
-    [P(8, 10, 4), "8x10 n4 — 859 ms"],
-    [P(11, 11, 3), "11x11 n3 — 296 ms"],
-    [P(8, 9, 5), "8x9 n5 — 2.0 s"],
-    [P(8, 8, 7), "8x8 n7 — 667 ms"],
-    [P(10, 10, 5, true), "10x10 n5 diag — 735 ms"],
-    // Thin boards stay easy far past the area that kills a squarer one: a
-    // short line is nearly pinned by its own clues.
-    [P(2, 50, 4), "2x50 n4 — 195 ms, same area as the hopeless 10x10"],
-    [P(3, 30, 4), "3x30 n4 — 199 ms"],
-    [P(5, 30, 3), "5x30 n3 — 2.5 s"],
-  ])("admits %s (%s)", (p) => {
+    [P(10, 10, 4), "found on 5 deals of 12, 2026-10-21"],
+    [P(12, 12, 3), "found on every deal of 3"],
+    [P(9, 9, 6), "found on half the deals of 12"],
+    [P(10, 10, 6, true), "found on 4 deals of 12"],
+    [P(5, 40, 4), "never found in three deals"],
+    [P(9, 20, 3), "never found in three deals"],
+  ])("does not refuse %s (%s)", (p) => {
     expect(refusal(p, true)).toBeNull();
   });
 
-  it.each([
-    // Measured un-generable or far too slow to wait for.
-    [P(10, 10, 4), "0 accepts in 454,144 attempts"],
-    [P(9, 10, 4), "5.0 s expected — p99 would be ~23 s"],
-    [P(12, 12, 3), "6.0 s expected"],
-    [P(9, 9, 5), "30 s expected"],
-    [P(9, 9, 6), "0 accepts in 374,784"],
-    [P(8, 9, 7), "0 accepts in 344,832"],
-    [P(10, 10, 6, true), "0 accepts in 289,792"],
-    // Elongated boards whose AREA is far past anything generable. These are
-    // the ones a bound on clue density would have wrongly admitted.
-    [P(5, 40, 4), "0 accepts in 78,592 — same clue density as 8x10 n4"],
-    [P(4, 100, 4), "0 accepts in 79,360"],
-    [P(9, 20, 3), "0 accepts in 153,856"],
-  ])("refuses %s (%s)", (p) => {
-    expect(refusal(p, true)).toMatch(/no ABCD puzzle/);
-  });
-
-  it("refuses without running the generator, in well under a second", () => {
-    // The refusal is a predicate, not a timeout: generating this configuration
-    // would spend minutes of frozen worker and then throw.
-    const t0 = performance.now();
-    expect(refusal(P(10, 10, 4), true)).toMatch(/no ABCD puzzle/);
-    expect(performance.now() - t0).toBeLessThan(100);
-  });
-
-  it("still loads a game ID for a board outside the bound", () => {
-    // A bound on GENERATION must not retire a board someone already has. The
-    // desc carries the whole puzzle, so nothing is searched for. Hand-built
-    // rather than generated, because 10x10 n4 is precisely what cannot be
-    // generated — 80 clues, each within the per-axis maximum of 1 + 10/2.
+  it("loads a hand-built game ID of a large board", () => {
+    // 80 clues, each within the per-axis maximum of 1 + 10/2. The desc
+    // carries the whole puzzle, so nothing is searched for.
     const desc = "3,3,2,2,".repeat(20);
     const p = P(10, 10, 4);
     expect(validateDesc(abcdGame, p, desc)).toBeNull();
     expect(refusal(p, false)).toBeNull();
 
-    // The bound lets the ID through to the board's own verdict. This board,
-    // hand-built from repeated clues, has many answers, so the search refuses
-    // it rather than the bound.
+    // This board, hand-built from repeated clues, has many answers, so the
+    // search refuses it.
     const m = new Midend(abcdGame);
     expect(m.newGameFromId(`10x10n4:${desc}`)).toBe(DESC_NOT_UNIQUE);
   });

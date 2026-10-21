@@ -25,6 +25,7 @@
 import { describe, expect, it } from "vitest";
 import type { Game, HintStep } from "../game.ts";
 import { randomNew } from "../random/index.ts";
+import { dealsPromptly } from "./dealt.ts";
 import { type HintScanReport, SCAN_REPORT_MARK } from "./hint-scan-report.ts";
 
 const env = (globalThis as { process?: { env?: Record<string, string | undefined> } })
@@ -168,6 +169,9 @@ function scanHintPositions<P, S, M, U, D, H, R extends string>(
   let walked = 0;
   let boards = 0;
   for (const params of scan.params) {
+    // A size the game accepts can have boards too rare to deal promptly
+    // (Group's 6x6 at Hard, identity shown), which the scan passes over.
+    if (!dealsPromptly(game, params)) continue;
     const encoded = game.encodeParams(params, true);
     for (let n = 0; n < (scan.seeds ?? 12); n++) {
       const { desc } = game.newDesc(params, randomNew(`hint-scan-${n}`));

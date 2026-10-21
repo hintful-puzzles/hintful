@@ -261,22 +261,13 @@ describe("the size of a Filling board", () => {
     paramsError(fillingGame, fillingGame.decodeParams(id), true);
 
   it.each([
-    "17x17de",
     "17x17du",
-    "15x20du",
-    "1x300de",
-    "2x150du",
-  ])("%s is inside the bound", (id) => {
-    expect(refusal(id)).toBeNull();
-  });
-
-  it.each([
     "18x17de",
-    "18x17du",
-    "20x20de",
+    "20x20du",
     "1x301de",
-  ])("%s is refused when a board is to be dealt", (id) => {
-    expect(refusal(id)).toMatch(/at most 300/);
+    "25x25de",
+  ])("%s is dealt however long it takes", (id) => {
+    expect(refusal(id)).toBeNull();
   });
 
   it("a board that arrives with its description is not held to it", () => {

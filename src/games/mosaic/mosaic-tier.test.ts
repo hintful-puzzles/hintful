@@ -296,39 +296,15 @@ describe("the shape of a Mosaic board", () => {
     paramsError(mosaicGame, mosaicGame.decodeParams(id), true);
 
   it.each([
-    "3x20de",
-    "20x4du",
-    "5x30de",
-    "9x50de",
-    "10x100de",
-    "15x200h0du",
-    "20x500h0de",
-    "30x30du",
+    "3x21de",
+    "5x50de",
+    "8x100h0de",
+    "19x201h0du",
+    "31x30du",
+    "100x100du",
     "100x100h0du",
-  ])("%s is inside the bounds", (id) => {
+  ])("%s is dealt however long it takes", (id) => {
     expect(refusal(id)).toBeNull();
-  });
-
-  it.each([
-    ["3x21de", /3 squares across can be at most 20 long/],
-    ["21x4du", /4 squares across can be at most 20 long/],
-    ["5x31de", /5 squares across can be at most 30 long/],
-    ["8x51h0de", /8 squares across can be at most 50 long/],
-    ["101x12de", /12 squares across can be at most 100 long/],
-    ["19x201h0du", /19 squares across can be at most 200 long/],
-  ] as const)("%s is refused as too long for its width", (id, why) => {
-    expect(refusal(id)).toMatch(why);
-  });
-
-  it.each([
-    ["31x30du", /an Unreasonable puzzle can have at most 900 squares/],
-    ["50x50du", /an Unreasonable puzzle can have at most 900 squares/],
-    ["31x30dn", /a Normal puzzle can have at most 900 squares/],
-  ] as const)("%s is refused above Easy with aggressive generation only", (id, why) => {
-    const tier = id.slice(-2);
-    expect(refusal(id)).toMatch(why);
-    expect(refusal(id.replace(tier, "de"))).toBeNull();
-    expect(refusal(id.replace(tier, `h0${tier}`))).toBeNull();
   });
 
   it("a board that arrives with its description is not held to them", () => {

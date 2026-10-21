@@ -528,7 +528,11 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           // Above the hint, which stands on the panel under it.
           puzzle?.dealMessage
             ? html`<div class="deal" @click=${this.handleChromeClick}>
-                <span role="status">${puzzle.dealMessage}</span>
+                <span>
+                  <span role="status">${puzzle.dealMessage}</span>
+                  <!-- Outside the live region, which would read out every second of it. -->
+                  <span class="deal-wait">${puzzle.dealWait}</span>
+                </span>
                 ${
                   puzzle.canStopDeal
                     ? html`<button type="button" data-command="stop-deal">Stop</button>`
@@ -1758,6 +1762,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         border-radius: var(--app-radius-hint);
         color: var(--app-color-text-secondary);
         font-size: var(--app-font-size-support);
+
+        .deal-wait {
+          font-variant-numeric: tabular-nums;
+        }
 
         button {
           min-width: var(--app-tap-min);

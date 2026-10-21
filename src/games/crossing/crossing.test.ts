@@ -192,16 +192,12 @@ describe("crossing params", () => {
     );
   });
 
-  it("rejects a board too large to generate, but only when generating", () => {
-    // Measured ceiling: every shape up to 225 squares generated 3/3, everything
-    // from 240 up failed at least once, and 280+ never generated. Upstream has
-    // no bound at all and simply retries for ever there.
-    expect(check({ w: 15, h: 15, sym: false, diff: DIFF_EASY }, true)).toBeNull();
-    expect(check({ w: 16, h: 16, sym: false, diff: DIFF_EASY }, true)).toBe(
-      "Width times height must be at most 225; larger boards cannot be generated.",
-    );
-    // A description that already exists stays playable at any size.
-    expect(check({ w: 16, h: 16, sym: false, diff: DIFF_EASY }, false)).toBeNull();
+  it("deals a large board however long it takes, the deadline answering it", () => {
+    expect(check({ w: 16, h: 16, sym: false, diff: DIFF_EASY }, true)).toBeNull();
+    expect(
+      check({ w: 30, h: 30, sym: false, diff: DIFF_UNREASONABLE }, true),
+    ).toBeNull();
+    expect(check({ w: 2, h: 60, sym: false, diff: DIFF_EASY }, true)).toBeNull();
   });
 });
 

@@ -68,51 +68,6 @@ no difficulty letter SHALL decode as Easy.
   disallowed and every clue showing
 - **AND** its shared encoding is `6x6n5D`
 
-### Requirement: Params: ABCD refuses board sizes it cannot generate
-
-Parameter validation SHALL reject, when validating for generation at Easy,
-any combination of grid size and letter count whose measured
-generation-success rate is too low to produce a board in an acceptable time,
-giving a reason, rather than retrying until an attempt budget is exhausted.
-
-#### Scenario: An un-generable configuration is refused immediately
-
-- **WHEN** a configuration below the measured rate is entered in the Custom
-  dialog
-- **THEN** it is refused with a reason, without the generator being run
-
-### Requirement: Params: The bound is measured across size, shape and letter count
-
-The bound on generable boards SHALL be derived from measurement across grid
-size, grid shape and letter count, since none of them alone determines the
-rate: two boards of equal area, or of equal clue-to-cell ratio, can differ
-widely in acceptance rate. Diagonal mode SHALL be bounded separately, being
-markedly more generable rather than less.
-
-#### Scenario: A board of the same area as a refused one is still offered
-
-- **WHEN** a long thin board is entered whose area equals that of a refused
-  squarer board
-- **THEN** it is accepted, because its generation rate is measured to be high
-
-#### Scenario: Diagonal mode is bounded on its own measurements
-
-- **WHEN** a board is entered that is un-generable with diagonal touching
-  allowed but generable without it
-- **THEN** it is refused in the first mode and accepted in the second
-
-### Requirement: Params: ABCD's bound is asserted in both directions
-
-The bound on generable boards SHALL be asserted in both directions: that it
-admits configurations measured generable as well as refusing those measured
-un-generable.
-
-#### Scenario: A tightened bound cannot bar a generable board
-
-- **WHEN** a configuration measured generable is validated for generation
-- **THEN** it is accepted, so a bound drawn tighter than the measurements
-  fails as one drawn looser does
-
 ### Requirement: Params: ABCD's board without diagonal touching is a preset of its own
 
 The rule against diagonal touching needs five letters, which no other preset
@@ -135,9 +90,9 @@ a preset SHALL reach it from the menu.
 
 When a board is to be dealt with every clue showing, `validateParams` SHALL
 refuse Unreasonable for any grid of nine squares or fewer, as a size with no
-such puzzle, and for a grid two squares wide with diagonal touching
-disallowed, as one whose such puzzles are too rare to deal. With "remove
-clues" set neither refusal applies.
+such puzzle. A grid two squares wide with diagonal touching disallowed is
+rare at the tier and SHALL be dealt (`engine-difficulty`, "A rare tier is
+dealt under the deadline"). With "remove clues" set no refusal applies.
 
 #### Scenario: A 3x3 Unreasonable board with every clue showing is not dealt
 
@@ -157,28 +112,6 @@ clues" set neither refusal applies.
 
 - **WHEN** an Unreasonable 3×3 or 2×2 board is dealt with "remove clues" set
 - **THEN** it is dealt, and the lowest difficulty that solves it is
-  Unreasonable
-
-### Requirement: Params: Unreasonable is bounded on its own measurements
-
-The bound on the Unreasonable boards that are dealt SHALL be its own, measured
-per letter count and adjacency rule as the Easy bound is, since what limits it
-is the cost of the search and not how often the ladder finishes a fill. It
-SHALL apply to thin boards as to square ones. A size past it SHALL be refused
-with a reason naming the difficulty, and SHALL still be dealt at Easy where
-the Easy bound admits it.
-
-#### Scenario: A size dealt at Easy is refused at Unreasonable
-
-- **WHEN** an 8×9 board of four letters is checked for dealing at each
-  difficulty
-- **THEN** it is admitted at Easy and refused at Unreasonable
-
-#### Scenario: The largest admitted board of each kind is dealt
-
-- **WHEN** the largest Unreasonable board the bound admits is dealt for three
-  letters, for four, for eight, and with diagonal touching disallowed
-- **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
 ### Requirement: Description: ABCD descriptions use the edge-clue encoding

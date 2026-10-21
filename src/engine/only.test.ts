@@ -330,7 +330,7 @@ function assignments(axes: [string, (number | boolean)[]][]): ConfigValues[] {
 describe("the Custom dialog cannot submit what an `only` refusal would refuse", () => {
   it("has a game to hold", () => {
     expect(narrowing.map((n) => n.id)).toEqual(
-      expect.arrayContaining(["ascent", "bridges", "group"]),
+      expect.arrayContaining(["ascent", "group"]),
     );
   });
 

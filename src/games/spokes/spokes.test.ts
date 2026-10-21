@@ -314,13 +314,14 @@ describe("spokes two wide at Unreasonable, where a board is a minute away", () =
   const refusal = (id: string): string | null =>
     paramsError(spokesGame, decodeParams(id), true);
 
-  it("says rare, and not absent", () => {
-    for (const id of ["2x5dh", "6x2dh", "2x7dh", "10x2dh"]) {
-      expect(refusal(id)).toBe(
-        "Unreasonable puzzles two squares wide are too rare to deal.",
-      );
-      expect(paramsError(spokesGame, decodeParams(id), false)).toBeNull();
-    }
+  it.each([
+    "2x5dh",
+    "6x2dh",
+    "2x7dh",
+    "10x2dh",
+    "2x30dh",
+  ])("%s is not refused, being rare and not absent", (id) => {
+    expect(refusal(id)).toBeNull();
   });
 
   it.each(["3x4dh", "3x5dh", "2x6dt", "2x10dt"])("%s is dealt", (id) => {

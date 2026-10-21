@@ -40,22 +40,20 @@ describeAbsentTiers(keenGame, ["3dh", "3dx", "3du", "3dhm", "3dxm", "3dum"]);
 // with multiplication alone.
 describeDealtTiers(keenGame, ["3dnm", "4dxm", "6dum"]);
 
-describe("multiplication alone, where a tier is too rare to deal", () => {
+describe("multiplication alone, at every size a tier has", () => {
   const refusal = (id: string): string | null =>
     paramsError(keenGame, keenGame.decodeParams(id), true);
 
-  it("says rare, and not absent, at 9x9 above Tricky", () => {
-    expect(refusal("9dxm")).toBe(
-      "Hard 9x9 puzzles with multiplication only are too rare to deal.",
-    );
-    expect(refusal("9dum")).toBe(
-      "Unreasonable 9x9 puzzles with multiplication only are too rare to deal.",
-    );
-    for (const id of ["9dxm", "9dum"])
-      expect(paramsError(keenGame, keenGame.decodeParams(id), false)).toBeNull();
-  });
-
-  it.each(["4dum", "6dxm", "8dhm", "9dnm", "5dx", "9du"])("%s is dealt", (id) => {
+  it.each([
+    "9dxm",
+    "9dum",
+    "4dum",
+    "6dxm",
+    "8dhm",
+    "9dnm",
+    "5dx",
+    "9du",
+  ])("%s is dealt", (id) => {
     expect(refusal(id)).toBeNull();
   });
 });

@@ -130,8 +130,8 @@ export const paramConfig: ParamConfigItem<BridgesParams>[] = [
     rule: "the most bridges that may join one pair of islands is 2, unless the board's name gives another number.",
     // With one bridge a line no "at most" limit can exist, and sealing a group
     // off is Normal's, so Tricky has almost nothing left that a Normal board
-    // could not need: measured, generation gave up on most seeds.
-    only: { 0: { difficulty: [0, 1] } },
+    // could not need: measured, generation gave up on most seeds. It is rare
+    // and not absent, so it is dealt.
     label: {
       slot: "tail",
       words: (p) =>

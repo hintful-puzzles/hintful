@@ -36,7 +36,7 @@ import { Midend } from "./midend.ts";
 import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
-import { dealRare, dealt } from "./testing/dealt.ts";
+import { dealRare, dealsPromptly, dealt } from "./testing/dealt.ts";
 import { firstLeaf, leafPresets } from "./testing/presets.ts";
 import {
   itOverWholeSweep,
@@ -89,18 +89,21 @@ for (const { id, game } of registered) {
 const allLeaves = (game: AnyGame): unknown[] => leafPresets(game).map((e) => e.params);
 
 /**
- * The cheapest preset that is *valid* at `tier`, or `null` when no preset is.
+ * The cheapest preset that is *valid* at `tier` and deals it promptly, or
+ * `null` when no preset is.
  *
  * Not simply "the first preset with the tier written on it": a tier can be
  * invalid at some sizes and fine at others (Mathrax refuses Normal and
  * Recursive at order 3 and generates them happily above it), so the search has
  * to ask `validateParams`, and only a game where **no** preset accepts the tier
- * is genuinely ungenerable.
+ * is genuinely ungenerable. A size is refused only where it has no board, so
+ * one accepted can still have boards too rare to wait on (Group's 6x6 at Hard
+ * with its identity shown), and the search passes over it.
  */
 function paramsForTier(t: TieredGame, tier: number): unknown | null {
   for (const leaf of allLeaves(t.game)) {
     const p = withTier(t.game, leaf, tier);
-    if (paramsError(t.game, p, true) === null) return p;
+    if (paramsError(t.game, p, true) === null && dealsPromptly(t.game, p)) return p;
   }
   return null;
 }

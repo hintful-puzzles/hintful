@@ -29,12 +29,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
-import {
-  difficultyItem,
-  noSuchTier,
-  tierNames,
-  tooRareToDeal,
-} from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
@@ -144,7 +139,7 @@ export const paramConfig: ParamConfigItem<SaladParams>[] = [
     label: { slot: "size", words: squareSize("order") },
   }),
   numberItem<SaladParams>("symbols", "Symbols", "nums", {
-    doc: "The amount of different symbols that appear in each row. With 2 symbols there is no Normal puzzle on a Letters board smaller than 8x8 or a Numbers board smaller than 5x5. A Normal Numbers one is too rare to deal at 5x5 and from 8x8 up, and at 6x6 and 7x7 the first can take a third of a minute to appear.",
+    doc: "The amount of different symbols that appear in each row. With 2 symbols there is no Normal puzzle on a Letters board smaller than 8x8 or a Numbers board smaller than 5x5. A Normal Numbers one can take a minute or two to appear, and from 9x9 it is often not found at all.",
     bounds: { min: 2, max: 9 },
     label: { slot: "kind", words: symbolRange },
   }),
@@ -173,12 +168,9 @@ export const LETTERS_GRID_CLUES_FROM = 8;
  * - Letters with border clues alone: none in 80,000 to 440,000 at each size
  *   from 3x3 to 7x7. An 8x8, which may clue its grid, is found once in 16.
  * - Numbers: none in 700,000 at 3x3 and in 230,000 at 4x4. From 5x5 the
- *   boards exist, and with the bound lifted for four to five minutes a size
- *   a 5x5 took 19,000 tries and 34 seconds a board, a 6x6 2,800 and 18, a 7x7
- *   900 and 21, an 8x8 850 and 75, and a 9x9 gave one board in five minutes.
- *   The 6x6 and the 7x7 are dealt, since the app keeps the next board ready
- *   (`src/puzzle/deal-ahead.ts`), and the rest are too long to wait for once.
- *   With 3 symbols or more a board is two to six seconds up to 9x9.
+ *   boards exist and are dealt, however long they take: measured 2026-10-21
+ *   under the deal's deadline, a 5x5 takes 42 s and an 8x8 24 s, and at 9x9
+ *   and 10x10 about half the deals give up.
  */
 function twoSymbolRefusal(p: SaladParams): string | null {
   if (p.nums !== 2 || p.diff !== DIFF_HARD) return null;
@@ -189,10 +181,7 @@ function twoSymbolRefusal(p: SaladParams): string | null {
       ? noSuchTier(`${what} with 2 symbols`, tier)
       : null;
   }
-  if (p.order <= 4) return noSuchTier(`${what} with 2 symbols`, tier);
-  return p.order === 5 || p.order >= 8
-    ? tooRareToDeal(`${what}s with 2 symbols`, tier)
-    : null;
+  return p.order <= 4 ? noSuchTier(`${what} with 2 symbols`, tier) : null;
 }
 
 export function validateParams(p: SaladParams, full: boolean): string | null {

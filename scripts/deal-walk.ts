@@ -36,7 +36,8 @@
  *
  * Settings, all environment variables: `DEAL_WALK_SEEDS` deals a cell at most (4),
  * `DEAL_WALK_STOP_MS` the deal that ends a ladder (10,000),
- * `DEAL_WALK_KILL_MS` (60,000), `DEAL_WALK_HEAP_MB` (2,048), and
+ * `DEAL_WALK_KILL_MS` (60,000, or 150,000 with cells named),
+ * `DEAL_WALK_HEAP_MB` (2,048), and
  * `DEAL_WALK_JOBS` games at once (2: more of them and the times measure each
  * other).
  */
@@ -66,10 +67,12 @@ const setting = (name: string, fallback: number): number =>
   Number(process.env[name] ?? fallback);
 const SEEDS = setting("DEAL_WALK_SEEDS", 4);
 const STOP_MS = setting("DEAL_WALK_STOP_MS", 10_000);
-const KILL_MS = setting("DEAL_WALK_KILL_MS", 60_000);
+const CELLS = process.env["DEAL_WALK_CELLS"] ?? null;
+// A named cell is dealt under the app's deadline of 120 s, which must end a
+// deal before the kill does.
+const KILL_MS = setting("DEAL_WALK_KILL_MS", CELLS === null ? 60_000 : 150_000);
 const HEAP_MB = setting("DEAL_WALK_HEAP_MB", 2048);
 const JOBS = setting("DEAL_WALK_JOBS", 2);
-const CELLS = process.env["DEAL_WALK_CELLS"] ?? null;
 
 /** The walker, in one process with its worker a thread of it, so that killing
  * the process ends a deal that is still running. */

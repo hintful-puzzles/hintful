@@ -211,18 +211,6 @@ export function validateParams(p: SticksParams, full: boolean): string | null {
   return null;
 }
 
-/**
- * The largest Unreasonable board dealt, in squares and along its longer side.
- * An Unreasonable board takes about three times as long to deal as an Easy
- * one, and a long thin board far longer than a square one of its area.
- *
- * Measured 2026-10-10 at the default share of blocks, mean time for a board
- * inside the bound | past it: 10×10 1.5 s, 8×12 1.6 s, 4×25 1.7 s, 2×30
- * 0.7 s | 11×11 2.2 s, 3×33 2.2 s, 2×40 5.8 s, 2×50 57 s.
- */
-const MAX_UNREASONABLE_AREA = 100;
-const MAX_UNREASONABLE_SIDE = 30;
-
 function unreasonableRefusal(p: SticksParams): string | null {
   const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
   const area = p.w * p.h;
@@ -230,8 +218,9 @@ function unreasonableRefusal(p: SticksParams): string | null {
   // each one that has a single answer. A 2x3 board can have the tier, though
   // the generator seldom finds one and gives up in about a second.
   if (area === 4) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
-  if (area > MAX_UNREASONABLE_AREA || Math.max(p.w, p.h) > MAX_UNREASONABLE_SIDE)
-    return `An ${tier} puzzle must have at most ${MAX_UNREASONABLE_AREA} squares and be at most ${MAX_UNREASONABLE_SIDE} long; a larger one takes too long to deal.`;
+  // A larger board is dealt however long it takes: measured 2026-10-21,
+  // twelve deals a size, a 15×15 took 87 s and gave up on six, and a 2×60
+  // 67 s and gave up on four.
   return null;
 }
 

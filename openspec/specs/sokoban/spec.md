@@ -47,8 +47,9 @@ departure from the codec grammar.
 ### Requirement: Params: Sokoban deals no level past the area its search can open
 
 Sokoban SHALL refuse to deal a level on a board of more than 1200 squares, with a sentence
-that names the limit, since the levels a deal must generate there to find one the hint can
-open take longer than a player would wait. The refusal SHALL bind dealing only.
+that names the limit and says the hint seldom finishes a larger one, since past it a deal
+mostly runs its tries out on levels the search gives up on and ends on a level the hint
+cannot open. The refusal SHALL bind dealing only.
 
 #### Scenario: A board past the limit is refused when dealing
 

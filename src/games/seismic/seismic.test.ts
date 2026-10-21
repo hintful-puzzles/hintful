@@ -80,8 +80,7 @@ import {
   FM_ERRORDIST,
   FM_ERRORDUP,
   FM_FIXED,
-  MAX_CELLS_SEISMIC,
-  MAX_CELLS_TECTONIC,
+  MAX_PRESET_CELLS,
   MODE_NAMES,
   MODE_SEISMIC,
   MODE_TECTONIC,
@@ -194,40 +193,23 @@ describe("seismic params", () => {
     ).toBe("Width must be at least 4.");
   });
 
-  it("bounds each mode by what limits that mode", () => {
-    // The two bounds answer different questions — see `MAX_CELLS_SEISMIC`'s doc
-    // comment. Tectonic's is reachability (every size to 100 cells generates;
-    // 10×10 takes seconds, which the owner accepts for a size the player typed).
-    // Seismic's is possibility: 10×10 does not generate at all, and takes ~16 s
-    // per attempt to say so.
-    expect(MAX_CELLS_TECTONIC).toBe(10 * 10);
-    expect(MAX_CELLS_SEISMIC).toBe(8 * 8);
-
-    // 10×10 — the size upstream's TODO names — is available in Tectonic...
+  it("deals a large board in either mode however long it takes", () => {
     const valid = (p: SeismicParams) => paramsError(seismicGame, p, true);
-    expect(valid({ w: 10, h: 10, diff: DIFF_EASY, mode: MODE_TECTONIC })).toBeNull();
-    // ...and refused in Seismic, with a reason naming the mode, rather than left
-    // to churn for sixteen seconds and throw.
-    expect(valid({ w: 10, h: 10, diff: DIFF_EASY, mode: MODE_SEISMIC })).toMatch(
-      /at most 64 in Seismic mode/,
-    );
-    // Past Tectonic's own bound it is refused too.
-    expect(valid({ w: 11, h: 11, diff: DIFF_EASY, mode: MODE_TECTONIC })).toMatch(
-      /at most 100 in Tectonic mode/,
-    );
-
-    // Every preset stays inside its mode's bound, and inside the smaller of
-    // the two in either mode: a preset is a wait nobody chose.
-    for (const p of PRESETS) {
-      expect(valid(p)).toBeNull();
-      expect(p.w * p.h).toBeLessThanOrEqual(MAX_CELLS_SEISMIC);
+    for (const mode of [MODE_SEISMIC, MODE_TECTONIC]) {
+      expect(valid({ w: 10, h: 10, diff: DIFF_EASY, mode })).toBeNull();
+      expect(valid({ w: 20, h: 20, diff: DIFF_NORMAL, mode })).toBeNull();
     }
   });
 
-  it("opens a board past either bound when it arrives with its description", () => {
-    // The bounds are the generator's. Upstream has none, so it deals and shares
-    // boards of these sizes, and loading one is a single solver run (1 to 5 ms
-    // here). Both were dealt by this generator with the bound lifted.
+  it("keeps every preset quick, in either mode", () => {
+    // A preset is a wait nobody chose (`MAX_PRESET_CELLS`).
+    expect(MAX_PRESET_CELLS).toBe(8 * 8);
+    for (const p of PRESETS) expect(p.w * p.h).toBeLessThanOrEqual(MAX_PRESET_CELLS);
+  });
+
+  it("opens a large board that arrives with its description", () => {
+    // Upstream deals and shares boards of these sizes, and loading one is a
+    // single solver run (1 to 5 ms here).
     for (const id of [
       "9x8:aa1b1b3b1a1ca1aa4bbaaa1a1ba3dcaa3b2c3bad1a6b1a3aab3,z34e2j1i2q",
       "11x10T:abb1baacbbcaab4aaca1baaaa1bab1ab1daaa1dab1ba1ac7a2a2a1b2a2baa5d2d2aa3c3ab1b6b,b4a3e54m3d1a23g3j4b1d5d4f4b5m5f5d2b5c41",

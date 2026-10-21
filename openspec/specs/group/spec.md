@@ -62,8 +62,9 @@ columns that only a deduction above Easy can tell apart.
 When parameters are about to deal a board, `validateParams` SHALL refuse a
 tier no board of the size needs: Unreasonable below 5×5; Hard below 6×6;
 Tricky below 4×4, and below 6×6 with the identity shown; Normal below 4×4, and
-at 4×4 with the identity shown. It SHALL refuse a 6×6 at Hard with the
-identity shown as too rare to deal.
+at 4×4 with the identity shown. A 6×6 at Hard with the identity shown is rare
+and SHALL be dealt (`engine-difficulty`, "A rare tier is dealt under the
+deadline").
 
 #### Scenario: A 5×5 has no Hard board
 

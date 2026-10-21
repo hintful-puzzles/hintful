@@ -24,9 +24,9 @@
  * Dev/test-only; never imported by production code.
  */
 import { type RandomState, randomNew } from "../random/index.ts";
-import { RetryLimitExceeded, underDealTries } from "../retry-limit.ts";
+import { MAX_REGENERATE, RetryLimitExceeded, underDealTries } from "../retry-limit.ts";
 
-interface Dealing<Params> {
+export interface Dealing<Params> {
   encodeParams(p: Params, full: boolean): string;
   newDesc(p: Params, rng: RandomState): { desc: string; aux?: string };
 }
@@ -57,6 +57,40 @@ type Deal = { board: { desc: string; aux?: string } } | { thrown: unknown };
 
 const deals = new WeakMap<object, Map<string, Deal>>();
 
+function dealsOf(game: object): Map<string, Deal> {
+  let ofGame = deals.get(game);
+  if (ofGame === undefined) {
+    ofGame = new Map();
+    deals.set(game, ofGame);
+  }
+  return ofGame;
+}
+
+/**
+ * Whether `params` deals its first {@link dealt} board under the house count
+ * of tries, which keeps that board for `dealt` when it does. A size the game
+ * accepts may be one whose boards are too rare to find, as a refusal rests
+ * only on there being none, so a sweep that picks its own board asks this.
+ *
+ * A deal that throws for any other reason counts as prompt and is kept, so
+ * that the guard handed the board reports it.
+ */
+export function dealsPromptly<Params>(game: Dealing<Params>, params: Params): boolean {
+  const ofGame = dealsOf(game);
+  const key = `${game.encodeParams(params, true)}#0`;
+  if (ofGame.has(key)) return true;
+  try {
+    const rng = randomNew(`dealt-${key}`);
+    ofGame.set(key, {
+      board: underDealTries(MAX_REGENERATE, () => game.newDesc(params, rng)),
+    });
+  } catch (thrown) {
+    if (thrown instanceof RetryLimitExceeded) return false;
+    ofGame.set(key, { thrown });
+  }
+  return true;
+}
+
 /**
  * The `n`th board of `params`: the same one for every caller in this worker.
  * Take `n` above zero only where a second board of the same params is what the
@@ -67,11 +101,7 @@ export function dealt<Params>(
   params: Params,
   n = 0,
 ): { desc: string; aux?: string } {
-  let ofGame = deals.get(game);
-  if (ofGame === undefined) {
-    ofGame = new Map();
-    deals.set(game, ofGame);
-  }
+  const ofGame = dealsOf(game);
   const key = `${game.encodeParams(params, true)}#${n}`;
   let deal = ofGame.get(key);
   if (deal === undefined) {

@@ -65,18 +65,6 @@ No clue set of those sizes has one answer that the solver does not reach.
 - **WHEN** every clue set of each refused size is counted
 - **THEN** each one with exactly one answer is finished by the solver
 
-### Requirement: Params: Filling rejects board sizes it cannot generate
-
-`validateParams` SHALL refuse, when a board is to be dealt at either
-difficulty, a board of more than 300 squares, with a reason naming that
-maximum.
-
-#### Scenario: A board past the bound is refused with a reason
-
-- **WHEN** an 18×17, a 20×20 and a 1×301 board are validated for generation
-- **THEN** each is refused with a message naming 300
-- **AND** a 17×17, a 15×20 and a 1×300 board are admitted at either difficulty
-
 ### Requirement: Description: Filling descriptions are run-length number grids
 
 The desc SHALL encode the cells in scan order in the engine's run letters

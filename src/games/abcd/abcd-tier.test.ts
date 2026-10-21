@@ -254,10 +254,11 @@ describe("an Unreasonable ABCD board", () => {
     expect(stuck).toBeGreaterThan(1000);
   });
 
-  describeAbsentTiers(abcdGame, ["3x3n3du", "2x4n4du", "2x2n9du", "2x15n5Ddu"]);
+  describeAbsentTiers(abcdGame, ["3x3n3du", "2x4n4du", "2x2n9du"]);
   // Hidden clues give the smallest boards, and the two-wide ones under the
-  // rule against diagonal touching, the tier they lack with every clue
-  // showing; and the smallest sizes found to carry it with them all.
+  // rule against diagonal touching, the tier they lack or seldom have with
+  // every clue showing; and the smallest sizes found to carry it with them
+  // all.
   describeDealtTiers(abcdGame, [
     "3x3n3Rdu",
     "2x2n3Rdu",
@@ -265,7 +266,7 @@ describe("an Unreasonable ABCD board", () => {
     "3x4n4du",
     "4x4n3du",
   ]);
-  // The largest board of each kind the bound admits.
+  // A large board of each kind, found in seconds.
   describeDealtTiers(
     abcdGame,
     ["10x10n3du", "8x8n4du", "7x8n8du", "9x9n5Ddu", "8x9n6Ddu", "4x14n7Ddu"],
@@ -277,34 +278,16 @@ describe("an Unreasonable ABCD board", () => {
 
   it.each([
     "10x10n3du",
-    "3x33n3du",
-    "8x8n4du",
-    "7x8n5du",
-    "4x14n9du",
-    "9x9n5Ddu",
-    "8x9n6Ddu",
-    "8x8n9Ddu",
-    "4x14n7Ddu",
-    "8x8n4Rdu",
-  ])("%s is inside the bound on Unreasonable boards", (id) => {
-    expect(refusal(id)).toBeNull();
-  });
-
-  it.each([
-    // Each is dealt at Easy, and takes seconds or is never found here.
-    "10x11n3du",
+    "13x13n3du",
     "3x40n3du",
     "8x9n4du",
-    "8x8n5du",
-    "8x8n9du",
-    "9x10n5Ddu",
-    "9x9n6Ddu",
-    "6x11n9Ddu",
-    "4x15n7Ddu",
+    "9x9n9du",
+    "2x15n5Ddu",
+    "12x12n5Ddu",
+    "4x25n7Ddu",
     "8x9n4Rdu",
-  ])("%s is refused at Unreasonable and dealt at Easy", (id) => {
-    expect(refusal(id)).toMatch(/no Unreasonable ABCD puzzle/);
-    expect(refusal(id.replace("du", "de"))).toBeNull();
+  ])("%s is not refused at Unreasonable, however long it takes", (id) => {
+    expect(refusal(id)).toBeNull();
   });
 });
 

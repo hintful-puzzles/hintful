@@ -140,43 +140,6 @@ three. No such board has one partition that the solver does not reach.
 - **AND** a 3×3 board with three letters has a fill that the solver leaves
   unfinished and that has exactly one
 
-### Requirement: Params: Separate refuses to deal a size its generator gives up on
-
-Under full validation, on a grid wider and taller than one square,
-`validateParams` SHALL refuse more than 13 letters; from 8 letters, a grid
-whose squares times letters squared exceed 10,000; 13 letters on a grid two
-squares wide; and 9 or more letters on a grid three squares wide that they
-divide into two regions. The refusal SHALL say to use fewer letters or a
-smaller grid.
-
-#### Scenario: Many letters on a large grid
-
-- **WHEN** a 10×11 board with ten letters, or a 12×14 board with eight, is
-  checked for dealing
-- **THEN** it is refused as too rare to deal, with the advice to use fewer
-  letters or a smaller grid
-- **AND** a 10×10 board with ten letters and a 12×12 board with eight are not
-  refused
-
-#### Scenario: The narrow shapes
-
-- **WHEN** a 4×7 board with fourteen letters, a 2×13 board with thirteen, or
-  a 3×6 board with nine is checked for dealing
-- **THEN** each is refused
-- **AND** a 4×13 board with thirteen letters, a 2×12 board with twelve and a
-  3×4 board with six are not
-
-#### Scenario: A strip takes any letter count
-
-- **WHEN** a 1×52 board with 26 letters is checked for dealing
-- **THEN** it is not refused
-
-#### Scenario: A pasted board of a refused size
-
-- **WHEN** a 3×6 board with nine letters that has one answer is loaded from
-  its ID
-- **THEN** it opens, at the difficulty it needs
-
 ### Requirement: Params: Separate refuses no size of up to seven letters
 
 `validateParams` SHALL refuse no board of seven letters or fewer for its

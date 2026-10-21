@@ -113,18 +113,6 @@ out the tier, the island percentage or the expansion SHALL decode with each as
 - **THEN** it is a 10×10 board with two bridges a line and no loops, at Easy,
   30% islands and 10% expansion, as `defaultParams` has the three it leaves out
 
-### Requirement: Params: Bridges refuses to generate Tricky with one bridge per line
-
-With one bridge per line Bridges SHALL deal no Tricky board, because no "at
-most" limit can exist and sealing off is Normal's, so Tricky has almost
-nothing a Normal board could not need.
-
-#### Scenario: Tricky with one bridge per line is refused
-
-- **WHEN** a Tricky board with `maxb` 1 is asked to be generated
-- **THEN** the params are refused with a reason, and a `params:desc` id with
-  those params still loads
-
 ### Requirement: Params: Bridges refuses a tier that so few islands cannot need
 
 When a board is to be dealt above Easy, `validateParams` SHALL refuse, as a

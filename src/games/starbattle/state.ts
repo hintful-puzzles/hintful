@@ -113,16 +113,21 @@ const starsField = {
  */
 const MIN_SIZE: readonly number[] = [0, 4, 8, 12];
 
-/** The largest grid dealt. Measured 2026-10-12: a 12x12 takes 2 to 14
- * seconds a board with one or two stars, and a 14x14 with three takes 7. */
-const MAX_SIZE = 14;
+/** The letters the text form names the regions by, one a region. */
+const REGION_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/** The largest grid, which has as many regions as there are letters to name
+ * them by. No grid is refused for the time it takes to deal: measured
+ * 2026-10-12, a 12x12 takes 2 to 14 seconds a board with one or two stars,
+ * and a 14x14 with three takes 7. */
+const MAX_SIZE = REGION_LETTERS.length;
 
 const starsWords = (n: number): string => (n === 1 ? "1 star" : `${n} stars`);
 
 /** The "Custom type…" form, and the fields the codec below reads and writes. */
 export const paramConfig: ParamConfigItem<StarbattleParams>[] = [
   numberItem<StarbattleParams>("grid-size", "Grid size", "size", {
-    doc: "Width and height of the grid, which is also how many regions it is divided into. It must be at least 4 with one star, 8 with two and 12 with three. A grid wider than 10 can take several seconds to appear, and the harder puzzles longer.",
+    doc: "Width and height of the grid, which is also how many regions it is divided into. It must be at least 4 with one star, 8 with two and 12 with three, and at most 26. A grid wider than 10 can take several seconds to appear, a much larger one minutes, and the harder puzzles longer.",
     bounds: { min: MIN_SIZE[1], max: MAX_SIZE },
     label: { slot: "size", words: squareSize("size") },
   }),
@@ -247,8 +252,6 @@ export function touches(size: number, a: number, b: number): boolean {
 }
 
 // --- text format ------------------------------------------------------------
-
-const REGION_LETTERS = "ABCDEFGHIJKLMNOP";
 
 /** Each cell as its region's letter and its mark: `*` a star, `x` a cross. */
 export function textFormat(s: StarbattleState): string {

@@ -14,6 +14,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { ParamConfigItem } from "../game.ts";
+import { RetryLimitExceeded } from "../retry-limit.ts";
 import { axisSlice, dealtBoards, presetAxes, unofferedValues } from "./presets.ts";
 
 interface P {
@@ -175,6 +176,12 @@ describe("unofferedValues", () => {
     ] satisfies ParamConfigItem<P>[],
     validateParams: (q: P): string | null =>
       q.mode === 2 && q.size < 5 ? "Mode c needs a size of at least 5." : null,
+    encodeParams: (q: P) => JSON.stringify(q),
+    // A size of 7 in mode c is accepted and has boards too rare to find.
+    newDesc: (q: P) => {
+      if (q.mode === 2 && q.size === 7) throw new RetryLimitExceeded("rare", 1);
+      return { desc: "" };
+    },
   };
 
   const found = (menu: { title: string; params: P }[]) =>
@@ -207,6 +214,14 @@ describe("unofferedValues", () => {
       p("small", { size: 1, mode: 0, extra: true }),
       p("small b", { size: 1, mode: 1 }),
       p("big", { size: 9, mode: 0 }),
+    ];
+    expect(found(menu)).toEqual([["mode", "c", "big, Mode: c"]]);
+  });
+
+  it("passes over a preset whose board is too rare to deal", () => {
+    const menu = [
+      p("rare", { size: 7, mode: 0, extra: true }),
+      p("big", { size: 9, mode: 1 }),
     ];
     expect(found(menu)).toEqual([["mode", "c", "big, Mode: c"]]);
   });
@@ -255,6 +270,8 @@ describe("dealtBoards", () => {
           },
         },
       ] satisfies ParamConfigItem<Q>[],
+      encodeParams: (q: Q) => JSON.stringify(q),
+      newDesc: () => ({ desc: "" }),
       presets: () => ({
         submenu: [1, 5, 9].map((size) => ({
           title: `size ${size}`,

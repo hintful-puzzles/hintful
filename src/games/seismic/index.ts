@@ -88,7 +88,6 @@ import {
   type SeismicState,
   type SeismicUi,
   textFormat,
-  validateParams,
 } from "./state.ts";
 
 /** A player marking that contradicts the unique solution: a wrong placed number
@@ -299,7 +298,6 @@ export const seismicGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
 
   transposeParams: transposeDimensions(),
   paramConfig,

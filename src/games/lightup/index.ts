@@ -518,7 +518,7 @@ export const lightupGame: Game<
   transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<LightupParams>({
-      doc: "Size of the grid in squares. A 2x2 has only Easy puzzles, and a board needs nine squares to have an Unreasonable one. A 3x3 has none with symmetry, and no Normal one with 4-way symmetry; a 4x4 with 4-way symmetry has none it can deal.",
+      doc: "Size of the grid in squares. A 2x2 has only Easy puzzles, and a board needs nine squares to have an Unreasonable one. A 3x3 has none with symmetry, and no Normal one with 4-way symmetry; a 4x4 has none with 4-way mirror symmetry, and with 4-way rotational symmetry the first can take a minute or two to appear.",
       bounds: { min: 2 },
     }),
     numberItem<LightupParams>(

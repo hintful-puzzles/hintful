@@ -69,45 +69,6 @@ difficulty letter SHALL decode as Easy.
 - **THEN** `validateParams` refuses them with "Width or height must be at
   least 4."
 
-### Requirement: Params: Crossing rejects board sizes it cannot generate
-
-Parameter validation SHALL reject, when validating for generation, any board
-whose area is larger than the generable maximum, giving a reason. A board two,
-three or four squares on its shorter side SHALL be held to a smaller maximum
-of its own, since its long runs give out sooner.
-
-#### Scenario: An ungenerable size is refused with a reason
-
-- **WHEN** parameters larger than the generable maximum are validated for
-  generation
-- **THEN** validation fails with a message naming the maximum
-
-#### Scenario: A thin board is refused where none is dealt
-
-- **WHEN** a 2×41, a 61×3 and a 4×46 board are validated for generation at
-  either difficulty
-- **THEN** each is refused with a message naming its shorter side and that
-  side's maximum area, and a 2×40 board is admitted
-
-### Requirement: Params: Unreasonable is bounded on its own measurements
-
-The bound on the Unreasonable boards that are dealt SHALL be its own, tighter
-than the Easy one, since at every shape such a board is found many times more
-seldom. A size past it SHALL be refused with a reason naming the
-difficulty, and SHALL still be dealt at Easy where the Easy bound admits it.
-
-#### Scenario: A size dealt at Easy is refused at Unreasonable
-
-- **WHEN** a 13×13 board, with symmetric walls and without, a 10×15 board and
-  a 5×30 board are checked for dealing at each difficulty
-- **THEN** each is admitted at Easy and refused at Unreasonable
-
-#### Scenario: The largest admitted boards are dealt
-
-- **WHEN** an Unreasonable 12×12, 8×18, 4×36 and 2×40 board is dealt
-- **THEN** each is dealt, and the lowest difficulty that solves it is
-  Unreasonable
-
 ### Requirement: Description: Crossing descriptions use the upstream run-length encoding
 
 A Crossing description SHALL encode the walls in row-major order as alternating

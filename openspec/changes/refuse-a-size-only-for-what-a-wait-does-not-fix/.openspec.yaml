@@ -1,5 +1,0 @@
-# No delta at filing: the owner's answer decides which specs move, and the
-# delta is written then, removing this line.
-schema: spec-driven
-created: 2026-10-15
-skip_specs: true

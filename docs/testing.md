@@ -777,7 +777,11 @@ For the author of a new cross-game guard. The normative form is the
    right when the question is what the contract does to a record (a codec
    round-trip that generates no board), or when the behavior needs a
    combination no preset carries, such as a small grid at a hard tier. Say
-   which behavior needs it, and keep the slice beside it.
+   which behavior needs it, and keep the slice beside it. A synthesized
+   record that is dealt also asks `dealsPromptly` (`testing/dealt.ts`): a
+   game refuses only a size with no board, so one it accepts can have boards
+   too rare to wait on, and a sweep dealing it spins for the 5,000,000 tries
+   `dealt` allows.
 7. **A coverage guard has a second key: who is already covered.** Take the
    superset there too and classify what it catches; an over-reported
    shortfall fails no commit, so nothing else checks it. The tell is a

@@ -155,19 +155,6 @@ first and last numbers and has one chain.
 - **THEN** none of them has exactly one chain
 - **AND** the same walk over a 1×6 board with corner start finds two that do
 
-### Requirement: Params: Unreasonable Signpost is bounded on its own measurements
-
-`validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
-board of more than 225 squares or longer than 30 on a side, with a reason
-naming the difficulty. The same size SHALL still be asked for at Easy.
-
-#### Scenario: A size past the bound is refused at Unreasonable only
-
-- **WHEN** a 16×16 board and a 5×45 board are checked for dealing at each
-  difficulty
-- **THEN** each is refused at Unreasonable and not at Easy
-- **AND** a 15×15, a 9×25 and a 7×30 board are admitted at Unreasonable
-
 ### Requirement: Params: Signpost refuses an area past what a signed 32-bit number holds
 
 `validateParams` SHALL refuse a `w·h` above 2,147,483,647, in the collection's

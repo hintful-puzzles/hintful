@@ -479,16 +479,12 @@ describe("the tier in Signpost's params", () => {
     );
   });
 
-  it("bounds an Unreasonable board by its area and its longer side", () => {
-    expect(refusal("15x15cdu")).toBeNull();
-    expect(refusal("9x25du")).toBeNull();
-    expect(refusal("7x30cdu")).toBeNull();
-    expect(refusal("16x16cdu")).toMatch(/at most 225 squares and be at most 30 long/);
-    expect(refusal("5x45cdu")).toMatch(/at most 225 squares and be at most 30 long/);
-    expect(refusal("16x16cde")).toBeNull();
-    // A board that arrives with its description is not held to it.
-    expect(
-      paramsError(signpostGame, sized(20, 20, DIFF_UNREASONABLE), false),
-    ).toBeNull();
+  it.each([
+    "16x16cdu",
+    "5x45cdu",
+    "30x30cdu",
+    "2x450cdu",
+  ])("deals an Unreasonable %s, however long it takes", (id) => {
+    expect(refusal(id)).toBeNull();
   });
 });

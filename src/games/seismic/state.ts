@@ -115,7 +115,7 @@ export const PRESETS: readonly SeismicParams[] = [
   { w: 7, h: 7, diff: DIFF_NORMAL, mode: MODE_SEISMIC },
   { w: 7, h: 7, diff: DIFF_NORMAL, mode: MODE_TECTONIC },
   // Past upstream's range (its generator stopped at 7×7): the largest board whose
-  // *worst* observed generation stays near two seconds — see `MAX_CELLS_SEISMIC`,
+  // *worst* observed generation stays near two seconds — see `MAX_PRESET_CELLS`,
   // which is set by the tail and not the median.
   { w: 8, h: 8, diff: DIFF_EASY, mode: MODE_SEISMIC },
   { w: 8, h: 8, diff: DIFF_EASY, mode: MODE_TECTONIC },
@@ -131,8 +131,15 @@ export function defaultParams(): SeismicParams {
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SeismicParams>[] = [
+  // No size is refused, in either mode, for its rarity or its wait: the deal's
+  // deadline answers a size that finds no board in time. Seismic's keep-apart
+  // rule fills a large board less often, and only another fill algorithm
+  // fixes that (`audit-author-known-issues` §3a). Measured 2026-10-20 under
+  // the deadline, twelve deals a size: Seismic 9×9 took 15 s and 9×10 90 s,
+  // giving up on four, and 10×10 gave up on four of four; Tectonic 14×14
+  // took 86 s and 16×16 gave up on four of four.
   ...dimensionParamConfig<SeismicParams>({
-    doc: `Size of the grid in squares. The limit depends on the mode: ${MODE_NAMES[MODE_TECTONIC]} goes up to 100 squares, ${MODE_NAMES[MODE_SEISMIC]} up to 64. ${MODE_NAMES[MODE_SEISMIC]}'s keep-apart rule gets harder to satisfy the larger the board, so past that size a puzzle may never be found at all. Large boards can take several seconds to generate, which is why the ready-made types in the ‘Type’ menu stop at 8×8.`,
+    doc: `Size of the grid in squares. Large boards can take a minute or two to generate, which is why the ready-made types in the ‘Type’ menu stop at 8×8. A puzzle is seldom found at all past about 90 squares in ${MODE_NAMES[MODE_SEISMIC]} mode, whose keep-apart rule gets harder to satisfy the larger the board, or past about 200 in ${MODE_NAMES[MODE_TECTONIC]} mode.`,
     bounds: { min: 4 },
   }),
   difficultyItem(DIFF_NAMES, "diff", {
@@ -150,14 +157,11 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 /**
- * The largest board each mode's generator will be asked for, in cells. Two
- * different questions decide these two numbers, and conflating them is the
- * mistake this comment exists to prevent.
- *
- * **Tectonic's bound answers "how long is too long?"** Every Tectonic size up to
- * 100 cells is *reachable* — an exhaustive sweep of the accepted `(w, h,
- * difficulty)` combinations had zero failures — but nine seeds per slow size
- * showed medians that look fine hiding tails that do not:
+ * The largest board the preset menu offers, in cells, in either mode, which
+ * keeps the menu quick: a preset is a wait sprung on anyone opening the Type
+ * menu, whereas a Custom size is a wait the player chose. It is set by the
+ * tail and not the median: nine seeds per slow Tectonic size showed medians
+ * that look fine hiding tails that do not:
  *
  * | Tectonic    | median      | worst of 9 seeds |
  * |-------------|-------------|------------------|
@@ -165,55 +169,8 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  * | 10×8 (80)   | 1.4–1.9 s   | 17.0 s           |
  * | 9×9  (81)   | 1.1–1.5 s   | 16.2 s           |
  * | 10×10 (100) | 4.9–6.2 s   | 18.3 s           |
- *
- * A long wait in the Custom dialog is acceptable (owner decision), so Tectonic's
- * bound is the reachability limit, 100 cells, which admits 10×10 — the size
- * upstream's own TODO names ("10x10 is a common size for Hakyuu puzzles").
- * `PRESETS` still stops at 8×8: a preset is a wait sprung on anyone opening the
- * Type menu, whereas a Custom size is a wait the player chose.
- *
- * **Seismic's bound answers "is it possible at all?", and no wait fixes it.**
- * 10×10 Seismic does not generate: six attempts across both difficulties each
- * ran ~16 s and then threw `RetryLimitExceeded`. Nine region-size distributions
- * were measured against it, and the best managed 34 fills per 100 partitions
- * only by pushing mean region size to 4.45 against upstream's 2.62 — visibly
- * changing the puzzle at every size. Small-region distributions are *provably*
- * infeasible there: mean size 2.26 puts 44 `1`s on a 10×10 against a hard
- * ceiling of 50 (no two `1`s orthogonally adjacent). Reaching it needs a
- * different fill algorithm, not a tuned constant (`audit-author-known-issues`
- * §3a names the experiment that would cost one).
- *
- * So Seismic stays at **64**, the largest area whose worst observed run stays
- * near two seconds. Its exhaustive sweep passed up to 72 cells, but on
- * single-seed timings already reaching 5.5 s, with no tail measurement behind
- * them. Do not raise it without repeating the slow sizes over several seeds: a
- * median-based bound has been shipped here and retracted once already. A deal
- * the player can stop makes the wait theirs to choose, as Tectonic's is, so
- * what those seeds have to show is that every one of them ends in a board:
- * between 64 cells and 100 nobody has counted where the fill starts to fail.
- *
- * Refusing in `validateParams`, where the Custom dialog can show a reason, is
- * docs/solver-and-generator.md § "Unlucky, impossible, and load-bearing
- * validation"'s prescribed handling. Both bounds are the generator's and bind
- * only a board being dealt: upstream has neither, so it shares boards past
- * them, and one that arrives with its description opens after a single solver
- * run.
  */
-export const MAX_CELLS_SEISMIC = 64;
-
-/** @see MAX_CELLS_SEISMIC — Tectonic's limit is reachability, not the fill. */
-export const MAX_CELLS_TECTONIC = 100;
-
-function maxCells(mode: number): number {
-  return mode === MODE_TECTONIC ? MAX_CELLS_TECTONIC : MAX_CELLS_SEISMIC;
-}
-
-export function validateParams(p: SeismicParams, full: boolean): string | null {
-  const max = maxCells(p.mode);
-  if (full && p.w * p.h > max)
-    return `Width times height must be at most ${max} in ${MODE_NAMES[p.mode]} mode; the generator cannot reliably build a larger board.`;
-  return null;
-}
+export const MAX_PRESET_CELLS = 64;
 
 // --- state -----------------------------------------------------------------
 

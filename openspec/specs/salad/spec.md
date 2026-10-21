@@ -91,8 +91,9 @@ less than the grid size.
 
 When a board is to be dealt at Normal with two symbols, `validateParams` SHALL
 refuse an ABC End View board smaller than 8×8 and a Number Ball board up to
-4×4 with the sentence that no such puzzle is Normal, and a Number Ball board
-of 5×5, or of 8×8 and larger, with the sentence for a tier too rare to deal.
+4×4 with the sentence that no such puzzle is Normal. A Number Ball board of
+5×5 or larger is rare at that tier and SHALL be dealt (`engine-difficulty`,
+"A rare tier is dealt under the deadline").
 
 #### Scenario: Two letters at Normal
 
@@ -106,9 +107,9 @@ of 5×5, or of 8×8 and larger, with the sentence for a tier too rare to deal.
 
 - **WHEN** the `4` of `5n4Bdx` is changed to `2` and the params are checked for
   dealing
-- **THEN** they are refused with "Normal 5x5 Numbers puzzles with 2 symbols
-  are too rare to deal."
-- **AND** a 6×6 Number Ball board with two symbols is admitted at Normal
+- **THEN** they are not refused
+- **AND** a 4×4 Number Ball board with two symbols is refused with "No 4x4
+  Numbers puzzle with 2 symbols is Normal."
 
 ### Requirement: Description: Salad descriptions use the upstream run-length block encoding
 

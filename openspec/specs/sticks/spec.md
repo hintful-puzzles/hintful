@@ -114,19 +114,6 @@ rotational, and one with no difficulty letter as Easy.
 - **THEN** none of them has exactly one fill
 - **AND** the same walk over a 2×3 board finds some that do
 
-### Requirement: Params: Unreasonable Sticks is bounded on its own measurements
-
-`validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
-board of more than 100 squares or longer than 30 on a side, with a reason
-naming the difficulty. The same size SHALL still be asked for at Easy.
-
-#### Scenario: A size past the bound is refused at Unreasonable only
-
-- **WHEN** an 11×11 board and a 2×40 board are checked for dealing at each
-  difficulty
-- **THEN** each is refused at Unreasonable and not at Easy
-- **AND** a 10×10, a 4×25 and a 2×30 board are admitted at Unreasonable
-
 ### Requirement: Description: Sticks descriptions use the run-length blank encoding
 
 A Sticks description SHALL encode the fixed puzzle data, blocks and clue

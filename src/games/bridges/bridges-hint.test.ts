@@ -89,7 +89,7 @@ const SHAPES: { label: string; params: BridgesParams; shipped: boolean }[] = [
     shipped: false,
   },
   {
-    // Normal, because Tricky refuses one bridge per line (`validateParams`).
+    // Normal, because a Tricky board with one bridge per line is seldom found.
     label: "15x15 Normal maxb 1",
     params: { ...BRIDGES_PRESETS[7], maxb: 1 },
     shipped: false,

@@ -77,8 +77,8 @@ In this order, each step as the skeleton
 | – Unlucky, impossible, and load-bearing validation | a generator fails on some params, or `validateParams` does more than check bounds |
 | – A draw that fails often is mended, not retried | most of a generator's tries are thrown away, and more so as the board grows |
 | – A division into regions is the engine's | your board is divided into regions, of one size or of several |
-| – Bound a generator by its tail, not its median | you set or raise a size bound, or pick the sizes of a preset menu |
-| – A Custom size is not refused for its wait | a large Custom size deals slowly and you are about to refuse it |
+| – Bound a generator by its tail, not its median | you pick the sizes of a preset menu, or set a memory bound |
+| – A Custom size is not refused for its wait | a large or rare Custom size deals slowly, or not at all, and you are about to refuse it |
 | – Solver-gated generation | your generator keeps or strips clues by running the solver, or you refactor such a solver |
 | – A divergence retires or re-founds its fixture | a fix moves boards a frozen differential recorded |
 | – Recover emergent parameters from the fixtures | you replace a generator whose output had a shape the code does not state |
@@ -919,19 +919,13 @@ deals the next board ahead in a second worker
 board's only. Keep a type that takes more than a second or two off the
 preset menu, and write nothing else for it.
 
-**A cell too rare for the deadline is left to the deadline too, and a
-refusal of one says too rare.** The deal's deadline already answers it: a
-board that turns up in time is dealt, and the player is told when none does.
-`engine-difficulty`, "A tier too rare to deal says so", allows a refusal of a
-cell not known to be empty only where the first wait is longer than a player
-would sit through once, or where a long count found no board at all; it asks
-for none. So a new game writes none, and a refusal a game already has
-clears the same bar as any other: a line a player reaches from the menu's
-sizes, checked in a line. Its sentence is `tooRareToDeal` ("Hard 6x6 puzzles
-that show their identity are too rare to deal"), never `noSuchTier`, since
-the board may exist. A rare cell may be pinned with
-`describeDealtTiers(game, cells, { seldom: true })`, which deals one board a
-cell in the slow tier; none is owed.
+**A cell too rare for the deadline is left to the deadline too, and never
+refused.** The deal's deadline already answers it: a board that turns up in
+time is dealt, the player is told when none does, and they can stop the
+wait. A line drawn from deal times moves with every solver and every device,
+so none is written (§ "A Custom size is not refused for its wait"). A rare
+cell may be pinned with `describeDealtTiers(game, cells, { seldom: true })`,
+which deals one board a cell in the slow tier; none is owed.
 
 ### Measuring whether a size has a tier
 
@@ -1119,14 +1113,15 @@ draw is retried, an impossible configuration is refused in
   a stage that hands over when it is spent has a count, sized from the worst
   measured success rate of a configuration that can generate.
 - **Impossible ⇒ refuse in `validateParams`**, where the Custom dialog can
-  show a reason, and refuse the precise thing measured. Draw a few hundred
-  times per configuration across a grid of shapes, not along one dimension:
+  show a reason, and refuse the precise thing shown: a count of the
+  generator's tries that found none (§ "Measuring whether a size has a
+  tier"), or a proof. Look across a grid of shapes, not along one dimension:
   the line may follow one width, or the cell count, which a bound on `w` or
-  on `h` would not express.
-- **Both, split by a parameter ⇒ measure the boundary and apply both.** A
-  size cap alone would forbid sizes that work, and a retry alone leaves the
-  impossible range spinning. Exemplar: `MAX_CELLS_SEISMIC` in
-  [`seismic/state.ts`](../src/games/seismic/state.ts).
+  on `h` would not express. Seldom is not impossible: a size whose boards
+  take a minute is dealt (§ "A Custom size is not refused for its wait").
+- **Both, split by a parameter ⇒ find the boundary and apply both.** A size
+  cap alone would forbid sizes that work, and a retry alone leaves the
+  impossible range spinning.
 
 **Port a `validateParams` that does real work before anything that depends
 on it.** One that allocates, calls a generator helper or builds a board is a
@@ -1277,7 +1272,9 @@ states what it wants:
 ### Bound a generator by its tail, not its median
 
 **Before setting or raising a bound, repeat the sizes near it across several
-seeds: one seed per size is not a measurement.** A sweep with zero failures
+seeds: one seed per size is not a measurement.** The bounds drawn from time
+are the preset menu's; a Custom size is refused for memory, never for its
+wait (§ "A Custom size is not refused for its wait"). A sweep with zero failures
 says every size is reachable; only the tail says whether to offer it, and a
 median of a few seconds can hide a worst case several times as long.
 
@@ -1318,23 +1315,29 @@ table.
 
 ### A Custom size is not refused for its wait
 
-**Refuse a size in `validateParams` only for what a wait does not fix.** The
-app runs every deal beside the board in play and the player can stop it
-([`deal-ahead.ts`](../src/puzzle/deal-ahead.ts), `Puzzle.stopDeal`), so a
-large size is a wait they chose and can leave. What a wait does not fix:
+**Refuse a size in `validateParams` only for what no speedup changes.** The
+app runs every deal beside the board in play, shows how long the wait has
+run, and lets the player stop it
+([`deal-ahead.ts`](../src/puzzle/deal-ahead.ts), `Puzzle.stopDeal`); the
+page ends a deal at the deadline (`DEAL_DEADLINE_MS`,
+[`retry-limit.ts`](../src/engine/retry-limit.ts)), even one whose single
+search runs past it, and says no board was found. So a large or rare size is
+a wait the player chose and can leave. What a wait does not fix:
 
-- a deal that takes the worker down, since memory is not a wait;
-- a size no board exists at, or whose generator fails more often than it
-  finds;
-- a deal whose time goes on boards it then throws away, so that what arrives
-  is not what was searched for.
+- a size no board exists at, shown by a count or a proof (`noSuchTier`);
+- a structural limit: memory, an encoding, a level the hint cannot open.
 
-A tier's own bound is held to the same rule: "a larger one takes too long to
-deal" is a wait. The preset menu is held to more, since a preset is a wait
-sprung on whoever opens the menu. A generator that never ends is a defect at
-any size.
+Nothing else is refused: not "a larger one takes too long to deal", not "too
+rare to deal", and no bound drawn from a table of deal times or acceptance
+rates, whatever its message says. Such a line moves with every solver change
+and every device, so the catalog would be measured again for ever. The
+preset menu is held to more, since a preset is a wait sprung on whoever
+opens the menu: keep a slow type off it, and say so beside the menu, not in
+`validateParams`.
 
-Before a table of times is read as a bound:
+**Slow is still worth fixing.** A Custom size that deals in a minute is a
+size the generator could deal in seconds. Before a table of times is read as
+the generator's limit:
 
 - **A deal that throws is a defect in the code that throws.** A recursion
   that overflows the stack on a large board is rewritten to keep its own

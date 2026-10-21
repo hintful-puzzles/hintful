@@ -139,7 +139,7 @@ const EVERY_TIER = { from: 10, to: 25 };
 export const paramConfig: ParamConfigItem<MosaicParams>[] = [
   ...dimensionParamConfig<MosaicParams>({
     fields: { w: "width", h: "height" },
-    doc: `Size of the grid in squares. The grid may hold at most ${MAX_TILES} squares. A grid fewer than 20 squares across is refused past a length that depends on its width, because a long thin puzzle cannot be generated.`,
+    doc: `Size of the grid in squares. The grid may hold at most ${MAX_TILES} squares. A long thin puzzle is rare, so on a grid fewer than 20 squares across a long one can take a minute or two to appear, or none is found.`,
     bounds: { min: 3 },
   }),
   TIERS.item(
@@ -150,7 +150,7 @@ export const paramConfig: ParamConfigItem<MosaicParams>[] = [
     kw: "aggressive-generation",
     name: "Aggressive generation",
     type: "boolean",
-    doc: "Every puzzle hides the clues the game never used while solving it. When on, the game also tries taking away each clue that remains, and keeps it away whenever the puzzle still has its one solution at its difficulty without it, so fewer numbers are shown, which usually makes the puzzle harder.",
+    doc: "Every puzzle hides the clues the game never used while solving it. When on, the game also tries taking away each clue that remains, and keeps it away whenever the puzzle still has its one solution at its difficulty without it, so fewer numbers are shown, which usually makes the puzzle harder. Above Easy it makes a large puzzle much slower to find.",
     label: {
       slot: "tail",
       // Upstream recommends it off above about 30x30, and its presets follow.
@@ -199,61 +199,16 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 /**
- * The longest board dealt at each shorter side, keyed by the largest shorter
- * side the limit covers. A board is dealt from a random picture the one rule
- * finishes with every number showing, and on a long thin board the rule runs
- * dry somewhere along it: the share of pictures it finishes falls to nothing
- * well inside {@link MAX_TILES}. A board 20 or more across is dealt at any
- * length. Upstream has no such bound and draws for ever.
- *
- * Measured 2026-10-10, one picture in so many finished, at the bound | past
- * it: 3×22 770, 4×20 430 | 4×25 2,500, 4×30 20,000; 5×30 910 | 5×50 none in
- * 20,000; 7×40 410 | 7×60 3,000; 8×50 420 | 8×100 none in 8,000; 10×100
- * 1,200, 12×100 160 | 10×200 and 12×300 none; 15×200 180 | 15×600 none;
- * 20×500 83.
+ * No shape within {@link MAX_TILES} is refused for its rarity or its wait.
+ * On a long thin board the one rule runs dry somewhere along it, and the
+ * share of random pictures it finishes falls to nothing (measured 2026-10-10:
+ * 5×50 none in 20,000, 8×100 none in 8,000); and above Easy aggressive
+ * generation asks about every clue (measured 2026-10-20: an Unreasonable
+ * 80×80 took 107 s, and a 100×100 ran past the deadline in one search). The
+ * deal's deadline answers both, and the page ends a search that outlives it.
  */
-const MAX_LONG_SIDE = new Map<number, number>([
-  [4, 20],
-  [5, 30],
-  [7, 40],
-  [9, 50],
-  [14, 100],
-  [19, 200],
-]);
-
-/** The longest side dealt on a board `short` squares across. */
-function maxLongSide(short: number): number {
-  for (const [upTo, long] of MAX_LONG_SIDE) if (short <= upTo) return long;
-  return Number.POSITIVE_INFINITY;
-}
-
-/**
- * The largest board above Easy dealt with aggressive generation, in squares.
- * Hiding asks the deduction, and at Unreasonable the search, about every
- * clue. Measured 2026-10-11 at 25×25, 30×30 and 35×35: 0.4 s, 0.9 s and 2.2 s
- * at Normal, 0.65 s, 1.4 s and 2.5 s at Unreasonable. Without aggressive
- * generation few clues are asked about, and a 50×50 board takes 0.2 s at
- * Normal and 0.7 s at Unreasonable, a 100×100 one 1 to 3 s at either.
- */
-const MAX_AGGRESSIVE_ABOVE_EASY = 900;
-
-export function validateParams(p: MosaicParams, full: boolean): string | null {
+export function validateParams(p: MosaicParams, _full: boolean): string | null {
   if (p.height > MAX_TILES / p.width) return AREA_TOO_LARGE;
-  // Generation only: a board that arrives with its description is not
-  // searched for, so it opens at any shape.
-  if (!full) return null;
-  const short = Math.min(p.width, p.height);
-  const long = maxLongSide(short);
-  if (Math.max(p.width, p.height) > long)
-    return `A board ${short} squares across can be at most ${long} long; a longer one cannot be generated.`;
-  if (
-    p.diff !== DIFF_EASY &&
-    p.aggressive &&
-    p.width * p.height > MAX_AGGRESSIVE_ABOVE_EASY
-  ) {
-    const tier = TIERS.names[p.diff] as string;
-    return `With aggressive generation ${/^[AEIOU]/.test(tier) ? "an" : "a"} ${tier} puzzle can have at most ${MAX_AGGRESSIVE_ABOVE_EASY} squares; turn aggressive generation off for a larger one.`;
-  }
   return null;
 }
 

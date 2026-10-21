@@ -19,6 +19,7 @@
  * waiting for (`DealAhead.stopWaiting`).
  */
 
+import { DEAL_DEADLINE_MS } from "../engine/retry-limit.ts";
 import type { DealtBoard, EncodedParams, PuzzleId } from "../engine/types.ts";
 import type { KeptBoards } from "../store/kept-boards.ts";
 import { spawnPuzzleWorker, unlessWorkerFailsToStart } from "./spawn-worker.ts";
@@ -58,6 +59,34 @@ const dealInWorker: StartDeal = (puzzleId, params) => {
   };
 };
 
+/**
+ * How long a deal runs before the page ends its worker and answers that it
+ * found no board. A generator gives up at {@link DEAL_DEADLINE_MS} itself, but
+ * only between its tries, so one long search can outlive it; this holds every
+ * game to the deadline whatever its solver does. It is a little later than
+ * the generator's own, which is timed from when the worker has started.
+ */
+export const PAGE_DEADLINE_MS = DEAL_DEADLINE_MS + 5000;
+
+/** `deal`, ended at {@link PAGE_DEADLINE_MS} as a deal that found no board. */
+function endedAtDeadline(deal: RunningDeal): RunningDeal {
+  let settleOverrun: (overran: TimedDeal) => void = () => {};
+  const overrun = new Promise<TimedDeal>((settle) => {
+    settleOverrun = settle;
+  });
+  const timer = setTimeout(() => {
+    deal.stop();
+    settleOverrun({ board: null, ms: PAGE_DEADLINE_MS });
+  }, PAGE_DEADLINE_MS);
+  return {
+    dealt: Promise.race([deal.dealt, overrun]).finally(() => clearTimeout(timer)),
+    stop() {
+      clearTimeout(timer);
+      deal.stop();
+    },
+  };
+}
+
 /** How a wait for a board ended: with the board, with `null` where the
  * generator found none, or `"stopped"` where the wait was ended first. */
 export type WaitedDeal = DealtBoard | null | "stopped";
@@ -86,6 +115,8 @@ export class DealAhead {
    * once stays slow for the visit.
    */
   private readonly slow = new Set<EncodedParams>();
+  /** How long the last board found of each type took, this visit. */
+  private readonly lastMs = new Map<EncodedParams, number>();
   private queue: Promise<void> = Promise.resolve();
 
   constructor(
@@ -113,6 +144,12 @@ export class DealAhead {
       this.waiter = { params, settle, fail };
       void this.prepare(params);
     });
+  }
+
+  /** How long the last board found of `params` took to find, or `null`
+   * where none has been this visit: what a wait for the next is told. */
+  lastDealMs(params: EncodedParams): number | null {
+    return this.lastMs.get(params) ?? null;
   }
 
   /**
@@ -175,7 +212,7 @@ export class DealAhead {
       if (kept.some((ms) => ms >= SLOW_DEAL_MS)) this.slow.add(params);
       if (kept.length >= (this.slow.has(params) ? SLOW_TYPE_BOARDS : 1)) return;
     }
-    const deal = this.startDeal(this.puzzleId, params);
+    const deal = endedAtDeadline(this.startDeal(this.puzzleId, params));
     const dealing = { params, deal };
     this.dealing = dealing;
     void deal.dealt.then(
@@ -184,6 +221,7 @@ export class DealAhead {
         this.dealing = null;
         if (ms >= SLOW_DEAL_MS) this.slow.add(params);
         if (board === null) this.unasked = params;
+        else this.lastMs.set(params, ms);
         const waiter = this.waiter;
         if (waiter?.params === params) {
           this.waiter = null;

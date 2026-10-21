@@ -16,6 +16,7 @@ import type {
 import { KeptBoards } from "../store/kept-boards.ts";
 import {
   DealAhead,
+  PAGE_DEADLINE_MS,
   type RunningDeal,
   SLOW_DEAL_MS,
   SLOW_TYPE_BOARDS,
@@ -385,6 +386,60 @@ describe("a New game that finds no board kept", () => {
       asked[2].finish();
       expect(await dealing).toBe("dealt");
       expect(puzzle.dealPending).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("says how long the wait has run, and the last board's time", async () => {
+    const { puzzle, asked } = await inPlay();
+    fakeTimeouts();
+    try {
+      const dealing = puzzle.newGame();
+      await soon(() => asked.length === 3);
+      expect(puzzle.dealWait).toBe("");
+      await vi.advanceTimersByTimeAsync(DEAL_PENDING_MS);
+      // The board in play was found at once, by `inPlay`'s first deal.
+      expect(puzzle.dealWait).toBe("0:01 so far; the last took 0:00");
+      await vi.advanceTimersByTimeAsync(64_000);
+      expect(puzzle.dealWait).toBe("1:05 so far; the last took 0:00");
+      asked[2].finish();
+      expect(await dealing).toBe("dealt");
+      expect(puzzle.dealWait).toBe("");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("says the deadline where no board of the type has been found", async () => {
+    const { puzzle, asked } = puzzleOf("magnets");
+    await puzzle.setParams("5x6dt");
+    fakeTimeouts();
+    try {
+      puzzle.setBoardArea(UPRIGHT_PHONE);
+      const dealing = puzzle.newGame();
+      await soon(() => asked.length === 1);
+      await vi.advanceTimersByTimeAsync(DEAL_PENDING_MS);
+      expect(puzzle.dealWait).toBe("0:01 so far, 2:00 at most");
+      asked[0].finish();
+      expect(await dealing).toBe("dealt");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("ends a deal that outlives the deadline, as one that found no board", async () => {
+    const { puzzle, adapter, asked, gameId, board } = await inPlay();
+    fakeTimeouts();
+    try {
+      const dealing = puzzle.newGame();
+      await soon(() => asked.length === 3);
+      await vi.advanceTimersByTimeAsync(PAGE_DEADLINE_MS - 1);
+      expect(asked[2].stopped).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(asked[2].stopped).toBe(true);
+      expect(await dealing).toEqual({ refusal: adapter.dealFoundNone(UPRIGHT_PHONE) });
+      expect(gameId()).toBe(board);
     } finally {
       vi.useRealTimers();
     }

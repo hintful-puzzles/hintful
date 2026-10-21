@@ -4,8 +4,8 @@
 Seismic, the puzzle of numbering each area of size N with 1 to N, under either
 the Seismic rule that equal numbers N in a line have at least N cells between
 them or the Tectonic rule that equal numbers never touch, even diagonally. It
-has note-taking, an explained hint, a size bound measured for each mode, and
-an on-screen keypad sized to the largest area its generator produces.
+has note-taking, an explained hint, and an on-screen keypad sized to the
+largest area its generator produces.
 
 ## Requirements
 
@@ -30,80 +30,20 @@ and keep-apart rule is satisfied.
   satisfied
 - **THEN** the game is reported solved
 
-### Requirement: Params: The size bound is measured, per mode, and says why
-
-Any size bound in validation SHALL be derived from a measurement of the
-shipped generator rather than inherited, and SHALL carry a reason the
-Custom-type dialog can display, naming the mode it applies to. The bound SHALL
-be per mode, because the two modes are stopped by different things. Where a
-bound remains it SHALL reflect whichever stage is actually the limit: the
-region fill or the clue-stripping loop.
-
-#### Scenario: A board past 7×7 is generable
-
-- **WHEN** a board larger than 7×7 is requested, within the measured bound
-- **THEN** it is accepted by validation and a soluble board is produced
-
-#### Scenario: The refusal names the mode
-
-- **WHEN** a board over the bound of its mode is requested
-- **THEN** the refusal the Custom-type dialog shows names that mode
-
-### Requirement: Params: Tectonic's bound is what can be reached
-
-Tectonic's limit is reachability: every size within its bound SHALL generate,
-some of them slowly. A size the player types in the Custom dialog SHALL NOT be
-refused in Tectonic mode only because it takes seconds to generate.
-
-#### Scenario: The standard Hakyuu size is available where it can be built
-
-- **WHEN** a 10×10 board is requested in Tectonic mode from the Custom dialog
-- **THEN** it is accepted by validation and a soluble board is produced
-- **AND** no preset offers that size, so it is reached only by a player who asked
-  for it
-
-### Requirement: Params: Seismic's bound is what is possible
-
-Seismic's limit is possibility: a 10×10 board does not generate at all, each
-attempt running until it exhausts its retry budget, and no amount of waiting
-changes that. Its bound SHALL stay at the largest area whose worst
-observed run is short. Raising it SHALL require repeating the slow sizes over
-several seeds, and the bound SHALL NOT be set from medians.
-
-#### Scenario: A size the generator cannot build is refused up front
-
-- **WHEN** a 10×10 board is requested in Seismic mode
-- **THEN** it is rejected with a stated reason naming the mode, rather than
-  accepted and left to churn until its retry budget is exhausted
-
-### Requirement: Params: Seismic's two bounds bind a board being dealt only
-
-Both bounds are the generator's, so `validateParams` SHALL apply them to full
-params alone. A board that arrives with its description SHALL open at any
-size: another build of the puzzle has neither bound and shares such boards,
-and opening one is a single run of the solver.
-
-#### Scenario: A shared board past the bound of its mode
-
-- **WHEN** a game ID of a 9×8 Seismic board or an 11×10 Tectonic board, each
-  with its description, is opened
-- **THEN** it loads, where the same size asked for in the Custom dialog is
-  refused
-
 ### Requirement: Params: A preset is never a long wait
 
 A preset SHALL NOT be a size whose worst observed run is a long wait: it is
 offered to everyone who opens the Type menu, so a long generation there is a
-wait nobody chose, whereas a Custom size is a wait the player asked for, and a
-slow Custom size within the bound SHALL be accepted. Every preset SHALL be no
-larger than `MAX_CELLS_SEISMIC`, the largest area whose worst observed run is
-short, in either mode, and a test SHALL assert this.
+wait nobody chose, whereas a Custom size is a wait the player asked for, and
+a slow Custom size SHALL be accepted. Every preset SHALL be no larger than
+`MAX_PRESET_CELLS`, the largest area whose worst observed run is short, in
+either mode, and a test SHALL assert this.
 
 #### Scenario: A size whose worst case is a long wait is kept out of the menu
 
 - **WHEN** presets are enumerated
 - **THEN** none of them is a size whose generation tail runs to tens of seconds,
-  whatever the validation bound admits
+  whatever the Custom dialog admits
 
 #### Scenario: The largest preset may take a moment
 

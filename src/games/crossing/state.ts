@@ -17,8 +17,6 @@
 
 import {
   DIFF_EASY,
-  DIFF_UNREASONABLE,
-  SEARCH_TIER_NAMES,
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
@@ -64,7 +62,7 @@ const board = (side: number, sym = false): CrossingParams => ({
  * The sizes the menu offers. Upstream ships the first three. The rest are a
  * fork addition: the solving aids make a small board quick work, so the
  * ladder runs up to 13×13. That one is offered at Easy alone, being past
- * {@link MAX_UNREASONABLE_AREA}; the largest below it deals an Unreasonable
+ * {@link MENU_UNREASONABLE_AREA}; the largest below it deals an Unreasonable
  * board in 0.2 s.
  */
 const BOARDS: CrossingParams[] = [5, 7, 9, 11, 13].map((side) => board(side));
@@ -76,9 +74,9 @@ const BOARDS: CrossingParams[] = [5, 7, 9, 11, 13].map((side) => board(side));
  * Symmetry is not just a flavor — it is what makes the full size *practical*.
  * Growing the walls in 180°-rotational pairs puts them down twice as fast, so
  * runs stay short and the duplicate-number rejection that dominates large
- * boards (see {@link MAX_AREA}) fires far less often: an Easy 15×15 takes
- * 1.2 s plain and 0.3 s symmetric. Neither is offered at Unreasonable, which
- * {@link MAX_UNREASONABLE_AREA} refuses at that size.
+ * boards fires far less often: an Easy 15×15 takes 1.2 s plain and 0.3 s
+ * symmetric. Neither is offered at Unreasonable, being past
+ * {@link MENU_UNREASONABLE_AREA}.
  */
 const VARIANTS: CrossingParams[] = [board(9, true), board(15, true)];
 
@@ -93,7 +91,7 @@ export function defaultParams(): CrossingParams {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<CrossingParams>[] = [
   ...dimensionParamConfig<CrossingParams>({
-    doc: "Size of the grid in squares. Very large boards are refused, because a puzzle whose runs all read as distinct numbers becomes impossible to generate as the grid grows.",
+    doc: "Size of the grid in squares. A puzzle whose runs all read as distinct numbers grows rarer as the grid grows, so a board much larger than 15x15, or a long thin one, can take a minute or two to appear, or none is found.",
     bounds: { min: 2 },
   }),
   searchTierItem(
@@ -117,8 +115,8 @@ export function presets(): PresetMenu<CrossingParams> {
   return {
     title: "Crossing",
     ...presetGrid(paramConfig, BOARDS, {
-      // An Unreasonable board past the bound takes seconds to find.
-      tiers: (b) => (b.w * b.h > MAX_UNREASONABLE_AREA ? [DIFF_EASY, DIFF_EASY] : null),
+      tiers: (b) =>
+        b.w * b.h > MENU_UNREASONABLE_AREA ? [DIFF_EASY, DIFF_EASY] : null,
       variants: VARIANTS,
     }),
   };
@@ -134,80 +132,24 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 /**
- * The largest board the generator can actually produce, in squares.
- *
- * Upstream sets no upper bound at all, and `new_game_desc` retries until it
- * succeeds — so a large Custom board makes the C spin **for ever**. It is not a
- * question of patience: an attempt is rejected whenever any two runs read as the
- * same number, and since the run count grows with the area, that collision
- * becomes near-certain (a birthday problem over at most 81 two-digit numbers).
- *
- * So this is the "impossible ⇒ reject in `validateParams`" case, not the
- * "unlucky ⇒ retry" one (docs/solver-and-generator.md § "Unlucky, impossible, and load-bearing validation").
- * It also bounds the clue list, which is what makes the author's "no reliable
- * way to always fit the list on screen" tractable here.
- *
- * Measured 2026-10-10, one draw in so many accepted and the mean time for a
- * board, on boards at least five squares on the shorter side: 15×15 one in
- * 3,200 (1.2 s), 9×25 one in 2,900 (1.2 s), 8×28 one in 6,800 (2.5 s), 7×32
- * one in 14,000 (5 s). Past it, 10×23 and 12×19 are no better and nothing of
- * 280 squares was ever dealt. A thin board gives out sooner; see
- * {@link MAX_THIN_AREA}.
+ * The largest area the preset menu offers an Unreasonable board at, which
+ * keeps the menu quick: past it a board takes seconds to find (measured
+ * 2026-10-11, 13×13 2 s).
  */
-const MAX_AREA = 225;
+const MENU_UNREASONABLE_AREA = 144;
 
-/**
- * The largest area dealt on a board whose shorter side is the key. A long
- * thin board has few crossings to break its runs up, and a run may be nine
- * squares at most ({@link MAX_NUMBER_LENGTH}), so it gives out well inside
- * {@link MAX_AREA}.
+/** What upstream's `validate_params` checks: at least one dimension ≥ 4 (a 3×3
+ * board has no room for crossing runs).
  *
- * Measured 2026-10-10, mean time for an Easy board at the bound | past it:
- * two wide, 2×40 0.3 s | 2×50 5 s, 2×60 none in 48,000 draws; three wide,
- * 3×60 1.0 s | 3×67 none in 16,000; four wide, 4×45 0.6 s | 4×50 5 s, 4×56
- * none in 18,000.
- */
-const MAX_THIN_AREA = new Map<number, number>([
-  [2, 80],
-  [3, 180],
-  [4, 180],
-]);
-
-/**
- * The largest area an Unreasonable board is dealt at. Its own bound, since
- * such a board is far rarer than an Easy one at every shape: a draw has first
- * to survive the same rejections, and then be one the solver stops short on
- * that still has one answer. The solver's third deduction finishes five in
- * six of the boards its first two stop on, so the bound fell from 182 with
- * it.
- *
- * Measured 2026-10-11, one draw in so many kept and the mean time for a
- * board, at the bound | past it: 12×12 one in 2,900 (0.6 s), 8×18 one in
- * 2,200 (0.4 s), 6×24 one in 3,600 (0.7 s), 3×48 one in 2,800 (0.6 s), 4×36
- * one in 7,700 (1.4 s) | 12×13 one in 4,300 (0.9 s), 10×15 one in 5,200
- * (1.1 s), 5×30 one in 4,400 (1.0 s), 13×13 one in 8,500 (2 s), 3×60 one in
- * 9,300 (2.9 s). Symmetric walls halve the time (13×13 1.1 s) and are held to
- * the same bound.
- */
-const MAX_UNREASONABLE_AREA = 144;
-
-/** What upstream's `validate_params` checks beyond each dimension's own bound:
- * at least one of them ≥ 4 (a 3×3 board has no room for crossing runs) — plus
- * the generable-size ceilings upstream lacks. A ceiling applies only to a
- * `full` validation, i.e. when a board is about to be *generated*; a
- * description that already exists stays playable at any size. */
-export function validateParams(p: CrossingParams, full: boolean): string | null {
+ * No size is refused for its rarity. An attempt is rejected whenever two runs
+ * read as the same number, which grows likelier with the area, and a long
+ * thin board has few crossings to break its runs up, so a large board takes
+ * minutes or is not found; the deal's deadline answers that (`engine-difficulty`,
+ * "A rare tier is dealt under the deadline"). Measured 2026-10-20 under it: an
+ * Unreasonable 15×15 in 27 s, an Easy 2×55 in 56 s, and an Easy 2×58 gave up
+ * on eight deals of twelve. */
+export function validateParams(p: CrossingParams, _full: boolean): string | null {
   if (p.w < 4 && p.h < 4) return "Width or height must be at least 4.";
-  if (!full) return null;
-  const area = p.w * p.h;
-  if (area > MAX_AREA)
-    return `Width times height must be at most ${MAX_AREA}; larger boards cannot be generated.`;
-  const short = Math.min(p.w, p.h);
-  const thin = MAX_THIN_AREA.get(short);
-  if (thin !== undefined && area > thin)
-    return `On a board ${short} squares across, width times height must be at most ${thin}; longer boards cannot be generated.`;
-  if (p.diff === DIFF_UNREASONABLE && area > MAX_UNREASONABLE_AREA)
-    return `Width times height must be at most ${MAX_UNREASONABLE_AREA} for an ${SEARCH_TIER_NAMES[DIFF_UNREASONABLE]} puzzle; larger ones are too rare to deal.`;
   return null;
 }
 

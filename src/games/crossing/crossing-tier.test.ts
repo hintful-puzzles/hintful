@@ -228,7 +228,7 @@ describe("an Unreasonable Crossing board", () => {
 
   // The smallest boards there are carry the tier.
   describeDealtTiers(crossingGame, ["4x2du", "2x4du", "4x3du", "4x4Sdu"]);
-  // The largest the bound admits, wide and thin.
+  // Large boards, wide and thin, that deal in about a second.
   describeDealtTiers(crossingGame, ["12x12du", "8x18du", "4x36du", "2x40du"], {
     seldom: true,
   });
@@ -237,45 +237,24 @@ describe("an Unreasonable Crossing board", () => {
     paramsError(crossingGame, crossingGame.decodeParams(id), true);
 
   it.each([
-    "12x12du",
-    "11x13du",
-    "8x18Sdu",
-    "3x48du",
-    "2x40du",
-  ])("%s is inside the bound on Unreasonable boards", (id) => {
+    // Each takes a second or more to find, and some take minutes.
+    "13x13du",
+    "13x13Sdu",
+    "15x15du",
+    "16x16de",
+    "5x45du",
+    "2x41de",
+    "61x3du",
+    "4x46de",
+  ])("%s is dealt however long it takes", (id) => {
     expect(refusal(id)).toBeNull();
   });
 
-  it.each([
-    // Each is dealt at Easy, and takes a second or more to find here.
-    "13x13du",
-    "13x13Sdu",
-    "10x15du",
-    "5x30du",
-  ])("%s is refused at Unreasonable and dealt at Easy", (id) => {
-    expect(refusal(id)).toMatch(/at most 144 for an Unreasonable puzzle/);
-    expect(refusal(id.replace("du", "de"))).toBeNull();
-  });
-
-  it("is on the menu at every size inside the bound, and at none past it", () => {
+  it("is on the menu up to 11x11, keeping the menu quick", () => {
     const offered = (crossingGame.presets().submenu ?? []).flatMap(({ params }) =>
       params?.diff === DIFF_UNREASONABLE ? [`${params.w}x${params.h}`] : [],
     );
     expect(offered).toEqual(["5x5", "7x7", "9x9", "11x11"]);
-  });
-
-  it("a thin board is refused at either tier where none is dealt", () => {
-    for (const tier of ["de", "du"]) {
-      expect(refusal(`2x40${tier}`)).toBeNull();
-      expect(refusal(`2x41${tier}`)).toMatch(/2 squares across.*at most 80/);
-      expect(refusal(`61x3${tier}`)).toMatch(/3 squares across.*at most 180/);
-      expect(refusal(`4x46${tier}`)).toMatch(/4 squares across.*at most 180/);
-    }
-    expect(refusal("5x45de")).toBeNull();
-    // A board that arrives with its description is not held to any of them.
-    expect(
-      paramsError(crossingGame, sized(2, 60, DIFF_UNREASONABLE), false),
-    ).toBeNull();
   });
 });
 

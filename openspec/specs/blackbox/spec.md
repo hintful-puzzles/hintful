@@ -195,19 +195,6 @@ declaration.
   not have a minimum greater than its maximum." or "There must be fewer balls
   than squares."
 
-### Requirement: Params: Only a deal is bound by the ball limit
-
-`validateParams` SHALL reject `maxballs` above `ballLimit(w, h)`, and SHALL do
-so only when the params are about to deal a board. Params that arrive with
-their board SHALL NOT be held to the limit.
-
-#### Scenario: One ball past the limit
-
-- **WHEN** `validateParams` is given an 8×8 box whose `maxballs` is one more
-  than `ballLimit(8, 8)`, about to deal a board
-- **THEN** it returns a non-null error string
-- **AND** given the same params arriving with a board, it returns null
-
 ### Requirement: Description: Black Box descriptions are obfuscated ball-layout bitmaps
 
 A desc SHALL encode `[w, h, ball1x, ball1y, …]` as a byte-per-value bitmap,

@@ -178,20 +178,15 @@ describe("map params codec", () => {
   const refusal = (id: string): string | null =>
     paramsError(mapGame, decodeParams(id), true);
 
-  it("says rare, and not absent, where a board exists", () => {
-    expect(refusal("4x5n8dn")).toBe(
-      "Normal maps of 8 regions less than 5 squares wide are too rare to deal.",
-    );
-    expect(refusal("8x4n10du")).toBe(
-      "Unreasonable maps of 10 regions less than 5 squares wide are too rare to deal.",
-    );
-    expect(refusal("3x20n30dh")).toBe(
-      "Tricky maps three squares wide are too rare to deal.",
-    );
-    expect(refusal("3x20n30du")).toBeNull();
-    expect(refusal("4x5n8de")).toBeNull();
-    expect(refusal("4x5n9dn")).toBeNull();
-    expect(paramsError(mapGame, decodeParams("4x5n8dn"), false)).toBeNull();
+  it.each([
+    "4x5n8dn",
+    "8x4n10du",
+    "4x4n9dh",
+    "3x20n30dh",
+    "3x20n30du",
+    "4x5n9dn",
+  ])("%s is not refused, being rare and not absent", (id) => {
+    expect(refusal(id)).toBeNull();
   });
 
   describe("few regions, where a tier is found seldom", () => {

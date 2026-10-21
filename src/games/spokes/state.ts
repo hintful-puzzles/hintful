@@ -30,12 +30,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import {
-  difficultyItem,
-  noSuchTier,
-  tierNames,
-  tooRareToDeal,
-} from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -140,7 +135,7 @@ export function defaultParams(): SpokesParams {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SpokesParams>[] = [
   ...dimensionParamConfig<SpokesParams>({
-    doc: "Size of the grid in squares. A board of 8 squares or fewer has no Unreasonable puzzles, and on a longer board two squares wide they are too rare to deal.",
+    doc: "Size of the grid in squares. A board of 8 squares or fewer has no Unreasonable puzzles, and on a longer board two squares wide the first can take a minute or two to appear.",
     bounds: { min: 2 },
   }),
   difficultyItem(DIFF_NAMES, {
@@ -153,18 +148,12 @@ export const paramConfig: ParamConfigItem<SpokesParams>[] = [
 
 export function validateParams(p: SpokesParams, full: boolean): string | null {
   // Measured 2026-10-06: none in 440,000 boards built at 2x2, and in 100,000
-  // at 2x3 and at 2x4. A 3x3 is found once in 140, and a 3x4 and a 3x5 in
-  // under a second. Two wide and longer the boards exist and the wait is too
-  // long to sit through once. With the bound lifted for 60 to 350 seconds a
-  // size: a 2x5 and a 5x2 gave one board between them in 90,000 tries and
-  // seven minutes; a 2x6 and a 6x2 one every 25 seconds, the slowest of ten
-  // at two minutes; a 2x7 and a 2x10 one every 100 seconds; and a 2x8 one in
-  // 260. A try grows from 4 milliseconds at 2x5 to 40 at 2x10, so no longer
-  // board was counted.
+  // at 2x3 and at 2x4. Two wide and longer the boards exist and are dealt:
+  // measured 2026-10-21, twelve deals a size, a 2x5 gave up on all twelve,
+  // from 2x6 to 2x20 a board took 15 to 65 s, and a 2x25 gave up on seven.
   if (!full || p.diff !== "hard") return null;
   const tier = DIFF_NAMES[DIFF_HARD] ?? "";
   if (p.w * p.h <= 8) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
-  if (Math.min(p.w, p.h) === 2) return tooRareToDeal("puzzles two squares wide", tier);
   return null;
 }
 

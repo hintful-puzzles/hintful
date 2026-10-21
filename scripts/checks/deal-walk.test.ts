@@ -22,7 +22,10 @@
  * **`DEAL_WALK_CELLS` deals the params it names and nothing else**, each
  * `DEAL_WALK_SEEDS` times whatever they take, a size `validateParams` refuses
  * included, which is how the sizes each side of a line are counted before the
- * line is drawn or kept.
+ * line is drawn or kept. A named cell is dealt as the app deals it, by
+ * `generate` under the deal's deadline, so one that gives up is one a player
+ * would be told found no board. A ladder's guards count their tries instead,
+ * and where a try is cheap they give up long before the deadline.
  *
  * **It can be killed between any two deals and started again.** The cell in
  * flight is written to the state file before its deal, so a run that finds one
@@ -32,6 +35,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { it } from "vitest";
 import "../../src/games/index.ts";
+import { generate } from "../../src/engine/deal.ts";
 import { difficultyChoiceItem, withTier } from "../../src/engine/difficulty.ts";
 import type { Game, ParamConfigItem } from "../../src/engine/game.ts";
 import { paramsError } from "../../src/engine/params.ts";
@@ -207,17 +211,21 @@ function walk(id: string, statePath: string): void {
         const started = performance.now();
         const tries = new Map<string, number>();
         try {
-          const { desc } = countingTries(tries, () =>
-            game.newDesc(params, randomNew(`deal-walk-${id}-${label}-${seed}`)),
-          );
-          if (asked !== null) cell.tiers.push(lowestTier(game, params, desc));
+          const rng = randomNew(`deal-walk-${id}-${label}-${seed}`);
+          if (asked === null) countingTries(tries, () => game.newDesc(params, rng));
+          else {
+            const dealt = countingTries(tries, () => generate(game, params, rng));
+            if (dealt === null) cell.gaveUp++;
+            else cell.tiers.push(lowestTier(game, params, dealt.desc));
+          }
         } catch (e) {
           if (e instanceof RetryLimitExceeded) cell.gaveUp++;
           else cell.threw = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
         }
         cell.ms.push(Math.round(performance.now() - started));
-        // The deal's outermost loop is the guard that tried first.
-        cell.tries.push(tries.values().next().value ?? 0);
+        // The game's outermost loop is the guard that tried first, after
+        // `generate`'s own where it dealt.
+        cell.tries.push([...tries.values()][asked === null ? 0 : 1] ?? 0);
         // A slow cell on a ladder is dealt for about as long as the deal that
         // would end the ladder, and no longer: the slow cells are most of a
         // walk. A cell asked for by name has every deal it was promised.

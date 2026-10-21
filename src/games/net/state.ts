@@ -9,7 +9,7 @@ import {
 } from "../../engine/answer-search.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { descValue } from "../../engine/desc-error.ts";
-import { noSuchTier, tooRareToDeal } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import {
   AREA_TOO_LARGE,
   formatG,
@@ -134,54 +134,13 @@ export function validateParams(p: NetParams, full: boolean): string | null {
 }
 
 /**
- * The largest Unreasonable board dealt, in squares, and the longest a
- * wrapping one may be: at any width, and at a width of four. A wrapping board
- * with an even shorter side is far slower to deal than one a square wider or
- * narrower.
- *
- * Measured 2026-10-10, mean time for a board inside the bounds | past them:
- * 30×30 0.45 s, 3×300 0.6 s, 4×225 0.7 s, 20×45 0.1 s | 40×40 0.7 s, 4×400
- * 1.9 s, 50×50 1.9 s, 70×70 none in 8 s. Wrapping: 30×30 0.45 s, 10×80
- * 0.3 s, 6×80 0.65 s, 4×30 0.6 s | 6×120 over 2 s, 4×50 over 2 s and none in
- * 5 s half the time, 4×80 none in 5 s, 3×300 3 s.
- *
- * Measured again 2026-10-11, with the hint finishing boards the solver stops
- * on: 30×30 0.6 s, 20×45 0.85 s, 7×128 0.55 s; wrapping 30×30 1.2 s, 10×80
- * and 6×80 0.8 s, 4×30 0.75 s.
+ * Why no Unreasonable board of `p` is dealt, or `null`: only where none
+ * exists. Where one is rare or slow it is dealt, and the deal's deadline
+ * answers a size that has none in time. Measured 2026-10-20, a few deals a
+ * size: 70×70 took 81 s, 6×800 54 s, wrapping 10×300 30 s, 4×6 3 s and a
+ * barrier probability of 0.6 at 7×7 18 s, while 4×4, 4×5 and three wide gave
+ * up.
  */
-const MAX_UNREASONABLE_AREA = 900;
-
-/**
- * Without wrapping the hint finishes most small boards the solver stops on,
- * so the tier needs a shorter side of {@link MIN_UNREASONABLE_SIDE}, more
- * than 5×5, and on a board under {@link WIDE_ENOUGH} wide a longer side of at
- * most {@link MAX_UNREASONABLE_NARROW_SIDE}.
- *
- * Measured 2026-10-11, mean time for a board: 5×6 1.05 s, 5×7 0.65 s, 6×6
- * 0.3 s, 5×40 0.8 s | 5×5 2.3 s, 4×6 to 4×30 1 to 4 s, 5×80 1.4 s, 5×120
- * 2.9 s, 6×100 3.6 s. None was dealt in 16 s at 4×4, 4×5, or any board two
- * or three wide from 2×7 to 3×300.
- */
-const MIN_UNREASONABLE_SIDE = 5;
-const WIDE_ENOUGH = 7;
-const MAX_UNREASONABLE_NARROW_SIDE = 40;
-
-/**
- * The most barriers an Unreasonable board is dealt with. A wall tells the
- * solver what crosses a side, so the more a board has the likelier the solver
- * settles it, and with every one drawn it settles every board.
- *
- * Measured 2026-10-10 on 5×5, 11×13, and wrapping 7×7 and 11×11, six deals
- * each: at 0.3 a deal takes 0.1 s to 0.4 s; at 0.5 it takes 0.6 s to 1.5 s
- * and two 5×5 deals in five gave up after 3 s; at 0.75 most gave up, after 3
- * to 13 s. Again 2026-10-11, with the hint asked too: at 0.2 a deal takes
- * 0.5 s to 0.6 s at 7×7, 9×9 and 11×13 and 1.9 s at 6×6; at 0.3, 0.9 s to
- * 1.5 s and 2.7 s.
- */
-const MAX_UNREASONABLE_BARRIERS = 0.2;
-const MAX_UNREASONABLE_WRAPPING_SIDE = 80;
-const MAX_UNREASONABLE_WRAPPING_SIDE_FOUR_WIDE = 30;
-
 function unreasonableRefusal(p: NetParams): string | null {
   const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
   const short = Math.min(p.w, p.h);
@@ -194,31 +153,6 @@ function unreasonableRefusal(p: NetParams): string | null {
   // (`net-tier.test.ts`), and the solver settles each one.
   if (!p.wrapping && (short === 2 ? long <= 6 : short === 3 && long <= 4))
     return noSuchTier(`${size} puzzle without wrapping`, tier);
-  if (!p.wrapping && short < MIN_UNREASONABLE_SIDE)
-    return tooRareToDeal(
-      `puzzles without wrapping under ${MIN_UNREASONABLE_SIDE} squares wide`,
-      tier,
-    );
-  if (!p.wrapping && long === MIN_UNREASONABLE_SIDE)
-    return tooRareToDeal(`${size} puzzles without wrapping`, tier);
-  if (!p.wrapping && short < WIDE_ENOUGH && long > MAX_UNREASONABLE_NARROW_SIDE)
-    return `An ${tier} puzzle without wrapping under ${WIDE_ENOUGH} squares wide must be at most ${MAX_UNREASONABLE_NARROW_SIDE} squares long; a longer one takes too long to deal.`;
-  // The probability is kept in single precision, where 0.2 is a little more.
-  if (p.barrierProbability > Math.fround(MAX_UNREASONABLE_BARRIERS))
-    return tooRareToDeal(
-      `puzzles with a barrier probability over ${MAX_UNREASONABLE_BARRIERS}`,
-      tier,
-    );
-  if (p.w * p.h > MAX_UNREASONABLE_AREA)
-    return `An ${tier} puzzle must have at most ${MAX_UNREASONABLE_AREA} squares; a larger one takes too long to deal.`;
-  if (p.wrapping) {
-    const most =
-      short === 4
-        ? MAX_UNREASONABLE_WRAPPING_SIDE_FOUR_WIDE
-        : MAX_UNREASONABLE_WRAPPING_SIDE;
-    if (long > most)
-      return `An ${tier} wrapping puzzle ${short === 4 ? "four squares wide " : ""}must be at most ${most} squares long; a longer one takes too long to deal.`;
-  }
   return null;
 }
 

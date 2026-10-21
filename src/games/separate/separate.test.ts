@@ -83,31 +83,18 @@ describe("separate params", () => {
     expect(valid(easy(6, 6, 4))).toBeNull();
   });
 
-  it("refuses to deal a board with too many letters for its size", () => {
+  it("deals many letters on a large grid, however seldom it finds one", () => {
     const deal = (p: SeparateParams) => paramsError(separateGame, p, true);
-    const tooRare = (w: number, h: number, k: number) =>
-      `A ${w}x${h} puzzle with ${k} letters is too rare to deal; use fewer letters or a smaller grid.`;
-    // Squares times letters squared, from eight letters: 10,000 and past it.
-    expect(deal(easy(10, 10, 10))).toBeNull();
-    expect(deal(easy(10, 11, 10))).toBe(tooRare(10, 11, 10));
-    expect(deal(easy(12, 12, 8))).toBeNull();
-    expect(deal(easy(12, 14, 8))).toBe(tooRare(12, 14, 8));
-    // Up to seven letters a large board is a wait, and is dealt.
-    expect(deal(easy(40, 40, 2))).toBeNull();
-    expect(deal(easy(21, 21, 7))).toBeNull();
-    // Thirteen letters and no more, but for a strip.
-    expect(deal(easy(4, 13, 13))).toBeNull();
-    expect(deal(easy(4, 7, 14))).toBe(tooRare(4, 7, 14));
-    expect(deal(easy(1, 52, 26))).toBeNull();
-    // Two wide in thirteens.
-    expect(deal(easy(2, 12, 12))).toBeNull();
-    expect(deal(easy(2, 13, 13))).toBe(tooRare(2, 13, 13));
-    expect(deal(easy(3, 13, 13))).toBeNull();
-    // Three wide in two regions.
-    expect(deal(easy(3, 4, 6))).toBeNull();
-    expect(deal(easy(3, 6, 9))).toBe(tooRare(3, 6, 9));
-    expect(deal(easy(6, 3, 9))).toBe(tooRare(6, 3, 9));
-    expect(deal(easy(3, 9, 9))).toBeNull();
+    for (const p of [
+      easy(10, 11, 10),
+      easy(12, 14, 8),
+      easy(4, 7, 14),
+      easy(2, 13, 13),
+      easy(3, 6, 9),
+      easy(4, 13, 26),
+    ])
+      expect(deal(p)).toBeNull();
+    expect(deal(easy(2, 27, 27))).toBe("Number of letters must be at most 26.");
   });
 
   it("opens a board of a size it would not deal", () => {

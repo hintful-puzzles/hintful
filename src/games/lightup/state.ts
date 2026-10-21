@@ -19,7 +19,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, endParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -179,19 +179,11 @@ function absentTier(p: LightupParams): string | null {
   if (squares < 9) return noSuchTier("puzzle of fewer than 9 squares", tier);
   if (is3x3 && p.symm !== SYMM_NONE)
     return noSuchTier("3x3 puzzle with symmetry", tier);
-  if (p.w === 4 && p.h === 4) {
-    // Mirrored: none in 170,000 boards built. Turned: 8 in 170,000, and none
-    // at all starting from 50% black. Dealt 2026-10-06 with the round bound
-    // lifted, 90 seconds a starting percentage: a deal finds its board in its
-    // first twenty rounds or goes on finding none, so from 5% black two deals
-    // found one and the third ran 89 seconds without, from 20% one did, and
-    // from 50% none. That is a minute a board and more, which is too long to
-    // wait once, and nothing to size a bound to.
-    if (p.symm === SYMM_REF4)
-      return noSuchTier("4x4 puzzle with 4-way mirror symmetry", tier);
-    if (p.symm === SYMM_ROT4)
-      return tooRareToDeal("4x4 puzzles with 4-way rotational symmetry", tier);
-  }
+  // Mirrored: none in 170,000 boards built. Turned, 8 in 170,000, and dealt:
+  // measured 2026-10-21 under the deal's deadline, twelve deals each from 5%,
+  // 10%, 20% and 30% black, three to five gave up and the rest took 30 to 50 s.
+  if (p.w === 4 && p.h === 4 && p.symm === SYMM_REF4)
+    return noSuchTier("4x4 puzzle with 4-way mirror symmetry", tier);
   return null;
 }
 

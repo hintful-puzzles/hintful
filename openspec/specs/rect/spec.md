@@ -83,40 +83,6 @@ SHALL never write the `a`.
 - **AND** `10x10e0.5adu` decodes as an Unreasonable 10×10 board with an
   expansion factor of 0.5
 
-### Requirement: Params: Rectangles refuses Unreasonable where no board needs it
-
-`validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
-board one square wide, one two wide and up to eight long, a 3×3 one and a 3×4
-one. The hint finishes every board of those shapes that has one answer. It
-SHALL refuse an Unreasonable board two wide and nine to eleven long with the
-sentence for a tier too rare to deal: such boards exist, and the generator
-draws none.
-
-#### Scenario: The small boards are not dealt at Unreasonable
-
-- **WHEN** a 1×30, a 2×8, a 3×3 and a 4×3 board are asked for at Unreasonable
-- **THEN** each is refused with the sentence that no puzzle of that kind is
-  Unreasonable
-- **AND** a 2×8 board is still dealt at Easy, and a 2×12, a 3×5 and a 4×4
-  board are admitted at Unreasonable
-
-#### Scenario: Every board of a refused shape is tried
-
-- **WHEN** every division into rectangles of a 1×2, 1×5 and 1×8 board, of a
-  2×2 to a 2×8 board, and of a 3×3 and a 3×4 board, with each rectangle's
-  number on each of its squares, is given to the solver, and those it leaves
-  unfinished that have one answer are given to the hint's steps
-- **THEN** the steps finish every one
-- **AND** the same walk over a 3×5 board finds 48 they do not
-
-#### Scenario: The short two-wide boards are too rare to deal
-
-- **WHEN** a 2×9 and an 11×2 board are asked for at Unreasonable
-- **THEN** each is refused with the sentence that Unreasonable puzzles of that
-  size are too rare to deal
-- **AND** a 2×11 board is still asked for at Easy
-- **AND** a 2×9 board that arrives with its description is not refused
-
 ### Requirement: Params: Rectangles' menu offers its two largest sizes at Easy alone
 
 Rectangles' menu SHALL be the grid `presets` builds from its sizes
@@ -156,6 +122,36 @@ board is to be dealt or one arrives with its description.
 - **THEN** the params are refused with "Width times height must not be
   unreasonably large."
 - **AND** with a height of 142857 they are not
+
+### Requirement: Params: Rectangles refuses Unreasonable only where no board needs it
+
+`validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
+board one square wide, one two wide and up to eight long, a 3×3 one and a 3×4
+one. The hint finishes every board of those shapes that has one answer. A
+board two wide and nine long or more SHALL be dealt, though the generator
+seldom draws one ("A rare tier is dealt under the deadline").
+
+#### Scenario: The small boards are not dealt at Unreasonable
+
+- **WHEN** a 1×30, a 2×8, a 3×3 and a 4×3 board are asked for at Unreasonable
+- **THEN** each is refused with the sentence that no puzzle of that kind is
+  Unreasonable
+- **AND** a 2×8 board is still dealt at Easy, and a 2×12, a 3×5 and a 4×4
+  board are admitted at Unreasonable
+
+#### Scenario: Every board of a refused shape is tried
+
+- **WHEN** every division into rectangles of a 1×2, 1×5 and 1×8 board, of a
+  2×2 to a 2×8 board, and of a 3×3 and a 3×4 board, with each rectangle's
+  number on each of its squares, is given to the solver, and those it leaves
+  unfinished that have one answer are given to the hint's steps
+- **THEN** the steps finish every one
+- **AND** the same walk over a 3×5 board finds 48 they do not
+
+#### Scenario: The short two-wide boards are dealt
+
+- **WHEN** a 2×9 and an 11×2 board are asked for at Unreasonable
+- **THEN** neither is refused
 
 ### Requirement: Description: Rectangles descriptions use the upstream encoding
 

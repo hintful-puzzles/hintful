@@ -547,9 +547,10 @@ grading: [`solver-and-generator.md`](./solver-and-generator.md).
 - **`noSuchTier(what, tier)`** is the sentence `validateParams` returns for
   a size none of whose boards needs the tier
   ([`solver-and-generator.md`](./solver-and-generator.md) § "A size that
-  cannot carry a tier"). **`tooRareToDeal(what, tier)`** is the sentence for
-  a tier whose first board is a longer wait than a player would sit
-  through; a tier that only takes seconds is dealt, with nothing written.
+  cannot carry a tier"). A tier that is only rare or slow is dealt, with
+  nothing written: the deal's deadline answers it
+  ([`solver-and-generator.md`](./solver-and-generator.md) § "A Custom size is
+  not refused for its wait").
 - A game never calls `dealGaveUp`, nor `generate` and `dealBoard` in
   [`deal.ts`](../src/engine/deal.ts): they are the midend's and the deal
   worker's.

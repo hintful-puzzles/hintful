@@ -96,7 +96,11 @@ estimate of the wait if that is straightforward.
 that does not exist, shown by a count or a proof (`noSuchTier`), or a
 structural limit (memory, an encoding, a level the hint cannot open). A size
 that is merely rare or slow is dealt, and the deadline answers it the same
-way in every game. Nothing in the catalog is drawn from a deal's time.
+way in every game. Nothing in the catalog is drawn from a deal's time. A
+`noSuchTier` that rests on a count of tries stays: it is no timing, since a
+faster machine finds no board a count missed, and `describeAbsentTiers`
+goes red if a solver change makes such a board findable, which is when it is
+measured again.
 
 **What that needs of the engine.** The deadline is checked between a
 generator's tries, so a single long search outlives it: Mosaic at 100×100,

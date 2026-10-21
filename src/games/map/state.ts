@@ -13,7 +13,7 @@
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, endParams, paramsLetter } from "../../engine/params.ts";
@@ -121,10 +121,14 @@ export function validateParams(p: MapParams, full: boolean): string | null {
 }
 
 /**
- * The maps with no board at the tier asked for, and those where one is found
- * too seldom to wait for. Measured 2026-10-05 by running the generator out
- * over several sizes: the count beside each absence is maps built with none
- * found, and beside each rarity how many it took to find one.
+ * The maps with no board at the tier asked for. Measured 2026-10-05 by
+ * running the generator out over several sizes: the count beside each is
+ * maps built with none found.
+ *
+ * A map where a board is merely seldom found is dealt, and the deal's
+ * deadline answers it. Measured 2026-10-21 under that deadline: a 4x5 of 9
+ * regions at Tricky took 29 s, all twelve found; a 3x10 of 11 at Tricky 73 s,
+ * four of twelve gave up; a 4x4 of 9 at Tricky gave up on all three.
  */
 function tierRefusal(p: MapParams): string | null {
   const tier = DIFF_NAMES[p.diff];
@@ -136,32 +140,7 @@ function tierRefusal(p: MapParams): string | null {
   if (p.n === p.w * p.h) return noSuchTier("map whose every square is a region", tier);
   // 4,000,000.
   if (p.n === 8 && p.diff > DIFF_NORMAL) return noSuchTier("map of 8 regions", tier);
-  const narrowest = Math.min(p.w, p.h);
-  // Measured 2026-10-06 at 3x4, 4x4, 4x5 and 4x8: none in 1,000,000 to
-  // 3,600,000 at most cells, and at the rest a board in five to thirty
-  // seconds. From five wide they are dealt (`fewRegionsTierIsSeldom`).
-  if (fewRegionsTierIsSeldom(p) && narrowest < 5)
-    return tooRareToDeal(`maps of ${p.n} regions less than 5 squares wide`, tier);
-  // Measured 2026-10-06 over a minute a cell: a 3x10 of 20 regions and a 3x30
-  // of 30 gave a board in ten to fifteen seconds, a 3x10 of 11 gave one in
-  // 1,550,000 maps, and a 3x5 of 11 and a 3x30 of 75 gave none. No bound is
-  // sized to that. Unreasonable is found within 45,000.
-  if (p.diff === DIFF_HARD && narrowest === 3)
-    return tooRareToDeal("maps three squares wide", tier);
   return null;
-}
-
-/**
- * Whether the map has few enough regions that its tier is found seldom: 8 at
- * Normal, and 9 or 10 above it. Measured 2026-10-06 from 5x5 to 30x25 with
- * the generator's bound lifted, 2 to 51 boards a cell: a board takes one to
- * three seconds at 5x6 and 6x6, up to fifteen at 5x5, and ten to eighteen at
- * 15x20. The worst was a 30x25 of 9 regions at Tricky, at 45 seconds over two
- * boards. They are dealt because the app keeps the next board ready
- * (`src/puzzle/deal-ahead.ts`).
- */
-function fewRegionsTierIsSeldom(p: MapParams): boolean {
-  return p.n === 8 ? p.diff === DIFF_NORMAL : p.n <= 10 && p.diff >= DIFF_HARD;
 }
 
 // --- moves -----------------------------------------------------------

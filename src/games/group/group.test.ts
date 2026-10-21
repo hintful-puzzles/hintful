@@ -146,7 +146,6 @@ describe("a size with no board at a tier", () => {
     return cells;
   };
   const absent = refusedWith(/^No /);
-  const rare = refusedWith(/too rare/);
   const labels = (cells: GroupParams[]) => cells.map((p) => encodeParams(p, true));
 
   it("is refused, naming the size and the tier", () => {
@@ -162,19 +161,13 @@ describe("a size with no board at a tier", () => {
     );
   });
 
-  it("is refused where its boards are too rare to deal", () => {
-    expect(refusal(P(6, DIFF_EXTREME, true))).toBe(
-      "Hard 6x6 puzzles that show their identity are too rare to deal.",
-    );
-    expect(labels(rare)).toEqual(["6dx"]);
+  it("is not refused where its boards are rare", () => {
+    expect(refusal(P(6, DIFF_EXTREME, true))).toBeNull();
   });
 
-  it("still loads a rare board that arrives with its desc", () => {
-    for (const p of rare) expect(paramsError(groupGame, p, false)).toBeNull();
-  });
-
-  // The rare cell is not held to the run-out: none was found in 290,000
-  // tries, and that says only that its boards are rarer than the count saw.
+  // A rare cell is not held to the run-out: a 6x6 at Hard with its identity
+  // shown gave none in 290,000 tries, and that says only that its boards are
+  // rarer than the count saw.
   describeAbsentTiers(groupGame, labels(absent));
 });
 

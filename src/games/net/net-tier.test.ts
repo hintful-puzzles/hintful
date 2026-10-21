@@ -603,17 +603,15 @@ describe("the tier in Net's params", () => {
     expect(netGame.decodeParams("7x9wadu")).toEqual({ ...p, barrierProbability: 0 });
   });
 
-  it("is refused where no board has it, or too few to deal", () => {
-    const rare = (what: string) => `Unreasonable ${what} are too rare to deal.`;
+  it("is refused where no board has it, and not where one is rare", () => {
     expect(refusal("5x6du")).toBeNull();
     expect(refusal("7x7du")).toBeNull();
-    expect(refusal("5x5du")).toBe(rare("5x5 puzzles without wrapping"));
+    expect(refusal("5x5du")).toBeNull();
     expect(refusal("5x5de")).toBeNull();
     expect(refusal("5x5wdu")).toBeNull();
-    const narrow = rare("puzzles without wrapping under 5 squares wide");
-    expect(refusal("4x30du")).toBe(narrow);
-    expect(refusal("3x5du")).toBe(narrow);
-    expect(refusal("2x7du")).toBe(narrow);
+    expect(refusal("4x30du")).toBeNull();
+    expect(refusal("3x5du")).toBeNull();
+    expect(refusal("2x7du")).toBeNull();
     expect(refusal("4x4wdu")).toBeNull();
     expect(refusal("3x3wdu")).toBeNull();
     expect(refusal("2x6de")).toBeNull();
@@ -624,29 +622,15 @@ describe("the tier in Net's params", () => {
     expect(refusal("9x1wdu")).toBe("No 9x1 puzzle is Unreasonable.");
   });
 
-  it("bounds an Unreasonable board by its area, and a wrapping one by its length", () => {
-    const area = /at most 900 squares/;
-    expect(refusal("30x30du")).toBeNull();
-    expect(refusal("7x128du")).toBeNull();
-    expect(refusal("6x40du")).toBeNull();
-    expect(refusal("6x41du")).toMatch(
-      /without wrapping under 7 squares wide must be at most 40 squares long/,
-    );
-    expect(refusal("6x41de")).toBeNull();
-    expect(refusal("31x30du")).toMatch(area);
-    expect(refusal("31x30de")).toBeNull();
-    expect(refusal("10x80wdu")).toBeNull();
-    expect(refusal("10x81wdu")).toMatch(
-      /wrapping puzzle must be at most 80 squares long/,
-    );
-    expect(refusal("10x81du")).toBeNull();
-    expect(refusal("4x30wdu")).toBeNull();
-    expect(refusal("31x4wdu")).toMatch(
-      /wrapping puzzle four squares wide must be at most 30 squares long/,
-    );
-    expect(refusal("5x31wdu")).toBeNull();
-    // A board that arrives with its description is not held to it.
-    expect(paramsError(netGame, sized(40, 40, DIFF_UNREASONABLE), false)).toBeNull();
+  it.each([
+    "6x41du",
+    "31x30du",
+    "100x100du",
+    "10x81wdu",
+    "31x4wdu",
+    "7x7b0.21du",
+  ])("deals an Unreasonable %s, however long it takes", (id) => {
+    expect(refusal(id)).toBeNull();
   });
 
   it("is on the menu from 7x7 up, and every board on the menu is dealt", () => {
@@ -666,13 +650,5 @@ describe("the tier in Net's params", () => {
       "7x7wde",
     ]);
     for (const id of menu) expect(refusal(id), id).toBeNull();
-  });
-
-  it("bounds an Unreasonable board's walls", () => {
-    expect(refusal("7x7b0.2du")).toBeNull();
-    expect(refusal("7x7b0.21du")).toBe(
-      "Unreasonable puzzles with a barrier probability over 0.2 are too rare to deal.",
-    );
-    expect(refusal("5x5b1de")).toBeNull();
   });
 });

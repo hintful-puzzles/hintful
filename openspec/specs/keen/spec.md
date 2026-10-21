@@ -94,28 +94,6 @@ board of the tier, because no 3×3 board needs more than Normal.
 - **THEN** it returns "No 3x3 puzzle is Tricky."
 - **AND** called with `full = false` on the same params it returns null
 
-### Requirement: Params: A multiplication-only 9×9 Keen is not dealt above Tricky
-
-When a board is to be generated, `validateParams` SHALL refuse a 9×9
-multiplication-only puzzle at Hard or Unreasonable, in the collection's
-sentence for boards too rare to deal, because such a board exists and takes
-too long to find. Every other size SHALL be dealt with multiplication only at
-every tier its size has, and a 9×9 with every operation SHALL be dealt at
-every tier.
-
-#### Scenario: A multiplication-only 9×9 Hard is asked for
-
-- **WHEN** `9dxm` is decoded and `validateParams` is called with `full = true`
-- **THEN** it returns "Hard 9x9 puzzles with multiplication only are too rare
-  to deal."
-- **AND** called with `full = false` it returns null
-
-#### Scenario: The tier below, and the size below
-
-- **WHEN** `9dhm`, a multiplication-only 9×9 Tricky, or `8dxm`, a
-  multiplication-only 8×8 Hard, is validated with `full = true`
-- **THEN** it is not refused
-
 ### Requirement: Description: Keen descriptions encode the block structure and cage clues
 
 The desc SHALL consist of the block structure followed by a comma and the clue

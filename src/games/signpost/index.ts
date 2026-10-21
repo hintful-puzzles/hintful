@@ -121,25 +121,11 @@ function validateParams(p: SignpostParams, full: boolean): string | null {
     const ends = area === 9 ? " puzzle with its ends in the corners" : " puzzle";
     return noSuchTier(`${p.w}x${p.h}${ends}`, tier);
   }
-  if (area > MAX_UNREASONABLE_AREA || Math.max(p.w, p.h) > MAX_UNREASONABLE_SIDE)
-    return `An ${tier} puzzle must have at most ${MAX_UNREASONABLE_AREA} squares and be at most ${MAX_UNREASONABLE_SIDE} long; a larger one takes too long to deal.`;
+  // A larger board is dealt however long it takes: measured 2026-10-21,
+  // twelve deals a size, a 30×30 took 114 s and gave up on five, and a 2×200
+  // took 23 s.
   return null;
 }
-
-/**
- * The largest Unreasonable board dealt, in squares and along its longer side.
- * An Unreasonable board is an Easy one stripped further by the search, which
- * takes four to five times as long as the Easy board did, and a long thin
- * board takes longer than a square one of its area, since a square's arrow
- * has more squares to lead to.
- *
- * Measured 2026-10-10, mean time for a board inside the bound | past it:
- * 12×12 0.26 s, 15×15 0.9 s, 9×25 1.2 s, 7×30 1.2 s | 16×16 1.3 s, 5×45
- * 2.1 s, 3×75 2.6 s, 1×225 6.3 s, 20×20 4.9 s. The side is one number where
- * the time is a curve: a 1×100 strip deals in 0.5 s and is refused too.
- */
-const MAX_UNREASONABLE_AREA = 225;
-const MAX_UNREASONABLE_SIDE = 30;
 
 const paramConfig: ParamConfigItem<SignpostParams>[] = [
   ...dimensionParamConfig<SignpostParams>({

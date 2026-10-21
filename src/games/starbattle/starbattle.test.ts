@@ -14,6 +14,7 @@
 import { describe, expect, it } from "vitest";
 import { Dsf } from "../../engine/dsf.ts";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { starbattleGame } from "./index.ts";
@@ -74,6 +75,13 @@ describe("starbattle params", () => {
     );
     expect(validateParams({ size: 8, stars: 2, diff: DIFF_EASY }, true)).toBeNull();
     expect(validateParams(P, true)).toBeNull();
+  });
+
+  it("take a grid as large as the text form has letters for its regions", () => {
+    const refusal = (size: number) =>
+      paramsError(starbattleGame, { size, stars: 1, diff: DIFF_EASY }, true);
+    expect(refusal(26)).toBeNull();
+    expect(refusal(27)).toMatch(/\.$/);
   });
 });
 

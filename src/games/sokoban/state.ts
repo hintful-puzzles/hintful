@@ -105,13 +105,13 @@ const MAX_DEAL_AREA = 1200;
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SokobanParams>[] =
   dimensionParamConfig<SokobanParams>({
-    doc: `Size of the grid in squares. A new level has ${MAX_DEAL_AREA} squares at most, since a larger one the hint can follow takes too long to find.`,
+    doc: `Size of the grid in squares. A new level has ${MAX_DEAL_AREA} squares at most, since the hint seldom finishes a larger one.`,
     bounds: { min: 4 },
   });
 
 export function validateParams(p: SokobanParams, full: boolean): string | null {
   return full && p.w * p.h > MAX_DEAL_AREA
-    ? `Width times height must be at most ${MAX_DEAL_AREA} to deal a level; a larger one takes too long to find.`
+    ? `Width times height must be at most ${MAX_DEAL_AREA} to deal a level; the hint seldom finishes a larger one.`
     : null;
 }
 

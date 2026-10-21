@@ -25,7 +25,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -108,15 +108,10 @@ export function validateParams(p: KeenParams, full: boolean): string | null {
   // Normal, with every operation and with multiplication alone.
   if (full && p.w === 3 && level > DIFF_NORMAL)
     return noSuchTier("3x3 puzzle", DIFF_NAMES[level]);
-  // Measured 2026-10-06 with multiplication alone: a 9x9 above Tricky is
-  // found once in 67,000 to 84,000 tries, which was 50 seconds a board over
-  // two boards a tier. Every other size is under half a minute and is dealt.
-  const rare = level > DIFF_HARD && p.w === 9;
-  if (full && p.multiplicationOnly && rare)
-    return tooRareToDeal(
-      `${p.w}x${p.w} puzzles with multiplication only`,
-      DIFF_NAMES[level],
-    );
+  // A 9x9 with multiplication alone is the slowest above Tricky, and is
+  // dealt: measured 2026-10-20 under the deal's deadline, twelve deals a
+  // tier, Hard took 17 s on average and none gave up, Unreasonable 36 s and
+  // two of twelve gave up.
   return null;
 }
 

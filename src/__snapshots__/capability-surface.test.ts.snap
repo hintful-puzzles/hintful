@@ -1521,7 +1521,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
-      "validateParams",
     ],
     "ui": [
       "candidateReading",

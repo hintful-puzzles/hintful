@@ -786,7 +786,7 @@ export const netGame: Game<
     title: "Net",
     ...presetGrid(netGame.paramConfig ?? [], BOARDS, {
       // The hint finishes nearly every 5x5 board the solver stops on, so an
-      // Unreasonable one is too rare to deal (`unreasonableRefusal`).
+      // Unreasonable one takes seconds to find, too long for the menu.
       tiers: (b) => (b.w === 5 && b.h === 5 ? [DIFF_EASY, DIFF_EASY] : null),
       variants: VARIANTS,
     }),

@@ -7,6 +7,7 @@ import type { Scheme } from "../engine/color/color-word.ts";
 import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
 import type { MarkRole } from "../engine/hint-words.ts";
+import { DEAL_DEADLINE_MS } from "../engine/retry-limit.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -103,6 +104,12 @@ export const DEAL_PENDING_MS = SLOW_DEAL_MS;
 
 /** The chrome's wording for a pending deal (`Puzzle.dealMessage`). */
 const DEAL_PENDING_MESSAGE = "Looking for a board…";
+
+/** `ms` as minutes and seconds, `2:05`. */
+function clock(ms: number): string {
+  const s = Math.round(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
 
 /** What Undo says when it was the board it brought back, not a move. */
 export const BOARD_BROUGHT_BACK =
@@ -671,6 +678,10 @@ export class Puzzle {
    * the one the chrome is speaking of. */
   private dealsAsked = 0;
   private dealStoppable = false;
+  /** How long the pending deal has run, in whole seconds. */
+  private _dealWaited = signal(0);
+  /** How long the last board of the type waited for took, this visit. */
+  private dealLastMs: number | null = null;
 
   public get dealPending(): boolean {
     return this._dealPending.get();
@@ -681,6 +692,20 @@ export class Puzzle {
    * this module and the store behind it. */
   public get dealMessage(): string {
     return this._dealPending.get() ? DEAL_PENDING_MESSAGE : "";
+  }
+
+  /**
+   * The pending deal's wait so far, with what is known of how long it will
+   * be, and empty when there is none. Nothing is known of a type before its
+   * first board here, which is the wait that matters, so the estimate is the
+   * last board's time where there is one and the deadline where not.
+   */
+  public get dealWait(): string {
+    if (!this._dealPending.get()) return "";
+    const waited = clock(this._dealWaited.get() * 1000);
+    return this.dealLastMs === null
+      ? `${waited} so far, ${clock(DEAL_DEADLINE_MS)} at most`
+      : `${waited} so far; the last took ${clock(this.dealLastMs)}`;
   }
 
   /** Whether the pending deal has a way out (`stopDeal`). */
@@ -704,14 +729,22 @@ export class Puzzle {
     const turn = ++this.dealsAsked;
     this.dealStoppable = canStop && this.dealAhead !== null;
     const pendingTimer = setTimeout(() => this._dealPending.set(true), DEAL_PENDING_MS);
+    this._dealWaited.set(0);
+    const tick = (): ReturnType<typeof setTimeout> =>
+      setTimeout(() => {
+        if (turn === this.dealsAsked) this._dealWaited.set(this._dealWaited.get() + 1);
+        clockTimer = tick();
+      }, 1000);
+    let clockTimer = tick();
     try {
       const area = this.boardArea ?? undefined;
       for (;;) {
         let found: DealtBoard | null = null;
         if (this.dealAhead) {
-          const waited = await this.dealAhead.next(
-            await this.workerPuzzle.dealParams(area),
-          );
+          const params = await this.workerPuzzle.dealParams(area);
+          if (turn === this.dealsAsked)
+            this.dealLastMs = this.dealAhead.lastDealMs(params);
+          const waited = await this.dealAhead.next(params);
           if (waited === "stopped") return "stopped";
           if (waited === null)
             return { refusal: await this.workerPuzzle.dealFoundNone(area) };
@@ -729,6 +762,7 @@ export class Puzzle {
       }
     } finally {
       clearTimeout(pendingTimer);
+      clearTimeout(clockTimer);
       this._generatingGame.set(false);
       // A New game asked for since has its own wait to speak of.
       if (turn === this.dealsAsked) this._dealPending.set(false);

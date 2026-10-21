@@ -9,7 +9,12 @@
 import type { Game } from "./game.ts";
 import { paramsError } from "./params.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
-import { RetryLimitExceeded, retryLimit, underDealDeadline } from "./retry-limit.ts";
+import {
+  DEAL_DEADLINE_MS,
+  RetryLimitExceeded,
+  retryLimit,
+  underDealDeadline,
+} from "./retry-limit.ts";
 import type { DealtBoard, EncodedParams } from "./types.ts";
 
 /** A random 128-bit seed string for a fresh game (upstream seeds from system
@@ -27,14 +32,6 @@ export function freshSeed(): string {
  * Netslide at 3x3 with one move one in 25, and no other game any.
  */
 const MAX_DEALT_SOLVED = 20;
-
-/**
- * How long a deal looks for a board before it answers that it found none, in
- * every game and at every size. `openspec/specs/engine-difficulty/spec.md`,
- * "A deal is bounded by one deadline, the same in every game", says what the
- * length is weighed against.
- */
-const DEAL_DEADLINE_MS = 120_000;
 
 /**
  * What `game.newDesc` deals at `params`, or `null` where it found no board

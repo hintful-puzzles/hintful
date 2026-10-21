@@ -45,7 +45,7 @@ import { difficultyTiers, withTier } from "./difficulty.ts";
 import type { HintStep } from "./game.ts";
 import { NARRATION_LIMIT } from "./hint-words.ts";
 import { paramsError } from "./params.ts";
-import { dealt } from "./testing/dealt.ts";
+import { dealsPromptly, dealt } from "./testing/dealt.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
 import { CHAIN_PINS, declaredOrder } from "./testing/hint-chain-pins.ts";
 import {
@@ -1040,7 +1040,9 @@ describe("hint narration stays readable at a glance", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: every step within ${NARRATION_LIMIT} characters, or ledgered`, () => {
       for (const { label, params, seeds } of lintCases(name, game)) {
-        if (paramsError(game, params, true)) continue;
+        // A tier written onto the first preset can be accepted and still have
+        // boards too rare to wait on (Group's 6x6 at Hard, identity shown).
+        if (paramsError(game, params, true) || !dealsPromptly(game, params)) continue;
         for (const seed of seeds) {
           let board: { desc: string; aux?: string };
           try {

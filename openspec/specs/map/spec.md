@@ -111,28 +111,6 @@ none. None of these SHALL be refused at Easy, or when a game ID is loaded.
 - **WHEN** `4x4n8dh`, a 4x4 map of 8 regions at Tricky, is validated for a deal
 - **THEN** it is refused with "No map of 8 regions is Tricky."
 
-### Requirement: Params: Map refuses a tier too rare to deal on a narrow map
-
-When a board is to be dealt, `validateParams` SHALL refuse as too rare to
-deal, after the absences: a map less than 5 squares on its narrower side of 8
-regions at Normal, or of 9 or 10 regions at Tricky or Unreasonable; and a map
-three squares on its narrower side at Tricky. From five squares wide the
-few-region maps SHALL be dealt, and a map three squares wide SHALL be dealt at
-Unreasonable.
-
-#### Scenario: Eight regions on a 4x5 map
-
-- **WHEN** `4x5n8dn` is validated for a deal
-- **THEN** it is refused with "Normal maps of 8 regions less than 5 squares
-  wide are too rare to deal."
-- **AND** `5x5n8dn`, the same count on a map five squares wide, is accepted
-
-#### Scenario: Three squares wide refuses Tricky and not Unreasonable
-
-- **WHEN** `3x20n30dh` and `3x20n30du` are validated for a deal
-- **THEN** the first is refused with "Tricky maps three squares wide are too
-  rare to deal." and the second is accepted
-
 ### Requirement: Description: Map descriptions use the upstream two-part encoding
 
 The desc SHALL encode the region boundaries and the clue colors as two

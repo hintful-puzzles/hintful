@@ -294,22 +294,16 @@ describe("salad with two symbols at Normal", () => {
   const refusal = (id: string): string | null =>
     paramsError(saladGame, decodeParams(id), true);
 
-  it("says absent where no board was found, and rare where one was", () => {
+  it("says absent where no board was found", () => {
     expect(refusal("5n2Ldx")).toBe("No 5x5 Letters puzzle with 2 symbols is Normal.");
     expect(refusal("4n2Bdx")).toBe("No 4x4 Numbers puzzle with 2 symbols is Normal.");
-    expect(refusal("5n2Bdx")).toBe(
-      "Normal 5x5 Numbers puzzles with 2 symbols are too rare to deal.",
-    );
-    expect(refusal("8n2Bdx")).toBe(
-      "Normal 8x8 Numbers puzzles with 2 symbols are too rare to deal.",
-    );
-    expect(refusal("10n2Bdx")).toBe(
-      "Normal 10x10 Numbers puzzles with 2 symbols are too rare to deal.",
-    );
   });
 
   it.each([
     "8n2Ldx",
+    "5n2Bdx",
+    "8n2Bdx",
+    "10n2Bdx",
     "6n2Bdx",
     "7n2Bdx",
     "8n3Bdx",
@@ -319,11 +313,6 @@ describe("salad with two symbols at Normal", () => {
     "5n2Bde",
   ])("%s is dealt", (id) => {
     expect(refusal(id)).toBeNull();
-  });
-
-  it("still loads a rare board that arrives with its desc", () => {
-    for (const id of ["5n2Bdx", "8n2Bdx"])
-      expect(paramsError(saladGame, decodeParams(id), false)).toBeNull();
   });
 
   // A third of a minute a board on average.

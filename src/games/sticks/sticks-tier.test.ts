@@ -449,18 +449,11 @@ describe("the tier in Sticks' params", () => {
     expect(refusal("2x2b20s0du")).toBe("No 2x2 puzzle is Unreasonable.");
   });
 
-  it("bounds an Unreasonable board by its area and its longer side", () => {
-    expect(refusal("10x10b20s2du")).toBeNull();
-    expect(refusal("4x25b20s2du")).toBeNull();
-    expect(refusal("2x30b20s2du")).toBeNull();
-    expect(refusal("11x11b20s2du")).toMatch(
-      /at most 100 squares and be at most 30 long/,
-    );
-    expect(refusal("2x40b20s2du")).toMatch(
-      /at most 100 squares and be at most 30 long/,
-    );
-    expect(refusal("11x11b20s2de")).toBeNull();
-    // A board that arrives with its description is not held to it.
-    expect(paramsError(sticksGame, sized(12, 12, DIFF_UNREASONABLE), false)).toBeNull();
+  it.each([
+    "11x11b20s2du",
+    "2x40b20s2du",
+    "20x20b20s2du",
+  ])("deals an Unreasonable %s, however long it takes", (id) => {
+    expect(refusal(id)).toBeNull();
   });
 });

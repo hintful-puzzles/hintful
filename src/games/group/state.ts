@@ -25,7 +25,7 @@ import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -162,12 +162,6 @@ export function validateParams(p: GroupParams, full: boolean): string | null {
       DIFF_NAMES[p.diff],
     );
   }
-  if (full && tierTooRare(p)) {
-    return tooRareToDeal(
-      `${p.w}x${p.w} puzzles that show their identity`,
-      DIFF_NAMES[p.diff],
-    );
-  }
   return null;
 }
 
@@ -181,6 +175,10 @@ export function validateParams(p: GroupParams, full: boolean): string | null {
  * Upstream had most of this table and dealt the tier below in silence. It was
  * wrong about three cells: a 4x4 and a 5x5 hiding the identity deal a Tricky
  * board at once, and a 5x5 has no Hard one, where its generator never ends.
+ *
+ * A 6x6 at Hard with its identity shown is not here: it gave none in 290,000
+ * tries (2026-10-05, 75 seconds), which says only that its boards are rarer
+ * than the count saw, so it is dealt and the deal's deadline answers it.
  */
 function sizeLacksTier({ w, diff, id }: GroupParams): boolean {
   if (diff === DIFF_UNREASONABLE) return w < 5;
@@ -188,15 +186,6 @@ function sizeLacksTier({ w, diff, id }: GroupParams): boolean {
   if (diff === DIFF_HARD) return w < 4 || (w < 6 && id);
   if (diff === DIFF_NORMAL) return w < 4 || (w === 4 && id);
   return false;
-}
-
-/**
- * Whether boards of this size at this tier are too few to find. A 6x6 at Hard,
- * its identity shown, gave none in 290,000 tries (2026-10-05, 75 seconds), so
- * nothing says one exists.
- */
-function tierTooRare({ w, diff, id }: GroupParams): boolean {
-  return id && w === 6 && diff === DIFF_EXTREME;
 }
 
 // --- move model --------------------------------------------------------------

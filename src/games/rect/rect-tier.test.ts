@@ -338,8 +338,7 @@ describe("an Unreasonable Rectangles board", () => {
     expect(needingSearch(3, 5).found).toBe(48);
   });
 
-  // 2x9 has the tier, on 32 of its boards, and the generator draws none.
-  describeAbsentTiers(rectGame, ["1x9du", "2x8du", "3x3du", "4x3du", "2x9du"]);
+  describeAbsentTiers(rectGame, ["1x9du", "2x8du", "3x3du", "4x3du"]);
 });
 
 describe("a pasted Rectangles board", () => {
@@ -443,13 +442,15 @@ describe("the tier in Rectangles' params", () => {
   const refusal = (id: string) =>
     paramsError(rectGame, rectGame.decodeParams(id), true);
 
-  it("is refused only where no board has it, or the generator draws none", () => {
+  it("is refused only where no board has it", () => {
     expect(refusal("7x7du")).toBeNull();
     expect(refusal("4x4du")).toBeNull();
     expect(refusal("3x5du")).toBeNull();
     expect(refusal("2x12du")).toBeNull();
-    expect(refusal("2x9du")).toBe("Unreasonable 2x9 puzzles are too rare to deal.");
-    expect(refusal("11x2du")).toBe("Unreasonable 11x2 puzzles are too rare to deal.");
+    // 2x9 has the tier, on 32 of its boards, though the generator seldom
+    // draws one.
+    expect(refusal("2x9du")).toBeNull();
+    expect(refusal("11x2du")).toBeNull();
     expect(refusal("2x11de")).toBeNull();
     expect(refusal("2x8de")).toBeNull();
     expect(refusal("2x8du")).toBe("No 2x8 puzzle is Unreasonable.");

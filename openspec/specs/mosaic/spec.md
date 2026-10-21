@@ -103,37 +103,6 @@ decode as Easy, and a string of one number SHALL decode as a square board.
 - **THEN** they are refused with a non-null error string
 - **AND** a 100×100 board is accepted
 
-### Requirement: Params: Mosaic rejects board shapes it cannot generate
-
-`validateParams` SHALL refuse, when a board is to be dealt at any difficulty,
-a board longer than the longest that is dealt at its shorter side, with a
-reason naming both. A board 20 or more across SHALL be dealt at any length
-within the tile limit.
-
-#### Scenario: A long thin board is refused with a reason
-
-- **WHEN** a 3×21, a 5×31, an 8×51, a 101×12 and a 19×201 board are validated
-  for generation
-- **THEN** each is refused with a message naming its shorter side and that
-  side's greatest length
-- **AND** a 3×20, a 5×30, a 9×50, a 10×100, a 15×200 and a 20×500 board are
-  admitted
-
-### Requirement: Params: Aggressive generation above Easy is bounded on its own measurements
-
-`validateParams` SHALL refuse, when a board is to be dealt, a Normal or an
-Unreasonable board of more than 900 squares with aggressive generation on,
-with a reason that names the difficulty and says to turn it off. The same size
-SHALL be dealt at Easy, and at either higher difficulty with aggressive
-generation off.
-
-#### Scenario: A size dealt at Easy is refused above it with aggressive generation
-
-- **WHEN** a 31×30 board is checked for dealing at Normal and at Unreasonable,
-  and a 50×50 board at Unreasonable
-- **THEN** each is refused with aggressive generation on
-- **AND** each is admitted at Easy, and at its own difficulty with it off
-
 ### Requirement: Params: Mosaic's menu leaves its two smallest boards and its largest at Easy
 
 The menu `presets` builds SHALL offer its two smallest boards and its largest

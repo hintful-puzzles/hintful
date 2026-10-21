@@ -26,7 +26,7 @@ import {
 } from "../../engine/candidate-hint.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier, tooRareToDeal } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
@@ -116,7 +116,7 @@ export function defaultParams(): AbcdParams {
 export const paramConfig: ParamConfigItem<AbcdParams>[] = [
   // A width or height under 2 could break the solver.
   ...dimensionParamConfig<AbcdParams>({
-    doc: "Size of the grid in squares (excluding the size of the numbers on the edge). How large a board can be depends on the number of letters, because each extra letter is another count every row and column has to satisfy: with three letters a board can reach about 130 squares, with four about 80, and from six letters up about 65. Long thin boards go much further, because a short row is almost settled by its own numbers, so anything up to about 160 squares is allowed when one side is under 6. Past those limits no puzzle with a single solution is likely to exist at all, so the game says so rather than searching for one.",
+    doc: "Size of the grid in squares (excluding the size of the numbers on the edge). A large board takes longer to find, the more so with more letters, because each extra letter is another count every row and column has to satisfy: with three letters a board of about 130 squares comes in seconds, with four about 80, and from six letters up about 65. Long thin boards go much further, because a short row is almost settled by its own numbers. Past those sizes the first board can take a minute or two to appear, or not be found at all.",
     bounds: { min: 2 },
   }),
   numberItem<AbcdParams>("letters", "Letters", "n", {
@@ -179,132 +179,30 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 /**
- * The largest board area that generates in a tolerable time, per letter count
- * and diagonal mode, for a board whose *shorter* side is at least 6.
- *
- * Generation fills the grid at random and keeps the fill only if the solver
- * finds its edge clues uniquely solvable, so the acceptance rate — not any
- * bound in the algorithm — decides whether a board exists to be found. It falls
- * off a cliff: 9x9 n4 accepts 1 attempt in 18,586 (~1.2 s), while 10x10 n4
- * accepted **none in 454,144** (~30 s of trying). Upstream's author hit the same
- * wall and left it as a `TODO`, never having produced a 10x10 n4 board.
- *
- * The numbers are measured, not derived (the 139-configuration sweep is in
- * `bound-abcd-generable-sizes`' design), and the two obvious closed forms are
- * both WRONG:
- *
- *   - **Area alone cannot express it.** 10x10 n4 never generates; 2x50 n4, the
- *     same area, generates in 195 ms. Which is why the bound below applies only
- *     when both sides are >= 6, with a single generous area cap for the rest.
- *   - **Clue density cannot either.** 5x40 n4 and 8x10 n4 have the *same*
- *     `n(w+h)/wh`, and one is 859 ms while the other never generates at all.
- *
- * More letters make a board harder (each one is another count to satisfy), and
- * `diag` makes it markedly EASIER despite being an extra restriction: a more
- * constrained board is more deducible, so the solver reaches a unique solution
- * more often. 9x9 n5 never generates; with `diag` it takes 34 ms.
- *
- * Keyed `n * 2 + (diag ? 1 : 0)`; `diag` requires n >= 5 above.
+ * Why no Unreasonable board of these params exists, or `null`. Every fill of
+ * every board of up to nine squares has been tried, at each number of letters
+ * and under both rules: where the ladder stops short, a second answer fits
+ * (`abcd-tier.test.ts` keeps three and four letters). Hidden clues are what
+ * give such a board one answer the ladder misses.
  */
-const MAX_GENERABLE_AREA = new Map<number, number>([
-  [3 * 2, 130], // 11x11 296 ms, 10x12 965 ms | 12x12 6.0 s, 9x20 never
-  [4 * 2, 82], //  9x9 1.2 s, 8x10 859 ms     | 6x14 2.9 s, 9x10 5.0 s, 10x10 never
-  [5 * 2, 74], //  8x9 2.0 s, 8x8 286 ms      | 7x11 5.0 s, 8x10 never, 9x9 30 s
-  [6 * 2, 68], //  8x8 500 ms                 | 6x12 5.0 s, 8x9 7.5 s, 9x9 never
-  [7 * 2, 68], //  8x8 667 ms                 | 8x9 never
-  [8 * 2, 68], //  8x8 581 ms                 | 8x9 7.5 s
-  [9 * 2, 68], //  8x8 489 ms                 | 8x9 15 s
-  [5 * 2 + 1, 110], // 10x10 735 ms           | 11x11 10 s
-  [6 * 2 + 1, 90], //  9x9 2.0 s              | 10x10 never
-  [7 * 2 + 1, 70], //  8x8 102 ms             | 9x9 5.0 s, 10x10 never
-  [8 * 2 + 1, 70], //  8x8 104 ms             | 9x9 15 s
-  [9 * 2 + 1, 70], //  8x8 77 ms              | 9x9 never
-]);
-
-/** Below this shorter side, a board is bounded by area alone. A short line is
- * nearly pinned by its own clues, so thin boards stay easy far past the area
- * where a squarer one dies: 2x50 n4 is 195 ms and 3x30 n4 is 199 ms, where
- * 10x10 n4 and 9x10 n4 are hopeless. 150 is the largest thin area measured
- * generable (5x30 n3, 2.5 s); 5x40 n4 at 200 never generates. */
-const THIN_SIDE = 6;
-const MAX_THIN_AREA = 160;
-
-/**
- * The largest area an Unreasonable board is dealt at in about a second, keyed
- * as {@link MAX_GENERABLE_AREA} is. Its own table, since what bounds it is
- * different: a fill that the ladder stops short on is common at every size,
- * and what grows is the cost of the search that tells its one answer from
- * several, and the share with several. So it is tighter than the Easy bound
- * for three and four letters and looser nowhere, and a thin board is no
- * exception to it: with many letters a thin board is the slower one.
- *
- * Measured 2026-10-10, mean time for a board with every clue showing, at the
- * bound | past it. With clues hidden a deal is quicker, 0.6 s at the most.
- */
-const MAX_UNREASONABLE_AREA = new Map<number, number>([
-  [3 * 2, 100], // 10x10 1.2 s, 3x33 0.9 s  | 10x11 1.5 s, 3x40 none in 12 s
-  [4 * 2, 64], //  8x8 1.0 s, 3x21 0.7 s    | 8x9 2.4 s, 4x20 4.0 s
-  [5 * 2, 56], //  7x8 0.5 s, 5x11 0.4 s    | 8x8 5.0 s
-  [6 * 2, 56], //  7x8 0.7 s, 4x14 0.7 s    | 8x8 3.8 s, 3x20 6.0 s
-  [7 * 2, 56], //  7x8 0.6 s, 2x28 0.8 s
-  [8 * 2, 56], //  7x8 1.0 s
-  [9 * 2, 56], //  7x8 0.7 s, 4x14 1.0 s    | 8x8 3.8 s
-  [5 * 2 + 1, 81], // 9x9 0.4 s             | 9x10 2.0 s, 10x10 4.0 s
-  [6 * 2 + 1, 72], // 8x9 1.5 s, 8x8 0.2 s  | 9x9 6.0 s
-  [7 * 2 + 1, 64], // 8x8 0.9 s             | 8x9 2.4 s
-  [8 * 2 + 1, 64], // 8x8 0.8 s             | 8x9 12 s
-  [9 * 2 + 1, 64], // 8x8 0.7 s             | 8x9 12 s
-]);
-
-/** A thin board under the rule against diagonal touching was timed as far as
- * this area, where the slowest took 0.2 s (4x14, seven letters). */
-const MAX_THIN_DIAGONAL_AREA = 56;
-
-/** Why no Unreasonable board of these params is dealt, or `null`. */
-function unreasonableRefusal(p: AbcdParams, area: number): string | null {
+function unreasonableRefusal(p: AbcdParams): string | null {
+  if (p.removenums || p.w * p.h > 9) return null;
   const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
-  const short = Math.min(p.w, p.h);
-  if (!p.removenums) {
-    // Every fill of every board of up to nine squares has been tried, at each
-    // number of letters and under both rules: where the ladder stops short, a
-    // second answer fits (`abcd-tier.test.ts` keeps three and four letters).
-    // Hidden clues are what give such a board one answer the ladder misses.
-    if (area <= 9)
-      return noSuchTier(`${p.w}x${p.h} puzzle with every clue showing`, tier);
-    // None came of 240,000 fills at eight lengths from 15 to 28.
-    if (p.diag && short === 2)
-      return tooRareToDeal(
-        "puzzles two squares wide with no diagonal touching and every clue showing",
-        tier,
-      );
-  }
-  const table = MAX_UNREASONABLE_AREA.get(p.n * 2 + (p.diag ? 1 : 0)) ?? 0;
-  const max =
-    p.diag && short < THIN_SIDE ? Math.min(table, MAX_THIN_DIAGONAL_AREA) : table;
-  return area > max
-    ? `${p.n} letters have no ${tier} ABCD puzzle on a board this big; keep the area to ${max} squares at most, or use fewer letters.`
-    : null;
+  return noSuchTier(`${p.w}x${p.h} puzzle with every clue showing`, tier);
 }
 
 export function validateParams(p: AbcdParams, full: boolean): string | null {
   // Under 5 letters, diagonal mode can't avoid the no-touch rule in practice.
   if (p.n < 5 && p.diag)
     return "Letters must be at least 5 when diagonal touching is not allowed.";
-  // Generation only: a shared game ID or a saved game is handed over rather
-  // than searched for, so a described board outside the bound still opens.
-  if (full) {
-    const area = p.w * p.h;
-    if (p.diff === DIFF_UNREASONABLE) return unreasonableRefusal(p, area);
-    const thin = Math.min(p.w, p.h) < THIN_SIDE;
-    const max = thin
-      ? MAX_THIN_AREA
-      : (MAX_GENERABLE_AREA.get(p.n * 2 + (p.diag ? 1 : 0)) ?? 0);
-    if (area > max) {
-      return thin
-        ? `A board this long has no ABCD puzzle to find; keep the area under ${max} squares.`
-        : `${p.n} letters have no ABCD puzzle on a board this big; keep the area under ${max} squares, or use fewer letters.`;
-    }
-  }
+  // A large board is dealt however long it takes. Generation keeps a random
+  // fill only where the solver finds its clues have one answer, and that
+  // falls off fast as the board grows and as letters are added, but it does
+  // not reach none: measured 2026-10-21 under the deal's deadline, an Easy
+  // 10x10 of 4 letters was found on 5 deals of 12, where 454,144 tries had
+  // found none, and Unreasonable took 12 s at 12x12 with 3 letters and 57 s
+  // at 9x9 with 8 and no diagonal touching.
+  if (full && p.diff === DIFF_UNREASONABLE) return unreasonableRefusal(p);
   return null;
 }
 
