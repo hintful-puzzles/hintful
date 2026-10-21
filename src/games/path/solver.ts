@@ -16,8 +16,10 @@
  * Two rungs that read a region of the board, a cut that would shut squares
  * off from the numbers they need and the numbers whose paths can reach each
  * square, were tried and fired on no dealt board at either tier: the Easy
- * rungs and the lookahead between them decide everything those would have.
- * There is no rung against closing a loop either. The generator lays no path
+ * rung and the lookahead between them decide everything those would have.
+ * No rung crosses out an edge whose line would join two numbers: the edge
+ * counts as closed (`PathBoard.live`), as a player sees it is. There is no
+ * rung against closing a loop either. The generator lays no path
  * that touches itself, so no piece of a dealt board's answer has its two ends
  * side by side, and inside a supposition a loop is a clash.
  */
@@ -58,10 +60,7 @@ export type PathClash =
 export type PathReason =
   /** The square has only as many live edges as it still needs lines. */
   | { kind: "forced"; cell: number; need: number }
-  /** A line on the edge would join two different numbers, `ends`, one at
-   * the far end of the path on each side. */
-  | { kind: "pair"; ends: [number, number] }
-  /** Supposing `supposed` on `edge` leads, by the Easy rungs' `chain`, to
+  /** Supposing `supposed` on `edge` leads, by the Easy rung's `chain`, to
    * `clash`. */
   | {
       kind: "lookahead";
@@ -81,7 +80,6 @@ export interface PathFiring {
 /** The rungs, easiest first, by the `kind` of the reason a firing carries. */
 export const PATH_RUNGS = [
   "forced",
-  "pair",
   "lookahead",
 ] as const satisfies readonly PathReason["kind"][];
 export type PathRung = (typeof PATH_RUNGS)[number];
@@ -96,6 +94,11 @@ const CHAIN_LIMIT = 6;
  * goes. */
 export class PathBoard {
   readonly g: Geometry;
+  /** The pieces of line as of `piecesAt` writes; rebuilt when the edges have
+   * been written since. */
+  private cached: Pieces | null = null;
+  private writes = 0;
+  private piecesAt = -1;
 
   constructor(
     readonly w: number,
@@ -104,6 +107,22 @@ export class PathBoard {
     readonly edges: Uint8Array,
   ) {
     this.g = geometry(w, h);
+  }
+
+  /** Put `mark` on edge `e`. Every write to a board the ladder reads goes
+   * through here, so that {@link pieces} is never stale. */
+  set(e: number, mark: EdgeMark): void {
+    this.edges[e] = mark;
+    this.writes++;
+  }
+
+  /** The pieces the lines make now. */
+  pieces(): Pieces {
+    if (this.cached === null || this.piecesAt !== this.writes) {
+      this.cached = new Pieces(this);
+      this.piecesAt = this.writes;
+    }
+    return this.cached;
   }
 
   /** The edges around square `i` that hold `mark`. */
@@ -122,15 +141,17 @@ export class PathBoard {
   }
 
   /** Whether a line could still go on edge `e`: it is neither line nor cross,
-   * both its squares take another line, and it does not run straight between
-   * two different numbers. Either of the last two a player sees at a glance,
-   * so such an edge is as good as crossed out and no rung asks for its
-   * cross. */
+   * both its squares take another line, and it would not join two different
+   * numbers, whether they sit on its squares or the lines from them end
+   * there. Each of the last three a player sees at a glance (owner,
+   * 2026-10-21), so such an edge is as good as crossed out and no step asks
+   * for its cross. */
   live(e: number): boolean {
     const [i, j] = [this.g.a[e], this.g.b[e]];
-    const [p, q] = [this.ends[i], this.ends[j]];
-    if (p !== NO_END && q !== NO_END && p !== q) return false;
-    return this.edges[e] === OPEN && this.spare(i) && this.spare(j);
+    if (this.edges[e] !== OPEN || !this.spare(i) || !this.spare(j)) return false;
+    const pieces = this.pieces();
+    const [p, q] = [pieces.numberOf(i), pieces.numberOf(j)];
+    return p === NO_END || q === NO_END || p === q;
   }
 
   /** The {@link live} edges around square `i`. */
@@ -181,7 +202,7 @@ class Pieces {
 export function clashOf(b: PathBoard): PathClash | null {
   // A loop or a join first: it is on the board as drawn, where a square short
   // of ways is a count the player makes.
-  const joined = new Pieces(b).clash;
+  const joined = b.pieces().clash;
   if (joined) return joined;
   for (let i = 0; i < b.g.cells; i++) {
     const lines = b.edgesAt(i, LINE).length;
@@ -194,28 +215,19 @@ export function clashOf(b: PathBoard): PathClash | null {
 }
 
 /** Whether `firing` is still a deduction on `b` as it stands: its square
- * still has exactly its edges for the lines it needs, or its edge still
- * joins two different numbers. A supposition's chain is cut down to the
- * firings its break needs by asking this of each that is left. */
+ * still has exactly its edges for the lines it needs. A supposition's chain is
+ * cut down to the firings its break needs by asking this of each that is
+ * left. */
 export function stillHolds(b: PathBoard, firing: PathFiring): boolean {
   const { reason } = firing;
-  if (reason.kind === "forced") {
-    const live = b.liveAt(reason.cell);
-    const need = degreeOf(b.ends, reason.cell) - b.edgesAt(reason.cell, LINE).length;
-    return (
-      need === live.length &&
-      need === firing.edges.length &&
-      firing.edges.every((e) => live.includes(e))
-    );
-  }
-  if (reason.kind === "pair") {
-    const e = firing.edges[0];
-    if (!b.live(e)) return false;
-    const pieces = new Pieces(b);
-    const [p, q] = [pieces.numberOf(b.g.a[e]), pieces.numberOf(b.g.b[e])];
-    return p !== NO_END && q !== NO_END && p !== q;
-  }
-  return false;
+  if (reason.kind !== "forced") return false;
+  const live = b.liveAt(reason.cell);
+  const need = degreeOf(b.ends, reason.cell) - b.edgesAt(reason.cell, LINE).length;
+  return (
+    need === live.length &&
+    need === firing.edges.length &&
+    firing.edges.every((e) => live.includes(e))
+  );
 }
 
 /** Whether the lines join every pair of numbers through every square: each
@@ -245,6 +257,7 @@ export function isComplete(
  * `null` when none has, or `"contradiction"` when a square has too many lines
  * or too few ways left to take them. */
 function findForced(b: PathBoard): PathFiring | null | "contradiction" {
+  if (b.pieces().clash) return "contradiction";
   for (let i = 0; i < b.g.cells; i++) {
     const need = degreeOf(b.ends, i) - b.edgesAt(i, LINE).length;
     if (need < 0) return "contradiction";
@@ -257,20 +270,7 @@ function findForced(b: PathBoard): PathFiring | null | "contradiction" {
   return null;
 }
 
-/** The first live edge a line on which would join two different numbers. */
-function findPair(b: PathBoard): PathFiring | null | "contradiction" {
-  const pieces = new Pieces(b);
-  if (pieces.clash) return "contradiction";
-  for (let e = 0; e < b.g.edgeCount; e++) {
-    if (!b.live(e)) continue;
-    const [p, q] = [pieces.numberOf(b.g.a[e]), pieces.numberOf(b.g.b[e])];
-    if (p !== NO_END && q !== NO_END && p !== q)
-      return { reason: { kind: "pair", ends: [p, q] }, edges: [e], mark: CROSS };
-  }
-  return null;
-}
-
-/** The Easy rungs over `board`, each writing what it finds. */
+/** The Easy rung over `board`, writing what it finds. */
 function easyRungs(
   board: PathBoard,
   apply: (found: PathFiring | null | "contradiction") => number,
@@ -282,17 +282,12 @@ function easyRungs(
       run: () => apply(findForced(board)),
       available: () => offered(board, apply, allForced(board)),
     },
-    {
-      id: "pair" satisfies PathRung,
-      tier: DIFF_EASY,
-      run: () => apply(findPair(board)),
-      available: () => offered(board, apply, allPairs(board)),
-    },
   ];
 }
 
 /** Every forced firing on `b`, for a plan that chooses among them. */
 function allForced(b: PathBoard): PathFiring[] | "contradiction" {
+  if (b.pieces().clash) return "contradiction";
   const out: PathFiring[] = [];
   for (let i = 0; i < b.g.cells; i++) {
     const need = degreeOf(b.ends, i) - b.edgesAt(i, LINE).length;
@@ -306,30 +301,16 @@ function allForced(b: PathBoard): PathFiring[] | "contradiction" {
   return out;
 }
 
-/** Every pair firing on `b`. */
-function allPairs(b: PathBoard): PathFiring[] | "contradiction" {
-  const pieces = new Pieces(b);
-  if (pieces.clash) return "contradiction";
-  const out: PathFiring[] = [];
-  for (let e = 0; e < b.g.edgeCount; e++) {
-    if (!b.live(e)) continue;
-    const [p, q] = [pieces.numberOf(b.g.a[e]), pieces.numberOf(b.g.b[e])];
-    if (p !== NO_END && q !== NO_END && p !== q)
-      out.push({ reason: { kind: "pair", ends: [p, q] }, edges: [e], mark: CROSS });
-  }
-  return out;
-}
-
 /**
  * The numbers whose lines a firing's premise reads, which a hint plan
  * continues from: a player follows a line from its number, so a plan works on
  * one number's line until nothing more follows for it. A forced square reads
- * the line it is on and the lines whose squares closed its edges; a pair reads
- * the two numbers it keeps apart; a supposition reads the lines at its edge.
+ * the line it is on and the lines whose squares closed its edges; a
+ * supposition reads the lines at its edge.
  */
 function numbersReadBy(b: PathBoard, firing: PathFiring): number[] {
   const { g } = b;
-  const pieces = new Pieces(b);
+  const pieces = b.pieces();
   const on = (i: number): number[] => {
     const v = pieces.numberOf(i);
     return v === NO_END ? [] : [v];
@@ -352,8 +333,6 @@ function numbersReadBy(b: PathBoard, firing: PathFiring): number[] {
       }
       return out;
     }
-    case "pair":
-      return [...reason.ends];
     case "lookahead":
       return [...on(g.a[reason.edge]), ...on(g.b[reason.edge])];
   }
@@ -372,7 +351,7 @@ function offered(
     reads: () => numbersReadBy(b, firing),
     writes: () => {
       if (firing.mark !== LINE) return [];
-      const pieces = new Pieces(b);
+      const pieces = b.pieces();
       return firing.edges.flatMap((e) =>
         [b.g.a[e], b.g.b[e]].map((i) => pieces.numberOf(i)).filter((v) => v !== NO_END),
       );
@@ -391,7 +370,7 @@ function applier(
   return (found) => {
     if (found === "contradiction") return -1;
     if (found === null) return 0;
-    for (const e of found.edges) board.edges[e] = found.mark;
+    for (const e of found.edges) board.set(e, found.mark);
     record?.(found);
     return 1;
   };

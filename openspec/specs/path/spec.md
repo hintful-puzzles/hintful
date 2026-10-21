@@ -3,8 +3,8 @@
 ## Purpose
 Path, Nikoli's Numberlink: join each pair of like numbers with lines that
 never cross or branch and fill every square. This capability specifies what is
-the game's own: its rules and description format, a ladder whose two Easy
-rungs and bounded look-ahead prove every dealt board has one answer, the
+the game's own: its rules and description format, a ladder whose Easy rung
+and bounded look-ahead prove every dealt board has one answer, the
 generator over upstream's `path.c` that it gates, the drag that draws lines,
 and a hint that walks its look-ahead on the board. Upstream's `path.c` was a
 generator with no solver and no game; what every game shares is in the engine
@@ -60,7 +60,7 @@ A description SHALL be the squares in reading order: each number in decimal, wit
 
 ### Requirement: Generation: A tier is the rung a board needs
 
-A board SHALL be dealt only where the ladder finishes it, which proves it has exactly one answer. An Easy board SHALL be finished by the two Easy rungs alone; a Normal board SHALL need the lookahead at least once. No path of a dealt board's answer SHALL be a straight line of four squares or more, and none SHALL touch itself except along its own line.
+A board SHALL be dealt only where the ladder finishes it, which proves it has exactly one answer. An Easy board SHALL be finished by the Easy rung alone; a Normal board SHALL need the lookahead at least once. No path of a dealt board's answer SHALL be a straight line of four squares or more, and none SHALL touch itself except along its own line.
 
 #### Scenario: A Normal board needs the lookahead
 
@@ -69,16 +69,16 @@ A board SHALL be dealt only where the ladder finishes it, which proves it has ex
 
 ### Requirement: Solver: An edge a player sees is closed counts as closed
 
-The ladder SHALL count an edge as closed when it is crossed, when a square beside it has all its lines, or when it lies between two different numbers, and no rung SHALL decide such an edge.
+The ladder SHALL count an edge as closed when it is crossed, when a square beside it has all its lines, or when a line on it would join two different numbers, on its squares or at the ends of the lines through them, and no rung SHALL decide such an edge.
 
-#### Scenario: An edge between two numbers is never a step
+#### Scenario: An edge between two numbers' lines is never a step
 
-- **WHEN** a 2 and a 1 sit side by side
+- **WHEN** the line from a 2 and the line from a 3 end on squares side by side
 - **THEN** no hint step asks for a cross on the edge between them
 
 ### Requirement: Solver: The ladder and its lookahead
 
-The ladder's Easy rungs SHALL be: a square whose open edges are as many as the lines it still needs takes a line on each; and an edge whose line would join two different numbers takes a cross. Its Normal rung SHALL suppose a line or a cross on an open edge, run the Easy rungs from there for at most six firings, and give the edge the other mark where the board breaks.
+The ladder's Easy rung SHALL be: a square whose open edges are as many as the lines it still needs takes a line on each. Its Normal rung SHALL suppose a line or a cross on an open edge, run the Easy rungs from there for at most six firings, and give the edge the other mark where the board breaks.
 
 #### Scenario: The lookahead settles an edge
 
@@ -123,12 +123,12 @@ The arrows SHALL move a cursor over the squares. Enter SHALL start a line at the
 
 ### Requirement: Hint: A step rings the edges it decides and outlines what it reads
 
-A step SHALL ring the edges it decides, drawn as the line or cross it asks for, and outline what it reads: the square of a forced step; the lines and numbers a pair step would join. A lookahead step SHALL draw thin and number in order only the forced edges its break needs, outline where it breaks, and name a join or loop before a square short of edges. No step SHALL ask for a cross beside a square that has all its lines.
+A step SHALL ring the edges it decides, drawn as the line or cross it asks for, and outline what it reads: the square of a forced step. A lookahead step SHALL draw thin, and number once a firing in order, only the forced edges its break needs, outline where it breaks, and name a loop before a square short of edges. No step SHALL ask for a cross on an edge the ladder counts as closed.
 
-#### Scenario: A pair step names the two numbers
+#### Scenario: A forced step names its square
 
-- **WHEN** a step crosses out an edge whose line would join a 2 to a 3
-- **THEN** it says "A line here would join the outlined 2 to the 3, so this edge must be crossed out." and outlines both numbers
+- **WHEN** a square with one line has one open edge left
+- **THEN** the step says "The outlined square has only one edge left for its second line, so this edge must be a line." and outlines that square
 
 ### Requirement: Look: Lines are ink, joined pairs gray, and broken lines red
 

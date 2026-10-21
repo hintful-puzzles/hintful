@@ -55,11 +55,11 @@ export const CHAIN_PINS: Record<string, HintPin<unknown>> = {
     moves:
       '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":2},{"x":1,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":3},{"x":2,"y":3,"n":4}]},{"type":"set","x":2,"y":3,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":2},{"x":2,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":3,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":1}]},{"type":"pencilStrike","marks":[{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":4}]},{"type":"set","x":1,"y":0,"n":3,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":3},{"x":2,"y":0,"n":3}]},{"type":"set","x":2,"y":0,"n":4,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":4},{"x":3,"y":0,"n":4},{"x":2,"y":1,"n":4},{"x":2,"y":2,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":2}]}]',
   },
-  /** Held on 61 of 871 positions walked, on 12 boards. */
+  /** Held on 19 of 528 positions walked, on 12 boards. */
   path: {
-    id: "5x5dn:1b2b3e4_1c2b3c4",
+    id: "9x9dn:1c2d3_1a4c5f6a4a7a8a6_5b9f9a2_7c10d11c12a13g12a10a11_3a8c13a",
     moves:
-      '[{"kind":"edges","changes":[{"edge":3,"mark":1},{"edge":24,"mark":1}]},{"kind":"edges","changes":[{"edge":1,"mark":1},{"edge":22,"mark":1}]},{"kind":"edges","changes":[{"edge":10,"mark":2}]},{"kind":"edges","changes":[{"edge":32,"mark":2}]}]',
+      '[{"kind":"edges","changes":[{"edge":0,"mark":1}]},{"kind":"edges","changes":[{"edge":7,"mark":1},{"edge":80,"mark":1}]},{"kind":"edges","changes":[{"edge":81,"mark":1}]},{"kind":"edges","changes":[{"edge":16,"mark":1}]},{"kind":"edges","changes":[{"edge":135,"mark":1}]},{"kind":"edges","changes":[{"edge":143,"mark":1},{"edge":71,"mark":1}]},{"kind":"edges","changes":[{"edge":134,"mark":1}]},{"kind":"edges","changes":[{"edge":141,"mark":1},{"edge":69,"mark":1}]},{"kind":"edges","changes":[{"edge":140,"mark":2}]},{"kind":"edges","changes":[{"edge":68,"mark":1}]},{"kind":"edges","changes":[{"edge":67,"mark":2}]},{"kind":"edges","changes":[{"edge":139,"mark":1}]},{"kind":"edges","changes":[{"edge":60,"mark":2}]}]',
   },
   /** Held on 266 of 427 positions walked, on 12 boards. */
   rome: "4x4de:2aa10b1d,gXDUdRa",

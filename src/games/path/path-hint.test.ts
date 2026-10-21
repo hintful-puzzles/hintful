@@ -32,22 +32,9 @@ const pinned = describeHintPins({
   game: pathGame,
   params: [{ w: 5, h: 5, diff: DIFF_NORMAL }],
   pins: {
-    /** Held on 348 of 348 positions walked. */
+    /** Held on 259 of 259 positions walked. */
     forced: "5x5dn:1b2b3e4_1c2b3c4",
-    /** Held on 324 of 348 positions walked. */
-    pair: {
-      id: "5x5dn:1b2_3b3b1a4_5d4a2_5c",
-      moves: [
-        {
-          kind: "edges",
-          changes: [
-            { edge: 39, mark: 1 },
-            { edge: 19, mark: 1 },
-          ],
-        },
-      ],
-    },
-    /** Held on 156 of 348 positions walked. */
+    /** Held on 112 of 259 positions walked. */
     lookahead: {
       id: "5x5dn:1b2b3e4_1c2b3c4",
       moves:
@@ -141,24 +128,24 @@ describe("path hint order", () => {
     const result = pathGame.hint?.(state);
     if (!result?.ok) throw new Error("refused");
     const first = result.steps
-      .slice(0, 5)
+      .slice(0, 3)
       .map((step) => (step.move.kind === "edges" ? step.move.changes : []));
     expect(first).toEqual([
       [{ edge: edge([3, 0], [4, 0]), mark: LINE }],
       [{ edge: edge([3, 1], [4, 1]), mark: LINE }],
-      // The two crosses beside the 3's line, and then the 3 is joined.
-      [{ edge: edge([3, 0], [3, 1]), mark: CROSS }],
-      [{ edge: edge([3, 1], [3, 2]), mark: CROSS }],
+      // The 3's line can go only to the other 3: up meets the 2's line and
+      // down the 1, which no step needs to say.
       [{ edge: edge([2, 1], [3, 1]), mark: LINE }],
     ]);
   });
 });
 
 describe("path hint frame", () => {
-  it("rings the edge and numbers the edges a supposition forces", () => {
+  it("rings the edge a supposition settles and outlines where it breaks", () => {
+    // A chain's numbers are drawn at the chain pin, which hint-ordinal.test.ts
+    // reads; this pin's supposition breaks the board in one look.
     const { recording, step } = renderPinnedHint(pathGame, pinned("lookahead"));
-    expect(stepMarks(step).of("outline", EDGE).length).toBeGreaterThan(0);
-    expect(step.highlights?.chain.length).toBeGreaterThan(0);
+    expect(stepMarks(step).of("ring", EDGE).length).toBeGreaterThan(0);
     for (const color of [COL_HINT, COL_HINT_EVIDENCE])
       expect(recording.ops.some((op) => paintsWith(op, color))).toBe(true);
   });

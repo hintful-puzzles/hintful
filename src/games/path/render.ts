@@ -456,7 +456,7 @@ export function redraw(
     if (named.of("outline", EDGE).includes(link.edge))
       chain.set(link.edge, {
         mark: link.mark === CROSS ? H_CHAIN_CROSS : H_CHAIN_LINE,
-        order: link.order,
+        order: link.order ?? 0,
       });
 
   for (let y = 0; y < h; y++) {

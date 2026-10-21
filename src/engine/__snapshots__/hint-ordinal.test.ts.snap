@@ -20,7 +20,7 @@ exports[`an ordered hint chain carries its order to the canvas > keen: pinned hi
 
 exports[`an ordered hint chain carries its order to the canvas > path: pinned hint positions > says, at each pin 1`] = `
 {
-  "numberedChain": "A line here would force the numbered edges and join the outlined 1 to the 3, so this edge must be crossed out.",
+  "numberedChain": "A line here would force the numbered edges and leave the outlined square a dead end, so this edge must be crossed out.",
 }
 `;
 

@@ -49,7 +49,9 @@ const PLAN_CAP = 24;
 /** A supposition's chain, as the board draws it: each edge it would force,
  * with the mark and the place in the chain it falls. */
 export interface PathHighlights {
-  chain: readonly { edge: number; mark: EdgeMark; order: number }[];
+  /** `order` is on a firing's first edge only: a square forced to two lines
+   * is one deduction, and so one number. */
+  chain: readonly { edge: number; mark: EdgeMark; order?: number }[];
 }
 
 type PathStep = HintStep<PathMove, PathHighlights, PathRung>;
@@ -92,23 +94,6 @@ function wordsOf(state: PathState, edges: Uint8Array, firing: PathFiring): Sente
   switch (reason.kind) {
     case "forced":
       return say.forced(square(reason.cell), reason.need, firing.edges);
-    case "pair": {
-      // The lines on either side are outlined with their numbers, so the eye
-      // goes to where they meet, beside the ringed edge, and not to the two
-      // numbers, which may be side by side somewhere else.
-      const g = geometry(state.w, state.h);
-      const e = firing.edges[0];
-      const lines = [
-        ...pieceOf(state, edges, g.a[e]),
-        ...pieceOf(state, edges, g.b[e]),
-      ];
-      return say.pair(
-        numberOn(g.a[e], edges),
-        numberOn(g.b[e], edges),
-        lines.map(at),
-        e,
-      );
-    }
     case "lookahead": {
       // The board the supposition leads to, for what breaks there.
       const trial = edges.slice();
@@ -183,7 +168,7 @@ function pruned(
     const b = new PathBoard(state.w, state.h, state.ends, trial);
     for (const link of chain) {
       if (!stillHolds(b, link)) return null;
-      for (const e of link.edges) trial[e] = link.mark;
+      for (const e of link.edges) b.set(e, link.mark);
     }
     return clashOf(b);
   };
@@ -217,7 +202,11 @@ function stepOf(state: PathState, edges: Uint8Array, recorded: PathFiring): Path
       chain:
         reason.kind === "lookahead"
           ? reason.chain.flatMap((link, k) =>
-              link.edges.map((edge) => ({ edge, mark: link.mark, order: k + 1 })),
+              link.edges.map((edge, j) =>
+                j === 0
+                  ? { edge, mark: link.mark, order: k + 1 }
+                  : { edge, mark: link.mark },
+              ),
             )
           : [],
     },
@@ -226,7 +215,7 @@ function stepOf(state: PathState, edges: Uint8Array, recorded: PathFiring): Path
 
 /**
  * The plan from the player's lines and crosses. No tier cap: a board that
- * arrives by its ID carries no tier, and the ladder tries the Easy rungs
+ * arrives by its ID carries no tier, and the ladder tries the Easy rung
  * first, which is the order a hint wants anyway.
  */
 export function pathHint(

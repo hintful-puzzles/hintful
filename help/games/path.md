@@ -51,19 +51,16 @@ you to fix the highlighted mistakes first.
 {{hint-marks}}
 
 An edge beside a square that already has all its lines can never take
-another, and neither can an edge between two different numbers side by side,
-so the hint counts both as closed without asking you to cross them out.
-Most steps are one of two rules at work:
-
-* A square with only as many open edges left as it still needs lines takes a
-  line on each of them.
-* An edge whose line would join two different numbers is crossed out.
+another, and neither can an edge whose line would join two different
+numbers, whether the numbers sit beside it or lines lead to them from it. The
+hint counts all of these as closed without asking you to cross them out, and
+most steps are then one rule at work: a square with only as many open edges
+left as it still needs lines takes a line on each of them.
 
 On Normal boards a step sometimes has to look ahead. It supposes a line on an
-edge, or a cross, and follows those two rules from it, numbering each edge
-they settle in turn, until a square is left a dead end or cut off, gets too
-many lines, or a loop closes or two different numbers are joined. Then the
-edge must be the other way.
+edge, or a cross, and follows that rule from it, numbering each square's
+edges as it settles them, until a square is left a dead end or cut off, gets
+too many lines, or a loop closes. Then the edge must be the other way.
 
 ## Path parameters
 

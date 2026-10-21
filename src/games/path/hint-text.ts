@@ -45,14 +45,9 @@ const mustBe = (edges: readonly number[], what: "line" | "cross"): Narration =>
 const outlined = (s: Square, lead = "the outlined"): Narration =>
   mark.as("outline", CELL, [s.at], `${lead} ${s.number ?? "square"}`);
 
-/** Two numbers, outlined together, or with the squares of the lines that
- * lead to them: "the outlined 2 to the 5". */
-const twoNumbers = (
-  a: Square,
-  b: Square,
-  area: readonly Point[] = [a.at, b.at],
-): Narration =>
-  mark.as("outline", CELL, area, `the outlined ${a.number} to the ${b.number}`);
+/** Two numbers, outlined together: "the outlined 2 to the 5". */
+const twoNumbers = (a: Square, b: Square): Narration =>
+  mark.as("outline", CELL, [a.at, b.at], `the outlined ${a.number} to the ${b.number}`);
 
 /** A square's count of lines in words, so it does not run into its number. */
 const COUNTS = ["no", "one", "two", "three", "four"] as const;
@@ -99,13 +94,6 @@ export const say = {
             ? phrase`${outlined(s)} has only two edges left for its two lines`
             : phrase`${outlined(s)} has only one edge left for its second line`,
       move: mustBe(edges, "line"),
-    }),
-
-  /** A line on the edge would join two different numbers. */
-  pair: (a: Square, b: Square, lines: readonly Point[], edge: number): Sentence =>
-    so({
-      look: phrase`a line here would join ${twoNumbers(a, b, lines)}`,
-      move: mustBe([edge], "cross"),
     }),
 
   /**
