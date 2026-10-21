@@ -311,8 +311,10 @@ describe("the shared color vocabulary", () => {
     // reads as that mark: a blue pair as the hint's line, a red one as
     // broken. Held to 0.1 from each, above the 0.07 the hint's references
     // are held to from one another, and further from the error, the one a
-    // player must never miss. Stripes are not among them: a hatch laid under a symbol is
-    // not a line, and no game with these colors draws one.
+    // player must never miss. Only the first ring and outline are held: the
+    // later ones appear on a step with two references of one role, and the
+    // app redraws them edged while a hint shows (owner, 2026-10-21, in
+    // `FREE_DESIGN`).
     const inDark = (c: Color): Color => darkValue(c) ?? c;
     const relLum = (c: Color): number => {
       const lin = (v: number) =>
@@ -337,15 +339,11 @@ describe("the shared color vocabulary", () => {
       ["the cursor", roles.CURSOR],
       ["a held piece", roles.HELD],
       ["the drag", roles.DRAG_ADD],
-      ...(["ring", "outline"] as const).flatMap((role) =>
-        colors.HINT_REFERENCE_COLORS[role].map((c, i): [string, Color] => [
-          `${role} ${i}`,
-          c,
-        ]),
-      ),
+      ["the hint's ring", colors.HINT_REFERENCE_COLORS.ring[0]],
+      ["the hint's outline", colors.HINT_REFERENCE_COLORS.outline[0]],
     ];
     const surface = roles.cellSurface(BG);
-    expect(colors.FREE.length).toBeGreaterThanOrEqual(4);
+    expect(colors.FREE.length).toBe(10);
     for (const [k, c] of colors.FREE.entries())
       for (const [scheme, f] of [
         ["light", (x: Color) => x],
@@ -360,17 +358,14 @@ describe("the shared color vocabulary", () => {
           apart(f(c), f(roles.ERROR)),
           `free${k} from the error in ${scheme}`,
         ).toBeGreaterThan(0.15);
-        // A line of it reads on the cell, as the hint's ring does (2.5 in
-        // light, less a hair for the amber, whose line is thick), and a
-        // black number reads on a disc of it.
+        // A line of it reads, as the hint's ring does (2.5 in light, less a
+        // hair for a line, which is thick): on the cell, or against the
+        // black edge a piece of it is drawn with (Path's lines), which is
+        // what a pale member has in the light scheme.
         expect(
-          contrast(f(c), f(surface)),
-          `free${k} on the cell in ${scheme}`,
+          Math.max(contrast(f(c), f(surface)), contrast(f(c), colors.BLACK)),
+          `free${k} on the cell or its edge in ${scheme}`,
         ).toBeGreaterThan(2.4);
-        expect(
-          contrast(f(c), colors.BLACK),
-          `black on free${k} in ${scheme}`,
-        ).toBeGreaterThan(3);
       }
   });
 

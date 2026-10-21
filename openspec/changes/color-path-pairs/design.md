@@ -258,3 +258,44 @@ The design subagent's mock-up (a 9x9 Path board with every mark, each member
 as line, ring and disc, and a Flood mosaic, in both schemes) was shown to the
 owner. Re-render it in the app; the mock-up is not evidence for the real
 board.
+
+### Outcome (2026-10-22)
+
+- **Re-measured before pinning**: every worst pair in the table above, and
+  every nearest held mark, came out as the design subagent measured, to the
+  third place. `colors.test.ts` holds the first 3, 4, 6, 9 and 10 at 0.22,
+  0.15, 0.13, 0.13 and 0.12, and each bar, the word extents, the number color
+  and `palette.test.ts`'s held marks were seen to fail on a planted value
+  (magenta moved to h 300, olive to h 140, the number always black).
+- **The set's yellow is a color of its own**, not `YELLOW` retuned. `YELLOW`
+  is the win flash, the pencil and one of Unruly's pair, and its dark value
+  was set against those; the free set is laid out as a set. The two agree in
+  the light scheme, and a set's members are not single exports, so "names
+  each color once" never compares them.
+- **The number color is derived, not listed** (`FREE_TEXT`): black, unless
+  black on the member reads under 3:1, which gives white on the light brown
+  only, as the table says.
+- **Guess keeps `INK` for its cursor.** It is a hairline ring round a peg on
+  the board's surface, and in the app a green hairline beside a teal or mint
+  peg reads far weaker than the ink ring does. The comment says so.
+- **Path in the app** (9x9 and 15x10, light and dark, with a hint and its
+  outline, a broken line, a drag and a solved board): the edge reads on every
+  pale line in the light scheme and vanishes on the dark cell, turns are
+  clean, and the filled brown disc carries a white number in light and a
+  black one in dark. The open ring's inner side is edged too, so the ring
+  reads on the given surface in both schemes.
+- **Flood, Guess and Same Game in the app** at 10, 10 and 9 colors, both
+  schemes, with a hint: every member is told apart, and Flood's and Same
+  Game's hints named "mint" and "orange". The pair to watch, olive and
+  brown, reads apart in both schemes.
+- **`TEN` is retired** and `palette-source.test.ts` finds no named color
+  orphaned by it, as D5 predicted.
+- **`color-collide` before and after** (203 pairs, then 263): gone are
+  Guess's first peg on `COL_WRONG` and a peg on `COL_HINT`, and Flood's and
+  Same Game's tile on `COL_HINT`, the clashes D5 named. New in Path are its
+  black slots only, `COL_EDGE` and the black numbers of eight members, all
+  deliberate. Yellow stays the win flash in all four games, as `TEN`'s
+  yellow was (D5's risk). The gray, which only a ten-color Flood or Guess
+  board takes, lands on Flood's grid line and Guess's hole rim; a gray tile
+  still meets every other tile's line, and Guess's rim is round a hole, not
+  a peg, so neither hides anything a player reads.

@@ -262,7 +262,7 @@ describe("a per-game token belongs to the game it names", () => {
  *
  * "Used" spans all four ways a color reaches a board: a game imports it, a
  * meaning in `palette.ts` is defined over it, one of the sets in `colors.ts`
- * itself gathers it up (`RED` is in `TEN`, which is what Flood imports), or
+ * itself gathers it up (`PURPLE` is in `TWO`, which is what Unruly imports), or
  * the app paints it over the board (a hint's reference colors).
  */
 it("declares no named color nothing can show", () => {

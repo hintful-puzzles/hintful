@@ -326,13 +326,17 @@ describe("path frame", () => {
       renderScenario({ game: pathGame, id: ID, moves }).recording.ops;
     const lines = (moves: PathMove[]): Set<string> =>
       new Set(ops(moves).flatMap((op) => (op.op === "line" ? [op.rgb] : [])));
-    // The corner's 1 is the first square drawn, and its disc its first circle.
-    const disc = ops([]).find((op) => op.op === "circle");
+    // The corner's 1 is the first square drawn, and its disc its first
+    // circle that is not the black edge under it. A pair's line is drawn on
+    // a black edge too, and ink is black in the light scheme.
+    const black = "rgb(0, 0, 0)";
+    const disc = ops([]).find((op) => op.op === "circle" && op.fillRgb !== black);
     if (disc?.op !== "circle") throw new Error("no disc drawn");
-    expect(disc.fillRgb).not.toBe("rgb(0, 0, 0)");
-    expect(lines([set(13, LINE)])).toEqual(new Set(["rgb(0, 0, 0)"]));
-    expect(lines([set(9, LINE)])).toEqual(new Set([disc.fillRgb]));
-    expect(lines([set(13, LINE), set(9, LINE)])).toEqual(new Set([disc.fillRgb]));
+    expect(lines([set(13, LINE)])).toEqual(new Set([black]));
+    expect(lines([set(9, LINE)])).toEqual(new Set([black, disc.fillRgb]));
+    expect(lines([set(13, LINE), set(9, LINE)])).toEqual(
+      new Set([black, disc.fillRgb]),
+    );
   });
 
   it("draws a line red where it joins two different numbers, and not before", () => {

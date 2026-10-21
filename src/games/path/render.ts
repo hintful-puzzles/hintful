@@ -9,7 +9,7 @@
  * its own beside the word for what the square holds.
  */
 
-import { BLACK, FREE } from "../../engine/color/colors.ts";
+import { BLACK, FREE, FREE_TEXT } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -64,8 +64,8 @@ const COL_TEXT = 6;
 /** A line that breaks a rule already: it closes a loop, or joins two
  * different numbers. */
 export const COL_ERROR = 7;
-/** A number on the filled disc of a pair whose path is drawn whole. */
-const COL_DONE_TEXT = 8;
+/** The edge drawn under a pair's line, ring and disc. */
+const COL_EDGE = 8;
 const COL_DRAG_ADD = 9;
 const COL_DRAG_REMOVE = 10;
 const COL_CURSOR = 11;
@@ -79,6 +79,11 @@ const COL_FLASH_LEAD = 15;
 /** The first of a pair's colors, one slot each: a pair's discs and every line
  * reaching them. */
 const COL_PAIR = 16;
+/** How many of the free colors pairs take: all but the gray, whose line in
+ * the dark scheme sits near the white of a line reaching no number. */
+const PAIRS = 9;
+/** The first of the numbers on a pair's filled disc, one slot a color. */
+const COL_PAIR_TEXT = COL_PAIR + PAIRS;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -90,9 +95,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_RULED_OUT] = RULED_OUT;
   out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
-  // `BLACK`, not `INK`: drawn on the pair's color, which is as light in the
-  // dark scheme as a line on the dark board has to be.
-  out[COL_DONE_TEXT] = BLACK;
+  // `BLACK`, not `INK`: the edge is what a pale pair's line reads against
+  // in the light scheme, and on the dark board it vanishes.
+  out[COL_EDGE] = BLACK;
   out[COL_DRAG_ADD] = DRAG_ADD;
   out[COL_DRAG_REMOVE] = DRAG_REMOVE;
   out[COL_CURSOR] = CURSOR;
@@ -100,9 +105,10 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
-  FREE.forEach((c, k) => {
-    out[COL_PAIR + k] = c;
-  });
+  for (let k = 0; k < PAIRS; k++) {
+    out[COL_PAIR + k] = FREE[k];
+    out[COL_PAIR_TEXT + k] = FREE_TEXT[k];
+  }
   return out;
 }
 
@@ -235,7 +241,7 @@ function pairColors({ w, ends }: PathState): Int32Array {
       b.y1 = Math.max(b.y1, y);
     } else boxes[n - 1] = { x0: x, y0: y, x1: x, y1: y };
   });
-  return Int32Array.of(0, ...spreadColors(boxes, FREE.length));
+  return Int32Array.of(0, ...spreadColors(boxes, PAIRS));
 }
 
 // --- one square -------------------------------------------------------------
@@ -336,34 +342,44 @@ function drawTile(
     if (color >= 0) strokes.push({ k, color, weight });
   }
   const [p, q] = strokes;
-  if (
+  const segments: { from: Point; to: Point; color: number; weight: number }[] =
     strokes.length === 2 &&
     p.k + q.k === 3 &&
     p.color === q.color &&
     p.weight === q.weight
-  ) {
-    dr.drawLine(sideEnd(p.k), sideEnd(q.k), p.color, p.weight);
-  } else {
-    for (const { k, color, weight } of strokes)
-      dr.drawLine({ x: cx, y: cy }, sideEnd(k), color, weight);
-  }
+      ? [{ from: sideEnd(p.k), to: sideEnd(q.k), color: p.color, weight: p.weight }]
+      : strokes.map(({ k, color, weight }) => ({
+          from: { x: cx, y: cy },
+          to: sideEnd(k),
+          color,
+          weight,
+        }));
+  // A pair's line is edged, every edge before any color so that one half's
+  // edge never cuts across the other half at a turn.
+  for (const { from, to, color, weight } of segments)
+    if (color === lineColor && piece) dr.drawLine(from, to, COL_EDGE, weight + 2);
+  for (const { from, to, color, weight } of segments)
+    dr.drawLine(from, to, color, weight);
 
   const number = square & 0xff;
   if (number !== NO_END) {
     // A ring in the pair's color while its path is open, and a disc filled
-    // with it once the path is whole.
+    // with it once the path is whole, edged as its lines are.
     const r = Math.floor((ts * 3) / 8);
     const pair = COL_PAIR + ds.pairColor[number];
     const done = (square & F_DONE) !== 0;
-    dr.drawCircle({ x: cx, y: cy }, r, pair, pair);
+    const center = { x: cx, y: cy };
+    dr.drawCircle(center, r + 1, COL_EDGE, COL_EDGE);
+    dr.drawCircle(center, r, pair, pair);
     if (!done) {
       const ring = Math.max(2, Math.floor(ts / 12));
-      dr.drawCircle({ x: cx, y: cy }, r - ring, COL_GIVEN, COL_GIVEN);
+      dr.drawCircle(center, r - ring, COL_EDGE, COL_EDGE);
+      dr.drawCircle(center, r - ring - 1, COL_GIVEN, COL_GIVEN);
     }
     dr.drawText(
-      { x: cx, y: cy },
+      center,
       glyphFont(Math.floor(number > 9 ? ts / 3 : (ts * 2) / 5)),
-      done ? COL_DONE_TEXT : COL_TEXT,
+      done ? COL_PAIR_TEXT + ds.pairColor[number] : COL_TEXT,
       String(number),
     );
   }

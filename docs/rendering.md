@@ -749,8 +749,8 @@ and which one you reach for is the decision:
   `wallFill`, `highlightWash`, `pencilColor`, `clueDoneColor`).
 - [`engine/color/colors.ts`](../src/engine/color/colors.ts) holds **the
   palette itself**: the named colors, most at three intensities (base,
-  `_WASH`, `_BOLD`), and the sets made to be told apart (`TEN`, `TEN_NAMES`,
-  `REGION_FILLS`, `FOUR_FILLS`, `FREE`).
+  `_WASH`, `_BOLD`), and the sets made to be told apart (`FREE`,
+  `FREE_NAMES`, `REGION_FILLS`, `FOUR_FILLS`).
 - [`engine/color/palette-games.ts`](../src/engine/color/palette-games.ts)
   holds colors a game defines **relative to its own board**, prefixed with
   its id (`slantGrounded`, `undeadGhost`). Functions, not values.
@@ -768,20 +768,23 @@ its own.
   `REGION_DONE` for a completed fill.
 - **Reach past a meaning to a named color only where the name is
   load-bearing to the player**: a member of a set whose job is to be told
-  apart (`TEN`), or a color the game says out loud (`TEN_NAMES`, read off
-  `TEN` so word and color cannot drift). A name is a `ColorWord`
+  apart (`FREE`), or a color the game says out loud (`FREE_NAMES`, read off
+  `FREE` so word and color cannot drift). A name is a `ColorWord`
   (`engine/color/color-word.ts`), a word for each scheme, since a dark
   value can leave its light word (Map's dark yellow is a brown). A sentence
   takes it as a `phrase` part and is shown in the scheme in force. A text
   shown alike in every scheme, a help page, a control's `does` or a mark's
   own words, takes `.only`, which refuses a color with two words.
   `colors.test.ts` holds every word to its color in both schemes.
-- **Pieces told apart by a color that means nothing, while a number or a
-  letter says which is which, take `FREE`**, spread by `spreadColors`
-  (`engine/spread-colors.ts`) and repeating past its size. `TEN` is for
-  pieces whose color is all that tells them apart, and it holds the error's
-  red and the hint's blue, so a piece in it can hide a mark. `FREE` holds
-  none of them, and has only four members for that reason. Exemplar:
+- **Pieces told apart by a color that means nothing take `FREE`**, the one
+  such set, its first members first: Flood's tiles and Guess's pegs, whose
+  color is all that tells them apart, and Path's pairs, whose numbers say
+  which is which. Only a game with that second carrier may repeat it past
+  its ten, spread by `spreadColors` (`engine/spread-colors.ts`). No member
+  is near the error, the cursor, the drag or the hint's first ring and
+  outline, so a piece never hides a mark; a game drawing pale members as
+  lines on the light cell edges them in `BLACK`, as Path does. A game that
+  writes a number on one takes `FREE_TEXT`. Exemplar:
   [`path/render.ts`](../src/games/path/render.ts).
 - **A game whose board has spent the default may pick a different named
   color, and says why on the assignment's line or the line above**

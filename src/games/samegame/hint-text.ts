@@ -7,7 +7,7 @@
  */
 
 import type { ColorWord } from "../../engine/color/color-word.ts";
-import { TEN_NAMES } from "../../engine/color/colors.ts";
+import { FREE_NAMES } from "../../engine/color/colors.ts";
 import type { HintMarkLegend } from "../../engine/game.ts";
 import {
   CELL,
@@ -27,7 +27,7 @@ const GROUP = whole(CELL);
 
 /** The word for color `c` (`1..ncols`), from the palette the tiles are
  * painted in, so the word and the square cannot disagree. */
-export const colorName = (c: number): ColorWord => TEN_NAMES[c - 1];
+export const colorName = (c: number): ColorWord => FREE_NAMES[c - 1];
 
 /** What each mark means here, as the help's list of marks gives it. */
 export const HINT_MARKS: HintMarkLegend = {

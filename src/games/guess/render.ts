@@ -13,7 +13,7 @@
  * the column they enter.
  */
 
-import { BLACK, PINK_WASH, TEAL_WASH, TEN, WHITE } from "../../engine/color/colors.ts";
+import { BLACK, FREE, PINK_WASH, TEAL_WASH, WHITE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   ERROR,
@@ -472,15 +472,17 @@ function rowBox(ds: GuessDrawState, gi: number): Rect {
 export function colors(defaultBackground: Color): Color[] {
   const ret: Color[] = new Array(NCOLORS);
 
-  for (let i = 0; i < 10; i++) ret[COL_1 + i] = TEN[i];
+  for (let i = 0; i < 10; i++) ret[COL_1 + i] = FREE[i];
 
   ret[COL_FRAME] = INK;
-  // Not `CURSOR`: the cursor rings pegs of all ten hues, green among them.
+  // Not `CURSOR`: the cursor is a hairline ring round a peg, on the board's
+  // surface, where a green hairline reads far weaker than ink beside a teal
+  // or a mint peg.
   ret[COL_CURSOR] = INK;
   // The win flash is `COL_LIT` and `COL_LIT_LEAD`; upstream's `COL_FLASH` slot lights the feedback
   // holes of a row that is ready to mark. It and the held-peg slot are washes,
-  // not pegs (so not `HELD`, whose green is one of the ten): they sit *behind*
-  // a peg and must not be mistaken for one.
+  // not pegs (so not `HELD`, a mark's full strength): they sit *behind* a peg
+  // and must not be mistaken for one.
   ret[COL_FLASH] = TEAL_WASH;
   ret[COL_HOLD] = PINK_WASH;
   ret[COL_CORRECTPLACE] = BLACK;

@@ -115,19 +115,22 @@ describe("the named colors", () => {
     // The bars are what upstream's hand-written sets measured. Every one of them
     // has to be beaten in BOTH schemes: a set's dark values are authored as a
     // set, never derived per color.
+    const free = (n: number): [string, Color][] =>
+      colors.FREE.slice(0, n).map((c, i) => [colors.FREE_NAMES[i].light, c]);
     const SETS: [name: string, entries: [string, Color][], upstream: number][] = [
-      [
-        "the ten (flood, guess)",
-        colors.TEN.map((c, i) => [colors.TEN_NAMES[i].light, c] as [string, Color]),
-        0.134,
-      ],
-      [
-        "the nine (samegame)",
-        colors.TEN.slice(0, 9).map(
-          (c, i) => [colors.TEN_NAMES[i].light, c] as [string, Color],
-        ),
-        0.127,
-      ],
+      // The colors that mean nothing, by how many a game takes: each first
+      // few are the set's, so each is held. Path takes nine, Same Game up to
+      // nine, and Flood and Guess six by default and up to ten. The bars are
+      // a little under what each measured (2026-10-22). The ten's light 0.125
+      // is under upstream's 0.134, which the owner accepted to keep every
+      // member off the board's meanings (2026-10-21; `FREE_DESIGN`); its dark
+      // is still near twice upstream's 0.070. Nine beat Same Game's upstream
+      // 0.127.
+      ["the first three free colors", free(3), 0.22],
+      ["the first four free colors", free(4), 0.15],
+      ["the first six free colors (flood, guess)", free(6), 0.13],
+      ["the first nine free colors (path, samegame)", free(9), 0.13],
+      ["the ten free colors (flood, guess)", free(10), 0.12],
       [
         "four region fills (map)",
         colors.FOUR_FILLS.map((c, i) => [`fill${i}`, c] as [string, Color]),
@@ -142,14 +145,6 @@ describe("the named colors", () => {
         "eight region fills (the region palette)",
         colors.REGION_FILLS.map((c, i) => [`fill${i}`, c] as [string, Color]),
         0.07,
-      ],
-      // No upstream set: Path colored nothing. The bar is what four colors
-      // reach in the hues the board's meanings leave (`FREE_DESIGN`), which
-      // measured 0.130 light and 0.145 dark (2026-10-21).
-      [
-        "the free colors (path)",
-        colors.FREE.map((c, i) => [`free${i}`, c] as [string, Color]),
-        0.125,
       ],
       [
         "six count digits (mines)",
@@ -321,14 +316,36 @@ describe("the named colors", () => {
       });
   });
 
-  it("says the ten's names alongside the ten", () => {
+  it("says the free colors' names alongside them", () => {
     // Flood's hint reads "Fill with orange". The only thing between that and a
     // lie is that the word and the color are handed out together.
-    expect(colors.TEN_NAMES.length).toBe(colors.TEN.length);
+    expect(colors.FREE_NAMES.length).toBe(colors.FREE.length);
     for (const scheme of ["light", "dark"] as const)
-      expect(new Set(colors.TEN_NAMES.map((w) => w.in(scheme))).size).toBe(
-        colors.TEN_NAMES.length,
+      expect(new Set(colors.FREE_NAMES.map((w) => w.in(scheme))).size).toBe(
+        colors.FREE_NAMES.length,
       );
+  });
+
+  it("puts a number on each free color that reads on it", () => {
+    // Path's filled disc carries its number in the member's text color.
+    expect(colors.FREE_TEXT.length).toBe(colors.FREE.length);
+    const lum = (c: Color): number => {
+      const lin = (v: number) =>
+        v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+    };
+    const contrast = (a: Color, b: Color): number => {
+      const [hi, lo] = [lum(a), lum(b)].sort((p, q) => q - p);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+    const inDark = (c: Color): Color => darkValue(c) ?? c;
+    colors.FREE.forEach((c, i) => {
+      const text = colors.FREE_TEXT[i];
+      expect(contrast(c, text), `${i} in light`).toBeGreaterThanOrEqual(3);
+      expect(contrast(inDark(c), inDark(text)), `${i} in dark`).toBeGreaterThanOrEqual(
+        3,
+      );
+    });
   });
 
   describe("calls each color what a player would, in each scheme", () => {
@@ -342,11 +359,14 @@ describe("the named colors", () => {
       orange: { h: [45, 75], l: [0.6, 1], c: [0.1, 1] },
       yellow: { h: [85, 115], l: [0.75, 1] },
       brown: { h: [30, 100], l: [0, 0.6], c: [0.03, 0.12] },
+      olive: { h: [85, 120], l: [0, 0.7], c: [0.06, 1] },
       green: { h: [130, 165] },
       teal: { h: [175, 215] },
+      mint: { h: [150, 180], l: [0.8, 1] },
       blue: { h: [230, 270] },
       violet: { h: [270, 300] },
       purple: { h: [295, 325], c: [0.12, 1] },
+      magenta: { h: [325, 350] },
       pink: { h: [340, 375], l: [0.65, 1] },
       maroon: { h: [340, 375], l: [0, 0.55] },
       gray: { c: [0, 0.02] },
@@ -369,7 +389,7 @@ describe("the named colors", () => {
       words: readonly ColorWord[],
       of: readonly (readonly Color[])[],
     ][] = [
-      ["TEN", colors.TEN_NAMES, [colors.TEN]],
+      ["FREE", colors.FREE_NAMES, [colors.FREE]],
       ["TWO", colors.TWO_NAMES, [colors.TWO]],
       ["FOUR", colors.FOUR_NAMES, [colors.FOUR_FILLS, colors.FOUR_FILL_MARKS]],
     ];

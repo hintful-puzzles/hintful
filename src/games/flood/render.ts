@@ -1,4 +1,4 @@
-import { BLACK, TEN, TEN_NAMES } from "../../engine/color/colors.ts";
+import { BLACK, FREE, FREE_NAMES } from "../../engine/color/colors.ts";
 import {
   FLASH,
   FLASH_LEAD,
@@ -53,7 +53,7 @@ export const COL_HINT = 15;
  * the palette rather than written here, because the sentence is a claim about
  * the board and only a word and a color from the same place keep it true.
  */
-export const COLOR_NAMES = TEN_NAMES;
+export const COLOR_NAMES = FREE_NAMES;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -61,7 +61,7 @@ export function colors(defaultBackground: Color): Color[] {
   // `BLACK`, not `INK`: a mark on a tile is drawn against the tile, not the
   // board, and stays black under both schemes.
   out[COL_MARK] = BLACK;
-  for (let i = 0; i < 10; i++) out[COL_1 + i] = TEN[i];
+  for (let i = 0; i < 10; i++) out[COL_1 + i] = FREE[i];
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_LIT] = FLASH;
   out[COL_LIT_LEAD] = FLASH_LEAD;

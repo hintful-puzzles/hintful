@@ -6,12 +6,14 @@
  * these, or a *meaning* defined over them in [`palette.ts`](./palette.ts), or a
  * color derived from the board it sits on.
  *
- * ## Why the set is exactly this size
+ * ## Why the set is this size
  *
- * **Flood, Guess and Samegame need ten members a player can tell apart**, in
- * every scheme; nothing else the collection does needs more. So the palette is
- * sized by that, and "how many colors should there be" has an answer rather than
- * a preference.
+ * **A name is here because something shows it**: a meaning in `palette.ts` is
+ * built on it, or a game names the color itself, and `palette-source.test.ts`
+ * fails on one nothing shows. A set whose job is to be told apart is not
+ * picked from the names but designed as a set, below: the colors that mean
+ * nothing ({@link FREE}), the region fills, the hint's references. So "how
+ * many colors should there be" has an answer rather than a preference.
  *
  * ## Two things a name has to be
  *
@@ -66,7 +68,7 @@
 
 import type { MarkRole } from "../hint-words.ts";
 import type { Color } from "../types.ts";
-import { token } from "./color-token.ts";
+import { darkValue, token } from "./color-token.ts";
 import { ColorWord } from "./color-word.ts";
 
 // --- OKLCH → sRGB ------------------------------------------------------
@@ -114,7 +116,7 @@ type Steps = {
  *
  * The lightnesses are not free-hand: they are the result of maximizing the worst
  * pairwise distance inside every set the collection needs a player to tell apart
- * — the ten-member set, Mines' six counts, the washes as a set of region
+ * — then the ten-member set Flood took from these names, Mines' six counts, the washes as a set of region
  * fills, the hint vocabulary, and each color's own three steps — subject to each
  * name staying true (a "yellow" at lightness 0.45 is olive; a "blue" at 0.9 is
  * not blue). Where several solutions cleared every bar, the one closest to the
@@ -138,9 +140,9 @@ type Steps = {
  *
  * - **A color may not leave its own name.** Uncapped, dark yellow went to
  *   lightness 0.95 at half the chroma it can carry: a **cream**, which bought
- *   the ten-set 0.158. Capped at 0.86 the set is 0.143 — still twice upstream's
- *   dark 0.070 and above its light 0.134 — and a yellow that reads as white
- *   fails the truthful-name rule outright.
+ *   the ten-set 0.158. Capped at 0.86 the set was 0.143 — still twice
+ *   upstream's dark 0.070 and above its light 0.134 — and a yellow that reads
+ *   as white fails the truthful-name rule outright.
  * - **A wash sits where the board's own cells sit.** A game's dark cells are
  *   drawn near 0.44, and a wash well below that reads as a hole in the board
  *   rather than a mark on it, as Crossing's across/down highlight once did. The
@@ -316,7 +318,7 @@ export const PINK: Color = of("PINK", "base");
 /** @see PINK */
 export const PINK_WASH: Color = of("PINK", "wash");
 
-/** Gray — the achromatic member, and the tenth member of {@link TEN}. */
+/** Gray — the achromatic member. */
 export const GRAY: Color = of("GRAY", "base");
 /** @see GRAY */
 export const GRAY_WASH: Color = of("GRAY", "wash");
@@ -342,40 +344,6 @@ export const WHITE: Color = token([1, 1, 1], [1, 1, 1]);
 // --- the sets ----------------------------------------------------------
 
 /**
- * **Ten colors a player can tell apart**, and the reason the palette is the size
- * it is: Flood's tiles, Guess's pegs, Samegame's nine (which takes all but the
- * gray — a gray tile among colored ones reads as a hole in the board).
- *
- * Upstream wrote Flood's and Guess's ten out twice and never designed them as a
- * set: worst pair 0.134 in light and **0.070** in dark, because mutual
- * distinguishability is a property of the set and no per-color rule — including
- * adapting one to a scheme — can establish it. This set measures 0.159 light and
- * 0.143 dark (2026-09-11).
- */
-export const TEN: readonly Color[] = [
-  RED,
-  YELLOW,
-  GREEN,
-  BLUE,
-  ORANGE,
-  PURPLE,
-  BROWN,
-  TEAL,
-  PINK,
-  GRAY,
-];
-
-/**
- * {@link TEN}, as a player would say them — the names a game may put in a
- * sentence.
- *
- * Parallel to {@link TEN} and exported *with* it so the two cannot drift: Flood's
- * hint reads "Fill with orange", and the only thing standing between that and a
- * lie is that the word and the color come from the same place.
- */
-export const TEN_NAMES: readonly ColorWord[] = TEN.map(wordOf);
-
-/**
  * **The two states of a two-state game**, where neither is the important one:
  * Unruly's two kinds of square. A game takes the pair from here and names no
  * hue of its own, so a different pair is this line, {@link TWO_NAMES} and
@@ -393,7 +361,7 @@ export const TEN_NAMES: readonly ColorWord[] = TEN.map(wordOf);
 export const TWO: readonly [Color, Color] = [PURPLE, YELLOW];
 
 /** {@link TWO}, as a player would say them: the words a hint puts in a
- * sentence, exported beside the colors as {@link TEN_NAMES} is. */
+ * sentence, exported beside the colors as {@link FREE_NAMES} is. */
 export const TWO_NAMES: readonly [ColorWord, ColorWord] = [
   wordOf(TWO[0]),
   wordOf(TWO[1]),
@@ -599,35 +567,82 @@ export const HINT_REFERENCE_COLORS: Readonly<Record<MarkRole, readonly Color[]>>
 };
 
 /**
- * **Colors that mean nothing**, for pieces a player tells apart by color
- * while something else, such as a number, says which is which: Path's pairs.
- * A game takes them by position, and this is the one set in the collection
- * whose members are only that.
+ * **Colors that mean nothing**: the one set in the collection whose members
+ * are only told apart. Flood's tiles and Guess's pegs take the first six by
+ * default and up to all ten, Same Game's tiles three to nine, and Path's
+ * pairs the first nine. A game takes them by position, so the order is the
+ * set's: each first few stand furthest apart.
  *
- * Every member stands apart from each color a board draws a meaning in over
- * its pieces: the error, the cursor and a held piece, the drag, and every
- * color a hint's ring or outline takes ({@link HINT_REFERENCE_COLORS}). A
- * pair's line is a line, and so is the hint's, so a blue pair would be read
- * as the hint's and a red one as broken. That leaves two arcs of hue, amber
- * to olive and violet to pink, and the members are laid out along them for
- * distance from one another in both schemes, at a lightness where a line
- * reads on `cellSurface` and a black number reads on a disc of the color.
+ * **Why ten.** Flood's and Guess's colors are their pieces' only identity,
+ * and they go up to ten. Path repeats the set past its size, which its
+ * numbers make harmless, and nine kept two pairs of one color side by side
+ * on 2 boards in 40 at 9x9 (the `color-path-pairs` change, design D5).
  *
- * A board with more pieces than the set has members repeats them, which is
- * why a game takes this set only where something else tells its pieces
- * apart. No words: no game says one of these aloud, and one that would
- * names them here, held to their colors as {@link TEN_NAMES} is.
+ * **What a member is kept from**, in both schemes: 0.15 from the error, and
+ * 0.10 from the cursor and a held piece, the hint's first ring (also the
+ * drag) and its first outline, which are drawn in the shapes a piece is. The
+ * hint's later references are allowed nearer (owner, 2026-10-21: "smaller
+ * hue differences between colors, as long as they're sufficiently distinct
+ * from the main semantic elements"): they appear only on a step with two of
+ * one role, the app redraws them edged while a hint shows
+ * (`puzzle/mark-flash.ts`), and the hint's words are tinted with them. So
+ * there is no red, blue or green here, and a mint and a teal stand in for
+ * the green and the blue a player might want.
+ *
+ * Gray is last, and a game that cannot show it takes fewer: Same Game's gray
+ * tile reads as a hole, and in the dark scheme Path's gray line sits near
+ * the white of a line reaching no number.
+ *
+ * Each member's word is the same in both schemes, so the set's names are
+ * read off its colors as every set's are ({@link FREE_NAMES}).
  */
-const FREE_DESIGN: readonly { light: Lch; dark: Lch }[] = [
-  // amber
-  { light: [0.58, 0.117, 72], dark: [0.81, 0.149, 72] },
-  // violet
-  { light: [0.54, 0.257, 288], dark: [0.66, 0.181, 288] },
-  // olive
-  { light: [0.48, 0.103, 116], dark: [0.72, 0.155, 116] },
-  // magenta
-  { light: [0.52, 0.212, 340], dark: [0.84, 0.112, 340] },
+const FREE_DESIGN: readonly {
+  word: string;
+  h: number;
+  light: Step;
+  dark: Step;
+}[] = [
+  { word: "yellow", h: 100, light: [0.86, 0.168], dark: [0.86, 0.16] },
+  { word: "violet", h: 292, light: [0.55, 0.22], dark: [0.68, 0.17] },
+  { word: "teal", h: 185, light: [0.68, 0.11], dark: [0.68, 0.115] },
+  { word: "magenta", h: 338, light: [0.56, 0.22], dark: [0.66, 0.21] },
+  { word: "orange", h: 58, light: [0.72, 0.156], dark: [0.75, 0.15] },
+  { word: "olive", h: 100, light: [0.52, 0.105], dark: [0.66, 0.12] },
+  { word: "pink", h: 355, light: [0.82, 0.09], dark: [0.88, 0.07] },
+  { word: "mint", h: 165, light: [0.88, 0.08], dark: [0.9, 0.08] },
+  { word: "brown", h: 45, light: [0.4, 0.07], dark: [0.52, 0.08] },
+  { word: "gray", h: 0, light: [0.62, 0], dark: [0.74, 0] },
 ];
 
-/** {@link FREE_DESIGN}. */
-export const FREE: readonly Color[] = FREE_DESIGN.map((d) => fill(d.light, d.dark));
+/** {@link FREE_DESIGN}, in its order. */
+export const FREE: readonly Color[] = FREE_DESIGN.map((d) =>
+  named(
+    token(oklch(d.light[0], d.light[1], d.h), oklch(d.dark[0], d.dark[1], d.h)),
+    d.word,
+  ),
+);
+
+/** {@link FREE}, as a player would say them: Flood's *"Fill with orange"*,
+ * Same Game's groups. Read off the colors, so recoloring a member cannot
+ * leave a sentence naming the old hue. */
+export const FREE_NAMES: readonly ColorWord[] = FREE.map(wordOf);
+
+/** WCAG's relative luminance of an sRGB color. */
+const luminance = (c: Color): number => {
+  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+};
+
+/** {@link BLACK}, or {@link WHITE} where black on `c` reads under 3:1. */
+const textOn = (c: Color): Color => ((luminance(c) + 0.05) / 0.05 >= 3 ? BLACK : WHITE);
+
+/**
+ * **The number on a filled disc of each member**, indexed alike: black, as a
+ * number on any piece of color is, except where black on the member would
+ * read under 3:1, which only the light brown does.
+ */
+export const FREE_TEXT: readonly Color[] = FREE.map((c) => {
+  const lightText = textOn(c);
+  const darkText = textOn(darkValue(c) ?? c);
+  return lightText === darkText ? lightText : token(lightText, darkText);
+});

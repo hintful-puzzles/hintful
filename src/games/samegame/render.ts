@@ -1,4 +1,4 @@
-import { BLACK, TEN, WHITE } from "../../engine/color/colors.ts";
+import { BLACK, FREE, WHITE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   FLASH,
@@ -77,7 +77,7 @@ const NCOLORS = 20;
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = new Array<Color>(NCOLORS);
   out[COL_BACKGROUND] = defaultBackground;
-  for (let i = 0; i < 9; i++) out[COL_1 + i] = TEN[i];
+  for (let i = 0; i < 9; i++) out[COL_1 + i] = FREE[i];
   out[COL_INK] = INK;
   // `WHITE` and `BLACK`, not `PAPER` and `INK`: both are read against a
   // tile, which is one color in both schemes, and a selected tile that
