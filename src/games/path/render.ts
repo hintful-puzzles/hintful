@@ -9,10 +9,10 @@
  * its own beside the word for what the square holds.
  */
 
+import { BLACK, FREE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
-  clueDoneColor,
   DRAG_ADD,
   DRAG_REMOVE,
   ERROR,
@@ -30,6 +30,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { type PieceBox, spreadColors } from "../../engine/spread-colors.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { PathHighlights } from "./hint.ts";
@@ -54,16 +55,17 @@ export const PREFERRED_TILE_SIZE = 40;
 const COL_BACKGROUND = 0;
 const COL_GRID = 1;
 const COL_CELL = 2;
-/** The disc under a number. */
+/** Inside the ring of a number whose path is not yet whole. */
 const COL_GIVEN = 3;
+/** A line reaching no number. */
 const COL_LINE = 4;
 const COL_RULED_OUT = 5;
 const COL_TEXT = 6;
 /** A line that breaks a rule already: it closes a loop, or joins two
  * different numbers. */
 export const COL_ERROR = 7;
-/** A number whose path is drawn whole. */
-const COL_DONE = 8;
+/** A number on the filled disc of a pair whose path is drawn whole. */
+const COL_DONE_TEXT = 8;
 const COL_DRAG_ADD = 9;
 const COL_DRAG_REMOVE = 10;
 const COL_CURSOR = 11;
@@ -74,6 +76,9 @@ export const COL_HINT = 12;
 export const COL_HINT_EVIDENCE = 13;
 const COL_FLASH = 14;
 const COL_FLASH_LEAD = 15;
+/** The first of a pair's colors, one slot each: a pair's discs and every line
+ * reaching them. */
+const COL_PAIR = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -85,7 +90,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_RULED_OUT] = RULED_OUT;
   out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
-  out[COL_DONE] = clueDoneColor(defaultBackground);
+  // `BLACK`, not `INK`: drawn on the pair's color, which is as light in the
+  // dark scheme as a line on the dark board has to be.
+  out[COL_DONE_TEXT] = BLACK;
   out[COL_DRAG_ADD] = DRAG_ADD;
   out[COL_DRAG_REMOVE] = DRAG_REMOVE;
   out[COL_CURSOR] = CURSOR;
@@ -93,6 +100,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
+  FREE.forEach((c, k) => {
+    out[COL_PAIR + k] = c;
+  });
   return out;
 }
 
@@ -160,12 +170,15 @@ export function pointAtEdge(state: PathState, ts: number, e: number): Point {
 // --- draw state -------------------------------------------------------------
 
 // Word 0, the square: its number in bits 0-7, then the cursor, the win
-// flash's tone, whether its path is whole, and the sides of the hint's
-// outline it draws (`hint-mark.ts`'s side bits).
+// flash's tone, whether its path is whole, the sides of the hint's outline
+// it draws (`hint-mark.ts`'s side bits), and the color of its lines, one
+// more than their pair's slot past `COL_PAIR`, or 0 for ink. Every line on a
+// square is of one piece, which joins them there.
 const F_CURSOR = 1 << 8;
 const K_TONE = 9;
 const F_DONE = 1 << 11;
 const K_OUTLINE = 12;
+const K_PIECE = 16;
 
 // Word 1, the sides: seven bits a side, in `SIDES` order.
 const SIDE_BITS = 7;
@@ -193,6 +206,8 @@ export interface PathDrawState {
   /** What each square shows on the canvas, three words a square; -1 before
    * the first frame. */
   cache: Int32Array;
+  /** Each number's slot past `COL_PAIR`, by the number. */
+  pairColor: Int32Array;
 }
 
 export function newDrawState(state: PathState, tileSize: number): PathDrawState {
@@ -201,7 +216,26 @@ export function newDrawState(state: PathState, tileSize: number): PathDrawState 
     started: false,
     tileSize,
     cache: new Int32Array(squares * WORDS).fill(-1),
+    pairColor: pairColors(state),
   };
+}
+
+/** A color for each number, its two squares' box spread over the set
+ * (`spreadColors`), so that pairs given near each other differ. */
+function pairColors({ w, ends }: PathState): Int32Array {
+  const boxes: PieceBox[] = [];
+  ends.forEach((n, i) => {
+    if (n === NO_END) return;
+    const [x, y] = [i % w, Math.floor(i / w)];
+    const b = boxes[n - 1];
+    if (b) {
+      b.x0 = Math.min(b.x0, x);
+      b.y0 = Math.min(b.y0, y);
+      b.x1 = Math.max(b.x1, x);
+      b.y1 = Math.max(b.y1, y);
+    } else boxes[n - 1] = { x0: x, y0: y, x1: x, y1: y };
+  });
+  return Int32Array.of(0, ...spreadColors(boxes, FREE.length));
 }
 
 // --- one square -------------------------------------------------------------
@@ -282,6 +316,8 @@ function drawTile(
   // two halves meeting in the middle make a round turn; two that run straight
   // through are one stroke, as two round ends overlapping there darken their
   // soft edges into a knob.
+  const piece = (square >> K_PIECE) & 0xf;
+  const lineColor = piece ? COL_PAIR + piece - 1 : COL_LINE;
   const strokes: { k: number; color: number; weight: number }[] = [];
   for (let k = 0; k < 4; k++) {
     const s = (sides >> (k * SIDE_BITS)) & ((1 << SIDE_BITS) - 1);
@@ -291,7 +327,7 @@ function drawTile(
     if (s & S_DRAG_ADD) color = COL_DRAG_ADD;
     else if (s & S_DRAG_REMOVE) color = COL_DRAG_REMOVE;
     else if ((s & 3) === LINE)
-      color = s & S_WRONG || s & S_ERROR ? COL_ERROR : COL_LINE;
+      color = s & S_WRONG || s & S_ERROR ? COL_ERROR : lineColor;
     else if (h === H_LINE) color = COL_HINT;
     else if (h === H_CHAIN_LINE) {
       color = COL_HINT_EVIDENCE;
@@ -314,17 +350,20 @@ function drawTile(
 
   const number = square & 0xff;
   if (number !== NO_END) {
+    // A ring in the pair's color while its path is open, and a disc filled
+    // with it once the path is whole.
     const r = Math.floor((ts * 3) / 8);
-    dr.drawCircle(
-      { x: cx, y: cy },
-      r,
-      COL_GIVEN,
-      square & F_DONE ? COL_DONE : COL_TEXT,
-    );
+    const pair = COL_PAIR + ds.pairColor[number];
+    const done = (square & F_DONE) !== 0;
+    dr.drawCircle({ x: cx, y: cy }, r, pair, pair);
+    if (!done) {
+      const ring = Math.max(2, Math.floor(ts / 12));
+      dr.drawCircle({ x: cx, y: cy }, r - ring, COL_GIVEN, COL_GIVEN);
+    }
     dr.drawText(
       { x: cx, y: cy },
       glyphFont(Math.floor(number > 9 ? ts / 3 : (ts * 2) / 5)),
-      square & F_DONE ? COL_DONE : COL_TEXT,
+      done ? COL_DONE_TEXT : COL_TEXT,
       String(number),
     );
   }
@@ -359,9 +398,14 @@ function drawTile(
 
 // --- redraw -----------------------------------------------------------------
 
-/** The edges of every piece of line that breaks a rule: one that closes a
- * loop, or that joins two different numbers. */
-function brokenEdges(state: PathState, edges: Uint8Array): Uint8Array {
+/** The pieces of line: `broken`, the edges of every piece that breaks a
+ * rule, one that closes a loop or joins two different numbers; and `reach`,
+ * the number each square's piece reaches, or {@link NO_END} where it reaches
+ * none or is broken. */
+function pieces(
+  state: PathState,
+  edges: Uint8Array,
+): { broken: Uint8Array; reach: Uint8Array } {
   const { ends } = state;
   const g = geometry(state.w, state.h);
   // Each piece, walked from a square of it, by the squares it passes.
@@ -395,14 +439,15 @@ function brokenEdges(state: PathState, edges: Uint8Array): Uint8Array {
     // Every link was counted from both its squares.
     looped[id] = links / 2 >= squares;
   }
-  const out = new Uint8Array(g.edgeCount);
-  for (let e = 0; e < g.edgeCount; e++) {
-    if (edges[e] !== LINE) continue;
-    const id = piece[g.a[e]];
-    const nums = numbers[id];
-    if (looped[id] || nums.some((v) => v !== nums[0])) out[e] = 1;
-  }
-  return out;
+  const isBroken = (id: number): boolean =>
+    looped[id] || numbers[id].some((v) => v !== numbers[id][0]);
+  const broken = new Uint8Array(g.edgeCount);
+  for (let e = 0; e < g.edgeCount; e++)
+    if (edges[e] === LINE && isBroken(piece[g.a[e]])) broken[e] = 1;
+  const reach = new Uint8Array(g.cells);
+  for (let i = 0; i < g.cells; i++)
+    if (!isBroken(piece[i])) reach[i] = numbers[piece[i]][0] ?? NO_END;
+  return { broken, reach };
 }
 
 export function redraw(
@@ -432,7 +477,7 @@ export function redraw(
     ui.drag && ui.drag.cells.length > 1 ? dragChanges(state, ui.drag.cells) : [];
   const edges = withChanges(state, drag);
   const dragged = new Map(drag.map((c) => [c.edge, c.mark]));
-  const broken = brokenEdges(state, edges);
+  const { broken, reach } = pieces(state, edges);
   const wrong = new Set(mistakes?.map((m) => m.edge));
   const done = doneNumbers(state, edges);
 
@@ -467,7 +512,8 @@ export function redraw(
         (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y ? F_CURSOR : 0) |
         (flash.win(sweepStep(x, y)) << K_TONE) |
         (ends[i] !== NO_END && done.has(ends[i]) ? F_DONE : 0) |
-        (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0);
+        (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0) |
+        (reach[i] !== NO_END ? (ds.pairColor[reach[i]] + 1) << K_PIECE : 0);
       let sides = 0;
       let hints = 0;
       for (let k = 0; k < 4; k++) {

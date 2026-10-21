@@ -750,7 +750,7 @@ and which one you reach for is the decision:
 - [`engine/color/colors.ts`](../src/engine/color/colors.ts) holds **the
   palette itself**: the named colors, most at three intensities (base,
   `_WASH`, `_BOLD`), and the sets made to be told apart (`TEN`, `TEN_NAMES`,
-  `REGION_FILLS`, `FOUR_FILLS`).
+  `REGION_FILLS`, `FOUR_FILLS`, `FREE`).
 - [`engine/color/palette-games.ts`](../src/engine/color/palette-games.ts)
   holds colors a game defines **relative to its own board**, prefixed with
   its id (`slantGrounded`, `undeadGhost`). Functions, not values.
@@ -776,6 +776,13 @@ its own.
   shown alike in every scheme, a help page, a control's `does` or a mark's
   own words, takes `.only`, which refuses a color with two words.
   `colors.test.ts` holds every word to its color in both schemes.
+- **Pieces told apart by a color that means nothing, while a number or a
+  letter says which is which, take `FREE`**, spread by `spreadColors`
+  (`engine/spread-colors.ts`) and repeating past its size. `TEN` is for
+  pieces whose color is all that tells them apart, and it holds the error's
+  red and the hint's blue, so a piece in it can hide a mark. `FREE` holds
+  none of them, and has only four members for that reason. Exemplar:
+  [`path/render.ts`](../src/games/path/render.ts).
 - **A game whose board has spent the default may pick a different named
   color, and says why on the assignment's line or the line above**
   (`engine-colors` § "A departure from a shared role is stated at the

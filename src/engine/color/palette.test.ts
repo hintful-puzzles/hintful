@@ -306,6 +306,74 @@ describe("the shared color vocabulary", () => {
       }
   });
 
+  it("keeps the free colors off every meaning drawn over a piece, in both schemes", () => {
+    // A pair's line is drawn as the hint's is, so a free color near a mark's
+    // reads as that mark: a blue pair as the hint's line, a red one as
+    // broken. Held to 0.1 from each, above the 0.07 the hint's references
+    // are held to from one another, and further from the error, the one a
+    // player must never miss. Stripes are not among them: a hatch laid under a symbol is
+    // not a line, and no game with these colors draws one.
+    const inDark = (c: Color): Color => darkValue(c) ?? c;
+    const relLum = (c: Color): number => {
+      const lin = (v: number) =>
+        v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+    };
+    const contrast = (a: Color, b: Color): number => {
+      const [hi, lo] = [relLum(a), relLum(b)].sort((p, q) => q - p);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+    const apart = (a: Color, b: Color): number => {
+      const plane = ([, c, h]: OKLCH): [number, number] =>
+        isGrayChroma(c)
+          ? [0, 0]
+          : [c * Math.cos((h * Math.PI) / 180), c * Math.sin((h * Math.PI) / 180)];
+      const [p, q] = [colorToOKLCH(a), colorToOKLCH(b)];
+      const [px, py] = plane(p);
+      const [qx, qy] = plane(q);
+      return Math.hypot(p[0] - q[0], px - qx, py - qy);
+    };
+    const marks: [string, Color][] = [
+      ["the cursor", roles.CURSOR],
+      ["a held piece", roles.HELD],
+      ["the drag", roles.DRAG_ADD],
+      ...(["ring", "outline"] as const).flatMap((role) =>
+        colors.HINT_REFERENCE_COLORS[role].map((c, i): [string, Color] => [
+          `${role} ${i}`,
+          c,
+        ]),
+      ),
+    ];
+    const surface = roles.cellSurface(BG);
+    expect(colors.FREE.length).toBeGreaterThanOrEqual(4);
+    for (const [k, c] of colors.FREE.entries())
+      for (const [scheme, f] of [
+        ["light", (x: Color) => x],
+        ["dark", inDark],
+      ] as const) {
+        for (const [name, mark] of marks)
+          expect(
+            apart(f(c), f(mark)),
+            `free${k} from ${name} in ${scheme}`,
+          ).toBeGreaterThan(0.1);
+        expect(
+          apart(f(c), f(roles.ERROR)),
+          `free${k} from the error in ${scheme}`,
+        ).toBeGreaterThan(0.15);
+        // A line of it reads on the cell, as the hint's ring does (2.5 in
+        // light, less a hair for the amber, whose line is thick), and a
+        // black number reads on a disc of it.
+        expect(
+          contrast(f(c), f(surface)),
+          `free${k} on the cell in ${scheme}`,
+        ).toBeGreaterThan(2.4);
+        expect(
+          contrast(f(c), colors.BLACK),
+          `black on free${k} in ${scheme}`,
+        ).toBeGreaterThan(3);
+      }
+  });
+
   it("keeps Signpost's chain colors apart, in both schemes", () => {
     // Two of its chains once took colors 0.009 apart, mixes of two fills
     // that had both gone gray. Every chain color is a region fill now, and

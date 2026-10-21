@@ -31,9 +31,12 @@ Holding Ctrl while pressing an arrow key draws or removes the line in that
 direction and moves along it, and holding Shift crosses out or clears the
 edge in that direction.
 
-A line turns red when it breaks the rules already: when it joins two
-different numbers, or closes into a loop. The two numbers of a pair turn gray
-once a line joins them.
+Each pair of numbers has a color, ringing both its numbers, and a line takes
+that color once it reaches one of them, while a line that reaches no number
+yet has none. Colors repeat on a board with more pairs than colors, and the numbers
+tell those pairs apart. A line turns red when it breaks the rules already:
+when it joins two different numbers, or closes into a loop. A pair's two
+discs fill with its color once a line joins them.
 
 ## Where the puzzle comes from
 

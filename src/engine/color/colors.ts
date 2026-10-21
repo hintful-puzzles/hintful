@@ -597,3 +597,37 @@ export const HINT_REFERENCE_COLORS: Readonly<Record<MarkRole, readonly Color[]>>
   outline: designed("outline"),
   stripes: designed("stripes"),
 };
+
+/**
+ * **Colors that mean nothing**, for pieces a player tells apart by color
+ * while something else, such as a number, says which is which: Path's pairs.
+ * A game takes them by position, and this is the one set in the collection
+ * whose members are only that.
+ *
+ * Every member stands apart from each color a board draws a meaning in over
+ * its pieces: the error, the cursor and a held piece, the drag, and every
+ * color a hint's ring or outline takes ({@link HINT_REFERENCE_COLORS}). A
+ * pair's line is a line, and so is the hint's, so a blue pair would be read
+ * as the hint's and a red one as broken. That leaves two arcs of hue, amber
+ * to olive and violet to pink, and the members are laid out along them for
+ * distance from one another in both schemes, at a lightness where a line
+ * reads on `cellSurface` and a black number reads on a disc of the color.
+ *
+ * A board with more pieces than the set has members repeats them, which is
+ * why a game takes this set only where something else tells its pieces
+ * apart. No words: no game says one of these aloud, and one that would
+ * names them here, held to their colors as {@link TEN_NAMES} is.
+ */
+const FREE_DESIGN: readonly { light: Lch; dark: Lch }[] = [
+  // amber
+  { light: [0.58, 0.117, 72], dark: [0.81, 0.149, 72] },
+  // violet
+  { light: [0.54, 0.257, 288], dark: [0.66, 0.181, 288] },
+  // olive
+  { light: [0.48, 0.103, 116], dark: [0.72, 0.155, 116] },
+  // magenta
+  { light: [0.52, 0.212, 340], dark: [0.84, 0.112, 340] },
+];
+
+/** {@link FREE_DESIGN}. */
+export const FREE: readonly Color[] = FREE_DESIGN.map((d) => fill(d.light, d.dark));

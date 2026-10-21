@@ -95,7 +95,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `permutation-planner.ts` — a staged plan over any permutation moves | the hint should place pieces in reading order, the way a person solves |
 | – `position-store.ts` — the positions a breadth-first search reached | a hint searches breadth-first |
 | – `piece.ts` — a piece on its cell | a cell holds a piece, is shaded or is ruled out |
-| – `region-fill.ts` — a fill for each region of a division | the puzzle divides your board into regions, or its answer is a coloring of them |
+| – `region-fill.ts` — a fill for each region of a division | regions are colored, or pieces outnumber their colors |
 | – `hint-mark.ts` — the ring and the outline | you draw a hint's marks on cells |
 | – `hatch.ts` — the stripes on the line a step names | a hint sentence names a row or column |
 | – `hint-ordinal.ts` — where a cell falls in a forced chain | a hint step walks a chain of cells |
@@ -920,6 +920,16 @@ its fills are tried. Two callers, which differ only in that choice:
   Byte-match critical there: the walk asks once for the region and once for
   its fills at every step, and Map's frozen differential pins the draws of
   upstream's four-coloring through it. Exemplar: `map/generator.ts`.
+
+**Pieces that outnumber a set's colors** are not a division, and take
+`spreadColors(boxes, colors)` (`spread-colors.ts`) instead: where a number
+or letter tells repeated colors apart, as Path's pairs on `FREE`
+(`color/colors.ts`). It takes each piece's box of given squares and keeps
+pieces near each other on different colors. **Give it what the puzzle
+gives, never the answer**: colors spread by where the answer's lines run
+tell a player which pairs do not touch. Call it in `newDrawState`, so a
+board wears the same colors each time it is opened. Exemplar:
+`path/render.ts`.
 
 ### `hint-mark.ts` — the ring and the outline
 

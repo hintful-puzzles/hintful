@@ -143,6 +143,14 @@ describe("the named colors", () => {
         colors.REGION_FILLS.map((c, i) => [`fill${i}`, c] as [string, Color]),
         0.07,
       ],
+      // No upstream set: Path colored nothing. The bar is what four colors
+      // reach in the hues the board's meanings leave (`FREE_DESIGN`), which
+      // measured 0.130 light and 0.145 dark (2026-10-21).
+      [
+        "the free colors (path)",
+        colors.FREE.map((c, i) => [`free${i}`, c] as [string, Color]),
+        0.125,
+      ],
       [
         "six count digits (mines)",
         label([
