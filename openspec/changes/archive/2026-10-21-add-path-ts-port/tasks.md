@@ -48,4 +48,4 @@
 
 - [x] 6.1 Findings recorded in `design.md`; guides updated with what the
       build taught.
-- [ ] 6.2 Commit and push; bring to the owner for acceptance, then archive.
+- [x] 6.2 Commit and push; the owner accepted the game (2026-10-21); archive.
