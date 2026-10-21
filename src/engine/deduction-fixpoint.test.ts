@@ -467,3 +467,145 @@ describe("singleFirings", () => {
     expect(message).toMatch(/Techniques by firings: liar ×30\./);
   });
 });
+
+describe("singleFirings, continuing where the plan is", () => {
+  /**
+   * A board of firings, each a name that reads and writes elements; a rung
+   * offers those of its rung still untaken. Taking one logs its name.
+   */
+  function ladderOf(
+    rungs: readonly (readonly {
+      name: string;
+      reads: number[];
+      writes: number[];
+      /** Offered only once this firing has been taken. */
+      after?: string;
+    }[])[],
+    log: string[],
+    asked: string[] = [],
+  ): DeductionTechnique[] {
+    const taken = new Set<string>();
+    return rungs.map((firings, k) => ({
+      id: `rung-${k}`,
+      tier: 0,
+      run: () => {
+        throw new Error("a continuing plan never runs a rung's first firing");
+      },
+      available: () => {
+        asked.push(`rung-${k}`);
+        return firings
+          .filter(
+            (f) => !taken.has(f.name) && (f.after === undefined || taken.has(f.after)),
+          )
+          .map((f) => ({
+            reads: () => f.reads,
+            writes: () => f.writes,
+            take: () => {
+              taken.add(f.name);
+              log.push(f.name);
+            },
+          }));
+      },
+    }));
+  }
+
+  const plan = (techniques: DeductionTechnique[], calls: number): void => {
+    const ladder = singleFirings({
+      techniques,
+      budget: stepBudget("continuing"),
+      continuing: true,
+    });
+    for (let i = 0; i < calls; i++) ladder.next();
+  };
+
+  it("takes the firing that continues from the last one over an easier one elsewhere", () => {
+    const log: string[] = [];
+    plan(
+      ladderOf(
+        [
+          [
+            { name: "a", reads: [1], writes: [1] },
+            { name: "far", reads: [9], writes: [9] },
+          ],
+          [{ name: "next to a", reads: [1], writes: [2] }],
+        ],
+        log,
+      ),
+      3,
+    );
+    // A fresh plan has no frontier, so it starts by the rung order; then the
+    // harder firing that continues beats the easy one across the board.
+    expect(log).toEqual(["a", "next to a", "far"]);
+  });
+
+  it("keeps its place through a firing that writes nothing it keys on", () => {
+    const log: string[] = [];
+    plan(
+      ladderOf(
+        [
+          [
+            { name: "line on 3", reads: [3], writes: [3] },
+            { name: "line on 2", reads: [2], writes: [2] },
+            { name: "join the 3", reads: [3], writes: [3], after: "cross 3" },
+          ],
+          // As many crosses as the frontier is deep: were each one a step of
+          // its own, the 3 would have dropped out of it by the join.
+          [
+            { name: "cross 1", reads: [3, 2], writes: [] },
+            { name: "cross 2", reads: [3, 2], writes: [], after: "cross 1" },
+            { name: "cross 3", reads: [3, 2], writes: [], after: "cross 2" },
+          ],
+        ],
+        log,
+      ),
+      6,
+    );
+    expect(log).toEqual([
+      "line on 3",
+      "cross 1",
+      "cross 2",
+      "cross 3",
+      "join the 3",
+      "line on 2",
+    ]);
+  });
+
+  it("asks a dear rung only when no easier one continues", () => {
+    const log: string[] = [];
+    const asked: string[] = [];
+    plan(
+      ladderOf(
+        [
+          [
+            { name: "a", reads: [1], writes: [1] },
+            { name: "b", reads: [1], writes: [1] },
+          ],
+          [{ name: "dear", reads: [5], writes: [5] }],
+        ],
+        log,
+        asked,
+      ),
+      2,
+    );
+    expect(log).toEqual(["a", "b"]);
+    expect(asked).not.toContain("rung-1");
+  });
+
+  it("stops on a rung's contradiction, and refuses a rung that offers nothing", () => {
+    const contradicting = singleFirings({
+      techniques: [
+        { id: "broken", tier: 0, run: () => 0, available: () => "contradiction" },
+      ],
+      budget: stepBudget("contradiction"),
+      continuing: true,
+    });
+    expect(contradicting.next()).toBeNull();
+    expect(contradicting.impossible()).toBe(true);
+    const undeclared = singleFirings({
+      techniques: [{ id: "old", tier: 0, run: () => 0 }],
+      budget: stepBudget("undeclared"),
+      continuing: true,
+    });
+    expect(() => undeclared.next()).toThrow(/old.*available/);
+  });
+});

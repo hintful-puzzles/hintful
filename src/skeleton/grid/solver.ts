@@ -15,6 +15,7 @@
 import {
   type DeductionTechnique,
   type FiringTally,
+  type LadderCandidate,
   runDeductionFixpoint,
   type SingleFirings,
   singleFirings,
@@ -114,25 +115,27 @@ export function isComplete(
   return board.clueSquares().every((c) => board.need(c) === 0);
 }
 
-/** The first number whose count decides its open squares, `null` when none
- * does, or `"contradiction"` when a number can no longer be met. */
-function findCount(b: SkeletonBoard): SkeletonFiring | null | "contradiction" {
+/** Every number whose count decides its open squares, in reading order, or
+ * `"contradiction"` when a number can no longer be met. */
+function allCounts(b: SkeletonBoard): SkeletonFiring[] | "contradiction" {
+  const out: SkeletonFiring[] = [];
   for (const clue of b.clueSquares()) {
     const open = b.open(clue);
     const need = b.need(clue);
     if (need < 0 || need > open.length) return "contradiction";
     if (open.length === 0) continue;
     const reason: SkeletonReason = { kind: "count", clue, need, open: open.length };
-    if (need === 0) return { reason, cells: open, mark: CROSSED };
-    if (need === open.length) return { reason, cells: open, mark: FILLED };
+    if (need === 0) out.push({ reason, cells: open, mark: CROSSED });
+    else if (need === open.length) out.push({ reason, cells: open, mark: FILLED });
   }
-  return null;
+  return out;
 }
 
-/** The first pair of numbers where one's open squares all lie beside the
- * other, and the difference of their needs decides the other's remaining
- * open squares. */
-function findShared(b: SkeletonBoard): SkeletonFiring | null {
+/** Every pair of numbers where one's open squares all lie beside the other,
+ * and the difference of their needs decides the other's remaining open
+ * squares. */
+function allShared(b: SkeletonBoard): SkeletonFiring[] {
+  const out: SkeletonFiring[] = [];
   const clues = b.clueSquares();
   for (const clue of clues) {
     const open = b.open(clue);
@@ -154,11 +157,21 @@ function findShared(b: SkeletonBoard): SkeletonFiring | null {
         innerNeed,
         meet: within,
       };
-      if (beyond === 0) return { reason, cells: rest, mark: CROSSED };
-      if (beyond === rest.length) return { reason, cells: rest, mark: FILLED };
+      if (beyond === 0) out.push({ reason, cells: rest, mark: CROSSED });
+      else if (beyond === rest.length) out.push({ reason, cells: rest, mark: FILLED });
     }
   }
-  return null;
+  return out;
+}
+
+/** The squares a firing's premise reads, which a hint plan continues from:
+ * its numbers and the squares around them. */
+function readsOf(b: SkeletonBoard, firing: SkeletonFiring): number[] {
+  const { reason } = firing;
+  const around = (clue: number): number[] => [clue, ...neighbors(b.w, b.h, clue)];
+  return reason.kind === "count"
+    ? around(reason.clue)
+    : [...around(reason.clue), ...around(reason.inner)];
 }
 
 /** The ladder over `board`. A rung that fires writes its squares, and hands
@@ -172,23 +185,38 @@ function ladder(
     record?.(firing);
     return 1;
   };
+  // What a hint plan chooses among: each firing with what it reads and the
+  // squares it writes.
+  const offered = (found: readonly SkeletonFiring[]): LadderCandidate[] =>
+    found.map((firing) => ({
+      reads: () => readsOf(board, firing),
+      writes: () => firing.cells,
+      take: () => {
+        apply(firing);
+      },
+    }));
   return [
     {
       id: "count" satisfies SkeletonRung,
       tier: DIFF_EASY,
       run: () => {
-        const found = findCount(board);
+        const found = allCounts(board);
         if (found === "contradiction") return -1;
-        return found ? apply(found) : 0;
+        return found.length > 0 ? apply(found[0]) : 0;
+      },
+      available: () => {
+        const found = allCounts(board);
+        return found === "contradiction" ? found : offered(found);
       },
     },
     {
       id: "shared" satisfies SkeletonRung,
       tier: DIFF_NORMAL,
       run: () => {
-        const found = findShared(board);
-        return found ? apply(found) : 0;
+        const found = allShared(board);
+        return found.length > 0 ? apply(found[0]) : 0;
       },
+      available: () => offered(allShared(board)),
     },
   ];
 }
@@ -240,6 +268,8 @@ export function skeletonRecordingPass(
     }),
     budget,
     settled: () => !board.unfinished(),
+    // A plan stays with the squares it is working on before it moves on.
+    continuing: true,
   });
   return {
     next: () => (pass.next() ? last : null),

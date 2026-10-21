@@ -87,7 +87,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `candidate-hint.ts` — candidate-elimination plan plumbing | your hint strikes pencil notes |
 | – `entry-mistakes.ts` — Check & Save for one value or a set of marks per cell | the player places one value a cell |
 | – `candidate-plan.ts` — the candidate-elimination plan walk | you write a notes game's `buildSteps` |
-| – `hint-frontier.ts` — which available firing a plan takes next | a candidate plan is not on a grid |
+| – `hint-frontier.ts` — which available firing a plan takes next | a plan wanders, or is not on a grid |
 | – `latin-hint.ts` — truthful Latin single classification | a Latin game's hint narrates a single |
 | – `hint-words.ts` — a hint's words bound to its marks | you write a hint step's sentence |
 | – `hint-text.ts` — the sentences several games share | another game already says your sentence |
@@ -510,6 +510,10 @@ fires. Exemplar: `src/skeleton/grid/solver.ts`.
   with a sticky `impossible()` and a required budget. It returns every
   firing; hiding one is `deduceHintPlan`'s `showable`. See
   [`hints.md`](./hints.md) § "Recording the deduction".
+- **With `continuing`, the hint stays where its work is**: each technique
+  declares `available()`, and the driver takes the firing that continues
+  from the plan's latest steps (`hint-frontier.ts`, below). Without it a
+  plan takes whichever firing the scan meets first, and wanders.
 - **Read the header's no-gos before adopting it or "fixing" a game that
   does not use it**, and re-derive that list when the contract changes. The
   bookkeeping around a ladder is the game's and often decides which boards
@@ -789,6 +793,15 @@ than grid cells keys it on that and drives it from its own plan
 (`map/hint.ts`). See [`hints-candidates.md`](./hints-candidates.md) §
 "Continue from the last step" and `hints-candidates.md` § "A graph, not a
 grid (Map)".
+
+A deduction ladder's hint takes it through `singleFirings`' `continuing`:
+each technique declares `available()`, every firing it could make with what
+it reads and writes, and the driver keeps the frontier, a fresh one a plan.
+Key what a firing reads and writes on what the player follows, which need
+not be a cell: Path keys on the number whose line a step extends, and a
+cross writes nothing, so the plan stays with that line until it is joined.
+A firing that writes nothing keyed leaves the frontier where it was. Exemplar:
+`easyRungs` and `offered` in [`path/solver.ts`](../src/games/path/solver.ts).
 
 ### `latin-hint.ts` — truthful Latin single classification
 

@@ -19,7 +19,9 @@ import {
   CROSS,
   DIFF_EASY,
   DIFF_NORMAL,
+  edgeBetween,
   executeMove,
+  geometry,
   LINE,
   newState,
   type PathParams,
@@ -124,6 +126,31 @@ describe("path hint plans", () => {
         state,
       ),
     ).toBe("off");
+  });
+});
+
+describe("path hint order", () => {
+  it("finishes the line it is working on before it starts another", () => {
+    // The owner's board (2026-10-21): the plan used to draw the 2's and the
+    // 3's first edges and then go to the 4.
+    const state = newState({ w: 5, h: 5, diff: DIFF_EASY }, "1c2b3a3b2_1_4e4d");
+    const g = geometry(5, 5);
+    const sq = (x: number, y: number): number => y * 5 + x;
+    const edge = (p: [number, number], q: [number, number]): number =>
+      edgeBetween(g, sq(...p), sq(...q));
+    const result = pathGame.hint?.(state);
+    if (!result?.ok) throw new Error("refused");
+    const first = result.steps
+      .slice(0, 5)
+      .map((step) => (step.move.kind === "edges" ? step.move.changes : []));
+    expect(first).toEqual([
+      [{ edge: edge([3, 0], [4, 0]), mark: LINE }],
+      [{ edge: edge([3, 1], [4, 1]), mark: LINE }],
+      // The two crosses beside the 3's line, and then the 3 is joined.
+      [{ edge: edge([3, 0], [3, 1]), mark: CROSS }],
+      [{ edge: edge([3, 1], [3, 2]), mark: CROSS }],
+      [{ edge: edge([2, 1], [3, 1]), mark: LINE }],
+    ]);
   });
 });
 

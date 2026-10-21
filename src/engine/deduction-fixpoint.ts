@@ -46,6 +46,7 @@
  * eight rungs entirely left every one of its tests green, since that rung fires
  * on no board its generator produces.
  */
+import { HintFrontier } from "./hint-frontier.ts";
 import { type StepBudget, StepBudgetExceeded } from "./step-budget.ts";
 
 /**
@@ -82,6 +83,29 @@ export interface DeductionTechnique {
    * oblivious to it.
    */
   run: () => number;
+  /**
+   * Every firing this technique could make from the current board, for a hint
+   * plan that continues where its latest steps were rather than taking the
+   * first firing a scan meets ({@link SingleFiringOptions.frontier}). Each
+   * says what it reads and writes, and `take` makes it as `run` would (writes
+   * the board, records the firing). `"contradiction"` where `run` would return
+   * `< 0`.
+   *
+   * Only the recording path reads it, and only with a frontier; the fixpoint
+   * and a plan without one run `run`. A technique whose search is dear may
+   * offer just the firing `run` would make.
+   */
+  available?: () => readonly LadderCandidate[] | "contradiction";
+}
+
+/** A firing a technique could make now, offered to a hint plan's frontier. */
+export interface LadderCandidate {
+  /** The elements its premise reads, by the frontier's key. */
+  reads(): readonly number[];
+  /** The elements it writes, which a later step continues from. */
+  writes(): readonly number[];
+  /** Make the firing: write the board and record it. */
+  take(): void;
 }
 
 /**
@@ -227,6 +251,42 @@ function firstFiring(
 }
 
 /**
+ * The firing the frontier takes: of every technique's {@link
+ * DeductionTechnique.available} firings, the one continuing from the plan's
+ * latest firings, rung order breaking ties. A rung's firings are asked for only
+ * when the frontier reaches it, so a dear rung costs nothing while an easier one
+ * continues.
+ */
+function continuingFiring(
+  opts: SingleFiringOptions,
+  frontier: HintFrontier<number>,
+  firings: FiringTally,
+): DeductionTechnique | null | "contradiction" {
+  const { techniques, maxTier, beforeTechnique } = opts;
+  const admitted = techniques.filter((t) => maxTier === undefined || t.tier <= maxTier);
+  let contradiction = false;
+  const rungs = admitted.map((technique) => () => {
+    const { available } = technique;
+    if (!available)
+      throw new Error(
+        `deduction-fixpoint: "${technique.id}" declares no available(), which a plan with a frontier needs`,
+      );
+    beforeTechnique?.(technique);
+    const offered = available();
+    if (offered === "contradiction") {
+      contradiction = true;
+      return [];
+    }
+    return offered.map((candidate) => ({ ...candidate, technique }));
+  });
+  const taken = frontier.takeContinuing(rungs, () => contradiction);
+  if (contradiction) return "contradiction";
+  if (taken === null) return null;
+  firings.set(taken.technique.id, (firings.get(taken.technique.id) ?? 0) + 1);
+  return taken.technique;
+}
+
+/**
  * Run the ordered techniques to a fixpoint (see the module doc). Returns the
  * reached grade and whether a technique proved the board inconsistent; callers
  * handle `impossible` first (the reported `grade` is meaningless then).
@@ -265,6 +325,16 @@ export type SingleFiringOptions = Omit<
   "baseGrade" | "budget"
 > & {
   budget: StepBudget;
+  /**
+   * Whether the plan stays where its work is: each call takes the firing that
+   * continues from what the plan's latest firings wrote, trying the rungs in
+   * order, and only with nothing continuing the first firing of the first rung
+   * that has one (`hint-frontier.ts`, the owner's rule). Every technique the
+   * cap admits must then declare {@link DeductionTechnique.available}. The
+   * frontier is the driver's own, so each plan starts from none and two
+   * identical boards hint alike.
+   */
+  continuing?: boolean;
 };
 
 /** The ladder, one firing per call. */
@@ -300,12 +370,16 @@ export function singleFirings(opts: SingleFiringOptions): SingleFirings {
   const firings = opts.firings ?? new Map<string, number>();
   const budget = attributingBudget(opts.budget, firings);
   let impossible = false;
+  // A ladder's elements are the game's own numbers, so the key is the number.
+  const frontier = opts.continuing ? new HintFrontier<number>((i) => i) : null;
   return {
     next(): DeductionTechnique | null {
       if (impossible) return null;
       budget.tick();
       if (opts.settled?.()) return null;
-      const fired = firstFiring(opts, firings);
+      const fired = frontier
+        ? continuingFiring(opts, frontier, firings)
+        : firstFiring(opts, firings);
       if (fired !== "contradiction") return fired;
       impossible = true;
       return null;

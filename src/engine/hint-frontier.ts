@@ -96,6 +96,68 @@ export class HintFrontier<P = Point> {
     return true;
   }
 
+  /**
+   * As {@link take}, for a deduction ladder's firings
+   * (`deduction-fixpoint.ts`'s `available`), which say what they write
+   * themselves. Each rung is offered as a thunk and asked for only when the
+   * choice reaches it, so a dear rung (a look-ahead) costs nothing while a
+   * cheaper one continues; once `stop` says so (a rung found the board
+   * inconsistent) the choice ends with nothing taken. Returns the candidate
+   * taken.
+   */
+  takeContinuing<C extends FrontierCandidate<P> & { writes(): readonly P[] }>(
+    rungs: readonly (() => readonly C[])[],
+    stop: () => boolean = () => false,
+  ): C | null {
+    const lists = new Map<number, readonly C[]>();
+    const rung = (k: number): readonly C[] | null => {
+      let list = lists.get(k);
+      if (!list) {
+        list = rungs[k]();
+        lists.set(k, list);
+      }
+      return stop() ? null : list;
+    };
+    let chosen: C | null = null;
+    find: for (let age = this.recent.length - 1; age >= 0 && !chosen; age--) {
+      const wrote = this.recent[age];
+      for (let k = 0; k < rungs.length; k++) {
+        const list = rung(k);
+        if (list === null) return null;
+        const c = list.find((cand) =>
+          cand.reads().some((p) => {
+            const i = this.key(p);
+            return i !== null && wrote.has(i);
+          }),
+        );
+        if (c) {
+          chosen = c;
+          break find;
+        }
+      }
+    }
+    for (let k = 0; k < rungs.length && !chosen; k++) {
+      const list = rung(k);
+      if (list === null) return null;
+      chosen = list[0] ?? null;
+    }
+    if (!chosen) return null;
+    chosen.take();
+    const wrote = new Set<number>();
+    for (const p of chosen.writes()) {
+      const c = this.key(p);
+      if (c !== null) wrote.add(c);
+    }
+    // A step that writes nothing the frontier keys on serves the work in hand
+    // (Path's cross beside the line being drawn) and leaves the frontier where
+    // it was, so the next step still continues that work.
+    if (wrote.size > 0) {
+      this.recent.push(wrote);
+      if (this.recent.length > DEPTH) this.recent.shift();
+    }
+    return chosen;
+  }
+
   private choose(
     rungs: readonly (readonly FrontierCandidate<P>[])[],
   ): FrontierCandidate<P> | null {

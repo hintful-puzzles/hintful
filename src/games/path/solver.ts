@@ -25,6 +25,7 @@
 import {
   type DeductionTechnique,
   type FiringTally,
+  type LadderCandidate,
   runDeductionFixpoint,
   type SingleFirings,
   singleFirings,
@@ -33,6 +34,7 @@ import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
 import {
+  across,
   CROSS,
   DIFF_EASY,
   DIFF_NORMAL,
@@ -278,13 +280,107 @@ function easyRungs(
       id: "forced" satisfies PathRung,
       tier: DIFF_EASY,
       run: () => apply(findForced(board)),
+      available: () => offered(board, apply, allForced(board)),
     },
     {
       id: "pair" satisfies PathRung,
       tier: DIFF_EASY,
       run: () => apply(findPair(board)),
+      available: () => offered(board, apply, allPairs(board)),
     },
   ];
+}
+
+/** Every forced firing on `b`, for a plan that chooses among them. */
+function allForced(b: PathBoard): PathFiring[] | "contradiction" {
+  const out: PathFiring[] = [];
+  for (let i = 0; i < b.g.cells; i++) {
+    const need = degreeOf(b.ends, i) - b.edgesAt(i, LINE).length;
+    if (need < 0) return "contradiction";
+    if (need === 0) continue;
+    const live = b.liveAt(i);
+    if (need > live.length) return "contradiction";
+    if (need === live.length)
+      out.push({ reason: { kind: "forced", cell: i, need }, edges: live, mark: LINE });
+  }
+  return out;
+}
+
+/** Every pair firing on `b`. */
+function allPairs(b: PathBoard): PathFiring[] | "contradiction" {
+  const pieces = new Pieces(b);
+  if (pieces.clash) return "contradiction";
+  const out: PathFiring[] = [];
+  for (let e = 0; e < b.g.edgeCount; e++) {
+    if (!b.live(e)) continue;
+    const [p, q] = [pieces.numberOf(b.g.a[e]), pieces.numberOf(b.g.b[e])];
+    if (p !== NO_END && q !== NO_END && p !== q)
+      out.push({ reason: { kind: "pair", ends: [p, q] }, edges: [e], mark: CROSS });
+  }
+  return out;
+}
+
+/**
+ * The numbers whose lines a firing's premise reads, which a hint plan
+ * continues from: a player follows a line from its number, so a plan works on
+ * one number's line until nothing more follows for it. A forced square reads
+ * the line it is on and the lines whose squares closed its edges; a pair reads
+ * the two numbers it keeps apart; a supposition reads the lines at its edge.
+ */
+function numbersReadBy(b: PathBoard, firing: PathFiring): number[] {
+  const { g } = b;
+  const pieces = new Pieces(b);
+  const on = (i: number): number[] => {
+    const v = pieces.numberOf(i);
+    return v === NO_END ? [] : [v];
+  };
+  const { reason } = firing;
+  switch (reason.kind) {
+    case "forced": {
+      // Its own line, and the lines of the full squares beside it. Not the
+      // line across a cross: the cross was made for that line's sake and says
+      // nothing more about it, so a square it forces belongs to its own line.
+      const out = on(reason.cell);
+      for (let k = 0; k < 4; k++) {
+        const e = g.around[reason.cell * 4 + k];
+        if (e < 0 || b.edges[e] !== OPEN || b.live(e)) continue;
+        const j = across(g, e, reason.cell);
+        // Two numbers side by side close their edge from the start: no step
+        // made it, so it continues from none.
+        if (b.ends[reason.cell] !== NO_END && b.ends[j] !== NO_END) continue;
+        if (!b.spare(j)) out.push(...on(j));
+      }
+      return out;
+    }
+    case "pair":
+      return [...reason.ends];
+    case "lookahead":
+      return [...on(g.a[reason.edge]), ...on(g.b[reason.edge])];
+  }
+}
+
+/** `found` as the candidates a plan's frontier chooses among. A line writes
+ * the number whose line it extends; a cross writes none, as it serves the
+ * line in hand, so the plan stays with that line. */
+function offered(
+  b: PathBoard,
+  apply: (found: PathFiring | null | "contradiction") => number,
+  found: readonly PathFiring[] | "contradiction",
+): LadderCandidate[] | "contradiction" {
+  if (found === "contradiction") return found;
+  return found.map((firing) => ({
+    reads: () => numbersReadBy(b, firing),
+    writes: () => {
+      if (firing.mark !== LINE) return [];
+      const pieces = new Pieces(b);
+      return firing.edges.flatMap((e) =>
+        [b.g.a[e], b.g.b[e]].map((i) => pieces.numberOf(i)).filter((v) => v !== NO_END),
+      );
+    },
+    take: () => {
+      apply(firing);
+    },
+  }));
 }
 
 /** A writer of firings onto `board`, handing each to `record`. */
@@ -359,6 +455,12 @@ function ladder(
       id: "lookahead" satisfies PathRung,
       tier: DIFF_NORMAL,
       run: () => apply(findLookahead(board)),
+      // The shortest walk only: every supposition is dear, and the frontier
+      // reaches this rung only where no Easy firing continues.
+      available: () => {
+        const found = findLookahead(board);
+        return offered(board, apply, found ? [found] : []);
+      },
     },
   ];
 }
@@ -410,6 +512,8 @@ export function pathRecordingPass(
     }),
     budget,
     settled: () => !board.unfinished(),
+    // A plan stays with the line it is working on before it moves on.
+    continuing: true,
   });
   return {
     next: () => (pass.next() ? last : null),
