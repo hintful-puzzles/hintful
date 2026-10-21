@@ -21,12 +21,14 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Clash, EDGE, type Square, say } from "./hint-text.ts";
 import {
+  clashOf,
   isComplete,
   PathBoard,
   type PathClash,
   type PathFiring,
   type PathRung,
   pathRecordingPass,
+  stillHolds,
 } from "./solver.ts";
 import {
   CROSS,
@@ -91,9 +93,21 @@ function wordsOf(state: PathState, edges: Uint8Array, firing: PathFiring): Sente
     case "forced":
       return say.forced(square(reason.cell), reason.need, firing.edges);
     case "pair": {
+      // The lines on either side are outlined with their numbers, so the eye
+      // goes to where they meet, beside the ringed edge, and not to the two
+      // numbers, which may be side by side somewhere else.
       const g = geometry(state.w, state.h);
       const e = firing.edges[0];
-      return say.pair(numberOn(g.a[e], edges), numberOn(g.b[e], edges), e);
+      const lines = [
+        ...pieceOf(state, edges, g.a[e]),
+        ...pieceOf(state, edges, g.b[e]),
+      ];
+      return say.pair(
+        numberOn(g.a[e], edges),
+        numberOn(g.b[e], edges),
+        lines.map(at),
+        e,
+      );
     }
     case "lookahead": {
       // The board the supposition leads to, for what breaks there.
@@ -150,7 +164,45 @@ function clashWords(
   }
 }
 
-function stepOf(state: PathState, edges: Uint8Array, firing: PathFiring): PathStep {
+/**
+ * A supposition's chain cut down to the firings its break needs. The ladder
+ * records every Easy firing the supposition sets off, in the order the rungs
+ * found them, and some settle a corner the break never reads; numbered, they
+ * claim an order of consequence that is not there. Each firing is dropped,
+ * last first, where the ones left still follow one from the next and still
+ * break the board, which is then said as it breaks with those alone.
+ */
+function pruned(
+  state: PathState,
+  edges: Uint8Array,
+  reason: Extract<PathFiring["reason"], { kind: "lookahead" }>,
+): { chain: PathFiring[]; clash: PathClash } {
+  const breaks = (chain: readonly PathFiring[]): PathClash | null => {
+    const trial = edges.slice();
+    trial[reason.edge] = reason.supposed;
+    const b = new PathBoard(state.w, state.h, state.ends, trial);
+    for (const link of chain) {
+      if (!stillHolds(b, link)) return null;
+      for (const e of link.edges) trial[e] = link.mark;
+    }
+    return clashOf(b);
+  };
+  let chain = reason.chain;
+  for (let k = chain.length - 1; k >= 0; k--) {
+    const without = chain.filter((_, j) => j !== k);
+    if (breaks(without)) chain = without;
+  }
+  return { chain, clash: breaks(chain) ?? reason.clash };
+}
+
+function stepOf(state: PathState, edges: Uint8Array, recorded: PathFiring): PathStep {
+  const firing: PathFiring =
+    recorded.reason.kind === "lookahead"
+      ? {
+          ...recorded,
+          reason: { ...recorded.reason, ...pruned(state, edges, recorded.reason) },
+        }
+      : recorded;
   const words = wordsOf(state, edges, firing);
   const { reason } = firing;
   return {

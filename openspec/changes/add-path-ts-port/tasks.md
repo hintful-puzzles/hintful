@@ -40,8 +40,9 @@
 - [x] 5.1 Own, generation and hint tests; the census; the chain pin.
 - [x] 5.2 Registered in `src/games/index.ts` and the catalog, with icons and
       its help page and row.
-- [ ] 5.3 `npm run game -- path` green; played in the app with pointer,
-      keyboard and touch; a fresh subagent reads the hint against the board.
+- [x] 5.3 `npm run game -- path` green; played in the app with pointer,
+      keyboard and touch; a fresh subagent read the hint against the board,
+      and its findings are fixed (design D5).
 
 ## 6. Close-out
 

@@ -172,7 +172,11 @@ class Pieces {
 }
 
 /** The first thing that breaks `b`, or `null`. */
-function clashOf(b: PathBoard): PathClash | null {
+export function clashOf(b: PathBoard): PathClash | null {
+  // A loop or a join first: it is on the board as drawn, where a square short
+  // of ways is a count the player makes.
+  const joined = new Pieces(b).clash;
+  if (joined) return joined;
   for (let i = 0; i < b.g.cells; i++) {
     const lines = b.edgesAt(i, LINE).length;
     const need = degreeOf(b.ends, i);
@@ -180,7 +184,32 @@ function clashOf(b: PathBoard): PathClash | null {
     if (lines < need && lines + b.liveAt(i).length < need)
       return { kind: "stuck", cell: i };
   }
-  return new Pieces(b).clash;
+  return null;
+}
+
+/** Whether `firing` is still a deduction on `b` as it stands: its square
+ * still has exactly its edges for the lines it needs, or its edge still
+ * joins two different numbers. A supposition's chain is cut down to the
+ * firings its break needs by asking this of each that is left. */
+export function stillHolds(b: PathBoard, firing: PathFiring): boolean {
+  const { reason } = firing;
+  if (reason.kind === "forced") {
+    const live = b.liveAt(reason.cell);
+    const need = degreeOf(b.ends, reason.cell) - b.edgesAt(reason.cell, LINE).length;
+    return (
+      need === live.length &&
+      need === firing.edges.length &&
+      firing.edges.every((e) => live.includes(e))
+    );
+  }
+  if (reason.kind === "pair") {
+    const e = firing.edges[0];
+    if (!b.live(e)) return false;
+    const pieces = new Pieces(b);
+    const [p, q] = [pieces.numberOf(b.g.a[e]), pieces.numberOf(b.g.b[e])];
+    return p !== NO_END && q !== NO_END && p !== q;
+  }
+  return false;
 }
 
 /** Whether the lines join every pair of numbers through every square: each

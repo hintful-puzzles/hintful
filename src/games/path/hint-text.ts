@@ -45,9 +45,14 @@ const mustBe = (edges: readonly number[], what: "line" | "cross"): Narration =>
 const outlined = (s: Square, lead = "the outlined"): Narration =>
   mark.as("outline", CELL, [s.at], `${lead} ${s.number ?? "square"}`);
 
-/** Two numbers, outlined together: "the outlined 2 to the 5". */
-const twoNumbers = (a: Square, b: Square): Narration =>
-  mark.as("outline", CELL, [a.at, b.at], `the outlined ${a.number} to the ${b.number}`);
+/** Two numbers, outlined together, or with the squares of the lines that
+ * lead to them: "the outlined 2 to the 5". */
+const twoNumbers = (
+  a: Square,
+  b: Square,
+  area: readonly Point[] = [a.at, b.at],
+): Narration =>
+  mark.as("outline", CELL, area, `the outlined ${a.number} to the ${b.number}`);
 
 /** A square's count of lines in words, so it does not run into its number. */
 const COUNTS = ["no", "one", "two", "three", "four"] as const;
@@ -67,17 +72,17 @@ export type Clash =
 const clashWords = (c: Clash): Narration => {
   switch (c.kind) {
     case "crowded":
-      return phrase`gives ${outlined(c.square)} ${COUNTS[c.lines]} lines`;
+      return phrase`give ${outlined(c.square)} ${COUNTS[c.lines]} lines`;
     // A square with one way in and none out is a dead end; one with no way
     // at all, or a number with none, is cut off.
     case "stuck":
       return c.ways > 0
-        ? phrase`leaves ${outlined(c.square)} a dead end`
-        : phrase`cuts off ${outlined(c.square)}`;
+        ? phrase`leave ${outlined(c.square)} a dead end`
+        : phrase`cut off ${outlined(c.square)}`;
     case "closed":
-      return phrase`closes a loop round ${mark.as("outline", CELL, c.squares, "the outlined squares")}`;
+      return phrase`close a loop round ${mark.as("outline", CELL, c.squares, "the outlined squares")}`;
     case "joined":
-      return phrase`joins ${twoNumbers(c.a, c.b)}`;
+      return phrase`join ${twoNumbers(c.a, c.b)}`;
   }
 };
 
@@ -97,9 +102,9 @@ export const say = {
     }),
 
   /** A line on the edge would join two different numbers. */
-  pair: (a: Square, b: Square, edge: number): Sentence =>
+  pair: (a: Square, b: Square, lines: readonly Point[], edge: number): Sentence =>
     so({
-      look: phrase`a line here would join ${twoNumbers(a, b)}`,
+      look: phrase`a line here would join ${twoNumbers(a, b, lines)}`,
       move: mustBe([edge], "cross"),
     }),
 
@@ -114,10 +119,10 @@ export const say = {
     chain: readonly number[],
     clash: Clash,
   ): Sentence => {
-    const what = supposed === "line" ? "a line here" : "a cross here";
+    const what = supposed === "line" ? "a line here would" : "a cross here would";
     const forced =
       chain.length > 0
-        ? phrase` forces ${mark.as("outline", EDGE, chain, "the numbered edges")} and`
+        ? phrase` force ${mark.as("outline", EDGE, chain, "the numbered edges")} and`
         : phrase``;
     return so({
       look: phrase`${what}${forced} ${clashWords(clash)}`,

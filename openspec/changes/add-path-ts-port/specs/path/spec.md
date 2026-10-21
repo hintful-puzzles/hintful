@@ -104,7 +104,7 @@ The arrows SHALL move a cursor over the squares. Enter SHALL start a line at the
 
 ### Requirement: Hint: A step rings the edges it decides and outlines what it reads
 
-A step SHALL ring the edges it decides, drawn as the line or cross it asks for, and outline the squares it reads: the square of a forced step, the two numbers of a step that would join them. A lookahead step SHALL draw the edges the supposition forces thin, in the outline's color, numbered in the order they follow, and outline the square or numbers where the board breaks. No step SHALL ask for a cross beside a square that has all its lines.
+A step SHALL ring the edges it decides, drawn as the line or cross it asks for, and outline what it reads: the square of a forced step; the lines and numbers a pair step would join. A lookahead step SHALL draw thin and number in order only the forced edges its break needs, outline where it breaks, and name a join or loop before a square short of edges. No step SHALL ask for a cross beside a square that has all its lines.
 
 #### Scenario: A pair step names the two numbers
 

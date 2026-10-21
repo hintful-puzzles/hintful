@@ -50,7 +50,7 @@ uniqueness engine is needed, and none was built.
   a cut can matter, and where the Easy rungs stall the open area is too wide
   for either. A loop rung fires on no dealt board, because no path of a dealt
   answer touches itself (D3); inside a supposition a loop is a clash.
-- **What stands in for an oracle** (D5): `count-answers.ts`, a brute-force
+- **What stands in for an oracle** (D6): `count-answers.ts`, a brute-force
   counter sharing no code with the ladder, finds exactly one answer on every
   dealt board up to 7x7 in the generation test.
 
@@ -92,7 +92,28 @@ Measured (2026-10-21, 10 boards a cell): 5x5 Easy 4–5 pairs at 3 ms, Normal
 - **The name** a player sees is *Path*, upstream's, with the aliases
   Numberlink, Arukone and Flow.
 
-## D5 — No differential; assurance is behavioral
+## D5 — The hint
+
+- **A step is one firing.** Forced and pair steps outline what they read: the
+  square, or the lines and numbers a line would join (the numbers alone,
+  when side by side, drew the eye to their own edge and not the ringed one).
+- **A look-ahead is walked statically** (`docs/hints-marks.md` § "Show the
+  what-if walk statically"): the ringed edge drawn as asked, the edges the
+  supposition forces drawn thin and numbered, the break outlined. The
+  recorded chain is **cut down to the firings the break needs**, each
+  dropped where the rest still follow and still break: the ladder records
+  every Easy firing in the order it found them, and numbering a corner the
+  break never reads claimed an order of consequence that was not there (a
+  subagent's read of the running hint, 2026-10-21). A join or a loop is
+  named before a square short of edges, because it is what the numbered
+  edges show.
+- **An ordinal sits in a corner of the edge's first square**, beside the
+  edge, where no line goes and no outline covers it.
+- **Reviewed**: a fresh subagent played four boards through the hint and
+  checked 17 look-aheads by hand; all were sound. Its findings on the
+  picture are fixed above.
+
+## D6 — No differential; assurance is behavioral
 
 There is no C game or solver. The generation test holds every dealt board to
 one answer by the independent counter, to its tier, and to the no-boring-path

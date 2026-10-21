@@ -332,23 +332,22 @@ function drawTile(
   if (square & F_CURSOR)
     drawRectCorners(dr, cx, cy, half - 3, COL_CURSOR, Math.max(2, ts >> 4));
 
-  // A chain's ordinal sits beside its edge's middle, off the line it
-  // numbers, between the discs of the two squares: a square's corner is
-  // where `drawHintOrdinal` puts one, and an edge has no corner. Both
-  // squares of the edge draw it, each its own half.
-  for (let k = 0; k < 4; k++) {
+  // A chain's ordinal is drawn by the edge's first square, inside it and
+  // clear of its outline, in the corner beside the edge: the top-right for
+  // its right side, the bottom-left for its lower side. No line reaches a
+  // corner and the two corners are apart, so no number is cut by a side or
+  // covered. `drawHintOrdinal`'s bottom-right corner is where both edges
+  // meet.
+  const size = Math.max(9, Math.floor(ts * 0.28));
+  const inset = Math.max(2, ts >> 4) + 1 + Math.floor(size / 2);
+  for (const k of [2, 3]) {
     const order = (hints >> (k * HINT_SIDE_BITS + K_ORDER)) & 7;
     if (order === 0) continue;
-    const m = sideEnd(k);
-    const off = Math.floor(ts / 4);
     dr.drawText(
-      SIDES[k].x !== 0 ? { x: m.x, y: m.y - off } : { x: m.x + off, y: m.y },
-      {
-        align: "center",
-        baseline: "mathematical",
-        fontType: "variable",
-        size: Math.max(8, off),
-      },
+      k === 2
+        ? { x: px + ts - inset, y: py + inset }
+        : { x: px + inset, y: py + ts - inset },
+      { align: "center", baseline: "mathematical", fontType: "variable", size },
       COL_HINT_EVIDENCE,
       String(order),
     );
@@ -486,7 +485,7 @@ export function redraw(
         sides |= side << (k * SIDE_BITS);
         const link = chain.get(e);
         const mark = asked.get(e) ?? link?.mark ?? 0;
-        const order = link?.order ?? 0;
+        const order = link && g.a[e] === i ? link.order : 0;
         hints |= (mark | (order << K_ORDER)) << (k * HINT_SIDE_BITS);
       }
       const at = i * WORDS;
