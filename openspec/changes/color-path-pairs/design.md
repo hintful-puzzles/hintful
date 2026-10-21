@@ -138,3 +138,123 @@ retire it.
   take `REGION_FILLS`, fills already designed against the marks drawn on
   them. The two-state games take `TWO`, which is chosen to avoid the mark
   hues. Nothing else colors pieces by a color that means nothing.
+
+## D5 — One set of ten, replacing `FREE` and `TEN` (owner, 2026-10-21)
+
+**This supersedes the outcomes of D1 and D4.** Four colors failed on the
+owner's first large board: on a 9x9, two pink pairs and two violet pairs sat
+side by side. Pair 6's numbers were at opposite corners, so its box neighbored
+nearly every pair. The owner: "I want more distinct colors... superseding
+whatever usages we currently have for TEN which use them for semantics-free
+needs. I want to make things simpler and more consistent, and for these
+semantics-free colors, I'm ok with smaller hue differences between colors, as
+long as they're sufficiently distinct from the main semantic elements." The
+owner approved the proposal below for the engine and every affected game.
+
+### The constraints, re-derived
+
+- **Held hard**, in both schemes: 0.15 from `ERROR`, and 0.10 from ring[0]
+  (`HINT_RING`, which is also `DRAG_ADD`), from outline[0] (`HINT_OUTLINE`)
+  and from `CURSOR`/`HELD`. These are drawn in the same shapes as a pair's
+  line or a tile's mark.
+- **Relaxed**: ring[1] cyan, ring[2] indigo, outline[1] teal and outline[2]
+  brown. They appear only when one step has two or more references of one
+  role. While a hint shows, the app redraws them with a 1px black or white
+  edge (`edged`, `mark-flash.ts`), which pair lines do not have. The hint's
+  words are tinted with each and flash on tap. In Path a hint line lies only
+  on an edge with no line yet. Holding these hard is what left D1 two arcs of
+  hue and stopped it at four.
+- **Path's lines are edged.** Each pair line and disc is drawn 1px wider in
+  `BLACK` underneath. This reads in the light scheme and is invisible on the
+  dark cell. Without the edge, yellow, pink, mint, orange and teal measure
+  1.0–1.5 against the light cell. The best set kept inside the 2.4 line bar
+  had dark members that were not distinct as lines, and a Flood board in it
+  looked murky. The `palette.test.ts` bar becomes: the better of the contrast
+  on the cell and the contrast against the black edge is over 2.4.
+
+### The set, in the order games take it
+
+Names are the same in both schemes. Each value is OKLCH `[L, C]` at hue `h`.
+
+| # | name | h | light | dark | number on the disc |
+|---|---|---|---|---|---|
+| 1 | yellow | 100 | 0.86, 0.168 | 0.86, 0.160 | black |
+| 2 | violet | 292 | 0.55, 0.220 | 0.68, 0.170 | black |
+| 3 | teal | 185 | 0.68, 0.110 | 0.68, 0.115 | black |
+| 4 | magenta | 338 | 0.56, 0.220 | 0.66, 0.210 | black |
+| 5 | orange | 58 | 0.72, 0.156 | 0.75, 0.150 | black |
+| 6 | olive | 100 | 0.52, 0.105 | 0.66, 0.120 | black |
+| 7 | pink | 355 | 0.82, 0.090 | 0.88, 0.070 | black |
+| 8 | mint | 165 | 0.88, 0.080 | 0.90, 0.080 | black |
+| 9 | brown | 45 | 0.40, 0.070 | 0.52, 0.080 | **white in light**, black in dark |
+| 10 | gray | — | 0.62, 0 | 0.74, 0 | black |
+
+The number color is a per-member color with a light and a dark value,
+parallel to the set. It is needed because black on the light brown measures
+2.2.
+
+**Measured by the design subagent (2026-10-21; re-measure before relying on
+it).** Worst pair for the first N members, light / dark, against `TEN` in its
+own order:
+
+| first | the set | `TEN` |
+|---|---|---|
+| 3 | 0.264 / 0.231 | 0.260 / 0.168 |
+| 4 | 0.172 / 0.154 | 0.260 / 0.168 |
+| 6 | 0.172 / 0.135 | 0.176 / 0.148 |
+| 9 | 0.148 / 0.135 | 0.159 / 0.143 |
+| 10 | 0.125 / 0.130 (teal and gray) | 0.159 / 0.143 |
+
+Teal and gray are clearly distinct on screen; the metric undervalues color
+against gray. The pair to watch by eye is olive and brown in the light
+scheme. No two saturated members are within 46° of hue at similar
+lightness, so D1's purple and magenta failure has no counterpart. Nearest
+held mark for any member: error 0.177, ring 0.125, outline 0.110, cursor
+0.116.
+
+### Who takes what
+
+- **Path: the first 9.** Gray stays out: in the dark scheme a light-gray
+  pair's line sits near the white of a line reaching no number. Same-color
+  touching pairs at 9x9 (40 boards, `spreadColors`): 4 colors 9.7% (38/40
+  boards), 6 colors 2.0% (16/40), 8 colors 0.3% (3/40), 9 colors 0.2%
+  (2/40). At 7x7, 8 or more gave none.
+- **Samegame: 3–9**, gray out as with `TEN` (a gray tile reads as a hole).
+- **Flood and Guess: 6 by default, up to 10.**
+
+### Moving off `TEN`, and retiring it
+
+- **Names**: each member takes its word through `named`/`wordOf`, and the set's
+  names replace `TEN_NAMES`. Flood's "Fill with ..." and Samegame's
+  `colorName` read them unchanged. `colors.test.ts` gains word extents for
+  magenta (h 325–350), olive (h 85–120, L ≤ 0.7, C ≥ 0.06) and mint (h
+  150–180, L ≥ 0.8). The others' extents already cover their values.
+- **Files**: `flood/render.ts` (`TEN`, `COLOR_NAMES`), `guess/render.ts`
+  (`TEN`; its comment that the cursor rings pegs "of all ten hues, green
+  among them" stops being true, so weigh `CURSOR`), `samegame/render.ts`
+  and `hint-text.ts`, `colors.test.ts` (the ten and nine sets, the names
+  test, the `NAMED` list), the comment at `palette-source.test.ts` naming
+  `RED` in `TEN`, and `colors.ts`'s header, "Why the set is exactly this
+  size".
+- **It fixes three clashes `TEN` has today**: its red tile is `ERROR`
+  itself, its blue tile is `HINT_RING`/`DRAG_ADD` (Flood's blue hint dot can
+  land on a blue tile), and its green tile is `CURSOR`.
+- **Retiring `TEN`** orphans no named color: `RED` stays through `ERROR`,
+  `ORANGE` through Subsets and Tents, `TEAL`/`PINK`/`GRAY` through Mines and
+  `palette.ts`, `BROWN` through Tents, and `YELLOW` through `PENCIL_BODY`.
+  Re-check this with `palette-source.test.ts` after the move.
+
+### Risks
+
+- Brown in the light scheme is 0.023 from outline[2] brown. That matters
+  only on a step with three outline references, and the fix belongs in the
+  hint vocabulary.
+- Samegame's stripes[2] amber hatch is 0.057 from olive (`TEN`'s brown was
+  0.072); the hatch is edged.
+- The win flash's yellow (`FLASH` = `GOAL` = `YELLOW`) equals the first
+  member, as with `TEN` today.
+
+The design subagent's mock-up (a 9x9 Path board with every mark, each member
+as line, ring and disc, and a Flood mosaic, in both schemes) was shown to the
+owner. Re-render it in the app; the mock-up is not evidence for the real
+board.

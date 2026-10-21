@@ -27,7 +27,7 @@ A press and drag with the left button SHALL draw a line along each edge between 
 
 ### Requirement: Look: Each pair and the lines reaching it share a color
 
-A number SHALL sit in a ring of its pair's color, from the collection's set of colors that mean nothing, spread so that pairs given near each other differ where the set allows, and repeating past it. The ring SHALL fill with the color once a line joins the pair. A line SHALL take the color of the number its piece reaches, and a piece reaching no number SHALL be ink. A line SHALL be drawn red where its piece joins two different numbers or closes into a loop.
+A number SHALL sit in a ring of its pair's color, from the colors that mean nothing, spread so that pairs given near each other differ where the set allows, and repeating past it. A pair's ring, disc and lines SHALL be edged in black. The ring SHALL fill with the color once a line joins the pair. A line SHALL take the color of the number its piece reaches, and a piece reaching no number SHALL be ink. A line SHALL be drawn red where its piece joins two different numbers or closes into a loop.
 
 #### Scenario: A line from a number takes its color
 
