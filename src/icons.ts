@@ -23,7 +23,6 @@ import circleXIcon from "lucide-static/icons/circle-x.svg";
 import crownIcon from "lucide-static/icons/crown.svg";
 import deleteIcon from "lucide-static/icons/delete.svg";
 import downloadIcon from "lucide-static/icons/download.svg";
-import ellipsisIcon from "lucide-static/icons/ellipsis.svg";
 import externalLinkIcon from "lucide-static/icons/external-link.svg";
 import frownIcon from "lucide-static/icons/frown.svg";
 import gemIcon from "lucide-static/icons/gem.svg";
@@ -36,6 +35,7 @@ import infoIcon from "lucide-static/icons/info.svg";
 import laughIcon from "lucide-static/icons/laugh.svg";
 import lightbulbIcon from "lucide-static/icons/lightbulb.svg";
 import listChecksIcon from "lucide-static/icons/list-checks.svg";
+import menuIcon from "lucide-static/icons/menu.svg";
 import octagonAlertIcon from "lucide-static/icons/octagon-alert.svg";
 import partyPopperIcon from "lucide-static/icons/party-popper.svg";
 import pauseIcon from "lucide-static/icons/pause.svg";
@@ -87,7 +87,7 @@ const defaultIcons: IconMap = {
   "check-and-save": bookmarkCheckIcon,
   "back-to-last-save": bookmarkIcon,
   "check-only": searchCheckIcon,
-  "more": ellipsisIcon,
+  "menu": menuIcon,
   "search": searchIcon,
   "switch-puzzle": arrowLeftRightIcon,
   "checkpoint-add": shieldCheckIcon,

@@ -136,7 +136,7 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
           aria-pressed=${this.menuOpen ? "true" : "false"}
           @click=${this.handleMenuButton}
       >
-        <wa-icon name="more"></wa-icon>
+        <wa-icon name="menu"></wa-icon>
         <span part="caption">Menu</span>
       </button>
     `;
@@ -385,6 +385,16 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
       :host([roomy]) [part~="slot"] {
         min-width: 5.25rem;
         padding-inline: 0.625rem;
+      }
+
+      /* Along the bottom the slots sit side by side, so each hangs from the
+       * same top: the icons share a line, and so do the captions' first lines,
+       * however many lines a caption wraps to. Centering instead raised a
+       * wrapped slot's icon half a line above its neighbors'. The inset leaves
+       * room for a two-line caption within the slot's height. */
+      :host([along="bottom"]) [part~="slot"] {
+        justify-content: flex-start;
+        padding-block-start: 0.375rem;
       }
 
       :host([along="side"]) [part~="slot"] {
