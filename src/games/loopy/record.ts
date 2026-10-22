@@ -178,6 +178,16 @@ interface RelationEdge {
   fact: number;
 }
 
+/** A recorder's place, as {@link LoopyRecorder.mark} took it. */
+export interface RecorderMark {
+  facts: LoopyFact[];
+  tickOf: number[];
+  bitFact: Int32Array;
+  relations: RelationEdge[][];
+  ops: RecordedOp[];
+  reason: LoopyReason | null;
+}
+
 export class LoopyRecorder {
   readonly facts: LoopyFact[] = [];
   /** The plan position each fact was found at: how many firings came before it.
@@ -196,10 +206,39 @@ export class LoopyRecorder {
   /** The lines the current firing changed, captured by `solverSetLine`. */
   ops: RecordedOp[] = [];
   reason: LoopyReason | null = null;
+  /** The plan's `SweepOffers.keep`: whether a rung returns at the firing it
+   * has just made, or scans on while the plan collects every firing. */
+  keep: (() => boolean) | null = null;
 
   constructor(numEdges: number) {
     this.bitFact = new Int32Array(4 * numEdges).fill(-1);
     this.relations = Array.from({ length: numEdges }, () => []);
+  }
+
+  /** Where the recorder stands, for {@link rewind}. Its logs are copied, not
+   * measured: a plan offering firings rewinds to before one and records
+   * another in its place, and taking the first again must bring its own
+   * facts back. */
+  mark(): RecorderMark {
+    return {
+      facts: this.facts.slice(),
+      tickOf: this.tickOf.slice(),
+      bitFact: this.bitFact.slice(),
+      relations: this.relations.map((r) => r.slice()),
+      ops: [...this.ops],
+      reason: this.reason,
+    };
+  }
+
+  /** Put the recorder back where {@link mark} found it. */
+  rewind(m: RecorderMark): void {
+    this.facts.splice(0, this.facts.length, ...m.facts);
+    this.tickOf.splice(0, this.tickOf.length, ...m.tickOf);
+    this.bitFact.set(m.bitFact);
+    for (const [k, r] of m.relations.entries())
+      this.relations[k].splice(0, this.relations[k].length, ...r);
+    this.ops = [...m.ops];
+    this.reason = m.reason;
   }
 
   private addFact(fact: LoopyFact): number {

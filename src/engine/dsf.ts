@@ -96,6 +96,14 @@ export class Dsf {
     if (this.least) copy.least?.set(this.least);
     return copy;
   }
+
+  /** Take on `other`'s partition in place, for a holder that keeps one forest
+   * and puts it back to a copy it saved. */
+  copyFrom(other: Dsf): void {
+    this.parent.set(other.parent);
+    this.classSize.set(other.classSize);
+    if (this.least && other.least) this.least.set(other.least);
+  }
 }
 
 /** The root/inverse pair a flip-dsf canonify returns. */
@@ -201,5 +209,19 @@ export class FlipDsf {
 
     this.pathCompress(n1, root, f1);
     this.pathCompress(n2, root, f2);
+  }
+
+  /** A deep copy: a fresh forest with the same classes and parities. */
+  clone(): FlipDsf {
+    const copy = new FlipDsf(this.parent.length);
+    copy.copyFrom(this);
+    return copy;
+  }
+
+  /** Take on `other`'s classes and parities in place. */
+  copyFrom(other: FlipDsf): void {
+    this.parent.set(other.parent);
+    this.classSize.set(other.classSize);
+    this.flip.set(other.flip);
   }
 }

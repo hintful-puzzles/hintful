@@ -31,8 +31,14 @@
  * satisfy the runner's interface while hiding inside it, where here it is a
  * few lines in one place that say what they decide.
  */
+import {
+  type DeductionTechnique,
+  singleFirings,
+} from "../../engine/deduction-fixpoint.ts";
 import { Dsf, FlipDsf } from "../../engine/dsf.ts";
 import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
+import type { StepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   dlineEnds,
   dlineIndexFromDot,
@@ -48,6 +54,7 @@ import {
   type LoopyReason,
   LoopyRecorder,
   type RecordedOp,
+  type RecorderMark,
 } from "./record.ts";
 import {
   checkCompletion,
@@ -75,7 +82,7 @@ export class SolverState {
   readonly state: LoopyState;
   status: SolverStatus = "incomplete";
   /** The difficulty cap. Fixed for a whole solve, except on the hint path, which
-   * raises it one tier at a time until some rung fires ({@link nextFiring}). */
+   * sets it to the tier of each rung it asks ({@link hintFirings}). */
   diff: number;
   /** The hint path's recorder; `null` on every other path. */
   rec: LoopyRecorder | null = null;
@@ -137,6 +144,58 @@ export class SolverState {
   get grid(): Grid {
     return this.state.grid;
   }
+
+  /** Everything a firing writes, the recorder's logs included. */
+  save(): SolverSnapshot {
+    return {
+      lines: this.state.lines.slice(),
+      dotDsf: this.dotDsf.clone(),
+      counts: [
+        this.looplen,
+        this.dotYesCount,
+        this.dotNoCount,
+        this.faceYesCount,
+        this.faceNoCount,
+        this.dotSolved,
+        this.faceSolved,
+      ].map((a) => a.slice()),
+      dlines: this.dlines?.slice() ?? null,
+      linedsf: this.linedsf?.clone() ?? null,
+      status: this.status,
+      rec: this.rec?.mark() ?? null,
+    };
+  }
+
+  /** Put back what {@link save} took. */
+  restore(s: SolverSnapshot): void {
+    this.state.lines.set(s.lines);
+    this.dotDsf.copyFrom(s.dotDsf);
+    const counts = [
+      this.looplen,
+      this.dotYesCount,
+      this.dotNoCount,
+      this.faceYesCount,
+      this.faceNoCount,
+      this.dotSolved,
+      this.faceSolved,
+    ];
+    for (const [k, a] of counts.entries()) a.set(s.counts[k]);
+    if (this.dlines && s.dlines) this.dlines.set(s.dlines);
+    if (this.linedsf && s.linedsf) this.linedsf.copyFrom(s.linedsf);
+    this.status = s.status;
+    if (this.rec && s.rec) this.rec.rewind(s.rec);
+  }
+}
+
+/** What {@link SolverState.save} takes. */
+export interface SolverSnapshot {
+  lines: Uint8Array;
+  dotDsf: Dsf;
+  counts: (Int32Array | Uint8Array)[];
+  dlines: Uint8Array | null;
+  linedsf: FlipDsf | null;
+  status: SolverStatus;
+  rec: RecorderMark | null;
 }
 
 /**
@@ -286,11 +345,12 @@ function faceSetall(
  * call would put many independent deductions under one premise. The recording
  * path returns at the first premise that changed a line instead, and the driver
  * starts again from the cheapest rung (docs/hints.md § "A rung is not a
- * premise, so return per premise").
+ * premise, so return per premise"). Whether it returns is the plan's to say:
+ * while it collects every firing a rung could make, the rung scans on.
  */
-function fired(rec: LoopyRecorder, reason: LoopyReason): number {
+function fired(rec: LoopyRecorder, reason: LoopyReason): boolean {
   rec.reason = reason;
-  return 0;
+  return rec.keep?.() ?? true;
 }
 
 function firedCorner(
@@ -298,7 +358,7 @@ function firedCorner(
   dot: number,
   dline: number,
   bound: "atMostOne" | "atLeastOne",
-): number {
+): boolean {
   return fired(rec, { kind: "corner", dot, fact: rec.cornerFact(dline, bound) });
 }
 
@@ -508,7 +568,7 @@ function trivialDeductions(ss: SolverState): number {
     if (clue === currentYes) {
       if (faceSetall(ss, i, LINE_UNKNOWN, LINE_NO)) diff = Math.min(diff, 0);
       ss.faceSolved[i] = 1;
-      if (rec?.ops.length) return fired(rec, { kind: "clueFull", face: i });
+      if (rec?.ops.length && fired(rec, { kind: "clueFull", face: i })) return 0;
       continue;
     }
     if (f.order - clue < currentNo) {
@@ -518,7 +578,7 @@ function trivialDeductions(ss: SolverState): number {
     if (f.order - clue === currentNo) {
       if (faceSetall(ss, i, LINE_UNKNOWN, LINE_YES)) diff = Math.min(diff, 0);
       ss.faceSolved[i] = 1;
-      if (rec?.ops.length) return fired(rec, { kind: "clueStarved", face: i });
+      if (rec?.ops.length && fired(rec, { kind: "clueStarved", face: i })) return 0;
       continue;
     }
 
@@ -532,14 +592,16 @@ function trivialDeductions(ss: SolverState): number {
         faceSetall(ss, i, LINE_UNKNOWN, LINE_YES);
         ss.faceSolved[i] = 1;
         diff = Math.min(diff, 0);
-        if (rec?.ops.length) {
-          return fired(rec, {
+        if (
+          rec?.ops.length &&
+          fired(rec, {
             kind: "clueBlockedPair",
             face: i,
             dots: [blocked.dot1, blocked.dot2],
             between: blocked.between,
-          });
-        }
+          })
+        )
+          return 0;
         continue;
       }
 
@@ -556,14 +618,16 @@ function trivialDeductions(ss: SolverState): number {
           diff = Math.min(diff, 0);
         }
       }
-      if (rec?.ops.length) {
-        return fired(rec, {
+      if (
+        rec?.ops.length &&
+        fired(rec, {
           kind: "clueOneShort",
           face: i,
           dot: pair.dot,
           pair: [pair.e1, pair.e2],
-        });
-      }
+        })
+      )
+        return 0;
     }
   }
 
@@ -584,7 +648,7 @@ function trivialDeductions(ss: SolverState): number {
         dotSetall(ss, i, LINE_UNKNOWN, LINE_NO);
         diff = Math.min(diff, 0);
         ss.dotSolved[i] = 1;
-        if (rec?.ops.length) return fired(rec, { kind: "deadEnd", dot: i });
+        if (rec?.ops.length && fired(rec, { kind: "deadEnd", dot: i })) return 0;
       }
     } else if (yes === 1) {
       if (unknown === 0) {
@@ -594,14 +658,14 @@ function trivialDeductions(ss: SolverState): number {
         // The line has to continue somewhere, and there is only one way out.
         dotSetall(ss, i, LINE_UNKNOWN, LINE_YES);
         diff = Math.min(diff, 0);
-        if (rec?.ops.length) return fired(rec, { kind: "lineContinues", dot: i });
+        if (rec?.ops.length && fired(rec, { kind: "lineContinues", dot: i })) return 0;
       }
     } else if (yes === 2) {
       ss.dotSolved[i] = 1;
       if (unknown > 0) {
         dotSetall(ss, i, LINE_UNKNOWN, LINE_NO);
         diff = Math.min(diff, 0);
-        if (rec?.ops.length) return fired(rec, { kind: "dotFull", dot: i });
+        if (rec?.ops.length && fired(rec, { kind: "dotFull", dot: i })) return 0;
       }
     } else {
       ss.status = "mistake";
@@ -764,7 +828,8 @@ function dlineDeductions(ss: SolverState): number {
         diff = Math.min(diff, 0);
         if (rec?.ops.length) {
           const witness = boundWitness(ss, i, k, j, "min");
-          return fired(rec, { kind: "clueBound", face: i, edge: lineIndex, witness });
+          if (fired(rec, { kind: "clueBound", face: i, edge: lineIndex, witness }))
+            return 0;
         }
       }
       if (maxs[k * S + j] < clue - 1) {
@@ -777,7 +842,8 @@ function dlineDeductions(ss: SolverState): number {
         diff = Math.min(diff, 0);
         if (rec?.ops.length) {
           const witness = boundWitness(ss, i, k, j, "max");
-          return fired(rec, { kind: "clueBound", face: i, edge: lineIndex, witness });
+          if (fired(rec, { kind: "clueBound", face: i, edge: lineIndex, witness }))
+            return 0;
         }
       }
 
@@ -849,24 +915,26 @@ function dlineDeductions(ss: SolverState): number {
         if (line1 === LINE_YES && line2 === LINE_UNKNOWN) {
           solverSetLine(ss, line2Index, LINE_NO);
           diff = Math.min(diff, 0);
-          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atMostOne");
+          if (rec?.ops.length && firedCorner(rec, i, dlineIndex, "atMostOne")) return 0;
         }
         if (line2 === LINE_YES && line1 === LINE_UNKNOWN) {
           solverSetLine(ss, line1Index, LINE_NO);
           diff = Math.min(diff, 0);
-          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atMostOne");
+          if (rec?.ops.length && firedCorner(rec, i, dlineIndex, "atMostOne")) return 0;
         }
       }
       if (isAtLeastOne(dlines, dlineIndex)) {
         if (line1 === LINE_NO && line2 === LINE_UNKNOWN) {
           solverSetLine(ss, line2Index, LINE_YES);
           diff = Math.min(diff, 0);
-          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atLeastOne");
+          if (rec?.ops.length && firedCorner(rec, i, dlineIndex, "atLeastOne"))
+            return 0;
         }
         if (line2 === LINE_NO && line1 === LINE_UNKNOWN) {
           solverSetLine(ss, line1Index, LINE_YES);
           diff = Math.min(diff, 0);
-          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atLeastOne");
+          if (rec?.ops.length && firedCorner(rec, i, dlineIndex, "atLeastOne"))
+            return 0;
         }
       }
 
@@ -882,13 +950,14 @@ function dlineDeductions(ss: SolverState): number {
           solverSetLine(ss, line1Index, LINE_NO);
           solverSetLine(ss, line2Index, LINE_NO);
           diff = Math.min(diff, 0);
-          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atMostOne");
+          if (rec?.ops.length && firedCorner(rec, i, dlineIndex, "atMostOne")) return 0;
         }
         if (isAtLeastOne(dlines, dlineIndex)) {
           solverSetLine(ss, line1Index, LINE_YES);
           solverSetLine(ss, line2Index, LINE_YES);
           diff = Math.min(diff, 0);
-          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atLeastOne");
+          if (rec?.ops.length && firedCorner(rec, i, dlineIndex, "atLeastOne"))
+            return 0;
         }
       }
       if (yes === 1) {
@@ -953,16 +1022,18 @@ function dlineDeductions(ss: SolverState): number {
                   diff = Math.min(diff, 0);
                 }
               }
-              if (rec?.ops.length) {
-                return fired(rec, {
+              if (
+                rec?.ops.length &&
+                fired(rec, {
                   kind: "cornerExit",
                   dot: i,
                   facts: [
                     rec.cornerFact(dlineIndex, "atLeastOne"),
                     rec.cornerFact(dlineIndex, "atMostOne"),
                   ],
-                });
-              }
+                })
+              )
+                return 0;
             } else if (unknown === 4) {
               // Exactly one of the opposite pair is YES too; "at most one" is
               // already set, so add "at least one".
@@ -1185,12 +1256,12 @@ function linedsfDeductions(ss: SolverState): number {
     let yes = ss.faceYesCount[i];
     if (yes + 1 === clue) {
       if (faceSetallIdentical(ss, i, LINE_NO)) diff = Math.min(diff, 0);
-      if (rec?.ops.length) return 0;
+      if (rec?.ops.length && (rec.keep?.() ?? true)) return 0;
     }
     const no = ss.faceNoCount[i];
     if (no + 1 === N - clue) {
       if (faceSetallIdentical(ss, i, LINE_YES)) diff = Math.min(diff, 0);
-      if (rec?.ops.length) return 0;
+      if (rec?.ops.length && (rec.keep?.() ?? true)) return 0;
     }
 
     // Reload the YES count — the calls above may have changed it.
@@ -1201,7 +1272,7 @@ function linedsfDeductions(ss: SolverState): number {
       diff,
       parityDeductions(ss, g.faces[i].edges, (clue - yes) % 2, unknown, i, -1),
     );
-    if (rec?.ops.length) return 0;
+    if (rec?.ops.length && (rec.keep?.() ?? true)) return 0;
   }
 
   // ------ Dot deductions ------
@@ -1258,7 +1329,7 @@ function linedsfDeductions(ss: SolverState): number {
     const yes = ss.dotYesCount[i];
     const no = ss.dotNoCount[i];
     diff = Math.min(diff, parityDeductions(ss, d.edges, yes % 2, N - yes - no, -1, i));
-    if (rec?.ops.length) return 0;
+    if (rec?.ops.length && (rec.keep?.() ?? true)) return 0;
   }
 
   // ------ Edge dsf propagation ------
@@ -1272,7 +1343,7 @@ function linedsfDeductions(ss: SolverState): number {
         diff = Math.min(diff, 0);
         if (rec) {
           const path = rec.path(c.root, i);
-          return fired(rec, { kind: "related", from: c.root, path });
+          if (fired(rec, { kind: "related", from: c.root, path })) return 0;
         }
       }
     } else {
@@ -1282,7 +1353,7 @@ function linedsfDeductions(ss: SolverState): number {
           diff = Math.min(diff, 0);
           if (rec) {
             const path = rec.path(i, c.root);
-            return fired(rec, { kind: "related", from: i, path });
+            if (fired(rec, { kind: "related", from: i, path })) return 0;
           }
         }
       }
@@ -1308,6 +1379,14 @@ function linedsfDeductions(ss: SolverState): number {
  * not count it as a fair deduction for a player to make, which is why
  * `gameHasUniqueSoln` requires exactly `"solved"`.
  */
+/** Join the dots of every YES line into their chains, as the loop rung does
+ * before it reads them; idempotent. */
+function joinChains(ss: SolverState): void {
+  const { lines } = ss.state;
+  for (let i = 0; i < ss.grid.numEdges; i++)
+    if (lines[i] === LINE_YES) mergeDots(ss, i);
+}
+
 function loopDeductions(ss: SolverState): number {
   const g = ss.grid;
   const s = ss.state;
@@ -1382,13 +1461,13 @@ function loopDeductions(ss: SolverState): number {
     progress = solverSetLine(ss, i, val);
     if (val === LINE_YES) {
       ss.status = "ambiguous";
-      if (ss.rec) ss.rec.reason = { kind: "closesLoop" };
-      return 0;
+      if (!ss.rec || fired(ss.rec, { kind: "closesLoop" })) return 0;
+      continue;
     }
     if (ss.rec && progress) {
       const because =
         ss.looplen[eqclass] === edgecount + 1 ? "unmetClues" : "strayLines";
-      return fired(ss.rec, { kind: "earlyLoop", because });
+      if (fired(ss.rec, { kind: "earlyLoop", because })) return 0;
     }
   }
 
@@ -1573,7 +1652,9 @@ export function hintBoardSolved(ss: SolverState): boolean {
 }
 
 /**
- * The next line the solver can decide, at the lowest tier that decides one.
+ * The lines the solver can decide, one firing a call, at the lowest tier that
+ * decides one, and among that tier's firings the one beside the line the plan
+ * is drawing.
  *
  * **Easiest first, and not the board's own tier.** A shared game ID carries no
  * difficulty, so the hint cannot know the tier a board was generated at. It does
@@ -1583,41 +1664,110 @@ export function hintBoardSolved(ss: SolverState): boolean {
  * looked for lower down; each carries its own premise, so a step citing one can
  * still say why it holds.
  *
- * **The first line found is the one taken, and a long chain behind it is not a
- * sign a shorter one was available.** Every rung returns at the first line it can
- * set, which is the shallowest derivation there is. Setting a long-chained firing
- * aside and asking the same tier for others, keeping the one resting on the fewest
- * facts, was built and measured: on generated Hard boards it left every tiling's
- * p99 chain and count of steps over eight facts unchanged
- * (`add-loopy-hint`'s `findings.md`).
+ * **A long chain behind a firing is not a sign a shorter one was available.**
+ * Every rung sets a line at the first premise it can, which is the shallowest
+ * derivation there is. Setting a long-chained firing aside and asking the same
+ * tier for others, keeping the one resting on the fewest facts, was built and
+ * measured: on generated Hard boards it left every tiling's p99 chain and count
+ * of steps over eight facts unchanged (`add-loopy-hint`'s `findings.md`).
  *
  * `solveGame`'s threshold pair is a speed optimization whose order decides which
  * boards the generator accepts; the hint decides no boards, so it simply starts
  * again from the cheapest rung after any progress.
  */
-export function nextFiring(ss: SolverState, tick: () => void): LoopyFiring | null {
+export function hintFirings(
+  ss: SolverState,
+  budget: StepBudget,
+): () => LoopyFiring | null {
   const rec = ss.rec;
-  if (rec === null) throw new Error("loopy solver: nextFiring off the hint path");
-  for (let tier = 0; tier <= DIFF_HARD; tier++) {
-    ss.diff = tier;
-    for (let i = 0; i < RUNGS.length; ) {
-      tick();
-      if (ss.status !== "incomplete") return null;
-      const rung = RUNGS[i];
-      if (rung.diff > tier) {
-        i++;
-        continue;
-      }
+  if (rec === null) throw new Error("loopy solver: hintFirings off the hint path");
+  const g = ss.grid;
+  const edgeDots = (e: number): number[] => {
+    const edge = g.edges[e];
+    return [edge.dot1.index, edge.dot2.index];
+  };
+  const opDots = (ops: readonly RecordedOp[]): number[] =>
+    ops.flatMap((op) => edgeDots(op.edge));
+  // The dots a firing's premise reads, which a plan continues from: its face's
+  // or its dot's, and those of the lines it sets, so a plan follows the line
+  // it is drawing.
+  const premise = (r: Recorded): number[] => {
+    const at: number[] = opDots(r.ops);
+    const reason = r.reason;
+    if (reason && "face" in reason && reason.face !== null && reason.face >= 0)
+      for (const e of g.faces[reason.face].edges) if (e) at.push(...edgeDots(e.index));
+    if (reason && "dot" in reason && reason.dot !== null && reason.dot >= 0)
+      at.push(reason.dot);
+    return at;
+  };
+  const offers = new SweepOffers<SolverSnapshot, Recorded>({
+    save: () => ss.save(),
+    restore: (s) => ss.restore(s),
+    recorded: () => ({ reason: rec.reason, ops: [...rec.ops] }),
+    record: (r) => {
+      rec.reason = r.reason;
+      rec.ops = [...r.ops];
+    },
+    reads: premise,
+    writes: (_before, _after, r) => opDots(r.ops),
+  });
+  rec.keep = () => offers.keep();
+  // Each rung at each tier it runs at, the tier raised only where no rung
+  // below it fires.
+  const techniques: DeductionTechnique[] = [];
+  for (let tier = 0; tier <= DIFF_HARD; tier++)
+    for (const [k, rung] of RUNGS.entries()) {
+      if (rung.diff > tier) continue;
+      const run = (): number => {
+        const progress = rung.fn(ss);
+        if (ss.status === "mistake") return -1;
+        return progress === DIFF_MAX ? 0 : 1;
+      };
+      techniques.push({
+        id: `${RUNG_IDS[k]}@${tier}`,
+        tier,
+        run: () => {
+          ss.diff = tier;
+          return run();
+        },
+        available: () => {
+          ss.diff = tier;
+          // The loop rung joins the chains of every line before it reads them:
+          // outside the offers, which put back what the scan began from.
+          if (rung.fn === loopDeductions) joinChains(ss);
+          return offers.offer(run);
+        },
+      });
+    }
+  const pass = singleFirings({
+    techniques,
+    budget,
+    beforeTechnique: () => {
       rec.ops = [];
       rec.reason = null;
-      const progress = rung.fn(ss);
-      if (rec.ops.length > 0) {
-        if (rec.reason === null)
-          throw new Error("loopy solver: a firing with no premise");
-        return { reason: rec.reason, ops: rec.ops, tier };
-      }
-      i = progress === DIFF_MAX ? i + 1 : 0;
+    },
+    settled: () => ss.status !== "incomplete",
+    // A plan follows the line it is drawing before it moves on.
+    continuing: true,
+  });
+  return () => {
+    // A firing that only learns about dlines changes no line: no step, and
+    // the plan carries on.
+    for (let fired = pass.next(); fired; fired = pass.next()) {
+      if (rec.ops.length === 0) continue;
+      if (rec.reason === null)
+        throw new Error("loopy solver: a firing with no premise");
+      return { reason: rec.reason, ops: rec.ops, tier: fired.tier };
     }
-  }
-  return null;
+    return null;
+  };
 }
+
+/** What a firing recorded: its premise and the lines it set. */
+interface Recorded {
+  reason: LoopyReason | null;
+  ops: RecordedOp[];
+}
+
+/** The rungs' names, for a hint's technique ids. */
+const RUNG_IDS = ["trivial", "dline", "linedsf", "loop"];

@@ -53,7 +53,7 @@ const CONTINUING: readonly string[] = mentioning("singleFirings(").filter((id) =
  * its entry goes, and a new one is not left out in silence.
  */
 const NOT_CONTINUING: Record<string, string> = Object.fromEntries(
-  ["loopy", "singles", "slant"].map((id) => [id, "continue-ladder-hints"]),
+  ["singles", "slant"].map((id) => [id, "continue-ladder-hints"]),
 );
 
 /**

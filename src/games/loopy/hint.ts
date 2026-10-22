@@ -3,8 +3,9 @@
  *
  * **Threaded through the solver, not written beside it.** Loopy's rungs are the
  * solver's own (`solver.ts`), run with a recorder that names the premise behind
- * each change and returns at the first one, and with the tiers tried easiest
- * first ({@link nextFiring}). The generator never builds a recorder, so no board
+ * each change, and with the tiers tried easiest first ({@link hintFirings}):
+ * among a tier's firings the plan takes the one beside the line it is
+ * drawing. The generator never builds a recorder, so no board
  * changes; the frozen differential is the proof.
  *
  * **Sound because the mistake check vouches for every mark.** `findMistakes`
@@ -45,9 +46,9 @@ import {
 } from "./record.ts";
 import {
   hintBoardSolved,
+  hintFirings,
   hintSolver,
   type LoopyFiring,
-  nextFiring,
   type SolverState,
 } from "./solver.ts";
 import {
@@ -122,13 +123,13 @@ export function deduceLoopyPlan(state: LoopyState): {
   const ss = hintSolver(state);
   const rec = ss.rec;
   if (rec === null) throw new Error("loopy hint: the hint solver has no recorder");
-  const budget = stepBudget("loopy hint plan");
+  const next = hintFirings(ss, stepBudget("loopy hint plan"));
   const { plan } = deduceHintPlan<SolverState, Planned, PlanStatus>({
     board: ss,
     status: (b) => (hintBoardSolved(b) ? "solved" : "incomplete"),
     incomplete: "incomplete",
     next: (b) => {
-      const f = nextFiring(b, () => budget.tick());
+      const f = next();
       if (f === null) return null;
       const before = b.state.lines.slice();
       for (const op of f.ops) before[op.edge] = LINE_UNKNOWN;

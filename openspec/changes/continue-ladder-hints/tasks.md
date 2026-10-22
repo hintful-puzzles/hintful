@@ -43,7 +43,12 @@
       meant) and subsets (its cube rungs shrink the cube before the offers,
       which put back what a scan began from). Done too: filling (its region
       groups; its single-cell fills, each the first of a cascade, are
-      fallbacks offering one).
+      fallbacks offering one). Done too: loopy (each rung at each tier a
+      technique; its solver state and the recorder's fact log are snapshot,
+      the log copied, since a rewound offer's facts are overwritten by the
+      next; the loop rung joins chains before its offers). A plan's first
+      hint costs two to four times what it did, under 50 ms on the largest
+      presets measured.
 - [ ] 2.3 For each: hint pins and plan tests re-baselined, each moved
       sentence read against its board; a hint played in the app.
 
