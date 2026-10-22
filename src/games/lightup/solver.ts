@@ -11,7 +11,9 @@
  * from the C shape here only with a differential run to prove it.
  */
 import { Combi } from "../../engine/combi/index.ts";
+import { singleFirings } from "../../engine/deduction-fixpoint.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   cloneState,
@@ -552,17 +554,100 @@ export function dosolve(
  */
 export function deduceHintPlan(state: LightupState): LightupFiring[] {
   const work = cloneState(state);
-  const firings: LightupFiring[] = [];
-  dosolve(work, F_SOLVE_FORCEUNIQUE | F_SOLVE_DISCOUNTSETS, (kind, cells, reason) => {
-    firings.push({
+  for (let i = 0; i < work.flags.length; i++) work.flags[i] &= ~F_NUMBERUSED;
+  const { w, h } = work;
+  const plan: LightupFiring[] = [];
+  let last: LightupFiring | null = null;
+  const offers = new SweepOffers<
+    { flags: Uint8Array; lights: Int16Array },
+    LightupFiring | null
+  >({
+    save: () => ({ flags: work.flags.slice(), lights: work.lights.slice() }),
+    restore: (s) => {
+      work.flags.set(s.flags);
+      work.lights.set(s.lights);
+    },
+    recorded: () => last,
+    record: (f) => {
+      last = f;
+    },
+    reads: (f) => (f ? premiseOf(f.reason, w, h).map((p) => idx(p.x, p.y, w)) : []),
+    writes: (_before, _after, f) => (f ? f.cells.map((p) => idx(p.x, p.y, w)) : []),
+  });
+  const rec: LightupRecorder = (kind, cells, reason) => {
+    last = {
       kind,
       cells,
       reason,
       flags: work.flags.slice(),
       lights: work.lights.slice(),
-    });
+    };
+    offers.keep();
+  };
+  // The solver's two kinds of deduction, the cheap per-square ones before the
+  // discount sets, one firing at a time: a plan that continues takes every
+  // firing through its offers, so a sweep never runs on past the one.
+  const eachCell = (at: (x: number, y: number, i: number) => boolean) => () => {
+    let fired = 0;
+    for (let x = 0; x < w; x++)
+      for (let y = 0; y < h; y++) if (at(x, y, idx(x, y, w))) fired++;
+    return fired;
+  };
+  const pass = singleFirings({
+    techniques: offers.techniques([
+      {
+        id: "cheap",
+        tier: 0,
+        run: eachCell((x, y, i) => {
+          const flags = work.flags[i];
+          const lights = work.lights[i];
+          const light = trySolveLight(work, x, y, flags, lights, rec);
+          const number = trySolveNumber(work, x, y, flags, lights, rec);
+          return light || number;
+        }),
+      },
+      {
+        id: "discount",
+        tier: 1,
+        run: eachCell((x, y, i) => {
+          const flags = work.flags[i];
+          if (!(flags & F_BLACK) && work.lights[i] === 0)
+            return discountUnlit(work, x, y, rec);
+          return flags & F_NUMBERED ? discountClue(work, x, y, rec) : false;
+        }),
+      },
+    ]),
+    budget: stepBudget("lightup hint"),
+    settled: () => gridOverlap(work) || gridCorrect(work),
+    // A plan works round the bulbs it has just placed before it moves on.
+    continuing: true,
   });
-  return firings;
+  for (;;) {
+    last = null;
+    if (!pass.next()) break;
+    // Set by the firing the driver just took.
+    const f = last as LightupFiring | null;
+    if (!f) break;
+    plan.push(f);
+  }
+  return plan;
+}
+
+/** The squares a firing's premise reads, which a hint plan continues from:
+ * the dark square and its line of sight, or the clue and the squares round
+ * it. */
+function premiseOf(r: LightupHintReason, w: number, h: number): Point[] {
+  switch (r.kind) {
+    case "forcedLight":
+      return [r.dark, ...r.corridor];
+    case "clueSatisfied":
+    case "clueSaturated":
+      return [r.clue, ...getSurrounds(w, h, r.clue.x, r.clue.y)];
+    case "discountUnlit":
+      return [r.dark, ...r.set];
+    case "discountClue":
+      return [r.clue, ...r.set];
+  }
 }
 
 /** Remove every bulb and every impossible-mark (and the solver-scratch

@@ -14,14 +14,25 @@
  *    plan teaches the reasoning and then cashes it in.
  */
 
+import {
+  type DeductionTechnique,
+  singleFirings,
+} from "../../engine/deduction-fixpoint.ts";
 import { deduceHintPlan, type HintPlanResult } from "../../engine/hint-plan.ts";
 import type { HintStep } from "../../engine/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { changed, SweepOffers } from "../../engine/sweep-offers.ts";
 import type { Point } from "../../engine/types.ts";
 import { type GalaxiesSaid, say } from "./hint-text.ts";
 import type { GalaxiesMove } from "./index.ts";
 import { okToAddAssocWithOpposite, reachableFromDot } from "./moves.ts";
-import { type GalaxiesFiring, RUNGS } from "./solver.ts";
+import {
+  type GalaxiesFiring,
+  newRecorder,
+  RUNGS,
+  type SolverRecorder,
+  stop,
+} from "./solver.ts";
 import {
   addAssoc,
   checkComplete,
@@ -133,11 +144,12 @@ const EMPTY: Omit<GalaxiesHint, "targets" | "said"> = {
  * argues from the *dots*, which the player can point at, so where it and the
  * reach rung both apply this one wins as the shorter story.
  */
-function soleOwnerFiring(s: GalaxiesState): GalaxiesFiring | null {
+function soleOwner(s: GalaxiesState, rec: SolverRecorder): number {
   const cols = checkComplete(s, true).colors;
-  if (!cols) return null;
+  if (!cols) return 0;
   // One flood per dot, not one per (cell, dot) pair.
   const reach = s.dots.map((d) => reachableFromDot(s, d.x, d.y));
+  let fired = 0;
   for (let y = 1; y < s.sy - 1; y += 2) {
     for (let x = 1; x < s.sx - 1; x += 2) {
       if (s.flags[idx(s, x, y)] & F_TILE_ASSOC) continue;
@@ -151,10 +163,27 @@ function soleOwnerFiring(s: GalaxiesState): GalaxiesFiring | null {
       if (opp && (opp.x !== x || opp.y !== y)) {
         addAssoc(s, opp.x, opp.y, only.x, only.y);
       }
-      return { kind: "soleOwner", tile: { x, y }, opp, dot: only };
+      rec.firing = { kind: "soleOwner", tile: { x, y }, opp, dot: only };
+      fired = 1;
+      if (stop(rec)) return fired;
     }
   }
-  return null;
+  return fired;
+}
+
+/** Every space a firing names (tiles, walls and dots alike), which a hint
+ * plan continues from: a player follows a galaxy as it grows. */
+function spacesOf(s: GalaxiesState, f: GalaxiesFiring): number[] {
+  const out: number[] = [];
+  const walk = (v: unknown): void => {
+    if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === "object" && "x" in v && "y" in v) {
+      const p = v as Point;
+      out.push(idx(s, p.x, p.y));
+    }
+  };
+  Object.values(f).forEach(walk);
+  return out;
 }
 
 // --- the plan ---------------------------------------------------------
@@ -166,34 +195,43 @@ function soleOwnerFiring(s: GalaxiesState): GalaxiesFiring | null {
  * regardless, so this decides which explanation is offered first and nothing
  * about what can be deduced.
  */
-function nextPlanFiring(b: GalaxiesState): GalaxiesFiring | null {
-  const ladder: ((s: GalaxiesState) => GalaxiesFiring | null)[] = [
-    RUNGS.dotOwnCells.fire,
+function planLadder(b: GalaxiesState, rec: SolverRecorder): DeductionTechnique[] {
+  const rung = (
+    id: string,
+    run: (s: GalaxiesState, r: SolverRecorder) => number,
+    fallback = false,
+  ): DeductionTechnique => ({
+    id,
+    tier: 0,
+    // A rule that finds the board impossible offers nothing: `findMistakes`
+    // has vouched for it, so the plan ends there.
+    run: () => Math.max(0, run(b, rec)),
+    fallback,
+  });
+  return [
+    // Every rule after it reads a dot's own cells as its own.
+    { ...rung("dotOwnCells", RUNGS.dotOwnCells.run), prerequisite: true },
     // Walls first among equals: they are what finishes the board.
-    RUNGS.separate.fire,
-    RUNGS.enclosed.fire,
+    rung("separate", RUNGS.separate.run),
+    rung("enclosed", RUNGS.enclosed.run),
     // Before the reach argument, because it is the same conclusion with a
     // shorter proof — and one the player can confirm with a drag.
-    soleOwnerFiring,
-    RUNGS.reach.fire,
-    RUNGS.exclave.fire,
-    // Last, deliberately. Mirroring a wall is Galaxies' signature technique
-    // and stays in the plan — but as the *routine* source of walls it buried
-    // everything else (58% of a 7x7 plan's steps, measured), while the walls
-    // it drew early are the same ones "these two cells are in different
-    // galaxies" narrates later, in the game's plainest terms. Demoted, it
-    // fires only where it is genuinely the deduction that unsticks the board.
-    RUNGS.mirrorWall.fire,
+    rung("soleOwner", soleOwner),
+    rung("reach", RUNGS.reach.run),
+    rung("exclave", RUNGS.exclave.run),
+    // Last, deliberately, and only where nothing else fires. Mirroring a wall
+    // is Galaxies' signature technique and stays in the plan — but as the
+    // *routine* source of walls it buried everything else (58% of a 7x7
+    // plan's steps, measured), while the walls it drew early are the same
+    // ones "these two cells are in different galaxies" narrates later, in the
+    // game's plainest terms. Demoted, it fires only where it is genuinely the
+    // deduction that unsticks the board.
+    rung("mirrorWall", RUNGS.mirrorWall.run, true),
     // And nothing after it. Hypothesizing a cell's dot and propagating until
     // something breaks would settle more boards, and that rung was removed on
     // owner acceptance: it is guessing, and "I tried them all and this one
     // survived" teaches no technique. The hint refuses instead.
   ];
-  for (const rung of ladder) {
-    const firing = rung(b);
-    if (firing) return firing;
-  }
-  return null;
 }
 
 /** A firing plus whether the player's board would actually take it. A
@@ -239,6 +277,45 @@ export function galaxiesHintPlan(
   state: GalaxiesState,
 ): HintPlanResult<Planned, string> {
   const board = cloneState(state);
+  const rec = newRecorder(true);
+  const offers = new SweepOffers<
+    { flags: Uint16Array; dotx: Int16Array; doty: Int16Array; nassoc: Int16Array },
+    GalaxiesFiring | null
+  >({
+    save: () => ({
+      flags: board.flags.slice(),
+      dotx: board.dotx.slice(),
+      doty: board.doty.slice(),
+      nassoc: board.nassoc.slice(),
+    }),
+    restore: (s) => {
+      board.flags.set(s.flags);
+      board.dotx.set(s.dotx);
+      board.doty.set(s.doty);
+      board.nassoc.set(s.nassoc);
+    },
+    recorded: () => rec.firing,
+    record: (f) => {
+      rec.firing = f;
+    },
+    reads: (f) => (f ? spacesOf(board, f) : []),
+    // The spaces whose wall or owner it set.
+    writes: (before, after) => [
+      ...changed(before.flags, after.flags),
+      ...changed(before.dotx, after.dotx),
+      ...changed(before.doty, after.doty),
+    ],
+  });
+  rec.keep = () => offers.keep();
+  const pass = singleFirings({
+    techniques: offers.techniques(planLadder(board, rec)),
+    budget: stepBudget("galaxies hint"),
+    beforeTechnique: () => {
+      rec.firing = null;
+    },
+    // A plan grows the galaxy it is working on before it moves on.
+    continuing: true,
+  });
   return deduceHintPlan<GalaxiesState, Planned, string>({
     board,
     status: (b) => (checkComplete(b, false).complete ? "solved" : "unfinished"),
@@ -246,7 +323,7 @@ export function galaxiesHintPlan(
     // The rungs mutate as they detect, so there is no `apply` — re-applying a
     // firing that has already been made would be wrong, not just redundant.
     next: (b) => {
-      const firing = nextPlanFiring(b);
+      const firing = pass.next() ? rec.firing : null;
       return firing ? planned(b, firing) : null;
     },
     showable: (_b, p) => p.showable,

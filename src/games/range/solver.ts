@@ -21,11 +21,13 @@ import {
   dealUnreasonable,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
+import { singleFirings } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   BLACK,
   type Cell,
@@ -125,13 +127,9 @@ export interface HintMove {
   grid: Int8Array;
 }
 
-/** Invoked at each forced cell when the deduction is run for a hint. */
-export type Recorder = (
-  r: number,
-  c: number,
-  value: number,
-  reason: HintReason,
-) => void;
+/** Invoked at each forced cell when the deduction is run for a hint, once the
+ * cell is written. */
+type Recorder = (r: number, c: number, value: number, reason: HintReason) => void;
 
 export function findClues(grid: Int8Array, w: number, h: number): Cell[] {
   const clues: Cell[] = [];
@@ -364,35 +362,72 @@ export function applyRules(
   w: number,
   h: number,
   clues: Cell[],
-  rec?: Recorder,
 ): number {
   let total = 0;
-  // Guard the hint/recording path against a non-terminating fixpoint; the
-  // generator (no `rec`) runs unguarded, because a budget firing there would
-  // break board generation.
-  const budget = rec ? stepBudget("range hint") : undefined;
   for (;;) {
-    budget?.tick();
     const made =
-      ruleNotTooBig(grid, w, h, clues, rec) +
-      ruleAdjacency(grid, w, h, rec) +
-      ruleConnectedness(grid, w, h, rec);
+      ruleNotTooBig(grid, w, h, clues) +
+      ruleAdjacency(grid, w, h) +
+      ruleConnectedness(grid, w, h);
     if (made === 0) break;
     total += made;
   }
   return total;
 }
 
-/** Run the deductive solver from `grid` (the player's current marks),
+/**
+ * Run the deductive solver from `grid` (the player's current marks),
  * recording every forced cell in deduction order with the reason that
- * forces it — the data a hint plan narrates. Operates on a clone. */
+ * forces it — the data a hint plan narrates. Operates on a clone.
+ *
+ * One cell at a time, each the one beside the plan's last where there is
+ * one, so a plan finishes the clue it is working on before it moves on.
+ */
 export function deduceHintPlan(grid: Int8Array, w: number, h: number): HintMove[] {
   const dup = grid.slice();
-  const moves: HintMove[] = [];
-  applyRules(dup, w, h, findClues(dup, w, h), (r, c, value, reason) => {
-    moves.push({ r, c, value, reason, grid: dup.slice() });
+  const clues = findClues(dup, w, h);
+  const plan: HintMove[] = [];
+  let moves: HintMove[] = [];
+  const offers = new SweepOffers<{ grid: Int8Array; moves: HintMove[] }, HintMove[]>({
+    save: () => ({ grid: dup.slice(), moves: [...moves] }),
+    restore: (s) => {
+      dup.set(s.grid);
+      moves = [...s.moves];
+    },
+    recorded: () => [...moves],
+    record: (m) => {
+      moves = [...m];
+    },
+    // The cell, and the clue or the black square that forces it.
+    reads: (m) =>
+      m.flatMap(({ r, c, reason }) => [
+        r * w + c,
+        ...("clue" in reason ? [reason.clue.r * w + reason.clue.c] : []),
+        ...("from" in reason ? [reason.from.r * w + reason.from.c] : []),
+      ]),
+    writes: (_before, _after, m) => m.map(({ r, c }) => r * w + c),
   });
-  return moves;
+  // Each cell is a firing of its own: the plan takes every firing through
+  // its offers, so a rule never runs on past the one.
+  const rec: Recorder = (r, c, value, reason) => {
+    moves.push({ r, c, value, reason, grid: dup.slice() });
+    offers.keep();
+  };
+  const pass = singleFirings({
+    techniques: offers.techniques([
+      { id: "not-too-big", tier: 0, run: () => ruleNotTooBig(dup, w, h, clues, rec) },
+      { id: "adjacency", tier: 0, run: () => ruleAdjacency(dup, w, h, rec) },
+      { id: "connectedness", tier: 0, run: () => ruleConnectedness(dup, w, h, rec) },
+    ]),
+    budget: stepBudget("range hint"),
+    continuing: true,
+  });
+  for (;;) {
+    moves = [];
+    if (!pass.next()) break;
+    plan.push(...moves);
+  }
+  return plan;
 }
 
 // --- error checking (solved-detection + live highlight) --------------------

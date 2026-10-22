@@ -98,9 +98,9 @@ const pinned = describeHintPins({
     dotAtCorner: "7x7dn:ajhrekfsrijvkk",
     /** Held on 191 of 7067 positions walked. */
     wallMirroredOffEdge: {
-      id: "7x7du:mkibeyrzadbdkzb",
+      id: "7x7du:devsbnpzdugpd",
       moves:
-        '[{"ops":[{"kind":"assoc","x":11,"y":2,"ax":11,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":4,"ax":1,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":2,"y":10,"ax":2,"ay":10}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":10,"ax":13,"ay":10}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":8}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":12}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":3,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":3}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":3,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":10}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":11}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":5,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":9}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":7,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":8}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":13,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":1,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":7,"ax":11,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":11}],"solving":false}]',
+        '[{"ops":[{"kind":"assoc","x":4,"y":1,"ax":4,"ay":1}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":4,"ax":11,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":4,"ax":13,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":6,"ax":1,"ay":6}],"solving":false},{"ops":[{"kind":"assoc","x":4,"y":7,"ax":4,"ay":7}],"solving":false},{"ops":[{"kind":"assoc","x":2,"y":11,"ax":2,"ay":11}],"solving":false},{"ops":[{"kind":"assoc","x":12,"y":12,"ax":12,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":12}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":11}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":7,"ax":7,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":7}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":7}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":3,"ax":5,"ay":3}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":11,"ax":7,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":2}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":3,"ax":5,"ay":3}],"solving":false},{"ops":[{"kind":"edge","x":9,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":4}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":7,"ax":11,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":7}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":1}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":7,"ax":13,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":7}],"solving":false}]',
     },
     /** Held on 74 of 7067 positions walked. */
     wallMirroredAboutOwnCell: {
@@ -114,31 +114,31 @@ const pinned = describeHintPins({
     severalCells: "7x7dn:cgqkdqdzcjdptkdb",
     /** Held on 858 of 7067 positions walked. */
     dotTile: "7x7dn:cgqkdqdzcjdptkdb",
-    /** Held on 6249 of 7067 positions walked. */
+    /** Held on 6240 of 7067 positions walked. */
     separate: {
       id: "7x7dn:ajhrekfsrijvkk",
       moves:
         '[{"ops":[{"kind":"assoc","x":6,"y":2,"ax":6,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":4,"ax":3,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":6,"ax":13,"ay":6}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":8,"ax":5,"ay":8}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":12,"ax":5,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":2}],"solving":false}]',
     },
-    /** Held on 393 of 7067 positions walked. */
+    /** Held on 432 of 7067 positions walked. */
     enclosed: {
       id: "7x7dn:ajhrekfsrijvkk",
       moves:
         '[{"ops":[{"kind":"assoc","x":6,"y":2,"ax":6,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":4,"ax":3,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":6,"ax":13,"ay":6}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":8,"ax":5,"ay":8}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":12,"ax":5,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":10}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":13}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":1,"ax":11,"ay":1}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":1}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":5,"ax":11,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":5}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":7,"ax":5,"ay":8}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":9}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":7,"ax":11,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":7}],"solving":false}]',
     },
-    /** Held on 3076 of 7067 positions walked. */
+    /** Held on 3151 of 7067 positions walked. */
     soleOwner: {
       id: "7x7du:pgddzgtguvfth",
       moves:
         '[{"ops":[{"kind":"assoc","x":3,"y":2,"ax":3,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":10,"y":2,"ax":10,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":12,"y":7,"ax":12,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":12}],"solving":false}]',
     },
-    /** Held on 3726 of 7067 positions walked. */
+    /** Held on 4646 of 7067 positions walked. */
     onlyReach: {
       id: "7x7du:pgddzgtguvfth",
       moves:
         '[{"ops":[{"kind":"assoc","x":3,"y":2,"ax":3,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":10,"y":2,"ax":10,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":12,"y":7,"ax":12,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":12}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":1,"ax":1,"ay":3}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":1}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":1,"ax":5,"ay":3}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":6}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":3,"ax":10,"ay":2}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":3}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":5,"ax":5,"ay":3}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":5}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":11,"ax":3,"ay":11}],"solving":false}]',
     },
-    /** Held on 245 of 7067 positions walked. */
+    /** Held on 260 of 7067 positions walked. */
     exclave: {
       id: "15x15dn:elgebzzsjklbssbzztjwhizalgnzhrdzyfecgzglijgzjzkefcjvzzkpuozkqd",
       moves:

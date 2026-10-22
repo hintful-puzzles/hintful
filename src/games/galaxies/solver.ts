@@ -110,21 +110,26 @@ export type GalaxiesFiring =
  * normally sweeps the whole board and accumulates, which is right for solving
  * and wrong for narrating (one firing = one hint).
  */
-interface SolverRecorder {
+export interface SolverRecorder {
   /** Return from a rule as soon as one firing is recorded. */
   stopAtFirstFiring: boolean;
   /** The firing this pass recorded, if any. */
   firing: GalaxiesFiring | null;
+  /** The hint's `SweepOffers.keep`: whether the rule returns at the firing
+   * it has just recorded, or scans on while a plan collects them all. */
+  keep?: () => boolean;
 }
 
-function newRecorder(stopAtFirstFiring: boolean): SolverRecorder {
+export function newRecorder(stopAtFirstFiring: boolean): SolverRecorder {
   return { stopAtFirstFiring, firing: null };
 }
 
 /** True when this rule should return now — it has a firing and the caller
  * asked for one at a time. */
-function stop(rec?: SolverRecorder): boolean {
-  return rec?.stopAtFirstFiring === true && rec.firing !== null;
+export function stop(rec?: SolverRecorder): boolean {
+  return (
+    rec?.stopAtFirstFiring === true && rec.firing !== null && (rec.keep?.() ?? true)
+  );
 }
 
 // Scratch flags live in a side buffer, so no transient bit reaches the state.
@@ -236,7 +241,7 @@ function solverLinesOpposite(
                 { x: s.dotx[i1], y: s.doty[i1] },
               ],
             };
-            if (rec.stopAtFirstFiring) return PROGRESS;
+            if (stop(rec)) return PROGRESS;
           }
         }
       }
@@ -266,7 +271,7 @@ function solverLinesOpposite(
               opp,
               dot: { x: s.dotx[ti], y: s.doty[ti] },
             };
-            if (rec.stopAtFirstFiring) return PROGRESS;
+            if (stop(rec)) return PROGRESS;
           }
         }
       }
@@ -778,7 +783,7 @@ export function solverState(
 
 /**
  * One rule of the deduction chain, as the hint consumes it: run it against the
- * board and return the single firing it records, or `null`.
+ * board, recording each firing.
  *
  * The *order* these are tried in is a narration decision, not a solver one —
  * every rule is run to a fixpoint either way, so ordering changes which
@@ -787,21 +792,16 @@ export function solverState(
  */
 interface GalaxiesRung {
   readonly name: string;
-  fire(s: GalaxiesState): GalaxiesFiring | null;
+  /** Run the rule, recording into `rec`: `< 0` where it finds the board
+   * impossible, `> 0` where it fires. */
+  run(s: GalaxiesState, rec: SolverRecorder): number;
 }
 
 function rungOf(
   name: string,
   run: (s: GalaxiesState, rec: SolverRecorder) => number,
 ): GalaxiesRung {
-  return {
-    name,
-    fire(s) {
-      const rec = newRecorder(true);
-      if (run(s, rec) === IMPOSSIBLE) return null;
-      return rec.firing;
-    },
-  };
+  return { name, run };
 }
 
 const SEPARATE_ONLY: LineRules = { separate: true, mirror: false };

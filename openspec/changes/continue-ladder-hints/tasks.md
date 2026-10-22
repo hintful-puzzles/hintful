@@ -32,7 +32,13 @@
       where it returned the first (Boats' collect in `firing()` instead, so
       its thirteen finders stay as written). A dear look-ahead offers only
       the firing it would make (Clusters' shortest chain, Spokes' first
-      contradiction).
+      contradiction). Done too: galaxies, lightup, range, unruly, whose
+      rules record each firing and now ask `keep()` there. Range, Light Up
+      and Unruly planned the trace of a full solve; their hint is now a
+      ladder over the same rules, one firing a step. Galaxies'
+      `dotOwnCells` is a prerequisite (a plan that took a later rule first
+      ran dry on a board it used to finish), and its mirrored wall a
+      fallback, as its demotion meant.
 - [ ] 2.3 For each: hint pins and plan tests re-baselined, each moved
       sentence read against its board; a hint played in the app.
 

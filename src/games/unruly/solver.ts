@@ -7,8 +7,13 @@
  * cells per board during generation, where a clone per fill would be wasteful.
  * The `Game`'s `executeMove` stays pure.
  */
-import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
+import {
+  type DeductionTechnique,
+  runDeductionFixpoint,
+  singleFirings,
+} from "../../engine/deduction-fixpoint.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import { DIFF_EASY, DIFF_NORMAL, DIFF_TRIVIAL, EMPTY, ONE, ZERO } from "./constants.ts";
 import type { UnrulyMistake, UnrulyState } from "./state.ts";
 
@@ -23,6 +28,11 @@ export interface GridView {
   h2: number;
   unique: boolean;
   grid: Uint8Array;
+  /**
+   * The hint path's: called where a technique has just made one firing, so
+   * that a plan can offer it as a step of its own (`SweepOffers.keep`).
+   */
+  offer?: () => void;
 }
 
 // --- hint recording (the explained-deduction path) ----------------------
@@ -64,7 +74,7 @@ export interface HintMove {
 }
 
 /** Invoked at each forced cell when the deduction is run for a hint. */
-export type Recorder = (
+type Recorder = (
   index: number,
   value: number,
   reason: HintReason,
@@ -156,6 +166,7 @@ function checkThrees(
         grid[fillAt] = block;
         rowcount[Math.floor(fillAt / w2)]++;
         colcount[fillAt % w2]++;
+        view.offer?.();
       }
     }
   }
@@ -226,7 +237,9 @@ function checkSingleGap(
         fill,
         full: otherColor(fill),
       };
-      ret += fillRow(view, i, horizontal, rowcount, colcount, fill, rec, reason);
+      const n = fillRow(view, i, horizontal, rowcount, colcount, fill, rec, reason);
+      ret += n;
+      if (n > 0) view.offer?.();
     }
   }
   return ret;
@@ -267,7 +280,9 @@ function checkCompleteNums(
         fill,
         full: otherColor(fill),
       };
-      ret += fillRow(view, i, horizontal, rowcount, colcount, fill, rec, reason);
+      const n = fillRow(view, i, horizontal, rowcount, colcount, fill, rec, reason);
+      ret += n;
+      if (n > 0) view.offer?.();
     }
   }
   return ret;
@@ -339,6 +354,7 @@ function checkUniques(
           s.zerosCols[i1 % w2]++;
         }
         ret++;
+        view.offer?.();
       }
     }
   }
@@ -412,8 +428,10 @@ function checkNearComplete(
           anchor,
         };
         for (const b of bogus) grid[b] = BOGUS;
-        ret += fillRow(view, i, horizontal, rowcount, colcount, fill, rec, reason);
+        const n = fillRow(view, i, horizontal, rowcount, colcount, fill, rec, reason);
+        ret += n;
         for (const b of bogus) grid[b] = EMPTY;
+        if (n > 0) view.offer?.();
       }
     }
   }
@@ -449,83 +467,144 @@ function checkAllNearComplete(view: GridView, s: Scratch, rec?: Recorder): numbe
  * firing, the running grade, and the tier cap. No technique can prove a
  * contradiction, so `impossible` is never reported.
  */
-export function solveGame(
-  view: GridView,
-  scratch: Scratch,
-  diff: number,
-  rec?: Recorder,
-): number {
-  // Guard the hint/recording path against a non-terminating fixpoint; the
-  // generator (no `rec`) runs unguarded.
-  const budget = rec ? stepBudget("unruly hint") : undefined;
+export function solveGame(view: GridView, scratch: Scratch, diff: number): number {
   const { grade } = runDeductionFixpoint({
-    techniques: [
-      {
-        id: "three-in-a-row",
-        tier: DIFF_TRIVIAL,
-        run: () => (checkAllThrees(view, scratch, rec) ? 1 : 0),
-      },
-      {
-        id: "single-gap",
-        tier: DIFF_TRIVIAL,
-        run: () => (checkAllSingleGap(view, scratch, rec) ? 1 : 0),
-      },
-      {
-        id: "complete-count",
-        tier: DIFF_EASY,
-        run: () => (checkAllCompleteNums(view, scratch, rec) ? 1 : 0),
-      },
-      {
-        // `unique` is a rule of the board (the "no two identical rows"
-        // variant), not a rung ordering question, so it gates the technique
-        // rather than being a runner predicate.
-        id: "unique-rows",
-        tier: DIFF_EASY,
-        run: () => (view.unique && checkAllUniques(view, scratch, rec) ? 1 : 0),
-      },
-      {
-        id: "near-complete",
-        tier: DIFF_NORMAL,
-        run: () => (checkAllNearComplete(view, scratch, rec) ? 1 : 0),
-      },
-    ],
+    techniques: unrulyLadder(view, scratch),
     maxTier: diff,
     baseGrade: -1,
-    budget,
   });
   return grade;
 }
 
+/** The five techniques over `view`, each recording to `rec` where there is
+ * one. */
+function unrulyLadder(
+  view: GridView,
+  scratch: Scratch,
+  rec?: Recorder,
+): DeductionTechnique[] {
+  const run = (sweep: () => number) => () => (sweep() ? 1 : 0);
+  return [
+    {
+      id: "three-in-a-row",
+      tier: DIFF_TRIVIAL,
+      run: run(() => checkAllThrees(view, scratch, rec)),
+    },
+    {
+      id: "single-gap",
+      tier: DIFF_TRIVIAL,
+      run: run(() => checkAllSingleGap(view, scratch, rec)),
+    },
+    {
+      id: "complete-count",
+      tier: DIFF_EASY,
+      run: run(() => checkAllCompleteNums(view, scratch, rec)),
+    },
+    {
+      // `unique` is a rule of the board (the "no two identical rows"
+      // variant), not a rung ordering question, so it gates the technique
+      // rather than being a runner predicate.
+      id: "unique-rows",
+      tier: DIFF_EASY,
+      run: run(() => (view.unique ? checkAllUniques(view, scratch, rec) : 0)),
+    },
+    {
+      id: "near-complete",
+      tier: DIFF_NORMAL,
+      run: run(() => checkAllNearComplete(view, scratch, rec)),
+    },
+  ];
+}
+
 /** Solve a copy of `grid` on `view`'s board, capped at tier `diff`, and return
  * the worked copy; the caller's grid is untouched. */
-export function solveCopy(
-  view: GridView,
-  grid: Uint8Array,
-  diff: number,
-  rec?: Recorder,
-): GridView {
+export function solveCopy(view: GridView, grid: Uint8Array, diff: number): GridView {
   const { w2, h2, unique } = view;
   const work: GridView = { w2, h2, unique, grid: Uint8Array.from(grid) };
-  solveGame(work, newScratch(work), diff, rec);
+  solveGame(work, newScratch(work), diff);
   return work;
+}
+
+/** Everything a hint firing writes, and the moves it has recorded. */
+interface UnrulySnapshot {
+  grid: Uint8Array;
+  counts: Int32Array[];
+  moves: HintMove[];
 }
 
 /**
  * Run the deduction from the player's current marks at full strength,
  * recording every forced cell in order — the explained-hint plan. Returns the
  * ordered forced moves; the first is the move to surface next.
+ *
+ * One firing at a time, each the one beside the plan's last where there is
+ * one: a player works the rows and columns through the cells just filled.
  */
 export function deduceHintPlan(state: UnrulyState): HintMove[] {
-  const moves: HintMove[] = [];
-  solveCopy(
-    state,
-    state.grid,
-    Number.MAX_SAFE_INTEGER,
-    (index, value, reason, continues) => {
-      moves.push({ index, value, reason, continuesPrevious: continues });
+  const { w2, h2, unique } = state;
+  const plan: HintMove[] = [];
+  let moves: HintMove[] = [];
+  const view: GridView = { w2, h2, unique, grid: Uint8Array.from(state.grid) };
+  const s = newScratch(view);
+  const counts = [s.onesRows, s.onesCols, s.zerosRows, s.zerosCols];
+  const lineCells = (line: number, horizontal: boolean): number[] =>
+    horizontal
+      ? Array.from({ length: w2 }, (_, x) => line * w2 + x)
+      : Array.from({ length: h2 }, (_, y) => y * w2 + line);
+  const offers = new SweepOffers<UnrulySnapshot, HintMove[]>({
+    save: () => ({
+      grid: view.grid.slice(),
+      counts: counts.map((c) => c.slice()),
+      moves: [...moves],
+    }),
+    restore: (snap) => {
+      view.grid.set(snap.grid);
+      for (const [k, c] of counts.entries()) c.set(snap.counts[k]);
+      moves = [...snap.moves];
     },
-  );
-  return moves;
+    recorded: () => [...moves],
+    record: (m) => {
+      moves = [...m];
+    },
+    // The pair that forces a cell, the row or rows a count reads, and the
+    // cells it fills.
+    reads: (m) => {
+      if (m.length === 0) return [];
+      const { reason } = m[0];
+      const own = m.map((x) => x.index);
+      switch (reason.kind) {
+        case "threes":
+          return [...reason.refs, ...own];
+        case "complete":
+        case "nearcomplete":
+          return [...lineCells(reason.line, reason.horizontal), ...own];
+        case "unique":
+          return [
+            ...lineCells(reason.rowA, reason.horizontal),
+            ...lineCells(reason.rowB, reason.horizontal),
+          ];
+      }
+    },
+    writes: (_before, _after, m) => m.map((x) => x.index),
+  });
+  view.offer = () => {
+    offers.keep();
+  };
+  const pass = singleFirings({
+    techniques: offers.techniques(
+      unrulyLadder(view, s, (index, value, reason, continuesPrevious) => {
+        moves.push({ index, value, reason, continuesPrevious });
+      }),
+    ),
+    budget: stepBudget("unruly hint"),
+    continuing: true,
+  });
+  for (;;) {
+    moves = [];
+    if (!pass.next()) break;
+    plan.push(...moves);
+  }
+  return plan;
 }
 
 // --- validators ----------------------------------------------------------
