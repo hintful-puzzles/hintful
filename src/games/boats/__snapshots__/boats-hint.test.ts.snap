@@ -2592,7 +2592,7 @@ exports[`boats: pinned hint positions > says, at each pin 1`] = `
   "onlyRunsLeft": "Only the outlined run can hold the 4-boat, so the ringed square is covered wherever it sits.",
   "refuted": "If this square were water, it would make one boat (outlined) too many, so it must hold a boat segment.",
   "runTooShort": "Filling this run would make a boat of 2, but every 2-boat is already placed, so its free square must be water.",
-  "sharedDiagonal": "This column can take 1 more water, so one outlined square must be a boat: the middle one's ringed sides must be water.",
+  "sharedDiagonal": "This column has 1 water left, so an outlined square must be a boat: the ringed squares between them must be water.",
 }
 `;
 

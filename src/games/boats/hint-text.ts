@@ -298,14 +298,24 @@ export const say = {
         });
   },
 
-  // Whichever of them is the boat, the middle one's two sides are beside a
-  // boat segment, so the conclusion holds either way.
-  sharedDiagonal: (t: T<"sharedDiagonal">, m: BoatsMarks): Sentence =>
-    so({
-      look: phrase`${lineIntro(t.line, m)}${lineRef(t.line, m).capitalized()} can take ${t.room} more water`,
-      follows: phrase`${outlined(m.evidence, "one outlined square")} must be a boat`,
-      move: phrase`${ringed(m.waters, "the middle one's ringed sides")} must be water`,
-    }),
+  // A boat on an outer square touches the ringed squares at a corner, which
+  // the help states; a boat on the middle square is the case only the words
+  // can explain, so they say it would fill the line crossing there.
+  sharedDiagonal: (t: T<"sharedDiagonal">, m: BoatsMarks): Sentence => {
+    const look = phrase`${lineIntro(t.line, m)}${lineRef(t.line, m).capitalized()} has ${t.room} water left`;
+    const one = outlined(m.evidence, "an outlined square");
+    return t.middle
+      ? so({
+          look,
+          follows: phrase`${one} must be a boat, which fills its ${t.line.horizontal ? "column" : "row"} if central`,
+          move: phrase`${ringed(m.waters, "the ringed sides")} are water`,
+        })
+      : so({
+          look,
+          follows: phrase`${one} must be a boat`,
+          move: phrase`${ringed(m.waters, "the ringed squares between them")} must be water`,
+        });
+  },
 
   refuted: (t: T<"refuted">, m: BoatsMarks): Sentence => {
     if (t.center) {
