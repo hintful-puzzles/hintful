@@ -131,6 +131,15 @@ const LONG_NARRATIONS: {
     why: PEARL_CARRIES_ON,
   },
   {
+    games: ["crossing"],
+    rungs: ["crossRuns"],
+    why:
+      "Its premise is the digits the tighter run's fitting numbers leave the " +
+      "square, which no mark shows, so they are listed in full; where both " +
+      "runs leave five or more, the list alone is a fifth of the line " +
+      "(crossing's last preset, 2026-10-22: 123 characters with five).",
+  },
+  {
     games: ["magnets"],
     rungs: ["onlyEndLeft"],
     why:
