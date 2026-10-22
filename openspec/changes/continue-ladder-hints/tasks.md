@@ -48,7 +48,10 @@
       the log copied, since a rewound offer's facts are overwritten by the
       next; the loop rung joins chains before its offers). A plan's first
       hint costs two to four times what it did, under 50 ms on the largest
-      presets measured.
+      presets measured. Done too: singles (its queue of cascades is a rung
+      whose firings are the queued groups, and a firing applies its own ops
+      and queues their cascade rather than draining it; the solver's path is
+      unchanged).
 - [ ] 2.3 For each: hint pins and plan tests re-baselined, each moved
       sentence read against its board; a hint played in the app.
 

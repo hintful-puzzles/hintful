@@ -158,13 +158,14 @@ describe("deduceHintPlan records the deduction reason", () => {
   });
 
   it("pair: an adjacent equal pair shades the other copies in the line", () => {
-    // Row 0: 1 1 2 1 → the lone '1' at x=3 must be shaded.
-    const s = craft(4, 2, [1, 1, 2, 1, 3, 4, 2, 4]);
-    const plan = deduceHintPlan(s);
-    const r = plan.find((m) => m.reason.kind === "pair");
-    expect(r).toBeDefined();
+    // Row 0: 1 1 2 2 1 → the lone '1' at x=4 must be shaded. No two equal
+    // numbers sit a cell apart, so the pair is what a plan opens with: a
+    // plan that continues may decide a cell by another rule first.
+    const s = craft(5, 2, [1, 1, 2, 2, 1, 3, 4, 5, 6, 7]);
+    const [r] = deduceHintPlan(s);
+    expect(r?.reason.kind).toBe("pair");
     expect(r?.op).toBe(0); // OP_BLACK
-    expect(r).toMatchObject({ x: 3, y: 0 });
+    expect(r).toMatchObject({ x: 4, y: 0 });
   });
 
   it("corner3: three matching numbers in a 2x2 corner force the apex black", () => {

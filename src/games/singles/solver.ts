@@ -6,13 +6,16 @@
  * cascade and each deduction mirror upstream so the difficulty grading —
  * and therefore the generator's published board — matches C exactly.
  */
-import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
+import {
+  findingTechniques,
+  runDeductionFixpoint,
+  singleFirings,
+} from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   cloneState,
-  DIFF_ANY,
   DIFF_EASY,
   DIFF_TRICKY,
   F_BLACK,
@@ -201,22 +204,27 @@ function cascadeFromCircle(
 /** Apply every queued op, cascading new ops as blacks/circles imply
  * their neighbors. */
 export function solverOpsDo(s: SinglesState, ss: SolverState): void {
-  for (let next = 0; next < ss.ops.length; next++) {
-    const op = ss.ops[next];
-    const i = op.y * s.w + op.x;
-    const set = op.op === OP_BLACK ? F_BLACK : F_CIRCLE;
-    const clash = op.op === OP_BLACK ? F_CIRCLE : F_BLACK;
-    if (s.flags[i] & clash) {
-      s.impossible = true;
-      return;
-    }
-    if (s.flags[i] & set) continue;
-    s.flags[i] |= set;
-    recordOp(ss, op);
-    if (op.op === OP_BLACK) cascadeFromBlack(s, ss, op.x, op.y);
-    else cascadeFromCircle(s, ss, op.x, op.y);
-  }
+  for (let next = 0; next < ss.ops.length; next++)
+    if (!solverOpDo(s, ss, ss.ops[next])) return;
   ss.ops = [];
+}
+
+/** Apply one op, queuing the cascade it sets off; false where it clashes
+ * with the board. */
+function solverOpDo(s: SinglesState, ss: SolverState, op: Op): boolean {
+  const i = op.y * s.w + op.x;
+  const set = op.op === OP_BLACK ? F_BLACK : F_CIRCLE;
+  const clash = op.op === OP_BLACK ? F_CIRCLE : F_BLACK;
+  if (s.flags[i] & clash) {
+    s.impossible = true;
+    return false;
+  }
+  if (s.flags[i] & set) return true;
+  s.flags[i] |= set;
+  recordOp(ss, op);
+  if (op.op === OP_BLACK) cascadeFromBlack(s, ss, op.x, op.y);
+  else cascadeFromCircle(s, ss, op.x, op.y);
+  return true;
 }
 
 /* --- once-only deductions (number-only) --- */
@@ -782,18 +790,102 @@ export function solveSpecific(
   return checkComplete(state, CC_MUST_FILL) ? 1 : 0;
 }
 
-/** Run the deductive solver from the player's current marks (a clone of
- * `state`), recording every forced cell in deduction order with the
- * reason that forces it — the data a hint plan narrates. Uses `DIFF_ANY`
- * (every rule, no sneaky), the level `findMistakes`/`solve` use, so a
- * uniquely-solvable board yields the full remaining solution. */
+/**
+ * Run the deductive solver's rules from the player's current marks (a clone
+ * of `state`), recording every forced cell in deduction order with the reason
+ * that forces it — the data a hint plan narrates. Every rule, no sneaky, as
+ * `findMistakes` and `solve` use (`DIFF_ANY`), so a uniquely-solvable board
+ * yields the full remaining solution.
+ *
+ * One firing at a time, where the solver drains its whole queue: what is
+ * queued is forced by the cells already decided, group by group, so each
+ * group is a firing a plan may take, and it takes the one beside the cells
+ * it has just decided.
+ */
 export function deduceHintPlan(state: SinglesState): HintRecord[] {
   const work = cloneState(state);
   const ss = newSolverState(work);
-  ss.records = [];
+  const records: HintRecord[] = [];
+  ss.records = records;
   primeCascadeFromMarks(work, ss);
-  solveSpecific(work, DIFF_ANY, false, ss);
-  return ss.records;
+  // The once-only rules queue what they find, as the solver's do.
+  solveSinglesep(work, ss);
+  solveDoubles(work, ss);
+  solveCorners(work, ss);
+  solveOffsetpair(work, ss);
+
+  /** The ops a rule would queue from the board as it stands, queuing none. */
+  const queuedBy = (rule: (s: SinglesState, ss: SolverState) => number): Op[] => {
+    const queued = ss.ops.length;
+    rule(work, ss);
+    return ss.ops.splice(queued);
+  };
+  /** Every op a firing's ops would change, by group, in queue order. */
+  const groups = (ops: readonly Op[]): Op[][] => {
+    const by = new Map<number, Op[]>();
+    for (const op of ops) {
+      const i = op.y * work.w + op.x;
+      const set = op.op === OP_BLACK ? F_BLACK : F_CIRCLE;
+      if (work.flags[i] & set) continue;
+      const g = op.group ?? -1;
+      const group = by.get(g);
+      if (group) group.push(op);
+      else by.set(g, [op]);
+    }
+    return [...by.values()];
+  };
+  // A firing applies its ops, records them, and queues the cascade they set
+  // off, which the queue's rung then offers as firings of their own.
+  const take = (ops: readonly Op[]): void => {
+    const taken = new Set(ops);
+    ss.ops = ss.ops.filter((op) => !taken.has(op));
+    for (const op of ops) if (!solverOpDo(work, ss, op)) return;
+  };
+  const cells = (ops: readonly Op[]): number[] => ops.map((op) => op.y * work.w + op.x);
+  const pass = singleFirings({
+    techniques: findingTechniques<Op[]>(
+      [
+        // What the cells already decided force, cascade by cascade.
+        { id: "queued", tier: DIFF_EASY, find: () => groups(ss.ops) },
+        {
+          id: "all-black-but-one",
+          tier: DIFF_EASY,
+          find: () => groups(queuedBy(solveAllblackbutone)),
+        },
+        {
+          id: "remove-splits",
+          tier: DIFF_TRICKY,
+          find: () => groups(queuedBy(solveRemovesplits)),
+        },
+      ],
+      take,
+      // The cells a firing's premise names, and its own: a player works
+      // outward from the cells just decided.
+      {
+        reads: (ops) => [...cells(ops), ...pointsOf(work, ops[0].reason)],
+        writes: cells,
+      },
+    ),
+    budget: stepBudget("singles hint"),
+    settled: () => work.impossible || checkComplete(work, CC_MUST_FILL),
+    continuing: true,
+  });
+  while (pass.next());
+  return records;
+}
+
+/** Every cell a reason names. */
+function pointsOf(s: SinglesState, reason: SinglesReason | null): number[] {
+  const out: number[] = [];
+  const walk = (v: unknown): void => {
+    if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === "object" && "x" in v && "y" in v) {
+      const p = v as Point;
+      out.push(p.y * s.w + p.x);
+    }
+  };
+  if (reason) Object.values(reason).forEach(walk);
+  return out;
 }
 
 /**
