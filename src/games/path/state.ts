@@ -103,8 +103,8 @@ export const paramConfig: ParamConfigItem<PathParams>[] = [
 const BOARDS: PathParams[] = [
   { w: 5, h: 5, diff: DIFF_EASY },
   { w: 7, h: 7, diff: DIFF_EASY },
-  { w: 10, h: 10, diff: DIFF_EASY },
-  { w: 13, h: 13, diff: DIFF_EASY },
+  { w: 8, h: 12, diff: DIFF_EASY },
+  { w: 10, h: 15, diff: DIFF_EASY },
 ];
 
 /** Normal, so that the first board needs both rungs and its hint draws every

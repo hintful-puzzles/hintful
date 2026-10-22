@@ -444,12 +444,12 @@ preset:5x5 Easy  full=5x5de  brief=5x5
 preset:5x5 Normal  full=5x5dn  brief=5x5
 preset:7x7 Easy  full=7x7de  brief=7x7
 preset:7x7 Tricky  full=7x7dt  brief=7x7
-preset:10x10 Easy  full=10x10de  brief=10x10
-preset:10x10 Normal  full=10x10dn  brief=10x10
-preset:10x10 Tricky  full=10x10dt  brief=10x10
-preset:13x13 Easy  full=13x13de  brief=13x13
-preset:13x13 Normal  full=13x13dn  brief=13x13
-preset:13x13 Tricky  full=13x13dt  brief=13x13
+preset:8x12 Easy  full=8x12de  brief=8x12
+preset:8x12 Normal  full=8x12dn  brief=8x12
+preset:8x12 Tricky  full=8x12dt  brief=8x12
+preset:10x15 Easy  full=10x15de  brief=10x15
+preset:10x15 Normal  full=10x15dn  brief=10x15
+preset:10x15 Tricky  full=10x15dt  brief=10x15
 bump:w  full=8x7dn  brief=8x7
 bump:h  full=7x8dn  brief=7x8"
 `;

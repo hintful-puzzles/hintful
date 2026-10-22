@@ -37,7 +37,7 @@ follow, and a generator that deals boards needing it.
   until the Easy rung finishes it and strips numbers tier by tier, so a join
   accepted at the tier asked for is one the tier below could not finish:
   boards need their tier by construction rather than by luck.
-- **The menu**: 5x5 at Easy and Normal, 7x7, 10x10 and 13x13 at every tier.
+- **The menu**: 5x5 at Easy and Normal, 7x7, 8x12 and 10x15 at every tier.
 - **The edges skeleton** measures its lookahead's walk the same way, being
   the same defect in the template new edge games are stamped from.
 - The Custom dialog's tier description and the help page's hint section say

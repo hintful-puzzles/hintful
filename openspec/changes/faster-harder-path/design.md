@@ -84,7 +84,14 @@ ladder refused is not tried again within a strip.
 | 15x15 Tricky | 2 s | 4 s | 10 |
 | 13x13 Normal | 0.1 s | 0.2 s | 1 |
 | 20x20 Normal | 0.5 s | 1 s | 1 |
+| 8x12 Tricky | 0.5 s | 1 s | 32 |
+| 10x15 Tricky | 0.7 s | 3 s | 12 |
 
-The menu is 5x5 at Easy and Normal, and 7x7, 10x10 and 13x13 at every
-tier: eleven lines. A 5x5 Tricky board keeps three pairs and is a rare find,
-so it is off the menu, and left to Custom.
+The menu is 5x5 at Easy and Normal, and 7x7, 8x12 and 10x15 at every tier:
+eleven lines. The first menu was all squares; the owner (2026-10-23): "both
+phones and typical browser windows are typically rectangular, and I'd
+suggest that at least half the boards be rectangular (e.g. 10x15), similar
+as how we do it in other games." The two largest are 2:3 and drawn tall, as
+every preset is, and turn to fit a landscape window. A 5x5 Tricky board
+keeps three pairs and is a rare find, so it is off the menu, and left to
+Custom.
