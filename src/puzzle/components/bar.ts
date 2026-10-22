@@ -387,13 +387,17 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
         padding-inline: 0.625rem;
       }
 
-      /* Along the bottom the slots sit side by side, so each hangs from the
-       * same top: the icons share a line, and so do the captions' first lines,
-       * however many lines a caption wraps to. Centering instead raised a
-       * wrapped slot's icon half a line above its neighbors'. The inset leaves
-       * room for a two-line caption within the slot's height. */
+      /* Along the bottom the slots sit side by side and are stretched to one
+       * height, so each is two rows: the icons share the top one, and each
+       * caption is centered in the rest, whether it takes one line or two.
+       * Centering the icon and caption together raised a wrapped slot's icon
+       * half a line above its neighbors'. The inset leaves room for a
+       * two-line caption within the slot's height. */
       :host([along="bottom"]) [part~="slot"] {
-        justify-content: flex-start;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        justify-items: center;
+        align-items: center;
         padding-block-start: 0.375rem;
       }
 
