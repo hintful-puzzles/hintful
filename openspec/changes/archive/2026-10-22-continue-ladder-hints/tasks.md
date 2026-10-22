@@ -63,5 +63,5 @@
 
 - [x] 3.1 `docs/hints.md` § "The shared plan loop: deduceHintPlan" says a
       plan continues, and how to key `available()`.
-- [ ] 3.2 Commit a game or a few at a time; push; bring the reordered hints
-      to the owner; archive on acceptance.
+- [x] 3.2 Commit a game or a few at a time; push; bring the reordered hints
+      to the owner; archive on acceptance. (Accepted 2026-10-22.)
