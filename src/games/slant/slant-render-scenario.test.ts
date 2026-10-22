@@ -35,16 +35,16 @@ const pinned = describeHintKindPins({
     equivalence: "equiv",
   },
   pins: {
-    /** Held on 1060 of 1156 positions walked. */
+    /** Held on 1074 of 1164 positions walked. */
     clue: "5x5de:e11a42c1b1c2b1a1a22a1e",
-    /** Held on 59 of 1156 positions walked. */
+    /** Held on 59 of 1164 positions walked. */
     loop: {
       id: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
       moves:
         '[{"type":"set","x":0,"y":7,"v":1},{"type":"set","x":1,"y":7,"v":-1},{"type":"set","x":3,"y":3,"v":-1},{"type":"set","x":4,"y":3,"v":1},{"type":"alike","x":0,"y":1,"dir":"right","on":true},{"type":"set","x":0,"y":0,"v":-1},{"type":"set","x":1,"y":0,"v":1},{"type":"set","x":1,"y":1,"v":1},{"type":"set","x":0,"y":1,"v":1},{"type":"set","x":2,"y":1,"v":-1},{"type":"set","x":2,"y":0,"v":1},{"type":"set","x":0,"y":2,"v":1},{"type":"set","x":1,"y":2,"v":-1}]',
     },
-    /** Held on 560 of 1156 positions walked. */
-    equivalence: "8x8dh:1a111111a12c1e11c3112a21c1a13211a1b3b3b11b23a2d13131a1b1d1b",
+    /** Held on 274 of 1164 positions walked. */
+    equivalence: "8x8dh:a1a11d122212a1c3c11b2b1a32a113b32g2a3b2b3a21a112b3a11i",
   },
 });
 

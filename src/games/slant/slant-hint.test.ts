@@ -47,25 +47,25 @@ const pinned = describeHintPins({
       first.move.type === "set",
   },
   pins: {
-    /** Held on 270 of 856 positions walked. */
+    /** Held on 277 of 861 positions walked. */
     clueWithSecondSquare: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
-    /** Held on 829 of 856 positions walked. */
+    /** Held on 838 of 861 positions walked. */
     "clue-fill": "8x8dh:1a111111a12c1e11c3112a21c1a13211a1b3b3b11b23a2d13131a1b1d1b",
-    /** Held on 833 of 856 positions walked. */
+    /** Held on 838 of 861 positions walked. */
     "clue-empty": "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
-    /** Held on 754 of 856 positions walked. */
+    /** Held on 758 of 861 positions walked. */
     loop: {
       id: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
       moves:
         '[{"type":"set","x":0,"y":7,"v":1},{"type":"set","x":1,"y":7,"v":-1},{"type":"set","x":3,"y":3,"v":-1},{"type":"set","x":4,"y":3,"v":1},{"type":"alike","x":0,"y":1,"dir":"right","on":true},{"type":"set","x":0,"y":0,"v":-1},{"type":"set","x":1,"y":0,"v":1},{"type":"set","x":1,"y":1,"v":1},{"type":"set","x":0,"y":1,"v":1},{"type":"set","x":2,"y":1,"v":-1},{"type":"set","x":2,"y":0,"v":1},{"type":"set","x":0,"y":2,"v":1},{"type":"set","x":1,"y":2,"v":-1}]',
     },
-    /** Held on 260 of 856 positions walked. */
+    /** Held on 362 of 861 positions walked. */
     deadend: "8x8dh:a1e1c23123c3a21a21c2121e2a32211a3a2a2a2c123a12a1a22a33c1d11a",
-    /** Held on 560 of 856 positions walked. */
-    equiv: "8x8dh:1a111111a12c1e11c3112a21c1a13211a1b3b3b11b23a2d13131a1b1d1b",
-    /** Held on 553 of 856 positions walked. */
+    /** Held on 274 of 861 positions walked. */
+    equiv: "8x8dh:a1a11d122212a1c3c11b2b1a32a113b32g2a3b2b3a21a112b3a11i",
+    /** Held on 467 of 861 positions walked. */
     "mark-clue": "8x8dh:a1a11d122212a1c3c11b2b1a32a113b32g2a3b2b3a21a112b3a11i",
-    /** Held on 398 of 856 positions walked. */
+    /** Held on 400 of 861 positions walked. */
     "mark-v": {
       id: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
       moves:
@@ -148,13 +148,12 @@ describe("slant hint", () => {
   });
 
   test("loop / dead-end / equivalence firings each get their narration", () => {
-    // Whole plans are read here because the equivalence sentence cannot be
-    // pinned: it opened 0 of 2456 hints. It is always a plan's second step,
-    // and the recompute after the first explains the square by another rung.
+    // A whole plan is read here, so one board shows every square-pass rung
+    // and both marks narrated in the course of a plan, beside the pins.
     const seen = new Set<string>();
     const s = newState(
       { w: 12, h: 10, diff: DIFF_HARD },
-      "i1d321a11a1b2b1b31b22a2c231a2a21a1113b121a22a1b11b2b3a2a1c2f3211b2a11a33a2c33b22c3b4a2a3a3a33a1i1c",
+      "g1f133b1a11a1113c1213b2b112d2b11c1a3a12d13c12b2a2b3b11a1a1a1c32c3a12a1b3a13c212b321d1a13e1111e",
     );
     const res = slantGame.hint?.(s);
     if (!res?.ok) throw new Error("expected a plan");

@@ -17,7 +17,10 @@
  *   slash-value propagation through equivalence classes, dead-end avoidance
  *   over the vertex-connectivity DSF, and the v-shape bitmap deductions.
  */
+import { singleFirings } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import { ALIKE_DOWN, ALIKE_RIGHT, DIFF_EASY, DIFF_HARD, type Slash } from "./state.ts";
 
 /** Solver verdicts (upstream's 0 / 1 / 2 return codes). */
@@ -254,7 +257,6 @@ function vbitmapClear(
  * The solver (upstream `slant_solve`). Writes the deduced solution into
  * `soln` and returns the verdict.
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: deduction ladder plus dsf loop-avoidance; the two are interleaved by design, not by accident.
 export function slantSolve(
   w: number,
   h: number,
@@ -264,17 +266,44 @@ export function slantSolve(
   difficulty: number,
   opts?: SlantSolveOpts,
 ): SolveVerdict {
-  const W = w + 1;
-  const H = h + 1;
   const trace = opts?.trace ?? null;
-  sc.trace = trace;
   const record = opts?.record
     ? (f: SlantFiring) => {
         opts.record?.(f);
         if (trace) trace.tick++;
       }
-    : undefined;
+    : null;
+  slantSetup(w, h, clues, soln, sc, opts);
 
+  const passes = slantPasses(w, h, clues, soln, sc, difficulty, record, trace);
+  for (;;) {
+    const clue = passes.clue();
+    if (clue < 0) return SOLVE_IMPOSSIBLE;
+    if (clue > 0) continue;
+    const square = passes.square();
+    if (square < 0) return SOLVE_IMPOSSIBLE;
+    if (square > 0) continue;
+    if (passes.vbitmap() > 0) continue;
+    break;
+  }
+
+  // No more progress: solved iff the grid is full.
+  return soln.includes(0) ? SOLVE_NOT_CONVERGED : SOLVE_UNIQUE;
+}
+
+/** Clear `soln` and the scratch for a solve of `clues`, and replay the
+ * player's diagonals and alike marks where `opts` gives them. */
+function slantSetup(
+  w: number,
+  h: number,
+  clues: Int8Array,
+  soln: Int8Array,
+  sc: SolverScratch,
+  opts?: SlantSolveOpts,
+): void {
+  const W = w + 1;
+  const H = h + 1;
+  sc.trace = opts?.trace ?? null;
   soln.fill(0);
   sc.clues = clues;
   sc.connected.reinit();
@@ -310,10 +339,33 @@ export function slantSolve(
       if (bits & ALIKE_DOWN) seedMerge(sc, i, i + w);
     }
   }
+}
 
-  let doneSomething: boolean;
-  do {
-    doneSomething = false;
+/**
+ * The solver's three passes over one board: each `> 0` where it did
+ * something, `0` where it found nothing, `< 0` where the board is impossible.
+ * The solver runs each to its end and starts again from the first after any
+ * progress; a hint plan offers their firings one at a time.
+ *
+ * The clue pass also merges a pair of squares around a clue without calling
+ * it progress, as upstream does; `clue(false)` makes those merges alone, for
+ * a hint plan, which keeps what a pass did only where the pass fired.
+ */
+function slantPasses(
+  w: number,
+  h: number,
+  clues: Int8Array,
+  soln: Int8Array,
+  sc: SolverScratch,
+  difficulty: number,
+  record: ((f: SlantFiring) => void) | null,
+  trace: SlantTrace | null,
+): { clue(fill?: boolean): number; square(): number; vbitmap(): number } {
+  const W = w + 1;
+  const H = h + 1;
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: the clue-point pass, interleaved with the equivalence merges by design.
+  const clue = (fill = true): number => {
+    let doneSomething = false;
 
     /*
      * Clue-point pass: any clue point with the number of remaining lines
@@ -385,9 +437,10 @@ export function slantSolve(
           last = j;
         }
 
-        if (nl < 0 || nl > nu) return SOLVE_IMPOSSIBLE;
+        if (nl < 0 || nl > nu) return -1;
 
         if (nu > 0 && (nl === 0 || nl === nu)) {
+          if (!fill) continue;
           // Fill (nl > 0) or empty (nl === 0) every undecided neighbor
           // except a tracked equivalent pair.
           const placed: SlantPlacement[] = [];
@@ -429,7 +482,7 @@ export function slantSolve(
             const sv1 = sc.slashval[a];
             const b = sc.equiv.canonify(nPos[i]);
             const sv2 = sc.slashval[b];
-            if (sv1 !== 0 && sv2 !== 0 && sv1 !== sv2) return SOLVE_IMPOSSIBLE;
+            if (sv1 !== 0 && sv2 !== 0 && sv1 !== sv2) return -1;
             const sv = sv1 !== 0 ? sv1 : sv2;
             if (trace && a !== b) {
               trace.merges.push({
@@ -452,8 +505,11 @@ export function slantSolve(
       }
     }
 
-    if (doneSomething) continue;
+    return doneSomething ? 1 : 0;
+  };
 
+  const square = (): number => {
+    let doneSomething = false;
     /*
      * Square pass: no square may complete a loop; above `DIFF_EASY`, also dead-end
      * avoidance and equivalence-class slash values.
@@ -517,7 +573,7 @@ export function slantSolve(
           }
         }
 
-        if (fs && bs) return SOLVE_IMPOSSIBLE;
+        if (fs && bs) return -1;
         if (fs || bs) {
           const sv: Slash = fs ? 1 : -1;
           fillSquare(w, x, y, sv, soln, sc.connected, sc);
@@ -531,11 +587,13 @@ export function slantSolve(
       }
     }
 
-    if (doneSomething) continue;
+    return doneSomething ? 1 : 0;
+  };
 
+  const vbitmap = (): number => {
     // All vbitmap deductions are disabled at `DIFF_EASY`.
-    if (difficulty <= DIFF_EASY) continue;
-
+    if (difficulty <= DIFF_EASY) return 0;
+    let doneSomething = false;
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         // A placed slash rules out contradicting v-shapes with each
@@ -659,10 +717,10 @@ export function slantSolve(
         }
       }
     }
-  } while (doneSomething);
+    return doneSomething ? 1 : 0;
+  };
 
-  // No more progress: solved iff the grid is full.
-  return soln.includes(0) ? SOLVE_NOT_CONVERGED : SOLVE_UNIQUE;
+  return { clue, square, vbitmap };
 }
 
 /** Merge a player-marked pair's classes, keeping the class's slash value
@@ -688,16 +746,147 @@ export function deduceHintPlan(
   alike: Uint8Array,
 ): { firings: SlantFiring[]; trace: SlantTrace } {
   const sc = new SolverScratch(w, h);
-  const scratch = new Int8Array(w * h);
+  const work = new Int8Array(w * h);
   const firings: SlantFiring[] = [];
   const trace = new SlantTrace(w, h);
-  slantSolve(w, h, clues, scratch, sc, DIFF_HARD, {
-    seedFrom: soln,
-    seedAlike: alike,
-    record: (f) => firings.push(f),
-    trace,
+  slantSetup(w, h, clues, work, sc, { seedFrom: soln, seedAlike: alike, trace });
+  let last: SlantFiring | null = null;
+  const W = w + 1;
+  // The squares round a clue point.
+  const around = (pt: number): number[] => {
+    const x = pt % W;
+    const y = (pt - x) / W;
+    const out: number[] = [];
+    for (const [sx, sy] of [
+      [x - 1, y - 1],
+      [x, y - 1],
+      [x - 1, y],
+      [x, y],
+    ])
+      if (sx >= 0 && sy >= 0 && sx < w && sy < h) out.push(sy * w + sx);
+    return out;
+  };
+  const moved = (f: SlantFiring): number[] => f.moves.map((m) => m.y * w + m.x);
+  const offers = new SweepOffers<SlantSnapshot, SlantFiring | null>({
+    save: () => ({
+      soln: work.slice(),
+      connected: sc.connected.clone(),
+      exits: sc.exits.slice(),
+      border: sc.border.slice(),
+      equiv: sc.equiv.clone(),
+      slashval: sc.slashval.slice(),
+      vbitmap: sc.vbitmap.slice(),
+      vWhy: trace.vWhy.slice(),
+      merges: trace.merges.slice(),
+      tick: trace.tick,
+    }),
+    restore: (s) => {
+      work.set(s.soln);
+      sc.connected.copyFrom(s.connected);
+      sc.exits.set(s.exits);
+      sc.border.set(s.border);
+      sc.equiv.copyFrom(s.equiv);
+      sc.slashval.set(s.slashval);
+      sc.vbitmap.set(s.vbitmap);
+      trace.vWhy.splice(0, trace.vWhy.length, ...s.vWhy);
+      trace.merges.splice(0, trace.merges.length, ...s.merges);
+      trace.tick = s.tick;
+    },
+    recorded: () => last,
+    record: (f) => {
+      last = f;
+    },
+    // What it rests on, with the squares it fills: the squares round the
+    // clue it counts and the pair it counts as one, the squares that slant
+    // alike with the one it decides, or the squares round that one, whose
+    // slashes close the loop or the dead end. A player works round the
+    // slashes just drawn.
+    reads: (f) => {
+      if (!f) return [];
+      const out = moved(f);
+      if (f.clue) out.push(...around(f.clue.y * W + f.clue.x), ...(f.pair ?? []));
+      else if (f.technique === "equiv")
+        for (const m of f.moves) {
+          const root = sc.equiv.canonify(m.y * w + m.x);
+          for (let j = 0; j < w * h; j++)
+            if (sc.equiv.canonify(j) === root) out.push(j);
+        }
+      else
+        for (const m of f.moves)
+          for (let sy = Math.max(0, m.y - 1); sy <= Math.min(h - 1, m.y + 1); sy++)
+            for (let sx = Math.max(0, m.x - 1); sx <= Math.min(w - 1, m.x + 1); sx++)
+              out.push(sy * w + sx);
+      return out;
+    },
+    writes: (_before, _after, f) => (f ? moved(f) : []),
   });
+  const passes = slantPasses(
+    w,
+    h,
+    clues,
+    work,
+    sc,
+    DIFF_HARD,
+    (f) => {
+      last = f;
+      trace.tick++;
+      offers.keep();
+    },
+    trace,
+  );
+  const clue = () => passes.clue();
+  const pass = singleFirings({
+    techniques: [
+      {
+        id: "clue",
+        tier: 0,
+        run: clue,
+        // The pairs a clue makes alike are merged before the offers, which
+        // put back what a scan began from, and they persist as the solver's
+        // do: they are what the board says, and a later step reads them.
+        available: () => {
+          if (passes.clue(false) < 0) return "contradiction";
+          return offers.offer(clue);
+        },
+      },
+      ...offers.techniques([
+        { id: "square", tier: 0, run: passes.square },
+        // What the v-shapes rule out, only where nothing shows: no step of its
+        // own, and the evidence a later step cites.
+        { id: "vbitmap", tier: 0, run: passes.vbitmap, fallback: true },
+      ]),
+    ],
+    budget: stepBudget("slant hint"),
+    beforeTechnique: () => {
+      last = null;
+    },
+    settled: () => !work.includes(0),
+    // A plan works round the slashes it has just drawn before it moves on.
+    continuing: true,
+  });
+  for (;;) {
+    last = null;
+    if (!pass.next()) break;
+    // Set by the firing the driver just took; none for a pass that only
+    // learned what the board's squares share.
+    const f = last as SlantFiring | null;
+    if (f) firings.push(f);
+  }
   return { firings, trace };
+}
+
+/** Everything a hint firing writes, the trace included. */
+interface SlantSnapshot {
+  soln: Int8Array;
+  connected: Dsf;
+  exits: Int32Array;
+  border: Uint8Array;
+  equiv: Dsf;
+  slashval: Int8Array;
+  vbitmap: Uint8Array;
+  vWhy: (VWhy | null)[];
+  merges: SlantMerge[];
+  tick: number;
 }
 
 /** Solve a board's clues from scratch with the full (`DIFF_HARD`) solver, as

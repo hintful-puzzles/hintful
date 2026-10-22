@@ -977,9 +977,11 @@ not a record. What the ladder gives is the driver and a certified rung list:
   `ladder-continuity.test.ts` holds every game that sets it.
   - **Key `reads` and `writes` on what the player follows**: a cell, a
     region, a line's number, an island. A firing that writes nothing keyed
-    leaves the plan where it was.
+    leaves the plan where it was. `reads` is everything its premise rests on,
+    not only what it fills: a firing that reads only its own square never
+    continues (Slant's equivalence reads its whole class).
   - **A sweep-shaped rung need not be written twice.** Where it would return
-    its firing, it asks `kept()` of a `SweepOffers`
+    its firing, it asks `keep()` of a `SweepOffers`
     ([`sweep-offers.ts`](../src/engine/sweep-offers.ts)), which collects
     every site's firing and undoes it. A finder that returns its first
     firing becomes a generator that yields them all (`starbattle/solver.ts`).

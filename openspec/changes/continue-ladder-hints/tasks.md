@@ -23,7 +23,7 @@
       flags); and a continuing firing is taken only at the tier the order
       would fire at, since otherwise Ascent taught Hard reasoning on Easy
       boards (112 steps over the board's tier in its walk).
-- [ ] 2.2 The eighteen with a `next` of their own: boats, bricks, clusters,
+- [x] 2.2 The eighteen with a `next` of their own: boats, bricks, clusters,
       crossing, filling, galaxies, lightup, loopy, pattern, range, rect,
       signpost, singles, slant, spokes, sticks, subsets, unruly. Onto
       `singleFirings` and `continuing`, or the reason not, recorded here.
@@ -51,13 +51,17 @@
       presets measured. Done too: singles (its queue of cascades is a rung
       whose firings are the queued groups, and a firing applies its own ops
       and queues their cascade rather than draining it; the solver's path is
-      unchanged).
-- [ ] 2.3 For each: hint pins and plan tests re-baselined, each moved
+      unchanged). Done too: slant (its solve split into passes the hint
+      drives as rungs, the clue pass's merges made before its offers; the
+      square pass's firings read what they rest on, an equivalence its whole
+      class, or it never continued and dropped out of every plan). None is
+      left off: `NOT_CONTINUING` is empty.
+- [x] 2.3 For each: hint pins and plan tests re-baselined, each moved
       sentence read against its board; a hint played in the app.
 
 ## 3. Close-out
 
-- [ ] 3.1 `docs/hints.md` § "The shared plan loop: deduceHintPlan" says a
+- [x] 3.1 `docs/hints.md` § "The shared plan loop: deduceHintPlan" says a
       plan continues, and how to key `available()`.
 - [ ] 3.2 Commit a game or a few at a time; push; bring the reordered hints
       to the owner; archive on acceptance.
