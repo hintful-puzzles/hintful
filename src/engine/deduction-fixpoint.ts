@@ -96,6 +96,23 @@ export interface DeductionTechnique {
    * offer just the firing `run` would make.
    */
   available?: () => readonly LadderCandidate[] | "contradiction";
+  /**
+   * The technique's premise presumes that every rung before it has nothing to
+   * do, so a plan that continues asks it only then. Taking the first firing,
+   * the ladder's order already makes it so; a frontier weighs every rung's
+   * firings at once, and would take this one beside its work while a cheaper
+   * rung elsewhere still fires (Tents draws a link only for a step nothing
+   * else can make).
+   */
+  fallback?: boolean;
+  /**
+   * Every rung after this one presumes it has nothing left to do, so a plan
+   * that continues asks them only once it has none: it keeps a board's
+   * bookkeeping current, and a later rung read before it caught up would
+   * conclude from a stale board (Tracks: a square with a track side is a
+   * track square, which every line count reads).
+   */
+  prerequisite?: boolean;
 }
 
 /** A firing a technique could make now, offered to a hint plan's frontier. */
@@ -265,20 +282,46 @@ function continuingFiring(
   const { techniques, maxTier, beforeTechnique } = opts;
   const admitted = techniques.filter((t) => maxTier === undefined || t.tier <= maxTier);
   let contradiction = false;
-  const rungs = admitted.map((technique) => () => {
+  type Offered = LadderCandidate & { technique: DeductionTechnique };
+  const asked = new Map<number, readonly Offered[]>();
+  const ask = (k: number): readonly Offered[] => {
+    const seen = asked.get(k);
+    if (seen) return seen;
+    const technique = admitted[k];
     const { available } = technique;
     if (!available)
       throw new Error(
         `deduction-fixpoint: "${technique.id}" declares no available(), which a plan with a frontier needs`,
       );
-    beforeTechnique?.(technique);
-    const offered = available();
-    if (offered === "contradiction") {
-      contradiction = true;
-      return [];
+    let list: readonly Offered[] = [];
+    // A fallback is asked only once every rung before it has nothing, and
+    // any rung only once each prerequisite before it has nothing.
+    let stalled = true;
+    for (let j = 0; j < k && stalled && !contradiction; j++)
+      if (technique.fallback || admitted[j].prerequisite) stalled = ask(j).length === 0;
+    if (stalled && !contradiction) {
+      beforeTechnique?.(technique);
+      const offered = available();
+      if (offered === "contradiction") contradiction = true;
+      else list = offered.map((candidate) => ({ ...candidate, technique }));
     }
-    return offered.map((candidate) => ({ ...candidate, technique }));
-  });
+    asked.set(k, list);
+    return list;
+  };
+  // The tier the ladder's own order would fire at: no firing harder than that
+  // is taken for continuing, so a plan never teaches harder reasoning than the
+  // board needs where it stands.
+  let ceiling: number | null = null;
+  const tierNow = (): number => {
+    if (ceiling === null) {
+      const k = admitted.findIndex((_, j) => contradiction || ask(j).length > 0);
+      ceiling = k < 0 ? Number.NEGATIVE_INFINITY : admitted[k].tier;
+    }
+    return ceiling;
+  };
+  const rungs = admitted.map(
+    (technique, k) => () => (technique.tier > tierNow() ? [] : ask(k)),
+  );
   const taken = frontier.takeContinuing(rungs, () => contradiction);
   if (contradiction) return "contradiction";
   if (taken === null) return null;

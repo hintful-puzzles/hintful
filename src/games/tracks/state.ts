@@ -42,6 +42,7 @@ import {
   R,
   U,
 } from "../../engine/square-edges.ts";
+import type { SweepOffers } from "../../engine/sweep-offers.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- difficulty (upstream's Easy, Tricky, Hard; shown as tierNames(3)) ------
@@ -157,6 +158,17 @@ export interface Board {
    * deduction").
    */
   rec?: TracksRecorder;
+  /** The hint path's collector of every firing a rung could make, for a plan
+   * that continues where its latest step was; its record is the recorder's
+   * `reason`, `unknown` here for the same cause. */
+  offers?: SweepOffers<TracksSnapshot, unknown>;
+}
+
+/** Everything a hint firing writes, the changes recorded so far included. */
+export interface TracksSnapshot {
+  sflags: Int32Array;
+  impossible: boolean;
+  ops: TracksOp[];
 }
 
 /**

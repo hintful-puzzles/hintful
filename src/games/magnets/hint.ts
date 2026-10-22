@@ -29,6 +29,7 @@ import {
 } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { type StepBudget, stepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   type Axis,
   type Cause,
@@ -147,12 +148,49 @@ export function recordingPass(
 ): { next: () => MagnetsFiring | null; impossible: () => boolean } {
   const rec = { reason: null as MagnetsReason | null };
   solver.rec = rec;
+  const { w } = solver;
+  const lineCells = ({ roworcol, num }: MagnetsLine): number[] =>
+    roworcol === ROW
+      ? Array.from({ length: w }, (_, x) => num * w + x)
+      : Array.from({ length: solver.h }, (_, y) => y * w + num);
+  solver.offers = new SweepOffers({
+    save: () => ({ grid: solver.grid.slice(), flags: solver.flags.slice() }),
+    restore: (s) => {
+      solver.grid.set(s.grid);
+      solver.flags.set(s.flags);
+    },
+    recorded: () => rec.reason,
+    record: (r) => {
+      rec.reason = r;
+    },
+    // The square and its partner, or the line whose clue it counts.
+    reads: (r) =>
+      !r
+        ? []
+        : r.kind === "force"
+          ? [r.cell, solver.dominoes[r.cell]]
+          : lineCells(r.line),
+    // `GS_MARK` is `advancedfull`'s scratch, rewritten whether or not it fires.
+    writes: (before, after) => {
+      const out: number[] = [];
+      for (let i = 0; i < solver.wh; i++)
+        if (
+          before.grid[i] !== after.grid[i] ||
+          ((before.flags[i] ^ after.flags[i]) & ~GS_MARK) !== 0
+        )
+          out.push(i);
+      return out;
+    },
+  });
   const ladder = singleFirings({
-    techniques: solver.ladder(),
+    techniques: solver.offers.techniques(solver.ladder()),
     budget,
     beforeTechnique: () => {
       rec.reason = null;
     },
+    // A plan works on the squares and lines it has just decided before it
+    // moves on.
+    continuing: true,
   });
 
   const next = (): MagnetsFiring | null => {
@@ -563,7 +601,10 @@ function tellCount(
     area.push(i, ...ev.area);
     ruled.push(i);
     if (why.kind === "partner") ruled.push(why.at);
-    reasonClues.push(...ev.reasonClues);
+    // A square the line's own clue rules out (a marked magnet along the line
+    // already brings its last pole) cites the clue the step outlines as its
+    // count, which is one mark, not two.
+    reasonClues.push(...ev.reasonClues.filter((c) => !clues.includes(c)));
     // Read through its partner, a square's evidence begins with that partner,
     // so both halves are outlined: the tile is what the board shows. Unless
     // the partner is a square the journey rings, which the ring takes instead.
@@ -656,7 +697,10 @@ function tellCount(
       area: [...area, j, ...ev.area],
       clues,
       line,
-      reasonClues: [...reasonClues, ...ev.reasonClues],
+      reasonClues: [
+        ...reasonClues,
+        ...ev.reasonClues.filter((c) => !clues.includes(c)),
+      ],
       targets: [idx],
     };
   };

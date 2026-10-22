@@ -2,17 +2,27 @@
 
 ## 1. The measure first
 
-- [ ] 1.1 A ladder-plan continuity census beside `hint-frontier.test.ts`'s:
+- [x] 1.1 A ladder-plan continuity census beside `hint-frontier.test.ts`'s:
       for each game setting `continuing`, the jumps its plans make where a
       continuing firing was available; its population derived, and the
       `deduceHintPlan` games without `continuing` listed. Run it on Path and
       the skeleton; see it fail with the frontier planted off.
+      (`ladder-continuity.test.ts`. Path 0/33, grid and edges skeletons
+      0/63 and 0/69; Path planted off 61/88. Its share is of the positions
+      where the plan could continue, not of jumps: Tracks' bookkeeping jumps
+      drowned a frontier planted off at 54 of 1,900.)
 
 ## 2. The games
 
-- [ ] 2.1 The eight on `singleFirings`: ascent, bridges, magnets, pearl,
+- [x] 2.1 The eight on `singleFirings`: ascent, bridges, magnets, pearl,
       separate, starbattle, tents, tracks. Each rung declares `available()`
       keyed on what its player follows; `continuing: true`.
+      What they taught the engine: `SweepOffers` builds `available()` from a
+      sweep as written; `fallback` and `prerequisite` keep a rung that
+      presumes others ran dry from being asked first (Tents' links, Tracks'
+      flags); and a continuing firing is taken only at the tier the order
+      would fire at, since otherwise Ascent taught Hard reasoning on Easy
+      boards (112 steps over the board's tier in its walk).
 - [ ] 2.2 The eighteen with a `next` of their own: boats, bricks, clusters,
       crossing, filling, galaxies, lightup, loopy, pattern, range, rect,
       signpost, singles, slant, spokes, sticks, subsets, unruly. Onto

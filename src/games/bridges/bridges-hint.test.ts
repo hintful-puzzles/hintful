@@ -66,8 +66,16 @@ const REASON_KINDS: Record<Kind, true> = {
  */
 const UNREACHED_BY_PRESETS: Kind[] = [];
 
-/** Five, because the two connectivity arms are the rare ones: `mustReachOut`
- * fires on roughly one board in ten and three seeds miss it outright. */
+/**
+ * Shipped boards on which a rare premise fires, pinned as the descs the
+ * deduction reads. `mustReachOut` fired on one of 120 shipped boards
+ * (2026-10-22, a plan that stays where its work is), which no handful of
+ * seeds reaches.
+ */
+const SHIPPED_PINNED = ["7x7i30e10m2d2:3a4a3a1g4a6c3g2c2i4a4a4a2"];
+
+/** Five, because the two connectivity arms are the rare ones and three seeds
+ * miss them outright. */
 const SEEDS = ["bh-a", "bh-b", "bh-c", "bh-d", "bh-e"];
 
 /** The shipped presets, plus the axes the Type dialog varies that the ladder
@@ -107,7 +115,14 @@ function allFirings(
   params: BridgesParams,
   seed: string,
 ): { firings: BridgesFiring[]; status: string; islands: Island[] } {
-  const start = makeBoard(params, seed);
+  return firingsFrom(params, makeBoard(params, seed));
+}
+
+/** {@link allFirings} from a board already made. */
+function firingsFrom(
+  params: BridgesParams,
+  start: BridgesState,
+): { firings: BridgesFiring[]; status: string; islands: Island[] } {
   const work = start.workingCopy();
   const pass = bridgesRecordingPass(
     work,
@@ -136,18 +151,24 @@ describe("the corpus reaches every premise, and the ledger says which it cannot"
   const all = new Map<Kind, number>();
   let firingCount = 0;
   let stalled = 0;
-  for (const { params, shipped: isShipped } of SHAPES) {
-    for (const seed of SEEDS) {
-      const { firings, status } = allFirings(params, seed);
-      if (status !== "done") stalled++;
-      for (const f of firings) {
-        firingCount++;
-        if (!f.reason) continue;
-        all.set(f.reason.kind, (all.get(f.reason.kind) ?? 0) + 1);
-        if (isShipped)
-          shipped.set(f.reason.kind, (shipped.get(f.reason.kind) ?? 0) + 1);
-      }
+  const tally = (
+    { firings, status }: ReturnType<typeof allFirings>,
+    isShipped: boolean,
+  ): void => {
+    if (status !== "done") stalled++;
+    for (const f of firings) {
+      firingCount++;
+      if (!f.reason) continue;
+      all.set(f.reason.kind, (all.get(f.reason.kind) ?? 0) + 1);
+      if (isShipped) shipped.set(f.reason.kind, (shipped.get(f.reason.kind) ?? 0) + 1);
     }
+  };
+  for (const { params, shipped: isShipped } of SHAPES)
+    for (const seed of SEEDS) tally(allFirings(params, seed), isShipped);
+  for (const id of SHIPPED_PINNED) {
+    const [p, desc] = id.split(":");
+    const params = decodeParams(p);
+    tally(firingsFrom(params, newStateFromDesc(params, desc)), true);
   }
 
   it("looked at enough firings to mean anything", () => {

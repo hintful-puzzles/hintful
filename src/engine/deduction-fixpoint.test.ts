@@ -591,6 +591,52 @@ describe("singleFirings, continuing where the plan is", () => {
     expect(asked).not.toContain("rung-1");
   });
 
+  it("continues at no harder a tier than the ladder's order would fire", () => {
+    const log: string[] = [];
+    const techniques = ladderOf(
+      [
+        [
+          { name: "a", reads: [1], writes: [1] },
+          { name: "far", reads: [9], writes: [9] },
+        ],
+        [{ name: "hard next to a", reads: [1], writes: [2] }],
+      ],
+      log,
+    ).map((t, k) => ({ ...t, tier: k }));
+    plan(techniques, 3);
+    expect(log).toEqual(["a", "far", "hard next to a"]);
+  });
+
+  it("asks a fallback only once every rung before it has nothing, and every rung after a prerequisite only once it has nothing", () => {
+    const log: string[] = [];
+    const [first, second, third] = ladderOf(
+      [
+        [{ name: "a", reads: [1], writes: [1] }],
+        [{ name: "far", reads: [9], writes: [9] }],
+        [{ name: "link next to a", reads: [1], writes: [1] }],
+      ],
+      log,
+    );
+    plan([first, second, { ...third, fallback: true }], 3);
+    expect(log).toEqual(["a", "far", "link next to a"]);
+    const kept: string[] = [];
+    const [book, line, count] = ladderOf(
+      [
+        [
+          { name: "flag", reads: [5], writes: [5] },
+          { name: "flag again", reads: [6], writes: [6] },
+        ],
+        [{ name: "line by the flag", reads: [5], writes: [5] }],
+        [{ name: "start", reads: [1], writes: [1] }],
+      ],
+      kept,
+    );
+    plan([{ ...count, id: "count" }, { ...book, prerequisite: true }, line], 4);
+    // The count fires first by the order; then the bookkeeping runs dry
+    // before the line beside it may continue from it.
+    expect(kept).toEqual(["start", "flag", "flag again", "line by the flag"]);
+  });
+
   it("stops on a rung's contradiction, and refuses a rung that offers nothing", () => {
     const contradicting = singleFirings({
       techniques: [

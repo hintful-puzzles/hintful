@@ -59,6 +59,7 @@ import {
 } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import type { SeparateShape } from "./state.ts";
 
 /** Solver verdict, mirroring upstream's 0/1/2. */
@@ -115,6 +116,9 @@ export class SolverScratch {
   borders: Uint8Array;
   /** Hint path only: the last firing, captured by the rung that fired. */
   rec: { firing: SeparateFiring | null } | null = null;
+  /** Hint path only: collects every firing a rung could make, for a plan
+   * that continues where its latest step was. */
+  offers: SweepOffers<SolverScratch, SeparateFiring | null> | null = null;
 
   constructor(w: number, h: number, k: number) {
     this.w = w;
@@ -145,6 +149,20 @@ export class SolverScratch {
     copy.disconnect.set(this.disconnect);
     copy.borders.set(this.borders);
     return copy;
+  }
+
+  /** Take on everything `s` holds that a firing writes, sharing nothing. */
+  restore(s: SolverScratch): void {
+    this.dsf = s.dsf.clone();
+    this.size.set(s.size);
+    this.contents.set(s.contents);
+    this.disconnect.set(s.disconnect);
+    this.borders.set(s.borders);
+  }
+
+  /** Where a rung on the hint path has made its firing: whether it returns. */
+  kept(): boolean {
+    return this.offers?.keep() ?? true;
   }
 
   /** Index each component's letters from the grid and the current dsf. */
@@ -299,7 +317,7 @@ function separateLadder(
               sc.contents[yx2 * k + i],
             ];
             sc.rec.firing = { kind: "sharedLetter", a, b, letter: i, holders, edges };
-            return fired;
+            if (sc.kept()) return fired;
           }
         }
       }
@@ -327,7 +345,7 @@ function separateLadder(
           fired++;
           if (sc.rec) {
             sc.rec.firing = { kind: "walledApart", a, b, edges };
-            return fired;
+            if (sc.kept()) return fired;
           }
         }
       }
@@ -369,7 +387,7 @@ function separateLadder(
       sc.connect(i, sq);
       progress.fired = true;
       if (sc.rec) sc.rec.firing = { kind: "onlyWay", region, square: sq, edges };
-      return 1;
+      if (sc.kept()) return 1;
     }
     return 0;
   };
@@ -622,12 +640,31 @@ export function separateRecordingPass(
 
   const rec: { firing: SeparateFiring | null } = { firing: null };
   sc.rec = rec;
+  sc.offers = new SweepOffers<SolverScratch, SeparateFiring | null>({
+    save: () => sc.clone(),
+    restore: (s) => sc.restore(s),
+    recorded: () => rec.firing,
+    record: (f) => {
+      rec.firing = f;
+    },
+    // The regions a firing turns on: a player follows a region as it grows.
+    reads: (f) =>
+      !f ? [] : f.kind === "onlyWay" ? [...f.region, f.square] : [...f.a, ...f.b],
+    // The squares either side of each edge it marks.
+    writes: (_before, _after, f) =>
+      (f?.edges ?? []).flatMap(({ x, y, dir }) => [
+        y * w + x,
+        (y + DY[dir]) * w + x + DX[dir],
+      ]),
+  });
   const firings = singleFirings({
-    techniques: separateLadder(sc, null, { fired: false }),
+    techniques: sc.offers.techniques(separateLadder(sc, null, { fired: false })),
     budget,
     beforeTechnique: () => {
       rec.firing = null;
     },
+    // A plan works on the regions it is growing before it moves on.
+    continuing: true,
   });
   return {
     scratch: sc,

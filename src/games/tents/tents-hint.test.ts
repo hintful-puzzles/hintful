@@ -182,7 +182,10 @@ describe("a link is drawn only for a step that rests on it", () => {
         pending = linkOnly(firing.reason.kind) ? seen(state) : null;
       });
     }
-    expect(checked).toBeGreaterThan(5);
+    // A plan that stays where its work is asks for few links of their own:
+    // five on this corpus (2026-10-22), against eighteen taking the first
+    // firing each rung meets.
+    expect(checked).toBeGreaterThan(3);
   });
 });
 

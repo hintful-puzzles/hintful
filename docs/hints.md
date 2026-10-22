@@ -930,6 +930,10 @@ the game. Exemplar: `skeletonHint` in `src/skeleton/grid/hint.ts`.
   not skip it.
 - **Omit `apply` when the rungs mutate as they detect.** Applying a firing
   twice is wrong for a rung that reads its own effect.
+- **A plan continues where its last step was.** Its `next` is a ladder
+  driven with `singleFirings({ continuing: true })`, which picks among every
+  rung's firings the one beside the work in hand (§ "Recording the
+  deduction").
 
 Its users: `npm run refs -- src/engine/hint-plan.ts deduceHintPlan`. A game's
 own `function deduceHintPlan` (`git grep -n "function deduceHintPlan" --
@@ -965,6 +969,25 @@ not a record. What the ladder gives is the driver and a certified rung list:
   turns the recorder into a firing and hand that to `deduceHintPlan`.
   Exemplars: `skeletonRecordingPass`, and `tracksRecordingPass` in
   [`tracks/solver.ts`](../src/games/tracks/solver.ts).
+- **Pass `continuing: true`, and give every rung `available()`**: every
+  firing it could make, each with what it reads and writes. The plan then
+  takes the firing that continues from its latest steps, rung order breaking
+  ties, at no harder a tier than the ladder's own order would fire, so it
+  finishes the work in front of the player before it starts elsewhere.
+  `ladder-continuity.test.ts` holds every game that sets it.
+  - **Key `reads` and `writes` on what the player follows**: a cell, a
+    region, a line's number, an island. A firing that writes nothing keyed
+    leaves the plan where it was.
+  - **A sweep-shaped rung need not be written twice.** Where it would return
+    its firing, it asks `kept()` of a `SweepOffers`
+    ([`sweep-offers.ts`](../src/engine/sweep-offers.ts)), which collects
+    every site's firing and undoes it. A finder that returns its first
+    firing becomes a generator that yields them all (`starbattle/solver.ts`).
+  - **A rung that presumes the rungs before it ran dry says so.** `fallback`
+    is asked only once every rung before it has nothing (Tents' links);
+    `prerequisite` holds back every rung after it until it has nothing
+    (Tracks' flags, which every line count reads). The order of the first
+    firing made both true; a plan that weighs every rung at once does not.
 - **`beforeTechnique` clears the standing reason**, so a rung that declares
   none returns `null` and does not borrow the last one.
 - **Record every firing, including one that changed nothing the player

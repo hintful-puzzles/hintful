@@ -104,7 +104,7 @@ const PINNED = [
   // route, since a whole run took the one above's
   "8x10mCdh:DhDd30b48Ca18fDa20a23_35b51C11a1b43bDb2c54aC8d40bD6b67_65cCa71a76b61aDc77_80b58D",
   // a dead end, its other end out of reach
-  "6x6mOEdn:a35a7b25c5d3b23_28o14",
+  "6x6mOEdh:j5b25a7c28_17_8l35a",
   // a dead end, its other end placed
   "6x6mOEdn:e1_35g8a20_13a28e29h17a",
   // a dead end, its other end's arrow pointing elsewhere

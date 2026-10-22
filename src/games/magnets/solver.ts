@@ -16,6 +16,7 @@ import {
   type FiringTally,
   runDeductionFixpoint,
 } from "../../engine/deduction-fixpoint.ts";
+import type { SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   COLUMN,
   checkCompletion,
@@ -106,6 +107,17 @@ export class MagnetsSolver {
   readonly flags: Int32Array;
   /** The hint's recorder; `null` on the generator's path. */
   rec: MagnetsRecorder | null = null;
+  /** Hint path only: collects every firing a rung could make, for a plan
+   * that continues where its latest step was. */
+  offers: SweepOffers<
+    { grid: Int32Array; flags: Int32Array },
+    MagnetsReason | null
+  > | null = null;
+
+  /** Where a rung on the hint path has made its firing: whether it returns. */
+  kept(): boolean {
+    return this.offers?.keep() ?? true;
+  }
 
   constructor(w: number, h: number, common: MagnetsCommon) {
     this.w = w;
@@ -232,7 +244,7 @@ export class MagnetsSolver {
         if (this.rec) this.rec.reason = { kind: "force", cell: i };
         if (this.set(i, which) < 0) return -1;
         didsth = 1;
-        if (this.rec) return didsth;
+        if (this.rec && this.kept()) return didsth;
       }
     }
     return didsth;
@@ -497,7 +509,7 @@ export class MagnetsSolver {
       const ret = fn.call(this, rc, counts);
       if (ret < 0) return ret;
       didsth += ret;
-      if (this.rec && didsth > 0) return didsth;
+      if (this.rec && ret > 0 && this.kept()) return didsth;
     }
     for (let y = 0; y < this.h; y++) {
       const rc = this.mkrowcol(y, ROW);
@@ -505,7 +517,7 @@ export class MagnetsSolver {
       const ret = fn.call(this, rc, counts);
       if (ret < 0) return ret;
       didsth += ret;
-      if (this.rec && didsth > 0) return didsth;
+      if (this.rec && ret > 0 && this.kept()) return didsth;
     }
     return didsth;
   }

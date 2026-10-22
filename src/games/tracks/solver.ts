@@ -31,6 +31,7 @@ import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import { D, dirCount, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   ALLDIR,
   type Board,
@@ -53,6 +54,7 @@ import {
   sESet,
   type TracksOp,
   type TracksRecorder,
+  type TracksSnapshot,
   trackDsf,
 } from "./state.ts";
 
@@ -133,13 +135,18 @@ export interface TracksFiring {
  * generator's hot path, where nothing reads it.
  *
  * The two lines that follow every premise are the rest of the pattern:
- * `if (rec && did > before) return did;` is the **per-premise early return**
- * that keeps one firing = one hint step (a rung like `updateFlags` scans the
- * whole grid and would otherwise pile dozens of unrelated deductions into one
- * step: docs/hints-marks.md § "Group one firing into one step"), and
+ * `if (rec && did > before && kept(b)) return did;` is the **per-premise early
+ * return** that keeps one firing = one hint step (a rung like `updateFlags`
+ * scans the whole grid and would otherwise pile dozens of unrelated deductions
+ * into one step: docs/hints-marks.md § "Group one firing into one step"), and
  * `if (rec) rec.reason = null;` stops a premise that changed nothing from
- * lending its reason to the next one.
+ * lending its reason to the next one. `kept` is false only while a plan's
+ * frontier collects every firing a rung could make: the board is then put
+ * back, and the scan goes on to the next premise.
  */
+
+/** Where a rung on the hint path has made its firing: whether it returns. */
+const kept = (b: Board): boolean => b.offers?.keep() ?? true;
 
 // --- primitive flag setters (upstream solve_set_sflag / solve_set_eflag) ---
 //
@@ -210,7 +217,7 @@ function updateFlags(b: Board): number {
       if (b.sflags[y * w + x] & S_NOTRACK) {
         const before = did;
         for (let i = 0; i < 4; i++) did += setEflag(b, x, y, 1 << i, E_NOTRACK);
-        if (b.rec && did > before) return did;
+        if (b.rec && did > before && kept(b)) return did;
       }
       // 3+ NOTRACK edges → the square is NOTRACK.
       if (sECount(b, x, y, E_NOTRACK) >= 3) {
@@ -226,14 +233,14 @@ function updateFlags(b: Board): number {
           };
         }
         did += setSflag(b, x, y, S_NOTRACK);
-        if (rec && did > before) return did;
+        if (rec && did > before && kept(b)) return did;
         if (rec) rec.reason = null;
       }
       // Any TRACK edge → the square is TRACK. (No reason: see above.)
       if (sECount(b, x, y, E_TRACK) > 0) {
         const before = did;
         did += setSflag(b, x, y, S_TRACK);
-        if (b.rec && did > before) return did;
+        if (b.rec && did > before && kept(b)) return did;
       }
       // TRACK square with 2 NOTRACK edges → the other two are TRACK.
       if (
@@ -260,7 +267,7 @@ function updateFlags(b: Board): number {
             did += setEflag(b, x, y, d, E_TRACK);
           }
         }
-        if (rec && did > before) return did;
+        if (rec && did > before && kept(b)) return did;
         if (rec) rec.reason = null;
       }
       // TRACK square with 2 TRACK edges → the other two are NOTRACK.
@@ -277,7 +284,7 @@ function updateFlags(b: Board): number {
             did += setEflag(b, x, y, d, E_NOTRACK);
           }
         }
-        if (b.rec && did > before) return did;
+        if (b.rec && did > before && kept(b)) return did;
       }
     }
   }
@@ -347,7 +354,7 @@ function countCluesSub(
       if (!(b.sflags[i] & S_TRACK))
         did += setSflag(b, i % w, Math.floor(i / w), S_NOTRACK);
     }
-    if (rec && did > before) return did;
+    if (rec && did > before && kept(b)) return did;
     if (rec) rec.reason = null;
   }
   if (cnotrack === n - target) {
@@ -364,7 +371,7 @@ function countCluesSub(
       if (!(b.sflags[i] & S_NOTRACK))
         did += setSflag(b, i % w, Math.floor(i / w), S_TRACK);
     }
-    if (rec && did > before) return did;
+    if (rec && did > before && kept(b)) return did;
     if (rec) rec.reason = null;
   }
   return did;
@@ -375,11 +382,11 @@ function countClues(b: Board): number {
   let did = 0;
   for (let x = 0; x < w; x++) {
     did += countCluesSub(b, x, w, h, b.numbers[x], x);
-    if (b.rec?.ops.length) return did;
+    if (b.rec?.ops.length && kept(b)) return did;
   }
   for (let y = 0; y < h; y++) {
     did += countCluesSub(b, y * w, 1, w, b.numbers[w + y], w + y);
-    if (b.rec?.ops.length) return did;
+    if (b.rec?.ops.length && kept(b)) return did;
   }
   return did;
 }
@@ -497,9 +504,9 @@ function checkLoop(b: Board): number {
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       if (x < w - 1) did += checkLoopSub(b, x, y, R, dsf, startc, endc);
-      if (b.rec?.ops.length) return did;
+      if (b.rec?.ops.length && kept(b)) return did;
       if (y < h - 1) did += checkLoopSub(b, x, y, D, dsf, startc, endc);
-      if (b.rec?.ops.length) return did;
+      if (b.rec?.ops.length && kept(b)) return did;
     }
   }
   return did;
@@ -644,7 +651,7 @@ function checkLooseSub(
           did += setEflag(b, i % w, Math.floor(i / w), 1 << k, E_TRACK);
       }
     }
-    if (rec && did > before) return did;
+    if (rec && did > before && kept(b)) return did;
     if (rec) rec.reason = null;
   }
   return did;
@@ -655,11 +662,11 @@ function checkLooseEnds(b: Board): number {
   let did = 0;
   for (let x = 0; x < w; x++) {
     did += checkLooseSub(b, x, w, h, b.numbers[x], R | L, x);
-    if (b.rec?.ops.length) return did;
+    if (b.rec?.ops.length && kept(b)) return did;
   }
   for (let y = 0; y < h; y++) {
     did += checkLooseSub(b, y * w, 1, w, b.numbers[w + y], U | D, w + y);
-    if (b.rec?.ops.length) return did;
+    if (b.rec?.ops.length && kept(b)) return did;
   }
   return did;
 }
@@ -759,9 +766,9 @@ function checkNeighbors(b: Board, bothWays: boolean): number {
     if (!onefill && !oneempty) continue;
     for (let y = 0; y + 1 < h; y++) {
       did += neighborsTry(b, x, y, x, y + 1, onefill, oneempty, D, x, x, w, h);
-      if (b.rec?.ops.length) return did;
+      if (b.rec?.ops.length && kept(b)) return did;
       did += neighborsTry(b, x, y + 1, x, y, onefill, oneempty, U, x, x, w, h);
-      if (b.rec?.ops.length) return did;
+      if (b.rec?.ops.length && kept(b)) return did;
     }
   }
   for (let y = 0; y < h; y++) {
@@ -770,9 +777,9 @@ function checkNeighbors(b: Board, bothWays: boolean): number {
     if (!onefill && !oneempty) continue;
     for (let x = 0; x + 1 < w; x++) {
       did += neighborsTry(b, x, y, x + 1, y, onefill, oneempty, R, w + y, y * w, 1, w);
-      if (b.rec?.ops.length) return did;
+      if (b.rec?.ops.length && kept(b)) return did;
       did += neighborsTry(b, x + 1, y, x, y, onefill, oneempty, L, w + y, y * w, 1, w);
-      if (b.rec?.ops.length) return did;
+      if (b.rec?.ops.length && kept(b)) return did;
     }
   }
   return did;
@@ -872,11 +879,11 @@ function checkBridgeParity(b: Board, dsf: Dsf): number {
     for (let y = 0; y < h; y++) {
       if (y + 1 < h && !fls.isLoopEdge(y * w + x, (y + 1) * w + x)) {
         did += bridgeSub(b, x, y, D, dsf);
-        if (b.rec?.ops.length) return did;
+        if (b.rec?.ops.length && kept(b)) return did;
       }
       if (x + 1 < w && !fls.isLoopEdge(y * w + x, y * w + (x + 1))) {
         did += bridgeSub(b, x, y, R, dsf);
-        if (b.rec?.ops.length) return did;
+        if (b.rec?.ops.length && kept(b)) return did;
       }
     }
   }
@@ -901,11 +908,24 @@ function discountEdge(b: Board, x: number, y: number, d: number): void {
  * of them a corpus ever fires. */
 function tracksLadder(b: Board, bridgeDsf: Dsf): DeductionTechnique[] {
   return [
-    { id: "update-flags", tier: DIFF_EASY, run: () => updateFlags(b) },
+    // Every rung after it counts track squares off the flags it keeps.
+    {
+      id: "update-flags",
+      tier: DIFF_EASY,
+      run: () => updateFlags(b),
+      prerequisite: true,
+    },
     { id: "count-clues", tier: DIFF_EASY, run: () => countClues(b) },
     { id: "check-loop", tier: DIFF_EASY, run: () => checkLoop(b) },
     { id: "check-single", tier: DIFF_TRICKY, run: () => checkSingle(b) },
-    { id: "check-loose-ends", tier: DIFF_TRICKY, run: () => checkLooseEnds(b) },
+    // Its first premise holds the hint to a board the easy rungs have run dry
+    // on, so a plan that continues asks it only there.
+    {
+      id: "check-loose-ends",
+      tier: DIFF_TRICKY,
+      run: () => checkLooseEnds(b),
+      fallback: true,
+    },
     { id: "check-neighbors", tier: DIFF_TRICKY, run: () => checkNeighbors(b, false) },
     {
       id: "check-neighbors-both-ways",
@@ -995,16 +1015,61 @@ export function tracksRecordingPass(
   const ladder = tracksLadder(b, bridgeDsf);
   const rec: TracksRecorder = { reason: null, ops: [] };
   b.rec = rec;
+  const { w } = b;
+  const lineCells = (line: number): number[] =>
+    line < w
+      ? Array.from({ length: b.h }, (_, y) => y * w + line)
+      : Array.from({ length: w }, (_, x) => (line - w) * w + x);
+  const offers = new SweepOffers<TracksSnapshot, unknown>({
+    save: () => ({
+      sflags: b.sflags.slice(),
+      impossible: b.impossible,
+      ops: [...rec.ops],
+    }),
+    restore: (s) => {
+      b.sflags.set(s.sflags);
+      b.impossible = s.impossible;
+      rec.ops = [...s.ops];
+    },
+    recorded: () => rec.reason,
+    record: (r) => {
+      rec.reason = r;
+    },
+    // The square it turns on, the squares and sides it cites, and the lines
+    // whose clues it counts: a player follows the track through them.
+    reads: (r) => {
+      const reason = r as TracksReason | null;
+      if (!reason) return [];
+      const { ev } = reason;
+      return [
+        ...("x" in reason ? [reason.y * w + reason.x] : []),
+        ...ev.cells,
+        ...ev.edges.map((e) => e >> 4),
+        ...ev.clues.flatMap(lineCells),
+      ];
+    },
+    // The squares its changes are on, both sides of an edge.
+    writes: (before, after) =>
+      after.ops.slice(before.ops.length).flatMap((op) => {
+        const at = op.y * w + op.x;
+        return op.dir === undefined
+          ? [at]
+          : [at, (op.y + dirY(op.dir)) * w + op.x + dirX(op.dir)];
+      }),
+  });
+  b.offers = offers;
   // A rung never returns `< 0`; it raises the board's own flag instead, which
   // `settled` reads before the ladder runs and the closure reads after.
   const firings = singleFirings({
-    techniques: ladder,
+    techniques: offers.techniques(ladder),
     maxTier: cap,
     budget,
     beforeTechnique: () => {
       rec.reason = null;
     },
     settled: () => b.impossible,
+    // A plan follows the track it is laying before it moves on.
+    continuing: true,
   });
 
   return (): TracksFiring | null => {

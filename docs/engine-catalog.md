@@ -835,6 +835,22 @@ not be a cell: Path keys on the number whose line a step extends, and a
 cross writes nothing, so the plan stays with that line until it is joined.
 A firing that writes nothing keyed leaves the frontier where it was. Exemplar:
 `easyRungs` and `offered` in [`path/solver.ts`](../src/games/path/solver.ts).
+The ladder takes a continuing firing only at or below the tier its own
+order would fire at, so continuity never reaches for harder reasoning than
+the board needs; `fallback` and `prerequisite` on a technique keep a rung
+that presumes others ran dry from being asked before they have
+([`hints.md`](./hints.md) § "Recording the deduction").
+
+For a rung that sweeps its sites and returns its first firing,
+[`sweep-offers.ts`](../src/engine/sweep-offers.ts)'s `SweepOffers` builds a technique's `available()` from the rung as written:
+the rung asks `kept()` where it would return its firing on the recording
+path, and while offers are collected each site's firing is saved with its
+record and undone, so the scan goes on. Taking an offer restores what was
+saved. The game gives `save`/`restore` over everything a firing writes, and
+`reads`/`writes` keyed on what the player follows. A rung that fires without
+asking is one offer. Exemplars: `tentsRecordingPass` in
+[`tents/solver.ts`](../src/games/tents/solver.ts), and Tracks, whose rungs
+ask at every per-premise return.
 
 ### `latin-hint.ts` — truthful Latin single classification
 

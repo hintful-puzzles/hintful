@@ -4,7 +4,12 @@
 
 ### Requirement: A deduction ladder's hint plan continues from its latest steps
 
-A hint plan driven by the deduction ladder SHALL take, at each step, a firing that continues from what the plan's latest steps wrote where one is available, the rung order breaking ties, and only with none continuing the first firing of the first rung that has one. Each technique SHALL offer its firings with what each reads and writes, keyed on what the game's player follows, and a firing that writes nothing keyed SHALL leave the plan where it was.
+A hint plan driven by the deduction ladder SHALL take, at each step, a firing that continues from what its latest steps wrote where one is available at no harder a tier than the ladder's order would fire, the rung order breaking ties, and otherwise the first firing of the first rung that has one. Each technique SHALL offer its firings with what each reads and writes, keyed on what the player follows; a firing writing nothing keyed SHALL leave the plan where it was.
+
+#### Scenario: A plan never reaches for a harder tier to continue
+
+- **WHEN** an easy firing is available across the board and only a harder one continues from the latest step
+- **THEN** the plan takes the easy firing
 
 #### Scenario: A Path plan finishes the line it is working on
 

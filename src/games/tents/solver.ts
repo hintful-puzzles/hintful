@@ -30,6 +30,7 @@ import {
   singleFirings,
 } from "../../engine/deduction-fixpoint.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
+import { changed, SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   BLANK,
   DIFF_EASY,
@@ -71,14 +72,22 @@ export type TentsReason =
   | { kind: "lineCount"; line: number }
   /** A row or column's count, over the lines either side of it. */
   | { kind: "lineNeighbors"; line: number }
-  /** A tent every other tree beside which already has its tent. */
-  | { kind: "tentLink"; tent: number; tree: number }
+  /** A tent every other tree beside which already has its tent. `serves` is
+   * on a link the hint draws: what the firing it was drawn for reads. */
+  | { kind: "tentLink"; tent: number; tree: number; serves?: number[] }
   /** A tree whose one remaining square holds a tent. */
-  | { kind: "treeLink"; tree: number; tent: number };
+  | { kind: "treeLink"; tree: number; tent: number; serves?: number[] };
 
 /** The hint's recorder: the reason for the firing in progress. */
 interface TentsRecorder {
   reason: TentsReason | null;
+}
+
+/** Everything a hint firing writes. */
+interface TentsSnapshot {
+  soln: Int8Array;
+  links: Int8Array;
+  drawn: Int8Array;
 }
 
 /** The working board the rungs share: the squares, the tent↔tree links, and
@@ -96,6 +105,9 @@ export class TentsBoard {
   /** Set on the hint path only: the links the player has drawn, which
    * {@link readLinks} rebuilds `links` from. */
   drawn: Int8Array | null = null;
+  /** Set on the hint path only: collects every firing a rung could make, for
+   * a plan that continues where its latest step was. */
+  offers: SweepOffers<TentsSnapshot, TentsReason | null> | null = null;
 
   constructor(
     readonly w: number,
@@ -118,6 +130,45 @@ export class TentsBoard {
     b.links.set(this.links);
     if (this.drawn) b.drawn = Int8Array.from(this.drawn);
     return b;
+  }
+
+  /** Where a rung on the hint path has made its firing: whether it returns. */
+  kept(): boolean {
+    return this.offers?.keep() ?? true;
+  }
+
+  /**
+   * The squares a firing's premise reads, which a hint plan continues from:
+   * what its sentence points at, and the squares round the tree or tent it
+   * turns on, whose decisions are why it fires.
+   */
+  premise(r: TentsReason): number[] {
+    const round = (i: number): number[] => [i, ...this.neighbors(i).map(({ j }) => j)];
+    switch (r.kind) {
+      case "noTree":
+        return r.squares;
+      case "treesDone":
+        return r.squares.flatMap((i) =>
+          round(i).filter((j) => j === i || this.soln[j] === TREE),
+        );
+      case "nextToTent":
+        return [r.tent, ...r.squares];
+      case "treeSingle":
+        return round(r.tree);
+      case "treeDiagonal":
+        return [...round(r.tree), r.square];
+      case "lineCount":
+      case "lineNeighbors": {
+        const { w, h } = this;
+        return r.line < w
+          ? Array.from({ length: h }, (_, k) => r.line + k * w)
+          : Array.from({ length: w }, (_, k) => (r.line - w) * w + k);
+      }
+      case "tentLink":
+        return [...round(r.tent), r.tree];
+      case "treeLink":
+        return [...round(r.tree), r.tent];
+    }
   }
 
   private inGrid(x: number, y: number): boolean {
@@ -303,7 +354,11 @@ export class TentsBoard {
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         if (soln[y * w + x] !== BLANK || this.nearUnmatchedTree(x, y)) continue;
-        if (rec) return this.recordGrassAway(y * w + x, rec);
+        if (rec) {
+          const n = this.recordGrassAway(y * w + x, rec);
+          if (this.kept()) return n;
+          continue;
+        }
         soln[y * w + x] = NONTENT;
         fired++;
       }
@@ -368,7 +423,8 @@ export class TentsBoard {
                 squares.push(yy * w + xx);
           for (const i of squares) soln[i] = NONTENT;
           rec.reason = { kind: "nextToTent", tent, squares };
-          return squares.length;
+          if (this.kept()) return squares.length;
+          continue;
         }
         soln[y * w + x] = NONTENT;
         fired++;
@@ -409,7 +465,7 @@ export class TentsBoard {
           fired++;
           if (rec) {
             rec.reason = { kind: "treeSingle", tree: y * w + x, square };
-            return fired;
+            if (this.kept()) return fired;
           }
         }
       }
@@ -441,7 +497,7 @@ export class TentsBoard {
               tree + DY(d2) * w + DX(d2),
             ];
             rec.reason = { kind: "treeDiagonal", tree, pair, square: i };
-            return fired;
+            if (this.kept()) return fired;
           }
         }
       }
@@ -514,7 +570,7 @@ export class TentsBoard {
       }
       if (rec && fired > before) {
         rec.reason = { kind: neighbors ? "lineNeighbors" : "lineCount", line: i };
-        return fired;
+        if (this.kept()) return fired;
       }
     }
     return fired;
@@ -661,10 +717,12 @@ function tentsHintLadder(b: TentsBoard): DeductionTechnique[] {
     if (!t) throw new Error(`tents: no rung ${id}`);
     return t;
   };
+  // A link is drawn only where every rung before it has stalled.
   const drawFor = (id: string, then: readonly string[], anyway: boolean) => ({
     id,
     tier: DIFF_EASY,
     run: () => drawLinkFor(b, then, anyway),
+    fallback: true,
   });
   return [
     ...NEAR.map(rung),
@@ -674,21 +732,41 @@ function tentsHintLadder(b: TentsBoard): DeductionTechnique[] {
   ];
 }
 
-/** Draw the first pending link after which one of the rungs `then` fires (or
- * the first pending link at all, `anyway`), recording why it holds. */
+/**
+ * Draw the first pending link after which one of the rungs `then` fires (or
+ * the first pending link at all, `anyway`), recording why it holds and what
+ * the firing it unlocks reads.
+ */
 function drawLinkFor(b: TentsBoard, then: readonly string[], anyway: boolean): number {
+  // What the first of `then` to fire on `board` reads, or `null` if none does.
+  const fires = (board: TentsBoard): number[] | null => {
+    const rec: TentsRecorder = { reason: null };
+    board.rec = rec;
+    const fired = tentsLadder(board).some((t) => then.includes(t.id) && t.run() > 0);
+    return fired && rec.reason ? board.premise(rec.reason) : null;
+  };
   const pending = b.pendingLinks();
-  const unlocks = (link: (typeof pending)[number]): boolean => {
+  const unlocks = (link: (typeof pending)[number]): number[] | null => {
     const trial = b.clone();
     trial.drawLink(link.tent, link.tree);
-    if (trial.readLinks() < 0) return false;
-    return tentsLadder(trial).some((t) => then.includes(t.id) && t.run() > 0);
+    if (trial.readLinks() < 0) return null;
+    return fires(trial);
   };
-  let link = pending.find(unlocks) ?? null;
-  if (!link && anyway && pending.length > 0) link = pending[0];
-  if (!link) return 0;
-  b.drawLink(link.tent, link.tree);
-  if (b.rec) b.rec.reason = link;
+  const draw = (link: (typeof pending)[number], serves?: number[]): boolean => {
+    b.drawLink(link.tent, link.tree);
+    if (b.rec) b.rec.reason = serves ? { ...link, serves } : link;
+    return b.kept();
+  };
+  let found = false;
+  for (const link of pending) {
+    const serves = unlocks(link);
+    if (!serves) continue;
+    found = true;
+    if (draw(link, serves)) return 1;
+  }
+  if (found) return 1;
+  if (!anyway || pending.length === 0) return 0;
+  draw(pending[0]);
   return 1;
 }
 
@@ -719,13 +797,41 @@ export function tentsRecordingPass(
 ): { next(): TentsFiring | null; impossible(): boolean } {
   const rec: TentsRecorder = { reason: null };
   b.rec = rec;
+  b.offers = new SweepOffers<TentsSnapshot, TentsReason | null>({
+    save: () => ({
+      soln: b.soln.slice(),
+      links: b.links.slice(),
+      drawn: (b.drawn ?? b.links).slice(),
+    }),
+    restore: (s) => {
+      b.soln.set(s.soln);
+      b.links.set(s.links);
+      b.drawn?.set(s.drawn);
+    },
+    recorded: () => rec.reason,
+    record: (r) => {
+      rec.reason = r;
+    },
+    reads: (r) => (r ? b.premise(r) : []),
+    // A link writes both its ends, and where the firing it was drawn for
+    // reads: the link is for that firing, which is where the work goes next.
+    writes: (before, after, r) => [
+      ...changed(before.soln, after.soln),
+      ...changed(before.links, after.links),
+      ...(r && (r.kind === "tentLink" || r.kind === "treeLink")
+        ? (r.serves ?? [])
+        : []),
+    ],
+  });
   let broken = false;
   const firings = singleFirings({
-    techniques: tentsHintLadder(b),
+    techniques: b.offers.techniques(tentsHintLadder(b)),
     budget,
     beforeTechnique: () => {
       rec.reason = null;
     },
+    // A plan works round the trees and lines it is on before it moves on.
+    continuing: true,
   });
   const drawnOf = (): Int8Array => {
     if (!b.drawn) throw new Error("tents: a recording pass needs the drawn links");

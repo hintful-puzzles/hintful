@@ -26,6 +26,7 @@ import {
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   type BridgesOp,
   type BridgesState,
@@ -101,6 +102,18 @@ interface BridgesRecorder {
   ops: BridgesOp[];
 }
 
+/** Everything a hint firing writes. */
+interface BridgesSnapshot {
+  grid: Uint16Array;
+  lines: Uint8Array;
+  possv: Uint8Array;
+  possh: Uint8Array;
+  maxv: Uint8Array;
+  maxh: Uint8Array;
+  dsf: Dsf;
+  ops: BridgesOp[];
+}
+
 /**
  * Neighbors of grid vertex `v` for loop detection — mirrors C
  * `bridges_neighbour`. An island vertex reports every island it currently has a
@@ -169,10 +182,63 @@ class Solver {
    * generator's hot path where nothing would read it.
    */
   rec: BridgesRecorder | null = null;
+  /** Hint path only: collects every firing a rung could make, for a plan
+   * that continues where its latest step was. */
+  offers: SweepOffers<BridgesSnapshot, BridgesReason | null> | null = null;
 
   constructor(st: BridgesState) {
     this.st = st;
     this.dsf = new Dsf(st.w * st.h);
+  }
+
+  /** Where a rung on the hint path has made its firing: whether it returns. */
+  private kept(): boolean {
+    return this.offers?.keep() ?? true;
+  }
+
+  /** Everything a firing writes, the ops recorded so far included. */
+  save(): BridgesSnapshot {
+    const { st } = this;
+    return {
+      grid: st.grid.slice(),
+      lines: st.lines.slice(),
+      possv: st.possv.slice(),
+      possh: st.possh.slice(),
+      maxv: st.maxv.slice(),
+      maxh: st.maxh.slice(),
+      dsf: this.dsf.clone(),
+      ops: [...(this.rec?.ops ?? [])],
+    };
+  }
+
+  restore(s: BridgesSnapshot): void {
+    const { st } = this;
+    st.grid.set(s.grid);
+    st.lines.set(s.lines);
+    st.possv.set(s.possv);
+    st.possh.set(s.possh);
+    st.maxv.set(s.maxv);
+    st.maxh.set(s.maxh);
+    this.dsf = s.dsf.clone();
+    if (this.rec) this.rec.ops = [...s.ops];
+  }
+
+  /** The islands a firing's premise reads, which a hint plan continues from:
+   * its island and every island it can still reach a bridge to. */
+  premise(r: BridgesReason): number[] {
+    return [r.island, ...this.adjacentIslands(this.st.islands[r.island])];
+  }
+
+  /** The islands at either end of the spans `ops` write. */
+  islandsOf(ops: readonly BridgesOp[]): number[] {
+    const { st } = this;
+    return ops.flatMap((o) =>
+      o.op === "S"
+        ? []
+        : o.op === "M"
+          ? [st.gridi[st.idx(o.x, o.y)]]
+          : [st.gridi[st.idx(o.x1, o.y1)], st.gridi[st.idx(o.x2, o.y2)]],
+    );
   }
 
   // --- recording helpers (no-ops with no recorder attached) ---------------
@@ -788,7 +854,7 @@ class Solver {
         if (!r.ok) return -1;
         if (r.didsth) {
           didsth = true;
-          if (this.rec) return 1;
+          if (this.rec && this.kept()) return 1;
         }
       }
       return didsth ? 1 : 0;
@@ -900,13 +966,26 @@ export function bridgesRecordingPass(
   }
   const rec: BridgesRecorder = { reason: null, ops: [] };
   solver.rec = rec;
+  solver.offers = new SweepOffers<BridgesSnapshot, BridgesReason | null>({
+    save: () => solver.save(),
+    restore: (s) => solver.restore(s),
+    recorded: () => rec.reason,
+    record: (r) => {
+      rec.reason = r;
+    },
+    reads: (r) => (r ? solver.premise(r) : []),
+    // A firing's own ops are those recorded since the board it started on.
+    writes: (before, after) => solver.islandsOf(after.ops.slice(before.ops.length)),
+  });
   const firings = singleFirings({
-    techniques: solver.ladder(),
+    techniques: solver.offers.techniques(solver.ladder()),
     maxTier: cap,
     budget,
     beforeTechnique: () => {
       rec.reason = null;
     },
+    // A plan works round the islands it has just bridged before it moves on.
+    continuing: true,
   });
 
   return {

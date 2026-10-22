@@ -10,9 +10,9 @@
  *    is the guard on the design's one real bet: the hint reasons from edges and
  *    pearls alone, forgetting the shape strikes the solver keeps, and nothing
  *    but the boards can say that loses no board.
- *  - **Every step stands on the board the player can see.** A step recomputed
- *    from the player's own board, after following the plan up to it, is the
- *    same step: no fact the plan used is one the player does not have.
+ *  - **Every step stands on the board the player can see.** The workspace a
+ *    step was found on is the player's own board after following the plan up
+ *    to it: no fact the plan used is one the player does not have.
  *  - **Every premise the corpus reaches is reached**, with the census one level
  *    finer than the ladder's (docs/hints.md § "Census the reasons, not
  *    only the rungs").
@@ -21,10 +21,16 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { dirX, dirY, opposite } from "../../engine/square-edges.ts";
+import { D, dirX, dirY, L, opposite, R, U } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { boardOf, type PearlHint, type PearlRung, pearlKeepTrack } from "./hint.ts";
+import {
+  boardOf,
+  type PearlHint,
+  type PearlRung,
+  pearlKeepTrack,
+  pearlPlan,
+} from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
 import { executeMove } from "./moves.ts";
@@ -162,19 +168,51 @@ describe("a step draws what the pearls' rules carry on from its lines", () => {
 });
 
 describe("every step stands on the board the player can see", () => {
-  // Recomputing from the player's own board, after following the plan up to a
-  // step, gives that same step. A plan resting on something the player has not
-  // got (a shape the solver struck, a cross it hid) would diverge here.
+  // The workspace each step was found on holds, edge for edge, the player's
+  // own board after following the plan up to it, but for the crosses beside a
+  // square with both its lines, which the plan writes without asking. A plan
+  // resting on something the player has not got (a cross it hid, a line it
+  // drew unasked) differs here. Shapes are read off the edges before every
+  // firing, which the census below holds.
   for (const { p, seed } of CORPUS.filter((_, i) => i % 3 === 0)) {
     it(label(p, seed), () => {
       let state = deal(p, seed);
-      const plan = hintSteps(state);
+      const { plan } = pearlPlan(state);
+      const steps = hintSteps(state);
       expect(plan.length).toBeGreaterThan(5);
-      for (const [i, step] of plan.entries()) {
-        const again = hintSteps(state)[0];
-        expect(again.explanation, `step ${i}`).toBe(step.explanation);
-        expect(again.highlights, `step ${i}`).toEqual(step.highlights);
-        state = executeMove(state, step.move);
+      for (const [i, f] of plan.entries()) {
+        const seen = boardOf(state);
+        const { w, h } = seen;
+        const lines = (ws: Int32Array, x: number, y: number): number =>
+          [R, U, L, D].filter((d) => ws[seen.edgeAt(x, y, d)] === 1).length;
+        for (let y = 0; y < h; y++)
+          for (let x = 0; x < w; x++)
+            for (const d of [R, D]) {
+              if (x + dirX(d) >= w || y + dirY(d) >= h) continue;
+              const e = seen.edgeAt(x, y, d);
+              if (f.before[e] === seen.ws[e]) continue;
+              const full =
+                lines(seen.ws, x, y) === 2 ||
+                lines(seen.ws, x + dirX(d), y + dirY(d)) === 2;
+              expect({
+                step: i,
+                x,
+                y,
+                d,
+                was: seen.ws[e],
+                is: f.before[e],
+                full,
+              }).toEqual({
+                step: i,
+                x,
+                y,
+                d,
+                was: 3,
+                is: 2,
+                full: true,
+              });
+            }
+        state = executeMove(state, steps[i].move);
       }
     });
   }

@@ -365,28 +365,11 @@ export function pearlHint(
 ):
   | { ok: true; steps: HintStep<PearlMove, PearlHint, PearlRung>[] }
   | { ok: false; error: HintRefusal } {
-  const board = boardOf(state);
-  const pass = pearlRecordingPass(board, stepBudget("pearl hint"));
-  const { plan } = deduceHintPlan<PearlBoard, ShownFiring, string>({
-    board,
-    status: (b) => (pass.impossible() ? "broken" : b.closed ? "done" : "open"),
-    incomplete: "open",
-    next: (b) => {
-      const f = pass.next();
-      if (!f) return null;
-      const carried = carryOn(b, f.ops);
-      const shown = [...f.ops, ...carried.map((c) => c.op)].filter(
-        (op) => !evident(b, op),
-      );
-      return { ...f, carried, shown };
-    },
-    showable: (_b, f) => f.reason !== null && f.shown.length > 0,
-    planCap: PLAN_CAP,
-  });
+  const { board, impossible, plan } = pearlPlan(state);
 
   // `findMistakes` vouches for every line and cross, so a contradiction here
   // would mean the deduction is unsound: say the honest thing.
-  if (pass.impossible()) return { ok: false, error: PUZZLE_NOT_REASONABLE };
+  if (impossible) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
   return {
@@ -405,6 +388,33 @@ export function pearlHint(
       };
     }),
   };
+}
+
+/** The firings a plan shows, each with the workspace it was found on. */
+export function pearlPlan(state: PearlState): {
+  board: PearlBoard;
+  impossible: boolean;
+  plan: ShownFiring[];
+} {
+  const board = boardOf(state);
+  const pass = pearlRecordingPass(board, stepBudget("pearl hint"));
+  const { plan } = deduceHintPlan<PearlBoard, ShownFiring, string>({
+    board,
+    status: (b) => (pass.impossible() ? "broken" : b.closed ? "done" : "open"),
+    incomplete: "open",
+    next: (b) => {
+      const f = pass.next();
+      if (!f) return null;
+      const carried = carryOn(b, f.ops);
+      const shown = [...f.ops, ...carried.map((c) => c.op)].filter(
+        (op) => !evident(b, op),
+      );
+      return { ...f, carried, shown };
+    },
+    showable: (_b, f) => f.reason !== null && f.shown.length > 0,
+    planCap: PLAN_CAP,
+  });
+  return { board, impossible: pass.impossible(), plan };
 }
 
 /** The move that makes these edges: each a line or a cross, set on the squares

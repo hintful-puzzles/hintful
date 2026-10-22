@@ -366,6 +366,9 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
 
   const board: Board = { state: start, spilled: false };
   let found: AscentFiring | null = null;
+  const take = (f: Found): void => {
+    found = { ...f, before: board.state, joins: false };
+  };
   const pass = singleFirings({
     techniques: ladder.map(
       ({ kind, tier, find }): DeductionTechnique => ({
@@ -374,12 +377,34 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
         run: () => {
           const f = find(board.state, null);
           if (!f) return 0;
-          found = { ...f, before: board.state, joins: false };
+          take(f);
           return 1;
+        },
+        // A technique's first firing in each run, the one its scan meets
+        // first leading: a player follows the path along its numbers, so a
+        // plan finishes a stretch of it, and goes on to the next stretch from
+        // the number that ends this one.
+        available: () => {
+          const first = find(board.state, null);
+          if (!first) return [];
+          const runs = runsOf(board.state);
+          const ofFirst = runs.find((r) => r.lo <= first.n && first.n <= r.hi);
+          return [ofFirst, ...runs.filter((r) => r !== ofFirst)].flatMap((run) => {
+            if (!run) return [];
+            const f =
+              run === ofFirst ? first : find(board.state, { lo: run.lo, hi: run.hi });
+            if (!f) return [];
+            const span = Array.from(
+              { length: run.hi - run.lo + 3 },
+              (_, k) => run.lo - 1 + k,
+            );
+            return [{ reads: () => span, writes: () => span, take: () => take(f) }];
+          });
         },
       }),
     ),
     budget: stepBudget("ascent hint"),
+    continuing: true,
   });
 
   // The rest of a run, when the step that began it lets it be finished there

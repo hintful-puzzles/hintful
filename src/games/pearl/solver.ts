@@ -38,6 +38,7 @@ import {
   U,
 } from "../../engine/square-edges.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   bBLANK,
   bLD,
@@ -138,6 +139,10 @@ export class PearlBoard {
   readonly dsfsize: Int32Array;
   nonblanks = 0;
   rec: PearlRecorder | null = null;
+  /** Hint path only: collects every firing a rung could make, for a plan
+   * that continues where its latest step was. */
+  offers: SweepOffers<{ ws: Int32Array; closed: boolean }, PearlReason | null> | null =
+    null;
   /** Every square's states before any edge is known: what its clue allows. */
   private readonly clueShapes: Int32Array;
 
@@ -152,6 +157,59 @@ export class PearlBoard {
     this.clueShapes = this.ws.slice();
     this.dsf = new Dsf(w * h);
     this.dsfsize = new Int32Array(w * h);
+  }
+
+  /** Where a rung on the hint path has made its firing: whether it returns. */
+  kept(): boolean {
+    return this.offers?.keep() ?? true;
+  }
+
+  /**
+   * The squares a firing's premise reads, which a hint plan continues from:
+   * the square it reads, the pearl and the squares beside it its rule looks
+   * along, or the piece of line it would close.
+   */
+  premise(r: PearlReason): number[] {
+    const { w, h } = this;
+    const step = (cell: number, d: number, k: number): number[] => {
+      const x = (cell % w) + k * dirX(d);
+      const y = ((cell / w) | 0) + k * dirY(d);
+      return x >= 0 && y >= 0 && x < w && y < h ? [y * w + x] : [];
+    };
+    switch (r.kind) {
+      case "square":
+        return [r.sq];
+      case "blackRunsOn":
+      case "blackCannotRunOn":
+        return [r.pearl, ...step(r.pearl, r.dir, 1), ...step(r.pearl, r.dir, 2)];
+      case "whiteCannotTurn":
+        return [r.pearl, ...step(r.pearl, r.axis, 1), ...step(r.pearl, r.axis, -1)];
+      case "whiteTurnsOpposite":
+        return [r.pearl, ...step(r.pearl, r.dir, 1), ...step(r.pearl, r.dir, -1)];
+      case "closesEarly":
+        return [r.sq, ...step(r.sq, r.dir, 1), ...r.piece];
+      case "closesEarlyThrough":
+        return [r.sq, ...r.piece];
+    }
+  }
+
+  /** The squares either side of every edge that differs between two
+   * workspaces. */
+  edgeSquares(before: Int32Array, after: Int32Array): number[] {
+    const { w, h, W } = this;
+    const out: number[] = [];
+    for (let i = 0; i < before.length; i++) {
+      if (before[i] === after[i]) continue;
+      const x = i % W;
+      const y = (i / W) | 0;
+      if (!((x ^ y) & 1)) continue;
+      for (const [cx, cy] of [
+        [(x - 1) >> 1, (y - 1) >> 1],
+        [x >> 1, y >> 1],
+      ])
+        if (cx >= 0 && cy >= 0 && cx < w && cy < h) out.push(cy * w + cx);
+    }
+    return out;
   }
 
   /** The workspace index of the edge leaving square `(x, y)` toward `d`. */
@@ -268,7 +326,7 @@ export class PearlBoard {
         fired += nailed;
         if (rec && nailed) {
           rec.reason = { kind: "square", sq: y * w + x };
-          return fired;
+          if (this.kept()) return fired;
         }
       }
     return fired;
@@ -301,7 +359,7 @@ export class PearlBoard {
                 });
                 if (n < 0) return -1;
                 fired += n;
-                if (rec && n) return fired;
+                if (rec && n && this.kept()) return fired;
               }
             } else if (ws[ey * W + ex] === 3) {
               // Corner separated by an unknown edge from a square that
@@ -311,7 +369,7 @@ export class PearlBoard {
                 fired++;
                 if (rec) {
                   rec.reason = { kind: "blackCannotRunOn", pearl, dir: d };
-                  return fired;
+                  if (this.kept()) return fired;
                 }
               }
             }
@@ -345,7 +403,7 @@ export class PearlBoard {
               });
               if (n < 0) return -1;
               fired += n;
-              if (rec && n) return fired;
+              if (rec && n && this.kept()) return fired;
             }
           }
           // If a straight with known direction connects on one side to a
@@ -369,7 +427,7 @@ export class PearlBoard {
               });
               if (n < 0) return -1;
               fired += n;
-              if (rec && n) return fired;
+              if (rec && n && this.kept()) return fired;
             }
           }
         }
@@ -471,6 +529,7 @@ export class PearlBoard {
    */
   private firstShortcut(rec: PearlRecorder): number {
     const { w, W, H, ws } = this;
+    let found = false;
     for (let y = 1; y < H - 1; y++)
       for (let x = 1; x < W - 1; x++)
         if ((y ^ x) & 1 && this.edgeClosesEarly(x, y)) {
@@ -485,8 +544,10 @@ export class PearlBoard {
             dir: vertical ? R : D,
             piece: this.pieceOf(sq),
           };
-          return 1;
+          found = true;
+          if (this.kept()) return 1;
         }
+    if (found) return 1;
     for (let y = 1; y < H - 1; y += 2)
       for (let x = 1; x < W - 1; x += 2)
         for (let b = 2; b < 0xd; b++) {
@@ -501,9 +562,13 @@ export class PearlBoard {
             shape: b,
             piece: this.pieceOf(end),
           });
-          if (n) return n;
+          if (n < 0) return n;
+          if (n) {
+            found = true;
+            if (this.kept()) return n;
+          }
         }
-    return 0;
+    return found ? 1 : 0;
   }
 
   /** Is the unknown edge at workspace `(x, y)` one that joins two squares of
@@ -618,14 +683,29 @@ export function pearlRecordingPass(
 ): { next(): PearlFiring | null; impossible(): boolean } {
   const rec: PearlRecorder = { reason: null };
   b.rec = rec;
+  b.offers = new SweepOffers({
+    save: () => ({ ws: b.ws.slice(), closed: b.closed }),
+    restore: (s) => {
+      b.ws.set(s.ws);
+      b.closed = s.closed;
+    },
+    recorded: () => rec.reason,
+    record: (r) => {
+      rec.reason = r;
+    },
+    reads: (r) => (r ? b.premise(r) : []),
+    writes: (before, after) => b.edgeSquares(before.ws, after.ws),
+  });
   let broken = false;
   const firings = singleFirings({
-    techniques: pearlLadder(b),
+    techniques: b.offers.techniques(pearlLadder(b)),
     budget,
     beforeTechnique: () => {
       rec.reason = null;
     },
     settled: () => b.closed,
+    // A plan follows the line it is drawing before it moves on.
+    continuing: true,
   });
   const { w, h, ws } = b;
   return {

@@ -15,6 +15,7 @@
 import {
   type DeductionTechnique,
   type FiringTally,
+  type LadderCandidate,
   runDeductionFixpoint,
   type SingleFirings,
   singleFirings,
@@ -245,53 +246,56 @@ export function isComplete(board: StarbattleBoard): boolean {
   );
 }
 
-type Found = StarbattleFiring | null;
+/** A rung's firings from the board as it stands, in scan order; a
+ * contradiction ends them. The solver takes the first, and a hint plan
+ * chooses among them all. */
+type Finds<F = StarbattleFiring> = Generator<F | "contradiction", void, undefined>;
 
-/** The first star with an open cell touching it. */
-function findAround(b: StarbattleBoard): Found {
+/** Every star with an open cell touching it. */
+function* findAround(b: StarbattleBoard): Finds {
   for (let star = 0; star < b.grid.length; star++) {
     if (b.grid[star] !== STAR) continue;
     const cells = touching(b.size, star).filter((i) => b.grid[i] === BLANK);
     if (cells.length > 0)
-      return { reason: { kind: "around", star }, cells, mark: CROSSED };
+      yield { reason: { kind: "around", star }, cells, mark: CROSSED };
   }
-  return null;
 }
 
-/** The first unit that has its stars and still has open cells. */
-function findFull(b: StarbattleBoard): Found {
+/** Every unit that has its stars and still has open cells. */
+function* findFull(b: StarbattleBoard): Finds {
   for (let unit = 0; unit < b.units.length; unit++) {
     if (b.need(unit) !== 0) continue;
     const cells = b.open(unit);
     if (cells.length > 0)
-      return { reason: { kind: "full", unit }, cells, mark: CROSSED };
+      yield { reason: { kind: "full", unit }, cells, mark: CROSSED };
   }
-  return null;
 }
 
-/** The first unit that needs every open cell it has, or `"contradiction"`
- * when a unit has too many stars or too few open cells. */
-function findExact(b: StarbattleBoard): Found | "contradiction" {
+/** Every unit that needs every open cell it has, or `"contradiction"` when a
+ * unit has too many stars or too few open cells. */
+function* findExact(b: StarbattleBoard): Finds {
   for (let unit = 0; unit < b.units.length; unit++) {
     const need = b.need(unit);
     const cells = b.open(unit);
-    if (need < 0 || need > cells.length) return "contradiction";
+    if (need < 0 || need > cells.length) {
+      yield "contradiction";
+      return;
+    }
     if (need > 0 && need === cells.length)
-      return { reason: { kind: "exact", unit, need }, cells, mark: STAR };
+      yield { reason: { kind: "exact", unit, need }, cells, mark: STAR };
   }
-  return null;
 }
 
 /**
- * The first run of neighboring rows, or columns, `count` long for each of
+ * Every run of neighboring rows, or columns, `count` long for each of
  * `counts` in turn, whose need for stars equals that of the regions lying
  * wholly inside the run, or of the regions reaching into it, and which leaves
  * cells to cross out.
  */
-function findConfinement(
+function* findConfinement(
   b: StarbattleBoard,
   counts: readonly number[],
-): (Confinement & { cells: number[] }) | null | "contradiction" {
+): Finds<Confinement & { cells: number[] }> {
   const { size } = b;
   const rowOf = (i: number): number => (i / size) | 0;
   const columnOf = (i: number): number => i % size;
@@ -333,14 +337,17 @@ function findConfinement(
           return lo >= first && hi <= last;
         });
         const insideNeed = inside.reduce((sum, r) => sum + r.need, 0);
-        if (insideNeed > need) return "contradiction";
+        if (insideNeed > need) {
+          yield "contradiction";
+          return;
+        }
         if (insideNeed === need) {
           const held = new Set(inside.flatMap((r) => r.open));
           const cells = lines()
             .flatMap((line) => b.open(line))
             .filter((i) => !held.has(i));
           if (cells.length > 0)
-            return {
+            yield {
               lines: lines(),
               regions: inside.map((r) => r.unit),
               need,
@@ -354,11 +361,14 @@ function findConfinement(
           return hi >= first && lo <= last && r.open.some(within);
         });
         const reachingNeed = reaching.reduce((sum, r) => sum + r.need, 0);
-        if (reachingNeed < need) return "contradiction";
+        if (reachingNeed < need) {
+          yield "contradiction";
+          return;
+        }
         if (reachingNeed === need) {
           const cells = reaching.flatMap((r) => r.open.filter((i) => !within(i)));
           if (cells.length > 0)
-            return {
+            yield {
               lines: lines(),
               regions: reaching.map((r) => r.unit),
               need,
@@ -369,12 +379,11 @@ function findConfinement(
       }
     }
   }
-  return null;
 }
 
-/** The first cell a unit cannot do without: leaving it empty leaves the unit
+/** Every cell a unit cannot do without: leaving it empty leaves the unit
  * room for fewer stars than it needs. */
-function findNeeded(b: StarbattleBoard): Found {
+function* findNeeded(b: StarbattleBoard): Finds {
   for (let unit = 0; unit < b.units.length; unit++) {
     const need = b.need(unit);
     if (need === 0) continue;
@@ -388,20 +397,23 @@ function findNeeded(b: StarbattleBoard): Found {
         need,
       );
       if (room < need)
-        return {
+        yield {
           reason: { kind: "needed", unit, need, room },
           cells: [cell],
           mark: STAR,
         };
     }
   }
-  return null;
 }
 
-/** The first cell where a star would leave some unit too little room: the
- * star rules out every open cell touching it, and the rest of any unit of
- * its own that it completes. */
-function findStarved(b: StarbattleBoard, kind: "crowded" | "starved", from = 0): Found {
+/** Every cell, from `from` on, where a star would leave some unit too little
+ * room: the star rules out every open cell touching it, and the rest of any
+ * unit of its own that it completes. */
+function* findStarved(
+  b: StarbattleBoard,
+  kind: "crowded" | "starved",
+  from = 0,
+): Finds {
   const { size, grid } = b;
   const open = b.units.map((_, unit) => b.open(unit));
   const needs = b.units.map((_, unit) => b.need(unit));
@@ -438,32 +450,62 @@ function findStarved(b: StarbattleBoard, kind: "crowded" | "starved", from = 0):
       if (count >= need && need === 1) continue;
       const left = open[unit].filter((i) => i !== cell && ruledFor[i] !== cell);
       const room = roomFor(size, left, need);
-      if (room < need)
-        return {
-          reason: {
-            kind,
-            unit,
-            need,
-            room,
-            ruled: open[unit].filter((i) => ruledFor[i] === cell),
-            left: left.length,
-            completes:
-              kind === "starved"
-                ? own.filter(
-                    (mine) =>
-                      needs[mine] === 1 &&
-                      open[unit].some(
-                        (i) => ruledFor[i] === cell && b.unitsAt(i).includes(mine),
-                      ),
-                  )
-                : [],
-          },
-          cells: [cell],
-          mark: CROSSED,
-        };
+      if (room >= need) continue;
+      yield {
+        reason: {
+          kind,
+          unit,
+          need,
+          room,
+          ruled: open[unit].filter((i) => ruledFor[i] === cell),
+          left: left.length,
+          completes:
+            kind === "starved"
+              ? own.filter(
+                  (mine) =>
+                    needs[mine] === 1 &&
+                    open[unit].some(
+                      (i) => ruledFor[i] === cell && b.unitsAt(i).includes(mine),
+                    ),
+                )
+              : [],
+        },
+        cells: [cell],
+        mark: CROSSED,
+      };
+      break;
     }
   }
+}
+
+/** The first of a rung's firings, or `null` where it has none. */
+function firstOf(found: Finds): StarbattleFiring | null | "contradiction" {
+  for (const f of found) return f;
   return null;
+}
+
+/**
+ * The cells a firing's premise reads, which a hint plan continues from: the
+ * star it crosses round, or the rows, columns and regions it counts, and the
+ * cells a trial star would rule out.
+ */
+function readsOf(b: StarbattleBoard, { reason }: StarbattleFiring): number[] {
+  const cellsOf = (units: readonly number[]): number[] =>
+    units.flatMap((u) => b.units[u].cells);
+  switch (reason.kind) {
+    case "around":
+      return [reason.star, ...b.touching(reason.star)];
+    case "full":
+    case "exact":
+    case "needed":
+      return cellsOf([reason.unit]);
+    case "confined":
+    case "banded":
+      return cellsOf([...reason.lines, ...reason.regions]);
+    case "crowded":
+    case "starved":
+      return [...reason.ruled, ...cellsOf([reason.unit, ...reason.completes])];
+  }
 }
 
 /** The ladder over `board`. A rung that fires writes its cells, and hands
@@ -477,34 +519,54 @@ function ladder(
     record?.(firing);
     return 1;
   };
+  // What a hint plan chooses among: each firing with what it reads and the
+  // cells it writes.
+  const available =
+    (find: () => Finds): (() => LadderCandidate[] | "contradiction") =>
+    () => {
+      const out: LadderCandidate[] = [];
+      for (const found of find()) {
+        if (found === "contradiction") return found;
+        out.push({
+          reads: () => readsOf(board, found),
+          writes: () => found.cells,
+          take: () => {
+            apply(found);
+          },
+        });
+      }
+      return out;
+    };
   // A solve with no one listening runs a rung until it finds nothing more
   // before going back to the easier ones, where the hint takes one firing.
   const rung = (
     id: StarbattleRung,
     tier: number,
-    find: () => Found | "contradiction",
+    find: () => Finds,
   ): DeductionTechnique => ({
     id,
     tier,
     run: () => {
       for (let fired = 0; ; ) {
-        const found = find();
+        const found = firstOf(find());
         if (found === "contradiction") return -1;
         if (!found) return fired;
         fired += apply(found);
         if (record) return fired;
       }
     },
+    available: available(find),
   });
-  const confinement = (
-    kind: "confined" | "banded",
-    counts: readonly number[],
-  ): Found | "contradiction" => {
-    const found = findConfinement(board, counts);
-    if (found === null || found === "contradiction") return found;
-    const { cells, ...confinement } = found;
-    return { reason: { kind, ...confinement }, cells, mark: CROSSED };
-  };
+  function* confinement(kind: "confined" | "banded", counts: readonly number[]): Finds {
+    for (const found of findConfinement(board, counts)) {
+      if (found === "contradiction") {
+        yield found;
+        return;
+      }
+      const { cells, ...confinement } = found;
+      yield { reason: { kind, ...confinement }, cells, mark: CROSSED };
+    }
+  }
   // Every run of more than one line and fewer than all of them, shortest
   // first.
   const bands = Array.from({ length: Math.max(0, board.size - 2) }, (_, j) => j + 2);
@@ -515,13 +577,15 @@ function ladder(
     tier: TIERS[kind],
     run: () => {
       let fired = 0;
-      for (let found = findStarved(board, kind); found; ) {
+      for (let found = firstOf(findStarved(board, kind)); found; ) {
+        if (found === "contradiction") return -1;
         fired += apply(found);
         if (record) break;
-        found = findStarved(board, kind, found.cells[0] + 1);
+        found = firstOf(findStarved(board, kind, found.cells[0] + 1));
       }
       return fired;
     },
+    available: available(() => findStarved(board, kind)),
   });
   return [
     rung("around", TIERS.around, () => findAround(board)),
@@ -595,6 +659,8 @@ export function starbattleRecordingPass(
     }),
     budget,
     settled: () => !board.unfinished(),
+    // A plan works on the cells it has just decided before it moves on.
+    continuing: true,
   });
   return {
     next: () => (pass.next() ? last : null),
