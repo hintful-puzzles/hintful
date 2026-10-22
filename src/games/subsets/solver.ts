@@ -20,9 +20,11 @@ import {
   type DeductionTechnique,
   type FiringTally,
   runDeductionFixpoint,
+  singleFirings,
 } from "../../engine/deduction-fixpoint.ts";
 import { deduceHintPlan as accumulateHintPlan } from "../../engine/hint-plan.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { SweepOffers } from "../../engine/sweep-offers.ts";
 import {
   ADJTHAN,
   ALL_BITS,
@@ -556,6 +558,37 @@ export interface SubsetsDeduction {
   marks: RuleOutMark[];
 }
 
+/** Where a hint rung has made a firing: whether it returns it, or scans on
+ * while a plan collects every firing it could make (`SweepOffers.keep`). */
+type Keep = (d: SubsetsDeduction) => boolean;
+
+/** Everything a hint firing writes: the board's letters and rule-outs, and the
+ * cube and its reasons, which persist across firings. */
+interface SubsetsSnapshot {
+  known: Uint16Array;
+  mask: Uint16Array;
+  ruledOut: Uint16Array;
+  cube: Uint8Array;
+  why: (RuleOutWhy | null)[];
+}
+
+/** The cells a firing's premise reads, which a hint plan continues from: the
+ * cell, the cells round it its horseshoes join it to, and the cells its
+ * rule-outs name. */
+function readsOf(state: SubsetsState, d: SubsetsDeduction): number[] {
+  const { w, h } = state;
+  const x = d.pos % w;
+  const y = (d.pos - x) / w;
+  return [
+    d.pos,
+    ...(x > 0 ? [d.pos - 1] : []),
+    ...(x < w - 1 ? [d.pos + 1] : []),
+    ...(y > 0 ? [d.pos - w] : []),
+    ...(y < h - 1 ? [d.pos + w] : []),
+    ...d.marks.flatMap((m) => [m.pos, m.why.via]),
+  ];
+}
+
 /** The remaining plan from the player's position. `status` is the board's
  * verdict when the recorder stopped: `complete` means the deductions solve it
  * (which also certifies the position — the rules are monotone, so a wrong mark
@@ -592,7 +625,7 @@ function lettersToPlace(
 
 /** The first arrow with a player-visible letter change, applied and recorded
  * (mirrors `applyArrows`, one side of one arrow at a time). */
-function nextArrowFiring(state: SubsetsState): SubsetsDeduction | null {
+function nextArrowFiring(state: SubsetsState, keep: Keep): SubsetsDeduction | null {
   const { w, h, n } = state;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -605,23 +638,25 @@ function nextArrowFiring(state: SubsetsState): SubsetsDeduction | null {
         const gainedKnown = state.known[i2] & ~state.known[i1];
         if (gainedKnown) {
           state.known[i1] |= state.known[i2];
-          return {
+          const d: SubsetsDeduction = {
             pos: i1,
             sets: bitList(gainedKnown, n).map((bit) => ({ bit, type: "known" })),
             reason: { kind: "arrowKnown", from: i1, to: i2 },
             marks: [],
           };
+          if (keep(d)) return d;
         }
         // A letter ruled out of the superset i1 is ruled out of the subset i2.
         const lostMask = state.mask[i2] & ~state.mask[i1];
         if (lostMask) {
           state.mask[i2] &= state.mask[i1];
-          return {
+          const d: SubsetsDeduction = {
             pos: i2,
             sets: bitList(lostMask, n).map((bit) => ({ bit, type: "cleared" })),
             reason: { kind: "arrowMask", from: i1, to: i2 },
             marks: [],
           };
+          if (keep(d)) return d;
         }
       }
     }
@@ -760,6 +795,7 @@ function nextCollapseFiring(
   state: SubsetsState,
   cube: Uint8Array,
   why: (RuleOutWhy | null)[],
+  keep: Keep,
 ): SubsetsDeduction | null {
   const s = state.w * state.h;
   const n2 = 1 << state.n;
@@ -807,7 +843,8 @@ function nextCollapseFiring(
 
     state.known[i] |= newknown;
     state.mask[i] &= newmask;
-    return { pos: i, sets, reason, marks };
+    const d: SubsetsDeduction = { pos: i, sets, reason, marks };
+    if (keep(d)) return d;
   }
   return null;
 }
@@ -822,6 +859,7 @@ function nextSinglePosition(
   counts: Int32Array,
   cube: Uint8Array,
   why: (RuleOutWhy | null)[],
+  keep: Keep,
 ): SubsetsDeduction | null {
   const s = state.w * state.h;
   const n2 = 1 << state.n;
@@ -840,7 +878,13 @@ function nextSinglePosition(
     const sets = lettersToPlace(state, found, nj);
     state.known[found] = nj;
     state.mask[found] = nj;
-    return { pos: found, sets, reason: { kind: "hiddenSingle", value: nj }, marks };
+    const d: SubsetsDeduction = {
+      pos: found,
+      sets,
+      reason: { kind: "hiddenSingle", value: nj },
+      marks,
+    };
+    if (keep(d)) return d;
   }
   return null;
 }
@@ -1042,6 +1086,7 @@ function popcount(x: number): number {
 function nextHiddenSingle(
   state: SubsetsState,
   counts: Int32Array,
+  keep: Keep,
 ): SubsetsDeduction | null {
   const n2 = 1 << state.n;
   for (let value = 0; value < n2; value++) {
@@ -1053,7 +1098,13 @@ function nextHiddenSingle(
     if (sets.length === 0) continue;
     state.known[pos] = value;
     state.mask[pos] = value;
-    return { pos, sets, reason: { kind: "hiddenSingle", value }, marks: [] };
+    const d: SubsetsDeduction = {
+      pos,
+      sets,
+      reason: { kind: "hiddenSingle", value },
+      marks: [],
+    };
+    if (keep(d)) return d;
   }
   return null;
 }
@@ -1079,53 +1130,16 @@ export function deduceHintPlan(
   orig: SubsetsState,
   maxdiff: number = DIFF_NORMAL,
 ): SubsetsHintPlan {
-  const work = cloneState(orig);
-  const s = work.w * work.h;
-  const n2 = 1 << work.n;
-  const cube = new Uint8Array(s * n2).fill(1);
-  const counts = new Int32Array(s);
-  const why: (RuleOutWhy | null)[] = new Array(s * n2).fill(null);
   const budget = stepBudget("subsets hint");
-
-  // Every rung *applies as it detects* (each `next*Firing` writes the letter or
-  // clears the mask it found), so the shared loop takes no `apply` callback.
-  const nextFiring = (state: SubsetsState): SubsetsDeduction | null => {
-    // Rung 1: horseshoe arrows — direct letter propagation, no cube needed.
-    const arrow = nextArrowFiring(state);
-    if (arrow) return arrow;
-
-    // Rung 2: a hidden single — "this set fits only one cell" (shallow, so the
-    // player can verify it with the same spotlight). Tried before the collapse
-    // so the crisp counting form wins where it exists.
-    const hidden = nextHiddenSingle(state, counts);
-    if (hidden) return hidden;
-
-    // Rungs 3+: engage the cube. Shrink it to a fixpoint (the value-only
-    // rules), then look for a letter collapse, then a last-place placement.
-    // `cube` and `why` both persist across iterations (the cube shrinks
-    // monotonically, so an elimination's reason is stable) — refilling `why`
-    // would lose the reason for a rule-out found in an earlier iteration.
-    shrinkCube(state, cube, why, false);
-    const easy =
-      nextCollapseFiring(state, cube, why) ??
-      nextSinglePosition(state, counts, cube, why);
-    if (easy) return easy;
-
-    // Rung 4 (`DIFF_NORMAL`): only once every cheaper rung is exhausted, add
-    // the head half of the advanced arrow rule and try the cube again. Reaching
-    // for it *last* keeps an Easy board's plan free of it — the cheaper
-    // vocabulary never runs out on a board vetted as solvable without it. (The
-    // Clusters hint's lookahead rung has the same shape.) Both `next*Firing`
-    // calls above returned null without mutating, so re-running them here
-    // repeats no work and drops no firing.
-    if (maxdiff < DIFF_NORMAL) return null;
-    shrinkCube(state, cube, why, true);
-    return (
-      nextCollapseFiring(state, cube, why) ??
-      nextSinglePosition(state, counts, cube, why)
-    );
-  };
-
+  const { work, counts, techniques, taken } = hintLadder(orig);
+  const pass = singleFirings({
+    techniques,
+    maxTier: maxdiff,
+    budget,
+    // A plan works the cells beside the one it has just decided before it
+    // moves on.
+    continuing: true,
+  });
   const { status, plan } = accumulateHintPlan<
     SubsetsState,
     SubsetsDeduction,
@@ -1135,8 +1149,152 @@ export function deduceHintPlan(
     // Recounts into `counts`, which rung 2 and the cube shrink both read.
     status: (state) => subsetsValidate(state, null, counts),
     incomplete: "unfinished",
-    next: nextFiring,
+    next: () => (pass.next() ? taken() : null),
     budget,
   });
   return { status, deductions: plan };
+}
+
+/**
+ * Every firing a fresh plan from `orig` could open with, at every tier up to
+ * `maxdiff` — what a plan's step must be one of, for it to rest on the board
+ * the player sees and on nothing the plan carried from its earlier steps.
+ */
+export function firingsOffered(
+  orig: SubsetsState,
+  maxdiff: number = DIFF_NORMAL,
+): SubsetsDeduction[] {
+  const seen: SubsetsDeduction[] = [];
+  const { work, counts, techniques } = hintLadder(orig, seen);
+  subsetsValidate(work, null, counts);
+  for (const t of techniques) if (t.tier <= maxdiff) t.available?.();
+  return seen;
+}
+
+/**
+ * The hint's ladder over a working copy of `orig`, each rung offering every
+ * firing it could make; `taken` is the firing a plan last took. Every firing
+ * offered is also added to `seen`, where there is one.
+ */
+function hintLadder(
+  orig: SubsetsState,
+  seen?: SubsetsDeduction[],
+): {
+  work: SubsetsState;
+  counts: Int32Array;
+  techniques: DeductionTechnique[];
+  taken: () => SubsetsDeduction | null;
+} {
+  const work = cloneState(orig);
+  const s = work.w * work.h;
+  const n2 = 1 << work.n;
+  const cube = new Uint8Array(s * n2).fill(1);
+  const counts = new Int32Array(s);
+  const why: (RuleOutWhy | null)[] = new Array(s * n2).fill(null);
+
+  let last: SubsetsDeduction | null = null;
+  const offers = new SweepOffers<SubsetsSnapshot, SubsetsDeduction | null>({
+    save: () => ({
+      known: work.known.slice(),
+      mask: work.mask.slice(),
+      ruledOut: work.ruledOut.slice(),
+      cube: cube.slice(),
+      why: why.slice(),
+    }),
+    restore: (snap) => {
+      work.known.set(snap.known);
+      work.mask.set(snap.mask);
+      work.ruledOut.set(snap.ruledOut);
+      cube.set(snap.cube);
+      for (let k = 0; k < why.length; k++) why[k] = snap.why[k];
+    },
+    recorded: () => last,
+    record: (d) => {
+      last = d;
+    },
+    reads: (d) => (d ? readsOf(work, d) : []),
+    writes: (_before, _after, d) => (d ? [d.pos, ...d.marks.map((m) => m.pos)] : []),
+  });
+  const keep: Keep = (d) => {
+    last = d;
+    seen?.push(d);
+    return offers.keep();
+  };
+  // Every rung *applies as it detects* (each `next*Firing` writes the letter or
+  // clears the mask it found), so the shared loop takes no `apply` callback.
+  // A cube rung shrinks the cube before it scans, and outside the offers: the
+  // shrink derives only what the board says, and persists as it always has,
+  // where an offer puts back what its scan began from.
+  const rung = (
+    id: string,
+    tier: number,
+    scan: () => unknown,
+    shrink?: { strong: boolean },
+  ): DeductionTechnique => {
+    const run = () => (scan() ? 1 : 0);
+    const prepare = (): void => {
+      if (shrink) shrinkCube(work, cube, why, shrink.strong);
+    };
+    return {
+      id,
+      tier,
+      run: () => {
+        prepare();
+        return run();
+      },
+      available: () => {
+        prepare();
+        return offers.offer(run);
+      },
+    };
+  };
+  const weak = { strong: false };
+  const strong = { strong: true };
+  return {
+    work,
+    counts,
+    techniques: [
+      // Rung 1: horseshoe arrows — direct letter propagation, no cube needed.
+      rung("arrow", DIFF_EASY, () => nextArrowFiring(work, keep)),
+      // Rung 2: a hidden single — "this set fits only one cell" (shallow, so
+      // the player can verify it with the same spotlight). Tried before the
+      // collapse so the crisp counting form wins where it exists.
+      rung("hiddenSingle", DIFF_EASY, () => nextHiddenSingle(work, counts, keep)),
+      // Rungs 3+: engage the cube. Shrink it to a fixpoint (the value-only
+      // rules), then look for a letter collapse, then a last-place placement.
+      // `cube` and `why` both persist across iterations (the cube shrinks
+      // monotonically, so an elimination's reason is stable) — refilling `why`
+      // would lose the reason for a rule-out found in an earlier iteration.
+      rung(
+        "collapse",
+        DIFF_EASY,
+        () => nextCollapseFiring(work, cube, why, keep),
+        weak,
+      ),
+      rung(
+        "singlePosition",
+        DIFF_EASY,
+        () => nextSinglePosition(work, counts, cube, why, keep),
+        weak,
+      ),
+      // Rung 4 (`DIFF_NORMAL`): only once every cheaper rung is exhausted, add
+      // the head half of the advanced arrow rule and try the cube again.
+      // Reaching for it *last* keeps an Easy board's plan free of it — the
+      // cheaper vocabulary never runs out on a board vetted as solvable without
+      // it. (The Clusters hint's lookahead rung has the same shape.)
+      rung(
+        "collapse-advanced",
+        DIFF_NORMAL,
+        () => nextCollapseFiring(work, cube, why, keep),
+        strong,
+      ),
+      rung(
+        "singlePosition-advanced",
+        DIFF_NORMAL,
+        () => nextSinglePosition(work, counts, cube, why, keep),
+        strong,
+      ),
+    ],
+    taken: () => last,
+  };
 }

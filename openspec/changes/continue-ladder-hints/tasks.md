@@ -38,7 +38,10 @@
       ladder over the same rules, one firing a step. Galaxies'
       `dotOwnCells` is a prerequisite (a plan that took a later rule first
       ran dry on a board it used to finish), and its mirrored wall a
-      fallback, as its demotion meant.
+      fallback, as its demotion meant. Done too: crossing (its fixpoint note
+      and note strike are fallbacks, as their place after every placement
+      meant) and subsets (its cube rungs shrink the cube before the offers,
+      which put back what a scan began from).
 - [ ] 2.3 For each: hint pins and plan tests re-baselined, each moved
       sentence read against its board; a hint played in the app.
 

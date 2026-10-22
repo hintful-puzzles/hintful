@@ -22,8 +22,11 @@
  * must copy everything a firing writes, and the rung must be one whose sites
  * read the board as the scan began (a rung whose later sites read an earlier
  * site's writes is not a sweep of independent firings, and offers what it
- * never would). A rung that finds the board inconsistent after offering some
- * offers none: the board is inconsistent whatever the plan takes.
+ * never would). **Work a rung does before its scan is undone at the first
+ * offer** with the rest, and every later site then reads the board without
+ * it: do it before {@link SweepOffers.offer} (Subsets shrinks its cube
+ * first). A rung that finds the board inconsistent after offering some offers
+ * none: the board is inconsistent whatever the plan takes.
  */
 import type { DeductionTechnique, LadderCandidate } from "./deduction-fixpoint.ts";
 

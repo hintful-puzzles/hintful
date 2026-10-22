@@ -34,6 +34,7 @@ import {
   candidateSets,
   deduceHintPlan,
   findMistakes,
+  firingsOffered,
   pickExclusion,
   type SubsetsDeduction,
   solveCopy,
@@ -179,21 +180,22 @@ describe("deduceHintPlan", () => {
     }
   });
 
-  it("is recompute-stable: applying the first firing leaves the rest of the plan", () => {
+  it("every step is one a fresh plan from the board as followed could open with", () => {
+    // The cube and its reasons persist across a plan's firings. A step must
+    // still rest on the board the player has by then, and on nothing the plan
+    // carried: so it is among the firings a plan begun afresh from that board
+    // offers. (A fresh plan opens with the ladder's first, where a plan that
+    // continues takes the one beside its last step.)
     let compared = 0;
     for (let s = 0; s < 12; s++) {
-      const state = gen(`stable-${s}`);
-      const plan = deduceHintPlan(state);
-      if (plan.deductions.length < 2) continue;
-      const next = applyFiring(state, plan.deductions[0]);
-      const replan = deduceHintPlan(next);
-      expect(replan.deductions).toEqual(plan.deductions.slice(1));
-      compared++;
+      let state = gen(`stable-${s}`);
+      for (const d of deduceHintPlan(state).deductions) {
+        expect(firingsOffered(state)).toContainEqual(d);
+        state = applyFiring(state, d);
+        compared++;
+      }
     }
-    // A planner that stopped returning multi-firing plans would skip all twelve.
-    expect(compared, "no seed produced a plan of two or more firings").toBeGreaterThan(
-      0,
-    );
+    expect(compared, "no seed produced a plan").toBeGreaterThan(50);
   });
 
   it("an arrowKnown firing propagates the subset's marked letters up the arrow", () => {

@@ -56,6 +56,11 @@
  * wherever the solver does.
  */
 
+import {
+  type FindingRung,
+  findingTechniques,
+  singleFirings,
+} from "../../engine/deduction-fixpoint.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -446,20 +451,49 @@ function posInRun(puzzle: CrossingPuzzle, r: number, i: number): number {
 }
 
 /**
- * The next forced deduction, in **goal-first** order: fill a whole run, as
- * the one number it can take or as a number's one run, else pin one square, else pin one square from its two crossing numbers, else write
- * the notes the next placement rests on, else rule a refuted note out. Leading
- * with the whole-run placement is both the strongest teaching and the most
- * satisfying move.
+ * The hint's rungs, in **goal-first** order: fill a whole run, as the one
+ * number it can take or as a number's one run, else pin one square, else pin
+ * one square from its two crossing numbers; only where none of those fires,
+ * write the notes the next placement rests on, else rule a refuted note out.
+ * Leading with the whole-run placement is both the strongest teaching and the
+ * most satisfying move.
  */
-function nextCrossingFiring(board: CrossingHintBoard): CrossingFiring | null {
-  const a = analyze(board);
-  const shown = placementFiring(board, a, a);
-  if (shown) return shown;
+function crossingRungs(board: CrossingHintBoard): FindingRung<CrossingFiring>[] {
+  return [
+    { id: "placement", tier: 0, find: () => placementFirings(board, analyze(board)) },
+    // The notes the next placement rests on, where the board shows none.
+    {
+      id: "notes",
+      tier: 0,
+      fallback: true,
+      find: () => {
+        const f = noteForHiddenPlacement(board, analyze(board));
+        return f ? [f] : [];
+      },
+    },
+    // A refuted note, where no placement is near.
+    {
+      id: "strike",
+      tier: 0,
+      fallback: true,
+      find: () => noteStrikeFirings(board, analyze(board)),
+    },
+  ];
+}
 
+/** The note step for the first placement the fixpoint finds, or `null` where
+ * the fixpoint finds none either. */
+function noteForHiddenPlacement(
+  board: CrossingHintBoard,
+  a: Analysis,
+): CrossingFiring | null {
   const fp = fixpoint(board, a.placed);
-  const hidden = placementFiring(board, fp, a);
-  if (!hidden) return noteStrikeFiring(board, a);
+  let hidden: CrossingFiring | null = null;
+  for (const f of placementFirings(board, a, fp)) {
+    hidden = f;
+    break;
+  }
+  if (!hidden) return null;
   const [first] = support(board.puzzle, a.placed, fp, kills(board, a, fp, hidden));
   // The oldest narrowing rests on the board alone. Were it a number's one
   // run, the board would show that number fitting no other.
@@ -472,14 +506,15 @@ function nextCrossingFiring(board: CrossingHintBoard): CrossingFiring | null {
 
 /**
  * The four placement techniques, in goal-first order, read off whichever
- * tables `t` it is given. `shown` is always the board's own reading: it decides
- * how a whole-run placement is narrated.
+ * tables `t` it is given (the board's own reading by default). `shown` is
+ * always the board's own reading: it decides how a whole-run placement is
+ * narrated.
  */
-function placementFiring(
+function* placementFirings(
   board: CrossingHintBoard,
-  t: Tables,
   shown: Analysis,
-): CrossingFiring | null {
+  t: Tables = shown,
+): Generator<CrossingFiring> {
   const { puzzle, grid } = board;
   const { w, h, walls, runs, numbers } = puzzle;
   const { fitting, acc } = t;
@@ -495,7 +530,7 @@ function placementFiring(
     const unnoted = numbers.filter((_, l) =>
       numberAvailableTo(puzzle, grid, shown.placed, r, l),
     ).length;
-    return {
+    yield {
       technique: "onlyNumber",
       run: r,
       number: fitting[r][0],
@@ -515,10 +550,7 @@ function placementFiring(
   // 2 — a number only one run can still take. Asked of the board's own
   // reading alone: the fixpoint has given such a run to its number, which 1
   // reads off its tables.
-  if (t === shown) {
-    const only = onlyRunFiring(board, shown);
-    if (only) return only;
-  }
+  if (t === shown) yield* onlyRunFirings(board, shown);
 
   // 3 — a position every still-fitting number of one run agrees on.
   for (let r = 0; r < runs.length; r++) {
@@ -528,7 +560,7 @@ function placementFiring(
       if (grid[i]) continue;
       const digit = soleDigit(acc[r][k]);
       if (!digit) continue;
-      return {
+      yield {
         technique: "sharedDigit",
         run: r,
         cell: i,
@@ -549,7 +581,7 @@ function placementFiring(
     const downDigits = acc[down][posInRun(puzzle, down, i)];
     const digit = soleDigit(acrossDigits & downDigits);
     if (!digit) continue;
-    return {
+    yield {
       technique: "crossRuns",
       cell: i,
       digit,
@@ -562,16 +594,14 @@ function placementFiring(
       fitting: [...fitting[across], ...fitting[down]],
     };
   }
-
-  return null;
 }
 
-/** A number the board shows fitting one run only, where that run has a square
- * to write in. */
-function onlyRunFiring(
+/** Every number the board shows fitting one run only, where that run has a
+ * square to write in. */
+function* onlyRunFirings(
   board: CrossingHintBoard,
   shown: Analysis,
-): CrossingFiring | null {
+): Generator<CrossingFiring> {
   const { puzzle, grid } = board;
   const { runs, numbers } = puzzle;
   const cand = boardCandidates(board);
@@ -587,7 +617,7 @@ function onlyRunFiring(
       others++;
       against.push(...cells.filter((i, k) => !(cand[i] & digitBit(num[k]))));
     });
-    return {
+    yield {
       technique: "onlyRun",
       run,
       number,
@@ -597,7 +627,6 @@ function onlyRunFiring(
       fitting: [number],
     };
   }
-  return null;
 }
 
 /** The numbers that still fit on the board but must be dead for `f` — found on
@@ -668,11 +697,11 @@ function noteFiring(
     : { technique: "noteDigits", ...note };
 }
 
-/** A pencil note no still-fitting number supports. */
-function noteStrikeFiring(
+/** Every pencil note no still-fitting number supports, one square a firing. */
+function* noteStrikeFirings(
   board: CrossingHintBoard,
   a: Analysis,
-): CrossingFiring | null {
+): Generator<CrossingFiring> {
   const { puzzle, grid, marks } = board;
   const { w, h, walls } = puzzle;
   for (let i = 0; i < w * h; i++) {
@@ -693,7 +722,7 @@ function noteStrikeFiring(
       }
     }
     if (bestRun < 0) continue;
-    return {
+    yield {
       technique: "noteStrike",
       cell: i,
       run: bestRun,
@@ -701,8 +730,29 @@ function noteStrikeFiring(
       fitting: a.fitting[bestRun],
     };
   }
+}
 
-  return null;
+/** The squares a firing's premise reads, which a hint plan continues from:
+ * the runs whose numbers it counts. */
+function readsOf(puzzle: CrossingPuzzle, f: CrossingFiring): number[] {
+  const cellsOf = (r: number): readonly number[] => puzzle.runs[r].cells;
+  switch (f.technique) {
+    case "crossRuns":
+      return [...cellsOf(f.acrossRun), ...cellsOf(f.downRun)];
+    default:
+      return [...cellsOf(f.run)];
+  }
+}
+
+/** The squares a firing writes a digit or a note in. */
+function writesOf(f: CrossingFiring): number[] {
+  switch (f.technique) {
+    case "onlyNumber":
+    case "onlyRun":
+      return f.fill;
+    default:
+      return [f.cell];
+  }
 }
 
 /** Apply a firing to the deduction's working board. */
@@ -746,6 +796,21 @@ export function deduceCrossingPlan(state: CrossingState): CrossingPlan {
     grid: state.grid.slice(),
     marks: state.pencil.slice(),
   };
+  let last: CrossingFiring | null = null;
+  const pass = singleFirings({
+    techniques: findingTechniques(
+      crossingRungs(board),
+      (f) => {
+        applyCrossingFiring(board, f);
+        last = f;
+      },
+      { reads: (f) => readsOf(board.puzzle, f), writes: writesOf },
+    ),
+    budget: stepBudget("crossing hint"),
+    // A plan works the runs through the squares it has just filled before it
+    // moves on.
+    continuing: true,
+  });
   const { status, plan } = deduceHintPlan<
     CrossingHintBoard,
     CrossingFiring,
@@ -754,8 +819,7 @@ export function deduceCrossingPlan(state: CrossingState): CrossingPlan {
     board,
     status: (b) => validateBoard(b.puzzle, b.grid).status,
     incomplete: "progress",
-    next: nextCrossingFiring,
-    apply: applyCrossingFiring,
+    next: () => (pass.next() ? last : null),
     planCap: HINT_PLAN_MAX,
     budget: stepBudget("crossing hint"),
   });
