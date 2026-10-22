@@ -6,6 +6,7 @@
  * (docs/testing.md § "What a new game ships").
  */
 import { describe, expect, it } from "vitest";
+import { LINE } from "../../engine/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { squareEdges } from "../../engine/square-edges.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
@@ -19,7 +20,6 @@ import {
   DIFF_NORMAL,
   encodeParams,
   executeMove,
-  LINE,
   NO_END,
   newState,
   type PathParams,

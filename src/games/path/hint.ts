@@ -17,6 +17,7 @@ import {
 } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import { CROSS, type EdgeMark, LINE } from "../../engine/line-drawing.ts";
 import { squareEdges } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
@@ -31,15 +32,7 @@ import {
   pathRecordingPass,
   stillHolds,
 } from "./solver.ts";
-import {
-  CROSS,
-  type EdgeMark,
-  executeMove,
-  LINE,
-  NO_END,
-  type PathMove,
-  type PathState,
-} from "./state.ts";
+import { executeMove, NO_END, type PathMove, type PathState } from "./state.ts";
 
 /** How far ahead the plan is computed. A player rarely follows more than a
  * few steps before going their own way, and the plan is asked for again

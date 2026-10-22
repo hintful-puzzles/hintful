@@ -26,19 +26,30 @@ takes (Pearl: two, or none; Path: one on a number, two elsewhere) and whether
 the drag may close a loop (Pearl yes, Path no). Everything else is one
 behavior.
 
-## D2 — Where the two differ, the owner decides (asked in this change)
+## D2 — Where the two differ, the owner decides (answered 2026-10-22)
 
-Moving both onto one module surfaces two differences a player of Pearl would
-see. Bring each to the owner with a recommendation before changing Pearl:
+Moving both onto one module surfaced three differences a player would see.
+The table above predates the third: Path's erase rule changed on 2026-10-21
+(`18f3c842`) and Pearl's had not. Each went to the owner with a
+recommendation, and each recommendation was taken, so the options are only
+D1's two.
 
-- **Refusing an over-full square while dragging.** Path refuses it; Pearl
-  lets the drag through and shows the error after. Recommendation: refuse in
-  both, as upstream's Path sketch asks ("the UI should enforce at all times the
-  constraint that at most two links can come into any square").
-- **Ctrl+Shift+arrow** (Pearl: a line without moving). Recommendation: keep
-  it, and give it to Path.
+- **The erase rule.** Pearl took up the lines a drag started along until its
+  first new edge (upstream's `clearing`), so tracing the loop's end to carry
+  it on erased what was traced. **Path's rule in both**: a drag keeps the
+  lines it passes, and takes them up only where it passes nothing else. Pearl
+  loses the one-drag reroute (back along a stretch and off another way).
+- **Refusing an over-full square.** Pearl drew a third line by drag, click
+  or Ctrl+arrow and showed the error after. **Refused in both**, as upstream's
+  Path sketch asks ("the UI should enforce at all times the constraint that
+  at most two links can come into any square").
+- **Ctrl+Shift+arrow.** Pearl drew a line without moving; in Path Shift won
+  and it crossed. **A line without moving, in both**, now in both help pages.
 
-Until the owner answers, Pearl keeps its behavior through the options.
+Smaller differences went to Path's behavior without a question, being no
+control a player would rely on: Space on a hidden cursor no longer shows it
+in Pearl (Enter and the arrows do), and a quick straight drag that would run
+over a square it passed stops there rather than crossing its own line.
 
 ## D3 — Gestures that are not this one
 
@@ -48,7 +59,9 @@ Until the owner answers, Pearl keeps its behavior through the options.
 - **Ascent** commits one segment a step and allows diagonals; **Bridges**
   drags island to island. Neither draws through squares.
 
-Record any of these that turns out to share the module's step after all.
+Re-read against the module (2026-10-22): none shares its step. Tracks' rail
+drag opens the engine's sweep on the first edge crossed and its square drag is
+a row or column fill; `docs/input.md` § "The line drag" says so.
 
 ## D4 — The preview and the saved move
 

@@ -15,9 +15,9 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { LineDrawingUi } from "../../engine/line-drawing.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import { D, L, R, U } from "../../engine/square-edges.ts";
 
@@ -198,18 +198,9 @@ export interface PearlMove {
   ops: PearlOp[];
 }
 
-/** Transient interaction state (upstream `game_ui`). The drag path, keyboard
- * cursor, and the `appearance` preference (`guiStyle`). None of it is
- * serialized. */
-export interface PearlUi {
-  /** Drag path so far, as `y*w+x` coords (length w*h; only the first
-   * `ndragcoords` entries are live). */
-  dragcoords: number[];
-  /** -1 = no drag; 0 = click, drag not yet confirmed; >0 = dragging. */
-  ndragcoords: number;
-  clickx: number;
-  clicky: number;
-  cursor: GridCursor;
+/** The line being drawn, the keyboard cursor, and the `appearance` preference
+ * (`guiStyle`). None of it is serialized. */
+export interface PearlUi extends LineDrawingUi {
   /** GUI_MASYU (0) or GUI_LOOPY (1); driven by the `appearance` pref. */
   guiStyle: number;
 }

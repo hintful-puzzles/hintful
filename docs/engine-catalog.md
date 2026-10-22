@@ -41,6 +41,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | Board structure and geometry | you need connectivity, a board mechanic or pixel geometry |
 | – `dsf.ts` — union-find | your state is a partition of cells |
 | – `square-edges.ts` — square-grid edges | you name a direction or an edge |
+| – `line-drawing.ts` — drawn lines | lines are drawn by dragging |
 | – `border-grid.ts` — the shared border-marking mechanic | the player marks edges between cells as walls |
 | – `border-grid-render.ts` — that mechanic's look | you draw a border-marking game's tiles |
 | – `border-grid-hint.ts` — that mechanic's explained hint | you write a border-marking game's hint |
@@ -59,11 +60,11 @@ the `engine-helpers` spec and the engine specs an entry names.
 | Generation | you are writing a generator |
 | – `retry-limit.ts` — a bound on generate-until-it-works | a generator retries until a board passes |
 | – `divvy.ts` — random equal-omino partition | a generator divides a rectangle into equal regions |
-| – `redivide.ts` — divide a few regions of a partition again | a generator mends a division into regions of one size where it fails |
-| – `divide.ts` — regions of unequal size | a generator divides a grid into regions that differ in size |
+| – `redivide.ts` — divide a few regions of a partition again | a generator mends a division into equal regions |
+| – `divide.ts` — regions of unequal size | a generator divides a grid into unequal regions |
 | – `mend-division.ts` — mend a division until it has one answer | a board's regions are its only clue |
 | – `laydomino.ts` — random domino tiling | a generator tiles a board with dominoes |
-| – `symmetric-blacks.ts` — symmetric black-square placement | a generator places black squares symmetrically |
+| – `symmetric-blacks.ts` — symmetric black-square placement | black squares are placed symmetrically |
 | – `loopgen.ts` — random loop generation | a generator needs a random closed loop |
 | – `wires.ts` — the Net/Netslide wire model | your tiles carry wires from a source |
 | – `obfuscate.ts` — solution masking in descs | your desc carries the answer |
@@ -73,7 +74,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `step-budget.ts` — the fixpoint non-termination guard | a hint pass loops until nothing changes |
 | – `difficulty.ts` — the cross-game difficulty contract | your game has difficulty tiers |
 | – `hint-finishes.ts` — whether deduction finishes a board | your game is untiered, or has an Unreasonable tier |
-| – `answer-search.ts` — a deductive game's Unreasonable tier | some boards need trial and error, or a generator wants a board's second answer |
+| – `answer-search.ts` — a deductive game's Unreasonable tier | some boards need trial and error, or a generator wants a second answer |
 | – `sections.ts` — contract sections and the draft label | your game leaves out a contract section |
 | – `deduction-record.ts` — the recorded-firing shape | your solver records firings for a candidate hint |
 | – `firing-replay.ts` — the premise audit | a candidate game has a solver of its own |
@@ -93,7 +94,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-words.ts` — a hint's words bound to its marks | you write a hint step's sentence |
 | – `hint-text.ts` — the sentences several games share | another game already says your sentence |
 | – `slide-planner.ts` — sliding-permutation search | the player slides tiles into one arrangement |
-| – `permutation-planner.ts` — a staged plan over any permutation moves | the hint should place pieces in reading order, the way a person solves |
+| – `permutation-planner.ts` — a staged plan over any permutation moves | a hint places pieces in reading order |
 | – `position-store.ts` — the positions a breadth-first search reached | a hint searches breadth-first |
 | – `piece.ts` — a piece on its cell | a cell holds a piece, is shaded or is ruled out |
 | – `region-fill.ts` — a fill for each region of a division | regions are colored, or pieces outnumber their colors |
@@ -231,6 +232,16 @@ tile and border, with a still middle a game can turn off. Exemplar:
 named by the bit each direction is saved in, and maps to the module's at
 the pointer: `border-grid.ts`'s `SQUARE_DIRS`. Changing a stored order is a
 save format change.
+
+### `line-drawing.ts` — drawn lines
+
+Reach for it when the player draws lines along the edges between squares by
+dragging through them: it is the whole input, the drag, the click, the cross
+sweep and the keys. `OPEN`, `LINE` and `CROSS` are what an edge holds. The
+game declares `LineRules` (`mark`, `takes`, `loops`) and its saved move;
+`dragPreview` gives its render the drag as it would be released. Adopting
+it: [`input.md`](./input.md) § "The line drag". Exemplars: `path/`,
+`pearl/`.
 
 ### `border-grid.ts` — the shared border-marking mechanic
 

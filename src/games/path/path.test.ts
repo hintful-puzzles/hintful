@@ -14,6 +14,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -34,16 +35,13 @@ import { pathGame } from "./index.ts";
 import { COL_ERROR, COL_HINT, centerOf, layout, newDrawState } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
-  CROSS,
   DIFF_EASY,
   DIFF_NORMAL,
   decodeParams,
   encodeDesc,
   encodeParams,
   executeMove,
-  LINE,
   newState,
-  OPEN,
   type PathMove,
   type PathState,
   validateParams,

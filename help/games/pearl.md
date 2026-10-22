@@ -9,18 +9,26 @@ must be a straight which is connected to *at least one* corner.
 
 ## Controls
 
-Drag between squares to draw or undraw pieces of the loop.
-Alternatively, left-click the edge between two squares to turn it on
-or off. Right-click an edge to mark it with a cross indicating that
-you are sure the loop does not go through it, and keep the button down
-and drag to cross every unmarked edge you pass over.
+Drag from square to square to draw the loop along the edges you pass.
+Dragging back the way you came takes the line back up again, and
+dragging back onto the square you started from closes the loop. A drag
+along a stretch of loop you have drawn and on past its end carries that
+stretch on, and a drag that runs only along lines you have drawn takes
+them up. A line stops where it would give a square a third line, or
+where you have crossed the edge out. You can also click near the edge
+between two squares to draw or remove a line there.
+
+Right-click an edge to mark it with a cross indicating that you are
+sure the loop does not go through it, and keep the button down and
+drag to cross every unmarked edge you pass over.
 
 The keyboard can also be used. The arrow keys move a cursor. Press
 Enter to start drawing, move the cursor along the path you want, and
-press Enter again to draw or undraw it; Space, Escape, Backspace or Delete abandons the
-path instead. Holding Ctrl while pressing an arrow key draws or
-undraws the line in that direction and moves along it, and holding
-Shift marks or unmarks a cross on that edge.
+press Enter again to draw or undraw it; Space, Escape, Backspace or
+Delete abandons the path instead. Holding Ctrl while pressing an arrow
+key draws or undraws the line in that direction and moves along it,
+holding Ctrl and Shift together does the same without moving, and
+holding Shift alone marks or unmarks a cross on that edge.
 
 ## Hints
 

@@ -28,8 +28,9 @@ The keyboard can also be used. The arrow keys move a cursor. Press Enter to
 start a line, move the cursor along the way you want it, and press Enter
 again to draw it; Space, Escape, Backspace or Delete abandons it instead.
 Holding Ctrl while pressing an arrow key draws or removes the line in that
-direction and moves along it, and holding Shift crosses out or clears the
-edge in that direction.
+direction and moves along it, holding Ctrl and Shift together does the same
+without moving, and holding Shift alone crosses out or clears the edge in
+that direction.
 
 Each pair of numbers has a color, ringing both its numbers, and a line takes
 that color once it reaches one of them, while a line that reaches no number

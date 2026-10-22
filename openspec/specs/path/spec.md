@@ -119,7 +119,7 @@ A right click near an edge SHALL cross it out, or clear its cross, and SHALL do 
 
 ### Requirement: Controls: The keyboard draws, crosses and walks
 
-The arrows SHALL move a cursor over the squares. Enter SHALL start a line at the cursor, the arrows SHALL carry it as a drag carries one, and Enter again SHALL draw it; Space, Escape, Backspace and Delete SHALL abandon it. Ctrl with an arrow SHALL draw or remove the line in that direction and move the cursor along it; Shift with an arrow SHALL cross out or clear that edge. A modified arrow on a hidden cursor SHALL only show it.
+The arrows SHALL move a cursor over the squares. Enter SHALL start a line at the cursor, the arrows SHALL carry it as a drag carries one, and Enter again SHALL draw it; Space, Escape, Backspace and Delete SHALL abandon it. Ctrl with an arrow SHALL draw or remove the line in that direction and move the cursor along it, and with Shift as well the cursor SHALL stay; Shift alone with an arrow SHALL cross out or clear that edge. A modified arrow on a hidden cursor SHALL only show it.
 
 #### Scenario: Enter, two arrows and Enter draw a line
 

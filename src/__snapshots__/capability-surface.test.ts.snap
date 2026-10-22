@@ -1277,12 +1277,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "validateParams",
     ],
     "ui": [
-      "clickx",
-      "clicky",
       "cursor",
-      "dragcoords",
+      "drag",
       "guiStyle",
-      "ndragcoords",
     ],
   },
   {

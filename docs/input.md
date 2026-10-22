@@ -72,6 +72,7 @@ values, keys of its own, pixel coordinates in its state.
 | – Giving a drag game a keyboard | a grab, drag and release needs a keyboard form |
 | – Giving a geometric game a keyboard | the input is per edge on a tiling with no rows or columns |
 | Drag models | your game has a drag and you choose its shape |
+| – The line drag | the player draws lines along the edges between squares by dragging through them |
 | – The accreting-paint drag | a press picks a value and the drag paints the cells it passes |
 | – A line-fill drag picks a transformation | a drag fills one row or column |
 | – A sprite drag | a piece follows the pointer |
@@ -539,7 +540,7 @@ The declaration is no `Game` member, so no guard finds it unless it is added
 to that test, which runs the sweep check (`testing/sweep-probe.ts`). A `holds`
 that reads the wrong array typechecks and drags nothing. Exemplars: `clueDrag`
 in [`towers/index.ts`](../src/games/towers/index.ts); `crossDrag` in
-[`pearl/index.ts`](../src/games/pearl/index.ts).
+[`engine/line-drawing.ts`](../src/engine/line-drawing.ts).
 
 ## Keyboard cursors
 
@@ -654,6 +655,7 @@ split, the blitter and canceling a dangling drag in `changedState` are in
 | The press decides | Shape |
 | --- | --- |
 | nothing more than the mark a click makes | a sweep (§ "A mark that drags is a sweep") |
+| the square a line along the edges starts from | § "The line drag" |
 | a paint value | § "The accreting-paint drag" |
 | a `from → to` pair for one line | § "A line-fill drag picks a transformation" |
 | the piece picked up | § "A sprite drag" |
@@ -665,6 +667,30 @@ and a slide-follow drag ([`sixteen/index.ts`](../src/games/sixteen/index.ts),
 
 **Continue every drag on the button class** (`isMouseDrag`, `isMouseRelease`),
 never on the exact press code (§ "A touch hold arrives as the right button").
+
+### The line drag
+
+**Where the player draws lines along the edges between squares by dragging
+through them, declare `LineRules` and write no input.**
+[`engine/line-drawing.ts`](../src/engine/line-drawing.ts) is the whole
+input: the drag, the click on an edge, the right button's cross sweep and
+the keys. Its header says what each does. A game declares three facts:
+
+- `mark`: what an edge holds, read from the game's own state;
+- `takes`: how many lines a square takes, which no drag, click or key
+  exceeds;
+- `loops`: whether a drag back onto its first square closes a loop.
+
+The rules go in `moves.ts`, since `render.ts` previews the drag with
+`dragPreview` from them. `lineDrawing(rules, { layout, move })` in `index.ts`
+builds `interpretMove` and `crossDrag`. `move` turns the edges a release
+changes into the game's own saved move, so Pearl keeps its op pairs. Export
+`crossDrag` and add it to `drag-marks.test.ts`
+(§ "A mark outside the verbs that drags"). Exemplars:
+[`path/`](../src/games/path/) and [`pearl/`](../src/games/pearl/).
+
+Tracks' rail drag is not this one: it commits each edge as the pointer
+passes it, through the sweep, and its square drag fills one row or column.
 
 ### The accreting-paint drag
 

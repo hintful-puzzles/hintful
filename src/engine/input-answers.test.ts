@@ -35,7 +35,6 @@ const MAKES_AN_UNCHANGED_MOVE = [
   "group",
   "loopy",
   "mathrax",
-  "pearl",
   "untangle",
 ];
 

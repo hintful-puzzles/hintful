@@ -7,6 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { CROSS, LINE } from "../../engine/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { edgeBetween, squareEdges } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -17,11 +18,9 @@ import { pathGame } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
-  CROSS,
   DIFF_EASY,
   DIFF_NORMAL,
   executeMove,
-  LINE,
   newState,
   type PathParams,
   type PathState,

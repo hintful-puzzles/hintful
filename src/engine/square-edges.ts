@@ -188,6 +188,13 @@ export interface Side {
   readonly dir: number;
 }
 
+/** The square a press at `p` lands in, or `-1` off the board. */
+export function squareAt(g: SquareEdges, m: EdgeLayout, p: Point): number {
+  const x = fromCoord(p.x, m.tile, m.border);
+  const y = fromCoord(p.y, m.tile, m.border);
+  return x >= 0 && x < g.w && y >= 0 && y < g.h ? y * g.w + x : -1;
+}
+
 /** The middle of square `i`. */
 export function squareCenter(g: SquareEdges, m: EdgeLayout, i: number): Point {
   const half = Math.floor(m.tile / 2);
@@ -209,10 +216,8 @@ export function sideAt(
   p: Point,
   still = 1 / 4,
 ): Side | null {
-  const x = fromCoord(p.x, m.tile, m.border);
-  const y = fromCoord(p.y, m.tile, m.border);
-  if (x < 0 || x >= g.w || y < 0 || y >= g.h) return null;
-  const cell = y * g.w + x;
+  const cell = squareAt(g, m, p);
+  if (cell < 0) return null;
   const c = squareCenter(g, m, cell);
   const [dx, dy] = [p.x - c.x, p.y - c.y];
   if (Math.max(Math.abs(dx), Math.abs(dy)) < m.tile * still) return null;

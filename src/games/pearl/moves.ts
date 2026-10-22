@@ -1,23 +1,24 @@
 /**
- * Pearl move application, drag interpretation and completion checking —
- * ports of `execute_move`, `interpret_ui_drag` / `update_ui_drag` and
- * `check_completion` / `dsf_update_completion` (pearl.c).
+ * Pearl move application, the rules its loop is drawn by, and completion
+ * checking — ports of `execute_move` and `check_completion` /
+ * `dsf_update_completion` (pearl.c).
  *
  * Split out of `index.ts` so `render.ts`, which previews the in-progress drag,
- * can share the drag helpers without an import cycle (docs/rendering.md
+ * reads the same rules without an import cycle (docs/rendering.md
  * § "A simulated-release preview lives in `moves.ts`").
  */
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import { CROSS, LINE, type LineRules, OPEN } from "../../engine/line-drawing.ts";
 import {
   D,
   dirCount,
   dirX,
   dirY,
-  L,
   opposite,
   R,
-  U,
+  sideOf,
+  squareEdges,
 } from "../../engine/square-edges.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import { pearlSolve } from "./solver.ts";
@@ -39,107 +40,20 @@ import {
   STRAIGHT,
 } from "./state.ts";
 
-// --- drag interpretation ---------------------------------------------------
-export interface DragLeg {
-  sx: number;
-  sy: number;
-  dx: number;
-  dy: number;
-  dir: number;
-  oldstate: number;
-  newstate: number;
-}
+// --- drawing the loop -----------------------------------------------------
 
-/** Work out the intended effect of drag leg `i` on the grid (upstream
- * `interpret_ui_drag`). `clearing` is threaded via a mutable holder. */
-export function interpretUiDrag(
-  state: PearlState,
-  dragcoords: number[],
-  clearing: { v: boolean },
-  i: number,
-): DragLeg {
-  const w = state.w;
-  const sp = dragcoords[i];
-  const dp = dragcoords[i + 1];
-  const sy = (sp / w) | 0;
-  const sx = sp % w;
-  const dy = (dp / w) | 0;
-  const dx = dp % w;
-  const dir = dy > sy ? D : dy < sy ? U : dx > sx ? R : L;
-  const oldstate = state.lines[sp] & dir;
-  let newstate: number;
-  if (oldstate) {
-    // The edge was present: set it absent, unless we've stopped clearing.
-    newstate = clearing.v ? 0 : dir;
-  } else {
-    // The edge was absent: set it present, and cancel the 'clearing' flag.
-    newstate = dir;
-    clearing.v = false;
-  }
-  return { sx, sy, dx, dy, dir, oldstate, newstate };
-}
-
-/** Extend/truncate the drag path to include `(gx, gy)` (upstream
- * `update_ui_drag`). Mutates `dragcoords`/`ndragcoords` on `ui`. */
-export function updateUiDrag(
-  state: PearlState,
-  ui: { dragcoords: number[]; ndragcoords: number },
-  gx: number,
-  gy: number,
-): void {
-  const w = state.w;
-  if (!inGrid(state, gx, gy)) return;
-  if (ui.ndragcoords < 0) return; // drag not in progress
-
-  const pos = gy * w + gx;
-  const lastpos = ui.dragcoords[ui.ndragcoords > 0 ? ui.ndragcoords - 1 : 0];
-  if (pos === lastpos) return;
-
-  if (ui.ndragcoords === 0) ui.ndragcoords = 1; // drag confirmed
-
-  // Dragging into an already-visited square truncates the path back to it.
-  for (let i = 1; i < ui.ndragcoords; i++)
-    if (pos === ui.dragcoords[i]) {
-      ui.ndragcoords = i + 1;
-      return;
-    }
-
-  if (pos === ui.dragcoords[0]) {
-    // A loop-shaped drag back to the start: allowed unless it makes a
-    // vertex of the wrong degree.
-    ui.dragcoords[ui.ndragcoords] = pos;
-    const clearing = { v: true };
-    let lines = state.lines[pos] & (L | R | U | D);
-    for (let i = 0; i < ui.ndragcoords; i++) {
-      const leg = interpretUiDrag(state, ui.dragcoords, clearing, i);
-      if (leg.sx === gx && leg.sy === gy) lines ^= leg.oldstate ^ leg.newstate;
-      if (leg.dx === gx && leg.dy === gy)
-        lines ^= opposite(leg.oldstate) ^ opposite(leg.newstate);
-    }
-    if (dirCount(lines) > 2) {
-      // Bad vertex degree: fall back to backtracking behavior.
-      ui.ndragcoords = 1;
-      return;
-    }
-  }
-
-  // A rook-move away from the last square extends the path.
-  let oy = (ui.dragcoords[ui.ndragcoords - 1] / w) | 0;
-  let ox = ui.dragcoords[ui.ndragcoords - 1] % w;
-  if (ox === gx || oy === gy) {
-    const dx = gx < ox ? -1 : gx > ox ? 1 : 0;
-    const dy = gy < oy ? -1 : gy > oy ? 1 : 0;
-    const dir = dy > 0 ? D : dy < 0 ? U : dx > 0 ? R : L;
-    while (ox !== gx || oy !== gy) {
-      // Stop at a 'no line here' mark — we don't let the drag cross one.
-      if (state.marks[oy * w + ox] & dir) break;
-      ox += dx;
-      oy += dy;
-      ui.dragcoords[ui.ndragcoords++] = oy * w + ox;
-    }
-  }
-  // Failing that, a diagonal drag does nothing.
-}
+/** What an edge holds, read from its first square, and the loop: two lines a
+ * square, closing on itself. */
+export const pearlLines: LineRules<PearlState> = {
+  mark(state, e) {
+    const g = squareEdges(state.w, state.h);
+    const i = g.a[e];
+    const bit = 1 << sideOf(g, e, i);
+    return state.lines[i] & bit ? LINE : state.marks[i] & bit ? CROSS : OPEN;
+  },
+  takes: () => 2,
+  loops: true,
+};
 
 // --- completion checking ---------------------------------------------------
 const COMP_NONE = 0;

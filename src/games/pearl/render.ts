@@ -33,6 +33,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as cellAt } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { dragPreview } from "../../engine/line-drawing.ts";
 import {
   clockwise,
   D,
@@ -41,13 +42,15 @@ import {
   L,
   opposite,
   R,
+  sideOf,
+  squareEdges,
   U,
 } from "../../engine/square-edges.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, loopSteps, WIN_LEAD, walkLoop } from "../../engine/win-wave.ts";
 import type { PearlHint } from "./hint.ts";
 import { EDGE, SQUARE } from "./hint-text.ts";
-import { interpretUiDrag } from "./moves.ts";
+import { pearlLines } from "./moves.ts";
 import {
   ERROR_CLUE,
   NOCLUE,
@@ -413,16 +416,11 @@ export function redraw(
   // The win flash runs the loop: a square's position is its step around it.
   const around = flash.winning ? loopOrder(state) : null;
 
-  // In-progress drag preview.
+  // In-progress drag preview: the lines a release would draw or take up.
   const draglines = new Uint8Array(w * h);
-  if (ui.ndragcoords > 0) {
-    const clearing = { v: true };
-    for (let i = 0; i < ui.ndragcoords - 1; i++) {
-      const leg = interpretUiDrag(state, ui.dragcoords, clearing, i);
-      draglines[leg.sy * w + leg.sx] ^= leg.oldstate ^ leg.newstate;
-      draglines[leg.dy * w + leg.dx] ^= opposite(leg.oldstate) ^ opposite(leg.newstate);
-    }
-  }
+  const g = squareEdges(w, h);
+  for (const { edge } of dragPreview(pearlLines, state, ui.drag))
+    for (const i of [g.a[edge], g.b[edge]]) draglines[i] |= 1 << sideOf(g, edge, i);
 
   // findMistakes wrong-edge overlay → per-cell bitmaps, lines and crosses.
   const wrong = new Uint8Array(w * h);

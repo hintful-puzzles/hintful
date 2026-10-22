@@ -34,18 +34,10 @@ import {
 } from "../../engine/deduction-fixpoint.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import { CROSS, type EdgeMark, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { across, type SquareEdges, squareEdges } from "../../engine/square-edges.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
-import {
-  CROSS,
-  DIFF_EASY,
-  DIFF_NORMAL,
-  degreeOf,
-  type EdgeMark,
-  LINE,
-  NO_END,
-  OPEN,
-} from "./state.ts";
+import { DIFF_EASY, DIFF_NORMAL, degreeOf, NO_END } from "./state.ts";
 
 /** What breaks a board: a square with more lines than it takes, or too few
  * ways left for the lines it takes; or lines that close a loop, or that join

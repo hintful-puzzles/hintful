@@ -4,62 +4,31 @@
  * at least one cell each side) and passes straight through every white pearl
  * (turning immediately before or after).
  *
- * Left-drag traces a loop path along grid edges (committed as line flips);
- * a left-click near an edge toggles that segment; a right-click / right-drag
- * marks "no-line" crosses; a keyboard cursor draws lines (Ctrl) or marks
- * (Shift). `H` is not the game's: the app reads it as Next hint.
+ * The loop is drawn through the engine's line drawing
+ * (`engine/line-drawing.ts`), saved as Pearl's own op pairs. `H` is not the
+ * game's: the app reads it as Next hint.
  */
 
 import { c2nUpper } from "../../engine/desc-alphabet.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, GamePref, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { type EdgeChange, LINE, lineDrawing } from "../../engine/line-drawing.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  cursorDelta,
-  isCancelKey,
-  isCursorMove,
-  LEFT_BUTTON,
-  LEFT_DRAG,
-  LEFT_RELEASE,
-  MOD_CTRL,
-  MOD_SHFT,
-  moveCursor,
-  newCursor,
-  RIGHT_BUTTON,
-  RIGHT_DRAG,
-  RIGHT_RELEASE,
-  showCursor,
-  stripModifiers,
-} from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   D,
   dirX,
   dirY,
   type EdgeLayout,
-  edgeAt,
-  edgeMiddle,
   L,
-  opposite,
-  pointAtEdge,
   R,
   sideOf,
   squareEdges,
   U,
 } from "../../engine/square-edges.ts";
-import {
-  beginSweep,
-  dragMarkVerbs,
-  endSweep,
-  sweepOpen,
-  sweepTo,
-} from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
   PEARL_RUNGS,
@@ -68,12 +37,11 @@ import {
   pearlHint,
   pearlKeepTrack,
 } from "./hint.ts";
-import { executeMove, interpretUiDrag, status, updateUiDrag } from "./moves.ts";
+import { executeMove, pearlLines, status } from "./moves.ts";
 import {
   centeredCoord,
   colors,
   computeSize,
-  fromCoord,
   GUI_MASYU,
   metrics,
   newDrawState,
@@ -87,7 +55,6 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
-  inGrid,
   newState,
   type PearlMove,
   type PearlOp,
@@ -109,48 +76,8 @@ export interface PearlMistake {
   cross: boolean;
 }
 
-function newUi(state: PearlState): PearlUi {
-  return {
-    dragcoords: new Array<number>(state.w * state.h).fill(0),
-    ndragcoords: -1,
-    clickx: 0,
-    clicky: 0,
-    cursor: newCursor(),
-    guiStyle: GUI_MASYU,
-  };
-}
-
-const KEY_DIRECTION = (button: number): number => {
-  const d = cursorDelta(button);
-  if (!d) return R;
-  return d.dy > 0 ? D : d.dy < 0 ? U : d.dx < 0 ? L : R;
-};
-
-/** Lay a line ('F', primary) or a no-line mark ('M', secondary) in the given
- * direction from `(x, y)`, refusing to lay one over the other (upstream
- * `mark_in_direction`). Returns the move, or `UI_UPDATE` when blocked. */
-function markInDirection(
-  state: PearlState,
-  x: number,
-  y: number,
-  dir: number,
-  primary: boolean,
-): PearlMove | UiUpdate {
-  const w = state.w;
-  const x2 = x + dirX(dir);
-  const y2 = y + dirY(dir);
-  const dir2 = opposite(dir);
-  if (!inGrid(state, x, y) || !inGrid(state, x2, y2)) return UI_UPDATE;
-  // Disallow laying a mark over a line, or a line over a mark.
-  const other = primary ? state.marks : state.lines;
-  if (other[y * w + x] & dir || other[y2 * w + x2] & dir2) return UI_UPDATE;
-  const kind = primary ? "flip" : "mark";
-  return {
-    ops: [
-      { kind, l: dir, x, y },
-      { kind, l: dir2, x: x2, y: y2 },
-    ],
-  };
+function newUi(_state: PearlState): PearlUi {
+  return { drag: null, cursor: newCursor(), guiStyle: GUI_MASYU };
 }
 
 /** The board's pixel layout, as `engine/square-edges.ts` aims at an edge in
@@ -160,201 +87,32 @@ function layout(ds: PearlDrawState): EdgeLayout {
   return { tile: m.tile, border: m.border };
 }
 
-/** The edge a press at `p` is aimed at, or `null` near a square's middle. */
-const aimedEdge = (state: PearlState, ds: PearlDrawState, p: Point): number | null =>
-  edgeAt(squareEdges(state.w, state.h), layout(ds), p);
+/** The move making `changes`: an op for the square either side of each edge,
+ * a `flip` where a line is drawn or taken up and a `mark` where a cross is. */
+function opsOf(state: PearlState, changes: readonly EdgeChange[]): PearlMove {
+  const g = squareEdges(state.w, state.h);
+  const ops: PearlOp[] = [];
+  for (const { edge, mark } of changes) {
+    const kind =
+      mark === LINE || pearlLines.mark(state, edge) === LINE ? "flip" : "mark";
+    for (const i of [g.a[edge], g.b[edge]])
+      ops.push({
+        kind,
+        l: 1 << sideOf(g, edge, i),
+        x: i % state.w,
+        y: Math.floor(i / state.w),
+      });
+  }
+  return { ops };
+}
 
-/**
- * The right button's drag: the cross on every edge the pointer passes, through
- * the engine's sweep, so the drag is one step of Undo. The left button's drag
- * is the line path, `interpretMove`'s own.
- */
-export const crossDrag = dragMarkVerbs<
-  PearlState,
-  PearlUi,
-  PearlDrawState,
-  number,
-  PearlMove
->({
-  noun: "edge",
-  button: "secondary",
-  target: aimedEdge,
-  apply(state, e) {
-    const cell = squareEdges(state.w, state.h).a[e];
-    const dir = 1 << sideOf(squareEdges(state.w, state.h), e, cell);
-    const made = markInDirection(
-      state,
-      cell % state.w,
-      Math.floor(cell / state.w),
-      dir,
-      false,
-    );
-    return made === UI_UPDATE ? null : made;
-  },
-  pointAt: (s, ds, e) => pointAtEdge(squareEdges(s.w, s.h), layout(ds), e),
-  sweep: {
-    holds(s, e) {
-      const g = squareEdges(s.w, s.h);
-      return s.marks[g.a[e]] & (1 << sideOf(g, e, g.a[e])) ? 1 : 0;
-    },
-    within: (ds) => metrics(ds.tileSize).tile * 0.3,
-    middle: (ds, s, e) => edgeMiddle(squareEdges(s.w, s.h), layout(ds), e),
-  },
+const input = lineDrawing<PearlState, PearlUi, PearlDrawState, PearlMove>(pearlLines, {
+  layout,
+  move: opsOf,
 });
 
-function interpretMove(
-  state: PearlState,
-  ui: PearlUi,
-  ds: PearlDrawState,
-  p: Point,
-  rawButton: number,
-): PearlMove | null | UiUpdate {
-  const w = state.w;
-  const h = state.h;
-  const m = metrics(ds.tileSize);
-  let x = p.x;
-  let y = p.y;
-  let gx = fromCoord(x, m);
-  let gy = fromCoord(y, m);
-
-  const shift = rawButton & MOD_SHFT;
-  const control = rawButton & MOD_CTRL;
-  const button = stripModifiers(rawButton);
-
-  const isMouseDown = button === LEFT_BUTTON || button === RIGHT_BUTTON;
-  const isMouseRelease = button === LEFT_RELEASE || button === RIGHT_RELEASE;
-
-  if (isMouseDown) {
-    ui.cursor.visible = false;
-    if (!inGrid(state, gx, gy)) {
-      ui.ndragcoords = -1;
-      return UI_UPDATE;
-    }
-    ui.clickx = x;
-    ui.clicky = y;
-    ui.dragcoords[0] = gy * w + gx;
-    ui.ndragcoords = 0; // will be 1 once the drag is confirmed
-    // A right press on an edge can be dragged along more edges.
-    const e = button === RIGHT_BUTTON ? aimedEdge(state, ds, p) : null;
-    if (e !== null) beginSweep(crossDrag, state, ui, e, button, p, false);
-    return UI_UPDATE;
-  }
-
-  if (button === LEFT_DRAG && ui.ndragcoords >= 0) {
-    updateUiDrag(state, ui, gx, gy);
-    return UI_UPDATE;
-  }
-  if (button === RIGHT_DRAG && sweepOpen(ui))
-    return sweepTo(crossDrag, state, ui, ds, p);
-
-  let release = false;
-  if (isMouseRelease) {
-    // A cross drag made its moves as it went; its release is not a click.
-    if (endSweep(ui)) {
-      ui.ndragcoords = -1;
-      return UI_UPDATE;
-    }
-    release = true;
-  }
-
-  if (isCursorMove(button)) {
-    // A *modified* arrow marks a line, which is too much to do to a player who
-    // cannot yet see where the cursor is — so that one still only reveals.
-    if (control || shift) {
-      if (showCursor(ui.cursor)) return UI_UPDATE;
-      if (ui.ndragcoords > 0) return null;
-      ui.ndragcoords = -1;
-      const move = markInDirection(
-        state,
-        ui.cursor.x,
-        ui.cursor.y,
-        KEY_DIRECTION(button),
-        control !== 0,
-      );
-      if (control && !shift && move !== UI_UPDATE) {
-        const d = cursorDelta(button);
-        if (d) {
-          ui.cursor.x = Math.max(0, Math.min(w - 1, ui.cursor.x + d.dx));
-          ui.cursor.y = Math.max(0, Math.min(h - 1, ui.cursor.y + d.dy));
-        }
-      }
-      return move;
-    }
-    moveCursor(ui.cursor, button, w, h);
-    if (ui.ndragcoords >= 0) updateUiDrag(state, ui, ui.cursor.x, ui.cursor.y);
-    return UI_UPDATE;
-  }
-
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    if (!ui.cursor.visible) {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    if (button === CURSOR_SELECT) {
-      if (ui.ndragcoords === -1) {
-        ui.ndragcoords = 0;
-        ui.dragcoords[0] = ui.cursor.y * w + ui.cursor.x;
-        ui.clickx = centeredCoord(ui.cursor.x, m);
-        ui.clicky = centeredCoord(ui.cursor.y, m);
-        return UI_UPDATE;
-      }
-      release = true;
-    } else {
-      if (ui.ndragcoords >= 0) {
-        ui.ndragcoords = -1;
-        return UI_UPDATE;
-      }
-      return null;
-    }
-  }
-
-  if (isCancelKey(button)) {
-    // Escape / backspace: cancel a drag.
-    if (ui.ndragcoords >= 0) {
-      ui.ndragcoords = -1;
-      return UI_UPDATE;
-    }
-    return null;
-  }
-
-  if (release) {
-    if (ui.ndragcoords > 0) {
-      // End of a drag: emit a line flip for every leg that changed.
-      const ops: PearlOp[] = [];
-      const clearing = { v: true };
-      for (let i = 0; i < ui.ndragcoords - 1; i++) {
-        const leg = interpretUiDrag(state, ui.dragcoords, clearing, i);
-        if (leg.oldstate !== leg.newstate) {
-          ops.push({ kind: "flip", l: leg.dir, x: leg.sx, y: leg.sy });
-          ops.push({ kind: "flip", l: opposite(leg.dir), x: leg.dx, y: leg.dy });
-        }
-      }
-      ui.ndragcoords = -1;
-      return ops.length > 0 ? { ops } : UI_UPDATE;
-    }
-    if (ui.ndragcoords === 0) {
-      // Click (or tiny drag): find the closest edge (based on the click-down
-      // location, which is more controllable than the release).
-      ui.ndragcoords = -1;
-      x = ui.clickx;
-      y = ui.clicky;
-      gx = fromCoord(x, m);
-      gy = fromCoord(y, m);
-      const cx = centeredCoord(gx, m);
-      const cy = centeredCoord(gy, m);
-      if (!inGrid(state, gx, gy)) return UI_UPDATE;
-      if (Math.max(Math.abs(x - cx), Math.abs(y - cy)) < m.tile / 4) {
-        // Near the center: a cell click, which does nothing (upstream TODO).
-        return UI_UPDATE;
-      }
-      const direction =
-        Math.abs(x - cx) < Math.abs(y - cy) ? (y < cy ? U : D) : x < cx ? L : R;
-      return markInDirection(state, gx, gy, direction, button === LEFT_RELEASE);
-    }
-  }
-
-  return null;
-}
+/** The right button's drag, which crosses every edge it passes. */
+export const crossDrag = input.crossDrag;
 
 /** One tap per edge, inside one of its squares, off center toward that edge:
  * the primary button draws the line, the secondary the cross. A step's ops
@@ -477,7 +235,7 @@ export const pearlGame: Game<
   newState,
   newUi,
 
-  interpretMove,
+  interpretMove: input.interpretMove,
   executeMove,
   status,
 

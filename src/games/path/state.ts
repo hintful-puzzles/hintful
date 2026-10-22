@@ -18,9 +18,15 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import {
+  CROSS,
+  type EdgeChange,
+  type EdgeMark,
+  LINE,
+  type LineDrawingUi,
+} from "../../engine/line-drawing.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import { presetGrid } from "../../engine/preset-grid.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 
@@ -35,16 +41,6 @@ const DIFF_NAMES: readonly string[] = tierNames(2);
 
 /** The `d<char>` params suffix, by tier. */
 const DIFF_CHARS = "en";
-
-// --- edges ------------------------------------------------------------------
-
-/** An edge the player has not decided. */
-export const OPEN = 0;
-/** An edge a path runs along. */
-export const LINE = 1;
-/** An edge the player has marked as having no line. */
-export const CROSS = 2;
-export type EdgeMark = typeof OPEN | typeof LINE | typeof CROSS;
 
 /** `ends[i]` for a square without a number. */
 export const NO_END = 0;
@@ -76,24 +72,10 @@ export interface PathState {
 /** A move sets edges to marks: the edges a drag or a key changed, or every
  * edge for a solve. */
 export type PathMove =
-  | { kind: "edges"; changes: ReadonlyArray<{ edge: number; mark: EdgeMark }> }
+  | { kind: "edges"; changes: readonly EdgeChange[] }
   | { kind: "solve"; edges: readonly EdgeMark[] };
 
-/** A line being drawn: the squares it has passed through, in order. */
-export interface PathDrag {
-  cells: number[];
-  /** Whether Enter began it, so that the arrows carry it on and Enter
-   * finishes it. */
-  keyboard: boolean;
-  /** Where the press that began a pointer's drag landed, which says the edge
-   * a press released where it began is aimed at. */
-  at: { x: number; y: number } | null;
-}
-
-export interface PathUi {
-  cursor: GridCursor;
-  drag: PathDrag | null;
-}
+export type PathUi = LineDrawingUi;
 
 // --- squares ---------------------------------------------------------------
 
