@@ -14,9 +14,9 @@
  * squares, a number takes one line and every other square two.
  */
 
+import { EDGE } from "../../engine/edge-hint.ts";
 import {
   CELL,
-  type MarkKind,
   mark,
   type Narration,
   phrase,
@@ -24,9 +24,6 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-
-/** An edge between two squares, by its index. */
-export const EDGE: MarkKind<number> = { name: "edge", key: String };
 
 /** A square, and the number on it where it has one. */
 export interface Square {

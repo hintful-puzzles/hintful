@@ -221,7 +221,12 @@ export function sECount(b: Board, x: number, y: number, eflag: number): number {
 }
 
 /** The two flags (E_TRACK / E_NOTRACK) set on a specific edge of a square. */
-export function sEFlags(b: Board, x: number, y: number, d: number): number {
+export function sEFlags(
+  b: Pick<Board, "w" | "sflags">,
+  x: number,
+  y: number,
+  d: number,
+): number {
   const f = b.sflags[y * b.w + x];
   const t = f & (d << S_TRACK_SHIFT);
   const nt = f & (d << S_NOTRACK_SHIFT);

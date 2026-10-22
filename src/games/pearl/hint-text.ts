@@ -18,6 +18,7 @@
  * the help").
  */
 
+import { EDGE } from "../../engine/edge-hint.ts";
 import {
   type MarkKind,
   mark,
@@ -27,23 +28,15 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 
-/** An edge, by the square it leaves rightward or downward. */
-export interface Edge {
-  readonly sq: number;
-  readonly dir: number;
-}
-
-export const EDGE: MarkKind<Edge> = { name: "edge", key: (e) => `${e.sq}:${e.dir}` };
-
 /** A square, by its index. */
 export const SQUARE: MarkKind<number> = { name: "square", key: String };
 
 /** What a step marks: the edges its own deduction decides, the lines a black
  * or a white pearl carries on from them, and the squares it reasons from. */
 export interface Marked {
-  own: readonly Edge[];
-  black: readonly Edge[];
-  white: readonly Edge[];
+  own: readonly number[];
+  black: readonly number[];
+  white: readonly number[];
   area: readonly number[];
 }
 

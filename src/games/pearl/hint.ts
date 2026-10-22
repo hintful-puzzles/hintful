@@ -15,6 +15,7 @@
  * measurement in `add-pearl-hint`'s design).
  */
 
+import { EDGE } from "../../engine/edge-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
@@ -25,6 +26,7 @@ import {
 import { trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import {
+  bitDirection,
   D,
   DIRECTIONS,
   dirX,
@@ -32,12 +34,11 @@ import {
   L,
   opposite,
   R,
+  squareEdges,
 } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
   type Axis,
-  EDGE,
-  type Edge,
   type LeftOut,
   type Marked,
   type NoStraight,
@@ -217,17 +218,22 @@ function narrateSquare(b: PearlBoard, f: ShownFiring, sq: number, m: Marked): Se
   return lines === 1 ? say.lineGoesOn(m) : say.deadEnd(m);
 }
 
-const edgeOf = (op: PearlEdgeOp): Edge => ({ sq: op.sq, dir: op.dir });
+/** The op's edge, by its `square-edges.ts` number. */
+export function edgeOf(board: { w: number; h: number }, op: PearlEdgeOp): number {
+  return squareEdges(board.w, board.h).around[op.sq * 4 + bitDirection(op.dir)];
+}
 
 /** What a firing's step marks, split the way its words name it: the edges its
  * own deduction decides, and the lines each pearl rule carries on from them. */
 function markedOf(b: PearlBoard, f: ShownFiring, reason: PearlReason): Marked {
-  const carried = new Map(f.carried.map((c) => [EDGE.key(c.op), c.rule]));
-  const rule = (op: PearlEdgeOp) => carried.get(EDGE.key(op)) ?? null;
+  const carried = new Map(f.carried.map((c) => [edgeOf(b, c.op), c.rule]));
+  const rule = (op: PearlEdgeOp) => carried.get(edgeOf(b, op)) ?? null;
+  const edges = (r: Carried["rule"] | null) =>
+    f.shown.filter((op) => rule(op) === r).map((op) => edgeOf(b, op));
   return {
-    own: f.shown.filter((op) => rule(op) === null).map(edgeOf),
-    black: f.shown.filter((op) => rule(op) === "black").map(edgeOf),
-    white: f.shown.filter((op) => rule(op) === "white").map(edgeOf),
+    own: edges(null),
+    black: edges("black"),
+    white: edges("white"),
     area: areaOf(b, reason),
   };
 }
@@ -466,7 +472,7 @@ export function pearlKeepTrack(
     if (hintStep.highlights)
       hintStep.highlights = { ...hintStep.highlights, targets: left };
     if (hintStep.words) {
-      const kept = new Set(left.map((t) => EDGE.key(t)));
+      const kept = new Set(left.map((t) => EDGE.key(edgeOf(state, t))));
       hintStep.words = hintStep.words.narrow(
         (role, _kind, key) => role !== "ring" || kept.has(key),
       );

@@ -29,6 +29,15 @@ import {
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
+import {
+  drawEdgeHints,
+  EDGE,
+  EDGE_HINT_BITS,
+  type EdgeHint,
+  type EdgeInks,
+  edgeHintWords,
+  hintedSides,
+} from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as cellAt } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
@@ -40,7 +49,6 @@ import {
   dirX,
   dirY,
   L,
-  opposite,
   R,
   sideOf,
   squareEdges,
@@ -48,8 +56,8 @@ import {
 } from "../../engine/square-edges.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, loopSteps, WIN_LEAD, walkLoop } from "../../engine/win-wave.ts";
-import type { PearlHint } from "./hint.ts";
-import { EDGE, SQUARE } from "./hint-text.ts";
+import { edgeOf, type PearlHint } from "./hint.ts";
+import { SQUARE } from "./hint-text.ts";
 import { pearlLines } from "./moves.ts";
 import {
   ERROR_CLUE,
@@ -138,11 +146,11 @@ const DS_FLASH_LEAD = 1 << 27;
 //
 // A word of its own beside `lflags`, compared in the same cache-miss test, so a
 // hint displayed on an otherwise unchanged board still repaints
-// (docs/rendering.md § "The tile cache and the diff key"). Edge bits are
-// set on both squares sharing the edge, and each paints its own half.
-const H_LINE_SHIFT = 0; // 4 bits: edges the step says must be lines
-const H_CROSS_SHIFT = 4; // 4 bits: edges the step says can't be
-const H_AREA_SHIFT = 8; // 4 bits: sides of the evidence outline to paint
+// (docs/rendering.md § "The tile cache and the diff key"). Its low bits are
+// `edge-hint.ts`'s word for the edges the step decides.
+const H_AREA_SHIFT = EDGE_HINT_BITS; // 4 bits: sides of the evidence outline to paint
+
+const HINT_INKS: EdgeInks = { ring: COL_HINT, outline: COL_HINT_CELL };
 
 export interface PearlDrawState {
   started: boolean;
@@ -288,13 +296,12 @@ function drawSquare(
     COL_HINT_CELL,
   );
 
-  // Thin gridlines or no-line marks (drawn first; thick lines go on top). A
-  // cross the step asks for is the player's cross in the hint's color, drawn
-  // heavier so it reads as a mark rather than a stroke of the grid.
+  // Thin gridlines or no-line marks (drawn first; thick lines go on top).
   const cross = (mx: number, my: number, msz: number, c: number, thick: number) => {
     dr.drawLine({ x: mx - msz, y: my - msz }, { x: mx + msz, y: my + msz }, c, thick);
     dr.drawLine({ x: mx - msz, y: my + msz }, { x: mx + msz, y: my - msz }, c, thick);
   };
+  const hintCrosses = hintedSides(hint, "cross");
   for (let d = 1; d < 16; d *= 2) {
     const xoff = t2 * dirX(d);
     const yoff = t2 * dirY(d);
@@ -308,23 +315,33 @@ function drawSquare(
     if ((lflags >> DS_MSHIFT) & d) {
       const wrong = (lflags >> DS_WSHIFT) & d;
       cross(cx + xoff, cy + yoff, t16, wrong ? COL_MISTAKE : COL_RULED_OUT, 1);
-    } else if ((hint >> H_CROSS_SHIFT) & d) {
-      cross(cx + xoff, cy + yoff, t16, COL_HINT, Math.max(2, band));
-    } else if (guiStyle === GUI_LOOPY) {
+    } else if (guiStyle === GUI_LOOPY && !(hintCrosses & d)) {
       drawLine(dr, cx, cy, cx + xoff, cy + yoff, COL_GRID);
     }
   }
 
-  // The lines the step asks for: the path the player's own will take, drawn at
-  // half its weight so it reads as proposed rather than laid.
-  for (let d = 1; d < 16; d *= 2)
-    if ((hint >> H_LINE_SHIFT) & d)
-      dr.drawLine(
-        { x: cx, y: cy },
-        { x: cx + t2 * dirX(d), y: cy + t2 * dirY(d) },
-        COL_HINT,
-        Math.max(2, t16),
-      );
+  // The edges the step asks for, under the laid lines. A cross is the
+  // player's in the hint's color, drawn heavier so it reads as a mark rather
+  // than a stroke of the grid; a line is the path the player's own will take,
+  // drawn at half its weight so it reads as proposed rather than laid.
+  const each = (sides: number, draw: (d: number) => void): void => {
+    for (let d = 1; d < 16; d *= 2) if (sides & d) draw(d);
+  };
+  drawEdgeHints(hint, HINT_INKS, {
+    cross: (sides, ink) =>
+      each(sides, (d) =>
+        cross(cx + t2 * dirX(d), cy + t2 * dirY(d), t16, ink, Math.max(2, band)),
+      ),
+    line: (sides, ink, role) =>
+      each(sides, (d) =>
+        dr.drawLine(
+          { x: cx, y: cy },
+          { x: cx + t2 * dirX(d), y: cy + t2 * dirY(d) },
+          ink,
+          role === "ring" ? Math.max(2, t16) : Math.max(1, t16 >> 1),
+        ),
+      ),
+  });
 
   // Laid lines. Order matters for the exposed end-cap colors.
   const line = !(lflags & DS_FLASH)
@@ -465,14 +482,14 @@ function hintFlags(
   const marks = stepMarks(step);
   // The words ring an edge; whether it asks for a line or a cross is the
   // step's plan, read here only for the edges the words ring.
-  const ringed = new Set(marks.of("ring", EDGE).map(EDGE.key));
+  const ringed = new Set(marks.of("ring", EDGE));
+  const asked: EdgeHint[] = [];
   for (const t of step?.highlights?.targets ?? []) {
-    if (!ringed.has(EDGE.key(t))) continue;
-    const shift = t.line ? H_LINE_SHIFT : H_CROSS_SHIFT;
-    const far = t.sq + dirY(t.dir) * w + dirX(t.dir);
-    out[t.sq] |= t.dir << shift;
-    out[far] |= opposite(t.dir) << shift;
+    const edge = edgeOf(state, t);
+    if (ringed.has(edge))
+      asked.push({ edge, shape: t.line ? "line" : "cross", role: "ring" });
   }
+  out.set(edgeHintWords(squareEdges(w, h), asked));
   // One contour round a contiguous region, one ring per scattered square
   // (`engine/hint-mark.ts`).
   const area = marks.of("outline", SQUARE);

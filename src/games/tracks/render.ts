@@ -34,6 +34,13 @@ import {
 } from "../../engine/color/palette.ts";
 import { TRACKS_BED } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
+import {
+  drawEdgeHints,
+  EDGE_HINT_BITS,
+  type EdgeHint,
+  type EdgeInks,
+  edgeHintWords,
+} from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL, outlineSides } from "../../engine/hint-mark.ts";
@@ -41,13 +48,12 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import {
+  bitDirection,
   D,
   dirCount,
-  dirX,
-  dirY,
   L,
-  opposite,
   R,
+  squareEdges,
   U,
 } from "../../engine/square-edges.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
@@ -66,6 +72,7 @@ import {
   S_TRACK,
   sECount,
   sEDirs,
+  sEFlags,
   stateToBoard,
   type TracksMove,
   type TracksState,
@@ -149,15 +156,14 @@ const DS_CSHIFT = 20; // R/U/L/D shift for cursor-on-edge
 // beside `flags`/`flagsDrag` in the drawstate: that is what puts the overlay in
 // the tile cache's diff key, which is the whole of the bug class
 // `hint-overlay.test.ts` guards (docs/rendering.md § "The tile cache and
-// the diff key"). Edge bits are set on **both** squares that share the edge, so
-// each paints its own clipped half exactly as the game's own edge crosses do.
-const H_RING = 1 << 0; // the square is a target: ring it
-const H_EMPTY = 1 << 1; // ...and the move marks it empty, so echo the cross
-const H_AREA_SHIFT = 2; // 4 bits: which sides of the evidence outline to paint
-const H_TRACK_SHIFT = 6; // 4 bits: sides the step forces to carry track
-const H_BLOCK_SHIFT = 10; // 4 bits: sides the step forces blocked
-const H_CITED_SHIFT = 14; // 4 bits: sides the deduction reasons from
-const H_LINE = 1 << 18; // on the line or block the sentence names: hatch it
+// the diff key"). Its low bits are `edge-hint.ts`'s word for the sides the step
+// decides and the sides it reasons from.
+const H_RING = 1 << EDGE_HINT_BITS; // the square is a target: ring it
+const H_EMPTY = H_RING << 1; // ...and the move marks it empty, so echo the cross
+const H_AREA_SHIFT = EDGE_HINT_BITS + 2; // 4 bits: which sides of the evidence outline to paint
+const H_LINE = 1 << (H_AREA_SHIFT + 4); // on the line or block the sentence names: hatch it
+
+const HINT_INKS: EdgeInks = { ring: COL_HINT, outline: COL_HINT_CELL };
 
 // --- geometry (NARROW_BORDERS → border 0) ---------------------------------
 
@@ -250,20 +256,36 @@ function hintFlags(state: TracksState, step?: HintStep<TracksMove>): Int32Array 
   const mark = (x: number, y: number, bits: number): void => {
     if (x >= 0 && x < w && y >= 0 && y < h) out[y * w + x] |= bits;
   };
-  /** Set `shift`'s direction bit on both squares sharing the edge. */
-  const markEdge = (x: number, y: number, dir: number, shift: number): void => {
-    mark(x, y, dir << shift);
-    mark(x + dirX(dir), y + dirY(dir), opposite(dir) << shift);
-  };
 
   const ringed = marks.of("ring", PIECE);
   for (const t of ringed.filter(isCell))
     mark(t.x, t.y, H_RING | (decided(t) ? 0 : H_EMPTY));
-  for (const e of ringed.filter(isSide)) {
-    markEdge(e.x, e.y, e.dir, decided(e) ? H_TRACK_SHIFT : H_BLOCK_SHIFT);
-  }
   const outlined = marks.of("outline", PIECE);
-  for (const e of outlined.filter(isSide)) markEdge(e.x, e.y, e.dir, H_CITED_SHIFT);
+  // A side the step decides is drawn as what it becomes; one it reasons from
+  // as what it holds, a track or not.
+  const side = (e: { x: number; y: number; dir: number }) => ({
+    cell: e.y * w + e.x,
+    dir: bitDirection(e.dir),
+  });
+  const sides: EdgeHint[] = [
+    ...ringed.filter(isSide).map(
+      (e): EdgeHint => ({
+        edge: side(e),
+        shape: decided(e) ? "line" : "cross",
+        role: "ring",
+      }),
+    ),
+    ...outlined.filter(isSide).map(
+      (e): EdgeHint => ({
+        edge: side(e),
+        shape: sEFlags(state, e.x, e.y, e.dir) & E_TRACK ? "line" : "cross",
+        role: "outline",
+      }),
+    ),
+  ];
+  edgeHintWords(squareEdges(w, h), sides).forEach((word, i) => {
+    out[i] |= word;
+  });
 
   // One contour round a contiguous region, one ring per scattered cell: the
   // shared rule, so the picture never draws a boundary the deduction did not
@@ -491,7 +513,8 @@ function drawCross(
  * deliberately different from each other so the *shape* says which action is
  * being asked for and the color only says "not yet": a ring for a square, rail
  * stubs for a side that must carry track, a cross for a side that must be
- * blocked. Evidence is a plain bar along a cited side, a shape no action uses.
+ * blocked. Evidence is a plain bar along a cited side, a shape no action uses,
+ * whether the side holds track or not.
  */
 function drawHintMarks(
   dr: GameDrawing,
@@ -508,33 +531,38 @@ function drawHintMarks(
   const band = lineThick;
   const box = { x: ox, y: oy, w: m.tile, h: m.tile };
 
-  // Evidence first, so a target's ring wins any border the two share.
-  const cited = (hint >> H_CITED_SHIFT) & ALLDIR;
-  for (let d = 1; d < 16; d *= 2) {
-    if (!(cited & d)) continue;
-    const half = Math.max(2, Math.floor(m.tile / 5));
-    const along = Math.max(2, Math.floor(band * 1.5));
-    if (d === L || d === R) {
-      const ex = d === L ? ox : ox + m.tile - along;
-      dr.drawRect({ x: ex, y: oy + t2 - half, w: along, h: 2 * half }, COL_HINT_CELL);
-    } else {
-      const ey = d === U ? oy : oy + m.tile - along;
-      dr.drawRect({ x: ox + t2 - half, y: ey, w: 2 * half, h: along }, COL_HINT_CELL);
+  const bars = (sides: number, ink: number): void => {
+    for (let d = 1; d < 16; d *= 2) {
+      if (!(sides & d)) continue;
+      const half = Math.max(2, Math.floor(m.tile / 5));
+      const along = Math.max(2, Math.floor(band * 1.5));
+      if (d === L || d === R) {
+        const ex = d === L ? ox : ox + m.tile - along;
+        dr.drawRect({ x: ex, y: oy + t2 - half, w: along, h: 2 * half }, ink);
+      } else {
+        const ey = d === U ? oy : oy + m.tile - along;
+        dr.drawRect({ x: ox + t2 - half, y: ey, w: 2 * half, h: along }, ink);
+      }
     }
-  }
+  };
+  const crosses = (sides: number, ink: number): void => {
+    for (let d = 1; d < 16; d *= 2) {
+      if (!(sides & d)) continue;
+      const cx = ox + t2 + (d === R ? t2 : d === L ? -t2 : 0);
+      const cy = oy + t2 + (d === D ? t2 : d === U ? -t2 : 0);
+      drawCross(dr, cx, cy, Math.floor(m.half / 4), lineThick, ink);
+    }
+  };
+
+  // Evidence first, so a target's ring wins any border the two share.
   const area = (hint >> H_AREA_SHIFT) & MARK_ALL;
   if (area) drawMarkSides(dr, { box, outer: 0, inner: band }, area, COL_HINT_CELL);
-
-  // Actions.
-  const stubs = (hint >> H_TRACK_SHIFT) & ALLDIR;
-  if (stubs) drawTrackStubs(dr, m, x, y, stubs, COL_HINT);
-  const blocked = (hint >> H_BLOCK_SHIFT) & ALLDIR;
-  for (let d = 1; d < 16; d *= 2) {
-    if (!(blocked & d)) continue;
-    const cx = ox + t2 + (d === R ? t2 : d === L ? -t2 : 0);
-    const cy = oy + t2 + (d === D ? t2 : d === U ? -t2 : 0);
-    drawCross(dr, cx, cy, Math.floor(m.half / 4), lineThick, COL_HINT);
-  }
+  drawEdgeHints(hint, HINT_INKS, {
+    line: (sides, ink, role) =>
+      role === "ring" ? drawTrackStubs(dr, m, x, y, sides, ink) : bars(sides, ink),
+    cross: (sides, ink, role) =>
+      role === "ring" ? crosses(sides, ink) : bars(sides, ink),
+  });
   if (hint & H_EMPTY) drawRuledOutCross(dr, box, COL_HINT);
   if (hint & H_RING)
     drawMarkSides(dr, { box, outer: 0, inner: band }, MARK_ALL, COL_HINT);

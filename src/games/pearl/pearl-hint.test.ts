@@ -21,7 +21,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { D, dirX, dirY, opposite, R } from "../../engine/square-edges.ts";
+import { dirX, dirY, opposite } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { boardOf, type PearlHint, type PearlRung, pearlKeepTrack } from "./hint.ts";
@@ -224,8 +224,8 @@ describe("every narratable premise the corpus reaches is reached", () => {
   });
 
   it("the arms no corpus board reaches still read as English, in the necessity voice", () => {
-    const one = { own: [{ sq: 0, dir: R }], black: [], white: [], area: [1] };
-    const two = { ...one, own: [...one.own, { sq: 0, dir: D }] };
+    const one = { own: [0], black: [], white: [], area: [1] };
+    const two = { ...one, own: [...one.own, 1] };
     for (const { text } of [
       say.closesEarly("lines", one),
       say.closesEarlyThrough("lines", two),

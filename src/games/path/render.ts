@@ -26,17 +26,23 @@ import {
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
+import {
+  drawEdgeHints,
+  drawEdgeOrdinals,
+  EDGE,
+  type EdgeHint,
+  type EdgeInks,
+  edgeHintWords,
+} from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { CROSS, dragPreview, LINE } from "../../engine/line-drawing.ts";
 import { type PieceBox, spreadColors } from "../../engine/spread-colors.ts";
 import {
-  DOWN,
   DX,
   DY,
   type EdgeLayout,
-  RIGHT,
   reverse,
   squareCenter,
   squareEdges,
@@ -44,7 +50,6 @@ import {
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { PathHighlights } from "./hint.ts";
-import { EDGE } from "./hint-text.ts";
 import type { PathMistake } from "./index.ts";
 import { pathLines, withChanges } from "./moves.ts";
 import {
@@ -158,16 +163,10 @@ const S_WRONG = 1 << 3;
 const S_DRAG_ADD = 1 << 4;
 const S_DRAG_REMOVE = 1 << 5;
 
-// Word 2, the hint on the sides: six bits a side. What the step shows there
-// in bits 0-2, and its place in a supposition's chain in bits 3-5.
-const HINT_SIDE_BITS = 6;
-const H_LINE = 1;
-const H_CROSS = 2;
-const H_CHAIN_LINE = 3;
-const H_CHAIN_CROSS = 4;
-const K_ORDER = 3;
-
+// Word 2, the hint on the sides: `edge-hint.ts`'s word.
 const WORDS = 3;
+
+const HINT_INKS: EdgeInks = { ring: COL_HINT, outline: COL_HINT_EVIDENCE };
 
 export interface PathDrawState {
   started: boolean;
@@ -270,46 +269,17 @@ function drawTile(
     );
   };
 
-  // Crosses first, the player's and the step's, under any line.
-  const small = Math.max(2, Math.floor(ts / 8));
-  for (let k = 0; k < 4; k++) {
-    const s = (sides >> (k * SIDE_BITS)) & ((1 << SIDE_BITS) - 1);
-    const h = (hints >> (k * HINT_SIDE_BITS)) & 7;
-    if ((s & 3) === CROSS) cross(k, s & S_WRONG ? COL_ERROR : COL_RULED_OUT, small, 1);
-    else if (h === H_CROSS) cross(k, COL_HINT, small, Math.max(2, ts >> 4));
-    else if (h === H_CHAIN_CROSS)
-      cross(k, COL_HINT_EVIDENCE, small, Math.max(2, ts >> 4));
-  }
-
   // The lines, each from the middle to its side. A line's ends are round, so
   // two halves meeting in the middle make a round turn; two that run straight
   // through are one stroke, as two round ends overlapping there darken their
   // soft edges into a knob.
-  const piece = (square >> K_PIECE) & 0xf;
-  const lineColor = piece ? COL_PAIR + piece - 1 : COL_LINE;
-  const strokes: { k: number; color: number; weight: number }[] = [];
-  for (let k = 0; k < 4; k++) {
-    const s = (sides >> (k * SIDE_BITS)) & ((1 << SIDE_BITS) - 1);
-    const h = (hints >> (k * HINT_SIDE_BITS)) & 7;
-    let color = -1;
-    let weight = thick;
-    if (s & S_DRAG_ADD) color = COL_DRAG_ADD;
-    else if (s & S_DRAG_REMOVE) color = COL_DRAG_REMOVE;
-    else if ((s & 3) === LINE)
-      color = s & S_WRONG || s & S_ERROR ? COL_ERROR : lineColor;
-    else if (h === H_LINE) color = COL_HINT;
-    else if (h === H_CHAIN_LINE) {
-      color = COL_HINT_EVIDENCE;
-      weight = Math.max(2, thick >> 1);
-    }
-    if (color >= 0) strokes.push({ k, color, weight });
-  }
-  const [p, q] = strokes;
-  const segments: { from: Point; to: Point; color: number; weight: number }[] =
-    strokes.length === 2 &&
-    q.k === reverse(p.k) &&
-    p.color === q.color &&
-    p.weight === q.weight
+  type Stroke = { k: number; color: number; weight: number };
+  const segmentsOf = (strokes: readonly Stroke[]) => {
+    const [p, q] = strokes;
+    return strokes.length === 2 &&
+      q.k === reverse(p.k) &&
+      p.color === q.color &&
+      p.weight === q.weight
       ? [{ from: sideEnd(p.k), to: sideEnd(q.k), color: p.color, weight: p.weight }]
       : strokes.map(({ k, color, weight }) => ({
           from: { x: cx, y: cy },
@@ -317,6 +287,45 @@ function drawTile(
           color,
           weight,
         }));
+  };
+
+  // The step's edges, under the player's own: a chain's thin in the outline's
+  // ink, the asked ones at the weight of a laid line.
+  const small = Math.max(2, Math.floor(ts / 8));
+  const hintCross = Math.max(2, ts >> 4);
+  drawEdgeHints(hints, HINT_INKS, {
+    cross: (sides, ink) => {
+      for (let k = 0; k < 4; k++) if (sides & (1 << k)) cross(k, ink, small, hintCross);
+    },
+    line: (sides, ink, role) => {
+      const weight = role === "ring" ? thick : Math.max(2, thick >> 1);
+      const strokes: Stroke[] = [];
+      for (let k = 0; k < 4; k++)
+        if (sides & (1 << k)) strokes.push({ k, color: ink, weight });
+      for (const { from, to } of segmentsOf(strokes))
+        dr.drawLine(from, to, ink, weight);
+    },
+  });
+
+  // The player's crosses, under any line.
+  for (let k = 0; k < 4; k++) {
+    const s = (sides >> (k * SIDE_BITS)) & ((1 << SIDE_BITS) - 1);
+    if ((s & 3) === CROSS) cross(k, s & S_WRONG ? COL_ERROR : COL_RULED_OUT, small, 1);
+  }
+
+  const piece = (square >> K_PIECE) & 0xf;
+  const lineColor = piece ? COL_PAIR + piece - 1 : COL_LINE;
+  const strokes: Stroke[] = [];
+  for (let k = 0; k < 4; k++) {
+    const s = (sides >> (k * SIDE_BITS)) & ((1 << SIDE_BITS) - 1);
+    let color = -1;
+    if (s & S_DRAG_ADD) color = COL_DRAG_ADD;
+    else if (s & S_DRAG_REMOVE) color = COL_DRAG_REMOVE;
+    else if ((s & 3) === LINE)
+      color = s & S_WRONG || s & S_ERROR ? COL_ERROR : lineColor;
+    if (color >= 0) strokes.push({ k, color, weight: thick });
+  }
+  const segments = segmentsOf(strokes);
   // A pair's line is edged, every edge before any color so that one half's
   // edge never cuts across the other half at a turn.
   for (const { from, to, color, weight } of segments)
@@ -350,26 +359,13 @@ function drawTile(
   if (square & F_CURSOR)
     drawRectCorners(dr, cx, cy, half - 3, COL_CURSOR, Math.max(2, ts >> 4));
 
-  // A chain's ordinal is drawn by the edge's first square, inside it and
-  // clear of its outline, in the corner beside the edge: the top-right for
-  // its right side, the bottom-left for its lower side. No line reaches a
-  // corner and the two corners are apart, so no number is cut by a side or
-  // covered. `drawHintOrdinal`'s bottom-right corner is where both edges
-  // meet.
-  const size = Math.max(9, Math.floor(ts * 0.28));
-  const inset = Math.max(2, ts >> 4) + 1 + Math.floor(size / 2);
-  for (const k of [RIGHT, DOWN]) {
-    const order = (hints >> (k * HINT_SIDE_BITS + K_ORDER)) & 7;
-    if (order === 0) continue;
-    dr.drawText(
-      k === RIGHT
-        ? { x: px + ts - inset, y: py + inset }
-        : { x: px + inset, y: py + ts - inset },
-      { align: "center", baseline: "mathematical", fontType: "variable", size },
-      COL_HINT_EVIDENCE,
-      String(order),
-    );
-  }
+  drawEdgeOrdinals(
+    dr,
+    hints,
+    { x: px, y: py, w: ts, h: ts },
+    Math.max(2, ts >> 4),
+    COL_HINT_EVIDENCE,
+  );
 
   dr.unclip();
   dr.drawUpdate({ x: px, y: py, w: ts, h: ts });
@@ -467,20 +463,26 @@ export function redraw(
   const evidence = new Set(named.of("outline", CELL).map((c) => c.y * w + c.x));
   const inEvidence = (x: number, y: number): boolean =>
     x >= 0 && x < w && y >= 0 && y < h && evidence.has(y * w + x);
-  const asked = new Map<number, number>();
-  if (hint && hint.move.kind === "edges")
-    for (const e of named.of("ring", EDGE))
-      asked.set(
-        e,
-        hint.move.changes.find((c) => c.edge === e)?.mark === CROSS ? H_CROSS : H_LINE,
-      );
-  const chain = new Map<number, { mark: number; order: number }>();
-  for (const link of hint?.highlights?.chain ?? [])
-    if (named.of("outline", EDGE).includes(link.edge))
-      chain.set(link.edge, {
-        mark: link.mark === CROSS ? H_CHAIN_CROSS : H_CHAIN_LINE,
-        order: link.order ?? 0,
+  const marked: EdgeHint[] = [];
+  if (hint && hint.move.kind === "edges") {
+    const { changes } = hint.move;
+    for (const edge of named.of("ring", EDGE))
+      marked.push({
+        edge,
+        shape: changes.find((c) => c.edge === edge)?.mark === CROSS ? "cross" : "line",
+        role: "ring",
       });
+  }
+  const outlined = new Set(named.of("outline", EDGE));
+  for (const link of hint?.highlights?.chain ?? [])
+    if (outlined.has(link.edge))
+      marked.push({
+        edge: link.edge,
+        shape: link.mark === CROSS ? "cross" : "line",
+        role: "outline",
+        order: link.order,
+      });
+  const hintWords = edgeHintWords(g, marked);
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -493,7 +495,7 @@ export function redraw(
         (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0) |
         (reach[i] !== NO_END ? (ds.pairColor[reach[i]] + 1) << K_PIECE : 0);
       let sides = 0;
-      let hints = 0;
+      const hints = hintWords[i];
       for (let k = 0; k < 4; k++) {
         const e = g.around[i * 4 + k];
         if (e < 0) continue;
@@ -507,10 +509,6 @@ export function redraw(
             ? S_DRAG_REMOVE
             : 0);
         sides |= side << (k * SIDE_BITS);
-        const link = chain.get(e);
-        const mark = asked.get(e) ?? link?.mark ?? 0;
-        const order = link && g.a[e] === i ? link.order : 0;
-        hints |= (mark | (order << K_ORDER)) << (k * HINT_SIDE_BITS);
       }
       const at = i * WORDS;
       if (

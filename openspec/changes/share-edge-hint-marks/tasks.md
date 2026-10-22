@@ -4,10 +4,11 @@ Starts after `share-square-edge-geometry` is archived.
 
 ## 1. The module
 
-- [ ] 1.1 The engine `EDGE` kind (design D1), the per-side packer and the
+- [x] 1.1 The engine `EDGE` kind (design D1), the per-side packer and the
       in-tile painter with a game's declared line and cross (D3), and the
       chain ordinal in Path's corner; tests.
-- [ ] 1.2 Path, Pearl and Tracks onto it; narration and snapshots unmoved.
+- [x] 1.2 Path, Pearl and Tracks onto it; narration and snapshots unmoved
+      (D3b).
 
 ## 2. The border grid
 

@@ -6,6 +6,7 @@
  * (docs/testing.md § "Pinning a hint's positions").
  */
 import { describe, expect, it } from "vitest";
+import { EDGE } from "../../engine/edge-hint.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { CROSS, LINE } from "../../engine/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -13,7 +14,6 @@ import { edgeBetween, squareEdges } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
-import { EDGE } from "./hint-text.ts";
 import { pathGame } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";

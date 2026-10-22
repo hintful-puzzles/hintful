@@ -6,8 +6,6 @@ there is one. An entry is short: the module's own header is its
 documentation. An exemplar is a
 path under `src/games/` unless it says otherwise. The normative rules are
 the `engine-helpers` spec and the engine specs an entry names.
-`node scripts/checks/engine-catalog.mjs` fails when a module under
-`src/engine/` has no entry here.
 
 ## What every game does
 
@@ -99,6 +97,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `piece.ts` — a piece on its cell | a cell holds a piece, is shaded or is ruled out |
 | – `region-fill.ts` — a fill for each region of a division | regions are colored, or pieces outnumber their colors |
 | – `hint-mark.ts` — the ring and the outline | you draw a hint's marks on cells |
+| – `edge-hint.ts` — a hint on an edge between squares | a hint names a side of a square |
 | – `hatch.ts` — the stripes on the line a step names | a hint sentence names a row or column |
 | – `hint-ordinal.ts` — where a cell falls in a forced chain | a hint step walks a chain of cells |
 | – `hint-refusal.ts` — what a hint says when it will not give one | your `hint` returns an error |
@@ -980,6 +979,20 @@ in every hue and both schemes. Exemplar: `src/skeleton/grid/render.ts`.
   names (`hints-marks.md` § "Where the band goes, and who rubs it out").
 - **It is for a mark on a cell.** A game whose regions are not whole cells
   draws its own band (`hints-candidates.md` § "A graph, not a grid (Map)").
+
+### `edge-hint.ts` — a hint on an edge between squares
+
+Name an edge a step decides or reasons from by its `EDGE` kind, keyed by
+the `square-edges.ts` edge number, so one edge is one mark from either
+square; a side on the board's rim is named by its square and direction.
+`edgeHintWords` gives each square its tile-key word for those edges, set on
+both squares, with a chain's ordinal on the edge's first one. In the tile,
+`drawEdgeHints` asks the game's declared `EdgeShapes` for its own line and
+cross in the ring's or the outline's ink, under the square's content, and
+`drawEdgeOrdinals` draws the numbers over it. The word's low
+`EDGE_HINT_BITS` bits are the module's; a game keeps its own hint bits
+above them. Exemplars: `path/render.ts`, with a chain; `tracks/render.ts`,
+whose outline role draws a bar.
 
 ### `hatch.ts` — the stripes on the line a step names
 

@@ -9,6 +9,7 @@
  * statically").
  */
 
+import { EDGE } from "../../engine/edge-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
@@ -21,7 +22,7 @@ import { CROSS, type EdgeMark, LINE } from "../../engine/line-drawing.ts";
 import { squareEdges } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Clash, EDGE, type Square, say } from "./hint-text.ts";
+import { type Clash, type Square, say } from "./hint-text.ts";
 import {
   clashOf,
   isComplete,

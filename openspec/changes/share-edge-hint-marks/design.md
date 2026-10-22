@@ -25,6 +25,31 @@ The kind's key is the square-edge number, so a sentence naming an edge from
 either square names one mark, and `hint-binding` compares them as one.
 Pearl's non-canonical key is a latent bug this removes.
 
+Tracks keeps its `PIECE` kind: one reference there names squares, sides and
+a clue together ("it must run through the ringed one" over a square and its
+sides), a reference is of one kind, and its side key is already canonical.
+It takes the packer and the painter, which is where the hand-packed bits
+were.
+
+## D3a — A side on the rim (measured 2026-10-22)
+
+Tracks' evidence names a side on the board's rim, which has no square
+beyond it and no edge number: 408 of the 2,618 sides its hints named over
+1,177 steps (24 boards, three sizes). So an `EdgeHint` takes an edge number
+or a square's side, and a rim side is drawn by its one square. A chain's
+ordinal goes on the edge's first square, whose side is right or down, and
+the module refuses one it has no corner for.
+
+## D3b — What moving them changed (measured 2026-10-22)
+
+A draw-op differential over 1,023 hint frames, HEAD against the module
+(Tracks 423, Path 285, Pearl 315): Tracks and Pearl draw the same ops,
+reordered in 18 frames where only marks of one ink or apart from each other
+moved. Path differs in 2 frames, both a chain's straight run through a
+square that also holds a laid line: it was two round-ended halves, the knob
+Path's line comment avoids, and is now one stroke. Path draws the step's
+edges under the player's lines, as Pearl does.
+
 ## D2 — The border grid's hint changes look (asked in this change)
 
 Moving Palisade and Separate onto the shared painter draws the wall or

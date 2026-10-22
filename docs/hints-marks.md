@@ -165,11 +165,17 @@ move's shape in the hint color"). That is a first-class answer and not a gap.
 
 | The element | The mark | Exemplar |
 | --- | --- | --- |
-| A side between two squares | the game's own stub or cross, while its squares take the band | `tracks/render.ts` |
+| A side between two squares | the game's own line or cross, drawn through `engine/edge-hint.ts` | `path/render.ts`, `tracks/render.ts` |
 | A span between two elements | the thing it would become, with only the added part in the action color | `bridges/render.ts` |
 | An element wider than its tile | its own rim and glyph recolored, since a band on the tile would cut across it | `drawIsland` in `bridges/render.ts` |
 | An edge, face or dot of a tiling | a band under the edge, an outline inset in the face, a ring under the dot, from `engine/grid/` geometry | `loopy/render.ts` |
 | A region that is not a set of whole cells | the band the game draws inside the region's boundary for its selection, in the hint colors | `map/render.ts`, and `hints-candidates.md` § "A graph, not a grid (Map)" |
+
+**A side of a square is the engine's `EDGE` mark**, and
+[`engine/edge-hint.ts`](../src/engine/edge-hint.ts) packs it into both
+squares' tile keys and calls the game's own line and cross in the hint's
+inks, so a game declares only how those two shapes look. A step that asks
+for a line draws the line; one that asks for a cross draws the cross.
 
 A game whose every decided element is a cell uses the band whole
 ([`seismic/render.ts`](../src/games/seismic/render.ts)). Edge games on the

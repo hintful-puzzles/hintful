@@ -90,6 +90,11 @@ export function dirY(bit: number): number {
   return bit === D ? 1 : bit === U ? -1 : 0;
 }
 
+/** The direction of a single direction bit. */
+export function bitDirection(bit: number): number {
+  return 31 - Math.clz32(bit);
+}
+
 /** How many directions a mask holds (upstream `COUNT`, `NBITS`). */
 export function dirCount(mask: number): number {
   return (mask & 1) + ((mask >> 1) & 1) + ((mask >> 2) & 1) + ((mask >> 3) & 1);
