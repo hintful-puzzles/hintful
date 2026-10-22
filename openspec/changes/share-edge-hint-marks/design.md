@@ -59,6 +59,32 @@ not a cell" asks of every game, and what Pearl, Path and Tracks do. It is a
 change a player sees: show the owner a before and after of each, with the
 recommendation to take it, and wait.
 
+### What the captures found (2026-10-22), and the question
+
+The premise above is half right. The border grid's own notation has one
+shape for both states: a wall is the edge in ink, a not-wall the same edge
+in pale gray, undecided the same edge in yellow. So for a wall the hint's
+blue edge already is the move's shape recolored. For a not-wall it is the
+wrong one: "these edges can't be walls" is drawn exactly as "these must be
+walls" would be (Palisade `5x5n5de:2c2c1a2d1g1`, its first step; Separate
+`5x5n5de:DBECEADBEAECCDBBADDCAABEC`, the seventh). That is what
+`hints-marks.md` § "Echo the move's shape in the hint color" forbids, a
+mark showing the opposite of its sentence. And Separate's help already
+promises "a mark saying 'no wall here'" that the board never draws.
+
+Two prototypes were captured. A thin blue line along the edge is not seen
+at a phone's tile size, where the edge is three pixels wide. A blue cross
+on the edge, the edge left in its own undecided color, reads at every size,
+and is the cross Pearl, Path and Tracks draw for "not a line". It is a
+shape the border grid's own notation does not have, so it is put to the
+owner: the cross (recommended), or keep today's blue edge and correct
+Separate's help. A wall ask is drawn as today either way.
+
+A constraint the captures taught: while a hint shows, the app repaints
+every op drawn in a hint ink over the board, so a game cannot cover an
+ink mark afterwards; a not-wall edge must be drawn in its own color and
+never in the ring's.
+
 ## D3 — What a game still declares
 
 The game says how its line and its cross are drawn (Pearl's line and Tracks'
@@ -70,3 +96,22 @@ painter; the module owns the bits, both squares, the colors and the ordinal.
 Galaxies' walls on a space grid, Rect's edges, Dominosa's spots, Net's notes
 and Slant's alike marks: count what moving each would remove and decide, with
 the reason here.
+
+Measured 2026-10-22; each is declined, with the line count the move would
+remove:
+
+- **Galaxies** (about 10). Its walls are keyed by half-grid point, beside
+  dots on the same points, which stay hand-packed; a wall has one shape,
+  a bar along the edge, and no cross.
+- **Rect** (about 10). Its edge hint is a side of the shared `hint-mark.ts`
+  band it rings a rectangle with, one look for both; its move has no cross.
+- **Dominosa** (about 20). Only its barrier is an edge; its other answer,
+  a domino placed, is a ring round two squares painted outside the tiles.
+- **Net** (15 to 20). Its notes are a line and a cross, the closest fit,
+  but a wrapping board's sides across the wrap have no edge number and need
+  both their squares drawn, and its outline recolors the player's own note
+  where the module draws under it. The module would take Net once it
+  numbers a wrapping board's edges.
+- **Slant** (about 5). One shape, the "=", drawn on a ring-extended tile
+  grid, sharing one priority code per side with the player's and Check &
+  Save's marks.

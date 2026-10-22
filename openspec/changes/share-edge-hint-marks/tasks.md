@@ -12,13 +12,14 @@ Starts after `share-square-edge-geometry` is archived.
 
 ## 2. The border grid
 
-- [ ] 2.1 Before and after captures of a Palisade and a Separate hint, put to
+- [x] 2.1 Before and after captures of a Palisade and a Separate hint, put to
       the owner with the recommendation (D2); wait.
-- [ ] 2.2 On the owner's word, the border grid onto the module.
+- [ ] 2.2 On the owner's word, the border grid onto the module: a not-wall
+      ask as the cross, or today's edge kept and Separate's help corrected.
 
 ## 3. The rest
 
-- [ ] 3.1 Galaxies, Rect, Dominosa, Net, Slant measured and decided (D4).
+- [x] 3.1 Galaxies, Rect, Dominosa, Net, Slant measured and decided (D4).
 
 ## 4. Close-out
 
