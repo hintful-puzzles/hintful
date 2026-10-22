@@ -18,6 +18,7 @@ import {
   DISABLED,
 } from "../../engine/border-grid.ts";
 import {
+  BORDER_RING_LEGEND,
   type BorderHint,
   borderHintJourney,
   borderHintKeepTrack,
@@ -280,7 +281,7 @@ export const separateGame: Game<
   hint,
   hintMarks: {
     roles: {
-      ring: 'the edges the step decides, drawn in the hint color along the edge itself: a wall, or a mark saying "no wall here". When one reason decides several edges at once they are all marked together.',
+      ring: BORDER_RING_LEGEND,
       outline:
         "a second region the step reasons from, or a lone square, which the sentence names by its letter or calls a square.",
       stripes: "the region the sentence is about, which can be a lone square.",

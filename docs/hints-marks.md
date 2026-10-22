@@ -180,7 +180,12 @@ for a line draws the line; one that asks for a cross draws the cross.
 A game whose every decided element is a cell uses the band whole
 ([`seismic/render.ts`](../src/games/seismic/render.ts)). Edge games on the
 border grid take their marks from `hintTileBits` in
-[`engine/border-grid-render.ts`](../src/engine/border-grid-render.ts).
+[`engine/border-grid-render.ts`](../src/engine/border-grid-render.ts), whose
+notation has one shape, the edge, for a wall and a not-wall alike: a wall
+ask is the edge in the ring's ink, and a not-wall ask a cross on the edge,
+because the edge in that ink would read as a wall. **A mark drawn in a hint
+ink cannot be covered**: the app repaints each ink's marks over the board,
+so a shape the step does not ask for is never drawn in one.
 
 ### A piece is ringed as one shape
 

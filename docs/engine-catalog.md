@@ -257,8 +257,10 @@ Reach for it to draw a border-grid game's tile: the error model, the
 half-grid cursor, the edges, the tile skeleton and the board geometry. The
 game supplies its palette indices as `BorderGridColors` and a `drawContent`
 callback for the middle of the tile. `hintTileBits` folds a hint step into
-the tile flags; the marks are drawn when the palette names `hintEdge` and
-`hintEvidence`. Exemplar: `palisade/render.ts`.
+the tile flags and an `edge-hint.ts` word a cell; pass both to
+`borderTileStale` and the word to `drawBorderTile`, and the marks are drawn
+when the palette names `hintEdge` and `hintEvidence`. Exemplar:
+`palisade/render.ts`.
 
 ### `border-grid-hint.ts` — that mechanic's explained hint
 

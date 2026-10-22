@@ -18,6 +18,7 @@ import {
   DY,
 } from "../../engine/border-grid.ts";
 import {
+  BORDER_RING_LEGEND,
   borderHintJourney,
   borderHintKeepTrack,
   borderStepEdge,
@@ -289,7 +290,7 @@ export const palisadeGame: Game<
   hint,
   hintMarks: {
     roles: {
-      ring: "the edges the step decides, drawn in the hint color along the edge itself. When one reason decides several edges at once they are all marked together, because they share one fate, and each drops back to normal as you set it.",
+      ring: BORDER_RING_LEGEND,
       outline:
         'what the step reasons from, inside its squares: the clue it counts, the two clues either side of an edge, the four squares meeting at "this corner", or the two regions a join would merge.',
       stripes:

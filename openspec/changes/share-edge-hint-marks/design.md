@@ -76,9 +76,12 @@ Two prototypes were captured. A thin blue line along the edge is not seen
 at a phone's tile size, where the edge is three pixels wide. A blue cross
 on the edge, the edge left in its own undecided color, reads at every size,
 and is the cross Pearl, Path and Tracks draw for "not a line". It is a
-shape the border grid's own notation does not have, so it is put to the
-owner: the cross (recommended), or keep today's blue edge and correct
-Separate's help. A wall ask is drawn as today either way.
+shape the border grid's own notation does not have, so it was put to the
+owner, who took the cross (2026-10-22). A wall ask is drawn as before. The
+border grid keeps its own `EDGE` kind, as Tracks does (D1): its marks carry
+the kind each edge must become, which is the shape drawn, and its key is
+already canonical. Both games' legends now share one sentence for the ring,
+`BORDER_RING_LEGEND`, which says what Separate's promised.
 
 A constraint the captures taught: while a hint shows, the app repaints
 every op drawn in a hint ink over the board, so a game cannot cover an

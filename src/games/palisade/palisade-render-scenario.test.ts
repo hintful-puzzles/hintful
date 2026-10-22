@@ -46,18 +46,28 @@ describe("Palisade render scenarios", () => {
   it("reaches the equivalentEdges hint frame in-process and paints it", () => {
     const result = renderPinnedHint(palisadeGame, pinned("equivalentEdges"));
     const ops = result.recording.ops;
-    const rectsOf = (color: number): number =>
-      ops.filter((o) => o.op === "rect" && o.color === color).length;
+    const ofKind = (kind: "rect" | "line", color: number): number =>
+      ops.filter((o) => o.op === kind && o.color === color).length;
 
-    // Both forced edges paint COL_HINT (they share a fate, so they share a
-    // color) — at least two blue rects — over "the same region", hatched, one
-    // hatch per cell of it, and outlined nowhere.
-    expect(rectsOf(COL_HINT)).toBeGreaterThanOrEqual(2);
+    // Both forced edges are drawn in COL_HINT as what they must become (they
+    // share a fate, so they share a shape): a wall as the edge, not a wall as
+    // a cross on it, two strokes from each of its two cells. They lie over
+    // "the same region", hatched, one hatch per cell of it, and outlined
+    // nowhere.
+    const ringed = stepMarks(result.hint).of("ring", EDGE);
+    expect(ringed.length).toBeGreaterThanOrEqual(2);
+    if (ringed[0].kind === "wall") {
+      expect(ofKind("rect", COL_HINT)).toBeGreaterThanOrEqual(ringed.length);
+      expect(ofKind("line", COL_HINT)).toBe(0);
+    } else {
+      expect(ofKind("line", COL_HINT)).toBe(4 * ringed.length);
+      expect(ofKind("rect", COL_HINT)).toBe(0);
+    }
     const hatches = opsOfKind(ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(
       stepMarks(result.hint).of("stripes", CELL).length,
     );
-    expect(rectsOf(COL_HINT_CELL)).toBe(0);
+    expect(ofKind("rect", COL_HINT_CELL)).toBe(0);
 
     // Hatching the region does not erase the clues: digits are still drawn.
     expect(ops.some((o) => o.op === "text")).toBe(true);
@@ -69,8 +79,8 @@ describe("Palisade render scenarios", () => {
 
   it("matches the opener-frame snapshot", () => {
     // A fixed descriptive board → a stable frame, exercising a different
-    // rule than equivalentEdges. Its opening deduction forces more than one
-    // edge, so the first leg paints the firing's other edges in COL_HINT
+    // rule than equivalentEdges. Its opening deduction rules out more than one
+    // edge, so the first leg crosses the firing's other edges in COL_HINT
     // alongside the action edge: the grouped-journey rendering.
     const { recording, hint } = renderScenario({
       game: palisadeGame,
@@ -79,7 +89,8 @@ describe("Palisade render scenarios", () => {
     });
 
     expect(hint).toBeDefined();
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(
+    expect(stepMarks(hint ?? undefined).of("ring", EDGE)[0].kind).toBe("nowall");
+    expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(
       true,
     );
     expect(recording.ops).toMatchSnapshot();

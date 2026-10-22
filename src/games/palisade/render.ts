@@ -16,6 +16,7 @@ import {
   type BorderGridDrawState,
   borderErrorBits,
   borderGridSize,
+  borderTileStale,
   center,
   cursorBits,
   drawBorderCursor,
@@ -151,7 +152,7 @@ export function redraw(
   const { w, h, k, clues, borders } = state;
   const wh = w * h;
 
-  const hintMask = hintTileBits(w, h, stepMarks(hint));
+  const hinted = hintTileBits(w, h, stepMarks(hint));
 
   if (!ds.started) {
     drawBorderGridBackground(dr, ts, w, h, PALETTE);
@@ -183,7 +184,7 @@ export function redraw(
     for (let c = 0; c < w; c++) {
       const i = r * w + c;
       const clue = clues[i];
-      let flags = borders[i] | mistakeMask[i] | hintMask[i];
+      let flags = borders[i] | mistakeMask[i] | hinted.cells[i];
 
       if (validRoot.get(blackDsf.canonify(i))) flags |= F_CORRECT;
       if (clue !== EMPTY) flags |= F_GIVEN;
@@ -196,18 +197,26 @@ export function redraw(
       flags |= cursorBits(ui.cursor, c, r);
       flags |= borderErrorBits(c, r, w, h, k, borders, blackDsf, yellowDsf);
 
-      if (ds.cache[i] !== flags) {
-        ds.cache[i] = flags;
-        drawBorderTile(dr, ts, r, c, flags, PALETTE, (_body, o) => {
-          if (clue !== EMPTY) {
-            dr.drawText(
-              { x: o.x + center(ts), y: o.y + center(ts) },
-              glyphFont(Math.floor(ts / 2)),
-              flags & F_CLUE_ERROR ? COL_ERROR : COL_GRID,
-              String(clue),
-            );
-          }
-        });
+      if (borderTileStale(ds, i, flags, hinted.edges[i])) {
+        drawBorderTile(
+          dr,
+          ts,
+          r,
+          c,
+          flags,
+          PALETTE,
+          (_body, o) => {
+            if (clue !== EMPTY) {
+              dr.drawText(
+                { x: o.x + center(ts), y: o.y + center(ts) },
+                glyphFont(Math.floor(ts / 2)),
+                flags & F_CLUE_ERROR ? COL_ERROR : COL_GRID,
+                String(clue),
+              );
+            }
+          },
+          hinted.edges[i],
+        );
       }
     }
   }

@@ -17,6 +17,7 @@ import {
   type BorderGridDrawState,
   borderErrorBits,
   borderGridSize,
+  borderTileStale,
   center,
   cursorBits,
   drawBorderCursor,
@@ -181,12 +182,12 @@ export function redraw(
   invalidateDanglingRegions(w, h, borders, blackDsf, validRoot);
 
   const mistakeMask = mistakeEdgeBits(w, h, mistakes);
-  const hintMask = hintTileBits(w, h, stepMarks(hint));
+  const hinted = hintTileBits(w, h, stepMarks(hint));
 
   for (let r = 0; r < h; r++) {
     for (let c = 0; c < w; c++) {
       const i = r * w + c;
-      let flags = borders[i] | mistakeMask[i] | hintMask[i];
+      let flags = borders[i] | mistakeMask[i] | hinted.cells[i];
 
       flags |= flashFlag(flash.win(sweepStep(c, r)));
 
@@ -199,16 +200,24 @@ export function redraw(
       flags |= cursorBits(ui.cursor, c, r);
       flags |= borderErrorBits(c, r, w, h, k, borders, blackDsf, yellowDsf);
 
-      if (ds.cache[i] !== flags) {
-        ds.cache[i] = flags;
-        drawBorderTile(dr, ts, r, c, flags, PALETTE, (_body, o) => {
-          dr.drawText(
-            { x: o.x + center(ts), y: o.y + center(ts) },
-            glyphFont(Math.floor(ts / 2)),
-            flags & F_CLUE_ERROR ? COL_ERROR : COL_GRID,
-            String.fromCharCode(A + letters[i]),
-          );
-        });
+      if (borderTileStale(ds, i, flags, hinted.edges[i])) {
+        drawBorderTile(
+          dr,
+          ts,
+          r,
+          c,
+          flags,
+          PALETTE,
+          (_body, o) => {
+            dr.drawText(
+              { x: o.x + center(ts), y: o.y + center(ts) },
+              glyphFont(Math.floor(ts / 2)),
+              flags & F_CLUE_ERROR ? COL_ERROR : COL_GRID,
+              String.fromCharCode(A + letters[i]),
+            );
+          },
+          hinted.edges[i],
+        );
       }
     }
   }

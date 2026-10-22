@@ -14,8 +14,9 @@ Starts after `share-square-edge-geometry` is archived.
 
 - [x] 2.1 Before and after captures of a Palisade and a Separate hint, put to
       the owner with the recommendation (D2); wait.
-- [ ] 2.2 On the owner's word, the border grid onto the module: a not-wall
+- [x] 2.2 On the owner's word, the border grid onto the module: a not-wall
       ask as the cross, or today's edge kept and Separate's help corrected.
+      (The cross.)
 
 ## 3. The rest
 
@@ -23,7 +24,7 @@ Starts after `share-square-edge-geometry` is archived.
 
 ## 4. Close-out
 
-- [ ] 4.1 `docs/hints-marks.md` § "A mark on something that is not a cell":
+- [x] 4.1 `docs/hints-marks.md` § "A mark on something that is not a cell":
       the module is the way; `engine-catalog.md` entry.
-- [ ] 4.2 Read a hint step of each touched game in the app; `npm run game`
+- [x] 4.2 Read a hint step of each touched game in the app; `npm run game`
       green for each; commit, push, archive.

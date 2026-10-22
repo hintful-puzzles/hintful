@@ -44,14 +44,20 @@ export interface ForcedBorderEdge extends BorderEdge {
 }
 
 /** The edges of the border grid, as marks: an edge named from either of its
- * squares is the same edge. */
-export const EDGE: MarkKind<BorderEdge> = {
+ * squares is the same edge. A mark carries what the edge must become, which
+ * is the shape it is drawn in. */
+export const EDGE: MarkKind<ForcedBorderEdge> = {
   name: "edge",
   key: ({ x, y, dir }) =>
     DX[dir] < 0 || DY[dir] < 0
       ? `${x + DX[dir]},${y + DY[dir]},${FLIP(dir)}`
       : `${x},${y},${dir}`,
 };
+
+/** The legend's words for the ring (`hintMarks.roles.ring`), which
+ * `border-grid-render.ts` draws the same in every border-grid game. */
+export const BORDER_RING_LEGEND =
+  "the edges the step decides, each as what it must become: a wall is the edge itself in the hint color, and an edge that can't be a wall keeps its look with a cross on it. When one reason decides several edges at once they are all marked together, and each drops back to normal as you set it.";
 
 /**
  * The edge a leg's edits set, which is what its click aims at

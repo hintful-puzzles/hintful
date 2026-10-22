@@ -4,7 +4,7 @@
 // overlay edge, the clue text, and the cursor outline.
 import { describe, expect, it } from "vitest";
 import { BORDER } from "../../engine/border-grid.ts";
-import { EDGE } from "../../engine/border-grid-hint.ts";
+import { EDGE, type ForcedBorderEdge } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -156,13 +156,13 @@ describe("Palisade redraw", () => {
 
   it("paints every forced edge of the firing in COL_HINT, plus the shaded cells", () => {
     const state = makeState();
-    const own = { x: 1, y: 1, dir: 1 };
+    const own = { x: 1, y: 1, dir: 1, kind: "wall" } as const;
     const cells = [
       { x: 1, y: 1 },
       { x: 2, y: 1 },
     ];
     const stepRinging = (
-      edges: { x: number; y: number; dir: number }[],
+      edges: ForcedBorderEdge[],
     ): HintStep<PalisadeMove, PalisadeHint> => {
       const words = so({
         look: mark.as("outline", CELL, cells, "cells"),
@@ -173,7 +173,7 @@ describe("Palisade redraw", () => {
         rung: "numberExhausted",
         explanation: words.text,
         words,
-        highlights: { ...own, kind: "nowall" },
+        highlights: own,
       };
     };
     const { dr, ops } = recordingDrawing();
@@ -186,7 +186,7 @@ describe("Palisade redraw", () => {
       freshUi(),
       0,
       NO_FLASH,
-      stepRinging([own, { x: 1, y: 1, dir: 2 }]),
+      stepRinging([own, { x: 1, y: 1, dir: 2, kind: "wall" }]),
     );
     // The action edge AND its sibling both paint COL_HINT (they share a
     // fate, so they share a color); referenced cells get a COL_HINT_CELL

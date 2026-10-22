@@ -70,7 +70,7 @@ export const DY = [-1, 0, +1, 0] as const;
 /** `square-edges.ts`'s direction for each of this file's. This file numbers
  * directions by the bit each one's border is saved in, which is upstream's
  * order and not the engine's. */
-const SQUARE_DIRS: readonly number[] = [UP, RIGHT, DOWN, LEFT];
+export const SQUARE_DIRS: readonly number[] = [UP, RIGHT, DOWN, LEFT];
 
 /** The tri-state a single edge can be in, as the input mechanic sees it. */
 const MAYBE = 0;
@@ -150,7 +150,7 @@ export function pointerEdge(
 const layout = (ts: number): EdgeLayout => ({ tile: ts, border: margin(ts) });
 
 /** `square-edges.ts`'s side for an edge named from a cell. */
-const sideOf = (w: number, { x, y, dir }: BorderEdge): Side => ({
+export const squareSide = (w: number, { x, y, dir }: BorderEdge): Side => ({
   cell: y * w + x,
   dir: SQUARE_DIRS[dir],
 });
@@ -197,7 +197,7 @@ export function borderGridGeometry<
     noun: "edge",
     pointerTarget: (s, ds, p) => pointerEdge(s, p.x, p.y, ds.tileSize),
     pointAt: (s, ds, e) =>
-      pointAtSide(squareEdges(s.w, s.h), layout(ds.tileSize), sideOf(s.w, e)),
+      pointAtSide(squareEdges(s.w, s.h), layout(ds.tileSize), squareSide(s.w, e)),
     cursorTarget(_s, ui) {
       const { x, y } = ui.cursor;
       if (x % 2 === y % 2) return null;
@@ -255,7 +255,7 @@ export function borderGridVerbs<
       },
       within: (ds) => ds.tileSize * 0.3,
       middle: (ds, s, e) =>
-        sideMiddle(squareEdges(s.w, s.h), layout(ds.tileSize), sideOf(s.w, e)),
+        sideMiddle(squareEdges(s.w, s.h), layout(ds.tileSize), squareSide(s.w, e)),
     },
   };
 }

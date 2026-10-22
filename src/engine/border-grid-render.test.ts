@@ -15,6 +15,7 @@
 
 import { describe, expect, it } from "vitest";
 import { BORDER, margin, moveBorderCursor } from "./border-grid.ts";
+import { EDGE, type ForcedBorderEdge } from "./border-grid-hint.ts";
 import * as render from "./border-grid-render.ts";
 import {
   BORDER_ERROR,
@@ -22,7 +23,7 @@ import {
   CONTAINS_CURSOR,
   center,
   cursorBits,
-  EDGE_HINT,
+  drawBorderTile,
   F_CLUE_ERROR,
   F_CORRECT,
   F_FLASH,
@@ -31,15 +32,18 @@ import {
   F_HINT_CELL,
   F_HINT_REGION,
   flashFlag,
+  hintTileBits,
   mistakeEdgeBits,
   tileWidth,
 } from "./border-grid-render.ts";
+import { mark, phrase, stepMarks } from "./hint-words.ts";
 import { newCursor } from "./pointer.ts";
 import {
   enrolledIn,
   membersNotMentioning,
   SCANNED_SOURCE_FILES,
 } from "./testing/enrollment.ts";
+import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./win-wave.ts";
 
 describe("geometry", () => {
@@ -111,7 +115,6 @@ describe("the packed flags do not collide", () => {
     F_FLASH_LEAD,
     CONTAINS_CURSOR: CONTAINS_CURSOR(0x1ff),
     F_CORRECT,
-    EDGE_HINT: EDGE_HINT(0xf),
     F_HINT_CELL,
     F_HINT_REGION,
     F_GIVEN,
@@ -119,7 +122,7 @@ describe("the packed flags do not collide", () => {
 
   it("lists every flag the module exports", () => {
     const exported = Object.keys(render).filter((n) =>
-      /^(F_[A-Z_]+|[A-Z_]+_ERROR|CONTAINS_CURSOR|EDGE_HINT)$/.test(n),
+      /^(F_[A-Z_]+|[A-Z_]+_ERROR|CONTAINS_CURSOR)$/.test(n),
     );
     expect(exported.sort()).toEqual(
       Object.keys(FLAGS)
@@ -140,6 +143,47 @@ describe("the packed flags do not collide", () => {
     expect(flashFlag(WIN_BODY)).toBe(F_FLASH);
     expect(flashFlag(WIN_LEAD)).toBe(F_FLASH_LEAD);
     expect(flashFlag(WIN_NONE)).toBe(0);
+  });
+});
+
+describe("an edge the hint decides is drawn as what it must become", () => {
+  const RING = 20;
+  const colors = {
+    background: 1,
+    flash: 2,
+    flashLead: 3,
+    correct: 4,
+    grid: 5,
+    lineNo: 6,
+    lineMaybe: 7,
+    error: 8,
+    hintEdge: RING,
+    hintEvidence: 21,
+    cursor: 9,
+  };
+  const ts = 48;
+  /** What tile (0, 0) of a 2×2 board draws in the ring's ink while a step
+   * rings its right edge as `kind`. */
+  const ringInk = (kind: ForcedBorderEdge["kind"]) => {
+    const edge: ForcedBorderEdge = { x: 0, y: 0, dir: 1, kind };
+    const step = { words: phrase`${mark.as("ring", EDGE, [edge], "edge")}` };
+    const { cells, edges } = hintTileBits(2, 2, stepMarks(step));
+    const dr = new RecordingDrawing([]);
+    drawBorderTile(dr, ts, 0, 0, cells[0], colors, undefined, edges[0]);
+    return dr.ops.filter((o) => "color" in o && o.color === RING);
+  };
+
+  it("a wall is the edge in the ring's ink", () => {
+    const ops = ringInk("wall");
+    expect(ops.map((o) => o.op)).toEqual(["rect"]);
+  });
+
+  it("not a wall is a cross on the edge, which keeps its own color", () => {
+    const ops = ringInk("nowall");
+    expect(ops.map((o) => o.op)).toEqual(["line", "line"]);
+    // Centered on the edge between the two cells.
+    const edgeX = margin(ts) + ts + Math.floor(tileWidth(ts) / 2);
+    for (const o of ops) if (o.op === "line") expect((o.x1 + o.x2) / 2).toBe(edgeX);
   });
 });
 

@@ -24,14 +24,25 @@
  * validity — the shared code never asks which game it is drawing.
  */
 
-import { BORDER, DISABLED, DX, DY, margin, outOfBounds } from "./border-grid.ts";
+import {
+  BORDER,
+  DISABLED,
+  DX,
+  DY,
+  margin,
+  outOfBounds,
+  SQUARE_DIRS,
+  squareSide,
+} from "./border-grid.ts";
 import { EDGE } from "./border-grid-hint.ts";
 import type { Dsf } from "./dsf.ts";
+import { drawEdgeHints, type EdgeHint, edgeHintWords } from "./edge-hint.ts";
 import type { GameDrawing } from "./game.ts";
 import { hatchPeriod } from "./hatch.ts";
 import { drawMarkSides, MARK_ALL } from "./hint-mark.ts";
 import { CELL, type StepMarks } from "./hint-words.ts";
 import type { GridCursor } from "./pointer.ts";
+import { squareEdges } from "./square-edges.ts";
 import type { Rect, Size } from "./types.ts";
 import { WIN_BODY, WIN_LEAD, type WinTone } from "./win-wave.ts";
 
@@ -79,8 +90,6 @@ export const F_FLASH = 1 << 13;
 export const CONTAINS_CURSOR = (x: number): number => x << 14;
 /** This cell is in a region the game considers finished and correct. */
 export const F_CORRECT = 1 << 23;
-/** This edge is one the displayed hint forces. Unused by a game with no hint. */
-export const EDGE_HINT = (border: number): number => border << 24;
 /** A square the displayed hint's sentence cites, outlined (a clue, one of two
  * regions). */
 export const F_HINT_CELL = 1 << 28;
@@ -135,6 +144,8 @@ export interface BorderGridDrawState {
   h: number;
   /** `w·h` cache of last-drawn packed tile flags; `-1` forces a draw. */
   cache: Int32Array;
+  /** `w·h` cache of last-drawn `edge-hint.ts` words, beside `cache`. */
+  edges: Int32Array;
 }
 
 export function newBorderGridDrawState(
@@ -142,7 +153,28 @@ export function newBorderGridDrawState(
   h: number,
   tileSize: number,
 ): BorderGridDrawState {
-  return { started: false, tileSize, w, h, cache: new Int32Array(w * h).fill(-1) };
+  return {
+    started: false,
+    tileSize,
+    w,
+    h,
+    cache: new Int32Array(w * h).fill(-1),
+    edges: new Int32Array(w * h),
+  };
+}
+
+/** Whether cell `i` shows other than `flags` and `edges`, recording them as
+ * drawn when it does: the tile's whole diff key. */
+export function borderTileStale(
+  ds: BorderGridDrawState,
+  i: number,
+  flags: number,
+  edges: number,
+): boolean {
+  if (ds.cache[i] === flags && ds.edges[i] === edges) return false;
+  ds.cache[i] = flags;
+  ds.edges[i] = edges;
+  return true;
 }
 
 // --- the flags a frame computes ----------------------------------------------
@@ -202,23 +234,31 @@ export function mistakeEdgeBits(
 }
 
 /**
- * The displayed hint step's marks, as per-cell bits: each ringed edge on both
- * squares it separates (a firing's edges share a fate, so they share one channel
- * and one color), the outlined squares and the striped region.
+ * The displayed hint step's marks, per cell: in `cells`, the flags of the
+ * outlined squares and the striped region; in `edges`, the `edge-hint.ts` word
+ * for each ringed edge, drawn as what it must become.
  */
-export function hintTileBits(w: number, h: number, marks: StepMarks): Int32Array {
-  const mask = new Int32Array(w * h);
-  for (const { x, y, dir } of marks.of("ring", EDGE)) {
-    mask[y * w + x] |= EDGE_HINT(BORDER(dir));
-    const nx = x + DX[dir];
-    const ny = y + DY[dir];
-    if (!outOfBounds(nx, ny, w, h)) mask[ny * w + nx] |= EDGE_HINT(BORDER(dir ^ 2));
-  }
+export function hintTileBits(
+  w: number,
+  h: number,
+  marks: StepMarks,
+): { cells: Int32Array; edges: Int32Array } {
+  const cells = new Int32Array(w * h);
   for (const cell of marks.of("outline", CELL))
-    mask[cell.y * w + cell.x] |= F_HINT_CELL;
+    cells[cell.y * w + cell.x] |= F_HINT_CELL;
   for (const cell of marks.of("stripes", CELL))
-    mask[cell.y * w + cell.x] |= F_HINT_REGION;
-  return mask;
+    cells[cell.y * w + cell.x] |= F_HINT_REGION;
+  const edges = edgeHintWords(
+    squareEdges(w, h),
+    marks.of("ring", EDGE).map(
+      (e): EdgeHint => ({
+        edge: squareSide(w, e),
+        shape: e.kind === "wall" ? "line" : "cross",
+        role: "ring",
+      }),
+    ),
+  );
+  return { cells, edges };
 }
 
 /** The cursor-containment bits for this tile — see {@link CONTAINS_CURSOR}. */
@@ -257,9 +297,6 @@ export function invalidateDanglingRegions(
 
 function edgeColor(flags: number, dir: number, colors: BorderGridColors): number {
   const b = BORDER(dir);
-  // A hint's forced edges win over the normal states: they share a fate, so
-  // they share a color.
-  if (colors.hintEdge !== undefined && flags & EDGE_HINT(b)) return colors.hintEdge;
   if (flags & BORDER_ERROR(b)) return colors.error;
   if (flags & b) return colors.grid; // a wall
   if (flags & DISABLED(b)) return colors.lineNo;
@@ -309,6 +346,7 @@ export function drawBorderTile(
   flags: number,
   colors: BorderGridColors,
   drawContent?: (body: Rect, origin: { x: number; y: number }) => void,
+  edgeHint = 0,
 ): void {
   const w = tileWidth(ts);
   const x = margin(ts) + ts * c;
@@ -348,11 +386,53 @@ export function drawBorderTile(
 
   drawContent?.(body, { x, y });
 
-  // Four border edges (U, R, D, L).
-  dr.drawRect({ x: x + w, y, w: ts - w, h: w }, edgeColor(flags, 0, colors));
-  dr.drawRect({ x: x + ts, y: y + w, w, h: ts - w }, edgeColor(flags, 1, colors));
-  dr.drawRect({ x: x + w, y: y + ts, w: ts - w, h: w }, edgeColor(flags, 2, colors));
-  dr.drawRect({ x, y: y + w, w, h: ts - w }, edgeColor(flags, 3, colors));
+  // Four border edges, by this file's direction (U, R, D, L).
+  const edges: readonly Rect[] = [
+    { x: x + w, y, w: ts - w, h: w },
+    { x: x + ts, y: y + w, w, h: ts - w },
+    { x: x + w, y: y + ts, w: ts - w, h: w },
+    { x, y: y + w, w, h: ts - w },
+  ];
+  for (let dir = 0; dir < 4; dir++)
+    dr.drawRect(edges[dir], edgeColor(flags, dir, colors));
+
+  // The edges the displayed hint decides, as what each must become: a wall is
+  // the edge in the ring's ink, and not a wall is a cross on the edge, which
+  // keeps its own color. The app repaints a hint's ink over the board, so an
+  // edge drawn in it would read as a wall whatever was drawn over it.
+  if (colors.hintEdge !== undefined && colors.hintEvidence !== undefined) {
+    const each = (sides: number, draw: (rect: Rect) => void): void => {
+      edges.forEach((rect, dir) => {
+        if (sides & (1 << SQUARE_DIRS[dir])) draw(rect);
+      });
+    };
+    const arm = Math.max(3, Math.floor(ts / 8));
+    const weight = Math.max(2, ts >> 4);
+    drawEdgeHints(
+      edgeHint,
+      { ring: colors.hintEdge, outline: colors.hintEvidence },
+      {
+        line: (sides, ink) => each(sides, (rect) => dr.drawRect(rect, ink)),
+        cross: (sides, ink) =>
+          each(sides, (rect) => {
+            const mx = rect.x + Math.floor(rect.w / 2);
+            const my = rect.y + Math.floor(rect.h / 2);
+            dr.drawLine(
+              { x: mx - arm, y: my - arm },
+              { x: mx + arm, y: my + arm },
+              ink,
+              weight,
+            );
+            dr.drawLine(
+              { x: mx - arm, y: my + arm },
+              { x: mx + arm, y: my - arm },
+              ink,
+              weight,
+            );
+          }),
+      },
+    );
+  }
 
   dr.unclip();
   dr.drawUpdate({ x, y, w: ts + w, h: ts + w });
