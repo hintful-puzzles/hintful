@@ -357,10 +357,7 @@ describe("boats hint — narration", () => {
     ["mustGrow", /unfinished boat can't stop at \d+/],
     ["runTooShort", /every \d+-boat is already placed/],
     ["onlyRunsLeft", /run[s]? can hold the \d+-boat/],
-    [
-      "sharedDiagonal",
-      /can take \d+ more water, so one outlined square must be a boat/,
-    ],
+    ["sharedDiagonal", /has \d+ water left, so an outlined square must be a boat/],
     ["refuted", /^If this square (were water|held a boat segment),/],
   ];
 

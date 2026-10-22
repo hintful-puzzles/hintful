@@ -177,9 +177,11 @@ export type BoatsTechnique =
    * as there are such boats, so every one of them is used. */
   | { kind: "onlyRunsLeft"; size: number; runs: number }
   // --- Tricky ---
-  /** Two squares in a nearly-full line share diagonal neighbors; one of them is
-   * a ship either way, so the shared neighbors are water. */
-  | { kind: "sharedDiagonal"; line: BoatsLine; room: number }
+  /** Three squares in a nearly-full line can't all be water, and whichever is
+   * a ship, the middle one's two sides are water: an outer one touches them at
+   * a corner, and the middle one (`middle`, when it counts) would fill its own
+   * crossing line. */
+  | { kind: "sharedDiagonal"; line: BoatsLine; room: number; middle: Point | null }
   // --- Hard ---
   /** The opposite placement immediately contradicts the board. `center` is the
    * given middle segment when the trial ran its boat one way through it
@@ -880,13 +882,19 @@ function findSharedDiagonal(ctx: Ctx): BoatsFiring | null {
         const back = k < span - 1 && emptyAt(k + 1) ? 1 : 0;
         if (front + center + back <= target) continue;
 
-        const evidence = [cellAt(k)];
+        const evidence: Point[] = [];
+        if (center) evidence.push(cellAt(k));
         if (front) evidence.push(cellAt(k - 1));
         if (back) evidence.push(cellAt(k + 1));
 
         const f = firing(
           ctx,
-          { kind: "sharedDiagonal", line: lineOf(ctx, horizontal, i), room: target },
+          {
+            kind: "sharedDiagonal",
+            line: lineOf(ctx, horizontal, i),
+            room: target,
+            middle: center ? cellAt(k) : null,
+          },
           [
             { ...cellAt(k, i - 1), ship: false },
             { ...cellAt(k, i + 1), ship: false },

@@ -180,6 +180,15 @@ const LONG_NARRATIONS: {
       "squares not settled yet stands beside a fit to the notes and locks.",
   },
   {
+    games: ["boats"],
+    rungs: ["sharedDiagonal"],
+    why:
+      "Where the middle of the three squares could be the boat, the step rests " +
+      "on a second premise: that boat would fill the line crossing there. " +
+      "Without it the sentence read as unsound to the owner (2026-10-22), " +
+      "since a middle boat need not touch the ringed squares at a corner.",
+  },
+  {
     games: ["rect"],
     rungs: ["line"],
     why:
