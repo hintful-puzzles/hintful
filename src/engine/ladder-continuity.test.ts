@@ -17,19 +17,25 @@ const mentioning = (marker: string): string[] => {
   return IDS.filter((id) => !without.has(id));
 };
 
-/** Each game's corpus: every leaf preset, two seeds. */
+/** Each game's corpus at seed `s`: every leaf preset. */
 function corpus(
   id: string,
+  s = 0,
 ): { game: (typeof HINT_GAMES)[number][1]; state: unknown }[] {
   const game = HINT_GAMES.find(([g]) => g === id)?.[1];
   if (!game) throw new Error(`${id} is not a hint game`);
-  return leafPresets(game).flatMap((p) =>
-    [0, 1].map((s) => ({
-      game,
-      state: game.newState(p.params, dealt(game, p.params, s).desc),
-    })),
-  );
+  return leafPresets(game).map((p) => ({
+    game,
+    state: game.newState(p.params, dealt(game, p.params, s).desc),
+  }));
 }
+
+/** How many positions where a plan could continue a game's share is read
+ * over: enough that one avoidable jump reads under the bound and two over. */
+const ENOUGH = 30;
+
+/** The most seeds dealt to reach {@link ENOUGH}. */
+const MAX_SEEDS = 8;
 
 /**
  * The games whose hint builds a continuing driver, found by running each hint
@@ -47,14 +53,14 @@ const CONTINUING: readonly string[] = mentioning("singleFirings(").filter((id) =
  * its entry goes, and a new one is not left out in silence.
  */
 const NOT_CONTINUING: Record<string, string> = Object.fromEntries(
-  ["filling", "loopy", "singles", "slant"].map((id) => [id, "continue-ladder-hints"]),
+  ["loopy", "singles", "slant"].map((id) => [id, "continue-ladder-hints"]),
 );
 
 /**
  * The share of the positions where a plan could continue that it left
  * anyway. With the frontier taking it is none on this corpus; with the
- * frontier planted off it was 11% for Ascent and Tracks and 20% to 66% for
- * the rest (2026-10-22), so the bound sits between with room on both sides.
+ * frontier planted off it was 6% at the least (3 of 48) and 96% at the most,
+ * most games over 20% (2026-10-22), so the bound sits between them.
  */
 const MAX_AVOIDABLE = 0.05;
 
@@ -73,12 +79,14 @@ describe("ladder hint plans continue from their latest step where they can", () 
     it(`${id}: a plan that could continue seldom leaves`, () => {
       let continuable = 0;
       let avoidable = 0;
-      for (const { game, state } of corpus(id)) {
-        const c = ladderContinuity(game, state);
-        continuable += c.continuable;
-        avoidable += c.avoidable;
-      }
-      expect(continuable).toBeGreaterThan(10);
+      // Seed after seed of every preset, until the share is read over enough.
+      for (let s = 0; s < MAX_SEEDS && continuable < ENOUGH; s++)
+        for (const { game, state } of corpus(id, s)) {
+          const c = ladderContinuity(game, state);
+          continuable += c.continuable;
+          avoidable += c.avoidable;
+        }
+      expect(continuable).toBeGreaterThanOrEqual(ENOUGH);
       expect(avoidable / continuable, `${avoidable} of ${continuable}`).toBeLessThan(
         MAX_AVOIDABLE,
       );

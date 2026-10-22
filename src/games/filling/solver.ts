@@ -15,7 +15,11 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import { valuesOneTo } from "../../engine/candidate-bits.ts";
-import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
+import {
+  findingTechniques,
+  runDeductionFixpoint,
+  singleFirings,
+} from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { DX, DY, largestNumber } from "./state.ts";
@@ -252,14 +256,14 @@ class FillingSolver {
   /** The next region-growth deduction, *grouped*: a region that cannot reach
    * its size without a set of empty cells (each on every completion, so each
    * forced to the region's value). `exact` ⇒ those cells complete the region
-   * (its only completion). Returns null when no region has a forced cell in
-   * the current position. Deterministic (lowest root first). */
-  nextRegionGroup(): {
+   * (its only completion). Every region with a forced cell in the current
+   * position, lowest root first. */
+  *regionGroups(): Generator<{
     cells: number[];
     value: number;
     region: number[];
     exact: boolean;
-  } | null {
+  }> {
     const { sz, board, dsf } = this;
     for (let i = 0; i < sz; i++) {
       if (board[i] === 0 || i !== dsf.canonify(i)) continue;
@@ -270,7 +274,7 @@ class FillingSolver {
       const forced = reach.filter((j) => !this.checkCapacity(i, j));
       // forced.length never exceeds slack on a consistent board; guard anyway.
       if (forced.length > 0 && forced.length <= slack) {
-        return {
+        yield {
           cells: forced,
           value: n,
           region: this.regionCells(i, n),
@@ -278,7 +282,6 @@ class FillingSolver {
         };
       }
     }
-    return null;
   }
 
   /** A region with exactly one legal growth cell must grow into it. */
@@ -720,29 +723,54 @@ export function deduceHintPlan(
   const plan: FillingHintMove[] = [];
   const working = Int32Array.from(board);
   let fromClues: RecordedFill[] | null = null;
-  const limit = w * h + 5; // each step fills ≥1 cell, so this never trips
-  for (let guard = 0; guard < limit; guard++) {
-    if (!working.includes(0)) break; // solved
-    const solver = new FillingSolver(working, w, h);
-    const group = solver.nextRegionGroup();
-    if (group) {
-      plan.push({
-        cells: group.cells,
-        value: group.value,
-        area: group.region.filter((c) => !group.cells.includes(c)),
-        reason: { kind: "growth", n: group.value, exact: group.exact },
-      });
-      for (const c of group.cells) working[c] = group.value;
-      continue;
-    }
-    let fill = recordFills(working, w, h).at(0);
-    if (fill === undefined) {
-      fromClues ??= recordFills(clues, w, h);
-      fill = fromClues.find((f) => working[f.cell] === 0);
-    }
-    if (fill === undefined) break; // the clues do not finish the board either
-    plan.push(stepOf(fill, working, w, h));
-    working[fill.cell] = fill.value;
-  }
+  const one = (fill: RecordedFill | null): FillingHintMove[] =>
+    fill ? [stepOf(fill, working, w, h)] : [];
+  const pass = singleFirings({
+    techniques: findingTechniques<FillingHintMove>(
+      [
+        {
+          id: "growth",
+          tier: 0,
+          find: function* () {
+            for (const group of new FillingSolver(working, w, h).regionGroups())
+              yield {
+                cells: group.cells,
+                value: group.value,
+                area: group.region.filter((c) => !group.cells.includes(c)),
+                reason: { kind: "growth", n: group.value, exact: group.exact },
+              };
+          },
+        },
+        // A single cell, where no region has a forced one: the solver's first
+        // fill, its run being a cascade whose later fills rest on the earlier.
+        {
+          id: "single",
+          tier: 0,
+          fallback: true,
+          find: () => one(recordFills(working, w, h).at(0) ?? null),
+        },
+        {
+          id: "fromClues",
+          tier: 0,
+          fallback: true,
+          find: () => {
+            fromClues ??= recordFills(clues, w, h);
+            return one(fromClues.find((f) => working[f.cell] === 0) ?? null);
+          },
+        },
+      ],
+      (move) => {
+        plan.push(move);
+        for (const c of move.cells) working[c] = move.value;
+      },
+      // A region as it grows: the region and the cells it takes.
+      { reads: (move) => [...move.area, ...move.cells], writes: (move) => move.cells },
+    ),
+    budget: stepBudget("filling hint"),
+    settled: () => !working.includes(0),
+    // A plan grows the region it is working on before it moves on.
+    continuing: true,
+  });
+  while (pass.next());
   return plan;
 }

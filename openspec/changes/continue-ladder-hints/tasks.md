@@ -41,7 +41,9 @@
       fallback, as its demotion meant. Done too: crossing (its fixpoint note
       and note strike are fallbacks, as their place after every placement
       meant) and subsets (its cube rungs shrink the cube before the offers,
-      which put back what a scan began from).
+      which put back what a scan began from). Done too: filling (its region
+      groups; its single-cell fills, each the first of a cascade, are
+      fallbacks offering one).
 - [ ] 2.3 For each: hint pins and plan tests re-baselined, each moved
       sentence read against its board; a hint played in the app.
 
