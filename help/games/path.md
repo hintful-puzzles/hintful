@@ -64,7 +64,9 @@ left as it still needs lines takes a line on each of them.
 On Normal boards a step sometimes has to look ahead. It supposes a line on an
 edge, or a cross, and follows that rule from it, numbering each square's
 edges as it settles them, until a square is left a dead end or cut off, gets
-too many lines, or a loop closes. Then the edge must be the other way.
+too many lines, or a loop closes. Then the edge must be the other way. On a
+Normal board that takes at most six numbered steps; on a Tricky board it can
+take up to twelve.
 
 ## Path parameters
 

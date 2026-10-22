@@ -16,7 +16,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import {
   CROSS,
@@ -34,13 +34,16 @@ import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 
 /** Every line follows from one square, or from the numbers a line would join. */
 export const DIFF_EASY = 0;
-/** Needs a region of squares that a missing line would shut off. */
+/** Needs a line or cross supposed, and followed until a square breaks. */
 export const DIFF_NORMAL = 1;
+/** Needs a supposition followed until a pair is walled apart, or squares are
+ * walled off from every number. */
+export const DIFF_TRICKY = 2;
 
-const DIFF_NAMES: readonly string[] = tierNames(2);
+const DIFF_NAMES: readonly string[] = tierNames(3);
 
 /** The `d<char>` params suffix, by tier. */
-const DIFF_CHARS = "en";
+const DIFF_CHARS = "ent";
 
 /** `ends[i]` for a square without a number. */
 export const NO_END = 0;
@@ -55,7 +58,7 @@ const MAX_PAIRS = 255;
 export interface PathParams {
   w: number;
   h: number;
-  /** {@link DIFF_EASY} or {@link DIFF_NORMAL}. */
+  /** {@link DIFF_EASY}, {@link DIFF_NORMAL} or {@link DIFF_TRICKY}. */
   diff: number;
 }
 
@@ -93,14 +96,15 @@ export const paramConfig: ParamConfigItem<PathParams>[] = [
     bounds: { min: 3 },
   }),
   difficultyItem(DIFF_NAMES, "diff", {
-    doc: "<p><em>Easy</em> puzzles can be finished one square, or one pair of numbers, at a time.</p><p><em>Normal</em> puzzles also need you to spot squares that would be shut off from the numbers they need.</p>",
+    doc: "<p><em>Easy</em> puzzles can be finished one square at a time: a square with only as many open edges as the lines it still needs takes a line on each.</p><p><em>Normal</em> puzzles also need you to try a line or a cross on an edge, and see the board break a few squares later.</p><p><em>Tricky</em> puzzles need you to follow such a try for twice as long before it breaks.</p>",
   }),
 ];
 
 const BOARDS: PathParams[] = [
   { w: 5, h: 5, diff: DIFF_EASY },
   { w: 7, h: 7, diff: DIFF_EASY },
-  { w: 9, h: 9, diff: DIFF_EASY },
+  { w: 10, h: 10, diff: DIFF_EASY },
+  { w: 13, h: 13, diff: DIFF_EASY },
 ];
 
 /** Normal, so that the first board needs both rungs and its hint draws every
@@ -109,8 +113,12 @@ export function defaultParams(): PathParams {
   return { ...BOARDS[1], diff: DIFF_NORMAL };
 }
 
+/** No Tricky 5x5 on the menu: its boards keep three pairs and take a second
+ * or two to find, measured 2026-10-22. */
 export function presets(): PresetMenu<PathParams> {
-  return presetGrid(paramConfig, BOARDS);
+  return presetGrid(paramConfig, BOARDS, {
+    tiers: (p) => (p.w === 5 ? [DIFF_EASY, DIFF_NORMAL] : null),
+  });
 }
 
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
@@ -118,10 +126,30 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
-export function validateParams(p: PathParams, _full: boolean): string | null {
+/**
+ * The refusal for a board too small to need the tier asked for, or `null`.
+ *
+ * Proved 2026-10-22 by grading every way to lay paths of two squares or more
+ * on each board: no 3x3 board is Normal, and no 3x3, 3x4, 3x5, 4x4 or 4x5
+ * board is Tricky, whatever its paths. On 3x4 and 3x5 every Normal board has a path
+ * of two squares, a straight run of four or a path that touches itself, none
+ * of which the generator lays. A 4x4 has 26 Normal boards the generator may
+ * lay, and is left to it.
+ */
+function absentTier(p: PathParams): string | null {
+  const tier = DIFF_NAMES[p.diff] ?? "";
+  const what = `${p.w}x${p.h} puzzle`;
+  const [short, long] = [Math.min(p.w, p.h), Math.max(p.w, p.h)];
+  if (p.diff === DIFF_TRICKY && short <= 4 && long <= 5) return noSuchTier(what, tier);
+  const narrow = short === 3 && long <= 5;
+  if (p.diff === DIFF_NORMAL && narrow) return noSuchTier(what, tier);
+  return null;
+}
+
+export function validateParams(p: PathParams, full: boolean): string | null {
   if (p.w < 3 || p.h < 3) return "Width and height must both be at least three.";
   if (p.w * p.h > 400) return "Width times height must be at most 400.";
-  return null;
+  return full ? absentTier(p) : null;
 }
 
 // --- desc -------------------------------------------------------------------

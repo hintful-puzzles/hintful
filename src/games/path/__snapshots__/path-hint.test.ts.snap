@@ -3,6 +3,7 @@
 exports[`path: pinned hint positions > says, at each pin 1`] = `
 {
   "forced": "The outlined square has only two edges left for its two lines, so these edges must be lines.",
+  "long-lookahead": "A line here would force the numbered edges and leave the outlined square a dead end, so this edge must be crossed out.",
   "lookahead": "A line here would leave the outlined square a dead end, so this edge must be crossed out.",
 }
 `;

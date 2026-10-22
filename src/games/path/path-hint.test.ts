@@ -20,6 +20,7 @@ import { answerOf } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
+  DIFF_TRICKY,
   executeMove,
   newState,
   type PathParams,
@@ -28,15 +29,24 @@ import {
 
 const pinned = describeHintPins({
   game: pathGame,
-  params: [{ w: 5, h: 5, diff: DIFF_NORMAL }],
+  params: [
+    { w: 5, h: 5, diff: DIFF_NORMAL },
+    { w: 7, h: 7, diff: DIFF_TRICKY },
+  ],
   pins: {
-    /** Held on 259 of 259 positions walked. */
+    /** Held on 843 of 843 positions walked. */
     forced: "5x5dn:1b2b3e4_1c2b3c4",
-    /** Held on 112 of 259 positions walked. */
+    /** Held on 502 of 843 positions walked. */
     lookahead: {
       id: "5x5dn:1b2b3e4_1c2b3c4",
       moves:
         '[{"kind":"edges","changes":[{"edge":3,"mark":1},{"edge":24,"mark":1}]},{"kind":"edges","changes":[{"edge":1,"mark":1},{"edge":22,"mark":1}]},{"kind":"edges","changes":[{"edge":10,"mark":2}]},{"kind":"edges","changes":[{"edge":32,"mark":2}]}]',
+    },
+    /** Held on 178 of 843 positions walked. */
+    "long-lookahead": {
+      id: "7x7dt:e1d2a3_1b4_5d2d3h6a5a6d4c",
+      moves:
+        '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":42,"mark":1}]},{"kind":"edges","changes":[{"edge":5,"mark":1},{"edge":48,"mark":1}]},{"kind":"edges","changes":[{"edge":3,"mark":1},{"edge":46,"mark":1}]},{"kind":"edges","changes":[{"edge":17,"mark":1},{"edge":62,"mark":1}]},{"kind":"edges","changes":[{"edge":29,"mark":1},{"edge":76,"mark":1}]},{"kind":"edges","changes":[{"edge":36,"mark":1},{"edge":77,"mark":1}]},{"kind":"edges","changes":[{"edge":83,"mark":1},{"edge":41,"mark":1}]}]',
     },
   },
 });
@@ -45,6 +55,7 @@ const BOARDS: PathParams[] = [
   { w: 5, h: 5, diff: DIFF_EASY },
   { w: 5, h: 5, diff: DIFF_NORMAL },
   { w: 7, h: 5, diff: DIFF_NORMAL },
+  { w: 7, h: 7, diff: DIFF_TRICKY },
 ];
 
 function deal(p: PathParams, seed: string): PathState {

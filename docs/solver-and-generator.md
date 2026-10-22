@@ -721,6 +721,12 @@ asks whether its tier is named `Unreasonable`, and for a game with no
 - **A constant that bounds a rung is load-bearing for a tier's name.** Say so
   where it is defined (`ACTION_LIMIT` there), or the next reader retunes it
   as a performance dial and turns a middle tier into a search.
+- **Hold a walk to its bound as the hint shows it.** A chain the hint cuts
+  down to the links its break needs is measured cut down in the solver too:
+  counting the links a propagator fired on the side grades a board for a
+  longer walk than any step it shows. Cut it in the solver, and let the hint
+  narrate what was recorded. Exemplar: `pruned` in
+  [`path/solver.ts`](../src/games/path/solver.ts).
 - **Two strengths of one rung emit the same words**, so no narration guard
   separates them. Make the guarantee structural: assert that planning at the
   top tier gives the same plan as planning at the bounded tier, with a
@@ -860,6 +866,13 @@ closure from a contract. Exemplar:
   deals correct boards. Exemplar: `EASY_MAX_ARC_PASSES` in
   [`undead/solver.ts`](../src/games/undead/solver.ts), which both readers
   import.
+- **Strip each tier from the one below, and a board needs its tier by
+  construction.** A board stripped until no clue can go at `t − 1` keeps a
+  removal at `t` only where `t − 1` can no longer finish it, so one removal
+  at `t` proves the tier; a strip at `t` that removes nothing says the board
+  is too easy. Stripping straight at `t` ends minimal for `t` and as often
+  solvable at `t − 1`, found out only after the work. Exemplar:
+  `newPathDesc` in [`path/generator.ts`](../src/games/path/generator.ts).
 - **A grade belongs to a solve that finished.** The runner's grade is the
   highest tier that fired, so on a solve that stalled it says only that the
   solver ran out of facts. Reading it as "too easy" rejects a board for

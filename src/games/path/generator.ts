@@ -25,7 +25,7 @@ import {
   squareEdges,
 } from "../../engine/square-edges.ts";
 import { PathBoard, solvePath } from "./solver.ts";
-import { encodeDesc, type PathParams } from "./state.ts";
+import { DIFF_EASY, encodeDesc, type PathParams } from "./state.ts";
 
 /** The fewest squares a path may have: two numbers side by side would leave
  * the player nothing to find. */
@@ -107,9 +107,11 @@ function withJoin(paths: readonly Path[], j: Join): Path[] {
 }
 
 /** Paths filling the board, or `null` where the joining left a path too
- * short to stand. Every square starts as a path of its own, and two paths are
- * joined while one of them is too short, or by a coin's toss, so that long
- * paths do not swallow every short one. */
+ * short to stand. Every square starts as a path of its own, and paths are
+ * joined at random until no two can be. A path too short to stand is joined
+ * first, the one with the fewest joins left soonest: joined at random among
+ * the rest, one is soon walled in by long paths' middles, and the chance that
+ * none is falls away with the board's area. */
 function layPaths(g: SquareEdges, rng: RandomState): Path[] | null {
   let paths: Path[] = Array.from({ length: g.cells }, (_, i) => [i]);
   // Each join leaves one path fewer.
@@ -117,14 +119,18 @@ function layPaths(g: SquareEdges, rng: RandomState): Path[] | null {
   for (;;) {
     join();
     const candidates = joins(g, paths);
+    if (candidates.length === 0) break;
     shuffle(candidates, rng);
-    const pick = candidates.find(
-      (j) =>
-        paths[j.p].length < MIN_LENGTH ||
-        paths[j.q].length < MIN_LENGTH ||
-        randomUpto(rng, 2) === 0,
-    );
-    if (pick === undefined) break;
+    const short = (k: number): boolean => paths[k].length < MIN_LENGTH;
+    const ways = new Map<number, number>();
+    for (const j of candidates)
+      for (const k of [j.p, j.q]) if (short(k)) ways.set(k, (ways.get(k) ?? 0) + 1);
+    let pick = candidates[0];
+    if (ways.size > 0) {
+      const fewest = Math.min(...ways.values());
+      const k = [...ways].find(([, n]) => n === fewest)?.[0];
+      pick = candidates.find((j) => j.p === k || j.q === k) ?? pick;
+    }
     paths = withJoin(paths, pick);
   }
   return paths.every((p) => p.length >= MIN_LENGTH) ? paths : null;
@@ -191,7 +197,10 @@ function mend(
 }
 
 /** Join paths, in a random order, wherever the ladder still finishes the
- * board at `cap` without the two numbers a join takes away. */
+ * board at `cap` without the two numbers a join takes away. A join the
+ * ladder refused is not tried again: joins elsewhere seldom make it one the
+ * ladder takes, and trying every refused join on every pass costs a solve
+ * each. */
 function strip(
   p: PathParams,
   g: SquareEdges,
@@ -200,6 +209,8 @@ function strip(
   cap: number,
 ): Path[] {
   let paths = [...start];
+  // By the edge between the two ends a join meets at.
+  const refused = new Set<number>();
   // Each pass but the last joins two paths into one.
   const pass = retryLimit("path: strip", g.cells);
   for (let again = true; again; ) {
@@ -208,8 +219,13 @@ function strip(
     const candidates = joins(g, paths);
     shuffle(candidates, rng);
     for (const j of candidates) {
+      const at = edgeBetween(g, j.u, j.v);
+      if (refused.has(at)) continue;
       const tried = withJoin(paths, j);
-      if (attempt(p, numberEnds(g, tried), cap).unfinished()) continue;
+      if (attempt(p, numberEnds(g, tried), cap).unfinished()) {
+        refused.add(at);
+        continue;
+      }
       paths = tried;
       again = true;
       break;
@@ -218,6 +234,14 @@ function strip(
   return paths;
 }
 
+/**
+ * A board at exactly tier `p.diff`. The paths are mended until the Easy rung
+ * finishes the board, then stripped at each tier in turn, up to the one asked
+ * for. A board stripped as far as the tier below allows takes a join at the
+ * next only where that join leaves the tier below unable to finish it, so
+ * each tier's strip pushes the board past the last, and one that joins
+ * nothing leaves the board too easy.
+ */
 export function newPathDesc(p: PathParams, rng: RandomState): { desc: string } {
   const g = squareEdges(p.w, p.h);
   const next = retryLimit("path: generation");
@@ -225,9 +249,16 @@ export function newPathDesc(p: PathParams, rng: RandomState): { desc: string } {
     next();
     const laid = layPaths(g, rng);
     if (laid === null) continue;
-    const mended = mend(p, g, laid, rng, p.diff);
-    if (mended === null) continue;
-    const ends = numberEnds(g, strip(p, g, mended, rng, p.diff));
+    let paths = mend(p, g, laid, rng, DIFF_EASY);
+    if (paths === null) continue;
+    let joined = true;
+    for (let tier = DIFF_EASY; tier <= p.diff; tier++) {
+      const before = paths.length;
+      paths = strip(p, g, paths, rng, tier);
+      joined = paths.length < before;
+    }
+    if (p.diff > DIFF_EASY && !joined) continue;
+    const ends = numberEnds(g, paths);
     const capped: CappedSolve = (cap) =>
       attempt(p, ends, cap).unfinished() ? "unsolved" : "solved";
     if (solvableAtExactlyTier(capped, p.diff)) return { desc: encodeDesc(ends) };

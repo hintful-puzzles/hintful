@@ -23,14 +23,12 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Clash, say } from "./hint-text.ts";
 import {
-  clashOf,
   isComplete,
   SkeletonBoard,
   type SkeletonClash,
   type SkeletonFiring,
   type SkeletonRung,
   skeletonRecordingPass,
-  stillHolds,
 } from "./solver.ts";
 import { executeMove, type SkeletonMove, type SkeletonState } from "./state.ts";
 
@@ -108,49 +106,13 @@ function wordsOf(
   }
 }
 
-/**
- * A supposition's chain cut down to the firings its break needs. The ladder
- * records every Easy firing the supposition sets off, in the order the rungs
- * found them, and some settle a corner the break never reads; numbered, they
- * claim an order of consequence that is not there. Each firing is dropped,
- * last first, where the ones left still follow one from the next and still
- * break the board, which is then said as it breaks with those alone.
- */
-function pruned(
-  state: SkeletonState,
-  edges: Uint8Array,
-  reason: Extract<SkeletonFiring["reason"], { kind: "lookahead" }>,
-): { chain: SkeletonFiring[]; clash: SkeletonClash } {
-  const breaks = (chain: readonly SkeletonFiring[]): SkeletonClash | null => {
-    const trial = edges.slice();
-    trial[reason.edge] = reason.supposed;
-    const b = new SkeletonBoard(state.w, state.h, state.walls, trial);
-    for (const link of chain) {
-      if (!stillHolds(b, link)) return null;
-      for (const e of link.edges) b.set(e, link.mark);
-    }
-    return clashOf(b);
-  };
-  let chain = reason.chain;
-  for (let k = chain.length - 1; k >= 0; k--) {
-    const without = chain.filter((_, j) => j !== k);
-    if (breaks(without)) chain = without;
-  }
-  return { chain, clash: breaks(chain) ?? reason.clash };
-}
-
+/** A supposition's walk comes from the ladder cut down to the firings its
+ * break needs, so it is narrated and numbered as it is. */
 function stepOf(
   state: SkeletonState,
   edges: Uint8Array,
-  recorded: SkeletonFiring,
+  firing: SkeletonFiring,
 ): SkeletonStep {
-  const firing: SkeletonFiring =
-    recorded.reason.kind === "lookahead"
-      ? {
-          ...recorded,
-          reason: { ...recorded.reason, ...pruned(state, edges, recorded.reason) },
-        }
-      : recorded;
   const words = wordsOf(state, edges, firing);
   const { reason } = firing;
   return {

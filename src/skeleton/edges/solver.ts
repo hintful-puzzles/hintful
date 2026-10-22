@@ -74,6 +74,13 @@ export type SkeletonRung = (typeof SKELETON_RUNGS)[number];
  * (docs/solver-and-generator.md § "Check, Tactic, Search"). */
 const CHAIN_LIMIT = 6;
 
+/** How far a supposition's walk runs before it gives up. The Easy rung fires
+ * every square it can, and some settle a corner the break never reads, so a
+ * walk is measured against {@link CHAIN_LIMIT} only once it is
+ * {@link pruned} to the firings its break needs, which is the walk the hint
+ * shows. */
+const RUN_LIMIT = 2 * CHAIN_LIMIT;
+
 /** The board the ladder works on: the walls, and the edges it writes as it
  * goes. */
 export class SkeletonBoard {
@@ -173,7 +180,7 @@ class Pieces {
 }
 
 /** The first thing that breaks `b`, or `null`. */
-export function clashOf(b: SkeletonBoard): SkeletonClash | null {
+function clashOf(b: SkeletonBoard): SkeletonClash | null {
   // A loop first: it is on the board as drawn, where a square short of ways
   // is a count the player makes.
   const closed = b.pieces().clash;
@@ -191,7 +198,7 @@ export function clashOf(b: SkeletonBoard): SkeletonClash | null {
  * still has exactly its edges for the lines it needs. A supposition's chain is
  * cut down to the firings its break needs by asking this of each that is
  * left. */
-export function stillHolds(b: SkeletonBoard, firing: SkeletonFiring): boolean {
+function stillHolds(b: SkeletonBoard, firing: SkeletonFiring): boolean {
   const { reason } = firing;
   if (reason.kind !== "forced") return false;
   const live = b.liveAt(reason.cell);
@@ -334,20 +341,53 @@ function suppose(
   }
 }
 
-/** The live edge one of whose marks breaks the board in the fewest firings,
- * which must then take the other mark. Each supposition is walked only as
- * far as the shortest break found so far. */
+/**
+ * `walk`, from supposing `mark` on edge `e` of `b`, cut down to the firings
+ * its break needs: numbered, a firing the break never reads would claim an
+ * order of consequence that is not there. Each firing is dropped, last first,
+ * where the ones left still follow one from the next and still break the
+ * board, which is then said as it breaks with those alone.
+ */
+function pruned(
+  b: SkeletonBoard,
+  e: number,
+  mark: typeof LINE | typeof CROSS,
+  walk: { chain: SkeletonFiring[]; clash: SkeletonClash },
+): { chain: SkeletonFiring[]; clash: SkeletonClash } {
+  const breaks = (chain: readonly SkeletonFiring[]): SkeletonClash | null => {
+    const edges = b.edges.slice();
+    edges[e] = mark;
+    const trial = new SkeletonBoard(b.w, b.h, b.walls, edges);
+    for (const link of chain) {
+      if (!stillHolds(trial, link)) return null;
+      for (const f of link.edges) trial.set(f, link.mark);
+    }
+    return clashOf(trial);
+  };
+  let chain = walk.chain;
+  for (let k = chain.length - 1; k >= 0; k--) {
+    const without = chain.filter((_, j) => j !== k);
+    if (breaks(without)) chain = without;
+  }
+  return { chain, clash: breaks(chain) ?? walk.clash };
+}
+
+/** The live edge one of whose marks breaks the board in the fewest firings
+ * the break needs, at most {@link CHAIN_LIMIT}, which must then take the
+ * other mark. */
 function findLookahead(b: SkeletonBoard): SkeletonFiring | null {
   let best: SkeletonFiring | null = null;
-  let limit = CHAIN_LIMIT;
-  for (let e = 0; e < b.g.edgeCount && limit >= 0; e++) {
+  let fewest = CHAIN_LIMIT + 1;
+  for (let e = 0; e < b.g.edgeCount; e++) {
     if (!b.live(e)) continue;
     for (const supposed of [LINE, CROSS] as const) {
-      const found = suppose(b, e, supposed, limit);
-      if (found === null) continue;
-      limit = found.chain.length - 1;
+      const walk = suppose(b, e, supposed, RUN_LIMIT);
+      if (walk === null) continue;
+      const cut = pruned(b, e, supposed, walk);
+      if (cut.chain.length >= fewest) continue;
+      fewest = cut.chain.length;
       best = {
-        reason: { kind: "lookahead", edge: e, supposed, ...found },
+        reason: { kind: "lookahead", edge: e, supposed, ...cut },
         edges: [e],
         mark: supposed === LINE ? CROSS : LINE,
       };

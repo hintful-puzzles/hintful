@@ -23,14 +23,12 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Clash, type Square, say } from "./hint-text.ts";
 import {
-  clashOf,
   isComplete,
   PathBoard,
   type PathClash,
   type PathFiring,
   type PathRung,
   pathRecordingPass,
-  stillHolds,
 } from "./solver.ts";
 import { executeMove, NO_END, type PathMove, type PathState } from "./state.ts";
 
@@ -70,7 +68,8 @@ function wordsOf(state: PathState, edges: Uint8Array, firing: PathFiring): Sente
   switch (reason.kind) {
     case "forced":
       return say.forced(square(reason.cell), reason.need, firing.edges);
-    case "lookahead": {
+    case "lookahead":
+    case "long-lookahead": {
       // The board the supposition leads to, for what breaks there.
       const trial = edges.slice();
       trial[reason.edge] = reason.supposed;
@@ -125,45 +124,9 @@ function clashWords(
   }
 }
 
-/**
- * A supposition's chain cut down to the firings its break needs. The ladder
- * records every Easy firing the supposition sets off, in the order the rungs
- * found them, and some settle a corner the break never reads; numbered, they
- * claim an order of consequence that is not there. Each firing is dropped,
- * last first, where the ones left still follow one from the next and still
- * break the board, which is then said as it breaks with those alone.
- */
-function pruned(
-  state: PathState,
-  edges: Uint8Array,
-  reason: Extract<PathFiring["reason"], { kind: "lookahead" }>,
-): { chain: PathFiring[]; clash: PathClash } {
-  const breaks = (chain: readonly PathFiring[]): PathClash | null => {
-    const trial = edges.slice();
-    trial[reason.edge] = reason.supposed;
-    const b = new PathBoard(state.w, state.h, state.ends, trial);
-    for (const link of chain) {
-      if (!stillHolds(b, link)) return null;
-      for (const e of link.edges) b.set(e, link.mark);
-    }
-    return clashOf(b);
-  };
-  let chain = reason.chain;
-  for (let k = chain.length - 1; k >= 0; k--) {
-    const without = chain.filter((_, j) => j !== k);
-    if (breaks(without)) chain = without;
-  }
-  return { chain, clash: breaks(chain) ?? reason.clash };
-}
-
-function stepOf(state: PathState, edges: Uint8Array, recorded: PathFiring): PathStep {
-  const firing: PathFiring =
-    recorded.reason.kind === "lookahead"
-      ? {
-          ...recorded,
-          reason: { ...recorded.reason, ...pruned(state, edges, recorded.reason) },
-        }
-      : recorded;
+/** A supposition's walk comes from the ladder cut down to the firings its
+ * break needs, so it is narrated and numbered as it is. */
+function stepOf(state: PathState, edges: Uint8Array, firing: PathFiring): PathStep {
   const words = wordsOf(state, edges, firing);
   const { reason } = firing;
   return {
@@ -176,7 +139,7 @@ function stepOf(state: PathState, edges: Uint8Array, recorded: PathFiring): Path
     words,
     highlights: {
       chain:
-        reason.kind === "lookahead"
+        reason.kind !== "forced"
           ? reason.chain.flatMap((link, k) =>
               link.edges.map((edge, j) =>
                 j === 0

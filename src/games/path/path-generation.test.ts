@@ -9,7 +9,10 @@ import { describe, expect, it } from "vitest";
 import { LINE } from "../../engine/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { squareEdges } from "../../engine/square-edges.ts";
-import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { countAnswers } from "./count-answers.ts";
 import { newPathDesc } from "./generator.ts";
@@ -18,6 +21,7 @@ import { answerOf, PATH_RUNGS, PathBoard, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
+  DIFF_TRICKY,
   encodeParams,
   executeMove,
   NO_END,
@@ -38,6 +42,18 @@ describeDealtTiers(
   SHAPES.map((p) => encodeParams(p, true)),
 );
 
+// The cells `absentTier` in `state.ts` refuses, with its proof.
+describeAbsentTiers(pathGame, [
+  "3x3dn",
+  "3x4dn",
+  "5x3dn",
+  "3x3dt",
+  "4x3dt",
+  "4x4dt",
+  "3x5dt",
+  "5x4dt",
+]);
+
 const SEEDS = ["a", "b", "c"];
 
 const dealt = SHAPES.flatMap((p) =>
@@ -51,7 +67,7 @@ describeLadderCensus<PathParams & { desc: string }>({
   game: "path",
   rungs: PATH_RUNGS,
   unreached: {},
-  caps: [DIFF_EASY, DIFF_NORMAL],
+  caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
   cases: dealt.map(({ label, p, desc }) => ({ label, board: () => ({ ...p, desc }) })),
   solve: (p, cap, firings) => {
     const { w, h, ends, edges } = newState(p, p.desc);

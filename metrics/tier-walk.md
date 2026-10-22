@@ -1085,6 +1085,26 @@
 - `3dn` refused: Size 3 has no Normal or Unreasonable puzzles; use Easy or Tricky.
 - `3dr` refused: Size 3 has no Normal or Unreasonable puzzles; use Easy or Tricky.
 
+## path
+
+209 cells dealt, 0 refused, 28 left out as slow.
+
+- `3x3dn` asked Normal: gave up on 3
+- `3x3dt` asked Tricky: gave up on 3
+- `4x4dn` asked Normal: gave up on 3
+- `4x4dt` asked Tricky: gave up on 3
+- `3x5dn` asked Normal: gave up on 3
+- `3x5dt` asked Tricky: gave up on 3
+- `4x5dt` asked Tricky: gave up on 3
+- `5x3dn` asked Normal: gave up on 3
+- `5x3dt` asked Tricky: gave up on 3
+- `5x4dt` asked Tricky: gave up on 3
+- `3x7dt` asked Tricky: gave up on 3
+- `7x3dt` asked Tricky: gave up on 3
+- `3x10dt` asked Tricky: gave up on 1; 4.6 s
+- `3x13dt` asked Tricky: gave up on 1; 8.2 s
+- left out: `4x10dt` `6x10dt` `8x10dt` `9x10dt` `11x10dt` `12x10dt` `13x10dt` `10x3dt` `10x4dt` `10x6dt` `10x8dt` `10x9dt` `10x11dt` `10x12dt` `10x13dt` `4x13dt` `6x13dt` `8x13dt` `9x13dt` `11x13dt` `12x13dt` `13x3dt` `13x4dt` `13x6dt` `13x8dt` `13x9dt` `13x11dt` `13x12dt`
+
 ## pearl
 
 46 cells dealt, 1 refused, 31 left out as slow.
