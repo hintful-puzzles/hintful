@@ -64,5 +64,5 @@ replaced that outcome with D5. Read D5 whole before starting.
 
 ## 5. Close-out
 
-- [ ] 5.1 `npm run game -- path` (and `flood`, `guess`, `samegame`) green;
+- [x] 5.1 `npm run game -- path` (and `flood`, `guess`, `samegame`) green;
       commit, push; the owner accepts the look; archive.

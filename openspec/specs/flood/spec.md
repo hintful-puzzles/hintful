@@ -143,7 +143,7 @@ leaves the hint to Flood on a position played past it.
 - **WHEN** on `3x1c3m0:012,2` the player fills with color 2, leaving two
   colors to join and one move
 - **THEN** `hasNoSolution` holds and Solve refuses, and the hint still gives
-  the next fill: `Fill with yellow: it joins the dotted square to your
+  the next fill: `Fill with violet: it joins the dotted square to your
   region.`
 
 ### Requirement: Generation: A generated Flood board is completable within its move limit
@@ -230,10 +230,10 @@ moves`, with `FAILED! ` before it on a lost board.
 
 ### Requirement: Look: Flood draws a flat field of colored tiles
 
-`redraw` SHALL draw the board as a field of flat tiles in the collection's ten
-colors, with no bevel anywhere on it. Tiles of one region SHALL join with no
-line between them, so a region reads as one area and the controlled region's
-growth is the picture.
+`redraw` SHALL draw the board as a field of flat tiles in the collection's
+colors that mean nothing, with no bevel anywhere on it. Tiles of one region
+SHALL join with no line between them, so a region reads as one area and the
+controlled region's growth is the picture.
 
 #### Scenario: The field has no bevel
 
