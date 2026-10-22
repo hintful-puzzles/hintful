@@ -310,7 +310,12 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
 
   private renderAdvancedSection() {
     return html`
-      <wa-details id="advanced" name="panel" summary="Advanced">
+      <wa-details
+          id="advanced"
+          name="panel"
+          summary="Advanced"
+          @wa-show=${this.handleAdvancedShow}
+      >
         <wa-checkbox 
             ?checked=${pwaManager.allowOfflineUse}
             @change=${this.handleAllowOfflineChange}
@@ -351,8 +356,15 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
         return "not downloaded";
       case "registered":
         return html`
-          up to date
-          (<button @click=${this.handleCheckForUpdate}>check for updates</a>)
+          ${pwaManager.lastChecked === null ? "installed" : "up to date"}
+          (<button @click=${this.handleCheckForUpdate}>check for updates</button>)
+        `;
+      case "checking-for-updates":
+        return html`<wa-spinner></wa-spinner> checking for updates&hellip;`;
+      case "check-failed":
+        return html`
+          couldn’t check for updates
+          (<button @click=${this.handleCheckForUpdate}>try again</button>)
         `;
       case "downloading":
       case "update-downloading": {
@@ -399,6 +411,14 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
 
   private async handleCheckForUpdate() {
     await pwaManager.checkForUpdate();
+  }
+
+  private async handleAdvancedShow(event: Event) {
+    // The offline status is only seen here, so check as it comes into view
+    // rather than show a claim nothing has verified.
+    if (event.target === event.currentTarget) {
+      await pwaManager.checkForUpdate();
+    }
   }
 
   private handleInstallUpdate() {

@@ -32,6 +32,7 @@ type PWAManagerStatus =
   | "downloading" // initial service worker "installing"
   | "download-ready" // initial service worker "installed"
   | "checking-for-updates"
+  | "check-failed" // service worker active, but the last update check failed
   | "update-downloading" // updated service worker "installing"
   | "update-ready" // updated service worker "installed", waiting for activation
   | "installing" // skipWaiting called on updated service worker
@@ -67,7 +68,8 @@ type PWAManagerStatus =
 // Updates - explicit check:
 //   status=registered (and up to date)
 // pwaManager.checkForUpdates()
-//   status=checking-for-updates (if no updates, returns to status=active)
+//   status=checking-for-updates (if no updates, returns to status=registered
+//     with lastChecked set; if the check fails, goes to status=check-failed)
 //   status=update-downloading
 //     downloadProgress will advance from 0 to 100
 //     pendingVersion will be set
@@ -99,6 +101,7 @@ class PWAManager {
   private _autoUpdate = computed(() => settings.autoUpdate ?? this.allowOfflineUse);
   private _status = signal<PWAManagerStatus>("uninitialized");
   private _downloadProgress = signal<number | null>(null);
+  private _lastChecked = signal<number | null>(null);
 
   private wb?: Workbox;
 
@@ -181,6 +184,16 @@ class PWAManager {
   }
 
   /**
+   * When an update check last found nothing new, or null if none has this
+   * session. "registered" alone says only that a worker is active: the browser
+   * checks for a new one on navigation, so an app left open in the background
+   * can be days behind.
+   */
+  get lastChecked(): number | null {
+    return this._lastChecked.get();
+  }
+
+  /**
    * Activate a pending service worker update.
    * (This will result in a page reload once the update is complete.)
    */
@@ -204,29 +217,35 @@ class PWAManager {
   /**
    * Force an immediate service worker update check.
    *
-   * If no service worker is installed (e.g., in dev mode) this will
-   * show "checking" for the timeout duration and then indicate "up to date".
+   * A check that fails or times out (usually from being offline) leaves the
+   * installed content working, so it is "check-failed", never "error".
    */
   async checkForUpdate(timeout = 7_500) {
-    if (this.status !== "registered") {
+    if (!this.wb || (this.status !== "registered" && this.status !== "check-failed")) {
       // Some other operation (perhaps another checkForUpdate)
       // is already in progress
       return;
     }
     this._status.set("checking-for-updates");
 
-    // Then force an update check with a timeout
+    let checked = false;
     try {
-      await Promise.race([this.wb?.update(), sleep(timeout)].filter(Boolean));
+      checked = await Promise.race([
+        this.wb.update().then(() => true),
+        sleep(timeout).then(() => false),
+      ]);
       await sleep(10); // ensure messages are delivered
     } catch (error) {
-      console.error("PWAManager.checkForUpdate failed:", error);
-      Sentry.captureException(error);
-      this._status.set("error");
+      console.warn("PWAManager.checkForUpdate failed:", error);
     }
     if (this._status.get() === "checking-for-updates") {
-      // If we got here with no status change events, we were already up to date
-      this._status.set("registered");
+      // No status change events: either nothing new, or the check never answered
+      if (checked) {
+        this._lastChecked.set(Date.now());
+        this._status.set("registered");
+      } else {
+        this._status.set("check-failed");
+      }
     }
   }
 
