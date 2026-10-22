@@ -12,8 +12,9 @@
 # replace the puzzle, and the checklist printed at the end is what the copy
 # leaves undone.
 #
-# `kind` names the skeleton: `grid` (the default, and the only one so far) is
-# a square grid of cells the player marks, solved by deduction.
+# `kind` names the skeleton, a directory of src/skeleton/ whose table says
+# what each is for: `grid` (the default) or `edges`. The checklist differs
+# where the skeletons do, which the `case` below says.
 
 set -euo pipefail
 
@@ -42,6 +43,45 @@ if [ ! -d "${SRC}" ]; then
   echo "no skeleton of kind '${KIND}' (looked in ${SRC})" >&2
   exit 2
 fi
+
+# What the checklist says of this kind's copy.
+case "${KIND}" in
+  grid)
+    HAS="params and their codec, presets,
+the desc, target-verb input, a deduction ladder with two tiers, a solver-gated
+generator, the mistake check, an explained hint with its marks and gesture, a
+tile-cached renderer, and tests for each."
+    PUZZLE="The rules live in solver.ts, the board in state.ts,
+     the sentences in hint-text.ts. Rename what the copy calls a \"mark\", a
+     \"clue\" and its two rungs to this puzzle's own words as you go."
+    ROLES="Each of the three hint roles in hintMarks (ring, outline, stripes)"
+    REFUSED=""
+    ;;
+  edges)
+    HAS="params and their codec, presets,
+the desc, the engine's line drawing (the drag, a click, the keys and the cross
+sweep), a deduction ladder with two tiers (a square's count of edges, and a
+bounded look-ahead), a solver-gated generator, the mistake check on set edges,
+an explained hint with its edge marks and gesture, a tile-cached renderer, and
+tests for each."
+    PUZZLE="The rules live in solver.ts and what a line may do in
+     moves.ts, the board in state.ts, the sentences in hint-text.ts. Rename
+     what the copy calls a \"wall\" and its two rungs to this puzzle's own
+     words as you go. The generator's answer is a loop through every square;
+     a puzzle with other answers draws its own."
+    ROLES="Each of the two hint roles in hintMarks (ring, outline)"
+    REFUSED="
+       - CHAIN_PINS in src/engine/testing/hint-chain-pins.ts: a position
+         whose hint numbers a look-ahead's chain (hint-quality.test.ts).
+         The hint test's lookahead pin is one; the scan walks only games
+         listed there, so list it, then let
+         npm run hint-scan -- src/engine/hint-ordinal.test.ts find it again"
+    ;;
+  *)
+    echo "scripts/new-game.sh has no checklist for kind '${KIND}'" >&2
+    exit 2
+    ;;
+esac
 for existing in "${DIR}" "${HELP}"; do
   if [ -e "${existing}" ]; then
     echo "refusing to overwrite existing ${existing}" >&2
@@ -101,15 +141,10 @@ cat <<EOF
 src/games/${GAME}/ is a copy of the '${KIND}' skeleton that plays as the
 skeleton's own puzzle, and help/games/${GAME}.md is its help page.
 
-What the copy has, each on the shared way: params and their codec, presets,
-the desc, target-verb input, a deduction ladder with two tiers, a solver-gated
-generator, the mistake check, an explained hint with its marks and gesture, a
-tile-cached renderer, and tests for each.
+What the copy has, each on the shared way: ${HAS}
 
 What is left to do, and the copy does none of it:
-  1. Replace the puzzle. The rules live in solver.ts, the board in state.ts,
-     the sentences in hint-text.ts. Rename what the copy calls a "mark", a
-     "clue" and its two rungs to this puzzle's own words as you go.
+  1. Replace the puzzle. ${PUZZLE}
   2. Register the game, two edits made together (catalog-registry.test.ts
      holds them to each other):
        - import ${GAME_OBJECT} in src/games/index.ts and register it there
@@ -118,14 +153,14 @@ What is left to do, and the copy does none of it:
      run the game's whole verdict, here and after every concern you change:
        npm run game -- ${GAME}
      It names every guard that refuses the game, with the guide section the
-     guard cites. Two records kept by hand refuse a game on its first run:
+     guard cites. Records kept by hand refuse a game on its first run:
        - help/puzzles.md: its row (help-coverage.test.ts)
        - the snapshots of capability-surface.test.ts and
-         params-stability.test.ts (run each with --update and read the diff)
+         params-stability.test.ts (run each with --update and read the diff)${REFUSED}
      and one thing the copy has no reason to hold yet refuses it later:
        - a help page that says where the puzzle comes from says it under
          "## Where the puzzle comes from" (help-coverage.test.ts)
-     Each of the three hint roles in hintMarks (ring, outline, stripes) is
+     ${ROLES} is
      drawn by the copy; one the puzzle's hint never names goes, with its
      line in the legend (warm-repaint.test.ts holds the two together).
   3. Pin the hint again once the rungs are this puzzle's:

@@ -1,0 +1,8 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`skeleton: pinned hint positions > says, at each pin 1`] = `
+{
+  "forced": "The outlined square has only two edges left for its two lines, so these edges must be lines.",
+  "lookahead": "A cross here would force the numbered edges and make a loop of the outlined squares, so this edge must be a line.",
+}
+`;

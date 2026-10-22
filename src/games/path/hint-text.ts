@@ -56,7 +56,7 @@ export type Clash =
   /** The square would have too few edges left for its lines: `ways` is its
    * lines and its open edges together. */
   | { kind: "stuck"; square: Square; ways: number }
-  /** The lines would close a loop round `squares`. */
+  /** The lines would make a loop of `squares`. */
   | { kind: "closed"; squares: readonly Point[] }
   /** The lines would join two different numbers. */
   | { kind: "joined"; a: Square; b: Square };
@@ -72,7 +72,7 @@ const clashWords = (c: Clash): Narration => {
         ? phrase`leave ${outlined(c.square)} a dead end`
         : phrase`cut off ${outlined(c.square)}`;
     case "closed":
-      return phrase`close a loop round ${mark.as("outline", CELL, c.squares, "the outlined squares")}`;
+      return phrase`make a loop of ${mark.as("outline", CELL, c.squares, "the outlined squares")}`;
     case "joined":
       return phrase`join ${twoNumbers(c.a, c.b)}`;
   }
