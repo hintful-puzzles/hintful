@@ -224,7 +224,8 @@ Pearl's lines, Tracks' rails) uses the module's mask algebra as it is.
 `squareEdges(w, h)` numbers a board's edges once: **store a mark per edge
 by that number, never on both squares**, which is how two copies come to
 disagree. `edgeAt` and `pointAtEdge` are the press side of it, given the
-tile and border, with a still middle a game can turn off. Exemplar:
+tile and border, with a still middle a game can turn off. `pieceThrough`
+walks the piece of line a square is on. Exemplars: `skeleton/edges/`,
 `path/`.
 
 **A game whose stored bits are in another order keeps its own index**,
@@ -238,9 +239,11 @@ Reach for it when the player draws lines along the edges between squares by
 dragging through them: it is the whole input, the drag, the click, the cross
 sweep and the keys. `OPEN`, `LINE` and `CROSS` are what an edge holds. The
 game declares `LineRules` (`mark`, `takes`, `loops`) and its saved move;
-`dragPreview` gives its render the drag as it would be released. Adopting
-it: [`input.md`](./input.md) § "The line drag". Exemplars: `path/`,
-`pearl/`.
+`dragPreview` gives its render the drag as it would be released, and
+`hintGesture` the clicks that make a step's edges. `edgeMistakes` is the
+mistake check of a game that stores a mark per edge. Adopting it:
+[`input.md`](./input.md) § "The line drag". Exemplars: `skeleton/edges/`,
+`path/`, `pearl/`.
 
 ### `border-grid.ts` — the shared border-marking mechanic
 
@@ -987,6 +990,9 @@ in every hue and both schemes. Exemplar: `src/skeleton/grid/render.ts`.
 Name an edge a step decides or reasons from by its `EDGE` kind, keyed by
 the `square-edges.ts` edge number, so one edge is one mark from either
 square; a side on the board's rim is named by its square and direction.
+`stepEdgeHints` reads a step's edges from its words, its move and its
+chain (`EdgeChainLink`), and `trackEdgeStep` is the `hintKeepTrack` of a
+step that sets edges, shrinking its move and its rings together.
 `edgeHintWords` gives each square its tile-key word for those edges, set on
 both squares, with a chain's ordinal on the edge's first one. In the tile,
 `drawEdgeHints` asks the game's declared `EdgeShapes` for its own line and

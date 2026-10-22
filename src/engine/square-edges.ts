@@ -171,6 +171,28 @@ export function edgeBetween(g: SquareEdges, i: number, j: number): number {
   return -1;
 }
 
+/** The squares joined to square `from` through edges that `joins`, in reading
+ * order: the piece of line it is on, where `joins` says which edges hold a
+ * line. */
+export function pieceThrough(
+  g: SquareEdges,
+  joins: (e: number) => boolean,
+  from: number,
+): number[] {
+  const seen = new Set([from]);
+  const stack = [from];
+  for (let i = stack.pop(); i !== undefined; i = stack.pop())
+    for (let d = 0; d < 4; d++) {
+      const e = g.around[i * 4 + d];
+      if (e < 0 || !joins(e)) continue;
+      const j = across(g, e, i);
+      if (seen.has(j)) continue;
+      seen.add(j);
+      stack.push(j);
+    }
+  return [...seen].sort((p, q) => p - q);
+}
+
 /** The side of square `i` that edge `e` lies on: `RIGHT` or `DOWN` from its
  * first square, `LEFT` or `UP` from its second. */
 export function sideOf(g: SquareEdges, e: number, i: number): number {

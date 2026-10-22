@@ -26,6 +26,7 @@
  */
 
 import { UI_UPDATE, type UiUpdate } from "./game.ts";
+import { click, type PointerAction } from "./hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -115,6 +116,28 @@ export interface LineDrag {
 export interface LineDrawingUi {
   cursor: GridCursor;
   drag: LineDrag | null;
+}
+
+/** An edge marked against the answer. */
+export interface EdgeMistake {
+  edge: number;
+}
+
+/**
+ * The edges marked against `answer`, the lines of a board's one answer: a line
+ * it does not have, and a cross on one it does. An open edge is never one
+ * (docs/solver-and-generator.md § "Edge games flag set edges only").
+ */
+export function edgeMistakes(
+  marks: ArrayLike<number>,
+  answer: ArrayLike<number>,
+): EdgeMistake[] {
+  const out: EdgeMistake[] = [];
+  for (let edge = 0; edge < marks.length; edge++) {
+    if (marks[edge] === LINE && answer[edge] !== LINE) out.push({ edge });
+    if (marks[edge] === CROSS && answer[edge] === LINE) out.push({ edge });
+  }
+  return out;
 }
 
 /** The marks of every edge of `state`. */
@@ -242,6 +265,13 @@ export interface LineDrawing<S, U, D, M> {
   /** The right button's drag, which crosses every edge it passes. Not a
    * `Game` member, so the game exports it for `drag-marks.test.ts`. */
   crossDrag: TargetVerbs<S, U, D, number, M>;
+  /** The clicks that make `changes`, a hint step's edges: the left button
+   * on each line, the right on each cross. */
+  hintGesture(
+    state: S,
+    ds: D,
+    changes: readonly EdgeChange[],
+  ): readonly PointerAction[];
 }
 
 /** The input of a game whose player draws lines along the edges of squares:
@@ -385,5 +415,17 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
     return null;
   }
 
-  return { interpretMove, crossDrag };
+  const hintGesture = (
+    state: S,
+    ds: D,
+    changes: readonly EdgeChange[],
+  ): readonly PointerAction[] =>
+    changes.map(({ edge, mark }) =>
+      click(
+        pointAtEdge(edges(state), input.layout(ds), edge),
+        mark === LINE ? "primary" : "secondary",
+      ),
+    );
+
+  return { interpretMove, crossDrag, hintGesture };
 }

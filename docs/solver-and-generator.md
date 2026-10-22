@@ -1570,7 +1570,10 @@ but if each wall is a real solution boundary it is partial progress.
 Exemplars: [`rect/index.ts`](../src/games/rect/index.ts),
 [`tracks/index.ts`](../src/games/tracks/index.ts), and
 [`galaxies/index.ts`](../src/games/galaxies/index.ts), which also flags an
-interior wall set inside a single region.
+interior wall set inside a single region. A game that stores a mark per
+`square-edges.ts` edge passes its marks and its answer's lines to
+`edgeMistakes` in [`engine/line-drawing.ts`](../src/engine/line-drawing.ts),
+which says this rule once: `skeleton/edges/index.ts`.
 
 ### Live rule errors and the re-solve are both
 

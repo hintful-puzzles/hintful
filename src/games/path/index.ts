@@ -9,13 +9,15 @@
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
-import { CROSS, LINE, lineDrawing } from "../../engine/line-drawing.ts";
+import {
+  type EdgeMistake,
+  edgeMistakes,
+  lineDrawing,
+} from "../../engine/line-drawing.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
-import { pointAtEdge, squareEdges } from "../../engine/square-edges.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import { newPathDesc } from "./generator.ts";
 import { type PathHighlights, pathHint, pathKeepTrack } from "./hint.ts";
@@ -53,12 +55,6 @@ import {
   validateParams,
 } from "./state.ts";
 
-/** An edge marked against the answer: a line the answer does not have, or a
- * cross on one it does. */
-export interface PathMistake {
-  edge: number;
-}
-
 function newUi(_state: PathState): PathUi {
   return { cursor: newCursor(), drag: null };
 }
@@ -85,18 +81,11 @@ function solve(orig: PathState): SolveResult<PathMove> {
   return { ok: true, move: { kind: "solve", edges } };
 }
 
-/** The lines the answer does not have, and the crosses on lines it does. An
- * open edge is never one, and neither is any edge of a board the ladder
- * cannot finish, which has no answer to compare with. */
-function findMistakes(state: PathState): readonly PathMistake[] {
+/** No edge of a board the ladder cannot finish is a mistake: it has no
+ * answer to compare with. */
+function findMistakes(state: PathState): readonly EdgeMistake[] {
   const answer = answerOf(state.w, state.h, state.ends);
-  if (answer === null) return [];
-  const out: PathMistake[] = [];
-  state.edges.forEach((mark, edge) => {
-    if (mark === LINE && answer[edge] !== LINE) out.push({ edge });
-    if (mark === CROSS && answer[edge] === LINE) out.push({ edge });
-  });
-  return out;
+  return answer === null ? [] : edgeMistakes(state.edges, answer);
 }
 
 const difficulty: DifficultyContract<PathParams> = {
@@ -106,32 +95,13 @@ const difficulty: DifficultyContract<PathParams> = {
   },
 };
 
-// --- the hint's gesture -----------------------------------------------------
-
-/** A click on each edge the step decides: the left button for a line, the
- * right for a cross. */
-function hintGesture(
-  state: PathState,
-  _ui: PathUi,
-  ds: PathDrawState,
-  move: PathMove,
-): readonly PointerAction[] {
-  if (move.kind !== "edges") return [];
-  return move.changes.map(({ edge, mark }) =>
-    click(
-      pointAtEdge(squareEdges(state.w, state.h), layout(ds.tileSize), edge),
-      mark === LINE ? "primary" : "secondary",
-    ),
-  );
-}
-
 export const pathGame: Game<
   PathParams,
   PathState,
   PathMove,
   PathUi,
   PathDrawState,
-  PathMistake,
+  EdgeMistake,
   PathHighlights,
   PathRung
 > = {
@@ -168,7 +138,8 @@ export const pathGame: Game<
     },
   },
   hintKeepTrack: pathKeepTrack,
-  hintGesture,
+  hintGesture: (state, _ui, ds, move) =>
+    move.kind === "edges" ? input.hintGesture(state, ds, move.changes) : [],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

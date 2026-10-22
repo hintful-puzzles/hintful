@@ -9,17 +9,16 @@
  * statically").
  */
 
-import { EDGE } from "../../engine/edge-hint.ts";
+import { type EdgeChainLink, trackEdgeStep } from "../../engine/edge-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import { type EdgeMark, LINE } from "../../engine/line-drawing.ts";
-import { squareEdges } from "../../engine/square-edges.ts";
+import { LINE } from "../../engine/line-drawing.ts";
+import { pieceThrough, squareEdges } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Clash, say } from "./hint-text.ts";
@@ -43,32 +42,10 @@ const PLAN_CAP = 24;
 /** A supposition's chain, as the board draws it: each edge it would force,
  * with the mark and the place in the chain it falls. */
 export interface SkeletonHighlights {
-  /** `order` is on a firing's first edge only: a square forced to two lines
-   * is one deduction, and so one number. */
-  chain: readonly { edge: number; mark: EdgeMark; order?: number }[];
+  chain: readonly EdgeChainLink[];
 }
 
 type SkeletonStep = HintStep<SkeletonMove, SkeletonHighlights, SkeletonRung>;
-
-/** The squares of the piece of loop through square `from` on `edges`. */
-function pieceOf(state: SkeletonState, edges: Uint8Array, from: number): number[] {
-  const g = squareEdges(state.w, state.h);
-  const seen = new Set([from]);
-  const stack = [from];
-  while (stack.length > 0) {
-    const i = stack.pop() as number;
-    for (let k = 0; k < 4; k++) {
-      const e = g.around[i * 4 + k];
-      if (e < 0 || edges[e] !== LINE) continue;
-      const j = g.a[e] === i ? g.b[e] : g.a[e];
-      if (!seen.has(j)) {
-        seen.add(j);
-        stack.push(j);
-      }
-    }
-  }
-  return [...seen].sort((p, q) => p - q);
-}
 
 /** What breaks the board `trial`, a supposition has led to, in words. */
 function clashWords(
@@ -94,10 +71,8 @@ function clashWords(
     }
     case "closed": {
       const g = squareEdges(state.w, state.h);
-      return {
-        kind: "closed",
-        squares: pieceOf(state, trial, g.a[clash.edge]).map(at),
-      };
+      const piece = pieceThrough(g, (e) => trial[e] === LINE, g.a[clash.edge]);
+      return { kind: "closed", squares: piece.map(at) };
     }
   }
 }
@@ -233,40 +208,19 @@ export function skeletonHint(
   return { ok: true, steps: plan.map((firing, k) => stepOf(state, before[k], firing)) };
 }
 
-/**
- * Judge a move against the step on show by what it did to the edges, so a
- * click, a drag and a key that make the same change are the same
- * (`engine/hint-track.ts`). A step that decides several edges shrinks to the
- * ones left.
- */
+/** Judge a move against the step on show by what it did to the edges, which
+ * a solve never makes a step of. */
 export function skeletonKeepTrack(
   move: SkeletonMove,
   step: HintStep<SkeletonMove>,
   state: SkeletonState,
 ): HintTrackVerdict {
   if (move.kind !== "edges" || step.move.kind !== "edges") return "off";
-  const after = executeMove(state, move);
-  const { verdict, left } = trackTargets({
-    targets: step.move.changes,
-    changes: changedCells<EdgeMark>(
-      state.edges.length,
-      (e) => state.edges[e] as EdgeMark,
-      (e) => after.edges[e] as EdgeMark,
-    ),
-    key: (t) => t.edge,
-    want: (t) => t.mark,
-    holds: (t) => after.edges[t.edge] === t.mark,
-  });
-  if (verdict === "onTrack") {
-    step.move = { kind: "edges", changes: left };
-    // The rings are read from the words, so the words shrink with the move.
-    const kept = new Set(left.map((t) => String(t.edge)));
-    if (step.words) {
-      step.words = step.words.narrow(
-        (role, kind, key) => role !== "ring" || kind !== EDGE.name || kept.has(key),
-      );
-      step.explanation = step.words.text;
-    }
-  }
-  return verdict;
+  return trackEdgeStep(
+    step,
+    step.move.changes,
+    state.edges,
+    executeMove(state, move).edges,
+    (changes): SkeletonMove => ({ kind: "edges", changes }),
+  );
 }

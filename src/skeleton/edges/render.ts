@@ -29,15 +29,19 @@ import { drawRectCorners } from "../../engine/draw.ts";
 import {
   drawEdgeHints,
   drawEdgeOrdinals,
-  EDGE,
-  type EdgeHint,
   type EdgeInks,
   edgeHintWords,
+  stepEdgeHints,
 } from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { CROSS, dragPreview, LINE } from "../../engine/line-drawing.ts";
+import {
+  CROSS,
+  dragPreview,
+  type EdgeMistake,
+  LINE,
+} from "../../engine/line-drawing.ts";
 import {
   DOWN,
   DX,
@@ -53,7 +57,6 @@ import {
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { SkeletonHighlights } from "./hint.ts";
-import type { SkeletonMistake } from "./index.ts";
 import { skeletonLines, withChanges } from "./moves.ts";
 import { SkeletonBoard } from "./solver.ts";
 import type {
@@ -331,7 +334,7 @@ export function redraw(
   _animTime: number,
   flash: Flash,
   hint?: HintStep<SkeletonMove, SkeletonHighlights>,
-  mistakes?: readonly SkeletonMistake[],
+  mistakes?: readonly EdgeMistake[],
 ): void {
   const ts = ds.tileSize;
   const { w, h, walls } = state;
@@ -369,26 +372,14 @@ export function redraw(
   const evidence = new Set(named.of("outline", CELL).map((c) => c.y * w + c.x));
   const inEvidence = (x: number, y: number): boolean =>
     x >= 0 && x < w && y >= 0 && y < h && evidence.has(y * w + x);
-  const marked: EdgeHint[] = [];
-  if (hint && hint.move.kind === "edges") {
-    const { changes } = hint.move;
-    for (const edge of named.of("ring", EDGE))
-      marked.push({
-        edge,
-        shape: changes.find((c) => c.edge === edge)?.mark === CROSS ? "cross" : "line",
-        role: "ring",
-      });
-  }
-  const outlined = new Set(named.of("outline", EDGE));
-  for (const link of hint?.highlights?.chain ?? [])
-    if (outlined.has(link.edge))
-      marked.push({
-        edge: link.edge,
-        shape: link.mark === CROSS ? "cross" : "line",
-        role: "outline",
-        order: link.order,
-      });
-  const hintWords = edgeHintWords(g, marked);
+  const hintWords = edgeHintWords(
+    g,
+    stepEdgeHints(
+      named,
+      hint?.move.kind === "edges" ? hint.move.changes : [],
+      hint?.highlights?.chain,
+    ),
+  );
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {

@@ -13,8 +13,10 @@
  * and where the ordinal goes, is this module's.
  */
 
-import type { GameDrawing } from "./game.ts";
-import type { MarkKind, MarkRole } from "./hint-words.ts";
+import type { GameDrawing, HintStep, HintTrackVerdict } from "./game.ts";
+import { changedCells, trackTargets } from "./hint-track.ts";
+import type { MarkKind, MarkRole, StepMarks } from "./hint-words.ts";
+import { CROSS, type EdgeChange, type EdgeMark } from "./line-drawing.ts";
 import { DOWN, RIGHT, type Side, type SquareEdges, sideOf } from "./square-edges.ts";
 import type { Rect } from "./types.ts";
 
@@ -35,6 +37,83 @@ export interface EdgeHint {
   readonly shape: "line" | "cross";
   readonly role: EdgeRole;
   readonly order?: number;
+}
+
+/** One edge of a supposition's chain, as a step's highlights carry it: the
+ * mark it would take, and its place in the chain on a firing's first edge
+ * (a square forced to two lines is one deduction, and so one number). */
+export interface EdgeChainLink {
+  readonly edge: number;
+  readonly mark: EdgeMark;
+  readonly order?: number;
+}
+
+/**
+ * The edges a step draws, read from its words (`named`): each ringed edge in
+ * the shape `asked`, the step's move, gives it, and each outlined edge of
+ * `chain` in the shape it would take, with its place in the chain.
+ */
+export function stepEdgeHints(
+  named: StepMarks,
+  asked: readonly EdgeChange[],
+  chain: readonly EdgeChainLink[] = [],
+): EdgeHint[] {
+  const out: EdgeHint[] = [];
+  for (const edge of named.of("ring", EDGE))
+    out.push({
+      edge,
+      shape: asked.find((c) => c.edge === edge)?.mark === CROSS ? "cross" : "line",
+      role: "ring",
+    });
+  const outlined = new Set(named.of("outline", EDGE));
+  for (const link of chain)
+    if (outlined.has(link.edge))
+      out.push({
+        edge: link.edge,
+        shape: link.mark === CROSS ? "cross" : "line",
+        role: "outline",
+        order: link.order,
+      });
+  return out;
+}
+
+/**
+ * Judge a move against a step that sets edges, by what it did to them, so a
+ * click, a drag and a key that make the same change are the same
+ * (`hint-track.ts`). `asked` is the step's changes, and `before` and `after`
+ * the edges either side of the move. A step left part-made shrinks to the rest:
+ * its move becomes `moveOf` of what is left, and its words drop the rings on
+ * the edges made, which re-renders every word that counts them.
+ */
+export function trackEdgeStep<M>(
+  step: HintStep<M>,
+  asked: readonly EdgeChange[],
+  before: ArrayLike<number>,
+  after: ArrayLike<number>,
+  moveOf: (left: EdgeChange[]) => M,
+): HintTrackVerdict {
+  const { verdict, left } = trackTargets({
+    targets: asked,
+    changes: changedCells<number>(
+      before.length,
+      (e) => before[e],
+      (e) => after[e],
+    ),
+    key: (t) => t.edge,
+    want: (t) => t.mark,
+    holds: (t) => after[t.edge] === t.mark,
+  });
+  if (verdict === "onTrack") {
+    step.move = moveOf(left);
+    const kept = new Set(left.map((t) => EDGE.key(t.edge)));
+    if (step.words) {
+      step.words = step.words.narrow(
+        (role, kind, key) => role !== "ring" || kind !== EDGE.name || kept.has(key),
+      );
+      step.explanation = step.words.text;
+    }
+  }
+  return verdict;
 }
 
 // A square's word: three bits a side, by direction, for what the side shows,

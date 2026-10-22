@@ -10,7 +10,7 @@ Starts after `share-square-edge-geometry`, `share-line-drawing-drag` and
       render, hint, hint-text, help and tests, every shared concern a
       declaration (D2).
 - [x] 1.3 `scripts/new-game.sh` takes `edges`, with its checklist.
-- [ ] 1.4 What the skeleton wrote that is not its puzzle goes to the engine,
+- [x] 1.4 What the skeleton wrote that is not its puzzle goes to the engine,
       Path with it (D2).
 
 ## 2. Proving it

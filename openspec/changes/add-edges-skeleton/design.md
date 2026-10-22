@@ -41,6 +41,37 @@ Everything the three earlier changes made shared is a declaration here, not
 code: if the skeleton writes a helper, the earlier change missed it, and it
 goes back to the engine. Write down each one found.
 
+**Found, and moved to the engine with Path on them (2026-10-22).** Each was
+written word for word in Path and the skeleton, and a copy would be a third:
+
+- `edgeMistakes` and `EdgeMistake` (`line-drawing.ts`): the mistake check of
+  a game that stores a mark per edge, the rule of `solver-and-generator.md`
+  § "Edge games flag set edges only".
+- `hintGesture` on what `lineDrawing` returns: a click on each edge a step
+  sets, the left button for a line and the right for a cross.
+- `stepEdgeHints` and `EdgeChainLink` (`edge-hint.ts`): a step's edges as
+  `EdgeHint`s, read from its words, its move and its chain. The earlier
+  change shared what an edge mark is and how it is drawn, but left each
+  render to read a step into them.
+- `trackEdgeStep` (`edge-hint.ts`): `hintKeepTrack` for a step that sets
+  edges, which shrinks the move and the words' rings together.
+- `pieceThrough` (`square-edges.ts`): the squares on one piece of line.
+
+**Kept the game's, and why:**
+
+- **The supposition walk** (`suppose`, `findLookahead`, `pruned`,
+  `stillHolds`) is word for word Path's too. It is the ladder's, not the
+  edges': it runs the game's Easy rungs on a trial board and reads the
+  game's clashes, and Clusters walks one of its own over cells. A shared
+  one is a deduction-engine change over every game with a bounded
+  look-ahead, which this change is not; the skeleton is now where the next
+  game copies it from, and the case for it is recorded here.
+- **The line and cross shapes** in `render.ts` are Path's: the earlier
+  change decided how a line and a cross look is the game's (`EdgeShapes`),
+  and Pearl's and Tracks' do look different.
+- **`withChanges`** in `moves.ts` is three lines, and the skeleton's skips
+  walls.
+
 ## D3 — Proving it
 
 Stamp a copy, register it, run `npm run game -- <copy>` and the source-scan
