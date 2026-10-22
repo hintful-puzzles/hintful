@@ -201,8 +201,7 @@ bound, where either holds fewer than `k` cells. It SHALL redden a wall that
 divides nothing: one between two cells the no-wall marks join, or between two
 cells of one wall-bounded region of at most `k` cells. The rim SHALL never be
 reddened. An edge the game's Check & Save flags SHALL be drawn in the same
-error color, and an edge a displayed hint rings SHALL take the hint's color
-over it.
+error color.
 
 #### Scenario: An undersized region reddens its walls
 
@@ -306,3 +305,16 @@ edge edits to this helper.
   player left-clicks it
 - **THEN** the verdict is `"completed"`, the one click having cleared the mark
   and set the wall
+
+### Requirement: An edge a hint decides is drawn as what it must become
+
+An edge a displayed hint rings SHALL be drawn as the step says it must
+become: one that must be a wall as the edge in the hint's color, over its
+other states; one that can't be a wall as a cross in the hint's color on the
+edge, which SHALL keep its own color, so that the two asks never look alike.
+
+#### Scenario: A step that rules out a wall crosses the edge
+
+- **WHEN** a hint step says an undecided edge can't be a wall
+- **THEN** the edge is drawn undecided, with a cross in the hint's color on
+  it, and nothing of it in the hint's color is drawn as a wall
