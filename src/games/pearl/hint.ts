@@ -24,6 +24,15 @@ import {
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import {
+  D,
+  DIRECTIONS,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+} from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
   type Axis,
@@ -44,18 +53,11 @@ import {
 } from "./solver.ts";
 import {
   CORNER,
-  D,
-  DX,
-  DY,
-  F,
-  L,
   NOCLUE,
   type PearlMove,
   type PearlOp,
   type PearlState,
-  R,
   STRAIGHT,
-  U,
 } from "./state.ts";
 
 /**
@@ -89,25 +91,23 @@ interface ShownFiring extends PearlFiring {
 
 // --- reading a workspace --------------------------------------------------
 
-/** The four directions, in the order the narration searches them. */
-const DIRS = [R, U, L, D];
-
 /** Edge states: 1 a line, 2 ruled out (or the board's edge), 3 unknown. */
 function edgeState(b: PearlBoard, ws: Int32Array, sq: number, d: number): number {
   return ws[b.edgeAt(sq % b.w, Math.floor(sq / b.w), d)];
 }
 
 function onBoard(b: PearlBoard, sq: number, d: number): boolean {
-  const x = (sq % b.w) + DX(d);
-  const y = Math.floor(sq / b.w) + DY(d);
+  const x = (sq % b.w) + dirX(d);
+  const y = Math.floor(sq / b.w) + dirY(d);
   return x >= 0 && x < b.w && y >= 0 && y < b.h;
 }
 
-const step = (b: PearlBoard, sq: number, d: number): number => sq + DY(d) * b.w + DX(d);
+const step = (b: PearlBoard, sq: number, d: number): number =>
+  sq + dirY(d) * b.w + dirX(d);
 
 function linesAt(b: PearlBoard, ws: Int32Array, sq: number): number {
   let n = 0;
-  for (const d of DIRS) if (edgeState(b, ws, sq, d) === 1) n++;
+  for (const d of DIRECTIONS) if (edgeState(b, ws, sq, d) === 1) n++;
   return n;
 }
 
@@ -118,7 +118,7 @@ const otherAxis = (a: Axis): Axis => (a === "across" ? "upDown" : "across");
  * 0 when it is not one of `sq`'s edges. */
 function dirFrom(b: PearlBoard, op: PearlEdgeOp, sq: number): number {
   if (op.sq === sq) return op.dir;
-  if (step(b, op.sq, op.dir) === sq) return F(op.dir);
+  if (step(b, op.sq, op.dir) === sq) return opposite(op.dir);
   return 0;
 }
 
@@ -156,7 +156,7 @@ function carryOn(b: PearlBoard, ops: readonly PearlEdgeOp[]): Carried[] {
     const op =
       d === R || d === D
         ? { sq, dir: d, line: true }
-        : { sq: step(b, sq, d), dir: F(d), line: true };
+        : { sq: step(b, sq, d), dir: opposite(d), line: true };
     carried.push({ op, rule });
     work.push(op);
   };
@@ -164,11 +164,11 @@ function carryOn(b: PearlBoard, ops: readonly PearlEdgeOp[]): Carried[] {
     const far = step(b, op.sq, op.dir);
     for (const [sq, next, d] of [
       [op.sq, far, op.dir],
-      [far, op.sq, F(op.dir)],
+      [far, op.sq, opposite(op.dir)],
     ]) {
       // `d` leads from `sq` along the line to `next`.
       if (b.clues[sq] === CORNER) draw(next, d, "black");
-      if (b.clues[sq] === STRAIGHT) draw(sq, F(d), "white");
+      if (b.clues[sq] === STRAIGHT) draw(sq, opposite(d), "white");
     }
   }
   return carried;
@@ -184,8 +184,9 @@ function noStraight(
   d: number,
 ): NoStraight {
   if (b.clues[next] === CORNER) return "blackPearl";
-  for (const s of DIRS)
-    if (s !== d && s !== F(d) && edgeState(b, ws, next, s) === 1) return "sideLine";
+  for (const s of DIRECTIONS)
+    if (s !== d && s !== opposite(d) && edgeState(b, ws, next, s) === 1)
+      return "sideLine";
   return onBoard(b, next, d) ? "farEdge" : "boardEdge";
 }
 
@@ -196,17 +197,17 @@ function narrateSquare(b: PearlBoard, f: ShownFiring, sq: number, m: Marked): Se
   if (clue === CORNER) {
     // One axis: the op's edge, and the edge opposite it.
     const d = dirFrom(b, f.ops[0], sq);
-    const opposite = edgeState(b, ws, sq, F(d));
-    if (opposite === 1) return say.blackOpposite("line", m);
+    const facing = edgeState(b, ws, sq, opposite(d));
+    if (facing === 1) return say.blackOpposite("line", m);
     return say.blackOpposite(
-      onBoard(b, sq, F(d)) ? "ruledOut" : "boardEdge",
+      onBoard(b, sq, opposite(d)) ? "ruledOut" : "boardEdge",
       m,
       m.black.length > 0,
     );
   }
   if (clue === STRAIGHT) {
     if (linesAt(b, ws, sq) > 0) return say.whiteCarriesOn(m);
-    for (const d of DIRS)
+    for (const d of DIRECTIONS)
       if (edgeState(b, ws, sq, d) === 2)
         return say.whiteBlocked(otherAxis(axisOf(d)), !onBoard(b, sq, d), m);
     throw new Error("pearl hint: a white pearl settled with nothing beside it");
@@ -293,7 +294,7 @@ function areaOf(b: PearlBoard, reason: PearlReason): number[] {
       return [step(b, reason.pearl, reason.dir)];
     case "whiteCannotTurn": {
       const d = reason.axis;
-      return [step(b, reason.pearl, d), step(b, reason.pearl, F(d))];
+      return [step(b, reason.pearl, d), step(b, reason.pearl, opposite(d))];
     }
     case "whiteTurnsOpposite":
       return [step(b, reason.pearl, reason.dir)];
@@ -312,12 +313,12 @@ export function boardOf(state: PearlState): PearlBoard {
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
       for (const d of [R, D]) {
-        if (x + DX(d) >= w || y + DY(d) >= h) continue;
+        if (x + dirX(d) >= w || y + dirY(d) >= h) continue;
         const i = y * w + x;
-        const j = i + DY(d) * w + DX(d);
+        const j = i + dirY(d) * w + dirX(d);
         const e = b.edgeAt(x, y, d);
-        if (lines[i] & d || lines[j] & F(d)) b.ws[e] = 1;
-        else if (marks[i] & d || marks[j] & F(d)) b.ws[e] = 2;
+        if (lines[i] & d || lines[j] & opposite(d)) b.ws[e] = 1;
+        else if (marks[i] & d || marks[j] & opposite(d)) b.ws[e] = 2;
       }
   return b;
 }
@@ -408,7 +409,7 @@ function moveOf(b: PearlBoard, targets: readonly PearlEdgeOp[]): PearlMove {
     const kind = t.line ? "line" : "mark";
     const far = step(b, t.sq, t.dir);
     ops.push({ kind, l: t.dir, x: t.sq % b.w, y: Math.floor(t.sq / b.w) });
-    ops.push({ kind, l: F(t.dir), x: far % b.w, y: Math.floor(far / b.w) });
+    ops.push({ kind, l: opposite(t.dir), x: far % b.w, y: Math.floor(far / b.w) });
   }
   return { ops };
 }

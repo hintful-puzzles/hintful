@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
+import { D, L, R, U } from "../../engine/square-edges.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -38,14 +39,10 @@ import {
 import { pearlSolve } from "./solver.ts";
 import {
   CORNER,
-  D,
   DIFF_COUNT,
-  L,
   newState,
   type PearlMove,
   type PearlParams,
-  R,
-  U,
 } from "./state.ts";
 
 const P: PearlParams = { w: 6, h: 6, difficulty: 0 };

@@ -26,9 +26,19 @@ import {
   singleFirings,
 } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import {
+  anticlockwise,
+  clockwise,
+  D,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/square-edges.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
 import {
-  ACW,
   bBLANK,
   bLD,
   bLR,
@@ -37,18 +47,10 @@ import {
   bRU,
   bUD,
   CORNER,
-  CW,
-  D,
   DIFF_COUNT,
   DIFF_EASY,
   DIFF_TRICKY,
-  DX,
-  DY,
-  F,
-  L,
-  R,
   STRAIGHT,
-  U,
 } from "./state.ts";
 
 /** The solver's verdict and the workspace it left. */
@@ -154,7 +156,7 @@ export class PearlBoard {
 
   /** The workspace index of the edge leaving square `(x, y)` toward `d`. */
   edgeAt(x: number, y: number, d: number): number {
-    return (2 * y + 1 + DY(d)) * this.W + 2 * x + 1 + DX(d);
+    return (2 * y + 1 + dirY(d)) * this.W + 2 * x + 1 + dirX(d);
   }
 
   /**
@@ -239,8 +241,8 @@ export class PearlBoard {
         for (let b = 0; b < 0xd; b++)
           if (ws[sq] & (1 << b)) {
             for (let d = 1; d <= 8; d += d) {
-              const ex = 2 * x + 1 + DX(d);
-              const ey = 2 * y + 1 + DY(d);
+              const ex = 2 * x + 1 + dirX(d);
+              const ey = 2 * y + 1 + dirY(d);
               if (ws[ey * W + ex] === (b & d ? 2 : 1)) {
                 ws[sq] &= ~(1 << b);
                 fired++;
@@ -283,11 +285,11 @@ export class PearlBoard {
         const clue = clues[pearl];
         if (clue === CORNER) {
           for (let d = 1; d <= 8; d += d) {
-            const ex = 2 * x + 1 + DX(d);
-            const ey = 2 * y + 1 + DY(d);
-            const fx = ex + DX(d);
-            const fy = ey + DY(d);
-            const type = d | F(d);
+            const ex = 2 * x + 1 + dirX(d);
+            const ey = 2 * y + 1 + dirY(d);
+            const fx = ex + dirX(d);
+            const fy = ey + dirY(d);
+            const type = d | opposite(d);
             if (ws[ey * W + ex] === 1) {
               // Corner connected on an edge ⇒ the square beyond it is a
               // straight in that direction.
@@ -319,15 +321,22 @@ export class PearlBoard {
           // If a straight is between two squares neither of which can be a
           // corner connected to it, it cannot point that way.
           for (let d = 1; d <= 2; d += d) {
-            const fx = 2 * x + 1 + 2 * DX(d);
-            const fy = 2 * y + 1 + 2 * DY(d);
-            const gx = 2 * x + 1 - 2 * DX(d);
-            const gy = 2 * y + 1 - 2 * DY(d);
-            const type = d | F(d);
+            const fx = 2 * x + 1 + 2 * dirX(d);
+            const fy = 2 * y + 1 + 2 * dirY(d);
+            const gx = 2 * x + 1 - 2 * dirX(d);
+            const gy = 2 * y + 1 - 2 * dirY(d);
+            const type = d | opposite(d);
             if (!(ws[sq] & (1 << type))) continue;
             if (
-              !(ws[fy * W + fx] & ((1 << (F(d) | ACW(d))) | (1 << (F(d) | CW(d))))) &&
-              !(ws[gy * W + gx] & ((1 << (d | ACW(d))) | (1 << (d | CW(d)))))
+              !(
+                ws[fy * W + fx] &
+                ((1 << (opposite(d) | anticlockwise(d))) |
+                  (1 << (opposite(d) | clockwise(d))))
+              ) &&
+              !(
+                ws[gy * W + gx] &
+                ((1 << (d | anticlockwise(d))) | (1 << (d | clockwise(d))))
+              )
             ) {
               const n = this.narrow(sq, ws[sq] & ~(1 << type), {
                 kind: "whiteCannotTurn",
@@ -342,11 +351,11 @@ export class PearlBoard {
           // If a straight with known direction connects on one side to a
           // known straight, the other side must be a corner.
           for (let d = 1; d <= 8; d += d) {
-            const fx = 2 * x + 1 + 2 * DX(d);
-            const fy = 2 * y + 1 + 2 * DY(d);
-            const gx = 2 * x + 1 - 2 * DX(d);
-            const gy = 2 * y + 1 - 2 * DY(d);
-            const type = d | F(d);
+            const fx = 2 * x + 1 + 2 * dirX(d);
+            const fy = 2 * y + 1 + 2 * dirY(d);
+            const gx = 2 * x + 1 - 2 * dirX(d);
+            const gy = 2 * y + 1 - 2 * dirY(d);
+            const type = d | opposite(d);
             if (ws[sq] !== 1 << type) continue;
             if (
               !(ws[fy * W + fx] & ~(bLR | bUD)) &&
@@ -485,7 +494,7 @@ export class PearlBoard {
           if (!(ws[sq] & (1 << b)) || !this.shapeClosesEarly(x, y, b)) continue;
           const cell = ((y - 1) >> 1) * w + ((x - 1) >> 1);
           const d = b & -b;
-          const end = cell + DY(d) * w + DX(d);
+          const end = cell + dirY(d) * w + dirX(d);
           const n = this.narrow(sq, ws[sq] & ~(1 << b), {
             kind: "closesEarlyThrough",
             sq: cell,
@@ -516,12 +525,12 @@ export class PearlBoard {
     let connections = 0;
     for (let d = 1; d <= 8; d += d)
       if (b & d) {
-        const xx = ((x / 2) | 0) + DX(d);
-        const yy = ((y / 2) | 0) + DY(d);
+        const xx = ((x / 2) | 0) + dirX(d);
+        const yy = ((y / 2) | 0) + dirY(d);
         const ee = dsf.canonify(yy * w + xx);
         if (e === -1) e = ee;
         else if (e !== ee) e = -2;
-        if (ws[(y + DY(d)) * W + (x + DX(d))] === 1) connections++;
+        if (ws[(y + dirY(d)) * W + (x + dirX(d))] === 1) connections++;
       }
     if (e < 0 || connections >= 2) return false;
     let loopsize = dsfsize[e];
@@ -682,10 +691,10 @@ function transcribe(w: number, h: number, ws: Int32Array, result: Uint8Array): v
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
       for (let d = 1; d <= 8; d += d) {
-        const nx = x + DX(d);
-        const ny = y + DY(d);
+        const nx = x + dirX(d);
+        const ny = y + dirY(d);
         const linksBack =
-          nx >= 0 && nx < w && ny >= 0 && ny < h && result[ny * w + nx] & F(d);
+          nx >= 0 && nx < w && ny >= 0 && ny < h && result[ny * w + nx] & opposite(d);
         if (!linksBack) result[y * w + x] &= ~d;
       }
 }

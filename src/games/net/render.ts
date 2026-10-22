@@ -38,8 +38,6 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
-import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import {
   anticlockwise,
   clockwise,
@@ -48,12 +46,13 @@ import {
   dirX,
   dirY,
   L,
-  offset,
   opposite,
   R,
   U,
-  wireDistance,
-} from "../../engine/wires.ts";
+} from "../../engine/square-edges.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
+import { offset, wireDistance } from "../../engine/wires.ts";
 import type { NetHint } from "./hint.ts";
 import { SIDE } from "./hint-text.ts";
 import { computeLoops, ERR_SHIFT } from "./loops.ts";

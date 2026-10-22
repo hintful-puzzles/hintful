@@ -1,9 +1,9 @@
 # Engine catalog
 
 Every shared helper under [`src/engine/`](../src/engine/): when a game
-reaches for it, what it exports that a game calls, a game to read, and the
-trap if there is one. An entry is short because the module's own header is
-its documentation; read the header before using the module. An exemplar is a
+reaches for it, what a game calls from it, a game to read, and the trap if
+there is one. An entry is short: the module's own header is its
+documentation. An exemplar is a
 path under `src/games/` unless it says otherwise. The normative rules are
 the `engine-helpers` spec and the engine specs an entry names.
 `node scripts/checks/engine-catalog.mjs` fails when a module under
@@ -40,6 +40,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – Byte-match critical entries | you change a helper whose order reaches a desc |
 | Board structure and geometry | you need connectivity, a board mechanic or pixel geometry |
 | – `dsf.ts` — union-find | your state is a partition of cells |
+| – `square-edges.ts` — square-grid edges | you name a direction or an edge |
 | – `border-grid.ts` — the shared border-marking mechanic | the player marks edges between cells as walls |
 | – `border-grid-render.ts` — that mechanic's look | you draw a border-marking game's tiles |
 | – `border-grid-hint.ts` — that mechanic's explained hint | you write a border-marking game's hint |
@@ -213,6 +214,23 @@ for `FlipDsf`.
   bound** and not as an identity to compare. Which members the scan skips
   decides which boards a solver-gated generator emits (Rome's naked pairs).
   Byte-match critical: `Dsf` keeps `dsf.c`'s tie-break.
+
+### `square-edges.ts` — square-grid edges
+
+Reach for it before writing a direction, a `DX`, or "the edge between these
+two squares". A direction is `RIGHT`, `UP`, `LEFT` or `DOWN`, and `1 << d` is
+upstream's `R`/`U`/`L`/`D` bit, so a mask of a square's sides (Net's wires,
+Pearl's lines, Tracks' rails) uses the module's mask algebra as it is.
+`squareEdges(w, h)` numbers a board's edges once: **store a mark per edge
+by that number, never on both squares**, which is how two copies come to
+disagree. `edgeAt` and `pointAtEdge` are the press side of it, given the
+tile and border, with a still middle a game can turn off. Exemplar:
+`path/`.
+
+**A game whose stored bits are in another order keeps its own index**,
+named by the bit each direction is saved in, and maps to the module's at
+the pointer: `border-grid.ts`'s `SQUARE_DIRS`. Changing a stored order is a
+save format change.
 
 ### `border-grid.ts` — the shared border-marking mechanic
 
@@ -465,8 +483,8 @@ far simpler. Exemplar: `pearl/generator.ts`.
 
 ### `wires.ts` — the Net/Netslide wire model
 
-Reach for it for tiles that carry wires: the direction algebra, the wire
-desc codec with its barriers, the spanning-tree grower, barrier placement
+Reach for it for tiles that carry wires: the step across the torus, the
+wire desc codec with its barriers, the spanning-tree grower, barrier placement
 and the `computeActive` power flood. `wireDistance`, a tile's distance from
 the source along the wires, is the position to hand the win flash. **Only
 the bits `0x0F` are wires; each game owns the high bits**, and the header's

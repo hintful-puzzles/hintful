@@ -4,7 +4,7 @@
  * Both are grids of Net wire tiles whose solved configuration is a spanning
  * tree rooted at a source; they differ only in *how the player rearranges the
  * grid* (Net rotates a tile in place, Netslide slides a whole line). The
- * direction algebra, the hex wire description codec, the spanning-tree grower,
+ * hex wire description codec, the spanning-tree grower,
  * barrier placement and the "power flows from the source" flood are shared,
  * and live here. Both games' differentials depend on the draw order in it.
  *
@@ -23,67 +23,22 @@ import { readDesc } from "./desc-reader.ts";
 import type { RandomState } from "./random/index.ts";
 import { randomUpto } from "./random/index.ts";
 import { SortedMultiset } from "./sorted-multiset.ts";
+import {
+  D,
+  DIRECTIONS,
+  dirCount,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "./square-edges.ts";
 
 /* ----------------------------------------------------------------------
- * Direction / wire-mask algebra (upstream's macros R/U/L/D, A/C/F/ROT,
- * X/Y, COUNT, OFFSET).
+ * A step across the torus (upstream's `OFFSET`). The direction algebra under
+ * it is `square-edges.ts`'s.
  */
-
-export const R = 0x01;
-export const U = 0x02;
-export const L = 0x04;
-export const D = 0x08;
-
-/** The four directions in upstream's iteration order (`d = 1; d < 0x10;
- * d <<= 1`). Ports of upstream loops depend on this order. */
-export const DIRECTIONS: readonly number[] = [R, U, L, D];
-
-/** Rotate a direction/wire mask one step anticlockwise (upstream `A`). */
-export function anticlockwise(x: number): number {
-  return ((x & 0x07) << 1) | ((x & 0x08) >> 3);
-}
-
-/** Rotate a direction/wire mask one step clockwise (upstream `C`). */
-export function clockwise(x: number): number {
-  return ((x & 0x0e) >> 1) | ((x & 0x01) << 3);
-}
-
-/** Reverse a direction/wire mask (upstream `F`). */
-export function opposite(x: number): number {
-  return ((x & 0x0c) >> 2) | ((x & 0x03) << 2);
-}
-
-/** Rotate `x` by `n` quarter-turns, upstream's `ROT(x, n)`:
- * 0 = identity, 1 = anticlockwise, 2 = flip, 3 = clockwise. */
-export function rot(x: number, n: number): number {
-  switch (n & 3) {
-    case 0:
-      return x;
-    case 1:
-      return anticlockwise(x);
-    case 2:
-      return opposite(x);
-    default:
-      return clockwise(x);
-  }
-}
-
-/** The x displacement of a single direction bit (upstream `X`). */
-export function dirX(dir: number): number {
-  return dir === R ? +1 : dir === L ? -1 : 0;
-}
-
-/** The y displacement of a single direction bit (upstream `Y`). */
-export function dirY(dir: number): number {
-  return dir === D ? +1 : dir === U ? -1 : 0;
-}
-
-/** Number of wires in a tile mask (upstream `COUNT`). */
-export function wireCount(tile: number): number {
-  return (
-    ((tile & 0x08) >> 3) + ((tile & 0x04) >> 2) + ((tile & 0x02) >> 1) + (tile & 0x01)
-  );
-}
 
 /** Step one tile in `dir`, wrapping around the torus (upstream `OFFSET`). It
  * wraps unconditionally: a non-wrapping game is fenced in by border barriers,
@@ -170,7 +125,7 @@ export function growSpanningTree(
     tiles[y2 * w + x2] |= d2;
 
     // A T-piece has had its say: withdraw the fourth arm.
-    if (wireCount(tiles[y1 * w + x1]) === 3) {
+    if (dirCount(tiles[y1 * w + x1]) === 3) {
       possibilities.delete({ x: x1, y: y1, direction: 0x0f ^ tiles[y1 * w + x1] });
     }
 

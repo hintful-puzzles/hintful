@@ -29,23 +29,18 @@ import {
 } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
+import { D, dirCount, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
 import {
   ALLDIR,
   type Board,
   checkCompletion,
-  D,
   DIFF_EASY,
   DIFF_HARD,
   DIFF_TRICKY,
-  DX,
-  DY,
   E_NOTRACK,
   E_TRACK,
   inGrid,
-  L,
-  NBITS,
-  R,
   S_CLUE,
   S_ERROR,
   S_MARK,
@@ -59,7 +54,6 @@ import {
   type TracksOp,
   type TracksRecorder,
   trackDsf,
-  U,
 } from "./state.ts";
 
 // --- the recording projection: what a firing points at, and why ------------
@@ -408,7 +402,7 @@ function checkLoopSub(
 ): number {
   const { w, h } = b;
   const i = y * w + x;
-  const j = (y + DY(dir)) * w + (x + DX(dir));
+  const j = (y + dirY(dir)) * w + (x + dirX(dir));
   if (
     b.sflags[i] & S_TRACK &&
     b.sflags[j] & S_TRACK &&
@@ -705,7 +699,7 @@ function neighborsTry(
   const p = y * w + x;
   const P = Y * w + X;
   if ((b.sflags[p] | b.sflags[P]) & (S_TRACK | S_NOTRACK)) return 0;
-  const possibleExitsExceptDir = NBITS[ALLDIR & ~dir & ~sEDirs(b, x, y, E_NOTRACK)];
+  const possibleExitsExceptDir = dirCount(ALLDIR & ~dir & ~sEDirs(b, x, y, E_NOTRACK));
   if (possibleExitsExceptDir >= 2) return 0;
   // If p is filled, P must be too.
   let did = 0;
@@ -788,8 +782,8 @@ function checkNeighbors(b: Board, bothWays: boolean): number {
 
 function bridgeSub(b: Board, x: number, y: number, d: number, dsf: Dsf): number {
   const { w, h } = b;
-  const X = x + DX(d);
-  const Y = y + DY(d);
+  const X = x + dirX(d);
+  const Y = y + dirY(d);
   dsf.reinit();
   for (let xi = 0; xi < w; xi++) {
     for (let yi = 0; yi < h; yi++) {
@@ -820,8 +814,8 @@ function bridgeSub(b: Board, x: number, y: number, d: number, dsf: Dsf): number 
       if (dsf.canonify(yi * w + xi) !== component) continue;
       if (rec) cells.push(yi * w + xi);
       for (let di = 1; di < 16; di *= 2) {
-        const Xi = xi + DX(di);
-        const Yi = yi + DY(di);
+        const Xi = xi + dirX(di);
+        const Yi = yi + dirY(di);
         if (
           (Xi < 0 ||
             Xi >= w ||
@@ -863,8 +857,8 @@ function* bridgeNeighbors(b: Board, vertex: number): Iterable<number> {
   const dirs = ALLDIR & ~sEDirs(b, x, y, E_TRACK) & ~sEDirs(b, x, y, E_NOTRACK);
   for (let di = 1; di < 16; di *= 2) {
     if (dirs & di) {
-      const xr = x + DX(di);
-      const yr = y + DY(di);
+      const xr = x + dirX(di);
+      const yr = y + dirY(di);
       if (inGrid(b, xr, yr)) yield yr * w + xr;
     }
   }
@@ -1046,8 +1040,8 @@ export function copyAndStrip(b: Board, flipClueI: number): Board {
     const y = Math.floor(i / w);
     for (let j = 0; j < 4; j++) {
       const f = 1 << j;
-      const xx = x + DX(f);
-      const yy = y + DY(f);
+      const xx = x + dirX(f);
+      const yy = y + dirY(f);
       if (!inGrid(b, xx, yy) || !(ret.sflags[yy * w + xx] & S_CLUE)) {
         sEClear(ret, x, y, f, E_TRACK);
         sEClear(ret, x, y, f, E_NOTRACK);

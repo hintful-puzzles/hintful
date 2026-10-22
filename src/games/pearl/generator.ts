@@ -18,6 +18,7 @@ import {
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
+import { D, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
 import { pearlSolve } from "./solver.ts";
 import {
   bLD,
@@ -27,17 +28,11 @@ import {
   bRU,
   bUD,
   CORNER,
-  D,
   DIFF_EASY,
-  DX,
-  DY,
   encodeClues,
-  L,
   NOCLUE,
   type PearlParams,
-  R,
   STRAIGHT,
-  U,
 } from "./state.ts";
 
 /** Build the black-clue bias for `generateLoop` (upstream `pearl_loopgen_bias`),
@@ -175,8 +170,8 @@ function newClues(
           let d = 1;
           for (; d <= 8; d += d)
             if (type & d) {
-              const xx = x + DX(d);
-              const yy = y + DY(d);
+              const xx = x + dirX(d);
+              const yy = y + dirY(d);
               if ((bLU | bLD | bRU | bRD) & (1 << gridOut[yy * w + xx])) break;
             }
           if (d <= 8) clues[y * w + x] = STRAIGHT;
@@ -186,8 +181,8 @@ function newClues(
           let d = 1;
           for (; d <= 8; d += d)
             if (type & d) {
-              const xx = x + DX(d);
-              const yy = y + DY(d);
+              const xx = x + dirX(d);
+              const yy = y + dirY(d);
               if (!((bLR | bUD) & (1 << gridOut[yy * w + xx]))) break;
             }
           if (d > 8) clues[y * w + x] = CORNER;

@@ -19,8 +19,8 @@ import {
   sentence,
   so,
 } from "../../engine/hint-words.ts";
+import { D, dirCount, L, R, U } from "../../engine/square-edges.ts";
 import type { Point } from "../../engine/types.ts";
-import { D, L, R, U, wireCount } from "../../engine/wires.ts";
 import { NOTE_WIRE, type SideNote } from "./state.ts";
 
 /** A side, named as a note move names it (from the tile left of it, `R`, or
@@ -55,7 +55,7 @@ export function dirWords(wires: number): string {
 
 /** What a tile is called, by its wires: the pieces the help names. */
 export function pieceName(wires: number): string {
-  const n = wireCount(wires);
+  const n = dirCount(wires);
   if (n === 1) return "dead end";
   if (n === 3) return "T";
   if (n === 4) return "cross";

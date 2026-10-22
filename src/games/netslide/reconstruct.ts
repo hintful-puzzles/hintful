@@ -37,19 +37,9 @@
  */
 
 import { Dsf } from "../../engine/dsf.ts";
-import {
-  D,
-  L,
-  type NetslideState,
-  offset,
-  opposite,
-  R,
-  U,
-  wireCount,
-} from "./state.ts";
-
-/** The four wire directions, in a fixed order so the search is deterministic. */
-const DIRS = [R, U, L, D] as const;
+import { D, DIRECTIONS, dirCount, opposite, R } from "../../engine/square-edges.ts";
+import { offset } from "../../engine/wires.ts";
+import type { NetslideState } from "./state.ts";
 
 /** How many distinct finished grids to look for before giving up counting. The
  * hint only needs one; the cap exists so a pathological board cannot make the
@@ -97,7 +87,7 @@ export function findSolutions(
     let required = 0;
     let forbidden = 0;
 
-    for (const dir of DIRS) {
+    for (const dir of DIRECTIONS) {
       // A wire may never cross a barrier. (Border walls are barriers too, so a
       // non-wrapping grid's edges are handled here without a special case.)
       if (barriers[cell] & dir) {
@@ -133,7 +123,7 @@ export function findSolutions(
     for (let cell = 0; cell < n; cell++) {
       if (placed[cell]) continue;
       let count = 0;
-      for (const dir of DIRS) if (placed[neighbor(cell, dir)]) count++;
+      for (const dir of DIRECTIONS) if (placed[neighbor(cell, dir)]) count++;
       if (count > bestNeighbors) {
         bestNeighbors = count;
         best = cell;
@@ -181,7 +171,7 @@ export function findSolutions(
       // the wire budget has no room for one.
       let merged = false;
       let loops = false;
-      for (const dir of DIRS) {
+      for (const dir of DIRECTIONS) {
         if (!(mask & dir)) continue;
         const other = neighbor(cell, dir);
         if (!placed[other]) continue;
@@ -213,7 +203,7 @@ export function findSolutions(
 
   // A board whose tiles cannot even form a tree is not a Netslide board.
   let ends = 0;
-  for (let cell = 0; cell < n; cell++) ends += wireCount(tiles[cell]);
+  for (let cell = 0; cell < n; cell++) ends += dirCount(tiles[cell]);
   if (ends !== 2 * (n - 1)) return [];
 
   search(n - 1);

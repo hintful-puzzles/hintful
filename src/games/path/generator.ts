@@ -17,16 +17,14 @@ import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { PathBoard, solvePath } from "./solver.ts";
 import {
   across,
   edgeBetween,
-  encodeDesc,
-  type Geometry,
-  geometry,
-  OPEN,
-  type PathParams,
-} from "./state.ts";
+  type SquareEdges,
+  squareEdges,
+} from "../../engine/square-edges.ts";
+import { PathBoard, solvePath } from "./solver.ts";
+import { encodeDesc, OPEN, type PathParams } from "./state.ts";
 
 /** The fewest squares a path may have: two numbers side by side would leave
  * the player nothing to find. */
@@ -41,7 +39,7 @@ const LONGEST_STRAIGHT = 3;
 type Path = readonly number[];
 
 /** Whether `path` is a straight line too long to be worth finding. */
-function boring(g: Geometry, path: Path): boolean {
+function boring(g: SquareEdges, path: Path): boolean {
   if (path.length <= LONGEST_STRAIGHT) return false;
   const row = (i: number): number => Math.floor(i / g.w);
   const col = (i: number): number => i % g.w;
@@ -54,7 +52,7 @@ function boring(g: Geometry, path: Path): boolean {
 /** Whether `p` and `q` touch anywhere but at `u` beside `v`. A path never
  * touches itself except along its own line, as in `path.c`: one that did
  * would leave a corner a line could cut. */
-function touches(g: Geometry, p: Path, q: Path, u: number, v: number): boolean {
+function touches(g: SquareEdges, p: Path, q: Path, u: number, v: number): boolean {
   const inQ = new Set(q);
   for (const i of p)
     for (let k = 0; k < 4; k++) {
@@ -83,7 +81,7 @@ interface Join {
 
 /** Every join of two of `paths` whose ends touch, the joined path touching
  * itself nowhere else and not {@link boring}. */
-function joins(g: Geometry, paths: readonly Path[]): Join[] {
+function joins(g: SquareEdges, paths: readonly Path[]): Join[] {
   const owner = new Int32Array(g.cells).fill(-1);
   paths.forEach((path, k) => {
     owner[path[0]] = k;
@@ -111,7 +109,7 @@ function withJoin(paths: readonly Path[], j: Join): Path[] {
  * short to stand. Every square starts as a path of its own, and two paths are
  * joined while one of them is too short, or by a coin's toss, so that long
  * paths do not swallow every short one. */
-function layPaths(g: Geometry, rng: RandomState): Path[] | null {
+function layPaths(g: SquareEdges, rng: RandomState): Path[] | null {
   let paths: Path[] = Array.from({ length: g.cells }, (_, i) => [i]);
   // Each join leaves one path fewer.
   const join = retryLimit("path: lay", g.cells);
@@ -133,7 +131,7 @@ function layPaths(g: Geometry, rng: RandomState): Path[] | null {
 
 /** The numbers for `paths`: each path's two ends take one number, numbered in
  * reading order of the first square of either end. */
-function numberEnds(g: Geometry, paths: readonly Path[]): Uint8Array {
+function numberEnds(g: SquareEdges, paths: readonly Path[]): Uint8Array {
   const order = paths
     .map((p) => [p[0], p[p.length - 1]] as const)
     .sort((x, y) => Math.min(...x) - Math.min(...y));
@@ -150,7 +148,7 @@ function attempt(p: PathParams, ends: Uint8Array, cap: number): PathBoard {
     p.w,
     p.h,
     ends,
-    new Uint8Array(geometry(p.w, p.h).edgeCount),
+    new Uint8Array(squareEdges(p.w, p.h).edgeCount),
   );
   solvePath(board, cap);
   return board;
@@ -163,7 +161,7 @@ function attempt(p: PathParams, ends: Uint8Array, cap: number): PathBoard {
  */
 function mend(
   p: PathParams,
-  g: Geometry,
+  g: SquareEdges,
   start: readonly Path[],
   rng: RandomState,
   cap: number,
@@ -195,7 +193,7 @@ function mend(
  * board at `cap` without the two numbers a join takes away. */
 function strip(
   p: PathParams,
-  g: Geometry,
+  g: SquareEdges,
   start: readonly Path[],
   rng: RandomState,
   cap: number,
@@ -220,7 +218,7 @@ function strip(
 }
 
 export function newPathDesc(p: PathParams, rng: RandomState): { desc: string } {
-  const g = geometry(p.w, p.h);
+  const g = squareEdges(p.w, p.h);
   const next = retryLimit("path: generation");
   for (;;) {
     next();

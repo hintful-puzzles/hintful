@@ -43,8 +43,8 @@ import {
   sentence,
   whole,
 } from "../../engine/hint-words.ts";
+import { D, dirCount, L, R, U } from "../../engine/square-edges.ts";
 import type { Point } from "../../engine/types.ts";
-import { D, L, R, U, wireCount } from "./state.ts";
 
 /** The tile a step moves, by the cell it sits in; its mark includes the arrow
  * that slides it. */
@@ -67,7 +67,7 @@ export interface Marked {
  * see. There is no "tile 8" in Netslide, so the shape names the *kind* and the
  * board's mark says *which one*. */
 function tileName(mask: number): string {
-  const wires = wireCount(mask);
+  const wires = dirCount(mask);
   if (wires === 1) return "loose end";
   if (wires === 3) return "T-piece";
   if (wires === 4) return "cross";

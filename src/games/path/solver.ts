@@ -34,16 +34,14 @@ import {
 } from "../../engine/deduction-fixpoint.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import { across, type SquareEdges, squareEdges } from "../../engine/square-edges.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
 import {
-  across,
   CROSS,
   DIFF_EASY,
   DIFF_NORMAL,
   degreeOf,
   type EdgeMark,
-  type Geometry,
-  geometry,
   LINE,
   NO_END,
   OPEN,
@@ -93,7 +91,7 @@ const CHAIN_LIMIT = 6;
 /** The board the ladder works on: the numbers, and the edges it writes as it
  * goes. */
 export class PathBoard {
-  readonly g: Geometry;
+  readonly g: SquareEdges;
   /** The pieces of line as of `piecesAt` writes; rebuilt when the edges have
    * been written since. */
   private cached: Pieces | null = null;
@@ -106,7 +104,7 @@ export class PathBoard {
     readonly ends: Uint8Array,
     readonly edges: Uint8Array,
   ) {
-    this.g = geometry(w, h);
+    this.g = squareEdges(w, h);
   }
 
   /** Put `mark` on edge `e`. Every write to a board the ladder reads goes
@@ -473,7 +471,7 @@ export function answerOf(
   h: number,
   ends: Uint8Array,
 ): readonly EdgeMark[] | null {
-  const board = new PathBoard(w, h, ends, new Uint8Array(geometry(w, h).edgeCount));
+  const board = new PathBoard(w, h, ends, new Uint8Array(squareEdges(w, h).edgeCount));
   if (solvePath(board, DIFF_NORMAL) !== "solved") return null;
   return Array.from(board.edges, (m) => (m === LINE ? LINE : OPEN));
 }

@@ -15,13 +15,13 @@ import {
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { D, L, opposite, R, U } from "../../engine/square-edges.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
 import { executeMove } from "./moves.ts";
 import { pearlSolve } from "./solver.ts";
 import {
-  D,
   DIFF_COUNT,
   DIFF_EASY,
   DIFF_NAMES,
@@ -29,14 +29,10 @@ import {
   decodeParams,
   encodeClues,
   encodeParams,
-  F,
-  L,
   newState,
   type PearlMove,
   type PearlParams,
   type PearlState,
-  R,
-  U,
 } from "./state.ts";
 
 const EASY_6 = { w: 6, h: 6, difficulty: DIFF_EASY };
@@ -327,8 +323,8 @@ describe("pearl mistake overlay is in the diff key (paint-twice)", () => {
 });
 
 describe("pearl reciprocal / off-grid guards", () => {
-  it("F(dir) is the opposite direction", () => {
-    expect(F(R)).toBe(L);
-    expect(F(U)).toBe(D);
+  it("opposite(dir) is the opposite direction", () => {
+    expect(opposite(R)).toBe(L);
+    expect(opposite(U)).toBe(D);
   });
 });

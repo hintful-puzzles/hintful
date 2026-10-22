@@ -1,10 +1,10 @@
+import { D, R } from "../../engine/square-edges.ts";
 /**
  * What Net's Check & Save flags: a lock or a side note the solution
  * contradicts. A tile turned wrong but not locked is not a mistake — it is the
  * player still working.
  */
 
-import { D, R } from "../../engine/wires.ts";
 import { answerOf } from "./solver.ts";
 import {
   LOCKED,

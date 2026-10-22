@@ -1,5 +1,5 @@
 /**
- * Pearl (Masyu) state, params, direction algebra and the RLE desc codec.
+ * Pearl (Masyu) state, params and the RLE desc codec.
  *
  * State is immutable: `lines` / `marks` / `errors` are per-move copies; the
  * `clues` grid is shared frozen (upstream's ref-counted `shared_state`).
@@ -19,41 +19,17 @@ import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
+import { D, L, R, U } from "../../engine/square-edges.ts";
 
 // --- clue kinds (upstream NOCLUE / CORNER=black / STRAIGHT=white) ----------
 export const NOCLUE = 0;
 export const CORNER = 1; // black pearl
 export const STRAIGHT = 2; // white pearl
 
-// --- direction bits --------------------------------------------------------
-export const R = 1;
-export const U = 2;
-export const L = 4;
-export const D = 8;
-export const BLANK = 0;
-
-/** x-delta of a single direction bit (upstream `DX`). */
-export function DX(d: number): number {
-  return (d === R ? 1 : 0) - (d === L ? 1 : 0);
-}
-/** y-delta of a single direction bit (upstream `DY`; y grows downward). */
-export function DY(d: number): number {
-  return (d === D ? 1 : 0) - (d === U ? 1 : 0);
-}
-/** Opposite direction (upstream `F`). */
-export function F(d: number): number {
-  return ((d << 2) | (d >> 2)) & 0xf;
-}
-/** Clockwise-90 direction (upstream `C`). */
-export function CW(d: number): number {
-  return ((d << 3) | (d >> 1)) & 0xf;
-}
-/** Anticlockwise-90 direction (upstream `A`). */
-export function ACW(d: number): number {
-  return ((d << 1) | (d >> 3)) & 0xf;
-}
-
 // --- square-state bitmasks (1 << <pair of directions>) --------------------
+// Directions are `engine/square-edges.ts`'s bits, the ones `lines`, `marks`
+// and a move's `l` are stored in.
+export const BLANK = 0;
 export const bLR = 1 << (L | R);
 export const bUD = 1 << (U | D);
 export const bLU = 1 << (L | U);
@@ -61,13 +37,6 @@ export const bLD = 1 << (L | D);
 export const bRU = 1 << (R | U);
 export const bRD = 1 << (R | D);
 export const bBLANK = 1 << BLANK;
-
-// --- population count of the 4 direction bits -----------------------------
-const NBITS_TABLE = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
-/** Number of set direction bits in `l` (upstream `NBITS`). */
-export function NBITS(l: number): number {
-  return l < 0 || l > 15 ? 4 : NBITS_TABLE[l];
-}
 
 /** Error bit that flags a contradicted clue (upstream `ERROR_CLUE`), OR-ed
  * into `errors` alongside the four direction bits. */

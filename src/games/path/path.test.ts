@@ -25,12 +25,13 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
+import { pointAtEdge, squareEdges } from "../../engine/square-edges.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { countAnswers } from "./count-answers.ts";
 import { pathGame } from "./index.ts";
-import { COL_ERROR, COL_HINT, centerOf, newDrawState, pointAtEdge } from "./render.ts";
+import { COL_ERROR, COL_HINT, centerOf, layout, newDrawState } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   CROSS,
@@ -215,7 +216,7 @@ describe("path input", () => {
   });
 
   it("a click by an edge lays or lifts its line, and a right click crosses it", () => {
-    const p = pointAtEdge(start, TS, 9);
+    const p = pointAtEdge(squareEdges(start.w, start.h), layout(TS), 9);
     expect(
       play(start, [
         [LEFT_BUTTON, p],

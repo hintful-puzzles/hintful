@@ -1,6 +1,5 @@
 /**
- * Path's state, params, move and ui types, the board's geometry, and its desc
- * codec.
+ * Path's state, params, move and ui types, and its desc codec.
  *
  * The board is the numbers, which the desc gives and play never changes, and
  * a mark on every edge between two squares that share a side: nothing yet, a
@@ -23,6 +22,7 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { presetGrid } from "../../engine/preset-grid.ts";
+import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -69,7 +69,7 @@ export interface PathState {
   /** The number on each square, 1 up, or {@link NO_END}. Shared between
    * states. */
   ends: Uint8Array;
-  /** An {@link EdgeMark} per edge, indexed as {@link Geometry} numbers them. */
+  /** An {@link EdgeMark} per edge, indexed as `engine/square-edges.ts` numbers them. */
   edges: Uint8Array;
 }
 
@@ -95,72 +95,7 @@ export interface PathUi {
   drag: PathDrag | null;
 }
 
-// --- geometry ---------------------------------------------------------------
-
-/**
- * The edges of a `w × h` board. Edge `e` joins squares `a[e]` and `b[e]`, with
- * `a[e] < b[e]`: the horizontal edges come first, in reading order of their
- * left square, then the vertical ones in reading order of their upper square.
- * `around` holds each square's edges, four slots a square in the order up,
- * left, right, down, with `-1` past the board's side.
- */
-export interface Geometry {
-  w: number;
-  h: number;
-  cells: number;
-  edgeCount: number;
-  a: Int32Array;
-  b: Int32Array;
-  around: Int32Array;
-}
-
-const geometries = new Map<string, Geometry>();
-
-export function geometry(w: number, h: number): Geometry {
-  const key = `${w}x${h}`;
-  const known = geometries.get(key);
-  if (known) return known;
-  const cells = w * h;
-  const across = (w - 1) * h;
-  const edgeCount = across + w * (h - 1);
-  const a = new Int32Array(edgeCount);
-  const b = new Int32Array(edgeCount);
-  const around = new Int32Array(cells * 4).fill(-1);
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w - 1; x++) {
-      const e = y * (w - 1) + x;
-      const i = y * w + x;
-      a[e] = i;
-      b[e] = i + 1;
-      around[i * 4 + 2] = e;
-      around[(i + 1) * 4 + 1] = e;
-    }
-  for (let i = 0; i < w * (h - 1); i++) {
-    const e = across + i;
-    a[e] = i;
-    b[e] = i + w;
-    around[i * 4 + 3] = e;
-    around[(i + w) * 4] = e;
-  }
-  const made = { w, h, cells, edgeCount, a, b, around };
-  geometries.set(key, made);
-  return made;
-}
-
-/** The square across edge `e` from square `i`. */
-export function across(g: Geometry, e: number, i: number): number {
-  return g.a[e] === i ? g.b[e] : g.a[e];
-}
-
-/** The edge between squares `i` and `j`, or `-1` where they do not share a
- * side. */
-export function edgeBetween(g: Geometry, i: number, j: number): number {
-  for (let k = 0; k < 4; k++) {
-    const e = g.around[i * 4 + k];
-    if (e >= 0 && across(g, e, i) === j) return e;
-  }
-  return -1;
-}
+// --- squares ---------------------------------------------------------------
 
 /** How many lines a square takes: one from a number, two through any other. */
 export function degreeOf(ends: Uint8Array, i: number): number {
@@ -271,7 +206,12 @@ function parseDesc(p: PathParams, desc: string): DescParse<Uint8Array> {
 
 export function newState(p: PathParams, desc: string): PathState {
   const ends = descValue(parseDesc(p, desc));
-  return { w: p.w, h: p.h, ends, edges: new Uint8Array(geometry(p.w, p.h).edgeCount) };
+  return {
+    w: p.w,
+    h: p.h,
+    ends,
+    edges: new Uint8Array(squareEdges(p.w, p.h).edgeCount),
+  };
 }
 
 function cloneState(s: PathState): PathState {
@@ -297,7 +237,7 @@ export function executeMove(s: PathState, move: PathMove): PathState {
  * crosses between them. */
 export function textFormat(s: PathState): string {
   const { w, h, ends, edges } = s;
-  const g = geometry(w, h);
+  const g = squareEdges(w, h);
   const width = ends.some((v) => v > 9) ? 2 : 1;
   const cell = (i: number): string =>
     (ends[i] === NO_END ? "+" : String(ends[i])).padStart(width, " ");
@@ -308,13 +248,13 @@ export function textFormat(s: PathState): string {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       out += cell(i);
-      if (x < w - 1) out += join(g.around[i * 4 + 2], "-");
+      if (x < w - 1) out += join(g.around[i * 4 + RIGHT], "-");
     }
     out += "\n";
     if (y === h - 1) break;
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      out += join(g.around[i * 4 + 3], "|").padStart(width, " ");
+      out += join(g.around[i * 4 + DOWN], "|").padStart(width, " ");
       if (x < w - 1) out += " ";
     }
     out += "\n";

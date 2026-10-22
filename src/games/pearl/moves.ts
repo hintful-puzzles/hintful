@@ -9,6 +9,16 @@
  */
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import {
+  D,
+  dirCount,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/square-edges.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import { pearlSolve } from "./solver.ts";
 import {
@@ -20,21 +30,13 @@ import {
   bRU,
   bUD,
   CORNER,
-  D,
   DIFF_COUNT,
-  DX,
-  DY,
   ERROR_CLUE,
-  F,
   inGrid,
-  L,
-  NBITS,
   NOCLUE,
   type PearlMove,
   type PearlState,
-  R,
   STRAIGHT,
-  U,
 } from "./state.ts";
 
 // --- drag interpretation ---------------------------------------------------
@@ -111,9 +113,10 @@ export function updateUiDrag(
     for (let i = 0; i < ui.ndragcoords; i++) {
       const leg = interpretUiDrag(state, ui.dragcoords, clearing, i);
       if (leg.sx === gx && leg.sy === gy) lines ^= leg.oldstate ^ leg.newstate;
-      if (leg.dx === gx && leg.dy === gy) lines ^= F(leg.oldstate) ^ F(leg.newstate);
+      if (leg.dx === gx && leg.dy === gy)
+        lines ^= opposite(leg.oldstate) ^ opposite(leg.newstate);
     }
-    if (NBITS(lines) > 2) {
+    if (dirCount(lines) > 2) {
       // Bad vertex degree: fall back to backtracking behavior.
       ui.ndragcoords = 1;
       return;
@@ -157,11 +160,11 @@ function dsfUpdateCompletion(
   const w = state.w;
   const ac = ay * w + ax;
   if (!(state.lines[ac] & dir)) return true; // no link
-  const bx = ax + DX(dir);
-  const by = ay + DY(dir);
+  const bx = ax + dirX(dir);
+  const by = ay + dirY(dir);
   if (!inGrid(state, bx, by)) return false; // link off grid
   const bc = by * w + bx;
-  if (!(state.lines[bc] & F(dir))) return false; // no reciprocal link
+  if (!(state.lines[bc] & opposite(dir))) return false; // no reciprocal link
   dsf.merge(ac, bc);
   return true;
 }
@@ -205,7 +208,7 @@ function checkCompletion(state: PearlState): CompletionResult {
   for (let x = 0; x < w; x++)
     for (let y = 0; y < h; y++) {
       const type = lines[y * w + x];
-      const degree = NBITS(type);
+      const degree = dirCount(type);
       const comp = dsf.canonify(y * w + x);
       if (degree > 2) {
         error(x, y, type);
@@ -264,8 +267,8 @@ function checkCompletion(state: PearlState): CompletionResult {
         if ((bLR | bUD) & (1 << type)) error(x, y, ERROR_CLUE); // actually straight
         for (let d = 1; d <= 8; d += d)
           if (type & d) {
-            const xx = x + DX(d);
-            const yy = y + DY(d);
+            const xx = x + dirX(d);
+            const yy = y + dirY(d);
             if (!inGrid(state, xx, yy)) {
               error(x, y, d); // leads off grid
             } else if ((bLU | bLD | bRU | bRD) & (1 << lines[yy * w + xx])) {
@@ -277,15 +280,15 @@ function checkCompletion(state: PearlState): CompletionResult {
         let straightTouches = 0;
         for (let d = 1; d <= 8; d += d)
           if (type & d) {
-            const xx = x + DX(d);
-            const yy = y + DY(d);
+            const xx = x + dirX(d);
+            const yy = y + dirY(d);
             if (!inGrid(state, xx, yy)) {
               error(x, y, d); // leads off grid
             } else if ((bLR | bUD) & (1 << lines[yy * w + xx])) {
               straightTouches++;
             }
           }
-        if (straightTouches >= 2 && NBITS(type) >= 2) error(x, y, ERROR_CLUE);
+        if (straightTouches >= 2 && dirCount(type) >= 2) error(x, y, ERROR_CLUE);
       }
     }
 

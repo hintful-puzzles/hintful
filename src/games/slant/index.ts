@@ -37,6 +37,17 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
+  DOWN,
+  type EdgeLayout,
+  edgeAt,
+  edgeBetween,
+  edgeMiddle,
+  isHorizontal,
+  pointAtSide,
+  RIGHT,
+  squareEdges,
+} from "../../engine/square-edges.ts";
+import {
   beginSweep,
   dragMarkVerbs,
   ERASE_KEYS,
@@ -193,11 +204,11 @@ function interpretMove(
     const y = fromCoord(p.y, ts, border(ts));
     if (x < 0 || y < 0 || x >= w || y >= h) return null;
     hideCursor(ui.cursor);
-    const side = sideMarkAt(state, ds, p);
-    if (side === null) return null;
+    const e = aimedEdge(state, ds, p);
+    if (e === null) return null;
     // Either button marks, so the drag is opened as the one it declares.
-    beginSweep(markDrag, state, ui, side, LEFT_BUTTON, p, true);
-    return markDrag.primary.apply(state, side, ui);
+    beginSweep(markDrag, state, ui, e, LEFT_BUTTON, p, true);
+    return markDrag.primary.apply(state, e, ui);
   }
   if (ui.pencilMode && isMouseDrag(button)) return sweepTo(markDrag, state, ui, ds, p);
   if (ui.pencilMode && (button === CURSOR_SELECT || button === CURSOR_SELECT2)) {
@@ -206,7 +217,8 @@ function interpretMove(
     const pin = ui.pin;
     if (pin !== null && Math.abs(pin.x - x) + Math.abs(pin.y - y) === 1) {
       ui.pin = null;
-      return toggleMark(state, pin, { x, y }) ?? UI_UPDATE;
+      const g = squareEdges(w, h);
+      return toggleMark(state, edgeBetween(g, pin.y * w + pin.x, y * w + x));
     }
     ui.pin = pin !== null && pin.x === x && pin.y === y ? null : { x, y };
     return UI_UPDATE;
@@ -221,34 +233,36 @@ function interpretMove(
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
-/** The mark joining two squares that share a side, as `alike` stores it. */
-function markBetween(a: Point, b: Point): { x: number; y: number; dir: AlikeDir } {
-  const lo = a.y < b.y || (a.y === b.y && a.x < b.x) ? a : b;
-  return { x: lo.x, y: lo.y, dir: a.y === b.y ? "right" : "down" };
+/** The board's pixel layout, as `engine/square-edges.ts` aims at an edge in
+ * it. */
+const layout = (ds: SlantDrawState): EdgeLayout => ({
+  tile: ds.tileSize,
+  border: border(ds.tileSize),
+});
+
+/** The mark on edge `e`, as `alike` stores it: on its first square, toward
+ * the right or below. */
+function markOn(state: SlantState, e: number): { x: number; y: number; dir: AlikeDir } {
+  const g = squareEdges(state.w, state.h);
+  const i = g.a[e];
+  return {
+    x: i % state.w,
+    y: Math.floor(i / state.w),
+    dir: isHorizontal(g, e) ? "right" : "down",
+  };
 }
 
-type SideMark = ReturnType<typeof markBetween>;
+/** The edge a notes-mode press at `p` marks: the side of its square it lies
+ * nearest, with no still middle, since the diagonals cut a square into four
+ * triangles, one per side. */
+const aimedEdge = (state: SlantState, ds: SlantDrawState, p: Point): number | null =>
+  edgeAt(squareEdges(state.w, state.h), layout(ds), p, 0);
 
-/** The mark on the side of its square a notes-mode press at `p` is nearest,
- * or `null` off the board or on the board's rim. The diagonals cut a square
- * into four triangles, one per side. */
-function sideMarkAt(state: SlantState, ds: SlantDrawState, p: Point): SideMark | null {
-  const { w, h } = state;
-  const ts = ds.tileSize;
-  const x = fromCoord(p.x, ts, border(ts));
-  const y = fromCoord(p.y, ts, border(ts));
-  if (x < 0 || y < 0 || x >= w || y >= h) return null;
-  const fx = (p.x - border(ts)) / ts - x;
-  const fy = (p.y - border(ts)) / ts - y;
-  const side = [fx, 1 - fx, fy, 1 - fy];
-  const [nx, ny] = [
-    [x - 1, y],
-    [x + 1, y],
-    [x, y - 1],
-    [x, y + 1],
-  ][side.indexOf(Math.min(...side))];
-  if (nx < 0 || ny < 0 || nx >= w || ny >= h) return null;
-  return markBetween({ x, y }, { x: nx, y: ny });
+/** Toggle the mark on edge `e`. */
+function toggleMark(state: SlantState, e: number): SlantMove {
+  const mark = markOn(state, e);
+  const on = (state.alike[mark.y * state.w + mark.x] & alikeBit(mark.dir)) === 0;
+  return { type: "alike", ...mark, on };
 }
 
 /** Notes mode's mark between two squares, which a drag across more sides
@@ -257,40 +271,21 @@ export const markDrag = dragMarkVerbs<
   SlantState,
   SlantUi,
   SlantDrawState,
-  SideMark,
+  number,
   SlantMove
 >({
   noun: "side",
-  target: sideMarkAt,
-  apply: (state, mark) => ({
-    type: "alike",
-    ...mark,
-    on: (state.alike[mark.y * state.w + mark.x] & alikeBit(mark.dir)) === 0,
-  }),
-  pointAt(_state, ds, { x, y, dir }) {
-    // The middle of the side: the right or the bottom of square (x, y).
-    const ts = ds.tileSize;
-    const b = border(ts);
-    return dir === "right"
-      ? { x: b + (x + 1) * ts, y: b + y * ts + ts / 2 }
-      : { x: b + x * ts + ts / 2, y: b + (y + 1) * ts };
-  },
+  target: aimedEdge,
+  apply: toggleMark,
+  pointAt: (state, ds, e) => edgeMiddle(squareEdges(state.w, state.h), layout(ds), e),
   sweep: {
-    holds: (state, { x, y, dir }) =>
-      state.alike[y * state.w + x] & alikeBit(dir) ? 1 : 0,
+    holds(state, e) {
+      const { x, y, dir } = markOn(state, e);
+      return state.alike[y * state.w + x] & alikeBit(dir) ? 1 : 0;
+    },
     within: (ds) => ds.tileSize * 0.3,
   },
 });
-
-/** Toggle the mark between `a` and its neighbor `b`, or nothing when `b` is
- * off the board. */
-function toggleMark(state: SlantState, a: Point, b: Point): SlantMove | null {
-  const { w, h } = state;
-  if (b.x < 0 || b.y < 0 || b.x >= w || b.y >= h) return null;
-  const mark = markBetween(a, b);
-  const on = (state.alike[mark.y * w + mark.x] & alikeBit(mark.dir)) === 0;
-  return { type: "alike", ...mark, on };
-}
 
 function solve(
   orig: SlantState,
@@ -412,13 +407,11 @@ export const slantGame: Game<
     if (m.type !== "alike") throw new Error("slant: a hint never solves");
     // A notes-mode tap marks the side of its square it lands nearest: here,
     // the one facing the square below or to the right.
-    const ts = ds.tileSize;
-    const b = border(ts);
-    const [fx, fy] = m.dir === "right" ? [0.9, 0.5] : [0.5, 0.9];
-    const tap = click({
-      x: b + Math.floor((m.x + fx) * ts),
-      y: b + Math.floor((m.y + fy) * ts),
-    });
+    const g = squareEdges(s.w, s.h);
+    const i = m.y * s.w + m.x;
+    const tap = click(
+      pointAtSide(g, layout(ds), { cell: i, dir: m.dir === "right" ? RIGHT : DOWN }),
+    );
     if (ui.pencilMode) return [tap];
     return [key(PENCIL_MODE_BUTTON), tap, key(PENCIL_MODE_BUTTON)];
   },

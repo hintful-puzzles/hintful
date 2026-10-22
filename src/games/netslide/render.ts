@@ -23,6 +23,18 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import {
+  anticlockwise,
+  D,
+  DIRECTIONS,
+  dirCount,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/square-edges.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { wireDistance } from "../../engine/wires.ts";
@@ -30,25 +42,15 @@ import type { NetslideHint } from "./hint.ts";
 import { SQUARE, TILE } from "./hint-text.ts";
 import {
   ACTIVE,
-  anticlockwise,
   computeActive,
-  D,
-  DIRECTIONS,
   DR,
-  dirX,
-  dirY,
   FLASHING,
-  L,
   LD,
   type NetslideMove,
   type NetslideState,
   type NetslideUi,
-  opposite,
-  R,
   RU,
-  U,
   UL,
-  wireCount,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
@@ -292,7 +294,7 @@ function drawTile(
   // `COL_POWERED` or `COL_ENDPOINT`. Nothing at all on a through-tile.
   let boxColor = -1;
   if (x === s.cx && y === s.cy) boxColor = COL_WIRE;
-  else if (wireCount(tile) === 1) {
+  else if (dirCount(tile) === 1) {
     boxColor = tile & ACTIVE ? COL_POWERED : COL_ENDPOINT;
   }
   if (boxColor >= 0) {

@@ -36,6 +36,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { D, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
 import {
   beginSweep,
   buttonVerb,
@@ -73,21 +74,16 @@ import {
 import { copyAndStrip, tracksSolve } from "./solver.ts";
 import {
   type Board,
-  D,
   DIFF_COUNT,
-  DX,
-  DY,
   decodeParams,
   defaultParams,
   E_NOTRACK,
   E_TRACK,
   encodeParams,
   inGrid,
-  L,
   newState,
   paramConfig,
   presets,
-  R,
   S_NOTRACK,
   S_TRACK,
   sECount,
@@ -100,7 +96,6 @@ import {
   type TracksState,
   type TracksUi,
   textFormat,
-  U,
   validateParams,
 } from "./state.ts";
 
@@ -242,7 +237,7 @@ const geometry: TargetGeometry<TracksState, TracksUi, TracksDrawState, Point> = 
       return { x: 2 * gx + 1, y: 2 * gy + 1 };
     const dir =
       Math.abs(p.x - cx) < Math.abs(p.y - cy) ? (p.y < cy ? U : D) : p.x < cx ? L : R;
-    const t = { x: 2 * gx + 1 + DX(dir), y: 2 * gy + 1 + DY(dir) };
+    const t = { x: 2 * gx + 1 + dirX(dir), y: 2 * gy + 1 + dirY(dir) };
     return spotAt(state, t) ? t : null;
   },
   pointAt(state, ds, t) {
@@ -255,8 +250,8 @@ const geometry: TargetGeometry<TracksState, TracksUi, TracksDrawState, Point> = 
     const x = spot ? spot.x : 0;
     const y = spot ? spot.y : 0;
     return {
-      x: centeredCoord(x, m) + reach * DX(dir),
-      y: centeredCoord(y, m) + reach * DY(dir),
+      x: centeredCoord(x, m) + reach * dirX(dir),
+      y: centeredCoord(y, m) + reach * dirY(dir),
     };
   },
   cursorTarget: (state, ui) =>
@@ -314,7 +309,7 @@ const targetVerbs: TargetVerbs<
       const board = stateToBoard(state);
       return (
         carriesTrack(board, from.x, from.y) ||
-        carriesTrack(board, from.x + DX(from.dir), from.y + DY(from.dir))
+        carriesTrack(board, from.x + dirX(from.dir), from.y + dirY(from.dir))
       );
     },
     within: (ds) => metrics(ds.tileSize).tile * RAIL_DRAG_REACH,
@@ -324,8 +319,8 @@ const targetVerbs: TargetVerbs<
       const spot = spotAt(state, t);
       const dir = spot?.kind === "edge" ? spot.dir : 0;
       return {
-        x: centeredCoord(spot?.x ?? 0, m) + (m.tile / 2) * DX(dir),
-        y: centeredCoord(spot?.y ?? 0, m) + (m.tile / 2) * DY(dir),
+        x: centeredCoord(spot?.x ?? 0, m) + (m.tile / 2) * dirX(dir),
+        y: centeredCoord(spot?.y ?? 0, m) + (m.tile / 2) * dirY(dir),
       };
     },
     says:
@@ -619,7 +614,7 @@ export const tracksGame: Game<
   hintGesture(state, ui, ds, m, step) {
     const targets = m.ops.map((op) => {
       const dir = op.kind === "edge" ? (op.dir ?? 0) : 0;
-      return { x: 2 * op.x + 1 + DX(dir), y: 2 * op.y + 1 + DY(dir) };
+      return { x: 2 * op.x + 1 + dirX(dir), y: 2 * op.y + 1 + dirY(dir) };
     });
     return verbClicks(
       targetVerbs,

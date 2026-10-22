@@ -8,6 +8,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { D, dirCount, L, R, U } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -17,16 +18,11 @@ import { type NetslideHint, parseAux } from "./hint.ts";
 import { netslideGame } from "./index.ts";
 import { ANIM_TIME, COL_HINT, colors, newDrawState, redraw } from "./render.ts";
 import {
-  D,
   isComplete,
-  L,
   type NetslideMove,
   type NetslideParams,
   type NetslideState,
   newUi,
-  R,
-  U,
-  wireCount,
 } from "./state.ts";
 
 const EASY_3X3: NetslideParams = {
@@ -188,7 +184,7 @@ function legalMoves(s: NetslideState): NetslideMove[] {
 
 /** The shape name a tile's wires earn, worked out independently of the hint. */
 function shapeOf(mask: number): string {
-  switch (wireCount(mask)) {
+  switch (dirCount(mask)) {
     case 1:
       return "loose end";
     case 3:

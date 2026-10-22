@@ -35,6 +35,13 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
+  directionOf,
+  edgeAt,
+  edgeMiddle,
+  pointAtEdge,
+  squareEdges,
+} from "../../engine/square-edges.ts";
+import {
   beginSweep,
   dragMarkVerbs,
   endSweep,
@@ -47,14 +54,12 @@ import { type PathHighlights, pathHint, pathKeepTrack } from "./hint.ts";
 import { dragChanges, type EdgeChange, extendDrag, lineFits } from "./moves.ts";
 import {
   cellAt,
-  centerOf,
   colors,
   computeSize,
-  edgeAt,
+  layout,
   newDrawState,
   type PathDrawState,
   PREFERRED_TILE_SIZE,
-  pointAtEdge,
   redraw,
 } from "./render.ts";
 import {
@@ -71,7 +76,6 @@ import {
   defaultParams,
   encodeParams,
   executeMove,
-  geometry,
   LINE,
   newState,
   OPEN,
@@ -129,22 +133,21 @@ export const crossDrag = dragMarkVerbs<
 >({
   noun: "edge",
   button: "secondary",
-  target: (state, ds, p) => edgeAt(state, ds.tileSize, p),
+  target: (state, ds, p) => aimedEdge(state, ds.tileSize, p),
   apply: toggleCross,
-  pointAt: (state, ds, e) => pointAtEdge(state, ds.tileSize, e),
+  pointAt: (state, ds, e) =>
+    pointAtEdge(squareEdges(state.w, state.h), layout(ds.tileSize), e),
   sweep: {
     holds: (state, e) => state.edges[e],
     within: (ds) => ds.tileSize * 0.3,
-    middle(ds, state, e) {
-      const g = geometry(state.w, state.h);
-      const [p, q] = [
-        centerOf(state, ds.tileSize, g.a[e]),
-        centerOf(state, ds.tileSize, g.b[e]),
-      ];
-      return { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
-    },
+    middle: (ds, state, e) =>
+      edgeMiddle(squareEdges(state.w, state.h), layout(ds.tileSize), e),
   },
 });
+
+/** The edge a press at `p` is aimed at, or `null` near a square's middle. */
+const aimedEdge = (state: PathState, ts: number, p: Point): number | null =>
+  edgeAt(squareEdges(state.w, state.h), layout(ts), p);
 
 /** The edge beside the cursor's square in the direction an arrow points, or
  * `null` past the board's side. */
@@ -152,10 +155,10 @@ function edgeFromCursor(state: PathState, ui: PathUi, button: number): number | 
   const d = cursorDelta(button);
   if (!d) return null;
   const { x, y } = ui.cursor;
-  const [nx, ny] = [x + d.dx, y + d.dy];
-  if (nx < 0 || nx >= state.w || ny < 0 || ny >= state.h) return null;
-  const side = d.dy < 0 ? 0 : d.dx < 0 ? 1 : d.dx > 0 ? 2 : 3;
-  return geometry(state.w, state.h).around[(y * state.w + x) * 4 + side];
+  const e = squareEdges(state.w, state.h).around[
+    (y * state.w + x) * 4 + directionOf(d.dx, d.dy)
+  ];
+  return e >= 0 ? e : null;
 }
 
 function interpretMove(
@@ -177,7 +180,7 @@ function interpretMove(
   if (button === RIGHT_BUTTON) {
     hideCursor(ui.cursor);
     ui.drag = null;
-    const e = edgeAt(state, ts, p);
+    const e = aimedEdge(state, ts, p);
     if (e !== null) beginSweep(crossDrag, state, ui, e, button, p, false);
     return UI_UPDATE;
   }
@@ -197,13 +200,13 @@ function interpretMove(
       return moveOf(dragChanges(state, drag.cells)) ?? UI_UPDATE;
     // A press released where it began is a click on the edge it was aimed
     // at.
-    const e = drag.at ? edgeAt(state, ts, drag.at) : null;
+    const e = drag.at ? aimedEdge(state, ts, drag.at) : null;
     return (e !== null ? toggleLine(state, e) : null) ?? UI_UPDATE;
   }
   if (button === RIGHT_RELEASE) {
     // A cross drag made its moves as it went; its release is not a click.
     if (endSweep(ui)) return UI_UPDATE;
-    const e = edgeAt(state, ts, p);
+    const e = aimedEdge(state, ts, p);
     return (e !== null ? toggleCross(state, e) : null) ?? UI_UPDATE;
   }
 
@@ -292,7 +295,7 @@ function hintGesture(
   if (move.kind !== "edges") return [];
   return move.changes.map(({ edge, mark }) =>
     click(
-      pointAtEdge(state, ds.tileSize, edge),
+      pointAtEdge(squareEdges(state.w, state.h), layout(ds.tileSize), edge),
       mark === LINE ? "primary" : "secondary",
     ),
   );

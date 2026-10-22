@@ -31,6 +31,16 @@ import { fromCoord } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { type PieceBox, spreadColors } from "../../engine/spread-colors.ts";
+import {
+  DOWN,
+  DX,
+  DY,
+  type EdgeLayout,
+  RIGHT,
+  reverse,
+  squareCenter,
+  squareEdges,
+} from "../../engine/square-edges.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { PathHighlights } from "./hint.ts";
@@ -39,7 +49,6 @@ import type { PathMistake } from "./index.ts";
 import { dragChanges, withChanges } from "./moves.ts";
 import {
   CROSS,
-  geometry,
   LINE,
   NO_END,
   type PathMove,
@@ -127,50 +136,13 @@ export function cellAt(state: PathState, ts: number, p: Point): number {
   return x >= 0 && x < state.w && y >= 0 && y < state.h ? y * state.w + x : -1;
 }
 
+/** The board's pixel layout, as `engine/square-edges.ts` aims at an edge in
+ * it. */
+export const layout = (ts: number): EdgeLayout => ({ tile: ts, border: border(ts) });
+
 /** The middle of square `i`. */
 export function centerOf(state: PathState, ts: number, i: number): Point {
-  const b = border(ts);
-  const half = Math.floor(ts / 2);
-  return {
-    x: (i % state.w) * ts + b + half,
-    y: Math.floor(i / state.w) * ts + b + half,
-  };
-}
-
-/** Which way each of a square's four sides lies, in `Geometry.around`'s
- * order: up, left, right, down. */
-const SIDES: readonly Point[] = [
-  { x: 0, y: -1 },
-  { x: -1, y: 0 },
-  { x: 1, y: 0 },
-  { x: 0, y: 1 },
-];
-
-/**
- * The edge a press at `p` is aimed at: the side of its square it lies
- * nearest, or `null` near the square's middle or on the board's rim, where
- * no edge is.
- */
-export function edgeAt(state: PathState, ts: number, p: Point): number | null {
-  const i = cellAt(state, ts, p);
-  if (i < 0) return null;
-  const c = centerOf(state, ts, i);
-  const [dx, dy] = [p.x - c.x, p.y - c.y];
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < ts / 4) return null;
-  const side = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : dy < 0 ? 0 : 3;
-  const e = geometry(state.w, state.h).around[i * 4 + side];
-  return e >= 0 ? e : null;
-}
-
-/** A point a press aims at edge `e` from, inside its first square and well
- * toward the side, so that {@link edgeAt} reads it back as `e`. */
-export function pointAtEdge(state: PathState, ts: number, e: number): Point {
-  const g = geometry(state.w, state.h);
-  const i = g.a[e];
-  const side = g.around[i * 4 + 2] === e ? 2 : 3;
-  const c = centerOf(state, ts, i);
-  const reach = Math.floor((3 * ts) / 8);
-  return { x: c.x + SIDES[side].x * reach, y: c.y + SIDES[side].y * reach };
+  return squareCenter(squareEdges(state.w, state.h), layout(ts), i);
 }
 
 // --- draw state -------------------------------------------------------------
@@ -186,7 +158,7 @@ const F_DONE = 1 << 11;
 const K_OUTLINE = 12;
 const K_PIECE = 16;
 
-// Word 1, the sides: seven bits a side, in `SIDES` order.
+// Word 1, the sides: seven bits a side, by direction.
 const SIDE_BITS = 7;
 // The side's mark in bits 0-1, then whether its line breaks a rule, whether
 // Check & Save found it wrong, and what the drag would do to it.
@@ -287,9 +259,9 @@ function drawTile(
     COL_HINT_EVIDENCE,
   );
 
-  const sideEnd = (k: number): Point => ({
-    x: cx + SIDES[k].x * (half + (SIDES[k].x > 0 ? 1 : 0)),
-    y: cy + SIDES[k].y * (half + (SIDES[k].y > 0 ? 1 : 0)),
+  const sideEnd = (d: number): Point => ({
+    x: cx + DX[d] * (half + (DX[d] > 0 ? 1 : 0)),
+    y: cy + DY[d] * (half + (DY[d] > 0 ? 1 : 0)),
   });
   const cross = (k: number, color: number, size: number, weight: number): void => {
     const m = sideEnd(k);
@@ -344,7 +316,7 @@ function drawTile(
   const [p, q] = strokes;
   const segments: { from: Point; to: Point; color: number; weight: number }[] =
     strokes.length === 2 &&
-    p.k + q.k === 3 &&
+    q.k === reverse(p.k) &&
     p.color === q.color &&
     p.weight === q.weight
       ? [{ from: sideEnd(p.k), to: sideEnd(q.k), color: p.color, weight: p.weight }]
@@ -395,11 +367,11 @@ function drawTile(
   // meet.
   const size = Math.max(9, Math.floor(ts * 0.28));
   const inset = Math.max(2, ts >> 4) + 1 + Math.floor(size / 2);
-  for (const k of [2, 3]) {
+  for (const k of [RIGHT, DOWN]) {
     const order = (hints >> (k * HINT_SIDE_BITS + K_ORDER)) & 7;
     if (order === 0) continue;
     dr.drawText(
-      k === 2
+      k === RIGHT
         ? { x: px + ts - inset, y: py + inset }
         : { x: px + inset, y: py + ts - inset },
       { align: "center", baseline: "mathematical", fontType: "variable", size },
@@ -423,7 +395,7 @@ function pieces(
   edges: Uint8Array,
 ): { broken: Uint8Array; reach: Uint8Array } {
   const { ends } = state;
-  const g = geometry(state.w, state.h);
+  const g = squareEdges(state.w, state.h);
   // Each piece, walked from a square of it, by the squares it passes.
   const piece = new Int32Array(g.cells).fill(-1);
   const numbers: number[][] = [];
@@ -480,7 +452,7 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const { w, h, ends } = state;
-  const g = geometry(w, h);
+  const g = squareEdges(w, h);
   const b = border(ts);
 
   if (!ds.started) {
@@ -568,7 +540,7 @@ export function redraw(
 /** The numbers whose two squares a line joins, with nothing broken on it. */
 function doneNumbers(state: PathState, edges: Uint8Array): Set<number> {
   const { ends } = state;
-  const g = geometry(state.w, state.h);
+  const g = squareEdges(state.w, state.h);
   const out = new Set<number>();
   for (let start = 0; start < g.cells; start++) {
     if (ends[start] === NO_END) continue;

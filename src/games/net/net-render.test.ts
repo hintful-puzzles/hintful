@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { DIRECTIONS, opposite } from "../../engine/square-edges.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -18,7 +19,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
-import { DIRECTIONS, offset, opposite } from "../../engine/wires.ts";
+import { offset } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
 import { netGame } from "./index.ts";
 import {

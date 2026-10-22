@@ -8,7 +8,7 @@
  * assertions are the feedback.
  *
  * They deliberately state the *rules* the module's doc comments claim — the
- * direction algebra's group structure, the torus wrap, the desc codec's
+ * torus wrap, the desc codec's
  * round trip, the border fence, and what "powered" means — rather than pinning
  * particular values a refactor would have to chase.
  */
@@ -21,90 +21,18 @@ import {
   descVerdict,
 } from "./desc-error.ts";
 import { randomNew } from "./random/index.ts";
+import { D, DIRECTIONS, dirCount, L, opposite, R, U } from "./square-edges.ts";
 import {
   addBorderBarriers,
-  anticlockwise,
-  clockwise,
   computeActive,
-  D,
-  DIRECTIONS,
-  dirX,
-  dirY,
   encodeWireDesc,
   growSpanningTree,
-  L,
   offset,
-  opposite,
   parseWireDesc,
-  R,
-  rot,
-  U,
-  wireCount,
   wireDistance,
   type Xyd,
   xydCmp,
 } from "./wires.ts";
-
-const ALL = R | U | L | D;
-
-describe("direction algebra", () => {
-  it("lists the four directions in upstream's iteration order", () => {
-    // Ports of upstream loops (`d = 1; d < 0x10; d <<= 1`) depend on this
-    // order, and `growSpanningTree` indexes the RNG through it.
-    expect(DIRECTIONS).toEqual([R, U, L, D]);
-    expect([R, U, L, D]).toEqual([0x01, 0x02, 0x04, 0x08]);
-  });
-
-  it("rotates every mask as a group: four turns is the identity", () => {
-    for (let m = 0; m <= ALL; m++) {
-      expect(anticlockwise(anticlockwise(anticlockwise(anticlockwise(m))))).toBe(m);
-      expect(clockwise(clockwise(clockwise(clockwise(m))))).toBe(m);
-      // The two rotations are inverses, and two of either is a reversal.
-      expect(clockwise(anticlockwise(m))).toBe(m);
-      expect(anticlockwise(anticlockwise(m))).toBe(opposite(m));
-      expect(opposite(opposite(m))).toBe(m);
-    }
-  });
-
-  it("turns each single direction into its neighbor, anticlockwise on screen", () => {
-    // y grows downward, so "anticlockwise" is R -> U -> L -> D -> R.
-    expect([R, U, L, D].map(anticlockwise)).toEqual([U, L, D, R]);
-    expect([R, U, L, D].map(clockwise)).toEqual([D, R, U, L]);
-    expect([R, U, L, D].map(opposite)).toEqual([L, D, R, U]);
-  });
-
-  it("rot(x, n) is n quarter-turns, and only the low two bits of n matter", () => {
-    for (let m = 0; m <= ALL; m++) {
-      expect(rot(m, 0)).toBe(m);
-      expect(rot(m, 1)).toBe(anticlockwise(m));
-      expect(rot(m, 2)).toBe(opposite(m));
-      expect(rot(m, 3)).toBe(clockwise(m));
-      expect(rot(m, 5)).toBe(rot(m, 1));
-      expect(rot(m, -3)).toBe(rot(m, 1)); // `n & 3` on a negative turn
-    }
-  });
-
-  it("rotation preserves the wire count — it turns a tile, it does not change it", () => {
-    for (let m = 0; m <= ALL; m++) {
-      for (let n = 0; n < 4; n++) expect(wireCount(rot(m, n))).toBe(wireCount(m));
-    }
-  });
-
-  it("counts wires as set bits of the low nibble", () => {
-    expect(wireCount(0)).toBe(0);
-    expect(wireCount(R)).toBe(1);
-    expect(wireCount(R | L)).toBe(2);
-    expect(wireCount(R | U | L)).toBe(3);
-    expect(wireCount(ALL)).toBe(4);
-    // High bits are each game's own (FLASHING / LOCKED) and are not wires.
-    expect(wireCount(0x10 | R)).toBe(1);
-  });
-
-  it("maps a direction to its displacement", () => {
-    expect([R, U, L, D].map(dirX)).toEqual([1, 0, -1, 0]);
-    expect([R, U, L, D].map(dirY)).toEqual([0, -1, 0, 1]);
-  });
-});
 
 describe("offset", () => {
   it("steps one tile in the given direction", () => {
@@ -279,7 +207,7 @@ describe("growSpanningTree", () => {
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
           const t = tiles[y * w + x];
-          expect(wireCount(t)).toBeLessThan(4); // a full cross reads the same in every orientation
+          expect(dirCount(t)).toBeLessThan(4); // a full cross reads the same in every orientation
           for (const d of DIRECTIONS) {
             if (!(t & d)) continue;
             arms++;

@@ -7,12 +7,11 @@
  * simulated-release preview lives in `moves.ts`").
  */
 
+import { edgeBetween, squareEdges } from "../../engine/square-edges.ts";
 import {
   CROSS,
   degreeOf,
   type EdgeMark,
-  edgeBetween,
-  geometry,
   LINE,
   OPEN,
   type PathDrag,
@@ -34,7 +33,7 @@ export interface EdgeChange {
  * lost it (owner, 2026-10-21).
  */
 export function dragChanges(state: PathState, cells: readonly number[]): EdgeChange[] {
-  const g = geometry(state.w, state.h);
+  const g = squareEdges(state.w, state.h);
   const passed: number[] = [];
   for (let k = 1; k < cells.length; k++)
     passed.push(edgeBetween(g, cells[k - 1], cells[k]));
@@ -59,7 +58,7 @@ export function withChanges(
 
 /** How many lines square `i` has in `edges`. */
 function linesAt(state: PathState, edges: Uint8Array, i: number): number {
-  const g = geometry(state.w, state.h);
+  const g = squareEdges(state.w, state.h);
   let n = 0;
   for (let k = 0; k < 4; k++) {
     const e = g.around[i * 4 + k];
@@ -74,7 +73,7 @@ function linesAt(state: PathState, edges: Uint8Array, i: number): number {
 export function lineFits(state: PathState, edges: Uint8Array, e: number): boolean {
   if (edges[e] === CROSS) return false;
   if (edges[e] === LINE) return true;
-  const g = geometry(state.w, state.h);
+  const g = squareEdges(state.w, state.h);
   return [g.a[e], g.b[e]].every(
     (i) => linesAt(state, edges, i) < degreeOf(state.ends, i),
   );
@@ -91,7 +90,7 @@ export function lineFits(state: PathState, edges: Uint8Array, e: number): boolea
  */
 export function extendDrag(state: PathState, drag: PathDrag, to: number): void {
   const { w } = state;
-  const g = geometry(state.w, state.h);
+  const g = squareEdges(state.w, state.h);
   const seen = drag.cells.indexOf(to);
   if (seen >= 0) {
     drag.cells.length = seen + 1;

@@ -472,24 +472,10 @@ export const MODULES = [
         replace: "export const margin = (ts: number): number => 0;",
       },
       {
-        // EQUIVALENT, and finding out why corrected a comment. The three masks
-        // are not independent: the first leaves one of {L,R}, the second one of
-        // {U,D}, and the third clears exactly one of those two pairs. So one
-        // bit always survives and `dir === 4` is unreachable — the guard is
-        // defensive, not a corner rejection. The comment used to say a corner
-        // or center click "means nothing", which the module's own
-        // tie-break-at-a-tile-center test already contradicted.
         within: "pointerEdge",
-        why: "the unreachable not-exactly-one-edge guard (a click always resolves to one edge)",
-        equivalent: true,
-        find: "  if (dir === 4) return null; // defensive: see above, unreachable",
-        replace: "  if (dir === 4) dir = 0;",
-      },
-      {
-        within: "pointerEdge",
-        why: "a click on the outer border toggles a border with no neighbor",
-        find: "  if (outOfBounds(gx + DX[dir], gy + DY[dir], w, h)) return null;",
-        replace: "  if (false) return null;",
+        why: "a press names the engine's direction, not the bit its border is saved in",
+        find: "    dir: SQUARE_DIRS.indexOf(side.dir),",
+        replace: "    dir: side.dir,",
       },
       {
         within: "edgeEdits",
@@ -593,6 +579,42 @@ export const MODULES = [
     ],
   },
 
+  {
+    module: "src/engine/square-edges.ts",
+    cases: [
+      {
+        within: "rot",
+        why: "rotation by n quarter-turns drops the wrap, losing arms off the top",
+        find: "export function rot(x: number, n: number): number {",
+        replace: "export function rot(x: number, n: number): number {\n  n = 0;",
+      },
+      {
+        within: "opposite",
+        why: "opposite() returns the arm itself, so connections match one-sided",
+        find: "export function opposite(x: number): number {",
+        replace: "export function opposite(x: number): number {\n  return x;",
+      },
+      {
+        within: "sideAt",
+        why: "a press by the board's rim aims at a side with no square across it",
+        find: "  return g.around[cell * 4 + dir] >= 0 ? { cell, dir } : null;",
+        replace: "  return { cell, dir };",
+      },
+      {
+        within: "sideAt",
+        why: "a press near a square's middle aims at a side, so a tap meant for the square marks an edge",
+        find: "  if (Math.max(Math.abs(dx), Math.abs(dy)) < m.tile * still) return null;",
+        replace: "",
+      },
+      {
+        within: "squareEdges",
+        why: "a square's edge below is not recorded, so the square under it does not see the edge from above",
+        find: "    around[(i + w) * 4 + UP] = e;",
+        replace: "",
+      },
+    ],
+  },
+
   // --- control group -------------------------------------------------------
   // Purpose-written local tests landed for these three in
   // `audit-test-suite-strength`. They should score at or near the top; if they
@@ -601,12 +623,6 @@ export const MODULES = [
   {
     module: "src/engine/wires.ts",
     cases: [
-      {
-        within: "rot",
-        why: "rotation by n quarter-turns drops the wrap, losing arms off the top",
-        find: "export function rot(x: number, n: number): number {",
-        replace: "export function rot(x: number, n: number): number {\n  n = 0;",
-      },
       {
         within: "growSpanningTree",
         why: "the spanning tree may close a loop by growing into a used tile",
@@ -618,12 +634,6 @@ export const MODULES = [
         why: "on a non-wrapping grid the frontier steps off the top edge",
         find: "        if (d === U && y2 === 0) continue;",
         replace: "        if (false) continue;",
-      },
-      {
-        within: "opposite",
-        why: "opposite() returns the arm itself, so connections match one-sided",
-        find: "export function opposite(x: number): number {",
-        replace: "export function opposite(x: number): number {\n  return x;",
       },
     ],
   },

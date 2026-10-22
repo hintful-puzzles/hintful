@@ -7,6 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { squareEdges } from "../../engine/square-edges.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { countAnswers } from "./count-answers.ts";
@@ -18,7 +19,6 @@ import {
   DIFF_NORMAL,
   encodeParams,
   executeMove,
-  geometry,
   LINE,
   NO_END,
   newState,
@@ -75,7 +75,7 @@ describe("path dealt boards", () => {
     const answer = answerOf(p.w, p.h, start.ends);
     if (answer === null) throw new Error("the ladder finishes every dealt board");
     const solved = executeMove(start, { kind: "solve", edges: answer });
-    const g = geometry(p.w, p.h);
+    const g = squareEdges(p.w, p.h);
     for (let i = 0; i < g.cells; i++) {
       if (solved.ends[i] === NO_END) continue;
       // Walk the path from this end, and see whether it ever turns.

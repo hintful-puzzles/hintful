@@ -3,8 +3,9 @@
  *
  * A `w × h` grid of wire tiles whose solved form is a spanning tree rooted at a
  * movable source; the player rotates each tile until every tile is powered. The
- * model (direction algebra, desc codec, spanning-tree generator, power flood)
- * lives in `engine/wires.ts`, shared with Netslide; this file is the glue —
+ * model (desc codec, spanning-tree generator, power flood) lives in
+ * `engine/wires.ts`, shared with Netslide, over `engine/square-edges.ts`'s
+ * direction bits; this file is the glue —
  * input, moves, solve, preferences, and the game object.
  */
 
@@ -48,6 +49,18 @@ import { presetGrid } from "../../engine/preset-grid.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  anticlockwise,
+  clockwise,
+  D,
+  DIRECTIONS,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/square-edges.ts";
+import {
   beginSweep,
   interpretTargetVerbs,
   letterKey,
@@ -58,17 +71,7 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
-import {
-  anticlockwise,
-  clockwise,
-  D,
-  DIRECTIONS,
-  L,
-  offset,
-  opposite,
-  R,
-  U,
-} from "../../engine/wires.ts";
+import { offset } from "../../engine/wires.ts";
 import { finishes } from "./deduce.ts";
 import { newDesc } from "./generator.ts";
 import {
@@ -395,9 +398,7 @@ export const noteVerbs: TargetVerbs<NetState, NetUi, NetDrawState, NoteSpot, Net
       pointAt(s, ds, { x, y, dir }, ui) {
         const mid = geometry.pointAt(s, ds, { x, y }, ui);
         const reach = Math.floor(ds.tileSize * 0.4);
-        const dx = dir === L ? -1 : dir === R ? 1 : 0;
-        const dy = dir === U ? -1 : dir === D ? 1 : 0;
-        return { x: mid.x + reach * dx, y: mid.y + reach * dy };
+        return { x: mid.x + reach * dirX(dir), y: mid.y + reach * dirY(dir) };
       },
       cursorTarget: () => null,
       parkCursor() {},

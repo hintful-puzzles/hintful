@@ -28,8 +28,19 @@
  * cursor pass, being the rendering *of this mechanic*.
  */
 import { Dsf } from "./dsf.ts";
-import { fromCoord } from "./geometry.ts";
 import { cursorDelta, type GridCursor } from "./pointer.ts";
+import {
+  DOWN,
+  type EdgeLayout,
+  LEFT,
+  pointAtSide,
+  RIGHT,
+  type Side,
+  sideAt,
+  sideMiddle,
+  squareEdges,
+  UP,
+} from "./square-edges.ts";
 import { rulingOut, type TargetGeometry, type TargetVerbs } from "./target-verb.ts";
 
 // --- the edge bit vocabulary -----------------------------------------------
@@ -55,6 +66,11 @@ export const FLIP = (dir: number): number => dir ^ 2;
 
 export const DX = [0, +1, 0, -1] as const;
 export const DY = [-1, 0, +1, 0] as const;
+
+/** `square-edges.ts`'s direction for each of this file's. This file numbers
+ * directions by the bit each one's border is saved in, which is upstream's
+ * order and not the engine's. */
+const SQUARE_DIRS: readonly number[] = [UP, RIGHT, DOWN, LEFT];
 
 /** The tri-state a single edge can be in, as the input mechanic sees it. */
 const MAYBE = 0;
@@ -116,37 +132,28 @@ export interface BorderEdge {
  */
 export function pointerEdge(
   state: BorderGridState,
-  px0: number,
-  py0: number,
+  px: number,
+  py: number,
   ts: number,
 ): BorderEdge | null {
-  const { w, h } = state;
-  const gx = fromCoord(px0, ts, margin(ts));
-  const gy = fromCoord(py0, ts, margin(ts));
-  if (outOfBounds(gx, gy, w, h)) return null;
-
-  // Find the edge of cell (gx,gy) closest to the click: eliminate the far half
-  // on each axis, then the axis the click is further from. Exactly one bit
-  // *always* survives — the three masks are not independent. The first leaves
-  // one of {L,R}, the second one of {U,D}, and the third clears exactly one of
-  // those two surviving pairs. So every click inside a cell resolves to an
-  // edge, including one exactly on a corner or a center (which the tie-break
-  // test pins), and the `dir === 4` exit below is defensive, not a rejection.
-  let possible = BORDER_MASK;
-  let px = (px0 - margin(ts)) % ts;
-  let py = (py0 - margin(ts)) % ts;
-  possible &= ~(2 * px < ts ? BORDER(1) : BORDER(3)); // R : L
-  possible &= ~(2 * py < ts ? BORDER(2) : BORDER(0)); // D : U
-  px = Math.min(px, ts - px);
-  py = Math.min(py, ts - py);
-  possible &= ~(px < py ? BORDER(0) | BORDER(2) : BORDER(3) | BORDER(1));
-
-  let dir = 0;
-  for (; dir < 4 && BORDER(dir) !== possible; dir++);
-  if (dir === 4) return null; // defensive: see above, unreachable
-  if (outOfBounds(gx + DX[dir], gy + DY[dir], w, h)) return null;
-  return { x: gx, y: gy, dir };
+  // No still middle: every press inside a cell aims at one of its sides.
+  const side = sideAt(squareEdges(state.w, state.h), layout(ts), { x: px, y: py }, 0);
+  if (!side) return null;
+  return {
+    x: side.cell % state.w,
+    y: Math.floor(side.cell / state.w),
+    dir: SQUARE_DIRS.indexOf(side.dir),
+  };
 }
+
+/** The board's pixel layout, as `square-edges.ts` aims at an edge in it. */
+const layout = (ts: number): EdgeLayout => ({ tile: ts, border: margin(ts) });
+
+/** `square-edges.ts`'s side for an edge named from a cell. */
+const sideOf = (w: number, { x, y, dir }: BorderEdge): Side => ({
+  cell: y * w + x,
+  dir: SQUARE_DIRS[dir],
+});
 
 /**
  * The paired edits that cycle `edge` one way. Toward a wall: undecided → wall →
@@ -189,13 +196,8 @@ export function borderGridGeometry<
   return {
     noun: "edge",
     pointerTarget: (s, ds, p) => pointerEdge(s, p.x, p.y, ds.tileSize),
-    pointAt(_s, ds, e) {
-      // Inside cell (x, y), most of the way to the edge: its nearest side.
-      const ts = ds.tileSize;
-      const toward = (v: number, d: number) =>
-        margin(ts) + v * ts + Math.floor(((1 + 0.7 * d) * ts) / 2);
-      return { x: toward(e.x, DX[e.dir]), y: toward(e.y, DY[e.dir]) };
-    },
+    pointAt: (s, ds, e) =>
+      pointAtSide(squareEdges(s.w, s.h), layout(ds.tileSize), sideOf(s.w, e)),
     cursorTarget(_s, ui) {
       const { x, y } = ui.cursor;
       if (x % 2 === y % 2) return null;
@@ -252,12 +254,8 @@ export function borderGridVerbs<
         return b & BORDER(dir) ? YES : b & DISABLED(BORDER(dir)) ? NO : MAYBE;
       },
       within: (ds) => ds.tileSize * 0.3,
-      middle(ds, _s, { x, y, dir }) {
-        const ts = ds.tileSize;
-        const toward = (v: number, d: number) =>
-          margin(ts) + v * ts + ((1 + d) * ts) / 2;
-        return { x: toward(x, DX[dir]), y: toward(y, DY[dir]) };
-      },
+      middle: (ds, s, e) =>
+        sideMiddle(squareEdges(s.w, s.h), layout(ds.tileSize), sideOf(s.w, e)),
     },
   };
 }

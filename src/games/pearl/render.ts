@@ -33,27 +33,29 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as cellAt } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import {
+  clockwise,
+  D,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/square-edges.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, loopSteps, WIN_LEAD, walkLoop } from "../../engine/win-wave.ts";
 import type { PearlHint } from "./hint.ts";
 import { EDGE, SQUARE } from "./hint-text.ts";
 import { interpretUiDrag } from "./moves.ts";
 import {
-  CW,
-  D,
-  DX,
-  DY,
   ERROR_CLUE,
-  F,
-  L,
   NOCLUE,
   type PearlMove,
   type PearlParams,
   type PearlState,
   type PearlUi,
-  R,
   STRAIGHT,
-  U,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 31;
@@ -219,10 +221,10 @@ function drawLinesSpecific(
   const cy = oy + t2;
 
   for (let d = 1; d < 16; d *= 2) {
-    const xoff = t2 * DX(d);
-    const yoff = t2 * DY(d);
-    const xnudge = Math.abs(t16 * DX(CW(d)));
-    const ynudge = Math.abs(t16 * DY(CW(d)));
+    const xoff = t2 * dirX(d);
+    const yoff = t2 * dirY(d);
+    const xnudge = Math.abs(t16 * dirX(clockwise(d)));
+    const ynudge = Math.abs(t16 * dirY(clockwise(d)));
 
     if ((lflags >> shift) & d) {
       const lx = cx + (xoff < 0 ? xoff : 0) - xnudge;
@@ -291,8 +293,8 @@ function drawSquare(
     dr.drawLine({ x: mx - msz, y: my + msz }, { x: mx + msz, y: my - msz }, c, thick);
   };
   for (let d = 1; d < 16; d *= 2) {
-    const xoff = t2 * DX(d);
-    const yoff = t2 * DY(d);
+    const xoff = t2 * dirX(d);
+    const yoff = t2 * dirY(d);
     if (
       (x === 0 && d === L) ||
       (y === 0 && d === U) ||
@@ -316,7 +318,7 @@ function drawSquare(
     if ((hint >> H_LINE_SHIFT) & d)
       dr.drawLine(
         { x: cx, y: cy },
-        { x: cx + t2 * DX(d), y: cy + t2 * DY(d) },
+        { x: cx + t2 * dirX(d), y: cy + t2 * dirY(d) },
         COL_HINT,
         Math.max(2, t16),
       );
@@ -418,7 +420,7 @@ export function redraw(
     for (let i = 0; i < ui.ndragcoords - 1; i++) {
       const leg = interpretUiDrag(state, ui.dragcoords, clearing, i);
       draglines[leg.sy * w + leg.sx] ^= leg.oldstate ^ leg.newstate;
-      draglines[leg.dy * w + leg.dx] ^= F(leg.oldstate) ^ F(leg.newstate);
+      draglines[leg.dy * w + leg.dx] ^= opposite(leg.oldstate) ^ opposite(leg.newstate);
     }
   }
 
@@ -469,9 +471,9 @@ function hintFlags(
   for (const t of step?.highlights?.targets ?? []) {
     if (!ringed.has(EDGE.key(t))) continue;
     const shift = t.line ? H_LINE_SHIFT : H_CROSS_SHIFT;
-    const far = t.sq + DY(t.dir) * w + DX(t.dir);
+    const far = t.sq + dirY(t.dir) * w + dirX(t.dir);
     out[t.sq] |= t.dir << shift;
-    out[far] |= F(t.dir) << shift;
+    out[far] |= opposite(t.dir) << shift;
   }
   // One contour round a contiguous region, one ring per scattered square
   // (`engine/hint-mark.ts`).

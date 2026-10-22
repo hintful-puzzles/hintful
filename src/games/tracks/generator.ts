@@ -10,20 +10,16 @@ import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
+import { D, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
 import { copyAndStrip, tracksSolve } from "./solver.ts";
 import {
   type Board,
   blankBoard,
-  D,
   DIRS,
-  DX,
-  DY,
   E_NOTRACK,
   E_TRACK,
   encodeDesc,
   inGrid,
-  L,
-  R,
   S_CLUE,
   S_NOTRACK,
   S_TRACK,
@@ -31,7 +27,6 @@ import {
   sEDirs,
   sESet,
   type TracksParams,
-  U,
 } from "./state.ts";
 
 function clearBoard(b: Board): void {
@@ -152,8 +147,8 @@ class Coverage {
       const cx = i % w;
       const cy = (i - cx) / w;
       for (const d of DIRS) {
-        const nx = cx + DX(d);
-        const ny = cy + DY(d);
+        const nx = cx + dirX(d);
+        const ny = cy + dirY(d);
         if (!this.free(nx, ny) || seen[ny * w + nx] === stamp) continue;
         visit(nx, ny);
       }
@@ -186,8 +181,8 @@ function walk(cover: Coverage, rs: RandomState): number[] | null {
     path.push(y * w + x);
     shuffle(dirs, rs);
     for (const d of dirs) {
-      const nx = x + DX(d);
-      const ny = y + DY(d);
+      const nx = x + dirX(d);
+      const ny = y + dirY(d);
       if (ny === h) {
         if (cover.complete) return path;
         continue;

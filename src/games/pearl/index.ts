@@ -38,6 +38,21 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  D,
+  dirX,
+  dirY,
+  type EdgeLayout,
+  edgeAt,
+  edgeMiddle,
+  L,
+  opposite,
+  pointAtEdge,
+  R,
+  sideOf,
+  squareEdges,
+  U,
+} from "../../engine/square-edges.ts";
+import {
   beginSweep,
   dragMarkVerbs,
   endSweep,
@@ -68,16 +83,11 @@ import {
 } from "./render.ts";
 import { pearlSolve } from "./solver.ts";
 import {
-  D,
   DIFF_COUNT,
-  DX,
-  DY,
   decodeParams,
   defaultParams,
   encodeParams,
-  F,
   inGrid,
-  L,
   newState,
   type PearlMove,
   type PearlOp,
@@ -86,9 +96,7 @@ import {
   type PearlUi,
   paramConfig,
   presets,
-  R,
   textFormat,
-  U,
   validateParams,
 } from "./state.ts";
 
@@ -129,9 +137,9 @@ function markInDirection(
   primary: boolean,
 ): PearlMove | UiUpdate {
   const w = state.w;
-  const x2 = x + DX(dir);
-  const y2 = y + DY(dir);
-  const dir2 = F(dir);
+  const x2 = x + dirX(dir);
+  const y2 = y + dirY(dir);
+  const dir2 = opposite(dir);
   if (!inGrid(state, x, y) || !inGrid(state, x2, y2)) return UI_UPDATE;
   // Disallow laying a mark over a line, or a line over a mark.
   const other = primary ? state.marks : state.lines;
@@ -145,27 +153,16 @@ function markInDirection(
   };
 }
 
-/** One side of a square: the edge a press off the square's middle addresses. */
-interface Side {
-  readonly x: number;
-  readonly y: number;
-  readonly dir: number;
+/** The board's pixel layout, as `engine/square-edges.ts` aims at an edge in
+ * it. */
+function layout(ds: PearlDrawState): EdgeLayout {
+  const m = metrics(ds.tileSize);
+  return { tile: m.tile, border: m.border };
 }
 
-/** The side of its square a press at `p` is nearest, or `null` near the
- * square's middle, off the grid, or on the grid's rim. */
-function sideAt(state: PearlState, ds: PearlDrawState, p: Point): Side | null {
-  const m = metrics(ds.tileSize);
-  const x = fromCoord(p.x, m);
-  const y = fromCoord(p.y, m);
-  if (!inGrid(state, x, y)) return null;
-  const cx = centeredCoord(x, m);
-  const cy = centeredCoord(y, m);
-  if (Math.max(Math.abs(p.x - cx), Math.abs(p.y - cy)) < m.tile / 4) return null;
-  const dir =
-    Math.abs(p.x - cx) < Math.abs(p.y - cy) ? (p.y < cy ? U : D) : p.x < cx ? L : R;
-  return inGrid(state, x + DX(dir), y + DY(dir)) ? { x, y, dir } : null;
-}
+/** The edge a press at `p` is aimed at, or `null` near a square's middle. */
+const aimedEdge = (state: PearlState, ds: PearlDrawState, p: Point): number | null =>
+  edgeAt(squareEdges(state.w, state.h), layout(ds), p);
 
 /**
  * The right button's drag: the cross on every edge the pointer passes, through
@@ -176,34 +173,32 @@ export const crossDrag = dragMarkVerbs<
   PearlState,
   PearlUi,
   PearlDrawState,
-  Side,
+  number,
   PearlMove
 >({
   noun: "edge",
   button: "secondary",
-  target: sideAt,
-  apply(state, { x, y, dir }) {
-    const made = markInDirection(state, x, y, dir, false);
+  target: aimedEdge,
+  apply(state, e) {
+    const cell = squareEdges(state.w, state.h).a[e];
+    const dir = 1 << sideOf(squareEdges(state.w, state.h), e, cell);
+    const made = markInDirection(
+      state,
+      cell % state.w,
+      Math.floor(cell / state.w),
+      dir,
+      false,
+    );
     return made === UI_UPDATE ? null : made;
   },
-  pointAt(_s, ds, { x, y, dir }) {
-    const m = metrics(ds.tileSize);
-    const reach = Math.floor((3 * m.tile) / 8);
-    return {
-      x: centeredCoord(x, m) + reach * DX(dir),
-      y: centeredCoord(y, m) + reach * DY(dir),
-    };
-  },
+  pointAt: (s, ds, e) => pointAtEdge(squareEdges(s.w, s.h), layout(ds), e),
   sweep: {
-    holds: (s, { x, y, dir }) => (s.marks[y * s.w + x] & dir ? 1 : 0),
-    within: (ds) => metrics(ds.tileSize).tile * 0.3,
-    middle(ds, _s, { x, y, dir }) {
-      const m = metrics(ds.tileSize);
-      return {
-        x: centeredCoord(x, m) + (m.tile / 2) * DX(dir),
-        y: centeredCoord(y, m) + (m.tile / 2) * DY(dir),
-      };
+    holds(s, e) {
+      const g = squareEdges(s.w, s.h);
+      return s.marks[g.a[e]] & (1 << sideOf(g, e, g.a[e])) ? 1 : 0;
     },
+    within: (ds) => metrics(ds.tileSize).tile * 0.3,
+    middle: (ds, s, e) => edgeMiddle(squareEdges(s.w, s.h), layout(ds), e),
   },
 });
 
@@ -240,8 +235,8 @@ function interpretMove(
     ui.dragcoords[0] = gy * w + gx;
     ui.ndragcoords = 0; // will be 1 once the drag is confirmed
     // A right press on an edge can be dragged along more edges.
-    const side = button === RIGHT_BUTTON ? sideAt(state, ds, p) : null;
-    if (side !== null) beginSweep(crossDrag, state, ui, side, button, p, false);
+    const e = button === RIGHT_BUTTON ? aimedEdge(state, ds, p) : null;
+    if (e !== null) beginSweep(crossDrag, state, ui, e, button, p, false);
     return UI_UPDATE;
   }
 
@@ -331,7 +326,7 @@ function interpretMove(
         const leg = interpretUiDrag(state, ui.dragcoords, clearing, i);
         if (leg.oldstate !== leg.newstate) {
           ops.push({ kind: "flip", l: leg.dir, x: leg.sx, y: leg.sy });
-          ops.push({ kind: "flip", l: F(leg.dir), x: leg.dx, y: leg.dy });
+          ops.push({ kind: "flip", l: opposite(leg.dir), x: leg.dx, y: leg.dy });
         }
       }
       ui.ndragcoords = -1;
@@ -377,8 +372,8 @@ function hintGesture(
     const op = move.ops[i];
     if (op.kind !== "line" && op.kind !== "mark") continue;
     const at = {
-      x: centeredCoord(op.x, m) + DX(op.l) * off,
-      y: centeredCoord(op.y, m) + DY(op.l) * off,
+      x: centeredCoord(op.x, m) + dirX(op.l) * off,
+      y: centeredCoord(op.y, m) + dirY(op.l) * off,
     };
     out.push(click(at, op.kind === "line" ? "primary" : "secondary"));
   }

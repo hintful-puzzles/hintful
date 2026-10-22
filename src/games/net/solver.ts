@@ -27,13 +27,8 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import {
-  anticlockwise,
-  computeActive,
-  DIRECTIONS,
-  offset,
-  opposite,
-} from "../../engine/wires.ts";
+import { anticlockwise, DIRECTIONS, opposite } from "../../engine/square-edges.ts";
+import { computeActive, offset } from "../../engine/wires.ts";
 import { LOCKED, type NetState } from "./state.ts";
 
 /** Proved to have no solution at all. */

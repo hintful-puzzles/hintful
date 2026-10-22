@@ -32,6 +32,16 @@ import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
+import {
+  D,
+  dirCount,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/square-edges.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- difficulty (upstream's Easy, Tricky, Hard; shown as tierNames(3)) ------
@@ -42,20 +52,9 @@ export const DIFF_COUNT = 3;
 const DIFF_NAMES: readonly string[] = tierNames(DIFF_COUNT);
 const DIFF_CHARS = "eth"; // ENCODE chars, indexed by difficulty
 
-// --- directions (upstream R/U/L/D bit flags) ------------------------------
-export const R = 1;
-export const U = 2;
-export const L = 4;
-export const D = 8;
+// --- directions (`engine/square-edges.ts`'s bits, upstream's R/U/L/D) ------
 export const ALLDIR = 15;
 export const DIRS = [U, D, L, R] as const; // upstream dirs_const order
-
-export const DX = (d: number): number => (d === R ? 1 : d === L ? -1 : 0);
-export const DY = (d: number): number => (d === D ? 1 : d === U ? -1 : 0);
-/** The opposite direction (upstream `F`). */
-export const FLIP = (d: number): number => ((d << 2) | (d >> 2)) & 0xf;
-
-export const NBITS = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4] as const;
 
 // --- square + edge flag bits (upstream layout) ----------------------------
 export const S_TRACK = 1;
@@ -218,7 +217,7 @@ export function sEDirs(b: Board, x: number, y: number, eflag: number): number {
 
 /** Count of a particular edge flag around a square. */
 export function sECount(b: Board, x: number, y: number, eflag: number): number {
-  return NBITS[sEDirs(b, x, y, eflag)];
+  return dirCount(sEDirs(b, x, y, eflag));
 }
 
 /** The two flags (E_TRACK / E_NOTRACK) set on a specific edge of a square. */
@@ -233,9 +232,9 @@ export function sEFlags(b: Board, x: number, y: number, d: number): number {
 export function sESet(b: Board, x: number, y: number, d: number, eflag: number): void {
   const shift = edgeShift(eflag);
   b.sflags[y * b.w + x] |= d << shift;
-  const ax = x + DX(d);
-  const ay = y + DY(d);
-  if (inGrid(b, ax, ay)) b.sflags[ay * b.w + ax] |= FLIP(d) << shift;
+  const ax = x + dirX(d);
+  const ay = y + dirY(d);
+  if (inGrid(b, ax, ay)) b.sflags[ay * b.w + ax] |= opposite(d) << shift;
 }
 
 /** Clear a flag on a given edge of a square (and its shared neighbor edge). */
@@ -248,9 +247,9 @@ export function sEClear(
 ): void {
   const shift = edgeShift(eflag);
   b.sflags[y * b.w + x] &= ~(d << shift);
-  const ax = x + DX(d);
-  const ay = y + DY(d);
-  if (inGrid(b, ax, ay)) b.sflags[ay * b.w + ax] &= ~(FLIP(d) << shift);
+  const ax = x + dirX(d);
+  const ay = y + dirY(d);
+  if (inGrid(b, ax, ay)) b.sflags[ay * b.w + ax] &= ~(opposite(d) << shift);
 }
 
 // --- params ---------------------------------------------------------------
@@ -359,7 +358,7 @@ function parseDesc(p: TracksParams, desc: string): DescParse<Board> {
       }
       const c = r.char();
       const f = clueNibble(c) ?? r.fail(descBadCharacter(c));
-      if (NBITS[f] !== 2)
+      if (dirCount(f) !== 2)
         r.fail(
           puzzleDescError(
             "This game ID has a clue square whose track doesn't join exactly two of its sides.",
@@ -454,11 +453,11 @@ export function trackOrder(b: Board): Int32Array {
   let d = R;
   for (let n = 0; inGrid(b, x, y) && order[y * w + x] < 0; n++) {
     order[y * w + x] = n;
-    d = FLIP(d); // the direction we just arrived from
+    d = opposite(d); // the direction we just arrived from
     d = sEDirs(b, x, y, E_TRACK) & ~d; // the other track from here
-    if (NBITS[d] !== 1) break;
-    x += DX(d);
-    y += DY(d);
+    if (dirCount(d) !== 1) break;
+    x += dirX(d);
+    y += dirY(d);
   }
   return order;
 }
@@ -489,8 +488,8 @@ function* tracksNeighbors(b: Board, vertex: number): Iterable<number> {
   for (let j = 0; j < 4; j++) {
     const dir = 1 << j;
     if (dirs & dir) {
-      const nx = x + DX(dir);
-      const ny = y + DY(dir);
+      const nx = x + dirX(dir);
+      const ny = y + dirY(dir);
       if (inGrid(b, nx, ny)) yield ny * w + nx;
     }
   }

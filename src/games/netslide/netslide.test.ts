@@ -28,6 +28,15 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  D,
+  DIRECTIONS,
+  dirCount,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/square-edges.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
@@ -35,6 +44,7 @@ import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-draw
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import type { Flash } from "../../engine/win-wave.ts";
+import { offset } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
 import { netslideGame } from "./index.ts";
 import {
@@ -51,24 +61,16 @@ import {
   ACTIVE,
   c2pos,
   computeActive,
-  D,
-  DIRECTIONS,
   decodeParams,
   encodeParams,
   hasNoSolution,
   isComplete,
-  L,
   type NetslideParams,
   newState,
   newUi,
-  offset,
-  opposite,
   pos2c,
-  R,
   slideCol,
   slideRow,
-  U,
-  wireCount,
 } from "./state.ts";
 
 const EASY_5x5: NetslideParams = {
@@ -257,11 +259,11 @@ describe("netslide generator", () => {
 
         // No full crosses: a four-armed tile is identical in every orientation,
         // so it would tell the player nothing.
-        for (const tile of solution.tiles) expect(wireCount(tile)).toBeLessThan(4);
+        for (const tile of solution.tiles) expect(dirCount(tile)).toBeLessThan(4);
 
         // No loops: a spanning tree over w·h tiles has exactly w·h − 1 edges,
         // and every edge is counted once from each of its two ends.
-        const arms = [...solution.tiles].reduce((n, t) => n + wireCount(t), 0);
+        const arms = [...solution.tiles].reduce((n, t) => n + dirCount(t), 0);
         expect(arms / 2).toBe(p.w * p.h - 1);
       }
     }

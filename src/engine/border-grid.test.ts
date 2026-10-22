@@ -108,9 +108,9 @@ describe("pointerEdge", () => {
   });
 
   it("breaks the tie toward the down edge at an exact tile center", () => {
-    // Not a rejection. At the exact center both axes are equidistant, so each
-    // `<` test is false: the left and up bits go first, then left|right go
-    // again, leaving down. Pinned because a center click is a genuinely
+    // Not a rejection. At the exact center both axes are equidistant, and
+    // `square-edges.ts` gives a tie to the vertical side, below on a zero
+    // offset. Pinned because a center click is a genuinely
     // reachable input (a precise click, or a synthetic tap at a tile's midpoint)
     // and the alternative — resolving to nothing — would put a dead zone in the
     // middle of every tile.

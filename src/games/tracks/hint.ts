@@ -25,6 +25,7 @@ import {
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import { dirX, dirY, L, opposite, U } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { type Axis, type Marked, PIECE, type Piece, say } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
@@ -33,12 +34,8 @@ import {
   type Board,
   checkCompletion,
   DIRS,
-  DX,
-  DY,
   E_TRACK,
-  FLIP,
   inGrid,
-  L,
   S_NOTRACK,
   S_NOTRACK_SHIFT,
   S_TRACK,
@@ -48,7 +45,6 @@ import {
   type TracksMove,
   type TracksOp,
   type TracksState,
-  U,
 } from "./state.ts";
 
 /**
@@ -258,7 +254,7 @@ export function evident(b: Board, op: TracksOp): boolean {
     !inGrid(b, x, y) ||
     (b.sflags[y * b.w + x] & S_NOTRACK) !== 0 ||
     sECount(b, x, y, E_TRACK) === 2;
-  return closed(op.x, op.y) || closed(op.x + DX(d), op.y + DY(d));
+  return closed(op.x, op.y) || closed(op.x + dirX(d), op.y + dirY(d));
 }
 
 /**
@@ -362,8 +358,8 @@ function flagKey(
   track: boolean,
 ): string {
   if (kind === "square") return `s ${x} ${y} ${track}`;
-  if ((dir === L || dir === U) && inGrid(b, x + DX(dir), y + DY(dir)))
-    return `e ${x + DX(dir)} ${y + DY(dir)} ${FLIP(dir)} ${track}`;
+  if ((dir === L || dir === U) && inGrid(b, x + dirX(dir), y + dirY(dir)))
+    return `e ${x + dirX(dir)} ${y + dirY(dir)} ${opposite(dir)} ${track}`;
   return `e ${x} ${y} ${dir} ${track}`;
 }
 

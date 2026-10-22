@@ -12,20 +12,20 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import type { TargetVerbs } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   anticlockwise,
   clockwise,
   D,
+  dirCount,
   dirX,
   dirY,
   L,
   opposite,
   R,
   U,
-  wireCount,
-} from "../../engine/wires.ts";
+} from "../../engine/square-edges.ts";
+import type { TargetVerbs } from "../../engine/target-verb.ts";
+import type { Point } from "../../engine/types.ts";
 import { Facts, nextStep, record, type Side, type Step } from "./deduce.ts";
 import {
   type Fit,
@@ -172,7 +172,7 @@ function premisesOf(f: Facts, step: Step): Premises {
     seal,
     striped: [...striped.values()],
     deadEnds:
-      striped.size > 0 && [...striped.keys()].every((t) => wireCount(f.wires[t]) === 1),
+      striped.size > 0 && [...striped.keys()].every((t) => dirCount(f.wires[t]) === 1),
     // A striped neighbor reached by stepping off one edge and on at the other.
     acrossEdge: [...striped.keys()].some(overEdge),
     runsOn: runsOn || barLoops,

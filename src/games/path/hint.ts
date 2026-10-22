@@ -17,6 +17,7 @@ import {
 } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import { squareEdges } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Clash, EDGE, type Square, say } from "./hint-text.ts";
@@ -34,7 +35,6 @@ import {
   CROSS,
   type EdgeMark,
   executeMove,
-  geometry,
   LINE,
   NO_END,
   type PathMove,
@@ -58,7 +58,7 @@ type PathStep = HintStep<PathMove, PathHighlights, PathRung>;
 
 /** The squares of the piece of line through square `from` on `edges`. */
 function pieceOf(state: PathState, edges: Uint8Array, from: number): number[] {
-  const g = geometry(state.w, state.h);
+  const g = squareEdges(state.w, state.h);
   const seen = new Set([from]);
   const stack = [from];
   while (stack.length > 0) {
@@ -116,7 +116,7 @@ function clashWords(
   square: (i: number) => Square,
   numberOn: (i: number, lines: Uint8Array) => Square,
 ): Clash {
-  const g = geometry(state.w, state.h);
+  const g = squareEdges(state.w, state.h);
   switch (clash.kind) {
     case "crowded": {
       let lines = 0;

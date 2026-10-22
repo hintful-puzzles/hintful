@@ -18,16 +18,13 @@ import {
 } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import { D, L, R, U } from "../../engine/square-edges.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   addBorderBarriers,
   computeActive as computeActiveWires,
-  D,
-  L,
   offset,
   parseWireDesc,
-  R,
-  U,
 } from "../../engine/wires.ts";
 
 /* ----------------------------------------------------------------------

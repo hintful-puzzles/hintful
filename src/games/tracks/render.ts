@@ -40,6 +40,16 @@ import { drawMarkSides, MARK_ALL, outlineSides } from "../../engine/hint-mark.ts
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
+import {
+  D,
+  dirCount,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/square-edges.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import { pieceOfOp } from "./hint.ts";
@@ -48,15 +58,8 @@ import { copyAndApplyDrag } from "./moves.ts";
 import {
   ALLDIR,
   type Board,
-  D,
-  DX,
-  DY,
   E_NOTRACK,
   E_TRACK,
-  FLIP,
-  L,
-  NBITS,
-  R,
   S_CLUE,
   S_ERROR,
   S_NOTRACK,
@@ -68,7 +71,6 @@ import {
   type TracksState,
   type TracksUi,
   trackOrder,
-  U,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 33;
@@ -251,7 +253,7 @@ function hintFlags(state: TracksState, step?: HintStep<TracksMove>): Int32Array 
   /** Set `shift`'s direction bit on both squares sharing the edge. */
   const markEdge = (x: number, y: number, dir: number, shift: number): void => {
     mark(x, y, dir << shift);
-    mark(x + DX(dir), y + DY(dir), FLIP(dir) << shift);
+    mark(x + dirX(dir), y + dirY(dir), opposite(dir) << shift);
   };
 
   const ringed = marks.of("ring", PIECE);
@@ -386,7 +388,7 @@ function drawTracksSpecific(
     thickLine(dr, thickTrack, ox + 2 * t3, oy, ox + 2 * t3, oy + m.tile, ctrack);
     return;
   }
-  if (NBITS[flags] === 2) {
+  if (dirCount(flags) === 2) {
     // Any other two-sided piece is a curve round the corner the two sides share.
     const cx = flags & L ? ox : ox + m.tile;
     const cy = flags & U ? oy : oy + m.tile;
@@ -460,8 +462,8 @@ function bestBits(
   flagsDrag: number,
   col: number,
 ): { bits: number; col: number } {
-  const nbOrig = NBITS[flags & ALLDIR];
-  const nbDrag = NBITS[flagsDrag & ALLDIR];
+  const nbOrig = dirCount(flags & ALLDIR);
+  const nbDrag = dirCount(flagsDrag & ALLDIR);
   if (nbOrig > nbDrag) return { bits: flags & ALLDIR, col: COL_DRAGOFF };
   if (nbOrig < nbDrag) return { bits: flagsDrag & ALLDIR, col: COL_DRAGON };
   return { bits: flags & ALLDIR, col };

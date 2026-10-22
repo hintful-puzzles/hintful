@@ -16,9 +16,9 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { D, L, R, U } from "../../engine/square-edges.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { D, L, R, U } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
 import { netGame } from "./index.ts";
 import { findMistakes } from "./mistakes.ts";

@@ -26,7 +26,7 @@ import {
   type Sentence,
   so,
 } from "../../engine/hint-words.ts";
-import { D, L, R, U } from "./state.ts";
+import { D, L, R, U } from "../../engine/square-edges.ts";
 
 export type Axis = "row" | "column";
 

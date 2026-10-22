@@ -26,6 +26,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { D, dirX, dirY, opposite, R, U } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { evident, narrate, type TracksPicture, type TracksRung } from "./hint.ts";
@@ -40,16 +41,11 @@ import {
 } from "./solver.ts";
 import {
   type Board,
-  D,
   DIFF_EASY,
   DIFF_HARD,
   DIFF_TRICKY,
-  DX,
-  DY,
   E_TRACK,
-  FLIP,
   inGrid,
-  R,
   S_TRACK,
   sEDirs,
   sEFlags,
@@ -58,7 +54,6 @@ import {
   type TracksOp,
   type TracksParams,
   type TracksState,
-  U,
 } from "./state.ts";
 
 const SHAPES: TracksParams[] = [
@@ -254,8 +249,8 @@ describe("what the plan hides is exactly what the board already says", () => {
       const beyond: TracksOp[] = [];
       for (const d of [U, D, R]) {
         if (sEFlags(b, ax, ay, d) & E_TRACK) continue; // the piece's own side
-        const nx = ax + DX(d);
-        const ny = ay + DY(d);
+        const nx = ax + dirX(d);
+        const ny = ay + dirY(d);
         if (!inGrid(b, nx, ny) || solution.sflags[ny * b.w + nx] & S_TRACK) continue;
         beyond.push({ kind: "square", x: nx, y: ny, track: false, set: true });
       }
@@ -269,7 +264,7 @@ describe("what the plan hides is exactly what the board already says", () => {
           const d = op.dir ?? 0;
           const touches =
             (op.x === ax && op.y === ay) ||
-            (op.x + DX(d) === ax && op.y + DY(d) === ay);
+            (op.x + dirX(d) === ax && op.y + dirY(d) === ay);
           expect(touches, `"${step.explanation}" blocks a side of the entrance`).toBe(
             false,
           );
@@ -614,7 +609,7 @@ describe("following one step at a time", () => {
         .map((op) => ({ step, before, op })),
     );
     const other = found.find(({ op, before }) =>
-      inGrid(before, op.x + DX(op.dir ?? 0), op.y + DY(op.dir ?? 0)),
+      inGrid(before, op.x + dirX(op.dir ?? 0), op.y + dirY(op.dir ?? 0)),
     );
     expect(other, "no interior edge op in the corpus").toBeDefined();
     if (!other) return;
@@ -622,9 +617,9 @@ describe("following one step at a time", () => {
     const dir = op.dir ?? 0;
     const flipped: TracksOp = {
       ...op,
-      x: op.x + DX(dir),
-      y: op.y + DY(dir),
-      dir: FLIP(dir),
+      x: op.x + dirX(dir),
+      y: op.y + dirY(dir),
+      dir: opposite(dir),
     };
     expect(tracksGame.hintKeepTrack?.({ ops: [flipped] }, step, before)).not.toBe(
       "off",

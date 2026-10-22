@@ -14,7 +14,8 @@
  */
 
 import { findLoops } from "../../engine/findloop.ts";
-import { DIRECTIONS, offset, opposite } from "../../engine/wires.ts";
+import { DIRECTIONS, opposite } from "../../engine/square-edges.ts";
+import { offset } from "../../engine/wires.ts";
 import { LOCKED } from "./state.ts";
 
 /** Upstream `ERR(dir) = dir << 6`. The error/loop flag for a direction. */

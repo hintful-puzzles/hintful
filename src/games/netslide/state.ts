@@ -26,42 +26,28 @@ import {
 } from "../../engine/pointer.ts";
 import {
   addBorderBarriers,
-  anticlockwise,
-  clockwise,
   computeActive as computeActiveWires,
-  DIRECTIONS,
-  dirX,
-  dirY,
-  opposite,
   parseWireDesc,
-  wireCount,
 } from "../../engine/wires.ts";
 
 /* ----------------------------------------------------------------------
  * Bit vocabulary.
  *
  * A tile's wires are a 4-bit mask; the same four bits name a neighbor
- * direction — the direction algebra lives in `engine/wires.ts`, shared with
- * Net. The barrier grid reuses those low four bits for "there is a wall on this
- * side" and the high four for the corner-joining flags that let barrier
- * junctions be drawn without a notch.
+ * direction, `engine/square-edges.ts`'s. The barrier grid reuses those low four
+ * bits for "there is a wall on this side" and the high four for the
+ * corner-joining flags that let barrier junctions be drawn without a notch.
  */
 
-// The game's modules take the shared wire vocabulary from here.
-export {
+import {
   anticlockwise,
   clockwise,
-  D,
   DIRECTIONS,
+  dirCount,
   dirX,
   dirY,
-  L,
-  offset,
   opposite,
-  R,
-  U,
-  wireCount,
-} from "../../engine/wires.ts";
+} from "../../engine/square-edges.ts";
 
 /** Non-wire tile flags, OR'd into the value handed to the renderer. */
 export const FLASHING = 0x10;
@@ -345,7 +331,7 @@ export function hasNoSolution(s: NetslideState): boolean {
   const n = s.tiles.length;
   let arms = 0;
   for (const tile of s.tiles) {
-    const count = wireCount(tile);
+    const count = dirCount(tile);
     if (count === 0 && n > 1) return true;
     arms += count;
   }

@@ -32,7 +32,8 @@
  */
 
 import { Dsf } from "../../engine/dsf.ts";
-import { anticlockwise, DIRECTIONS, offset, opposite } from "../../engine/wires.ts";
+import { anticlockwise, DIRECTIONS, opposite } from "../../engine/square-edges.ts";
+import { offset } from "../../engine/wires.ts";
 import {
   LOCKED,
   type NetState,

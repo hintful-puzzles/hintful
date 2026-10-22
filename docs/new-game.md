@@ -162,8 +162,10 @@ guides is for a game that is not yours.
 - `hints-marks.md` § "A mark on something that is not a cell";
   `hints-marks.md` § "Evidence for a connectivity deduction"; `hints-marks.md`
   § "Give the facts a notation".
-- `engine-catalog.md` § "`dsf.ts` — union-find"; `engine-catalog.md` §
-  "`findloop.ts` — loop/bridge finding"; `engine-catalog.md` §
+- `engine-catalog.md` § "`square-edges.ts` — square-grid edges",
+  first, on a grid of squares; `engine-catalog.md` § "`dsf.ts` —
+  union-find"; `engine-catalog.md` § "`findloop.ts` — loop/bridge finding";
+  `engine-catalog.md` §
   "`border-grid.ts` — the shared border-marking mechanic" where the player
   draws walls between regions.
 - `mechanics.md` § "Bespoke geometry" and `input.md` § "Giving a geometric

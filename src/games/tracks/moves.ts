@@ -5,11 +5,10 @@
  * (docs/rendering.md § "The tile cache and the diff key").
  */
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+import { dirX, dirY } from "../../engine/square-edges.ts";
 import {
   type Board,
   checkCompletion,
-  DX,
-  DY,
   E_NOTRACK,
   E_TRACK,
   inGrid,
@@ -57,8 +56,8 @@ export function uiCanFlipEdge(
   dir: number,
   notrack: boolean,
 ): boolean {
-  const x2 = x + DX(dir);
-  const y2 = y + DY(dir);
+  const x2 = x + dirX(dir);
+  const y2 = y + dirY(dir);
   if (!inGrid(b, x, y) || !inGrid(b, x2, y2)) return false;
   const sf1 = b.sflags[y * b.w + x];
   const sf2 = b.sflags[y2 * b.w + x2];

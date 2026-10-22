@@ -21,6 +21,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { D, dirX, dirY, opposite, R } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { boardOf, type PearlHint, type PearlRung, pearlKeepTrack } from "./hint.ts";
@@ -30,18 +31,13 @@ import { executeMove } from "./moves.ts";
 import { type PearlReason, pearlRecordingPass, pearlSolve } from "./solver.ts";
 import {
   CORNER,
-  D,
   DIFF_COUNT,
   DIFF_EASY,
   DIFF_TRICKY,
-  DX,
-  DY,
-  F,
   newState,
   type PearlMove,
   type PearlParams,
   type PearlState,
-  R,
   STRAIGHT,
 } from "./state.ts";
 
@@ -120,8 +116,8 @@ describe("a step draws what the pearls' rules carry on from its lines", () => {
       for (const { step, before } of walk(deal(p, seed)).seen) {
         const targets = step.highlights?.targets ?? [];
         const drawn = (sq: number, d: number) => {
-          const x = (sq % p.w) + DX(d);
-          const y = Math.floor(sq / p.w) + DY(d);
+          const x = (sq % p.w) + dirX(d);
+          const y = Math.floor(sq / p.w) + dirY(d);
           if (x < 0 || x >= p.w || y < 0 || y >= p.h) return true;
           const far = y * p.w + x;
           return (
@@ -129,21 +125,22 @@ describe("a step draws what the pearls' rules carry on from its lines", () => {
             targets.some(
               (t) =>
                 t.line &&
-                ((t.sq === sq && t.dir === d) || (t.sq === far && t.dir === F(d))),
+                ((t.sq === sq && t.dir === d) ||
+                  (t.sq === far && t.dir === opposite(d))),
             )
           );
         };
         let whiteCarry = false;
         for (const t of targets.filter((t) => t.line)) {
-          const far = t.sq + DY(t.dir) * p.w + DX(t.dir);
+          const far = t.sq + dirY(t.dir) * p.w + dirX(t.dir);
           for (const [sq, next, d] of [
             [t.sq, far, t.dir],
-            [far, t.sq, F(t.dir)],
+            [far, t.sq, opposite(t.dir)],
           ]) {
             if (before.clues[sq] === CORNER)
               expect(drawn(next, d), step.explanation).toBe(true);
             if (before.clues[sq] === STRAIGHT) {
-              expect(drawn(sq, F(d)), step.explanation).toBe(true);
+              expect(drawn(sq, opposite(d)), step.explanation).toBe(true);
               // A white pearl this step's own deduction did not reach.
               if (
                 !before.lines[sq] &&
@@ -313,7 +310,7 @@ describe("following one step at a time", () => {
     return {
       ops: [
         { kind: "flip", l: t.dir, x, y },
-        { kind: "flip", l: F(t.dir), x: x + DX(t.dir), y: y + DY(t.dir) },
+        { kind: "flip", l: opposite(t.dir), x: x + dirX(t.dir), y: y + dirY(t.dir) },
       ],
     };
   }
@@ -361,7 +358,7 @@ describe("the boards the midend refuses a hint on", () => {
     const wrong = executeMove(state, {
       ops: [
         { kind: "mark", l: 1, x, y },
-        { kind: "mark", l: F(1), x: x + 1, y },
+        { kind: "mark", l: opposite(1), x: x + 1, y },
       ],
     });
     const mistakes = pearlGame.findMistakes?.(wrong) as readonly PearlMistake[];

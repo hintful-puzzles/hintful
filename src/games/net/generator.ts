@@ -37,20 +37,22 @@ import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle as shuffleArray } from "../../engine/shuffle.ts";
 import {
-  addBorderBarriers,
   anticlockwise,
   clockwise,
-  collectBarrierCandidates,
   D,
-  encodeWireDesc,
-  growSpanningTree,
   L,
-  offset,
   opposite,
-  placeBarriers,
   R,
   rot,
   U,
+} from "../../engine/square-edges.ts";
+import {
+  addBorderBarriers,
+  collectBarrierCandidates,
+  encodeWireDesc,
+  growSpanningTree,
+  offset,
+  placeBarriers,
   type Xyd,
 } from "../../engine/wires.ts";
 import { finishes } from "./deduce.ts";
