@@ -48,22 +48,14 @@ const CONTINUING: readonly string[] = mentioning("singleFirings(").filter((id) =
  */
 const NOT_CONTINUING: Record<string, string> = Object.fromEntries(
   [
-    "boats",
-    "bricks",
-    "clusters",
     "crossing",
     "filling",
     "galaxies",
     "lightup",
     "loopy",
-    "pattern",
     "range",
-    "rect",
-    "signpost",
     "singles",
     "slant",
-    "spokes",
-    "sticks",
     "subsets",
     "unruly",
   ].map((id) => [id, "continue-ladder-hints"]),

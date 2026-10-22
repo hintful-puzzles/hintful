@@ -19,7 +19,7 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
-import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
+import { findingTechniques, singleFirings } from "../../engine/deduction-fixpoint.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
   GRID_EMPTY,
@@ -708,7 +708,7 @@ function rangeAbs(geom: LineGeom, from: number, to: number): number[] {
 }
 
 /** The single-line intersection bottom rung: run the complete single-line
- * solver on some line and surface its first forced same-value contiguous
+ * solver on `line` and surface its first forced same-value contiguous
  * segment. Every cell `doRow` forces is black (or white) in *every* arrangement
  * of that line's runs consistent with its marks — the general intersection, the
  * same family as overlap generalized to the whole clue. Covers the gap-based
@@ -719,36 +719,34 @@ function intersectionFiring(
   w: number,
   h: number,
   clues: readonly (readonly number[])[],
+  line: number,
 ): PatternHintMove | null {
-  for (let line = 0; line < w + h; line++) {
-    const geom = lineGeom(line, w, h);
-    const known = readLine(grid, geom);
-    const mat = Uint8Array.from(known); // doRow reads/writes S_* states
-    const forced: { pos: number; value: GridVal }[] = [];
-    doRow(mat, 0, geom.len, 1, clues[line], (p) =>
-      forced.push({ pos: p, value: mat[p] === S_BLOCK ? GRID_FULL : GRID_EMPTY }),
-    );
-    if (forced.length === 0) continue;
-    forced.sort((a, b) => a.pos - b.pos);
-    const first = forced[0];
-    const cells = [geom.start + first.pos * geom.step];
-    let last = first.pos;
-    for (let k = 1; k < forced.length; k++) {
-      if (forced[k].pos === last + 1 && forced[k].value === first.value) {
-        cells.push(geom.start + forced[k].pos * geom.step);
-        last = forced[k].pos;
-      } else break;
-    }
-    return {
-      cells,
-      value: first.value,
-      line,
-      reason: { kind: "intersection", black: first.value === GRID_FULL },
-      blackRefs: [],
-      whiteRefs: [],
-    };
+  const geom = lineGeom(line, w, h);
+  const known = readLine(grid, geom);
+  const mat = Uint8Array.from(known); // doRow reads/writes S_* states
+  const forced: { pos: number; value: GridVal }[] = [];
+  doRow(mat, 0, geom.len, 1, clues[line], (p) =>
+    forced.push({ pos: p, value: mat[p] === S_BLOCK ? GRID_FULL : GRID_EMPTY }),
+  );
+  if (forced.length === 0) return null;
+  forced.sort((a, b) => a.pos - b.pos);
+  const first = forced[0];
+  const cells = [geom.start + first.pos * geom.step];
+  let last = first.pos;
+  for (let k = 1; k < forced.length; k++) {
+    if (forced[k].pos === last + 1 && forced[k].value === first.value) {
+      cells.push(geom.start + forced[k].pos * geom.step);
+      last = forced[k].pos;
+    } else break;
   }
-  return null;
+  return {
+    cells,
+    value: first.value,
+    line,
+    reason: { kind: "intersection", black: first.value === GRID_FULL },
+    blackRefs: [],
+    whiteRefs: [],
+  };
 }
 
 /**
@@ -764,39 +762,56 @@ export function deduceHintPlan(state: PatternState): PatternHintMove[] {
   const { w, h, clues } = state.common;
   const working = Uint8Array.from(state.grid);
   const plan: PatternHintMove[] = [];
-  // Record a firing (or nothing) into the plan; report it to the ladder.
-  const apply = (firing: PatternHintMove | null): number => {
-    if (!firing) return 0;
-    plan.push(firing);
-    for (const c of firing.cells) working[c] = firing.value;
-    return 1;
-  };
+  // Each line's first firing of a technique, in line order.
+  const eachLine = (
+    fire: (line: number) => PatternHintMove | null,
+  ): (() => Iterable<PatternHintMove>) =>
+    function* () {
+      for (let line = 0; line < w + h; line++) {
+        const firing = fire(line);
+        if (firing) yield firing;
+      }
+    };
   // Each firing decides at least one cell; the step budget is the
-  // non-termination backstop. Both techniques sit on tier 0, and the grade
-  // is unused.
-  runDeductionFixpoint({
-    techniques: [
-      {
-        id: "line-analysis",
-        tier: 0,
-        run: () => {
-          let firing: PatternHintMove | null = null;
-          for (let line = 0; line < w + h && !firing; line++) {
+  // non-termination backstop. Both techniques sit on tier 0.
+  const pass = singleFirings({
+    techniques: findingTechniques(
+      [
+        {
+          id: "line-analysis",
+          tier: 0,
+          find: eachLine((line) => {
             const geom = lineGeom(line, w, h);
-            firing = analyzeLine(readLine(working, geom), clues[line], line, geom);
-          }
-          return apply(firing);
+            return analyzeLine(readLine(working, geom), clues[line], line, geom);
+          }),
         },
+        {
+          id: "line-intersection",
+          tier: 0,
+          find: eachLine((line) => intersectionFiring(working, w, h, clues, line)),
+        },
+      ],
+      (firing) => {
+        plan.push(firing);
+        for (const c of firing.cells) working[c] = firing.value;
       },
+      // A firing reads its own line, and a line crossing a cell the last one
+      // decided continues from it.
       {
-        id: "line-intersection",
-        tier: 0,
-        run: () => apply(intersectionFiring(working, w, h, clues)),
+        reads: (firing) => {
+          const geom = lineGeom(firing.line, w, h);
+          return rangeAbs(geom, 0, geom.len);
+        },
+        writes: (firing) => firing.cells,
       },
-    ],
+    ),
     budget: stepBudget("pattern hint"),
     settled: () => !working.includes(GRID_UNKNOWN),
+    // A plan works the lines through the cells it has just decided before
+    // it moves on.
+    continuing: true,
   });
+  while (pass.next());
   return plan;
 }
 

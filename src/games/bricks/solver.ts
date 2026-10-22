@@ -34,8 +34,11 @@
  * (`MAX_GENERABLE_DIFF`) but stays here as "try as hard as you can" for hints
  * and Solve, where the extra depth costs nothing.
  */
+
+import { findingTechniques, singleFirings } from "../../engine/deduction-fixpoint.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
 import {
   BRICKS_STEPS,
   type BricksMistake,
@@ -447,6 +450,13 @@ export function nextForcedMove(
   w: number,
   h: number,
 ): ForcedMove | null {
+  for (const move of forcedMoves(grid, w, h)) return move;
+  return null;
+}
+
+/** Every forced move on `grid`, in cell order, each found with the grid as
+ * it stands: {@link nextForcedMove}'s scan carried on. */
+function* forcedMoves(grid: Uint16Array, w: number, h: number): Generator<ForcedMove> {
   const s = w * h;
   const errors = new Uint16Array(s);
   for (let i = 0; i < s; i++) {
@@ -455,17 +465,34 @@ export function nextForcedMove(
     if (bricksValidate(grid, w, h, false, errors) === "invalid") {
       const reason = classifyUnshadeTrial(grid, errors, w, h, i);
       grid[i] = F_EMPTY;
-      return { index: i, to: "shade", reason };
+      yield { index: i, to: "shade", reason };
+      continue;
     }
     grid[i] = F_SHADE;
     if (bricksValidate(grid, w, h, false, errors) === "invalid") {
       const reason = classifyShadeTrial(grid, errors, w, h, i);
       grid[i] = F_EMPTY;
-      return { index: i, to: "unshade", reason };
+      yield { index: i, to: "unshade", reason };
+      continue;
     }
     grid[i] = F_EMPTY;
   }
-  return null;
+}
+
+/** The cells a forced move's premise reads, which a hint plan continues
+ * from: the cell, and the bricks or clue its trial broke. */
+function readsOf({ index, reason }: ForcedMove): number[] {
+  switch (reason.kind) {
+    case "three":
+      return [index, ...reason.cells];
+    case "unsupported":
+      return [index, ...reason.below];
+    case "overcount":
+    case "undercount":
+      return [index, reason.clue];
+    case "strandSupport":
+      return [index, reason.above];
+  }
 }
 
 /** Runaway/UX cap on plan length — the player rarely follows more than a few
@@ -483,17 +510,29 @@ export function deduceBricksPlan(
   w: number,
   h: number,
 ): ForcedMove[] {
-  return deduceHintPlan<Uint16Array, ForcedMove, BricksStatus>({
-    board: grid0.slice(),
-    status: (grid) => bricksValidate(grid, w, h, true),
-    incomplete: "unfinished",
+  const board = grid0.slice();
+  let last: ForcedMove | null = null;
+  const pass = singleFirings({
     // Single-cell refutations only. The recursive rung assumes a color and
     // *solves the rest of the board* from it, a search a hint never presents as
     // a technique, so where only it would fire the plan ends and `hint` refuses.
-    next: (grid) => nextForcedMove(grid, w, h),
-    apply: (grid, move) => {
-      grid[move.index] = colorBits(move.to);
-    },
+    techniques: findingTechniques(
+      [{ id: "refute", tier: 0, find: () => forcedMoves(board, w, h) }],
+      (move) => {
+        board[move.index] = colorBits(move.to);
+        last = move;
+      },
+      { reads: readsOf, writes: (move) => [move.index] },
+    ),
+    budget: stepBudget("bricks hint"),
+    // A plan works on the bricks beside its last move before it moves on.
+    continuing: true,
+  });
+  return deduceHintPlan<Uint16Array, ForcedMove, BricksStatus>({
+    board,
+    status: (grid) => bricksValidate(grid, w, h, true),
+    incomplete: "unfinished",
+    next: () => (pass.next() ? last : null),
     planCap: HINT_PLAN_MAX,
   }).plan;
 }

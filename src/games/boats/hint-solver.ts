@@ -37,6 +37,11 @@
  *    final verdict from. The dsf is built for the two expand techniques.
  */
 
+import {
+  type FindingRung,
+  findingTechniques,
+  singleFirings,
+} from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -255,6 +260,12 @@ interface Ctx {
   deduced: boolean[];
   /** False once every hidden number has been recovered (upstream's latch). */
   hasNoClue: boolean;
+  /**
+   * While a plan's frontier asks a technique for every firing it could make:
+   * {@link firing} keeps each here and answers `null`, so the finder scans on
+   * as though it had found nothing, and is left with them all.
+   */
+  collect: BoatsFiring[] | null;
 }
 
 /**
@@ -323,7 +334,7 @@ function firing(
     });
   }
 
-  return {
+  const f: BoatsFiring = {
     technique,
     squares: fresh,
     consequences,
@@ -331,6 +342,9 @@ function firing(
     line,
     grid: Int8Array.from(b.grid),
   };
+  if (!ctx.collect) return f;
+  ctx.collect.push(f);
+  return null;
 }
 
 function applySquares(b: BoatsBoard, squares: readonly BoatsSquare[]): void {
@@ -683,12 +697,13 @@ function findMustGrow(ctx: Ctx): BoatsFiring | null {
         const length = dsf.size(i2);
         if (length - 1 < 1 || length - 1 >= b.fleet) continue;
         if (b.fleetData[length - 1] !== fleetCount[length - 1]) continue;
-        return firing(
+        const f = firing(
           ctx,
           { kind: "mustGrow", length },
           [{ x, y, ship: true }],
           boatCells(b, dsf, dsf.canonify(i2)),
         );
+        if (f) return f;
       }
     }
     return null;
@@ -705,12 +720,13 @@ function findMustGrow(ctx: Ctx): BoatsFiring | null {
         if (length - 1 < 1 || length - 1 >= b.fleet) continue;
         if (b.fleetData[length - 1] !== fleetCount[length - 1]) continue;
         const i2 = dsf.minimal(i1) - d;
-        return firing(
+        const f = firing(
           ctx,
           { kind: "mustGrow", length },
           [{ x: i2 % b.w, y: Math.floor(i2 / b.w), ship: true }],
           boatCells(b, dsf, c1),
         );
+        if (f) return f;
       }
     }
     return null;
@@ -1130,7 +1146,7 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
 // --- the firing order -------------------------------------------------------
 
 /**
- * The next firing, **goal-first** (docs/hints.md § "Hint the move that
+ * The hint's rungs, **goal-first** (docs/hints.md § "Hint the move that
  * advances the goal"): within each tier the placements — the moves that build
  * the fleet — run before the rule-outs, and a cheaper tier always runs before a
  * dearer one, so an Easy board is taught the Easy technique that suffices
@@ -1138,46 +1154,146 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
  * reorders `solveBoats`' internal rungs; the hint only needs each firing to be
  * *forced*, not to match the solver's order.
  */
-function nextBoatsFiring(ctx: Ctx): BoatsFiring | null {
-  const { b, maxDiff } = ctx;
-
-  // Easy.
-  const easy =
-    findGivenClue(ctx) ??
-    findNeverTouch(ctx) ??
-    findLineCount(ctx, true) ??
-    (ctx.hasNoClue ? findAllWaterPlaced(ctx) : null) ??
-    findCenterForced(ctx) ??
-    findSingles(ctx, true) ??
-    findLineCount(ctx, false) ??
-    findSingles(ctx, false);
-  if (easy) return easy;
-  if (maxDiff < DIFF_NORMAL) return null;
-
+function boatsRungs(ctx: Ctx): FindingRung<BoatsFiring | "recover">[] {
+  const { b } = ctx;
+  // Every firing the finder would return, in the order it would meet them.
+  const every = (find: () => unknown) => (): BoatsFiring[] => {
+    const out: BoatsFiring[] = [];
+    ctx.collect = out;
+    try {
+      find();
+    } finally {
+      ctx.collect = null;
+    }
+    return out;
+  };
   // Normal. Populate the dsf before the two expand techniques read it; its
-  // status verdict is not wanted (see the module header). The two placements
-  // come first, and of them the one that reads a single boat before the one
-  // that counts every run on the board.
-  checkDsf(b, ctx.dsf, ctx.fleetCount);
-  const runs = collectRuns(b);
-  const normal =
-    findMustGrow(ctx) ??
-    findOnlyRunsLeft(ctx, runs, true) ??
-    findCenterCount(ctx) ??
-    findGrowTooLong(ctx) ??
-    findRunTooShort(ctx, runs);
-  if (normal) return normal;
-  if (maxDiff < DIFF_TRICKY) return null;
-
-  // Tricky. Each restart recovers a number, and there are `w + h` of them.
-  if (ctx.hasNoClue && recoverHiddenNumbers(ctx)) return nextBoatsFiring(ctx);
-  const tricky = findOnlyRunsLeft(ctx, runs, false) ?? findSharedDiagonal(ctx);
-  if (tricky) return tricky;
-  if (maxDiff < DIFF_HARD) return null;
-
-  // Hard.
-  return findRefuted(ctx);
+  // status verdict is not wanted (see the module header).
+  const counted = (find: (runs: BoatsRun[]) => unknown) =>
+    every(() => {
+      checkDsf(b, ctx.dsf, ctx.fleetCount);
+      return find(collectRuns(b));
+    });
+  const rung = (
+    id: string,
+    tier: number,
+    find: () => BoatsFiring[],
+  ): FindingRung<BoatsFiring | "recover"> => ({ id, tier, find });
+  return [
+    rung(
+      "givenClue",
+      DIFF_EASY,
+      every(() => findGivenClue(ctx)),
+    ),
+    rung(
+      "neverTouch",
+      DIFF_EASY,
+      every(() => findNeverTouch(ctx)),
+    ),
+    rung(
+      "lineCount-fill",
+      DIFF_EASY,
+      every(() => findLineCount(ctx, true)),
+    ),
+    rung(
+      "allWaterPlaced",
+      DIFF_EASY,
+      every(() => (ctx.hasNoClue ? findAllWaterPlaced(ctx) : null)),
+    ),
+    rung(
+      "centerForced",
+      DIFF_EASY,
+      every(() => findCenterForced(ctx)),
+    ),
+    rung(
+      "singles-fill",
+      DIFF_EASY,
+      every(() => findSingles(ctx, true)),
+    ),
+    rung(
+      "lineCount",
+      DIFF_EASY,
+      every(() => findLineCount(ctx, false)),
+    ),
+    rung(
+      "singles",
+      DIFF_EASY,
+      every(() => findSingles(ctx, false)),
+    ),
+    // The two placements come first, and of them the one that reads a single
+    // boat before the one that counts every run on the board.
+    rung(
+      "mustGrow",
+      DIFF_NORMAL,
+      counted(() => findMustGrow(ctx)),
+    ),
+    rung(
+      "onlyRunsLeft-fill",
+      DIFF_NORMAL,
+      counted((runs) => findOnlyRunsLeft(ctx, runs, true)),
+    ),
+    rung(
+      "centerCount",
+      DIFF_NORMAL,
+      counted(() => findCenterCount(ctx)),
+    ),
+    rung(
+      "growTooLong",
+      DIFF_NORMAL,
+      counted(() => findGrowTooLong(ctx)),
+    ),
+    rung(
+      "runTooShort",
+      DIFF_NORMAL,
+      counted((runs) => findRunTooShort(ctx, runs)),
+    ),
+    // A recovered number is new to every cheaper technique, so the rest wait
+    // until none is left to recover; it is no step of its own.
+    {
+      id: "recover",
+      tier: DIFF_TRICKY,
+      prerequisite: true,
+      find: () => (ctx.hasNoClue && wouldRecover(ctx) ? ["recover"] : []),
+    },
+    rung(
+      "onlyRunsLeft",
+      DIFF_TRICKY,
+      counted((runs) => findOnlyRunsLeft(ctx, runs, false)),
+    ),
+    rung(
+      "sharedDiagonal",
+      DIFF_TRICKY,
+      counted(() => findSharedDiagonal(ctx)),
+    ),
+    rung(
+      "refuted",
+      DIFF_HARD,
+      counted(() => findRefuted(ctx)),
+    ),
+  ];
 }
+
+/** Whether {@link recoverHiddenNumbers} would bring a number back, leaving
+ * the board as it was. */
+function wouldRecover(ctx: Ctx): boolean {
+  const clues = Int32Array.from(ctx.b.borderClues);
+  const deduced = [...ctx.deduced];
+  const { hasNoClue } = ctx;
+  const recovered = recoverHiddenNumbers(ctx);
+  ctx.b.borderClues.set(clues);
+  ctx.deduced = deduced;
+  ctx.hasNoClue = hasNoClue;
+  return recovered;
+}
+
+/** The squares a firing's premise reads, which a hint plan continues from:
+ * its evidence, the line it counts, and the squares it decides. */
+const readsOf = (b: BoatsBoard, f: BoatsFiring): number[] =>
+  [...f.evidence, ...f.line, ...f.squares].map((p) => p.y * b.w + p.x);
+
+/** The squares a firing decides, and the water that follows from them. */
+const writesOf = (b: BoatsBoard, f: BoatsFiring): number[] =>
+  [...f.squares, ...f.consequences].map((p) => p.y * b.w + p.x);
 
 // --- the plan ---------------------------------------------------------------
 
@@ -1215,15 +1331,44 @@ function planAt(state: BoatsState, maxDiff: number): BoatsPlan {
     dsf: Dsf.withMinimal(b.w * b.h + 1),
     deduced: new Array(b.w + b.h).fill(false),
     hasNoClue: b.borderClues.includes(NO_CLUE),
+    collect: null,
   };
 
+  let last: BoatsFiring | null = null;
+  const pass = singleFirings({
+    techniques: findingTechniques(
+      boatsRungs(ctx),
+      (f) => {
+        if (f === "recover") recoverHiddenNumbers(ctx);
+        else {
+          applyBoatsFiring(b, f);
+          last = f;
+        }
+      },
+      {
+        reads: (f) => (f === "recover" ? [] : readsOf(b, f)),
+        writes: (f) => (f === "recover" ? [] : writesOf(b, f)),
+      },
+    ),
+    maxTier: maxDiff,
+    budget: stepBudget("boats hint"),
+    // A plan works round the boats it has just placed before it moves on.
+    continuing: true,
+  });
   const { status, plan } = deduceHintPlan<Ctx, BoatsFiring, number>({
     board: ctx,
     // Also refills the tallies every technique reads (Subsets' shape).
     status: boardStatus,
     incomplete: STATUS_INCOMPLETE,
-    next: nextBoatsFiring,
-    apply: (c, f) => applyBoatsFiring(c.b, f),
+    next: (c) => {
+      last = null;
+      // A recovered number is no step: the techniques are asked again.
+      while (pass.next()) {
+        if (last) return last;
+        boardStatus(c);
+      }
+      return null;
+    },
     planCap: HINT_PLAN_MAX,
     budget: stepBudget("boats hint"),
   });

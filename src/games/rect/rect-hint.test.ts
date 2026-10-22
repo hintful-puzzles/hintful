@@ -11,6 +11,7 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
 import {
   type Crossing,
+  firingsOn,
   moveOf,
   nextFiring,
   RECT_RUNGS,
@@ -104,14 +105,16 @@ describe("rect hint rungs", () => {
       const { state, steps, index } = pinned(rung);
       let s = state;
       for (const earlier of steps.slice(0, index)) s = executeMove(s, earlier.move);
-      const f = nextFiring(s);
+      const f = [...firingsOn(s)].find(
+        (g) => JSON.stringify(moveOf(g)) === JSON.stringify(steps[index].move),
+      );
       expect(f?.kind).toBe(rung);
-      if (f) expect(moveOf(f)).toEqual(steps[index].move);
     });
 
-  it("a plan's every step is the firing its board gives when read afresh", () => {
+  it("a plan's every step is a firing its board gives when read afresh", () => {
     // A plan reads each clue's fits once and takes away the ones each step's
-    // lines cross. `nextFiring` on a board alone reads them all again.
+    // lines cross. `firingsOn` on a board alone reads them all again. The plan
+    // takes the one beside its last step, which need not be the first.
     const rungs = new Set<string>();
     for (const diff of [DIFF_EASY, DIFF_UNREASONABLE])
       for (let seed = 0; seed < 6; seed++) {
@@ -120,8 +123,7 @@ describe("rect hint rungs", () => {
         const plan = rectHint(s);
         // An Unreasonable board can be one the rungs have nothing to say of.
         for (const step of plan.ok ? plan.steps : []) {
-          const f = nextFiring(s);
-          expect(f && moveOf(f)).toEqual(step.move);
+          expect([...firingsOn(s)].map(moveOf)).toContainEqual(step.move);
           if (step.rung) rungs.add(step.rung);
           s = executeMove(s, step.move);
         }

@@ -94,7 +94,8 @@ function breachClause(breach: BoatsBreach, cells: readonly Point[], m: BoatsMark
       // the line the trial broke need not be that square's own.
       return phrase`${mark.the("stripes", whole(CELL), m.line, breach.line.horizontal ? "row" : "column")} couldn't reach its ${breach.line.clue}`;
     case "fleet":
-      return phrase`it would make ${at("a boat")} the fleet has no room for`;
+      // A boat of a size the fleet has had all of, so "too many" of them.
+      return phrase`it would make ${at("one boat")} too many`;
     case "fleetTotal":
       return breach.tooMany
         ? phrase`there would be more ${at("boat squares")} than the whole fleet has`

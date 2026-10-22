@@ -24,6 +24,7 @@ import {
   answerCache,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
+import { findingTechniques, singleFirings } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -593,8 +594,8 @@ function reasonKey(r: SticksReason): string {
 }
 
 /**
- * The next deduction *firing* — every cell the same clue-and-rule forces on
- * **this** board, in cell order, or `null` when the deduction is exhausted.
+ * Every deduction *firing* on **this** board — each the cells one
+ * clue-and-rule forces, in cell order — in the order the scan met them.
  *
  * Deliberately a **parallel** function rather than a recorder threaded through
  * `sticksTry`: the generator's deduction is then untouched by construction, so
@@ -613,28 +614,46 @@ function reasonKey(r: SticksReason): string {
  * handed in*, so the group is simultaneous, not a chain — a chain would stay
  * separate steps.
  */
-function nextSticksFiring(
+function sticksFirings(
   grid: Uint8Array,
   numbers: Int16Array,
   w: number,
   h: number,
   scratch: SticksScratch,
-): SticksFiring[] | null {
+): SticksFiring[][] {
   const s = w * h;
-  let group: SticksFiring[] | null = null;
-  let key = "";
+  const groups = new Map<string, SticksFiring[]>();
   for (let i = 0; i < s; i++) {
     if (grid[i]) continue;
     const firing = forcedAt(grid, numbers, w, h, scratch, i);
     if (!firing) continue;
-    if (!group) {
-      group = [firing];
-      key = reasonKey(firing.reason);
-    } else if (reasonKey(firing.reason) === key) {
-      group.push(firing);
-    }
+    const key = reasonKey(firing.reason);
+    const group = groups.get(key);
+    if (group) group.push(firing);
+    else groups.set(key, [firing]);
   }
-  return group;
+  // In the order each group's first cell was met, so the first is the one the
+  // scan alone would give.
+  return [...groups.values()];
+}
+
+/** The cells a firing's premise reads, which a hint plan continues from: its
+ * clues and the line or lines its trial broke, and the cells it decides. */
+function readsOf(group: SticksFiring[]): number[] {
+  const { reason } = group[0];
+  const own = group.map((f) => f.index);
+  switch (reason.kind) {
+    case "tooLong":
+      return [reason.clue, ...reason.segment, ...own];
+    case "unreachable":
+      return [reason.clue, ...reason.span, ...own];
+    case "twoClues":
+      return [...reason.clues, ...reason.segment, ...own];
+    case "overConnected":
+      return [reason.clue, ...reason.lines, ...own];
+    case "starved":
+      return [reason.clue, ...reason.open, ...own];
+  }
 }
 
 /** Runaway/UX cap on plan length — the player rarely follows more than a few
@@ -651,14 +670,32 @@ const HINT_PLAN_MAX = 40;
 export function deduceSticksPlan(state: SticksState): SticksFiring[][] {
   const { w, h, numbers } = state;
   const scratch = newScratch(w * h);
+  const board = state.grid.slice();
+  let last: SticksFiring[] | null = null;
+  const pass = singleFirings({
+    techniques: findingTechniques(
+      [
+        {
+          id: "refute",
+          tier: 0,
+          find: () => sticksFirings(board, numbers, w, h, scratch),
+        },
+      ],
+      (group) => {
+        for (const f of group) board[f.index] = f.to === "hor" ? F_HOR : F_VER;
+        last = group;
+      },
+      { reads: readsOf, writes: (group) => group.map((f) => f.index) },
+    ),
+    budget: stepBudget("sticks hint"),
+    // A plan works on the lines beside its last step before it moves on.
+    continuing: true,
+  });
   return deduceHintPlan<Uint8Array, SticksFiring[], SticksStatus>({
-    board: state.grid.slice(),
+    board,
     status: (grid) => sticksValidate(grid, numbers, w, h, scratch),
     incomplete: "unfinished",
-    next: (grid) => nextSticksFiring(grid, numbers, w, h, scratch),
-    apply: (grid, group) => {
-      for (const f of group) grid[f.index] = f.to === "hor" ? F_HOR : F_VER;
-    },
+    next: () => (pass.next() ? last : null),
     planCap: HINT_PLAN_MAX,
     budget: stepBudget("sticks hint"),
   }).plan;

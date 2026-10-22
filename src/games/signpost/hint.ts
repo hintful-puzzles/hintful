@@ -17,6 +17,7 @@
  * cannot come next.
  */
 
+import { findingTechniques, singleFirings } from "../../engine/deduction-fixpoint.ts";
 import {
   type HintResult,
   type HintStep,
@@ -105,7 +106,7 @@ function reasons(rivals: readonly Rival[]): Rival[] {
   return (["taken", "chain", "number"] as const).filter((r) => rivals.includes(r));
 }
 
-function onlyNext(s: SignpostState): SignpostFiring | null {
+function* onlyNext(s: SignpostState): Generator<SignpostFiring> {
   for (let from = 0; from < s.n; from++) {
     if (s.next[from] !== -1 || s.nums[from] === s.n) continue;
     const line = arrowLine(s, from);
@@ -117,12 +118,11 @@ function onlyNext(s: SignpostState): SignpostFiring | null {
         return r ? [r] : [];
       }),
     );
-    return { kind: "onlyNext", from, to: open[0], line, others: [], why };
+    yield { kind: "onlyNext", from, to: open[0], line, others: [], why };
   }
-  return null;
 }
 
-function onlyBefore(s: SignpostState): SignpostFiring | null {
+function* onlyBefore(s: SignpostState): Generator<SignpostFiring> {
   const { w } = s;
   for (let to = 0; to < s.n; to++) {
     if (s.prev[to] !== -1 || s.nums[to] === 1) continue;
@@ -142,7 +142,7 @@ function onlyBefore(s: SignpostState): SignpostFiring | null {
       const r = why(i);
       return r ? [r] : [];
     });
-    return {
+    yield {
       kind: "onlyBefore",
       from: open[0],
       to,
@@ -151,14 +151,11 @@ function onlyBefore(s: SignpostState): SignpostFiring | null {
       why: reasons(rivals),
     };
   }
-  return null;
 }
 
-/** The next forced link on `s`, plainest rung first, or `null`. */
-function nextFiring(s: SignpostState): SignpostFiring | null {
-  updateNumbers(s);
-  return onlyNext(s) ?? onlyBefore(s);
-}
+/** The squares a link's premise reads, which a hint plan continues from: the
+ * two it joins, and the squares it ruled out. */
+const readsOf = (f: SignpostFiring): number[] => [f.from, f.to, ...f.line, ...f.others];
 
 /**
  * The plan from the player's own links as far as forced links go, a step per
@@ -169,19 +166,43 @@ export function signpostHint(
   state: SignpostState,
 ): HintResult<SignpostMove, SignpostHint, SignpostRung> {
   const board = cloneState(state);
+  let last: SignpostFiring | null = null;
+  // Plainest rung first; each reads the numbers as the links settle them.
+  const rung = (
+    id: SignpostRung,
+    find: (s: SignpostState) => Iterable<SignpostFiring>,
+  ) => ({
+    id,
+    tier: 0,
+    find: () => {
+      updateNumbers(board);
+      return find(board);
+    },
+  });
+  const pass = singleFirings({
+    techniques: findingTechniques(
+      [rung("onlyNext", onlyNext), rung("onlyBefore", onlyBefore)],
+      // As `executeMove` leaves the board: the link, the numbers it settles,
+      // and the links between consecutive numbers the board then makes
+      // itself. A copy without those plans a step for a link the player
+      // already has.
+      (f) => {
+        makeLink(board, f.from, f.to);
+        updateNumbers(board);
+        checkCompletion(board, true);
+        last = f;
+      },
+      { reads: readsOf, writes: (f) => [f.from, f.to] },
+    ),
+    budget: stepBudget("signpost hint"),
+    // A plan follows the chain it is linking before it starts another.
+    continuing: true,
+  });
   const { plan } = deduceHintPlan({
     board,
     status: (b) => checkCompletion(b, false),
     incomplete: false,
-    next: nextFiring,
-    // As `executeMove` leaves the board: the link, the numbers it settles, and
-    // the links between consecutive numbers the board then makes itself. A
-    // copy without those plans a step for a link the player already has.
-    apply: (b, f) => {
-      makeLink(b, f.from, f.to);
-      updateNumbers(b);
-      checkCompletion(b, true);
-    },
+    next: () => (pass.next() ? last : null),
     budget: stepBudget("signpost hint"),
   });
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };

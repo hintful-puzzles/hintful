@@ -126,6 +126,56 @@ export interface LadderCandidate {
 }
 
 /**
+ * A rung written as a finder: every firing it could make from the board as it
+ * stands, in scan order, ending at a contradiction if it meets one. The rung
+ * takes the first; a plan that continues chooses among them all. A generator
+ * that yields where a first-firing finder would return is one.
+ */
+export interface FindingRung<F> {
+  id: string;
+  tier: number;
+  find: () => Iterable<F | "contradiction">;
+  fallback?: boolean;
+  prerequisite?: boolean;
+}
+
+/**
+ * The techniques a ladder of finders makes, each firing taken by `take`
+ * (write the board, record the firing) and keyed for a plan's frontier by
+ * `reads` and `writes`.
+ */
+export function findingTechniques<F>(
+  rungs: readonly FindingRung<F>[],
+  take: (firing: F) => void,
+  key: { reads(firing: F): readonly number[]; writes(firing: F): readonly number[] },
+): DeductionTechnique[] {
+  return rungs.map(({ find, ...rung }) => ({
+    ...rung,
+    run: () => {
+      for (const found of find()) {
+        if (found === "contradiction") return -1;
+        take(found as F);
+        return 1;
+      }
+      return 0;
+    },
+    available: () => {
+      const out: LadderCandidate[] = [];
+      for (const found of find()) {
+        if (found === "contradiction") return "contradiction";
+        const firing = found as F;
+        out.push({
+          reads: () => key.reads(firing),
+          writes: () => key.writes(firing),
+          take: () => take(firing),
+        });
+      }
+      return out;
+    },
+  }));
+}
+
+/**
  * Per-rung firing counts, keyed by {@link DeductionTechnique.id}.
  *
  * Counts rather than a set of ids, because the step budget's non-termination

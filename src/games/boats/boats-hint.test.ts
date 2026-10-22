@@ -385,7 +385,7 @@ describe("boats hint — narration", () => {
     // A "so it is forced" with no named rule is exactly the un-narrated step
     // the spec forbids.
     expect(step?.explanation).toMatch(
-      /(touching corner to corner|couldn't reach its \d+|make a boat \(outlined\) the fleet has no room for|more boat squares than the whole fleet|rest of the fleet would no longer fit|given segment's own shape|could no longer be placed legally)/,
+      /(touching corner to corner|couldn't reach its \d+|make one boat \(outlined\) too many|more boat squares than the whole fleet|rest of the fleet would no longer fit|given segment's own shape|could no longer be placed legally)/,
     );
   });
 

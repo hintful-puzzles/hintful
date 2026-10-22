@@ -27,6 +27,12 @@
       crossing, filling, galaxies, lightup, loopy, pattern, range, rect,
       signpost, singles, slant, spokes, sticks, subsets, unruly. Onto
       `singleFirings` and `continuing`, or the reason not, recorded here.
+      Done: boats, bricks, clusters, pattern, rect, signpost, spokes,
+      sticks, through `findingTechniques`: each finder yields every firing
+      where it returned the first (Boats' collect in `firing()` instead, so
+      its thirteen finders stay as written). A dear look-ahead offers only
+      the firing it would make (Clusters' shortest chain, Spokes' first
+      contradiction).
 - [ ] 2.3 For each: hint pins and plan tests re-baselined, each moved
       sentence read against its board; a hint played in the app.
 

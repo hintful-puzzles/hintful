@@ -28,7 +28,11 @@
  * {@link findErrors}) do not mutate, so persisted state and the renderer stay
  * `F_ERROR`-free.
  */
-import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
+import {
+  findingTechniques,
+  runDeductionFixpoint,
+  singleFirings,
+} from "../../engine/deduction-fixpoint.ts";
 import { deduceHintPlan as accumulateHintPlan } from "../../engine/hint-plan.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
@@ -322,13 +326,13 @@ function contradictionAround(
   return null;
 }
 
-/** The first single-cell contradiction firing in row-major order (red tried
- * first, as `solverTry` does), or null at a stall. Leaves `grid` unchanged. */
-function firstDirectDeduction(
+/** Every single-cell contradiction firing in row-major order (red tried
+ * first, as `solverTry` does). Leaves `grid` unchanged. */
+function* directDeductions(
   grid: Uint8Array,
   w: number,
   h: number,
-): ClustersDeduction | null {
+): Generator<ClustersDeduction> {
   const s = w * h;
   for (let i = 0; i < s; i++) {
     if (grid[i] !== 0) continue;
@@ -338,16 +342,39 @@ function firstDirectDeduction(
       const at = contradictionAround(grid, w, h, i);
       grid[i] = 0;
       if (at) {
-        return {
+        yield {
           index: i,
           fill: opposite(refuted),
           refuted,
           reason: { kind: "direct", at },
         };
+        break;
       }
     }
   }
-  return null;
+}
+
+/** The cells a deduction's premise reads, which a hint plan continues from:
+ * the cell and the cell whose rule its trial broke, each with the cells
+ * beside it, and a chain's own cells. */
+function readsOf(d: ClustersDeduction, w: number, h: number): number[] {
+  const around = (c: number): number[] => {
+    const x = c % w;
+    const y = (c - x) / w;
+    return [
+      c,
+      ...(x > 0 ? [c - 1] : []),
+      ...(x < w - 1 ? [c + 1] : []),
+      ...(y > 0 ? [c - w] : []),
+      ...(y < h - 1 ? [c + w] : []),
+    ];
+  };
+  const { reason } = d;
+  return [
+    ...around(d.index),
+    ...around(reason.at.cell),
+    ...(reason.kind === "chain" ? reason.steps.map((s) => s.index) : []),
+  ];
 }
 
 /** Play out the hypothetical "cell `i` is `refuted`": propagate single-cell
@@ -441,19 +468,42 @@ export function deduceHintPlan(
 ): ClustersHintPlan {
   // Hint-only path, so the budget is unconditional.
   const budget = stepBudget("clusters hint");
+  const board = grid0.slice();
+  let last: ClustersDeduction | null = null;
+  const pass = singleFirings({
+    techniques: findingTechniques<ClustersDeduction>(
+      [
+        { id: "direct", tier: 0, find: () => directDeductions(board, w, h) },
+        // Only the shortest chain: each is a search, and the shortest is the
+        // one worth teaching wherever the plan is.
+        {
+          id: "chain",
+          tier: 1,
+          find: () => {
+            const d = shortestChainDeduction(board, w, h, budget);
+            return d ? [d] : [];
+          },
+        },
+      ],
+      (d) => {
+        board[d.index] = d.fill;
+        last = d;
+      },
+      { reads: (d) => readsOf(d, w, h), writes: (d) => [d.index] },
+    ),
+    budget,
+    // A plan works on the clusters beside its last fill before it moves on.
+    continuing: true,
+  });
   const { status, plan } = accumulateHintPlan<
     Uint8Array,
     ClustersDeduction,
     ClustersStatus
   >({
-    board: grid0.slice(),
+    board,
     status: (grid) => clustersStatus(grid, w, h),
     incomplete: UNFINISHED,
-    next: (grid) =>
-      firstDirectDeduction(grid, w, h) ?? shortestChainDeduction(grid, w, h, budget),
-    apply: (grid, d) => {
-      grid[d.index] = d.fill;
-    },
+    next: () => (pass.next() ? last : null),
     budget,
   });
   return { verdict: status, deductions: plan };

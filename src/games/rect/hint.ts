@@ -28,6 +28,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { findingTechniques, singleFirings } from "../../engine/deduction-fixpoint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { narratedStep } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
@@ -189,6 +190,16 @@ function isDrawn(s: RectState, r: Rect): boolean {
  * {@link fitsAfter} kept of an earlier board's, where the caller has them.
  */
 export function nextFiring(s: RectState, fits: Fits = readFits(s)): RectFiring | null {
+  for (const f of firingsOn(s, fits)) return f;
+  return null;
+}
+
+/** Every firing on `s`, cheapest rung first and in reading order within one:
+ * {@link nextFiring}'s scan carried on. */
+export function* firingsOn(
+  s: RectState,
+  fits: Fits = readFits(s),
+): Generator<RectFiring> {
   const { w, h } = s;
   const clues = [...fits.keys()];
   const fitsFor = (c: number): readonly Rect[] => fits.get(c) ?? [];
@@ -210,7 +221,7 @@ export function nextFiring(s: RectState, fits: Fits = readFits(s)): RectFiring |
       else if (v === "line") line = true;
       else if (v !== "fits") blockers.add(v.clue);
     }
-    return {
+    yield {
       kind: "fit",
       clue,
       rect: f[0],
@@ -226,7 +237,7 @@ export function nextFiring(s: RectState, fits: Fits = readFits(s)): RectFiring |
     if (who.length !== 1 || !isOpen.has(who[0])) continue;
     const through = fitsFor(who[0]).filter((r) => covers(r, i, w));
     if (through.length === 1 && i !== who[0])
-      return { kind: "reach", clue: who[0], rect: through[0], square: i };
+      yield { kind: "reach", clue: who[0], rect: through[0], square: i };
   }
 
   // The squares each clue covers wherever it goes, its own among them.
@@ -246,7 +257,7 @@ export function nextFiring(s: RectState, fits: Fits = readFits(s)): RectFiring |
       const left = f.filter((r) => !overlap(r, core));
       if (left.length !== 1 || left.length === f.length) continue;
       const used = cellsOf(core, w).filter((i) => f.some((r) => covers(r, i, w)));
-      return { kind: "overlap", clue, rect: left[0], other, core: used };
+      yield { kind: "overlap", clue, rect: left[0], other, core: used };
     }
   }
 
@@ -275,7 +286,7 @@ export function nextFiring(s: RectState, fits: Fits = readFits(s)): RectFiring |
       return true;
     });
     if (ok.length === 1)
-      return {
+      yield {
         kind: "starve",
         clue,
         rect: ok[0],
@@ -327,10 +338,42 @@ export function nextFiring(s: RectState, fits: Fits = readFits(s)): RectFiring |
       ];
       for (const [open, edge, j] of edges) {
         const across = open ? crossing(j, i) : null;
-        if (across && across.length > 0) return { kind: "line", edge, across };
+        if (across && across.length > 0) yield { kind: "line", edge, across };
       }
     }
-  return null;
+}
+
+/** The squares a firing's premise reads, which a hint plan continues from:
+ * the rectangle and the squares and clues it turns on, or the squares either
+ * side of the line and those the fits across it would take or leave out. */
+function readsOf(s: RectState, f: RectFiring): number[] {
+  const { w } = s;
+  switch (f.kind) {
+    case "fit":
+      return [...cellsOf(f.rect, w), ...f.blockers];
+    case "reach":
+      return cellsOf(f.rect, w);
+    case "overlap":
+      return [...cellsOf(f.rect, w), f.other, ...f.core];
+    case "starve":
+      return [...cellsOf(f.rect, w), ...f.starved, ...f.stranded];
+    case "line":
+      return [
+        ...edgeSquares(f.edge, w),
+        ...f.across.flatMap((c) => [c.clue, ...c.takes, ...c.owners, ...c.misses]),
+      ];
+  }
+}
+
+/** The two squares either side of a line. */
+function edgeSquares(edge: RectEdge, w: number): number[] {
+  const i = edge.y * w + edge.x;
+  return [i, edge.edge === "v" ? i - 1 : i - w];
+}
+
+/** The squares a firing draws round or beside. */
+function writesOf(s: RectState, f: RectFiring): number[] {
+  return f.kind === "line" ? edgeSquares(f.edge, s.w) : cellsOf(f.rect, s.w);
 }
 
 /** The squares every one of `fits` covers, or null when there are none. */
@@ -379,16 +422,27 @@ function stepOf(s: RectState, f: RectFiring): HintStep<RectMove, RectHint, RectR
 export function rectHint(state: RectState): HintResult<RectMove, RectHint, RectRung> {
   const board = { s: state, fits: readFits(state) };
   const steps: HintStep<RectMove, RectHint, RectRung>[] = [];
+  const pass = singleFirings({
+    // One technique holding every rung, so the scan's order, cheapest rung
+    // first, breaks a tie between firings that both continue.
+    techniques: findingTechniques(
+      [{ id: "rect", tier: 0, find: () => firingsOn(board.s, board.fits) }],
+      (f) => {
+        steps.push(stepOf(board.s, f));
+        board.s = executeMove(board.s, moveOf(f));
+        board.fits = fitsAfter(board.fits, board.s, f);
+      },
+      { reads: (f) => readsOf(board.s, f), writes: (f) => writesOf(board.s, f) },
+    ),
+    budget: stepBudget("rect hint"),
+    // A plan works on the rectangles beside its last one before it moves on.
+    continuing: true,
+  });
   deduceHintPlan({
     board,
     status: (b) => isSolved(b.s),
     incomplete: false,
-    next: (b) => nextFiring(b.s, b.fits),
-    apply: (b, f) => {
-      steps.push(stepOf(b.s, f));
-      b.s = executeMove(b.s, moveOf(f));
-      b.fits = fitsAfter(b.fits, b.s, f);
-    },
+    next: () => pass.next(),
     budget: stepBudget("rect hint"),
   });
   if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };

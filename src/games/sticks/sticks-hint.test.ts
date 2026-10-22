@@ -352,7 +352,7 @@ describe("sticks hint — lifecycle", () => {
 describe("sticks hint — recording stays off the solve path", () => {
   it("collecting reasons does not change a single verdict", () => {
     // The generator's byte-identity rests on this, and the differential is the
-    // other half of the check: `nextSticksFiring` is a parallel function, so
+    // other half of the check: `sticksFirings` is a parallel function, so
     // the only shared surface is `sticksValidate`'s extra out-param.
     let compared = 0;
     for (let seed = 0; seed < 6; seed++) {

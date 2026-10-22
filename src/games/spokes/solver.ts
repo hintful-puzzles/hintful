@@ -39,9 +39,15 @@
  * that can never reach the rest of the board.
  */
 
-import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
+import {
+  type FindingRung,
+  findingTechniques,
+  runDeductionFixpoint,
+  singleFirings,
+} from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
 import {
   cloneBoard,
   copyBoard,
@@ -448,11 +454,11 @@ function markHelps(b: SpokesBoard, i: number, d: number): boolean {
  * Skipped on a two-hub board, where the pair *is* the answer, as
  * {@link spokesSolverOnes} is.
  */
-function findTwoOnes(b: SpokesBoard): SpokesFiring | null {
+function* findTwoOnes(b: SpokesBoard): Generator<SpokesFiring> {
   const { w, h } = b;
   let clues = 0;
   for (let i = 0; i < w * h; i++) if (b.numbers[i]) clues++;
-  if (clues === 2) return null;
+  if (clues === 2) return;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -468,7 +474,7 @@ function findTwoOnes(b: SpokesBoard): SpokesFiring | null {
           unsatisfied(b, j) &&
           getSpoke(b.spokes[i], d) === SPOKE_EMPTY
         ) {
-          return {
+          yield {
             kind: "twoOnes",
             forced: [{ index: i, dir: d, state: SPOKE_MARKED }],
             evidenceHubs: [i, j],
@@ -477,7 +483,6 @@ function findTwoOnes(b: SpokesBoard): SpokesFiring | null {
       }
     }
   }
-  return null;
 }
 
 /**
@@ -486,13 +491,13 @@ function findTwoOnes(b: SpokesBoard): SpokesFiring | null {
  * most direct progress, so it is tried first. Reads the tallies
  * {@link spokesValidate} last left in `s`.
  */
-function findSaturation(b: SpokesBoard, s: SpokesScratch): SpokesFiring | null {
+function* findSaturation(b: SpokesBoard, s: SpokesScratch): Generator<SpokesFiring> {
   const n = b.w * b.h;
   for (let i = 0; i < n; i++) {
     if (s.nodes[i] - s.marked[i] === b.numbers[i]) {
       const dirs = emptyDirs(b.spokes[i]);
       if (dirs.length) {
-        return {
+        yield {
           kind: "saturation",
           forced: dirs.map((d) => ({ index: i, dir: d, state: SPOKE_LINE })),
           evidenceHubs: [i],
@@ -500,7 +505,6 @@ function findSaturation(b: SpokesBoard, s: SpokesScratch): SpokesFiring | null {
       }
     }
   }
-  return null;
 }
 
 /**
@@ -509,20 +513,19 @@ function findSaturation(b: SpokesBoard, s: SpokesScratch): SpokesFiring | null {
  * exhaustion mark onto another finished hub is busywork, and never needed for
  * completion.
  */
-function findExhaustion(b: SpokesBoard, s: SpokesScratch): SpokesFiring | null {
+function* findExhaustion(b: SpokesBoard, s: SpokesScratch): Generator<SpokesFiring> {
   const n = b.w * b.h;
   for (let i = 0; i < n; i++) {
     if (s.lines[i] !== b.numbers[i]) continue;
     const dirs = emptyDirs(b.spokes[i]).filter((d) => markHelps(b, i, d));
     if (dirs.length) {
-      return {
+      yield {
         kind: "exhaustion",
         forced: dirs.map((d) => ({ index: i, dir: d, state: SPOKE_MARKED })),
         evidenceHubs: [i],
       };
     }
   }
-  return null;
 }
 
 /** Classify why an invalid board is impossible, and name the hubs at fault, so
@@ -570,12 +573,12 @@ function analyzeBreak(
  * {@link spokesSolverAttempt}, but stops at the first hit and records the
  * refuted hypothesis plus where the trial board breaks.
  */
-function findContradiction(
+function* findContradiction(
   b: SpokesBoard,
   copy: SpokesBoard,
   s: SpokesScratch,
   subdiff: number,
-): SpokesFiring | null {
+): Generator<SpokesFiring> {
   const n = b.w * b.h;
   for (let i = 0; i < n; i++) {
     for (let dir = 0; dir < 8; dir++) {
@@ -590,18 +593,18 @@ function findContradiction(
         spokesPlace(copy, i, dir, trialState);
         if (spokesSolve(copy, s, subdiff) === "invalid") {
           const { breakKind, hubs } = analyzeBreak(copy, s);
-          return {
+          yield {
             kind: "contradiction",
             forced: [{ index: i, dir, state: forcedState }],
             hypothesis: { index: i, dir, state: trialState },
             evidenceHubs: hubs,
             breakKind,
           };
+          break;
         }
       }
     }
   }
-  return null;
 }
 
 /** Apply a firing's forced spokes to a working board (both ends kept in sync),
@@ -617,14 +620,13 @@ function applyFiring(b: SpokesBoard, f: SpokesFiring): void {
 }
 
 /**
- * The next firing from `b`, **goal-first**: draw a forced connection whenever
- * one exists ({@link findSaturation}), then the genuinely-useful rule-outs (each
- * gated so it only fires when it helps a hub still needing lines), then the
- * expensive look-ahead. This deliberately reorders the solver's rungs — the hint
- * only needs each firing to be *forced*, not to match the solver's internal
- * order, and leading with connections keeps the plan from dribbling out
- * busywork marks. `s` must already hold `b`'s recounted tallies (`full = false`);
- * `copy` is contradiction scratch, and `null` below Normal.
+ * The hint's rungs over `b`, **goal-first**: forced connections
+ * ({@link findSaturation}), then the genuinely-useful rule-outs (each gated so
+ * it only fires when it helps a hub still needing lines), then the expensive
+ * look-ahead. This deliberately reorders the solver's rungs — the hint only
+ * needs each firing to be *forced*, not to match the solver's internal order,
+ * and among firings beside the plan's work, or with none there, a connection
+ * leads. `copy` is contradiction scratch, and `null` below Normal.
  *
  * **The `Unreasonable` rung is deliberately absent.** `spokesSolve` runs the
  * look-ahead a second time at `DIFF_EASY` — the same trial with no bound on the
@@ -633,17 +635,38 @@ function applyFiring(b: SpokesBoard, f: SpokesFiring): void {
  * says so, which is the honest answer. The *solver* keeps the rung: the
  * generator grades on it.
  */
-function nextSpokesFiring(
+function spokesRungs(
   b: SpokesBoard,
   s: SpokesScratch,
   copy: SpokesBoard | null,
-): SpokesFiring | null {
-  return (
-    findSaturation(b, s) ??
-    findTwoOnes(b) ??
-    findExhaustion(b, s) ??
-    (copy ? findContradiction(b, copy, s, DIFF_LIMITED) : null)
-  );
+): FindingRung<SpokesFiring>[] {
+  // The tallies are read afresh: the look-ahead's trials leave its own in `s`.
+  const tallied = (find: () => Iterable<SpokesFiring>) => () => {
+    spokesSolverRecount(b, s, false);
+    return find();
+  };
+  return [
+    { id: "saturation", tier: 0, find: tallied(() => findSaturation(b, s)) },
+    { id: "twoOnes", tier: 0, find: () => findTwoOnes(b) },
+    { id: "exhaustion", tier: 0, find: tallied(() => findExhaustion(b, s)) },
+    // Every trial is a sub-solve, so only the first, wherever the plan is.
+    {
+      id: "contradiction",
+      tier: 1,
+      find: () => {
+        if (!copy) return [];
+        for (const f of findContradiction(b, copy, s, DIFF_LIMITED)) return [f];
+        return [];
+      },
+    },
+  ];
+}
+
+/** The hubs at either end of a spoke. */
+function spokeEnds(b: SpokesBoard, { index, dir }: SpokesSpokeRef): number[] {
+  const nx = (index % b.w) + SPOKE_DIRS[dir].dx;
+  const ny = ((index / b.w) | 0) + SPOKE_DIRS[dir].dy;
+  return nx < 0 || nx >= b.w || ny < 0 || ny >= b.h ? [index] : [index, ny * b.w + nx];
 }
 
 /**
@@ -652,7 +675,7 @@ function nextSpokesFiring(
  *
  * The default is `DIFF_TRICKY`, not the top tier: the hint reasons as hard as it
  * is *allowed* to, and the rung above Normal is a search
- * ({@link nextSpokesFiring}). Passing `DIFF_HARD` changes nothing.
+ * ({@link spokesRungs}). Passing `DIFF_HARD` changes nothing.
  */
 export function deduceSpokesPlan(
   board0: SpokesBoard,
@@ -662,12 +685,30 @@ export function deduceSpokesPlan(
   const s = new SpokesScratch(b.w * b.h);
   const copy = diff >= DIFF_TRICKY ? cloneBoard(b) : null;
 
+  let last: SpokesFiring | null = null;
+  const pass = singleFirings({
+    techniques: findingTechniques(
+      spokesRungs(b, s, copy),
+      (f) => {
+        applyFiring(b, f);
+        last = f;
+      },
+      // A player follows the hubs: a firing reads the hubs it argues from and
+      // the ends of the spokes it decides, and writes those ends.
+      {
+        reads: (f) => [...f.evidenceHubs, ...f.forced.flatMap((r) => spokeEnds(b, r))],
+        writes: (f) => f.forced.flatMap((r) => spokeEnds(b, r)),
+      },
+    ),
+    budget: stepBudget("spokes hint"),
+    // A plan works round the hubs it has just joined before it moves on.
+    continuing: true,
+  });
   return deduceHintPlan<SpokesBoard, SpokesFiring, SpokesStatus>({
     board: b,
     status: (board) => spokesValidate(board, s),
     incomplete: "incomplete",
-    next: (board) => nextSpokesFiring(board, s, copy),
-    apply: applyFiring,
+    next: () => (pass.next() ? last : null),
     planCap: HINT_PLAN_MAX,
   }).plan;
 }
