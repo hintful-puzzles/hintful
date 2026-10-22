@@ -59,6 +59,14 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
   @query("wa-dialog", true)
   private dialog?: WaDialog;
 
+  @query("wa-details#advanced", true)
+  private advancedPanel?: HTMLElementTagNameMap["wa-details"];
+
+  // The element outlives each opening, and a check from an earlier one says
+  // nothing about now: only a check since this opening may say "up to date".
+  @state()
+  private openedAt = 0;
+
   protected override render() {
     return html`
       <wa-dialog label="Preferences" light-dismiss>
@@ -356,7 +364,7 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
         return "not downloaded";
       case "registered":
         return html`
-          ${pwaManager.lastChecked === null ? "installed" : "up to date"}
+          ${(pwaManager.lastChecked ?? -1) >= this.openedAt ? "up to date" : "not checked yet"}
           (<button @click=${this.handleCheckForUpdate}>check for updates</button>)
         `;
       case "checking-for-updates":
@@ -552,6 +560,11 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
 
   async show() {
     if (!this.dialog?.open) {
+      this.openedAt = Date.now();
+      // An Advanced panel left expanded fires no wa-show, so check here too
+      if (this.advancedPanel?.open) {
+        void pwaManager.checkForUpdate();
+      }
       // Make sure puzzle-preferences-form is displaying current values
       await this.reload();
     }
