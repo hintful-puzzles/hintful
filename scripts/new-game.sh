@@ -73,9 +73,10 @@ tests for each."
     REFUSED="
        - CHAIN_PINS in src/engine/testing/hint-chain-pins.ts: a position
          whose hint numbers a look-ahead's chain (hint-quality.test.ts).
-         The hint test's lookahead pin is one; the scan walks only games
-         listed there, so list it, then let
-         npm run hint-scan -- src/engine/hint-ordinal.test.ts find it again"
+         The scan walks only games listed there, so list the game with any
+         pin (the hint test's lookahead pin will do), run
+         npm run hint-scan -- src/engine/hint-ordinal.test.ts
+         and paste the position it prints for the game"
     ;;
   *)
     echo "scripts/new-game.sh has no checklist for kind '${KIND}'" >&2
@@ -117,9 +118,9 @@ if ! grep -q "^export const ${GAME_OBJECT}:" "${INDEX}"; then
   echo "the skeleton's index.ts no longer exports its game as <id>Game" >&2
   exit 1
 fi
+# The import goes before the first one, below the file's header comment.
 {
-  echo 'import { registerGame } from "../../engine/registry.ts";'
-  cat "${INDEX}"
+  awk '!done && /^import / { print "import { registerGame } from \"../../engine/registry.ts\";"; done = 1 } { print }' "${INDEX}"
   echo ""
   echo "registerGame(${GAME_OBJECT});"
 } > "${INDEX}.new"

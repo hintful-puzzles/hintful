@@ -100,6 +100,45 @@ the skeleton exported `crossDrag` for that list and nothing read it.) A
 copy's `hint-ordinal.test.ts` snapshot entry is written by vitest on the
 first run.
 
+**Stamp to playing, against Path (2026-10-22).** A toy edge game, `corners`,
+was built from a stamp and thrown away: one loop through every square, some
+squares signed turn or straight. It changes every concern but the input:
+square clues and their desc in place of walls, a second Easy rung (a line
+into a signed square), a fourth clash (a square bent against its sign), the
+generator's clues read off its loop, the words, the picture of a sign, the
+help and the tests.
+
+| | Path (`add-path-ts-port`) | `corners` from the skeleton |
+| --- | --- | --- |
+| Files of the copy replaced | every one | none |
+| Lines written | about 2,500, all of them | 370 of the copy's 1,670 game lines changed; 480 of 2,220 with the tests |
+| Time | one session | 16.5 minutes, stamp to a registered game that played to the end in the app |
+| Refused by its first verdict | many, one at a time | the spec and the icons (a game's own), and two of the toy's slips |
+
+The comparison flatters the skeleton: its author wrote the toy, knew every
+file, and chose a puzzle close to the skeleton's. It measures what the
+skeleton removes, not what a stranger to it would spend. Three things the
+build taught, each fixed here:
+
+- **The script put the `registerGame` import above the copy's header
+  comment**, in a copy of either kind. It now goes before the first import.
+- **The checklist's way into `CHAIN_PINS` was wrong.** The copy's look-ahead
+  pin broke the board in one look and numbered no chain. Listed with any pin,
+  the ordinal scan prints a position that does, which the author pastes;
+  the checklist now says so.
+- **A copy keeps the skeleton's refusals it no longer needs**: `corners` has
+  4 × 4 boards at Normal, which the skeleton refuses. Nothing flags a
+  refusal that stopped being true; the copy's test of it fails only if the
+  author deletes the refusal first.
+
+**A defect seen on the way, not this change's.** While Auto-solve runs, a
+step whose sentence repeats the one before it (two "a line here would leave
+the outlined square a dead end" in a row, Path `5x5dn:1b2b3e4_1c2b3c4`) is
+drawn with the previous step's edge still in the ring's ink, for as long as
+it is on show. The midend's step rings one edge (`activeHintStep`, checked),
+and the warm-repaint guard, which walks `executeHint`, passes; so the stale
+mark comes from the app's side of the display. Raised with the owner.
+
 **Path's look-ahead sentence could run past 120 characters.** "A line here
 would force the numbered edges and close a loop round the outlined squares,
 so this edge must be crossed out." is 121; the skeleton's hint test dealt

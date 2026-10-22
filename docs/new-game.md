@@ -19,8 +19,9 @@ state and one set of marks, so the writing is not divided among agents.
    `design.md`.
 2. **Find the game's kind** in § "The route by kind of game". It names the
    sections of each guide the game needs, and the rest are skipped.
-3. **Scaffold.** `scripts/new-game.sh <gameId>` copies the skeleton,
-   [`src/skeleton/`](../src/skeleton/README.md), to `src/games/<gameId>/` and
+3. **Scaffold.** `scripts/new-game.sh <gameId> [kind]` copies the skeleton
+   of the game's kind, `grid` or `edges`
+   ([`src/skeleton/`](../src/skeleton/README.md)), to `src/games/<gameId>/` and
    `help/games/<gameId>.md`, renamed for the game. It checks that the copy
    compiles, lints and passes its tests, and prints what the copy leaves
    undone, which is the list to work through: the puzzle, the registration,
@@ -76,8 +77,8 @@ guides is for a game that is not yours.
 | Kind | The player | Solved by | Exemplar |
 | --- | --- | --- | --- |
 | Cells with notes | types a value into a cell and pencils candidates | deduction | Unequal |
-| Cells marked by state | sets each cell to one of a few states | deduction | the skeleton, Unruly |
-| Edges and loops | marks the edges between cells, or joins things | deduction, with connectivity | Tracks |
+| Cells marked by state | sets each cell to one of a few states | deduction | the `grid` skeleton, Unruly |
+| Edges and loops | marks the edges between cells, or joins things | deduction, with connectivity | the `edges` skeleton, Tracks |
 | Moves and search | makes moves toward a goal, and no single move is forced | a search or a heuristic | Pegs |
 
 **Every game.**

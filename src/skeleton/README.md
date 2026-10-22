@@ -8,6 +8,7 @@ script stamps out a new game from the skeleton" in
 | Kind | For |
 | --- | --- |
 | [`grid`](./grid) | A square grid of cells the player marks, solved by deduction. |
+| [`edges`](./edges) | Lines the player draws along the edges between squares, solved by deduction with connectivity. |
 
 **A skeleton is a small game that plays**, written the shared way for every
 concern that has one: params, presets, the desc, input, the solver's ladder,

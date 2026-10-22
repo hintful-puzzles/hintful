@@ -17,10 +17,10 @@ Starts after `share-square-edge-geometry`, `share-line-drawing-drag` and
 
 - [x] 2.1 Stamp, register and run the game's verdict on a copy; delete it
       (D3).
-- [ ] 2.2 The stamp-to-playing comparison with Path's findings, recorded.
+- [x] 2.2 The stamp-to-playing comparison with Path's findings, recorded.
 
 ## 3. Close-out
 
-- [ ] 3.1 `src/skeleton/README.md`'s table, `docs/new-game.md` § "The route
+- [x] 3.1 `src/skeleton/README.md`'s table, `docs/new-game.md` § "The route
       by kind of game" (Edges and loops) and § "What every game does".
-- [ ] 3.2 Commit, push, archive.
+- [x] 3.2 Commit, push, archive.
