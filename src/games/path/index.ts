@@ -1,6 +1,7 @@
 /**
  * Path (Numberlink): join each pair of like numbers with a line, so that
- * lines never cross or branch and every square has a line through it.
+ * lines never cross or branch and every square has a line through it. Its
+ * Zip ruleset draws one line through the numbers in order instead.
  *
  * This file is the `Game` object and the glue around it: the input, the
  * answer, the hint's gesture. The rules a line obeys are in
@@ -72,11 +73,11 @@ export const crossDrag = input.crossDrag;
 // --- the answer -------------------------------------------------------------
 
 function status(s: PathState): GameStatus {
-  return isComplete(s.w, s.h, s.ends, s.edges) ? "solved" : "ongoing";
+  return isComplete(s, s.edges) ? "solved" : "ongoing";
 }
 
 function solve(orig: PathState): SolveResult<PathMove> {
-  const edges = answerOf(orig.w, orig.h, orig.ends);
+  const edges = answerOf(orig);
   if (edges === null) return { ok: false, error: NO_SOLUTION };
   return { ok: true, move: { kind: "solve", edges } };
 }
@@ -84,14 +85,14 @@ function solve(orig: PathState): SolveResult<PathMove> {
 /** No edge of a board the ladder cannot finish is a mistake: it has no
  * answer to compare with. */
 function findMistakes(state: PathState): readonly EdgeMistake[] {
-  const answer = answerOf(state.w, state.h, state.ends);
+  const answer = answerOf(state);
   return answer === null ? [] : edgeMistakes(state.edges, answer);
 }
 
 const difficulty: DifficultyContract<PathParams> = {
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
-    return solvePath(new PathBoard(s.w, s.h, s.ends, s.edges), cap);
+    return solvePath(new PathBoard(s, s.edges), cap);
   },
 };
 

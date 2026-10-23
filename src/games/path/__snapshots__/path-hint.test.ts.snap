@@ -5,5 +5,10 @@ exports[`path: pinned hint positions > says, at each pin 1`] = `
   "forced": "The outlined square has only two edges left for its two lines, so these edges must be lines.",
   "long-lookahead": "A line here would force the numbered edges and leave the outlined square a dead end, so this edge must be crossed out.",
   "lookahead": "A line here would leave the outlined square a dead end, so this edge must be crossed out.",
+  "zipForced": "The outlined square has only two edges left for its two lines, so these edges must be lines.",
+  "zipLongLookahead": "A line here would force the numbered edges and make a loop of the outlined squares, so this edge must be crossed out.",
+  "zipLookahead": "A line here would leave the outlined square a dead end, so this edge must be crossed out.",
+  "zipMiddleNumber": "The outlined 12 has only one edge left for its second line, so this edge must be a line.",
+  "zipOutOfOrder": "A cross here would force the numbered edges and join the outlined 4 to the 9, so this edge must be a line.",
 }
 `;

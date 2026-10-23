@@ -8,13 +8,14 @@
  */
 
 import type { EdgeChange, EdgeMark, LineRules } from "../../engine/line-drawing.ts";
-import { degreeOf, type PathState } from "./state.ts";
+import type { PathState } from "./state.ts";
 
-/** One line from a number, two through any other square, and no loops. */
+/** The lines each square takes, no loops, and walls no input changes. */
 export const pathLines: LineRules<PathState> = {
   mark: (state, e) => state.edges[e] as EdgeMark,
-  takes: (state, i) => degreeOf(state.ends, i),
+  takes: (state, i) => state.takes[i],
   loops: false,
+  fixed: (state, e) => state.walls[e] === 1,
 };
 
 /** The edges of `state` with `changes` made. */

@@ -20,11 +20,14 @@
  * (2026-10-22): beside the longer walk it changed neither how fast Tricky
  * boards are found nor how many numbers they keep, and in place of it Tricky
  * boards were seldom found at all.
- * No rung crosses out an edge whose line would join two numbers: the edge
- * counts as closed (`PathBoard.live`), as a player sees it is. There is no
- * rung against closing a loop either. The generator lays no path
- * that touches itself, so no piece of a dealt board's answer has its two ends
- * side by side, and inside a supposition a loop is a clash.
+ * No rung crosses out an edge whose line would join two numbers, or in Zip
+ * two numbers out of order: the edge counts as closed (`PathBoard.live`), as
+ * a player sees it is. In Path there is no rung against closing a loop
+ * either. Path's generator lays no path that touches itself, so no piece of
+ * a dealt board's answer has its two ends side by side, and inside a
+ * supposition a loop is a clash. Zip's one path fills the board and touches
+ * itself everywhere, so a piece's two ends are often side by side, and the
+ * edge between them counts as closed too.
  */
 
 import {
@@ -45,11 +48,19 @@ import {
   squareEdges,
 } from "../../engine/square-edges.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
-import { DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY, degreeOf, NO_END } from "./state.ts";
+import {
+  DIFF_EASY,
+  DIFF_NORMAL,
+  DIFF_TRICKY,
+  MODE_ZIP,
+  NO_END,
+  type PathPuzzle,
+  startEdges,
+} from "./state.ts";
 
 /** What breaks a board: a square with more lines than it takes, or too few
  * ways left for the lines it takes; or lines that close a loop, or that join
- * two different numbers, at `edge`. */
+ * two numbers that may not meet, at `edge`. */
 export type PathClash =
   | { kind: "crowded" | "stuck"; cell: number }
   | { kind: "closed" | "joined"; edge: number };
@@ -113,10 +124,13 @@ function supposingRung(firings: number): SupposingRung {
  * shows: twice Tricky's limit leaves it room for the corners. */
 const RUN_LIMIT = 24;
 
-/** The board the ladder works on: the numbers, and the edges it writes as it
+/** The board the ladder works on: the puzzle, and the edges it writes as it
  * goes. */
 export class PathBoard {
   readonly g: SquareEdges;
+  readonly w: number;
+  readonly h: number;
+  readonly ends: Uint8Array;
   /** The pieces of line, kept up to date by {@link set}, or `null` until
    * they are next asked for. */
   private cached: Pieces | null = null;
@@ -125,26 +139,19 @@ export class PathBoard {
   private readonly quiet: Uint8Array;
 
   constructor(
-    readonly w: number,
-    readonly h: number,
-    readonly ends: Uint8Array,
+    readonly puzzle: PathPuzzle,
     readonly edges: Uint8Array,
     quiet?: Uint8Array,
   ) {
-    this.g = squareEdges(w, h);
+    ({ w: this.w, h: this.h, ends: this.ends } = puzzle);
+    this.g = squareEdges(this.w, this.h);
     this.quiet = quiet ?? new Uint8Array(this.g.cells);
   }
 
   /** A copy to suppose on, which knows the squares this board knows are
    * quiet. */
   copy(): PathBoard {
-    return new PathBoard(
-      this.w,
-      this.h,
-      this.ends,
-      this.edges.slice(),
-      this.quiet.slice(),
-    );
+    return new PathBoard(this.puzzle, this.edges.slice(), this.quiet.slice());
   }
 
   /** Put `mark` on edge `e`. Every write to a board the ladder reads goes
@@ -227,23 +234,26 @@ export class PathBoard {
     return n;
   }
 
+  /** How many lines square `i` takes. */
+  takes(i: number): number {
+    return this.puzzle.takes[i];
+  }
+
   /** Whether square `i` takes another line. */
   spare(i: number): boolean {
-    return this.lines(i) < degreeOf(this.ends, i);
+    return this.lines(i) < this.takes(i);
   }
 
   /** Whether a line could still go on edge `e`: it is neither line nor cross,
-   * both its squares take another line, and it would not join two different
-   * numbers, whether they sit on its squares or the lines from them end
-   * there. Each of the last three a player sees at a glance (owner,
-   * 2026-10-21), so such an edge is as good as crossed out and no step asks
-   * for its cross. */
+   * both its squares take another line, and it would not join two numbers
+   * that may not meet, whether they sit on its squares or the lines from
+   * them end there; in Zip, nor close a loop. Each of these a player sees
+   * at a glance (owner, 2026-10-21), so such an edge is as good as crossed
+   * out and no step asks for its cross. */
   live(e: number): boolean {
     const [i, j] = [this.g.a[e], this.g.b[e]];
     if (this.edges[e] !== OPEN || !this.spare(i) || !this.spare(j)) return false;
-    const pieces = this.pieces();
-    const [p, q] = [pieces.numberOf(i), pieces.numberOf(j)];
-    return p === NO_END || q === NO_END || p === q;
+    return this.pieces().meets(i, j);
   }
 
   /** The {@link live} edges around square `i`. */
@@ -264,42 +274,116 @@ export class PathBoard {
   /** Whether some square still lacks a line it takes. */
   unfinished(): boolean {
     for (let i = 0; i < this.g.cells; i++)
-      if (this.edgesAt(i, LINE).length < degreeOf(this.ends, i)) return true;
+      if (this.lines(i) < this.takes(i)) return true;
     return false;
   }
 }
 
-/** The pieces of path the lines make, and the number each piece reaches. */
+/**
+ * The pieces of path the lines make: each piece's two end squares, and the
+ * number nearest each end along it. That is all either ruleset's rule reads.
+ * In Path two pieces may meet where their numbers are alike or one has none.
+ * In Zip, where every number is on one square, a piece's numbers run in
+ * order, and two pieces may meet where the numbers nearest the meeting ends
+ * are one apart: a line from the 3 that meets a line whose nearest number is
+ * the 5 must miss the 4, and one that meets the 4 cannot pass it in the
+ * wrong order, because the 4's own piece cannot hold the 3 too.
+ */
 class Pieces {
   readonly dsf: Dsf;
-  /** At each piece's root, a number on one of its squares, or
-   * {@link NO_END}. */
-  private readonly number: Int32Array;
-  /** The first line that closes a loop or joins two numbers, or `null`. */
+  private readonly mode: number;
+  /** At each piece's root, its two end squares: the same square twice for a
+   * piece of one square. */
+  private readonly endA: Int32Array;
+  private readonly endB: Int32Array;
+  /** At each piece's root, the number nearest {@link endA} and
+   * {@link endB} along the piece, or {@link NO_END}. */
+  private readonly nearA: Int32Array;
+  private readonly nearB: Int32Array;
+  /** The first line that breaks a rule, or `null`. */
   clash: PathClash | null = null;
 
   constructor(b: PathBoard) {
     const { g } = b;
+    this.mode = b.puzzle.mode;
     this.dsf = new Dsf(g.cells);
-    this.number = Int32Array.from(b.ends);
+    this.endA = Int32Array.from({ length: g.cells }, (_, i) => i);
+    this.endB = this.endA.slice();
+    this.nearA = Int32Array.from(b.ends);
+    this.nearB = this.nearA.slice();
     for (let e = 0; e < g.edgeCount; e++) if (b.edges[e] === LINE) this.add(b, e);
+  }
+
+  /** Whether numbers `p` and `q` may be joined, either being
+   * {@link NO_END}. */
+  private fits(p: number, q: number): boolean {
+    if (p === NO_END || q === NO_END) return true;
+    return this.mode === MODE_ZIP ? Math.abs(p - q) === 1 : p === q;
+  }
+
+  /** The number nearest square `i` along its piece, where `i` is one of its
+   * ends. */
+  nearAt(i: number): number {
+    const r = this.dsf.canonify(i);
+    return this.endA[r] === i ? this.nearA[r] : this.nearB[r];
+  }
+
+  /** Whether a line between squares `i` and `j`, each an end of its piece,
+   * breaks no rule. */
+  meets(i: number, j: number): boolean {
+    if (this.dsf.equivalent(i, j)) return this.mode !== MODE_ZIP;
+    return this.fits(this.nearAt(i), this.nearAt(j));
   }
 
   /** Join the pieces at the two ends of line `e`. */
   add(b: PathBoard, e: number): void {
     const { g } = b;
-    const [x, y] = [this.dsf.canonify(g.a[e]), this.dsf.canonify(g.b[e])];
-    const [p, q] = [this.number[x], this.number[y]];
-    if (x === y || (p !== NO_END && q !== NO_END && p !== q)) {
-      this.clash ??= { kind: x === y ? "closed" : "joined", edge: e };
+    const [u, v] = [g.a[e], g.b[e]];
+    const [x, y] = [this.dsf.canonify(u), this.dsf.canonify(v)];
+    if (x === y) {
+      this.clash ??= { kind: "closed", edge: e };
       return;
     }
+    // A square already in the middle of its piece has a third line; no
+    // move or rung lays one, so this is a board loaded as it was saved.
+    for (const [i, r] of [
+      [u, x],
+      [v, y],
+    ])
+      if (this.endA[r] !== i && this.endB[r] !== i) {
+        this.clash ??= { kind: "crowded", cell: i };
+        return;
+      }
+    const [p, q] = [this.nearAt(u), this.nearAt(v)];
+    if (!this.fits(p, q)) {
+      this.clash ??= { kind: "joined", edge: e };
+      return;
+    }
+    // The ends left are the far ones, and a far end with no number nearer
+    // it on its own piece is nearest the number across the join.
+    const [farX, nearX] =
+      this.endA[x] === u
+        ? [this.endB[x], this.nearB[x]]
+        : [this.endA[x], this.nearA[x]];
+    const [farY, nearY] =
+      this.endA[y] === v
+        ? [this.endB[y], this.nearB[y]]
+        : [this.endA[y], this.nearA[y]];
     this.dsf.merge(x, y);
-    this.number[this.dsf.canonify(x)] = p !== NO_END ? p : q;
+    const r = this.dsf.canonify(x);
+    this.endA[r] = farX;
+    this.nearA[r] = nearX !== NO_END ? nearX : q;
+    this.endB[r] = farY;
+    this.nearB[r] = nearY !== NO_END ? nearY : p;
   }
 
+  /** The lowest number on the piece through square `i`, or {@link NO_END}:
+   * in Path, its one number. */
   numberOf(i: number): number {
-    return this.number[this.dsf.canonify(i)];
+    const r = this.dsf.canonify(i);
+    const [p, q] = [this.nearA[r], this.nearB[r]];
+    if (p === NO_END || q === NO_END) return p === NO_END ? q : p;
+    return Math.min(p, q);
   }
 }
 
@@ -310,8 +394,8 @@ function clashOf(b: PathBoard): PathClash | null {
   const joined = b.pieces().clash;
   if (joined) return joined;
   for (let i = 0; i < b.g.cells; i++) {
-    const lines = b.edgesAt(i, LINE).length;
-    const need = degreeOf(b.ends, i);
+    const lines = b.lines(i);
+    const need = b.takes(i);
     if (lines > need) return { kind: "crowded", cell: i };
     if (lines < need && lines + b.liveAt(i).length < need)
       return { kind: "stuck", cell: i };
@@ -327,7 +411,7 @@ function stillHolds(b: PathBoard, firing: PathFiring): boolean {
   const { reason } = firing;
   if (reason.kind !== "forced") return false;
   const live = b.liveAt(reason.cell);
-  const need = degreeOf(b.ends, reason.cell) - b.edgesAt(reason.cell, LINE).length;
+  const need = b.takes(reason.cell) - b.lines(reason.cell);
   return (
     need === live.length &&
     need === firing.edges.length &&
@@ -335,19 +419,16 @@ function stillHolds(b: PathBoard, firing: PathFiring): boolean {
   );
 }
 
-/** Whether the lines join every pair of numbers through every square: each
- * square has the lines it takes, and every path runs between two like
- * numbers. A cross and an open edge are the same here, so a player need cross
- * nothing out to finish. */
-export function isComplete(
-  w: number,
-  h: number,
-  ends: Uint8Array,
-  edges: Uint8Array,
-): boolean {
-  const board = new PathBoard(w, h, ends, edges);
+/** Whether the lines solve the puzzle: each square has the lines it takes,
+ * and no line breaks a rule. Then in Path every path runs between two like
+ * numbers; in Zip the 1 and the highest number are the only squares that
+ * take one line, so the lines are one path between them, through the numbers
+ * in order. A cross and an open edge are the same here, so a player need
+ * cross nothing out to finish. */
+export function isComplete(puzzle: PathPuzzle, edges: Uint8Array): boolean {
+  const board = new PathBoard(puzzle, edges);
   for (let i = 0; i < board.g.cells; i++)
-    if (board.edgesAt(i, LINE).length !== degreeOf(ends, i)) return false;
+    if (board.lines(i) !== board.takes(i)) return false;
   // Every square has its lines, so a piece that reaches no number is a loop.
   const pieces = new Pieces(board);
   if (pieces.clash) return false;
@@ -362,7 +443,7 @@ export function isComplete(
  * needs lines, `null` where it has not, or `"contradiction"` where it has too
  * many lines or too few ways left to take them. */
 function forcedAt(b: PathBoard, i: number): PathFiring | null | "contradiction" {
-  const need = degreeOf(b.ends, i) - b.lines(i);
+  const need = b.takes(i) - b.lines(i);
   if (need < 0) return "contradiction";
   if (need === 0) return null;
   const live = b.liveCount(i);
@@ -534,7 +615,7 @@ function pruned(
   const breaks = (chain: readonly PathFiring[]): PathClash | null => {
     const edges = b.edges.slice();
     edges[e] = mark;
-    const trial = new PathBoard(b.w, b.h, b.ends, edges);
+    const trial = new PathBoard(b.puzzle, edges);
     for (const link of chain) {
       if (!stillHolds(trial, link)) return null;
       for (const f of link.edges) trial.set(f, link.mark);
@@ -650,21 +731,17 @@ export function solvePath(
   });
   if (impossible) return "impossible";
   if (board.unfinished()) return "unsolved";
-  return isComplete(board.w, board.h, board.ends, board.edges)
-    ? "solved"
-    : "impossible";
+  return isComplete(board.puzzle, board.edges) ? "solved" : "impossible";
 }
 
-/** The lines of a board's answer, or `null` where the ladder does not reach
- * one. */
-export function answerOf(
-  w: number,
-  h: number,
-  ends: Uint8Array,
-): readonly EdgeMark[] | null {
-  const board = new PathBoard(w, h, ends, new Uint8Array(squareEdges(w, h).edgeCount));
+/** The marks of a board's answer, its lines and its walls' crosses, or
+ * `null` where the ladder does not reach one. */
+export function answerOf(puzzle: PathPuzzle): readonly EdgeMark[] | null {
+  const board = new PathBoard(puzzle, startEdges(puzzle));
   if (solvePath(board, DIFF_TRICKY) !== "solved") return null;
-  return Array.from(board.edges, (m) => (m === LINE ? LINE : OPEN));
+  return Array.from(board.edges, (m, e) =>
+    m === LINE ? LINE : puzzle.walls[e] ? CROSS : OPEN,
+  );
 }
 
 /** The ladder one firing at a time, writing `board` as it goes: `next` gives

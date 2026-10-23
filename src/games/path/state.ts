@@ -1,15 +1,22 @@
 /**
  * Path's state, params, move and ui types, and its desc codec.
  *
- * The board is the numbers, which the desc gives and play never changes, and
- * a mark on every edge between two squares that share a side: nothing yet, a
- * line, or a cross saying no line goes there. A move only writes edges, so a
- * player can lay a piece of a path before it reaches either of its numbers.
+ * The board is the numbers and the walls, which the desc gives and play
+ * never changes, and a mark on every edge between two squares that share a
+ * side: nothing yet, a line, or a cross saying no line goes there. A wall's
+ * edge holds a cross no move clears. A move only writes edges, so a player
+ * can lay a piece of a path before it reaches either of its numbers.
+ *
+ * Two puzzles are played on the board, Path and Zip (`engine/ruleset.ts`).
+ * They differ in how many lines a numbered square takes, which
+ * {@link PathPuzzle.takes} holds, and in which pieces of line may meet,
+ * which is the solver's.
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
   DESC_TOO_LONG,
   DESC_UNPAIRED,
   type DescParse,
@@ -26,9 +33,11 @@ import {
   type LineDrawingUi,
 } from "../../engine/line-drawing.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
+import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import { presetGrid } from "../../engine/preset-grid.ts";
+import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
+import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -48,10 +57,27 @@ const DIFF_CHARS = "ent";
 /** `ends[i]` for a square without a number. */
 export const NO_END = 0;
 
-/** The most pairs a desc may number. More than the largest board can hold
- * (every pair takes at least two squares), so it bounds only what a typed
- * desc can ask a typed array to store. */
-const MAX_PAIRS = 255;
+/** The highest number a desc may give, so that a number fits the byte
+ * `ends` keeps it in. A Path board cannot reach it (every pair takes at
+ * least two squares), and the Zip generator deals far fewer. */
+export const MAX_NUMBER = 255;
+
+// --- rulesets ---------------------------------------------------------------
+
+export const MODE_PATH = 0;
+export const MODE_ZIP = 1;
+
+/** The two puzzles, indexed by `MODE_*`. */
+const RULESETS: Ruleset[] = [
+  {
+    name: "Path",
+    rule: "Every number is on two squares. Join each pair of like numbers with a line of its own, so a numbered square takes one line.",
+  },
+  {
+    name: "Zip",
+    rule: "The numbers run from 1 up, each on one square. Draw one line from the 1 to the highest number that passes the numbers in order, so the 1 and the highest number take one line and every other square two.",
+  },
+];
 
 // --- types ------------------------------------------------------------------
 
@@ -60,15 +86,28 @@ export interface PathParams {
   h: number;
   /** {@link DIFF_EASY}, {@link DIFF_NORMAL} or {@link DIFF_TRICKY}. */
   diff: number;
+  /** {@link MODE_PATH} or {@link MODE_ZIP}. */
+  mode: number;
 }
 
-export interface PathState {
-  w: number;
-  h: number;
-  /** The number on each square, 1 up, or {@link NO_END}. Shared between
-   * states. */
-  ends: Uint8Array;
-  /** An {@link EdgeMark} per edge, indexed as `engine/square-edges.ts` numbers them. */
+/** What the desc gives, which play never changes. Shared between states. */
+export interface PathPuzzle {
+  readonly w: number;
+  readonly h: number;
+  /** {@link MODE_PATH} or {@link MODE_ZIP}. */
+  readonly mode: number;
+  /** The number on each square, 1 up, or {@link NO_END}. */
+  readonly ends: Uint8Array;
+  /** How many lines each square takes. */
+  readonly takes: Uint8Array;
+  /** 1 on each edge the desc walls off, indexed as `engine/square-edges.ts`
+   * numbers them. */
+  readonly walls: Uint8Array;
+}
+
+export interface PathState extends PathPuzzle {
+  /** An {@link EdgeMark} per edge, indexed as `engine/square-edges.ts`
+   * numbers them. A wall's edge is a cross. */
   edges: Uint8Array;
 }
 
@@ -80,11 +119,32 @@ export type PathMove =
 
 export type PathUi = LineDrawingUi;
 
-// --- squares ---------------------------------------------------------------
+// --- the puzzle -------------------------------------------------------------
 
-/** How many lines a square takes: one from a number, two through any other. */
-export function degreeOf(ends: Uint8Array, i: number): number {
-  return ends[i] === NO_END ? 2 : 1;
+/** How many lines each square takes: two through a square without a number.
+ * In Path one from a number; in Zip one from the 1 and the highest number,
+ * where the line ends, and two through every other number. */
+function takesOf(mode: number, ends: Uint8Array): Uint8Array {
+  const last = Math.max(...ends);
+  return ends.map((v) => {
+    if (v === NO_END) return 2;
+    return mode === MODE_ZIP && v !== 1 && v !== last ? 2 : 1;
+  });
+}
+
+/** The puzzle of a board of `p`'s shape and ruleset with these numbers and
+ * walls. */
+export function puzzleOf(
+  p: Pick<PathParams, "w" | "h" | "mode">,
+  ends: Uint8Array,
+  walls: Uint8Array = new Uint8Array(squareEdges(p.w, p.h).edgeCount),
+): PathPuzzle {
+  return { w: p.w, h: p.h, mode: p.mode, ends, takes: takesOf(p.mode, ends), walls };
+}
+
+/** The edges of `puzzle` before any move: a cross on each wall. */
+export function startEdges(puzzle: PathPuzzle): Uint8Array {
+  return puzzle.walls.map((wall) => (wall ? CROSS : 0));
 }
 
 // --- params -----------------------------------------------------------------
@@ -98,13 +158,17 @@ export const paramConfig: ParamConfigItem<PathParams>[] = [
   difficultyItem(DIFF_NAMES, "diff", {
     doc: "<p><em>Easy</em> puzzles can be finished one square at a time: a square with only as many open edges as the lines it still needs takes a line on each.</p><p><em>Normal</em> puzzles also need you to try a line or a cross on an edge, and see the board break a few squares later.</p><p><em>Tricky</em> puzzles need you to follow such a try for twice as long before it breaks.</p>",
   }),
+  rulesetItem<PathParams>(RULESETS, "mode"),
 ];
 
 const BOARDS: PathParams[] = [
-  { w: 5, h: 5, diff: DIFF_EASY },
-  { w: 7, h: 7, diff: DIFF_EASY },
-  { w: 8, h: 12, diff: DIFF_EASY },
-  { w: 10, h: 15, diff: DIFF_EASY },
+  { w: 5, h: 5, diff: DIFF_EASY, mode: MODE_PATH },
+  { w: 7, h: 7, diff: DIFF_EASY, mode: MODE_PATH },
+  { w: 8, h: 12, diff: DIFF_EASY, mode: MODE_PATH },
+  { w: 10, h: 15, diff: DIFF_EASY, mode: MODE_PATH },
+  { w: 6, h: 6, diff: DIFF_EASY, mode: MODE_ZIP },
+  { w: 7, h: 7, diff: DIFF_EASY, mode: MODE_ZIP },
+  { w: 8, h: 8, diff: DIFF_EASY, mode: MODE_ZIP },
 ];
 
 /** Normal, so that the first board needs both rungs and its hint draws every
@@ -113,16 +177,24 @@ export function defaultParams(): PathParams {
   return { ...BOARDS[1], diff: DIFF_NORMAL };
 }
 
-/** No Tricky 5x5 on the menu: its boards keep three pairs and take a second
- * or two to find, measured 2026-10-22. */
+/** No Tricky Path 5x5 on the menu: its boards keep three pairs and take a
+ * second or two to find, measured 2026-10-22. Zip's Tricky is on the menu at
+ * 8x8 only: the worst of eight deals took 0.8 s there, against 1.3 s at 7x7
+ * and 1.2 s at 6x6, where fewer boards need the long lookahead (2026-10-23). */
 export function presets(): PresetMenu<PathParams> {
   return presetGrid(paramConfig, BOARDS, {
-    tiers: (p) => (p.w === 5 ? [DIFF_EASY, DIFF_NORMAL] : null),
+    tiers: (p) => {
+      if (p.mode === MODE_ZIP) return p.w < 8 ? [DIFF_EASY, DIFF_NORMAL] : null;
+      return p.w === 5 ? [DIFF_EASY, DIFF_NORMAL] : null;
+    },
   });
 }
 
+/** `WxH`, a `z` for Zip (Path writes nothing), then the generator-only tier
+ * letter. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
+  letters(paramConfig, RULESET_KW, ["", "z"]),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
@@ -130,13 +202,14 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  * The refusal for a board too small to need the tier asked for, or `null`.
  *
  * Proved 2026-10-22 by grading every way to lay paths of two squares or more
- * on each board: no 3x3 board is Normal, and no 3x3, 3x4, 3x5, 4x4 or 4x5
- * board is Tricky, whatever its paths. On 3x4 and 3x5 every Normal board has a path
- * of two squares, a straight run of four or a path that touches itself, none
- * of which the generator lays. A 4x4 has 26 Normal boards the generator may
- * lay, and is left to it.
+ * on each board: no 3x3 Path board is Normal, and no 3x3, 3x4, 3x5, 4x4 or
+ * 4x5 board is Tricky, whatever its paths. On 3x4 and 3x5 every Normal board
+ * has a path of two squares, a straight run of four or a path that touches
+ * itself, none of which the generator lays. A 4x4 has 26 Normal boards the
+ * generator may lay, and is left to it.
  */
 function absentTier(p: PathParams): string | null {
+  if (p.mode !== MODE_PATH) return null;
   const tier = DIFF_NAMES[p.diff] ?? "";
   const what = `${p.w}x${p.h} puzzle`;
   const [short, long] = [Math.min(p.w, p.h), Math.max(p.w, p.h)];
@@ -157,12 +230,17 @@ export function validateParams(p: PathParams, full: boolean): string | null {
 /** Separates two numbers on squares side by side in reading order. */
 const SEPARATOR = "_";
 
+/** Separates the numbers from the walls. */
+const WALLS = ",";
+
 const isRunLetter = (c: string): boolean => c >= "a" && c <= "z";
 
 /** The numbers in reading order, each a decimal with {@link SEPARATOR}
  * between two that touch, and each run of squares without one a letter: `a`
- * for one square up to `z` for 26. */
-export function encodeDesc(ends: Uint8Array): string {
+ * for one square up to `z` for 26. Then, where there are walls, a comma and
+ * the edges as a list of walls and gaps (`engine/wall-runs.ts`), whose order
+ * is `engine/square-edges.ts`'s. */
+export function encodeDesc(ends: Uint8Array, walls?: Uint8Array): string {
   let out = "";
   let run = 0;
   let afterNumber = false;
@@ -184,10 +262,11 @@ export function encodeDesc(ends: Uint8Array): string {
     afterNumber = true;
   }
   flush();
+  if (walls?.includes(1)) out += WALLS + encodeWallRuns(walls);
   return out;
 }
 
-function parseDesc(p: PathParams, desc: string): DescParse<Uint8Array> {
+function parseDesc(p: PathParams, desc: string): DescParse<PathPuzzle> {
   return readDesc(desc, (r) => {
     const ends = new Uint8Array(p.w * p.h);
     let k = 0;
@@ -199,42 +278,51 @@ function parseDesc(p: PathParams, desc: string): DescParse<Uint8Array> {
         afterNumber = false;
       } else {
         if (afterNumber) r.expect(SEPARATOR);
-        ends[k++] = r.int(1, MAX_PAIRS);
+        ends[k++] = r.int(1, MAX_NUMBER);
         afterNumber = true;
       }
+    }
+    const edgeCount = squareEdges(p.w, p.h).edgeCount;
+    let walls: Uint8Array = new Uint8Array(edgeCount);
+    if (r.peekIs((c) => c === WALLS)) {
+      r.expect(WALLS);
+      walls = readWallRuns(r, edgeCount);
     }
     r.end();
     const count = new Map<number, number>();
     for (const v of ends) if (v !== NO_END) count.set(v, (count.get(v) ?? 0) + 1);
-    // The numbers run from 1 with no gap, so a number names its pair's color.
+    // The numbers run from 1 with no gap: a Path number names its pair's
+    // color, and a Zip line passes every number in order.
     if (count.size === 0) r.fail(DESC_OUT_OF_RANGE);
     for (const v of count.keys()) if (v > count.size) r.fail(DESC_OUT_OF_RANGE);
-    for (const n of count.values()) if (n !== 2) r.fail(DESC_UNPAIRED);
-    return ends;
+    if (p.mode === MODE_ZIP) {
+      for (const n of count.values()) if (n !== 1) r.fail(DESC_REPEATED);
+      // A line has two ends.
+      if (count.size < 2) r.fail(DESC_OUT_OF_RANGE);
+    } else {
+      for (const n of count.values()) if (n !== 2) r.fail(DESC_UNPAIRED);
+    }
+    return puzzleOf(p, ends, walls);
   });
 }
 
 export function newState(p: PathParams, desc: string): PathState {
-  const ends = descValue(parseDesc(p, desc));
-  return {
-    w: p.w,
-    h: p.h,
-    ends,
-    edges: new Uint8Array(squareEdges(p.w, p.h).edgeCount),
-  };
+  const puzzle = descValue(parseDesc(p, desc));
+  return { ...puzzle, edges: startEdges(puzzle) };
 }
 
 function cloneState(s: PathState): PathState {
   return { ...s, edges: s.edges.slice() };
 }
 
-/** A move's board. Pure: `s` is left as it was. */
+/** A move's board. Pure: `s` is left as it was. No move changes a wall. */
 export function executeMove(s: PathState, move: PathMove): PathState {
   const next = cloneState(s);
   if (move.kind === "solve") {
     next.edges.set(move.edges);
   } else if (move.kind === "edges") {
-    for (const { edge, mark } of move.changes) next.edges[edge] = mark;
+    for (const { edge, mark } of move.changes)
+      if (!s.walls[edge]) next.edges[edge] = mark;
   } else {
     return assertNever(move, "path: executeMove");
   }
@@ -243,16 +331,16 @@ export function executeMove(s: PathState, move: PathMove): PathState {
 
 // --- text format ------------------------------------------------------------
 
-/** The numbers on a grid of `+`, with `-` and `|` for lines and `x` for
- * crosses between them. */
+/** The numbers on a grid of `+`, with `-` and `|` for lines, `x` for crosses
+ * and `#` for walls between them. */
 export function textFormat(s: PathState): string {
-  const { w, h, ends, edges } = s;
+  const { w, h, ends, edges, walls } = s;
   const g = squareEdges(w, h);
-  const width = ends.some((v) => v > 9) ? 2 : 1;
+  const width = ends.some((v) => v > 9) ? String(Math.max(...ends)).length : 1;
   const cell = (i: number): string =>
     (ends[i] === NO_END ? "+" : String(ends[i])).padStart(width, " ");
   const join = (e: number, line: string): string =>
-    edges[e] === LINE ? line : edges[e] === CROSS ? "x" : " ";
+    walls[e] ? "#" : edges[e] === LINE ? line : edges[e] === CROSS ? "x" : " ";
   let out = "";
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {

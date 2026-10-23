@@ -30,7 +30,13 @@ import {
   type PathRung,
   pathRecordingPass,
 } from "./solver.ts";
-import { executeMove, NO_END, type PathMove, type PathState } from "./state.ts";
+import {
+  executeMove,
+  MODE_ZIP,
+  NO_END,
+  type PathMove,
+  type PathState,
+} from "./state.ts";
 
 /** How far ahead the plan is computed. A player rarely follows more than a
  * few steps before going their own way, and the plan is asked for again
@@ -59,15 +65,22 @@ function wordsOf(state: PathState, edges: Uint8Array, firing: PathFiring): Sente
     at: at(i),
     number: ends[i] === NO_END ? null : ends[i],
   });
-  /** The numbered square at the far end of the piece through `i`. */
+  /** The numbered square nearest `i` along its piece, where `i` is an end of
+   * it. */
   const numberOn = (i: number, lines: Uint8Array): Square => {
-    const found = pieceOf(state, lines, i).find((j) => ends[j] !== NO_END);
+    const near = new PathBoard(state, lines).pieces().nearAt(i);
+    const found = pieceOf(state, lines, i).find((j) => ends[j] === near);
     return square(found ?? i);
   };
   const { reason } = firing;
   switch (reason.kind) {
     case "forced":
-      return say.forced(square(reason.cell), reason.need, firing.edges);
+      return say.forced(
+        square(reason.cell),
+        state.takes[reason.cell],
+        reason.need,
+        firing.edges,
+      );
     case "lookahead":
     case "long-lookahead": {
       // The board the supposition leads to, for what breaks there.
@@ -102,7 +115,7 @@ function clashWords(
       return { kind: "crowded", square: square(clash.cell), lines };
     }
     case "stuck": {
-      const b = new PathBoard(state.w, state.h, state.ends, trial);
+      const b = new PathBoard(state, trial);
       const ways = b.edgesAt(clash.cell, LINE).length + b.liveAt(clash.cell).length;
       return { kind: "stuck", square: square(clash.cell), ways };
     }
@@ -115,11 +128,13 @@ function clashWords(
       // The two sides of the joining edge, each before it was laid.
       const before = trial.slice();
       before[clash.edge] = CROSS;
-      return {
-        kind: "joined",
-        a: numberOn(g.a[clash.edge], before),
-        b: numberOn(g.b[clash.edge], before),
-      };
+      const [a, b] = [
+        numberOn(g.a[clash.edge], before),
+        numberOn(g.b[clash.edge], before),
+      ];
+      // "The 3 to the 7": a Zip line runs up its numbers, so the lower first.
+      const swap = state.mode === MODE_ZIP && (a.number ?? 0) > (b.number ?? 0);
+      return { kind: "joined", a: swap ? b : a, b: swap ? a : b };
     }
   }
 }
@@ -160,14 +175,13 @@ function stepOf(state: PathState, edges: Uint8Array, firing: PathFiring): PathSt
 export function pathHint(
   state: PathState,
 ): HintResult<PathMove, PathHighlights, PathRung> {
-  const { w, h, ends } = state;
-  const board = new PathBoard(w, h, ends, state.edges.slice());
+  const board = new PathBoard(state, state.edges.slice());
   const pass = pathRecordingPass(board, stepBudget("path hint"));
   // Each firing is narrated against the edges as they stood when it fired.
   const before: Uint8Array[] = [];
   const { plan } = deduceHintPlan<PathBoard, PathFiring, "open" | "done">({
     board,
-    status: (b) => (isComplete(w, h, ends, b.edges) ? "done" : "open"),
+    status: (b) => (isComplete(state, b.edges) ? "done" : "open"),
     incomplete: "open",
     next: () => {
       const edges = board.edges.slice();

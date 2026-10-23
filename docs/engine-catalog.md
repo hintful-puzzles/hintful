@@ -238,7 +238,8 @@ save format change.
 Reach for it when the player draws lines along the edges between squares by
 dragging through them: it is the whole input, the drag, the click, the cross
 sweep and the keys. `OPEN`, `LINE` and `CROSS` are what an edge holds. The
-game declares `LineRules` (`mark`, `takes`, `loops`) and its saved move;
+game declares `LineRules` (`mark`, `takes`, `loops`, and `fixed` for an edge
+the board owns, as Zip's walls) and its saved move;
 `dragPreview` gives its render the drag as it would be released, and
 `hintGesture` the clicks that make a step's edges. `edgeMistakes` is the
 mistake check of a game that stores a mark per edge. Adopting it:
@@ -979,6 +980,10 @@ gives, never the answer**: colors spread by where the answer's lines run
 tell a player which pairs do not touch. Call it in `newDrawState`, so a
 board wears the same colors each time it is opened. Exemplar:
 `path/render.ts`.
+
+**Colors that run in an order**, a line that changes as it goes, take
+`FREE_RAMP` (`color/colors.ts`): `FREE`'s members in order of hue, one a
+hue, by index into it. Exemplar: Zip's line in `path/render.ts`.
 
 ### `hint-mark.ts` — the ring and the outline
 

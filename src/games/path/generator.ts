@@ -25,7 +25,15 @@ import {
   squareEdges,
 } from "../../engine/square-edges.ts";
 import { PathBoard, solvePath } from "./solver.ts";
-import { DIFF_EASY, encodeDesc, type PathParams } from "./state.ts";
+import {
+  DIFF_EASY,
+  encodeDesc,
+  MODE_ZIP,
+  type PathParams,
+  puzzleOf,
+  startEdges,
+} from "./state.ts";
+import { newZipDesc } from "./zip-generator.ts";
 
 /** The fewest squares a path may have: two numbers side by side would leave
  * the player nothing to find. */
@@ -151,12 +159,8 @@ function numberEnds(g: SquareEdges, paths: readonly Path[]): Uint8Array {
 
 /** The ladder run on `ends` at `cap`, with the edges it decided. */
 function attempt(p: PathParams, ends: Uint8Array, cap: number): PathBoard {
-  const board = new PathBoard(
-    p.w,
-    p.h,
-    ends,
-    new Uint8Array(squareEdges(p.w, p.h).edgeCount),
-  );
+  const puzzle = puzzleOf(p, ends);
+  const board = new PathBoard(puzzle, startEdges(puzzle));
   solvePath(board, cap);
   return board;
 }
@@ -243,6 +247,7 @@ function strip(
  * nothing leaves the board too easy.
  */
 export function newPathDesc(p: PathParams, rng: RandomState): { desc: string } {
+  if (p.mode === MODE_ZIP) return newZipDesc(p, rng);
   const g = squareEdges(p.w, p.h);
   const next = retryLimit("path: generation");
   for (;;) {

@@ -6,10 +6,14 @@
  * middle to the side, and its half of a cross on the side. A line between two
  * squares is the two halves, and a cross is whole once both squares have
  * drawn. So a square's key holds what is on each of its sides, in a word of
- * its own beside the word for what the square holds.
+ * its own beside the word for what the square holds. A wall is drawn the
+ * same way, a square's half of a bar along the side.
+ *
+ * Path colors each pair; Zip colors its one line by how far along it a
+ * square sits, so the color runs from the 1 to the highest number.
  */
 
-import { BLACK, FREE, FREE_TEXT } from "../../engine/color/colors.ts";
+import { BLACK, FREE, FREE_RAMP, FREE_TEXT } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -44,10 +48,14 @@ import {
 } from "../../engine/line-drawing.ts";
 import { type PieceBox, spreadColors } from "../../engine/spread-colors.ts";
 import {
+  across,
   DX,
   DY,
   type EdgeLayout,
+  edgeBetween,
+  pieceThrough,
   reverse,
+  sideOf,
   squareCenter,
   squareEdges,
 } from "../../engine/square-edges.ts";
@@ -56,6 +64,7 @@ import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-w
 import type { PathHighlights } from "./hint.ts";
 import { pathLines, withChanges } from "./moves.ts";
 import {
+  MODE_ZIP,
   NO_END,
   type PathMove,
   type PathParams,
@@ -99,6 +108,8 @@ const COL_PAIR = 16;
 const PAIRS = 9;
 /** The first of the numbers on a pair's filled disc, one slot a color. */
 const COL_PAIR_TEXT = COL_PAIR + PAIRS;
+/** A wall between two squares. */
+export const COL_WALL = COL_PAIR_TEXT + PAIRS;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -124,6 +135,7 @@ export function colors(defaultBackground: Color): Color[] {
     out[COL_PAIR + k] = FREE[k];
     out[COL_PAIR_TEXT + k] = FREE_TEXT[k];
   }
+  out[COL_WALL] = INK;
   return out;
 }
 
@@ -150,21 +162,27 @@ export function centerOf(state: PathState, ts: number, i: number): Point {
 // flash's tone, whether its path is whole, the sides of the hint's outline
 // it draws (`hint-mark.ts`'s side bits), and the color of its lines, one
 // more than their pair's slot past `COL_PAIR`, or 0 for ink. Every line on a
-// square is of one piece, which joins them there.
+// square is of one piece, which joins them there. On a Zip number, the side
+// one more than its direction where the line arrives from the number before
+// in another color, and that color as the piece's is.
 const F_CURSOR = 1 << 8;
 const K_TONE = 9;
 const F_DONE = 1 << 11;
 const K_OUTLINE = 12;
 const K_PIECE = 16;
+const K_ARRIVES = 20;
+const K_ARRIVES_COLOR = 23;
 
 // Word 1, the sides: seven bits a side, by direction.
 const SIDE_BITS = 7;
 // The side's mark in bits 0-1, then whether its line breaks a rule, whether
-// Check & Save found it wrong, and what the drag would do to it.
+// Check & Save found it wrong, what the drag would do to it, and whether it
+// is a wall.
 const S_ERROR = 1 << 2;
 const S_WRONG = 1 << 3;
 const S_DRAG_ADD = 1 << 4;
 const S_DRAG_REMOVE = 1 << 5;
+const S_WALL = 1 << 6;
 
 // Word 2, the hint on the sides: `edge-hint.ts`'s word.
 const WORDS = 3;
@@ -177,8 +195,9 @@ export interface PathDrawState {
   /** What each square shows on the canvas, three words a square; -1 before
    * the first frame. */
   cache: Int32Array;
-  /** Each number's slot past `COL_PAIR`, by the number. */
-  pairColor: Int32Array;
+  /** Each number's slot past `COL_PAIR`, by the number: its pair's in
+   * Path, and in Zip that of the line from it to the next. */
+  numberColor: Int32Array;
 }
 
 export function newDrawState(state: PathState, tileSize: number): PathDrawState {
@@ -187,8 +206,26 @@ export function newDrawState(state: PathState, tileSize: number): PathDrawState 
     started: false,
     tileSize,
     cache: new Int32Array(squares * WORDS).fill(-1),
-    pairColor: pairColors(state),
+    numberColor: state.mode === MODE_ZIP ? rampColors(state) : pairColors(state),
   };
+}
+
+/** A color for each number along {@link FREE_RAMP}, the line from the 1 to
+ * the 2 the first and the line into the highest number the last, spread
+ * evenly so that each color covers a run of numbers the same length. The
+ * highest number takes the color of the line into it. */
+function rampColors({ ends }: PathState): Int32Array {
+  const last = Math.max(...ends);
+  const steps = Math.max(1, last - 1);
+  const out = new Int32Array(last + 1);
+  for (let n = 1; n <= last; n++) {
+    const along = Math.min(n, last - 1) - 1;
+    out[n] =
+      FREE_RAMP[
+        Math.min(FREE_RAMP.length - 1, Math.floor((along * FREE_RAMP.length) / steps))
+      ];
+  }
+  return out;
 }
 
 /** A color for each number, its two squares' box spread over the set
@@ -310,14 +347,33 @@ function drawTile(
     },
   });
 
-  // The player's crosses, under any line.
+  // The walls, this square's half of a bar along each, and the player's
+  // crosses, all under any line.
+  const wall = Math.max(2, Math.floor(ts / 12));
   for (let k = 0; k < 4; k++) {
     const s = (sides >> (k * SIDE_BITS)) & ((1 << SIDE_BITS) - 1);
-    if ((s & 3) === CROSS) cross(k, s & S_WRONG ? COL_ERROR : COL_RULED_OUT, small, 1);
+    if (s & S_WALL) {
+      const upright = DX[k] !== 0;
+      const far = DX[k] > 0 || DY[k] > 0;
+      dr.drawRect(
+        {
+          x: upright && far ? px + ts - wall : px,
+          y: !upright && far ? py + ts - wall : py,
+          w: upright ? wall : ts,
+          h: upright ? ts : wall,
+        },
+        COL_WALL,
+      );
+    } else if ((s & 3) === CROSS)
+      cross(k, s & S_WRONG ? COL_ERROR : COL_RULED_OUT, small, 1);
   }
 
   const piece = (square >> K_PIECE) & 0xf;
   const lineColor = piece ? COL_PAIR + piece - 1 : COL_LINE;
+  const arrives = ((square >> K_ARRIVES) & 7) - 1;
+  const arrivingColor = COL_PAIR + ((square >> K_ARRIVES_COLOR) & 0xf) - 1;
+  const colored = (color: number): boolean =>
+    color >= COL_PAIR && color < COL_PAIR + PAIRS;
   const strokes: Stroke[] = [];
   for (let k = 0; k < 4; k++) {
     const s = (sides >> (k * SIDE_BITS)) & ((1 << SIDE_BITS) - 1);
@@ -325,23 +381,28 @@ function drawTile(
     if (s & S_DRAG_ADD) color = COL_DRAG_ADD;
     else if (s & S_DRAG_REMOVE) color = COL_DRAG_REMOVE;
     else if ((s & 3) === LINE)
-      color = s & S_WRONG || s & S_ERROR ? COL_ERROR : lineColor;
+      color =
+        s & S_WRONG || s & S_ERROR
+          ? COL_ERROR
+          : k === arrives
+            ? arrivingColor
+            : lineColor;
     if (color >= 0) strokes.push({ k, color, weight: thick });
   }
   const segments = segmentsOf(strokes);
-  // A pair's line is edged, every edge before any color so that one half's
+  // A colored line is edged, every edge before any color so that one half's
   // edge never cuts across the other half at a turn.
   for (const { from, to, color, weight } of segments)
-    if (color === lineColor && piece) dr.drawLine(from, to, COL_EDGE, weight + 2);
+    if (colored(color)) dr.drawLine(from, to, COL_EDGE, weight + 2);
   for (const { from, to, color, weight } of segments)
     dr.drawLine(from, to, color, weight);
 
   const number = square & 0xff;
   if (number !== NO_END) {
-    // A ring in the pair's color while its path is open, and a disc filled
-    // with it once the path is whole, edged as its lines are.
+    // A ring in the number's color while its path is open, and a disc
+    // filled with it once the path is whole, edged as its lines are.
     const r = Math.floor((ts * 3) / 8);
-    const pair = COL_PAIR + ds.pairColor[number];
+    const pair = COL_PAIR + ds.numberColor[number];
     const done = (square & F_DONE) !== 0;
     const center = { x: cx, y: cy };
     dr.drawCircle(center, r + 1, COL_EDGE, COL_EDGE);
@@ -354,7 +415,7 @@ function drawTile(
     dr.drawText(
       center,
       glyphFont(Math.floor(number > 9 ? ts / 3 : (ts * 2) / 5)),
-      done ? COL_PAIR_TEXT + ds.pairColor[number] : COL_TEXT,
+      done ? COL_PAIR_TEXT + ds.numberColor[number] : COL_TEXT,
       String(number),
     );
   }
@@ -454,9 +515,15 @@ export function redraw(
   const drag = dragPreview(pathLines, state, ui.drag);
   const edges = withChanges(state, drag);
   const dragged = new Map(drag.map((c) => [c.edge, c.mark]));
-  const { broken, reach } = pieces(state, edges);
+  const { broken, reach, done, arrives, arrivesFrom }: LineLook =
+    state.mode === MODE_ZIP
+      ? zipPieces(state, edges)
+      : {
+          ...pieces(state, edges),
+          done: doneNumbers(state, edges),
+          ...noArrivals(g.cells),
+        };
   const wrong = new Set(mistakes?.map((m) => m.edge));
-  const done = doneNumbers(state, edges);
 
   // The displayed step's marks, read from its words and from nowhere else:
   // the kinds read here are the kinds a sentence may name.
@@ -484,7 +551,11 @@ export function redraw(
         (flash.win(sweepStep(x, y)) << K_TONE) |
         (ends[i] !== NO_END && done.has(ends[i]) ? F_DONE : 0) |
         (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0) |
-        (reach[i] !== NO_END ? (ds.pairColor[reach[i]] + 1) << K_PIECE : 0);
+        (reach[i] !== NO_END ? (ds.numberColor[reach[i]] + 1) << K_PIECE : 0) |
+        (arrives[i] >= 0
+          ? ((arrives[i] + 1) << K_ARRIVES) |
+            ((ds.numberColor[arrivesFrom[i]] + 1) << K_ARRIVES_COLOR)
+          : 0);
       let sides = 0;
       const hints = hintWords[i];
       for (let k = 0; k < 4; k++) {
@@ -493,6 +564,7 @@ export function redraw(
         const was = dragged.get(e);
         const side =
           edges[e] |
+          (state.walls[e] ? S_WALL : 0) |
           (broken[e] ? S_ERROR : 0) |
           (wrong.has(e) && was === undefined ? S_WRONG : 0) |
           (was === LINE ? S_DRAG_ADD : 0) |
@@ -514,6 +586,104 @@ export function redraw(
       ds.cache[at + 2] = hints;
     }
   }
+}
+
+/** What the lines show: the broken edges, each square's color by the number
+ * it takes it from (`reach`, as {@link pieces} says), the numbers whose
+ * discs fill, and on a square whose line changes color, the side it changes
+ * on (`arrives`, -1 for none) and the number that side's color is from. */
+interface LineLook {
+  broken: Uint8Array;
+  reach: Uint8Array;
+  done: Set<number>;
+  arrives: Int8Array;
+  arrivesFrom: Uint8Array;
+}
+
+function noArrivals(cells: number): Pick<LineLook, "arrives" | "arrivesFrom"> {
+  return { arrives: new Int8Array(cells).fill(-1), arrivesFrom: new Uint8Array(cells) };
+}
+
+/**
+ * Zip's pieces of line, as {@link pieces} gives Path's, and `done`, the
+ * numbers whose line reaches the number before them and the one after (or
+ * only one of those, for the 1 and the highest). A piece is broken where it
+ * closes a loop or passes two numbers one after the other that are not one
+ * apart. Along an unbroken piece, a square's color is that of the line from
+ * the number behind it, the one it passed last going up: on a number's own
+ * square, that number, but for the half of its line that arrives from the
+ * number before. Before a piece's first number it is the line into that
+ * number, and on a piece with only one number, whose way up the piece does
+ * not yet show, every square takes that number's.
+ */
+function zipPieces(state: PathState, edges: Uint8Array): LineLook {
+  const { ends } = state;
+  const g = squareEdges(state.w, state.h);
+  const last = Math.max(...ends);
+  const linked = (i: number): number[] => {
+    const out: number[] = [];
+    for (let k = 0; k < 4; k++) {
+      const e = g.around[i * 4 + k];
+      if (e >= 0 && edges[e] === LINE) out.push(across(g, e, i));
+    }
+    return out;
+  };
+  const broken = new Uint8Array(g.edgeCount);
+  const reach = new Uint8Array(g.cells);
+  const done = new Set<number>();
+  const { arrives, arrivesFrom } = noArrivals(g.cells);
+  const seen = new Uint8Array(g.cells);
+  for (let start = 0; start < g.cells; start++) {
+    if (seen[start]) continue;
+    const piece = pieceThrough(g, (e) => edges[e] === LINE, start);
+    for (const i of piece) seen[i] = 1;
+    // A piece with no square at its end is a loop; one with a square of
+    // three lines, which no move makes, is broken too.
+    const end = piece.find((i) => linked(i).length < 2);
+    const walk: number[] = [];
+    if (end !== undefined && piece.every((i) => linked(i).length <= 2))
+      for (let at = end, prev = -1; walk.length < piece.length; ) {
+        walk.push(at);
+        const next = linked(at).find((j) => j !== prev);
+        if (next === undefined) break;
+        [prev, at] = [at, next];
+      }
+    const numbers = walk.map((i) => ends[i]).filter((v) => v !== NO_END);
+    const ordered = numbers.every(
+      (v, k) => k === 0 || Math.abs(v - numbers[k - 1]) === 1,
+    );
+    if (walk.length < piece.length || !ordered) {
+      for (const i of piece)
+        for (let k = 0; k < 4; k++) {
+          const e = g.around[i * 4 + k];
+          if (e >= 0 && edges[e] === LINE) broken[e] = 1;
+        }
+      continue;
+    }
+    if (numbers.length === 0) continue;
+    if (numbers.length > 1 && numbers[0] > numbers[1]) {
+      walk.reverse();
+      numbers.reverse();
+    }
+    let behind = numbers.length > 1 ? Math.max(1, numbers[0] - 1) : numbers[0];
+    walk.forEach((i, t) => {
+      if (ends[i] !== NO_END) {
+        // The half of its line that comes up from the number before is that
+        // stretch's, which only shows once the piece has two numbers.
+        if (t > 0 && numbers.length > 1) {
+          const e = edgeBetween(g, i, walk[t - 1]);
+          arrives[i] = sideOf(g, e, i);
+          arrivesFrom[i] = behind;
+        }
+        behind = ends[i];
+      }
+      reach[i] = behind;
+    });
+    const has = new Set(numbers);
+    for (const n of numbers)
+      if ((n === 1 || has.has(n - 1)) && (n === last || has.has(n + 1))) done.add(n);
+  }
+  return { broken, reach, done, arrives, arrivesFrom };
 }
 
 /** The numbers whose two squares a line joins, with nothing broken on it. */

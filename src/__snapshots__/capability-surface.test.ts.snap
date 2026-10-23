@@ -1191,7 +1191,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "cache",
-      "pairColor",
+      "numberColor",
       "started",
       "tileSize",
     ],

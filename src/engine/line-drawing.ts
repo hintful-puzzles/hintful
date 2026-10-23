@@ -92,6 +92,9 @@ export interface LineRules<S extends Board> {
   /** Whether a drag back onto its first square closes a loop there, rather
    * than being cut back to it. */
   loops: boolean;
+  /** Whether edge `e` is the board's and not the player's, as a wall is: no
+   * click, key or drag changes it. Absent, every edge is the player's. */
+  fixed?(state: S, e: number): boolean;
 }
 
 interface Board {
@@ -284,18 +287,19 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
   const moveOf = (state: S, changes: readonly EdgeChange[]): M | null =>
     changes.length > 0 ? input.move(state, changes) : null;
 
+  const fixed = (state: S, e: number): boolean => rules.fixed?.(state, e) ?? false;
+
   /** A line on edge `e`, or the line taken off it. */
-  const toggleLine = (state: S, e: number): M | null =>
-    rules.mark(state, e) === LINE
-      ? moveOf(state, [{ edge: e, mark: OPEN }])
-      : lineFits(rules, state, e)
-        ? moveOf(state, [{ edge: e, mark: LINE }])
-        : null;
+  const toggleLine = (state: S, e: number): M | null => {
+    if (fixed(state, e)) return null;
+    if (rules.mark(state, e) === LINE) return moveOf(state, [{ edge: e, mark: OPEN }]);
+    return lineFits(rules, state, e) ? moveOf(state, [{ edge: e, mark: LINE }]) : null;
+  };
 
   /** A cross on edge `e`, or the cross taken off it: nothing on a line. */
   const toggleCross = (state: S, e: number): M | null => {
     const mark = rules.mark(state, e);
-    if (mark === LINE) return null;
+    if (mark === LINE || fixed(state, e)) return null;
     return moveOf(state, [{ edge: e, mark: mark === CROSS ? OPEN : CROSS }]);
   };
 

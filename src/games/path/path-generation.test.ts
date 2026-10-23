@@ -24,6 +24,8 @@ import {
   DIFF_TRICKY,
   encodeParams,
   executeMove,
+  MODE_PATH,
+  MODE_ZIP,
   NO_END,
   newState,
   type PathParams,
@@ -33,8 +35,10 @@ import {
 /** Every preset, a small board, and one that is not square. */
 const SHAPES: PathParams[] = [
   ...(presets().submenu ?? []).flatMap((leaf) => (leaf.params ? [leaf.params] : [])),
-  { w: 4, h: 4, diff: DIFF_EASY },
-  { w: 7, h: 5, diff: DIFF_NORMAL },
+  { w: 4, h: 4, diff: DIFF_EASY, mode: MODE_PATH },
+  { w: 7, h: 5, diff: DIFF_NORMAL, mode: MODE_PATH },
+  { w: 5, h: 5, diff: DIFF_NORMAL, mode: MODE_ZIP },
+  { w: 6, h: 5, diff: DIFF_EASY, mode: MODE_ZIP },
 ];
 
 describeDealtTiers(
@@ -70,25 +74,27 @@ describeLadderCensus<PathParams & { desc: string }>({
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
   cases: dealt.map(({ label, p, desc }) => ({ label, board: () => ({ ...p, desc }) })),
   solve: (p, cap, firings) => {
-    const { w, h, ends, edges } = newState(p, p.desc);
-    return solvePath(new PathBoard(w, h, ends, edges), cap, firings);
+    const s = newState(p, p.desc);
+    return solvePath(new PathBoard(s, s.edges), cap, firings);
   },
 });
 
+/** A Zip board's brute force walks every path through its squares, which
+ * past this many takes seconds. */
+const ZIP_COUNTED = 36;
+
 describe("path dealt boards", () => {
-  it.each(dealt.filter(({ p }) => p.w * p.h <= 49))("$label has exactly one answer", ({
-    p,
-    desc,
-  }) => {
-    expect(countAnswers(p.w, p.h, newState(p, desc).ends)).toBe(1);
+  it.each(
+    dealt.filter(({ p }) => p.w * p.h <= (p.mode === MODE_ZIP ? ZIP_COUNTED : 49)),
+  )("$label has exactly one answer", ({ p, desc }) => {
+    expect(countAnswers(newState(p, desc))).toBe(1);
   });
 
-  it.each(dealt)("$label has no straight path of four squares or more", ({
-    p,
-    desc,
-  }) => {
+  it.each(
+    dealt.filter(({ p }) => p.mode === MODE_PATH),
+  )("$label has no straight path of four squares or more", ({ p, desc }) => {
     const start = newState(p, desc);
-    const answer = answerOf(p.w, p.h, start.ends);
+    const answer = answerOf(start);
     if (answer === null) throw new Error("the ladder finishes every dealt board");
     const solved = executeMove(start, { kind: "solve", edges: answer });
     const g = squareEdges(p.w, p.h);

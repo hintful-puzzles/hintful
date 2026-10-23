@@ -622,6 +622,29 @@ export const FREE: readonly Color[] = FREE_DESIGN.map((d) =>
   ),
 );
 
+/** How near in hue two members of {@link FREE} are one hue on
+ * {@link FREE_RAMP}: olive's and yellow's, brown's and orange's. */
+const SAME_HUE = 15;
+
+/**
+ * **{@link FREE}'s members in the order of their hues**, by index into it:
+ * a run of colors a line changes along, as Zip's does from its 1 to its last
+ * number. Gray has no hue and is left out, and so is a member within
+ * {@link SAME_HUE} of one before it in the set, which would make two steps
+ * of the run look alike. From orange, the run goes round the wheel the way
+ * the hues rise.
+ */
+export const FREE_RAMP: readonly number[] = FREE_DESIGN.map((d, k) => ({ ...d, k }))
+  .filter(
+    (d) =>
+      d.light[1] > 0 &&
+      !FREE_DESIGN.slice(0, d.k).some(
+        (e) => e.light[1] > 0 && Math.abs(e.h - d.h) < SAME_HUE,
+      ),
+  )
+  .sort((a, b) => a.h - b.h)
+  .map((d) => d.k);
+
 /** {@link FREE}, as a player would say them: Flood's *"Fill with orange"*,
  * Same Game's groups. Read off the colors, so recoloring a member cannot
  * leave a sentence naming the old hue. */

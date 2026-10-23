@@ -11,7 +11,7 @@
  * force are outlined too, drawn thin and numbered in the order they follow.
  *
  * The words are the help page's: lines run along the **edges** between
- * squares, a number takes one line and every other square two.
+ * squares, and a square takes one line or two, as its mode says.
  */
 
 import { EDGE } from "../../engine/edge-hint.ts";
@@ -58,7 +58,8 @@ export type Clash =
   | { kind: "stuck"; square: Square; ways: number }
   /** The lines would make a loop of `squares`. */
   | { kind: "closed"; squares: readonly Point[] }
-  /** The lines would join two different numbers. */
+  /** The lines would join two numbers that may not meet: two different
+   * numbers in Path, and in Zip two that are not one apart. */
   | { kind: "joined"; a: Square; b: Square };
 
 const clashWords = (c: Clash): Narration => {
@@ -79,13 +80,18 @@ const clashWords = (c: Clash): Narration => {
 };
 
 export const say = {
-  /** The square has only as many edges left as it still needs lines. An
-   * edge beside a square that has all its lines is not one of them, which
-   * the help says. */
-  forced: (s: Square, need: number, edges: readonly number[]): Sentence =>
+  /** The square, which takes `takes` lines, has only as many edges left as
+   * it still needs lines. An edge beside a square that has all its lines is
+   * not one of them, which the help says. */
+  forced: (
+    s: Square,
+    takes: number,
+    need: number,
+    edges: readonly number[],
+  ): Sentence =>
     so({
       look:
-        s.number !== null
+        takes === 1
           ? phrase`${outlined(s)} has only one edge left for its line`
           : need === 2
             ? phrase`${outlined(s)} has only two edges left for its two lines`
