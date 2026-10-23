@@ -1,7 +1,8 @@
 # add-zip-to-path
 
-**A draft, waiting on the owner's word** (filed 2026-10-22): the owner asked
-for LinkedIn's *Zip*, and whether it fits as a ruleset of Path.
+Filed 2026-10-22: the owner asked for LinkedIn's *Zip*, and whether it fits
+as a ruleset of Path. The owner (2026-10-23): "I'm leaning towards a Path
+ruleset", with no objection raised.
 
 ## The puzzle
 
@@ -37,10 +38,16 @@ Its own entry in the game list, findable as "Zip". As a ruleset it is found
 in Path's menu, under its own section. Either way the code is the same
 modules; the difference is the listing.
 
-## Open question for the owner
+## Decisions
 
-- **A ruleset of Path (recommended), or its own entry in the list** sharing
-  Path's modules?
-- **Walls in the first version, or later?**
-- **The look**: LinkedIn draws the line as one gradient; Path colors by
-  pair. A Zip board could color the line by how far along it a piece is.
+- **A ruleset of Path** (owner, 2026-10-23), named "Zip" in the Type menu's
+  own section.
+- **Walls in the first version**: LinkedIn's boards use them, and on Path's
+  board a wall is an edge the desc closes, so they cost a desc field and a
+  drawn line, not a new kind of board. The generator lays a few where they
+  make a board need its tier with fewer numbers. (Proposed 2026-10-23 for
+  the owner to overrule.)
+- **The look**: one line whose color runs along it from 1 to K, as Zip's
+  does, rather than Path's color per pair: a piece takes the color of how
+  far along the order its numbers sit, and a piece reaching none stays ink.
+  (Proposed 2026-10-23 for the owner to overrule.)

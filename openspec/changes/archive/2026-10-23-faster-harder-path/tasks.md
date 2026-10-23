@@ -27,4 +27,5 @@
 - [x] 3.1 The Custom dialog's tier description and the help page's hint
       section.
 - [x] 3.2 Run in Chrome: the menu, a 13x13 Tricky deal, hint walks drawn.
-- [ ] 3.3 Owner's word on the boards' difficulty (asked for by name).
+- [x] 3.3 Owner's word (2026-10-23, after the menu went rectangular): "I
+      accept the new presets."
