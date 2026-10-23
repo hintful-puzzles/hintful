@@ -87,14 +87,16 @@ export const say = {
     chain: readonly number[],
     clash: Clash,
   ): Sentence => {
-    const what = supposed === "line" ? "a line here would" : "a cross here would";
     const forced =
       chain.length > 0
         ? phrase` force ${mark.as("outline", EDGE, chain, "the numbered edges")} and`
         : phrase``;
+    // The edge is named where the sentence supposes on it, never as a bare
+    // "here", and the move after says "it" of the same edge.
+    const other = supposed === "line" ? "crossed out" : "a line";
     return so({
-      look: phrase`${what}${forced} ${clashWords(clash)}`,
-      move: mustBe([edge], supposed === "line" ? "cross" : "line"),
+      look: phrase`a ${supposed} on ${these([edge])} would${forced} ${clashWords(clash)}`,
+      move: phrase`it must be ${other}`,
     });
   },
 };
