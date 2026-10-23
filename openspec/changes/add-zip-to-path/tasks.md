@@ -9,4 +9,6 @@
 - [x] 7. Count-answers' Zip walk; Zip's tests; the help page
 - [x] 8. The game verdict, green
 - [x] 9. Run the app: deal, draw, walls, colors, hint, light and dark
-- [ ] 10. Commit, push, archive
+- [x] 10. Commit and push
+- [x] 11. The owner's playtest (2026-10-23): a pointer's drag only adds; the lookahead names its edge
+- [ ] 12. The owner's word on Zip and its names; then archive

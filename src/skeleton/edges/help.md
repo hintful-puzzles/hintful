@@ -10,8 +10,10 @@ Every puzzle has exactly one solution, and none needs a guess.
 
 ## Controls
 
-Drag from square to square to draw a line along the edges you pass. Dragging
-back the way you came takes the line back up again. A drag along a line you
+Drag from square to square to draw a line along the edges you pass. A drag
+only adds: passing back over a square it has already drawn through does
+nothing, and it carries on once you return to where it reached. Undo takes
+a stroke back. A drag along a line you
 have drawn and on past its end carries that line on, and a drag that runs
 only along lines you have drawn takes them up. A line stops where it would
 give a square more than two lines, or at a wall or an edge you have crossed

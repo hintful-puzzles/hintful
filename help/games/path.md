@@ -16,8 +16,10 @@ needs a guess.
 
 ## Controls
 
-Drag from square to square to draw a line along the edges you pass. Dragging
-back the way you came takes the line back up again. A drag along a line you
+Drag from square to square to draw a line along the edges you pass. A drag
+only adds: passing back over a square it has already drawn through does
+nothing, and it carries on once you return to where it reached, so a long
+line can be drawn in one stroke. Undo takes a stroke back. A drag along a line you
 have drawn and on past its end carries that line on, and a drag that runs
 only along lines you have drawn takes them up. A line stops where it would give a square more
 lines than it takes, where you have crossed the edge out, or at a wall. You
@@ -30,8 +32,9 @@ Right-click it again to clear the cross. A wall cannot be crossed out or
 cleared. You never need to cross anything out to finish.
 
 The keyboard can also be used. The arrow keys move a cursor. Press Enter to
-start a line, move the cursor along the way you want it, and press Enter
-again to draw it; Space, Escape, Backspace or Delete abandons it instead.
+start a line, move the cursor along the way you want it (moving back along
+it takes a step back), and press Enter again to draw it; Space, Escape,
+Backspace or Delete abandons it instead.
 Holding Ctrl while pressing an arrow key draws or removes the line in that
 direction and moves along it, holding Ctrl and Shift together does the same
 without moving, and holding Shift alone crosses out or clears the edge in

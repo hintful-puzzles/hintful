@@ -145,7 +145,7 @@ describe("skeleton input", () => {
     });
   });
 
-  it("a drag back over its own way takes the line back", () => {
+  it("a drag back over its own way keeps the line it drew", () => {
     const move = play(start, [
       [LEFT_BUTTON, at(0)],
       [LEFT_DRAG, at(1)],
@@ -153,7 +153,13 @@ describe("skeleton input", () => {
       [LEFT_DRAG, at(1)],
       [LEFT_RELEASE, at(1)],
     ]);
-    expect(move).toEqual(set(0, LINE));
+    expect(move).toEqual({
+      kind: "edges",
+      changes: [
+        { edge: 0, mark: LINE },
+        { edge: 1, mark: LINE },
+      ],
+    });
   });
 
   it("a drag round four squares closes a loop", () => {

@@ -4,8 +4,9 @@
  * click and keys that change it.
  *
  * The left button drags a line from square to square: a rook move a square
- * at a time, cut back where it returns to a square it has passed, stopped by
- * a crossed edge and by a square that would get more lines than it takes. On
+ * at a time that only adds, waiting where it returns to a square it has
+ * passed, stopped by a crossed edge and by a square that would get more
+ * lines than it takes. On
  * release it draws a line along every edge it passed, keeping the lines
  * already there, so a drag along a line and on past its end carries the line
  * on; a drag that passes only lines takes them up. Upstream took up the lines
@@ -206,13 +207,18 @@ function lineFits<S extends Board>(rules: LineRules<S>, state: S, e: number): bo
 }
 
 /**
- * Carry `drag` on to square `to`. Back onto a square it has passed through,
- * it is cut back to there, unless it closes a loop on its first square.
- * Otherwise it walks a square at a time in a straight line toward `to`, so a
- * quick drag along a row loses nothing, and stops where the next edge is
- * crossed out or its line would give a square more lines than it takes. A
- * step off the row and column it is on does nothing, as upstream's do: the
- * drag waits for the pointer to come back.
+ * Carry `drag` on to square `to`: it walks a square at a time in a
+ * straight line toward `to`, so a quick drag along a row loses nothing, and
+ * stops where the next edge is crossed out or its line would give a square
+ * more lines than it takes. A step off the row and column it is on does
+ * nothing, as upstream's do: the drag waits for the pointer to come back.
+ *
+ * Back onto a square it has passed through, unless it closes a loop on its
+ * first square, a pointer's drag does nothing either and keeps all it has
+ * drawn: a player drawing a long line in one stroke who brushed an earlier
+ * part of it lost everything after (owner, 2026-10-23). The keyboard's is
+ * cut back to there, which is how it takes back a step before Enter, and an
+ * arrow cannot brush a square by accident.
  */
 function extendDrag<S extends Board>(
   rules: LineRules<S>,
@@ -227,7 +233,7 @@ function extendDrag<S extends Board>(
   // The smallest loop of squares has four.
   const closing = seen === 0 && rules.loops && cells.length >= 4;
   if (seen >= 0 && !closing) {
-    cells.length = seen + 1;
+    if (drag.keyboard) cells.length = seen + 1;
     return;
   }
   const last = cells[cells.length - 1];
@@ -249,7 +255,7 @@ function extendDrag<S extends Board>(
     at = next;
   }
   // A loop that cannot close is a drag back onto its first square.
-  if (closing && cells[cells.length - 1] !== to) cells.length = 1;
+  if (closing && drag.keyboard && cells[cells.length - 1] !== to) cells.length = 1;
 }
 
 // --- the input --------------------------------------------------------------

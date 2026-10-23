@@ -18,6 +18,7 @@ import {
   OPEN,
 } from "./line-drawing.ts";
 import {
+  CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_SELECT,
   LEFT_BUTTON,
@@ -94,8 +95,14 @@ describe("the line drag", () => {
     expect(drag(setup(), board(), [0, 2])).toEqual(lineOn([0, 1], [1, 2]));
   });
 
-  it("is cut back where it returns to a square it passed", () => {
-    expect(drag(setup(), board(), [0, 1, 2, 1])).toEqual(lineOn([0, 1]));
+  it("keeps all it drew where it returns to a square it passed", () => {
+    expect(drag(setup(), board(), [0, 1, 2, 1])).toEqual(lineOn([0, 1], [1, 2]));
+  });
+
+  it("waits at its end after brushing a square it passed, and carries on from there", () => {
+    expect(drag(setup(), board(), [0, 1, 2, 1, 2, 5])).toEqual(
+      lineOn([0, 1], [1, 2], [2, 5]),
+    );
   });
 
   it("carries a line on past its end, keeping the lines it ran along", () => {
@@ -142,11 +149,13 @@ describe("the line drag", () => {
     ).toEqual(lineOn([0, 1], [1, 4], [3, 4], [0, 3]));
   });
 
-  it("is cut back to its first square where a loop is not declared", () => {
-    expect(drag(setup(), board(), [0, 1, 4, 3, 0])).toBe(UI_UPDATE);
+  it("keeps all it drew, open, where a loop is not declared", () => {
+    expect(drag(setup(), board(), [0, 1, 4, 3, 0])).toEqual(
+      lineOn([0, 1], [1, 4], [3, 4]),
+    );
   });
 
-  it("is cut back to its first square where the loop would over-fill it", () => {
+  it("keeps all it drew, open, where the loop would over-fill its first square", () => {
     // The middle square has a line down besides the loop's first edge, so a
     // loop closing there would give it three.
     const state = board([[4, 7]]);
@@ -156,7 +165,7 @@ describe("the line drag", () => {
         state,
         [4, 1, 0, 3, 4],
       ),
-    ).toBe(UI_UPDATE);
+    ).toEqual(lineOn([1, 4], [0, 1], [0, 3]));
   });
 });
 
@@ -207,6 +216,17 @@ describe("the keys", () => {
       CURSOR_SELECT,
     ]);
     expect(moves.at(-1)).toEqual(lineOn([0, 1], [1, 2]));
+  });
+
+  it("an arrow back over the line takes back the step, as a drag's does not", () => {
+    const { moves } = press(board(), [
+      CURSOR_SELECT,
+      CURSOR_RIGHT,
+      CURSOR_RIGHT,
+      CURSOR_LEFT,
+      CURSOR_SELECT,
+    ]);
+    expect(moves.at(-1)).toEqual(lineOn([0, 1]));
   });
 
   it("Ctrl+arrow draws a line and moves along it", () => {

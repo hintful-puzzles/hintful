@@ -10,8 +10,10 @@ must be a straight which is connected to *at least one* corner.
 ## Controls
 
 Drag from square to square to draw the loop along the edges you pass.
-Dragging back the way you came takes the line back up again, and
-dragging back onto the square you started from closes the loop. A drag
+A drag only adds: passing back over a square it has already drawn through
+does nothing, and it carries on once you return to where it reached, while
+dragging back onto the square you started from closes the loop. Undo takes
+a stroke back. A drag
 along a stretch of loop you have drawn and on past its end carries that
 stretch on, and a drag that runs only along lines you have drawn takes
 them up. A line stops where it would give a square a third line, or
@@ -23,8 +25,9 @@ sure the loop does not go through it, and keep the button down and
 drag to cross every unmarked edge you pass over.
 
 The keyboard can also be used. The arrow keys move a cursor. Press
-Enter to start drawing, move the cursor along the path you want, and
-press Enter again to draw or undraw it; Space, Escape, Backspace or
+Enter to start drawing, move the cursor along the path you want (moving
+back along it takes a step back), and press Enter again to draw or undraw
+it; Space, Escape, Backspace or
 Delete abandons the path instead. Holding Ctrl while pressing an arrow
 key draws or undraws the line in that direction and moves along it,
 holding Ctrl and Shift together does the same without moving, and

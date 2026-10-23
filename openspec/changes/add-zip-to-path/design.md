@@ -65,6 +65,16 @@ the number before keeps that stretch's color: drawn in the number's color,
 it showed in the app as a stub of the wrong color beside every disc. A wall is an ink bar on its edge. Proposed for the
 owner to overrule, as the proposal says.
 
+## D8. A pointer's drag only adds
+
+The owner's playtest (2026-10-23): drawing a whole Zip line in one stroke, a
+finger that brushed an earlier part of the line cut the drag back there and
+lost what came after. A pointer's drag back onto a square it passed now does
+nothing, and the drag carries on once the pointer is back beside its end;
+Undo takes a stroke back. It is the engine's drag, so Pearl's changes too.
+The keyboard's drag keeps the cut-back: an arrow cannot brush a square by
+accident, and stepping back is its only way to correct a line before Enter.
+
 ## D7. The hint's words
 
 The sentences are Path's. The forced step's count is the square's `takes`
@@ -72,3 +82,8 @@ rather than whether it holds a number, so a middle Zip number reads "The
 outlined 12 has only one edge left for its second line". An out-of-order
 break reads "join the outlined 4 to the 9", lower first; "without passing
 the 5" was tried and ran past the 120-character line.
+
+A lookahead named its edge as a bare "here" ("A cross here would…"), which
+the owner could not place (2026-10-23), and `docs/hints.md` forbids. It now
+reads "A cross on [this edge] would …, so it must be a line", in both
+rulesets.

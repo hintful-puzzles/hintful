@@ -170,7 +170,7 @@ describe("path input", () => {
     ]);
   });
 
-  it("a drag back over its own way takes the line back", () => {
+  it("a drag back over its own way keeps the line it drew", () => {
     const move = play(start, [
       [LEFT_BUTTON, at(8)],
       [LEFT_DRAG, at(9)],
@@ -178,7 +178,13 @@ describe("path input", () => {
       [LEFT_DRAG, at(9)],
       [LEFT_RELEASE, at(9)],
     ]);
-    expect(move).toEqual(set(6, LINE));
+    expect(move).toEqual({
+      kind: "edges",
+      changes: [
+        { edge: 6, mark: LINE },
+        { edge: 7, mark: LINE },
+      ],
+    });
   });
 
   it("a drag that starts along a line takes lines up", () => {
