@@ -24,8 +24,8 @@ import {
   DIFF_TRICKY,
   encodeParams,
   executeMove,
+  MODE_PAIRS,
   MODE_PATH,
-  MODE_ZIP,
   NO_END,
   newState,
   type PathParams,
@@ -35,10 +35,10 @@ import {
 /** Every preset, a small board, and one that is not square. */
 const SHAPES: PathParams[] = [
   ...(presets().submenu ?? []).flatMap((leaf) => (leaf.params ? [leaf.params] : [])),
-  { w: 4, h: 4, diff: DIFF_EASY, mode: MODE_PATH },
-  { w: 7, h: 5, diff: DIFF_NORMAL, mode: MODE_PATH },
-  { w: 5, h: 5, diff: DIFF_NORMAL, mode: MODE_ZIP },
-  { w: 6, h: 5, diff: DIFF_EASY, mode: MODE_ZIP },
+  { w: 4, h: 4, diff: DIFF_EASY, mode: MODE_PAIRS },
+  { w: 7, h: 5, diff: DIFF_NORMAL, mode: MODE_PAIRS },
+  { w: 5, h: 5, diff: DIFF_NORMAL, mode: MODE_PATH },
+  { w: 6, h: 5, diff: DIFF_EASY, mode: MODE_PATH },
 ];
 
 describeDealtTiers(
@@ -79,19 +79,21 @@ describeLadderCensus<PathParams & { desc: string }>({
   },
 });
 
-/** A Zip board's brute force walks every path through its squares, which
+/** A Path board's brute force walks every path through its squares, which
  * past this many takes seconds. */
-const ZIP_COUNTED = 36;
+const ONE_PATH_COUNTED = 36;
 
 describe("path dealt boards", () => {
   it.each(
-    dealt.filter(({ p }) => p.w * p.h <= (p.mode === MODE_ZIP ? ZIP_COUNTED : 49)),
+    dealt.filter(
+      ({ p }) => p.w * p.h <= (p.mode === MODE_PATH ? ONE_PATH_COUNTED : 49),
+    ),
   )("$label has exactly one answer", ({ p, desc }) => {
     expect(countAnswers(newState(p, desc))).toBe(1);
   });
 
   it.each(
-    dealt.filter(({ p }) => p.mode === MODE_PATH),
+    dealt.filter(({ p }) => p.mode === MODE_PAIRS),
   )("$label has no straight path of four squares or more", ({ p, desc }) => {
     const start = newState(p, desc);
     const answer = answerOf(start);

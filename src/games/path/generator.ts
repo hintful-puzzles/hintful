@@ -1,7 +1,8 @@
 /**
- * Path's generator: lay paths that fill the board, number their ends, and
- * keep the board only where the ladder finishes it at exactly the tier asked
- * for.
+ * The Pairs ruleset's generator: lay paths that fill the board, number their
+ * ends, and keep the board only where the ladder finishes it at exactly the
+ * tier asked for. A Path board is dealt by
+ * [`one-path-generator.ts`](./one-path-generator.ts).
  *
  * The paths are grown as upstream's `path.c` sketched: start from many short
  * pieces and join them end to end, so that a few long paths fill the board.
@@ -24,16 +25,16 @@ import {
   type SquareEdges,
   squareEdges,
 } from "../../engine/square-edges.ts";
+import { newOnePathDesc } from "./one-path-generator.ts";
 import { PathBoard, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
   encodeDesc,
-  MODE_ZIP,
+  MODE_PATH,
   type PathParams,
   puzzleOf,
   startEdges,
 } from "./state.ts";
-import { newZipDesc } from "./zip-generator.ts";
 
 /** The fewest squares a path may have: two numbers side by side would leave
  * the player nothing to find. */
@@ -247,7 +248,7 @@ function strip(
  * nothing leaves the board too easy.
  */
 export function newPathDesc(p: PathParams, rng: RandomState): { desc: string } {
-  if (p.mode === MODE_ZIP) return newZipDesc(p, rng);
+  if (p.mode === MODE_PATH) return newOnePathDesc(p, rng);
   const g = squareEdges(p.w, p.h);
   const next = retryLimit("path: generation");
   for (;;) {

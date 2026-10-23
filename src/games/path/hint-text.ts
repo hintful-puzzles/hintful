@@ -59,7 +59,7 @@ export type Clash =
   /** The lines would make a loop of `squares`. */
   | { kind: "closed"; squares: readonly Point[] }
   /** The lines would join two numbers that may not meet: two different
-   * numbers in Path, and in Zip two that are not one apart. */
+   * numbers in Pairs, and in Path two that are not one apart. */
   | { kind: "joined"; a: Square; b: Square };
 
 const clashWords = (c: Clash): Narration => {

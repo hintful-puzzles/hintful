@@ -11,4 +11,6 @@
 - [x] 9. Run the app: deal, draw, walls, colors, hint, light and dark
 - [x] 10. Commit and push
 - [x] 11. The owner's playtest (2026-10-23): a pointer's drag only adds; the lookahead names its edge
-- [ ] 12. The owner's word on Zip and its names; then archive
+- [x] 12. The names: Path (one line) first, Pairs; Zip a catalog alias
+- [x] 13. A stroke from a number draws its line ahead again (`LineRules.restarts`)
+- [ ] 14. The owner's word on these two; then archive

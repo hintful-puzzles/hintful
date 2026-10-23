@@ -32,7 +32,7 @@ import {
 } from "./solver.ts";
 import {
   executeMove,
-  MODE_ZIP,
+  MODE_PATH,
   NO_END,
   type PathMove,
   type PathState,
@@ -132,8 +132,8 @@ function clashWords(
         numberOn(g.a[clash.edge], before),
         numberOn(g.b[clash.edge], before),
       ];
-      // "The 3 to the 7": a Zip line runs up its numbers, so the lower first.
-      const swap = state.mode === MODE_ZIP && (a.number ?? 0) > (b.number ?? 0);
+      // "The 3 to the 7": a Path line runs up its numbers, so the lower first.
+      const swap = state.mode === MODE_PATH && (a.number ?? 0) > (b.number ?? 0);
       return { kind: "joined", a: swap ? b : a, b: swap ? a : b };
     }
   }

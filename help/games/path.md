@@ -26,6 +26,13 @@ lines than it takes, where you have crossed the edge out, or at a wall. You
 can also click near the edge between two squares to draw or remove a line
 there.
 
+A stroke that starts on a number draws that number's line again: when you let
+go, the line that ran on from the number before is taken up, as far as it
+went, and your stroke is drawn in its place. In {{choice:ruleset:0}} the
+line that leads into the number from a lower one stays, so a stroke from the
+2 keeps the line from the 1 and replaces everything on from the 2. In
+{{choice:ruleset:1}} the number's whole line is replaced.
+
 Right-click an edge to cross it out, to mark that you are sure no line goes
 there, and keep the button down and drag to cross out every edge you pass.
 Right-click it again to clear the cross. A wall cannot be crossed out or
@@ -40,30 +47,30 @@ direction and moves along it, holding Ctrl and Shift together does the same
 without moving, and holding Shift alone crosses out or clears the edge in
 that direction.
 
-In {{choice:ruleset:0}}, each pair of numbers has a color, ringing both its
+In {{choice:ruleset:0}}, the color runs along the line from the 1 to the
+highest number: each stretch of line between two numbers takes a color of its
+own, in order round the color wheel, and each number is ringed in the color
+of the stretch that leaves it, the highest in that of the stretch that
+reaches it. A number's disc fills once the line reaches the numbers either
+side of it.
+
+In {{choice:ruleset:1}}, each pair of numbers has a color, ringing both its
 numbers, and a line takes that color once it reaches one of them. Colors
 repeat on a board with more pairs than colors, and the numbers tell those
 pairs apart. A pair's two discs fill with its color once a line joins them.
 
-In {{choice:ruleset:1}}, the color runs along the line from the 1 to the
-highest number: each stretch of line between two numbers takes a color of its
-own, in order round the color wheel, and each number is ringed in the color
-of the stretch that leaves it, the highest in that of the stretch that
-reaches it. A number's disc fills once the line reaches
-the numbers either side of it.
-
 In both, a line that reaches no number yet has no color. A line turns red
 when it breaks the rules already: when it closes into a loop, or joins two
-numbers that may not meet. In {{choice:ruleset:0}} that is two different
-numbers, and in {{choice:ruleset:1}} two that are not one apart, such as a
-line from the 3 that reaches the 5 before the 4.
+numbers that may not meet. In {{choice:ruleset:0}} that is two that are not
+one apart, such as a line from the 3 that reaches the 5 before the 4, and in
+{{choice:ruleset:1}} two different numbers.
 
 ## Where the puzzles come from
 
-{{choice:ruleset:0}} is Nikoli's *Numberlink*, also published as *Arukone*,
+{{choice:ruleset:0}} is the puzzle LinkedIn publishes daily as *Zip*.
+{{choice:ruleset:1}} is Nikoli's *Numberlink*, also published as *Arukone*,
 and played by many as *Flow Free*. Simon Tatham wrote a generator for it but
 never a game; this one fills every square, as Flow Free does.
-{{choice:ruleset:1}} is LinkedIn's daily puzzle of the same name.
 
 ## Hints
 
@@ -77,7 +84,7 @@ is, it asks you to fix the highlighted mistakes first.
 An edge beside a square that already has all its lines can never take
 another, and neither can an edge whose line would join two numbers that may
 not meet, whether the numbers sit beside it or lines lead to them from it.
-In {{choice:ruleset:1}}, neither can an edge whose line would close a loop.
+In {{choice:ruleset:0}}, neither can an edge whose line would close a loop.
 The hint counts all of these as closed without asking you to cross them out,
 and most steps are then one rule at work: a square with only as many open
 edges left as it still needs lines takes a line on each of them.

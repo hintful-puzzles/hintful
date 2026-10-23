@@ -628,7 +628,7 @@ const SAME_HUE = 15;
 
 /**
  * **{@link FREE}'s members in the order of their hues**, by index into it:
- * a run of colors a line changes along, as Zip's does from its 1 to its last
+ * a run of colors a line changes along, as Path's one line does from its 1 to its last
  * number. Gray has no hue and is left out, and so is a member within
  * {@link SAME_HUE} of one before it in the set, which would make two steps
  * of the run look alike. From orange, the run goes round the wheel the way

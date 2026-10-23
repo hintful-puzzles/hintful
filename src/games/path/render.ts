@@ -9,7 +9,7 @@
  * its own beside the word for what the square holds. A wall is drawn the
  * same way, a square's half of a bar along the side.
  *
- * Path colors each pair; Zip colors its one line by how far along it a
+ * Pairs colors each pair; Path colors its one line by how far along it a
  * square sits, so the color runs from the 1 to the highest number.
  */
 
@@ -64,7 +64,7 @@ import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-w
 import type { PathHighlights } from "./hint.ts";
 import { pathLines, withChanges } from "./moves.ts";
 import {
-  MODE_ZIP,
+  MODE_PATH,
   NO_END,
   type PathMove,
   type PathParams,
@@ -162,7 +162,7 @@ export function centerOf(state: PathState, ts: number, i: number): Point {
 // flash's tone, whether its path is whole, the sides of the hint's outline
 // it draws (`hint-mark.ts`'s side bits), and the color of its lines, one
 // more than their pair's slot past `COL_PAIR`, or 0 for ink. Every line on a
-// square is of one piece, which joins them there. On a Zip number, the side
+// square is of one piece, which joins them there. On a Path number, the side
 // one more than its direction where the line arrives from the number before
 // in another color, and that color as the piece's is.
 const F_CURSOR = 1 << 8;
@@ -196,7 +196,7 @@ export interface PathDrawState {
    * the first frame. */
   cache: Int32Array;
   /** Each number's slot past `COL_PAIR`, by the number: its pair's in
-   * Path, and in Zip that of the line from it to the next. */
+   * Pairs, and in Path that of the line from it to the next. */
   numberColor: Int32Array;
 }
 
@@ -206,7 +206,7 @@ export function newDrawState(state: PathState, tileSize: number): PathDrawState 
     started: false,
     tileSize,
     cache: new Int32Array(squares * WORDS).fill(-1),
-    numberColor: state.mode === MODE_ZIP ? rampColors(state) : pairColors(state),
+    numberColor: state.mode === MODE_PATH ? rampColors(state) : pairColors(state),
   };
 }
 
@@ -516,8 +516,8 @@ export function redraw(
   const edges = withChanges(state, drag);
   const dragged = new Map(drag.map((c) => [c.edge, c.mark]));
   const { broken, reach, done, arrives, arrivesFrom }: LineLook =
-    state.mode === MODE_ZIP
-      ? zipPieces(state, edges)
+    state.mode === MODE_PATH
+      ? onePathPieces(state, edges)
       : {
           ...pieces(state, edges),
           done: doneNumbers(state, edges),
@@ -605,7 +605,7 @@ function noArrivals(cells: number): Pick<LineLook, "arrives" | "arrivesFrom"> {
 }
 
 /**
- * Zip's pieces of line, as {@link pieces} gives Path's, and `done`, the
+ * Path's pieces of line, as {@link pieces} gives Pairs', and `done`, the
  * numbers whose line reaches the number before them and the one after (or
  * only one of those, for the 1 and the highest). A piece is broken where it
  * closes a loop or passes two numbers one after the other that are not one
@@ -616,7 +616,7 @@ function noArrivals(cells: number): Pick<LineLook, "arrives" | "arrivesFrom"> {
  * number, and on a piece with only one number, whose way up the piece does
  * not yet show, every square takes that number's.
  */
-function zipPieces(state: PathState, edges: Uint8Array): LineLook {
+function onePathPieces(state: PathState, edges: Uint8Array): LineLook {
   const { ends } = state;
   const g = squareEdges(state.w, state.h);
   const last = Math.max(...ends);

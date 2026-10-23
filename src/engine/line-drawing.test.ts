@@ -18,6 +18,7 @@ import {
   OPEN,
 } from "./line-drawing.ts";
 import {
+  CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -166,6 +167,62 @@ describe("the line drag", () => {
         [4, 1, 0, 3, 4],
       ),
     ).toEqual(lineOn([1, 4], [0, 1], [0, 3]));
+  });
+});
+
+describe("a drag that replaces lines", () => {
+  /** Rules whose drag from square 0 replaces the lines along the top row. */
+  function replacing() {
+    const rules: LineRules<Board> = {
+      mark: (s, e) => s.edges[e],
+      takes: () => 2,
+      loops: false,
+      restarts: (_s, i) => (i === 0 ? [edge(0, 1), edge(1, 2)] : []),
+    };
+    return lineDrawing<Board, LineDrawingUi, null, readonly EdgeChange[]>(rules, {
+      layout: () => ({ tile: TILE, border: 0 }),
+      move: (_s, changes) => changes,
+    });
+  }
+  const top = board([
+    [0, 1],
+    [1, 2],
+  ]);
+
+  it("takes up the lines it replaces and lays its own", () => {
+    expect(drag(replacing(), top, [0, 3, 4])).toEqual([
+      { edge: edge(0, 1), mark: OPEN },
+      { edge: edge(1, 2), mark: OPEN },
+      ...lineOn([0, 3], [3, 4]),
+    ]);
+  });
+
+  it("keeps a replaced line it lays again, and draws as if the rest were not there", () => {
+    // Along the replaced line, which would otherwise be taken up as a drag
+    // along nothing but lines.
+    expect(drag(replacing(), top, [0, 1])).toEqual([{ edge: edge(1, 2), mark: OPEN }]);
+  });
+
+  it("replaces nothing for a press released where it began", () => {
+    const input = replacing();
+    const ui = newUi();
+    input.interpretMove(top, ui, null, center(0), LEFT_BUTTON);
+    const made = input.interpretMove(top, ui, null, center(0), LEFT_RELEASE);
+    expect(made).toBe(UI_UPDATE);
+  });
+
+  it("is the same from the keyboard", () => {
+    const input = replacing();
+    const ui = newUi();
+    ui.cursor.visible = true;
+    const moves = [CURSOR_SELECT, CURSOR_DOWN, CURSOR_SELECT].map((k) =>
+      input.interpretMove(top, ui, null, { x: 0, y: 0 }, k),
+    );
+    expect(moves.at(-1)).toEqual([
+      { edge: edge(0, 1), mark: OPEN },
+      { edge: edge(1, 2), mark: OPEN },
+      ...lineOn([0, 3]),
+    ]);
   });
 });
 

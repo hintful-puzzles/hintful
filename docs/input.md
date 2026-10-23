@@ -675,14 +675,17 @@ through them, declare `LineRules` and write no input.**
 [`engine/line-drawing.ts`](../src/engine/line-drawing.ts) is the whole
 input: the drag, the click on an edge, the right button's cross sweep and
 the keys. Its header says what each does; a pointer's drag only adds, and
-the keyboard's takes a step back. A game declares three facts, and a
-fourth where the board owns some edges:
+the keyboard's takes a step back. A game declares three facts, and two
+more where it needs them:
 
 - `mark`: what an edge holds, read from the game's own state;
 - `takes`: how many lines a square takes, which no drag, click or key
   exceeds;
 - `loops`: whether a drag back onto its first square closes a loop;
-- `fixed`: an edge no input changes, as a Zip wall.
+- `fixed`: an edge no input changes, as Path's walls;
+- `restarts`: the lines a drag from a square replaces, as Path's line ahead
+  of a number, which the release takes up where the drag does not lay them
+  again.
 
 The rules go in `moves.ts`, since `render.ts` previews the drag with
 `dragPreview` from them. `lineDrawing(rules, { layout, move })` in `index.ts`

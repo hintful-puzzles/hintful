@@ -75,6 +75,27 @@ Undo takes a stroke back. It is the engine's drag, so Pearl's changes too.
 The keyboard's drag keeps the cut-back: an arrow cannot brush a square by
 accident, and stepping back is its only way to correct a line before Enter.
 
+## D9. A stroke from a number draws its line ahead again
+
+The owner (2026-10-23): having drawn 1→2→3→4→5, a stroke from the 2 through
+the 3 to the 4 replaces the old line on to the 5 and keeps the 1→2. The
+engine's `LineRules.restarts` names the lines a drag from a square replaces;
+the drag draws as if they were not there, and its release takes up each it
+does not lay again, so a stroke over the same squares keeps them and a
+press released where it began replaces nothing. Path's rules give the line
+ahead of a number: every side of it but one whose first number is lower. In
+Pairs a number's one line is ahead, as Flow Free does it, which also keeps
+"a drag along a line and on past its end carries it on" true from a number.
+
+## D10. The names
+
+The owner (2026-10-23) took the one-line puzzle as **Path**, after the game,
+and the pair puzzle as **Pairs** rather than "Paths", one letter from "Path"
+on a menu line; Path comes first. Links and saves keep their letters: Pairs
+none, as the game's only puzzle wrote, and Path `z`, from when it was dealt
+as Zip. "Zip" is a catalog alias, so a search for it still finds the game,
+and the help credits LinkedIn's *Zip*.
+
 ## D7. The hint's words
 
 The sentences are Path's. The forced step's count is the square's `takes`

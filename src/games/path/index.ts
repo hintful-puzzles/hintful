@@ -1,7 +1,8 @@
 /**
- * Path (Numberlink): join each pair of like numbers with a line, so that
- * lines never cross or branch and every square has a line through it. Its
- * Zip ruleset draws one line through the numbers in order instead.
+ * Path: draw lines from square to square that never cross or branch, so
+ * every square has a line through it. Its Path ruleset draws one line
+ * through the numbers in order; its Pairs ruleset (Numberlink) joins each
+ * pair of like numbers with a line of its own.
  *
  * This file is the `Game` object and the glue around it: the input, the
  * answer, the hint's gesture. The rules a line obeys are in

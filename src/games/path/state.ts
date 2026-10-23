@@ -7,7 +7,7 @@
  * edge holds a cross no move clears. A move only writes edges, so a player
  * can lay a piece of a path before it reaches either of its numbers.
  *
- * Two puzzles are played on the board, Path and Zip (`engine/ruleset.ts`).
+ * Two puzzles are played on the board, Path and Pairs (`engine/ruleset.ts`).
  * They differ in how many lines a numbered square takes, which
  * {@link PathPuzzle.takes} holds, and in which pieces of line may meet,
  * which is the solver's.
@@ -58,24 +58,25 @@ const DIFF_CHARS = "ent";
 export const NO_END = 0;
 
 /** The highest number a desc may give, so that a number fits the byte
- * `ends` keeps it in. A Path board cannot reach it (every pair takes at
- * least two squares), and the Zip generator deals far fewer. */
+ * `ends` keeps it in. A Pairs board cannot reach it (every pair takes at
+ * least two squares), and the Path generator deals far fewer. */
 export const MAX_NUMBER = 255;
 
 // --- rulesets ---------------------------------------------------------------
 
 export const MODE_PATH = 0;
-export const MODE_ZIP = 1;
+export const MODE_PAIRS = 1;
 
-/** The two puzzles, indexed by `MODE_*`. */
+/** The two puzzles, indexed by `MODE_*`: Path, the game's one-line puzzle
+ * after its name, first (owner, 2026-10-23). */
 const RULESETS: Ruleset[] = [
   {
     name: "Path",
-    rule: "Every number is on two squares. Join each pair of like numbers with a line of its own, so a numbered square takes one line.",
+    rule: "The numbers run from 1 up, each on one square. Draw one line from the 1 to the highest number that passes the numbers in order, so the 1 and the highest number take one line and every other square two.",
   },
   {
-    name: "Zip",
-    rule: "The numbers run from 1 up, each on one square. Draw one line from the 1 to the highest number that passes the numbers in order, so the 1 and the highest number take one line and every other square two.",
+    name: "Pairs",
+    rule: "Every number is on two squares. Join each pair of like numbers with a line of its own, so a numbered square takes one line.",
   },
 ];
 
@@ -86,7 +87,7 @@ export interface PathParams {
   h: number;
   /** {@link DIFF_EASY}, {@link DIFF_NORMAL} or {@link DIFF_TRICKY}. */
   diff: number;
-  /** {@link MODE_PATH} or {@link MODE_ZIP}. */
+  /** {@link MODE_PAIRS} or {@link MODE_PATH}. */
   mode: number;
 }
 
@@ -94,7 +95,7 @@ export interface PathParams {
 export interface PathPuzzle {
   readonly w: number;
   readonly h: number;
-  /** {@link MODE_PATH} or {@link MODE_ZIP}. */
+  /** {@link MODE_PAIRS} or {@link MODE_PATH}. */
   readonly mode: number;
   /** The number on each square, 1 up, or {@link NO_END}. */
   readonly ends: Uint8Array;
@@ -122,13 +123,13 @@ export type PathUi = LineDrawingUi;
 // --- the puzzle -------------------------------------------------------------
 
 /** How many lines each square takes: two through a square without a number.
- * In Path one from a number; in Zip one from the 1 and the highest number,
+ * In Pairs one from a number; in Path one from the 1 and the highest number,
  * where the line ends, and two through every other number. */
 function takesOf(mode: number, ends: Uint8Array): Uint8Array {
   const last = Math.max(...ends);
   return ends.map((v) => {
     if (v === NO_END) return 2;
-    return mode === MODE_ZIP && v !== 1 && v !== last ? 2 : 1;
+    return mode === MODE_PATH && v !== 1 && v !== last ? 2 : 1;
   });
 }
 
@@ -162,13 +163,13 @@ export const paramConfig: ParamConfigItem<PathParams>[] = [
 ];
 
 const BOARDS: PathParams[] = [
-  { w: 5, h: 5, diff: DIFF_EASY, mode: MODE_PATH },
+  { w: 6, h: 6, diff: DIFF_EASY, mode: MODE_PATH },
   { w: 7, h: 7, diff: DIFF_EASY, mode: MODE_PATH },
-  { w: 8, h: 12, diff: DIFF_EASY, mode: MODE_PATH },
-  { w: 10, h: 15, diff: DIFF_EASY, mode: MODE_PATH },
-  { w: 6, h: 6, diff: DIFF_EASY, mode: MODE_ZIP },
-  { w: 7, h: 7, diff: DIFF_EASY, mode: MODE_ZIP },
-  { w: 8, h: 8, diff: DIFF_EASY, mode: MODE_ZIP },
+  { w: 8, h: 8, diff: DIFF_EASY, mode: MODE_PATH },
+  { w: 5, h: 5, diff: DIFF_EASY, mode: MODE_PAIRS },
+  { w: 7, h: 7, diff: DIFF_EASY, mode: MODE_PAIRS },
+  { w: 8, h: 12, diff: DIFF_EASY, mode: MODE_PAIRS },
+  { w: 10, h: 15, diff: DIFF_EASY, mode: MODE_PAIRS },
 ];
 
 /** Normal, so that the first board needs both rungs and its hint draws every
@@ -177,24 +178,27 @@ export function defaultParams(): PathParams {
   return { ...BOARDS[1], diff: DIFF_NORMAL };
 }
 
-/** No Tricky Path 5x5 on the menu: its boards keep three pairs and take a
- * second or two to find, measured 2026-10-22. Zip's Tricky is on the menu at
- * 8x8 only: the worst of eight deals took 0.8 s there, against 1.3 s at 7x7
- * and 1.2 s at 6x6, where fewer boards need the long lookahead (2026-10-23). */
+/** No Tricky Pairs 5x5 on the menu: its boards keep three pairs and take a
+ * second or two to find, measured 2026-10-22. Path's Tricky is on the menu
+ * at 8x8 only: the worst of eight deals took 0.8 s there, against 1.3 s at
+ * 7x7 and 1.2 s at 6x6, where fewer boards need the long lookahead
+ * (2026-10-23). */
 export function presets(): PresetMenu<PathParams> {
   return presetGrid(paramConfig, BOARDS, {
     tiers: (p) => {
-      if (p.mode === MODE_ZIP) return p.w < 8 ? [DIFF_EASY, DIFF_NORMAL] : null;
+      if (p.mode === MODE_PATH) return p.w < 8 ? [DIFF_EASY, DIFF_NORMAL] : null;
       return p.w === 5 ? [DIFF_EASY, DIFF_NORMAL] : null;
     },
   });
 }
 
-/** `WxH`, a `z` for Zip (Path writes nothing), then the generator-only tier
- * letter. */
+/** `WxH`, a `z` for Path (Pairs writes nothing), then the generator-only
+ * tier letter. Pairs was the game's only puzzle, so its strings carry no
+ * letter, and Path was first dealt as "Zip": both are kept so every link and
+ * save still opens. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
-  letters(paramConfig, RULESET_KW, ["", "z"]),
+  letters(paramConfig, RULESET_KW, ["z", ""]),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
@@ -202,14 +206,14 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  * The refusal for a board too small to need the tier asked for, or `null`.
  *
  * Proved 2026-10-22 by grading every way to lay paths of two squares or more
- * on each board: no 3x3 Path board is Normal, and no 3x3, 3x4, 3x5, 4x4 or
+ * on each board: no 3x3 Pairs board is Normal, and no 3x3, 3x4, 3x5, 4x4 or
  * 4x5 board is Tricky, whatever its paths. On 3x4 and 3x5 every Normal board
  * has a path of two squares, a straight run of four or a path that touches
  * itself, none of which the generator lays. A 4x4 has 26 Normal boards the
  * generator may lay, and is left to it.
  */
 function absentTier(p: PathParams): string | null {
-  if (p.mode !== MODE_PATH) return null;
+  if (p.mode !== MODE_PAIRS) return null;
   const tier = DIFF_NAMES[p.diff] ?? "";
   const what = `${p.w}x${p.h} puzzle`;
   const [short, long] = [Math.min(p.w, p.h), Math.max(p.w, p.h)];
@@ -291,11 +295,11 @@ function parseDesc(p: PathParams, desc: string): DescParse<PathPuzzle> {
     r.end();
     const count = new Map<number, number>();
     for (const v of ends) if (v !== NO_END) count.set(v, (count.get(v) ?? 0) + 1);
-    // The numbers run from 1 with no gap: a Path number names its pair's
-    // color, and a Zip line passes every number in order.
+    // The numbers run from 1 with no gap: a Pairs number names its pair's
+    // color, and a Path line passes every number in order.
     if (count.size === 0) r.fail(DESC_OUT_OF_RANGE);
     for (const v of count.keys()) if (v > count.size) r.fail(DESC_OUT_OF_RANGE);
-    if (p.mode === MODE_ZIP) {
+    if (p.mode === MODE_PATH) {
       for (const n of count.values()) if (n !== 1) r.fail(DESC_REPEATED);
       // A line has two ends.
       if (count.size < 2) r.fail(DESC_OUT_OF_RANGE);

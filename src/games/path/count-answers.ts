@@ -4,22 +4,22 @@
  * the rules, so a ladder that finishes a board with two answers, or none,
  * disagrees with it.
  *
- * A Path board's squares are decided in reading order, each choosing whether
+ * A Pairs board's squares are decided in reading order, each choosing whether
  * a line leaves it to the right and downward once its own left and upper
  * edges are known, so every square's lines are fixed when it is passed. A
  * union-find that can be rolled back refuses a line that would close a loop
  * or join two different numbers.
  *
- * A Zip board's answer is one walk from the 1 through every square, so it is
+ * A Path board's answer is one walk from the 1 through every square, so it is
  * counted as one: step by step from the 1, never onto a square already
  * walked, a wall, or a number other than the next one due.
  */
 
 import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
-import { MODE_ZIP, NO_END, type PathPuzzle } from "./state.ts";
+import { MODE_PATH, NO_END, type PathPuzzle } from "./state.ts";
 
 export function countAnswers(puzzle: PathPuzzle, limit = 2): number {
-  return puzzle.mode === MODE_ZIP ? countZip(puzzle, limit) : countPath(puzzle, limit);
+  return puzzle.mode === MODE_PATH ? countZip(puzzle, limit) : countPath(puzzle, limit);
 }
 
 function countPath(puzzle: PathPuzzle, limit: number): number {

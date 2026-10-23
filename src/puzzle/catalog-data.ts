@@ -309,10 +309,10 @@ export const puzzleCatalog = {
   },
   path: {
     name: "Path",
-    aliases: ["Numberlink", "Arukone", "Flow"],
+    aliases: ["Zip", "Numberlink", "Arukone", "Flow"],
     description: "Path-joining puzzle",
     objective:
-      "Join each pair of like numbers with a line, so that the lines fill the grid and never cross.",
+      "Draw one line through the numbers in order, or join each pair of like numbers, so that the lines fill the grid and never cross.",
     collection: "own",
     family: "lines",
   },

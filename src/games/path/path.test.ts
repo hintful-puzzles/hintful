@@ -2,7 +2,8 @@
  * Path's own behavior: the codecs, drawing a line, the path from a solve to a
  * finished board, the mistake check, a save, and the frame.
  *
- * The board below is small enough to solve by eye. Edges are numbered as
+ * The board below, a Pairs board, is small enough to solve by eye; the
+ * Path ruleset's board is at the end. Edges are numbered as
  * `state.ts`'s `Geometry` numbers them: the nine across first, in reading
  * order of their left square, then the eight up and down.
  *
@@ -49,15 +50,15 @@ import {
   encodeDesc,
   encodeParams,
   executeMove,
+  MODE_PAIRS,
   MODE_PATH,
-  MODE_ZIP,
   newState,
   type PathMove,
   type PathState,
   validateParams,
 } from "./state.ts";
 
-const P = { w: 4, h: 3, diff: DIFF_EASY, mode: MODE_PATH };
+const P = { w: 4, h: 3, diff: DIFF_EASY, mode: MODE_PAIRS };
 const DESC = "1_2_1c2e";
 const ID = `${encodeParams(P, true)}:${DESC}`;
 /** The answer's lines, as edges. */
@@ -70,17 +71,17 @@ const set = (edge: number, mark: 0 | 1 | 2): PathMove => ({
 
 describe("path params", () => {
   it("round-trip through their string, tier included only in full", () => {
-    const p = { w: 6, h: 4, diff: DIFF_EASY, mode: MODE_PATH };
+    const p = { w: 6, h: 4, diff: DIFF_EASY, mode: MODE_PAIRS };
     expect(decodeParams(encodeParams(p, true))).toEqual(p);
     // The brief form leaves the tier at the default's.
     expect(decodeParams(encodeParams(p, false))).toEqual({ ...p, diff: DIFF_NORMAL });
   });
 
-  it("write Zip as a z after the size, and Path as nothing", () => {
-    const zip = { w: 6, h: 6, diff: DIFF_TRICKY, mode: MODE_ZIP };
-    expect(encodeParams(zip, true)).toBe("6x6zdt");
-    expect(decodeParams("6x6zdt")).toEqual(zip);
-    expect(decodeParams("6x6dt").mode).toBe(MODE_PATH);
+  it("write Path as a z after the size, and Pairs as nothing", () => {
+    const onePath = { w: 6, h: 6, diff: DIFF_TRICKY, mode: MODE_PATH };
+    expect(encodeParams(onePath, true)).toBe("6x6zdt");
+    expect(decodeParams("6x6zdt")).toEqual(onePath);
+    expect(decodeParams("6x6dt").mode).toBe(MODE_PAIRS);
   });
 
   it("refuse a board too small or too large", () => {
@@ -214,6 +215,22 @@ describe("path input", () => {
       [LEFT_RELEASE, at(10)],
     ]);
     expect(move).toEqual(set(7, LINE));
+  });
+
+  it("a stroke from a number replaces the line it had", () => {
+    // The corner 1's line runs down two squares; a stroke from it down one
+    // keeps that edge and takes up the one past it.
+    const lined = executeMove(start, {
+      kind: "edges",
+      changes: [9, 13].map((edge) => ({ edge, mark: LINE })),
+    });
+    expect(
+      play(lined, [
+        [LEFT_BUTTON, at(0)],
+        [LEFT_DRAG, at(4)],
+        [LEFT_RELEASE, at(4)],
+      ]),
+    ).toEqual(set(13, OPEN));
   });
 
   it("a drag stops where a square already has its lines, and at a cross", () => {
@@ -387,7 +404,7 @@ describe("path frame", () => {
 });
 
 /**
- * Zip on a board of the same size, its edges numbered as above:
+ * The Path ruleset on a board of the same size, its edges numbered as above:
  *
  *     1 . . .      1-+-+-+
  *     . . . 2            |
@@ -395,14 +412,14 @@ describe("path frame", () => {
  *                  |
  *                  3-+-+-4
  */
-describe("zip", () => {
-  const Z = { ...P, mode: MODE_ZIP };
-  const ZIP = "1f2_3b4";
-  const ZIP_ANSWER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 13];
+describe("path, the one-line ruleset", () => {
+  const Z = { ...P, mode: MODE_PATH };
+  const ONE_PATH = "1f2_3b4";
+  const ONE_PATH_ANSWER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 13];
   /** The same numbers with a wall between the second squares of the first
    * two rows, edge 10, which the answer does not take. */
   const WALLED = "1f2_3b4,jf";
-  const start = newState(Z, ZIP);
+  const start = newState(Z, ONE_PATH);
   const lines = (state: PathState, edges: readonly number[]): PathState =>
     executeMove(state, {
       kind: "edges",
@@ -411,14 +428,14 @@ describe("zip", () => {
 
   it("reads each number on one square, and refuses one twice or a gap", () => {
     expect(Array.from(start.ends)).toEqual([1, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 4]);
-    expect(encodeDesc(start.ends)).toBe(ZIP);
+    expect(encodeDesc(start.ends)).toBe(ONE_PATH);
     // The 1 and the 4 end the line, and every other square takes two.
     expect(Array.from(start.takes)).toEqual([1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1]);
     for (const desc of ["1f2_3b3", "1f2_3b5", "1k"])
       expect(() => newState(Z, desc), desc).toThrow();
-    // A Path board's pairs are not a Zip board, nor the other way round.
+    // A Pairs board's numbers are not a Path board, nor the other way round.
     expect(() => newState(Z, DESC)).toThrow();
-    expect(() => newState(P, ZIP)).toThrow();
+    expect(() => newState(P, ONE_PATH)).toThrow();
   });
 
   it("reads its walls, which start crossed and round-trip", () => {
@@ -431,12 +448,12 @@ describe("zip", () => {
   it("has one answer, which the ladder finds", () => {
     expect(countAnswers(start)).toBe(1);
     const answer = answerOf(start);
-    expect(answer?.flatMap((m, e) => (m === LINE ? [e] : []))).toEqual(ZIP_ANSWER);
+    expect(answer?.flatMap((m, e) => (m === LINE ? [e] : []))).toEqual(ONE_PATH_ANSWER);
   });
 
   it("is solved by one line through the numbers in order, and not out of order", () => {
-    expect(pathGame.status(lines(start, ZIP_ANSWER))).toBe("solved");
-    expect(pathGame.status(lines(start, ZIP_ANSWER.slice(1)))).toBe("ongoing");
+    expect(pathGame.status(lines(start, ONE_PATH_ANSWER))).toBe("solved");
+    expect(pathGame.status(lines(start, ONE_PATH_ANSWER.slice(1)))).toBe("ongoing");
     // Every square has its lines, but the line passes the 3 before the 2.
     const outOfOrder = [9, 13, 6, 14, 10, 1, 2, 12, 5, 15, 8];
     expect(pathGame.status(lines(start, outOfOrder))).toBe("ongoing");
@@ -462,16 +479,55 @@ describe("zip", () => {
     expect(executeMove(walled, solved.move).edges[10]).toBe(CROSS);
   });
 
+  it("a stroke from a number draws the line ahead of it again, and keeps the line behind", () => {
+    // The whole answer is drawn. A stroke from the 2 replaces the line on
+    // from it, through the 3 to the 4, and keeps the 1's line into it.
+    const drawn = lines(start, ONE_PATH_ANSWER);
+    const ds = newDrawState(drawn, 40);
+    const at = (i: number): Point => centerOf(drawn, 40, i);
+    const stroke = (cells: number[]): PathMove | null => {
+      const ui = pathGame.newUi(drawn);
+      let made: PathMove | null = null;
+      const presses: [number, number][] = [
+        [LEFT_BUTTON, cells[0]],
+        ...cells.slice(1).map((c): [number, number] => [LEFT_DRAG, c]),
+        [LEFT_RELEASE, cells[cells.length - 1]],
+      ];
+      for (const [button, c] of presses) {
+        const r = pathGame.interpretMove(drawn, ui, ds, at(c), button);
+        if (r !== null && typeof r === "object") made = r;
+      }
+      return made;
+    };
+    const changed = (move: PathMove | null) =>
+      move?.kind === "edges"
+        ? move.changes.map(({ edge, mark }) => `${edge}${mark === LINE ? "+" : "-"}`)
+        : null;
+    // Over the same three squares again: kept, and the rest taken up.
+    expect(changed(stroke([7, 6, 5, 4]))).toEqual(["6-", "7-", "8-", "13-"]);
+    // Down to the 4 instead: all of the old line ahead goes.
+    expect(changed(stroke([7, 11]))).toEqual([
+      "3-",
+      "4-",
+      "5-",
+      "6-",
+      "7-",
+      "8-",
+      "13-",
+      "16+",
+    ]);
+  });
+
   it("draws its walls, and its line in a color that runs from the 1 to the 4", () => {
     const id = (desc: string) => `${encodeParams(Z, true)}:${desc}`;
     const walled = renderScenario({ game: pathGame, id: id(WALLED) }).recording.ops;
     expect(walled.some((op) => paintsWith(op, COL_WALL))).toBe(true);
-    const unwalled = renderScenario({ game: pathGame, id: id(ZIP) }).recording.ops;
+    const unwalled = renderScenario({ game: pathGame, id: id(ONE_PATH) }).recording.ops;
     expect(unwalled.some((op) => paintsWith(op, COL_WALL))).toBe(false);
     const solved = renderScenario({
       game: pathGame,
-      id: id(ZIP),
-      moves: ZIP_ANSWER.map((edge) => set(edge, LINE)),
+      id: id(ONE_PATH),
+      moves: ONE_PATH_ANSWER.map((edge) => set(edge, LINE)),
     }).recording.ops;
     // Black is the edge drawn under a colored line; the line from the 1 to
     // the 2, the 2 to the 3 and the 3 to the 4 each take a color of their own.
@@ -484,7 +540,7 @@ describe("zip", () => {
     const red = (moves: PathMove[]): boolean =>
       renderScenario({
         game: pathGame,
-        id: `${encodeParams(Z, true)}:${ZIP}`,
+        id: `${encodeParams(Z, true)}:${ONE_PATH}`,
         moves,
       }).recording.ops.some((op) => paintsWith(op, COL_ERROR));
     expect(red([set(9, LINE)])).toBe(false);

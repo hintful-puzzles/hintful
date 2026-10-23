@@ -12,8 +12,11 @@
  * on; a drag that passes only lines takes them up. Upstream took up the lines
  * a drag started along even where it went on to lay one, and a player tracing
  * a line to continue it lost it (owner, 2026-10-21 for Path, 2026-10-22 for
- * both). A press released where it began is a click on the edge it was aimed
- * at. The right button crosses an edge, and drags to cross every edge it
+ * both). A game may say which lines a drag from a square replaces
+ * ({@link LineRules.restarts}), as Path's line ahead of a number: the drag
+ * draws as if they were not there, and its release takes up those it does
+ * not lay again. A press released where it began is a click on the edge it
+ * was aimed at, and replaces nothing. The right button crosses an edge, and drags to cross every edge it
  * passes, through the engine's sweep.
  *
  * The keyboard: Enter starts a line at the cursor, the arrows carry it,
@@ -96,6 +99,10 @@ export interface LineRules<S extends Board> {
   /** Whether edge `e` is the board's and not the player's, as a wall is: no
    * click, key or drag changes it. Absent, every edge is the player's. */
   fixed?(state: S, e: number): boolean;
+  /** The lines a drag that begins on square `i` replaces: the drag sees them
+   * as open, and its release takes up each one it does not lay again.
+   * Absent, a drag replaces nothing. */
+  restarts?(state: S, i: number): readonly number[];
 }
 
 interface Board {
@@ -114,6 +121,9 @@ export interface LineDrag {
   /** Where the press that began a pointer's drag landed, which says the edge
    * a press released where it began is aimed at. */
   at: Point | null;
+  /** The lines it replaces, from {@link LineRules.restarts} on its first
+   * square. */
+  replaces: readonly number[];
 }
 
 /** The `Ui` a line-drawing game holds. */
@@ -173,14 +183,29 @@ function dragChanges<S extends Board>(
   return out.sort((x, y) => x.edge - y.edge);
 }
 
+/** `rules` as `drag` sees the board: the lines it replaces open. */
+function seenBy<S extends Board>(rules: LineRules<S>, drag: LineDrag): LineRules<S> {
+  if (drag.replaces.length === 0) return rules;
+  const open = new Set(drag.replaces);
+  return { ...rules, mark: (state, e) => (open.has(e) ? OPEN : rules.mark(state, e)) };
+}
+
 /** The edges `drag` would change if released now, which its preview shows:
- * none for no drag or a press that has not left its square. */
+ * none for no drag or a press that has not left its square. The lines it
+ * replaces are taken up, but for those it lays again. */
 export function dragPreview<S extends Board>(
   rules: LineRules<S>,
   state: S,
   drag: LineDrag | null,
 ): EdgeChange[] {
-  return drag && drag.cells.length > 1 ? dragChanges(rules, state, drag.cells) : [];
+  if (!drag || drag.cells.length < 2) return [];
+  const marks = new Map<number, EdgeMark>(drag.replaces.map((e) => [e, OPEN]));
+  for (const c of dragChanges(seenBy(rules, drag), state, drag.cells))
+    marks.set(c.edge, c.mark);
+  return [...marks]
+    .filter(([e, mark]) => rules.mark(state, e) !== mark)
+    .map(([edge, mark]) => ({ edge, mark }))
+    .sort((x, y) => x.edge - y.edge);
 }
 
 /** How many lines square `i` has in `marks`. */
@@ -294,6 +319,8 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
     changes.length > 0 ? input.move(state, changes) : null;
 
   const fixed = (state: S, e: number): boolean => rules.fixed?.(state, e) ?? false;
+  const restartsAt = (state: S, i: number): readonly number[] =>
+    rules.restarts?.(state, i) ?? [];
 
   /** A line on edge `e`, or the line taken off it. */
   const toggleLine = (state: S, e: number): M | null => {
@@ -349,7 +376,10 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
     if (button === LEFT_BUTTON) {
       hideCursor(ui.cursor);
       const i = squareAtP();
-      ui.drag = i < 0 ? null : { cells: [i], keyboard: false, at: p };
+      ui.drag =
+        i < 0
+          ? null
+          : { cells: [i], keyboard: false, at: p, replaces: restartsAt(state, i) };
       return UI_UPDATE;
     }
     if (button === RIGHT_BUTTON) {
@@ -362,7 +392,7 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
     if (button === LEFT_DRAG) {
       if (!ui.drag || ui.drag.keyboard) return null;
       const i = squareAtP();
-      if (i >= 0) extendDrag(rules, state, ui.drag, i);
+      if (i >= 0) extendDrag(seenBy(rules, ui.drag), state, ui.drag, i);
       return UI_UPDATE;
     }
     if (button === RIGHT_DRAG)
@@ -372,7 +402,7 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
       if (!drag || drag.keyboard) return null;
       ui.drag = null;
       if (drag.cells.length > 1)
-        return moveOf(state, dragChanges(rules, state, drag.cells)) ?? UI_UPDATE;
+        return moveOf(state, dragPreview(rules, state, drag)) ?? UI_UPDATE;
       // A press released where it began is a click on the edge it was aimed
       // at, which is more controllable than where it was released.
       const e = drag.at ? aimedEdge(state, ds, drag.at) : null;
@@ -400,20 +430,27 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
       }
       if (!moveCursor(ui.cursor, button, state.w, state.h)) return null;
       if (ui.drag?.keyboard)
-        extendDrag(rules, state, ui.drag, ui.cursor.y * state.w + ui.cursor.x);
+        extendDrag(
+          seenBy(rules, ui.drag),
+          state,
+          ui.drag,
+          ui.cursor.y * state.w + ui.cursor.x,
+        );
       return UI_UPDATE;
     }
     if (button === CURSOR_SELECT) {
       if (showCursor(ui.cursor)) return UI_UPDATE;
       if (ui.drag?.keyboard) {
-        const { cells } = ui.drag;
+        const drag = ui.drag;
         ui.drag = null;
-        return moveOf(state, dragChanges(rules, state, cells)) ?? UI_UPDATE;
+        return moveOf(state, dragPreview(rules, state, drag)) ?? UI_UPDATE;
       }
+      const i = ui.cursor.y * state.w + ui.cursor.x;
       ui.drag = {
-        cells: [ui.cursor.y * state.w + ui.cursor.x],
+        cells: [i],
         keyboard: true,
         at: null,
+        replaces: restartsAt(state, i),
       };
       return UI_UPDATE;
     }

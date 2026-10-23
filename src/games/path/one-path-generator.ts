@@ -1,9 +1,9 @@
 /**
- * Zip's generator: lay one path through every square, number points along
- * it, and keep the board only where the ladder finishes it at exactly the
- * tier asked for.
+ * The Path ruleset's generator: lay one path through every square, number
+ * points along it, and keep the board only where the ladder finishes it at
+ * exactly the tier asked for.
  *
- * As Path's generator does with its pairs, the numbers are mended until the
+ * As Pairs' generator does with its pairs, the numbers are mended until the
  * Easy rung finishes the board, then stripped. Mending numbers a square of
  * the path beside an edge the ladder left open; stripping takes a number
  * away wherever the ladder still finishes the board without it. The 1 and
@@ -117,7 +117,7 @@ function mend(
   const marks = new Set([0, line.length - 1]);
   // Each pass numbers one more square, and a board with every square
   // numbered is finished.
-  const mark = retryLimit("zip: mend", g.cells);
+  const mark = retryLimit("path: one-path mend", g.cells);
   for (;;) {
     mark();
     const board = attempt(p, g, line, marks, walls, DIFF_EASY);
@@ -198,16 +198,16 @@ function stripWalls(
 }
 
 /**
- * A Zip board at exactly tier `p.diff`. The numbers are mended until the
+ * A Path board at exactly tier `p.diff`. The numbers are mended until the
  * Easy rung finishes the board, stripped at Easy, then stripped at the tier
  * asked for, where a strip that takes none leaves the board too easy. Unlike
- * Path's, the strip skips the tiers between: at Tricky a strip at Normal
+ * Pairs', the strip skips the tiers between: at Tricky a strip at Normal
  * first made a 6x6 board take a median 3.3 s to find against 0.2 s, and a
  * 7x7 1.1 s against 0.5 s, with as many numbers kept (2026-10-23).
  */
-export function newZipDesc(p: PathParams, rng: RandomState): { desc: string } {
+export function newOnePathDesc(p: PathParams, rng: RandomState): { desc: string } {
   const g = squareEdges(p.w, p.h);
-  const next = retryLimit("zip: generation");
+  const next = retryLimit("path: one-path generation");
   for (;;) {
     next();
     const line = layLine(g, rng);

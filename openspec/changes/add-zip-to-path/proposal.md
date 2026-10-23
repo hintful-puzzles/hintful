@@ -40,8 +40,12 @@ modules; the difference is the listing.
 
 ## Decisions
 
-- **A ruleset of Path** (owner, 2026-10-23), named "Zip" in the Type menu's
-  own section.
+- **A ruleset of Path** (owner, 2026-10-23), first dealt as "Zip" and then
+  named **Path**, with the pair puzzle renamed **Pairs** and Path first on
+  the menu (owner, 2026-10-23; design D10).
+- **The owner's playtest** (2026-10-23): a pointer's drag only adds, a stroke
+  from a number draws its line ahead again, and a lookahead names its edge
+  as a pill (design D7 to D9).
 - **Walls in the first version**: LinkedIn's boards use them, and on Path's
   board a wall is an edge the desc closes, so they cost a desc field and a
   drawn line, not a new kind of board. The generator lays a few where they

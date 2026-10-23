@@ -24,8 +24,8 @@ import {
   DIFF_NORMAL,
   DIFF_TRICKY,
   executeMove,
+  MODE_PAIRS,
   MODE_PATH,
-  MODE_ZIP,
   NO_END,
   newState,
   type PathMove,
@@ -35,11 +35,11 @@ import {
 
 type PathStep = HintStep<PathMove, PathHighlights, PathRung>;
 
-/** A step, on a Zip board, of `rung`. */
-const onZip =
+/** A step, on a board of the Path ruleset, of `rung`. */
+const onOnePath =
   (rung: PathRung) =>
   (step: PathStep, state: PathState): boolean =>
-    state.mode === MODE_ZIP && step.rung === rung;
+    state.mode === MODE_PATH && step.rung === rung;
 
 /** The numbered squares a step outlines, and how many it outlines. */
 const outlinedNumbers = (step: PathStep, state: PathState) => {
@@ -51,21 +51,21 @@ const outlinedNumbers = (step: PathStep, state: PathState) => {
 const pinned = describeHintPins({
   game: pathGame,
   params: [
-    { w: 5, h: 5, diff: DIFF_NORMAL, mode: MODE_PATH },
-    { w: 7, h: 7, diff: DIFF_TRICKY, mode: MODE_PATH },
-    { w: 6, h: 6, diff: DIFF_NORMAL, mode: MODE_ZIP },
-    { w: 8, h: 8, diff: DIFF_TRICKY, mode: MODE_ZIP },
+    { w: 5, h: 5, diff: DIFF_NORMAL, mode: MODE_PAIRS },
+    { w: 7, h: 7, diff: DIFF_TRICKY, mode: MODE_PAIRS },
+    { w: 6, h: 6, diff: DIFF_NORMAL, mode: MODE_PATH },
+    { w: 8, h: 8, diff: DIFF_TRICKY, mode: MODE_PATH },
   ],
   kinds: {
-    zipForced: onZip("forced"),
-    zipLookahead: { leg: onZip("lookahead") },
-    zipLongLookahead: { leg: onZip("long-lookahead") },
+    onePathForced: onOnePath("forced"),
+    onePathLookahead: { leg: onOnePath("lookahead") },
+    onePathLongLookahead: { leg: onOnePath("long-lookahead") },
     /** A number that is neither the 1 nor the last takes two lines. */
-    zipMiddleNumber: (step, state) => {
+    onePathMiddleNumber: (step, state) => {
       const { numbered, all } = outlinedNumbers(step, state);
       const [c] = numbered;
       return (
-        onZip("forced")(step, state) &&
+        onOnePath("forced")(step, state) &&
         all === 1 &&
         c &&
         state.takes[c.y * state.w + c.x] === 2
@@ -73,11 +73,12 @@ const pinned = describeHintPins({
     },
     /** A supposition that breaks where two numbers out of order would meet:
      * the only break that outlines two numbered squares and nothing else. */
-    zipOutOfOrder: {
+    onePathOutOfOrder: {
       leg: (step, state) => {
         const { numbered, all } = outlinedNumbers(step, state);
         return (
-          (onZip("lookahead")(step, state) || onZip("long-lookahead")(step, state)) &&
+          (onOnePath("lookahead")(step, state) ||
+            onOnePath("long-lookahead")(step, state)) &&
           all === 2 &&
           numbered.length === 2
         );
@@ -86,21 +87,21 @@ const pinned = describeHintPins({
   },
   pins: {
     /** Held on 829 of 1977 positions walked. */
-    zipForced: "6x6zdn:p4_6b5_3b2c1g,zjog",
+    onePathForced: "6x6zdn:p4_6b5_3b2c1g,zjog",
     /** Held on 833 of 1977 positions walked. */
-    zipLookahead: {
+    onePathLookahead: {
       id: "6x6zdn:i6f5a8a4d7b3c2_1b",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":30,"mark":1}]},{"kind":"edges","changes":[{"edge":4,"mark":1},{"edge":35,"mark":1}]},{"kind":"edges","changes":[{"edge":25,"mark":1},{"edge":54,"mark":1}]},{"kind":"edges","changes":[{"edge":59,"mark":1},{"edge":29,"mark":1}]}]',
     },
     /** Held on 288 of 1977 positions walked. */
-    zipLongLookahead: {
+    onePathLongLookahead: {
       id: "8x8zdt:n3c4a11_1c5g6b9_10a2a8f7c12k,akpzbzoj",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":56,"mark":1}]},{"kind":"edges","changes":[{"edge":57,"mark":1}]},{"kind":"edges","changes":[{"edge":2,"mark":1},{"edge":58,"mark":1}]},{"kind":"edges","changes":[{"edge":3,"mark":1}]},{"kind":"edges","changes":[{"edge":6,"mark":1},{"edge":63,"mark":1}]},{"kind":"edges","changes":[{"edge":64,"mark":1}]},{"kind":"edges","changes":[{"edge":71,"mark":1}]},{"kind":"edges","changes":[{"edge":49,"mark":1},{"edge":104,"mark":1}]},{"kind":"edges","changes":[{"edge":111,"mark":1},{"edge":55,"mark":1}]}]',
     },
     /** Held on 111 of 1977 positions walked. */
-    zipMiddleNumber: {
+    onePathMiddleNumber: {
       id: "8x8zdt:a12_10e11_13i9e2e8a4c6b1a3c5f7j,r1kzzol",
       moves: [
         {
@@ -113,7 +114,7 @@ const pinned = describeHintPins({
       ],
     },
     /** Held on 475 of 1977 positions walked. */
-    zipOutOfOrder: {
+    onePathOutOfOrder: {
       id: "8x8zdt:b9h4_3_6i5j2b1_10j8c7j,zezrvl",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":56,"mark":1}]},{"kind":"edges","changes":[{"edge":6,"mark":1},{"edge":63,"mark":1}]},{"kind":"edges","changes":[{"edge":49,"mark":1},{"edge":104,"mark":1}]},{"kind":"edges","changes":[{"edge":111,"mark":1},{"edge":55,"mark":1}]}]',
@@ -136,12 +137,12 @@ const pinned = describeHintPins({
 });
 
 const BOARDS: PathParams[] = [
-  { w: 5, h: 5, diff: DIFF_EASY, mode: MODE_PATH },
-  { w: 5, h: 5, diff: DIFF_NORMAL, mode: MODE_PATH },
-  { w: 7, h: 5, diff: DIFF_NORMAL, mode: MODE_PATH },
-  { w: 7, h: 7, diff: DIFF_TRICKY, mode: MODE_PATH },
-  { w: 6, h: 6, diff: DIFF_NORMAL, mode: MODE_ZIP },
-  { w: 8, h: 8, diff: DIFF_TRICKY, mode: MODE_ZIP },
+  { w: 5, h: 5, diff: DIFF_EASY, mode: MODE_PAIRS },
+  { w: 5, h: 5, diff: DIFF_NORMAL, mode: MODE_PAIRS },
+  { w: 7, h: 5, diff: DIFF_NORMAL, mode: MODE_PAIRS },
+  { w: 7, h: 7, diff: DIFF_TRICKY, mode: MODE_PAIRS },
+  { w: 6, h: 6, diff: DIFF_NORMAL, mode: MODE_PATH },
+  { w: 8, h: 8, diff: DIFF_TRICKY, mode: MODE_PATH },
 ];
 
 function deal(p: PathParams, seed: string): PathState {

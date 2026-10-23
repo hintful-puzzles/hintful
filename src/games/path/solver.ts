@@ -20,14 +20,14 @@
  * (2026-10-22): beside the longer walk it changed neither how fast Tricky
  * boards are found nor how many numbers they keep, and in place of it Tricky
  * boards were seldom found at all.
- * No rung crosses out an edge whose line would join two numbers, or in Zip
- * two numbers out of order: the edge counts as closed (`PathBoard.live`), as
- * a player sees it is. In Path there is no rung against closing a loop
- * either. Path's generator lays no path that touches itself, so no piece of
- * a dealt board's answer has its two ends side by side, and inside a
- * supposition a loop is a clash. Zip's one path fills the board and touches
- * itself everywhere, so a piece's two ends are often side by side, and the
- * edge between them counts as closed too.
+ * No rung crosses out an edge whose line would join two different numbers in
+ * Pairs, or two numbers out of order in Path: the edge counts as closed
+ * (`PathBoard.live`), as a player sees it is. In Pairs there is no rung
+ * against closing a loop either. Pairs' generator lays no path that touches
+ * itself, so no piece of a dealt board's answer has its two ends side by
+ * side, and inside a supposition a loop is a clash. Path's one line fills
+ * the board and touches itself everywhere, so a piece's two ends are often
+ * side by side, and the edge between them counts as closed too.
  */
 
 import {
@@ -52,7 +52,7 @@ import {
   DIFF_EASY,
   DIFF_NORMAL,
   DIFF_TRICKY,
-  MODE_ZIP,
+  MODE_PATH,
   NO_END,
   type PathPuzzle,
   startEdges,
@@ -247,7 +247,7 @@ export class PathBoard {
   /** Whether a line could still go on edge `e`: it is neither line nor cross,
    * both its squares take another line, and it would not join two numbers
    * that may not meet, whether they sit on its squares or the lines from
-   * them end there; in Zip, nor close a loop. Each of these a player sees
+   * them end there; in Path, nor close a loop. Each of these a player sees
    * at a glance (owner, 2026-10-21), so such an edge is as good as crossed
    * out and no step asks for its cross. */
   live(e: number): boolean {
@@ -282,8 +282,8 @@ export class PathBoard {
 /**
  * The pieces of path the lines make: each piece's two end squares, and the
  * number nearest each end along it. That is all either ruleset's rule reads.
- * In Path two pieces may meet where their numbers are alike or one has none.
- * In Zip, where every number is on one square, a piece's numbers run in
+ * In Pairs two pieces may meet where their numbers are alike or one has none.
+ * In Path, where every number is on one square, a piece's numbers run in
  * order, and two pieces may meet where the numbers nearest the meeting ends
  * are one apart: a line from the 3 that meets a line whose nearest number is
  * the 5 must miss the 4, and one that meets the 4 cannot pass it in the
@@ -318,7 +318,7 @@ class Pieces {
    * {@link NO_END}. */
   private fits(p: number, q: number): boolean {
     if (p === NO_END || q === NO_END) return true;
-    return this.mode === MODE_ZIP ? Math.abs(p - q) === 1 : p === q;
+    return this.mode === MODE_PATH ? Math.abs(p - q) === 1 : p === q;
   }
 
   /** The number nearest square `i` along its piece, where `i` is one of its
@@ -331,7 +331,7 @@ class Pieces {
   /** Whether a line between squares `i` and `j`, each an end of its piece,
    * breaks no rule. */
   meets(i: number, j: number): boolean {
-    if (this.dsf.equivalent(i, j)) return this.mode !== MODE_ZIP;
+    if (this.dsf.equivalent(i, j)) return this.mode !== MODE_PATH;
     return this.fits(this.nearAt(i), this.nearAt(j));
   }
 
@@ -378,7 +378,7 @@ class Pieces {
   }
 
   /** The lowest number on the piece through square `i`, or {@link NO_END}:
-   * in Path, its one number. */
+   * in Pairs, its one number. */
   numberOf(i: number): number {
     const r = this.dsf.canonify(i);
     const [p, q] = [this.nearA[r], this.nearB[r]];
@@ -420,8 +420,8 @@ function stillHolds(b: PathBoard, firing: PathFiring): boolean {
 }
 
 /** Whether the lines solve the puzzle: each square has the lines it takes,
- * and no line breaks a rule. Then in Path every path runs between two like
- * numbers; in Zip the 1 and the highest number are the only squares that
+ * and no line breaks a rule. Then in Pairs every path runs between two like
+ * numbers; in Path the 1 and the highest number are the only squares that
  * take one line, so the lines are one path between them, through the numbers
  * in order. A cross and an open edge are the same here, so a player need
  * cross nothing out to finish. */
