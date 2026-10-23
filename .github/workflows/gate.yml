@@ -41,7 +41,13 @@ jobs:
   # gate's steps, and the artifact that ships is `ci.yml`'s.
   gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Two files set the wall time, since vitest runs one file's tests in turn:
+    # hint-resume took 21.5 min and hint-quality 16 of a 23.5-min run, and a
+    # runner 1.7x slower took the whole suite past 30, so six of eight runs on
+    # 2026-10-22 were canceled with no verdict. The room is until the change
+    # that spreads those two over the workers lands
+    # (openspec/changes/spread-the-long-hint-walks).
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
