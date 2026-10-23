@@ -28,6 +28,7 @@ import {
   INK,
   RULED_OUT,
   surfaceGrid,
+  wallFill,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import {
@@ -135,7 +136,9 @@ export function colors(defaultBackground: Color): Color[] {
     out[COL_PAIR + k] = FREE[k];
     out[COL_PAIR_TEXT + k] = FREE_TEXT[k];
   }
-  out[COL_WALL] = INK;
+  // Structure, not ink: an ink wall read as a line reaching no number (owner,
+  // 2026-10-23).
+  out[COL_WALL] = wallFill(defaultBackground);
   return out;
 }
 

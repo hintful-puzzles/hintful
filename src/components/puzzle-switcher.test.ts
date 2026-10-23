@@ -59,20 +59,20 @@ describe("the quick-switch reaches every game", () => {
     expect([...listed].sort()).toEqual([...puzzleIds].sort());
   });
 
-  it("finds every game by typing its name", async () => {
+  it("finds every game first by typing its name, so Enter takes it", async () => {
     // The vacuity guard is the count: an empty catalog, or a `search` setter
     // that stopped taking effect, would make the loop below assert nothing.
     expect(puzzleIds.length).toBeGreaterThan(50);
 
-    const unreachable: string[] = [];
+    const notFirst: string[] = [];
     for (const puzzleId of puzzleIds) {
       const listed = await search(puzzleDataMap[puzzleId].name);
-      if (!listed.includes(puzzleId)) unreachable.push(puzzleId);
+      if (listed[0] !== puzzleId) notFirst.push(puzzleId);
     }
     expect(
-      unreachable,
-      "a game that cannot be reached by typing its own name is a game the " +
-        "quick-switch has silently lost",
+      notFirst,
+      "a player who types a game's whole name wants that game, and Enter " +
+        "takes the first row",
     ).toEqual([]);
   });
 

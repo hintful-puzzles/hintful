@@ -1483,14 +1483,28 @@ ruling-out secondary verb.
   declared with `rulingOut`
 - **THEN** the cross-game guard fails, naming the game
 
-### Requirement: A line drawn through squares is the engine's drag
+### Requirement: The line drawing's keys are the engine's
 
-The engine SHALL provide the drag that draws a line along the edges between the squares it passes, a rook move at a time, cut back where it returns to a square it passed, and stopped by a crossed edge or a square given more lines than it takes. Its release SHALL keep the lines it passes, or take them up where it passes nothing else. A game drawing lines this way SHALL use it and declare only how many lines a square takes and whether a loop may close.
+The engine's line drawing SHALL take Enter to start a line at the cursor, the arrows to carry it, Enter to draw it and Space or a cancel key to abandon it; Ctrl+arrow SHALL draw or take up the line on that side and move along it, Ctrl+Shift+arrow the same without moving, and Shift+arrow SHALL cross or clear that edge. A modified arrow on a hidden cursor SHALL only show it.
 
-#### Scenario: A drag back over its own way takes the line back
+#### Scenario: Ctrl+Shift+arrow draws without moving
+
+- **WHEN** Ctrl+Shift+Right is pressed on a showing cursor beside an open edge
+- **THEN** the edge takes a line and the cursor stays on its square
+
+### Requirement: A line drawn through squares is the engine's add-only drag
+
+The engine SHALL provide the drag that draws a line along the edges between the squares it passes, a rook move at a time, stopped by a crossed edge or a square given more lines than it takes. A pointer's drag back onto a square it passed SHALL change nothing, unless it closes a declared loop; the keyboard's SHALL be cut back there. Its release SHALL keep the lines it passes, or take them up where it passes nothing else. A game drawing lines this way SHALL use it.
+
+#### Scenario: A drag back over its own way keeps what it drew
 
 - **WHEN** a drag passes three squares and returns to the second
-- **THEN** releasing it draws only the edge between the first two
+- **THEN** releasing it draws both edges it passed
+
+#### Scenario: An arrow back over the line takes back the step
+
+- **WHEN** Enter starts a line, two arrows carry it, an arrow back returns it to the second square, and Enter draws it
+- **THEN** only the edge between the first two squares is drawn
 
 #### Scenario: A drag along a line and past its end carries it on
 
@@ -1501,12 +1515,3 @@ The engine SHALL provide the drag that draws a line along the edges between the 
 
 - **WHEN** a drag, a click or a Ctrl+arrow would give a square more lines than it takes
 - **THEN** the drag stops before that square, and the click or key makes no move
-
-### Requirement: The line drawing's keys are the engine's
-
-The engine's line drawing SHALL take Enter to start a line at the cursor, the arrows to carry it, Enter to draw it and Space or a cancel key to abandon it; Ctrl+arrow SHALL draw or take up the line on that side and move along it, Ctrl+Shift+arrow the same without moving, and Shift+arrow SHALL cross or clear that edge. A modified arrow on a hidden cursor SHALL only show it.
-
-#### Scenario: Ctrl+Shift+arrow draws without moving
-
-- **WHEN** Ctrl+Shift+Right is pressed on a showing cursor beside an open edge
-- **THEN** the edge takes a line and the cursor stays on its square

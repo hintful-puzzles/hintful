@@ -26,7 +26,7 @@ import {
   puzzleDataMap,
   puzzleIds,
 } from "../puzzle/catalog.ts";
-import { familiesOffered, matchesQuery } from "../puzzle/catalog-search.ts";
+import { familiesOffered, searchResults } from "../puzzle/catalog-search.ts";
 import { puzzlePageUrl } from "../routing.ts";
 import { savedGames } from "../store/saved-games.ts";
 import { settings } from "../store/settings.ts";
@@ -188,7 +188,7 @@ export class HomeScreen extends SignalWatcher(Screen) {
 
   /** The rows the list is showing, after the filter and the search box. */
   private get listedIds(): readonly string[] {
-    return this.visibleIds.filter((puzzleId) => {
+    const filtered = this.visibleIds.filter((puzzleId) => {
       switch (this.filter) {
         case "favorites":
           if (!settings.favoritePuzzles.has(puzzleId)) return false;
@@ -199,11 +199,9 @@ export class HomeScreen extends SignalWatcher(Screen) {
         case "all":
           break;
       }
-      if (this.family !== null && puzzleDataMap[puzzleId]?.family !== this.family) {
-        return false;
-      }
-      return matchesQuery(puzzleId, this.search);
+      return this.family === null || puzzleDataMap[puzzleId]?.family === this.family;
     });
+    return searchResults(filtered, this.search);
   }
 
   private renderCatalog() {

@@ -33,7 +33,7 @@ import {
   puzzleIds,
   puzzlesInFamily,
 } from "../puzzle/catalog.ts";
-import { matchesQuery } from "../puzzle/catalog-search.ts";
+import { searchResults } from "../puzzle/catalog-search.ts";
 import { puzzlePageUrl } from "../routing.ts";
 import { closeOnBackdropClick } from "../utils/dialog.ts";
 
@@ -75,7 +75,7 @@ export class PuzzleSwitcher extends LitElement {
     if (related.length > 0) {
       return [...related, ...puzzleIds.filter((id) => !related.includes(id))];
     }
-    return puzzleIds.filter((puzzleId) => matchesQuery(puzzleId, this.search));
+    return searchResults(puzzleIds, this.search);
   }
 
   /**

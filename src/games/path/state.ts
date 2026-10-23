@@ -164,8 +164,8 @@ export const paramConfig: ParamConfigItem<PathParams>[] = [
 
 const BOARDS: PathParams[] = [
   { w: 6, h: 6, diff: DIFF_EASY, mode: MODE_PATH },
-  { w: 7, h: 7, diff: DIFF_EASY, mode: MODE_PATH },
-  { w: 8, h: 8, diff: DIFF_EASY, mode: MODE_PATH },
+  { w: 6, h: 9, diff: DIFF_EASY, mode: MODE_PATH },
+  { w: 7, h: 9, diff: DIFF_EASY, mode: MODE_PATH },
   { w: 5, h: 5, diff: DIFF_EASY, mode: MODE_PAIRS },
   { w: 7, h: 7, diff: DIFF_EASY, mode: MODE_PAIRS },
   { w: 8, h: 12, diff: DIFF_EASY, mode: MODE_PAIRS },
@@ -175,18 +175,19 @@ const BOARDS: PathParams[] = [
 /** Normal, so that the first board needs both rungs and its hint draws every
  * mark the legend lists: the board the cross-game guards deal is this one. */
 export function defaultParams(): PathParams {
-  return { ...BOARDS[1], diff: DIFF_NORMAL };
+  return { w: 7, h: 7, diff: DIFF_NORMAL, mode: MODE_PATH };
 }
 
 /** No Tricky Pairs 5x5 on the menu: its boards keep three pairs and take a
  * second or two to find, measured 2026-10-22. Path's Tricky is on the menu
- * at 8x8 only: the worst of eight deals took 0.8 s there, against 1.3 s at
- * 7x7 and 1.2 s at 6x6, where fewer boards need the long lookahead
- * (2026-10-23). */
+ * at 7x9 only: the worst of eight deals took 0.97 s there, against 2.2 s at
+ * 8x10, 1.3 s at 7x7 and 1.2 s at 6x6, where fewer boards need the long
+ * lookahead (2026-10-23). */
 export function presets(): PresetMenu<PathParams> {
   return presetGrid(paramConfig, BOARDS, {
     tiers: (p) => {
-      if (p.mode === MODE_PATH) return p.w < 8 ? [DIFF_EASY, DIFF_NORMAL] : null;
+      if (p.mode === MODE_PATH)
+        return p.w === 7 && p.h === 9 ? null : [DIFF_EASY, DIFF_NORMAL];
       return p.w === 5 ? [DIFF_EASY, DIFF_NORMAL] : null;
     },
   });

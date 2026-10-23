@@ -13,4 +13,5 @@
 - [x] 11. The owner's playtest (2026-10-23): a pointer's drag only adds; the lookahead names its edge
 - [x] 12. The names: Path (one line) first, Pairs; Zip a catalog alias
 - [x] 13. A stroke from a number draws its line ahead again (`LineRules.restarts`)
-- [ ] 14. The owner's word on these two; then archive
+- [x] 14. The owner's word on these two (accepted 2026-10-23)
+- [x] 15. The owner's playtest: half the Path boards rectangles; walls in `wallFill`; search puts a game named exactly first

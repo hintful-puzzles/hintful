@@ -36,6 +36,35 @@ export function matchesQuery(puzzleId: string, query: string): boolean {
   return searchHaystack(puzzleId).includes(needle);
 }
 
+/**
+ * The puzzles of `ids` that match `query`, the closest first: one whose name
+ * the query is, then names it begins, then another name of a puzzle it is or
+ * begins, then every other match, each in the order `ids` gives. A player
+ * who types a game's whole name wants that game, and the quick-switch's
+ * Enter takes the first row (owner, 2026-10-23: "path" listed Ascent first,
+ * whose objective says "path").
+ */
+export function searchResults(ids: readonly string[], query: string): string[] {
+  const needle = query.trim().toLowerCase();
+  const hits = ids.filter((id) => matchesQuery(id, query));
+  if (!needle) return hits;
+  const rank = (id: string): number => {
+    const data = puzzleDataMap[id];
+    if (!data) return 4;
+    const name = data.name.toLowerCase();
+    const others = (data.aliases ?? []).map((a) => a.toLowerCase());
+    if (name === needle) return 0;
+    if (name.startsWith(needle)) return 1;
+    if (others.includes(needle)) return 2;
+    if (others.some((a) => a.startsWith(needle))) return 3;
+    return 4;
+  };
+  return hits
+    .map((id, order) => ({ id, order, rank: rank(id) }))
+    .sort((a, b) => a.rank - b.rank || a.order - b.order)
+    .map(({ id }) => id);
+}
+
 /** The family chips the home screen offers beside `query`. Once something is
  * typed the search answers, a family's label included, and on a phone the chips
  * are four rows standing between the box and its results under the keyboard.

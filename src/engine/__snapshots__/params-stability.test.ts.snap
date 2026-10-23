@@ -442,10 +442,11 @@ exports[`encoded params are byte-stable > path 1`] = `
 "default  full=7x7zdn  brief=7x7z
 preset:Path/Path: 6x6 Easy  full=6x6zde  brief=6x6z
 preset:Path/Path: 6x6 Normal  full=6x6zdn  brief=6x6z
-preset:Path/Path: 7x7 Easy  full=7x7zde  brief=7x7z
-preset:Path/Path: 8x8 Easy  full=8x8zde  brief=8x8z
-preset:Path/Path: 8x8 Normal  full=8x8zdn  brief=8x8z
-preset:Path/Path: 8x8 Tricky  full=8x8zdt  brief=8x8z
+preset:Path/Path: 6x9 Easy  full=6x9zde  brief=6x9z
+preset:Path/Path: 6x9 Normal  full=6x9zdn  brief=6x9z
+preset:Path/Path: 7x9 Easy  full=7x9zde  brief=7x9z
+preset:Path/Path: 7x9 Normal  full=7x9zdn  brief=7x9z
+preset:Path/Path: 7x9 Tricky  full=7x9zdt  brief=7x9z
 preset:Pairs/Pairs: 5x5 Easy  full=5x5de  brief=5x5
 preset:Pairs/Pairs: 5x5 Normal  full=5x5dn  brief=5x5
 preset:Pairs/Pairs: 7x7 Easy  full=7x7de  brief=7x7
@@ -457,6 +458,7 @@ preset:Pairs/Pairs: 8x12 Tricky  full=8x12dt  brief=8x12
 preset:Pairs/Pairs: 10x15 Easy  full=10x15de  brief=10x15
 preset:Pairs/Pairs: 10x15 Normal  full=10x15dn  brief=10x15
 preset:Pairs/Pairs: 10x15 Tricky  full=10x15dt  brief=10x15
+tier:0  full=7x7zde  brief=7x7z
 tier:2  full=7x7zdt  brief=7x7z
 bump:w  full=8x7zdn  brief=8x7z
 bump:h  full=7x8zdn  brief=7x8z"

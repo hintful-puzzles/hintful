@@ -47,11 +47,20 @@ numbers against seven. Stripping straight at Tricky, skipping Normal, took a
 
 ## D5. The menu
 
-Path keeps its eleven lines. Zip offers 6x6 and 7x7 at Easy and Normal and
-8x8 at all three tiers, seven lines and eighteen in all, the menu's limit.
-Tricky is left off the smaller Zip boards because a deal's worst of eight
-took 1.2 s at 6x6 and 1.3 s at 7x7, against 0.8 s at 8x8: small boards seldom
-need the long lookahead.
+Pairs keeps its eleven lines. Path offers 6x6 and 6x9 at Easy and Normal and
+7x9 at all three tiers, seven lines and eighteen in all, the menu's limit;
+the owner asked for about half the boards to be rectangles (2026-10-23), and
+four of the seven are, upright as Pairs' are, for a phone. Tricky is on 7x9
+alone because a deal's worst of eight took 0.97 s there, against 2.2 s at
+8x10, 1.2 s at 6x6 and 1.3 s at 7x7: small boards seldom need the long
+lookahead, and large ones take long to find.
+
+## D11. Walls are structure, not ink
+
+A wall was ink, and in the owner's playtest (2026-10-23) a wall beside a
+line reaching no number, also ink, could hardly be told from it. Walls take
+`wallFill`, the palette's color for structure that is never the player's,
+authored not to be ink.
 
 ## D6. The look
 
