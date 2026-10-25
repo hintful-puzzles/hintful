@@ -12,7 +12,7 @@ so "ringed" names a round mark in every game.
 
 - **WHEN** a step rings a cell holding a digit or pencil notes
 - **THEN** no stroke of the ring, nor its edge, crosses the area the cell's
-  text may take
+  text may take, nor the text of a neighbor it reaches past the cell into
 - **AND** a cell with nothing at its corners is ringed by a circle
 
 #### Scenario: An element that cannot be ringed round is not ringed

@@ -95,14 +95,20 @@ not cover any digits/text, by adding padding as needed, but keeping roundness.
 If it can't be made round without covering content, then it shouldn't be a
 ring there."*
 
-So `drawRing` takes the element's box and the box its content may occupy
-(`clear`). It strokes a rounded rectangle inside the element's box, with the
-**largest corner radius that keeps the stroke and the app's edge
-(`MARK_EDGE_PX`) off `clear`**, up to half the short side. An empty or
-centered-glyph cell therefore gets a circle, and a cell of corner notes a
-rounded square. Below a floor of roundness, a radius of a third of the short
-side, it throws and names the box. That throw is the structural half of
-"then it shouldn't be a ring there":
+The owner added: *"I'm also ok with going a bit outside the referred
+elements, like in A and B, as long as it doesn't cover any content there."*
+
+So `drawRing` takes the element's box and `clear`, the boxes content may
+occupy: the element's own and its neighbors'. It strokes a rounded rectangle
+round the element and picks the **roundest one whose stroke and edge
+(`MARK_EDGE_PX`) cross no box in `clear`**. It encloses the element's own
+content, and may grow outward from the element's box by up to half the
+short side. Among equally round shapes, the one that grows least wins. An
+empty or centered-glyph cell therefore gets a circle, and a cell of corner
+notes gets a rounded square, or a larger circle where the neighbors leave
+room. Below a floor of roundness, a corner radius of a third of the shape's
+short side, it throws and names the box. That throw is the structural half
+of "then it shouldn't be a ring there":
 
 - A game whose element cannot clear its content at the floor either pads
   the content (it insets its notes), or marks that element with another
@@ -117,6 +123,10 @@ side, it throws and names the box. That throw is the structural half of
 - **Render snapshots across the collection rebaseline.** The diffs are
   verified by shape, which means a ring op where a band was, and the app is
   run per kind of element.
+- **A ring that grows past its element lies in tiles it does not own.** Its
+  erase takes the path an `outer` band takes today (`eraseBeforeTiles` and
+  the `overlaps` repaint), sized to the ring's own bounds, and a game is
+  played with a hint moving between cells.
 - **A candidate game's notes may need to move inward** to clear the floor
   (D5). That is a layout change in each such game, and it is run in the app.
 - **Echoes inside a ring are smaller than today's recolored shapes.** An edge
