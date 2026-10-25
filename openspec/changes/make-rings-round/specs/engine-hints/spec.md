@@ -2,10 +2,25 @@
 
 ### Requirement: A ring is round, and only the engine draws one
 
-Every mark in the ring role SHALL be round: a circle around a square element,
-a pill around an elongated one. The engine SHALL draw it, and a game SHALL
-have no way to draw in the ring's ink but the engine's ring, so the word
-"ringed" names a round mark in every game.
+Every mark in the ring role SHALL be round, as round as the element's content
+allows and never rounder than a corner radius of a third of its short side
+less, and SHALL NOT cover any of the content's text. The engine SHALL draw it,
+and a game SHALL have no way to draw in the ring's ink but the engine's ring,
+so "ringed" names a round mark in every game.
+
+#### Scenario: A ring clears the content
+
+- **WHEN** a step rings a cell holding a digit or pencil notes
+- **THEN** no stroke of the ring, nor its edge, crosses the area the cell's
+  text may take
+- **AND** a cell with nothing at its corners is ringed by a circle
+
+#### Scenario: An element that cannot be ringed round is not ringed
+
+- **WHEN** a game asks for a ring around an element whose content leaves no
+  room for a round one
+- **THEN** drawing the ring throws, naming the element, and the game pads
+  its content or marks that element with another role
 
 #### Scenario: A game asks for a ring
 

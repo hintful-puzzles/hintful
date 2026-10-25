@@ -2,14 +2,15 @@
 
 ## 1. The primitive
 
-- [ ] 1.1 `GameDrawing.drawRing(box, thickness, inside?)` in `engine/game.ts`, `puzzle/drawing.ts` and `engine/testing/recording-drawing.ts`; a circle for a square box and a pill otherwise, with `inside` clipped to the interior
+- [ ] 1.1 `GameDrawing.drawRing(box, clear, thickness, inside?)` in `engine/game.ts`, `puzzle/drawing.ts` and `engine/testing/recording-drawing.ts`: the largest corner radius that keeps stroke and edge off `clear`, throwing below the floor (D5); `inside` clipped to the interior; unit tests on an empty cell (a circle), a corner-notes cell (a rounded square), and a cell that cannot clear (the throw)
 - [ ] 1.2 `resolvePalette` appends the ring ink before the stripes ink; `drawRing` and `hintInkIndices` read it from there; a game slot holding the ring's color throws, and that guard is seen to fail with a planted slot
 - [ ] 1.3 Census: every game slot whose color equals `HINT_RING` for a meaning other than the ring, with what each becomes
 
 ## 2. The owner's choice of cell ring
 
-- [ ] 2.1 Render A, B and C (design, "Open question") in Solo with notes, Cube and Tracks, in both schemes, and put them to the owner
-- [ ] 2.2 Record the answer in the design, and fit `drawRing`'s square case to it
+- [x] 2.1 Render the inscribed circle, the circumscribed circle and the rounded square in a notes grid, Cube, a domino and an edge, and put them to the owner
+- [x] 2.2 Record the answer in the design (D5)
+- [ ] 2.3 Each game's `clear` box: the area its content may take; where notes cannot clear the floor, inset them, or choose another role there and say why
 
 ## 3. The engine painters
 

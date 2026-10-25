@@ -29,11 +29,11 @@ stripes ink to every palette, so no game can draw stripes in any other way.
 
 ### D1. A colorless ring primitive
 
-`GameDrawing.drawRing(box: Rect, thickness: number, inside?: (ink: number)
-=> void)`:
+`GameDrawing.drawRing(box: Rect, clear: Rect, thickness: number, inside?:
+(ink: number) => void)`:
 
-- It strokes the round shape fitted to `box`: a circle when the box is
-  square, and otherwise a pill whose ends are semicircles on the short side.
+- It strokes the roundest shape fitted to `box` that clears `clear` (D5):
+  a circle or a pill wherever the content allows.
 - It strokes in the ring ink at `thickness`. The ink is the palette slot that
   `resolvePalette` appends.
 - `inside`, if given, runs clipped to the shape's interior and receives the
@@ -87,30 +87,38 @@ inside the cell and is undone by the cell's own repaint, which the
 `OverlaySidecar` already triggers when the overlay changes. Games with
 `joinTargets` key on the target's piece and no longer on its sides.
 
-## Open question for the owner: a ring on a cell
+### D5. The owner's choice: as round as the content allows, never over it
 
-**This is decided on sight** (`docs/work-management.md` § "What the owner
-accepts"). A cell can hold corner content, such as a candidate game's pencil
-notes in a 3×3 grid. Three placements exist, and each costs something:
+The owner chose on 2026-10-25, from drawn alternatives (an inscribed circle,
+a circumscribed circle, a rounded square): *"Definitely C, but ensure it does
+not cover any digits/text, by adding padding as needed, but keeping roundness.
+If it can't be made round without covering content, then it shouldn't be a
+ring there."*
 
-- **A. Inscribed circle.** It touches the cell's sides at their midpoints and
-  stays inside the cell. It crosses the corner notes.
-- **B. Circumscribed circle.** It passes through the cell's corners, so it
-  clears every note but crosses into the four neighbors.
-- **C. Rounded square.** The band keeps its place on the border and its
-  corners round at a large radius (about a third of the side). It clears the
-  notes and keeps to the cell, but it is only roughly round, and its
-  difference from the outline is smaller.
+So `drawRing` takes the element's box and the box its content may occupy
+(`clear`). It strokes a rounded rectangle inside the element's box, with the
+**largest corner radius that keeps the stroke and the app's edge
+(`MARK_EDGE_PX`) off `clear`**, up to half the short side. An empty or
+centered-glyph cell therefore gets a circle, and a cell of corner notes a
+rounded square. Below a floor of roundness, a radius of a third of the short
+side, it throws and names the box. That throw is the structural half of
+"then it shouldn't be a ring there":
 
-Renders of each in Solo (notes), Cube and Tracks go to the owner before the
-collection moves. D1 to D4 do not depend on the answer, because it changes
-only how `drawRing` fits a shape to a square box.
+- A game whose element cannot clear its content at the floor either pads
+  the content (it insets its notes), or marks that element with another
+  role and says so in other words.
+- `clear` is the area content *may* take (a game's note grid, its glyph
+  box), not what a frame happens to show. So one game's rings keep one shape
+  from frame to frame, and the throw is reached by the first frame that
+  rings the element, not only by the frame with the fullest cell.
 
 ## Risks / Trade-offs
 
 - **Render snapshots across the collection rebaseline.** The diffs are
   verified by shape, which means a ring op where a band was, and the app is
   run per kind of element.
+- **A candidate game's notes may need to move inward** to clear the floor
+  (D5). That is a layout change in each such game, and it is run in the app.
 - **Echoes inside a ring are smaller than today's recolored shapes.** An edge
   pill is thin, and a cross inside it may be hard to read. Edge games are run
   in the app before the change is called done.
