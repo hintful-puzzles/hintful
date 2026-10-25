@@ -28,10 +28,11 @@ found every pinned case had its antecedent pill. Refusal strings
   on the 626 pinned sentences it found one true case beyond the lint, against
   about six false ones, so the unmarked-pronoun sites are fixed by hand
   instead (proposal, What Changes).
-- **"There" is refused except as an existential.** `there (is|are|'s|would)`
-  is the existential and builds; every other "there" in the audit named a
-  place. If the gate finds an existential the pattern misses, widen the
-  exception, never add a per-site allowlist.
+- **"There" is refused except as an existential.** `there (is|are|'s|would
+  be)` is the existential and builds; every other "there" in the audit named a
+  place. "There would" alone is not enough: "a bulb there would…" is the
+  supposition this change refuses. If the gate finds an existential the
+  pattern misses, widen the exception, never add a per-site allowlist.
 - **Fix the template first.** The supposition shape spread from
   `skeleton/edges/hint-text.ts`, already fixed. The shared Latin `dup`
   sentence in `engine/hint-text.ts` is one fix for seven games.

@@ -131,13 +131,13 @@ export const say = {
   // could hold a bulb itself, it is among "every square that could light" it.
   discountUnlit: (m: Marked): Sentence =>
     so({
-      look: phrase`A bulb here rules out ${mark.the("outline", CELL, m.area, "square", "every")} that can light ${darkSquare(m)}`,
-      move: phrase`${these(m, "square")} can't hold a bulb`,
+      look: phrase`A bulb on ${these(m, "square")} rules out ${mark.the("outline", CELL, m.area, "square", "every")} that can light ${darkSquare(m)}`,
+      move: phrase`it can't hold a bulb`,
     }),
 
   discountClue: (m: Marked): Sentence =>
     so({
-      look: phrase`A bulb here rules out ${mark.the("outline", CELL, m.area, "square", "every")} left for ${mark.the("outline", CELL, m.clue ? [m.clue] : [], "clue")}'s bulb`,
-      move: phrase`${these(m, "square")} can't hold a bulb`,
+      look: phrase`A bulb on ${these(m, "square")} rules out ${mark.the("outline", CELL, m.area, "square", "every")} left for ${mark.the("outline", CELL, m.clue ? [m.clue] : [], "clue")}'s bulb`,
+      move: phrase`it can't hold a bulb`,
     }),
 };

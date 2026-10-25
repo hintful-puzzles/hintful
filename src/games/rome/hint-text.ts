@@ -147,9 +147,9 @@ export const say = {
 
   /** A candidate that would join a chain of arrows, `path` (numbered), leading
    * back to its own square. `n` is the struck direction, so the chain starts at
-   * the neighbor it points at. */
-  loop: (path: readonly OrderedCell[], n: number): Narration =>
-    phrase`${mark.as("outline", CELL, path, "The numbered arrows")} from the square ${neighbor(n)} lead back here`,
+   * the neighbor it points at. `at` is the square, ringed. */
+  loop: (path: readonly OrderedCell[], n: number, at: Point): Narration =>
+    phrase`${mark.as("outline", CELL, path, "The numbered arrows")} from the square ${neighbor(n)} lead back to ${here(at)}`,
 
   /** A four-square area, `region`, with only one home left for an arrow, seen
    * as the elimination of that square's other marks. */

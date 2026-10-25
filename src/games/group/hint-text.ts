@@ -76,7 +76,7 @@ export const say = {
       : phrase`The product ${shows(via, `${A}·${B} = ${B}`)} shows ${A} is the identity`;
     return so({
       look: reveals,
-      follows: phrase`its row and column are just the element labels`,
+      follows: phrase`row ${productIsA ? B : A} and column ${productIsA ? B : A} are just the element labels`,
       move: phrase`${thisCell(at)} must be ${value}`,
     });
   },

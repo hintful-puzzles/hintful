@@ -109,6 +109,19 @@ describe("the literal words may not say what a reference must", () => {
     expect(() => Narration.plain("these cells")).toThrow(/these/);
   });
 
+  it("refuses a place said in plain words, but not the existential 'there'", () => {
+    expect(() => phrase`A line here would close a loop.`).toThrow(/"here"/);
+    expect(() => phrase`The 4 must go from the other cells there.`).toThrow(/"there"/);
+    for (const s of [
+      "There is only one way left.",
+      "there are two",
+      "there's one",
+      "there would be none",
+    ])
+      expect(Narration.plain(s).text).toBe(s);
+    expect(() => phrase`A bulb there would light it.`).toThrow(/"there"/);
+  });
+
   it("lints interpolated strings too, so an unconverted helper cannot slip in", () => {
     const helper = "in this cell";
     expect(() => phrase`2 goes ${helper}.`).toThrow(/"this"/);

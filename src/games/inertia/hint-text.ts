@@ -140,7 +140,7 @@ export const say = {
   declined: (m: Marked): Sentence =>
     sentence({
       aim: theGem(m),
-      look: phrase`you could grab it from here, but the route comes at it from another side`,
+      look: phrase`you could grab it now, but the route comes at it from another side`,
       move: slideWay(m),
       relation: { kind: "serves" },
     }),
@@ -149,7 +149,7 @@ export const say = {
   positioning: (m: Marked, oneMore: boolean): Sentence =>
     sentence({
       aim: theGem(m),
-      look: phrase`no slide from here reaches it`,
+      look: phrase`no slide reaches it yet`,
       move: slideWay(m),
       relation: {
         kind: "effect",

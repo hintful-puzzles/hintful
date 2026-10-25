@@ -398,13 +398,13 @@ describe("netslide hint narration", () => {
     // sits at ⌊w/2⌋ and the player can see it.
     const row = pinned("offFrozenRow");
     expect(row.step.explanation).toContain("This row never slides");
-    expect(row.step.explanation).toContain("only a column move shifts");
+    expect(row.step.explanation).toContain("only column moves shift");
     expect(marksOf(row.step).line).toEqual(
       Array.from({ length: row.state.w }, (_, x) => row.state.cy * row.state.w + x),
     );
     const col = pinned("offFrozenColumn");
     expect(col.step.explanation).toContain("This column never slides");
-    expect(col.step.explanation).toContain("only a row move shifts");
+    expect(col.step.explanation).toContain("only row moves shift");
     expect(marksOf(col.step).line).toEqual(
       Array.from({ length: col.state.h }, (_, y) => y * col.state.w + col.state.cx),
     );

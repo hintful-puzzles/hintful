@@ -202,7 +202,8 @@ export function regionSide(
   const name = phrase`${w.clues(outer)} squares beyond ${w.clues(inner)}`;
   return {
     subject: name,
-    possessive: phrase`those squares'`,
+    // In the words of its region sentence ("whose others hold…").
+    possessive: phrase`${w.clues(outer)} other squares'`,
     needs: hold,
     striped: false,
     singular: false,

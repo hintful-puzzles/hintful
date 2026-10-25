@@ -104,7 +104,7 @@ export const say = {
     if (at.cell === d.index) {
       if (at.kind === "surrounded") {
         return so({
-          look: phrase`Every neighbor of ${thisCell(m)} is ${f}. A ${t} tile here could never touch another ${t} tile`,
+          look: phrase`Every neighbor of ${thisCell(m)} is ${f}. As ${t}, it could never touch another ${t} tile`,
           move: itMust,
         });
       }

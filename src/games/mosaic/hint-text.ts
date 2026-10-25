@@ -121,7 +121,7 @@ export const say = {
     const { first, other, again, where } = pairOf(m);
     const look =
       m.n === m.other.n
-        ? phrase`${mark.as("outline", BLOCK, [m.clue, m.other.clue], `Both ${m.n}s`)} need ${shadeds(m.need)}, and the ${where(m)} one's all lie in the ${where(m.other)} one's block`
+        ? phrase`${mark.as("outline", BLOCK, [m.clue, m.other.clue], `Both ${m.n}s`)} need ${shadeds(m.need)}, and the ${where(m)} ${m.n}'s all lie in the ${where(m.other)} ${m.n}'s block`
         : phrase`${first} and ${other} both need ${shadeds(m.need)}, and the ${m.n}'s all lie in ${again}'s block`;
     return so({ look, move: phrase`${theseSquares(m)} must be ${UNSHADED_NAME}` });
   },

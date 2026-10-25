@@ -4,7 +4,7 @@ exports[`dominosa: pinned hint positions > says, at each pin 1`] = `
 {
   "localDuplicate": "A 0–6 domino on the ringed spot would force another at the outlined square, but each domino is used once, so it can't.",
   "localDuplicate2": "A domino on the ringed spot would leave both outlined squares needing the same domino, a duplicate, so it can't.",
-  "mustOverlap": "Every remaining spot for the outlined domino overlaps this pair, so no other domino can go there.",
+  "mustOverlap": "Every remaining spot for the outlined domino overlaps this pair, so no other domino can go on it.",
   "onlySpot": "The 3–3 domino has only one spot left where it fits, so it must go on the ringed spot.",
   "parity": "A domino on the ringed spot would split the empty squares into odd-sized regions dominoes can't fill, so it can't.",
   "placement": "The 3–3 domino has only one spot left where it fits, so it must go on the ringed spot.",

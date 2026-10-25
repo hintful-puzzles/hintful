@@ -733,13 +733,13 @@ describe("the sentences at their extremes", () => {
     expect(t(say.needsThisWay(3, 2, m))).toContain("at most 2 bridges from");
     expect(t(say.wouldSealGroup(2, 0, m))).toContain("these 2 islands");
     expect(t(say.wouldSealGroup(2, 0, m))).toMatch(
-      /^A bridge here .* must be blocked\.$/,
+      /^A bridge on the ringed line .* must be blocked\.$/,
     );
     expect(t(say.wouldSealGroup(2, 1, m))).toMatch(
-      /^Two bridges here .* the ringed line can take at most one\.$/,
+      /^Two bridges on the ringed line .* the line can take at most one\.$/,
     );
     expect(t(say.wouldSealGroup(2, 3, m))).toMatch(
-      /^Four bridges here .* can take at most three\.$/,
+      /^Four bridges on the ringed line .* can take at most three\.$/,
     );
     expect(t(say.wouldStarve(5, true, 0, m))).toContain("this 5 itself");
     expect(t(say.wouldStarve(5, false, 0, m))).toContain("the outlined island");

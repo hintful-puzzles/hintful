@@ -77,7 +77,7 @@ export const say = {
         if (h.others.length === 0)
           return so({
             look: phrase`Only ${arrow} points at ${target}`,
-            move: phrase`it must lead there`,
+            move: phrase`the square must follow it`,
           });
         // The outlined squares are the other arrows pointing at it; the help's
         // list of marks says so, which leaves the sentence the reasons.
@@ -86,7 +86,7 @@ export const say = {
         );
         return so({
           look: phrase`${others} into ${target} ${ruledOut(f.why, h.others.length, BEFORE)}`,
-          move: phrase`${arrow} must lead there`,
+          move: phrase`it must follow ${arrow}`,
         });
       }
     }

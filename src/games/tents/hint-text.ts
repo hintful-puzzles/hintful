@@ -62,8 +62,8 @@ const more = (n: number): string => (n === 1 ? "1 more tent" : `${n} more tents`
 const ringed = (cells: readonly Point[], one: string, many: string): Narration =>
   mark.as("ring", CELL, cells, (els) => (els.length > 1 ? many : one));
 
-/** "the ringed squares", for a premise about them; its conclusion says
- * "there", which agrees with one square or several. */
+/** "the ringed squares", for a premise about them; its conclusion names them
+ * again with {@link eachMust}, which agrees with one square or several. */
 const these = (cells: readonly Point[]): Narration =>
   ringed(cells, "the ringed square", "the ringed squares");
 
@@ -97,7 +97,7 @@ export const say = {
   noTree: (cells: readonly Point[]): Sentence =>
     so({
       look: phrase`Every tent sits beside a tree, and no tree is beside ${these(cells)}`,
-      move: phrase`grass must go there`,
+      move: eachMust(cells, "grass"),
     }),
 
   /** Squares every tree beside which already has its tent, shown in `area`. */
@@ -107,7 +107,7 @@ export const say = {
       : phrase`already has its tent`;
     return so({
       look: phrase`Every tree beside ${these(cells)} ${has}`,
-      move: phrase`grass must go there`,
+      move: eachMust(cells, "grass"),
     });
   },
 
@@ -143,7 +143,7 @@ export const say = {
         })
       : so({
           look: phrase`${theTree}'s only open square is ${mark.as("ring", CELL, [square], "the ringed one")}`,
-          move: phrase`its tent must go there, ${joined}`,
+          move: phrase`its tent must go in it, ${joined}`,
         });
   },
 
@@ -238,8 +238,8 @@ export const say = {
     so({
       look:
         need === 1
-          ? phrase`Wherever ${thisLine(c)}'s ${number(c, "1 remaining tent")} goes, it touches ${these(cells)} beside it`
-          : phrase`Wherever ${thisLine(c)}'s ${number(c, `${need} remaining tents`)} go, one touches ${ringed(cells, "the ringed square", "each ringed square")} beside it`,
-      move: phrase`grass must go there`,
+          ? phrase`Wherever ${thisLine(c)}'s ${number(c, "1 remaining tent")} goes, it touches ${these(cells)}`
+          : phrase`Wherever ${thisLine(c)}'s ${number(c, `${need} remaining tents`)} go, one touches ${ringed(cells, "the ringed square", "each ringed square")}`,
+      move: eachMust(cells, "grass"),
     }),
 };

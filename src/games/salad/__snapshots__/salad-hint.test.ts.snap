@@ -3,13 +3,13 @@
 exports[`salad: pinned hint positions > says, at each pin 1`] = `
 {
   "borderFar": "This clue sees A first, after at most 2 empty squares, keeping it in the first 3, so the A beyond that must go.",
-  "borderNear": "This clue sees A first, and the outlined square is nearest it, which leaves only A there, so B and C must go.",
+  "borderNear": "This clue sees A first, and the outlined square nearest it can hold only A, so B and C must go.",
   "circleXNote": "This square is now known to hold a number, so its empty-square mark must go.",
   "clean": "Now clear the easy ones: cross out any number already placed in its square's row or column.",
   "countHolesDone": "This column already has both of its empty squares, so this square and the rest of it must hold a number.",
   "countLettersDone": "We already know which 3 squares of this row hold its numbers, so this square and the rest of it must be empty.",
-  "crossNaked": "Every letter is ruled out here, so the empty-square mark is the only one left: this square must be empty.",
-  "dup": "The A just placed can't repeat in its row and column, so the A must go from the other squares there.",
+  "crossNaked": "Every letter is ruled out in this square, so the empty-square mark is the only one left: the square must be empty.",
+  "dup": "The A just placed can't repeat in its row and column, so the A must go from the other squares.",
   "forcing": "Square 1 is 2 or the numbered chain forces square 4 to 2, both in line with this square, so the 2 must go.",
   "hiddenSingle": "Every other square in this row rules out 1, so this square must be 1.",
   "marker": "This column already has both of its empty squares, so this square and the rest of it must hold a number.",

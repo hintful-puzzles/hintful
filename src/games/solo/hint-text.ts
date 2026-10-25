@@ -147,7 +147,7 @@ export const say = {
     placedRulesOut({ px: placed.x, py: placed.y }, g(n), joinOr(regions)),
 
   /** Where the placement's cull strikes from. */
-  dupWhere: "from the other cells there",
+  dupWhere: "from the other cells",
 
   /** Every cell of `confined` that can take `n` also lies in one `target`. */
   intersect: (
@@ -160,7 +160,8 @@ export const say = {
 
   /** Where an intersection strikes from: the rest of the target region, the
    * one the premise just named last. */
-  intersectWhere: "from the rest of it",
+  intersectWhere: (target: SoloRegion): string =>
+    `from the rest of the ${regionName(target)}`,
 
   /** The outlined `set` inside `region` accounts for `ns`. */
   set: (

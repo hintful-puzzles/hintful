@@ -2,7 +2,7 @@
 
 exports[`unruly: pinned hint positions > says, at each pin 1`] = `
 {
-  "complete": "This row already holds all its purple cells (outlined), so this cell and every other empty one in it must be yellow.",
+  "complete": "This row has all its purple cells (outlined), so this cell and the row's other empty cells must be yellow.",
   "groupedPlan": "The outlined cells are already purple, so this cell would make three in a row: it must be yellow.",
   "nearcomplete": "The last purple in this column fits only in an outlined cell without making three yellows, so this cell must be yellow.",
   "threes": "The outlined cells are already purple, so this cell would make three in a row: it must be yellow.",

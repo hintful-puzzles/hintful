@@ -233,7 +233,7 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
     );
     // The value just placed is outlined: it is what the cull reasons from.
     expect(keys(dup.premise)).toEqual(["outline|cell|0,2"]);
-    expect(dup.where).toBe("from the other cells there");
+    expect(dup.where).toBe("from the other cells");
     const set = latinPremise(
       {
         kind: "set",
@@ -293,8 +293,8 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
     };
     expect(said([4, 2, 4], {})).toBe("[2 and 4] must go");
     expect(said([3], {})).toBe("[the 3] must go");
-    expect(said([5], { where: "from the other cells there" })).toBe(
-      "[the 5] must go from the other cells there",
+    expect(said([5], { where: "from the other cells" })).toBe(
+      "[the 5] must go from the other cells",
     );
     expect(said([5], { where: "beyond that" })).toBe("[the 5 beyond that] must go");
     expect(said([1, 2], { struck: "its identity marks" })).toBe(

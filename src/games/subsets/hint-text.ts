@@ -96,7 +96,7 @@ export const say = {
       return first
         ? so({
             look: phrase`${outlinedCell(m.cells)}'s set lies inside ${here}'s and has ${L} marked`,
-            follows: phrase`${L} must be here too`,
+            follows: phrase`${L} must be in both`,
             move: act,
           })
         : again(phrase`${outlinedCell(m.cells)}'s ${L} is marked`);
@@ -105,7 +105,7 @@ export const say = {
       return first
         ? so({
             look: phrase`${here}'s set lies inside ${outlinedCell(m.cells)}'s, which has no ${L}`,
-            follows: phrase`${L} can't be here either`,
+            follows: phrase`${L} can't be in either`,
             move: act,
           })
         : again(phrase`${outlinedCell(m.cells)} has no ${L}`);

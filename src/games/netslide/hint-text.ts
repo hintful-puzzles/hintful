@@ -97,8 +97,12 @@ const tail = (home: boolean): string =>
  * tile, what `HINT_SETTING_UP` says elsewhere. The planner chose the move
  * among others as good, so the sentence says what it does (`effect`) rather
  * than that the look forces it. */
-const arrives = (home: boolean, where = "there"): Narration =>
-  home ? phrase`it belongs ${where}` : phrase`that sets it up`;
+const arrives = (home: boolean, where?: string): Narration =>
+  !home
+    ? phrase`that sets it up`
+    : where
+      ? phrase`it belongs ${where}`
+      : phrase`that's where it belongs`;
 
 /** The slide as a step toward placing its tile: the tile is the aim, and the
  * planner, not a deduction, chose it. */
@@ -115,7 +119,7 @@ export const say = {
   rowFixed: (m: Marked, home: boolean): Sentence =>
     sentence({
       look: phrase`${thisLine(m, "row")} never slides`,
-      follows: phrase`only a column move shifts ${thisTile(m)}`,
+      follows: phrase`only column moves shift ${thisTile(m)}`,
       move: phrase`take it to ${place(m)}`,
       relation: { kind: "effect", effect: arrives(home) },
     }),
@@ -124,7 +128,7 @@ export const say = {
   colFixed: (m: Marked, home: boolean): Sentence =>
     sentence({
       look: phrase`${thisLine(m, "column")} never slides`,
-      follows: phrase`only a row move shifts ${thisTile(m)}`,
+      follows: phrase`only row moves shift ${thisTile(m)}`,
       move: phrase`take it to ${place(m)}`,
       relation: { kind: "effect", effect: arrives(home) },
     }),

@@ -3,7 +3,7 @@
 exports[`cube: pinned hint positions > says, at each pin 1`] = `
 {
   "collect": "Roll onto the ringed square: a plain face picks up its paint, leaving 5 painted squares.",
-  "come-round": "Working on the outlined square: a painted face would land on it from here. Instead: roll onto the ringed square.",
+  "come-round": "Working on the outlined square: the roll onto it would land a painted face on it. Instead: roll onto the ringed square.",
   "drop": "Working on the outlined square, roll onto the ringed square: it leaves paint, to pick up again later.",
   "forced-drop": "Paint must go down before any comes up. Roll onto the ringed square: it leaves paint.",
   "travel": "Working on the outlined square, roll onto the ringed square: no paint changes.",

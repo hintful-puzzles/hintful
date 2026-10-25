@@ -205,11 +205,11 @@ describe("Mosaic's hint", () => {
               ? ["left", "right"]
               : ["right", "left"];
         seen.add(a as string);
-        // Named with the value, or, where the sentence opens on both, by place
-        // alone ("Both 5s … the lower one's … the upper one's").
+        // Named with the value and where it sits, also where the sentence
+        // opens on both ("Both 5s … the lower 5's … the upper 5's").
         expect(step.explanation).toMatch(
           new RegExp(
-            `^The ${a} ${at(first)}\\b.* the ${b} ${at(other)}\\b|^Both ${at(first)}s .* the ${a} one's .* the ${b} one's`,
+            `^The ${a} ${at(first)}\\b.* the ${b} ${at(other)}\\b|^Both ${at(first)}s .* the ${a} ${at(first)}'s .* the ${b} ${at(other)}'s`,
           ),
         );
         expect(step.explanation).not.toContain("other");

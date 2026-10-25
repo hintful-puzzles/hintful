@@ -186,7 +186,7 @@ function narrate(board: MinesState, f: Firing, legs: readonly Leg[]): Sentence[]
         ? mark.as("stripes", CELL, sharedPts, (els) =>
             els.length === 1 ? "the striped square" : "the striped squares",
           )
-        : Narration.plain("the squares they share");
+        : Narration.plain("the shared squares");
       const sideWords = (s: Side, inner: boolean): SideWords =>
         "group" in s
           ? numberSide(

@@ -453,7 +453,7 @@ describe("rome hint render", () => {
   /**
    * The reachability frame — the one Rome was picked for. A `loop` firing's
    * evidence is the chain of arrows leading back to the struck square, drawn as
-   * a numbered contour, because "the numbered arrows lead back here" is a
+   * a numbered contour, because "the numbered arrows lead back to this square" is a
    * claim the player has to be able to walk.
    */
   it("numbers the arrow chain a loop deduction walks", () => {

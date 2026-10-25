@@ -10555,9 +10555,9 @@ exports[`salad: pinned hint positions > says, at each pin 1`] = `
 {
   "confinedRun": "This clue sees B first, after at most 1 empty square, keeping it in the first 2, so the B beyond that must go.",
   "emptyMarker": "We already know which 3 squares of this row hold its numbers, so this square and the rest of it must be empty.",
-  "nearestSquare": "This clue sees B first, and the outlined square is nearest it, which leaves only B there, so A and C must go.",
+  "nearestSquare": "This clue sees B first, and the outlined square nearest it can hold only B, so A and C must go.",
   "placement": "Every other number has been ruled out in this square, so it can only be 3.",
-  "strikeAfterPlacing": "The A just placed can't repeat in its row and column, so the A must go from the other squares there.",
+  "strikeAfterPlacing": "The A just placed can't repeat in its row and column, so the A must go from the other squares.",
   "symbolMarker": "This column already has both of its empty squares, so this square and the rest of it must hold a number.",
 }
 `;

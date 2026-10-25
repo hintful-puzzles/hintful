@@ -66,7 +66,7 @@ export const say = {
   comeRound: (dest: number, goal: number): Sentence =>
     sentence({
       aim: theGoal(goal),
-      look: phrase`a painted face would land on it from here`,
+      look: phrase`the roll onto it would land a painted face on it`,
       move: rollOnto(dest),
       relation: { kind: "answers", how: "Instead" },
     }),

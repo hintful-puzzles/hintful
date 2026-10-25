@@ -177,7 +177,7 @@ function premise(
         y: (i / w) | 0,
         order: k + 1,
       }));
-      return { premise: say.loop(path, n) };
+      return { premise: say.loop(path, n, at) };
     }
     case "onlyHome":
       return {

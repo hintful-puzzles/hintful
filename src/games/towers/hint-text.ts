@@ -114,8 +114,8 @@ export const say = {
   lowerBound: (c: ClueSight, n: number): Narration =>
     phrase`${clue(c)} sees exactly ${c.value} towers along ${line(c, "its line")}; height ${n} so near it would hide too many`,
 
-  arrangement: (c: ClueSight, n: number): Narration =>
-    phrase`No way for ${clue(c, `clue ${c.value}`)} to show exactly ${c.value} towers along ${line(c, "its line")} puts height ${n} here`,
+  arrangement: (c: ClueSight, n: number, at: Point): Narration =>
+    phrase`No way for ${clue(c, `clue ${c.value}`)} to show exactly ${c.value} towers along ${line(c, "its line")} puts height ${n} in ${thisCell(at)}`,
 
   /** The cull after a placement: the tower just placed, outlined. */
   dup: (placed: Point, n: number): Narration =>
@@ -124,7 +124,7 @@ export const say = {
     placedRulesOut({ px: placed.x, py: placed.y }, String(n)),
 
   /** Where the placement's cull strikes from. */
-  dupWhere: "from the other cells there",
+  dupWhere: "from the other cells",
 
   single: (at: Point, n: number): Sentence =>
     so({

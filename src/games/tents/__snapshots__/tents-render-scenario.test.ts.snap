@@ -12665,7 +12665,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
 exports[`tents: pinned hint positions > says, at each pin 1`] = `
 {
   "lineCount": "This column needs 3 more tents, and its open squares fit only 3 that don't touch, so the ringed square must be a tent.",
-  "lineNeighbors": "Wherever this column's 3 remaining tents go, one touches each ringed square beside it, so grass must go there.",
+  "lineNeighbors": "Wherever this column's 3 remaining tents go, one touches each ringed square, so every ringed square must be grass.",
   "tentLink": "Every other tree by the ringed tent has its tent (outlined), so it must belong to the tree below it: draw the link.",
 }
 `;

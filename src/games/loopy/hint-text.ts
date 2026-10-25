@@ -253,8 +253,8 @@ export const say = {
   deadEnd: (m: Marked): Sentence =>
     so({
       look: phrase`${dot(m, "The outlined dot")} has no line and no other open edge`,
-      follows: phrase`a line here would dead-end`,
-      move: phrase`${thisEdge(m)} can't be a line`,
+      follows: phrase`a line on ${thisEdge(m)} would dead-end`,
+      move: phrase`it can't be a line`,
     }),
 
   lineContinues: (m: Marked): Sentence =>

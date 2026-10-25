@@ -398,7 +398,7 @@ export function latinPremise(
     case "dup":
       return {
         premise: placedRulesOut(reason, v(reason.n)),
-        where: `from the other ${cell}s there`,
+        where: `from the other ${cell}s`,
       };
     case "set":
       if (reason.lines)

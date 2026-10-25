@@ -257,8 +257,9 @@ describe("salad hint — journeys and highlights", () => {
         } else {
           // The near arm outlines the squares it walks across, known empty; the
           // square it decides is outlined too only when it is the whole premise,
-          // the one the clue sees straight away ("this square is nearest it").
-          const whole = /is nearest it/.test(step.explanation);
+          // the one the clue sees straight away ("the outlined square nearest
+          // it").
+          const whole = /square nearest it/.test(step.explanation);
           for (const t of hl.targets) expect(inArea(t)).toBe(whole);
           near++;
         }
@@ -451,7 +452,7 @@ describe("salad hint — a square a set rules out as empty", () => {
     const walked = descWalk(BOARD);
     expect(walked.solved).toBe(true);
     expect(walked.texts).toContain(
-      "The outlined squares account for both empty squares of their column, so the X here must go.",
+      "The outlined squares account for both empty squares of their column, so the X must go.",
     );
   });
 
@@ -474,7 +475,7 @@ describe("salad hint — a square a set rules out as empty", () => {
     expect(t.premise.text).toBe(
       "The outlined squares account for 2 and both empty squares of their column",
     );
-    expect(t.struck).toBe("2 and the X here");
+    expect(t.struck).toBe("2 and the X");
   });
 
   it("names and stripes the lines of a set that spans several", () => {

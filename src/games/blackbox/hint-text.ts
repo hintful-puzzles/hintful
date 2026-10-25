@@ -64,12 +64,14 @@ const thisSquare = (at: Point): Narration => mark.this("ring", CELL, [at], "squa
 
 /** The supposition the laser refutes: the square holding what it does not. */
 const supposing = (s: Settled): Narration =>
-  s.ball ? phrase`with ${thisSquare(s.at)} empty` : phrase`with a ball here`;
+  s.ball
+    ? phrase`with ${thisSquare(s.at)} empty`
+    : phrase`with a ball on ${thisSquare(s.at)}`;
 
 /** What the square holds. Once the supposition has said "this square", "it"
  * refers back to it. */
 const holds = (s: Settled): Narration =>
-  s.ball ? phrase`it must hold a ball` : phrase`${thisSquare(s.at)} must be empty`;
+  s.ball ? phrase`it must hold a ball` : phrase`it must be empty`;
 
 function would(w: Would, seen: Seen["kind"]): string {
   if (w === "hit") return "stop dead";
@@ -89,7 +91,7 @@ export const say = {
     if (seen.kind === "exit") {
       const ends = mark.as("outline", LASER, [...seen.ends], `The two ${seen.n}s`);
       return decided(
-        phrase`${ends} are one ray's ends, but ${supposing(s)} no ray could run between them`,
+        phrase`${ends} are one ray's ends, but ${supposing(s)} no ray could join them`,
         holds(s),
       );
     }

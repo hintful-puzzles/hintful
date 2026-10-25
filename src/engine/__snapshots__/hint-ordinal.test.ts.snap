@@ -26,7 +26,7 @@ exports[`an ordered hint chain carries its order to the canvas > path: pinned hi
 
 exports[`an ordered hint chain carries its order to the canvas > rome: pinned hint positions > says, at each pin 1`] = `
 {
-  "numberedChain": "The numbered arrows from the square below lead back here, so this square must point left or right.",
+  "numberedChain": "The numbered arrows from the square below lead back to this square, so this square must point left or right.",
 }
 `;
 

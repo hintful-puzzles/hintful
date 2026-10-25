@@ -16,7 +16,7 @@ Path's and the skeleton's were fixed in `add-zip-to-path`.
 
 - The `phrase` lint refuses a literal "here", and a "there" that names a
   place, outside a reference, as it refuses "this" and "these". "There is",
-  "there are", "there's" and "there would" are not places and still build.
+  "there are", "there's" and "there would be" are not places and still build.
   A call site the tests reach is then checked for good, which is the
   "pre-commit" the owner asked for: the gate's hint walks reach every rung.
 - Every site the lint refuses is reworded so the place it points at is a

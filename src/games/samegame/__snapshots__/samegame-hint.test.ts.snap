@@ -3,7 +3,7 @@
 exports[`samegame: pinned hint positions > says, at each pin 1`] = `
 {
   "alsoThese": "This group and the outlined groups keep the board clearable; some others do not. One of them: remove this group.",
-  "anyGroup": "Removing any group here keeps the board clearable. One of them: remove this group.",
+  "anyGroup": "Removing any group now keeps the board clearable. One of them: remove this group.",
   "joins": "The outlined square has no violet square beside it. One way to bring one beside it: remove this group.",
   "last": "Remove this group: that clears the board.",
   "lastOfColor": "Removing the striped group would leave the outlined square the last yellow one. One way to avoid it: remove this group.",

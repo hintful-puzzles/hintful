@@ -71,7 +71,7 @@ export const say = {
   movesOn: (m: Slid): Sentence =>
     sentence({
       move: slideIt(m),
-      relation: { kind: "effect", effect: phrase`it moves on from there later` },
+      relation: { kind: "effect", effect: phrase`it moves on again later` },
     }),
 
   /** A slide of the key block, with `left` moves still to make at the
@@ -81,7 +81,7 @@ export const say = {
       move: slideIt(m),
       relation: {
         kind: "effect",
-        effect: phrase`from there it can be out in ${left === 1 ? "1 move" : `${left} moves`}`,
+        effect: phrase`after that it can be out in ${left === 1 ? "1 move" : `${left} moves`}`,
       },
     }),
 

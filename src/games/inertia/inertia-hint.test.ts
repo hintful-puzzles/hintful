@@ -265,7 +265,7 @@ describe("inertia hint narration", () => {
 
     const step = firstStep(s);
     expect(step.explanation).toContain("Working on the outlined gem");
-    expect(step.explanation).toContain("no slide from here reaches it");
+    expect(step.explanation).toContain("no slide reaches it yet");
     expect(step.explanation).toContain("one more slide sweeps it up");
     expect(goalOf(step)).toBe(s.board.square(4, 2));
   });
@@ -273,7 +273,7 @@ describe("inertia hint narration", () => {
   it("never claims a gem is out of reach when one slide would sweep it up", () => {
     // The overclaim guard. The route may decline a grab it *could* take — a gem
     // is not one place but eight, because the ball arrives still moving and
-    // cannot turn — so "no slide from here reaches it" is a claim, and has to be
+    // cannot turn — so "no slide reaches it yet" is a claim, and has to be
     // checked rather than assumed (docs/hints.md § "The premise must single out the conclusion").
     let claims = 0;
     for (const seed of ["g-a", "g-b", "g-c", "g-d", "g-e", "g-f"]) {
@@ -285,7 +285,7 @@ describe("inertia hint narration", () => {
       if (!res.ok) throw new Error(`${seed}: ${res.error}`);
       for (const step of res.steps) {
         if (step.rung === "positioning") {
-          expect(step.explanation).toContain("no slide from here reaches it");
+          expect(step.explanation).toContain("no slide reaches it yet");
           const goal = goalOf(step);
           const grabbable = legalDirections(s.board, s.px, s.py).some((dir) => {
             const path = slidePath(s.board, s.px, s.py, dir);

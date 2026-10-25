@@ -8,7 +8,7 @@ exports[`bridges: pinned hint positions > says, at each pin 1`] = `
   "needsThisWay": "This 2 can take at most 1 bridge from its other neighbors, so one must run along the ringed line.",
   "severalBridges": "This 3 needs more bridges than either outlined neighbor could carry alone, so each ringed line must take at least one.",
   "wouldCloseLoop": "These islands are linked by the outlined bridges, so one more would close a loop: the ringed line must be blocked.",
-  "wouldSealGroup": "A bridge here would shut these 2 islands off as a finished group, so the ringed line must be blocked.",
-  "wouldStarve": "Two bridges here would leave the outlined island short of its own count, so the ringed line can take at most one.",
+  "wouldSealGroup": "A bridge on the ringed line would shut these 2 islands off as a finished group, so the line must be blocked.",
+  "wouldStarve": "Two bridges on the ringed line would leave the outlined island short of its count, so the line can take at most one.",
 }
 `;

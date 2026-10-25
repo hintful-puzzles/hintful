@@ -77,18 +77,18 @@ const decided = (m: Marked, words: string): Narration =>
 const counted = (m: Marked, words: string): Narration =>
   mark.as("outline", PIECE, m.islands, words);
 
-/** The trial a limiting argument makes: one bridge past what it allows. */
-const tooMany = (limit: number): string =>
-  limit === 0
-    ? "A bridge"
-    : `${WORDS[limit + 1].replace(/^./, (c) => c.toUpperCase())} bridges`;
+/** The trial a limiting argument makes: one bridge past what it allows, on the
+ * line it decides. */
+const tooMany = (m: Marked, limit: number): Narration =>
+  phrase`${limit === 0 ? "A bridge" : `${WORDS[limit + 1].replace(/^./, (c) => c.toUpperCase())} bridges`} on ${decided(m, "the ringed line")}`;
 
-/** Its conclusion. At none it is the no-line the player crosses out, and
- * above it the "at most" mark they write with the same gesture. */
-const limited = (m: Marked, limit: number): Narration =>
+/** Its conclusion, of the line the trial named. At none it is the no-line the
+ * player crosses out, and above it the "at most" mark they write with the same
+ * gesture. */
+const limited = (limit: number): Narration =>
   limit === 0
-    ? phrase`${decided(m, "the ringed line")} must be blocked`
-    : phrase`${decided(m, "the ringed line")} can take at most ${WORDS[limit]}`;
+    ? phrase`the line must be blocked`
+    : phrase`the line can take at most ${WORDS[limit]}`;
 
 export const say = {
   /** An island `missing` bridges short of its clue with room for exactly that
@@ -158,8 +158,8 @@ export const say = {
    * words name with them. */
   wouldSealGroup: (group: number, limit: number, m: Marked): Sentence =>
     so({
-      look: phrase`${tooMany(limit)} here would shut ${mark.as("outline", PIECE, [...m.islands, ...m.spans], `these ${group} islands`)} off as a finished group`,
-      move: limited(m, limit),
+      look: phrase`${tooMany(m, limit)} would shut ${mark.as("outline", PIECE, [...m.islands, ...m.spans], `these ${group} islands`)} off as a finished group`,
+      move: limited(limit),
     }),
 
   /** One bridge more than `limit` here leaves some island unable to reach its
@@ -168,9 +168,9 @@ export const say = {
   wouldStarve: (clue: number, self: boolean, limit: number, m: Marked): Sentence =>
     so({
       look: self
-        ? phrase`${tooMany(limit)} here would leave ${thisClue(m, clue, " itself")} short of its count`
-        : phrase`${tooMany(limit)} here would leave ${counted(m, "the outlined island")} short of its own count`,
-      move: limited(m, limit),
+        ? phrase`${tooMany(m, limit)} would leave ${thisClue(m, clue, " itself")} short of its count`
+        : phrase`${tooMany(m, limit)} would leave ${counted(m, "the outlined island")} short of its count`,
+      move: limited(limit),
     }),
 
   /** Filling every other direction to its limit would seal off a finished

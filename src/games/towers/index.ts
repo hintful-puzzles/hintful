@@ -447,7 +447,7 @@ function premise(reason: HintReason, marks: readonly Mark[], w: number): Premise
     case "lowerBound":
       return { premise: say.lowerBound(sight(reason, w), n) };
     case "arrangement":
-      return { premise: say.arrangement(sight(reason, w), n) };
+      return { premise: say.arrangement(sight(reason, w), n, marks[0]) };
     case "dup":
       return {
         premise: say.dup({ x: reason.px, y: reason.py }, reason.n),

@@ -188,7 +188,7 @@ describe("slide hint: a dealt board, read as a player", () => {
       "Slide the ringed block into the striped space: that makes room for the outlined block.",
       "Slide the ringed block into the striped space: that makes room for the outlined block.",
       "Slide the ringed block into the striped space: that makes room for the key block.",
-      "Slide the ringed key block into the striped space: from there it can be out in 20 moves.",
+      "Slide the ringed key block into the striped space: after that it can be out in 20 moves.",
     ]);
     plan.steps.slice(0, 3).forEach((step, k) => {
       const next = plan.steps[k + 1];

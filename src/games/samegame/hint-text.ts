@@ -131,7 +131,7 @@ export const say = {
   /** Every rival leaves a board that can still be cleared. */
   anyGroup: (g: readonly Point[], relation: Relation): Sentence =>
     sentence({
-      look: phrase`Removing any group here keeps the board clearable`,
+      look: phrase`Removing any group now keeps the board clearable`,
       move: remove(g),
       relation,
     }),

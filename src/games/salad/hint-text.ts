@@ -125,7 +125,7 @@ export function say(mode: number) {
       // sees across, so it is outlined as the premise as well as ringed, and
       // named once, by its outline: the ring is its conclusion's.
       if (k === 0)
-        return phrase`${lead}, and ${mark.the("outline", CELL, [at], "square")} is nearest it, which leaves only ${clue} there`;
+        return phrase`${lead}, and ${mark.the("outline", CELL, [at], "square")} nearest it can hold only ${clue}`;
       return phrase`${lead} past ${mark.as("outline", CELL, between, count(k, "empty square"))}, which leaves only ${clue} for ${square(at)}`;
     },
 
@@ -211,9 +211,9 @@ export function say(mode: number) {
 
     crossNaked: (at: Point): Sentence =>
       so({
-        look: phrase`Every ${noun} is ruled out here`,
+        look: phrase`Every ${noun} is ruled out in ${square(at)}`,
         follows: phrase`the empty-square mark is the only one left`,
-        move: phrase`${square(at)} must be empty`,
+        move: phrase`the square must be empty`,
       }),
 
     /** The square at `at` has notes, and the empty-square mark is not among
@@ -249,7 +249,7 @@ export function say(mode: number) {
      * the empty-square mark is among them: the X it is penciled as, which is
      * how the shared sentences print it among a square's candidates. */
     setHolesStruck: (also: readonly number[]): string =>
-      also.length > 0 ? `${joinWith(also.map(sym))} and the X here` : "the X here",
+      also.length > 0 ? `${joinWith(also.map(sym))} and the X` : "the X",
 
     /** The squares `cells`, just settled as holding a symbol, keep no
      * empty-square mark. */

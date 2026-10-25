@@ -507,7 +507,7 @@ function premise(
     case "intersect":
       return {
         premise: say.intersect(reason.confined, reason.target, reason.n, cells),
-        where: say.intersectWhere,
+        where: say.intersectWhere(reason.target),
       };
     case "set":
       return {

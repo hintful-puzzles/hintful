@@ -97,7 +97,7 @@ export const say = {
       case "mustOverlap":
         return so({
           look: phrase`${mark.as("outline", CELL, evidence, "Every remaining spot for the outlined domino")} overlaps ${at(spot, "this pair")}`,
-          move: phrase`no other domino can go there`,
+          move: phrase`no other domino can go on it`,
         });
       case "localDuplicate":
         return so({

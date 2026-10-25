@@ -290,9 +290,14 @@ points: `mark.this("ring", CELL, [c], "cell")` for "this cell",
 `mark.this("stripes", whole(CELL), cage, "cage")` for "this cage" (`whole`
 counts a region as one thing), `mark.as(role, kind, els, words)` for anything
 else that names a mark, and `mark.paren` for "its bulbs (ringed)". A literal
-"this", "these" or mark adjective throws, and so does a reference whose words
-use another role's adjective. The words re-render from a reference's elements,
-so `Narration.narrow` rewrites the sentence of a step whose marks shrink.
+"this", "these", "here", a "there" that names a place, or a mark adjective
+throws, and so does a reference whose words use another role's adjective.
+The existential "there is", "there are", "there's" and "there would be"
+builds. A supposition names its place as the pill ("a line on [this edge]
+would…, so it must be crossed out"), never "a line here would…"; where an "it"
+in the premise already means something else, the move names the place again.
+The words re-render from a reference's elements, so `Narration.narrow`
+rewrites the sentence of a step whose marks shrink.
 
 **The declaration.** Every hinted game declares `hintMarks`: the roles its
 steps name, in the words its help page gives them. The page writes

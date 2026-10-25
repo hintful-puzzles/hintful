@@ -291,7 +291,7 @@ export const say = {
           : `with ${other}'s arrow pointing elsewhere`;
     return so({
       look: phrase`Only ${outlined([open], "the outlined square")} leads into ${ring(at, "the ringed one")}`,
-      follows: phrase`the path must end here`,
+      follows: phrase`the path must end on it`,
       move: phrase`${which}, it must be ${n}`,
     });
   },

@@ -4,7 +4,7 @@
 
 ### Requirement: A word that points at a place on the board is a reference
 
-Building a hint sentence SHALL refuse a literal "here", or a "there" that names a place, outside a reference to a mark, naming the word. A "there" that opens "there is", "there are", "there's" or "there would" SHALL build.
+Building a hint sentence SHALL refuse a literal "here", or a "there" that names a place, outside a reference to a mark, naming the word. A "there" that opens "there is", "there are", "there's" or "there would be" SHALL build.
 
 #### Scenario: A bare "here" refuses to build
 

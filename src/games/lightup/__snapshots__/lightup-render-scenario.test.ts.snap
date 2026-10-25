@@ -1076,7 +1076,7 @@ exports[`lightup: pinned hint positions > says, at each pin 1`] = `
 {
   "clueSatisfied": "The outlined clue is 0, so no bulb may sit beside it: its ringed free neighbors can't hold a bulb.",
   "clueSaturated": "The outlined clue still needs 3 more bulbs and has exactly 3 free neighbors left, so each ringed one must be a bulb.",
-  "discount": "A bulb here rules out every outlined square that can light the outlined dark square, so this square can't hold a bulb.",
+  "discount": "A bulb on this square rules out every outlined square that can light the outlined dark square, so it can't hold a bulb.",
   "forcedLight": "The other outlined square can't light the outlined dark square, so only this square can: it must hold a bulb.",
 }
 `;

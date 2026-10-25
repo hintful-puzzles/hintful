@@ -52,8 +52,8 @@ export const say = {
 
   complete: (reason: R<"complete">, m: Marked): Sentence =>
     so({
-      look: phrase`${thisLine(m, reason.horizontal)} already holds ${mark.paren("outline", CELL, m.evidence, `all its ${colorName(reason.full).only} cells`)}`,
-      move: phrase`${thisCell(m)} and every other empty one in it must be ${colorName(reason.fill)}`,
+      look: phrase`${thisLine(m, reason.horizontal)} has ${mark.paren("outline", CELL, m.evidence, `all its ${colorName(reason.full).only} cells`)}`,
+      move: phrase`${thisCell(m)} and the ${lineName(reason.horizontal)}'s other empty cells must be ${colorName(reason.fill)}`,
     }),
 
   unique: (reason: R<"unique">, m: Marked): Sentence =>

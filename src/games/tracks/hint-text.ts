@@ -121,7 +121,7 @@ export const say = {
 
   bothSidesLeft: (m: Marked): Sentence =>
     so({
-      look: phrase`The track here can't cross ${outlinedSides(m)}`,
+      look: phrase`The track can't cross ${outlinedSides(m)}`,
       move: phrase`it must run through ${mark.as("ring", PIECE, m.decided, (els) =>
         els.length === 1 ? "the ringed one" : "the ringed ones",
       )}`,
@@ -167,16 +167,16 @@ export const say = {
 
   wouldStrandTrack: (m: Marked): Sentence =>
     so({
-      look: phrase`Joining here would link A's run to B's and finish the track, stranding ${cells(m, "the outlined track")}`,
-      move: phrase`${thisSide(m)} must be blocked`,
+      look: phrase`Crossing ${thisSide(m)} would finish the track from A to B, stranding ${cells(m, "the outlined track")}`,
+      move: phrase`the side must be blocked`,
     }),
 
   /** Finishing here would leave the named line's clue unmet by the track
    * squares it has. */
   wouldFinishEarly: (axis: Axis, m: Marked): Sentence =>
     so({
-      look: phrase`Joining A's run to B's here would finish the track short of ${line(m, `this ${axis}`)}'s ${mark.as("outline", PIECE, [...m.clues, ...m.cells], "outlined clue")}`,
-      move: phrase`${thisSide(m)} must be blocked`,
+      look: phrase`Crossing ${thisSide(m)} would finish the track from A to B short of ${line(m, `this ${axis}`)}'s ${mark.as("outline", PIECE, [...m.clues, ...m.cells], "outlined clue")}`,
+      move: phrase`the side must be blocked`,
     }),
 
   // "None of them can cross it": every unfinished square has a side blocked

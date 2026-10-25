@@ -210,9 +210,9 @@ export const say = {
       phrase`touch ${clueAt([pt], `the 1 ${where}`)}`,
     three: (pt: Point, where: string): Narration =>
       phrase`slant away from ${clueAt([pt], `the 3 ${where}`)}`,
-    /** One of the pair is placed and misses the corner `where`. */
-    placed: (where: string): Narration =>
-      phrase`touch the corner ${where}, as one already slants away from it`,
+    /** One of the pair, `sq`, is placed and misses the corner `where`. */
+    placed: (sq: Point, where: string): Narration =>
+      phrase`touch the corner ${where}, as ${squaresAs([sq], "the outlined one")} already slants away from it`,
     /**
      * Across a 2 `where`: the pair across it gives it at least one line
      * (`touch`: so these two can't both touch it) or at most one (so they

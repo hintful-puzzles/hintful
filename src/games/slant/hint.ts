@@ -255,7 +255,10 @@ function vClause(
     }
     case "slash":
       ev.squares.push(why.sq);
-      return say.vClause.placed(whereOf(sq, g.horizontal, g.meet, w));
+      return say.vClause.placed(
+        pointOf(why.sq, w),
+        whereOf(sq, g.horizontal, g.meet, w),
+      );
     case "two": {
       ev.clues.push(why.pt);
       const where = whereOf(sq, g.horizontal, why.pt, w);

@@ -115,8 +115,8 @@ export const say = {
     forced(
       m,
       phrase`${area(m, "This square")} has no line and no other open edge`,
-      phrase`${thisEdge(m)} can't be a line`,
-      phrase`a line here would dead-end`,
+      phrase`it can't be a line`,
+      phrase`a line on ${thisEdge(m)} would dead-end`,
     ),
 
   /** One axis of a black pearl, whose opposite edge is a line (`line`), ruled
@@ -222,8 +222,8 @@ export const say = {
   closesEarly: (out: LeftOut, m: Marked): Sentence =>
     forced(
       m,
-      phrase`Joining the ends of ${area(m, "the outlined line")} here would close a loop that misses ${misses(out)}`,
-      phrase`${thisEdge(m)} can't be a line`,
+      phrase`Joining the ends of ${area(m, "the outlined line")} with ${thisEdge(m)} would close a loop that misses ${misses(out)}`,
+      phrase`it can't be a line`,
     ),
 
   /** A plain square whose one way through joins the ends of one line. It has

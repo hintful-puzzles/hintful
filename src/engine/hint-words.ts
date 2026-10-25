@@ -95,9 +95,11 @@ const RETIRED_ADJECTIVES = ["hatched", "highlighted"] as const;
 
 const ROLE_ADJECTIVES = Object.values(MARK_ROLES).map((r) => r.adjective);
 
-/** A literal that says what only a reference may. */
+/** A literal that says what only a reference may. "There" names a place except
+ * as the existential ("there is one way left"), which points at nothing; "there
+ * would" alone is still a place ("a bulb there would…"). */
 const UNBOUND = new RegExp(
-  `\\b(?:this|these|${[...ROLE_ADJECTIVES, ...RETIRED_ADJECTIVES].join("|")})\\b`,
+  `\\b(?:this|these|here|there(?!\\s+(?:is|are|would\\s+be)\\b|['’]s\\b)|${[...ROLE_ADJECTIVES, ...RETIRED_ADJECTIVES].join("|")})\\b`,
   "i",
 );
 

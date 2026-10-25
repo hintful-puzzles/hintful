@@ -5491,7 +5491,7 @@ exports[`unequal: pinned hint positions > says, at each pin 1`] = `
   "adjacent": "No bar joins this cell to the 1 beside it, and they can't differ by 1, so the 2 must go.",
   "adjacentSet": "A bar joins this cell to its neighbor with nothing open one away from 1, so the 1 must go.",
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
-  "dup": "The 5 just placed can't repeat in its row and column, so the 5 must go from the other cells there.",
+  "dup": "The 5 just placed can't repeat in its row and column, so the 5 must go from the other cells.",
   "forcing": "Cell 1 is 1 or the numbered chain forces cell 3 to 1, both in line with this cell, so the 1 must go.",
   "greater": "The larger side of this greater-than sign can't hold the smallest number, so the 1 must go.",
   "hiddenSingle": "Every other cell in this row rules out 2, so this cell must be 2.",

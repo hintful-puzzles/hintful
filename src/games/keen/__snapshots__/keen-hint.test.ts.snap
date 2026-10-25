@@ -6101,7 +6101,7 @@ exports[`keen: pinned hint positions > says, at each pin 1`] = `
   "cage": "No way to make this cage sum to 7 puts 1 or 2 in this cell, so this cell can only be 3 or 4.",
   "cageLine": "This cage must multiply to 10, and every way to fill it places a 1 in its row, so 1 and 2 must go.",
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
-  "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells there.",
+  "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",
   "forcing": "Cell 1 is 3 or the numbered chain forces cell 5 to 3, both in line with this cell, so the 3 must go.",
   "hiddenSingle": "Every other cell in this column rules out 3, so this cell must be 3.",
   "note": "Nothing in this cell's row or column rules out a number yet, so pencil in every one.",
