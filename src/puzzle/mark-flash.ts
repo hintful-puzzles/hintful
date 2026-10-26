@@ -62,6 +62,57 @@ export function inkCoverage(
   return out;
 }
 
+/** The marks without the specks a canvas leaves between two frames. Chrome's
+ * GPU canvas antialiases a line a little differently as the frame's other
+ * paths change, so lines no reference touches differ in faint runs a pixel
+ * wide, and a pressed pill's leader would point at one. A mark has a solid
+ * core: a pixel all the mark's, or most of it with `CORE_NEIGHBORS` of its
+ * eight neighbors as much. Only the pixels within `reach` of a core are kept,
+ * which keeps a mark's antialiased rim. Marks with no core keep every pixel:
+ * a hairline is never a speck to be cleared. */
+export function withoutSpecks(
+  alpha: Uint8ClampedArray<ArrayBuffer>,
+  width: number,
+  reach = 2,
+): Uint8ClampedArray<ArrayBuffer> {
+  const height = alpha.length / width;
+  const most = (x: number, y: number): boolean =>
+    x >= 0 && y >= 0 && x < width && y < height && alpha[y * width + x] >= 128;
+  // Whether a core lies within `reach` along the row, then down the column:
+  // the square round each pixel, in two passes.
+  const row = new Uint8Array(alpha.length);
+  let cores = 0;
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      if (alpha[p] < 128) continue;
+      let beside = 0;
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++)
+          if ((dx || dy) && most(x + dx, y + dy)) beside++;
+      if (alpha[p] < 255 && beside < CORE_NEIGHBORS) continue;
+      cores++;
+      for (let dx = -reach; dx <= reach; dx++)
+        if (x + dx >= 0 && x + dx < width) row[p + dx] = 1;
+    }
+  if (cores === 0) return alpha;
+  const out = new Uint8ClampedArray(alpha.length);
+  for (let p = 0; p < alpha.length; p++) {
+    if (alpha[p] === 0) continue;
+    const y = (p - (p % width)) / width;
+    for (let dy = -reach; dy <= reach; dy++)
+      if (y + dy >= 0 && y + dy < height && row[p + dy * width]) {
+        out[p] = alpha[p];
+        break;
+      }
+  }
+  return out;
+}
+
+/** How many of a pixel's eight neighbors a mark's core pixel has as much of
+ * the mark: a speck's run, a pixel wide, has two at most. */
+const CORE_NEIGHBORS = 3;
+
 /** The smallest box round every pixel the marks touch. */
 export function markBox(alpha: Uint8ClampedArray, width: number): MarkBox | null {
   let x0 = width;

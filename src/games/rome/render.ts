@@ -47,7 +47,7 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { drawRectOutline } from "../../engine/draw.ts";
+import { drawRectOutline, drawStrike } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
   type CellText,
@@ -557,9 +557,15 @@ export function redraw(
         const markAt = (bit: number, mx: number, my: number, n: number): void => {
           if (!(p & bit)) return;
           drawArrow(dr, mx, my, q, bit, COL_ARROW_PENCIL);
-          if (struck & valueBit(n)) {
-            line(dr, 1, mx - q, my + q, mx + q, my - q, COL_ARROW_PENCIL);
-          }
+          if (struck & valueBit(n))
+            drawStrike(
+              dr,
+              { x: mx, y: my },
+              2 * q,
+              COL_ARROW_PENCIL,
+              { x: tx, y: ty, w: ts, h: ts },
+              { slant: true },
+            );
         };
         markAt(FM_UP, midX, ox + y * ts + Math.floor(ts / 4), 1);
         markAt(FM_DOWN, midX, ox + y * ts + Math.floor((3 * ts) / 4), 2);

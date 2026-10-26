@@ -1817,7 +1817,11 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         &.colored:hover {
           background-color: color-mix(in srgb, var(--ref-color) 30%, transparent);
         }
-        &.flashing {
+        /* Hovered too: a pill flashes because it was just pressed, so the
+         * pointer is still on it, and a hover's tint under the flash's dark
+         * text would leave it unreadable. */
+        &.flashing,
+        &.flashing:hover {
           background-color: var(--app-color-hint-ink);
           box-shadow: none;
           color: var(--app-color-hint-surface);

@@ -43,7 +43,7 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
   type CellText,
@@ -73,7 +73,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { textBox } from "../../engine/ring.ts";
-import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SeismicHint } from "./hint.ts";
 import {
@@ -300,6 +300,7 @@ function drawPencilMarks(
   cy: number,
   marks: number,
   struck: number,
+  tile: Rect,
 ): void {
   const shown = pencilValues(marks);
   pencilSlots(ts, cx, cy, shown.length).forEach(({ origin: at, options }, j) => {
@@ -307,15 +308,7 @@ function drawPencilMarks(
     dr.drawText(at, options, COL_NUM_PENCIL, String(n));
     // The struck note keeps its own color, so it still reads as the player's
     // note; the line through it is what says the hint rules it out.
-    if (struck & (1 << n)) {
-      const r = Math.max(2, (options.size / 3) | 0);
-      dr.drawLine(
-        { x: at.x - r, y: at.y },
-        { x: at.x + r, y: at.y },
-        COL_NUM_PENCIL,
-        2,
-      );
-    }
+    if (struck & (1 << n)) drawStrike(dr, at, options.size, COL_NUM_PENCIL, tile);
   });
 }
 
@@ -400,7 +393,7 @@ function drawTile(
     corner(tx + ts - far, ty + ts - far, far, far);
 
   if (grid[i] === 0) {
-    drawPencilMarks(dr, ts, cx, cy, pencil[i], struck);
+    drawPencilMarks(dr, ts, cx, cy, pencil[i], struck, { x: tx, y: ty, w: ts, h: ts });
   } else {
     const ink =
       flags[i] & FM_FIXED

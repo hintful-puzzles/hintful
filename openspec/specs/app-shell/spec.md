@@ -1371,10 +1371,11 @@ app applies to every game. No game SHALL choose its references' colors.
 ### Requirement: The engine colors every hint mark
 
 A hint mark's color and edge SHALL be the engine's, the same on the screen
-and in an exported image. A game SHALL draw a ring in `HINT_RING`, an outline
-in `HINT_OUTLINE` and stripes with the engine's hatch, and a mark in no other
-hint color. The app SHALL find a mark drawn in an ink on content of any color,
-and SHALL keep the ink's own coverage when it repaints it.
+and in an exported image. A game SHALL draw a ring with the engine's ring, an
+outline in `HINT_OUTLINE` and stripes with the engine's hatch, and a mark in
+no other hint color; the ring's and the stripes' inks SHALL be the engine's,
+in no game's palette. The app SHALL find a mark drawn in an ink on content of
+any color, and SHALL keep the ink's own coverage when it repaints it.
 
 #### Scenario: Copy image while a hint shows
 
@@ -1398,3 +1399,8 @@ and SHALL keep the ink's own coverage when it repaints it.
 - **WHEN** a game draws a hint mark in any color but its role's ink, other
   than a mark that restyles the content in the content's own color
 - **THEN** the cross-game ink guard fails and names the game and the role
+
+#### Scenario: A game cannot hold the ring's ink
+
+- **WHEN** a game's source names the ring's ink
+- **THEN** the cross-game source guard fails and names the game's file

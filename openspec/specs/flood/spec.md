@@ -143,7 +143,7 @@ leaves the hint to Flood on a position played past it.
 - **WHEN** on `3x1c3m0:012,2` the player fills with color 2, leaving two
   colors to join and one move
 - **THEN** `hasNoSolution` holds and Solve refuses, and the hint still gives
-  the next fill: `Fill with violet: it joins the dotted square to your
+  the next fill: `Fill with violet: it joins the ringed square to your
   region.`
 
 ### Requirement: Generation: A generated Flood board is completable within its move limit

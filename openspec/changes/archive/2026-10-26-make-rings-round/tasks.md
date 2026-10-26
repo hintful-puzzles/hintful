@@ -42,6 +42,10 @@
 - [x] 5.2 `docs/hints-marks.md`, `docs/hints.md`, `docs/engine-catalog.md`, `docs/testing.md`, `docs/rendering.md`; `engine/hint-mark.ts` header; help pages of Ascent, Flood, Sixteen and the six candidate games whose chains strike
 - [x] 5.3 The gate, green (2026-10-26)
 
-## Workflow follow-up
+## 6. The owner's review (2026-10-26)
 
-- The owner accepts on sight (asked for by name). Then commit, push and archive.
+- [x] 6.1 A struck note is an X the engine draws (`drawStrike`), one size a board, inside its cell; Rome and Undead take one diagonal; the strike legends drop "a line through"
+- [x] 6.2 Untangle: the line's ends come from the move, so hiding one reference leaves the other's end; the spot is "a better spot", or "a new spot" where the move does not cut the point's crossings, and three sentences are shortened to fit
+- [x] 6.3 A reference's marks are measured with the canvas's specks cleared (`withoutSpecks`), and every measured frame is a full repaint (D8)
+- [x] 6.4 A pressed pill stays readable while hovered: the flash outranks the colored hover
+- [x] 6.5 The owner accepted on sight; the gate, green with the archive

@@ -640,9 +640,10 @@ describe("the frames a hint draws", () => {
     const hatched = opsOfKind(ops, "hatch");
     expect(new Set(hatched.map((h) => `${h.x},${h.y}`)).size).toBe(area.length);
     expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toEqual([]);
+    // Each struck note is crossed out with an X: two strokes (`drawStrike`).
     expect(
       ops.filter((o) => o.op === "line" && o.color === COL_NUM_PENCIL),
-    ).toHaveLength(hl.marks.length);
+    ).toHaveLength(2 * hl.marks.length);
     expect(ops).toMatchSnapshot();
   });
 });

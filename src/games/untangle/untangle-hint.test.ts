@@ -160,7 +160,7 @@ function followHints(start: UntangleState, aux?: string) {
         expect(st.explanation).toBe(
           say.journey(marksOf(st), i, res.steps.length, finishes, before, after).text,
         );
-        expect(st.explanation.length).toBeLessThanOrEqual(120);
+        expect(st.explanation.length, st.explanation).toBeLessThanOrEqual(120);
         // What keeps a hint recomputed after any step from cycling.
         if (i === 0) expect(after).toBeLessThan(before);
       });

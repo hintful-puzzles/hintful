@@ -380,8 +380,7 @@ export const saladGame: Game<
   hintMarks: {
     roles: {
       ring: "the square the step fills in. What to enter there is previewed in it in the hint color: a letter or number, an X for “empty”, or a circle for “holds a letter” (or number).",
-      strike:
-        "the pencil marks the step crosses out, shown with a line through them, and so the squares they are in.",
+      strike: "the pencil marks the step crosses out, and so the squares they are in.",
       outline:
         "what the step reasons from: the squares a clue looks across before its letter, the run of squares its letter must lie in, squares that between them already account for the letters being crossed out or for all of a line’s empty squares, the letter just placed, or a chain of squares with two candidates left each, numbered in the order it runs. The clue a sentence names (“this column’s top clue”) is lit in the hint color.",
       stripes:

@@ -25,7 +25,7 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {
@@ -507,11 +507,13 @@ function drawTile(
       dr.drawText(origin, options, COL_PENCIL, toChar(i, id));
       // A hint-struck candidate keeps its pencil color, with a same-color
       // strikethrough as the "ruled out" cue.
-      if (struck & (1 << i)) {
-        const r = Math.max(2, Math.trunc(options.size / 3));
-        const { x: px, y: py } = origin;
-        dr.drawLine({ x: px - r, y: py }, { x: px + r, y: py }, COL_PENCIL, 2);
-      }
+      if (struck & (1 << i))
+        drawStrike(dr, origin, options.size, COL_PENCIL, {
+          x: cx,
+          y: cy,
+          w: cw,
+          h: ch,
+        });
     });
   }
 

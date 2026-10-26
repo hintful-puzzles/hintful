@@ -474,10 +474,10 @@ background the deduction is reading) SHALL be outlined and not washed.
 #### Scenario: The acted-on cell is ringed, not filled
 
 - **WHEN** a hint step marks the cell it acts on
-- **THEN** the mark is a ring of thin sides drawn on the cell's border, and no
+- **THEN** the mark is a round ring the engine draws round the cell, and no
   primitive fills the cell with a hint color
-- **AND** the same mark is used whether the step places a value or strikes a
-  candidate, so the cell is never identified only by the strike
+- **AND** a step that only strikes candidates marks them struck instead, and
+  rings no cell
 - **AND** this holds even where the cell is empty and a fill would hide nothing
 
 #### Scenario: Evidence carrying content is outlined
@@ -491,19 +491,18 @@ background the deduction is reading) SHALL be outlined and not washed.
 
 ### Requirement: A hint mark is drawn on the cell's border
 
-The ring and the outline SHALL be drawn on the space the cell's border already
-occupies, the gutter between cells or the cell's own outermost pixels according
-to the game's layout, so a mark costs the content no room and reads as a
-highlight by color and not by weight. Where the border belongs to a game object
-in its own right, a wall in Galaxies or Palisade, the mark SHALL be inset
-inside the cell instead, so it cannot be read as that object.
+The outline SHALL be drawn on the space the cell's border already occupies,
+the gutter between cells or the cell's own outermost pixels according to the
+game's layout, so it costs the content no room. Where the border belongs to a
+game object in its own right, a wall in Galaxies or Palisade, the outline
+SHALL be inset inside the cell instead, so it cannot be read as that object.
 
 #### Scenario: A mark never impersonates a game object
 
 - **WHEN** a game draws its own objects on the cell border, a wall between two
   cells, say
-- **THEN** the hint's marks are inset inside the cell instead, so that neither
-  mark can be read as one of those objects
+- **THEN** the hint's outline is inset inside the cell instead, and its ring
+  is round, so that neither mark can be read as one of those objects
 
 ### Requirement: The palette carries no fill for the acted-on color
 
@@ -1647,22 +1646,21 @@ clear any displayed step, and the next hint SHALL be built under the new values.
 ### Requirement: A piece a hint acts on is ringed as one shape
 
 Where a hint step acts on a piece spanning several squares (a domino it places,
-a domino it decides whole), the target mark SHALL be one ring around the piece,
-drawing a side only where the square across it is not in the same piece, and
-not a ring per square with a double bar across the piece's middle.
+a domino it decides whole), the target mark SHALL be one round ring around the
+whole piece, and not a ring per square.
 
 #### Scenario: A domino placement is one ring
 
 - **WHEN** a Dominosa hint step asks the player to place a domino
-- **THEN** the target mark is one ring of six sides around its two squares
+- **THEN** the target mark is one pill around its two squares
 - **AND** a barrier step's two squares are still ringed one each, with the wall
   between them marked
 
 #### Scenario: A domino decided whole is one ring
 
 - **WHEN** a Magnets hint step decides a whole domino (neutral, or marked `?`)
-- **THEN** the target mark is one ring of six sides around both ends, drawn by
-  the shared painter and not by a pass of the game's own
+- **THEN** the target mark is one pill around both ends, drawn by the engine
+  and not by a pass of the game's own
 
 ### Requirement: The shared painter joins a piece from the game's relation
 
@@ -1670,13 +1668,14 @@ The shared hint-mark painter SHALL own the drawing, and a game SHALL supply
 only which squares belong together: a relation for the targets, and optionally
 one for the evidence when the evidence is whole pieces, so that two pieces side
 by side stay two shapes and not one that is not on the board. Without a
-relation, targets SHALL be ringed per square and evidence SHALL be outlined as
-one contour per connected region, exactly as for a game with no pieces.
+relation, each target square SHALL be ringed alone and evidence SHALL be
+outlined as one contour per connected region, exactly as for a game with no
+pieces.
 
 #### Scenario: A game with no pieces is unchanged
 
 - **WHEN** a game supplies no piece relation
-- **THEN** each target square is ringed on all four sides and a contiguous
+- **THEN** each target square has a round ring of its own and a contiguous
   evidence region is one contour
 
 ### Requirement: A joined mark inside the content box keys its repaint on its sides
@@ -1695,10 +1694,10 @@ each square's repaint on the sides drawn around it and not on its role alone.
 
 The engine SHALL define the roles a hint mark plays, each with one meaning in
 every game: a ring marks what the step decides, an outline marks what the step
-reasons from, and stripes mark the line or region the sentence names. The
-engine SHALL own each role's noun and adjective ("ringed", "outlined",
-"striped"). A game SHALL add a role only when none of the three fits, and the
-change adding it SHALL say why.
+reasons from, stripes mark the line or region the sentence names, and a strike
+marks a note the step rules out. The engine SHALL own each role's noun and
+adjective ("ringed", "outlined", "striped", "struck"). A game SHALL add a role
+only when none of the four fits, and the change adding it SHALL say why.
 
 #### Scenario: A literal says a mark's word
 
@@ -2630,18 +2629,6 @@ a reference. The hint-quality walk SHALL hold every bound game's steps to it.
 - **THEN** its reference says "the ringed squares", and "must all be mines" is
   outside it
 
-### Requirement: The ring's word is "ringed" in every game
-
-A ring reference SHALL use "ringed" as its role's word in every game, the
-legend's term for what a step decides, whatever shape the game draws it in.
-Where the game's drawing would make "ringed" mislead, the game's legend SHALL
-teach the phrase its sentences use for the mark instead.
-
-#### Scenario: Flood's ring is dots
-
-- **WHEN** a Flood step names the squares a fill would join
-- **THEN** it names them in a phrase its ring legend contains
-
 ### Requirement: An evidence area is outlined, never washed
 
 An evidence area SHALL be outlined and never washed, in every game: its cells
@@ -2733,3 +2720,79 @@ Building a hint sentence SHALL refuse a literal "here", or a "there" that names 
 
 - **WHEN** a hint sentence says "a line on [this edge] would", the edge a reference to its ring
 - **THEN** it builds
+
+### Requirement: A ring is round, and only the engine draws one
+
+Every mark in the ring role SHALL be round, as round as the element's content
+allows and never rounder than a corner radius of a third of its short side
+less, and SHALL NOT cover any of the content's text. The engine SHALL draw it,
+and a game SHALL have no way to draw in the ring's ink but the engine's ring,
+so "ringed" names a round mark in every game.
+
+#### Scenario: A ring clears the content
+
+- **WHEN** a step rings a cell holding a digit or pencil notes
+- **THEN** no stroke of the ring, nor its edge, crosses the cell's text, nor
+  the text of a neighbor it reaches past the cell into
+- **AND** a cell with nothing at its corners is ringed by a circle
+
+#### Scenario: A placement crosses only the notes it replaces
+
+- **WHEN** a step places a value in a cell that shows notes
+- **THEN** the cell's ring may cross that cell's own notes, and no other text
+
+### Requirement: A note a step rules out is struck
+
+The engine SHALL own a fourth mark role, the strike, with the noun "strike"
+and the adjective "struck": a candidate note a step rules out SHALL be marked
+by an X the engine draws, one size for every note of a board and inside its
+cell, and SHALL NOT be ringed, nor ring the cell it sits in.
+
+#### Scenario: An elimination strikes its notes
+
+- **WHEN** a candidate game's step rules out 8 and 9 in a cell
+- **THEN** each of the two notes has an X through it in the strike's
+  reference color, and the cell has no ring
+- **AND** the notes keep the size they have without a hint
+
+#### Scenario: An element that cannot be ringed round is not ringed
+
+- **WHEN** a game asks for a ring around an element whose content leaves no
+  room for a round one
+- **THEN** drawing the ring throws, naming the element, and the game pads
+  its content or marks that element with another role
+
+#### Scenario: A game asks for a ring
+
+- **WHEN** a hint step rings a cell, a note, an edge, a span or a piece
+- **THEN** the mark on the board is a circle or a pill around that element
+- **AND** nothing else in the frame is drawn in the ring's ink
+
+#### Scenario: Ring and outline differ in shape
+
+- **WHEN** a step rings one square and outlines another of the same size
+- **THEN** the ring is round and the outline has square corners, so the two
+  are told apart without their colors
+
+### Requirement: A ring is called ringed, and no game names it otherwise
+
+A ring reference SHALL use "ringed" as its role's word in every game, the
+legend's term for what a step decides; every ring is round and the engine's,
+so no game SHALL teach another phrase for it.
+
+#### Scenario: Flood's ring is ringed
+
+- **WHEN** a Flood step names the squares a fill would join
+- **THEN** it calls them "the ringed squares", and each is drawn with a round
+  ring
+
+### Requirement: A move's shape is shown inside its ring
+
+Where a game shows the shape its move will take (a line or a cross on an
+edge, a bridge across a span), that shape SHALL be drawn inside the element's
+ring and within it, and SHALL NOT stand in for the ring.
+
+#### Scenario: An edge step echoes its line
+
+- **WHEN** a Tracks or Path step asks for a line on an edge
+- **THEN** the edge is ringed by a pill, and the line is drawn inside the pill

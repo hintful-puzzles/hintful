@@ -746,8 +746,7 @@ export const crossingGame: Game<
   hintMarks: {
     roles: {
       ring: "what the step decides: the square it fills, or every square of a run it fills with a whole number, and then the number in the list it writes in.",
-      strike:
-        "a line through a pencil mark: a digit the step rules out of that square.",
+      strike: "a digit the step rules out of that square.",
       outline:
         "what the step reasons from: the numbers in the list that still fit the run, boxed, or the squares that rule a number out of a run.",
       stripes:

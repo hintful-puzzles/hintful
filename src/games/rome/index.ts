@@ -706,8 +706,7 @@ export const romeGame: Game<
   hintMarks: {
     roles: {
       ring: "the square the step decides: the arrow to place, or the marks to pencil in.",
-      strike:
-        "the marks the step crosses off, drawn with a line through them, and so the square they are in.",
+      strike: "the marks the step crosses off, and so the square they are in.",
       outline:
         'the squares it reasons from: the arrow the area already has, a neighbor that can only point two ways, or the two squares of a pair. A trail of arrows is numbered in the order you follow it from the square next door, when a sentence says "the numbered arrows … lead back to this square".',
       stripes:

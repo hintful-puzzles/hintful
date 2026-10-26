@@ -45,6 +45,7 @@ import { crossingGhost } from "../../engine/color/palette-games.ts";
 import {
   drawRectCorners,
   drawRectOutline,
+  drawStrike,
   drawThickRectOutline,
 } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -407,11 +408,8 @@ function drawMarks(
 ): void {
   for (const { i, origin, options } of markSlots(ts, tx, ty, marks)) {
     dr.drawText(origin, options, ink, String(i + 1));
-    if (struck & (1 << i)) {
-      const r = Math.max(2, Math.floor(options.size / 3));
-      const { x: cx, y: cy } = origin;
-      dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, ink, 2);
-    }
+    if (struck & (1 << i))
+      drawStrike(dr, origin, options.size, ink, { x: tx, y: ty, w: ts, h: ts });
   }
 }
 

@@ -34,7 +34,7 @@ import {
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { abcdBorderLetter } from "../../engine/color/palette-games.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as geometryFromCoord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -65,7 +65,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { textBox } from "../../engine/ring.ts";
-import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { AbcdHint } from "./hint.ts";
 import { CLUE } from "./hint-text.ts";
@@ -306,15 +306,13 @@ function drawPencilMarks(
   x: number,
   y: number,
   struck: number,
+  box: Rect,
 ): void {
   for (const { origin: at, options, letter } of pencilSlots(state, ts, x, y)) {
     dr.drawText(at, options, COL_PENCIL, String.fromCharCode(65 + letter));
     // The struck note keeps its own color, so it still reads as the player's
     // note; the line through it is what says the hint rules it out.
-    if (struck & valueBit(letter)) {
-      const r = Math.max(2, (options.size / 3) | 0);
-      dr.drawLine({ x: at.x - r, y: at.y }, { x: at.x + r, y: at.y }, COL_PENCIL, 2);
-    }
+    if (struck & valueBit(letter)) drawStrike(dr, at, options.size, COL_PENCIL, box);
   }
 }
 
@@ -436,7 +434,7 @@ function drawTile(
       String.fromCharCode(64 + letter),
     );
   } else {
-    drawPencilMarks(dr, state, ts, x, y, ds.hint.struck[i]);
+    drawPencilMarks(dr, state, ts, x, y, ds.hint.struck[i], box);
   }
 
   // Cell border.

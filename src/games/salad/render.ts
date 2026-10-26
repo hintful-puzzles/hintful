@@ -33,7 +33,7 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
+import { drawRectOutline, drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
@@ -443,19 +443,12 @@ function drawPencilMarks(
   x: number,
   y: number,
   struck: number,
+  cell: Rect,
 ): void {
   for (const { origin, options, text, n } of pencilSlots(s, ts, x, y)) {
     dr.drawText(origin, options, COL_PENCIL, text);
     // Candidate `i + 1` in the mark bitmap is candidate `i + 1` to the hint too.
-    if (struck & (1 << n)) {
-      const r = Math.max(2, Math.floor(options.size / 3));
-      dr.drawLine(
-        { x: origin.x - r, y: origin.y },
-        { x: origin.x + r, y: origin.y },
-        COL_PENCIL,
-        2,
-      );
-    }
+    if (struck & (1 << n)) drawStrike(dr, origin, options.size, COL_PENCIL, cell);
   }
 }
 
@@ -704,7 +697,7 @@ export function redraw(
       else if (flags[i] & FD_CROSS) drawCross(dr, ts, s, x, y, flags[i], thick);
 
       if (s.grid[i] === 0 && s.holes[i] !== CROSS) {
-        drawPencilMarks(dr, s, ts, x, y, struck);
+        drawPencilMarks(dr, s, ts, x, y, struck, { x: tx, y: ty, w: ts, h: ts });
       } else if (s.grid[i] !== 0) {
         const color =
           s.gridclues[i] > 0 && s.gridclues[i] <= o

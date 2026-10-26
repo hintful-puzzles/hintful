@@ -24,12 +24,13 @@ so "ringed" names a round mark in every game.
 
 The engine SHALL own a fourth mark role, the strike, with the noun "strike"
 and the adjective "struck": a candidate note a step rules out SHALL be marked
-by a line through it, and SHALL NOT be ringed, nor ring the cell it sits in.
+by an X the engine draws, one size for every note of a board and inside its
+cell, and SHALL NOT be ringed, nor ring the cell it sits in.
 
 #### Scenario: An elimination strikes its notes
 
 - **WHEN** a candidate game's step rules out 8 and 9 in a cell
-- **THEN** each of the two notes has a line through it in the strike's
+- **THEN** each of the two notes has an X through it in the strike's
   reference color, and the cell has no ring
 - **AND** the notes keep the size they have without a hint
 

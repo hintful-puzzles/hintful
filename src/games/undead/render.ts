@@ -33,7 +33,7 @@ import {
   undeadVampire,
   undeadZombie,
 } from "../../engine/color/palette-games.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
   type CellText,
@@ -603,6 +603,7 @@ function drawPencils(
   pencil: number,
   ascii: boolean,
   struck: number,
+  cell: Rect,
 ): void {
   const ts = ds.tileSize;
   const dx = border(ts) + x * ts + f(ts / 4);
@@ -613,15 +614,8 @@ function drawPencils(
     else dr.drawText(origin, options, COL_TEXT, monsterLetter(m));
     // A struck candidate keeps its glyph and gains a strikethrough in the
     // note's own ink, the ink of its letter and of its monster's outline.
-    if (struck & m) {
-      const r = f(ts / 6);
-      dr.drawLine(
-        { x: cx - r, y: cy + r },
-        { x: cx + r, y: cy - r },
-        COL_TEXT,
-        Math.max(1, f(ts / 24)),
-      );
-    }
+    if (struck & m)
+      drawStrike(dr, { x: cx, y: cy }, f(ts / 3), COL_TEXT, cell, { slant: true });
   }
   dr.drawUpdate({
     x: dx - f(ts / 4) + 2,
@@ -949,7 +943,7 @@ export function redraw(
         } else if (isSingleton(state.guess[xi])) {
           drawBigMonster(dr, ds, x, y, state.guess[xi], ui.ascii);
         } else {
-          drawPencils(dr, ds, x, y, state.pencil[xi], ui.ascii, struck);
+          drawPencils(dr, ds, x, y, state.pencil[xi], ui.ascii, struck, cell);
         }
         if (ds.wrong.at(xy)) {
           const { dx, dy } = cellCenter(ds, x, y);

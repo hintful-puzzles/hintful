@@ -947,7 +947,7 @@ export const undeadGame: Game<
     roles: {
       ring: "the square the step fills, in the hint color.",
       strike:
-        "the pencil marks the step crosses out, shown with a line through each, and so the square they are in. To cross one out yourself, right-click the square and type that monster's letter.",
+        "the pencil marks the step crosses out, and so the square they are in. To cross one out yourself, right-click the square and type that monster's letter.",
       outline:
         "the *sightline* the step reasons from, in a second color: the squares, mirrors included, that a line of sight passes through between the two numbers at its ends.",
     },

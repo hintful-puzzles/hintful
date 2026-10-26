@@ -72,7 +72,9 @@ const MARK_ROLES: Readonly<Record<MarkRole, MarkRoleWords>> = {
     noun: "strike",
     adjective: "struck",
     means: "a note the step rules out",
-    listed: ["A strike", "marks"],
+    // How it looks is the engine's (`drawStrike`), so the legend says it here
+    // and a game's entry says only what it marks.
+    listed: ["A strike through a note", "marks"],
   },
 };
 

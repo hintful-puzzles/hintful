@@ -11,6 +11,7 @@
  * recorder off the sightline and counting rungs, not `latin.ts`).
  */
 import { describe, expect, it } from "vitest";
+import { strikeReach } from "../../engine/draw.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, NOTE, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -430,13 +431,15 @@ describe("undead hint render (tier 2.5)", () => {
     // cross the notes the step leaves standing. Each struck candidate keeps its
     // glyph under a strikethrough in the note's own ink.
     expect(ringsOf(ops)).toHaveLength(0);
-    const span = 2 * Math.floor(PREFERRED_TILE_SIZE / 6);
+    // A monster is a shape, so its strike is one "\" through it, a note a
+    // third of a tile across (`drawStrike`).
+    const span = 2 * strikeReach(Math.floor(PREFERRED_TILE_SIZE / 3));
     const strikes = ops.filter(
       (o) =>
         o.op === "line" &&
         o.color === COL_TEXT &&
         o.x2 - o.x1 === span &&
-        o.y1 - o.y2 === span,
+        o.y2 - o.y1 === span,
     );
     expect(strikes.length).toBe(stepMarks(hint).of("strike", NOTE).length);
     expect(strikes.length).toBeGreaterThan(0);

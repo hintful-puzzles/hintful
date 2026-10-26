@@ -29,7 +29,7 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -61,7 +61,7 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import { textBox } from "../../engine/ring.ts";
-import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone } from "../../engine/win-wave.ts";
 import type { UnequalMove } from "./state.ts";
 import {
@@ -491,7 +491,7 @@ function drawCell(
     const { origin, options } = digitText(ts, x, y);
     dr.drawText(origin, options, color, displayChar(num, o));
   } else {
-    drawHints(dr, ts, o, x, y, pencil, struck);
+    drawHints(dr, ts, o, x, y, { x: ox, y: oy, w: ts, h: ts }, pencil, struck);
   }
 
   // Check & Save mistake overlay (fork addition): an inset red outline.
@@ -561,6 +561,7 @@ function drawHints(
   o: number,
   x: number,
   y: number,
+  cell: Rect,
   pencil: number,
   struck = 0,
 ): void {
@@ -568,11 +569,7 @@ function drawHints(
   pencilSlots(ts, x, y, shown.length).forEach(({ origin, options }, j) => {
     const n = shown[j];
     dr.drawText(origin, options, COL_PENCIL, displayChar(n, o));
-    if (struck & (1 << n)) {
-      const r = Math.max(2, Math.floor(options.size / 3));
-      const { x: cx, y: cy } = origin;
-      dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
-    }
+    if (struck & (1 << n)) drawStrike(dr, origin, options.size, COL_PENCIL, cell);
   });
 }
 

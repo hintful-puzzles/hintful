@@ -1385,6 +1385,8 @@ Look here before writing vertex arithmetic for a shape another game also
 draws, or a text options object. `src/puzzle/bevels.test.ts` fails a bevel
 in a game's frames that no call to these helpers drew.
 
+- `drawStrike`: a hint's strike through a note, in the note's ink: an X, or
+  one "\" with `slant` for a note that is a shape.
 - `drawRecessedBorder`: the playfield bevel.
 - `drawRaisedTile`: a raised tile, bevel and face in one call.
   `raisedBevelWidth(ts)` is the one thickness of its border, and

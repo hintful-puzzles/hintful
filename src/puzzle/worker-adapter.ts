@@ -37,7 +37,13 @@ import type {
 } from "../engine/types.ts";
 import { Drawing } from "./drawing.ts";
 import type { HintReferenceMarks, PuzzleEngineSurface } from "./engine-surface.ts";
-import { inkCoverage, markAlpha, markBox, type ReferenceMarks } from "./mark-flash.ts";
+import {
+  inkCoverage,
+  markAlpha,
+  markBox,
+  type ReferenceMarks,
+  withoutSpecks,
+} from "./mark-flash.ts";
 
 export class TsWorkerPuzzle implements PuzzleEngineSurface {
   private drawing?: Drawing;
@@ -121,7 +127,9 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
       const shown = drawing.pixels();
       const hidden = Array.from({ length: count }, (_, i) => {
         this.engine.hideHintReference(i);
-        this.engine.redraw(drawing);
+        // A full repaint: a game's cache need not be keyed on every mark it
+        // draws, and a skipped frame would read as a reference with none.
+        this.engine.forceRedraw(drawing);
         return drawing.pixels().data;
       });
       this.engine.hideHintReference(null);
@@ -153,7 +161,8 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
         { shown: black.shown.data, hidden: black.hidden[i] },
       );
       for (let p = 0; p < alpha.length; p++) if (ink[p] > 0) alpha[p] = ink[p];
-      return { alpha, box: markBox(alpha, width) };
+      const marks = withoutSpecks(alpha, width);
+      return { alpha: marks, box: markBox(marks, width) };
     });
     return transfer(
       { width, height, refs, roles: this.engine.hintReferenceRoles() },

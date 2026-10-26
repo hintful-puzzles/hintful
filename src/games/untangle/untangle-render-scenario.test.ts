@@ -138,6 +138,33 @@ describe("Untangle render scenarios", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
+  it("hiding the moved point leaves its spot's ring and its end of the line", () => {
+    // The app finds a reference's marks by drawing the board without them; a
+    // spot whose end of the line went with the point read as the point's, and
+    // a pressed "this point" pointed at the spot (owner, 2026-10-26).
+    const id =
+      "10:0-4,0-5,0-7,0-8,1-2,1-3,1-8,1-9,2-4,2-6,2-9,3-5,3-6,3-9,4-7,4-8,5-7,6-9";
+    const { midend, palette, hint } = renderScenario({
+      game: untangleGame,
+      id,
+      showHint: true,
+    });
+    const moved = hint?.move.points[0]?.i;
+    const refs = hint?.words?.refs ?? [];
+    const point = refs.findIndex(
+      (r) => r.kind === VERTEX && r.elements.length === 1 && r.elements[0] === moved,
+    );
+    expect(point).toBeGreaterThanOrEqual(0);
+    midend.hideHintReference(point);
+    const hidden = new RecordingDrawing(palette);
+    midend.redraw(hidden);
+    expectRing(hidden.ops, { rings: 1 });
+    const ink = ringsOf(hidden.ops)[0].color;
+    expect(hidden.ops.filter((o) => o.op === "line" && o.color === ink)).toHaveLength(
+      1,
+    );
+  });
+
   it("journey frame: the marked points still to move are ringed", () => {
     // The owner's board, followed by hint until a plan is a journey. Named by
     // seed because the hint here needs the generator's `aux`, which a desc

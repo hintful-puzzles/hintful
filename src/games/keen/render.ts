@@ -29,7 +29,7 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
@@ -313,11 +313,13 @@ function drawTile(
       dr.drawText(origin, options, COL_PENCIL, String(i));
       // A hint-ruled-out candidate keeps its normal pencil color with a
       // same-color strikethrough — the "ruled out" cue (docs/hints-marks.md § "The engine colors the marks").
-      if (struck & (1 << i)) {
-        const r = Math.max(2, (options.size / 3) | 0);
-        const { x: cx, y: cy } = origin;
-        dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
-      }
+      if (struck & (1 << i))
+        drawStrike(dr, origin, options.size, COL_PENCIL, {
+          x: cx,
+          y: cy,
+          w: cw,
+          h: ch,
+        });
     });
   }
 

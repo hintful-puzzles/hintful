@@ -474,9 +474,15 @@ describe("rome hint render", () => {
     expect(ordinals.length).toBe(area.length);
     // The struck square is shown by its struck mark, not a ring.
     expect(ringsOf(recording.ops)).toEqual([]);
+    // The strike: an arrow is a shape, so one "\" through it, in the arrow's
+    // ink, thick enough to read over stripes (`drawStrike`).
     expect(
       recording.ops.some(
-        (o) => o.op === "line" && o.color === COL_ARROW_PENCIL && o.thickness === 1,
+        (o) =>
+          o.op === "line" &&
+          o.color === COL_ARROW_PENCIL &&
+          o.thickness >= 2 &&
+          o.x2 - o.x1 === o.y2 - o.y1,
       ),
     ).toBe(true);
     expect(recording.ops).toMatchSnapshot();

@@ -252,12 +252,18 @@ export function redrawUntangle(
       RING_THICKNESS,
       { room: board, inside },
     );
-  const from = hintVertex >= 0 ? { x: ds.x[hintVertex], y: ds.y[hintVertex] } : null;
-  const to = spot ? { x: hintTx, y: hintTy } : null;
   // The move is the line from the point to its spot: each end's ring holds
   // its own end of it, from the edge of the point's blob or of the spot. The
+  // ends come from the move, not from which of the two the words still mark,
+  // so hiding one leaves the other's end of the line as it is: what hiding a
+  // reference takes away is what the app reads as that reference's marks. The
   // point is where it is drawn now (ds.x/y), so during an auto-hint slide the
   // line shrinks to nothing as the point arrives.
+  const dest = hint?.move.points[0];
+  const from = moved >= 0 ? { x: ds.x[moved], y: ds.y[moved] } : null;
+  const to = dest
+    ? { x: Math.trunc((dest.x * ts) / dest.d), y: Math.trunc((dest.y * ts) / dest.d) }
+    : null;
   const blob = ui.vertexNumbers ? DRAG_THRESHOLD : CIRCLE_RADIUS;
   const length = from && to ? Math.hypot(to.x - from.x, to.y - from.y) : 0;
   const leg = (ink: number): void => {
@@ -279,7 +285,7 @@ export function redrawUntangle(
     else ring(at, RING_HALF, own);
   }
   // The spot is where the point lands: a disc in the ring's ink.
-  if (to)
+  if (spot && to)
     ring(to, MOVE_RING_HALF, [], (ink) => {
       leg(ink);
       dr.drawCircle(to, SPOT_RADIUS, ink, ink);

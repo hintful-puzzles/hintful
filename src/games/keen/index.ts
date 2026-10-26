@@ -462,8 +462,7 @@ export const keenGame: Game<
   hintMarks: {
     roles: {
       ring: "the cell the step fills in with a number.",
-      strike:
-        "the pencil marks the step crosses out, shown with a line through them, and so the cell they are in.",
+      strike: "the pencil marks the step crosses out, and so the cell they are in.",
       outline:
         "what the step reasons from: cells that between them already account for the numbers being crossed out, the number just placed, or a chain of cells with two numbers left each, numbered in the order the sentence reads them.",
       stripes:

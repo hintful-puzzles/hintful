@@ -139,6 +139,15 @@ is, in the note's own ink, and found by the repaint by what it changes. No
 ring is drawn round a struck note, and a struck note no longer rings its
 cell (`NOTE.within`). Note grids keep their size.
 
+A line through the note was too faint to see over the stripes, in the
+note's ink and then in a thicker bar. From a design comparison sheet the
+owner chose (2026-10-26) an X in the strike's crimson, drawn by the engine
+(`drawStrike`), not by each game. Every X is one size: a digit's width, from
+the note size, so a board's Xs match. It is clamped inside the note's cell so
+a border never clips it. A struck shape that is not a note, such as Rome's
+arrow or an Undead monster, takes one diagonal of it, since a full X reads as
+a different piece.
+
 ### D7. A placement in a cell of notes rings the whole cell, over its notes
 
 The owner chose (2026-10-26) that when a step places a value in a cell that
@@ -152,6 +161,20 @@ cell of notes, so each kind of step has one look, and its words ("this
 cell") do not depend on how many pixels a note grid leaves. A game's
 `HintMarkStyle.text` therefore names a cell's notes apart from its other
 text: crossable on the ringed cell, avoided round it.
+
+### D8. A reference's marks are measured with the canvas's specks cleared
+
+A pressed pill's leader points at the nearest pixel that differs between the
+board drawn with the reference's marks and without them. Chrome's GPU canvas
+antialiases a line slightly differently as the frame's other paths change,
+even with identical draw calls on both sides (measured 2026-10-26). So lines
+no reference touches differ in faint runs a pixel wide. On a 2× display
+these reached the leader's threshold, and Untangle's "a better spot"
+pointed at an edge. `withoutSpecks` keeps only the pixels within two of a
+solid core, and a mark with no core keeps every pixel. `willReadFrequently`
+would rasterize in software but loses the context in Android Chrome's
+worker. Each measured frame is a full repaint, so it does not depend on
+which marks a game's draw cache is keyed on.
 
 ## Risks / Trade-offs
 

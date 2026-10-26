@@ -1,5 +1,6 @@
 /** Shared `GameDrawing` primitives. */
 import type { GameDrawing } from "./game.ts";
+import { MARK_EDGE_PX } from "./ring.ts";
 import type { DrawTextOptions, Point, Rect } from "./types.ts";
 
 /**
@@ -14,6 +15,57 @@ import type { DrawTextOptions, Point, Rect } from "./types.ts";
  */
 export function glyphFont(size: number): DrawTextOptions {
   return { align: "center", baseline: "mathematical", fontType: "variable", size };
+}
+
+/** How far a strike through a note of `size` reaches either side of its
+ * center, across and down ({@link drawStrike}): half a digit's width, so the X
+ * is as wide as the note it crosses, one size for every note of that size,
+ * and as clear of the cell's edge and its neighbors as the note is (owner,
+ * 2026-10-26, on Xs clamped cell by cell: "some of the Xs being bigger than
+ * the others"). */
+export const strikeReach = (size: number): number =>
+  Math.max(3, Math.round(size * 0.28));
+
+/**
+ * A hint's strike through a note at `center` of `size` (its font size, or the
+ * extent of a note that is a shape), in the note's own `ink`: the strike role.
+ * A glyph is crossed with an X, the owner's pick from drawn alternatives
+ * (2026-10-26): a bar along it "is still quite difficult to see", while one
+ * stroke of an X always cuts across the stripes, which run "/". A note that is
+ * a shape, not a glyph, is struck once, on the `slant` that crosses them, "\".
+ *
+ * `within` is the box the note is drawn in, the tile's clip. A note's own
+ * width keeps the X inside it, so this is only a guard: should a note sit
+ * nearer the edge than that, the arms are shortened, all four alike, rather
+ * than cut off square at the cell's border (owner, 2026-10-26: "it seems to be
+ * clipping behind the cell borders").
+ */
+export function drawStrike(
+  dr: GameDrawing,
+  center: Point,
+  size: number,
+  ink: number,
+  within: Rect,
+  { slant = false }: { slant?: boolean } = {},
+): void {
+  // Thin enough beside arms half a digit long, with the app's edge round each
+  // stroke, to read as an X and not a blot.
+  const thickness = Math.max(2, Math.round(size / 8));
+  const { x, y } = center;
+  // A round cap sticks out half the stroke past the end, and the app's edge
+  // (`MARK_EDGE_PX`) and a pixel of air more keep it off the border, where it
+  // would read as cut off.
+  const margin = thickness / 2 + MARK_EDGE_PX + 1;
+  const r = Math.min(
+    strikeReach(size),
+    x - within.x - margin,
+    within.x + within.w - x - margin,
+    y - within.y - margin,
+    within.y + within.h - y - margin,
+  );
+  dr.drawLine({ x: x - r, y: y - r }, { x: x + r, y: y + r }, ink, thickness);
+  if (!slant)
+    dr.drawLine({ x: x - r, y: y + r }, { x: x + r, y: y - r }, ink, thickness);
 }
 
 /** Outer pixel bounds of a beveled frame; edges are inclusive pixels. */

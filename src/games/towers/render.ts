@@ -30,7 +30,7 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -358,11 +358,13 @@ function drawTile(
         // player's note; the same-color strikethrough is what says the hint
         // rules it out (a hint color washed out against the background).
         dr.drawText(origin, options, COL_PENCIL, String(i));
-        if (struck & (1 << i)) {
-          const r = Math.max(2, Math.floor(options.size / 3));
-          const { x: cx, y: cy } = origin;
-          dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
-        }
+        if (struck & (1 << i))
+          drawStrike(dr, origin, options.size, COL_PENCIL, {
+            x: tx,
+            y: ty,
+            w: ts,
+            h: ts,
+          });
       },
     );
   }

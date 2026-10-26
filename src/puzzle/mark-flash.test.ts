@@ -11,6 +11,7 @@ import {
   nearestMarked,
   type ReferenceMarks,
   tinted,
+  withoutSpecks,
 } from "./mark-flash.ts";
 
 describe("a reference's marks", () => {
@@ -41,6 +42,47 @@ describe("a reference's marks", () => {
   it("are reached at their nearest pixel, not their box's", () => {
     // From below the right column: the box's nearest point, (2, 2), is bare.
     expect(nearestMarked(alpha, 3, 2.5, 5)).toEqual({ x: 1.5, y: 1.5 });
+  });
+
+  it("keep a core's rim and drop a speck's run, which has no core", () => {
+    // A 12x5 canvas: a 2x2 mark at (1, 1) with a faint rim pixel beside it,
+    // and a speck's run, a pixel wide and most-of-a-pixel strong, along a
+    // diagonal well clear of it (Chrome's GPU canvas, 2026-10-26).
+    const width = 12;
+    const a = new Uint8ClampedArray(width * 5);
+    for (const [x, y] of [
+      [1, 1],
+      [2, 1],
+      [1, 2],
+      [2, 2],
+    ])
+      a[y * width + x] = 200;
+    a[1 * width + 3] = 40;
+    for (const [x, y] of [
+      [7, 0],
+      [8, 1],
+      [9, 2],
+      [10, 3],
+    ])
+      a[y * width + x] = 147;
+    const kept = withoutSpecks(a, width);
+    expect(
+      [...kept].flatMap((v, p) => (v ? [[p % width, Math.floor(p / width), v]] : [])),
+    ).toEqual([
+      [1, 1, 200],
+      [2, 1, 200],
+      [3, 1, 40],
+      [1, 2, 200],
+      [2, 2, 200],
+    ]);
+    expect(nearestMarked(kept, width, 11, 4)).toEqual({ x: 2.5, y: 2.5 });
+  });
+
+  it("keep a hairline whole, a mark all of whose pixels are speck-thin", () => {
+    const width = 5;
+    const a = new Uint8ClampedArray(width * 5);
+    for (let i = 0; i < 5; i++) a[i * width + i] = 160;
+    expect(withoutSpecks(a, width)).toBe(a);
   });
 
   it("can be laid over the board in one color", () => {

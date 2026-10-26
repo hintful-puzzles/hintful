@@ -175,8 +175,11 @@ still proposing.
 
 **A note a step rules out is struck, not ringed** (requirement "A note a step
 rules out is struck"). A grid of notes leaves no room for a ring round one
-note or round a cell's notes, so a candidate game's strike step marks the
-line through each note, in the note's own ink, and rings nothing. A
+note or round a cell's notes, so a candidate game's strike step crosses each
+note out with an X, in the note's own ink, and rings nothing. Draw it with
+`drawStrike` ([`engine/draw.ts`](../src/engine/draw.ts)), which gives every
+game one strike: an X that one stroke always carries across the stripes, and
+one "\" through a note that is a shape. A
 premise's "this cell" on that cell is drawn by its strikes
 (`struckCellsByStrikes` in [`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts)),
 so its words must not say "ringed". Measured, the alternative cost 9×9 Keen

@@ -37,7 +37,7 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
   type CellText,
@@ -457,10 +457,8 @@ function drawPencilMarks(
     // player's note; the same-color strikethrough is what says the hint rules it
     // out (docs/hints-marks.md § "The engine colors the marks").
     dr.drawText(at, options, COL_PENCIL, String(n));
-    if (struck & (1 << n)) {
-      const r = Math.max(2, (options.size / 3) | 0);
-      dr.drawLine({ x: at.x - r, y: at.y }, { x: at.x + r, y: at.y }, COL_PENCIL, 2);
-    }
+    if (struck & (1 << n))
+      drawStrike(dr, at, options.size, COL_PENCIL, { x: tx, y: ty, w: ts, h: ts });
   }
 }
 

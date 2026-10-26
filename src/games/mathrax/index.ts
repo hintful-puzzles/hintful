@@ -608,8 +608,7 @@ export const mathraxGame: Game<
   hintMarks: {
     roles: {
       ring: "the cell the step fills in with a number.",
-      strike:
-        "the pencil marks the step crosses out, shown with a line through them, and so the cell they are in.",
+      strike: "the pencil marks the step crosses out, and so the cell they are in.",
       outline:
         "what the step reasons from: the cells a clue constrains (the diagonal pair it sits between, or all four around an E or O), the number just placed, the cells of a set, or the numbered cells of a chain, in the order it runs.",
       stripes:

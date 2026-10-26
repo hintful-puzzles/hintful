@@ -767,8 +767,7 @@ export const soloGame: Game<
   hintMarks: {
     roles: {
       ring: "the cell the step fills in with a number.",
-      strike:
-        "the pencil marks the step crosses out, shown with a line through them, and so the cell they are in.",
+      strike: "the pencil marks the step crosses out, and so the cell they are in.",
       outline:
         "the cells the reason rests on: a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; the only cells that several rows or columns leave for one number; or the numbered cells of a chain.",
       stripes:
