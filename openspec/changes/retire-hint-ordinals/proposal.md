@@ -43,9 +43,12 @@ numbers.
   end"). Each reference already has its own pill, color and leader.
 - **Map** stops hiding its own region numbers while a chain shows. Its chain
   journey, which "dots each numbered region", is re-worded without ordinals.
-- **A better presentation of forcing**, chosen by the owner from a comparison
-  the implementing session builds (design.md § "Open question"). It is
-  player-visible, and the owner asked for it by name.
+- **Forcing is taught only through marks the player can make** (owner,
+  2026-10-26). A chain whose every link writes an ordinary mark becomes
+  ordinary steps. A chain of suppositions is backtracking: it moves to
+  Unreasonable, off the lower tiers in both the hint and the generator. No
+  supposition marks are added, since saving and loading already serve that.
+  Each chain kind is classified first (design D4, D5).
 - Help pages and guides that describe a numbered chain are updated. No save,
   game-ID or preference format changes.
 
@@ -65,8 +68,8 @@ None.
   ordinal.
 - `rome`: a walk in a Rome hint is outlined, not numbered.
 - `path`: a lookahead step stops numbering its forced edges.
-- `map`: its chain requirements, written by the implementing session once the
-  wording is settled (tasks.md).
+- `map`, and any game whose chain rung moves to Unreasonable: deltas written
+  once the classification settles them (tasks.md).
 
 ## Impact
 

@@ -22,12 +22,12 @@ adjacent, and the break sits on or beside the last forced cell in 140 of 140.
 
 - No hint draws a number on a chain, in any game.
 - Each sentence that cited a number still ties every mark it names.
-- Forcing is shown in a way the owner prefers to today's, Path first.
+- Every chain a hint shows is either ordinary marked steps or not shown below
+  Unreasonable (D4).
 
 **Non-Goals**
 
-- Shortening chains or changing which deductions a ladder fires, unless the
-  owner's choice of presentation calls for it.
+- A mark for suppositions (D4).
 
 ## Decisions
 
@@ -54,40 +54,51 @@ the ordinals. With no ordinals, nothing is hidden. Its chain journey ("dots
 each numbered region") is re-worded, and its spec delta is written once the
 wording is settled.
 
-## Open question: how should forcing be shown?
+### D4. Forcing is taught only through marks the player can make (owner)
 
-The owner asked this change to look for a better way to communicate forcing,
-especially in Path (2026-10-26). Their example, on a phone at 7×9 Normal,
-reads "A cross on this edge would force the numbered edges and leave the
-outlined square a dead end, so it must be a line." The edge is ringed, the
-forced edges are thin green lines numbered 1 to 5, and the dead-end square is
+The owner asked this change to look for a better way to communicate
+forcing, especially in Path. Their example, on a phone at 7×9 Normal, reads
+"A cross on this edge would force the numbered edges and leave the outlined
+square a dead end, so it must be a line." The edge is ringed, the forced
+edges are thin green lines numbered 1 to 5, and the dead-end square is
 outlined. The owner found it "an already extremely difficult hint".
 
-This is player-visible, and the owner asked for it by name. So the session
-prototypes the candidates on real boards, builds a comparison the owner can
-see side by side (screenshots in the app, light and dark, phone width), and
-asks before building one. Candidates to weigh, not a shortlist:
+The owner's ruling (2026-10-26): **in practice, long forcing is
+indistinguishable from backtracking.** A chain is fair only if every link
+can be recorded with the game's ordinary deductive marks, the kind a player
+makes anyway, like pencil-mark eliminations in the Latin games. Such a chain
+is taught as ordinary steps, each writing its mark, and needs no chain
+picture. A chain whose links cannot be written down as facts is a
+supposition: it is Search, so it belongs to Unreasonable. The generator
+stops dealing it at lower difficulties, and the hint refuses it there as it
+refuses other Search.
 
-- **Outline only.** The forced edges are drawn thin, with no numbers, and the
-  sentence names them as a set. This is the minimum: the player re-derives
-  the order from the hypothetical edge outward.
-- **Reveal in order on demand.** Pressing the chain's pill draws its links one
-  at a time, in the order they follow from the supposition. The order is
-  shown without a number on the board. The order must be one that forces:
-  re-derive it rather than reuse the search's discovery order. The 65.6%
-  figure says those differ.
-- **The supposition as a journey.** Today a hypothesis is never a journey's
-  legs (`docs/hints-marks.md` § "Show the what-if walk statically"). Ask who
-  that rule serves before keeping it. A walk the player can play forward and
-  take back may teach better than a static picture.
-- **A shorter story.** The break is beside the last forced link in every
-  measured Clusters firing. Showing only the links the contradiction needs,
-  or splitting a long chain into steps that each force one thing, may matter
-  more than how the chain is marked.
+**No supposition marks.** A layer for marking hypotheses was considered and
+refused. A player who wants to try a supposition already can, by saving,
+playing it out and loading back.
 
-Measure before choosing. For each candidate, count how many forced links a
-real Path lookahead step shows (`npm run hint-scan`), and read the sentence
-against the board.
+The owner's Path example looks like a supposition: a cross "would force"
+edges that are not facts, and no Path mark records them. That is a reading,
+not a finding. Classify it per D5.
+
+### D5. Classify every chain kind before reworking any
+
+For each game and rung that shows a chain, decide whether every link writes
+a mark the player can make. Record the table in this design, and keep the
+code behind it as a guard derived from what each rung is, not a list
+(`docs/method.md`). Then:
+
+- **Markable** chains are split into ordinary steps.
+- **Supposition** chains move to Unreasonable: the rung is gated off the
+  lower tiers, and the generator's difficulty certifier is re-checked so
+  each tier still deals boards.
+
+Measure what moving them costs. For each tier, count how many boards the
+generator deals and how long dealing takes, before and after, and bring the
+owner any tier that becomes hard to fill. Re-read
+`docs/hints-marks.md` § "Show the what-if walk statically" and
+`docs/hints.md` § "The forcing boundary" against D4, and retire whatever D4
+makes dead.
 
 ## Risks / Trade-offs
 

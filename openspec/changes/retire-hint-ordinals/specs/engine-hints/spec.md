@@ -42,5 +42,6 @@ premise, and a link the words single out is a reference of its own.
 its links, not a sequence the player can follow, and a number is a mark the
 player cannot make on their own board.
 
-**Migration**: Games stop declaring a link's position. How forcing is shown
-is the owner's choice, recorded in this change's design.
+**Migration**: Games stop declaring a link's position. A chain whose every
+link writes a mark the player can make is taught as ordinary steps; a chain of
+suppositions is Search, refused below Unreasonable.
