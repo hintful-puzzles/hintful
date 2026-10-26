@@ -10,7 +10,10 @@
 
 - [x] 2.1 Render the inscribed circle, the circumscribed circle and the rounded square in a notes grid, Cube, a domino and an edge, and put them to the owner
 - [x] 2.2 Record the answer in the design (D5)
-- [ ] 2.3 Each game's `clear` box: the area its content may take; where notes cannot clear the floor, inset them, or choose another role there and say why
+- [x] 2.3 Measure the padding route in the app (9×9 Keen: notes ~40% smaller); owner chose the strike role and the over-notes placement ring (D6, D7)
+- [ ] 2.4 `ringShape` may shift off the box's center to leave a corner clue outside; unit test with Keen's clue-and-digit cell
+- [ ] 2.5 The strike role: `MARK_ROLES`, its reference colors and ink, the legend, and the five sources that ring a NOTE today (`candidate-plan.ts`, `hint-text.ts`, `overlay-sidecar.ts`, crossing, undead); a struck note no longer rings its cell
+- [ ] 2.6 `HintMarkStyle.text` names notes apart: crossable on the ringed cell, avoided round it; Keen's layout back to upstream's (no padding)
 
 ## 3. The engine painters
 

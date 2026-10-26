@@ -98,25 +98,54 @@ ring there."*
 The owner added: *"I'm also ok with going a bit outside the referred
 elements, like in A and B, as long as it doesn't cover any content there."*
 
-So `drawRing` takes the element's box and `clear`, the boxes content may
-occupy: the element's own and its neighbors'. It strokes a rounded rectangle
-round the element and picks the **roundest one whose stroke and edge
-(`MARK_EDGE_PX`) cross no box in `clear`**. It encloses the element's own
-content, and may grow outward from the element's box by up to half the
-short side. Among equally round shapes, the one that grows least wins. An
-empty or centered-glyph cell therefore gets a circle, and a cell of corner
-notes gets a rounded square, or a larger circle where the neighbors leave
-room. Below a floor of roundness, a corner radius of a third of the shape's
-short side, it throws and names the box. That throw is the structural half
-of "then it shouldn't be a ring there":
+So `drawRing` takes the element's box and `clear`: the text it encloses (the
+element's own) and the text it leaves outside (a clue in the element's
+corner, or a neighbor's). It strokes a rounded rectangle round the element
+and picks the **roundest one whose stroke and edge (`MARK_EDGE_PX`) cross no
+text**:
 
-- A game whose element cannot clear its content at the floor either pads
-  the content (it insets its notes), or marks that element with another
-  role and says so in other words.
-- `clear` is the area content *may* take (a game's note grid, its glyph
-  box), not what a frame happens to show. So one game's rings keep one shape
-  from frame to frame, and the throw is reached by the first frame that
-  rings the element, not only by the frame with the fullest cell.
+- It may grow past the element's box into `room`, the pixels the game
+  repaints when the ring moves.
+- It may draw in from the box, or shift off its center, to leave a corner's
+  clue outside.
+- Among equally round shapes, the one nearest the box wins.
+- Below a floor of roundness, a corner radius of a third of the short side,
+  it throws and names the box. That throw is the structural half of "then it
+  shouldn't be a ring there".
+
+`clear` is the text the frame shows, and a glyph's ink comes from the
+engine's `textBox`, which a game calls with the arguments it passes
+`drawText`.
+
+### D6. Struck notes are a strike, not a ring
+
+The first pass padded every cell's text so a ring would always fit round it.
+Measured in the app on 9×9 Keen at phone width (2026-10-26), that shrinks
+pencil marks by about 40%, and the marks in a cage-clue cell become dots.
+Ringing the single note instead does not fit either: there, notes are about
+9 px tall with 2.7 px between rows, and the thinnest ring with its edge
+needs about 3 px.
+
+The owner chose (2026-10-26) **a fourth engine role, the strike**: a note
+the step rules out is marked by the line through it, with the word "struck".
+It takes a reference color of its own. It is drawn as today's struck note
+is, in the note's own ink, and found by the repaint by what it changes. No
+ring is drawn round a struck note, and a struck note no longer rings its
+cell (`NOTE.within`). Note grids keep their size.
+
+### D7. A placement in a cell of notes rings the whole cell, over its notes
+
+The owner chose (2026-10-26) that when a step places a value in a cell that
+shows notes, the cell gets a round ring whose stroke may cross **that cell's
+own notes**. The step replaces them all. The clue and any neighbor's text are
+still kept clear.
+
+The owner offered this as the fallback for when a ring round the note
+cannot clear its neighbors. It is made the rule for every placement in a
+cell of notes, so each kind of step has one look, and its words ("this
+cell") do not depend on how many pixels a note grid leaves. A game's
+`HintMarkStyle.text` therefore names a cell's notes apart from its other
+text: crossable on the ringed cell, avoided round it.
 
 ## Risks / Trade-offs
 
@@ -127,8 +156,11 @@ of "then it shouldn't be a ring there":
   erase takes the path an `outer` band takes today (`eraseBeforeTiles` and
   the `overlaps` repaint), sized to the ring's own bounds, and a game is
   played with a hint moving between cells.
-- **A candidate game's notes may need to move inward** to clear the floor
-  (D5). That is a layout change in each such game, and it is run in the app.
+- **A ring that cannot fit throws at play time.** The shapes are judged
+  against the frame's text, so a board no test reaches could crash a game.
+  The cross-game hint frame tests (`hint-ink.test.ts` and each game's hint
+  test) draw every game's steps. A throw found in play is a defect in that
+  game's text or its element, and is fixed there.
 - **Echoes inside a ring are smaller than today's recolored shapes.** An edge
   pill is thin, and a cross inside it may be hard to read. Edge games are run
   in the app before the change is called done.
