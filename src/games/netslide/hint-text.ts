@@ -23,10 +23,8 @@
  * source is visibly off-center and the player can see the claim is false.
  *
  * Everything else a step marks is what it decides, so it is ringed in the roles
- * of `engine/hint-words.ts`, whatever its glyph: the tile to move (a double ring,
- * with the arrow to click in the hint's color) and the squares the slide takes
- * it to (a solid outline where it belongs, a dashed one on the way). The words
- * that point at them are references.
+ * of `engine/hint-words.ts`: the tile to move (with the arrow to click) and the
+ * squares the slide takes it to. The words that point at them are references.
  *
  * The move itself is *not* forced by logic — Netslide is a movement game — so
  * the conclusion is an imperative, never a modal of necessity.

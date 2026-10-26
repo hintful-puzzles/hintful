@@ -11,10 +11,11 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { CROSS, LINE } from "../../engine/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { skeletonGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -117,8 +118,9 @@ describe("skeleton hint frame", () => {
   it("rings the edge a supposition settles and outlines where it breaks", () => {
     const { recording, step } = renderPinnedHint(skeletonGame, pinned("lookahead"));
     expect(stepMarks(step).of("ring", EDGE).length).toBeGreaterThan(0);
-    for (const color of [COL_HINT, COL_HINT_EVIDENCE])
-      expect(recording.ops.some((op) => paintsWith(op, color))).toBe(true);
+    // Each of an edge's two squares draws its half of the edge's one ring.
+    expectRing(recording.ops, { rings: 2 * stepMarks(step).of("ring", EDGE).length });
+    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
   });
 
   it("outlines the square a degree step reads", () => {

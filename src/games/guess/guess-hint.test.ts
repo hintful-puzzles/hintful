@@ -22,6 +22,7 @@ import {
 } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -34,7 +35,7 @@ import {
 } from "./hint.ts";
 import type { Reason } from "./hint-text.ts";
 import { guessGame } from "./index.ts";
-import { answerSlotAt, COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { answerSlotAt, COL_HINT_CELL } from "./render.ts";
 import {
   decodeParams,
   defaultParams,
@@ -658,13 +659,10 @@ describe("the hint frame", () => {
     expect(hl.line).toEqual([0]);
     expect(hl.marked).toHaveLength(2 * p.npegs);
     const ops = res.recording.ops;
-    const frames = ops.filter((o) => o.op === "rect" && o.color === COL_HINT);
-    // A four-sided frame beside each marked block, every side of it thin: a
-    // mark in the gap, never a fill over the color it is about.
-    expect(frames.length).toBe(hl.marked.length * 4);
-    for (const f of frames) {
-      if (f.op === "rect") expect(Math.min(f.w, f.h)).toBeLessThanOrEqual(2);
-    }
+    // A round ring round each marked block, and nothing else in its ink: a
+    // mark round the color it is about, never a fill over it.
+    expectRing(ops, { rings: hl.marked.length });
+    for (const r of ringsOf(ops)) expect(r.thickness).toBeLessThanOrEqual(2);
     // The row is hatched, not outlined: its whole strip, then each peg and the
     // score box again over their own backgrounds, all on one strip of the board.
     expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toEqual([]);

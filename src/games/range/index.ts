@@ -247,7 +247,7 @@ function lineOfSight(
 
 /** The straight line from a clue toward a target it must reach: the clue
  * plus every cell between it and the target (target excluded — that one
- * is the COL_HINT cell). Clue and target are collinear by construction. */
+ * is the ringed cell). Clue and target are collinear by construction. */
 function reachLine(cr: number, cc: number, tr: number, tc: number): Cell[] {
   const cells = [{ r: cr, c: cc }];
   const dr = Math.sign(tr - cr);

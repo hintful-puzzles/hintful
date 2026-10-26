@@ -61,7 +61,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 16,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -79,7 +79,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 48,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -97,7 +97,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 80,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -115,7 +115,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 112,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -133,7 +133,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 144,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -151,7 +151,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 176,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -169,7 +169,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 208,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -187,7 +187,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 16,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -226,7 +226,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 80,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -244,7 +244,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 112,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -304,7 +304,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 208,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -322,7 +322,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 16,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -361,7 +361,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 80,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -379,7 +379,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 112,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -397,7 +397,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 144,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -415,7 +415,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 176,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -433,7 +433,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 208,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -451,7 +451,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 16,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -469,7 +469,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 48,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -487,7 +487,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 80,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -505,7 +505,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 112,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -523,7 +523,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 144,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -541,7 +541,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 176,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -559,7 +559,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 208,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -577,7 +577,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 16,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -595,7 +595,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 48,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -613,7 +613,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 80,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -631,7 +631,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 112,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -649,7 +649,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 144,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -688,7 +688,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 208,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -706,7 +706,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 16,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -766,7 +766,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 112,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -784,7 +784,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 144,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -823,7 +823,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 208,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -841,7 +841,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 16,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -859,7 +859,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 48,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -877,7 +877,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 80,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -895,7 +895,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 112,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -913,7 +913,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 144,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -931,7 +931,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 176,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -949,7 +949,7 @@ exports[`lightup rendering > draws the opener frame: black tiles, clue digits, g
     "y": 208,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

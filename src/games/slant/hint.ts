@@ -32,8 +32,8 @@ export interface SlantMark {
 
 /** Highlight data for a Slant hint step. `target` is the square this leg
  * forces and `siblings` the same firing's still-to-do squares, all ringed
- * `COL_HINT` with no slash preview (they share its fate); `mark` is the
- * same-slant mark a step places, drawn in the hint color. `area` is the
+ * with no slash preview (they share its fate); `mark` is the same-slant mark
+ * a step places, ringed with its bars inside. `area` is the
  * deduction's evidence to outline (a clue's decided neighbors, a loop chain,
  * the trapped dead-end components, the pairs a v-shape argument reads);
  * `marks` are the marks it cites; `ref` is a cited already-filled square,

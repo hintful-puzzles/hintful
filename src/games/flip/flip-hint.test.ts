@@ -13,12 +13,12 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
+import { expectRing, markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type FlipRung, hint, hintKeepTrack } from "./hint.ts";
 import { flipGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import { shortestAnswer } from "./solver.ts";
 import { encodeBitmap, type FlipMove, type FlipState } from "./state.ts";
 
@@ -240,7 +240,7 @@ describe("Flip hint frame", () => {
     const result = renderScenario({ game: G, id, showHint: true });
     expect(result.hint?.explanation).toBe(step.explanation);
     const ops = result.recording.ops;
-    expectRing(ops, COL_HINT);
+    expectRing(ops);
     // Two outlined squares, as one contour or two rings: six to eight sides.
     const sides = markSides(ops, COL_HINT_CELL).length;
     expect(sides).toBeGreaterThanOrEqual(6);
@@ -255,7 +255,7 @@ describe("Flip hint frame", () => {
   it("draws no mark without a hint", () => {
     const result = renderScenario({ game: G, id: pinned("lastChance").id });
     const ops = result.recording.ops;
-    expect(markSides(ops, COL_HINT)).toEqual([]);
+    expect(ringsOf(ops)).toEqual([]);
     expect(markSides(ops, COL_HINT_CELL)).toEqual([]);
   });
 });

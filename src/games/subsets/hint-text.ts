@@ -172,7 +172,7 @@ export const say = {
       : `a smaller set inside ${label}`;
     return so({
       look: phrase`no ${mark.as("outline", TALLY_SET, sets, "outlined set")} is ${partner}`,
-      move: phrase`the horseshoe to ${outlinedCell([via])} rules ${mark.as("ring", TALLY_SET, [rule.value], label)} out of ${mark.this("ring", CELL, [target], "cell")}`,
+      move: phrase`the horseshoe to ${outlinedCell([via])} rules ${mark.as("ring", TALLY_SET, [rule.value], label)} out of ${mark.this("stripes", CELL, [target], "cell")}`,
     });
   },
 

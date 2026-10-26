@@ -2,7 +2,11 @@
  * A hint's board marks — the **ring** around the cell a deduction acts on and
  * the **outline** around the region it reasons from.
  *
- * Both replace the cell's *border* rather than its background, which is the
+ * The outline is a band on the cell's border; the ring is round and the
+ * engine's (`GameDrawing.drawRing`), inside the band's reach, clear of the
+ * text a game says its cells show ({@link HintMarkStyle.text}).
+ *
+ * Both go beside the content rather than behind it, which is the
  * whole point: a fill behind content cannot be rescued by choosing a different
  * color. Measured, `HINT_FILL` scores 1.91:1 against a pencil mark in light and
  * 1.96:1 in dark, and a joint search over both hint roles, every hue and both
@@ -36,12 +40,13 @@
  */
 
 import type { GameDrawing } from "./game.ts";
+import type { RingClear } from "./ring.ts";
 import type { Rect } from "./types.ts";
 
-export const MARK_TOP = 1;
-export const MARK_LEFT = 2;
-export const MARK_BOTTOM = 4;
-export const MARK_RIGHT = 8;
+const MARK_TOP = 1;
+const MARK_LEFT = 2;
+const MARK_BOTTOM = 4;
+const MARK_RIGHT = 8;
 export const MARK_ALL = MARK_TOP | MARK_LEFT | MARK_BOTTOM | MARK_RIGHT;
 
 export interface MarkCell {
@@ -109,11 +114,26 @@ export function outlineSides(
   );
 }
 
+/** A cell's text as a ring sees it ({@link HintMarkStyle.text}). */
+export interface CellText extends RingClear {
+  readonly notes: readonly Rect[];
+}
+
+/** A cell that shows no text. */
+export const NO_TEXT: CellText = { enclose: [], avoid: [], notes: [] };
+
 export interface HintMarkStyle {
   /** Where cell `(x, y)`'s band sits. */
   band(x: number, y: number): MarkBand;
-  /** The ring around a cell the deduction acts on. */
-  targetColor: number;
+  /**
+   * The text cell `(x, y)` shows this frame, for a ring to keep clear of: what
+   * a ring on the cell encloses (its value), what it leaves outside (a cage
+   * clue in its corner), and its notes, which a ring on the cell may cross,
+   * because the step decides the cell and replaces them. Called for the
+   * target's neighbors too, which may lie off the board; a ring leaves all of
+   * a neighbor's text outside.
+   */
+  text(x: number, y: number): CellText;
   /** The outline around the region it reasons from. */
   evidenceColor: number;
   /**
@@ -129,6 +149,13 @@ export interface HintMarkStyle {
    * rather than one that is not on the board.
    */
   joinEvidence?: (a: MarkCell, b: MarkCell) => boolean;
+  /**
+   * What a ring round `piece` holds besides the cell's own content: the move's
+   * shape (Salad's entry, as X, circle or letter), drawn in the ring's `ink`
+   * and clipped to the ring (`GameDrawing.drawRing`'s `inside`). Omitted, or
+   * `null` for a piece, the ring holds nothing more.
+   */
+  inside?: (piece: readonly MarkCell[]) => ((ink: number) => void) | null;
 }
 
 const key = (c: MarkCell): number => c.y * 8192 + c.x;
@@ -197,6 +224,100 @@ export class MarkOutlines {
   packed(x: number, y: number): number {
     return this.targetSides(x, y) | (this.evidenceSides(x, y) << 4);
   }
+}
+
+/**
+ * The targets as the pieces a ring goes round: each set of targets `join`
+ * links, when it is one straight run, and every other target alone. A ring is
+ * round, and round a bent piece it would enclose board the piece is not on.
+ */
+function ringPieces(
+  targets: readonly MarkCell[],
+  join: (a: MarkCell, b: MarkCell) => boolean,
+): MarkCell[][] {
+  const byKey = new Map(targets.map((c) => [key(c), c]));
+  const seen = new Set<number>();
+  const pieces: MarkCell[][] = [];
+  for (const start of targets) {
+    if (seen.has(key(start))) continue;
+    const piece = [start];
+    seen.add(key(start));
+    for (let i = 0; i < piece.length; i++) {
+      const c = piece[i];
+      for (const [dx, dy] of STEPS) {
+        const n = byKey.get(key({ x: c.x + dx, y: c.y + dy }));
+        if (!n || seen.has(key(n)) || !join(c, n)) continue;
+        seen.add(key(n));
+        piece.push(n);
+      }
+    }
+    const straight =
+      piece.every((c) => c.x === start.x) || piece.every((c) => c.y === start.y);
+    if (straight) pieces.push(piece);
+    else for (const c of piece) pieces.push([c]);
+  }
+  return pieces;
+}
+
+const STEPS = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+] as const;
+
+const bounds = (rects: readonly Rect[]): Rect => {
+  const x = Math.min(...rects.map((r) => r.x));
+  const y = Math.min(...rects.map((r) => r.y));
+  const x1 = Math.max(...rects.map((r) => r.x + r.w));
+  const y1 = Math.max(...rects.map((r) => r.y + r.h));
+  return { x, y, w: x1 - x, h: y1 - y };
+};
+
+/** How thick {@link HintMarks} draws a ring on a cell of `band`: the band's
+ * own width, as the outline is, and never under two pixels. */
+const ringThickness = (band: MarkBand): number => Math.max(2, band.outer + band.inner);
+
+/** One ring round `piece`, within the band its cells' repaint and erase
+ * answer for, enclosing the piece's value, over its notes, and clear of the
+ * rest of the text round it. */
+function drawPieceRing(
+  dr: GameDrawing,
+  piece: readonly MarkCell[],
+  style: HintMarkStyle,
+) {
+  const inPiece = new Set(piece.map(key));
+  const bands = piece.map((c) => style.band(c.x, c.y));
+  const enclose: Rect[] = [];
+  const avoid: Rect[] = [];
+  for (const c of piece) {
+    const own = style.text(c.x, c.y);
+    enclose.push(...own.enclose);
+    avoid.push(...own.avoid);
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const n = { x: c.x + dx, y: c.y + dy };
+        if (inPiece.has(key(n))) continue;
+        const theirs = style.text(n.x, n.y);
+        avoid.push(...theirs.enclose, ...theirs.avoid, ...theirs.notes);
+      }
+  }
+  dr.drawRing(
+    bounds(bands.map((b) => b.box)),
+    { enclose, avoid },
+    ringThickness(bands[0]),
+    {
+      room: bounds(
+        bands.map((b) => ({
+          x: b.box.x - b.outer,
+          y: b.box.y - b.outer,
+          w: b.box.w + 2 * b.outer,
+          h: b.box.h + 2 * b.outer,
+        })),
+      ),
+      inside: style.inside?.(piece) ?? undefined,
+    },
+  );
 }
 
 /**
@@ -269,14 +390,9 @@ export class HintMarks {
         outlines.evidenceSides(c.x, c.y),
         style.evidenceColor,
       );
-    // The target last, so it wins any border the two share.
-    for (const c of targets)
-      drawMarkSides(
-        dr,
-        style.band(c.x, c.y),
-        outlines.targetSides(c.x, c.y),
-        style.targetColor,
-      );
+    // The rings last, so they lie over any outline they cross.
+    for (const piece of ringPieces(targets, style.joinTargets ?? never))
+      drawPieceRing(dr, piece, style);
     this.signature = signature;
     this.painted = [...evidence, ...targets];
   }

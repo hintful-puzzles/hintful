@@ -1,7 +1,7 @@
 /**
  * Tier-2.5 render scenarios for the Slant hint: drive a real Midend to a
  * displayed hint step and capture `redraw`. Targeted op assertions (the ringed
- * `COL_HINT` target, the recolored clue digit, the outlined `COL_HINT_CELL`
+ * target, the recolored clue digit, the outlined `COL_HINT_CELL`
  * evidence) plus one snapshot, so a render regression is a reviewable text
  * diff.
  */
@@ -12,7 +12,7 @@ import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.t
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { SlantHint } from "./hint.ts";
 import { slantGame } from "./index.ts";
-import { COL_GRID, COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_GRID, COL_HINT_CELL } from "./render.ts";
 import { DIFF_EASY, DIFF_HARD } from "./state.ts";
 
 const lit = (step: HintStep<unknown>): SlantHint => {
@@ -58,9 +58,9 @@ describe("Slant hint render scenarios", () => {
   it("opener frame: ringed target(s), recolored clue digit, board intact", () => {
     const { recording, h, size } = hintFrame("clue");
 
-    // The target and any siblings are **ringed**, four thin rects each and none
-    // solid: a blue square in Slant would read as a slash already placed.
-    expectRing(recording.ops, COL_HINT, 1 + (h.siblings?.length ?? 0));
+    // The target and any siblings are **ringed**, round and never filled: a
+    // blue square in Slant would read as a slash already placed.
+    expectRing(recording.ops, { rings: 1 + (h.siblings?.length ?? 0) });
     // The driving clue's digit is recolored, as an outline.
     expect(
       recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
@@ -78,7 +78,7 @@ describe("Slant hint render scenarios", () => {
 
     expect(h.area?.length ?? 0).toBeGreaterThan(0);
     // Exactly one ringed target (loop firings force a single square).
-    expectRing(recording.ops, COL_HINT);
+    expectRing(recording.ops);
     // The chain is **outlined**, not shaded: its squares carry the very
     // diagonals the deduction reasons from.
     const chain = markSides(recording.ops, COL_HINT_CELL);
@@ -90,7 +90,7 @@ describe("Slant hint render scenarios", () => {
     const { recording, h } = hintFrame("equivalence");
 
     expect(h.ref).toBeDefined();
-    expectRing(recording.ops, COL_HINT);
+    expectRing(recording.ops);
     expect(recording.ops.some((o) => "color" in o && o.color === COL_HINT_CELL)).toBe(
       true,
     );

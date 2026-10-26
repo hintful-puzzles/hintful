@@ -802,7 +802,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y": 400,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -821,7 +821,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y2": 224,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -830,7 +830,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y": 241,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -849,7 +849,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y2": 352,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -858,7 +858,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y": 369,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -877,7 +877,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y2": 224,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -886,7 +886,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y": 241,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -905,7 +905,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y2": 352,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -914,7 +914,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y": 369,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1003,7 +1003,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y2": 216,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1012,7 +1012,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y": 241,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1021,7 +1021,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y": 305,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1040,7 +1040,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y2": 384,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1049,7 +1049,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y": 177,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1058,7 +1058,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y": 241,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1077,7 +1077,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "y2": 320,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",

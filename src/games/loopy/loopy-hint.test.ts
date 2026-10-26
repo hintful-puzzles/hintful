@@ -16,6 +16,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -43,7 +44,7 @@ import {
   type LoopyParams,
 } from "./params.ts";
 import type { CornerWhy, LoopyReason, RelationWhy } from "./record.ts";
-import { COL_HINT, COL_HINT_CELL, COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
+import { COL_HINT_CELL, COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
 import { uniqueSolution } from "./solver.ts";
 import {
   AF_ADAPTIVE,
@@ -1154,21 +1155,25 @@ describe("Loopy hint frames", () => {
     return { result, step };
   }
 
-  it("bands the edges a step sets: solid for a line, broken for an edge that can't be one", () => {
+  it("rings the edges a step sets: solid inside for a line, broken for an edge that can't be one", () => {
     const line = frame("oneLine");
     const empty = frame("oneRuledOut");
-    const bands = (ops: typeof line.result.recording.ops) =>
-      ops.filter((o) => o.op === "line" && o.color === COL_HINT);
-    expect(bands(line.result.recording.ops)).toHaveLength(1);
-    expect(bands(empty.result.recording.ops)).toHaveLength(4);
+    const inside = (ops: typeof line.result.recording.ops) => {
+      expectRing(ops);
+      const ink = ringsOf(ops)[0].color;
+      return ops.filter((o) => o.op === "line" && o.color === ink);
+    };
+    expect(inside(line.result.recording.ops)).toHaveLength(1);
+    expect(inside(empty.result.recording.ops)).toHaveLength(4);
   });
 
-  it("draws the pair a step places in the action color, and the pairs it cites in the evidence color", () => {
+  it("rings the pair a step places, and draws the pairs it cites in the evidence color", () => {
     const { result, step } = frame("pairCitingPairs");
     const ops = result.recording.ops;
     const signs = (color: number) =>
       ops.filter((o) => o.op === "text" && o.color === color && /^[=≠]$/.test(o.text));
-    expect(signs(COL_HINT)).toHaveLength(1);
+    expectRing(ops);
+    expect(signs(ringsOf(ops)[0].color)).toHaveLength(1);
     expect(signs(COL_HINT_CELL)).toHaveLength(marksOf(step).pairs.length);
     expect(ops).toMatchSnapshot();
   });
@@ -1184,22 +1189,24 @@ describe("Loopy hint frames", () => {
     expect(ops).toMatchSnapshot();
   });
 
-  it("draws the corner a step places in the action color, over the corner it cites", () => {
+  it("rings the corner a step places, over the corner it cites", () => {
     const { result, step } = frame("cornerCitingCorners");
     const ops = result.recording.ops;
     const move = step.move;
     if (move.kind !== "corner") throw new Error("unreachable");
+    expectRing(ops);
+    const ink = ringsOf(ops)[0].color;
     const inColor = (color: number) =>
       ops.filter(
         (o) =>
           (o.op === "polygon" && o.fill === color) ||
           (o.op === "line" && o.color === color),
       );
-    expect(inColor(COL_HINT).length).toBeGreaterThan(0);
+    expect(inColor(ink).length).toBeGreaterThan(0);
     expect(inColor(COL_HINT_CELL).length).toBeGreaterThan(0);
     // A filled band for a corner needing a line, and none for one that can only
     // take one at most.
-    const filled = ops.filter((o) => o.op === "polygon" && o.fill === COL_HINT);
+    const filled = ops.filter((o) => o.op === "polygon" && o.fill === ink);
     expect(filled).toHaveLength(move.bits & 1 ? 1 : 0);
   });
 });

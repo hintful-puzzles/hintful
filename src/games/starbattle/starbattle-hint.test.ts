@@ -9,10 +9,11 @@ import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { starbattleGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   BLANK,
@@ -187,7 +188,7 @@ describe("starbattle hint frame", () => {
     const { recording, step } = renderPinnedHint(starbattleGame, pinned("starved"));
     expect(stepMarks(step).of("ring", CELL)).toHaveLength(1);
     expect(stepMarks(step).of("stripes", CELL).length).toBeGreaterThan(0);
-    expect(recording.ops.some((op) => paintsWith(op, COL_HINT))).toBe(true);
+    expectRing(recording.ops);
   });
 
   it("outlines the regions a band of rows or columns is counted against", () => {
@@ -198,7 +199,7 @@ describe("starbattle hint frame", () => {
     expect(stripes.length % state.size).toBe(0);
     expect(stripes.length / state.size).toBeGreaterThan(1);
     expect(stepMarks(step).of("outline", CELL).length).toBeGreaterThan(0);
-    for (const color of [COL_HINT, COL_HINT_EVIDENCE])
-      expect(recording.ops.some((op) => paintsWith(op, color))).toBe(true);
+    expect(ringsOf(recording.ops).length).toBeGreaterThan(0);
+    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
   });
 });

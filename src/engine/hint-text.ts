@@ -135,10 +135,10 @@ export function cleanObviousText(
 ): (marks: readonly Note[]) => Sentence {
   // Says nothing about the "fill all pencil marks" button doing this same
   // cleanup: help/features.md says so once (docs/hints.md § "Rules belong
-  // in the help"). The notes it names are the ringed ones it strikes.
+  // in the help"). The notes it names are the ones it strikes.
   return (marks) =>
     unshaped(
-      phrase`Now clear the easy ones: cross out ${mark.as("ring", NOTE, marks, `any ${noun} already ${placedVerb} in its ${cell}'s ${regions}`)}.`,
+      phrase`Now clear the easy ones: cross out ${mark.as("strike", NOTE, marks, `any ${noun} already ${placedVerb} in its ${cell}'s ${regions}`)}.`,
       "setup",
     );
 }

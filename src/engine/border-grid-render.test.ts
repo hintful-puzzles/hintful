@@ -146,8 +146,7 @@ describe("the packed flags do not collide", () => {
   });
 });
 
-describe("an edge the hint decides is drawn as what it must become", () => {
-  const RING = 20;
+describe("an edge the hint decides is ringed, with what it must become inside", () => {
   const colors = {
     background: 1,
     flash: 2,
@@ -157,10 +156,11 @@ describe("an edge the hint decides is drawn as what it must become", () => {
     lineNo: 6,
     lineMaybe: 7,
     error: 8,
-    hintEdge: RING,
-    hintEvidence: 21,
+    hintEvidence: 10,
     cursor: 9,
   };
+  /** The engine's ring ink, after the game's eleven slots. */
+  const RING = 11;
   const ts = 48;
   /** What tile (0, 0) of a 2×2 board draws in the ring's ink while a step
    * rings its right edge as `kind`. */
@@ -168,18 +168,20 @@ describe("an edge the hint decides is drawn as what it must become", () => {
     const edge: ForcedBorderEdge = { x: 0, y: 0, dir: 1, kind };
     const step = { words: phrase`${mark.as("ring", EDGE, [edge], "edge")}` };
     const { cells, edges } = hintTileBits(2, 2, stepMarks(step));
-    const dr = new RecordingDrawing([]);
+    const dr = new RecordingDrawing(Array.from({ length: RING }, () => [0, 0, 0]));
     drawBorderTile(dr, ts, 0, 0, cells[0], colors, undefined, edges[0]);
     return dr.ops.filter((o) => "color" in o && o.color === RING);
   };
 
-  it("a wall is the edge in the ring's ink", () => {
+  it("a wall is the edge in the ring's ink, inside a pill along it", () => {
     const ops = ringInk("wall");
-    expect(ops.map((o) => o.op)).toEqual(["rect"]);
+    expect(ops.map((o) => o.op)).toEqual(["ring", "rect"]);
+    const [pill] = ops;
+    if (pill.op === "ring") expect(pill.h).toBeGreaterThan(pill.w);
   });
 
-  it("not a wall is a cross on the edge, which keeps its own color", () => {
-    const ops = ringInk("nowall");
+  it("not a wall is a cross on the edge, inside a pill along it", () => {
+    const ops = ringInk("nowall").filter((o) => o.op !== "ring");
     expect(ops.map((o) => o.op)).toEqual(["line", "line"]);
     // Centered on the edge between the two cells.
     const edgeX = margin(ts) + ts + Math.floor(tileWidth(ts) / 2);

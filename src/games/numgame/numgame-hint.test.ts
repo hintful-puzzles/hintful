@@ -9,11 +9,10 @@ import { describe, expect, it } from "vitest";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { paintsWith } from "../../engine/testing/recording-drawing.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { SIGN, TILE } from "./hint-text.ts";
 import { numgameGame } from "./index.ts";
-import { COL_HINT } from "./render.ts";
 import { combine, OPS, reachOf } from "./solver.ts";
 import {
   executeMove,
@@ -143,6 +142,6 @@ describe("numgame hint plans", () => {
 describe("numgame hint frame", () => {
   it("rings the step's numbers and its operator", () => {
     const { recording } = renderPinnedHint(numgameGame, pinned("starts"));
-    expect(recording.ops.some((op) => paintsWith(op, COL_HINT))).toBe(true);
+    expectRing(recording.ops, { rings: 3 });
   });
 });

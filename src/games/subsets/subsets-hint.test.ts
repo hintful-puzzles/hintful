@@ -16,19 +16,14 @@ import { Midend } from "../../engine/index.ts";
 import { CURSOR_DOWN, LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { subsetsGame } from "./index.ts";
-import {
-  COL_HINT,
-  COL_HINT_CELL,
-  COL_HINT_SPOT,
-  newDrawState,
-  redraw,
-} from "./render.ts";
+import { COL_HINT_CELL, COL_HINT_SPOT, newDrawState, redraw } from "./render.ts";
 import {
   candidateCells,
   candidateSets,
@@ -356,7 +351,9 @@ describe("hint", () => {
     for (const step of res.steps) {
       expect(step.explanation.length).toBeGreaterThan(20);
       const marks = stepMarks(step);
-      expect(marks.of("ring", SLOT).length + marks.of("ring", CELL).length).toBe(1);
+      expect(marks.of("ring", SLOT).length + marks.of("ring", TALLY_SET).length).toBe(
+        1,
+      );
       // Every leg is one slot or one rule-out with its own action; the lead leg
       // also names the highlighted thing it reasons from (attention → deduction
       // → action).
@@ -641,10 +638,21 @@ describe("hint rendering (tier 2.5)", () => {
     return renderPinnedHint(subsetsGame, pinned(kind));
   }
 
-  it("an arrow hint frame paints the COL_HINT target slot and the COL_HINT_CELL neighbor", () => {
+  /** One ring per element the step rings: a slot, a cell or a tally entry. */
+  const ringed = (hint: Parameters<typeof stepMarks>[0]): number => {
+    const marks = stepMarks(hint);
+    return (
+      marks.of("ring", SLOT).length +
+      marks.of("ring", CELL).length +
+      marks.of("ring", TALLY_SET).length
+    );
+  };
+
+  it("an arrow hint frame rings the target slot and frames the COL_HINT_CELL neighbor", () => {
     const result = hintFrame("arrowKnown");
     const ops = result.recording.ops;
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
+    expect(stepMarks(result.hint).of("ring", SLOT)).toHaveLength(1);
+    expectRing(ops, { rings: ringed(result.hint) });
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
@@ -657,7 +665,8 @@ describe("hint rendering (tier 2.5)", () => {
     // gray), so a fill behind it competes with what has to be read.
     expect(stepMarks(result.hint).of("outline", TALLY_SET).length).toBeGreaterThan(0);
     const ops = result.recording.ops;
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
+    expect(ringed(result.hint)).toBeGreaterThan(0);
+    expectRing(ops, { rings: ringed(result.hint) });
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
@@ -666,7 +675,8 @@ describe("hint rendering (tier 2.5)", () => {
     const result = hintFrame("hiddenSingle");
     expect(stepMarks(result.hint).of("stripes", CELL)).toHaveLength(1);
     const ops = result.recording.ops;
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
+    expect(ringed(result.hint)).toBeGreaterThan(0);
+    expectRing(ops, { rings: ringed(result.hint) });
     // Striped like every other game's named line or region, one hatch per
     // letter square of the cell; the spotlight frame stays the aid's.
     const hatches = ops.filter((o) => o.op === "hatch");

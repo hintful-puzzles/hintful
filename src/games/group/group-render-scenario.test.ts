@@ -21,7 +21,7 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { groupGame } from "./index.ts";
-import { COL_DIAGONAL, COL_GRID, COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_DIAGONAL, COL_GRID, COL_HINT_CELL } from "./render.ts";
 import type { GroupMove } from "./state.ts";
 
 // A 6x6 identity-shown board (group-trace-5 fixture): the identity row/column
@@ -102,15 +102,15 @@ describe("group render scenarios", () => {
     const frame = renderPinnedHint(groupGame, pinned("associativityPairAndOne"));
     const { step } = frame;
 
-    // The forced cell is **ringed** COL_HINT — four thin rects, no fill — and
-    // the three known products are outlined COL_HINT_CELL as evidence.
+    // The forced cell is **ringed**, round, and the three known products are
+    // outlined COL_HINT_CELL as evidence.
     //
     // The side count is the assertion, because it is what distinguishes one
     // contour from a ring per cell. The kind's premises are an adjacent pair,
     // which the neighbor rule joins into a 6-sided contour, plus a separate
     // cell — **10**, where a per-cell renderer would give 12 and one that
     // dropped a premise 6.
-    expectRing(frame.recording.ops, COL_HINT);
+    expectRing(frame.recording.ops);
     expect(areaOf(step)).toHaveLength(3);
     const evidence = markSides(frame.recording.ops, COL_HINT_CELL);
     expect(evidence.length).toBe(10);

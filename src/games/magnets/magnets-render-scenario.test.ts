@@ -34,7 +34,6 @@ import {
   COL_DONE,
   COL_FLASH_LEAD,
   COL_HIGHLIGHT,
-  COL_HINT,
   COL_HINT_CELL,
   COL_MISTAKE,
   COL_NEGATIVE,
@@ -176,8 +175,8 @@ describe("magnets render scenarios", () => {
 
   it("a placement rings the one square it decides and marks its evidence beside it", () => {
     const { recording } = hintFrame("placementWithEvidence");
-    // Four thin sides, none solid: the square keeps its own content.
-    expectRing(recording.ops, COL_HINT, 1);
+    // One round ring, and the square keeps its own content.
+    expectRing(recording.ops);
     const evidence = markSides(recording.ops, COL_HINT_CELL);
     expect(evidence.length).toBeGreaterThan(0);
     for (const side of evidence) expect(isThin(side)).toBe(true);
@@ -187,7 +186,7 @@ describe("magnets render scenarios", () => {
   it("a `?` step rings the domino as one shape and recolors the line's clues", () => {
     const { recording, step } = hintFrame("markCountingClues");
     // One ring around both ends, not a ring per square.
-    expectPieceRing(recording.ops, COL_HINT);
+    expectPieceRing(recording.ops);
     const hinted = recording.ops.filter(
       (o) => o.op === "text" && o.color === COL_HINT_CELL,
     );

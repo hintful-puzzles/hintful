@@ -34,7 +34,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -46,7 +45,13 @@ import { soloKiller } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -67,7 +72,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
   checkKillerCageSum,
@@ -93,18 +99,18 @@ export const COL_PENCIL = 7;
 export const COL_KILLER = 8;
 // Fork additions, appended past the upstream enum (NCOLORS = 9).
 export const COL_PENCIL_BODY = 9; // the yellow body of the pencil-mode indicator
-export const COL_HINT = 10; // the acted-on cell's ring (drawn in redraw's last block)
-/** The driving region's outline (same block), **and** a forcing chain's ordinal —
- * one index, because they are one role: the number indexes the evidence. */
-export const COL_HINT_CELL = 11;
-export const COL_CELL = 12; // the surface of a cell the player fills
-export const COL_GIVEN = 13; // the lifted surface under a given digit
+/** The driving region's outline (drawn in redraw's last block), **and** a
+ * forcing chain's ordinal — one index, because they are one role: the number
+ * indexes the evidence. */
+export const COL_HINT_CELL = 10;
+export const COL_CELL = 11; // the surface of a cell the player fills
+export const COL_GIVEN = 12; // the lifted surface under a given digit
 /** The thin line between two cells of one block. A block's own edge is
  * content and stays `COL_GRID`. */
-export const COL_LINE = 14;
+export const COL_LINE = 13;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 15;
-export const COL_FLASH_LEAD = 16;
+export const COL_FLASH = 14;
+export const COL_FLASH_LEAD = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -121,11 +127,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_KILLER] = soloKiller(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_RING;
-  // Both hint marks are outlines in the cell's gutter, so both take a strong
-  // color and differ in shape rather than in weight — a region's contour
-  // against one cell's ring. `HINT_OUTLINE` covers the chain ordinal too; see
-  // its doc comment for why the index and the thing it indexes are one role.
+  // `HINT_OUTLINE` covers the chain ordinal too; see its doc comment for why
+  // the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
@@ -135,14 +138,14 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** Highlight payload a Solo hint step carries (built in `index.ts`). The
  * marks (docs/hints-marks.md § "The engine colors the marks"): the cells the reason rests on outlined `COL_HINT_CELL` in the gutter, the
- * acted-on cell(s) ringed `COL_HINT`, the ruled-out candidate(s) shown struck.
+ * acted-on cell(s) ringed by the engine, the ruled-out candidate(s) shown struck.
  * The region a sentence names is hatched from the step's marks, not from here. */
 export interface SoloHint {
   /** The cells the reason rests on (evidence), outlined `COL_HINT_CELL`. A
    * forcing chain's cells additionally carry their place in it, drawn as an
    * ordinal. */
   area: OrderedCell[];
-  /** The cell(s) the deduction acts on, ringed `COL_HINT`. */
+  /** The cell(s) the deduction acts on, ringed. */
   targets: { x: number; y: number }[];
   /** The candidate number(s) ruled out, shown struck among the pencil marks. */
   marks: { x: number; y: number; n: number }[];
@@ -410,30 +413,33 @@ function drawNumber(
 
   // Killer cage-sum clue.
   if (killer?.kgrid[cell]) {
-    dr.drawText(
-      { x: tx + ge * 4, y: ty + ge * 4 + ((ts / 4) | 0) },
-      {
-        align: "left",
-        baseline: "alphabetic",
-        fontType: "variable",
-        size: (ts / 4) | 0,
-      },
-      colKiller,
-      String(killer.kgrid[cell]),
-    );
+    const { origin, options } = killerText(ts, x, y);
+    dr.drawText(origin, options, colKiller, String(killer.kgrid[cell]));
   }
 
   // The digit, or the pencil-mark grid.
   const d = state.grid[cell];
   if (d) {
+    const { origin, options } = digitText(ts, x, y);
     dr.drawText(
-      { x: tx + ((ts / 2) | 0), y: ty + ((ts / 2) | 0) },
-      glyphFont((ts / 2) | 0),
+      origin,
+      options,
       state.immutable[cell] ? COL_CLUE : hl & HL_ERROR ? COL_ERROR : COL_USER,
       digitChar(d),
     );
   } else {
-    drawPencilMarks(dr, state, x, y, tx, ty, ts, ge, struck);
+    const shown = pencilValues(cr, state.pencil[cell]);
+    pencilSlots(state, ts, x, y, shown.length).forEach(({ origin, options }, j) => {
+      const i = shown[j];
+      dr.drawText(origin, options, COL_PENCIL, digitChar(i));
+      // A hint-ruled-out candidate keeps its normal pencil color with a
+      // same-color strikethrough — the "ruled out" cue (docs/hints-marks.md § "The engine colors the marks").
+      if (struck & (1 << i)) {
+        const r = Math.max(2, (options.size / 3) | 0);
+        const { x: gx, y: gy } = origin;
+        dr.drawLine({ x: gx - r, y: gy }, { x: gx + r, y: gy }, COL_PENCIL, 2);
+      }
+    });
   }
 
   // Check & Save mistake overlay (fork addition): an inset red outline.
@@ -481,30 +487,66 @@ function drawNumber(
   dr.drawUpdate({ x: cx - 1, y: cy - 1, w: cw + 1, h: ch + 1 });
 }
 
-/** The auto-sized pencil-mark grid for an empty cell (draw_number's else branch). */
-function drawPencilMarks(
-  dr: GameDrawing,
+/** A piece of text a tile draws: what it passes `drawText` but the color. */
+interface TileText {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+}
+
+/** The top-left corner of cell `(x, y)`'s tile, inside the gutter. */
+const tileOrigin = (ts: number, x: number, y: number): Point => {
+  const ge = gridExtra(ts);
+  return { x: border(ts) + x * ts + 1 + ge, y: border(ts) + y * ts + 1 + ge };
+};
+
+/** A killer cage's sum, in the top-left of its cell `(x, y)`. */
+function killerText(ts: number, x: number, y: number): TileText {
+  const t = tileOrigin(ts, x, y);
+  const ge = gridExtra(ts);
+  return {
+    origin: { x: t.x + ge * 4, y: t.y + ge * 4 + ((ts / 4) | 0) },
+    options: {
+      align: "left",
+      baseline: "alphabetic",
+      fontType: "variable",
+      size: (ts / 4) | 0,
+    },
+  };
+}
+
+/** A placed digit, in the middle of the tile. */
+function digitText(ts: number, x: number, y: number): TileText {
+  const t = tileOrigin(ts, x, y);
+  return {
+    origin: { x: t.x + ((ts / 2) | 0), y: t.y + ((ts / 2) | 0) },
+    options: glyphFont((ts / 2) | 0),
+  };
+}
+
+/** The values set in a cell's pencil-mark bits (bit `i` is value `i`). */
+const pencilValues = (cr: number, bits: number): number[] =>
+  Array.from({ length: cr }, (_, i) => i + 1).filter((i) => bits & (1 << i));
+
+/** Where `count` pencil marks go in the empty cell `(x, y)`, in order: the
+ * auto-sized grid of draw_number's else branch. */
+function pencilSlots(
   state: SoloState,
+  ts: number,
   x: number,
   y: number,
-  tx: number,
-  ty: number,
-  ts: number,
-  ge: number,
-  struck: number,
-): void {
-  const cr = state.cr;
-  const cell = y * cr + x;
-  const marks = state.pencil[cell];
-  let npencil = 0;
-  for (let i = 0; i < cr; i++) if (marks & (1 << (i + 1))) npencil++;
-  if (!npencil) return;
-
+  count: number,
+): TileText[] {
+  if (!count) return [];
+  const cell = y * state.cr + x;
+  const ge = gridExtra(ts);
+  const { x: tx, y: ty } = tileOrigin(ts, x, y);
   const minph = 2;
   let pl = tx + ge;
   let pr = pl + ts - ge;
   let pt = ty + ge;
   let pb = pt + ts - ge;
+  const sum =
+    state.killer && state.killerData !== null && state.killerData.kgrid[cell] !== 0;
   if (state.killer) {
     // Reserve uniform space for the cage outline (and the sum clue when present),
     // regardless of which sides actually carry a cage edge.
@@ -512,50 +554,58 @@ function drawPencilMarks(
     pr -= ge * 3;
     pt += ge * 3;
     pb -= ge * 3;
-    if (state.killerData && state.killerData.kgrid[cell] !== 0) pt += (ts / 4) | 0;
+    if (sum) pt += (ts / 4) | 0;
   }
 
   // Choose the grid layout maximizing the font size.
   let bestsize = 0;
   let pbest = 0;
-  for (let pw = 3; pw < Math.max(npencil, 4); pw++) {
-    let ph = ((npencil + pw - 1) / pw) | 0;
-    ph = Math.max(ph, minph);
-    const fw = (pr - pl) / pw;
-    const fh = (pb - pt) / ph;
-    const fs = Math.min(fw, fh);
+  for (let pw = 3; pw < Math.max(count, 4); pw++) {
+    const ph = Math.max(((count + pw - 1) / pw) | 0, minph);
+    const fs = Math.min((pr - pl) / pw, (pb - pt) / ph);
     if (fs >= bestsize) {
       bestsize = fs;
       pbest = pw;
     }
   }
   const pw = pbest;
-  let ph = ((npencil + pw - 1) / pw) | 0;
-  ph = Math.max(ph, minph);
+  const ph = Math.max(((count + pw - 1) / pw) | 0, minph);
   const fontsize = Math.min(((pr - pl) / pw) | 0, ((pb - pt) / ph) | 0);
 
   pl = tx + (((ts - fontsize * pw) / 2) | 0);
   pt = ty + (((ts - fontsize * ph) / 2) | 0);
-  if (state.killer && state.killerData && state.killerData.kgrid[cell] !== 0) {
-    pt = Math.max(pt, ty + ge * 3 + ((ts / 4) | 0));
-  }
+  if (sum) pt = Math.max(pt, ty + ge * 3 + ((ts / 4) | 0));
 
-  let j = 0;
-  for (let i = 0; i < cr; i++) {
-    if (!(marks & (1 << (i + 1)))) continue;
-    const dx = j % pw;
-    const dy = (j / pw) | 0;
-    const gx = pl + (((fontsize * (2 * dx + 1)) / 2) | 0);
-    const gy = pt + (((fontsize * (2 * dy + 1)) / 2) | 0);
-    dr.drawText({ x: gx, y: gy }, glyphFont(fontsize), COL_PENCIL, digitChar(i + 1));
-    // A hint-ruled-out candidate keeps its normal pencil color with a
-    // same-color strikethrough — the "ruled out" cue (docs/hints-marks.md § "The engine colors the marks").
-    if (struck & (1 << (i + 1))) {
-      const r = Math.max(2, (fontsize / 3) | 0);
-      dr.drawLine({ x: gx - r, y: gy }, { x: gx + r, y: gy }, COL_PENCIL, 2);
-    }
-    j++;
+  return Array.from({ length: count }, (_, j) => ({
+    origin: {
+      x: pl + (((fontsize * (2 * (j % pw) + 1)) / 2) | 0),
+      y: pt + (((fontsize * (2 * ((j / pw) | 0) + 1)) / 2) | 0),
+    },
+    options: glyphFont(fontsize),
+  }));
+}
+
+/** The text cell `(x, y)` shows, for a hint's ring to keep clear of. */
+function cellText(state: SoloState, ts: number, x: number, y: number): CellText {
+  const cr = state.cr;
+  if (x < 0 || y < 0 || x >= cr || y >= cr) return NO_TEXT;
+  const cell = y * cr + x;
+  const avoid: Rect[] = [];
+  const sum = state.killerData?.kgrid[cell] ?? 0;
+  if (sum) {
+    const { origin, options } = killerText(ts, x, y);
+    avoid.push(textBox(origin, options, String(sum)));
   }
+  const d = state.grid[cell];
+  if (d) {
+    const { origin, options } = digitText(ts, x, y);
+    return { enclose: [textBox(origin, options, digitChar(d))], avoid, notes: [] };
+  }
+  const shown = pencilValues(cr, state.pencil[cell]);
+  const notes = pencilSlots(state, ts, x, y, shown.length).map(
+    ({ origin, options }, j) => textBox(origin, options, digitChar(shown[j])),
+  );
+  return { enclose: [], avoid, notes };
 }
 
 // --- pencil-mode indicator -------------------------------------------------
@@ -655,7 +705,7 @@ export function redraw(
   }
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    text: (x: number, y: number) => cellText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {

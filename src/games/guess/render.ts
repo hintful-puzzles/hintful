@@ -20,7 +20,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -35,7 +34,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import {
   type Flash,
   NO_FLASH,
@@ -68,22 +68,20 @@ export const COL_EMPTY = 5; // must be COL_1 - 1
 export const COL_1 = 6; // COL_1..COL_10 = 6..15
 export const COL_CORRECTPLACE = 16;
 export const COL_CORRECTCOLOR = 17;
-/** The hint's target: a frame beside each answer-row color a step acts on. */
-export const COL_HINT = 18;
 /** The hint's evidence: an outline round an answer slot it reads. */
-export const COL_HINT_CELL = 19;
+export const COL_HINT_CELL = 18;
 /** The answer row's well, darker than every peg color in both schemes. */
-const COL_WELL = 20;
+const COL_WELL = 19;
 /** A mistake: the frame round an answer slot ruling out its own color. */
-export const COL_WRONG = 21;
+export const COL_WRONG = 20;
 /** The rim of an empty hole, which with {@link COL_EMPTY} inside it is a cell
  * of the collection's quiet surface, drawn round. */
-export const COL_HOLE_RIM = 22;
+export const COL_HOLE_RIM = 21;
 /** The box of a peg or a hole the win flash is on: under the highlight's
  * body, and under its leading edge. */
-export const COL_LIT = 23;
-export const COL_LIT_LEAD = 24;
-export const NCOLORS = 25;
+export const COL_LIT = 22;
+export const COL_LIT_LEAD = 23;
+export const NCOLORS = 24;
 
 // --- peg overlay flags (upstream PEG_*) -------------------------------
 
@@ -377,6 +375,18 @@ function outline(dr: GameDrawing, r: Rect, t: number, color: number): void {
   dr.drawRect(rect(r.x + r.w - t, r.y, t, r.h), color);
 }
 
+/** Where a color's block shows its number, which its hint ring encloses. */
+function blockLabel(
+  block: Rect,
+  c: number,
+): { origin: Point; options: DrawTextOptions; text: string } {
+  return {
+    origin: pt(block.x + block.w / 2, block.y + block.h / 2),
+    options: glyphFont(Math.min(block.w, block.h) / 2),
+    text: String(c % 10),
+  };
+}
+
 function drawAnswerSlot(
   dr: GameDrawing,
   ds: GuessDrawState,
@@ -402,24 +412,22 @@ function drawAnswerSlot(
     // A color still possible is a solid block; a ruled-out one is nothing at
     // all, as a struck pencil mark is in every other game. No outline either
     // way: a block is there or it is not.
-    if (!(key & (1 << c))) {
+    const shown = !(key & (1 << c));
+    const labeled = shown && (key & ANSWER_LABELED) !== 0;
+    const label = blockLabel(block, c);
+    if (shown) {
       dr.drawRect(block, COL_EMPTY + c);
-      if (key & ANSWER_LABELED) {
-        dr.drawText(
-          pt(block.x + block.w / 2, block.y + block.h / 2),
-          glyphFont(Math.min(block.w, block.h) / 2),
-          COL_FRAME,
-          String(c % 10),
-        );
-      }
+      if (labeled) dr.drawText(label.origin, label.options, COL_FRAME, label.text);
     }
     if (key & (1 << (c + ANSWER_FRAME_SHIFT))) {
-      // In the gap beside the block, a pixel clear of it, never over it.
-      outline(
-        dr,
+      // Out in the gap round the block, enclosing its number.
+      dr.drawRing(
         rect(block.x - 3, block.y - 3, block.w + 6, block.h + 6),
+        labeled
+          ? { enclose: [textBox(label.origin, label.options, label.text)], avoid: [] }
+          : NOTHING_TO_CLEAR,
         2,
-        COL_HINT,
+        { room: area },
       );
     }
   }
@@ -496,7 +504,6 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_LIT] = FLASH;
   ret[COL_LIT_LEAD] = FLASH_LEAD;
   ret[COL_WELL] = guessAnswerWell(defaultBackground);
-  ret[COL_HINT] = HINT_RING;
   ret[COL_HINT_CELL] = HINT_OUTLINE;
   ret[COL_WRONG] = ERROR;
 

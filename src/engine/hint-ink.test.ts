@@ -53,10 +53,13 @@ function inkFaults(game: (typeof HINT_GAMES)[number][1], id: string) {
   const inks = new Map<Color, MarkRole>(
     (Object.entries(HINT_INK) as [MarkRole, Color][]).map(([r, c]) => [c, r]),
   );
+  // The ring's ink is the engine's slot alone, the one `drawRing` draws in: a
+  // game's own slot of the same color (the drag's blue) is no ring's.
   palette.forEach((c, i) => {
     const r = inks.get(c);
-    if (r) role.set(i, r);
+    if (r && r !== "ring") role.set(i, r);
   });
+  role.set(palette.length - 2, "ring");
   const faults = new Set<string>();
   /** A color a mark is drawn in that is no ink, and a role it drew. */
   const outside = new Map<number, MarkRole>();

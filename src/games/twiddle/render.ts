@@ -12,7 +12,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import {
@@ -24,6 +23,13 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import {
+  MARK_EDGE_PX,
+  type RingClear,
+  type RingShape,
+  ringShape,
+  textBox,
+} from "../../engine/ring.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { BLOCK, LIFTED, TILE } from "./hint-text.ts";
@@ -55,14 +61,12 @@ export const COL_WELL = 9;
 export const COL_FLASH = 10;
 /** The face of a tile the win flash's leading edge is on. */
 export const COL_FLASH_LEAD = 11;
-/** The hint's ring: the block to turn. */
-export const COL_HINT = 12;
 /** The hint's outline: the tile it serves, and the square a run brings it to. */
-export const COL_HINT_EVIDENCE = 13;
+export const COL_HINT_EVIDENCE = 12;
 /** The dot at every block's pivot: the cursor's color, which marks where a
  * click acts. */
-export const COL_PIVOT = 14;
-export const NCOLORS = 15;
+export const COL_PIVOT = 13;
+export const NCOLORS = 14;
 
 // --- cursor edge flags ------------------------------------------------
 
@@ -70,12 +74,19 @@ const CUR_TOP = 1;
 const CUR_RIGHT = 2;
 const CUR_BOTTOM = 4;
 const CUR_LEFT = 8;
-/** Beside the four side bits, which carry the hint's ring: the outline. */
-const MARK_OUTLINE = 16;
-/** And the stripes: a finished tile a run lifts out, or that comes back. */
-const MARK_STRIPES = 32;
+// --- hint mark flags --------------------------------------------------
+
+/** Under the hint's ring round the turning block's pivot. */
+const MARK_RING = 1;
+/** Outlined: the tile the step serves, or the square a run brings it to. */
+const MARK_OUTLINE = 2;
+/** Striped: a finished tile a run lifts out, or that comes back. */
+const MARK_STRIPES = 4;
 
 // --- geometry ---------------------------------------------------------
+
+/** How a tile's number is drawn, for the tile and the ring round it. */
+const NUMBER_FONT = (ts: number) => glyphFont(ts / 3);
 
 export function border(ts: number): number {
   return Math.floor(ts / 2);
@@ -104,7 +115,7 @@ export function animLength(n: number): number {
 export interface TwiddleDrawState {
   started: boolean;
   /** Per-cell cache of the win flash's tone on the tile, above its two bits
-   * the hint's six mark bits, above those the four sides of a cursor or hover
+   * the hint's three mark bits, above those the four sides of a cursor or hover
    * outline, and above those the packed `number*4 + orient`; `-1` forces a
    * redraw (unknown, or inside the animating block). */
   cache: Int32Array;
@@ -270,12 +281,12 @@ function drawTile(
       hatchPeriod(ts),
     );
 
-  dr.drawText(center, glyphFont(ts / 3), COL_TEXT, String(num));
+  dr.drawText(center, NUMBER_FONT(ts), COL_TEXT, String(num));
 
   const band = (r: Rect, c: number) => dr.drawRect(r, c);
   // The block the keyboard cursor is on, or the mouse would turn: a band on
-  // the bevel of the block's outer edge, the hint's ring in the cursor color,
-  // so either reads as one thing and neither as a move made.
+  // the bevel of the block's outer edge in the cursor color, so either reads
+  // as one thing and neither as a move made.
   if (cedges) {
     if (cedges & CUR_TOP) band({ x: px, y: py, w: ts, h: hw }, COL_HIGHCURSOR);
     if (cedges & CUR_LEFT) band({ x: px, y: py, w: hw, h: ts }, COL_HIGHCURSOR);
@@ -285,25 +296,126 @@ function drawTile(
       band({ x: px + ts - hw, y: py, w: hw, h: ts }, COL_LOWCURSOR);
   }
 
-  // The hint's marks sit on the bevel, never on the number: the ring on the
-  // sides of the block's outer edge, the outline just inside the bevel.
-  if (marks) {
-    if (marks & CUR_TOP) band({ x: px, y: py, w: ts, h: hw }, COL_HINT);
-    if (marks & CUR_BOTTOM) band({ x: px, y: py + ts - hw, w: ts, h: hw }, COL_HINT);
-    if (marks & CUR_LEFT) band({ x: px, y: py, w: hw, h: ts }, COL_HINT);
-    if (marks & CUR_RIGHT) band({ x: px + ts - hw, y: py, w: hw, h: ts }, COL_HINT);
-    if (marks & MARK_OUTLINE) {
-      const i = hw;
-      const s = ts - 2 * hw;
-      band({ x: px + i, y: py + i, w: s, h: hw }, COL_HINT_EVIDENCE);
-      band({ x: px + i, y: py + i + s - hw, w: s, h: hw }, COL_HINT_EVIDENCE);
-      band({ x: px + i, y: py + i, w: hw, h: s }, COL_HINT_EVIDENCE);
-      band({ x: px + i + s - hw, y: py + i, w: hw, h: s }, COL_HINT_EVIDENCE);
-    }
+  // The hint's outline sits just inside the bevel, never on the number; its
+  // ring goes on the block's pivot, after the tiles (`redraw`).
+  if (marks & MARK_OUTLINE) {
+    const i = hw;
+    const s = ts - 2 * hw;
+    band({ x: px + i, y: py + i, w: s, h: hw }, COL_HINT_EVIDENCE);
+    band({ x: px + i, y: py + i + s - hw, w: s, h: hw }, COL_HINT_EVIDENCE);
+    band({ x: px + i, y: py + i, w: hw, h: s }, COL_HINT_EVIDENCE);
+    band({ x: px + i + s - hw, y: py + i, w: hw, h: s }, COL_HINT_EVIDENCE);
   }
 
   if (rot) dr.unclip();
   dr.drawUpdate({ x: px, y: py, w: ts, h: ts });
+}
+
+/** The square round the dot at the pivot of the block at (`bx`, `by`). */
+function pivotDot(bx: number, by: number, n: number, ts: number): Rect {
+  const r = Math.max(2, Math.round(ts / 26));
+  const x = coord(bx, ts) + (n * ts) / 2;
+  const y = coord(by, ts) + (n * ts) / 2 + (n % 2 === 1 ? ts * 0.32 : 0);
+  return { x: x - r, y: y - r, w: 2 * r, h: 2 * r };
+}
+
+// --- the hint's ring ----------------------------------------------------
+
+/** The ring round a turning block's pivot at `center`, as large as the
+ * numbers round it allow, with a curved arrow inside showing which way the
+ * block turns, round the middle number an odd block's ring encloses. The
+ * arrow's gap is at the bottom, where an odd block's pivot dot sits under its
+ * middle number. */
+function drawPivotRing(
+  dr: GameDrawing,
+  center: Point,
+  ts: number,
+  clear: RingClear,
+  room: Rect,
+  clockwise: boolean,
+): void {
+  const thickness = Math.max(2, Math.floor(ts / 16));
+  const boxOf = (side: number): Rect => ({
+    x: center.x - side / 2,
+    y: center.y - side / 2,
+    w: side,
+    h: side,
+  });
+  const fitting = (side: number): RingShape | null => {
+    try {
+      return ringShape(boxOf(side), clear, thickness, room);
+    } catch {
+      return null;
+    }
+  };
+  // Half the room: past that the ring reaches the next numbers out.
+  const largest = Math.round(room.w / 2);
+  let side = largest;
+  let shape = fitting(side);
+  while (!shape && side > ts / 2) shape = fitting(--side);
+  // Nothing fits: `drawRing` says so.
+  if (!shape) side = largest;
+  const rect = shape?.rect ?? boxOf(side);
+  const inner = Math.min(rect.w, rect.h) / 2 - thickness / 2 - MARK_EDGE_PX;
+  const middle = { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
+  // The arrow keeps as far from the number it goes round as the ring does.
+  const within = Math.max(
+    0,
+    ...clear.enclose.flatMap((r) =>
+      [r.x - middle.x, r.x + r.w - middle.x].flatMap((dx) =>
+        [r.y - middle.y, r.y + r.h - middle.y].map((dy) => Math.hypot(dx, dy)),
+      ),
+    ),
+  );
+  dr.drawRing(boxOf(side), clear, thickness, {
+    room,
+    inside: (ink) =>
+      drawTurnArrow(dr, middle, inner, within + MARK_EDGE_PX, ts, clockwise, ink),
+  });
+}
+
+/** A three-quarter arc round `center`, between `within` and `inner` out from
+ * it, with its head at the end the turn goes toward. */
+function drawTurnArrow(
+  dr: GameDrawing,
+  center: Point,
+  inner: number,
+  within: number,
+  ts: number,
+  clockwise: boolean,
+  ink: number,
+): void {
+  const width = Math.max(1, Math.round(ts / 20));
+  // The head's base reaches `head` either side of the arc's middle line, and
+  // touches neither the ring nor what the arc goes round.
+  const head = Math.min(Math.max(3, 2 * width), (inner - 1 - within) / 2);
+  // On a tile too small for its number to read, the ring is too small to
+  // hold an arrow beside the head's own width: it is left out.
+  if (head < width / 2 + 1) return;
+  const mid = inner - 1 - head;
+  const outer = mid + width / 2;
+  // Screen angles run clockwise, y being down. The gap is centered on the
+  // bottom (π/2): the arc leaves one side of it and the head points into it
+  // from the other.
+  const sign = clockwise ? 1 : -1;
+  const gap = 0.75 * Math.PI;
+  const start = Math.PI / 2 + (sign * gap) / 2;
+  const sweep = sign * (2 * Math.PI - gap);
+  const at = (r: number, a: number): Point => ({
+    x: center.x + r * Math.cos(a),
+    y: center.y + r * Math.sin(a),
+  });
+  const steps = 24;
+  const band: Point[] = [];
+  for (let k = 0; k <= steps; k++) band.push(at(outer, start + (sweep * k) / steps));
+  for (let k = steps; k >= 0; k--)
+    band.push(at(outer - width, start + (sweep * k) / steps));
+  dr.drawPolygon(band, ink, ink);
+  const end = start + sweep;
+  // The head: a triangle whose base straddles the arc's end, pointing along
+  // the turn.
+  const tip = start + sweep + sign * ((1.6 * head) / mid);
+  dr.drawPolygon([at(mid + head, end), at(mid, tip), at(mid - head, end)], ink, ink);
 }
 
 // --- redraw -----------------------------------------------------------
@@ -327,20 +439,24 @@ export function redraw(
   const ringed = hinted.of("ring", BLOCK)[0] ?? null;
   const outlined = new Set(hinted.of("outline", TILE));
   const stripedCells = new Set(hinted.of("stripes", LIFTED));
+  // The ring sits on the block's pivot, and may lie on the tiles round it:
+  // the four round the corner at the middle of an even block, and the middle
+  // tile of an odd one with the eight round it, where the ring goes round the
+  // middle number and the arrow round that.
+  const half = Math.floor(n / 2);
+  const ringLo = half - 1;
+  const ringHi = n % 2 === 1 ? half + 1 : half;
+  const inRinged = (tx: number, ty: number): boolean =>
+    ringed !== null &&
+    tx >= ringed.x + ringLo &&
+    tx <= ringed.x + ringHi &&
+    ty >= ringed.y + ringLo &&
+    ty <= ringed.y + ringHi;
   /** The hint's mark bits on a cell. */
   const marksAt = (tx: number, ty: number): number => {
     let m = outlined.has(ty * w + tx) ? MARK_OUTLINE : 0;
     if (stripedCells.has(ty * w + tx)) m |= MARK_STRIPES;
-    if (ringed) {
-      const inX = tx >= ringed.x && tx < ringed.x + n;
-      const inY = ty >= ringed.y && ty < ringed.y + n;
-      if (inX && inY) {
-        if (ty === ringed.y) m |= CUR_TOP;
-        if (ty === ringed.y + n - 1) m |= CUR_BOTTOM;
-        if (tx === ringed.x) m |= CUR_LEFT;
-        if (tx === ringed.x + n - 1) m |= CUR_RIGHT;
-      }
-    }
+    if (ringed && inRinged(tx, ty)) m |= MARK_RING;
     return m;
   };
 
@@ -414,6 +530,7 @@ export function redraw(
     }
   }
 
+  let ringRepainted = false;
   for (let i = 0; i < w * h; i++) {
     const tx = i % w;
     const ty = Math.floor(i / w);
@@ -426,7 +543,7 @@ export function redraw(
     const cedges = cursorAt(tx, ty);
     const t = inBlock
       ? -1
-      : ((((((state.numbers[i] * 4 + state.orient[i]) << 4) | cedges) << 6) | marks) <<
+      : ((((((state.numbers[i] * 4 + state.orient[i]) << 4) | cedges) << 3) | marks) <<
           2) |
         lit;
 
@@ -451,7 +568,54 @@ export function redraw(
         marks,
       );
       ds.cache[i] = t;
+      if (inRinged(tx, ty)) ringRepainted = true;
     }
+  }
+
+  // The hint's ring round the pivot of the block to turn, with the turn's
+  // arrow inside it. A ring round the whole block cannot clear the numbers
+  // in its corner tiles, and every block is the same size, so the pivot names
+  // it. The ring lies on the tiles under it alone, which key on it, so it is
+  // drawn again whenever one of them repaints.
+  const move = activeHint?.move;
+  if (ringed && ringRepainted && move?.type === "rotate") {
+    const x0 = coord(ringed.x + ringLo, ts);
+    const y0 = coord(ringed.y + ringLo, ts);
+    const span = (ringHi - ringLo + 1) * ts;
+    const room = { x: x0, y: y0, w: span, h: span };
+    const numberAt = (tx: number, ty: number): Rect =>
+      textBox(
+        { x: coord(tx, ts) + ts / 2, y: coord(ty, ts) + ts / 2 },
+        NUMBER_FONT(ts),
+        String(state.numbers[ty * w + tx]),
+      );
+    const odd = n % 2 === 1;
+    const enclose = odd ? [numberAt(ringed.x + half, ringed.y + half)] : [];
+    const avoid: Rect[] = [];
+    for (let ty = ringed.y + ringLo; ty <= ringed.y + ringHi; ty++)
+      for (let tx = ringed.x + ringLo; tx <= ringed.x + ringHi; tx++)
+        if (!(odd && tx === ringed.x + half && ty === ringed.y + half))
+          avoid.push(numberAt(tx, ty));
+    // The pivot dots of the blocks beside it, drawn over the ring, are kept
+    // off its stroke too; its own lies within the arrow.
+    for (let by = ringed.y - 1; by <= ringed.y + 1; by++)
+      for (let bx = ringed.x - 1; bx <= ringed.x + 1; bx++)
+        if (
+          bx >= 0 &&
+          by >= 0 &&
+          bx <= w - n &&
+          by <= h - n &&
+          !(bx === ringed.x && by === ringed.y)
+        )
+          avoid.push(pivotDot(bx, by, n, ts));
+    drawPivotRing(
+      dr,
+      { x: x0 + span / 2, y: y0 + span / 2 },
+      ts,
+      { enclose, avoid },
+      room,
+      move.dir === -1,
+    );
   }
 
   // A dot at every block's pivot, so each square shows which blocks hold it.
@@ -460,14 +624,16 @@ export function redraw(
   // block turns about it. An even block's pivot is a grid corner, in the gap
   // between tiles; an odd block's is its center square, where the dot sits
   // below the number.
-  const r = Math.max(2, Math.round(ts / 26));
-  const odd = n % 2 === 1;
   for (let by = 0; by <= h - n; by++)
     for (let bx = 0; bx <= w - n; bx++) {
-      const px = coord(bx, ts) + (n * ts) / 2;
-      const py = coord(by, ts) + (n * ts) / 2 + (odd ? ts * 0.32 : 0);
-      dr.drawCircle({ x: px, y: py }, r, COL_PIVOT, COL_PIVOT);
-      dr.drawUpdate({ x: px - r, y: py - r, w: 2 * r + 1, h: 2 * r + 1 });
+      const dot = pivotDot(bx, by, n, ts);
+      dr.drawCircle(
+        { x: dot.x + dot.w / 2, y: dot.y + dot.h / 2 },
+        dot.w / 2,
+        COL_PIVOT,
+        COL_PIVOT,
+      );
+      dr.drawUpdate({ ...dot, w: dot.w + 1, h: dot.h + 1 });
     }
 }
 
@@ -501,7 +667,6 @@ export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
   out[COL_WELL] = cellSurface(bg);
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_PIVOT] = CURSOR;
   return out;

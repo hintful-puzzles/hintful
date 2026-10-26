@@ -9,6 +9,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
@@ -22,7 +23,6 @@ import {
   COL_FLASH,
   COL_FLASH_LEAD,
   COL_GRID,
-  COL_HINT,
   COL_HINT_CELL,
   COL_LINE_MAYBE,
   newDrawState,
@@ -154,7 +154,7 @@ describe("Palisade redraw", () => {
     expect(ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 
-  it("paints every forced edge of the firing in COL_HINT, plus the shaded cells", () => {
+  it("rings every forced edge of the firing, plus the outlined cells", () => {
     const state = makeState();
     const own = { x: 1, y: 1, dir: 1, kind: "wall" } as const;
     const cells = [
@@ -188,12 +188,12 @@ describe("Palisade redraw", () => {
       NO_FLASH,
       stepRinging([own, { x: 1, y: 1, dir: 2, kind: "wall" }]),
     );
-    // The action edge AND its sibling both paint COL_HINT (they share a
-    // fate, so they share a color); referenced cells get a COL_HINT_CELL
-    // outline. Each edge paints on both of its cells, so a bare count cannot
-    // tell one edge from two: compare against the action edge alone.
-    const hintRects = (o: RecordingDrawing["ops"]) =>
-      opsOfKind(o, "rect").filter((op) => op.color === COL_HINT).length;
+    // The action edge AND its sibling are both ringed (they share a fate, so
+    // they share a mark); referenced cells get a COL_HINT_CELL outline. Each
+    // edge's pill is drawn by both of its cells, so a bare count cannot tell
+    // one edge from two: compare against the action edge alone.
+    const hintRings = (o: RecordingDrawing["ops"]) => ringsOf(o).length;
+    expectRing(ops, { rings: 4 });
     const alone = recordingDrawing();
     redraw(
       alone.dr,
@@ -206,18 +206,15 @@ describe("Palisade redraw", () => {
       NO_FLASH,
       stepRinging([own]),
     );
-    expect(hintRects(alone.ops)).toBeGreaterThan(0);
-    expect(hintRects(ops)).toBeGreaterThan(hintRects(alone.ops));
+    expect(hintRings(alone.ops)).toBeGreaterThan(0);
+    expect(hintRings(ops)).toBeGreaterThan(hintRings(alone.ops));
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
 
     // With no hint, none of the hint colors appear.
     const { dr: dr2, ops: ops2 } = recordingDrawing();
     redraw(dr2, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH);
-    expect(
-      ops2.some(
-        (o) => "color" in o && (o.color === COL_HINT || o.color === COL_HINT_CELL),
-      ),
-    ).toBe(false);
+    expect(ringsOf(ops2)).toEqual([]);
+    expect(ops2.some((o) => "color" in o && o.color === COL_HINT_CELL)).toBe(false);
   });
 
   it("draws the cursor outline when shown", () => {

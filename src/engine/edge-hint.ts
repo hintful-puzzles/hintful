@@ -4,8 +4,9 @@
  * and their drawing (docs/hints-marks.md § "A mark on something that is not a
  * cell").
  *
- * A step asks for an edge as a line or a cross, and the edge is drawn as that
- * line or cross in the ring's ink: the move's own shape, recolored. An edge
+ * A step asks for an edge as a line or a cross, and the edge is ringed by a
+ * pill with that line or cross inside it in the ring's ink: the move's own
+ * shape, recolored, inside the round mark the word "ringed" names. An edge
  * the step reasons from, or one a supposition's chain would force, is drawn
  * in the outline's ink, and a chain's edge carries its place in the chain.
  * How a line and a cross look is the game's own, so the game declares them
@@ -17,6 +18,7 @@ import type { GameDrawing, HintStep, HintTrackVerdict } from "./game.ts";
 import { changedCells, trackTargets } from "./hint-track.ts";
 import type { MarkKind, MarkRole, StepMarks } from "./hint-words.ts";
 import { CROSS, type EdgeChange, type EdgeMark } from "./line-drawing.ts";
+import type { RingClear } from "./ring.ts";
 import { DOWN, RIGHT, type Side, type SquareEdges, sideOf } from "./square-edges.ts";
 import type { Rect } from "./types.ts";
 
@@ -170,18 +172,25 @@ export function edgeHintWords(g: SquareEdges, hints: readonly EdgeHint[]): Int32
   return out;
 }
 
+/** Where the ring round an asked edge goes: the box its pill goes round, the
+ * text it keeps off, and how thick it is (`GameDrawing.drawRing`). */
+export interface EdgeRing {
+  readonly box: Rect;
+  readonly clear: RingClear;
+  readonly thickness: number;
+  readonly room?: Rect;
+}
+
 /** How a game draws a line and a cross on sides of one square. `sides` is a
  * direction mask (`1 << d`); the line runs from the square's middle to each
- * side, and the cross sits on the side. */
+ * side, and the cross sits on the side. `ring` says where the ring round the
+ * edge on side `d` goes when a step asks it to become `shape`: across the
+ * side, round the part of the shape the ring can hold clear of the squares'
+ * text. Both squares of the edge draw that one ring. */
 export interface EdgeShapes {
   line(sides: number, ink: number, role: EdgeRole): void;
   cross(sides: number, ink: number, role: EdgeRole): void;
-}
-
-/** The game's palette slots for each role's ink. */
-export interface EdgeInks {
-  readonly ring: number;
-  readonly outline: number;
+  ring(d: number, shape: EdgeHint["shape"]): EdgeRing;
 }
 
 function sidesWith(word: number, ...marks: number[]): number {
@@ -200,21 +209,39 @@ export function hintedSides(word: number, shape: EdgeHint["shape"]): number {
 }
 
 /**
- * Draw one square's half of the edges in its word, the outline's under the
- * ring's. Draw it under what the square holds: an edge a step asks for is
- * one the player has not decided, so nothing of theirs is on it.
+ * Draw one square's share of the edges in its word: its half of each
+ * outlined edge in `outlineInk`, and, over them, the whole ring round each
+ * asked edge with the asked shape inside it. Draw it under what the square
+ * holds: an edge a step asks for is one the player has not decided, so
+ * nothing of theirs is on it.
  */
-export function drawEdgeHints(word: number, inks: EdgeInks, shapes: EdgeShapes): void {
-  const draw = (mark: number, ink: number, role: EdgeRole, cross: boolean): void => {
+export function drawEdgeHints(
+  dr: GameDrawing,
+  word: number,
+  outlineInk: number,
+  shapes: EdgeShapes,
+): void {
+  const outlined = (mark: number, cross: boolean): void => {
     const sides = sidesWith(word, mark);
     if (sides === 0) return;
-    if (cross) shapes.cross(sides, ink, role);
-    else shapes.line(sides, ink, role);
+    if (cross) shapes.cross(sides, outlineInk, "outline");
+    else shapes.line(sides, outlineInk, "outline");
   };
-  draw(OUTLINE_CROSS, inks.outline, "outline", true);
-  draw(OUTLINE_LINE, inks.outline, "outline", false);
-  draw(RING_CROSS, inks.ring, "ring", true);
-  draw(RING_LINE, inks.ring, "ring", false);
+  outlined(OUTLINE_CROSS, true);
+  outlined(OUTLINE_LINE, false);
+  for (let d = 0; d < 4; d++) {
+    const mark = (word >> (d * SIDE_BITS)) & 7;
+    if (mark !== RING_LINE && mark !== RING_CROSS) continue;
+    const shape = mark === RING_CROSS ? "cross" : "line";
+    const { box, clear, thickness, room } = shapes.ring(d, shape);
+    dr.drawRing(box, clear, thickness, {
+      room,
+      inside: (ink) =>
+        shape === "cross"
+          ? shapes.cross(1 << d, ink, "ring")
+          : shapes.line(1 << d, ink, "ring"),
+    });
+  }
 }
 
 /**

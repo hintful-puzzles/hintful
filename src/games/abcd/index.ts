@@ -348,7 +348,9 @@ export const abcdGame: Game<
   hintRungs: ABCD_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the cell the step is about: the letter to enter there, or the pencil marks to cross out, which are shown with a line through them.",
+      ring: "the cell the step fills in with a letter.",
+      strike:
+        "the pencil marks the step crosses out, shown with a line through them, and so the cell they are in.",
       outline:
         'the particular cells the reason rests on: the letters a row already holds, the cells that can still take a letter, or the letter just placed. The number the sentence reads ("its one A", "needs 2 more Bs") is drawn in the hint color among the clues.',
       stripes: 'the row or column the step reasons from: "this row", "this column".',

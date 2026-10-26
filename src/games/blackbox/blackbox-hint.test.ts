@@ -9,12 +9,13 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { answerCount } from "./answer.ts";
 import { type BlackboxRung, deduce, type Firing } from "./hint.ts";
 import { blackboxGame as game } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import {
   BALL_CORRECT,
   BALL_GUESS,
@@ -245,8 +246,8 @@ describe("Black Box's hint", () => {
 
   it("rings the square it settles and outlines the laser's ends", () => {
     const { recording } = renderPinnedHint(game, pinned("ray"));
+    expectRing(recording.ops);
     const rects = recording.ops.filter((o) => o.op === "rect");
-    expect(rects.some((o) => o.color === COL_HINT)).toBe(true);
     expect(rects.some((o) => o.color === COL_HINT_EVIDENCE)).toBe(true);
     expect(recording.ops).toMatchSnapshot();
   });

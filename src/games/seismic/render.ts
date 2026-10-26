@@ -36,7 +36,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -46,7 +45,13 @@ import {
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -67,7 +72,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SeismicHint } from "./hint.ts";
 import {
@@ -105,16 +111,15 @@ export const COL_NUM_PENCIL = 7;
 export const COL_GRID = 8;
 /** The pencil indicator's body. */
 export const COL_PENCIL_BODY = 9;
-/** Fork additions: the explained hint's two marks (docs/hints-marks.md § "Shade vs
- * ring"), the ring on the cell a step acts on and the outline of what it reasons
- * from. Both are drawn on a cell's edge rather than behind its notes. */
-export const COL_HINT = 10;
-export const COL_HINT_CELL = 11;
+/** Fork addition: the outline of what an explained hint reasons from
+ * (docs/hints-marks.md § "Shade vs ring"), drawn on a cell's edge rather than
+ * behind its notes. The ring on the cell it acts on is the engine's. */
+export const COL_HINT_CELL = 10;
 /** The highlight's wash, in both its full-cell and its corner form. */
-export const COL_CURSOR = 12;
+export const COL_CURSOR = 11;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 13;
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH = 12;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(background: Color): Color[] {
   const out: Color[] = [];
@@ -130,7 +135,6 @@ export function colors(background: Color): Color[] {
   out[COL_NUM_ERROR] = ERROR;
   out[COL_NUM_PENCIL] = pencilColor(background);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   // A fill under the digit and its notes: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
@@ -245,9 +249,50 @@ function markBand(state: SeismicState, x: number, y: number, ts: number): MarkBa
   return { box: { x: cx, y: cy, w: cw, h: ch }, outer: 0, inner: Math.max(2, ts >> 4) };
 }
 
-/** The auto-sized pencil-mark grid — upstream's layout arithmetic verbatim,
- * integer division throughout. Bit `n − 1` is candidate `n`; bit `n` of `struck`
- * is a candidate the displayed hint rules out, drawn with a line through it. */
+/** A piece of text a tile draws: what it passes `drawText` but the color. */
+interface TileText {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+}
+
+/** The candidates set in a pencil mask, in order; bit `n − 1` is candidate `n`. */
+const pencilValues = (marks: number): number[] =>
+  Array.from({ length: 9 }, (_, n) => n + 1).filter((n) => marks & (1 << (n - 1)));
+
+/** Where `count` notes go in the cell whose fill starts at `(cx, cy)`, in
+ * order: upstream's auto-sized grid arithmetic verbatim, integer division
+ * throughout. */
+function pencilSlots(ts: number, cx: number, cy: number, count: number): TileText[] {
+  if (!count) return [];
+  let hw = 1;
+  while (hw * hw < count) hw++;
+  if (hw < 3) hw = 3;
+  let hh = ((count + hw - 1) / hw) | 0;
+  if (hh < 2) hh = 2;
+  const hmax = Math.max(hw, hh);
+  const fontsz = (ts / (((hmax * (11 - hmax)) / 8) | 0)) | 0;
+  return Array.from({ length: count }, (_, j) => ({
+    origin: {
+      x: cx + ((((4 * (j % hw) + 3) * ts) / (4 * hw + 2)) | 0),
+      y: cy + ((((4 * ((j / hw) | 0) + 3) * ts) / (4 * hh + 2)) | 0),
+    },
+    options: glyphFont(fontsz),
+  }));
+}
+
+/** A placed number, in the middle of the tile. */
+function digitText(ts: number, x: number, y: number): TileText {
+  return {
+    origin: {
+      x: origin(ts) + x * ts + ((ts / 2) | 0),
+      y: origin(ts) + y * ts + ((ts / 2) | 0),
+    },
+    options: glyphFont((ts / 2) | 0),
+  };
+}
+
+/** The pencil marks; bit `n` of `struck` is a candidate the displayed hint
+ * rules out, drawn with a line through it. */
 function drawPencilMarks(
   dr: GameDrawing,
   ts: number,
@@ -256,32 +301,14 @@ function drawPencilMarks(
   marks: number,
   struck: number,
 ): void {
-  let nhints = 0;
-  for (let n = 0; n < 9; n++) if (marks & (1 << n)) nhints++;
-  if (!nhints) return;
-
-  let hw = 1;
-  while (hw * hw < nhints) hw++;
-  if (hw < 3) hw = 3;
-  let hh = ((nhints + hw - 1) / hw) | 0;
-  if (hh < 2) hh = 2;
-  const hmax = Math.max(hw, hh);
-  const fontsz = (ts / (((hmax * (11 - hmax)) / 8) | 0)) | 0;
-
-  let j = 0;
-  for (let n = 0; n < 9; n++) {
-    if (!(marks & (1 << n))) continue;
-    const hx = j % hw;
-    const hy = (j / hw) | 0;
-    const at = {
-      x: cx + ((((4 * hx + 3) * ts) / (4 * hw + 2)) | 0),
-      y: cy + ((((4 * hy + 3) * ts) / (4 * hh + 2)) | 0),
-    };
-    dr.drawText(at, glyphFont(fontsz), COL_NUM_PENCIL, String(n + 1));
+  const shown = pencilValues(marks);
+  pencilSlots(ts, cx, cy, shown.length).forEach(({ origin: at, options }, j) => {
+    const n = shown[j];
+    dr.drawText(at, options, COL_NUM_PENCIL, String(n));
     // The struck note keeps its own color, so it still reads as the player's
     // note; the line through it is what says the hint rules it out.
-    if (struck & (1 << (n + 1))) {
-      const r = Math.max(2, (fontsz / 3) | 0);
+    if (struck & (1 << n)) {
+      const r = Math.max(2, (options.size / 3) | 0);
       dr.drawLine(
         { x: at.x - r, y: at.y },
         { x: at.x + r, y: at.y },
@@ -289,8 +316,28 @@ function drawPencilMarks(
         2,
       );
     }
-    j++;
+  });
+}
+
+/** The text cell `(x, y)` shows, for a hint's ring to keep clear of. */
+function cellText(state: SeismicState, ts: number, x: number, y: number): CellText {
+  const { w, h } = state;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  const i = y * w + x;
+  if (state.grid[i]) {
+    const { origin: at, options } = digitText(ts, x, y);
+    return {
+      enclose: [textBox(at, options, String(state.grid[i]))],
+      avoid: [],
+      notes: [],
+    };
   }
+  const { cx, cy } = cellRect(state, x, y, ts);
+  const shown = pencilValues(state.pencil[i]);
+  const notes = pencilSlots(ts, cx, cy, shown.length).map(
+    ({ origin: at, options }, j) => textBox(at, options, String(shown[j])),
+  );
+  return { enclose: [], avoid: [], notes };
 }
 
 function drawTile(
@@ -361,12 +408,8 @@ function drawTile(
         : flags[i] & FM_ERRORMASK
           ? COL_NUM_ERROR
           : COL_NUM_GUESS;
-    dr.drawText(
-      { x: tx + ((ts / 2) | 0), y: ty + ((ts / 2) | 0) },
-      glyphFont((ts / 2) | 0),
-      ink,
-      String(grid[i]),
-    );
+    const { origin: at, options } = digitText(ts, x, y);
+    dr.drawText(at, options, ink, String(grid[i]));
   }
 
   // Check & Save mistake overlay (fork addition): an inset red double outline,
@@ -470,7 +513,7 @@ export function redraw(
   }
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(state, x, y, ts),
-    targetColor: COL_HINT,
+    text: (x, y) => cellText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   });
 

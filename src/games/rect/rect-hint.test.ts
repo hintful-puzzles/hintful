@@ -7,6 +7,7 @@ import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
 import {
@@ -21,7 +22,7 @@ import {
 } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import type { RectMove, RectParams, RectState } from "./state.ts";
 
 const params = (w: number, h: number, expandfactor = 0): RectParams => ({
@@ -272,16 +273,22 @@ describe("rect hint keep-track", () => {
 });
 
 describe("rect hint frame", () => {
-  it("rings the rectangle as one contour and outlines the clue that blocks it", () => {
+  it("rings the rectangle whole and outlines the clue that blocks it", () => {
     const result = renderPinnedHint(rectGame, pinned("blockedByClue"));
     const { step } = result;
     if (step.move.type !== "rect") throw new Error("unreachable");
     const { w, h } = step.move;
     const ops = result.recording.ops;
-    // One side per square on the rectangle's edge: 2(w + h), not a ring per
-    // square (4wh).
-    const ring = ops.filter((o) => o.op === "rect" && o.color === COL_HINT);
-    expect(ring.length).toBe(2 * (w + h));
+    // One ring round the whole rectangle, not a ring per square: each square
+    // it may reach, the rectangle's and those round it, draws its part of
+    // the same ring.
+    const rings = ringsOf(ops);
+    expectRing(ops, { rings: rings.length });
+    expect(rings.length).toBeGreaterThanOrEqual(w * h);
+    expect(rings.length).toBeLessThanOrEqual((w + 2) * (h + 2));
+    const [first, ...rest] = rings;
+    for (const r of rest) expect(r).toEqual(first);
+    expect(first.w > first.h).toBe(w > h);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
     expect(ops).toMatchSnapshot();
   });

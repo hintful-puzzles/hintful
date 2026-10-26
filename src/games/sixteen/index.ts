@@ -725,7 +725,7 @@ export const sixteenGame: Game<
   hintRungs: SIXTEEN_RUNGS,
   hintMarks: {
     roles: {
-      ring: "what the step decides: the tile it is moving, filled in the hint's color, with the arrow to click drawn in the same color, and the square the move takes it to, outlined. When the tile is on a journey of two moves, one along a row and one along a column, both squares are marked: the nearer one, where this move lands it, with a dashed outline, and the other with a solid one.",
+      ring: "what the step decides: the tile it is moving, with the arrow to click ringed beside its line, and the square the move takes it to. When the tile is on a journey of two moves, one along a row and one along a column, both squares are ringed: the nearer one, where this move lands it, and the other.",
     },
   },
 

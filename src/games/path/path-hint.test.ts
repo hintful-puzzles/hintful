@@ -13,11 +13,12 @@ import { CROSS, LINE } from "../../engine/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { edgeBetween, squareEdges } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { PathHighlights } from "./hint.ts";
 import { pathGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf, type PathRung } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -241,9 +242,11 @@ describe("path hint frame", () => {
     // A chain's numbers are drawn at the chain pin, which hint-ordinal.test.ts
     // reads; this pin's supposition breaks the board in one look.
     const { recording, step } = renderPinnedHint(pathGame, pinned("lookahead"));
-    expect(stepMarks(step).of("ring", EDGE).length).toBeGreaterThan(0);
-    for (const color of [COL_HINT, COL_HINT_EVIDENCE])
-      expect(recording.ops.some((op) => paintsWith(op, color))).toBe(true);
+    const ringed = stepMarks(step).of("ring", EDGE).length;
+    expect(ringed).toBeGreaterThan(0);
+    // Both squares of an edge draw its pill.
+    expectRing(recording.ops, { rings: 2 * ringed });
+    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
   });
 
   it("outlines the square a degree step reads", () => {

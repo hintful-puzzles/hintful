@@ -14,11 +14,8 @@ import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import {
-  opsOfKind,
-  paintsWith,
-  RecordingDrawing,
-} from "../../engine/testing/recording-drawing.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
@@ -363,10 +360,10 @@ describe("Sixteen move execution", () => {
 // --- colors ----------------------------------------------------------
 
 describe("Sixteen colors", () => {
-  it("returns 10 colors from the game (the hint, the tile face, the arrows and the flash's two included)", () => {
+  it("returns 9 colors from the game (the tile face, the arrows and the flash's two included)", () => {
     const bg: [number, number, number] = [0.9, 0.9, 0.9];
     const palette = sixteenGame.colors(bg);
-    expect(palette).toHaveLength(10);
+    expect(palette).toHaveLength(9);
   });
 
   it("fills a slide arrow as Netslide fills its own, clear of the bevel's swap", () => {
@@ -1043,7 +1040,7 @@ describe("Sixteen hint", () => {
 });
 
 describe("Sixteen hint rendering", () => {
-  it("highlights hint tiles and arrow in COL_HINT", () => {
+  it("rings the hint's tile, its target squares and the arrow to click", () => {
     const rng = randomNew("render-test");
     const { desc } = newDesc(defaultParams(), rng);
     const s = newState(defaultParams(), desc);
@@ -1057,11 +1054,14 @@ describe("Sixteen hint rendering", () => {
     const { dr, ops } = recordingDrawing();
     sixteenGame.redraw?.(dr, ds, null, s, 1, ui, 0, NO_FLASH, result.steps[0]);
 
-    // The tile fill and target border (rects) and the arrow (polygon) all paint
-    // in COL_HINT, which is color index 4.
-    const COL_HINT_INDEX = 4;
-    const hintOps = ops.filter((o) => paintsWith(o, COL_HINT_INDEX));
-    expect(hintOps.length).toBeGreaterThan(0);
+    // The tile, each square its journey lands on, and the arrow, which is
+    // drawn inside its ring in the ring's ink.
+    const hl = result.steps[0].highlights as SixteenHintHighlights;
+    expectRing(ops, { rings: 3 + (hl.ultimatePos === null ? 0 : 1) });
+    const arrows = opsOfKind(ops, "polygon").filter(
+      (o) => o.fill === ringsOf(ops)[0].color,
+    );
+    expect(arrows).toHaveLength(1);
   });
 
   it("supports two-leg step narration and double-target highlights", () => {
@@ -1341,42 +1341,38 @@ describe("the hint marks while the hinted slide animates", () => {
     return { state, after, m, hl, from, ops };
   }
 
+  /** Whether a ring of `ops` is centered, to a pixel, on the tile-sized box at
+   * (`x`, `y`). */
+  const ringAt = (ops: RecordingDrawing["ops"], x: number, y: number): boolean =>
+    ringsOf(ops).some(
+      (r) =>
+        Math.abs(r.x + r.w / 2 - (x + TS / 2)) <= 1 &&
+        Math.abs(r.y + r.h / 2 - (y + TS / 2)) <= 1 &&
+        r.w <= TS - 2 * HW,
+    );
+
   it("carries the tile mark along with the tile it is marking", () => {
     const { state, m, from, ops } = animatingFrame();
     const w = state.w;
 
     // Half a slide in, the tile sits half a tile from its origin toward its
-    // landing cell; the hint fill is drawTile's center rect, inset by HW.
+    // landing cell; its ring is round its face there.
     const shift = Math.round(0.5 * TS * m.delta);
-    const ex = px(from % w) + (m.axis === "row" ? shift : 0) + HW;
-    const ey = px(Math.floor(from / w)) + (m.axis === "column" ? shift : 0) + HW;
-
-    const fills = opsOfKind(ops, "rect").filter(
-      (o) => o.color === 4 && o.w === TS - 2 * HW && o.h === TS - 2 * HW,
-    );
-    expect(
-      fills.length,
-      "the hinted tile is not painted in the hint color",
-    ).toBeGreaterThan(0);
-    for (const f of fills) {
-      expect({ x: f.x, y: f.y }).toEqual({ x: ex, y: ey });
-    }
+    const ex = px(from % w) + (m.axis === "row" ? shift : 0);
+    const ey = px(Math.floor(from / w)) + (m.axis === "column" ? shift : 0);
+    expect(ringAt(ops, ex, ey), "the hinted tile is not ringed mid-slide").toBe(true);
+    expect(ringAt(ops, px(from % w), px(Math.floor(from / w)))).toBe(false);
   });
 
-  it("leaves the target border where the target cell is", () => {
+  it("leaves the target ring where the target cell is", () => {
     const { state, hl, ops } = animatingFrame();
     const w = state.w;
 
-    // The target is a *cell*; the line slides under it. The solid border's
-    // top edge is a full-width, 3px-tall rect at the cell's own corner.
-    const top = opsOfKind(ops, "rect").find(
-      (o) => o.color === 4 && o.w === TS && o.h === 3,
-    );
-    expect(top, "the target cell is not outlined at all").toBeDefined();
-    expect(top).toMatchObject({
-      x: px(hl.targetPos % w),
-      y: px(Math.floor(hl.targetPos / w)),
-    });
+    // The target is a *cell*; the line slides under it.
+    expect(
+      ringAt(ops, px(hl.targetPos % w), px(Math.floor(hl.targetPos / w))),
+      "the target cell is not ringed at all",
+    ).toBe(true);
   });
 });
 

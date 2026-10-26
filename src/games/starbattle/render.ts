@@ -17,7 +17,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   RULED_OUT,
   SHADED,
@@ -25,7 +24,12 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
@@ -59,15 +63,13 @@ export const COL_ERROR = 5;
 /** The surface under a square Check & Save found wrong. */
 export const COL_WRONG = 6;
 const COL_CURSOR = 7;
-/** The ring on the squares a hint step decides, and the stripes on the row,
- * column or region its sentence names. */
-export const COL_HINT = 8;
-/** The outline on the squares it reasons from. */
-export const COL_HINT_EVIDENCE = 9;
-const COL_FLASH = 10;
-const COL_FLASH_LEAD = 11;
+/** The outline on the squares a hint step reasons from. The ring on the
+ * squares it decides is the engine's (`GameDrawing.drawRing`). */
+export const COL_HINT_EVIDENCE = 8;
+const COL_FLASH = 9;
+const COL_FLASH_LEAD = 10;
 /** The first of the surfaces a region's squares take, one a fill. */
-export const COL_REGION = 12;
+export const COL_REGION = 11;
 /** The region palette's first four, the same four Map colors with (the
  * owner, 2026-10-13). */
 const FILLS = REGION_FILLS.slice(0, 4);
@@ -85,7 +87,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_WRONG] = ERROR_WASH;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -382,7 +383,8 @@ export function redraw(
   // painted once the surface is down, and every frame.
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(ds, size, x, y),
-    targetColor: COL_HINT,
+    // A square shows no text: a star and a cross are shapes.
+    text: () => NO_TEXT,
     evidenceColor: COL_HINT_EVIDENCE,
   });
 }

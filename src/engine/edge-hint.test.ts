@@ -1,7 +1,8 @@
 /**
  * Tier-1 tests for a hint on the edges of a square grid: that one edge is one
- * mark however it is named, that each of its squares draws its own half in the
- * role's ink, and that a chain's number lands in one square, in the corner
+ * mark however it is named, that each of its squares draws its outline half or
+ * its asked edge's ring, with the asked shape inside the ring in the ring's
+ * ink, and that a chain's number lands in one square, in the corner
  * beside its edge. Path, Pearl and Tracks reach these only through the boards
  * their hints happen to make.
  */
@@ -15,6 +16,7 @@ import {
   edgeHintWords,
   hintedSides,
 } from "./edge-hint.ts";
+import { NOTHING_TO_CLEAR } from "./ring.ts";
 import { DOWN, LEFT, RIGHT, squareEdges, UP } from "./square-edges.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
@@ -23,16 +25,29 @@ const g = squareEdges(3, 2);
 const across = g.around[1 * 4 + RIGHT];
 const below = g.around[1 * 4 + DOWN];
 
-/** What `drawEdgeHints` asks a square's shapes to draw, in the order asked. */
+/** A game's palette of eight slots, so the ring's ink is the engine's
+ * ninth (`resolvePalette`). */
+const RING_INK = 8;
+
+/** What `drawEdgeHints` asks a square's shapes to draw, in the order asked:
+ * each ring it asks where to go, and what it draws in each role's ink. */
 function drawn(word: number): string[] {
   const out: string[] = [];
   const note = (shape: string) => (sides: number, ink: number, role: EdgeRole) =>
     out.push(`${shape} ${sides} ${ink} ${role}`);
-  drawEdgeHints(
-    word,
-    { ring: 7, outline: 8 },
-    { line: note("line"), cross: note("cross") },
-  );
+  const dr = new RecordingDrawing(Array.from({ length: RING_INK }, () => [0, 0, 0]));
+  drawEdgeHints(dr, word, 7, {
+    line: note("line"),
+    cross: note("cross"),
+    ring: (d, shape) => {
+      out.push(`ring ${d} ${shape}`);
+      return {
+        box: { x: 0, y: 0, w: 30, h: 12 },
+        clear: NOTHING_TO_CLEAR,
+        thickness: 2,
+      };
+    },
+  });
   return out;
 }
 
@@ -48,8 +63,15 @@ describe("an edge a hint names", () => {
 
   it("is drawn by both its squares, each on its own side", () => {
     const words = edgeHintWords(g, [{ edge: across, shape: "cross", role: "ring" }]);
-    expect(drawn(words[1])).toEqual([`cross ${1 << RIGHT} 7 ring`]);
-    expect(drawn(words[2])).toEqual([`cross ${1 << LEFT} 7 ring`]);
+    // Each square rings the edge, with the asked cross inside the ring.
+    expect(drawn(words[1])).toEqual([
+      `ring ${RIGHT} cross`,
+      `cross ${1 << RIGHT} ${RING_INK} ring`,
+    ]);
+    expect(drawn(words[2])).toEqual([
+      `ring ${LEFT} cross`,
+      `cross ${1 << LEFT} ${RING_INK} ring`,
+    ]);
     expect(hintedSides(words[2], "cross")).toBe(1 << LEFT);
     expect(hintedSides(words[2], "line")).toBe(0);
     for (const i of [0, 3, 4, 5]) expect(words[i]).toBe(0);
@@ -59,7 +81,7 @@ describe("an edge a hint names", () => {
     const words = edgeHintWords(g, [
       { edge: { cell: 0, dir: UP }, shape: "line", role: "outline" },
     ]);
-    expect(drawn(words[0])).toEqual([`line ${1 << UP} 8 outline`]);
+    expect(drawn(words[0])).toEqual([`line ${1 << UP} 7 outline`]);
     expect([...words.slice(1)].every((w) => w === 0)).toBe(true);
   });
 
@@ -71,8 +93,9 @@ describe("an edge a hint names", () => {
     ]);
     // The outline's under the ring's.
     expect(drawn(words[1])).toEqual([
-      `cross ${1 << DOWN} 8 outline`,
-      `line ${1 << RIGHT} 7 ring`,
+      `cross ${1 << DOWN} 7 outline`,
+      `ring ${RIGHT} line`,
+      `line ${1 << RIGHT} ${RING_INK} ring`,
     ]);
   });
 });

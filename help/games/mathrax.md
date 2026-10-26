@@ -33,7 +33,7 @@ More information: https://www.janko.at/Raetsel/Mathrax/index.htm
 
 {{hint-marks}}
 
-Numbered cells are a chain of cells with two numbers left each, read in order: the sentence says how the chain rules a number out of the ringed cell.
+Numbered cells are a chain of cells with two numbers left each, read in order: the sentence says how the chain rules a number out of the cell where it is struck.
 
 The hint names a clue as it is drawn ("the 7+ clue", "the 2÷ clue", "the = clue"), and "the 3 across it" is the number in the cell diagonally opposite across that clue. A number is *open* in a cell while it is still possible there: in the cell's pencil marks, or, in a cell with no marks, not yet ruled out by its row and column. So "nothing open across the 7+ clue adds with 1 to make 7" means the cell across can't be 6, so this cell can't be 1.
 

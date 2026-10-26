@@ -17,7 +17,7 @@
  *
  * Every word that points at the board is a reference to the mark it points at
  * (`engine/hint-words.ts`): the squares a step fills are ringed, and a whole
- * run's route is drawn as a line through them; a placed number the sentence
+ * run's route is drawn as a line through them, inside their rings; a placed number the sentence
  * names, an arrow it reads and a square it reasons from are outlined; the line
  * an arrow points along, a run's reach and the squares no other run reaches are
  * striped. `hint.ts` draws what the words name, so the two cannot disagree.
@@ -36,8 +36,8 @@ import type { LineKind } from "./premises.ts";
 /** A square of the board, by index. */
 export const SQUARE: MarkKind<number> = { name: "square", key: String };
 
-/** A square of a whole run's route, drawn as the game's path line through it:
- * the line is the ring on the squares it passes through. */
+/** A square of a whole run's route: each square it fills is ringed, with the
+ * game's path line through it inside the ring. */
 export const PATH: MarkKind<number> = {
   name: "path",
   key: String,

@@ -17,7 +17,6 @@ import {
   FLASH_LEAD,
   GOAL,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   lineNoColor,
   SHADED,
@@ -25,13 +24,16 @@ import {
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
+  type CellText,
   type HintMarkStyle,
   HintMarks,
   type MarkBand,
   type MarkCell,
   MarkOutlines,
+  NO_TEXT,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { textBox } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
 import { SPOT } from "./hint-text.ts";
@@ -64,14 +66,13 @@ export const COL_HIGHLIGHT_1 = 6;
 export const COL_HIGHLIGHT_2 = 7;
 // Fork overlays, appended past the upstream enum.
 export const COL_MISTAKE = 8;
-export const COL_HINT = 9; // the acted-on square's ring / the suggested edge
-export const COL_HINT_CELL = 10; // the evidence squares' outline
+export const COL_HINT_CELL = 9; // the evidence squares' outline
 // The reference-panel spotlight boxing a domino's candidate placements: the
 // places the domino the player is after could go, so the goal's color, which
 // no domino, mistake, hint or value highlight takes.
-export const COL_REFERENCE = 11;
-export const COL_FLASH = 12; // the ground of a domino the win flash's body is on
-export const COL_FLASH_LEAD = 13; // and of one its leading edge is on
+export const COL_REFERENCE = 10;
+export const COL_FLASH = 11; // the ground of a domino the win flash's body is on
+export const COL_FLASH_LEAD = 12; // and of one its leading edge is on
 
 export function colors(defaultBackground: Color): Color[] {
   const { background } = mkhighlight(defaultBackground);
@@ -89,10 +90,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HIGHLIGHT_1] = RED;
   out[COL_HIGHLIGHT_2] = GREEN;
   out[COL_MISTAKE] = ERROR;
-  out[COL_HINT] = HINT_RING;
-  // Both hint marks are outlines on the square's own border, so both take a
-  // strong color: every Dominosa square carries a number, so a fill behind one
-  // is exactly what has no working value.
+  // The outline is on the square's own border and takes a strong color: every
+  // Dominosa square carries a number, so a fill behind one is exactly what has
+  // no working value.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_REFERENCE] = GOAL;
   out[COL_FLASH] = FLASH;
@@ -122,8 +122,9 @@ const DF_CURSOR_YBASE = 0x40000;
 const DF_CURSOR_YMASK = 0xc0000;
 // Fork mistake overlay bit (no upstream analog): an inset red outline.
 const DF_MISTAKE = 0x100000;
-// Fork hint overlay bits. The target and evidence marks key on
-// `DominosaDrawState.markSides` instead.
+// Fork hint overlay bits: the side a barrier's wall is drawn across, inside the
+// spot's ring, which lies over the tile and is undone by its repaint. The target
+// and evidence marks key on `DominosaDrawState.markSides` instead.
 const DF_HINT_EDGE_L = 0x800000;
 const DF_HINT_EDGE_R = 0x1000000;
 const DF_HINT_EDGE_T = 0x2000000;
@@ -209,6 +210,79 @@ function markBand(ds: DominosaDrawState, x: number, y: number): MarkBand {
   };
 }
 
+/** Where square `(x, y)` draws its number: the arguments `drawText` takes but
+ * the color, so the tile and a hint's ring read one place. */
+function numberText(ts: number, x: number, y: number) {
+  return {
+    origin: {
+      x: coord(x, ts) + Math.floor(ts / 2),
+      y: coord(y, ts) + Math.floor(ts / 2),
+    },
+    options: glyphFont(Math.floor(ts / 2)),
+  };
+}
+
+/** The number square `(x, y)` shows, for a hint's ring to keep clear of. */
+function squareText(state: DominosaState, ts: number, x: number, y: number): CellText {
+  const { w, h } = state;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  const { origin, options } = numberText(ts, x, y);
+  const text = String(state.numbers[y * w + x]);
+  return { enclose: [textBox(origin, options, text)], avoid: [], notes: [] };
+}
+
+/**
+ * The ring round the spot a step decides: one pill round its two squares,
+ * enclosing both numbers. A barrier's pill holds the line the step asks for
+ * across its middle, so a spot that can't hold a domino reads as two squares
+ * with a wall between them, and one that must reads as the domino.
+ */
+function drawSpotRing(
+  dr: GameDrawing,
+  ds: DominosaDrawState,
+  state: DominosaState,
+  [a, b]: readonly [number, number],
+  barrier: boolean,
+): void {
+  const ts = ds.tileSize;
+  const w = state.w;
+  const [ax, ay, bx, by] = [a % w, (a / w) | 0, b % w, (b / w) | 0];
+  const ba = markBand(ds, ax, ay);
+  const bb = markBand(ds, bx, by);
+  const x0 = Math.min(ba.box.x, bb.box.x);
+  const y0 = Math.min(ba.box.y, bb.box.y);
+  const box = {
+    x: x0,
+    y: y0,
+    w: Math.max(ba.box.x + ba.box.w, bb.box.x + bb.box.w) - x0,
+    h: Math.max(ba.box.y + ba.box.h, bb.box.y + bb.box.h) - y0,
+  };
+  const enclose = [
+    squareText(state, ts, ax, ay),
+    squareText(state, ts, bx, by),
+  ].flatMap((t) => t.enclose);
+  const th = Math.max(2, Math.floor(ts / 12));
+  const g = gutter(ts);
+  // The wall between the squares, half on each side of their shared edge.
+  const wall =
+    ay === by
+      ? {
+          x: coord(Math.max(ax, bx), ts) - th,
+          y: coord(ay, ts) + g,
+          w: 2 * th,
+          h: ts - 2 * g,
+        }
+      : {
+          x: coord(ax, ts) + g,
+          y: coord(Math.max(ay, by), ts) - th,
+          w: ts - 2 * g,
+          h: 2 * th,
+        };
+  dr.drawRing(box, { enclose, avoid: [] }, Math.max(2, ba.outer + ba.inner), {
+    inside: barrier ? (ink) => dr.drawRect(wall, ink) : undefined,
+  });
+}
+
 // --- tile drawing -----------------------------------------------------------
 
 function drawTile(
@@ -226,10 +300,10 @@ function drawTile(
   const co = coffset(ts);
   const rad = dominoRadius(ts);
 
-  // No hint role in the background: every square carries a number, so the target
-  // ring and the evidence outline go on the square's own border in `redraw`.
-  // `markSides` is what makes a square repaint when a mark's side leaves it, and
-  // that repaint is also what erases the side.
+  // No hint role in the background: every square carries a number, so the
+  // spot's ring goes round it and the evidence outline on the square's own
+  // border, both in `redraw`. `markSides` is what makes a square repaint when a
+  // mark leaves it, and that repaint is also what erases the mark.
   dr.clip({ x: cx, y: cy, w: ts, h: ts });
   dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, COL_BACKGROUND);
 
@@ -323,25 +397,8 @@ function drawTile(
     dr.drawRect({ x: sx + span - t, y: sy, w: t, h: span }, COL_REFERENCE);
   }
 
-  // Hint: the suggested barrier edge as a thick COL_HINT bar.
-  if (flags & (DF_HINT_EDGE_L | DF_HINT_EDGE_R | DF_HINT_EDGE_T | DF_HINT_EDGE_B)) {
-    const th = Math.max(2, Math.floor(ts / 12));
-    if (flags & DF_HINT_EDGE_T)
-      dr.drawRect({ x: cx + g, y: cy, w: ts - 2 * g, h: th }, COL_HINT);
-    if (flags & DF_HINT_EDGE_B)
-      dr.drawRect({ x: cx + g, y: cy + ts - th, w: ts - 2 * g, h: th }, COL_HINT);
-    if (flags & DF_HINT_EDGE_L)
-      dr.drawRect({ x: cx, y: cy + g, w: th, h: ts - 2 * g }, COL_HINT);
-    if (flags & DF_HINT_EDGE_R)
-      dr.drawRect({ x: cx + ts - th, y: cy + g, w: th, h: ts - 2 * g }, COL_HINT);
-  }
-
-  dr.drawText(
-    { x: cx + Math.floor(ts / 2), y: cy + Math.floor(ts / 2) },
-    glyphFont(Math.floor(ts / 2)),
-    nc,
-    String(state.numbers[y * w + x]),
-  );
+  const { origin, options } = numberText(ts, x, y);
+  dr.drawText(origin, options, nc, String(state.numbers[y * w + x]));
 
   dr.drawUpdate({ x: cx, y: cy, w: ts, h: ts });
   dr.unclip();
@@ -377,12 +434,11 @@ export function redraw(
   const hintEvidence = marks.of("outline", CELL);
   const markStyle: HintMarkStyle = {
     band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    text: (x, y) => squareText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
-    // A placement's two squares are the domino it asks for: one ring. A
-    // barrier's two squares are two squares with the wall between them.
-    joinTargets: () => hl?.kind === "place",
   };
+  // The spot's ring is this file's (`drawSpotRing`); its sides here are only
+  // the cache key that repaints a square the ring leaves.
   const outlines = new MarkOutlines(hintTargets, hintEvidence, markStyle);
 
   // Count domino-value occurrences (capped at 2) so a value placed twice
@@ -477,5 +533,6 @@ export function redraw(
   }
 
   // The hint marks, after the square loop and outside every clip.
-  ds.marks.paint(dr, hintTargets, hintEvidence, markStyle);
+  ds.marks.paint(dr, [], hintEvidence, markStyle);
+  for (const spot of spots) drawSpotRing(dr, ds, state, spot, hl?.kind === "barrier");
 }

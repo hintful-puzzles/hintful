@@ -889,6 +889,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "dragY",
       "drawn",
       "drawnHint",
+      "drawnRings",
       "pencilModeShown",
       "started",
       "tileSize",
@@ -1356,6 +1357,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "h",
+      "rings",
       "started",
       "tileSize",
       "tone",

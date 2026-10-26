@@ -119,7 +119,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 2,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -138,7 +138,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "r": 13,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -147,7 +147,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 2,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 7,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -166,7 +166,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 2,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -185,7 +185,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 2,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -204,7 +204,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 2,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -223,7 +223,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 2,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -242,7 +242,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 34,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -270,7 +270,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 34,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -307,7 +307,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 34,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -344,7 +344,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 34,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -381,7 +381,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 34,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -400,7 +400,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 66,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -439,7 +439,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "circle",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "r": 14,
   },
@@ -449,7 +449,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "circle",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "r": 13,
   },
@@ -464,7 +464,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 66,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -483,7 +483,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 66,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -502,7 +502,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 66,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -521,7 +521,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "y": 66,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -543,7 +543,25 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "r": 10,
   },
   {
-    "fill": 9,
+    "color": 14,
+    "h": 30,
+    "op": "ring",
+    "radius": 15,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 2,
+    "w": 30,
+    "x": 2,
+    "y": 2,
+  },
+  {
+    "h": 30,
+    "op": "clip",
+    "w": 30,
+    "x": 2,
+    "y": 2,
+  },
+  {
+    "fill": 14,
     "fillRgb": "rgb(21, 113, 233)",
     "op": "polygon",
     "outline": 1,
@@ -578,6 +596,9 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
         16,
       ],
     ],
+  },
+  {
+    "op": "unclip",
   },
 ]
 `;

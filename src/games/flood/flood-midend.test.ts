@@ -4,10 +4,10 @@
 import { describe, expect, it } from "vitest";
 import { CURSOR_LEFT, CURSOR_RIGHT, CURSOR_SELECT } from "../../engine/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { floodGame } from "./index.ts";
-import { COL_HINT } from "./render.ts";
 
 function harness() {
   const h = driveMidend(floodGame);
@@ -81,13 +81,11 @@ describe("Flood midend lifecycle", () => {
     expect(h.statusBar()?.statusBarText).toContain("1 / 9 moves");
   });
 
-  it("surfaces a hint and renders its SOLNNEXT circle", () => {
+  it("surfaces a hint and rings its next-fill squares", () => {
     const h = harness();
     expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
     expect(h.m.hint()).toBeNull();
-    // The hint marks the next-fill squares with a circle in the ring's ink.
-    expect(opsOfKind(h.painted(), "circle").some((o) => o.fill === COL_HINT)).toBe(
-      true,
-    );
+    // The first fill is 1's, joining the top row's two squares.
+    expectRing(h.painted(), { rings: 2 });
   });
 });

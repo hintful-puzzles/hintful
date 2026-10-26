@@ -368,8 +368,10 @@ use that recorder, not a local double.
   to one op.
 - An op carries `color`, the palette index the game passed, and `rgb`, the
   resolved label. Assert against the game's own constant
-  (`o.color === COL_HINT`); `rgb` is there so a snapshot diff stays readable
-  when an index moves.
+  (`o.color === COL_HINT_CELL`); `rgb` is there so a snapshot diff stays
+  readable when an index moves. A `drawRing` records a `ring` op in the
+  engine's ink, and what its `inside` draws between a clip and an unclip
+  after it; `ringsOf` and `expectRing` in `testing/mark-shape.ts` read them.
 - `DrawOp` is a discriminated union, so chained `.filter` calls do not
   narrow. Put the whole predicate in one `filter`, or use a type guard.
 

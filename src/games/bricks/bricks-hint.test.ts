@@ -10,7 +10,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -21,7 +21,7 @@ import { NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { say } from "./hint-text.ts";
 import { BRICKS_RUNGS, type BricksHint, bricksGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL, tileOrigin } from "./render.ts";
 import {
   bricksValidate,
   deduceBricksPlan,
@@ -398,7 +398,7 @@ describe("bricks hint — hintKeepTrack", () => {
 });
 
 describe("bricks hint — rendering (tier 2.5)", () => {
-  it("rings the target COL_HINT and the evidence COL_HINT_CELL", () => {
+  it("rings the target and outlines the evidence COL_HINT_CELL", () => {
     const result = renderScenario({
       game: bricksGame,
       id: FIX_ID,
@@ -408,7 +408,7 @@ describe("bricks hint — rendering (tier 2.5)", () => {
     // The forced cell is **ringed**, not filled: the move is "shade this cell or
     // rule it out", so a fill would say with the board what the narration is
     // still proposing.
-    expectRing(ops, COL_HINT);
+    expectRing(ops);
     // Evidence off-board (an edge wall) rings nothing; any other is drawn.
     const hasEvidence = ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL);
     expect(hasEvidence || stepMarks(result.hint).of("outline", CELL).length === 0).toBe(
@@ -417,10 +417,11 @@ describe("bricks hint — rendering (tier 2.5)", () => {
     expect(ops).toMatchSnapshot();
   });
 
-  it("paints the ring the same whichever neighbors repainted before it", () => {
-    // The ring covers the border lines the cell shares with its neighbors. A
-    // fresh frame repaints every neighbor; a warm one, where only the target's
-    // cell changed, repaints none — the two canvases must still agree.
+  it("rings inside the cell's own square, whichever neighbors repainted before it", () => {
+    // The ring stays inside the square, so the cell's own repaint draws and
+    // takes it away. A fresh frame repaints every neighbor; a warm one, where
+    // only the target's cell changed, repaints none — the two canvases must
+    // still agree.
     const state = newState(FIX_PARAMS, FIX.desc);
     const w = state.w;
     const target = [...state.grid.keys()].find(
@@ -465,7 +466,13 @@ describe("bricks hint — rendering (tier 2.5)", () => {
     const warm = new BoxRaster(size.w, size.h);
     warm.apply(frame(ds));
     const ringed = frame(ds, step);
-    expect(ringed.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
+    const [ring] = ringsOf(ringed);
+    expect(ring, "the warm frame rings the target").toBeDefined();
+    const o = tileOrigin(target % w, Math.floor(target / w), state.h, ts);
+    expect(ring.x).toBeGreaterThanOrEqual(o.x + 1);
+    expect(ring.y).toBeGreaterThanOrEqual(o.y + 1);
+    expect(ring.x + ring.w).toBeLessThanOrEqual(o.x + ts);
+    expect(ring.y + ring.h).toBeLessThanOrEqual(o.y + ts);
     warm.apply(ringed);
     const fresh = new BoxRaster(size.w, size.h);
     fresh.apply(frame(bricksGame.newDrawState(state, ts), step));

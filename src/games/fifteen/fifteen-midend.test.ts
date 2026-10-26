@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { CURSOR_LEFT } from "../../engine/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { fifteenGame } from "./index.ts";
@@ -56,11 +57,10 @@ describe("Fifteen midend lifecycle", () => {
     expect(h.status()?.statusBarText).toContain("Moves: 1");
   });
 
-  it("surfaces a hint and renders it with the hint color", () => {
+  it("surfaces a hint and rings the hinted tile", () => {
     // hint() returns undefined on success.
     expect(h.m.hint()).toBeNull();
-    // The hinted tile is filled with COL_HINT (palette index 4).
-    expect(opsOfKind(h.painted(), "rect").some((o) => o.color === 4)).toBe(true);
+    expectRing(h.painted());
   });
 
   it("stretches a hint-executed move to the uniform 1s, despite Fifteen's 0.13s base", () => {

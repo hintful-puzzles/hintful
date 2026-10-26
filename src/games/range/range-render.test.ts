@@ -21,7 +21,6 @@ import {
   COL_FLASH_LEAD,
   COL_GIVEN,
   COL_GRID,
-  COL_HINT,
   COL_HINT_CELL,
   COL_RULED_OUT,
   COL_SHADED,
@@ -63,7 +62,7 @@ function makeState(w: number, h: number, grid: number[]): RangeState {
 }
 
 describe("hint color legend", () => {
-  it("outlines a cited black premise in COL_HINT_CELL, apart from the COL_HINT target", () => {
+  it("outlines a cited black premise in COL_HINT_CELL, apart from the ringed target", () => {
     // The adjacency deduction shape: a black square (the premise) at the center
     // forces a neighbor white (the target), each in its own role's ink.
     const grid = [EMPTY, EMPTY, EMPTY, EMPTY, BLACK, EMPTY, EMPTY, EMPTY, EMPTY];
@@ -90,11 +89,9 @@ describe("hint color legend", () => {
     expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_CELL)).toBe(
       true,
     );
-    // The forced cell is ringed in COL_HINT (drawn as `rect` sides) — a
-    // different color from the premise ring.
-    expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
-    // The premise ring is NOT drawn in the target's COL_HINT.
-    expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(false);
+    // The forced cell is ringed, and nothing else (the premise's outline
+    // included) takes the ring's ink.
+    expectRing(rec.ops);
   });
 });
 
@@ -213,11 +210,11 @@ describe("render scenario snapshot", () => {
     });
     expect(result.hint).toBeDefined();
     const ops = result.recording.ops;
-    // The hint target cell is **ringed** COL_HINT; premise cells are outlined
+    // The hint target cell is **ringed**; premise cells are outlined
     // COL_HINT_CELL, and a run the sentence names is hatched translucently.
     // None is an opaque fill: a Range premise runs along a clue's arms and takes
     // in the clue cell, so it carries the very digit the deduction counts with.
-    expectRing(ops, COL_HINT);
+    expectRing(ops);
     const marks = stepMarks(result.hint);
     const premise = markSides(ops, COL_HINT_CELL);
     for (const s of premise) expect(isThin(s)).toBe(true);
@@ -227,7 +224,7 @@ describe("render scenario snapshot", () => {
     expect(premise.length + run.length).toBeGreaterThan(0);
     // Clues are still drawn.
     expect(ops.some((o) => o.op === "text")).toBe(true);
-    // …and the clue *driving* the deduction draws its digit in COL_HINT, which
+    // …and the clue *driving* the deduction draws its digit in COL_HINT_CELL, which
     // is what lets the narration say "the highlighted 5". A clue sits inside
     // its own shaded line of sight and that run can hold a second clue of the
     // same value (seen live on 9x6 `range-a`), so the value alone is not a name.

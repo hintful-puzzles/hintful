@@ -12,7 +12,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 0,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -94,7 +94,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 68,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -186,7 +186,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 68,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -268,7 +268,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 68,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -350,7 +350,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 68,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -432,7 +432,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 108,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -524,7 +524,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 108,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -606,7 +606,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 108,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -688,7 +688,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 108,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -770,7 +770,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 148,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -852,7 +852,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 148,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -934,7 +934,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 148,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1016,7 +1016,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 148,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1098,7 +1098,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 188,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1156,7 +1156,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 172,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1238,7 +1238,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 188,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1320,7 +1320,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 188,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1329,7 +1329,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 120,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1338,7 +1338,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 120,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1347,7 +1347,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 120,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1356,7 +1356,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 160,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1365,85 +1365,13 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 198,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
     "w": 2,
     "x": 118,
     "y": 160,
-  },
-  {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 80,
-    "y": 40,
-  },
-  {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 80,
-    "y": 40,
-  },
-  {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 80,
-    "y": 78,
-  },
-  {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 118,
-    "y": 40,
-  },
-  {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 80,
-    "y": 80,
-  },
-  {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 80,
-    "y": 80,
-  },
-  {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 80,
-    "y": 118,
-  },
-  {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 118,
-    "y": 80,
   },
   {
     "color": 0,
@@ -1457,7 +1385,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 20,
+    "color": 19,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -1541,7 +1469,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
 ]
 `;
 
-exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the hint color 1`] = `
+exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the ring 1`] = `
 [
   {
     "color": 0,
@@ -1553,7 +1481,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 0,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1587,7 +1515,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1621,7 +1549,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1655,7 +1583,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1753,7 +1681,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y2": 48,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1787,7 +1715,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1875,7 +1803,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y2": 88,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1909,7 +1837,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1951,26 +1879,6 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
         119,
       ],
     ],
-  },
-  {
-    "cx": 220,
-    "cy": 100,
-    "fill": -1,
-    "fillRgb": "color#-1",
-    "op": "circle",
-    "outline": 19,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "r": 16,
-  },
-  {
-    "cx": 220,
-    "cy": 100,
-    "fill": -1,
-    "fillRgb": "color#-1",
-    "op": "circle",
-    "outline": 19,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "r": 15,
   },
   {
     "color": 2,
@@ -2039,7 +1947,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 140,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2139,7 +2047,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 140,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2303,7 +2211,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 180,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2337,7 +2245,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2425,7 +2333,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "r": 15,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2469,7 +2377,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2569,7 +2477,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 220,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2603,7 +2511,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2637,7 +2545,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2681,40 +2589,45 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
+    "color": 23,
+    "h": 38,
+    "op": "ring",
+    "radius": 19,
     "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 200,
-    "y": 80,
+    "thickness": 2,
+    "w": 38,
+    "x": 201,
+    "y": 81,
   },
   {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 200,
-    "y": 80,
+    "h": 38,
+    "op": "clip",
+    "w": 38,
+    "x": 201,
+    "y": 81,
   },
   {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 200,
-    "y": 118,
+    "cx": 220,
+    "cy": 100,
+    "fill": -1,
+    "fillRgb": "color#-1",
+    "op": "circle",
+    "outline": 23,
+    "outlineRgb": "rgb(21, 113, 233)",
+    "r": 16,
   },
   {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 238,
-    "y": 80,
+    "cx": 220,
+    "cy": 100,
+    "fill": -1,
+    "fillRgb": "color#-1",
+    "op": "circle",
+    "outline": 23,
+    "outlineRgb": "rgb(21, 113, 233)",
+    "r": 15,
+  },
+  {
+    "op": "unclip",
   },
   {
     "color": 0,
@@ -2806,19 +2719,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 53,
   },
   {
-    "align": "center",
-    "baseline": "mathematical",
-    "color": 19,
-    "fontType": "variable",
-    "op": "text",
-    "rgb": "rgb(21, 113, 233)",
-    "size": 20,
-    "text": "3",
-    "x": 60,
-    "y": 60,
-  },
-  {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2942,7 +2843,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 60,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3000,7 +2901,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 52,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3136,7 +3037,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 100,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3194,7 +3095,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 92,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3318,7 +3219,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 93,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3388,7 +3289,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 92,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3446,7 +3347,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 132,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3492,7 +3393,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 132,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3616,7 +3517,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 140,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3686,7 +3587,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 132,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3876,7 +3777,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y2": 168,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3934,7 +3835,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 172,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4004,7 +3905,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 172,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4128,7 +4029,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 220,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4198,7 +4099,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 212,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4334,40 +4235,37 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 213,
   },
   {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
+    "color": 23,
+    "h": 38,
+    "op": "ring",
+    "radius": 19,
     "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 40,
-    "y": 40,
+    "thickness": 2,
+    "w": 38,
+    "x": 41,
+    "y": 41,
   },
   {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 40,
-    "y": 40,
+    "h": 38,
+    "op": "clip",
+    "w": 38,
+    "x": 41,
+    "y": 41,
   },
   {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 23,
+    "fontType": "variable",
+    "op": "text",
     "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 40,
-    "y": 78,
+    "size": 20,
+    "text": "3",
+    "x": 60,
+    "y": 60,
   },
   {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 78,
-    "y": 40,
+    "op": "unclip",
   },
   {
     "color": 0,
@@ -4381,7 +4279,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
 ]
 `;
 
-exports[`salad hint frames > previews an empty-square marker as a cross in the hint color 1`] = `
+exports[`salad hint frames > previews an empty-square marker as a cross in the ring 1`] = `
 [
   {
     "color": 0,
@@ -4393,7 +4291,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y": 0,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4427,7 +4325,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4515,7 +4413,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y2": 48,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4549,7 +4447,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4583,7 +4481,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4737,7 +4635,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "r": 15,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4771,7 +4669,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4859,7 +4757,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "r": 15,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4893,7 +4791,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4927,7 +4825,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4961,7 +4859,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4995,7 +4893,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5029,7 +4927,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5063,7 +4961,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5445,7 +5343,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "r": 15,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5489,7 +5387,69 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 19,
+    "color": 21,
+    "h": 40,
+    "op": "rect",
+    "rgb": "rgb(194, 194, 194)",
+    "w": 40,
+    "x": 200,
+    "y": 200,
+  },
+  {
+    "color": 24,
+    "h": 40,
+    "op": "hatch",
+    "period": 13,
+    "rgb": "rgb(194, 85, 22)",
+    "w": 40,
+    "x": 200,
+    "y": 200,
+  },
+  {
+    "fill": -1,
+    "fillRgb": "color#-1",
+    "op": "polygon",
+    "outline": 3,
+    "outlineRgb": "rgb(139, 139, 139)",
+    "points": [
+      [
+        200,
+        199,
+      ],
+      [
+        240,
+        199,
+      ],
+      [
+        240,
+        239,
+      ],
+      [
+        200,
+        239,
+      ],
+    ],
+  },
+  {
+    "color": 23,
+    "h": 38,
+    "op": "ring",
+    "radius": 19,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 2,
+    "w": 38,
+    "x": 161,
+    "y": 201,
+  },
+  {
+    "h": 38,
+    "op": "clip",
+    "w": 38,
+    "x": 161,
+    "y": 201,
+  },
+  {
+    "color": 23,
     "op": "line",
     "rgb": "rgb(21, 113, 233)",
     "thickness": 3,
@@ -5499,7 +5459,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y2": 232,
   },
   {
-    "color": 19,
+    "color": 23,
     "op": "line",
     "rgb": "rgb(21, 113, 233)",
     "thickness": 3,
@@ -5509,84 +5469,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y2": 208,
   },
   {
-    "color": 22,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(194, 194, 194)",
-    "w": 40,
-    "x": 200,
-    "y": 200,
-  },
-  {
-    "color": 24,
-    "h": 40,
-    "op": "hatch",
-    "period": 13,
-    "rgb": "rgb(194, 85, 22)",
-    "w": 40,
-    "x": 200,
-    "y": 200,
-  },
-  {
-    "fill": -1,
-    "fillRgb": "color#-1",
-    "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(139, 139, 139)",
-    "points": [
-      [
-        200,
-        199,
-      ],
-      [
-        240,
-        199,
-      ],
-      [
-        240,
-        239,
-      ],
-      [
-        200,
-        239,
-      ],
-    ],
-  },
-  {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 160,
-    "y": 200,
-  },
-  {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 160,
-    "y": 200,
-  },
-  {
-    "color": 19,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 40,
-    "x": 160,
-    "y": 238,
-  },
-  {
-    "color": 19,
-    "h": 40,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 198,
-    "y": 200,
+    "op": "unclip",
   },
   {
     "color": 0,
@@ -5612,7 +5495,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 0,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5646,7 +5529,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5680,7 +5563,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5714,7 +5597,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5814,7 +5697,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 60,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5848,7 +5731,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5882,7 +5765,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6102,7 +5985,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 140,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6136,7 +6019,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6236,7 +6119,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 140,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6324,7 +6207,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y2": 168,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6424,7 +6307,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 180,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6458,7 +6341,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6492,7 +6375,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6526,7 +6409,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6626,7 +6509,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 220,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6660,7 +6543,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6717,7 +6600,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 0,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6799,7 +6682,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 68,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6881,7 +6764,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 68,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6963,7 +6846,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 68,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7111,7 +6994,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 60,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7193,7 +7076,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 108,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7275,7 +7158,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 108,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7579,7 +7462,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 140,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7661,7 +7544,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 148,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7809,7 +7692,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 140,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7945,7 +7828,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y2": 168,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8093,7 +7976,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 180,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8175,7 +8058,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 188,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8257,7 +8140,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 188,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8339,7 +8222,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 228,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8487,7 +8370,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 220,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8569,7 +8452,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 228,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8674,7 +8557,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "y": 0,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8708,7 +8591,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8742,7 +8625,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8776,7 +8659,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8810,7 +8693,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8844,7 +8727,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8878,7 +8761,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8912,7 +8795,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8946,7 +8829,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8980,7 +8863,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9014,7 +8897,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9048,7 +8931,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9082,7 +8965,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9116,7 +8999,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9150,7 +9033,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9184,7 +9067,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9346,7 +9229,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 0,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9380,7 +9263,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9526,7 +9409,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y2": 43,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9560,7 +9443,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9660,7 +9543,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 60,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9694,7 +9577,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9728,7 +9611,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9948,7 +9831,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 140,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9982,7 +9865,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10082,7 +9965,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 140,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10170,7 +10053,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y2": 168,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10270,7 +10153,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 180,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10304,7 +10187,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10338,7 +10221,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10372,7 +10255,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10472,7 +10355,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 220,
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10506,7 +10389,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 22,
+    "color": 21,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

@@ -4,19 +4,24 @@
  * these are the frames a player sees, not a hand-built drawstate.
  *
  * What is worth asserting here rather than on the highlight object: the hint's
- * *action* color has to actually reach the canvas, a wall the board does not
+ * *action* rings have to actually reach the canvas, a wall the board does not
  * have yet has to be drawn anyway (nothing else in this renderer paints an
- * unset edge), and the two ring roles have to stay one apiece.
+ * unset edge), and the two mark roles have to stay one apiece.
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
-import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
+import {
+  expectRing,
+  isThin,
+  markSides,
+  ringsOf,
+} from "../../engine/testing/mark-shape.ts";
 import { type DrawOp, opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { GalaxiesHint } from "./hint.ts";
 import { type GalaxiesMove, galaxiesGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL, PREFERRED_TILE_SIZE as TS } from "./render.ts";
 import { GalaxiesDiff } from "./solver.ts";
 
 const lit = (step: HintStep<GalaxiesMove, GalaxiesHint>): GalaxiesHint => {
@@ -84,6 +89,22 @@ const rects = (ops: DrawOp[], color: number) =>
 const circles = (ops: DrawOp[], outline: number) =>
   ops.filter((o) => o.op === "circle" && o.outline === outline);
 
+/** The frame's rings by their center: each with the distinct sizes drawn
+ * there, since a ring on a tile's corner is drawn by every tile that clips
+ * it. */
+function ringCenters(ops: DrawOp[]): Map<string, Set<number>> {
+  const out = new Map<string, Set<number>>();
+  for (const r of ringsOf(ops)) {
+    const at = `${r.x + r.w / 2},${r.y + r.h / 2}`;
+    out.set(at, (out.get(at) ?? new Set()).add(r.w));
+  }
+  return out;
+}
+
+/** Whether `at` (a `ringCenters` key) is the middle of a cell. */
+const isCellCenter = (at: string): boolean =>
+  at.split(",").every((c) => (Number(c) - TS) % TS === TS / 2);
+
 describe("a displayed hint reaches the canvas", () => {
   it("an association double-rings the deduced cell, rings its partner and the dot", () => {
     // A `focus` is what marks a deduction about *one* cell, whose dot is
@@ -94,19 +115,30 @@ describe("a displayed hint reaches the canvas", () => {
     expect(hl.focus).toBeDefined();
     expect(hl.refDots).toHaveLength(0);
 
-    // No solid fill anywhere in the hint color: a Galaxies cell's fill *is* its
-    // association, so a hint that painted over it would take away the premise.
-    expect(
-      rects(recording.ops, COL_HINT).filter((o) => o.op === "rect" && !isThin(o)),
-    ).toHaveLength(0);
+    // Rings and nothing else in their ink: no solid fill, since a Galaxies
+    // cell's fill *is* its association, so a hint that painted over it would
+    // take away the premise.
+    expectRing(recording.ops, { rings: ringsOf(recording.ops).length });
     // The focus cell is **doubled** and the partner single: the words say "this
     // cell", so only one cell may look like the thing being said (owner-reported
-    // when both were marked alike). Doubling is what says it now the fill is
-    // gone — 8 sides for the focus, 4 for each partner.
-    const sides = markSides(recording.ops, COL_HINT);
-    expect(sides.length).toBe(8 + 4 * (hl.targets.length - 1));
-    // Exactly one ring role on screen: "the ringed dot" cannot be ambiguous.
-    expect(circles(recording.ops, COL_HINT).length).toBeGreaterThan(0);
+    // when both were marked alike). Two concentric rings for the focus, one for
+    // each partner.
+    const centers = ringCenters(recording.ops);
+    // A dot may stand on a cell's middle, so its ring is told by where the dot
+    // is, not by where it falls.
+    const dot = hl.targetDot;
+    if (!dot) throw new Error("an association step rings its dot");
+    const dotAt = `${TS + (dot.x * TS) / 2},${TS + (dot.y * TS) / 2}`;
+    expect(centers.has(dotAt), "the dot is ringed").toBe(true);
+    const cells = [...centers].filter(([at]) => at !== dotAt && isCellCenter(at));
+    expect(cells).toHaveLength(hl.targets.length);
+    expect(cells.filter(([, sizes]) => sizes.size === 2)).toHaveLength(1);
+    expect(cells.filter(([, sizes]) => sizes.size === 1)).toHaveLength(
+      hl.targets.length - 1,
+    );
+    // The dot is ringed, and is the only one marked: "the ringed dot" cannot
+    // be ambiguous.
+    expect(centers.size).toBe(hl.targets.length + 1);
     expect(circles(recording.ops, COL_HINT_CELL)).toHaveLength(0);
   });
 
@@ -116,7 +148,9 @@ describe("a displayed hint reaches the canvas", () => {
     // cell it claims is equally the point, and the dot is standing on them.
     const { recording, hl } = hintFrame("aDotsOwnCells");
     expect(hl.targetDot).toBeDefined();
-    expect(circles(recording.ops, COL_HINT)).toHaveLength(0);
+    const centers = [...ringCenters(recording.ops).keys()];
+    expect(centers).toHaveLength(hl.targets.length);
+    for (const at of centers) expect(isCellCenter(at), at).toBe(true);
   });
 
   it("a forced wall is drawn even though the board has no wall there", () => {
@@ -130,11 +164,17 @@ describe("a displayed hint reaches the canvas", () => {
     const text = (midend.formatAsText() ?? "").split("\n");
     expect(text[wall.y]?.[wall.x], "the board already had the hinted wall").toBe(" ");
 
-    // Both tiles the wall separates paint their side of it.
-    const bars = rects(recording.ops, COL_HINT);
+    // Both tiles the wall separates draw their part of one pill round it, a
+    // tile long and half a tile across.
+    const pills = ringsOf(recording.ops).filter(
+      (r) => Math.max(r.w, r.h) > 1.5 * Math.min(r.w, r.h),
+    );
+    expect(pills).toHaveLength(2);
+    expect(pills[1]).toEqual(pills[0]);
+    // Inside it, the wall, a bar and never a tile-sized fill: a hint that
+    // filled the cell would be saying "this cell", which is a different move.
+    const bars = rects(recording.ops, pills[0].color);
     expect(bars.length).toBeGreaterThanOrEqual(2);
-    // A wall is a bar, never a tile-sized fill: a hint that filled the cell
-    // would be saying "this cell", which is a different move.
     for (const bar of bars) {
       if (bar.op !== "rect") continue;
       expect(Math.min(bar.w, bar.h)).toBeLessThan(Math.max(bar.w, bar.h) / 2);

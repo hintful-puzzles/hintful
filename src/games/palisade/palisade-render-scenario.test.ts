@@ -1,7 +1,7 @@
 // Seed for the in-process render-snapshot harness, on Palisade: frames reached
 // through the real Midend and asserted with no browser and no human eyeball.
 //
-//  1. the `equivalentEdges` hint frame — both forced edges COL_HINT, the
+//  1. the `equivalentEdges` hint frame — both forced edges ringed, the
 //     referenced region outlined in COL_HINT_CELL, clue digits still drawn
 //     (the spec's "hint frame asserted without a browser" scenario);
 //  2. a fixed opener frame snapshot — a render regression is a
@@ -12,13 +12,14 @@ import { EDGE } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { palisadeGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 
 // What an equivalentEdges frame marks: a sibling edge AND a hatched *region*
 // (more than one cell). numberExhausted journeys carry siblings too, but
@@ -46,28 +47,29 @@ describe("Palisade render scenarios", () => {
   it("reaches the equivalentEdges hint frame in-process and paints it", () => {
     const result = renderPinnedHint(palisadeGame, pinned("equivalentEdges"));
     const ops = result.recording.ops;
-    const ofKind = (kind: "rect" | "line", color: number): number =>
-      ops.filter((o) => o.op === kind && o.color === color).length;
-
-    // Both forced edges are drawn in COL_HINT as what they must become (they
-    // share a fate, so they share a shape): a wall as the edge, not a wall as
-    // a cross on it, two strokes from each of its two cells. They lie over
-    // "the same region", hatched, one hatch per cell of it, and outlined
-    // nowhere.
+    // Both forced edges are ringed, each by a pill drawn from both of its
+    // cells, with what they must become inside (they share a fate, so they
+    // share a shape): a wall as the edge, not a wall as a cross on it, two
+    // strokes from each of its two cells. They lie over "the same region",
+    // hatched, one hatch per cell of it, and outlined nowhere.
     const ringed = stepMarks(result.hint).of("ring", EDGE);
     expect(ringed.length).toBeGreaterThanOrEqual(2);
+    expectRing(ops, { rings: 2 * ringed.length });
+    const ink = ringsOf(ops)[0].color;
+    const echoes = (kind: "rect" | "line"): number =>
+      ops.filter((o) => o.op === kind && o.color === ink).length;
     if (ringed[0].kind === "wall") {
-      expect(ofKind("rect", COL_HINT)).toBeGreaterThanOrEqual(ringed.length);
-      expect(ofKind("line", COL_HINT)).toBe(0);
+      expect(echoes("rect")).toBe(2 * ringed.length);
+      expect(echoes("line")).toBe(0);
     } else {
-      expect(ofKind("line", COL_HINT)).toBe(4 * ringed.length);
-      expect(ofKind("rect", COL_HINT)).toBe(0);
+      expect(echoes("line")).toBe(4 * ringed.length);
+      expect(echoes("rect")).toBe(0);
     }
     const hatches = opsOfKind(ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(
       stepMarks(result.hint).of("stripes", CELL).length,
     );
-    expect(ofKind("rect", COL_HINT_CELL)).toBe(0);
+    expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toEqual([]);
 
     // Hatching the region does not erase the clues: digits are still drawn.
     expect(ops.some((o) => o.op === "text")).toBe(true);
@@ -80,8 +82,8 @@ describe("Palisade render scenarios", () => {
   it("matches the opener-frame snapshot", () => {
     // A fixed descriptive board → a stable frame, exercising a different
     // rule than equivalentEdges. Its opening deduction rules out more than one
-    // edge, so the first leg crosses the firing's other edges in COL_HINT
-    // alongside the action edge: the grouped-journey rendering.
+    // edge, so the first leg rings the firing's other edges, a cross inside
+    // each, alongside the action edge: the grouped-journey rendering.
     const { recording, hint } = renderScenario({
       game: palisadeGame,
       id: "5x5n5:e21c2a31e222a1",
@@ -90,7 +92,8 @@ describe("Palisade render scenarios", () => {
 
     expect(hint).toBeDefined();
     expect(stepMarks(hint ?? undefined).of("ring", EDGE)[0].kind).toBe("nowall");
-    expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(
+    const [ring] = ringsOf(recording.ops);
+    expect(recording.ops.some((o) => o.op === "line" && o.color === ring.color)).toBe(
       true,
     );
     expect(recording.ops).toMatchSnapshot();

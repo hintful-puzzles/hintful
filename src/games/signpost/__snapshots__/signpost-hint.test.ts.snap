@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`signpost hint frame > draws the arrow in the hint color, rings its target and stripes the line 1`] = `
+exports[`signpost hint frame > rings the arrow, drawn inside, and its target, and stripes the line 1`] = `
 [
   {
     "color": 0,
@@ -183,40 +183,15 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     "r": 2,
   },
   {
-    "color": 48,
-    "h": 2,
-    "op": "rect",
+    "color": 51,
+    "h": 46,
+    "op": "ring",
+    "radius": 23,
     "rgb": "rgb(21, 113, 233)",
-    "w": 48,
-    "x": 1,
-    "y": 49,
-  },
-  {
-    "color": 48,
-    "h": 48,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 1,
-    "y": 49,
-  },
-  {
-    "color": 48,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 48,
-    "x": 1,
-    "y": 95,
-  },
-  {
-    "color": 48,
-    "h": 48,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 47,
-    "y": 49,
+    "thickness": 2,
+    "w": 46,
+    "x": 2,
+    "y": 50,
   },
   {
     "color": 1,
@@ -891,10 +866,38 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     "y": 49,
   },
   {
-    "fill": 48,
+    "cx": 111,
+    "cy": 83,
+    "fill": 7,
+    "fillRgb": "rgb(0, 0, 0)",
+    "op": "circle",
+    "outline": 7,
+    "outlineRgb": "rgb(0, 0, 0)",
+    "r": 2,
+  },
+  {
+    "color": 51,
+    "h": 26,
+    "op": "ring",
+    "radius": 13,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 2,
+    "w": 26,
+    "x": 118,
+    "y": 70,
+  },
+  {
+    "h": 26,
+    "op": "clip",
+    "w": 26,
+    "x": 118,
+    "y": 70,
+  },
+  {
+    "fill": 51,
     "fillRgb": "rgb(21, 113, 233)",
     "op": "polygon",
-    "outline": 48,
+    "outline": 51,
     "outlineRgb": "rgb(21, 113, 233)",
     "points": [
       [
@@ -928,14 +931,7 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
     ],
   },
   {
-    "cx": 111,
-    "cy": 83,
-    "fill": 7,
-    "fillRgb": "rgb(0, 0, 0)",
-    "op": "circle",
-    "outline": 7,
-    "outlineRgb": "rgb(0, 0, 0)",
-    "r": 2,
+    "op": "unclip",
   },
   {
     "color": 1,

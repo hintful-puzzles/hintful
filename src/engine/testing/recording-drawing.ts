@@ -20,8 +20,9 @@
  * restore, and a captured drag sprite is not what these tests assert.
  */
 
-import { HINT_STRIPES } from "../color/palette.ts";
-import type { GameDrawing } from "../game.ts";
+import { HINT_RING, HINT_STRIPES } from "../color/palette.ts";
+import type { GameDrawing, RingOptions } from "../game.ts";
+import { type RingClear, ringShape } from "../ring.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../types.ts";
 
 /** One captured draw primitive. `color` is the palette index the game
@@ -87,6 +88,19 @@ export type DrawOp =
       color: number;
       rgb: string;
     }
+  | {
+      /** The stroke `ringShape` fitted; what `inside` drew follows it, between
+       * a clip to the ring's box and an unclip. */
+      op: "ring";
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      radius: number;
+      thickness: number;
+      color: number;
+      rgb: string;
+    }
   | { op: "clip"; x: number; y: number; w: number; h: number }
   | { op: "unclip" };
 
@@ -111,11 +125,13 @@ export class RecordingDrawing implements GameDrawing {
   private readonly palette: readonly Color[];
 
   /** `palette` is a game's, from `resolvePalette` or straight from its
-   * `colors()`: the stripes ink a hatch is drawn in is added where it is not
-   * already the last entry. */
+   * `colors()`: the ring and stripes inks the engine draws in are added where
+   * they are not already the last two entries. */
   constructor(palette: readonly Color[]) {
     this.palette =
-      palette.at(-1) === HINT_STRIPES ? palette : [...palette, HINT_STRIPES];
+      palette.at(-2) === HINT_RING && palette.at(-1) === HINT_STRIPES
+        ? palette
+        : [...palette, HINT_RING, HINT_STRIPES];
   }
 
   /** A palette index as a stable `rgb(r, g, b)` label (components 0..255). An
@@ -224,6 +240,28 @@ export class RecordingDrawing implements GameDrawing {
       color,
       rgb: this.rgb(color),
     });
+  }
+
+  drawRing(
+    box: Rect,
+    clear: RingClear,
+    thickness: number,
+    { room, inside }: RingOptions = {},
+  ): void {
+    const { rect, radius } = ringShape(box, clear, thickness, room);
+    const color = this.palette.length - 2;
+    this.ops.push({
+      op: "ring",
+      ...roundRect(rect),
+      radius: round(radius),
+      thickness: round(thickness),
+      color,
+      rgb: this.rgb(color),
+    });
+    if (!inside) return;
+    this.clip(rect);
+    inside(color);
+    this.unclip();
   }
 
   blitterNew(): unknown {

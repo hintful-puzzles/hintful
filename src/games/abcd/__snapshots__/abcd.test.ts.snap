@@ -936,7 +936,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "y": 150,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -970,7 +970,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1004,7 +1004,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1038,7 +1038,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1072,7 +1072,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1106,7 +1106,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1140,7 +1140,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1174,7 +1174,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1208,7 +1208,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1242,7 +1242,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1276,7 +1276,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1310,7 +1310,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1344,7 +1344,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1378,7 +1378,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1412,7 +1412,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1446,7 +1446,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1480,7 +1480,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1514,7 +1514,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1548,7 +1548,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1582,7 +1582,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1616,7 +1616,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1650,7 +1650,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1684,7 +1684,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1718,7 +1718,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1752,7 +1752,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     ],
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

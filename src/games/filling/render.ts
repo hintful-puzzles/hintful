@@ -20,7 +20,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   playerEntryColor,
@@ -30,8 +29,15 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { textBox } from "../../engine/ring.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -60,13 +66,12 @@ export const COL_CORRECT = 3; // completed-region background
 export const COL_ERROR = 4; // overfull / boxed-in region background
 export const COL_USER = 5; // player-filled digit
 export const COL_CURSOR = 6;
-export const COL_HINT = 7; // the cell to fill — ringed on its own border
-export const COL_HINT_CELL = 8; // the deduction's evidence cells — outlined
-export const COL_INK = 9; // a clue's digit, and a region's border
-export const COL_CELL = 10; // the surface of a cell the player fills
-export const COL_GIVEN = 11; // the lifted surface under a clue
-export const COL_FLASH = 12; // the ground of a cell under the win flash's body
-export const COL_FLASH_LEAD = 13; // and under its leading edge
+export const COL_HINT_CELL = 7; // the deduction's evidence cells — outlined
+export const COL_INK = 8; // a clue's digit, and a region's border
+export const COL_CELL = 9; // the surface of a cell the player fills
+export const COL_GIVEN = 10; // the lifted surface under a clue
+export const COL_FLASH = 11; // the ground of a cell under the win flash's body
+export const COL_FLASH_LEAD = 12; // and under its leading edge
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -83,7 +88,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR_WASH;
   out[COL_USER] = playerEntryColor(bg);
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   // The evidence is **outlined rather than washed**, though Filling is the
   // strongest case for a wash in the collection: its premise is a digit, which
   // reads well on a pale fill (3.41:1 in light, 4.04:1 in dark). But the wash
@@ -175,6 +179,28 @@ function markBand(ds: FillingDrawState, x: number, y: number): MarkBand {
   };
 }
 
+/** Where cell `(x, y)` draws its digit: the arguments `drawText` takes but
+ * the color, so the tile and a hint's ring read one place. */
+function digitText(ts: number, x: number, y: number) {
+  return {
+    origin: {
+      x: coord(x, ts) + Math.floor(ts / 2),
+      y: coord(y, ts) + Math.floor(ts / 2),
+    },
+    options: glyphFont(Math.floor(ts / 2)),
+  };
+}
+
+/** The text cell `(x, y)` shows, for a hint's ring to keep clear of. */
+function cellText(state: FillingState, ts: number, x: number, y: number): CellText {
+  const { w, h, board } = state;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  const n = board[y * w + x];
+  if (!n) return NO_TEXT;
+  const { origin, options } = digitText(ts, x, y);
+  return { enclose: [textBox(origin, options, String(n))], avoid: [], notes: [] };
+}
+
 // --- tile drawing --------------------------------------------------------
 
 function drawSquare(
@@ -190,8 +216,8 @@ function drawSquare(
   const bw = borderWidth(ts);
   dr.clip({ x: px, y: py, w: ts, h: ts });
 
-  // No hint role appears here: the target's ring and the evidence region's
-  // outline are drawn on the cell's own border in `redraw`, so a hint never
+  // No hint role appears here: the target's ring round the digit and the
+  // evidence region's outline on the cell's border are drawn in `redraw`, so a hint never
   // paints over the digits it is reasoning about. `HINT_TARGET`/`HINT_AREA`
   // stay in the cache word regardless — they are what makes a cell repaint when
   // the mark leaves it, which is also what erases the mark.
@@ -217,12 +243,8 @@ function drawSquare(
   dr.drawLine({ x: px, y: py }, { x: px, y: py + ts }, COL_GRID, 1);
 
   if (n) {
-    dr.drawText(
-      { x: px + Math.floor(ts / 2), y: py + Math.floor(ts / 2) },
-      glyphFont(Math.floor(ts / 2)),
-      flags & USER_COL ? COL_USER : COL_INK,
-      String(n),
-    );
+    const { origin, options } = digitText(ts, x, y);
+    dr.drawText(origin, options, flags & USER_COL ? COL_USER : COL_INK, String(n));
   }
 
   // Bold region borders. One on the top or left edge takes the grid line's
@@ -427,7 +449,7 @@ export function redrawFilling(
     }
   }
 
-  paintHintMarks(dr, ds, hintTargets, hintArea);
+  paintHintMarks(dr, ds, state, hintTargets, hintArea);
 }
 
 /**
@@ -437,13 +459,14 @@ export function redrawFilling(
 function paintHintMarks(
   dr: GameDrawing,
   ds: FillingDrawState,
+  state: FillingState,
   targets: ReadonlySet<number>,
   area: ReadonlySet<number>,
 ): void {
   const cellAt = (i: number): MarkCell => ({ x: i % ds.w, y: (i / ds.w) | 0 });
   ds.marks.paint(dr, [...targets].map(cellAt), [...area].map(cellAt), {
     band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    text: (x, y) => cellText(state, ds.tileSize, x, y),
     evidenceColor: COL_HINT_CELL,
   });
 }

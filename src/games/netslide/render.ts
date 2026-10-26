@@ -14,15 +14,14 @@ import {
   FLASH,
   FLASH_LEAD,
   GRID_DARK,
-  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { netslideLowlight } from "../../engine/color/palette-games.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import {
   anticlockwise,
   D,
@@ -35,7 +34,7 @@ import {
   R,
   U,
 } from "../../engine/square-edges.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { wireDistance } from "../../engine/wires.ts";
 import type { NetslideHint } from "./hint.ts";
@@ -75,14 +74,12 @@ export const COL_BARRIER = 6;
 export const COL_LOWLIGHT = 7;
 export const COL_TEXT = 8;
 
-/** The hint's marks, and the arrow that slides the hinted tile. */
-export const COL_HINT = 9;
 /** The keyboard cursor's gutter arrow, which upstream drew in the
  * powered-wire color. */
-export const COL_CURSOR = 10;
-export const COL_CELL = 11; // a tile's face
+export const COL_CURSOR = 9;
+export const COL_CELL = 10; // a tile's face
 /** A tile's face under the win flash's leading edge. */
-export const COL_FLASHING_LEAD = 12;
+export const COL_FLASHING_LEAD = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -101,7 +98,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BARRIER] = GRID_DARK;
   out[COL_LOWLIGHT] = netslideLowlight(defaultBackground);
   out[COL_TEXT] = INK;
-  out[COL_HINT] = HINT_RING;
   out[COL_CURSOR] = CURSOR;
   return out;
 }
@@ -117,10 +113,8 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** The tile the hint is placing. */
 const HINT_TILE = 0x40;
-/** Where this slide lands it — a staging cell, so shown as a dashed outline. */
-const HINT_LANDING = 0x80;
-/** Where it finally belongs — a solid outline. */
-const HINT_HOME = 0x100;
+/** A square the slide takes it to: where it lands, or where it belongs. */
+const HINT_SQUARE = 0x80;
 /** On the line the sentence names as never sliding — hatched. */
 const HINT_LINE = 0x200;
 /** With `FLASHING`: the highlight on this tile is its leading edge. */
@@ -238,9 +232,9 @@ function drawTile(
   const by = b + ts * y + Math.trunc(yshift * ts);
 
   // Blank the tile: a border-colored rect with the tile's face inset by the
-  // tile border. The tile the hint is placing takes no fill — it is
-  // **double-ringed** at the end of this function instead, so the wires that say
-  // *which piece* this is keep their own color rather than sitting on blue.
+  // tile border. The tile the hint is placing takes no fill — it is ringed at
+  // the end of this function instead, so the wires that say *which piece* this
+  // is keep their own color.
   const background = !(tile & FLASHING)
     ? COL_CELL
     : tile & FLASHING_LEAD
@@ -356,35 +350,23 @@ function drawTile(
     }
   }
 
-  // The hinted tile's mark: a **double** ring on the tile's frame, drawn last so
-  // no wire crosses it. It must look unlike the single inset ring
-  // `drawHintOutline` puts on the destination *cell* ("move this piece" against
-  // "to here"). Drawn here, at the shifted origin, it rides with the tile
-  // through the slide. On the face, inside the borders shared with the
-  // neighbors: a neighbor repaints its border without this tile.
-  if (tile & HINT_TILE) {
-    const t = Math.max(2, Math.round(ts / 16));
-    const box = face;
-    drawMarkSides(dr, { box, outer: 0, inner: t }, MARK_ALL, COL_HINT);
-    drawMarkSides(
-      dr,
-      {
-        box: { x: box.x + 2 * t, y: box.y + 2 * t, w: box.w - 4 * t, h: box.h - 4 * t },
-        outer: 0,
-        inner: t,
-      },
-      MARK_ALL,
-      COL_HINT,
-    );
-  }
+  // The hinted tile's ring, drawn last so no wire crosses it. Drawn here, at
+  // the shifted origin, it rides with the tile through the slide. On the face,
+  // inside the borders shared with the neighbors: a neighbor repaints its
+  // border without this tile.
+  if (tile & HINT_TILE) dr.drawRing(face, NOTHING_TO_CLEAR, ringThickness(ts));
 
   dr.drawUpdate({ x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER });
 }
 
+/** The stroke of every hint ring Netslide draws. */
+function ringThickness(ts: number): number {
+  return Math.max(2, Math.round(ts / 16));
+}
+
 /**
- * Where the hinted tile is headed. The cell it *belongs* in gets a solid outline;
- * a cell it is only passing through gets a dashed one, so a staging move never
- * reads as "this is the answer".
+ * Where the hinted tile is headed: each square ringed, inset past the tile
+ * border so a barrier drawn along that edge does not paint over it.
  *
  * A mark on a **cell**, so it is drawn after every tile at the cell's unshifted
  * position, not inside `drawTile`, where it would slide with the line under it.
@@ -394,46 +376,19 @@ function drawHintTargets(
   dr: GameDrawing,
   ds: NetslideDrawState,
   squares: readonly number[],
-  destination: number,
-  belongs: boolean,
 ): void {
   const ts = ds.tileSize;
   const b = border(ts);
-  const at = (cell: number, dashed: boolean) => {
-    const x = cell % ds.w;
-    const y = Math.floor(cell / ds.w);
-    const bx = b + ts * x;
-    const by = b + ts * y;
-    drawHintOutline(dr, bx, by, ts, dashed);
-    dr.drawUpdate({ x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER });
-  };
-
-  if (squares.includes(destination)) at(destination, !belongs);
-  for (const cell of squares) if (cell !== destination) at(cell, true);
-}
-
-/** An outline just inside a tile's edge, solid or dashed. Inset past the tile
- * border so a barrier drawn along that edge later does not paint over it. */
-function drawHintOutline(
-  dr: GameDrawing,
-  bx: number,
-  by: number,
-  ts: number,
-  dashed: boolean,
-): void {
   const inset = TILE_BORDER + 1;
-  const thickness = Math.max(2, Math.round(ts / 16));
-  const x = bx + inset;
-  const y = by + inset;
-  const side = ts - 2 * inset;
-  // A solid outline is a single dash the length of the side.
-  const dash = dashed ? Math.max(3, Math.round(ts / 8)) : side;
-  for (let d = 0; d < side; d += 2 * dash) {
-    const run = Math.min(dash, side - d);
-    dr.drawRect({ x: x + d, y, w: run, h: thickness }, COL_HINT);
-    dr.drawRect({ x: x + d, y: y + side - thickness, w: run, h: thickness }, COL_HINT);
-    dr.drawRect({ x, y: y + d, w: thickness, h: run }, COL_HINT);
-    dr.drawRect({ x: x + side - thickness, y: y + d, w: thickness, h: run }, COL_HINT);
+  for (const cell of squares) {
+    const bx = b + ts * (cell % ds.w);
+    const by = b + ts * Math.floor(cell / ds.w);
+    dr.drawRing(
+      { x: bx + inset, y: by + inset, w: ts - 2 * inset, h: ts - 2 * inset },
+      NOTHING_TO_CLEAR,
+      ringThickness(ts),
+    );
+    dr.drawUpdate({ x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER });
   }
 }
 
@@ -559,10 +514,29 @@ function drawArrow(
   xdy: number,
   fill: number,
 ): void {
-  const ts = ds.tileSize;
-  const b = border(ts);
-  const ox = gx * ts + b;
-  const oy = gy * ts + b;
+  const b = border(ds.tileSize);
+  drawArrowFrom(
+    dr,
+    ds.tileSize,
+    gx * ds.tileSize + b,
+    gy * ds.tileSize + b,
+    xdx,
+    xdy,
+    fill,
+  );
+}
+
+/** {@link drawArrow} with the corner of its full-tile footprint at pixel
+ * (`ox`, `oy`). */
+function drawArrowFrom(
+  dr: GameDrawing,
+  ts: number,
+  ox: number,
+  oy: number,
+  xdx: number,
+  xdy: number,
+  fill: number,
+): void {
   const ydy = -xdx;
   const ydx = xdy;
 
@@ -584,29 +558,59 @@ function drawArrow(
   dr.drawPolygon(coords, fill, COL_TEXT);
 }
 
-/** One border arrow, addressed by its ring position. */
+/**
+ * One border arrow, addressed by its ring position, filled `fill` or ringed.
+ *
+ * Its slot in the gutter is cleared first, so a ring the arrow last wore goes
+ * with it: the gutter's width by the line's, short of the pixel beside the
+ * grid that an exterior barrier takes. A ringed arrow is drawn inside its
+ * ring at the slot's center, which the plain arrow, overhanging the gutter's
+ * outer edge as upstream's does, is not quite at: the ring has no room round
+ * it there.
+ */
 function drawArrowAt(
   dr: GameDrawing,
   ds: NetslideDrawState,
   cx: number,
   cy: number,
-  fill: number,
+  fill: number | "ringed",
 ): void {
   if (cx === -1 && cy === -1) return; // no arrow here
 
-  if (cx === -1)
-    drawArrow(dr, ds, 0, cy + 1, 0, -1, fill); // left column
-  else if (cx === ds.w)
-    drawArrow(dr, ds, ds.w, cy, 0, +1, fill); // right
-  else if (cy === -1)
-    drawArrow(dr, ds, cx, 0, +1, 0, fill); // top row
-  else if (cy === ds.h)
-    drawArrow(dr, ds, cx + 1, ds.h, -1, 0, fill); // bottom
-  else throw new Error(`(${cx}, ${cy}) is not a border-arrow position`);
-
   const ts = ds.tileSize;
   const b = border(ts);
-  dr.drawUpdate({ x: cx * ts + b, y: cy * ts + b, w: ts, h: ts });
+  const far = b + ts * ds.w + 2;
+  const low = b + ts * ds.h + 2;
+  let gx: number;
+  let gy: number;
+  let xdx = 0;
+  let xdy = 0;
+  let slot: Rect;
+  if (cx === -1) {
+    [gx, gy, xdy] = [0, cy + 1, -1]; // left column
+    slot = { x: 0, y: b + ts * cy, w: b - 1, h: ts };
+  } else if (cx === ds.w) {
+    [gx, gy, xdy] = [ds.w, cy, +1]; // right
+    slot = { x: far, y: b + ts * cy, w: b - 1, h: ts };
+  } else if (cy === -1) {
+    [gx, gy, xdx] = [cx, 0, +1]; // top row
+    slot = { x: b + ts * cx, y: 0, w: ts, h: b - 1 };
+  } else if (cy === ds.h) {
+    [gx, gy, xdx] = [cx + 1, ds.h, -1]; // bottom
+    slot = { x: b + ts * cx, y: low, w: ts, h: b - 1 };
+  } else throw new Error(`(${cx}, ${cy}) is not a border-arrow position`);
+
+  dr.drawRect(slot, COL_BACKGROUND);
+  if (fill === "ringed") {
+    // The footprint's corner that puts the arrow's middle at the slot's.
+    const across = (ts / 2) * (xdx + xdy);
+    const ox = slot.x + slot.w / 2 - across;
+    const oy = slot.y + slot.h / 2 - (ts / 2) * (xdy - xdx);
+    dr.drawRing(slot, NOTHING_TO_CLEAR, ringThickness(ts), {
+      inside: (ink) => drawArrowFrom(dr, ts, ox, oy, xdx, xdy, ink),
+    });
+  } else drawArrow(dr, ds, gx, gy, xdx, xdy, fill);
+  dr.drawUpdate(slot);
 }
 
 /** How an arrow should look: the cursor wins over the hint (it is where the
@@ -618,9 +622,9 @@ function arrowFill(
   curY: number,
   hintX: number,
   hintY: number,
-): number {
+): number | "ringed" {
   if (cx === curX && cy === curY) return COL_CURSOR;
-  if (cx === hintX && cy === hintY) return COL_HINT;
+  if (cx === hintX && cy === hintY) return "ringed";
   return COL_LOWLIGHT;
 }
 
@@ -751,10 +755,9 @@ export function redraw(
 
       // The hint overlay goes into the cache word (see the HINT_* bits).
       if (i === hintTile) c |= HINT_TILE;
-      // `drawHintTargets` draws the outlines; their bits are keyed here so the
-      // tile under a stale outline repaints once the hint moves on.
-      if (squares.includes(i))
-        c |= plan && i === plan.destination && plan.belongs ? HINT_HOME : HINT_LANDING;
+      // `drawHintTargets` draws the squares' rings; their bit is keyed here so
+      // the tile under a stale ring repaints once the hint moves on.
+      if (squares.includes(i)) c |= HINT_SQUARE;
       if (hintLine.has(i)) c |= HINT_LINE;
 
       if (reach !== null && reach[i] >= 0) {
@@ -799,7 +802,7 @@ export function redraw(
   }
 
   // Last, so no sliding tile paints across them.
-  if (plan) drawHintTargets(dr, ds, squares, plan.destination, plan.belongs);
+  drawHintTargets(dr, ds, squares);
 
   dr.unclip();
 }

@@ -4,14 +4,16 @@
  *
  * **Shape, deliberately, and not color.** "Some rect carries the hint color"
  * is satisfied by exactly the thing these guards exist to forbid: a solid fill
- * behind the digits the hint is talking about. So a target asserts *four thin
- * rects and none solid*, and an evidence contour asserts its **side count**,
+ * behind the digits the hint is talking about. So a target asserts *a round
+ * ring and nothing else in its ink*, and an evidence contour asserts its **side count**,
  * which distinguishes one contour around a `w`-cell region (`2w + 2` sides) from
  * a ring per cell (`4w`) — a game that loses the neighbor test still fails.
  *
  * Dev/test-only; never imported by production code.
  */
 import { expect } from "vitest";
+import { RING_MIN_ROUNDNESS } from "../ring.ts";
+import { type DrawOp, opsOfKind, paintsWith } from "./recording-drawing.ts";
 
 interface RectOp {
   op: string;
@@ -33,18 +35,49 @@ export function markSides(ops: readonly RectOp[], color: number): RectOp[] {
   return ops.filter((o) => o.op === "rect" && o.color === color);
 }
 
+/** The rings a frame draws (`GameDrawing.drawRing`). */
+export function ringsOf(ops: readonly DrawOp[]): Extract<DrawOp, { op: "ring" }>[] {
+  return opsOfKind(ops, "ring");
+}
+
 /**
- * The cell a deduction acts on is **ringed**: four thin rects in `color`, and
- * no solid one. `rings` says how many cells are expected to be ringed — a step
- * may act on more than one.
+ * The cells a deduction acts on are **ringed**: `rings` ring ops, each at least
+ * {@link RING_MIN_ROUNDNESS} round, and nothing else drawn in the ring's ink.
+ * A step may act on more than one cell.
  */
-export function expectRing(ops: readonly RectOp[], color: number, rings = 1): void {
-  const sides = markSides(ops, color);
-  expect(sides.length, `${rings} target ring(s) is ${4 * rings} rects`).toBe(4 * rings);
-  for (const s of sides)
-    expect(isThin(s), `ring side ${s.w}x${s.h} is not thin — that is a fill`).toBe(
-      true,
+export function expectRing(
+  ops: readonly DrawOp[],
+  { rings = 1 }: { rings?: number } = {},
+): void {
+  const found = ringsOf(ops);
+  expect(found.length, `${rings} target ring(s)`).toBe(rings);
+  for (const r of found) {
+    const half = Math.min(r.w, r.h) / 2;
+    expect(r.radius, `a ${r.w}×${r.h} ring is round`).toBeGreaterThanOrEqual(
+      Math.floor(RING_MIN_ROUNDNESS * half),
     );
+  }
+  const ink = found[0]?.color;
+  if (ink !== undefined)
+    expect(
+      outsideRings(ops).filter((o) => paintsWith(o, ink)),
+      "nothing but a ring, and the move's shape inside one, is drawn in the ring's ink",
+    ).toEqual([]);
+}
+
+/** The ops not drawn inside a ring, rings aside: the recorder draws a ring's
+ * `inside` between a clip to it and an unclip, straight after the ring. */
+export function outsideRings(ops: readonly DrawOp[]): DrawOp[] {
+  const out: DrawOp[] = [];
+  let depth = 0;
+  ops.forEach((o, i) => {
+    if (o.op === "ring") return;
+    if (o.op === "clip" && ops[i - 1]?.op === "ring") depth = 1;
+    else if (depth > 0 && o.op === "clip") depth++;
+    else if (depth > 0 && o.op === "unclip") depth--;
+    else if (depth === 0) out.push(o);
+  });
+  return out;
 }
 
 /** `color` draws exactly one straight `cells`-cell outline: `2·cells + 2` thin
@@ -82,14 +115,17 @@ export function expectContour(
 }
 
 /**
- * A piece the step acts on — a domino — is **one ring** around its squares:
- * six sides for a domino, never the eight of a box per square with a double
- * bar across its middle.
+ * A straight piece the step acts on — a domino — is **one ring** around its
+ * squares: a pill about `squares` times as long as it is wide, never a ring
+ * per square.
  */
 export function expectPieceRing(
-  ops: readonly RectOp[],
-  color: number,
-  squares = 2,
+  ops: readonly DrawOp[],
+  { squares = 2 }: { squares?: number } = {},
 ): void {
-  expectOneShape(ops, color, squares, "piece ring");
+  expectRing(ops);
+  const [r] = ringsOf(ops);
+  const ratio = Math.max(r.w, r.h) / Math.min(r.w, r.h);
+  expect(ratio, `a ${squares}-square piece is one pill`).toBeGreaterThan(squares - 0.5);
+  expect(ratio).toBeLessThan(squares + 0.5);
 }

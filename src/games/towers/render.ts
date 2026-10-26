@@ -23,7 +23,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -35,7 +34,13 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -56,7 +61,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
   checkErrors,
@@ -81,19 +87,19 @@ export const COL_DONE = 6;
 // #2 school pencil). Appended past the upstream enum.
 export const COL_PENCIL_BODY = 7;
 // Fork additions: the explained-hint legend (see docs/hints-marks.md § "The engine colors the marks").
-export const COL_HINT = 8; // the acted-on cell's ring (drawn once per frame in redraw)
-/** The driving clue's line of sight, outlined (same pass), **and** a forcing
- * chain's ordinal — one index, because the number indexes the evidence. */
-export const COL_HINT_CELL = 9;
-export const COL_CELL = 10; // the surface of a play cell, and of a tower built on it
-export const COL_GIVEN = 11; // the lifted surface of a given tower
+/** The driving clue's line of sight, outlined (drawn once per frame in
+ * redraw), **and** a forcing chain's ordinal — one index, because the number
+ * indexes the evidence. */
+export const COL_HINT_CELL = 8;
+export const COL_CELL = 9; // the surface of a play cell, and of a tower built on it
+export const COL_GIVEN = 10; // the lifted surface of a given tower
 /** The line between two play cells. A tower's own edges are content and stay
  * `COL_GRID`. */
-export const COL_LINE = 12;
+export const COL_LINE = 11;
 /** The ground of a square the win flash is on. */
-export const COL_FLASH = 13;
+export const COL_FLASH = 12;
 /** The ground of a square the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -106,11 +112,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_DONE] = clueDoneColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_RING;
-  // Both hint marks are outlines on the cell's border, so both take a strong
-  // color and differ in shape rather than in weight — a line of sight's contour
-  // against one cell's ring. `HINT_OUTLINE` covers the chain ordinal too; see
-  // its doc comment for why the index and the thing it indexes are one role.
+  // `HINT_OUTLINE` covers the chain ordinal too; see its doc comment for why
+  // the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
@@ -251,8 +254,7 @@ function drawTile(
   hintOrder: number,
   hatched: boolean,
 ): void {
-  let tx = coord(x, ts);
-  let ty = coord(y, ts);
+  const { x: tx, y: ty } = faceOrigin(ts, w, threeD, x, y, tile);
   const digit = tile & DF_DIGIT_MASK;
   // `redraw` draws the hint's target ring and evidence outline once per frame;
   // a tile draws only `struck`, the candidate heights this firing rules out.
@@ -267,19 +269,21 @@ function drawTile(
     COL_FLASH,
     COL_FLASH_LEAD,
   );
-  const tower = threeD && (tile & DF_PLAYAREA) !== 0 && digit !== 0;
+  const tower = isTower(threeD, tile);
 
-  // 3D tower: left + bottom faces, then offset to the top face.
+  // 3D tower: left + bottom faces under the top face at `tx`/`ty`.
   if (tower) {
-    const xoff = x3d(digit, w, ts);
-    const yoff = y3d(digit, w, ts);
+    const bx = coord(x, ts);
+    const by = coord(y, ts);
+    const xoff = tx - bx;
+    const yoff = by - ty;
     // left face
     dr.drawPolygon(
       [
-        { x: tx, y: ty - 1 },
-        { x: tx, y: ty + ts - 1 },
-        { x: tx + xoff, y: ty + ts - 1 - yoff },
-        { x: tx + xoff, y: ty - 1 - yoff },
+        { x: bx, y: by - 1 },
+        { x: bx, y: by + ts - 1 },
+        { x: bx + xoff, y: by + ts - 1 - yoff },
+        { x: bx + xoff, y: by - 1 - yoff },
       ],
       bg,
       COL_GRID,
@@ -287,16 +291,14 @@ function drawTile(
     // bottom face
     dr.drawPolygon(
       [
-        { x: tx + ts, y: ty + ts - 1 },
-        { x: tx, y: ty + ts - 1 },
-        { x: tx + xoff, y: ty + ts - 1 - yoff },
-        { x: tx + ts + xoff, y: ty + ts - 1 - yoff },
+        { x: bx + ts, y: by + ts - 1 },
+        { x: bx, y: by + ts - 1 },
+        { x: bx + xoff, y: by + ts - 1 - yoff },
+        { x: bx + ts + xoff, y: by + ts - 1 - yoff },
       ],
       bg,
       COL_GRID,
     );
-    tx += xoff;
-    ty -= yoff;
   }
 
   drawCellBackground(
@@ -345,64 +347,24 @@ function drawTile(
     else if (tile & DF_IMMUTABLE) color = COL_GRID;
     else color = COL_USER;
 
-    dr.drawText(
-      { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) },
-      glyphFont(tile & DF_PLAYAREA ? Math.floor(ts / 2) : Math.floor((ts * 2) / 5)),
-      color,
-      String(digit),
-    );
+    const { origin, options } = digitText(ts, { x: tx, y: ty }, tile);
+    dr.drawText(origin, options, color, String(digit));
   } else {
-    // pencil marks
-    let npencil = 0;
-    for (let i = 1; i <= w; i++) if (tile & (1 << (i + DF_PENCIL_SHIFT))) npencil++;
-    if (npencil) {
-      const minph = 2;
-      let pl = tx + (threeD ? x3d(w, w, ts) : 0);
-      const pr = tx + ts;
-      const pt = ty;
-      const pb = ty + ts - (threeD ? y3d(w, w, ts) : 0);
-
-      // Choose a grid layout maximizing the font size.
-      let bestsize = 0;
-      let pbest = 0;
-      for (let pw = 3; pw < Math.max(npencil, 4); pw++) {
-        let ph = Math.floor((npencil + pw - 1) / pw);
-        ph = Math.max(ph, minph);
-        const fw = (pr - pl) / pw;
-        const fh = (pb - pt) / ph;
-        const fs = Math.min(fw, fh);
-        if (fs > bestsize) {
-          bestsize = fs;
-          pbest = pw;
+    const shown = pencilValues(w, tile);
+    pencilSlots(ts, w, threeD, { x: tx, y: ty }, shown.length).forEach(
+      ({ origin, options }, j) => {
+        const i = shown[j];
+        // A struck candidate keeps its pencil color, so it still reads as the
+        // player's note; the same-color strikethrough is what says the hint
+        // rules it out (a hint color washed out against the background).
+        dr.drawText(origin, options, COL_PENCIL, String(i));
+        if (struck & (1 << i)) {
+          const r = Math.max(2, Math.floor(options.size / 3));
+          const { x: cx, y: cy } = origin;
+          dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
         }
-      }
-      const pw = pbest;
-      let ph = Math.floor((npencil + pw - 1) / pw);
-      ph = Math.max(ph, minph);
-
-      const fontsize = Math.min(Math.floor((pr - pl) / pw), Math.floor((pb - pt) / ph));
-      pl = pl + Math.floor((pr - pl - fontsize * pw) / 2);
-      const pt2 = pt + Math.floor((pb - pt - fontsize * ph) / 2);
-
-      let j = 0;
-      for (let i = 1; i <= w; i++) {
-        if (tile & (1 << (i + DF_PENCIL_SHIFT))) {
-          const dx = j % pw;
-          const dy = Math.floor(j / pw);
-          const cx = pl + Math.floor((fontsize * (2 * dx + 1)) / 2);
-          const cy = pt2 + Math.floor((fontsize * (2 * dy + 1)) / 2);
-          // A struck candidate keeps its pencil color, so it still reads as the
-          // player's note; the same-color strikethrough is what says the hint
-          // rules it out (a hint color washed out against the background).
-          dr.drawText({ x: cx, y: cy }, glyphFont(fontsize), COL_PENCIL, String(i));
-          if (struck & (1 << i)) {
-            const r = Math.max(2, Math.floor(fontsize / 3));
-            dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
-          }
-          j++;
-        }
-      }
-    }
+      },
+    );
   }
 
   // Check & Save mistake overlay (fork addition): an inset red outline.
@@ -445,10 +407,119 @@ function drawTile(
     drawHintOrdinal(dr, { x: tx, y: ty }, ts, hintOrder, COL_HINT_CELL);
 }
 
+// --- tile text --------------------------------------------------------------
+
+/** A piece of text a tile draws: what it passes `drawText` but the color. */
+interface TileText {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+}
+
+/** Whether `tile` draws as a raised 3D tower. */
+const isTower = (threeD: boolean, tile: number): boolean =>
+  threeD && (tile & DF_PLAYAREA) !== 0 && (tile & DF_DIGIT_MASK) !== 0;
+
+/** The top-left corner of the face tile `(x, y)` draws its text on: its own
+ * square, or a 3D tower's top, raised up and to the right by its height. */
+function faceOrigin(
+  ts: number,
+  w: number,
+  threeD: boolean,
+  x: number,
+  y: number,
+  tile: number,
+): Point {
+  const p = { x: coord(x, ts), y: coord(y, ts) };
+  if (!isTower(threeD, tile)) return p;
+  const digit = tile & DF_DIGIT_MASK;
+  return { x: p.x + x3d(digit, w, ts), y: p.y - y3d(digit, w, ts) };
+}
+
+/** A tile's digit, in the middle of its face: a height, or a clue. */
+function digitText(ts: number, face: Point, tile: number): TileText {
+  return {
+    origin: { x: face.x + Math.floor(ts / 2), y: face.y + Math.floor(ts / 2) },
+    options: glyphFont(
+      tile & DF_PLAYAREA ? Math.floor(ts / 2) : Math.floor((ts * 2) / 5),
+    ),
+  };
+}
+
+/** The heights set in a tile's pencil-mark bits, in order. */
+const pencilValues = (w: number, tile: number): number[] =>
+  Array.from({ length: w }, (_, i) => i + 1).filter(
+    (i) => tile & (1 << (i + DF_PENCIL_SHIFT)),
+  );
+
+/** Where `count` pencil marks go on the face at `face`, in order, on the grid
+ * layout that maximizes the font size. In 3D they keep clear of the reach of
+ * the tallest tower next door. */
+function pencilSlots(
+  ts: number,
+  w: number,
+  threeD: boolean,
+  face: Point,
+  count: number,
+): TileText[] {
+  if (!count) return [];
+  const minph = 2;
+  let pl = face.x + (threeD ? x3d(w, w, ts) : 0);
+  const pr = face.x + ts;
+  const pt = face.y;
+  const pb = face.y + ts - (threeD ? y3d(w, w, ts) : 0);
+  const rows = (pw: number): number =>
+    Math.max(Math.floor((count + pw - 1) / pw), minph);
+
+  let bestsize = 0;
+  let pw = 0;
+  for (let cols = 3; cols < Math.max(count, 4); cols++) {
+    const fs = Math.min((pr - pl) / cols, (pb - pt) / rows(cols));
+    if (fs > bestsize) {
+      bestsize = fs;
+      pw = cols;
+    }
+  }
+  const ph = rows(pw);
+  const fontsize = Math.min(Math.floor((pr - pl) / pw), Math.floor((pb - pt) / ph));
+  pl = pl + Math.floor((pr - pl - fontsize * pw) / 2);
+  const pt2 = pt + Math.floor((pb - pt - fontsize * ph) / 2);
+  return Array.from({ length: count }, (_, j) => ({
+    origin: {
+      x: pl + Math.floor((fontsize * (2 * (j % pw) + 1)) / 2),
+      y: pt2 + Math.floor((fontsize * (2 * Math.floor(j / pw) + 1)) / 2),
+    },
+    options: glyphFont(fontsize),
+  }));
+}
+
+/** The text tile `(x, y)` shows this frame (play coordinates, the clue ring
+ * included), for a hint's ring to keep clear of. */
+function cellText(
+  ds: TowersDrawState,
+  threeD: boolean,
+  x: number,
+  y: number,
+): CellText {
+  const { tileSize: ts, w } = ds;
+  if (x < -1 || y < -1 || x > w || y > w) return NO_TEXT;
+  const tile = ds.tiles[(y + 1) * (w + 2) + (x + 1)];
+  const face = faceOrigin(ts, w, threeD, x, y, tile);
+  const digit = tile & DF_DIGIT_MASK;
+  if (digit) {
+    const { origin, options } = digitText(ts, face, tile);
+    return { enclose: [textBox(origin, options, String(digit))], avoid: [], notes: [] };
+  }
+  const shown = pencilValues(w, tile);
+  const notes = pencilSlots(ts, w, threeD, face, shown.length).map(
+    ({ origin, options }, j) => textBox(origin, options, String(shown[j])),
+  );
+  return { enclose: [], avoid: [], notes };
+}
+
 // --- hint overlay ----------------------------------------------------------
 
 /** Highlight payload a Towers hint step carries (built in `index.ts`): the
- * evidence outlined `COL_HINT_CELL`, the targets ringed `COL_HINT`, and the
+ * evidence outlined `COL_HINT_CELL`, the targets ringed by the engine, and the
  * struck candidates crossed through. */
 export type TowersHint = CandidateHighlights;
 
@@ -587,7 +658,7 @@ export function redraw(
   }
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    text: (x, y) => cellText(ds, threeD, x, y),
     evidenceColor: COL_HINT_CELL,
   });
 

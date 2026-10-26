@@ -37,7 +37,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   lineMaybeColor,
   lineNoColor,
@@ -69,12 +68,11 @@ export const COL_LINE_MAYBE = 3;
 export const COL_LINE_NO = 4;
 export const COL_ERROR = 5;
 export const COL_CORRECT = 6; // a completed, correct region
-export const COL_HINT = 7; // the edges a hint step sets, and its hatched region
-export const COL_HINT_CELL = 8; // the outline on a square a hint step cites
-export const COL_CELL = 9; // the surface of every cell
+export const COL_HINT_CELL = 7; // the outline on a square a hint step cites
+export const COL_CELL = 8; // the surface of every cell
 /** The body of a cell under the win flash's leading edge, where `COL_FLASH` is
  * under its body. */
-export const COL_FLASH_LEAD = 10;
+export const COL_FLASH_LEAD = 9;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -85,7 +83,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = INK;
   out[COL_ERROR] = ERROR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CORRECT] = REGION_DONE;
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
@@ -104,7 +101,6 @@ const PALETTE: BorderGridColors = {
   lineNo: COL_LINE_NO,
   lineMaybe: COL_LINE_MAYBE,
   error: COL_ERROR,
-  hintEdge: COL_HINT,
   hintEvidence: COL_HINT_CELL,
   cursor: COL_GRID,
 };

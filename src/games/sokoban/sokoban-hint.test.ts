@@ -19,6 +19,7 @@ import {
   deadEndBindingDefects,
 } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import {
   hasNoSolution,
@@ -29,7 +30,7 @@ import {
 } from "./hint.ts";
 import { BARREL, GOAL, PUSH, type Stuck } from "./hint-text.ts";
 import { executeMove, sokobanGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import { DIRS, SokobanBoard, search, searchFrom } from "./solver.ts";
 import {
   encodeBoard,
@@ -543,8 +544,7 @@ describe("rendering the marks (tier 2.5)", () => {
       id: PINNED.trapCorner,
       showHint: true,
     });
-    // Two strokes per ring.
-    expect(rings(recording.ops, COL_HINT)).toBe(4);
+    expectRing(recording.ops, { rings: 2 });
     expect(recording.ops.filter((o) => o.op === "hatch").length).toBe(2);
     expect(recording.ops).toMatchSnapshot();
   });
@@ -556,8 +556,9 @@ describe("rendering the marks (tier 2.5)", () => {
     ] as const) {
       const { recording, hint: st } = renderScenario({ game: G, id, showHint: true });
       expect(st ? stepMarks(st).of("outline", kind).length : 0).toBe(1);
-      // Two strokes per ring: the push's two squares, and the one outline.
-      expect(rings(recording.ops, COL_HINT)).toBe(4);
+      // A ring round each of the push's two squares, and two strokes round
+      // the one outline.
+      expectRing(recording.ops, { rings: 2 });
       expect(rings(recording.ops, COL_HINT_EVIDENCE)).toBe(2);
     }
   });

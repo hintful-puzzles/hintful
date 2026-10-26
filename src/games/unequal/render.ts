@@ -22,7 +22,6 @@ import {
   GRID_MID,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -34,7 +33,13 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -55,7 +60,8 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone } from "../../engine/win-wave.ts";
 import type { UnequalMove } from "./state.ts";
 import {
@@ -93,22 +99,22 @@ export const COL_LOWLIGHT = 7;
 export const COL_SPENT = COL_LOWLIGHT;
 // Fork additions, appended past the upstream enum.
 export const COL_PENCIL_BODY = 8; // the yellow body of the pencil-mode indicator
-export const COL_HINT = 9; // the acted-on cell's ring (drawn in redraw's last block)
-/** The driving clue's cells, outlined (same block), **and** a forcing chain's
- * ordinal — one index, because the number indexes the evidence. */
-export const COL_HINT_CELL = 10;
+/** The driving clue's cells, outlined (drawn in redraw's last block), **and** a
+ * forcing chain's ordinal — one index, because the number indexes the
+ * evidence. */
+export const COL_HINT_CELL = 9;
 /** The ground of a cell the win flash is on. */
-export const COL_FLASH = 11;
+export const COL_FLASH = 10;
 /** The keyboard cursor: the cell's fill (or its pencil-mode corner triangle).
  * Upstream drew it in the bevel highlight. */
-export const COL_CURSOR = 12;
-export const COL_CELL = 13; // the surface of a box the player fills
-export const COL_GIVEN = 14; // the lifted surface of a box holding a given
+export const COL_CURSOR = 11;
+export const COL_CELL = 12; // the surface of a box the player fills
+export const COL_GIVEN = 13; // the lifted surface of a box holding a given
 /** A box's own outline. The adjacency bars between boxes are clues and stay
  * `COL_GRID`. */
-export const COL_LINE = 15;
+export const COL_LINE = 14;
 /** The ground of a cell the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 16;
+export const COL_FLASH_LEAD = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background: bg, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -129,11 +135,8 @@ export function colors(defaultBackground: Color): Color[] {
   // the player's own digits here, and a fill has to keep them legible.
   out[COL_CURSOR] = highlightWash(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_RING;
-  // Both hint marks are outlines drawn beside the cell, so both take a strong
-  // color and differ in shape rather than in weight — a clue pair's contour
-  // against one cell's ring. `HINT_OUTLINE` covers the chain ordinal too; see
-  // its doc comment for why the index and the thing it indexes are one role.
+  // `HINT_OUTLINE` covers the chain ordinal too; see its doc comment for why
+  // the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
@@ -143,14 +146,14 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** Highlight payload an Unequal hint step carries (built in `index.ts`). The
  * marks (docs/hints-marks.md § "The engine colors the marks"): the driving
- * clue's cells outlined `COL_HINT_CELL`, the acted-on cell(s) ringed
- * `COL_HINT`, the ruled-out candidate(s) shown struck. Outline and ring sit in the gap around a cell, so
- * neither covers what the cell holds. */
+ * clue's cells outlined `COL_HINT_CELL`, the acted-on cell(s) ringed by the
+ * engine, the ruled-out candidate(s) shown struck. Outline and ring reach into
+ * the gap around a cell, and the ring keeps clear of the cell's text. */
 export interface UnequalHint {
   /** The driving clue's cells (evidence), outlined `COL_HINT_CELL`. A forcing
    * chain's cells additionally carry their place in it, drawn as an ordinal. */
   area: OrderedCell[];
-  /** The cell(s) the deduction acts on, marked `COL_HINT`. */
+  /** The cell(s) the deduction acts on, ringed. */
   targets: Point[];
   /** The candidate number(s) ruled out, shown struck among the pencil marks. */
   marks: { x: number; y: number; n: number }[];
@@ -485,14 +488,10 @@ function drawCell(
   if (num > 0) {
     const color =
       flags & DF_IMMUTABLE ? COL_TEXT : flags & F_ERROR ? COL_ERROR : COL_GUESS;
-    dr.drawText(
-      { x: ox + Math.floor(ts / 2), y: oy + Math.floor(ts / 2) },
-      glyphFont(Math.floor((3 * ts) / 4)),
-      color,
-      displayChar(num, o),
-    );
+    const { origin, options } = digitText(ts, x, y);
+    dr.drawText(origin, options, color, displayChar(num, o));
   } else {
-    drawHints(dr, ts, o, ox, oy, pencil, struck);
+    drawHints(dr, ts, o, x, y, pencil, struck);
   }
 
   // Check & Save mistake overlay (fork addition): an inset red outline.
@@ -514,48 +513,88 @@ function drawCell(
     drawHintOrdinal(dr, { x: ox, y: oy }, ts, hintOrder, COL_HINT_CELL);
 }
 
-/** Pencil-mark grid (upstream `draw_hints`, stolen from solo). A candidate in
- * `struck` (bit `1 << n`) is a hint-ruled-out mark, drawn in its normal pencil
- * color with a same-color strikethrough — high-contrast, reads as a real note,
- * and the line is the "ruled out" cue (docs/hints-marks.md § "The engine colors the marks"). */
+/** A piece of text a cell draws: what it passes `drawText` but the color. */
+interface TileText {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+}
+
+/** A placed number, in the middle of cell `(x, y)`. */
+function digitText(ts: number, x: number, y: number): TileText {
+  return {
+    origin: {
+      x: coord(x, ts) + Math.floor(ts / 2),
+      y: coord(y, ts) + Math.floor(ts / 2),
+    },
+    options: glyphFont(Math.floor((3 * ts) / 4)),
+  };
+}
+
+/** The values set in a cell's pencil-mark bits (bit `i` is value `i`). */
+const pencilValues = (o: number, bits: number): number[] =>
+  Array.from({ length: o }, (_, i) => i + 1).filter((i) => bits & (1 << i));
+
+/** Where `count` pencil marks go in cell `(x, y)`, in order: upstream
+ * `draw_hints`'s grid, stolen from solo. */
+function pencilSlots(ts: number, x: number, y: number, count: number): TileText[] {
+  if (count === 0) return [];
+  const hw = Math.max(3, Math.ceil(Math.sqrt(count)));
+  const hh = Math.max(2, Math.ceil(count / hw));
+  const hmax = Math.max(hw, hh);
+  const fontsz = Math.floor(ts / ((hmax * (11 - hmax)) / 8));
+  return Array.from({ length: count }, (_, j) => ({
+    origin: {
+      x: coord(x, ts) + Math.floor(((4 * (j % hw) + 3) * ts) / (4 * hw + 2)),
+      y: coord(y, ts) + Math.floor(((4 * Math.floor(j / hw) + 3) * ts) / (4 * hh + 2)),
+    },
+    options: glyphFont(fontsz),
+  }));
+}
+
+/** The pencil-mark grid. A candidate in `struck` (bit `1 << n`) is a
+ * hint-ruled-out mark, drawn in its normal pencil color with a same-color
+ * strikethrough — high-contrast, reads as a real note, and the line is the
+ * "ruled out" cue (docs/hints-marks.md § "The engine colors the marks"). */
 function drawHints(
   dr: GameDrawing,
   ts: number,
   o: number,
-  ox: number,
-  oy: number,
+  x: number,
+  y: number,
   pencil: number,
   struck = 0,
 ): void {
-  let nhints = 0;
-  for (let i = 0; i < o; i++) if (pencil & (1 << (i + 1))) nhints++;
-  if (nhints === 0) return;
-
-  const hw = Math.max(3, Math.ceil(Math.sqrt(nhints)));
-  const hh = Math.max(2, Math.ceil(nhints / hw));
-  const hmax = Math.max(hw, hh);
-  const fontsz = Math.floor(ts / ((hmax * (11 - hmax)) / 8));
-
-  let j = 0;
-  for (let i = 0; i < o; i++) {
-    if (pencil & (1 << (i + 1))) {
-      const hx = j % hw;
-      const hy = Math.floor(j / hw);
-      const cx = ox + Math.floor(((4 * hx + 3) * ts) / (4 * hw + 2));
-      const cy = oy + Math.floor(((4 * hy + 3) * ts) / (4 * hh + 2));
-      dr.drawText(
-        { x: cx, y: cy },
-        glyphFont(fontsz),
-        COL_PENCIL,
-        displayChar(i + 1, o),
-      );
-      if (struck & (1 << (i + 1))) {
-        const r = Math.max(2, Math.floor(fontsz / 3));
-        dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
-      }
-      j++;
+  const shown = pencilValues(o, pencil);
+  pencilSlots(ts, x, y, shown.length).forEach(({ origin, options }, j) => {
+    const n = shown[j];
+    dr.drawText(origin, options, COL_PENCIL, displayChar(n, o));
+    if (struck & (1 << n)) {
+      const r = Math.max(2, Math.floor(options.size / 3));
+      const { x: cx, y: cy } = origin;
+      dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
     }
+  });
+}
+
+/** The text cell `(x, y)` shows, for a hint's ring to keep clear of. The
+ * clue signs between cells are drawn shapes, outside the ring's band. */
+function cellText(state: UnequalState, ts: number, x: number, y: number): CellText {
+  const o = state.order;
+  if (x < 0 || y < 0 || x >= o || y >= o) return NO_TEXT;
+  const num = state.grid[y * o + x];
+  if (num > 0) {
+    const { origin, options } = digitText(ts, x, y);
+    return {
+      enclose: [textBox(origin, options, displayChar(num, o))],
+      avoid: [],
+      notes: [],
+    };
   }
+  const shown = pencilValues(o, state.pencil[y * o + x]);
+  const notes = pencilSlots(ts, x, y, shown.length).map(({ origin, options }, j) =>
+    textBox(origin, options, displayChar(shown[j], o)),
+  );
+  return { enclose: [], avoid: [], notes };
 }
 
 /** The three palette indices the shared glyph is drawn in; the engine draws it
@@ -615,7 +654,7 @@ export function redraw(
   }
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    text: (x: number, y: number) => cellText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   };
   const underErased = new Uint8Array(o * o);

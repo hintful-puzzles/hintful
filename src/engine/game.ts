@@ -20,6 +20,7 @@ import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
 import type { MarkRole, Sentence } from "./hint-words.ts";
 import type { Modifier } from "./modifier.ts";
 import type { RandomState } from "./random/index.ts";
+import type { RingClear } from "./ring.ts";
 import type { Ruleset } from "./ruleset.ts";
 import type { NotApplicableReasons } from "./sections.ts";
 import type { SolveFailure } from "./solve-failure.ts";
@@ -285,6 +286,12 @@ export interface PresetMenu<Params> {
   submenu?: PresetMenu<Params>[];
 }
 
+/** What a ring may reach and hold (`GameDrawing.drawRing`). */
+export interface RingOptions {
+  readonly room?: Rect;
+  readonly inside?: (ink: number) => void;
+}
+
 /**
  * The full puzzle drawing API a game's `redraw` may use. This is the
  * long-stable upstream `drawing_api`, rendered in TS; the concrete
@@ -315,6 +322,15 @@ export interface GameDrawing<Blitter = unknown> {
    * `rect`, `period` apart and aligned to the canvas so neighboring rects
    * join (`engine/hatch.ts`). */
   drawHatch(rect: Rect, period: number): void;
+  /** A hint's ring round the element at `box`: the shape `engine/ring.ts`'s
+   * `ringShape` fits clear of every rect in `clear`, stroked `thickness` wide
+   * in the ring ink (`HINT_RING`, the second-last entry of every palette,
+   * `resolvePalette`). It is the only way to draw in that ink: `inside`, if
+   * given, is called with the ink's index and clipped to the ring's interior,
+   * for a game to show its move's shape within the ring. `room` (default:
+   * `box`) is where the stroke may lie, the pixels the game repaints when the
+   * ring moves. Throws where no round ring fits. */
+  drawRing(box: Rect, clear: RingClear, thickness: number, options?: RingOptions): void;
   blitterNew(size: Size): Blitter;
   blitterFree(blitter: Blitter): void;
   blitterSave(blitter: Blitter, origin: Point): void;

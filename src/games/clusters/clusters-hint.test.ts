@@ -9,18 +9,20 @@
  * mid-game boards fiddly to craft, and a property checked on a real firing is
  * the stronger assertion anyway.
  *
- * Tier 2.5: render-scenario frames — the COL_HINT target, the danger double
+ * Tier 2.5: render-scenario frames — the ringed target, the danger double
  * ring, and a chain's what-if marks all reach the canvas, plus a snapshot.
  *
  * Cross-game guards (resume walk, overlay-reaches-cache, narration form) run
  * from `engine/testing/hint-games.ts` enrollment, not here.
  */
 import { describe, expect, it } from "vitest";
+import { resolvePalette } from "../../engine/color/color-mkhighlight.ts";
 import { TWO_NAMES } from "../../engine/color/colors.ts";
 import { CELL, mark, phrase, stepMarks, unshaped } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -30,14 +32,7 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { type ClustersHintHighlights, clustersGame } from "./index.ts";
-import {
-  border,
-  COL_0,
-  COL_1,
-  COL_HINT,
-  COL_HINT_CELL,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
+import { border, COL_0, COL_1, COL_HINT_CELL, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   type ClustersDeduction,
   type ClustersRuleKind,
@@ -383,9 +378,11 @@ describe("hint rendering (tier 2.5)", () => {
   // `COL_1` tile's blue would pass them all while looking like a placed tile
   // (`color-collide.test.ts` is advisory). This is the non-proxy form.
   it("every hint role is a color the board does not already use", () => {
-    const palette = clustersGame.colors([1, 1, 1]);
+    const palette = resolvePalette(clustersGame, [1, 1, 1]);
     const key = (i: number) => palette[i].join(",");
-    const roles = [COL_HINT, COL_HINT_CELL];
+    // The ring's ink is the engine's, the first slot past the game's own.
+    const ringInk = palette.length - 2;
+    const roles = [ringInk, COL_HINT_CELL];
     for (const role of roles) {
       for (const tile of [COL_0, COL_1]) {
         expect(
@@ -405,15 +402,14 @@ describe("hint rendering (tier 2.5)", () => {
     expect(new Set(roles.map(key)).size).toBe(roles.length);
   });
 
-  it("a direct hint frame paints the COL_HINT target", () => {
+  it("a direct hint frame rings the target", () => {
     const result = renderScenario({
       game: clustersGame,
       id: `${ID}#render-hint`,
       showHint: true,
     });
     expect(result.hint).toBeDefined();
-    const ops = result.recording.ops;
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
+    expectRing(result.recording.ops);
     expect(result.recording.ops).toMatchSnapshot();
   });
 

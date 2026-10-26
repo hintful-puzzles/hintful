@@ -31,19 +31,13 @@ import {
 } from "../../engine/pointer.ts";
 import { pointAtEdge, squareEdges } from "../../engine/square-edges.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
+import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectDragRepeatsThePress } from "../../engine/testing/sweep-probe.ts";
 import type { Point } from "../../engine/types.ts";
 import { crossDrag, skeletonGame } from "./index.ts";
-import {
-  COL_ERROR,
-  COL_HINT,
-  COL_WALL,
-  centerOf,
-  layout,
-  newDrawState,
-} from "./render.ts";
+import { COL_ERROR, COL_WALL, centerOf, layout, newDrawState } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -367,6 +361,6 @@ describe("skeleton frame", () => {
 
     const hinted = renderScenario({ game: skeletonGame, id: ID, showHint: true });
     expect(hinted.hint).toBeDefined();
-    expect(hinted.recording.ops.some((op) => paintsWith(op, COL_HINT))).toBe(true);
+    expect(ringsOf(hinted.recording.ops).length).toBeGreaterThan(0);
   });
 });

@@ -16,7 +16,6 @@ import {
   FLASH_LEAD,
   GOAL_WASH,
   givenSurface,
-  HINT_RING,
   highlightWash,
   INK,
   surfaceGrid,
@@ -25,7 +24,8 @@ import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import {
   type Flash,
   sweepRanks,
@@ -69,10 +69,8 @@ const COL_DIM = 6;
 /** The target's ground: what the player seeks. */
 const COL_TARGET = 7;
 const COL_CURSOR = 8;
-/** The ring on the numbers and the operator a hint step combines. */
-export const COL_HINT = 9;
-const COL_FLASH = 10;
-const COL_FLASH_LEAD = 11;
+const COL_FLASH = 9;
+const COL_FLASH_LEAD = 10;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -85,7 +83,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_DIM] = clueDoneColor(defaultBackground);
   out[COL_TARGET] = GOAL_WASH;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
@@ -248,8 +245,8 @@ function key(look: Look, out: Int32Array, at: number): boolean {
   return same;
 }
 
-/** The share of a tile's width its text may take: clear of the hint's ring,
- * which lies inside the tile's rim. */
+/** The share of a tile's width its text may take, leaving the hint's ring
+ * room to pass round it. */
 const TEXT_SPAN = 0.7;
 
 /** A font size at which `text` fits across `width`, no larger than `most`. */
@@ -260,6 +257,57 @@ function fitting(text: string, width: number, most: number): number {
 function ground(look: Look, base: number): number {
   if (look.tone) return winSlot(look.tone, COL_FLASH, COL_FLASH_LEAD);
   return look.flags & F_SELECTED ? COL_SELECTED : base;
+}
+
+/** A line of text an element shows: what it passes `drawText`, so the ring
+ * reads the same place the element draws from. */
+interface Label {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+  readonly text: string;
+}
+
+/** The text element `i` shows in `r`, the rect it draws in this frame. */
+function labels(ts: number, i: number, look: Look, r: Rect): Label[] {
+  const cx = r.x + Math.floor(r.w / 2);
+  const mid = { x: cx, y: r.y + Math.floor(r.h / 2) };
+  if (i === TARGET) {
+    const text = String(look.value);
+    return [
+      { origin: mid, options: glyphFont(fitting(text, r.w * 0.9, r.h * 0.7)), text },
+    ];
+  }
+  if (i >= OP_BASE)
+    return [
+      {
+        origin: mid,
+        options: glyphFont(Math.floor(r.h * 0.6)),
+        text: OP_SIGN[look.op ?? "+"],
+      },
+    ];
+  if (!(look.flags & F_PRESENT)) return [];
+  const text = String(look.value);
+  if (!look.made)
+    return [
+      {
+        origin: mid,
+        options: glyphFont(fitting(text, r.w * TEXT_SPAN, ts * 0.5)),
+        text,
+      },
+    ];
+  const how = madeText(look.made);
+  return [
+    {
+      origin: { x: cx, y: r.y + Math.floor(r.h * 0.42) },
+      options: glyphFont(fitting(text, r.w * TEXT_SPAN, ts * 0.45)),
+      text,
+    },
+    {
+      origin: { x: cx, y: r.y + Math.floor(r.h * 0.8) },
+      options: glyphFont(fitting(how, r.w * TEXT_SPAN, ts * 0.2)),
+      text: how,
+    },
+  ];
 }
 
 function drawElement(
@@ -276,18 +324,12 @@ function drawElement(
   if (at === base) dr.drawRect(box, COL_BACKGROUND);
   const cx = r.x + Math.floor(r.w / 2);
   const text = look.flags & F_DIM ? COL_DIM : COL_TEXT;
+  const shown = labels(ts, i, look, r);
 
   if (i === TARGET) {
     dr.drawRect(
       r,
       look.tone ? winSlot(look.tone, COL_FLASH, COL_FLASH_LEAD) : COL_TARGET,
-    );
-    const s = String(look.value);
-    dr.drawText(
-      { x: cx, y: r.y + Math.floor(r.h / 2) },
-      glyphFont(fitting(s, r.w * 0.9, r.h * 0.7)),
-      COL_TEXT,
-      s,
     );
   } else if (i >= OP_BASE) {
     dr.drawRect(r, COL_EDGE);
@@ -295,41 +337,12 @@ function drawElement(
       { x: r.x + 1, y: r.y + 1, w: r.w - 2, h: r.h - 2 },
       ground(look, COL_CELL),
     );
-    dr.drawText(
-      { x: cx, y: r.y + Math.floor(r.h / 2) },
-      glyphFont(Math.floor(r.h * 0.6)),
-      COL_TEXT,
-      OP_SIGN[look.op ?? "+"],
-    );
   } else if (look.flags & F_PRESENT) {
     dr.drawRect(r, COL_EDGE);
     dr.drawRect(
       { x: r.x + 1, y: r.y + 1, w: r.w - 2, h: r.h - 2 },
       ground(look, COL_GIVEN),
     );
-    const s = String(look.value);
-    if (look.made) {
-      dr.drawText(
-        { x: cx, y: r.y + Math.floor(r.h * 0.42) },
-        glyphFont(fitting(s, r.w * TEXT_SPAN, ts * 0.45)),
-        text,
-        s,
-      );
-      const how = madeText(look.made);
-      dr.drawText(
-        { x: cx, y: r.y + Math.floor(r.h * 0.8) },
-        glyphFont(fitting(how, r.w * TEXT_SPAN, ts * 0.2)),
-        text,
-        how,
-      );
-    } else {
-      dr.drawText(
-        { x: cx, y: r.y + Math.floor(r.h / 2) },
-        glyphFont(fitting(s, r.w * TEXT_SPAN, ts * 0.5)),
-        text,
-        s,
-      );
-    }
   } else {
     // An empty place keeps its outline, so the board keeps its shape; a lit
     // one is outlined in the flash's color, wider than at rest.
@@ -341,16 +354,23 @@ function drawElement(
       tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_EDGE,
     );
   }
+  for (const { origin, options, text: s } of shown)
+    dr.drawText(origin, options, text, s);
 
-  // The ring and the cursor sit in the gap round the element and on its rim,
-  // never over what it shows.
+  // The ring may reach into the gap round the element, which is the
+  // element's own to repaint; the cursor sits on its rim.
   const band = Math.max(2, ts >> 4);
   if (look.flags & F_RING)
-    drawMarkSides(
-      dr,
-      { box: r, outer: Math.min(band, ds.layout.half), inner: band },
-      MARK_ALL,
-      COL_HINT,
+    dr.drawRing(
+      r,
+      {
+        enclose: shown.map(({ origin, options, text: s }) =>
+          textBox(origin, options, s),
+        ),
+        avoid: [],
+      },
+      band,
+      { room: box },
     );
   if (look.flags & F_CURSOR)
     drawRectCorners(

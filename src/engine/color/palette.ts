@@ -175,9 +175,10 @@ export const ERROR_WASH: Color = RED_WASH;
  * on whatever lies under them; these are what a step shows until then, so a
  * step with one reference of each role looks the same before as after.
  *
- * A game draws a ring in {@link HINT_RING} and an outline in
- * {@link HINT_OUTLINE}, and its marks in nothing else (`hint-ink.test.ts`);
- * the engine draws every hatch in {@link HINT_STRIPES}. The engine finds a
+ * A game draws an outline in {@link HINT_OUTLINE}, and its marks in nothing
+ * else (`hint-ink.test.ts`); the engine draws every ring in {@link HINT_RING}
+ * and every hatch in {@link HINT_STRIPES}, and a strike is a line through a
+ * note in the note's own ink, so it has none. The engine finds a
  * game's ink slots by reference (`Midend.hintInkIndices`) to repaint them
  * while it measures the marks. A slot holding the same color for another
  * meaning is repainted with them, and changes nothing measured: it is drawn
@@ -195,7 +196,7 @@ export const HINT_OUTLINE: Color = HINT_REFERENCE_COLORS.outline[0];
 export const HINT_STRIPES: Color = HINT_REFERENCE_COLORS.stripes[0];
 
 /** The hint inks by the role they draw. */
-export const HINT_INK: Readonly<Record<MarkRole, Color>> = {
+export const HINT_INK: Readonly<Record<Exclude<MarkRole, "strike">, Color>> = {
   ring: HINT_RING,
   outline: HINT_OUTLINE,
   stripes: HINT_STRIPES,

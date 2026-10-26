@@ -137,11 +137,11 @@ export class OverlaySidecar {
   }
 
   /** Repack this frame's overlay from the marks the displayed step's words name
-   * (empty when no hint is displayed): ringed cells, ringed notes, outlined
+   * (empty when no hint is displayed): ringed cells, struck notes, outlined
    * cells with their chain ordinals, striped cells. `index` maps board
    * coordinates to the game's cell indexing (stride, border ring, …);
    * `markBits` encodes one struck note into the cell's struck lane. A game
-   * with no notes passes none, and its ringed notes are not asked for: what
+   * with no notes passes none, and its struck notes are not asked for: what
    * a renderer asks the marks for is what `warm-repaint.test.ts` holds it to
    * painting. */
   pack(
@@ -160,13 +160,11 @@ export class OverlaySidecar {
       if (a.order !== undefined) this.setOrder(i, a.order);
     }
     for (const t of marks.of("ring", CELL)) this.add(index(t.x, t.y), HINT_TARGET);
-    // A ringed note rings its cell with it (`NOTE.within`).
+    // A struck note is its own mark: a grid of notes leaves no room for a
+    // ring round its cell.
     if (markBits !== null)
-      for (const m of marks.of("ring", NOTE)) {
-        const i = index(m.x, m.y);
-        this.add(i, HINT_TARGET);
-        this.struck[i] |= markBits(m);
-      }
+      for (const m of marks.of("strike", NOTE))
+        this.struck[index(m.x, m.y)] |= markBits(m);
     for (const c of marks.of("stripes", CELL)) this.hatched[index(c.x, c.y)] = 1;
   }
 

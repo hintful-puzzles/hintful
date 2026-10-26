@@ -9,12 +9,13 @@ import { HINT_OUTLINE } from "../../engine/color/palette.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
 import { hintKeepTrack, refreshHintStep } from "./hint.ts";
 import { colorName, REGION } from "./hint-text.ts";
 import { mapGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import { neighbors } from "./solver.ts";
 import type { MapMove, MapParams, MapState } from "./state.ts";
 
@@ -632,7 +633,7 @@ describe("map hint bookkeeping", () => {
 });
 
 describe("map hint rendering", () => {
-  it("a chain's regions carry their numbers, and the target its band", () => {
+  it("a chain's regions carry their numbers, and the target its ring", () => {
     const { recording, hint } = renderPinnedHint(mapGame, pinned("chainMark"));
     const rgb = (c: readonly number[]) =>
       `rgb(${c.map((v) => Math.round(v * 255)).join(", ")})`;
@@ -648,7 +649,10 @@ describe("map hint rendering", () => {
     );
     const polys = (c: number) =>
       recording.ops.filter((o) => o.op === "polygon" && o.fill === c).length;
-    expect(polys(COL_HINT)).toBeGreaterThan(0);
+    // One ring, drawn by every cell it reaches, at the target's label point.
+    const rings = ringsOf(recording.ops);
+    expectRing(recording.ops, { rings: rings.length });
+    expect(new Set(rings.map((r) => `${r.x},${r.y},${r.w},${r.h}`)).size).toBe(1);
     expect(polys(COL_HINT_CELL)).toBeGreaterThan(0);
     // The evidence is a dashed line, never a strip along a whole tile side: a
     // solid one beside the target's band read as one thick line (owner

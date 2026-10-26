@@ -2,6 +2,6 @@
 
 exports[`flood: pinned hint positions > says, at each pin 1`] = `
 {
-  "fill": "Fill with teal: it joins the dotted squares to your region.",
+  "fill": "Fill with teal: it joins the ringed squares to your region.",
 }
 `;

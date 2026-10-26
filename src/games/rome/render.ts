@@ -41,7 +41,6 @@ import {
   GOAL_WASH,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   pencilColor,
@@ -50,7 +49,13 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -73,7 +78,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { RomeHint } from "./hint.ts";
 import type { RomeMistake } from "./index.ts";
@@ -141,18 +147,16 @@ export const COL_ARROW_ENTRY = 8;
 export const COL_ERRORBG = 9;
 export const COL_GOALBG = 10;
 export const COL_GOAL = 11;
-/** The square a hint's deduction acts on, ringed (fork addition). */
-export const COL_HINT = 12;
 /** The area a hint reasons from, outlined (fork addition). */
-export const COL_HINT_CELL = 13;
+export const COL_HINT_CELL = 12;
 /** The selected square's wash, and its notes triangle. */
-export const COL_CURSOR = 14;
+export const COL_CURSOR = 13;
 /** The thin line between two squares of one region. */
-export const COL_GRID = 15;
+export const COL_GRID = 14;
 /** The ground of a square the win flash is on: its body, and its leading
  * edge. */
-export const COL_FLASH = 16;
-export const COL_FLASH_LEAD = 17;
+export const COL_FLASH = 15;
+export const COL_FLASH_LEAD = 16;
 
 export function colors(background: Color): Color[] {
   const out: Color[] = [];
@@ -171,7 +175,6 @@ export function colors(background: Color): Color[] {
   out[COL_ERRORBG] = ERROR_WASH;
   out[COL_GOALBG] = GOAL_WASH;
   out[COL_GOAL] = GOAL;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   // A fill under the arrow and its marks: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
@@ -262,6 +265,37 @@ function markBand(ds: RomeDrawState, x: number, y: number): MarkBand {
     outer: 0,
     inner: Math.max(2, Math.floor(ts / 14)),
   };
+}
+
+/** Where an armed keyboard cursor's `?` goes in square `(x, y)`: the
+ * arguments `drawText` takes but the color, so the tile and a hint's ring
+ * read one place. */
+function armedText(
+  ts: number,
+  x: number,
+  y: number,
+): { origin: Point; options: DrawTextOptions } {
+  const ox = origin(ts);
+  return {
+    origin: {
+      x: ox + x * ts + Math.floor(ts / 2),
+      y: ox + y * ts + Math.floor(ts / 2),
+    },
+    options: {
+      align: "center",
+      baseline: "mathematical",
+      fontType: "fixed",
+      size: Math.trunc(ts / 1.8),
+    },
+  };
+}
+
+/** The text square `(x, y)` shows, for a hint's ring to keep clear of: only
+ * the armed cursor's `?`, since arrows and their marks are strokes. */
+function squareText(ts: number, armed: Point | null, x: number, y: number): CellText {
+  if (!armed || armed.x !== x || armed.y !== y) return NO_TEXT;
+  const { origin: at, options } = armedText(ts, x, y);
+  return { enclose: [textBox(at, options, "?")], avoid: [], notes: [] };
 }
 
 // --- primitives -------------------------------------------------------------
@@ -380,6 +414,8 @@ export function redraw(
     (m) => valueBit(m.n),
   );
 
+  // The square showing the armed cursor's `?` this frame, for the ring.
+  let armedAt: Point | null = null;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i1 = y * w + x;
@@ -403,6 +439,7 @@ export function redraw(
       if (highlight !== HIGHLIGHT_NONE && ui.kmode === KEYMODE_PENCIL)
         highlight = HIGHLIGHT_NOTES;
       const armed = highlight !== HIGHLIGHT_NONE && ui.kmode !== KEYMODE_MOVE;
+      if (armed) armedAt = { x, y };
       highlight = winHighlight(flash.win(sweepStep(x, y))) ?? highlight;
 
       const key =
@@ -500,14 +537,10 @@ export function redraw(
       // An armed keyboard cursor awaits a direction: a `?` in the ink of the
       // arrow or the mark that direction will make.
       if (armed) {
+        const { origin: at, options } = armedText(ts, x, y);
         dr.drawText(
-          { x: midX, y: midY },
-          {
-            align: "center",
-            baseline: "mathematical",
-            fontType: "fixed",
-            size: Math.trunc(ts / 1.8),
-          },
+          at,
+          options,
           highlight === HIGHLIGHT_NOTES ? COL_ARROW_PENCIL : COL_ARROW_GUESS,
           "?",
         );
@@ -583,7 +616,7 @@ export function redraw(
   }
   ds.marks.paint(dr, targets, evidence, {
     band: (bx, by) => markBand(ds, bx, by),
-    targetColor: COL_HINT,
+    text: (bx, by) => squareText(ts, armedAt, bx, by),
     evidenceColor: COL_HINT_CELL,
   });
 

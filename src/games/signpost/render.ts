@@ -17,7 +17,6 @@ import {
   givenSurface,
   HELD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -35,7 +34,8 @@ import { fromCoord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import type { SignpostHint } from "./hint.ts";
 import { ARROW } from "./hint-marks.ts";
@@ -73,10 +73,8 @@ const COL_B0 = 12;
 const COL_M0 = COL_B0 + 1 * NBACKGROUNDS;
 const COL_D0 = COL_B0 + 2 * NBACKGROUNDS;
 const COL_X0 = COL_B0 + 3 * NBACKGROUNDS;
-/** The hint's ring and its arrow: what the step decides. */
-export const COL_HINT = COL_X0 + NBACKGROUNDS;
 /** The outline on a square the hint reasons from. */
-export const COL_HINT_CELL = COL_HINT + 1;
+export const COL_HINT_CELL = COL_X0 + NBACKGROUNDS;
 /** The ground of a square the win flash is on. */
 export const COL_FLASH = COL_HINT_CELL + 1;
 /** And under the flash's leading edge. */
@@ -143,7 +141,6 @@ export function buildPalette(background: Color): Color[] {
   ret[COL_DRAG_ORIGIN] = HELD;
   // A tenth off the surface the chainless square is painted in.
   ret[COL_ARROW_BG_DIM] = signpostArrowDim(cellSurface(background));
-  ret[COL_HINT] = HINT_RING;
   ret[COL_HINT_CELL] = HINT_OUTLINE;
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -244,6 +241,23 @@ function numString(n: number, num: number): string {
   return letters + suffix;
 }
 
+/** Where a square's number is drawn, which the square and a ring in it both
+ * read: in its top-left corner, as large as fits its width. */
+function numberText(
+  tx: number,
+  ty: number,
+  ts: number,
+  text: string,
+): { origin: Point; options: DrawTextOptions } {
+  const cb = Math.floor(ts / 16);
+  const asz = Math.floor((7 * ts) / 32);
+  const size = Math.min(2 * asz, Math.floor((ts - 2 * cb) / text.length));
+  return {
+    origin: { x: tx + cb, y: ty + Math.floor(ts / 4) },
+    options: { align: "left", baseline: "mathematical", fontType: "variable", size },
+  };
+}
+
 function tileRedraw(
   dr: GameDrawing,
   ds: SignpostDrawState,
@@ -261,8 +275,7 @@ function tileRedraw(
   const setcol = empty ? COL_CELL : num2col(n, num);
 
   let arrowcol: number;
-  if (f & F_HINT_ARROW) arrowcol = COL_HINT;
-  else if (f & F_DRAG_SRC) arrowcol = COL_DRAG_ORIGIN;
+  if (f & F_DRAG_SRC) arrowcol = COL_DRAG_ORIGIN;
   else if (f & F_DIM) arrowcol = dim(setcol);
   else if (f & F_ARROW_POINT) arrowcol = mid(setcol);
   else arrowcol = COL_ARROW;
@@ -312,11 +325,12 @@ function tileRedraw(
   const asz = Math.floor((7 * ts) / 32);
   const acx = tx + Math.floor(ts / 2) + asz;
   const acy = ty + Math.floor(ts / 2) + asz;
-  if (num === n && f & F_IMMUTABLE) {
-    drawStar(dr, acx, acy, asz, 5, arrowcol);
-  } else {
-    drawArrow(dr, acx, acy, asz, (TWO_PI * dir) / 8, arrowcol);
-  }
+  const glyph = (color: number): void => {
+    if (num === n && f & F_IMMUTABLE) drawStar(dr, acx, acy, asz, 5, color);
+    else drawArrow(dr, acx, acy, asz, (TWO_PI * dir) / 8, color);
+  };
+  // The arrow a hint links from is drawn inside its ring, further down.
+  if (!(f & F_HINT_ARROW)) glyph(arrowcol);
   if (f & F_CUR) drawRectCorners(dr, acx, acy, asz + 1, COL_CURSOR);
 
   // Predecessor dot: cell needs a predecessor and doesn't have one.
@@ -327,28 +341,32 @@ function tileRedraw(
   }
 
   // Number / set text.
+  const numberBoxes: Rect[] = [];
   if (!empty) {
     const p = numString(n, num);
-    const textsz = Math.min(2 * asz, Math.floor((ts - 2 * cb) / p.length));
-    dr.drawText(
-      { x: tx + cb, y: ty + Math.floor(ts / 4) },
-      { align: "left", baseline: "mathematical", fontType: "variable", size: textsz },
-      textcol,
-      p,
-    );
+    const { origin, options } = numberText(tx, ty, ts, p);
+    dr.drawText(origin, options, textcol, p);
+    numberBoxes.push(textBox(origin, options, p));
   }
 
-  // The hint's ring and outline, on the square's own border. The squares tile
-  // exactly, so the band is inside the box and the square repaints it away
-  // when its flags change; the number starts `cb` in, clear of the band.
-  if (f & (F_HINT_RING | F_HINT_OUTLINE)) {
-    const band = {
-      box: { x: tx, y: ty, w: ts, h: ts },
-      outer: 0,
-      inner: Math.max(2, cb >> 1),
-    };
-    drawMarkSides(dr, band, MARK_ALL, f & F_HINT_RING ? COL_HINT : COL_HINT_CELL);
+  // The hint's marks, inside the square, which repaints them away when its
+  // flags change. The number sits flush in the square's corner, where no
+  // round ring inside the square can hold it, so a ring leaves it outside.
+  const thick = Math.max(2, cb >> 1);
+  const tile = { x: tx, y: ty, w: ts, h: ts };
+  const clear = { enclose: [], avoid: numberBoxes };
+  if (f & F_HINT_ARROW) {
+    // A circle round the arrow, wide enough for the arrow's back corners,
+    // with the arrow inside in the ring's ink.
+    const r = Math.ceil(1.05 * asz) + thick + 1;
+    dr.drawRing({ x: acx - r, y: acy - r, w: 2 * r, h: 2 * r }, clear, thick, {
+      room: tile,
+      inside: glyph,
+    });
   }
+  if (f & F_HINT_RING) dr.drawRing(tile, clear, thick);
+  if (f & F_HINT_OUTLINE)
+    drawMarkSides(dr, { box: tile, outer: 0, inner: thick }, MARK_ALL, COL_HINT_CELL);
 
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 }

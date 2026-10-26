@@ -491,7 +491,7 @@ export const tentsGame: Game<
   hintRungs: TENTS_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the squares the step decides. When it asks for a link, the tent and the tree are ringed as one shape, and the link is drawn between them in the hint color.",
+      ring: "the squares the step decides. When it asks for a link, the tent and the tree are ringed as one shape, and the link is drawn between them inside the ring, in its color.",
       outline:
         "what it reasons from: a tree, or a tent that already belongs to another tree, and the number of the row or column it counts with, which is shown in the hint's color.",
       stripes: 'the row or column the sentence calls "this row" or "this column".',

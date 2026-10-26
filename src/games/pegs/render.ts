@@ -21,7 +21,6 @@ import {
   GRID_DARK,
   HELD,
   HINT_OUTLINE,
-  HINT_RING,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawMoveArrow, drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
@@ -31,6 +30,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { MOVE, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
@@ -62,14 +62,13 @@ const COL_GRID = 1; // the line between two cells, and round the board
 const COL_CELL = 2; // the surface of a cell
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 3;
-export const COL_FLASH_LEAD = 10;
+export const COL_FLASH_LEAD = 9;
 const COL_HOLE = 4; // the ring that marks an empty hole
 const COL_PEG = 5;
 const COL_CURSOR = 6;
 /** The ring round a peg the keyboard has picked up to jump with. */
 const COL_HELD = 7;
-export const COL_HINT = 8;
-export const COL_HINT_EVIDENCE = 9;
+export const COL_HINT_EVIDENCE = 8;
 
 /** A peg is the pair's disc: the one piece on the board, in a color no mark
  * drawn round it has spent. */
@@ -122,7 +121,6 @@ export function colors(defaultBackground: Color): Color[] {
   // board together: picking a peg up turns the one into the other.
   out[COL_CURSOR] = CURSOR;
   out[COL_HELD] = HELD;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   return out;
 }
@@ -234,13 +232,18 @@ function drawTile(
 
   // The hint's rings sit in the margin outside the peg, beside it; an
   // outline inside a ring when one cell carries both.
-  const ring = (r: number, color: number) => {
-    dr.drawCircle({ x: x + half, y: y + half }, r, -1, color);
-    dr.drawCircle({ x: x + half, y: y + half }, r - 1, -1, color);
-  };
   const outer = half - 1;
-  if (ringed) ring(outer, COL_HINT);
-  if (outlined) ring(ringed ? outer - 2 : outer, COL_HINT_EVIDENCE);
+  if (ringed)
+    dr.drawRing(
+      { x: x + half - outer, y: y + half - outer, w: 2 * outer, h: 2 * outer },
+      NOTHING_TO_CLEAR,
+      2,
+    );
+  if (outlined) {
+    const r = ringed ? outer - 2 : outer;
+    dr.drawCircle({ x: x + half, y: y + half }, r, -1, COL_HINT_EVIDENCE);
+    dr.drawCircle({ x: x + half, y: y + half }, r - 1, -1, COL_HINT_EVIDENCE);
+  }
   // Laid over the peg each jumps.
   for (const [a, b] of jumps.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_EVIDENCE);
 

@@ -39,7 +39,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   lineMaybeColor,
   lineNoColor,
@@ -72,15 +71,14 @@ export const COL_GRID = 2; // == COL_CLUE == COL_LINE_YES
 export const COL_LINE_MAYBE = 3;
 export const COL_LINE_NO = 4;
 export const COL_ERROR = 5;
-export const COL_HINT = 6; // every edge the deduction forces this step
-export const COL_HINT_CELL = 7; // referenced-cell outline, inset inside the cell
-export const COL_CORRECT = 8; // a completed, correct region
+export const COL_HINT_CELL = 6; // referenced-cell outline, inset inside the cell
+export const COL_CORRECT = 7; // a completed, correct region
 /** The keyboard cursor's box, which upstream drew in the grid's own ink. */
-export const COL_CURSOR = 9;
-export const COL_CELL = 10; // the surface of a cell with no clue
+export const COL_CURSOR = 8;
+export const COL_CELL = 9; // the surface of a cell with no clue
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 11;
-export const COL_FLASH_LEAD = 12;
+export const COL_FLASH = 10;
+export const COL_FLASH_LEAD = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -93,7 +91,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = INK;
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CORRECT] = REGION_DONE;
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
@@ -112,7 +109,6 @@ const PALETTE: BorderGridColors = {
   lineNo: COL_LINE_NO,
   lineMaybe: COL_LINE_MAYBE,
   error: COL_ERROR,
-  hintEdge: COL_HINT,
   hintEvidence: COL_HINT_CELL,
   cursor: COL_CURSOR,
 };

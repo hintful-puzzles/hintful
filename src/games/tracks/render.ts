@@ -26,7 +26,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   PAPER,
   RULED_OUT,
@@ -38,7 +37,6 @@ import {
   drawEdgeHints,
   EDGE_HINT_BITS,
   type EdgeHint,
-  type EdgeInks,
   edgeHintWords,
 } from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -47,6 +45,7 @@ import { drawMarkSides, MARK_ALL, outlineSides } from "../../engine/hint-mark.ts
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import {
   bitDirection,
   D,
@@ -96,17 +95,16 @@ export const COL_DRAGOFF = 9;
 export const COL_ERROR = 10;
 export const COL_FLASH = 11;
 export const COL_ERROR_BACKGROUND = 12;
-/** The ring's ink, past the end of the C enum: what a step decides. */
-export const COL_HINT = 13;
-/** The outline's ink: what a step reasons from, and the clue it counts with. */
-export const COL_HINT_CELL = 14;
+/** The outline's ink, past the end of the C enum: what a step reasons from,
+ * and the clue it counts with. */
+export const COL_HINT_CELL = 13;
 /** The player's no-track crosses, on squares and edges. Their own slot rather
  * than the rails' `COL_TRACK`, which upstream shared: a rail is the picture
  * and a cross is a note beside it. */
-export const COL_NOTRACK = 15;
+export const COL_NOTRACK = 14;
 /** The bed under a square that carries track, whole piece or not. */
-export const COL_TRACK_BACKGROUND = 16;
-export const COL_FLASH_LEAD = 17;
+export const COL_TRACK_BACKGROUND = 15;
+export const COL_FLASH_LEAD = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -132,7 +130,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_DRAGOFF] = DRAG_REMOVE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_NOTRACK] = RULED_OUT;
   return out;
@@ -162,8 +159,6 @@ const H_RING = 1 << EDGE_HINT_BITS; // the square is a target: ring it
 const H_EMPTY = H_RING << 1; // ...and the move marks it empty, so echo the cross
 const H_AREA_SHIFT = EDGE_HINT_BITS + 2; // 4 bits: which sides of the evidence outline to paint
 const H_LINE = 1 << (H_AREA_SHIFT + 4); // on the line or block the sentence names: hatch it
-
-const HINT_INKS: EdgeInks = { ring: COL_HINT, outline: COL_HINT_CELL };
 
 // --- geometry (NARROW_BORDERS → border 0) ---------------------------------
 
@@ -554,18 +549,38 @@ function drawHintMarks(
     }
   };
 
-  // Evidence first, so a target's ring wins any border the two share.
+  // Evidence first, so a target's ring lies over any border the two share.
+  // A ring is the engine's, round: an asked side's is a pill across it, which
+  // each of the side's two squares draws its half of in its own clip.
   const area = (hint >> H_AREA_SHIFT) & MARK_ALL;
   if (area) drawMarkSides(dr, { box, outer: 0, inner: band }, area, COL_HINT_CELL);
-  drawEdgeHints(hint, HINT_INKS, {
+  const ringThick = Math.max(2, lineThick);
+  drawEdgeHints(dr, hint, COL_HINT_CELL, {
     line: (sides, ink, role) =>
       role === "ring" ? drawTrackStubs(dr, m, x, y, sides, ink) : bars(sides, ink),
     cross: (sides, ink, role) =>
       role === "ring" ? crosses(sides, ink) : bars(sides, ink),
+    ring: (d, shape) => {
+      const side = 1 << d;
+      const across = side === L || side === R;
+      const sx = ox + t2 + (side === R ? t2 : side === L ? -t2 : 0);
+      const sy = oy + t2 + (side === D ? t2 : side === U ? -t2 : 0);
+      const long = shape === "line" ? m.tile : Math.floor(m.tile * 0.6);
+      const short = Math.floor(m.tile * 0.6);
+      const w = across ? long : short;
+      const h = across ? short : long;
+      return {
+        box: { x: sx - w / 2, y: sy - h / 2, w, h },
+        clear: NOTHING_TO_CLEAR,
+        thickness: ringThick,
+        room: { x: sx - m.tile, y: sy - m.tile, w: 2 * m.tile, h: 2 * m.tile },
+      };
+    },
   });
-  if (hint & H_EMPTY) drawRuledOutCross(dr, box, COL_HINT);
   if (hint & H_RING)
-    drawMarkSides(dr, { box, outer: 0, inner: band }, MARK_ALL, COL_HINT);
+    dr.drawRing(box, NOTHING_TO_CLEAR, ringThick, {
+      inside: hint & H_EMPTY ? (ink) => drawRuledOutCross(dr, box, ink) : undefined,
+    });
 }
 
 function drawSquare(

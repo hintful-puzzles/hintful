@@ -16,6 +16,8 @@
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import {
   type Flash,
   sweepRanks,
@@ -47,14 +49,30 @@ export const COL_DRAGPOINT = 6;
 export const COL_CURSORPOINT = 7;
 export const COL_NEIGHBOR = 8;
 export const COL_FLASH = 9;
-export const COL_HINT = 10;
-export const COL_FLASH_LEAD = 11;
+export const COL_FLASH_LEAD = 10;
 /** The ring round a crossing a hint step removes. */
-export const COL_HINT_CELL = 12;
+export const COL_HINT_CELL = 11;
 
 /** Radius (px) of the ring round a crossing a hint step removes — just wider
  * than a point, so a ring is never mistaken for one. */
 const CROSSING_RING = CIRCLE_RADIUS + 3;
+/** The hint's ring round a point or a spot: as wide as a crossing's, and
+ * stroked as thick. */
+const RING_HALF = CROSSING_RING + 2;
+/** The ring round the point a step moves and round its spot: wider, so the
+ * end of the move's line each holds reads as pointing at the other, and the
+ * moved point stands apart from the others still to move. */
+const MOVE_RING_HALF = CROSSING_RING + 7;
+const RING_THICKNESS = 2;
+/** The disc in the spot's ring: smaller than a point, so the ring reads round
+ * it. */
+const SPOT_RADIUS = CIRCLE_RADIUS - 2;
+
+/** Where a point's index number is drawn, which the point and a ring round
+ * it both read. */
+function numberText(at: Point): { origin: Point; options: DrawTextOptions } {
+  return { origin: at, options: glyphFont(Math.trunc((DRAG_THRESHOLD * 3) / 2)) };
+}
 
 /** Linear interpolation between two rational points (upstream `mix`),
  * keeping exact integer rational arithmetic. `t` runs 0→1. */
@@ -193,12 +211,8 @@ export function redrawUntangle(
         // then draw the index number in `c`.
         const ground = flashColor(ds.lit[i]) ?? COL_BACKGROUND;
         dr.drawCircle({ x: ds.x[i], y: ds.y[i] }, DRAG_THRESHOLD, ground, ground);
-        dr.drawText(
-          { x: ds.x[i], y: ds.y[i] },
-          glyphFont(Math.trunc((DRAG_THRESHOLD * 3) / 2)),
-          c,
-          String(i),
-        );
+        const { origin, options } = numberText({ x: ds.x[i], y: ds.y[i] });
+        dr.drawText(origin, options, c, String(i));
       } else {
         // A lit point is the highlight's color to its edge. It rests in the
         // pair's yellow, which is the body's color, and with its ink ring kept
@@ -214,10 +228,6 @@ export function redrawUntangle(
     }
   }
 
-  // Hint: a line from the hinted vertex to its suggested destination, and
-  // a marker at the destination. The source is the vertex's *current*
-  // drawn position (ds.x/y), so during an auto-hint slide the line shrinks
-  // to nothing as the vertex arrives.
   // Ring each crossing the move removes, so the count the hint states is
   // one the player can see. Unfilled, so the crossing stays visible inside.
   for (const c of marks.of("outline", CROSSING)) {
@@ -225,35 +235,55 @@ export function redrawUntangle(
     dr.drawCircle(center, CROSSING_RING, -1, COL_HINT_CELL);
     dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT_CELL);
   }
-  // On a journey, ring the marked points still to move after this one, so
-  // the count in the narration is one the player can see.
-  for (const v of ringed) {
-    if (v === moved) continue;
-    const center = { x: ds.x[v], y: ds.y[v] };
-    dr.drawCircle(center, CROSSING_RING, -1, COL_HINT);
-    dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT);
-  }
-  if (hintVertex >= 0 && spot) {
+  // The step's rings: round every ringed point, the one it moves and, on a
+  // journey, those still to move after it, so the count in the narration is
+  // one the player can see; and round the spot the moved point goes to. A
+  // ring may reach anywhere on the board, which every frame repaints whole.
+  const board = { x: 0, y: 0, w: size, h: size };
+  const ring = (
+    at: Point,
+    half: number,
+    enclose: Rect[],
+    inside?: (ink: number) => void,
+  ): void =>
+    dr.drawRing(
+      { x: at.x - half, y: at.y - half, w: 2 * half, h: 2 * half },
+      { enclose, avoid: [] },
+      RING_THICKNESS,
+      { room: board, inside },
+    );
+  const from = hintVertex >= 0 ? { x: ds.x[hintVertex], y: ds.y[hintVertex] } : null;
+  const to = spot ? { x: hintTx, y: hintTy } : null;
+  // The move is the line from the point to its spot: each end's ring holds
+  // its own end of it, from the edge of the point's blob or of the spot. The
+  // point is where it is drawn now (ds.x/y), so during an auto-hint slide the
+  // line shrinks to nothing as the point arrives.
+  const blob = ui.vertexNumbers ? DRAG_THRESHOLD : CIRCLE_RADIUS;
+  const length = from && to ? Math.hypot(to.x - from.x, to.y - from.y) : 0;
+  const leg = (ink: number): void => {
+    if (!from || !to || length <= blob + SPOT_RADIUS) return;
+    const ux = (to.x - from.x) / length;
+    const uy = (to.y - from.y) / length;
     dr.drawLine(
-      { x: ds.x[hintVertex], y: ds.y[hintVertex] },
-      { x: hintTx, y: hintTy },
-      COL_HINT,
+      { x: from.x + ux * blob, y: from.y + uy * blob },
+      { x: to.x - ux * SPOT_RADIUS, y: to.y - uy * SPOT_RADIUS },
+      ink,
       2,
     );
+  };
+  for (const v of ringed) {
+    const at = { x: ds.x[v], y: ds.y[v] };
+    const { origin, options } = numberText(at);
+    const own = ui.vertexNumbers ? [textBox(origin, options, String(v))] : [];
+    if (v === hintVertex) ring(at, MOVE_RING_HALF, own, leg);
+    else ring(at, RING_HALF, own);
   }
-  if (spot) {
-    dr.drawCircle({ x: hintTx, y: hintTy }, CIRCLE_RADIUS, COL_HINT, COL_OUTLINE);
-  }
-  if (hintVertex >= 0) {
-    // The point the step moves wears the hint color too, so "this point" in
-    // the narration names one of the two ends of the line.
-    dr.drawCircle(
-      { x: ds.x[hintVertex], y: ds.y[hintVertex] },
-      CIRCLE_RADIUS,
-      COL_HINT,
-      COL_OUTLINE,
-    );
-  }
+  // The spot is where the point lands: a disc in the ring's ink.
+  if (to)
+    ring(to, MOVE_RING_HALF, [], (ink) => {
+      leg(ink);
+      dr.drawCircle(to, SPOT_RADIUS, ink, ink);
+    });
 
   dr.drawUpdate({ x: 0, y: 0, w: size, h: size });
 }

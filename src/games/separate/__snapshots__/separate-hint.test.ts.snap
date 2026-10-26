@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`separate hint frame > paints the edges blue, hatches one region and outlines the other 1`] = `
+exports[`separate hint frame > rings the edges, hatches one region and outlines the other 1`] = `
 [
   {
     "color": 0,
@@ -343,7 +343,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 24,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -420,7 +420,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 24,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -487,13 +487,34 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 28,
   },
   {
-    "color": 7,
+    "color": 10,
+    "h": 11,
+    "op": "ring",
+    "radius": 6,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "w": 33,
+    "x": 82,
+    "y": 69,
+  },
+  {
+    "h": 11,
+    "op": "clip",
+    "w": 33,
+    "x": 82,
+    "y": 69,
+  },
+  {
+    "color": 10,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
     "w": 44,
     "x": 76,
     "y": 72,
+  },
+  {
+    "op": "unclip",
   },
   {
     "op": "unclip",
@@ -506,7 +527,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 24,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -573,7 +594,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 24,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -640,7 +661,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 24,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -707,7 +728,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 72,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -774,7 +795,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 72,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -783,7 +804,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 76,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -792,7 +813,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 76,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -801,7 +822,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 76,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -810,7 +831,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 117,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -867,7 +888,25 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 76,
   },
   {
-    "color": 7,
+    "color": 10,
+    "h": 11,
+    "op": "ring",
+    "radius": 6,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "w": 33,
+    "x": 82,
+    "y": 69,
+  },
+  {
+    "h": 11,
+    "op": "clip",
+    "w": 33,
+    "x": 82,
+    "y": 69,
+  },
+  {
+    "color": 10,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -879,6 +918,9 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "op": "unclip",
   },
   {
+    "op": "unclip",
+  },
+  {
     "h": 52,
     "op": "clip",
     "w": 52,
@@ -886,7 +928,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 72,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -953,7 +995,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 72,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1020,7 +1062,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 72,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1087,7 +1129,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 120,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1154,7 +1196,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 120,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1221,7 +1263,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 120,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1288,7 +1330,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 120,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1355,7 +1397,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 120,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1422,7 +1464,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 168,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1489,7 +1531,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 168,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1556,7 +1598,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 168,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1623,7 +1665,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 168,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1690,7 +1732,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 168,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1757,7 +1799,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 216,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1824,7 +1866,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 216,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1891,7 +1933,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 216,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1958,7 +2000,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 216,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2025,7 +2067,7 @@ exports[`separate hint frame > paints the edges blue, hatches one region and out
     "y": 216,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

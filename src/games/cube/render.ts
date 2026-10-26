@@ -15,7 +15,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   MOVED,
   surfaceGrid,
@@ -23,6 +22,7 @@ import {
 import { strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { type Bbox, enumGridSquares, findBbox } from "./grid.ts";
@@ -43,10 +43,8 @@ export const COL_CELL = 4; // a plain square
 export const COL_SOLID = 5;
 export const COL_FLASH = 6; // a square of the arena the win flash's body is on
 export const COL_FLASH_LEAD = 7; // and one its leading edge is on
-/** The square a hint step rolls onto: its ring. */
-export const COL_HINT = 8;
 /** The painted square a hint step works toward: its outline. */
-export const COL_HINT_EVIDENCE = 9;
+export const COL_HINT_EVIDENCE = 8;
 
 export interface CubeDrawState {
   tileSize: number;
@@ -70,7 +68,6 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_SOLID] = givenSurface(defaultBackground);
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;
-  ret[COL_HINT] = HINT_RING;
   ret[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   return ret;
 }
@@ -180,7 +177,7 @@ export function redraw(
   // one), and the square a hint rolls onto is always one of those.
   const marks = stepMarks(hint);
   const thickness = Math.max(2, Math.round(gs / 16));
-  const markSquare = (i: number, color: number) => {
+  const squareAt = (i: number): { corners: Point[]; center: Point } => {
     const sq = grid[i];
     const corners: Point[] = [];
     for (let j = 0; j < sq.npoints; j++) {
@@ -193,7 +190,30 @@ export function redraw(
       x: Math.trunc(sq.x * gs) + ds.ox,
       y: Math.trunc(sq.y * gs) + ds.oy,
     };
-    strokeScaledPolygon(dr, corners, center, 0.75, color, thickness);
+    return { corners, center };
+  };
+  const outlineSquare = (i: number) => {
+    const { corners, center } = squareAt(i);
+    strokeScaledPolygon(dr, corners, center, 0.75, COL_HINT_EVIDENCE, thickness);
+  };
+  // The ring is the circle inside the square's sides (a triangle's as much
+  // as a square's), drawn in from them as far as the outline is, so a ring
+  // and an outline differ in shape and not by color alone.
+  const ringSquare = (i: number) => {
+    const { corners, center } = squareAt(i);
+    const inradius = Math.min(
+      ...corners.map((a, j) => {
+        const b = corners[(j + 1) % corners.length];
+        const cross = (b.x - a.x) * (center.y - a.y) - (b.y - a.y) * (center.x - a.x);
+        return Math.abs(cross) / Math.hypot(b.x - a.x, b.y - a.y);
+      }),
+    );
+    const r = inradius * 0.75 + thickness / 2;
+    dr.drawRing(
+      { x: center.x - r, y: center.y - r, w: 2 * r, h: 2 * r },
+      NOTHING_TO_CLEAR,
+      thickness,
+    );
   };
 
   // Compute and draw the polyhedron.
@@ -242,8 +262,8 @@ export function redraw(
     dr.drawPolygon(coords, st.faceColors[i] ? COL_PAINT : COL_SOLID, COL_BORDER);
   }
 
-  for (const i of marks.of("outline", SQUARE)) markSquare(i, COL_HINT_EVIDENCE);
-  for (const i of marks.of("ring", SQUARE)) markSquare(i, COL_HINT);
+  for (const i of marks.of("outline", SQUARE)) outlineSquare(i);
+  for (const i of marks.of("ring", SQUARE)) ringSquare(i);
 
   dr.drawUpdate({ x: 0, y: 0, w: xsize, h: ysize });
 }

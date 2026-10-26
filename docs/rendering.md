@@ -742,7 +742,7 @@ skeleton's `colors` is the shape: `out[COL_ERROR] = ERROR`. Three layers,
 and which one you reach for is the decision:
 
 - [`engine/color/palette.ts`](../src/engine/color/palette.ts) holds **the
-  meanings**, and is the default: `ERROR`, `HINT_RING`, `HINT_OUTLINE`,
+  meanings**, and is the default: `ERROR`, `HINT_OUTLINE`,
   `CURSOR`, `HELD`, `DRAG_ADD`, `FLASH`, `RULED_OUT`, `SHADED`,
   `REGION_DONE`, `INK`, `PAPER` and the rest of its exports, with the
   functions of the background (`cellSurface`, `surfaceGrid`, `givenSurface`,

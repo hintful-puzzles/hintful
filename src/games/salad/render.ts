@@ -25,7 +25,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PAPER,
@@ -37,7 +36,13 @@ import {
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -58,7 +63,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SaladHint } from "./hint.ts";
 import { CLUE } from "./hint-text.ts";
@@ -103,17 +109,15 @@ export const COL_MISTAKE = 17;
 /** Fork addition: the yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 18;
 // Fork additions: the explained-hint legend (docs/hints-marks.md § "The engine colors the marks").
-/** The square(s) / candidate(s) / entry the deduction acts on. */
-export const COL_HINT = 19;
 /** The deduction's evidence — a clue's line of sight, or a whole line, outlined
  * — **and** a forcing chain's ordinal, one index because the number indexes the
  * evidence. */
-export const COL_HINT_CELL = 20;
+export const COL_HINT_CELL = 19;
 /** Fork addition: the keyboard cursor's cell fill. Upstream used the bevel
  * lowlight, a tint of the board. */
-export const COL_CURSOR = 21;
-export const COL_CELL = 22; // the surface of a square the player fills
-export const COL_FLASH_LEAD = 23;
+export const COL_CURSOR = 20;
+export const COL_CELL = 21; // the surface of a square the player fills
+export const COL_FLASH_LEAD = 22;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = mkhighlightBackground(defaultBackground);
@@ -141,10 +145,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_E_HOLE] = ERROR;
   out[COL_MISTAKE] = ERROR;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_RING;
-  // Both hint marks are outlines on the square's border. A Salad square carries
-  // a letter, a ghosted preview and up to three struck notes, so an evidence
-  // wash would have to be pale enough to read all of that through — and at that
+  // The evidence is an outline on the square's border. A Salad square carries a
+  // letter, a ghosted preview and up to three struck notes, so an evidence wash
+  // would have to be pale enough to read all of that through — and at that
   // lightness it stops reading as a mark at all. `HINT_OUTLINE` covers the
   // chain ordinal too; see its doc comment for why they are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
@@ -165,7 +168,7 @@ const highlightOf = (flags: number): CellHighlight =>
 const FD_CIRCLE = 0x08;
 const FD_CROSS = 0x10;
 /** Fork addition, on a *border clue*: this clue is the premise of the hint on
- * screen, so it lights `COL_HINT`. It lives in `ds.borderfs`, which is already
+ * screen, so it lights `COL_HINT_CELL`. It lives in `ds.borderfs`, which is already
  * the clue's whole cache key, so the highlight repaints for free. */
 const FD_HINT = 0x20;
 
@@ -436,21 +439,54 @@ function drawX(
 function drawPencilMarks(
   dr: GameDrawing,
   s: SaladState,
+  ts: number,
   x: number,
   y: number,
-  mode: number,
-  ts: number,
-  tx: number,
-  ty: number,
   struck: number,
 ): void {
+  for (const { origin, options, text, n } of pencilSlots(s, ts, x, y)) {
+    dr.drawText(origin, options, COL_PENCIL, text);
+    // Candidate `i + 1` in the mark bitmap is candidate `i + 1` to the hint too.
+    if (struck & (1 << n)) {
+      const r = Math.max(2, Math.floor(options.size / 3));
+      dr.drawLine(
+        { x: origin.x - r, y: origin.y },
+        { x: origin.x + r, y: origin.y },
+        COL_PENCIL,
+        2,
+      );
+    }
+  }
+}
+
+/** A piece of text a square draws: what it passes `drawText` but the color. */
+interface TileText {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+  readonly text: string;
+}
+
+/** Where square `(x, y)`'s pencil marks go, each with the candidate `n` it
+ * is (the last mark, `nums + 1`, drawn as an `X`). Inside a ball, the marks
+ * are drawn smaller and inset. */
+function pencilSlots(
+  s: SaladState,
+  tileSize: number,
+  x: number,
+  y: number,
+): (TileText & { n: number })[] {
   const o = s.order;
+  const inBall = s.holes[y * o + x] === CIRCLE;
+  const ts = inBall ? Math.floor(tileSize * 0.8) : tileSize;
+  const inset = (v: number) => Math.floor((v + 1.1) * tileSize) + pad(tileSize);
+  const tx = inBall ? inset(x) : cellOrigin(x, tileSize);
+  const ty = inBall ? inset(y) : cellOrigin(y, tileSize);
   const mmx = s.nums + 1;
   const marks = s.pencil[y * o + x];
 
   let nhints = 0;
   for (let i = 0; i < mmx; i++) if (marks & (1 << i)) nhints++;
-  if (!nhints) return;
+  if (!nhints) return [];
 
   let hw = 1;
   while (hw * hw < nhints) hw++;
@@ -460,49 +496,108 @@ function drawPencilMarks(
   const hmax = Math.max(hw, hh);
   const fontsz = Math.floor(ts / Math.floor((hmax * (11 - hmax)) / 8));
 
-  let j = 0;
+  const slots: (TileText & { n: number })[] = [];
   for (let i = 0; i < mmx; i++) {
     if (!(marks & (1 << i))) continue;
+    const j = slots.length;
     const hx = j % hw;
     const hy = Math.floor(j / hw);
-    const ch = i === mmx - 1 ? "X" : symbolChar(mode, i + 1);
-    const cx = tx + Math.floor(((4 * hx + 3) * ts) / (4 * hw + 2));
-    const cy = ty + Math.floor(((4 * hy + 3) * ts) / (4 * hh + 2));
-    dr.drawText({ x: cx, y: cy }, glyphFont(fontsz), COL_PENCIL, ch);
-    // Candidate `i + 1` in the mark bitmap is candidate `i + 1` to the hint too.
-    if (struck & (1 << (i + 1))) {
-      const r = Math.max(2, Math.floor(fontsz / 3));
-      dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
-    }
-    j++;
+    slots.push({
+      origin: {
+        x: tx + Math.floor(((4 * hx + 3) * ts) / (4 * hw + 2)),
+        y: ty + Math.floor(((4 * hy + 3) * ts) / (4 * hh + 2)),
+      },
+      options: glyphFont(fontsz),
+      text: i === mmx - 1 ? "X" : symbolChar(s.mode, i + 1),
+      n: i + 1,
+    });
   }
+  return slots;
 }
 
-/** The entry a hint step is asking for, previewed in `COL_HINT` in the shape the
- * move itself would draw (`docs/hints-marks.md` § "Echo the move's shape in the
- * hint color"): a symbol as its glyph, an empty-square marker
- * as a cross, a holds-a-symbol marker as a ball outline. */
+/** A symbol in the middle of square `(x, y)`: the placed one, or the one a
+ * hint previews there. */
+function symbolText(ts: number, x: number, y: number): Omit<TileText, "text"> {
+  return {
+    origin: {
+      x: cellOrigin(x, ts) + Math.floor(ts / 2),
+      y: cellOrigin(y, ts) + Math.floor(ts / 2),
+    },
+    options: glyphFont(Math.floor(ts / 2)),
+  };
+}
+
+/** The border clue at margin tile `(x, y)`, or -1 where it holds none: the
+ * top, left, bottom and right clues are indexed in that order. */
+function clueIndex(o: number, x: number, y: number): number {
+  const along = (v: number) => v >= 0 && v < o;
+  if (y === -1 && along(x)) return x;
+  if (x === -1 && along(y)) return y + o;
+  if (y === o && along(x)) return x + o * 2;
+  if (x === o && along(y)) return y + o * 3;
+  return -1;
+}
+
+/** The text square `(x, y)` shows this frame, a margin tile's border clue
+ * included, for a hint's ring to keep clear of. A preview the hint draws is
+ * enclosed as the value is: it is the value the step writes. */
+function cellText(s: SaladState, ds: SaladDrawState, x: number, y: number): CellText {
+  const o = s.order;
+  const ts = ds.tileSize;
+  const clue = clueIndex(o, x, y);
+  if (clue >= 0) {
+    if (!s.borderclues[clue]) return NO_TEXT;
+    const { origin, options } = symbolText(ts, x, y);
+    const text = String.fromCharCode(64 + s.borderclues[clue]);
+    return { enclose: [textBox(origin, options, text)], avoid: [], notes: [] };
+  }
+  if (x < 0 || y < 0 || x >= o || y >= o) return NO_TEXT;
+  const i = y * o + x;
+  const ghost = (ds.hint.packed[i] & HINT_GHOST_MASK) >> HINT_GHOST_SHIFT;
+  const enclose: Rect[] = [];
+  const shown = s.grid[i] || (ghost > 0 && ghost < GHOST_CROSS ? ghost : 0);
+  if (shown) {
+    const { origin, options } = symbolText(ts, x, y);
+    enclose.push(textBox(origin, options, symbolChar(s.mode, shown)));
+  }
+  const notes =
+    s.grid[i] === 0 && s.holes[i] !== CROSS
+      ? pencilSlots(s, ts, x, y).map(({ origin, options, text }) =>
+          textBox(origin, options, text),
+        )
+      : [];
+  return { enclose, avoid: [], notes };
+}
+
+/** The entry a hint step is asking for, previewed inside the square's ring in
+ * the ring's `ink`, in the shape the move itself would draw
+ * (`docs/hints-marks.md` § "Echo the move's shape in the hint color"): a symbol
+ * as its glyph, an empty-square marker as a cross, a holds-a-symbol marker as
+ * a ball outline. */
 function drawGhost(
   dr: GameDrawing,
   ts: number,
   mode: number,
-  tx: number,
-  ty: number,
+  x: number,
+  y: number,
   code: number,
+  ink: number,
 ): void {
+  const tx = cellOrigin(x, ts);
+  const ty = cellOrigin(y, ts);
   const cx = tx + Math.floor(ts / 2);
   const cy = ty + Math.floor(ts / 2);
   if (code === GHOST_CROSS) {
-    drawX(dr, tx, ty, ts, COL_HINT, 2.5);
+    drawX(dr, tx, ty, ts, ink, 2.5);
     return;
   }
   if (code === GHOST_CIRCLE) {
-    dr.drawCircle({ x: cx, y: cy }, ts * 0.4, -1, COL_HINT);
-    dr.drawCircle({ x: cx, y: cy }, ts * 0.38, -1, COL_HINT);
+    dr.drawCircle({ x: cx, y: cy }, ts * 0.4, -1, ink);
+    dr.drawCircle({ x: cx, y: cy }, ts * 0.38, -1, ink);
     return;
   }
-  const ch = symbolChar(mode, code);
-  dr.drawText({ x: cx, y: cy }, glyphFont(Math.floor(ts / 2)), COL_HINT, ch);
+  const { origin, options } = symbolText(ts, x, y);
+  dr.drawText(origin, options, ink, symbolChar(mode, code));
 }
 
 /** The fork's Check & Save marker: an inset red box, the same cue Towers uses,
@@ -577,13 +672,12 @@ export function redraw(
       const tx = cellOrigin(x, ts);
       const ty = cellOrigin(y, ts);
       const struck = ds.hint.struck[i];
-      const ghost = (ds.hint.packed[i] & HINT_GHOST_MASK) >> HINT_GHOST_SHIFT;
 
       // Background, or the win's highlight where it is on this square. Neither
-      // hint mark appears here: the acted-on square is ringed and the evidence
-      // area outlined, both on the square's own border in the pass below, so a
-      // hinted square keeps its highlight, its ghost entry and its struck notes —
-      // the hint deliberately stays while the player types into it.
+      // hint mark appears here: the acted-on square is ringed, its ghost entry
+      // inside the ring, and the evidence area outlined, all in the pass below,
+      // so a hinted square keeps its highlight and its struck notes — the hint
+      // deliberately stays while the player types into it.
       drawCellBackground(
         dr,
         { x: tx, y: ty, w: ts, h: ts },
@@ -610,22 +704,7 @@ export function redraw(
       else if (flags[i] & FD_CROSS) drawCross(dr, ts, s, x, y, flags[i], thick);
 
       if (s.grid[i] === 0 && s.holes[i] !== CROSS) {
-        if (s.holes[i] === CIRCLE) {
-          // Inside a ball, the marks are drawn smaller and inset.
-          drawPencilMarks(
-            dr,
-            s,
-            x,
-            y,
-            s.mode,
-            Math.floor(ts * 0.8),
-            Math.floor((x + 1.1) * ts),
-            Math.floor((y + 1.1) * ts),
-            struck,
-          );
-        } else {
-          drawPencilMarks(dr, s, x, y, s.mode, ts, tx, ty, struck);
-        }
+        drawPencilMarks(dr, s, ts, x, y, struck);
       } else if (s.grid[i] !== 0) {
         const color =
           s.gridclues[i] > 0 && s.gridclues[i] <= o
@@ -633,16 +712,9 @@ export function redraw(
             : flags[i] & FD_ERROR
               ? COL_E_NUM
               : COL_G_NUM;
-        dr.drawText(
-          { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) },
-          glyphFont(Math.floor(ts / 2)),
-          color,
-          symbolChar(s.mode, s.grid[i]),
-        );
+        const { origin, options } = symbolText(ts, x, y);
+        dr.drawText(origin, options, color, symbolChar(s.mode, s.grid[i]));
       }
-
-      // The entry the hint asks for, and the ring saying "act here".
-      if (ghost !== 0) drawGhost(dr, ts, s.mode, tx, ty, ghost);
 
       // A forcing chain's place in the order it fires, so the narration can
       // cite the squares by number rather than asking the player to
@@ -660,8 +732,8 @@ export function redraw(
 
   // The hint marks, after the cell loop and outside every clip. A Salad square
   // carries a letter, a ghost preview and up to three struck notes, so neither
-  // mark can be a fill; both go on the square's own border, where the grid line
-  // already is.
+  // mark can be a fill: the outline goes on the square's own border, where the
+  // grid line already is, and the ring is round, clear of the text.
   {
     const targets: MarkCell[] = [];
     const evidence: MarkCell[] = [];
@@ -674,8 +746,14 @@ export function redraw(
     }
     ds.marks.paint(dr, targets, evidence, {
       band: (x, y) => markBand(ds, x, y),
-      targetColor: COL_HINT,
+      text: (x, y) => cellText(s, ds, x, y),
       evidenceColor: COL_HINT_CELL,
+      // The entry the hint asks for, inside the ring on its square.
+      inside: ([c]) => {
+        const ghost =
+          (ds.hint.packed[c.y * o + c.x] & HINT_GHOST_MASK) >> HINT_GHOST_SHIFT;
+        return ghost ? (ink) => drawGhost(dr, ts, s.mode, c.x, c.y, ghost, ink) : null;
+      },
     });
   }
 
@@ -692,11 +770,16 @@ export function redraw(
   // (docs/rendering.md § "A clue-ring erase must not wipe the grid").
   for (let i = 0; i < o; i++) {
     const spots = [
-      { j: i, tx: cellOrigin(i, ts), ty: cellOrigin(-1, ts), inset: 0 },
-      { j: i + o, tx: cellOrigin(-1, ts), ty: cellOrigin(i, ts), inset: 0 },
-      { j: i + o * 2, tx: cellOrigin(i, ts), ty: cellOrigin(o, ts), inset: 0 },
-      { j: i + o * 3, tx: cellOrigin(o, ts), ty: cellOrigin(i, ts), inset: 1 },
-    ];
+      { x: i, y: -1, inset: 0 },
+      { x: -1, y: i, inset: 0 },
+      { x: i, y: o, inset: 0 },
+      { x: o, y: i, inset: 1 },
+    ].map((at) => ({
+      ...at,
+      j: clueIndex(o, at.x, at.y),
+      tx: cellOrigin(at.x, ts),
+      ty: cellOrigin(at.y, ts),
+    }));
     for (const spot of spots) {
       if (!s.borderclues[spot.j]) continue;
       if (ds.borderfs[spot.j] === ds.borderDrawn[spot.j]) continue;
@@ -715,9 +798,10 @@ export function redraw(
         h: ts - 1 - spot.inset,
       };
       dr.drawRect(erase, COL_BACKGROUND);
+      const { origin, options } = symbolText(ts, spot.x, spot.y);
       dr.drawText(
-        { x: spot.tx + Math.floor(ts / 2), y: spot.ty + Math.floor(ts / 2) },
-        glyphFont(Math.floor(ts / 2)),
+        origin,
+        options,
         color,
         String.fromCharCode(64 + s.borderclues[spot.j]),
       );

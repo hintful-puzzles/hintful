@@ -4,7 +4,7 @@
  * are the palette's own (`render.ts`'s `COLOR_NAMES`).
  *
  * The squares the fill joins to the region are what the step decides, so they
- * are the ring in the roles of `engine/hint-words.ts`, drawn as a dot in each;
+ * are the ring in the roles of `engine/hint-words.ts`, drawn round each;
  * the words that point at them are a reference.
  */
 
@@ -32,7 +32,7 @@ export const say = {
       move: phrase`fill with ${name}`,
       relation: {
         kind: "effect",
-        effect: phrase`it joins ${mark.as("ring", CELL, joined, (els) => (els.length === 1 ? "the dotted square" : "the dotted squares"))} to your region`,
+        effect: phrase`it joins ${mark.the("ring", CELL, joined, "square")} to your region`,
       },
     });
   },

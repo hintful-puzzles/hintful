@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and the evidence COL_HINT_CELL 1`] = `
+exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines the evidence COL_HINT_CELL 1`] = `
 [
   {
     "color": 0,
@@ -64,7 +64,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -74,7 +74,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 24,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -83,7 +83,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 1,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -92,7 +92,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 1,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -101,7 +101,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 45,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -152,6 +152,17 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         48,
       ],
     ],
+  },
+  {
+    "color": 14,
+    "h": 43,
+    "op": "ring",
+    "radius": 22,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 4,
+    "w": 43,
+    "x": 51,
+    "y": 3,
   },
   {
     "op": "unclip",
@@ -288,7 +299,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -344,7 +355,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -550,7 +561,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -747,7 +758,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -812,7 +823,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1238,7 +1249,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1294,7 +1305,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1394,7 +1405,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1512,7 +1523,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1938,7 +1949,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2038,7 +2049,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2147,7 +2158,7 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
+    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2158,42 +2169,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
   },
   {
     "op": "unclip",
-  },
-  {
-    "color": 7,
-    "h": 4,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 49,
-    "x": 48,
-    "y": 0,
-  },
-  {
-    "color": 7,
-    "h": 49,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 4,
-    "x": 48,
-    "y": 0,
-  },
-  {
-    "color": 7,
-    "h": 4,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 49,
-    "x": 48,
-    "y": 45,
-  },
-  {
-    "color": 7,
-    "h": 49,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 4,
-    "x": 93,
-    "y": 0,
   },
 ]
 `;

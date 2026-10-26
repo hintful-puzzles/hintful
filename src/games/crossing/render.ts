@@ -33,7 +33,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PAPER,
@@ -50,11 +49,13 @@ import {
 } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
+  type CellText,
   drawMarkSides,
   HintMarks,
   MARK_ALL,
   type MarkBand,
   type MarkCell,
+  NO_TEXT,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -77,7 +78,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { LISTED } from "./hint-text.ts";
 import type { CrossingMistake } from "./solver.ts";
@@ -135,11 +137,10 @@ export const COL_ACROSS = 13;
 export const COL_DOWN = 14;
 export const COL_ACROSSFIT = 15;
 export const COL_DOWNFIT = 16;
-/** The square(s) a hint's deduction acts on, and the clue it writes in. */
-export const COL_HINT = 17;
-/** The deduction's evidence — the run(s) it reasons over, and the listed
- * numbers that still fit them. */
-export const COL_HINT_CELL = 18;
+/** A hint's evidence — the run(s) it reasons over, and the listed numbers that
+ * still fit them. The ring on the square(s) it acts on, and on the clue it
+ * writes in, is the engine's (`GameDrawing.drawRing`). */
+export const COL_HINT_CELL = 17;
 /**
  * A placed digit sitting **on** a run highlight.
  *
@@ -148,7 +149,7 @@ export const COL_HINT_CELL = 18;
  * one — and `COL_TEXT` is exactly the wrong ink on it in both. This is `PAPER`,
  * which adapts the other way round from ink and is therefore right in both.
  */
-export const COL_RUNTEXT = 19;
+export const COL_RUNTEXT = 18;
 /**
  * **Type here** — the selected square's wash, on an empty square and under a
  * placed digit alike, and its notes triangle. Also the completion wave's dim
@@ -166,12 +167,12 @@ export const COL_RUNTEXT = 19;
  * anyway: blue and amber are the two run directions, red is an error, and the
  * hint's marks take the engine's colors.
  */
-export const COL_SELECTED = 20;
+export const COL_SELECTED = 19;
 /** The cursor's corners on a wall: paper, which reads on the wall's strong
  * fill in both schemes. */
-export const COL_WALLCURSOR = 21;
-export const COL_FLASH_LEAD = 22;
-export const NCOLORS = 23;
+export const COL_WALLCURSOR = 20;
+export const COL_FLASH_LEAD = 21;
+export const NCOLORS = 22;
 
 export function colors(background: Color): Color[] {
   const out: Color[] = new Array(NCOLORS);
@@ -214,7 +215,6 @@ export function colors(background: Color): Color[] {
   // green does not read there. The paper's tone is the wall's opposite.
   out[COL_WALLCURSOR] = PAPER;
   out[COL_SELECTED] = highlightWash(background);
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -393,9 +393,9 @@ function drawErrRectangle(
 /** The pencil-mark grid inside an empty cell (upstream's inline block).
  * `struck` is the hint's rule-out set, in the same bit-`n−1` encoding: those
  * candidates keep their normal pencil color (they are still real notes) and
- * gain a strikethrough — the Towers cue, and the reason the whole square is
- * *not* filled `COL_HINT` for a rule-out (it would hide the very digit being
- * crossed out). */
+ * gain a strikethrough in their own ink — the Towers cue, and the reason the
+ * whole square is *not* filled for a rule-out (it would hide the very digit
+ * being crossed out). */
 function drawMarks(
   dr: GameDrawing,
   ts: number,
@@ -405,37 +405,78 @@ function drawMarks(
   struck: number,
   ink: number,
 ): void {
-  let nhints = 0;
-  for (let i = 0; i < 9; i++) if (marks & (1 << i)) nhints++;
-  if (nhints === 0) return;
+  for (const { i, origin, options } of markSlots(ts, tx, ty, marks)) {
+    dr.drawText(origin, options, ink, String(i + 1));
+    if (struck & (1 << i)) {
+      const r = Math.max(2, Math.floor(options.size / 3));
+      const { x: cx, y: cy } = origin;
+      dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, ink, 2);
+    }
+  }
+}
 
+/** Where the pencil marks in `marks` (bit `i` for digit `i + 1`) go in the
+ * tile at `(tx, ty)`, in order: the arguments `drawText` takes but the color,
+ * so the tile and a hint's ring read one place. */
+function markSlots(
+  ts: number,
+  tx: number,
+  ty: number,
+  marks: number,
+): { i: number; origin: Point; options: DrawTextOptions }[] {
+  const shown = Array.from({ length: 9 }, (_, i) => i).filter((i) => marks & (1 << i));
+  if (shown.length === 0) return [];
   let hw = 1;
-  while (hw * hw < nhints) hw++;
+  while (hw * hw < shown.length) hw++;
   if (hw < 3) hw = 3;
-  let hh = Math.floor((nhints + hw - 1) / hw);
+  let hh = Math.floor((shown.length + hw - 1) / hw);
   if (hh < 2) hh = 2;
   const hmax = Math.max(hw, hh);
   const fontsz = Math.floor(ts / Math.floor((hmax * (11 - hmax)) / 8));
+  return shown.map((i, j) => ({
+    i,
+    origin: {
+      x: tx + Math.floor(((4 * (j % hw) + 3) * ts) / (4 * hw + 2)),
+      y: ty + Math.floor(((4 * Math.floor(j / hw) + 3) * ts) / (4 * hh + 2)),
+    },
+    options: textOpts(fontsz, "center", "mathematical"),
+  }));
+}
 
-  let j = 0;
-  for (let i = 0; i < 9; i++) {
-    if (!(marks & (1 << i))) continue;
-    const hx = j % hw;
-    const hy = Math.floor(j / hw);
-    const cx = tx + Math.floor(((4 * hx + 3) * ts) / (4 * hw + 2));
-    const cy = ty + Math.floor(((4 * hy + 3) * ts) / (4 * hh + 2));
-    dr.drawText(
-      { x: cx, y: cy },
-      textOpts(fontsz, "center", "mathematical"),
-      ink,
-      String(i + 1),
-    );
-    if (struck & (1 << i)) {
-      const r = Math.max(2, Math.floor(fontsz / 3));
-      dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, ink, 2);
-    }
-    j++;
+/** Where square `(x, y)` draws a digit, placed or previewed. */
+function digitText(ts: number, x: number, y: number) {
+  return {
+    origin: { x: tileCenter(x, ts), y: tileCenter(y, ts) },
+    options: textOpts(Math.floor(ts / 2), "center", "mathematical"),
+  };
+}
+
+/** The text square `(x, y)` shows, for a hint's ring to keep clear of: its
+ * digit, placed or previewed, or its pencil marks. `ghost` is the frame's
+ * preview of a held clue. */
+function squareText(
+  state: CrossingState,
+  ghost: Uint8Array,
+  ts: number,
+  x: number,
+  y: number,
+): CellText {
+  const { w, h, walls } = state.puzzle;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  const i = y * w + x;
+  if (walls[i]) return NO_TEXT;
+  const digit = state.grid[i] || ghost[i];
+  if (digit) {
+    const { origin, options } = digitText(ts, x, y);
+    return { enclose: [textBox(origin, options, String(digit))], avoid: [], notes: [] };
   }
+  const notes = markSlots(
+    ts,
+    tileOrigin(x, ts),
+    tileOrigin(y, ts),
+    state.pencil[i],
+  ).map(({ i: n, origin, options }) => textBox(origin, options, String(n + 1)));
+  return { enclose: [], avoid: [], notes };
 }
 
 /** The Check-&-Save mistake overlay (fork addition): a red box inset well
@@ -477,7 +518,7 @@ function drawCell(
   const ty = tileOrigin(y, ts);
   const digit = state.grid[i];
   const highlight = ((flags >> K_HIGHLIGHT) & 7) as CellHighlight;
-  // The ring is drawn in `redraw` on the square's own border, and the run the
+  // The ring is drawn in `redraw` round the square's content, and the run the
   // sentence names is hatched translucently here, so a hint never takes the
   // background from the run wash or from the penciled candidates it is ruling
   // out. What is left here besides is `struck`, packed at bit `n − 1` for digit
@@ -533,9 +574,10 @@ function drawCell(
       COL_FLASH_LEAD,
     );
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, ts);
+    const { origin, options } = digitText(ts, x, y);
     dr.drawText(
-      { x: tileCenter(x, ts), y: tileCenter(y, ts) },
-      textOpts(Math.floor(ts / 2), "center", "mathematical"),
+      origin,
+      options,
       mid === runWash ? COL_RUNTEXT : COL_TEXT,
       String(digit),
     );
@@ -560,12 +602,8 @@ function drawCell(
   const ghost = (flags >> K_GHOST) & 0xf;
   if (!walls[i] && !digit && ghost) {
     // The held clue number previewed where it would land.
-    dr.drawText(
-      { x: tileCenter(x, ts), y: tileCenter(y, ts) },
-      textOpts(Math.floor(ts / 2), "center", "mathematical"),
-      COL_GHOST,
-      String(ghost),
-    );
+    const { origin, options } = digitText(ts, x, y);
+    dr.drawText(origin, options, COL_GHOST, String(ghost));
   } else if (!walls[i] && !digit) {
     // On a run wash the pencil ink all but vanishes, as `COL_TEXT` does, so
     // the candidates there take the ink a placed digit takes on it.
@@ -729,38 +767,37 @@ function drawNumbers(
   struckOf: (i: number) => boolean,
   heldOf: (i: number) => boolean,
   hintOf: (i: number) => number,
+  panel: Rect,
 ): void {
   const { fontsz, slots } = layoutNumbers(ts, w, h, numbers);
   if (slots.length === 0) return;
   const opts = textOpts(Math.trunc(fontsz), "left", "alphabetic", "fixed");
   const pad = Math.max(2, Math.round(fontsz * 0.15));
   const markT = Math.max(2, Math.round(fontsz / 8));
+  const textOf = (i: number) => textBox(slots[i], opts, numbers[i].join(""));
   for (let i = 0; i < slots.length; i++) {
     const color = colorOf(i);
     const hinted = hintOf(i);
-    if (hinted) {
-      // A **box**, not a patch behind the number. A clue's own ink is what says
-      // which run it can go in, and that ink is one of the two saturated
-      // dimension hues — a fill behind it is the same losing trade the board's
-      // marks make (`hint-mark.ts`), one surface further out.
-      //
-      // It nests *outside* the held box rather than sharing its rectangle, so a
-      // clue that is both held and hinted shows both.
-      drawMarkSides(
-        dr,
-        {
-          box: {
-            x: slots[i].x - pad,
-            y: Math.round(slots[i].y - fontsz * 0.85),
-            w: slots[i].hit.w + 2 * pad,
-            h: Math.round(fontsz * 1.1),
-          },
-          outer: markT,
-          inner: 0,
-        },
-        MARK_ALL,
-        hinted === 2 ? COL_HINT : COL_HINT_CELL,
-      );
+    // The held box; a hint's mark goes round it.
+    const box = {
+      x: slots[i].x - pad,
+      y: Math.round(slots[i].y - fontsz * 0.85),
+      w: slots[i].hit.w + 2 * pad,
+      h: Math.round(fontsz * 1.1),
+    };
+    // A mark, not a patch behind the number. A clue's own ink is what says
+    // which run it can go in, and that ink is one of the two saturated
+    // dimension hues — a fill behind it is the same losing trade the board's
+    // marks make (`hint-mark.ts`), one surface further out.
+    if (hinted === 1) {
+      // The outline nests *outside* the held box rather than sharing its
+      // rectangle, so a clue that is both held and hinted shows both.
+      drawMarkSides(dr, { box, outer: markT, inner: 0 }, MARK_ALL, COL_HINT_CELL);
+    } else if (hinted === 2) {
+      // The ring may reach into the gaps between the numbers round it: the
+      // whole panel repaints when it moves.
+      const avoid = slots.flatMap((_, k) => (k === i ? [] : [textOf(k)]));
+      dr.drawRing(box, { enclose: [textOf(i)], avoid }, markT, { room: panel });
     }
     dr.drawText({ x: slots[i].x, y: slots[i].y }, opts, color, numbers[i].join(""));
     if (struckOf(i)) {
@@ -961,7 +998,7 @@ export function redraw(
   }
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    text: (x, y) => squareText(state, ghost, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   });
 
@@ -1045,6 +1082,7 @@ export function redraw(
       (l) => colorClass(l) === 1,
       (l) => l === ui.heldNumber,
       hintClass,
+      { x: 0, y: top, w: size.w, h: size.h - top },
     );
     dr.drawUpdate({ x: 0, y: top, w: size.w, h: size.h - top });
     for (let l = 0; l < numbers.length; l++) ds.numberState[l] = panelState(l);

@@ -350,7 +350,7 @@ function status(s: BoatsState): GameStatus {
 /**
  * What a Boats hint step is about; its marks are the ones its words name.
  * `targets` are the squares to decide, each with what goes there: a ringed
- * square is drawn in `COL_HINT` in the shape of that action (a boat mark for a
+ * square holds, inside its ring, the shape of that action (a boat mark for a
  * segment, a water mark for water), because a single color standing for two
  * different actions reads as one action (docs/hints-marks.md § "Echo the
  * move's shape in the hint color"). `evidence` is the particular squares the

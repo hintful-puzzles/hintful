@@ -19,11 +19,12 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { type SeparateRung, separateGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import { separateRecordingPass, solveToBorders } from "./solver.ts";
 import {
   executeMove,
@@ -281,11 +282,12 @@ const pinned = describeHintPins({
 });
 
 describe("separate hint frame", () => {
-  it("paints the edges blue, hatches one region and outlines the other", () => {
+  it("rings the edges, hatches one region and outlines the other", () => {
     const result = renderPinnedHint(separateGame, pinned("namesTwo"));
 
     const ops = result.recording.ops;
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
+    // Both squares of an edge draw its pill.
+    expectRing(ops, { rings: 2 * stepMarks(result.hint).of("ring", EDGE).length });
     const hatched = new Set(opsOfKind(ops, "hatch").map((h) => `${h.x},${h.y}`));
     expect(hatched.size).toBe(stepMarks(result.hint).of("stripes", CELL).length);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);

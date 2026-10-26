@@ -2060,7 +2060,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 37,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2168,7 +2168,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 85,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2272,7 +2272,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 133,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2335,7 +2335,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 181,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2416,7 +2416,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 229,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2520,7 +2520,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 37,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2601,7 +2601,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 85,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2696,7 +2696,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 133,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2759,7 +2759,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 181,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2876,7 +2876,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 229,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2948,7 +2948,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 37,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3020,7 +3020,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 85,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3124,7 +3124,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 133,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3318,7 +3318,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 181,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3462,7 +3462,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 229,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3557,7 +3557,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 37,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3656,7 +3656,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 85,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3737,7 +3737,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 133,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3845,7 +3845,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 181,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3949,7 +3949,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 229,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4012,7 +4012,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 37,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4102,7 +4102,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 85,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4206,7 +4206,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 133,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4328,7 +4328,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 181,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4414,7 +4414,7 @@ exports[`netslide rendering > draws the opener: powered and unpowered wires, and
     "y": 229,
   },
   {
-    "color": 11,
+    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

@@ -26,7 +26,6 @@ import {
   FLASH_LEAD,
   GRID_MID,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -39,7 +38,13 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as geometryFromCoord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -59,7 +64,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { AbcdHint } from "./hint.ts";
 import { CLUE } from "./hint-text.ts";
@@ -99,13 +105,11 @@ export const COL_PENCIL_BODY = 10;
  * used mkhighlight's near-white, which the dark-mode pass inverts to
  * near-black. */
 export const COL_CURSOR = 11;
-/** The hint's action color: its target rings. */
-export const COL_HINT = 12;
 /** The hint's evidence color: the outline of the squares a reason rests on,
  * and the clue it reads. */
-export const COL_HINT_CELL = 13;
-export const COL_CELL = 14; // the surface of a cell the player fills
-export const COL_FLASH_LEAD = 15;
+export const COL_HINT_CELL = 12;
+export const COL_CELL = 13; // the surface of a cell the player fills
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const outer = defaultBackground;
@@ -125,7 +129,6 @@ export function colors(defaultBackground: Color): Color[] {
   // A fill under the letter and its notes: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
   out[COL_CURSOR] = highlightWash(inner);
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(outer);
   out[COL_LINE] = surfaceGrid(outer);
@@ -304,13 +307,40 @@ function drawPencilMarks(
   y: number,
   struck: number,
 ): void {
+  for (const { origin: at, options, letter } of pencilSlots(state, ts, x, y)) {
+    dr.drawText(at, options, COL_PENCIL, String.fromCharCode(65 + letter));
+    // The struck note keeps its own color, so it still reads as the player's
+    // note; the line through it is what says the hint rules it out.
+    if (struck & valueBit(letter)) {
+      const r = Math.max(2, (options.size / 3) | 0);
+      dr.drawLine({ x: at.x - r, y: at.y }, { x: at.x + r, y: at.y }, COL_PENCIL, 2);
+    }
+  }
+}
+
+/** A piece of text a tile draws: what it passes `drawText` but the color. */
+interface TileText {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+}
+
+/** Where cell `(x, y)`'s pencil marks go, laid out by upstream's arithmetic,
+ * each with its letter index. */
+function pencilSlots(
+  state: AbcdState,
+  ts: number,
+  x: number,
+  y: number,
+): (TileText & { letter: number })[] {
   const { w, n } = state.params;
   const notes = state.pencil[y * w + x];
   const ox = innerCoord(x, ts, n);
   const oy = innerCoord(y, ts, n);
-  let nhints = 0;
-  for (let i = 0; i < n; i++) if (notes & letterBit(i)) nhints++;
-  if (nhints === 0) return;
+  const letters = Array.from({ length: n }, (_, i) => i).filter(
+    (i) => notes & letterBit(i),
+  );
+  const nhints = letters.length;
+  if (nhints === 0) return [];
 
   let hw = 1;
   while (hw * hw < nhints) hw++;
@@ -321,24 +351,42 @@ function drawPencilMarks(
   const denom = ((hmax * (11 - hmax)) / 8) | 0;
   const fontsz = denom > 0 ? (ts / denom) | 0 : ts;
 
-  let j = 0;
-  for (let i = 0; i < n; i++) {
-    if (!(notes & letterBit(i))) continue;
-    const hx = j % hw;
-    const hy = (j / hw) | 0;
-    const at = {
-      x: (ox + ((4 * hx + 3) * ts) / (4 * hw + 2)) | 0,
-      y: (oy + ((4 * hy + 3) * ts) / (4 * hh + 2)) | 0,
+  return letters.map((letter, j) => ({
+    origin: {
+      x: (ox + ((4 * (j % hw) + 3) * ts) / (4 * hw + 2)) | 0,
+      y: (oy + ((4 * ((j / hw) | 0) + 3) * ts) / (4 * hh + 2)) | 0,
+    },
+    options: glyphFont(fontsz),
+    letter,
+  }));
+}
+
+/** A placed letter, in the middle of cell `(x, y)`. */
+function letterText(ts: number, n: number, x: number, y: number): TileText {
+  const half = (ts / 2) | 0;
+  return {
+    origin: { x: innerCoord(x, ts, n) + half, y: innerCoord(y, ts, n) + half },
+    options: glyphFont(half),
+  };
+}
+
+/** The text cell `(x, y)` shows, for a hint's ring to keep clear of. */
+function cellText(state: AbcdState, ts: number, x: number, y: number): CellText {
+  const { w, h, n } = state.params;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  const letter = state.grid[y * w + x];
+  if (letter !== EMPTY) {
+    const { origin, options } = letterText(ts, n, x, y);
+    return {
+      enclose: [textBox(origin, options, String.fromCharCode(64 + letter))],
+      avoid: [],
+      notes: [],
     };
-    dr.drawText(at, glyphFont(fontsz), COL_PENCIL, String.fromCharCode(65 + i));
-    // The struck note keeps its own color, so it still reads as the player's
-    // note; the line through it is what says the hint rules it out.
-    if (struck & valueBit(i)) {
-      const r = Math.max(2, (fontsz / 3) | 0);
-      dr.drawLine({ x: at.x - r, y: at.y }, { x: at.x + r, y: at.y }, COL_PENCIL, 2);
-    }
-    j++;
   }
+  const notes = pencilSlots(state, ts, x, y).map(({ origin, options, letter: l }) =>
+    textBox(origin, options, String.fromCharCode(65 + l)),
+  );
+  return { enclose: [], avoid: [], notes };
 }
 
 /** The box a cell's background fills, and so where a hint's band sits inside
@@ -380,9 +428,10 @@ function drawTile(
   ds.hint.drawHatch(dr, i, box, ts);
 
   if (letter !== EMPTY) {
+    const { origin, options } = letterText(ts, n, x, y);
     dr.drawText(
-      { x: tx + ((ts / 2) | 0), y: ty + ((ts / 2) | 0) },
-      glyphFont((ts / 2) | 0),
+      origin,
+      options,
       fs & DF_ERR ? COL_ERROR : COL_GUESS,
       String.fromCharCode(64 + letter),
     );
@@ -581,7 +630,7 @@ export function redraw(
   }
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(x, y, ts, n),
-    targetColor: COL_HINT,
+    text: (x, y) => cellText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
   });
 

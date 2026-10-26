@@ -514,7 +514,9 @@ export const FOUR_NAMES: readonly ColorWord[] = FOUR_FILLS.map(wordOf);
  * with it (`Puzzle.hintReferenceColorsIn`). A role's colors share what they
  * say, not a hue (the owner, 2026-10-19: "we just need them to have similar
  * emotional connotation"): cool and assertive for what a step decides, calm
- * for what it reasons from, warm for the line it names. Within a role they
+ * for what it reasons from, warm for the line it names, crimson for the notes
+ * it strikes, which a step names one set of at a time, so one color does.
+ * Within a role they
  * must be told apart at a glance, which in the light scheme hue does and
  * lightness alone does not: three greens there read as one.
  *
@@ -550,6 +552,7 @@ const REFERENCE_DESIGN = {
     { light: [0.59, 0.191, 0], dark: [0.68, 0.2, 0] },
     { light: [0.52, 0.103, 68], dark: [0.62, 0.128, 68] },
   ],
+  strike: [{ light: [0.5, 0.17, 345], dark: [0.76, 0.14, 345] }],
 } as const satisfies Record<
   MarkRole,
   readonly { readonly light: Lch; readonly dark: Lch }[]
@@ -564,6 +567,7 @@ export const HINT_REFERENCE_COLORS: Readonly<Record<MarkRole, readonly Color[]>>
   ring: [BLUE, ...designed("ring")],
   outline: designed("outline"),
   stripes: designed("stripes"),
+  strike: designed("strike"),
 };
 
 /**

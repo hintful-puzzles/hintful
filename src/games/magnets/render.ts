@@ -23,7 +23,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
 } from "../../engine/color/palette.ts";
@@ -31,13 +30,16 @@ import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {
+  type CellText,
   type HintMarkStyle,
   HintMarks,
   type MarkBand,
   type MarkCell,
   MarkOutlines,
+  NO_TEXT,
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { textBox } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -85,14 +87,12 @@ export const COL_POSITIVE = 9;
 export const COL_NOT = 10;
 // Fork mistake overlay, appended past the upstream enum.
 export const COL_MISTAKE = 11;
-/** The hint's ring: a band on a square's border, where the `?` mark is a
- * glyph in its middle, so the two never read as one shape. */
-export const COL_HINT = 12;
-/** The hint's evidence outline. */
-export const COL_HINT_CELL = 13;
+/** The hint's evidence outline. The ring round what a step decides is the
+ * engine's (`GameDrawing.drawRing`). */
+export const COL_HINT_CELL = 12;
 /** The ground of a domino under the win flash's leading edge. Under its body
  * the ground is {@link COL_HIGHLIGHT}. */
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -116,7 +116,6 @@ export function colors(defaultBackground: Color): Color[] {
   // lost a quarter of its contrast under the hint's hatch.
   out[COL_NOT] = BLUE_BOLD;
   out[COL_MISTAKE] = ERROR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -182,6 +181,32 @@ export function newDrawState(state: MagnetsState, tileSize: number): MagnetsDraw
 
 // --- symbol / tile drawing ------------------------------------------------
 
+/** Where square `(x, y)` draws its "not neutral" `?`: the arguments
+ * `drawText` takes but the color, so the tile and a hint's ring read one
+ * place. */
+function notNeutralText(ts: number, x: number, y: number) {
+  return {
+    origin: {
+      x: coord(x, ts) + Math.floor(ts / 2),
+      y: coord(y, ts) + Math.floor(ts / 2),
+    },
+    options: glyphFont(Math.floor((7 * ts) / 10)),
+  };
+}
+
+/** The text square `(x, y)` shows, for a hint's ring to keep clear of: only
+ * the `?` the player marks an undecided square with, a note a placement
+ * replaces. A pole and the other marks are shapes. */
+function squareText(state: MagnetsState, ts: number, x: number, y: number): CellText {
+  const { w, h, grid, flags } = state;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  const i = y * w + x;
+  if (grid[i] !== EMPTY || flags[i] & GS_SET || !(flags[i] & GS_NOTNEUTRAL))
+    return NO_TEXT;
+  const { origin, options } = notNeutralText(ts, x, y);
+  return { enclose: [], avoid: [], notes: [textBox(origin, options, "?")] };
+}
+
 function drawSym(
   dr: GameDrawing,
   ts: number,
@@ -205,7 +230,8 @@ function drawSym(
       dr.drawRect({ x: ccx - soff, y: ccy - roff, w: ssz, h: rsz }, col);
     }
   } else if (col === COL_NOT) {
-    dr.drawText({ x: ccx, y: ccy }, glyphFont(Math.floor((7 * ts) / 10)), col, "?");
+    const { origin, options } = notNeutralText(ts, x, y);
+    dr.drawText(origin, options, col, "?");
   } else {
     dr.drawLine(
       { x: ccx - roff, y: ccy - roff },
@@ -497,7 +523,7 @@ export function redraw(
     dominoes[a.y * w + a.x] === b.y * w + b.x;
   const markStyle: HintMarkStyle = {
     band: (x, y) => markBand(ts, x, y),
-    targetColor: COL_HINT,
+    text: (x, y) => squareText(state, ts, x, y),
     evidenceColor: COL_HINT_CELL,
     joinTargets: partners,
     joinEvidence: partners,

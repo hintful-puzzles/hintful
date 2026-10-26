@@ -17,14 +17,14 @@ import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
-import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
+import { markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL, COL_PENCIL } from "./render.ts";
+import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
 import { type HintReason, mathraxSolve, recordMathraxDeductions } from "./solver.ts";
 import {
   clueIsParity,
@@ -497,16 +497,17 @@ describe("mathrax hint render", () => {
       { defaultBackground: DEFAULT_BACKGROUND },
     );
     expect(hint?.explanation).toMatch(/ clue/);
-    // Two **separate** rings, not one contour: the pair is diagonal, so the two
-    // cells share no edge and joining them would outline board the clue does not
-    // constrain (`hint-mark.ts`'s `outlineSides`).
-    expectRing(recording.ops, COL_HINT_CELL, 2);
+    // Two **separate** outlines of four sides each, not one contour: the pair is
+    // diagonal, so the two cells share no edge and joining them would outline
+    // board the clue does not constrain (`hint-mark.ts`'s `outlineSides`).
+    expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(8);
     // The struck candidate keeps its COL_PENCIL digit, crossed through in the
-    // same color; the acted-on cell is ringed COL_HINT rather than filled.
+    // same color, and that strike is the step's only mark on its cell: a strike
+    // step rings nothing (`make-rings-round`, D6).
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,
     );
-    expectRing(recording.ops, COL_HINT, (hint?.highlights as AnyStep)?.targets.length);
+    expect(ringsOf(recording.ops)).toEqual([]);
     // The clue circles are still drawn.
     expect(recording.ops.some((o) => o.op === "circle")).toBe(true);
     expect(recording.ops).toMatchSnapshot();
@@ -520,7 +521,9 @@ describe("mathrax hint render", () => {
     // A 2x2 block's contour is its eight outer sides — four per-cell rings would
     // be sixteen, so the count still tells the two apart.
     expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(8);
-    expectRing(recording.ops, COL_HINT, (hint?.highlights as AnyStep)?.targets.length);
+    // It strikes the parity it rules out, so it rings nothing (D6).
+    expect((hint?.highlights as AnyStep)?.marks.length).toBeGreaterThan(0);
+    expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();
   });
 });

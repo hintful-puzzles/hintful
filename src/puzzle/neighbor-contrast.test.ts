@@ -26,17 +26,17 @@ import {
 /** `kind:a:b` to what the pair is, per game. */
 const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   ascent: {
-    "mark:13:2":
+    "mark:12:2":
       "an endpoint disc's ring, which the disc itself carries in the dark scheme",
   },
   fifteen: {
-    "mark:2:5":
+    "mark:2:4":
       "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",
-    "area:3:6": "a tile's shadow edge beside the gap",
-    "mark:3:6": "a tile's shadow edge beside the gap",
+    "area:3:5": "a tile's shadow edge beside the gap",
+    "mark:3:5": "a tile's shadow edge beside the gap",
   },
   galaxies: {
-    "mark:14:3": "a white dot's ink rim, white in the dark scheme; the dot carries it",
+    "mark:13:3": "a white dot's ink rim, white in the dark scheme; the dot carries it",
   },
   guess: {
     "mark:1:17": "the outline of a white peg, which is white",
@@ -54,10 +54,10 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
       "a region's fill beside the board's margin; the board's ink frame is between them",
   },
   pearl: {
-    "area:4:16": "a white pearl on the loop; its black outline carries it",
+    "area:4:15": "a white pearl on the loop; its black outline carries it",
   },
   sixteen: {
-    "mark:2:5":
+    "mark:2:4":
       "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",
   },
   slide: {
@@ -66,13 +66,13 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   // The region palette's first four sit at the margin's own lightness
   // (`REGION_FILLS`).
   starbattle: {
+    "area:0:11":
+      "a region's fill beside the board's margin; the board's ink frame is between them",
     "area:0:12":
       "a region's fill beside the board's margin; the board's ink frame is between them",
     "area:0:13":
       "a region's fill beside the board's margin; the board's ink frame is between them",
     "area:0:14":
-      "a region's fill beside the board's margin; the board's ink frame is between them",
-    "area:0:15":
       "a region's fill beside the board's margin; the board's ink frame is between them",
   },
   twiddle: {

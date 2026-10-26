@@ -701,7 +701,7 @@ export const dominosaGame: Game<
   hint,
   hintMarks: {
     roles: {
-      ring: "the spot the step is about, round its two squares: joined as one domino where a domino must go, or apart, with a thick line in the hint color between them, where one can't. That line is the one the step asks you to draw.",
+      ring: "the spot the step is about, round its two squares as one domino: empty where a domino must go, or with a thick line across its middle where one can't. That line is the one the step asks you to draw.",
       outline:
         "the squares the reason rests on, such as a square with only one neighbor left to pair with, or the spots left for a domino.",
     },

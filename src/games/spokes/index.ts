@@ -385,8 +385,8 @@ function findMistakes(state: SpokesState): readonly SpokesMistake[] {
  * `spokes` are the spokes the firing still forces from this leg on (the earlier
  * legs', once followed, are real lines or marks, and the renderer tints only a
  * spoke that is still EMPTY), each with what the step sets it to: a ringed
- * `SPOKE_LINE` spoke is drawn as a `COL_HINT` line ("draw this"), a
- * `SPOKE_MARKED` one as a `COL_HINT` dot at its rim ("rule this out"), so the
+ * `SPOKE_LINE` spoke is drawn as a line inside its ring ("draw this"), a
+ * `SPOKE_MARKED` one as a ring round its rim dot ("rule this out"), so the
  * picture never claims a different action than the words. `evidence` are the
  * hubs whose clue or lines are the argument. The whole deduction stays visible
  * while its legs are followed one at a time. `w` is the grid width, which a

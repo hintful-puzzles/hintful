@@ -5,11 +5,12 @@
 // the targeted assertions so a careless `-u` can't silently erase them.
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type Cell, ONE, ZERO } from "./constants.ts";
 import { newDesc } from "./generator.ts";
 import { type UnrulyHint, unrulyGame } from "./index.ts";
-import { COL_0, COL_1, COL_ERROR, COL_GIVEN, COL_GRID, COL_HINT } from "./render.ts";
+import { COL_0, COL_1, COL_ERROR, COL_GIVEN, COL_GRID } from "./render.ts";
 import { solveToString } from "./solver.ts";
 import { newState, type UnrulyMove } from "./state.ts";
 
@@ -97,10 +98,8 @@ describe("Unruly render scenarios", () => {
     const hl = hint?.highlights as UnrulyHint | undefined;
     expect(hl).toBeDefined();
 
-    // The forced cell is ringed in COL_HINT, so the hint color is on the frame.
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(
-      true,
-    );
+    // The forced cell is ringed.
+    expectRing(recording.ops);
     // Clues are still drawn (the hint overlays, it doesn't erase the board).
     expect(
       recording.ops.some(

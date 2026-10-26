@@ -1,26 +1,33 @@
 /**
- * The cross-game guard on how a hint marks the board: **beside the content,
- * never behind it**.
+ * The cross-game guard on how a hint marks the board: **a ring is round, and
+ * a mark goes beside the content, never behind it**.
  *
  * One sweep over the `hint-games.ts` enrollment, so a newly ported game with a
- * `hint()` is covered by adding the one line it already has to add. Each game's
- * own `COL_HINT` / `COL_HINT_CELL` indices are read out of its `render.ts`
- * exports rather than listed here, so nothing to maintain and nothing to drift.
+ * `hint()` is covered by adding the one line it already has to add. The ring's
+ * ink is the engine's (`resolvePalette`), so its index is known for every game;
+ * a game's own `COL_HINT_CELL` is read out of its `render.ts` exports.
  *
- * **Shape, not color.** "Some rect carries the hint color" is satisfied by
- * exactly the thing this forbids — a solid fill over the digits a hint is
- * talking about. What is asserted is that no rect in a hint color is
- * *cell-sized and thick in both directions*.
+ * The ring cannot be drawn in another shape (`GameDrawing.drawRing` is the
+ * only way to its ink), so the sweep holds the frames to what that promises:
+ * nothing in the ring's ink but a ring and the move's shape inside one. And
+ * **shape, not color**, for the outline: no rect in its ink is *cell-sized and
+ * thick in both directions*, a fill over the digits a hint is talking about.
  *
  * The measurement behind the rule is in `hint-mark.ts`; the per-game calls are
  * in `docs/hints-marks.md` § "Shade vs ring".
  */
 import { describe, expect, it } from "vitest";
-import { HintMarks, type MarkCell } from "./hint-mark.ts";
+import { type HintMarkStyle, HintMarks, type MarkCell, NO_TEXT } from "./hint-mark.ts";
 import { Midend } from "./index.ts";
+import { RING_MIN_ROUNDNESS } from "./ring.ts";
 import { beginDealt } from "./testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
-import { RecordingDrawing } from "./testing/recording-drawing.ts";
+import { outsideRings, ringsOf } from "./testing/mark-shape.ts";
+import {
+  type DrawOp,
+  paintsWith,
+  RecordingDrawing,
+} from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { perCommit } from "./testing/slow.ts";
 import type { Color, Rect } from "./types.ts";
@@ -46,17 +53,6 @@ function solidFills(ops: readonly Op[], color: number, cell: number): Op[] {
     return Math.min(w, h) * 4 >= Math.max(w, h) && Math.min(w, h) >= cell / 2;
   });
 }
-
-/**
- * The hint games whose renderer exports no `COL_HINT`, each with what its hint
- * marks in place of a cell. This sweep says nothing about them, so the set is
- * asserted exact: a game that stops exporting the color fails here, and a new
- * game that exports it is swept with no entry anywhere.
- */
-const MARKS_NO_CELL: Record<string, string> = {
-  fifteen: "the tile to slide, filled in the ring's ink",
-  sixteen: "the arrow to press and the tiles it moves, in the ring's ink",
-};
 
 /** Every `render.ts` in the games tree, by puzzle id. */
 function renderersById(): Map<string, Record<string, unknown>> {
@@ -90,9 +86,9 @@ function renderersById(): Map<string, Record<string, unknown>> {
 function hintFrames(
   id: string,
   game: (typeof HINT_GAMES)[number][1],
-): { ops: Op[]; cell: number }[] {
+): { ops: DrawOp[]; cell: number }[] {
   const palette = game.colors(DEFAULT_BACKGROUND);
-  const frames: { ops: Op[]; cell: number }[] = [];
+  const frames: { ops: DrawOp[]; cell: number }[] = [];
   for (const { params } of gatePresets(id, game)) {
     for (let s = 0; s < perCommit(1, 2); s++) {
       const midend = new Midend(game);
@@ -104,7 +100,7 @@ function hintFrames(
         const frame = new RecordingDrawing(palette);
         midend.redraw(frame);
         if (!midend.activeHintStep()) break;
-        frames.push({ ops: frame.ops as unknown as Op[], cell });
+        frames.push({ ops: frame.ops, cell });
         midend.executeHint();
       }
     }
@@ -114,13 +110,6 @@ function hintFrames(
 
 describe("a hint marks beside the content, never behind it", () => {
   const byId = renderersById();
-  /** Games that declare a cell-level target color, i.e. the ones this sweep can
-   * say anything about. The grid-move games (Fifteen, Flood, Sixteen, Netslide's
-   * arrows, Untangle, Inertia) mark something other than a cell and are absent
-   * (Fifteen and Sixteen by keeping `COL_HINT` unexported). */
-  const CHECKED = HINT_GAMES.filter(
-    ([id]) => typeof byId.get(id)?.["COL_HINT"] === "number",
-  );
 
   it("looks at every game's renderer", () => {
     // The "how many things did I look at?" guard. An `import.meta.glob` that
@@ -131,29 +120,29 @@ describe("a hint marks beside the content, never behind it", () => {
     // and an empty list still asserts something, because a game that hides its
     // renderer shows up here.
     expect(HINT_GAMES.filter(([id]) => !byId.has(id)).map(([id]) => id)).toEqual([]);
-    // …and the sweep itself cannot quietly shrink: a game whose `COL_HINT`
-    // export is renamed away drops out of `CHECKED` in silence otherwise. So
-    // the games left out are named, and a game that exports one is in.
-    const checked = new Set(CHECKED.map(([id]) => id));
-    expect(HINT_GAMES.map(([id]) => id).filter((id) => !checked.has(id))).toEqual(
-      Object.keys(MARKS_NO_CELL).sort(),
-    );
   });
 
-  for (const [id, game] of CHECKED) {
-    const mod = byId.get(id);
-    const target = mod?.["COL_HINT"] as number;
-    const evidence = mod?.["COL_HINT_CELL"];
+  for (const [id, game] of HINT_GAMES) {
+    const evidence = byId.get(id)?.["COL_HINT_CELL"];
 
-    it(`${id}: the acted-on cell is ringed, not filled`, () => {
+    it(`${id}: a ring is round, and nothing is filled`, () => {
       const frames = hintFrames(id, game);
       expect(frames.length, `${id} produced no hint frame to check`).toBeGreaterThan(0);
+      // The ring's ink follows the game's palette (`resolvePalette`).
+      const ringInk = game.colors(DEFAULT_BACKGROUND).length;
       for (const { ops, cell } of frames) {
-        const fills = solidFills(ops, target, cell);
+        const stray = outsideRings(ops).filter((o) => paintsWith(o, ringInk));
         expect(
-          fills,
-          `${id} fills a cell with its hint-target color: ${JSON.stringify(fills[0])}`,
+          stray,
+          `${id} draws in the ring's ink outside a ring: ${JSON.stringify(stray[0])}`,
         ).toHaveLength(0);
+        for (const r of ringsOf(ops))
+          expect(
+            r.radius,
+            `${id}: a ${r.w}×${r.h} ring is round`,
+          ).toBeGreaterThanOrEqual(
+            Math.floor((RING_MIN_ROUNDNESS * Math.min(r.w, r.h)) / 2),
+          );
         if (typeof evidence === "number") {
           const washes = solidFills(ops, evidence, cell);
           expect(
@@ -171,7 +160,7 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
   // cell (Clusters, Group and Undead draw theirs that way).
   const GUTTER = 1;
   const FILL = 0;
-  const TARGET = 2;
+  const EVIDENCE = 3;
   const backing = (dr: RecordingDrawing) => {
     dr.drawRect({ x: 0, y: 0, w: 30, h: 30 }, GUTTER);
   };
@@ -181,13 +170,27 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
     [0, 0, 1],
     [0, 1, 1],
   ];
+  /** The engine's ring ink, after the palette's four. */
+  const RING = 4;
   const marked: MarkCell[] = [{ x: 0, y: 0 }];
-  // Every op here is a rect, so a canvas of palette indices is exact.
+  // Every op here is a rect or a ring, and a ring is painted as the band of its
+  // box its stroke may reach, so a canvas of palette indices is exact enough:
+  // it can only over-cover.
   const paintOn = (px: Int8Array, rec: RecordingDrawing): Int8Array => {
+    const rect = (x: number, y: number, w: number, h: number, c: number) => {
+      for (let j = y; j < y + h; j++) px.fill(c, j * 30 + x, j * 30 + x + w);
+    };
     for (const o of rec.ops) {
-      if (o.op !== "rect") throw new Error(`unexpected ${o.op}`);
-      for (let y = o.y; y < o.y + o.h; y++)
-        px.fill(o.color, y * 30 + o.x, y * 30 + o.x + o.w);
+      if (o.op === "rect") rect(o.x, o.y, o.w, o.h, o.color);
+      else if (o.op === "ring") {
+        const t = Math.ceil(o.thickness / 2);
+        const [x, y] = [o.x - t, o.y - t];
+        const [w, h] = [o.w + 2 * t, o.h + 2 * t];
+        rect(x, y, w, 2 * t, o.color);
+        rect(x, y + h - 2 * t, w, 2 * t, o.color);
+        rect(x, y, 2 * t, h, o.color);
+        rect(x + w - 2 * t, y, 2 * t, h, o.color);
+      } else throw new Error(`unexpected ${o.op}`);
     }
     return px;
   };
@@ -206,8 +209,14 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
     band: { box: Rect; outer: number; inner: number },
     tiles: Record<string, (dr: RecordingDrawing) => void>,
     probe: number,
+    role: "ring" | "outline",
   ) {
-    const style = { band: () => band, targetColor: TARGET, evidenceColor: 3 };
+    const style: HintMarkStyle = {
+      band: () => band,
+      text: () => NO_TEXT,
+      evidenceColor: EVIDENCE,
+    };
+    const [targets, evidence] = role === "ring" ? [marked, []] : [[], marked];
     const board = (dr: RecordingDrawing) => {
       backing(dr);
       for (const t of Object.values(tiles)) t(dr);
@@ -215,10 +224,10 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
     const marks = new HintMarks();
     const first = new RecordingDrawing(palette);
     board(first);
-    marks.paint(first, marked, [], style);
+    marks.paint(first, targets, evidence, style);
     const warm = paintOn(new Int8Array(900), first);
     // Known positive: the mark really covered the pixel under test.
-    expect(warm[probe]).toBe(TARGET);
+    expect(warm[probe]).toBe(role === "ring" ? RING : EVIDENCE);
 
     const second = new RecordingDrawing(palette);
     const named = new Set<string>();
@@ -242,6 +251,20 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
       { box, outer: 1, inner: 3 },
       { "0,0": (dr) => dr.drawRect(box, FILL) },
       (box.y + 1) * 30 + box.x + 10,
+      "outline",
+    );
+    expect(differing(warm, fresh), "pixels a warm canvas shows differently").toEqual(
+      [],
+    );
+  });
+
+  it("repaints the cell under its ring", () => {
+    const box = { x: 5, y: 5, w: 20, h: 20 };
+    const { warm, fresh } = dropMark(
+      { box, outer: 1, inner: 3 },
+      { "0,0": (dr) => dr.drawRect(box, FILL) },
+      (box.y + 1) * 30 + box.x + 10,
+      "ring",
     );
     expect(differing(warm, fresh), "pixels a warm canvas shows differently").toEqual(
       [],
@@ -259,16 +282,17 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
         "1,0": (dr) => dr.drawRect({ x: 12, y: 10, w: 10, h: 8 }, FILL),
       },
       12 * 30 + 12,
+      "outline",
     );
     expect(named.has("1,0"), "the neighbor under the band is named").toBe(true);
     expect(differing(warm, fresh)).toEqual([]);
   });
 
   it("does nothing before the tiles while the marks stand", () => {
-    const style = {
+    const style: HintMarkStyle = {
       band: () => ({ box: { x: 5, y: 5, w: 20, h: 20 }, outer: 1, inner: 3 }),
-      targetColor: TARGET,
-      evidenceColor: 3,
+      text: () => NO_TEXT,
+      evidenceColor: EVIDENCE,
     };
     const marks = new HintMarks();
     marks.paint(new RecordingDrawing(palette), marked, [], style);

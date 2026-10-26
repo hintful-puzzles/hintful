@@ -5,9 +5,10 @@
 import { describe, expect, it } from "vitest";
 import { newDesc } from "../../games/palisade/generator.ts";
 import { palisadeGame } from "../../games/palisade/index.ts";
-import { COL_GRID, COL_HINT } from "../../games/palisade/render.ts";
+import { COL_GRID } from "../../games/palisade/render.ts";
 import { BORDER } from "../border-grid.ts";
 import { randomNew } from "../random/index.ts";
+import { ringsOf } from "./mark-shape.ts";
 import { renderPinnedHint, renderScenario } from "./render-scenario.ts";
 import { toSvg } from "./svg-drawing.ts";
 
@@ -67,16 +68,14 @@ describe("renderScenario", () => {
     expect(mistakeCount).toBe(0);
   });
 
-  it("shows a hint step and paints its action edge in COL_HINT", () => {
+  it("shows a hint step and rings its action edge", () => {
     const { hint, recording } = renderScenario({
       game: palisadeGame,
       id: ID,
       showHint: true,
     });
     expect(hint).toBeDefined();
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(
-      true,
-    );
+    expect(ringsOf(recording.ops).length).toBeGreaterThan(0);
   });
 
   it("shows a pinned plan's later leg, with the legs before it played", () => {

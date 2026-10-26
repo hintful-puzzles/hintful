@@ -367,6 +367,21 @@ function recordedReads(reason: unknown): readonly Point[] {
   return (reason as { reads?: readonly Point[] }).reads ?? [];
 }
 
+/** `premise` with each ring on cells the step strikes notes in drawn as those
+ * strikes instead: a grid of notes leaves no room for a round ring round the
+ * cell (`make-rings-round`, D6), and the strikes already say where the step
+ * acts. */
+function struckCellsByStrikes(premise: Narration, struck: readonly Mark[]): Narration {
+  return premise.remarked((ref) => {
+    if (ref.role !== "ring" || ref.kind.name !== CELL.name) return null;
+    const cells = new Set(ref.elements.map((e) => ref.kind.key(e)));
+    const notes = struck.filter((m) => cells.has(CELL.key(m)));
+    const covered = new Set(notes.map((m) => CELL.key(m)));
+    if (covered.size !== cells.size) return null;
+    return { role: "strike", kind: NOTE, elements: notes };
+  });
+}
+
 /** The cells `marks` act on, each once, in the order they first appear. */
 function cellsOf(marks: readonly Mark[]): Point[] {
   const seen = new Set<string>();
@@ -1201,11 +1216,14 @@ class CandidateWalk<
   ): HintStep<M, H, PlanRung<Reason>> {
     const marks = [...struck];
     const { premise, where, struck: noun, rung, ...rest } = words;
-    // The ending names the ringed notes it strikes, and re-renders from them
-    // when a refresh finds some already gone.
+    // The ending names the notes it strikes, and re-renders from them when a
+    // refresh finds some already gone.
     const { what, after } = this.plan.conclude.strike({ where, struck: noun });
-    const struckNotes = mark.as("ring", NOTE, marks, (live) => what(valuesOf(live)));
-    const said = so({ look: premise, move: phrase`${struckNotes} ${after}` });
+    const struckNotes = mark.as("strike", NOTE, marks, (live) => what(valuesOf(live)));
+    const said = so({
+      look: struckCellsByStrikes(premise, marks),
+      move: phrase`${struckNotes} ${after}`,
+    });
     return {
       move: this.strike(marks),
       rung,

@@ -14,14 +14,14 @@ import { MARK_ALL, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { markSides } from "../../engine/testing/mark-shape.ts";
+import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
 import { blockCells, hint, hintKeepTrack } from "./hint.ts";
 import { slideGame } from "./index.ts";
 import { computeReachable, executeMove } from "./moves.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import { findExit, solveBoard } from "./solver.ts";
 import {
   encodeDesc,
@@ -219,7 +219,11 @@ describe("slide hint: the frame", () => {
     const ringed = marks.of("ring", CELL);
     const outlined = marks.of("outline", CELL);
     const into = marks.of("stripes", CELL);
-    expect(markSides(recording.ops, COL_HINT)).toHaveLength(sidesRound(ringed));
+    // One pill round a straight block, a ring a square round any other.
+    const straight =
+      ringed.every((c) => c.x === ringed[0].x) ||
+      ringed.every((c) => c.y === ringed[0].y);
+    expectRing(recording.ops, { rings: straight ? 1 : ringed.length });
     expect(markSides(recording.ops, COL_HINT_EVIDENCE)).toHaveLength(
       sidesRound(outlined),
     );

@@ -65,7 +65,7 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
   ],
   // An outlined wall, which only the Unreasonable rungs reason from.
   galaxies: ["7x7du:mbgziedzjfzepcbd"],
-  // A ringed note, which Tricky's eliminations strike.
+  // A struck note, which Tricky's eliminations make.
   group: ["8dh:1_2_3_4_5_6_7_8_2g3f7_4e5a5a4e6a8e7e8a8e6_2"],
   // An outlined answer slot, read when a color is placed by elimination.
   guess: ["c8p5g12Bm:3bc2d346bb"],
@@ -74,7 +74,7 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
     "7x7t0dn:a322a2a2b1a2a1a2a13b332c30b21b22d3a2c3",
     "7x7t0dh:323b23a2b23a23a2a122c22a2c21332a23d2a21a",
   ],
-  // A ringed note.
+  // A struck note.
   mathrax: ["5dn:m1g1c,aS2cS1S3dS0d"],
   rect: [
     // A striped core two clues overlap on.
@@ -90,12 +90,12 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
     // An outlined target, the one to leave empty until the ringed one is filled.
     "10x12:w11tbtbs2btw3s4btw4fws2bstw3s3fs3w2tbs4tbw2s2tsfbstw2sb2susf2w2fsts5w2s2fs4fw3fs3w14",
   ],
-  // The number just placed, outlined, and a ringed note.
+  // The number just placed, outlined, and a struck note.
   seismic: ["4x4dh:1b3a2babaa1,i1f"],
   // An outlined cell.
   signpost: ["4x4c:1eefgc10cafcfcebca16a"],
   solo: [
-    // Outlined cells, then a ringed note.
+    // Outlined cells, then a struck note.
     "2x3da:6f2b3c5b4_4b5c1b2f1",
     "2x3di:3c5b4a2d4b2_2b5d2a1b1c6",
   ],

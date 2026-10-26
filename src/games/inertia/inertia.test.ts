@@ -17,6 +17,7 @@ import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
   type DrawOp,
@@ -33,7 +34,6 @@ import {
   COL_FLASH,
   COL_FLASH_LEAD,
   COL_GEM,
-  COL_HINT,
   COL_MINE,
   COL_PLAYER,
 } from "./render.ts";
@@ -626,10 +626,8 @@ describe("inertia rendering", () => {
     expect(recording.ops.some((o) => o.op === "circle" && o.fill === COL_MINE)).toBe(
       true,
     );
-    // No hint asked for, so no arrow.
-    expect(recording.ops.some((o) => o.op === "polygon" && o.fill === COL_HINT)).toBe(
-      false,
-    );
+    // No hint asked for, so no ringed arrow.
+    expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();
   });
 
@@ -706,11 +704,11 @@ describe("inertia rendering", () => {
     const idle = paint({ ...ui(), aiming: false, aimDir: -1 });
     expect(arrows(idle, COL_AIM)).toBe(0);
 
-    // Holding the ball, aimed east: an arrow appears — and in COL_AIM, not the
-    // COL_HINT the hint's arrow uses. They mean different things.
+    // Holding the ball, aimed east: an arrow appears — in COL_AIM and with no
+    // ring, unlike the hint's arrow. They mean different things.
     const aiming = paint({ ...ui(), aiming: true, aimDir: E });
     expect(arrows(aiming, COL_AIM)).toBe(1);
-    expect(arrows(aiming, COL_HINT)).toBe(0);
+    expect(ringsOf(aiming)).toEqual([]);
   });
 
   it("draws the dead ball as a red splat, once the slide has played out", () => {

@@ -21,7 +21,7 @@ import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -39,7 +39,6 @@ import { crossingGame } from "./index.ts";
 import {
   COL_ACROSS,
   COL_DOWN,
-  COL_HINT,
   COL_HINT_CELL,
   COL_SELECTED,
   type CrossingDrawState,
@@ -756,8 +755,7 @@ describe("crossing hint — the frame", () => {
     const res = scenario("hint-frame");
     const run = (res.hint as Step | undefined)?.highlights?.hatch ?? [];
     expect(run.length).toBeGreaterThan(1);
-    const rects = res.recording.ops.filter((o) => o.op === "rect");
-    expect(rects.some((o) => o.color === COL_HINT)).toBe(true);
+    expect(ringsOf(res.recording.ops).length).toBeGreaterThan(0);
     const hatched = opsOfKind(res.recording.ops, "hatch");
     // Distinct squares: a `crossRuns` step names two runs that share one.
     const squares = new Set(run.map((c) => `${c.x},${c.y}`));
@@ -773,10 +771,7 @@ describe("crossing hint — the frame", () => {
     const step = res.hint as Step | undefined;
     expect(step?.move.kind).toBe("pencilAdd");
     expect(step?.highlights?.marks).toEqual([]);
-    expectRing(
-      res.recording.ops.filter((o) => o.op === "rect"),
-      COL_HINT,
-    );
+    expectRing(res.recording.ops);
   });
 
   it("names at least one listed number as evidence, and paints it in the panel", () => {
@@ -790,13 +785,13 @@ describe("crossing hint — the frame", () => {
     // The panel sits below the grid; a hint patch must land there.
     const gridBottom = (EASY_PRESETS[0].h + 0.5) * PREFERRED_TILE_SIZE;
     const inPanel = res.recording.ops.filter(
-      (o) => o.op === "rect" && o.y >= gridBottom,
+      (o) => (o.op === "rect" || o.op === "ring") && o.y >= gridBottom,
     );
     expect(
       inPanel.some(
-        (o) => o.op === "rect" && (o.color === COL_HINT || o.color === COL_HINT_CELL),
+        (o) => o.op === "ring" || (o.op === "rect" && o.color === COL_HINT_CELL),
       ),
-      "no hint patch in the clue list",
+      "no hint mark in the clue list",
     ).toBe(true);
   });
 
@@ -948,13 +943,13 @@ describe("crossing hint — the frame", () => {
     expect(selectionFill(hintUp.frame.ops, target, hintUp.ts)).toBe(true);
     expect(selectionFill(plain.frame.ops, target, plain.ts)).toBe(true);
     // ...and only the hinted frame carries the ring. The count covers the clue
-    // list too: a whole-run placement boxes the number it writes in, in the same
-    // color and the same shape as the square it writes it into.
-    const boxes =
+    // list too: a whole-run placement rings the number it writes in, as it
+    // rings the square it writes it into.
+    const rings =
       (step.highlights?.targets.length ?? 0) +
       (step.highlights?.numberTarget == null ? 0 : 1);
-    expectRing(hintUp.frame.ops, COL_HINT, boxes);
-    expect(markSides(plain.frame.ops, COL_HINT)).toHaveLength(0);
+    expectRing(hintUp.frame.ops, { rings });
+    expect(ringsOf(plain.frame.ops)).toHaveLength(0);
   });
 
   it("matches its recorded frame", () => {

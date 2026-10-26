@@ -866,7 +866,7 @@ export const netGame: Game<
   hintRungs: NET_RUNGS,
   hintMarks: {
     roles: {
-      ring: "what the step decides: the square to turn and lock, or the side to note, drawn as the note the step places.",
+      ring: "what the step decides: the square to turn and lock, or the side to note, with the note the step places drawn inside its ring.",
       outline:
         "what the step reasons from: the notes and locks a way of turning would contradict, the square whose every way of turning agrees about the ringed side, or a square beside it that a way of turning would leave with no way to turn.",
       stripes:

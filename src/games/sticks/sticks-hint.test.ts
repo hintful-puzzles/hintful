@@ -12,14 +12,19 @@ import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
+import {
+  expectRing,
+  isThin,
+  markSides,
+  ringsOf,
+} from "../../engine/testing/mark-shape.ts";
 import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { newSticksDesc } from "./generator.ts";
 import { STICKS_RUNGS, sticksGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL, COL_LINE } from "./render.ts";
+import { COL_HINT_CELL, COL_LINE } from "./render.ts";
 import {
   deduceSticksPlan,
   newScratch,
@@ -382,9 +387,11 @@ describe("sticks hint — render frames (tier 2.5)", () => {
     it(`draws the forced line and its evidence for a ${kind} deduction`, () => {
       const result = renderPinnedHint(sticksGame, pinned(kind));
       const ops = result.recording.ops;
-      // The forced square is drawn as a bar in the hint color — the game's own
-      // line shape, which a plain tint could not give an orientation.
-      const bars = ops.filter((o) => o.op === "rect" && o.color === COL_HINT);
+      // The forced square is ringed, with a bar inside the ring — the game's
+      // own line shape, which a ring alone could not give an orientation.
+      expectRing(ops);
+      const [ring] = ringsOf(ops);
+      const bars = ops.filter((o) => o.op === "rect" && o.color === ring.color);
       expect(bars.length).toBe(1);
       const bar = bars[0];
       if (bar.op !== "rect") throw new Error("unreachable");

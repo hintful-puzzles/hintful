@@ -105,9 +105,9 @@ export interface SticksMistake {
 /**
  * Plan data for a hint step: the forced square (`target`), which keep-track
  * compares a move against, and the orientation it is forced to (`to` — drawn
- * as a `COL_HINT` bar in the square the words ring, the game's own line shape
- * in the hint color; a plain tint could not express an orientation, which is
- * the whole of the move).
+ * as a bar inside the ring round the square, the game's own line shape in the
+ * ring's ink; a ring alone could not express an orientation, which is the
+ * whole of the move).
  */
 export interface SticksHint {
   target: number;

@@ -128,8 +128,7 @@ export const say = {
         const distinct = [...new Set(ns)].sort((a, b) => a - b);
         return `${joinWith(distinct.map(arrow))} ${ns.length === 1 ? "mark" : "marks"}`;
       };
-      if (where)
-        return { what: (ns) => `the ringed ${ways(ns)} ${where}`, after: "must go" };
+      if (where) return { what: (ns) => `the ${ways(ns)} ${where}`, after: "must go" };
       if (struck) return { what: () => struck, after: "must go" };
       return { what: (ns) => `this square's ${ways(ns)}`, after: "must go" };
     },
@@ -147,7 +146,7 @@ export const say = {
 
   /** A candidate that would join a chain of arrows, `path` (numbered), leading
    * back to its own square. `n` is the struck direction, so the chain starts at
-   * the neighbor it points at. `at` is the square, ringed. */
+   * the neighbor it points at. `at` is the square. */
   loop: (path: readonly OrderedCell[], n: number, at: Point): Narration =>
     phrase`${mark.as("outline", CELL, path, "The numbered arrows")} from the square ${neighbor(n)} lead back to ${here(at)}`,
 
@@ -158,10 +157,10 @@ export const say = {
   onlyHomeStruck: "its other marks",
 
   /** The one candidate anywhere that can still grow a goal's `group`, and what
-   * its strike calls the square's other marks. The mark kept is in the ringed
-   * square `at`. */
+   * its strike calls the square's other marks. The mark kept is in square
+   * `at`, which its struck marks show. */
   reach: (group: readonly Point[], at: Point): Narration =>
-    phrase`Every square must reach a goal, and only ${mark.as("ring", CELL, [at], "this mark")} still leads into ${mark.the("stripes", whole(CELL), group, "group")}`,
+    phrase`Every square needs a goal, and only one mark in ${here(at)} leads to ${mark.the("stripes", whole(CELL), group, "group")}`,
   reachStruck: "its other marks",
 
   /** A neighbor, `side`, that could only point along one axis, which a mark

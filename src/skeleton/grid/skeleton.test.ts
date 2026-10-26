@@ -10,10 +10,11 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { skeletonGame } from "./index.ts";
-import { COL_HINT, COL_SHADED, COL_WRONG } from "./render.ts";
+import { COL_SHADED, COL_WRONG } from "./render.ts";
 import {
   BLANK,
   CROSSED,
@@ -173,6 +174,6 @@ describe("skeleton frame", () => {
 
     const hinted = renderScenario({ game: skeletonGame, id: ID, showHint: true });
     expect(hinted.hint).toBeDefined();
-    expect(hinted.recording.ops.some((op) => paintsWith(op, COL_HINT))).toBe(true);
+    expect(ringsOf(hinted.recording.ops).length).toBeGreaterThan(0);
   });
 });

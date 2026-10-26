@@ -45,12 +45,7 @@ import {
   mkhighlightSpecific,
 } from "../../engine/color/color-mkhighlight.ts";
 import { RED } from "../../engine/color/colors.ts";
-import {
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
-  HINT_RING,
-} from "../../engine/color/palette.ts";
+import { FLASH, FLASH_LEAD, HINT_OUTLINE } from "../../engine/color/palette.ts";
 import {
   slideBlockBase,
   slideMainBlockBase,
@@ -64,6 +59,7 @@ import { coord as gridCoord } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, PaletteScheme, Point, Rect, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -125,10 +121,9 @@ export const paletteScheme: Partial<PaletteScheme> = {
 export const COL_FLASH = 22;
 /** The same, under the flash's leading edge. */
 export const COL_FLASH_LEAD = 23;
-/** A hint's ring, and its outline. */
-export const COL_HINT = 24;
-export const COL_HINT_EVIDENCE = 25;
-export const NCOLORS = 26;
+/** A hint's outline. */
+export const COL_HINT_EVIDENCE = 24;
+export const NCOLORS = 25;
 
 /** Upstream `raise_colour`: two parts `src` to one part `limit`. */
 function raise(src: Color, limit: Color): Color {
@@ -202,7 +197,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
 
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
 
   return out;
@@ -292,14 +286,11 @@ export function newDrawState(state: SlideState, tileSize: number): SlideDrawStat
   };
 }
 
-/** A square's hint marks: the sides of the ring and of the outline it carries,
- * in `hint-mark.ts`'s side bits. */
-interface TileMarks {
-  readonly ring: number;
-  readonly outline: number;
-}
+/** A square's hint outline: the sides of it the square carries, in
+ * `hint-mark.ts`'s side bits. */
+type TileMarks = number;
 
-const NO_MARKS: TileMarks = { ring: 0, outline: 0 };
+const NO_MARKS: TileMarks = 0;
 
 // --- the fiddly bit: one section of one tile ---------------------------
 
@@ -655,13 +646,11 @@ function drawTile(
     drawPiecepart(dr, ts, tx, ty, (val >> FG_MAINPIECESH) & PIECE_MASK, cl, cc, ch);
   }
 
-  // The hint's bands lie inside the square, over the block's bevel, the
-  // border they stand in for: squares tile exactly, so a square whose marks
-  // change repaints and takes its old band with it. The ring is drawn last of
-  // the two, so it wins a side they share.
+  // The hint's outline lies inside the square, over the block's bevel, the
+  // border it stands in for: squares tile exactly, so a square whose marks
+  // change repaints and takes its old band with it.
   const band = { box, outer: 0, inner: highlightWidth(ts) };
-  drawMarkSides(dr, band, marks.outline, COL_HINT_EVIDENCE);
-  drawMarkSides(dr, band, marks.ring, COL_HINT);
+  drawMarkSides(dr, band, marks, COL_HINT_EVIDENCE);
 
   // Topmost: the keyboard cursor, as the collection's four corner brackets.
   // They sit *beside* the content rather than over it, so a block's bevel and
@@ -728,8 +717,8 @@ export function redraw(
   const wh = w * h;
 
   // The hint's marks, from its words alone. The ring and the outline each
-  // name one block, so a side is drawn wherever the neighbor is not marked
-  // alike, and each comes out as one shape round its block.
+  // name one block. The outline's side is drawn wherever the neighbor is not
+  // outlined, so it comes out as one shape round its block.
   const marks = stepMarks(hint);
   const at = (x: number, y: number): number => y * w + x;
   ds.hint.pack(marks, at);
@@ -802,6 +791,7 @@ export function redraw(
       litBlocks.set(canon, litFlag(flash.win(sweepStep(m.x / m.n, m.y / m.n))));
   }
 
+  let ringRepainted = false;
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
@@ -840,13 +830,57 @@ export function redraw(
       }
 
       if (val !== ds.grid[i] || ds.hint.stale(i)) {
-        const tile =
-          ringed.has(i) || outlined.has(i)
-            ? { ring: sides(ringed, x, y), outline: sides(outlined, x, y) }
-            : NO_MARKS;
-        drawTile(dr, ds, x, y, val, i, tile);
+        drawTile(
+          dr,
+          ds,
+          x,
+          y,
+          val,
+          i,
+          outlined.has(i) ? sides(outlined, x, y) : NO_MARKS,
+        );
         ds.grid[i] = val;
         ds.hint.commit(i);
+        if (ringed.has(i)) ringRepainted = true;
       }
     }
+
+  // The ring round the block to slide, over its squares: one pill round each
+  // unbroken straight run of them, and a ring a square round any other shape,
+  // which a ring round the whole would enclose floor the block is not on. It
+  // lies on the block's squares alone, which key on it, so it is drawn again
+  // whenever one of them repaints.
+  if (ringRepainted) {
+    const ts = ds.tileSize;
+    const cells = [...ringed]
+      .sort((a, b) => a - b)
+      .map((i) => ({ x: i % w, y: Math.floor(i / w) }));
+    const column = cells.every((c) => c.x === cells[0].x);
+    const straight = column || cells.every((c) => c.y === cells[0].y);
+    const runs: { x: number; y: number }[][] = [];
+    if (straight)
+      for (const c of cells) {
+        const run = runs.at(-1);
+        const last = run?.at(-1);
+        if (run && last && (column ? c.y - last.y : c.x - last.x) === 1) run.push(c);
+        else runs.push([c]);
+      }
+    const box = (cs: readonly { x: number; y: number }[]): Rect => {
+      const x0 = Math.min(...cs.map((c) => c.x));
+      const y0 = Math.min(...cs.map((c) => c.y));
+      const x1 = Math.max(...cs.map((c) => c.x)) + 1;
+      const y1 = Math.max(...cs.map((c) => c.y)) + 1;
+      const x = gridCoord(x0, ts, BORDER);
+      const y = gridCoord(y0, ts, BORDER);
+      return {
+        x,
+        y,
+        w: gridCoord(x1, ts, BORDER) - x,
+        h: gridCoord(y1, ts, BORDER) - y,
+      };
+    };
+    const thickness = Math.max(2, highlightWidth(ts));
+    for (const piece of straight ? runs : cells.map((c) => [c]))
+      dr.drawRing(box(piece), NOTHING_TO_CLEAR, thickness);
+  }
 }

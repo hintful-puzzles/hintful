@@ -17,7 +17,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   RULED_OUT,
   surfaceGrid,
   wallFill,
@@ -27,6 +26,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -60,22 +60,21 @@ export const COL_LIT = 4; // yellow lit-square fill
 export const COL_ERROR = 5;
 export const COL_CURSOR = 6;
 // Fork hint inks.
-export const COL_HINT = 7; // forced cell(s), ringed
-/** The evidence and the squares a deduction is about, ringed, and the ring
- * round a hint's driving clue, on its wall. */
-export const COL_HINT_CELL = 8;
+/** The evidence and the squares a deduction is about, outlined, and the
+ * outline round a hint's driving clue, on its wall. */
+export const COL_HINT_CELL = 7;
 /** The player's "no light here" cross. */
-export const COL_RULED_OUT = 9;
-export const COL_CELL = 10; // the surface of an open square no bulb lights
+export const COL_RULED_OUT = 8;
+export const COL_CELL = 9; // the surface of an open square no bulb lights
 /** The ground of an open square under the completion flash's body. The slot
  * for its leading edge is {@link COL_FLASH_LEAD}. */
-export const COL_FLASH = 11;
+export const COL_FLASH = 10;
 /** The line round a bulb. */
-export const COL_BULB_RIM = 12;
+export const COL_BULB_RIM = 11;
 /** A wrong clue's digit, on its badge. */
-export const COL_ERROR_TEXT = 13;
+export const COL_ERROR_TEXT = 12;
 /** The ground of an open square under the completion flash's leading edge. */
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -99,7 +98,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_RULED_OUT] = RULED_OUT;
   return out;
@@ -131,7 +129,7 @@ const DF_WRONG = 512;
 /** Fork addition: the show-lit-blobs pref, in the key so a toggle repaints. */
 const DF_BLOBS_PREF = 1024;
 // Fork additions: the displayed hint step, in the key so hint changes repaint.
-const DF_HINT_TARGET = 2048; // forced cell — COL_HINT ring
+const DF_HINT_TARGET = 2048; // forced cell — ringed
 const DF_HINT_AREA = 4096; // evidence — ringed
 const DF_HINT_DARKREF = 8192; // the unlit square the deduction is about — ringed
 const DF_HINT_CLUE = 16384; // driving clue: its wall ringed
@@ -249,8 +247,8 @@ function tileRedraw(
       );
     }
   } else {
-    // Hint roles (fork): the target is **ringed** COL_HINT, so a light or blob
-    // already on it stays visible. An evidence square is ringed COL_HINT_CELL
+    // Hint roles (fork): the target is **ringed**, so a light or blob
+    // already on it stays visible. An evidence square is outlined COL_HINT_CELL
     // and keeps its fill, which is its premise: lit or not.
     const tone = ((dsFlags >> DF_WIN_SHIFT) & 3) as WinTone;
     const fill =
@@ -261,14 +259,6 @@ function tileRedraw(
           : COL_CELL;
     dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, COL_GRID);
     dr.drawRect(box, fill);
-    if (dsFlags & DF_HINT_TARGET) {
-      drawMarkSides(
-        dr,
-        { box, outer: 0, inner: Math.max(2, ts >> 4) },
-        MARK_ALL,
-        COL_HINT,
-      );
-    }
     if (dsFlags & (DF_HINT_AREA | DF_HINT_DARKREF)) ring(COL_HINT_CELL);
     if (dsFlags & DF_LIGHT) {
       const lcol = dsFlags & DF_OVERLAP ? COL_ERROR : COL_LIGHT;
@@ -284,6 +274,9 @@ function tileRedraw(
     ) {
       drawRuledOutCross(dr, box, COL_RULED_OUT);
     }
+    // An open square shows no text, so its ring has none to keep clear of.
+    if (dsFlags & DF_HINT_TARGET)
+      dr.drawRing(box, NOTHING_TO_CLEAR, Math.max(2, ts >> 4));
   }
 
   // Check & Save: this cell contradicts the unique solution (fork divergence;

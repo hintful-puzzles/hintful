@@ -16,12 +16,12 @@ import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { anticlockwise, clockwise } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { Facts, nextStep } from "./deduce.ts";
 import { newDesc } from "./generator.ts";
 import type { NetHint, NetRung } from "./hint.ts";
 import { netGame } from "./index.ts";
-import { COL_HINT } from "./render.ts";
 import { answerOf, netSolver, SOLVER_UNIQUE, solverFinishes } from "./solver.ts";
 import {
   LOCKED,
@@ -296,16 +296,14 @@ describe("refusal and marks", () => {
     expect(netGame.findMistakes?.(lie).length ?? 0).toBeGreaterThan(0);
   });
 
-  it("rings the square a step turns and locks, in the hint color", () => {
+  it("rings the square a step turns and locks", () => {
     const r = renderScenario({
       game: netGame,
       id: "5x5:299511de1166b536dbb1861b2",
       showHint: true,
     });
     expect(r.hint).toBeDefined();
-    expect(r.recording.ops.some((o) => "color" in o && o.color === COL_HINT)).toBe(
-      true,
-    );
+    expectRing(r.recording.ops);
     expect(r.recording.ops).toMatchSnapshot();
   });
 });

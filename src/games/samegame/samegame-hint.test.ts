@@ -19,6 +19,7 @@ import {
   deadEndBindingDefects,
 } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
@@ -30,7 +31,7 @@ import {
   type SamegameRung,
 } from "./hint.ts";
 import { executeMove, samegameGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import {
   findClearing,
   type Group,
@@ -356,7 +357,7 @@ describe("samegame hint", () => {
     const { recording } = renderPinnedHint(G, pin);
     const rects = (color: number) =>
       recording.ops.filter((o) => o.op === "rect" && o.color === color).length;
-    expect(rects(COL_HINT)).toBeGreaterThan(0);
+    expect(ringsOf(recording.ops).length).toBeGreaterThan(0);
     expect(rects(COL_HINT_EVIDENCE)).toBeGreaterThan(0);
     const rival = stepMarks(pin.step).of("stripes", CELL);
     const hatches = recording.ops.filter((o) => o.op === "hatch");

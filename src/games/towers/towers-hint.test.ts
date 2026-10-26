@@ -5,7 +5,7 @@
  * placements complete a generated board; `hint` populates, strikes and places
  * with quality-bar narration (indication → necessity voice); refusal on
  * solved / on mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario
- * snapshot of a clue-elimination journey frame (struck candidates `COL_HINT`,
+ * snapshot of a clue-elimination journey frame (struck candidates in their ink,
  * the clue's line of sight hatched, clues still drawn).
  */
 import { describe, expect, it } from "vitest";
@@ -14,7 +14,12 @@ import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
-import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
+import {
+  expectRing,
+  isThin,
+  markSides,
+  ringsOf,
+} from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -22,7 +27,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newTowersDesc } from "./generator.ts";
 import { towersGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL, COL_PENCIL } from "./render.ts";
+import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
 import { type HintReason, recordTowersDeductions } from "./solver.ts";
 import {
   DIFF_EXTREME,
@@ -594,27 +599,19 @@ describe("towers hint render", () => {
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_PENCIL)).toBe(
       true,
     );
-    expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(
-      false,
-    );
-    // ...and the strike cell is **ringed** COL_HINT rather than filled with it.
-    // A fill would hide the struck digit, making the candidate look
-    // already-removed. The ring is the same mark a placement target gets, so a
-    // strike is never identified *only* by a strikethrough the player has to
-    // spot first.
-    expectRing(recording.ops, COL_HINT, (hint?.highlights as AnyStep)?.targets.length);
+    // A strike step rings nothing: its struck candidates mark the cell
+    // (`make-rings-round`, D6).
+    expect(ringsOf(recording.ops)).toEqual([]);
     // Clues are still drawn (text).
     expect(recording.ops.some((o) => o.op === "text")).toBe(true);
 
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("a placement step rings its target cell COL_HINT", () => {
+  it("a placement step rings its target cell", () => {
     const { recording, hint } = hintFrame("placement");
-    // A placement target is ringed COL_HINT, and carries no struck digit/line.
-    expectRing(recording.ops, COL_HINT, (hint?.highlights as AnyStep)?.targets.length);
-    expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(
-      false,
-    );
+    // A placement target is ringed, and nothing else is drawn in the ring's
+    // ink: no struck digit or line.
+    expectRing(recording.ops, { rings: (hint?.highlights as AnyStep)?.targets.length });
   });
 });

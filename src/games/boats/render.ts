@@ -43,7 +43,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   SHADED,
   surfaceGrid,
@@ -55,7 +54,8 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { BoatsHint } from "./index.ts";
 import type { BoatsMistake } from "./solver.ts";
@@ -107,14 +107,13 @@ export const COL_COUNT = 8;
 export const COL_COUNT_ERROR = 9;
 export const COL_COLLISION_ERROR = 10;
 export const COL_COLLISION_TEXT = 11;
-export const COL_HINT = 12;
-export const COL_HINT_CELL = 13;
-export const COL_CELL = 14; // the surface of an undecided square
-export const COL_GIVEN = 15; // the lifted surface under a segment the puzzle gave
+export const COL_HINT_CELL = 12;
+export const COL_CELL = 13; // the surface of an undecided square
+export const COL_GIVEN = 14; // the lifted surface under a segment the puzzle gave
 /** The waves on a given water square and the edge of a collision diamond. */
-export const COL_INK = 16;
-export const COL_FLASH = 17; // the ground of a square the win flash's body is on
-export const COL_FLASH_LEAD = 18; // and of one its leading edge is on
+export const COL_INK = 15;
+export const COL_FLASH = 16; // the ground of a square the win flash's body is on
+export const COL_FLASH_LEAD = 17; // and of one its leading edge is on
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -136,7 +135,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_COUNT_ERROR] = ERROR;
   out[COL_COLLISION_ERROR] = ERROR;
   out[COL_COLLISION_TEXT] = ERROR_TEXT;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -146,6 +144,19 @@ export function colors(defaultBackground: Color): Color[] {
 /** The web build compiles `NARROW_BORDERS`, so there is no outer margin
  * (docs/rendering.md § "Sizing"). */
 export const BORDER = 0;
+
+/** Where a segment the fleet cannot hold takes its "?", in the square at
+ * `(tx, ty)`: read by the text and by the ring round the square. */
+function fleetMarkText(
+  tx: number,
+  ty: number,
+  ts: number,
+): { origin: Point; options: DrawTextOptions } {
+  return {
+    origin: { x: tx + ts / 2, y: ty + ts / 2 },
+    options: glyphFont((ts / 2) | 0),
+  };
+}
 
 /** Vertical gap between the number row and the fleet display. */
 const gutter = (ts: number): number => (ts / 2) | 0;
@@ -667,12 +678,27 @@ export function redraw(
         drawWaves(dr, tx, ty, ts, COL_INK);
       }
 
-      // The hint marks *where and which action* in the game's own vocabulary,
-      // recolored, and never performs the move (docs/hints-marks.md §
-      // "Highlight, never perform"): an unresolved segment for a boat, the
-      // given-water waves for water.
-      if (hintBit & HINT_SHIP) drawSegment(dr, tx, ty, ts + 1, SHIP_VAGUE, COL_HINT);
-      else if (hintBit & HINT_WATER) drawWaves(dr, tx, ty, ts, COL_HINT);
+      const fleetText = isShip(ship) && cellFlags[i] & FE_FLEET;
+      const fleetAt = fleetMarkText(tx, ty, ts);
+
+      // The hint rings *where*, and shows *which action* inside the ring in
+      // the game's own vocabulary, and never performs the move
+      // (docs/hints-marks.md § "Highlight, never perform"): an unresolved
+      // segment for a boat, the given-water waves for water.
+      if (hintBit & (HINT_SHIP | HINT_WATER))
+        dr.drawRing(
+          { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
+          fleetText
+            ? { enclose: [textBox(fleetAt.origin, fleetAt.options, "?")], avoid: [] }
+            : NOTHING_TO_CLEAR,
+          Math.max(2, ts >> 4),
+          {
+            inside: (ink) =>
+              hintBit & HINT_SHIP
+                ? drawSegment(dr, tx, ty, ts + 1, SHIP_VAGUE, ink)
+                : drawWaves(dr, tx, ty, ts, ink),
+          },
+        );
 
       // Every evidence square keeps its own color and gets a ring at the cell's
       // edge — undecided or not, one mark for one role. A fill over water or a
@@ -700,13 +726,7 @@ export function redraw(
         );
       }
 
-      if (isShip(ship) && cellFlags[i] & FE_FLEET)
-        dr.drawText(
-          { x: tx + ts / 2, y: ty + ts / 2 },
-          glyphFont((ts / 2) | 0),
-          COL_COUNT_ERROR,
-          "?",
-        );
+      if (fleetText) dr.drawText(fleetAt.origin, fleetAt.options, COL_COUNT_ERROR, "?");
 
       // Check & Save: a square the unique solution contradicts. A wrong *ship*
       // is already red above; this outline is what makes a wrong *water* square

@@ -14,7 +14,7 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type MosaicHint, mosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
 import { mosaicGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf, newDesc, solveGameActual } from "./solver.ts";
 import {
   DIFF_NORMAL,
@@ -90,7 +90,7 @@ describe("Mosaic's hint", () => {
     expect(hl.mark).toBe(mark);
     expect(hint?.explanation).toMatch(words);
     // Each decided square is ringed, never filled with the mark it gets.
-    expectRing(recording.ops, COL_HINT, hl.cells.length);
+    expectRing(recording.ops, { rings: hl.cells.length });
     expect(stepMarks(hint).of("ring", CELL)).toHaveLength(hl.cells.length);
     // The number's block is one outline: a side per square on its perimeter.
     const [clue] = stepMarks(hint).of("outline", BLOCK);
@@ -126,7 +126,7 @@ describe("Mosaic's hint", () => {
     const hl = hint?.highlights as MosaicHint;
     expect(hl.mark).toBe(mark);
     expect(hint?.explanation).toMatch(words);
-    expectRing(recording.ops, COL_HINT, hl.cells.length);
+    expectRing(recording.ops, { rings: hl.cells.length });
     const rings = stepMarks(hint).of("ring", CELL);
     expect(rings).toHaveLength(hl.cells.length);
 

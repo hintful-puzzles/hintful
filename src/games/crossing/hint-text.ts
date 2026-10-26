@@ -165,7 +165,7 @@ export const say = {
     const ds = joinOr(f.digits);
     // Named by value even though the premise just did: "it" is no thing on
     // the board.
-    const struck = mark.as("ring", NOTE, m.notes, (els) => {
+    const struck = mark.as("strike", NOTE, m.notes, (els) => {
       const ns = [...new Set(els.map((e) => e.n))].sort((a, b) => a - b);
       return ns.length === 1 ? `the ${ns[0]}` : joinWith(ns.map(String));
     });

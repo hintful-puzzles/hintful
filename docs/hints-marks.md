@@ -20,21 +20,23 @@ already does it.
 1. Write every sentence in `hint-text.ts` with `phrase` and a `mark`
    reference wherever it points at the board: a ring on what the step
    decides, an outline on what it reasons from, stripes on the line or region
-   it names (`hints.md` § "Bind the words to the marks").
+   it names, a strike on a note it rules out (`hints.md` § "Bind the words to
+   the marks").
 2. Declare the roles the steps name as `hintMarks.roles` in `index.ts`, and
    put `{{hint-marks}}` in the `## Hints` section of `help.md`.
-3. In `render.ts`, export a `COL_HINT` slot holding `HINT_RING` and a
-   `COL_HINT_CELL` slot holding `HINT_OUTLINE`, and draw each mark in its
-   role's ink and nothing else (§ "The engine colors the marks").
+3. In `render.ts`, export a `COL_HINT_CELL` slot holding `HINT_OUTLINE`, and
+   draw each mark in its role's ink and nothing else (§ "The engine colors
+   the marks"). Hold no ring ink: the engine draws every ring.
 4. In `redraw`, read the marks with `stepMarks(hint)` and from nowhere else,
    and fold them into the draw state's `OverlaySidecar`, so that `stale` and
    `commit` put them in the tile's diff key.
 5. Say where a cell's mark sits with a `markBand` (§ "Where the band goes,
-   and who rubs it out").
+   and who rubs it out"), and what text a cell shows with
+   `HintMarkStyle.text` (§ "Shade vs ring").
 6. Call `HintMarks.eraseBeforeTiles` before the tile loop and
    `HintMarks.paint` after it, outside any clip.
-7. Draw the target as a ring around what the cell already shows, never as
-   the move's result (§ "Highlight, never perform").
+7. Ring the target round what the cell already shows, never draw the move's
+   result (§ "Highlight, never perform").
 8. Where a sentence names a line or region, stripe it under the content
    (§ "Hatch the line the sentence names").
 9. When keep-track shrinks a step, narrow its words with it, as
@@ -99,8 +101,8 @@ already does it.
 ## Highlight, never perform
 
 **A displayed hint marks the cell to act on and does not draw the move's
-result.** Ring the target in `COL_HINT`, keep the cell's own number or state
-visible inside the ring, and let the narration say which mark to place. Do
+result.** Ring the target, keep the cell's own number or state visible
+inside the ring, and let the narration say which mark to place. Do
 not fill the cell with the black square, circle, color or digit the move
 would place: it hides what the cell holds, and it reads as already done when
 the move is still the player's to make.
@@ -117,69 +119,92 @@ grouping of § "Group one firing into one step" is what makes it read well.
 
 ## Echo the move's shape in the hint color
 
-**Where a game's moves come in more than one visible kind, the hint draws the
-shape the game already draws for that action, recolored `COL_HINT`.** It
-never invents a shape the player has to translate, and never shows the shape
-of the wrong action: a line drawn for a rule-out says "connect these", the
-opposite of its sentence.
+**Where a game's moves come in more than one visible kind, the hint rings the
+element and draws, inside the ring, the shape the game already draws for
+that action, in the ring's ink.** It never invents a shape the player has to
+translate, and never shows the shape of the wrong action: a line drawn for a
+rule-out says "connect these", the opposite of its sentence.
 
-This is the converse of § "Highlight, never perform": the hint shows where
-and which action, in the hint color, without performing it. A uniform tint
-cannot express an orientation or a kind.
+The shape goes in `drawRing`'s `inside`, which is clipped to the ring and is
+the only way to the ring's ink, so it adds to the ring and never stands in
+for it: the word "ringed" names the round mark round it (requirement "A
+move's shape is shown inside its ring"). This is the converse of
+§ "Highlight, never perform": the hint shows where and which action without
+performing it. A uniform tint cannot express an orientation or a kind.
 
-Exemplars: the line-bit and mark-bit branches of
-[`spokes/render.ts`](../src/games/spokes/render.ts), where a forced line is
-a `COL_HINT` line and a forced rule-out a `COL_HINT` ring round the dot at
-the spoke's rim; Sticks draws its forced square as a bar in the forced
-orientation.
+Exemplars: [`tracks/render.ts`](../src/games/tracks/render.ts)'s
+`drawHintMarks`, a pill across a side with its rail stubs or cross inside,
+and a square's ring with the "must be empty" cross inside.
 
 ## Shade vs ring
 
 **The acted-on cell is ringed in every game, with no exceptions, and an
-evidence area is outlined.** Both marks sit on the cell's border and never
-behind its content.
+evidence area is outlined.** Neither is drawn behind the content.
+
+**A ring is round, and only the engine draws one**
+([`engine/ring.ts`](../src/engine/ring.ts), `GameDrawing.drawRing`;
+requirement "A ring is round, and only the engine draws one"; the owner,
+2026-10-25: "a ring should actually be round"). The ring's ink is the
+engine's, appended to every palette, so a game cannot draw a "ringed" mark
+in another shape. `drawRing` takes the element's box and the text round it,
+and picks the shape nearest the box at the roundest that fits: a circle
+where the corners are free, a rounded square (a corner radius of a third of
+the short side, the least it allows) where text sits in them. It never
+crosses text: a game hands it the boxes from `textBox`, called with what it
+passes `drawText`, so it never estimates a glyph. Where nothing round fits,
+it throws, and the element is not a ring's: the game pads its text or marks
+it in another role.
 
 The engine gives [`engine/hint-mark.ts`](../src/engine/hint-mark.ts):
-`MarkBand` says where a cell's band sits, `HintMarks` paints the ring and the
-outline around the tile loop, `MarkOutlines` gives each cell's sides.
-Requirements "A hint mark is drawn on the cell's border" and "A hint marks
-beside the content, never behind it" are the rule. Exemplars:
-[`keen/render.ts`](../src/games/keen/render.ts) (`markBand` and the block
-after the tiles) for a game with a gutter between cells,
-[`filling/render.ts`](../src/games/filling/render.ts) for one whose cells
-tile exactly, [`galaxies/render.ts`](../src/games/galaxies/render.ts) for a
-mark inset in the cell.
+`MarkBand` says where a cell's band sits, `HintMarks` paints the outline's
+band and the ring around the tile loop, `MarkOutlines` gives each cell's
+sides, and `HintMarkStyle.text` says what text each cell shows: its value,
+which a ring encloses, a clue in its corner, which it goes round, and its
+notes, which a ring on the cell may cross, because the step decides the cell
+and replaces them. Requirements "A hint mark is drawn on the cell's border"
+and "A hint marks beside the content, never behind it" are the rule.
+Exemplars: [`keen/render.ts`](../src/games/keen/render.ts) (`markBand`,
+`cellText`, and the block after the tiles) for a game with a gutter between
+cells and a clue in a corner, [`skeleton/grid/render.ts`](../src/skeleton/grid/render.ts)
+for a number in the middle.
 
 The target is ringed even where a fill would hide nothing: one mark means one
 thing across the collection, and in a shading game the move is "give this
 cell a color", so a solid fill says with the board what the narration is
-still proposing. A candidate game rings the cell on a strike step too, so the
-player does not hunt for the strikethrough.
+still proposing.
+
+**A note a step rules out is struck, not ringed** (requirement "A note a step
+rules out is struck"). A grid of notes leaves no room for a ring round one
+note or round a cell's notes, so a candidate game's strike step marks the
+line through each note, in the note's own ink, and rings nothing. A
+premise's "this cell" on that cell is drawn by its strikes
+(`struckCellsByStrikes` in [`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts)),
+so its words must not say "ringed". Measured, the alternative cost 9×9 Keen
+about 40% of its pencil marks' size (`make-rings-round`, D6).
 
 ### A mark on something that is not a cell
 
-**`hint-mark.ts` draws a band on a cell's border box, so use it for a cell
-and only for a cell.** Where the decided element is something else, ask what
-shape the game already draws for the action and recolor that (§ "Echo the
-move's shape in the hint color"). That is a first-class answer and not a gap.
+**`HintMarks` rings and outlines a cell, so use it for a cell and only for
+a cell.** Where the decided element is something else, ring it with
+`drawRing` round its own box, and draw the shape the game already draws for
+the action inside (§ "Echo the move's shape in the hint color"). A box
+longer than it is wide is ringed by a pill.
 
-| The element | The mark | Exemplar |
+| The element | The ring, and what goes inside it | Exemplar |
 | --- | --- | --- |
-| A side between two squares | the game's own line or cross, drawn through `engine/edge-hint.ts` | `path/render.ts`, `tracks/render.ts` |
-| A span between two elements | the thing it would become, with only the added part in the action color | `bridges/render.ts` |
-| An element wider than its tile | its own rim and glyph recolored, since a band on the tile would cut across it | `drawIsland` in `bridges/render.ts` |
-| An edge, face or dot of a tiling | a band under the edge, an outline inset in the face, a ring under the dot, from `engine/grid/` geometry | `loopy/render.ts` |
-| A region that is not a set of whole cells | the band the game draws inside the region's boundary for its selection, in the hint colors | `map/render.ts`, and `hints-candidates.md` § "A graph, not a grid (Map)" |
+| A side between two squares | a pill across the side, with the game's own line or cross, through `engine/edge-hint.ts` | `tracks/render.ts`, `skeleton/edges/render.ts` |
+| A side on the border grid | a pill along the side, with the wall or the cross | `engine/border-grid-render.ts` |
+| A span between two elements | a pill round the span, with the part the move adds | `bridges/render.ts` |
+| A dot, a peg, a vertex | a circle round it | `pegs/render.ts`, `untangle/render.ts` |
+| A straight piece | one pill round the piece | `dominosa/render.ts` |
 
 **A side of a square is the engine's `EDGE` mark**, and
 [`engine/edge-hint.ts`](../src/engine/edge-hint.ts) packs it into both
-squares' tile keys and calls the game's own line and cross in the hint's
-inks, so a game declares only how those two shapes look. A step that asks
-for a line draws the line; one that asks for a cross draws the cross.
+squares' tile keys. A game declares how its line and cross look, and where a
+side's ring goes (`EdgeShapes.ring`): both squares of the side draw that one
+ring, each in its own clip, with the asked shape inside.
 
-A game whose every decided element is a cell uses the band whole
-([`seismic/render.ts`](../src/games/seismic/render.ts)). Edge games on the
-border grid take their marks from `hintTileBits` in
+Edge games on the border grid take their marks from `hintTileBits` in
 [`engine/border-grid-render.ts`](../src/engine/border-grid-render.ts), whose
 notation has one shape, the edge, for a wall and a not-wall alike: a wall
 ask is the edge in the ring's ink, and a not-wall ask a cross on the edge,
@@ -189,10 +214,11 @@ so a shape the step does not ask for is never drawn in one.
 
 ### A piece is ringed as one shape
 
-**A target spanning several squares is one ring around the piece, not a box a
-square with a double bar across its middle** (requirement "A piece a hint
-acts on is ringed as one shape"). The game says only which squares belong
-together: `HintMarkStyle.joinTargets(a, b)` for the target, and
+**A straight target spanning several squares is one ring around the piece,
+a pill, not a ring a square** (requirement "A piece a hint acts on is ringed
+as one shape"). A bent piece takes a ring a square: a round ring round it
+would enclose board the piece is not on. The game says only which squares
+belong together: `HintMarkStyle.joinTargets(a, b)` for the target, and
 `joinEvidence` where evidence is whole pieces, so that two pieces side by
 side do not merge into a shape that is not on the board. Omitted, targets
 never join and evidence always does.
@@ -205,7 +231,7 @@ keys its own tile word and passes a join relation takes the sides from
 while its sides change (requirement "A joined mark inside the content box
 keys its repaint on its sides"). `expectPieceRing` in
 [`engine/testing/mark-shape.ts`](../src/engine/testing/mark-shape.ts) holds
-the six sides of a two-square piece. Population:
+a two-square piece to one pill. Population:
 `git grep -l joinTargets src/games`.
 
 ### A square the move brings along takes a lighter mark
@@ -249,7 +275,9 @@ take a strong color, as the engine's are.
 cell's border means in your game.** It reads as a highlight by color, not by
 weight. `MarkBand` is the cell's content box plus how far the band reaches
 outside it (`outer`) and inside it (`inner`), and that choice decides who
-undoes the mark.
+undoes the mark. `HintMarks` draws a cell's ring as thick as the band and
+within the band's reach (`drawRing`'s `room`), so the same erase and repaint
+undo it.
 
 - **Outside (`outer > 0`)**, where there is a gutter between cells. Call
   `HintMarks.eraseBeforeTiles(…, gutterColor, overlaps)` before the tile loop
@@ -266,7 +294,7 @@ undoes the mark.
   changed while it stayed evidence counts as changed; `OverlaySidecar.pack`
   puts the outline sides in its diff key, with nothing to wire. Exemplar:
   [`filling/render.ts`](../src/games/filling/render.ts). A game with no
-  notes passes `pack` no `markBits`, and its ringed notes are not asked for
+  notes passes `pack` no `markBits`, and its struck notes are not asked for
   ([`starbattle/render.ts`](../src/games/starbattle/render.ts)).
 - **Both**, a pixel of real gutter plus some of the cell's own edge. The
   `outer` part makes it an outside-band game, and the erase covers the inside
@@ -298,19 +326,23 @@ comes out as one contour and a scattered set as one ring a cell.
 
 ### Guarding the mark's shape
 
-**Test the shape of a mark, not its color.** "Some rect is `COL_HINT`" is
-what a fill also satisfies.
+**Test the shape of a mark, not its color.** "Some rect is in the outline's
+ink" is what a fill also satisfies.
 
+- No game names `HINT_RING`
+  ([`palette-source.test.ts`](../src/engine/color/palette-source.test.ts)),
+  so a ring is the engine's and round by construction.
 - [`hint-mark.test.ts`](../src/engine/hint-mark.test.ts) walks every hinting
-  game and fails on a rect in a hint color that is cell-sized and thick in
-  both directions. It finds a game's hint colors by reading the `COL_HINT`
-  and `COL_HINT_CELL` exports of its `render.ts`, so export those names for
-  the ring's and the outline's slots and for nothing else
-  ([`method.md`](./method.md) § "A scan that keys on a name").
+  game: nothing in the ring's ink but rings and the shapes inside them, every
+  ring round, and no rect in the outline's ink cell-sized and thick in both
+  directions. It reads a game's outline slot from the `COL_HINT_CELL` export
+  of its `render.ts`, so export that name for the outline's slot and for
+  nothing else ([`method.md`](./method.md) § "A scan that keys on a name").
 - In the game's own test,
   [`mark-shape.ts`](../src/engine/testing/mark-shape.ts) gives `expectRing`
-  (four thin rects, none solid), `expectContour` (`2w + 2` sides for a
-  `w`-cell row, where a ring a cell would give `4w`) and `expectPieceRing`.
+  (round rings, nothing else in their ink), `ringsOf`, `expectContour`
+  (`2w + 2` sides for a `w`-cell row, where a ring a cell would give `4w`)
+  and `expectPieceRing` (one pill).
 - The hatch draws no rect, so this guard does not see it; its own guards are
   in § "Hatch the line the sentence names".
 
@@ -564,15 +596,17 @@ same repaint over the board (`Puzzle.getImage`). The normative rule is
 [`app-shell`](../openspec/specs/app-shell/spec.md) requirement "The engine
 colors every hint mark".
 
-- **Draw a ring in `HINT_RING` and an outline in `HINT_OUTLINE`**, each in a
-  palette slot of its own, and a mark in nothing else. A recolored clue digit
-  is an outline. [`hint-ink.test.ts`](../src/engine/hint-ink.test.ts) hides
-  each reference of the steps every hinting game opens with, and fails on a
-  mark drawn in another role's ink or in a slot only a hint uses.
-- **Stripes are the engine's**: `drawHatch` takes no color, and draws in the
-  stripes ink `resolvePalette` adds to every palette.
-- **A mark that restyles the content keeps the content's color**, as a struck
-  candidate stays `COL_PENCIL`; the repaint finds it by what it changes.
+- **Draw an outline in `HINT_OUTLINE`**, in a palette slot of its own, and a
+  mark in nothing else. A recolored clue digit is an outline.
+  [`hint-ink.test.ts`](../src/engine/hint-ink.test.ts) hides each reference
+  of the steps every hinting game opens with, and fails on a mark drawn in
+  another role's ink or in a slot only a hint uses.
+- **Rings and stripes are the engine's**: `drawRing` and `drawHatch` take no
+  color, and draw in the inks `resolvePalette` appends to every palette. A
+  game's own slot of the ring's color (the drag's blue) is no ring's.
+- **A mark that restyles the content keeps the content's color**, as a
+  struck candidate stays `COL_PENCIL`; the repaint finds it by what it
+  changes. A strike is such a mark.
 - **Pick no hint color, and add no keyline.** The app finds an ink's marks by
   drawing the inks in black and then white, so a mark is found whole on
   content of any color, and it keeps the ink's own coverage: stripes stay as

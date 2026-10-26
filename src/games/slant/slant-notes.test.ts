@@ -18,6 +18,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
@@ -26,7 +27,7 @@ import { newDesc } from "./generator.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE } from "./hint-marks.ts";
 import { slantGame } from "./index.ts";
-import { border, COL_ERROR, COL_HINT, COL_PENCIL } from "./render.ts";
+import { border, COL_ERROR, COL_PENCIL } from "./render.ts";
 import { solveFromClues } from "./solver.ts";
 import {
   ALIKE_DOWN,
@@ -491,7 +492,7 @@ describe("slant marks render", () => {
     expect(barsAcross(ops, COL_PENCIL)).toHaveLength(0);
   });
 
-  it("a hint step placing a mark draws it in the hint color", () => {
+  it("a hint step placing a mark rings it, with its bars inside in the ring's ink", () => {
     const words = markWords.the("ring", ALIKE, [{ x: 1, y: 1, dir: "right" }], "mark");
     const step = {
       move: mark,
@@ -500,7 +501,10 @@ describe("slant marks render", () => {
       words,
       highlights: { mark },
     };
-    expect(barsAcross(frame(s, ui, step), COL_HINT)).toHaveLength(4);
+    const ops = frame(s, ui, step);
+    // One pill across the side, drawn by both squares.
+    expectRing(ops, { rings: 2 });
+    expect(barsAcross(ops, ringsOf(ops)[0].color)).toHaveLength(4);
   });
 
   it("marks are keyed per tile, so a new mark repaints the squares beside it", () => {

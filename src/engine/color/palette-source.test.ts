@@ -313,6 +313,20 @@ it("declares no named color nothing can show", () => {
 });
 
 /**
+ * **Only the engine draws a ring**, round (`GameDrawing.drawRing`), in the ink
+ * `resolvePalette` appends; a game that held `HINT_RING` in a slot could draw
+ * a "ringed" mark in any shape. The color itself is no secret (the drag's
+ * blue is the same), so what is refused is the name: a game reaches the ring
+ * only through the engine.
+ */
+it("no game holds the ring's ink", () => {
+  const holding = gameSources()
+    .filter(({ src }) => /\bHINT_RING\b/.test(code(src)))
+    .map(({ rel }) => rel);
+  expect(holding).toEqual([]);
+});
+
+/**
  * A **shared role** is one because two or more games mean the same thing by
  * it. One game's color is that game's, declared under its id in
  * `palette-games.ts`, and a role no game takes is a decision nothing on any

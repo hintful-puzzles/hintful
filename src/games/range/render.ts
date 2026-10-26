@@ -18,7 +18,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   RULED_OUT,
   SHADED,
@@ -35,7 +34,8 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { CLUE } from "./hint-text.ts";
 import type { RangeHint } from "./index.ts";
@@ -65,11 +65,10 @@ export const COL_RULED_OUT = 5; // the cross in a cell marked clear
 export const COL_TEXT = 6; // a clue's number
 export const COL_ERROR = 7;
 export const COL_CURSOR = 8;
-export const COL_HINT = 9; // the cell the displayed hint forces — ringed
-export const COL_HINT_CELL = 10; // the deduction's premise/area cells — outlined
+export const COL_HINT_CELL = 9; // the deduction's premise/area cells — outlined
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 11;
-export const COL_FLASH_LEAD = 12;
+export const COL_FLASH = 10;
+export const COL_FLASH_LEAD = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -86,7 +85,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -116,7 +114,7 @@ const F_HINT_HATCH = 1 << 24; // on the run the sentence names — hatched
 
 /** A cell's role in the displayed hint, with its cache flag. The `target` is
  * the forced cell, shaded or clear alike (the narration says which mark),
- * ringed in COL_HINT; the `area` is the deduction's evidence, outlined in
+ * ringed; the `area` is the deduction's evidence, outlined in
  * COL_HINT_CELL; a `shadedRef` is a shaded premise cell, which keeps its piece
  * and takes a doubled outline in COL_HINT_CELL. */
 const HINT_FLAG = { none: 0, target: 1 << 20, area: 1 << 22, shadedRef: 1 << 23 };
@@ -185,9 +183,10 @@ function drawCell(
   } else if (value === WHITE) {
     drawRuledOutCross(dr, box, error ? COL_ERROR : COL_RULED_OUT);
   } else if (value > 0) {
+    const { origin, options } = clueText(ts, tx, ty);
     dr.drawText(
-      { x: tx, y: ty },
-      glyphFont(Math.floor((ts * 3) / 5)),
+      origin,
+      options,
       error ? COL_ERROR : clueRef ? COL_HINT_CELL : COL_TEXT,
       String(value),
     );
@@ -205,13 +204,29 @@ function drawCell(
   // says which mark and auto-hint applies it for real.
   const band = { box, outer: 0, inner: thick };
   if (hintKind === "area") drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
-  if (hintKind === "target") drawMarkSides(dr, band, MARK_ALL, COL_HINT);
+  if (hintKind === "target") {
+    const clue = clueText(ts, tx, ty);
+    const clear: RingClear =
+      value > 0
+        ? { enclose: [textBox(clue.origin, clue.options, String(value))], avoid: [] }
+        : NOTHING_TO_CLEAR;
+    dr.drawRing(box, clear, thick);
+  }
   if (hintKind === "shadedRef") {
     drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_HINT_CELL);
     drawRectOutline(dr, x + 2, y + 2, ts - 3, ts - 3, COL_HINT_CELL);
   }
 
   dr.drawUpdate({ x, y, w: ts + 1, h: ts + 1 });
+}
+
+/** Where a clue's number is drawn in the cell centered on (`tx`, `ty`). */
+function clueText(
+  ts: number,
+  tx: number,
+  ty: number,
+): { origin: Point; options: DrawTextOptions } {
+  return { origin: { x: tx, y: ty }, options: glyphFont(Math.floor((ts * 3) / 5)) };
 }
 
 // --- redraw ----------------------------------------------------------------

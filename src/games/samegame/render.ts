@@ -5,7 +5,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -16,6 +15,7 @@ import {
   HintMarks,
   type MarkBand,
   type MarkCell,
+  NO_TEXT,
 } from "../../engine/hint-mark.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -68,11 +68,10 @@ export const COL_ON_TILE = 15;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
 export const COL_FLASH = 16;
 export const COL_FLASH_LEAD = 17;
-/** The ring round the group a hint step removes. */
-export const COL_HINT = 18;
-/** The outline round the squares and groups it reasons from. */
-export const COL_HINT_EVIDENCE = 19;
-const NCOLORS = 20;
+/** The outline round the squares and groups a hint step reasons from. The
+ * ring round the group it removes is the engine's (`GameDrawing.drawRing`). */
+export const COL_HINT_EVIDENCE = 18;
+const NCOLORS = 19;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = new Array<Color>(NCOLORS);
@@ -89,7 +88,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = surfaceGrid(defaultBackground);
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   return out;
 }
@@ -289,9 +287,11 @@ export function redraw(
   ds.hint.pack(named, (x, y) => y * w + x);
   const style: HintMarkStyle = {
     band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    // A tile is a color, never text.
+    text: () => NO_TEXT,
     evidenceColor: COL_HINT_EVIDENCE,
-    // A step rings one group, so its squares are one shape.
+    // A step rings one group: one pill where it is straight, and a ring per
+    // square where it bends.
     joinTargets: () => true,
     // Two groups the step outlines never share a color where they touch.
     joinEvidence: (a, b) => state.tiles[a.y * w + a.x] === state.tiles[b.y * w + b.x],

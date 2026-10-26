@@ -20,7 +20,6 @@ import {
   FLASH_LEAD,
   GRID_DARK,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   RULED_OUT,
   surfaceGrid,
@@ -29,7 +28,6 @@ import { drawRectCorners } from "../../engine/draw.ts";
 import {
   drawEdgeHints,
   drawEdgeOrdinals,
-  type EdgeInks,
   edgeHintWords,
   stepEdgeHints,
 } from "../../engine/edge-hint.ts";
@@ -42,6 +40,7 @@ import {
   type EdgeMistake,
   LINE,
 } from "../../engine/line-drawing.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import {
   DOWN,
   DX,
@@ -82,13 +81,11 @@ export const COL_ERROR = 6;
 const COL_DRAG_ADD = 7;
 const COL_DRAG_REMOVE = 8;
 const COL_CURSOR = 9;
-/** The edges a hint step decides, drawn as the line or cross it asks for. */
-export const COL_HINT = 10;
-/** The squares a step reasons from, and the edges a supposition would
- * force. */
-export const COL_HINT_EVIDENCE = 11;
-const COL_FLASH = 12;
-const COL_FLASH_LEAD = 13;
+/** The squares a hint step reasons from, and the edges a supposition would
+ * force. The edges it decides are ringed by the engine (`drawEdgeHints`). */
+export const COL_HINT_EVIDENCE = 10;
+const COL_FLASH = 11;
+const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -102,7 +99,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_DRAG_ADD] = DRAG_ADD;
   out[COL_DRAG_REMOVE] = DRAG_REMOVE;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -150,8 +146,6 @@ const S_DRAG_REMOVE = 1 << 6;
 
 // Word 2, the hint on the sides: `edge-hint.ts`'s word.
 const WORDS = 3;
-
-const HINT_INKS: EdgeInks = { ring: COL_HINT, outline: COL_HINT_EVIDENCE };
 
 export interface SkeletonDrawState {
   started: boolean;
@@ -274,7 +268,10 @@ function drawTile(
   // ink, the asked ones at the weight of a laid line.
   const small = Math.max(2, Math.floor(ts / 8));
   const hintCross = Math.max(2, ts >> 4);
-  drawEdgeHints(hints, HINT_INKS, {
+  // An asked side is ringed by a pill across it, round the line from this
+  // middle to the next or round the cross on the side; each of its two
+  // squares draws its half in its own clip.
+  drawEdgeHints(dr, hints, COL_HINT_EVIDENCE, {
     cross: (sides, ink) => {
       for (let k = 0; k < 4; k++) if (sides & (1 << k)) cross(k, ink, small, hintCross);
     },
@@ -285,6 +282,19 @@ function drawTile(
         if (sides & (1 << k)) strokes.push({ k, color: ink, weight });
       for (const { from, to } of segmentsOf(strokes))
         dr.drawLine(from, to, ink, weight);
+    },
+    ring: (d, shape) => {
+      const m = sideEnd(d);
+      const long = shape === "line" ? ts : Math.floor(ts * 0.6);
+      const short = Math.floor(ts * 0.6);
+      const w2 = (DX[d] !== 0 ? long : short) / 2;
+      const h2 = (DX[d] !== 0 ? short : long) / 2;
+      return {
+        box: { x: m.x - w2, y: m.y - h2, w: 2 * w2, h: 2 * h2 },
+        clear: NOTHING_TO_CLEAR,
+        thickness: Math.max(2, ts >> 4),
+        room: { x: m.x - ts, y: m.y - ts, w: 2 * ts, h: 2 * ts },
+      };
     },
   });
 

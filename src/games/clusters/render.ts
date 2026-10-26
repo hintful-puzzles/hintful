@@ -23,12 +23,16 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
@@ -61,24 +65,23 @@ export const COL_0_DOT = 4; // the dot on a given `F_COLOR_0` piece
 export const COL_1_DOT = 5; // the dot on a given `F_COLOR_1` piece
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
-// Hint marks: the forced cell is ringed COL_HINT; the tile the refuted
-// coloring would break gets a thin COL_HINT_CELL ring, an outline because the
+// Hint marks: the forced cell is ringed by the engine; the tile the refuted
+// coloring would break gets a thin COL_HINT_CELL frame, an outline because the
 // tile's own color *is* part of the premise; a lookahead chain's what-if cells
 // are outlined COL_HINT_CELL with a small piece of the color each would be
 // forced to.
-export const COL_HINT = 8;
 /** The outlines, **and** a chain cell's ordinal — one index, because the
  * number indexes the evidence. */
-export const COL_HINT_CELL = 9;
+export const COL_HINT_CELL = 8;
 /** The surface of a cell. */
-export const COL_CELL = 10;
+export const COL_CELL = 9;
 /** The surface under a given. */
-export const COL_GIVEN = 11;
+export const COL_GIVEN = 10;
 /** The surface under a tile Check & Save found wrong. */
-export const COL_WRONG = 12;
+export const COL_WRONG = 11;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 13;
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH = 12;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -98,7 +101,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   // The chain is outlined rather than washed, so it takes the mark form of the
   // evidence role, which covers the chain ordinal too (see `HINT_OUTLINE`).
   out[COL_HINT_CELL] = HINT_OUTLINE;
@@ -124,7 +126,7 @@ const K_LIT = 11; // bits 11-12: the win flash's tone on this cell
 
 // Hint-overlay bits, packed per cell into the OverlaySidecar, which is part of
 // the diff key (docs/rendering.md § "Overlay sidecars").
-const HB_TARGET = 1; // the forced cell — COL_HINT mark
+const HB_TARGET = 1; // the forced cell — ringed
 const HB_DANGER = 1 << 1; // tile that would break — a thin COL_HINT_CELL ring
 const HB_CHAIN_0 = 1 << 2; // what-if cell forced `F_COLOR_0` in the hypothetical
 const HB_CHAIN_1 = 1 << 3; // what-if cell forced `F_COLOR_1` in the hypothetical
@@ -348,7 +350,9 @@ export function redraw(
   }
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    // A forced cell shows a piece or a dot, never text; an ordinal is on a
+    // chain cell, inside its own tile, which the ring's room does not reach.
+    text: () => NO_TEXT,
     evidenceColor: COL_HINT_CELL,
   };
   ds.marks.eraseBeforeTiles(dr, targets, chain, markStyle, COL_GRID, (x, y) => {

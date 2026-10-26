@@ -19,6 +19,7 @@ import {
   deadEndBindingDefects,
 } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -34,7 +35,7 @@ import {
 } from "./hint.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import { pegsGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import { findFinish, frozenPegs, legalJumps, provedLost } from "./solver.ts";
 import { GRID_HOLE, GRID_PEG, type PegsMove, type PegsState, status } from "./state.ts";
 
@@ -543,8 +544,9 @@ describe("pegs hint", () => {
       recording.ops.filter(
         (o) => o.op === "circle" && o.fill === -1 && o.outline === color,
       ).length;
-    // Two strokes per ring: a ringed peg and hole, and one outlined peg.
-    expect(rings(COL_HINT)).toBe(4);
+    // A ring each round the ringed peg and hole, and two strokes round the
+    // outlined peg.
+    expectRing(recording.ops, { rings: 2 });
     expect(rings(COL_HINT_EVIDENCE)).toBe(2);
     // The rival's three squares are striped.
     expect(recording.ops.filter((o) => o.op === "hatch").length).toBe(3);

@@ -26,7 +26,7 @@ import {
 } from "./hint.ts";
 import { CLUE, type LineMarks, say } from "./hint-text.ts";
 import { abcdGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import { newSolverBoard, runsForce, solveBoard } from "./solver.ts";
 import {
   type AbcdMove,
@@ -490,7 +490,7 @@ describe("the frames a hint draws", () => {
     const hl = step.highlights as AbcdHint;
     const ops = result.recording.ops;
 
-    expectRing(ops, COL_HINT, 1);
+    expectRing(ops);
     // The line the sentence names is hatched, cell by cell and on through its
     // clue slots: one slot per letter.
     const line = hl.hatch ?? [];

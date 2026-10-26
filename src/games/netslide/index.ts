@@ -330,7 +330,7 @@ export const netslideGame: Game<
   hintRungs: NETSLIDE_RUNGS,
   hintMarks: {
     roles: {
-      ring: "what the step decides: the piece it is placing, with a double ring round its square, the arrow to click, drawn in the hint's color, and the square the slide takes the piece to, outlined. A solid outline is where the piece belongs; a dashed one is a square it is only passing through, or being parked in to set up a later move. When the slide only starts a longer journey, both squares are marked, and the dashed one nearer the piece is where this slide lands it. The words name the piece by its shape: a *loose end*, a *straight*, a *corner*, a *T-piece* or a *cross*.",
+      ring: "what the step decides: the piece it is placing, the arrow to click, and the square the slide takes the piece to. When the slide only starts a longer journey, both squares are ringed, and the one nearer the piece is where this slide lands it. The words say whether the piece then belongs there or is being set up for a later move, and name the piece by its shape: a *loose end*, a *straight*, a *corner*, a *T-piece* or a *cross*.",
       stripes:
         "the source's row or column, when the hint says it never slides: a piece sitting in it can only be moved along the other direction.",
     },

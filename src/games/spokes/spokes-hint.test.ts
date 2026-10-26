@@ -14,6 +14,7 @@
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
@@ -21,7 +22,7 @@ import {
 import { SLOW_TESTS_ENABLED, seedBudget } from "../../engine/testing/slow.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { type SpokesHint, spokesGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import {
   deduceSpokesPlan,
   type SpokesFiring,
@@ -382,12 +383,15 @@ describe("the hint frame paints the overlay", () => {
     return result;
   }
 
-  it("draws a COL_HINT spoke and a COL_HINT_CELL evidence ring, incl. a diagonal", () => {
+  it("rings a spoke and draws a COL_HINT_CELL evidence ring, incl. a diagonal", () => {
     const ops = hintFrame("diagonalLine").recording.ops;
-    // The forced diagonal line at hint color — completed across the grid
-    // corner, so both a plus-shape half and a corner-box half
-    // come out COL_HINT.
-    expect(ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(true);
+    // The forced diagonal line inside its ring, which is round — completed
+    // across the grid corner, so the cells around it and the corner box each
+    // draw the ring and the line in its ink.
+    const rings = ringsOf(ops);
+    expect(rings.length).toBeGreaterThan(1);
+    expectRing(ops, { rings: rings.length });
+    expect(ops.some((o) => o.op === "line" && o.color === rings[0].color)).toBe(true);
     // The evidence ring behind a hub.
     expect(ops.some((o) => o.op === "circle" && o.fill === COL_HINT_CELL)).toBe(true);
 
@@ -395,11 +399,14 @@ describe("the hint frame paints the overlay", () => {
   });
 
   it("rings a spoke to rule out rather than drawing it already marked", () => {
-    // A filled COL_HINT dot is exactly how a marked spoke looks, so the step
-    // read as already done.
-    const circles = hintFrame("ruleOut").recording.ops.filter((o) => o.op === "circle");
-    expect(circles.some((o) => o.outline === COL_HINT && o.fill === -1)).toBe(true);
-    expect(circles.filter((o) => o.fill === COL_HINT)).toEqual([]);
+    // A filled dot in the ring's ink is exactly how a marked spoke looks, so
+    // the step would read as already done: the dot is ringed, and nothing is
+    // filled in the ring's ink.
+    const ops = hintFrame("ruleOut").recording.ops;
+    expectRing(ops, { rings: ringsOf(ops).length });
+    const [ring] = ringsOf(ops);
+    expect(ring.w).toBe(ring.h);
+    expect(ops.filter((o) => o.op === "circle" && o.fill === ring.color)).toEqual([]);
   });
 });
 

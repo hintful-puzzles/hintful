@@ -8,6 +8,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
@@ -15,7 +16,7 @@ import { newDesc } from "./generator.ts";
 import { hint } from "./hint.ts";
 import { SQUARE } from "./hint-text.ts";
 import { cubeGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE, redraw } from "./render.ts";
+import { COL_HINT_EVIDENCE, redraw } from "./render.ts";
 import { DIR_CHARS, executeMove, findMoveDest } from "./roll.ts";
 import { SolidType } from "./solids.ts";
 import { canCollectWithoutDropping } from "./solver.ts";
@@ -227,7 +228,7 @@ describe("cube hint gesture", () => {
 });
 
 describe("cube hint marks", () => {
-  it("rings the square to roll onto and outlines the goal, as lines inside them", () => {
+  it("rings the square to roll onto and outlines the goal, inside them", () => {
     const p = PRESETS.find((q) => q.solid === SolidType.Cube) as CubeParams;
     const s = newState(p, newDesc(p, randomNew("w-a")).desc);
     const res = hint(s);
@@ -238,13 +239,13 @@ describe("cube hint marks", () => {
     const ds = cubeGame.newDrawState(s, cubeGame.preferredTileSize ?? 48);
     redraw(dr, ds, null, s, 0, {}, 0, NO_FLASH, step);
     const lines = opsOfKind(dr.ops, "line");
-    // A square's ring is its four sides, and nothing in a hint color fills.
-    expect(lines.filter((o) => o.color === COL_HINT)).toHaveLength(4);
+    // The square to roll onto is ringed round, and the goal's outline is
+    // its four sides, so the two differ in shape; nothing in a hint color
+    // fills.
+    expectRing(dr.ops);
     expect(lines.filter((o) => o.color === COL_HINT_EVIDENCE)).toHaveLength(4);
-    expect(
-      opsOfKind(dr.ops, "polygon").some(
-        (o) => o.fill === COL_HINT || o.fill === COL_HINT_EVIDENCE,
-      ),
-    ).toBe(false);
+    expect(opsOfKind(dr.ops, "polygon").some((o) => o.fill === COL_HINT_EVIDENCE)).toBe(
+      false,
+    );
   });
 });

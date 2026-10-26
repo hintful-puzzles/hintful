@@ -100,6 +100,9 @@ export interface RectDrawState {
   /** Per-cell tone of the win flash last drawn, beside the word, which is
    * full. */
   tone: Uint8Array;
+  /** Per-cell key of the hint rings last drawn through it: a ring reaches
+   * past its element, so no side bits in the word can say which it was. */
+  rings: string[];
 }
 
 /** A flagged edge that the unique solution does not contain. */

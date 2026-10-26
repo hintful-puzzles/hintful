@@ -23,7 +23,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -42,7 +41,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
@@ -67,16 +67,15 @@ export const COL_CURSOR = 4;
 /** The surface of a square, slashed or not: the slash is the content. */
 export const COL_CELL = 5;
 export const COL_GROUNDED = 6;
-export const COL_HINT = 7; // forced square(s), ringed on their own border
-export const COL_HINT_CELL = 8; // evidence area and cited anchors, outlined
-export const COL_PENCIL = 9; // the player's same-slant marks
-export const COL_PENCIL_BODY = 10; // the notes-mode indicator's pencil
+export const COL_HINT_CELL = 7; // evidence area and cited anchors, outlined
+export const COL_PENCIL = 8; // the player's same-slant marks
+export const COL_PENCIL_BODY = 9; // the notes-mode indicator's pencil
 /** The lifted disc under a clue. */
-export const COL_GIVEN = 11;
+export const COL_GIVEN = 10;
 /** The ground of a square the win flash is on: its body, and its leading
  * edge. */
-export const COL_FLASH = 12;
-export const COL_FLASH_LEAD = 13;
+export const COL_FLASH = 11;
+export const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -94,7 +93,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GROUNDED] = slantGrounded(background);
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
@@ -149,7 +147,8 @@ const SIDE_T = 6;
 const SIDE_B = 9;
 const PIN = 1 << 12;
 
-const MARK_COLORS = [-1, COL_PENCIL, COL_ERROR, COL_HINT_CELL, COL_HINT];
+/** A mark's ink by its code; {@link MARK_PLACING} is ringed instead. */
+const MARK_COLORS = [-1, COL_PENCIL, COL_ERROR, COL_HINT_CELL];
 
 const INDICATOR: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
@@ -215,12 +214,45 @@ function drawClue(
     COL_GIVEN,
     COL_INK,
   );
-  dr.drawText(
-    { x: coord(x, ts), y: coord(y, ts) },
-    glyphFont(clueTextSize(ts)),
-    tcol,
-    String(v),
-  );
+  const { origin, options } = clueText(ts, x, y);
+  dr.drawText(origin, options, tcol, String(v));
+}
+
+/** Where the clue on grid corner (`x`, `y`) is drawn, which the clue and a
+ * hint's ring both read. */
+function clueText(
+  ts: number,
+  x: number,
+  y: number,
+): { origin: Point; options: DrawTextOptions } {
+  return {
+    origin: { x: coord(x, ts), y: coord(y, ts) },
+    options: glyphFont(clueTextSize(ts)),
+  };
+}
+
+/** The clue digits at square (`x`, `y`)'s four corners, which a ring round
+ * the square keeps off. */
+function cornerClues(
+  ts: number,
+  W: number,
+  clues: Int8Array,
+  x: number,
+  y: number,
+): Rect[] {
+  const out: Rect[] = [];
+  for (const [cx, cy] of [
+    [x, y],
+    [x + 1, y],
+    [x, y + 1],
+    [x + 1, y + 1],
+  ]) {
+    const v = clues[cy * W + cx];
+    if (v === undefined || v < 0) continue;
+    const { origin, options } = clueText(ts, cx, cy);
+    out.push(textBox(origin, options, String(v)));
+  }
+  return out;
 }
 
 function drawTile(
@@ -354,18 +386,21 @@ function drawTile(
     dr.drawRect({ x: sx + span - 2, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_CELL);
   }
 
-  // The acted-on square's ring, and the evidence region's outline — both on the
-  // square's own border, over the grid line rather than over the slash. Drawn
-  // before the mistake overlay and the clues, which are inset and at the corners
-  // respectively, so all three can show at once.
+  // The evidence region's outline, on the square's own border, over the grid
+  // line rather than over the slash, and the acted-on square's ring, round as
+  // the clues in its corners allow. Drawn before the mistake overlay and the
+  // clues, which are inset and at the corners respectively, so all three can
+  // show at once.
   {
-    const band = {
-      box: { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
-      outer: 0,
-      inner: Math.max(2, ts >> 4),
-    };
+    const box = { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts };
+    const band = { box, outer: 0, inner: Math.max(2, ts >> 4) };
     if (v & HINT_EVID) drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
-    if (v & HINT_TARGET) drawMarkSides(dr, band, MARK_ALL, COL_HINT);
+    if (v & HINT_TARGET)
+      dr.drawRing(
+        box,
+        { enclose: [], avoid: cornerClues(ts, W, clues, x, y) },
+        Math.max(2, ts >> 4),
+      );
   }
 
   // findMistakes overlay: an inset red outline (the fork's cross-game
@@ -454,16 +489,31 @@ function drawMarks(dr: GameDrawing, ts: number, x: number, y: number, marks: num
   for (const [shift, cx, cy, across] of sides) {
     const code = (marks >> shift) & 7;
     if (code === 0) continue;
-    const color = MARK_COLORS[code];
-    for (const k of [-1, 1]) {
-      const off = k * gap - Math.floor(t / 2);
-      dr.drawRect(
-        across
-          ? { x: cx - reach, y: cy + off, w: 2 * reach + 1, h: t }
-          : { x: cx + off, y: cy - reach, w: t, h: 2 * reach + 1 },
-        color,
-      );
+    const bars = (color: number): void => {
+      for (const k of [-1, 1]) {
+        const off = k * gap - Math.floor(t / 2);
+        dr.drawRect(
+          across
+            ? { x: cx - reach, y: cy + off, w: 2 * reach + 1, h: t }
+            : { x: cx + off, y: cy - reach, w: t, h: 2 * reach + 1 },
+          color,
+        );
+      }
+    };
+    if (code !== MARK_PLACING) {
+      bars(MARK_COLORS[code]);
+      continue;
     }
+    // The mark a step places: a pill across the side round its bars, which
+    // each of the side's two squares draws its half of in its own clip.
+    const long = 2 * reach + 2 * t + 4;
+    const short = 2 * gap + 3 * t + 4;
+    const bw = across ? long : short;
+    const bh = across ? short : long;
+    dr.drawRing({ x: cx - bw / 2, y: cy - bh / 2, w: bw, h: bh }, NOTHING_TO_CLEAR, t, {
+      room: { x: cx - ts / 2, y: cy - ts / 2, w: ts, h: ts },
+      inside: bars,
+    });
   }
 }
 

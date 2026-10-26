@@ -11,7 +11,7 @@ exports[`net: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
-exports[`refusal and marks > rings the square a step turns and locks, in the hint color 1`] = `
+exports[`refusal and marks > rings the square a step turns and locks 1`] = `
 [
   {
     "color": 0,
@@ -587,7 +587,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 24,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -761,7 +761,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 24,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -884,7 +884,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 24,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1066,7 +1066,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 24,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1193,40 +1193,15 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     ],
   },
   {
-    "color": 11,
-    "h": 2,
-    "op": "rect",
+    "color": 15,
+    "h": 27,
+    "op": "ring",
+    "radius": 14,
     "rgb": "rgb(21, 113, 233)",
-    "w": 29,
-    "x": 121,
-    "y": 25,
-  },
-  {
-    "color": 11,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 29,
-    "x": 121,
-    "y": 52,
-  },
-  {
-    "color": 11,
-    "h": 29,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 121,
-    "y": 25,
-  },
-  {
-    "color": 11,
-    "h": 29,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 148,
-    "y": 25,
+    "thickness": 2,
+    "w": 27,
+    "x": 122,
+    "y": 26,
   },
   {
     "color": 6,
@@ -1266,7 +1241,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 24,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1622,7 +1597,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 56,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1838,7 +1813,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 56,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2009,7 +1984,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 56,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2162,7 +2137,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 56,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2300,7 +2275,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 56,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2683,7 +2658,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 88,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2842,7 +2817,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 88,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2979,7 +2954,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 88,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3182,7 +3157,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 88,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3337,7 +3312,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 88,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3660,7 +3635,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 120,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3801,7 +3776,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 120,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3905,7 +3880,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 120,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4076,7 +4051,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 120,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4198,7 +4173,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 120,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4563,7 +4538,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 152,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4755,7 +4730,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 152,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4878,7 +4853,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 152,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5061,7 +5036,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 152,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5210,7 +5185,7 @@ exports[`refusal and marks > rings the square a step turns and locks, in the hin
     "y": 152,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

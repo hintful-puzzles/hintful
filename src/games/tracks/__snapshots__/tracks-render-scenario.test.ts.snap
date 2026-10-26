@@ -313,7 +313,7 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y": 32,
   },
   {
-    "color": 16,
+    "color": 15,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(166, 145, 186)",
@@ -342,7 +342,7 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y2": 60,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -351,7 +351,7 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y": 32,
   },
   {
-    "color": 14,
+    "color": 13,
     "h": 12,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -360,7 +360,25 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y": 42,
   },
   {
-    "color": 13,
+    "color": 17,
+    "h": 17,
+    "op": "ring",
+    "radius": 9,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 2,
+    "w": 30,
+    "x": 49,
+    "y": 40,
+  },
+  {
+    "h": 17,
+    "op": "clip",
+    "w": 30,
+    "x": 49,
+    "y": 40,
+  },
+  {
+    "color": 17,
     "op": "line",
     "rgb": "rgb(21, 113, 233)",
     "thickness": 4,
@@ -370,7 +388,7 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y2": 43,
   },
   {
-    "color": 13,
+    "color": 17,
     "op": "line",
     "rgb": "rgb(21, 113, 233)",
     "thickness": 4,
@@ -378,6 +396,9 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "x2": 60,
     "y1": 53,
     "y2": 53,
+  },
+  {
+    "op": "unclip",
   },
   {
     "op": "unclip",
@@ -1148,7 +1169,25 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y": 33,
   },
   {
-    "color": 13,
+    "color": 17,
+    "h": 17,
+    "op": "ring",
+    "radius": 9,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 2,
+    "w": 30,
+    "x": 49,
+    "y": 40,
+  },
+  {
+    "h": 17,
+    "op": "clip",
+    "w": 30,
+    "x": 49,
+    "y": 40,
+  },
+  {
+    "color": 17,
     "op": "line",
     "rgb": "rgb(21, 113, 233)",
     "thickness": 4,
@@ -1158,7 +1197,7 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y2": 43,
   },
   {
-    "color": 13,
+    "color": 17,
     "op": "line",
     "rgb": "rgb(21, 113, 233)",
     "thickness": 4,
@@ -1171,6 +1210,9 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "op": "unclip",
   },
   {
+    "op": "unclip",
+  },
+  {
     "h": 32,
     "op": "clip",
     "w": 32,
@@ -1747,7 +1789,7 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y": 128,
   },
   {
-    "color": 16,
+    "color": 15,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(166, 145, 186)",
@@ -1823,7 +1865,7 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y": 192,
   },
   {
-    "color": 16,
+    "color": 15,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(166, 145, 186)",
@@ -2583,7 +2625,7 @@ exports[`Tracks render scenarios > a displayed hint marks the board, and never f
     "y": 160,
   },
   {
-    "color": 16,
+    "color": 15,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(166, 145, 186)",
@@ -3558,7 +3600,7 @@ exports[`Tracks render scenarios > opener frame: clue numbers + A/B labels drawn
     "y": 32,
   },
   {
-    "color": 16,
+    "color": 15,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(166, 145, 186)",
@@ -4934,7 +4976,7 @@ exports[`Tracks render scenarios > opener frame: clue numbers + A/B labels drawn
     "y": 128,
   },
   {
-    "color": 16,
+    "color": 15,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(166, 145, 186)",
@@ -5010,7 +5052,7 @@ exports[`Tracks render scenarios > opener frame: clue numbers + A/B labels drawn
     "y": 192,
   },
   {
-    "color": 16,
+    "color": 15,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(166, 145, 186)",
@@ -5770,7 +5812,7 @@ exports[`Tracks render scenarios > opener frame: clue numbers + A/B labels drawn
     "y": 160,
   },
   {
-    "color": 16,
+    "color": 15,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(166, 145, 186)",

@@ -334,7 +334,7 @@ function findMistakes(state: ClustersState): readonly ClustersMistake[] {
 // --- hint ------------------------------------------------------------------
 
 /** What a Clusters hint step's marks carry beyond the cells its words name
- * (see the COL_HINT block in render.ts). `danger` is the tile the refuted
+ * (see the hint marks block in render.ts's palette). `danger` is the tile the refuted
  * coloring would break — the one element the narration calls "outlined" —
  * when that isn't the target itself; `chain` is a lookahead firing's what-if
  * walk, each cell marked with the color the hypothesis would force it to. The

@@ -14,11 +14,12 @@ import { decodeSave, encodeSave } from "../../engine/save.ts";
 import type { AnyGame } from "../../engine/testing/enrollment.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { firstOpen } from "./generator.ts";
 import { DEAD_BOARD, type MinesHint, type MinesRung } from "./hint.ts";
 import { minesGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import { FLAG, type MinesMove, type MinesState } from "./state.ts";
 
 type Step = HintStep<MinesMove, MinesHint, MinesRung>;
@@ -417,7 +418,7 @@ describe("Mines hint: render (tier 2.5)", () => {
   it("rings what a two-number step decides, outlines the numbers and stripes the shared squares", () => {
     const found = renderPinnedHint(minesGame, pinned("twoNumbers"));
     const ops = found.recording.ops;
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
+    expectRing(ops, { rings: stepMarks(found.hint).of("ring", CELL).length });
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_EVIDENCE)).toBe(
       true,
     );

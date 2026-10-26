@@ -10,6 +10,11 @@ import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
+import {
+  expectPieceRing,
+  expectRing,
+  ringsOf,
+} from "../../engine/testing/mark-shape.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import {
   renderPinnedHint,
@@ -20,7 +25,6 @@ import { tentsGame } from "./index.ts";
 import {
   COL_ERROR,
   COL_GRID,
-  COL_HINT,
   COL_HINT_CELL,
   COL_LINK,
   COL_MISTAKE,
@@ -142,9 +146,7 @@ describe("tents render scenarios", () => {
     expect(
       recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
     ).toBe(true);
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(
-      true,
-    );
+    expectRing(recording.ops, { rings: stepMarks(hint).of("ring", CELL).length });
     expect(recording.ops).toMatchSnapshot();
   });
 
@@ -162,15 +164,18 @@ describe("tents render scenarios", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("link frame: the link the step asks for drawn in the action color", () => {
+  it("link frame: one pill round the tent and tree, the link drawn inside it", () => {
     const { recording, hint } = frame("tentLink");
     const marks = stepMarks(hint);
     expect(hint?.move).toMatchObject({ type: "link", on: true });
     expect(marks.of("ring", LINK)).toHaveLength(1);
     expect(marks.of("ring", CELL)).toHaveLength(2);
-    // The link's two halves: thin, and in the hint's color.
+    expectPieceRing(recording.ops);
+    // The link's two halves: thin, and in the ring's ink, which only a ring's
+    // inside can draw in (`expectRing`).
+    const [ring] = ringsOf(recording.ops);
     const bars = recording.ops.filter(
-      (o) => o.op === "rect" && o.color === COL_HINT && Math.min(o.w, o.h) <= 3,
+      (o) => o.op === "rect" && o.color === ring.color && Math.min(o.w, o.h) <= 3,
     );
     expect(bars.length).toBeGreaterThanOrEqual(2);
   });

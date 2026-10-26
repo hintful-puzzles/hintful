@@ -18,7 +18,6 @@ import {
   FLASH_LEAD,
   GOAL as GOAL_COLOR,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   MOVED,
   surfaceGrid,
@@ -32,7 +31,8 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece } from "../../engine/piece.ts";
-import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
 import { BARREL, GOAL, PUSH } from "./hint-text.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
@@ -72,14 +72,13 @@ export const COL_WALL = 9;
 export const COL_FLASH = 10;
 /** The floor under the win flash's leading edge, where `COL_FLASH` is under
  * its body. */
-export const COL_FLASH_LEAD = 15;
-export const COL_HINT = 11;
-export const COL_HINT_EVIDENCE = 12;
+export const COL_FLASH_LEAD = 14;
+export const COL_HINT_EVIDENCE = 11;
 /** A drag's aimed push, as Inertia's aimed slide. */
-export const COL_AIM = 13;
+export const COL_AIM = 12;
 /** A floor square. */
-export const COL_FLOOR = 14;
-const NCOLORS = 16;
+export const COL_FLOOR = 13;
+const NCOLORS = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = new Array<Color>(NCOLORS);
@@ -100,7 +99,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_WALL] = wallFill(defaultBackground);
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_AIM] = DRAG_ADD;
   return out;
@@ -207,6 +205,8 @@ function drawTile(
     w: barrelSide,
     h: barrelSide,
   });
+  // A barrel's letter, which its piece and a ring round it both read.
+  const labelFont: DrawTextOptions = glyphFont(Math.floor(ts / 2));
 
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
   dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, floor);
@@ -234,28 +234,32 @@ function drawTile(
     } else if (isBarrel(kind)) {
       drawPiece(dr, barrelBox(at), "square", COL_BARREL);
       const label = barrelLabel(kind);
-      if (label) {
-        dr.drawText(
-          at,
-          glyphFont(Math.floor(ts / 2)),
-          COL_TEXT,
-          String.fromCharCode(label),
-        );
-      }
+      if (label) dr.drawText(at, labelFont, COL_TEXT, String.fromCharCode(label));
     }
   };
-  if (v !== WALL && v !== PIT && v !== DEEP_PIT) piece(center, v);
+  const standing = v !== WALL && v !== PIT && v !== DEEP_PIT;
+  if (standing) piece(center, v);
   for (const s of sprites) piece({ x: s.x, y: s.y }, s.v);
 
   // The rings sit in the margin round a piece, so they read beside the
   // barrel's fill; an outline inside a ring when one square carries both.
-  const ring = (r: number, color: number) => {
-    dr.drawCircle(center, r, -1, color);
-    dr.drawCircle(center, r - 1, -1, color);
-  };
   const outer = Math.floor(ts / 2) - 1;
-  if (marks.ringed) ring(outer, COL_HINT);
-  if (marks.outlined) ring(marks.ringed ? outer - 2 : outer, COL_HINT_EVIDENCE);
+  if (marks.ringed) {
+    const label = standing && isBarrel(v) ? barrelLabel(v) : 0;
+    dr.drawRing(
+      { x: center.x - outer, y: center.y - outer, w: 2 * outer, h: 2 * outer },
+      {
+        enclose: label ? [textBox(center, labelFont, String.fromCharCode(label))] : [],
+        avoid: [],
+      },
+      2,
+    );
+  }
+  if (marks.outlined) {
+    const r = marks.ringed ? outer - 2 : outer;
+    dr.drawCircle(center, r, -1, COL_HINT_EVIDENCE);
+    dr.drawCircle(center, r - 1, -1, COL_HINT_EVIDENCE);
+  }
   for (const [a, b] of marks.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_EVIDENCE);
   if (marks.aim) drawMoveArrow(dr, ts, marks.aim[0], marks.aim[1], COL_AIM);
   if (marks.ghost) {

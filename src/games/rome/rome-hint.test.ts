@@ -22,7 +22,7 @@ import { descValue } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -31,7 +31,7 @@ import {
 import { newRomeDesc } from "./generator.ts";
 import { buildSteps } from "./hint.ts";
 import { romeGame } from "./index.ts";
-import { COL_ARROW_PENCIL, COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_ARROW_PENCIL, COL_HINT_CELL } from "./render.ts";
 import {
   parseDesc,
   type RomeReason,
@@ -428,7 +428,7 @@ const pinned = describeHintPins({
 });
 
 describe("rome hint render", () => {
-  it("rings the square, hatches its area, and crosses the marks it rules out", () => {
+  it("crosses the marks it rules out, hatches its area, and outlines its arrow", () => {
     // The sentence follows a placement inside a plan, so its step is a later
     // leg and the frame is the board with the legs before it played.
     const { recording, hint } = renderPinnedHint(romeGame, pinned("dup"), {
@@ -446,7 +446,10 @@ describe("rome hint render", () => {
     expect(area.length).toBeGreaterThan(1);
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(area.length);
-    expectRing(recording.ops, COL_HINT_CELL, 1);
+    expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(4);
+    // A strike step rings nothing: its struck marks show the square
+    // (`make-rings-round`, D6).
+    expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();
   });
 
@@ -469,9 +472,13 @@ describe("rome hint render", () => {
       (o) => o.op === "text" && o.color === COL_HINT_CELL,
     );
     expect(ordinals.length).toBe(area.length);
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(
-      true,
-    );
+    // The struck square is shown by its struck mark, not a ring.
+    expect(ringsOf(recording.ops)).toEqual([]);
+    expect(
+      recording.ops.some(
+        (o) => o.op === "line" && o.color === COL_ARROW_PENCIL && o.thickness === 1,
+      ),
+    ).toBe(true);
     expect(recording.ops).toMatchSnapshot();
   });
 });

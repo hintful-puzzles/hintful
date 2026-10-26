@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`map hint rendering > a chain's regions carry their numbers, and the target its band 1`] = `
+exports[`map hint rendering > a chain's regions carry their numbers, and the target its ring 1`] = `
 [
   {
     "color": 0,
@@ -1505,7 +1505,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 82,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -1526,10 +1526,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1551,10 +1551,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1576,10 +1576,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1601,10 +1601,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1638,20 +1638,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 118,
     "cy": 90,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 114,
     "cy": 98,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -1675,7 +1675,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 82,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -1696,10 +1696,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1725,10 +1725,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1750,10 +1750,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1775,10 +1775,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1812,10 +1812,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 134,
     "cy": 98,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -1867,7 +1867,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 82,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -1888,10 +1888,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1913,10 +1913,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1938,10 +1938,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -1963,10 +1963,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2000,10 +2000,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 178,
     "cy": 90,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
@@ -2027,7 +2027,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 82,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -2048,10 +2048,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2077,10 +2077,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2102,10 +2102,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2127,10 +2127,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2164,10 +2164,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 186,
     "cy": 94,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -2486,7 +2486,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2495,10 +2495,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2520,10 +2520,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2545,10 +2545,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2572,20 +2572,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 118,
     "cy": 110,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 114,
     "cy": 118,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -2618,7 +2618,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2627,10 +2627,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2652,10 +2652,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2677,10 +2677,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2704,20 +2704,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 138,
     "cy": 110,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 134,
     "cy": 118,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -2769,7 +2769,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2778,10 +2778,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2803,10 +2803,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2828,10 +2828,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2855,20 +2855,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 178,
     "cy": 110,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 166,
     "cy": 114,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -2901,7 +2901,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2910,10 +2910,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2935,10 +2935,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2960,10 +2960,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -2987,20 +2987,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 198,
     "cy": 110,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 186,
     "cy": 114,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -3090,7 +3090,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3136,7 +3136,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3173,7 +3173,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 102,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3313,7 +3313,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3322,10 +3322,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3347,10 +3347,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3372,10 +3372,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3399,20 +3399,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 118,
     "cy": 130,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 114,
     "cy": 138,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -3437,7 +3437,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 11,
+    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -3457,7 +3457,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3468,27 +3468,27 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 138,
     "cy": 130,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 134,
     "cy": 138,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 11,
+    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -3508,7 +3508,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3517,10 +3517,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3542,10 +3542,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3567,10 +3567,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3592,10 +3592,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3617,10 +3617,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3642,10 +3642,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3667,10 +3667,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3692,10 +3692,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3719,20 +3719,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 158,
     "cy": 130,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 154,
     "cy": 138,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -3756,7 +3756,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3765,10 +3765,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3790,10 +3790,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3815,10 +3815,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3842,20 +3842,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 178,
     "cy": 130,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 166,
     "cy": 134,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -3888,7 +3888,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3899,20 +3899,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 198,
     "cy": 130,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 186,
     "cy": 134,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -3936,7 +3936,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -3957,10 +3957,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -3982,10 +3982,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4007,10 +4007,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4032,10 +4032,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4069,10 +4069,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 206,
     "cy": 134,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -4134,7 +4134,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4217,7 +4217,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4348,7 +4348,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4357,10 +4357,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4382,10 +4382,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4407,10 +4407,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4434,20 +4434,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 118,
     "cy": 150,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 114,
     "cy": 158,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -4480,7 +4480,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4489,7 +4489,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -4510,10 +4510,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4535,10 +4535,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4560,10 +4560,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4585,10 +4585,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4610,10 +4610,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4635,10 +4635,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4660,10 +4660,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4685,10 +4685,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4722,10 +4722,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 138,
     "cy": 150,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
@@ -4740,7 +4740,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4749,10 +4749,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4774,10 +4774,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4799,10 +4799,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4824,10 +4824,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -4851,20 +4851,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 158,
     "cy": 150,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 146,
     "cy": 154,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -4897,7 +4897,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4908,20 +4908,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 178,
     "cy": 150,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 166,
     "cy": 154,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -4937,7 +4937,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 11,
+    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -4957,7 +4957,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4968,27 +4968,27 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 198,
     "cy": 150,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 186,
     "cy": 154,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 11,
+    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -5008,7 +5008,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5017,10 +5017,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5042,10 +5042,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5067,10 +5067,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5092,10 +5092,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5119,20 +5119,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 218,
     "cy": 150,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 206,
     "cy": 154,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -5147,7 +5147,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5193,7 +5193,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5230,7 +5230,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5267,7 +5267,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5313,7 +5313,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5444,7 +5444,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5453,10 +5453,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5478,10 +5478,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5503,10 +5503,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5528,10 +5528,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5553,10 +5553,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5578,10 +5578,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5605,20 +5605,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 118,
     "cy": 170,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 114,
     "cy": 178,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -5651,7 +5651,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5660,10 +5660,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5685,10 +5685,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5710,10 +5710,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5735,10 +5735,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5760,10 +5760,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5785,10 +5785,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -5812,20 +5812,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 138,
     "cy": 170,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 126,
     "cy": 174,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -5848,6 +5848,17 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
+    "color": 18,
+    "h": 17,
+    "op": "ring",
+    "radius": 9,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "w": 17,
+    "x": 134,
+    "y": 184,
+  },
+  {
     "op": "unclip",
   },
   {
@@ -5858,7 +5869,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5869,22 +5880,33 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 158,
     "cy": 170,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 146,
     "cy": 174,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
+  },
+  {
+    "color": 18,
+    "h": 17,
+    "op": "ring",
+    "radius": 9,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "w": 17,
+    "x": 134,
+    "y": 184,
   },
   {
     "op": "unclip",
@@ -5897,7 +5919,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5908,20 +5930,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 178,
     "cy": 170,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 166,
     "cy": 174,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -5936,7 +5958,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5947,20 +5969,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 198,
     "cy": 170,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 186,
     "cy": 174,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -5975,7 +5997,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5984,7 +6006,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -6005,10 +6027,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6030,10 +6052,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6055,10 +6077,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6080,10 +6102,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6117,10 +6139,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 206,
     "cy": 174,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -6135,7 +6157,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6163,7 +6185,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6182,7 +6204,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6210,7 +6232,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6256,7 +6278,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 162,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6441,7 +6463,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6450,10 +6472,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6475,10 +6497,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6500,10 +6522,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6525,10 +6547,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6550,10 +6572,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6575,10 +6597,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6600,10 +6622,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6625,10 +6647,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6650,10 +6672,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6677,20 +6699,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 118,
     "cy": 190,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 114,
     "cy": 198,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -6723,7 +6745,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6732,81 +6754,6 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "fill": 10,
-    "fillRgb": "rgb(21, 113, 233)",
-    "op": "polygon",
-    "outline": 10,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "points": [
-      [
-        122,
-        182,
-      ],
-      [
-        142,
-        182,
-      ],
-      [
-        142,
-        186,
-      ],
-      [
-        122,
-        186,
-      ],
-    ],
-  },
-  {
-    "fill": 10,
-    "fillRgb": "rgb(21, 113, 233)",
-    "op": "polygon",
-    "outline": 10,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "points": [
-      [
-        142,
-        198,
-      ],
-      [
-        142,
-        202,
-      ],
-      [
-        122,
-        202,
-      ],
-      [
-        122,
-        198,
-      ],
-    ],
-  },
-  {
-    "fill": 10,
-    "fillRgb": "rgb(21, 113, 233)",
-    "op": "polygon",
-    "outline": 10,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "points": [
-      [
-        122,
-        182,
-      ],
-      [
-        126,
-        182,
-      ],
-      [
-        126,
-        202,
-      ],
-      [
-        122,
-        202,
-      ],
-    ],
-  },
-  {
     "color": 1,
     "h": 20,
     "op": "rect",
@@ -6832,6 +6779,17 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "w": 1,
     "x": 122,
     "y": 182,
+  },
+  {
+    "color": 18,
+    "h": 17,
+    "op": "ring",
+    "radius": 9,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "w": 17,
+    "x": 134,
+    "y": 184,
   },
   {
     "op": "unclip",
@@ -6844,7 +6802,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6853,7 +6811,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -6874,10 +6832,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6899,10 +6857,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6924,10 +6882,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -6949,56 +6907,6 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 10,
-    "fillRgb": "rgb(21, 113, 233)",
-    "op": "polygon",
-    "outline": 10,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "points": [
-      [
-        142,
-        182,
-      ],
-      [
-        162,
-        202,
-      ],
-      [
-        156,
-        202,
-      ],
-      [
-        142,
-        188,
-      ],
-    ],
-  },
-  {
-    "fill": 10,
-    "fillRgb": "rgb(21, 113, 233)",
-    "op": "polygon",
-    "outline": 10,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "points": [
-      [
-        146,
-        198,
-      ],
-      [
-        146,
-        202,
-      ],
-      [
-        142,
-        202,
-      ],
-      [
-        142,
-        198,
-      ],
-    ],
-  },
-  {
     "color": 1,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
@@ -7011,10 +6919,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 158,
     "cy": 190,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
@@ -7028,6 +6936,17 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
+    "color": 18,
+    "h": 17,
+    "op": "ring",
+    "radius": 9,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "w": 17,
+    "x": 134,
+    "y": 184,
+  },
+  {
     "op": "unclip",
   },
   {
@@ -7038,7 +6957,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7047,10 +6966,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7072,10 +6991,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7097,10 +7016,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7124,20 +7043,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 178,
     "cy": 190,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 166,
     "cy": 194,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -7152,7 +7071,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7161,10 +7080,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7186,10 +7105,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7211,10 +7130,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7236,10 +7155,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7261,10 +7180,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7286,10 +7205,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7313,20 +7232,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 198,
     "cy": 190,
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(246, 235, 175)",
     "op": "circle",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(246, 235, 175)",
     "r": 2,
   },
   {
     "cx": 186,
     "cy": 194,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -7341,7 +7260,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7378,7 +7297,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7397,7 +7316,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7416,7 +7335,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7425,7 +7344,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -7456,7 +7375,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 182,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7679,6 +7598,17 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
+    "color": 18,
+    "h": 17,
+    "op": "ring",
+    "radius": 9,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "w": 17,
+    "x": 134,
+    "y": 184,
+  },
+  {
     "op": "unclip",
   },
   {
@@ -7689,88 +7619,13 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
     "w": 20,
     "x": 142,
     "y": 202,
-  },
-  {
-    "fill": 10,
-    "fillRgb": "rgb(21, 113, 233)",
-    "op": "polygon",
-    "outline": 10,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "points": [
-      [
-        158,
-        202,
-      ],
-      [
-        162,
-        202,
-      ],
-      [
-        162,
-        222,
-      ],
-      [
-        158,
-        222,
-      ],
-    ],
-  },
-  {
-    "fill": 10,
-    "fillRgb": "rgb(21, 113, 233)",
-    "op": "polygon",
-    "outline": 10,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "points": [
-      [
-        162,
-        218,
-      ],
-      [
-        162,
-        222,
-      ],
-      [
-        142,
-        222,
-      ],
-      [
-        142,
-        218,
-      ],
-    ],
-  },
-  {
-    "fill": 10,
-    "fillRgb": "rgb(21, 113, 233)",
-    "op": "polygon",
-    "outline": 10,
-    "outlineRgb": "rgb(21, 113, 233)",
-    "points": [
-      [
-        142,
-        202,
-      ],
-      [
-        146,
-        202,
-      ],
-      [
-        146,
-        222,
-      ],
-      [
-        142,
-        222,
-      ],
-    ],
   },
   {
     "color": 1,
@@ -7782,6 +7637,17 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
+    "color": 18,
+    "h": 17,
+    "op": "ring",
+    "radius": 9,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "w": 17,
+    "x": 134,
+    "y": 184,
+  },
+  {
     "op": "unclip",
   },
   {
@@ -7792,7 +7658,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7801,10 +7667,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7826,10 +7692,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7851,10 +7717,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7876,10 +7742,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7901,10 +7767,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7926,10 +7792,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -7953,20 +7819,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 166,
     "cy": 214,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
   {
     "cx": 174,
     "cy": 218,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -8008,7 +7874,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8017,10 +7883,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8042,10 +7908,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8067,10 +7933,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8092,10 +7958,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8117,10 +7983,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8142,10 +8008,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8169,20 +8035,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 186,
     "cy": 214,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
   {
     "cx": 194,
     "cy": 218,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -8261,7 +8127,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8310,7 +8176,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8329,7 +8195,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8366,7 +8232,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 202,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8525,7 +8391,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -8556,7 +8422,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8593,7 +8459,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8630,7 +8496,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8639,10 +8505,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8664,10 +8530,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8689,10 +8555,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8714,10 +8580,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8741,20 +8607,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 166,
     "cy": 234,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
   {
     "cx": 174,
     "cy": 238,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -8779,7 +8645,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 11,
+    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -8799,7 +8665,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8808,10 +8674,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8833,10 +8699,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8858,10 +8724,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -8885,20 +8751,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 186,
     "cy": 234,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
   {
     "cx": 194,
     "cy": 238,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -9043,7 +8909,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9071,7 +8937,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9117,7 +8983,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9163,7 +9029,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9209,7 +9075,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -9268,7 +9134,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9305,7 +9171,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9324,7 +9190,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9333,7 +9199,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -9354,10 +9220,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -9379,10 +9245,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -9404,10 +9270,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -9429,10 +9295,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -9470,10 +9336,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 154,
     "cy": 258,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -9488,7 +9354,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9499,20 +9365,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 166,
     "cy": 254,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
   {
     "cx": 174,
     "cy": 258,
-    "fill": 18,
+    "fill": 17,
     "fillRgb": "rgb(206, 213, 252)",
     "op": "circle",
-    "outline": 18,
+    "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
   },
@@ -9528,7 +9394,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 11,
+    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -9548,7 +9414,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9578,10 +9444,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -9603,10 +9469,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -9628,10 +9494,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -9653,10 +9519,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -9690,10 +9556,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 186,
     "cy": 254,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -9880,7 +9746,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9926,7 +9792,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 242,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9954,7 +9820,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 262,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9991,7 +9857,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 262,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10010,7 +9876,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 262,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10029,7 +9895,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 262,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10066,7 +9932,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 262,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10103,7 +9969,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 262,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10140,7 +10006,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 262,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10149,7 +10015,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 262,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -10170,10 +10036,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -10191,10 +10057,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -10216,10 +10082,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -10241,10 +10107,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -10295,7 +10161,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 262,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10325,10 +10191,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -10346,10 +10212,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -10371,10 +10237,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -10396,10 +10262,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     ],
   },
   {
-    "fill": 11,
+    "fill": 10,
     "fillRgb": "rgb(40, 132, 32)",
     "op": "polygon",
-    "outline": 11,
+    "outline": 10,
     "outlineRgb": "rgb(40, 132, 32)",
     "points": [
       [
@@ -10433,10 +10299,10 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   {
     "cx": 166,
     "cy": 274,
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(170, 235, 230)",
     "op": "circle",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
   },
@@ -10665,7 +10531,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 282,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10702,7 +10568,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 282,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10721,7 +10587,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 282,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10740,7 +10606,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 282,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10759,7 +10625,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 282,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10778,7 +10644,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 282,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10797,7 +10663,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 282,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11022,7 +10888,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 302,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11059,7 +10925,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 302,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11078,7 +10944,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 302,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11097,7 +10963,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 302,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11116,7 +10982,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 302,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11135,7 +11001,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 302,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11154,7 +11020,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 302,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11458,7 +11324,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 322,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11486,7 +11352,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 322,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11505,7 +11371,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 322,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11524,7 +11390,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 322,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11845,7 +11711,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 342,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11882,7 +11748,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 342,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11901,7 +11767,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 342,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11920,7 +11786,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 342,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11939,7 +11805,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 342,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11976,7 +11842,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 342,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -12063,7 +11929,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 342,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -12094,7 +11960,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 342,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12140,7 +12006,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 342,
   },
   {
-    "fill": 12,
+    "fill": 11,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "polygon",
     "outline": 1,
@@ -12320,7 +12186,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12369,7 +12235,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12388,7 +12254,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12407,7 +12273,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12426,7 +12292,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12445,7 +12311,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12482,7 +12348,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12519,7 +12385,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12547,7 +12413,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12566,7 +12432,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 362,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12765,7 +12631,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 382,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12805,7 +12671,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 382,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12824,7 +12690,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 382,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12864,7 +12730,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 382,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12913,7 +12779,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 382,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12932,7 +12798,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 382,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12951,7 +12817,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 382,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12970,7 +12836,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 382,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -13346,7 +13212,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 402,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -13374,7 +13240,7 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 402,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

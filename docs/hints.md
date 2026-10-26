@@ -321,8 +321,9 @@ The glyph a role
 takes on a kind is the game's. The shared painters
 read the words too: `OverlaySidecar.pack(stepMarks(hint), …)` for candidate
 games and `hintTileBits` for the border grid. A contained kind marks its
-container (`MarkKind.within`): a ringed note rings its cell even when no
-reference names the cell.
+container (`MarkKind.within`): a struck note marks its cell, in the strike's
+role, even when no reference names the cell, and a strike step's "this cell"
+is drawn by its strikes (`hints-marks.md` § "Shade vs ring").
 
 **The check.** `testing/hint-binding.ts` renders every step the hint-quality
 walk visits and ablates the words: narrowing any one named element out must

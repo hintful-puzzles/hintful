@@ -10,7 +10,7 @@
  */
 import type { Color, PaletteScheme } from "../types.ts";
 import { darkValue, token } from "./color-token.ts";
-import { HINT_STRIPES } from "./palette.ts";
+import { HINT_RING, HINT_STRIPES } from "./palette.ts";
 
 const K = Math.sqrt(3) / 6;
 
@@ -102,15 +102,20 @@ export function mkhighlight(defaultBackground: Color): {
  * host's gray). A tinted background can land a rounding error inside K and
  * move again in a channel's last place.
  *
- * The last entry is the engine's, not the game's: the stripes ink every hatch
- * is drawn in (`GameDrawing.drawHatch`), so no game picks the color of a
- * hint's stripes.
+ * The last two entries are the engine's, not the game's: the ring ink every
+ * ring is drawn in (`GameDrawing.drawRing`) and the stripes ink every hatch is
+ * drawn in (`GameDrawing.drawHatch`), so no game picks either color, and no
+ * game can draw a ring in any shape but the engine's.
  */
 export function resolvePalette(
   game: { colors(defaultBackground: Color): Color[] },
   hostBackground: Color,
 ): Color[] {
-  return [...game.colors(mkhighlightBackground(hostBackground)), HINT_STRIPES];
+  return [
+    ...game.colors(mkhighlightBackground(hostBackground)),
+    HINT_RING,
+    HINT_STRIPES,
+  ];
 }
 
 /** A game's {@link PaletteScheme}, with what it left out filled in. */

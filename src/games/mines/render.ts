@@ -18,7 +18,8 @@ import { coord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import type { DrawTextOptions, Point } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import type { MinesHint } from "./hint.ts";
 import {
@@ -54,15 +55,13 @@ export const COL_FLAGBASE = 16;
 export const COL_QUERY = 17;
 export const COL_WRONGNUMBER = 18;
 export const COL_CURSOR = 19;
-/** What a hint step decides: the ring on its border. */
-export const COL_HINT = 20;
 /** What a hint step reasons from: the outline on its border. */
-export const COL_HINT_EVIDENCE = 21;
+export const COL_HINT_EVIDENCE = 20;
 /** The ground of a square the win flash is on: its body, and its leading
  * edge. */
-export const COL_FLASH = 22;
-export const COL_FLASH_LEAD = 23;
-export const NCOLORS = 24;
+export const COL_FLASH = 21;
+export const COL_FLASH_LEAD = 22;
+export const NCOLORS = 23;
 
 export const PREFERRED_TILE_SIZE = 20;
 export const FLASH_FRAME = 0.13;
@@ -162,6 +161,22 @@ function drawStripes(
   if (marks & MARK_STRIPES) dr.drawHatch(face(ts, x, y), hatchPeriod(ts));
 }
 
+/** The glyph a square of value `v` shows at (`x`, `y`): a count's digit, or
+ * a query's mark; `null` for a square with none. */
+function glyph(
+  ts: number,
+  x: number,
+  y: number,
+  v: number,
+): { origin: Point; options: DrawTextOptions; text: string } | null {
+  const origin = { x: x + Math.floor(ts / 2), y: y + Math.floor(ts / 2) };
+  if (v === QUERY)
+    return { origin, options: glyphFont(Math.floor((ts * 6) / 8)), text: "?" };
+  if (v > 0 && v <= 8)
+    return { origin, options: glyphFont(Math.floor((ts * 7) / 8)), text: String(v) };
+  return null;
+}
+
 /** A ring, an outline or a mistake's frame at the edge of the tile's face, over
  * everything it draws. The check refuses a hint while it finds a mistake, so a
  * frame never shares a tile with a hint's mark. */
@@ -170,11 +185,17 @@ function drawBand(
   ts: number,
   x: number,
   y: number,
+  v: number,
   marks: number,
 ): void {
   const band = { box: face(ts, x, y), outer: 0, inner: Math.max(2, ts >> 3) };
-  if (marks & MARK_RING) drawMarkSides(dr, band, MARK_ALL, COL_HINT);
-  else if (marks & MARK_OUTLINE) drawMarkSides(dr, band, MARK_ALL, COL_HINT_EVIDENCE);
+  if (marks & MARK_RING) {
+    const g = glyph(ts, x, y, v);
+    const clear = g
+      ? { enclose: [textBox(g.origin, g.options, g.text)], avoid: [] }
+      : NOTHING_TO_CLEAR;
+    dr.drawRing(band.box, clear, band.inner);
+  } else if (marks & MARK_OUTLINE) drawMarkSides(dr, band, MARK_ALL, COL_HINT_EVIDENCE);
   else if (marks & MARK_MISTAKE) drawMarkSides(dr, band, MARK_ALL, COL_BANG);
 }
 
@@ -223,12 +244,8 @@ function drawTile(
       dr.drawPolygon(poly(coords, 3), COL_FLAG, COL_FLAG);
     } else if (v === QUERY) {
       // A question mark (this frontend never sets one, but be faithful).
-      dr.drawText(
-        { x: x + Math.floor(ts / 2), y: y + Math.floor(ts / 2) },
-        glyphFont(Math.floor((ts * 6) / 8)),
-        COL_QUERY,
-        "?",
-      );
+      const g = glyph(ts, x, y, v);
+      if (g) dr.drawText(g.origin, g.options, COL_QUERY, g.text);
     }
   } else {
     // Open tile. `v | 32` is the too-many-flags wrong-number tint, and the
@@ -239,13 +256,9 @@ function drawTile(
     else fill(tinted ? COL_WRONGNUMBER : COL_OPEN);
     drawStripes(dr, ts, x, y, marks);
 
-    if (v > 0 && v <= 8) {
-      dr.drawText(
-        { x: x + Math.floor(ts / 2), y: y + Math.floor(ts / 2) },
-        glyphFont(Math.floor((ts * 7) / 8)),
-        COL_1 - 1 + v,
-        String(v),
-      );
+    const g = glyph(ts, x, y, v);
+    if (g) {
+      dr.drawText(g.origin, g.options, COL_1 - 1 + v, g.text);
     } else if (v === KILLED) {
       const cx = x + Math.floor(ts / 2);
       const cy = y + Math.floor(ts / 2);
@@ -292,7 +305,7 @@ function drawTile(
       COL_CURSOR,
       Math.max(2, ts >> 4),
     );
-  drawBand(dr, ts, x, y, marks);
+  drawBand(dr, ts, x, y, v, marks);
   dr.unclip();
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }

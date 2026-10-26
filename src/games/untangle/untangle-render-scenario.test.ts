@@ -16,6 +16,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import {
   type DrawOp,
   RecordingDrawing,
@@ -35,7 +36,6 @@ import {
   COL_DRAGPOINT,
   COL_FLASH,
   COL_FLASH_LEAD,
-  COL_HINT,
   COL_HINT_CELL,
   COL_LINE,
   COL_OUTLINE,
@@ -106,7 +106,7 @@ describe("Untangle render scenarios", () => {
     expect(rec.ops).toMatchSnapshot();
   });
 
-  it("hint frame: a COL_HINT line + destination marker are drawn", () => {
+  it("hint frame: the moved point and its spot are ringed, the move inside", () => {
     const id =
       "10:0-4,0-5,0-7,0-8,1-2,1-3,1-8,1-9,2-4,2-6,2-9,3-5,3-6,3-9,4-7,4-8,5-7,6-9";
     const { recording, hint } = renderScenario({
@@ -118,14 +118,14 @@ describe("Untangle render scenarios", () => {
     // The displayed step targets a vertex and a destination.
     expect(stepMarks(hint).of("ring", SPOT)).toHaveLength(1);
 
-    // A COL_HINT line (the move suggestion) and a COL_HINT marker circle
-    // at the destination.
-    expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(
-      true,
-    );
-    expect(recording.ops.some((o) => o.op === "circle" && o.fill === COL_HINT)).toBe(
-      true,
-    );
+    // A ring round the point and one round its spot, and inside them, in
+    // the ring's ink, each one's end of the line and the spot's disc.
+    expectRing(recording.ops, { rings: 2 });
+    const ink = ringsOf(recording.ops)[0].color;
+    expect(
+      recording.ops.filter((o) => o.op === "line" && o.color === ink),
+    ).toHaveLength(2);
+    expect(recording.ops.some((o) => o.op === "circle" && o.fill === ink)).toBe(true);
 
     // Each crossing the step removes gets an unfilled two-stroke ring.
     const cleared = stepMarks(hint).of("outline", CROSSING);
@@ -168,19 +168,17 @@ describe("Untangle render scenarios", () => {
     const marked = marks.of("ring", VERTEX).filter((v) => v !== moved);
     expect(marked.length).toBeGreaterThan(0);
 
-    // A two-stroke ring on each marked point, centered on it, besides the
-    // rings on the crossings the step removes.
-    const rings = recording.ops.filter(
-      (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT,
-    );
-    expect(rings).toHaveLength(2 * marked.length);
+    // A ring centered on each marked point, besides the ones round the
+    // point the step moves and its spot.
+    expectRing(recording.ops, { rings: marked.length + 2 });
+    const rings = ringsOf(recording.ops);
     const ts = untangleGame.preferredTileSize ?? 32;
     for (const v of marked) {
       const p = s.pts[v];
       const at = { x: Math.trunc((p.x * ts) / p.d), y: Math.trunc((p.y * ts) / p.d) };
       expect(
-        rings.filter((o) => o.op === "circle" && o.cx === at.x && o.cy === at.y),
-      ).toHaveLength(2);
+        rings.filter((o) => o.x + o.w / 2 === at.x && o.y + o.h / 2 === at.y),
+      ).toHaveLength(1);
     }
 
     expect(recording.ops).toMatchSnapshot();

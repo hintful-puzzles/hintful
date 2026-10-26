@@ -6,7 +6,7 @@
  * (basic-Latin culls + the two-mode clue eliminations) and places with quality-bar
  * narration; refusal on solved / on mistakes; `hintKeepTrack` verdicts; resume to
  * solved in both modes. Tier 2.5 — a render-scenario snapshot of a clue-elimination
- * journey frame in each mode (struck candidate `COL_HINT`/strikethrough, evidence
+ * journey frame in each mode (struck candidate's strikethrough, evidence
  * `COL_HINT_CELL`, clue glyphs still drawn).
  */
 import { describe, expect, it } from "vitest";
@@ -15,14 +15,14 @@ import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
-import { expectContour, expectRing } from "../../engine/testing/mark-shape.ts";
+import { expectContour, ringsOf } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newUnequalDesc } from "./generator.ts";
 import { unequalGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL, COL_PENCIL } from "./render.ts";
+import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
 import { type HintReason, recordUnequalDeductions } from "./solver.ts";
 import {
   DIFF_EXTREME,
@@ -472,7 +472,7 @@ function hintFrame(kind: Parameters<typeof pinned>[0]) {
 
 describe("unequal hint render", () => {
   it("an Unequal-mode link elimination outlines the pair and strikes the candidate", () => {
-    const { recording, hint } = hintFrame("greaterThanStrike");
+    const { recording } = hintFrame("greaterThanStrike");
     // The two clue cells are **outlined** COL_HINT_CELL evidence: the pair is
     // adjacent (a greater-than sign joins them), so the contour is one two-cell
     // ring of `2·2 + 2` sides, not two four-sided ones.
@@ -484,10 +484,9 @@ describe("unequal hint render", () => {
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_PENCIL)).toBe(
       true,
     );
-    // The strike cell is **ringed** COL_HINT rather than filled with it — a fill
-    // would hide the very digit being crossed out, and a strike gets the same
-    // mark as a placement so it is never identified only by the strikethrough.
-    expectRing(recording.ops, COL_HINT, (hint?.highlights as AnyStep)?.targets.length);
+    // A strike step rings nothing: its struck note marks the cell, which a
+    // ring could not go round clear of its notes (`make-rings-round`, D6).
+    expect(ringsOf(recording.ops)).toEqual([]);
     // Clue glyphs (the > polygons) are still drawn.
     expect(recording.ops.some((o) => o.op === "polygon")).toBe(true);
     expect(recording.ops).toMatchSnapshot();

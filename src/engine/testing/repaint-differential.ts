@@ -59,6 +59,7 @@ export class BoxRaster {
   readonly when: Int32Array;
   private frame = 0;
   private clipRect: { x0: number; y0: number; x1: number; y1: number };
+  private clips: { x0: number; y0: number; x1: number; y1: number }[] = [];
 
   constructor(
     readonly w: number,
@@ -84,6 +85,7 @@ export class BoxRaster {
       if (i < ops.length) this.one(ops[i]);
     }
     this.clipRect = { x0: 0, y0: 0, x1: this.w, y1: this.h };
+    this.clips = [];
   }
 
   /** A blitter save copies pixels out and a load copies them back, as the
@@ -128,16 +130,23 @@ export class BoxRaster {
 
   private one(o: DrawOp): void {
     switch (o.op) {
-      case "clip":
+      // As the canvas does (`puzzle/drawing.ts`): a clip saves the one in force
+      // and narrows it, and an unclip restores the one saved, so a ring's
+      // inside, clipped within a tile's clip, stays within both.
+      case "clip": {
+        const c = this.clipRect;
+        this.clips.push(c);
+        if (o.w < 1 || o.h < 1) return;
         this.clipRect = {
-          x0: Math.max(0, o.x),
-          y0: Math.max(0, o.y),
-          x1: Math.min(this.w, o.x + o.w),
-          y1: Math.min(this.h, o.y + o.h),
+          x0: Math.max(c.x0, o.x),
+          y0: Math.max(c.y0, o.y),
+          x1: Math.min(c.x1, o.x + o.w),
+          y1: Math.min(c.y1, o.y + o.h),
         };
         return;
+      }
       case "unclip":
-        this.clipRect = { x0: 0, y0: 0, x1: this.w, y1: this.h };
+        this.clipRect = this.clips.pop() ?? { x0: 0, y0: 0, x1: this.w, y1: this.h };
         return;
       case "rect":
         this.fill(o.x, o.y, o.x + o.w, o.y + o.h, ink(o.color));
@@ -162,6 +171,23 @@ export class BoxRaster {
             if (o.outline >= 0 && Math.abs(d - o.r) <= 0.5)
               this.dot(x, y, ink(o.outline));
             else if (o.fill >= 0 && d2 <= r2) this.dot(x, y, ink(o.fill));
+          }
+        return;
+      }
+      case "ring": {
+        // The stroke's middle, one pixel wide, as a circle's outline is: a
+        // rounded rect's signed distance within half a pixel of zero.
+        const cx = o.x + o.w / 2;
+        const cy = o.y + o.h / 2;
+        for (let y = Math.floor(o.y) - 1; y <= Math.ceil(o.y + o.h) + 1; y++)
+          for (let x = Math.floor(o.x) - 1; x <= Math.ceil(o.x + o.w) + 1; x++) {
+            const qx = Math.abs(x - cx) - (o.w / 2 - o.radius);
+            const qy = Math.abs(y - cy) - (o.h / 2 - o.radius);
+            const d =
+              Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) +
+              Math.min(Math.max(qx, qy), 0) -
+              o.radius;
+            if (Math.abs(d) <= 0.5) this.dot(x, y, ink(o.color));
           }
         return;
       }

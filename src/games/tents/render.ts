@@ -31,7 +31,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -45,12 +44,14 @@ import {
   type MarkBand,
   type MarkCell,
   MarkOutlines,
+  NO_TEXT,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
-import { LINK, NUMBER } from "./hint-marks.ts";
+import { type HintLink, LINK, NUMBER } from "./hint-marks.ts";
 import {
   BLANK,
   canJoin,
@@ -90,21 +91,19 @@ export const COL_ERRTEXT = 7;
 export const COL_ERRTRUNK = 8;
 // The findMistakes overlay, appended past upstream's enum.
 export const COL_MISTAKE = 9;
-/** The hint's action color: the ring round what a step decides, the link it
- * asks for, and the clue it counts with. */
-export const COL_HINT = 10;
-/** The hint's evidence outline. */
-export const COL_HINT_CELL = 11;
-export const COL_CELL = 12; // the surface of a square not yet decided
+/** The hint's evidence outline, and the clue it counts with. The ring round
+ * what a step decides is the engine's (`GameDrawing.drawRing`). */
+export const COL_HINT_CELL = 10;
+export const COL_CELL = 11; // the surface of a square not yet decided
 /** The clues, the keyboard cursor and the edge of an error diamond. */
-export const COL_INK = 13;
+export const COL_INK = 12;
 /** A link between a tent and its tree: the ink of the clues, the color of the
  * player's own notation. */
 export const COL_LINK = COL_INK;
 /** The ground of a square the win flash is on. */
-export const COL_FLASH = 14;
+export const COL_FLASH = 13;
 /** The ground of a square the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 15;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -124,7 +123,6 @@ export function colors(defaultBackground: Color): Color[] {
   // told from the red leaves it is drawn under.
   out[COL_ERRTRUNK] = RED_BOLD;
   out[COL_MISTAKE] = ERROR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -155,7 +153,8 @@ const FLASH_SHIFT = 21;
 // The ring and outline sides (`MarkOutlines.packed`) in the low byte.
 /** The square lies on the line the step's sentence names. */
 const HINT_LINE_BIT = 1 << 8;
-/** The direction of the link the step asks for from this square. */
+/** The direction of the link the step asks for from this square: the ring
+ * round it lies over the tile, which repaints when it moves. */
 const HINT_LINK_SHIFT = 9;
 
 // --- geometry (NARROW_BORDERS) --------------------------------------------
@@ -485,9 +484,6 @@ function drawTile(
       packed & LINK_MISTAKE_BIT ? COL_MISTAKE : COL_LINK,
     );
   }
-  const hintLink = hintWord >> HINT_LINK_SHIFT;
-  if (hintLink !== N) drawLinkHalf(dr, ts, tx, ty, hintLink, COL_HINT);
-
   const half = Math.floor(ts / 2);
   if (err & ERR_ADJ_TOPLEFT) drawErrAdj(dr, ts, tx, ty);
   if (err & ERR_ADJ_TOP) drawErrAdj(dr, ts, tx + half, ty);
@@ -532,6 +528,49 @@ function markBand(ts: number, x: number, y: number): MarkBand {
     outer: 0,
     inner: Math.max(2, ts >> 4),
   };
+}
+
+/**
+ * The ring round the link a step asks for, from square `sq` toward `d`, with
+ * the link itself inside it, as thick as a square's ring. Where the step rings
+ * both of the link's squares, it is one pill round the two; otherwise a small
+ * pill round the link alone, across the side the squares share.
+ */
+function drawLinkRing(
+  dr: GameDrawing,
+  ts: number,
+  w: number,
+  { sq, d }: HintLink,
+  whole: boolean,
+): void {
+  const x = sq % w;
+  const y = Math.floor(sq / w);
+  const nx = x + DX(d);
+  const ny = y + DY(d);
+  const room = {
+    x: coord(Math.min(x, nx), ts),
+    y: coord(Math.min(y, ny), ts),
+    w: (Math.abs(nx - x) + 1) * ts,
+    h: (Math.abs(ny - y) + 1) * ts,
+  };
+  const across = ny === y;
+  const long = Math.floor(ts * 0.8);
+  const short = Math.floor(ts / 3);
+  const mx = across ? coord(Math.max(x, nx), ts) : coord(x, ts) + Math.floor(ts / 2);
+  const my = across ? coord(y, ts) + Math.floor(ts / 2) : coord(Math.max(y, ny), ts);
+  const box = whole
+    ? room
+    : across
+      ? { x: mx - long / 2, y: my - short / 2, w: long, h: short }
+      : { x: mx - short / 2, y: my - long / 2, w: short, h: long };
+  const band = markBand(ts, x, y);
+  dr.drawRing(box, NOTHING_TO_CLEAR, Math.max(2, band.outer + band.inner), {
+    room,
+    inside: (ink) => {
+      drawLinkHalf(dr, ts, coord(x, ts), coord(y, ts), d, ink);
+      drawLinkHalf(dr, ts, coord(nx, ts), coord(ny, ts), FLIP(d), ink);
+    },
+  });
 }
 
 export function redraw(
@@ -603,26 +642,37 @@ export function redraw(
   const cx = ui.cursor.visible ? ui.cursor.x : -1;
   const cy = ui.cursor.visible ? ui.cursor.y : -1;
 
-  // The hint: a ring round each square it decides (a link's two squares as one
-  // shape), an outline round the squares it reasons from, the line its sentence
-  // names hatched, and the link it asks for in its own color.
+  // The hint: a ring round each square it decides, a link's two squares one
+  // pill with the link it asks for inside, an outline round the squares it
+  // reasons from, and the line its sentence names hatched.
   const marks = stepMarks(hint);
   const cellsOf = (cells: readonly MarkCell[]): MarkCell[] =>
     [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
   const hintTargets = cellsOf(marks.of("ring", CELL));
   const area = cellsOf(marks.of("outline", CELL));
   const hintLinks = new Int8Array(w * h);
-  for (const { sq, d } of marks.of("ring", LINK)) {
+  const askedLinks = marks.of("ring", LINK);
+  for (const { sq, d } of askedLinks) {
     hintLinks[sq] = d;
     hintLinks[sq + DY(d) * w + DX(d)] = FLIP(d);
   }
   const markStyle: HintMarkStyle = {
     band: (x, y) => markBand(ts, x, y),
-    targetColor: COL_HINT,
+    // A square shows a tree, a tent or grass, never text; the clues lie
+    // outside the grid, past any ring's reach.
+    text: () => NO_TEXT,
     evidenceColor: COL_HINT_CELL,
-    joinTargets: (a, b) => hintLinks[a.y * w + a.x] === dirTo(b.x - a.x, b.y - a.y),
   };
   const outlines = new MarkOutlines(hintTargets, area, markStyle);
+  // A link's ring is this file's, since only it can draw the link inside; when
+  // the step rings both of its squares, that ring is theirs too.
+  const ringed = new Set(hintTargets.map((c) => c.y * w + c.x));
+  const whole = (link: HintLink): boolean =>
+    ringed.has(link.sq) && ringed.has(link.sq + DY(link.d) * w + DX(link.d));
+  const inPill = new Set(
+    askedLinks.filter(whole).flatMap((l) => [l.sq, l.sq + DY(l.d) * w + DX(l.d)]),
+  );
+  const unlinked = hintTargets.filter((c) => !inPill.has(c.y * w + c.x));
   const stripes = marks.of("stripes", CELL);
   const striped = new Set(stripes.map((p) => p.y * w + p.x));
   const counted = new Set(marks.of("outline", NUMBER));
@@ -660,7 +710,8 @@ export function redraw(
   }
 
   // After every tile, and every frame: `HintMarks.paint` always draws.
-  ds.marks.paint(dr, hintTargets, area, markStyle);
+  ds.marks.paint(dr, unlinked, area, markStyle);
+  for (const link of askedLinks) drawLinkRing(dr, ts, w, link, whole(link));
 
   // Edge numbers. The clue a hint counts with is recolored, and a striped
   // line's hatch runs on through its clue's slot.

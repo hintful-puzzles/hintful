@@ -21,7 +21,6 @@ import {
   FLASH_LEAD,
   GOAL,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   surfaceGrid,
   wallFill,
@@ -30,6 +29,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -67,25 +67,24 @@ export const COL_DEAD_PLAYER = 5;
 export const COL_MINE = 6;
 export const COL_GEM = 7;
 export const COL_WALL = 8;
-export const COL_HINT = 9;
 /** Appended past the C enum: the swipe's aim arrow, "let go and you go this
- * way". While a swipe is held it replaces the hint's arrow (`COL_HINT`, "the
- * hint says go this way"). */
-export const COL_AIM = 10;
-/** Appended: the ring round the gem a hint is going for. The hint's two roles
- * get two cues (docs/hints-marks.md § "The engine colors the marks"): the
- * direction is the hint's *arrow* in its action color, the subgoal gem a
- * *ring* in its evidence color. */
-export const COL_HINT_GOAL = 11;
+ * way". While a swipe is held it replaces the hint's ringed arrow ("the hint
+ * says go this way"). */
+export const COL_AIM = 9;
+/** Appended: the outline round the gem a hint is going for. The hint's two
+ * roles get two cues (docs/hints-marks.md § "The engine colors the marks"):
+ * the direction is the hint's *arrow*, ringed on the ball, the subgoal gem an
+ * *outline* in its evidence color. */
+export const COL_HINT_GOAL = 10;
 /** Appended: the solved flash's tile fill, under the highlight's body. */
-export const COL_FLASH = 12;
+export const COL_FLASH = 11;
 /** A floor square. */
-export const COL_FLOOR = 13;
+export const COL_FLOOR = 12;
 /** The solved flash's tile fill under the highlight's leading edge. */
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
-  const ret: Color[] = new Array(14);
+  const ret: Color[] = new Array(13);
 
   ret[COL_BACKGROUND] = defaultBackground;
   ret[COL_FLOOR] = cellSurface(defaultBackground);
@@ -100,7 +99,6 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_GLINT] = WHITE;
   ret[COL_GEM] = GOAL;
   ret[COL_WALL] = wallFill(defaultBackground);
-  ret[COL_HINT] = HINT_RING;
   ret[COL_AIM] = DRAG_ADD;
   // The subgoal is an outline in role (`theGem`, hint-text.ts), so it takes
   // the color an outline has in every game.
@@ -273,17 +271,17 @@ function drawTile(
 
 // --- the ball --------------------------------------------------------
 
-/** The ball, plus an arrow — the swipe the player is aiming, or the hint's
- * slide. `x`/`y` are the sprite's top-left pixel, which is
- * fractional mid-slide. */
+/** The ball, plus an arrow: the swipe the player is aiming (`aimDir`), or
+ * else the hint's slide (`hintDir`), ringed with the ball. `x`/`y` are the
+ * sprite's top-left pixel, which is fractional mid-slide. */
 function drawPlayer(
   dr: GameDrawing,
   ts: number,
   x: number,
   y: number,
   dead: boolean,
-  arrowDir: number,
-  arrowColor: number,
+  aimDir: number,
+  hintDir: number,
 ): void {
   const half = Math.floor(ts / 2);
 
@@ -327,35 +325,50 @@ function drawPlayer(
     );
   }
 
-  if (!dead && arrowDir >= 0) {
-    // An arrow along the direction. Diagonals are shortened so they don't stick
-    // out further than the orthogonals.
-    const scale = DX[arrowDir] && DY[arrowDir] ? 0.8 : 1.0;
-    const reach = Math.floor((ts * 2) / 5);
-    const ax = Math.trunc(reach * scale * DX[arrowDir]);
-    const ay = Math.trunc(reach * scale * DY[arrowDir]);
-    const px = -ay;
-    const py = ax;
-    const ox = x + half;
-    const oy = y + half;
-    const t = (n: number, d: number): number => Math.trunc(n / d);
-
-    dr.drawPolygon(
-      [
-        { x: ox + t(px, 9), y: oy + t(py, 9) },
-        { x: ox + t(px, 9) + t(ax * 2, 3), y: oy + t(py, 9) + t(ay * 2, 3) },
-        { x: ox + t(px, 3) + t(ax * 2, 3), y: oy + t(py, 3) + t(ay * 2, 3) },
-        { x: ox + ax, y: oy + ay },
-        { x: ox - t(px, 3) + t(ax * 2, 3), y: oy - t(py, 3) + t(ay * 2, 3) },
-        { x: ox - t(px, 9) + t(ax * 2, 3), y: oy - t(py, 9) + t(ay * 2, 3) },
-        { x: ox - t(px, 9), y: oy - t(py, 9) },
-      ],
-      arrowColor,
-      COL_OUTLINE,
-    );
-  }
+  if (!dead && aimDir >= 0) drawArrow(dr, ts, x, y, aimDir, COL_AIM);
+  else if (!dead && hintDir >= 0)
+    // The sprite's own square, which the blitter restores when the ball moves.
+    dr.drawRing({ x, y, w: ts, h: ts }, NOTHING_TO_CLEAR, Math.max(2, ts >> 4), {
+      inside: (ink) => drawArrow(dr, ts, x, y, hintDir, ink),
+    });
 
   dr.drawUpdate({ x, y, w: ts, h: ts });
+}
+
+/** An arrow out from the ball's center along `dir`. Diagonals are shortened
+ * so they don't stick out further than the orthogonals. */
+function drawArrow(
+  dr: GameDrawing,
+  ts: number,
+  x: number,
+  y: number,
+  dir: number,
+  color: number,
+): void {
+  const half = Math.floor(ts / 2);
+  const scale = DX[dir] && DY[dir] ? 0.8 : 1.0;
+  const reach = Math.floor((ts * 2) / 5);
+  const ax = Math.trunc(reach * scale * DX[dir]);
+  const ay = Math.trunc(reach * scale * DY[dir]);
+  const px = -ay;
+  const py = ax;
+  const ox = x + half;
+  const oy = y + half;
+  const t = (n: number, d: number): number => Math.trunc(n / d);
+
+  dr.drawPolygon(
+    [
+      { x: ox + t(px, 9), y: oy + t(py, 9) },
+      { x: ox + t(px, 9) + t(ax * 2, 3), y: oy + t(py, 9) + t(ay * 2, 3) },
+      { x: ox + t(px, 3) + t(ax * 2, 3), y: oy + t(py, 3) + t(ay * 2, 3) },
+      { x: ox + ax, y: oy + ay },
+      { x: ox - t(px, 3) + t(ax * 2, 3), y: oy - t(py, 3) + t(ay * 2, 3) },
+      { x: ox - t(px, 9) + t(ax * 2, 3), y: oy - t(py, 9) + t(ay * 2, 3) },
+      { x: ox - t(px, 9), y: oy - t(py, 9) },
+    ],
+    color,
+    COL_OUTLINE,
+  );
 }
 
 // --- redraw ----------------------------------------------------------
@@ -468,15 +481,7 @@ export function redraw(
 
   if (!ds.playerBackground) ds.playerBackground = dr.blitterNew({ w: ts, h: ts });
   dr.blitterSave(ds.playerBackground, { x: ds.pbgX, y: ds.pbgY });
-  drawPlayer(
-    dr,
-    ts,
-    ds.pbgX,
-    ds.pbgY,
-    s.dead && !prev,
-    aimDir >= 0 ? aimDir : hintDir,
-    aimDir >= 0 ? COL_AIM : COL_HINT,
-  );
+  drawPlayer(dr, ts, ds.pbgX, ds.pbgY, s.dead && !prev, aimDir, hintDir);
   ds.playerBgSaved = true;
 }
 

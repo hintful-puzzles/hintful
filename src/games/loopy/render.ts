@@ -30,7 +30,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   lineMaybeColor,
   lineNoColor,
@@ -47,7 +46,8 @@ import {
   pencilIndicatorBox,
   pencilIndicatorReach,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { MARK_EDGE_PX, type RingClear, ringShape, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import {
   type Flash,
   loopSteps,
@@ -84,16 +84,15 @@ export const COL_SATISFIED = 5;
 export const COL_FAINT = 6;
 /** The keyboard cursor — this fork's addition; upstream has no cursor here. */
 export const COL_CURSOR = 7;
-/** The edges a hint step sets, and the note it places. */
-export const COL_HINT = 8;
-/** What a hint step reasons from: clues, dots, lines and the notes it cites. */
-export const COL_HINT_CELL = 9;
+/** What a hint step reasons from: clues, dots, lines and the notes it cites.
+ * The edges it sets and the note it places are ringed by the engine. */
+export const COL_HINT_CELL = 8;
 /** The player's corner and pair notes. */
-export const COL_PENCIL = 10;
+export const COL_PENCIL = 9;
 /** The notes-mode indicator's pencil body. */
-export const COL_PENCIL_BODY = 11;
+export const COL_PENCIL_BODY = 10;
 /** The leading edge of the win flash, on an edge of the loop. */
-export const COL_HIGHLIGHT_LEAD = 12;
+export const COL_HIGHLIGHT_LEAD = 11;
 
 /**
  * The subset of the game UI the renderer reads. The full `LoopyUi` lives in
@@ -220,7 +219,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_SATISFIED] = clueDoneColor(defaultBackground);
   out[COL_FAINT] = lineNoColor(defaultBackground);
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
@@ -332,24 +330,115 @@ function edgeMidpoint(g: Grid, ts: number, i: number): Point {
   return midpoint(a, b);
 }
 
-/** The band under an edge the hint sets: solid for a line, broken for an edge the
- * loop cannot use, so the two read apart without their color. */
-function drawTargetBand(
+/** How thick a hint's ring is. */
+const ringThickness = (ts: number): number =>
+  Math.max(2, Math.round(lineThickness(ts) * 0.8));
+
+/** The box round `points`, `pad` out on every side. */
+function boxAround(points: readonly Point[], pad: number): Rect {
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  const x = Math.min(...xs) - pad;
+  const y = Math.min(...ys) - pad;
+  return { x, y, w: Math.max(...xs) + pad - x, h: Math.max(...ys) + pad - y };
+}
+
+/** The frame's text a ring at `box` might reach, `avoid`ed, and the text it
+ * holds, `enclose`d. A ring never grows past half its box's short side, so
+ * text further off than that is left out. */
+function clearOf(
+  box: Rect,
+  texts: readonly Rect[],
+  enclose: readonly Rect[] = [],
+): RingClear {
+  const reach = Math.min(box.w, box.h) / 2 + 2;
+  const near = (r: Rect): boolean =>
+    r.x < box.x + box.w + reach &&
+    r.x + r.w > box.x - reach &&
+    r.y < box.y + box.h + reach &&
+    r.y + r.h > box.y - reach;
+  return { enclose, avoid: texts.filter(near) };
+}
+
+/** How far the pill round an edge reaches either side of its line: never so
+ * near that the stroke leaves no room for the edge inside it. */
+const edgeRingPad = (ts: number): number =>
+  Math.max(Math.round(0.12 * ts), ringThickness(ts) + lineThickness(ts) + 1);
+
+/** The ring round an edge the hint sets: a pill along its middle, which is
+ * a circle on a diagonal edge, with the edge drawn inside as it must become:
+ * solid for a line, broken for an edge the loop cannot use, so the two read
+ * apart without their color. */
+function drawEdgeRing(
   dr: GameDrawing,
   a: Point,
   b: Point,
   line: boolean,
   ts: number,
+  texts: readonly Rect[],
+  room: Rect,
 ): void {
-  const thickness = Math.max(3, Math.round(2.5 * lineThickness(ts)));
-  if (line) {
-    dr.drawLine(a, b, COL_HINT, thickness);
-    return;
+  const thickness = lineThickness(ts);
+  const { box, clear } = edgeRingBox(a, b, edgeRingPad(ts), ts, texts, room);
+  dr.drawRing(box, clear, ringThickness(ts), {
+    room,
+    inside: (ink) => {
+      if (line) {
+        dr.drawLine(a, b, ink, thickness);
+        return;
+      }
+      for (let k = 0; k < 4; k++) {
+        const t = 0.05 + k * 0.25;
+        dr.drawLine(along(a, b, t), along(a, b, t + 0.15), ink, thickness);
+      }
+    },
+  });
+}
+
+/** Where the pill round an edge goes: along its middle half or, where the
+ * pair signs of the notes round it crowd that, slid along the edge and
+ * widened a pixel or two to the nearest stretch they leave clear, and
+ * shortened only where no half of it is. Any of these lies along the edge
+ * alone, so it names the same edge. */
+function edgeRingBox(
+  a: Point,
+  b: Point,
+  pad: number,
+  ts: number,
+  texts: readonly Rect[],
+  room: Rect,
+): { box: Rect; clear: RingClear } {
+  const shape = (start: number, length: number, grow: number) => {
+    const box = boxAround(
+      [along(a, b, start), along(a, b, start + length)],
+      pad + grow,
+    );
+    return { box, clear: clearOf(box, texts) };
+  };
+  // The middle half of the edge, then shorter stretches of it.
+  for (let tenths = 5; tenths >= 3; tenths--) {
+    const length = tenths / 10;
+    const slack = (1 - length) / 2;
+    for (let off = 0; off <= slack + 1e-9; off += 0.05)
+      for (const start of off === 0 ? [slack] : [slack - off, slack + off])
+        for (let grow = 0; grow <= 3; grow++) {
+          const candidate = shape(start, length, grow);
+          if (fits(candidate.box, candidate.clear, ts, room)) return candidate;
+        }
   }
-  for (let k = 0; k < 4; k++) {
-    const t = 0.05 + k * 0.25;
-    dr.drawLine(along(a, b, t), along(a, b, t + 0.15), COL_HINT, thickness);
-  }
+  // Nothing clears: `drawRing` says so.
+  return shape(0.25, 0.5, 0);
+}
+
+/** Where a clue's digit is drawn, which its text and a ring both read. */
+function clueText(
+  g: Grid,
+  ts: number,
+  f: GridFace,
+): { origin: Point; options: DrawTextOptions } {
+  gridFindIncenter(f);
+  const [x, y] = toScreen(g, ts, f.ix, f.iy);
+  return { origin: { x, y }, options: glyphFont(Math.floor(ts / 2)) };
 }
 
 /** A clue's outline, drawn inside its face so it never sits on the face's edges. */
@@ -393,35 +482,9 @@ function drawCornerWedge(
   bits: number,
   color: number,
   outline = false,
+  radii?: WedgeRadii,
 ): void {
-  const { dot, from, sweep } = cornerArc(g, dline);
-  const p = dotAt(g, ts, dot);
-  const length = Math.min(
-    ...dot.edges.map((e) => {
-      const q = dotAt(g, ts, e.dot1 === dot ? e.dot2 : e.dot1);
-      return Math.hypot(q.x - p.x, q.y - p.y);
-    }),
-  );
-  const inner = Math.min(dotRingRadius(ts) + 1, 0.25 * length);
-  // Short of where a pair between the corner's own two edges crosses it (about a
-  // third of an edge out on a square corner), so that pair's connector stays clear.
-  const outer = Math.min(
-    Math.max(inner + 8, 0.3 * Math.min(length, ts)),
-    0.45 * length,
-  );
-  const arcAt = (radius: number): Point[] => {
-    const points: Point[] = [];
-    for (let k = 0; k <= 6; k++) {
-      const a = from + sweep * (0.12 + (0.76 * k) / 6);
-      points.push({
-        x: Math.round(p.x + radius * Math.cos(a)),
-        y: Math.round(p.y + radius * Math.sin(a)),
-      });
-    }
-    return points;
-  };
-  const band = [...arcAt(outer), ...arcAt(inner).reverse()];
-  const stroke = Math.max(2, Math.round(lineThickness(ts) * 0.8));
+  const { band, arcAt, outer, stroke } = cornerWedge(g, ts, dline, radii);
   const polyline = (shape: Point[]): void => {
     for (let k = 0; k + 1 < shape.length; k++)
       dr.drawLine(shape[k], shape[k + 1], color, stroke);
@@ -436,32 +499,324 @@ function drawCornerWedge(
   if (bits & 2) polyline(bits & 1 ? arcAt(outer + stroke + 2) : [...band, band[0]]);
 }
 
-/** A pair note's connector between the midpoints of its two edges, and where its
- * `=` or `≠` goes: beside the connector and a third of the way along it, since at
- * its middle the sign would sit on the clue of a face the pair crosses. */
+/** How far from its dot a corner note's band runs. */
+interface WedgeRadii {
+  readonly inner: number;
+  readonly outer: number;
+}
+
+/** A corner note's dot `p`, the shortest edge at it, its band, its arc at a
+ * radius from the dot, its outer radius and its stroke: what
+ * {@link drawCornerWedge} draws, at `radii` or the note's own. */
+function cornerWedge(
+  g: Grid,
+  ts: number,
+  dline: number,
+  radii?: WedgeRadii,
+): {
+  p: Point;
+  length: number;
+  band: Point[];
+  arcAt: (radius: number) => Point[];
+  outer: number;
+  stroke: number;
+} {
+  const { dot, from, sweep } = cornerArc(g, dline);
+  const p = dotAt(g, ts, dot);
+  const length = Math.min(
+    ...dot.edges.map((e) => {
+      const q = dotAt(g, ts, e.dot1 === dot ? e.dot2 : e.dot1);
+      return Math.hypot(q.x - p.x, q.y - p.y);
+    }),
+  );
+  const inner = radii?.inner ?? Math.min(dotRingRadius(ts) + 1, 0.25 * length);
+  // Short of where a pair between the corner's own two edges crosses it (about a
+  // third of an edge out on a square corner), so that pair's connector stays clear.
+  const outer =
+    radii?.outer ??
+    Math.min(Math.max(inner + 8, 0.3 * Math.min(length, ts)), 0.45 * length);
+  const arcAt = (radius: number): Point[] => {
+    const points: Point[] = [];
+    for (let k = 0; k <= 6; k++) {
+      const a = from + sweep * (0.12 + (0.76 * k) / 6);
+      points.push({
+        x: Math.round(p.x + radius * Math.cos(a)),
+        y: Math.round(p.y + radius * Math.sin(a)),
+      });
+    }
+    return points;
+  };
+  const band = [...arcAt(outer), ...arcAt(inner).reverse()];
+  const stroke = Math.max(2, Math.round(lineThickness(ts) * 0.8));
+  return { p, length, band, arcAt, outer, stroke };
+}
+
+/** The ring round the corner note a step places: a circle round its dot,
+ * with the note inside it drawn short enough to fit. A ring round the note's
+ * own band would cross the clue of the face it lies in, which the band runs
+ * up to. */
+function drawCornerRing(
+  dr: GameDrawing,
+  g: Grid,
+  ts: number,
+  dline: number,
+  bits: number,
+  texts: readonly Rect[],
+  room: Rect,
+): void {
+  const { p, length, stroke } = cornerWedge(g, ts, dline);
+  const thickness = ringThickness(ts);
+  const half = Math.round(0.4 * Math.min(length, ts));
+  const box = { x: p.x - half, y: p.y - half, w: 2 * half, h: 2 * half };
+  const second = (bits & 3) === 3 ? stroke + 2 : 0;
+  const radii = { inner: dotRadius(ts) + 2, outer: half - thickness - 1 - second };
+  dr.drawRing(box, clearOf(box, texts), thickness, {
+    room,
+    inside: (ink) => drawCornerWedge(dr, g, ts, dline, bits, ink, false, radii),
+  });
+}
+
+/** A pair note's connector between the midpoints of its two edges, and its
+ * `=` or `≠` at `at` (`placeSigns`). */
 function drawPairConnector(
   dr: GameDrawing,
   g: Grid,
   ts: number,
   pair: LoopyPair,
+  at: Point,
   color: number,
 ): { at: Point; text: string; color: number } {
-  const a = edgeMidpoint(g, ts, pair.a);
-  const b = edgeMidpoint(g, ts, pair.b);
-  const thickness = Math.max(2, Math.round(lineThickness(ts) * 0.6));
+  const { a, b, thickness, text } = pairConnector(g, ts, pair);
   dr.drawLine(a, b, color, thickness);
   for (const end of [a, b]) dr.drawCircle(end, thickness + 1, color, color);
-  const len = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y));
-  const off = labelFont(ts) * 0.7;
+  return { at, text, color };
+}
+
+/** A pair note's connector, from `a` to `b` `thickness` wide, and its sign's
+ * `text`. */
+function pairConnector(
+  g: Grid,
+  ts: number,
+  pair: LoopyPair,
+): { a: Point; b: Point; thickness: number; text: string } {
   return {
-    at: {
-      x: Math.round(a.x + (b.x - a.x) * 0.35 - ((b.y - a.y) / len) * off),
-      y: Math.round(a.y + (b.y - a.y) * 0.35 + ((b.x - a.x) / len) * off),
-    },
+    a: edgeMidpoint(g, ts, pair.a),
+    b: edgeMidpoint(g, ts, pair.b),
+    thickness: Math.max(2, Math.round(lineThickness(ts) * 0.6)),
     text: pair.opposite ? "≠" : "=",
-    color,
   };
 }
+
+/** Distance from the segment `a`–`b` to the rect `r`; 0 where they meet. */
+function segmentRectDistance(a: Point, b: Point, r: Rect): number {
+  const inside = (p: Point): boolean =>
+    p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+  if (inside(a) || inside(b)) return 0;
+  const corners = [
+    { x: r.x, y: r.y },
+    { x: r.x + r.w, y: r.y },
+    { x: r.x + r.w, y: r.y + r.h },
+    { x: r.x, y: r.y + r.h },
+  ];
+  const cross = (o: Point, p: Point, q: Point): number =>
+    (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);
+  for (let k = 0; k < 4; k++) {
+    const c = corners[k];
+    const d = corners[(k + 1) % 4];
+    if (cross(a, b, c) * cross(a, b, d) <= 0 && cross(c, d, a) * cross(c, d, b) <= 0)
+      return 0;
+  }
+  const toSegment = (p: Point, s: Point, t: Point): number => {
+    const dx = t.x - s.x;
+    const dy = t.y - s.y;
+    const len2 = dx * dx + dy * dy;
+    const u =
+      len2 === 0 ? 0 : clamp(0, ((p.x - s.x) * dx + (p.y - s.y) * dy) / len2, 1);
+    return Math.hypot(p.x - s.x - u * dx, p.y - s.y - u * dy);
+  };
+  const rectPoint = (p: Point): number =>
+    Math.hypot(
+      Math.max(r.x - p.x, 0, p.x - (r.x + r.w)),
+      Math.max(r.y - p.y, 0, p.y - (r.y + r.h)),
+    );
+  return Math.min(
+    rectPoint(a),
+    rectPoint(b),
+    ...corners.map((c) => toSegment(c, a, b)),
+  );
+}
+
+const SIGN_LAYOUTS = new WeakMap<
+  readonly LoopyPair[],
+  Map<string, Map<string, Point>>
+>();
+
+/**
+ * Where each pair note's sign goes, by `pairKey`: beside its connector a third
+ * of the way along, since at its middle the sign would sit on the clue of a
+ * face the pair crosses, unless that puts it on an edge, a clue or a sign
+ * already placed. Then it goes to the nearest spot along the connector, on
+ * either side, that clears them all, or, on a spot crowded past that, the one
+ * that crosses fewest. Placed in `pairKey` order, `extra` (the pair a hint
+ * places) among them, so a note sits where it will once the move is made.
+ */
+function placeSigns(
+  g: Grid,
+  ts: number,
+  s: LoopyState,
+  extra: LoopyPair | null,
+): Map<string, Point> {
+  const cacheKey = `${ts}|${extra ? `${pairKey(extra.a, extra.b)}${extra.opposite}` : ""}`;
+  const byState = SIGN_LAYOUTS.get(s.pairs) ?? new Map<string, Map<string, Point>>();
+  SIGN_LAYOUTS.set(s.pairs, byState);
+  const cached = byState.get(cacheKey);
+  if (cached) return cached;
+
+  const pairs = [...s.pairs];
+  if (extra && !pairs.some((p) => pairKey(p.a, p.b) === pairKey(extra.a, extra.b)))
+    pairs.push(extra);
+  pairs.sort((p, q) => p.a - q.a || p.b - q.b);
+
+  const edges = g.edges.map((_, i) => edgeEnds(g, ts, i));
+  const lineClear = lineThickness(ts) / 2 + 1;
+  const taken: Rect[] = [];
+  for (let i = 0; i < g.numFaces; i++) {
+    if (s.clues[i] < 0) continue;
+    const { origin, options } = clueText(g, ts, g.faces[i]);
+    taken.push(textBox(origin, options, String(s.clues[i])));
+  }
+  const overlaps = (r: Rect, q: Rect): boolean =>
+    r.x < q.x + q.w + 1 &&
+    q.x < r.x + r.w + 1 &&
+    r.y < q.y + q.h + 1 &&
+    q.y < r.y + r.h + 1;
+  // Off the middle half of an edge by as far as a hint's pill round it
+  // reaches, where it can be, so the pill has room.
+  const pillClear = edgeRingPad(ts) + MARK_EDGE_PX;
+  const reach = Math.max(lineClear, pillClear);
+  /** Hard crossings (a line, a clue, a sign) count a hundred, a sign in the
+   * reach of a pill one. */
+  const conflicts = (box: Rect): number => {
+    let n = 0;
+    for (const [p, q] of edges) {
+      if (
+        Math.max(p.x, q.x) < box.x - reach ||
+        Math.min(p.x, q.x) > box.x + box.w + reach ||
+        Math.max(p.y, q.y) < box.y - reach ||
+        Math.min(p.y, q.y) > box.y + box.h + reach
+      )
+        continue;
+      if (segmentRectDistance(p, q, box) < lineClear) n += 100;
+      else if (
+        segmentRectDistance(along(p, q, 0.25), along(p, q, 0.75), box) < pillClear
+      )
+        n++;
+    }
+    for (const t of taken) if (overlaps(box, t)) n += 100;
+    return n;
+  };
+
+  const out = new Map<string, Point>();
+  const font = labelFont(ts);
+  for (const pair of pairs) {
+    const { a, b, text } = pairConnector(g, ts, pair);
+    const len = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y));
+    const nx = -(b.y - a.y) / len;
+    const ny = (b.x - a.x) / len;
+    let best: { at: Point; box: Rect; n: number } | null = null;
+    search: for (const off of [0.7, 1]) {
+      for (const along of [0.35, 0.5, 0.25, 0.65, 0.15, 0.75]) {
+        for (const side of [1, -1]) {
+          const at = {
+            x: Math.round(a.x + (b.x - a.x) * along + nx * side * off * font),
+            y: Math.round(a.y + (b.y - a.y) * along + ny * side * off * font),
+          };
+          const box = textBox(at, labelOptions(ts), text);
+          const n = conflicts(box);
+          if (!best || n < best.n) best = { at, box, n };
+          if (n === 0) break search;
+        }
+      }
+    }
+    if (!best) continue;
+    out.set(pairKey(pair.a, pair.b), best.at);
+    taken.push(best.box);
+  }
+  byState.set(cacheKey, out);
+  return out;
+}
+
+/** The ring round the pair note a step places: round its connector and its
+ * sign, with both inside it. */
+function drawPairRing(
+  dr: GameDrawing,
+  g: Grid,
+  ts: number,
+  pair: LoopyPair,
+  at: Point,
+  texts: readonly Rect[],
+  room: Rect,
+): void {
+  const { a, b, thickness, text } = pairConnector(g, ts, pair);
+  const sign = textBox(at, labelOptions(ts), text);
+  // Padded as far on every side as the sign sticks out on one, so the ring
+  // centers on the connector and a clue it runs through sits in its middle.
+  const line = boxAround([a, b], 0);
+  const out = Math.max(
+    0,
+    line.x - sign.x,
+    sign.x + sign.w - (line.x + line.w),
+    line.y - sign.y,
+    sign.y + sign.h - (line.y + line.h),
+  );
+  const whole = boxAround([a, b], out + thickness + 1);
+  // Where the player's other pair signs crowd the connector, no ring round
+  // it clears them all; then the ring goes round the sign alone, with the
+  // stretch of connector beside it, and where another sign all but touches
+  // this one, a ring goes round each end of the connector instead, and the
+  // sentence says which relation it is.
+  const signBox = boxAround(
+    [
+      { x: sign.x, y: sign.y },
+      { x: sign.x + sign.w, y: sign.y + sign.h },
+    ],
+    thickness + 1,
+  );
+  const ends = [a, b].map((p) => boxAround([p], 2 * thickness + ringThickness(ts)));
+  const shapes: { box: Rect; clear: RingClear }[][] = [
+    [{ box: whole, clear: clearOf(whole, texts, [sign]) }],
+    [{ box: signBox, clear: clearOf(signBox, texts, [sign]) }],
+    ends.map((box) => ({ box, clear: clearOf(box, [...texts, sign]) })),
+  ];
+  const rings =
+    shapes.find((s) => s.every(({ box, clear }) => fits(box, clear, ts, room))) ??
+    shapes[0];
+  for (const { box, clear } of rings)
+    dr.drawRing(box, clear, ringThickness(ts), {
+      room,
+      inside: (ink) => {
+        drawPairConnector(dr, g, ts, pair, at, ink);
+        drawLabel(dr, at, ts, text, ink);
+      },
+    });
+}
+
+/** Whether a ring at `box` fits clear of its text (`ringShape`). */
+function fits(box: Rect, clear: RingClear, ts: number, room: Rect): boolean {
+  try {
+    ringShape(box, clear, ringThickness(ts), room);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const labelOptions = (ts: number): DrawTextOptions => ({
+  align: "center",
+  baseline: "mathematical",
+  fontType: "variable",
+  size: labelFont(ts),
+});
 
 function drawLabel(
   dr: GameDrawing,
@@ -470,17 +825,7 @@ function drawLabel(
   text: string,
   color: number,
 ): void {
-  dr.drawText(
-    at,
-    {
-      align: "center",
-      baseline: "mathematical",
-      fontType: "variable",
-      size: labelFont(ts),
-    },
-    color,
-    text,
-  );
+  dr.drawText(at, labelOptions(ts), color, text);
 }
 
 /** A red cross over an edge the player ruled out that the loop runs along. A red
@@ -498,8 +843,7 @@ const pairKey = (a: number, b: number): string => (a < b ? `${a}:${b}` : `${b}:$
 /**
  * The player's notes, and the hint's marks on notes: each note in the pencil color,
  * red when the mistake check flags it, and in the evidence color when the displayed
- * step reasons from it; then the note the step places, in the action color. Returns
- * the pair signs, which are drawn last.
+ * step reasons from it. Returns the pair signs, which are drawn last.
  */
 function drawNotes(
   dr: GameDrawing,
@@ -508,6 +852,7 @@ function drawNotes(
   s: LoopyState,
   hint: HintStep<LoopyMove> | null,
   mistakes: readonly LoopyMistake[],
+  signs: ReadonlyMap<string, Point>,
 ): { at: Point; text: string; color: number }[] {
   const wrongCorners = new Set<number>();
   const wrongPairs = new Set<string>();
@@ -536,20 +881,54 @@ function drawNotes(
       : citedPairs.has(key)
         ? COL_HINT_CELL
         : COL_PENCIL;
-    return drawPairConnector(dr, g, ts, p, color);
+    return drawPairConnector(dr, g, ts, p, signAt(signs, p), color);
   });
-
-  // The note the step places is drawn off its move, where the words ring it.
-  const move = hint?.move;
-  if (move?.kind === "corner" && marks.of("ring", CORNER).includes(move.dline))
-    drawCornerWedge(dr, g, ts, move.dline, move.bits, COL_HINT);
-  if (move?.kind === "pair" && move.relation !== "none") {
-    const pair = { a: move.a, b: move.b, opposite: move.relation === "opposite" };
-    const placed = new Set(marks.of("ring", PAIR).map((p) => PAIR.key(p)));
-    if (placed.has(PAIR.key(pair)))
-      labels.push(drawPairConnector(dr, g, ts, pair, COL_HINT));
-  }
   return labels;
+}
+
+/**
+ * The hint's rings, over the edges so what each holds reads on top of the
+ * edge's own line: each edge the step sets, and the note it places, which is
+ * drawn off its move where the words ring it. `texts` is every text the frame
+ * shows, which no ring crosses.
+ */
+function drawHintRings(
+  dr: GameDrawing,
+  g: Grid,
+  ts: number,
+  hint: HintStep<LoopyMove> | null,
+  placing: LoopyPair | null,
+  signs: ReadonlyMap<string, Point>,
+  texts: readonly Rect[],
+  room: Rect,
+): void {
+  const marks = stepMarks(hint ?? undefined);
+  const move = hint?.move;
+  const ops = move?.kind === "set" ? move.ops : [];
+  const lineTo = new Map(ops.map((o) => [o.edge, o.state === LINE_YES]));
+  for (const i of marks.of("ring", EDGE)) {
+    const [a, b] = edgeEnds(g, ts, i);
+    drawEdgeRing(dr, a, b, lineTo.get(i) ?? false, ts, texts, room);
+  }
+  if (move?.kind === "corner" && marks.of("ring", CORNER).includes(move.dline))
+    drawCornerRing(dr, g, ts, move.dline, move.bits, texts, room);
+  if (placing) drawPairRing(dr, g, ts, placing, signAt(signs, placing), texts, room);
+}
+
+/** The pair note a step places, where its words ring it. */
+function placedPair(hint: HintStep<LoopyMove> | null): LoopyPair | null {
+  const move = hint?.move;
+  if (move?.kind !== "pair" || move.relation === "none") return null;
+  const pair = { a: move.a, b: move.b, opposite: move.relation === "opposite" };
+  const ringed = stepMarks(hint ?? undefined).of("ring", PAIR);
+  return ringed.some((p) => PAIR.key(p) === PAIR.key(pair)) ? pair : null;
+}
+
+/** A pair's sign, as `placeSigns` placed it. */
+function signAt(signs: ReadonlyMap<string, Point>, pair: LoopyPair): Point {
+  const at = signs.get(pairKey(pair.a, pair.b));
+  if (!at) throw new Error(`No sign placed for pair ${pair.a}:${pair.b}`);
+  return at;
 }
 
 export function redraw(
@@ -639,25 +1018,21 @@ export function redraw(
     dr.drawLine(a, b, COL_PENCIL, cursorHaloThickness(ts));
   }
 
-  // The hint's marks go under the edges and the clue digits, which stay legible on
-  // top of them: a band under each edge it sets or cites, a ring under each dot it
-  // names, and an outline inside each clue it counts.
+  // The hint's outlines go under the edges and the clue digits, which stay
+  // legible on top of them: a band under each edge it cites, a ring under each
+  // dot it names, and an outline inside each clue it counts.
   const thin = Math.max(2, Math.round(2 * lineThickness(ts)));
   for (const i of marks.of("outline", EDGE)) {
     const [a, b] = edgeEnds(g, ts, i);
     dr.drawLine(a, b, COL_HINT_CELL, thin);
   }
-  const ops = hint?.move.kind === "set" ? hint.move.ops : [];
-  const lineTo = new Map(ops.map((o) => [o.edge, o.state === LINE_YES]));
-  for (const i of marks.of("ring", EDGE)) {
-    const [a, b] = edgeEnds(g, ts, i);
-    drawTargetBand(dr, a, b, lineTo.get(i) ?? false, ts);
-  }
   for (const f of marks.of("outline", FACE)) drawFaceOutline(dr, g, ts, g.faces[f]);
   for (const d of marks.of("outline", DOT))
     drawDotRing(dr, dotAt(g, ts, g.dots[d]), ts);
 
-  const labels = drawNotes(dr, g, ts, s, hint ?? null, mistakes ?? []);
+  const placing = placedPair(hint ?? null);
+  const signs = placeSigns(g, ts, s, placing);
+  const labels = drawNotes(dr, g, ts, s, hint ?? null, mistakes ?? [], signs);
 
   // Notes mode's previews: the corner Enter would note, and the pair a drag is
   // drawing out from the edge it started on.
@@ -671,15 +1046,18 @@ export function redraw(
     dr.drawLine(edgeMidpoint(g, ts, drag.from), drag.at, COL_PENCIL, thickness);
   }
 
+  // Every text the frame shows, which a ring keeps off.
+  const texts: Rect[] = labels.map(({ at, text }) =>
+    textBox(at, labelOptions(ts), text),
+  );
   for (let i = 0; i < g.numFaces; i++) {
     const n = s.clues[i];
     if (n < 0) continue;
-    const f = g.faces[i];
-    gridFindIncenter(f);
-    const [x, y] = toScreen(g, ts, f.ix, f.iy);
+    const { origin, options } = clueText(g, ts, g.faces[i]);
+    texts.push(textBox(origin, options, String(n)));
     dr.drawText(
-      { x, y },
-      glyphFont(Math.floor(ts / 2)),
+      origin,
+      options,
       ds.clueError[i]
         ? COL_MISTAKE
         : ds.clueSatisfied[i]
@@ -713,6 +1091,8 @@ export function redraw(
     const [a, b] = edgeEnds(g, ts, i);
     drawMistakenCross(dr, a, b, ts);
   }
+
+  drawHintRings(dr, g, ts, hint ?? null, placing, signs, texts, { x: 0, y: 0, w, h });
 
   for (const { at, text, color } of labels) drawLabel(dr, at, ts, text, color);
 

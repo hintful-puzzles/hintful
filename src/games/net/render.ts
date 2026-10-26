@@ -21,7 +21,6 @@ import {
   GRID_DARK,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   PENCIL_BODY,
   pencilColor,
@@ -38,6 +37,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import {
   anticlockwise,
   clockwise,
@@ -50,7 +50,7 @@ import {
   R,
   U,
 } from "../../engine/square-edges.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { offset, wireDistance } from "../../engine/wires.ts";
 import type { NetHint } from "./hint.ts";
@@ -89,15 +89,13 @@ export const COL_CURSOR = 8;
 export const COL_PENCIL = 9;
 /** The notes-mode indicator's pencil. */
 export const COL_PENCIL_BODY = 10;
-/** A hint's ring and stripes: what the step decides, and where. */
-export const COL_HINT = 11;
 /** A hint's outlines: what the step reasons from. */
-export const COL_HINT_CELL = 12;
-export const COL_CELL = 13; // the surface of a tile the player may still turn
+export const COL_HINT_CELL = 11;
+export const COL_CELL = 12; // the surface of a tile the player may still turn
 /** The ground of a tile the win flash is on. */
-export const COL_FLASH = 14;
+export const COL_FLASH = 13;
 /** And under the flash's leading edge. */
-export const COL_FLASH_LEAD = 15;
+export const COL_FLASH_LEAD = 14;
 
 const INDICATOR: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
@@ -121,7 +119,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -487,25 +484,47 @@ function drawTile(
   // since a stub across one side and a bar along another would both be a
   // short line. The mark straddles the side, so each tile draws the half
   // inside its own clip.
-  const drawNote = (d: number, note: number, col: number) => {
-    const bx = dirX(d) > 0 ? tx + ts : dirX(d) < 0 ? tx : cx;
-    const by = dirY(d) > 0 ? ty + ts : dirY(d) < 0 ? ty : cy;
+  const sideMiddle = (d: number): Point => ({
+    x: dirX(d) > 0 ? tx + ts : dirX(d) < 0 ? tx : cx,
+    y: dirY(d) > 0 ? ty + ts : dirY(d) < 0 ? ty : cy,
+  });
+  const stubReach = Math.floor(ts * 0.22);
+  const stubHalf = 2 * lt;
+  const crossReach = Math.floor(ts * 0.12);
+  /** The pixels a note inks on side `d`. */
+  const noteBox = (d: number, note: number): Rect => {
+    const { x: bx, y: by } = sideMiddle(d);
     if (note === NOTE_WIRE) {
-      const reach = Math.floor(ts * 0.22);
-      const half = 2 * lt;
-      const [hx, hy] = dirX(d) !== 0 ? [reach, half] : [half, reach];
-      dr.drawRect({ x: bx - hx, y: by - hy, w: 2 * hx + 1, h: 2 * hy + 1 }, col);
+      const [hx, hy] = dirX(d) !== 0 ? [stubReach, stubHalf] : [stubHalf, stubReach];
+      return { x: bx - hx, y: by - hy, w: 2 * hx + 1, h: 2 * hy + 1 };
+    }
+    const r = crossReach + lt;
+    return { x: bx - r, y: by - r, w: 2 * r, h: 2 * r };
+  };
+  const drawNote = (d: number, note: number, col: number) => {
+    const { x: bx, y: by } = sideMiddle(d);
+    if (note === NOTE_WIRE) {
+      dr.drawRect(noteBox(d, note), col);
     } else {
-      const r = Math.floor(ts * 0.12);
+      const r = crossReach;
       dr.drawLine({ x: bx - r, y: by - r }, { x: bx + r, y: by + r }, col, 2 * lt);
       dr.drawLine({ x: bx - r, y: by + r }, { x: bx + r, y: by - r }, col, 2 * lt);
     }
   };
+  const ringThickness = Math.max(2, lt * 2);
   for (let d = 1, dsh = 0; d < 16; d *= 2, dsh++) {
-    // The note a hint places, in the action color and the shape it will have.
+    // The note a hint places: ringed, with the shape it will have inside.
+    // Both tiles of the side draw the same ring, each the half in its clip.
     const placing = (notes >> (HINT_RING_SIDE_SHIFT + 2 * dsh)) & 3;
     if (placing) {
-      drawNote(d, placing, COL_HINT);
+      const room = 2 * ringThickness;
+      const box = noteBox(d, placing);
+      dr.drawRing(
+        { x: box.x - room, y: box.y - room, w: box.w + 2 * room, h: box.h + 2 * room },
+        NOTHING_TO_CLEAR,
+        ringThickness,
+        { inside: (ink) => drawNote(d, placing, ink) },
+      );
       continue;
     }
     const note = (notes >> (dsh * NOTES_PER_SIDE)) & 3;
@@ -519,30 +538,27 @@ function drawTile(
     drawNote(d, note, col);
   }
 
-  // A ring just inside the tile: a lock the solution contradicts, the tile a
-  // hint turns and locks, or one the hint reasons from.
-  const ring =
-    notes & MISTAKE_TILE
-      ? COL_ERR
-      : notes & HINT_RING_TILE
-        ? COL_HINT
-        : notes & HINT_OUTLINE_TILE
-          ? COL_HINT_CELL
-          : -1;
-  if (ring >= 0) {
-    const inset = lt;
-    const width = Math.max(2, lt * 2);
-    const box = {
-      x: tx + inset,
-      y: ty + inset,
-      w: ts - 2 * inset - lt,
-      h: ts - 2 * inset - lt,
-    };
-    dr.drawRect({ ...box, h: width }, ring);
-    dr.drawRect({ ...box, y: box.y + box.h - width, h: width }, ring);
-    dr.drawRect({ ...box, w: width }, ring);
-    dr.drawRect({ ...box, x: box.x + box.w - width, w: width }, ring);
-  }
+  // Just inside the tile, the first that applies: a band round a lock the
+  // solution contradicts, a ring round the tile a hint turns and locks, or a
+  // band round one the hint reasons from.
+  const inset = lt;
+  const tileBox = {
+    x: tx + inset,
+    y: ty + inset,
+    w: ts - 2 * inset - lt,
+    h: ts - 2 * inset - lt,
+  };
+  const band = (col: number) => {
+    const width = ringThickness;
+    dr.drawRect({ ...tileBox, h: width }, col);
+    dr.drawRect({ ...tileBox, y: tileBox.y + tileBox.h - width, h: width }, col);
+    dr.drawRect({ ...tileBox, w: width }, col);
+    dr.drawRect({ ...tileBox, x: tileBox.x + tileBox.w - width, w: width }, col);
+  };
+  if (notes & MISTAKE_TILE) band(COL_ERR);
+  else if (notes & HINT_RING_TILE)
+    dr.drawRing(tileBox, NOTHING_TO_CLEAR, ringThickness);
+  else if (notes & HINT_OUTLINE_TILE) band(COL_HINT_CELL);
 
   // Barriers along grid edges: one flat fill, wider than the line between
   // tiles by `barrierOutline` on each side.

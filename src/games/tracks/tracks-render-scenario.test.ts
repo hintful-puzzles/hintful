@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT2 } from "../../engine/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
+import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   renderPinnedHint,
@@ -16,7 +17,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { LINE, PIECE } from "./hint-text.ts";
 import { tracksGame } from "./index.ts";
-import { COL_CURSOR, COL_ERROR, COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_CURSOR, COL_ERROR, COL_HINT_CELL } from "./render.ts";
 import type { TracksMove, TracksParams } from "./state.ts";
 
 /** The clues a step's words outline. */
@@ -103,16 +104,10 @@ describe("Tracks render scenarios", () => {
     });
     expect(hint?.explanation.length).toBeGreaterThan(20);
 
-    // Tracks draws two of its three action shapes as *lines* — the rail stubs
-    // for a side that must carry track and the cross for one that must be
-    // blocked — so a step on sides can paint its whole action without a rect.
-    // Hence "some op carries the action color", not "some rect does": a
-    // rect-only check would read as healthy on exactly that frame
-    // (docs/hints-marks.md § "Echo the move's shape in the hint color").
-    expect(
-      recording.ops.some((o) => "color" in o && o.color === COL_HINT),
-      "the hint painted nothing in the action color",
-    ).toBe(true);
+    // What the step decides is ringed, round, with its rail stubs or cross
+    // inside the ring (docs/hints-marks.md § "Echo the move's shape in the
+    // hint color").
+    expect(ringsOf(recording.ops).length, "the hint ringed nothing").toBeGreaterThan(0);
     expect(
       recording.ops.some((o) => "color" in o && o.color === COL_HINT_CELL),
       "the hint painted no evidence",
@@ -124,7 +119,7 @@ describe("Tracks render scenarios", () => {
     const cell = 33; // PREFERRED_TILE_SIZE
     for (const o of recording.ops) {
       if (o.op !== "rect") continue;
-      if (o.color !== COL_HINT && o.color !== COL_HINT_CELL) continue;
+      if (o.color !== COL_HINT_CELL) continue;
       const short = Math.min(o.w, o.h);
       expect(
         short * 4 < Math.max(o.w, o.h) || short < cell / 2,

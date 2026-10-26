@@ -30,7 +30,7 @@ from where you are and tells you what each move is for.
 {{hint-marks}}
 
 Everything a step marks is part of the move it asks for, so the hint calls
-the square it lands on "the ringed square", whatever its outline looks like.
+the square it lands on "the ringed square".
 
 Each step opens by naming the tile it is working on — *"Working on tile
 5:"* — and ends by saying whether the move takes it to *its final spot*

@@ -23,7 +23,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   RULED_OUT,
   surfaceGrid,
@@ -34,7 +33,6 @@ import {
   EDGE,
   EDGE_HINT_BITS,
   type EdgeHint,
-  type EdgeInks,
   edgeHintWords,
   hintedSides,
 } from "../../engine/edge-hint.ts";
@@ -43,6 +41,7 @@ import { fromCoord as cellAt } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { dragPreview } from "../../engine/line-drawing.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import {
   clockwise,
   D,
@@ -89,17 +88,15 @@ export const COL_CURSOR = 11;
 /** The player's edge crosses. Their own slot rather than upstream's pearl
  * `COL_BLACK`, which stays black in both schemes and sank into a dark board. */
 export const COL_RULED_OUT = 12;
-/** The edges a hint step decides, drawn as the line or cross it asks for. */
-export const COL_HINT = 13;
 /** The squares a hint step reasons from, outlined. */
-export const COL_HINT_CELL = 14;
-export const COL_CELL = 15; // the surface of a square
+export const COL_HINT_CELL = 13;
+export const COL_CELL = 14; // the surface of a square
 /** The loop the player draws. Ink and not the black pearl's `COL_BLACK`: the
  * loop is read against the surface, so it inverts with the scheme, and a
  * pinned black sank into a dark board. */
-export const COL_LINE = 16;
+export const COL_LINE = 15;
 /** The loop under the win flash's leading edge; {@link COL_FLASH} under its body. */
-export const COL_FLASH_LEAD = 17;
+export const COL_FLASH_LEAD = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -121,7 +118,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_LINE] = INK;
   out[COL_RULED_OUT] = RULED_OUT;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -149,8 +145,6 @@ const DS_FLASH_LEAD = 1 << 27;
 // (docs/rendering.md § "The tile cache and the diff key"). Its low bits are
 // `edge-hint.ts`'s word for the edges the step decides.
 const H_AREA_SHIFT = EDGE_HINT_BITS; // 4 bits: sides of the evidence outline to paint
-
-const HINT_INKS: EdgeInks = { ring: COL_HINT, outline: COL_HINT_CELL };
 
 export interface PearlDrawState {
   started: boolean;
@@ -323,11 +317,14 @@ function drawSquare(
   // The edges the step asks for, under the laid lines. A cross is the
   // player's in the hint's color, drawn heavier so it reads as a mark rather
   // than a stroke of the grid; a line is the path the player's own will take,
-  // drawn at half its weight so it reads as proposed rather than laid.
+  // drawn at half its weight so it reads as proposed rather than laid. An
+  // asked side is ringed by a pill across it, round the line from this middle
+  // to the next or round the cross on the side; each of its two squares draws
+  // its half in its own clip. A pearl is no text, so the pill may cross it.
   const each = (sides: number, draw: (d: number) => void): void => {
     for (let d = 1; d < 16; d *= 2) if (sides & d) draw(d);
   };
-  drawEdgeHints(hint, HINT_INKS, {
+  drawEdgeHints(dr, hint, COL_HINT_CELL, {
     cross: (sides, ink) =>
       each(sides, (d) =>
         cross(cx + t2 * dirX(d), cy + t2 * dirY(d), t16, ink, Math.max(2, band)),
@@ -341,6 +338,22 @@ function drawSquare(
           role === "ring" ? Math.max(2, t16) : Math.max(1, t16 >> 1),
         ),
       ),
+    ring: (d, shape) => {
+      // On the grid line the two squares share, so both draw one pill.
+      const side = 1 << d;
+      const sx = side === R ? ox + m.tile : side === L ? ox : cx;
+      const sy = side === D ? oy + m.tile : side === U ? oy : cy;
+      const long = shape === "line" ? m.tile : Math.floor(m.tile * 0.6);
+      const short = Math.floor(m.tile * 0.6);
+      const w = dirX(side) !== 0 ? long : short;
+      const h = dirX(side) !== 0 ? short : long;
+      return {
+        box: { x: sx - w / 2, y: sy - h / 2, w, h },
+        clear: NOTHING_TO_CLEAR,
+        thickness: Math.max(2, band),
+        room: { x: sx - m.tile, y: sy - m.tile, w: 2 * m.tile, h: 2 * m.tile },
+      };
+    },
   });
 
   // Laid lines. Order matters for the exposed end-cap colors.

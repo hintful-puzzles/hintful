@@ -15,7 +15,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
@@ -35,7 +34,8 @@ import {
   CURSOR_RIGHT,
   CURSOR_UP,
 } from "../../engine/pointer.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { type RingClear, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepRanks, WIN_LEAD } from "../../engine/win-wave.ts";
 import { REGION } from "./hint-text.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
@@ -55,21 +55,19 @@ export const COL_ERRTEXT = 7;
 export const COL_MISTAKE = 8;
 /** The selected region's band and its notes triangle. */
 export const COL_CURSOR = 9;
-/** The region a hint step acts on: its band. */
-export const COL_HINT = 10;
 /** The regions a hint step's premise rests on: their band, and a chain's
  * numbers. */
-export const COL_HINT_CELL = 11;
+export const COL_HINT_CELL = 10;
 /** A region with no color yet: the quiet cell surface. */
-export const COL_UNCOLORED = 12;
+export const COL_UNCOLORED = 11;
 /** The ground of a region the win flash is on. */
-export const COL_FLASH = 13;
+export const COL_FLASH = 12;
 /** And under the flash's leading edge. */
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH_LEAD = 13;
 /** The first of the four colors as a pencil stipple, a dot on a region with
  * no color yet: stronger than the fill in the dark scheme, where a dot of the
  * fill's own value does not show on that surface. */
-export const COL_MARK_0 = 15;
+export const COL_MARK_0 = 14;
 
 const FOUR = 4;
 const FIVE = 5;
@@ -87,7 +85,6 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_ERRTEXT] = ERROR_TEXT;
   ret[COL_MISTAKE] = ERROR;
   ret[COL_CURSOR] = CURSOR;
-  ret[COL_HINT] = HINT_RING;
   ret[COL_HINT_CELL] = HINT_OUTLINE;
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -312,6 +309,9 @@ export interface MapDrawState {
   /** Per-cell hint word, compared alongside `drawn`. */
   drawnHint: Int32Array;
   todrawHint: Int32Array;
+  /** Per-cell key of the hint rings that reach it, compared alongside
+   * `drawn`: a ring reaches cells outside its region. */
+  drawnRings: string[];
   // floating drag/cursor blob
   bl: unknown | null;
   dragVisible: boolean;
@@ -339,6 +339,7 @@ export function newDrawState(s: MapState, tileSize: number): MapDrawState {
     todraw: new Int32Array(wh),
     drawnHint: new Int32Array(wh),
     todrawHint: new Int32Array(wh),
+    drawnRings: new Array<string>(wh).fill(""),
     bl: null,
     dragVisible: false,
     dragX: -1,
@@ -456,6 +457,76 @@ function selectionBand(ts: number): number {
   return Math.max(2, Math.floor(ts / 8));
 }
 
+/** Where region `j`'s number, or its chain number, is drawn: at its label
+ * point, the same in every cell that draws a piece of it. */
+function regionLabel(
+  map: MapData,
+  j: number,
+  ts: number,
+): { origin: Point; options: DrawTextOptions } {
+  return {
+    origin: {
+      x: origin(ts) + Math.floor((ts * map.regionx[j]) / 2),
+      y: origin(ts) + Math.floor((ts * map.regiony[j]) / 2),
+    },
+    options: glyphFont(Math.floor((3 * ts) / 5)),
+  };
+}
+
+/** A hint ring round a region, as `GameDrawing.drawRing` takes it. */
+interface RegionRing {
+  box: Rect;
+  clear: RingClear;
+  thickness: number;
+  room: Rect;
+}
+
+const overlaps = (a: Rect, b: Rect): boolean =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+/**
+ * The ring round region `r`: a circle a tile across at its label point, where
+ * its number is drawn. A region is no shape a ring can go round, but its label
+ * point always has the region on every side for half a tile
+ * (`computeLabelPoints` picks a whole cell's center or a corner all eight
+ * triangles round it share), so the circle sits inside it. It may grow by half
+ * a tile, into neighbors' cells, to go round a number, and keeps off every
+ * other number shown near it.
+ */
+function regionRing(
+  map: MapData,
+  r: number,
+  ts: number,
+  labels: readonly (string | null)[],
+): RegionRing {
+  const { origin: at } = regionLabel(map, r, ts);
+  const box = { x: at.x - ts / 2, y: at.y - ts / 2, w: ts, h: ts };
+  const board = { x: origin(ts), y: origin(ts), w: map.w * ts, h: map.h * ts };
+  const x0 = Math.max(board.x, box.x - ts / 2);
+  const y0 = Math.max(board.y, box.y - ts / 2);
+  const room = {
+    x: x0,
+    y: y0,
+    w: Math.min(board.x + board.w, box.x + box.w + ts / 2) - x0,
+    h: Math.min(board.y + board.h, box.y + box.h + ts / 2) - y0,
+  };
+  const enclose: Rect[] = [];
+  const avoid: Rect[] = [];
+  labels.forEach((text, j) => {
+    if (text === null) return;
+    const label = regionLabel(map, j, ts);
+    const ink = textBox(label.origin, label.options, text);
+    if (j === r) enclose.push(ink);
+    else if (overlaps(ink, room)) avoid.push(ink);
+  });
+  return {
+    box,
+    clear: { enclose, avoid },
+    thickness: Math.round(1.5 * selectionBand(ts)),
+    room,
+  };
+}
+
 /** Is there a region boundary *through* grid point `(px, py)` — along any of
  * the four grid lines meeting there, or a diagonal ending there? */
 function boundaryAtPoint(map: MapData, px: number, py: number): boolean {
@@ -528,22 +599,15 @@ interface Band {
  * The bands piece `(x, y)`'s selection and hint put along its region's
  * boundary, outermost first.
  *
- * The hint step's target is the only mark on the boundary itself: a solid band
- * twice the selection's width. The regions its premise rests on take a thin
- * dashed line set in from theirs, so where they border the target the two never
- * run together into one thick line. A small target ringed by outlined
- * neighbors was lost among them when both sat on the border (owner playtest,
- * 2026-09-25). A selected region the hint also marks keeps its selection band
- * just inside the hint's target band, because that is where a player about to
- * act on the hint is looking, and outside the evidence line.
+ * The regions a hint step's premise rests on take a thin dashed line set in
+ * from their boundary, so where they border the target the line never runs
+ * together with the target's border. A selected region the hint also marks
+ * keeps its selection band outside the evidence line. The target's own mark is
+ * its ring ({@link regionRing}), not a band.
  */
 function bandsOf(selected: boolean, hint: number, t: number, ts: number): Band[] {
   const out: Band[] = [];
   let reach = 0;
-  if (hint === HINT_TARGET) {
-    out.push({ from: 0, to: 2 * t, color: COL_HINT });
-    reach = 2 * t;
-  }
   if (selected) {
     out.push({ from: reach, to: reach + t, color: COL_CURSOR });
     reach += t;
@@ -727,6 +791,7 @@ function drawSquare(
   vIn: number,
   hv: number,
   largeStipples: boolean,
+  rings: readonly RegionRing[],
 ): void {
   const { w, h } = map;
   const wh = w * h;
@@ -846,12 +911,10 @@ function drawSquare(
     const xo = map.regionx[j] - 2 * x;
     const yo = map.regiony[j] - 2 * y;
     if (xo >= 0 && xo <= 2 && yo >= 0 && yo <= 2) {
+      const label = regionLabel(map, j, ts);
       dr.drawText(
-        {
-          x: Math.floor((coord(x, ts) * 2 + ts * xo) / 2),
-          y: Math.floor((coord(y, ts) * 2 + ts * yo) / 2),
-        },
-        glyphFont(Math.floor((3 * ts) / 5)),
+        label.origin,
+        label.options,
         order ? COL_HINT_CELL : COL_GRID,
         String(order || j),
       );
@@ -871,6 +934,9 @@ function drawSquare(
     dr.drawRect({ x: x0, y: y0, w: t, h: bw }, COL_MISTAKE);
     dr.drawRect({ x: x0 + bw - t, y: y0, w: t, h: bw }, COL_MISTAKE);
   }
+
+  for (const ring of rings)
+    dr.drawRing(ring.box, ring.clear, ring.thickness, { room: ring.room });
 
   dr.unclip();
   dr.drawUpdate({ x: cx, y: cy, w: ts, h: ts });
@@ -1005,15 +1071,35 @@ export function redraw(
       ds.todraw[(ey - 1) * w + (ex - 1)] |= ERR_BASE << (2 * 3 + 2);
   }
 
+  // The number each region shows, which a ring encloses or keeps off.
+  const labels = Array.from({ length: n }, (_, j) =>
+    hintOrder[j]
+      ? String(hintOrder[j])
+      : ui.showNumbers && !chainShown
+        ? String(j)
+        : null,
+  );
+  const rings = marks
+    .of("ring", REGION)
+    .map((e) => regionRing(map, e.region, ts, labels));
+
   // Draw changed cells.
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const v = ds.todraw[y * w + x];
       const hv = ds.todrawHint[y * w + x];
-      if (ds.drawn[y * w + x] !== v || ds.drawnHint[y * w + x] !== hv) {
-        drawSquare(dr, ts, map, x, y, v, hv, ui.largeStipples);
+      const tile = { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts };
+      const here = rings.filter((r) => overlaps(r.room, tile));
+      const ringKey = here.length > 0 ? JSON.stringify(here) : "";
+      if (
+        ds.drawn[y * w + x] !== v ||
+        ds.drawnHint[y * w + x] !== hv ||
+        ds.drawnRings[y * w + x] !== ringKey
+      ) {
+        drawSquare(dr, ts, map, x, y, v, hv, ui.largeStipples, here);
         ds.drawn[y * w + x] = v;
         ds.drawnHint[y * w + x] = hv;
+        ds.drawnRings[y * w + x] = ringKey;
       }
     }
 

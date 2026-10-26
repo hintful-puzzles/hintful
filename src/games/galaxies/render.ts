@@ -12,6 +12,7 @@ import {
   type HintStep,
 } from "../../engine/index.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import {
   type Flash,
   sweepStep,
@@ -53,22 +54,19 @@ export const COL_MISTAKE = 9;
  * cursor's, since the two mean different things and are on screen together
  * during a keyboard drag. See `DRAG_ADD`'s doc comment. */
 export const COL_DRAG = 10;
-/** The displayed hint's *action*: the cells an association claims, the wall it
- * draws, and a ring on the dot it points at. */
-export const COL_HINT = 11;
 /** The displayed hint's *evidence*: the cells, walls and dots the deduction
  * reasons over. */
-export const COL_HINT_CELL = 12;
+export const COL_HINT_CELL = 11;
 /** The surface of a cell no galaxy has claimed yet. */
-export const COL_CELL = 13;
+export const COL_CELL = 12;
 /** The line round a dot: ink, so a white dot is closed on a light surface and
  * a black one on a dark surface. */
-export const COL_DOT_RIM = 14;
+export const COL_DOT_RIM = 13;
 /** The ground of a cell the win flash is on: under the highlight's body, and
  * under its leading edge. */
-export const COL_FLASH = 15;
-export const COL_FLASH_LEAD = 16;
-export const NCOLORS = 17;
+export const COL_FLASH = 14;
+export const COL_FLASH_LEAD = 15;
+export const NCOLORS = 16;
 
 // --- DrawState ------------------------------------------------------
 
@@ -185,19 +183,19 @@ const candAt = (overlay: number, dx0: number, dy0: number): number =>
 
 // --- the hint sidecar (`ds.hint`) ----------------------------------
 
-/** Bit 0: a cell the hint's association claims (solid `COL_HINT`). */
+/** Bit 0: a cell the hint's association claims (ringed twice). */
 const HINT_TARGET_CELL = 1 << 0;
-/** Bit 1: a cell the deduction reasons over (`COL_HINT_CELL` wash). */
+/** Bit 1: a cell the deduction reasons over (`COL_HINT_CELL` outline). */
 const HINT_AREA_CELL = 1 << 1;
 /** Bit 28: a cell the move claims only because it is the 180° partner of the
- * one being deduced. Outlined in `COL_HINT` rather than filled: same fate,
- * same hue, but the deduced cell is the one the words are about. */
+ * one being deduced. Ringed once: same fate, but the deduced cell is the one
+ * the words are about. */
 const HINT_PARTNER_CELL = 1 << 28;
 /** Bit 29: a cell of the galaxy the sentence names, hatched over its fill. */
 const HINT_REGION_CELL = 1 << 29;
-/** Bits 2-5: the wall to draw, on this tile's L/R/U/D side (`COL_HINT`). One
- * wall lights a bit in each of the two tiles it separates, exactly as
- * `wrongEdges` does. */
+/** Bits 2-5: the wall to draw, on this tile's L/R/U/D side (a pill round the
+ * wall). One wall lights a bit in each of the two tiles it separates, exactly
+ * as `wrongEdges` does. */
 const HINT_WALL_SHIFT = 2;
 /** Bits 6-9: a wall the deduction cites (`COL_HINT_CELL`). */
 const HINT_REFWALL_SHIFT = 6;
@@ -402,16 +400,12 @@ function drawSquare(
     drawRectOutline(dr, cx, cy, sz, sz, COL_CURSOR);
   }
 
-  // Edges. Three overlays can recolor a wall, and one of them can conjure a
-  // bar where the board has none: a wall the player set inside a single
-  // solution galaxy is COL_MISTAKE; a wall the displayed hint reasons *from*
-  // is COL_HINT_CELL; and the wall a hint asks the player to *draw* is a
-  // COL_HINT bar drawn whether or not the wall exists yet — that is the whole
-  // suggestion, and it is Palisade's forced-edge treatment in Galaxies'
-  // vocabulary (docs/hints-marks.md § "Echo the move's shape in the hint
-  // color"). `null` means this side draws nothing.
+  // Edges. Two overlays can recolor a wall: a wall the player set inside a
+  // single solution galaxy is COL_MISTAKE, and a wall the displayed hint
+  // reasons *from* is COL_HINT_CELL. The wall a hint asks the player to
+  // *draw* is ringed below, with the wall drawn inside the ring whether or
+  // not it exists yet. `null` means this side draws nothing.
   const edgeCol = (side: number): number | null => {
-    if (hint & (side << HINT_WALL_SHIFT)) return COL_HINT;
     if (!(flags & side)) return null;
     if (wrongEdges & side) return COL_MISTAKE;
     if (hint & (side << HINT_REFWALL_SHIFT)) return COL_HINT_CELL;
@@ -486,6 +480,36 @@ function drawSquare(
     );
   }
 
+  // The wall a hint asks the player to draw: a pill round it, with the wall
+  // inside — the move's own shape (docs/hints-marks.md § "Echo the move's
+  // shape in the hint color"). Each of the wall's two tiles draws the same
+  // pill, clipped to itself. Under the dots, which may sit on the wall.
+  for (const side of [DRAW_EDGE_L, DRAW_EDGE_R, DRAW_EDGE_U, DRAW_EDGE_D]) {
+    if (!(hint & (side << HINT_WALL_SHIFT))) continue;
+    const vertical = side === DRAW_EDGE_L || side === DRAW_EDGE_R;
+    // The grid line the wall lies on, and the tile across it.
+    const at = vertical
+      ? lx + (side === DRAW_EDGE_R ? tileSize : 0)
+      : ly + (side === DRAW_EDGE_D ? tileSize : 0);
+    const short = tileSize >> 1;
+    const wall = vertical
+      ? { x: at - edgeThickness + 1, y: ly, w: 2 * edgeThickness - 1, h: tileSize }
+      : { x: lx, y: at - edgeThickness + 1, w: tileSize, h: 2 * edgeThickness - 1 };
+    dr.drawRing(
+      vertical
+        ? { x: at - short / 2, y: ly, w: short, h: tileSize }
+        : { x: lx, y: at - short / 2, w: tileSize, h: short },
+      NOTHING_TO_CLEAR,
+      previewThickness,
+      {
+        room: vertical
+          ? { x: at - tileSize, y: ly, w: 2 * tileSize, h: tileSize }
+          : { x: lx, y: at - tileSize, w: tileSize, h: 2 * tileSize },
+        inside: (ink) => dr.drawRect(wall, ink),
+      },
+    );
+  }
+
   // Dots — 9 possible positions per tile (grid-aligned).
   for (let dy0 = 0; dy0 < 3; dy0++) {
     for (let dx0 = 0; dx0 < 3; dx0++) {
@@ -525,12 +549,12 @@ function drawSquare(
     }
   }
 
-  // The displayed hint's dot rings, in the drag's own ring vocabulary so the
-  // player reads them without being taught a second shape: the dot an
-  // association must point at, and any dot the argument merely cites. The
-  // colors differ from the drag's (see `colors()`), which is what keeps the
-  // two readable when a player drags to follow the hint and the cell's legal
-  // dots are ringed at the same time.
+  // The displayed hint's dot marks, in the drag's own ring vocabulary so the
+  // player reads them without being taught a second shape: a ring round the
+  // dot an association must point at, and a halo behind any dot the argument
+  // merely cites. The colors differ from the drag's (see `colors()`), which
+  // is what keeps the two readable when a player drags to follow the hint
+  // and the cell's legal dots are ringed at the same time.
   if (hint >>> HINT_DOT_SHIFT) {
     for (let dy0 = 0; dy0 < 3; dy0++) {
       for (let dx0 = 0; dx0 < 3; dx0++) {
@@ -540,13 +564,23 @@ function drawSquare(
           x: lx + ((dx0 * tileSize) >> 1),
           y: ly + ((dy0 * tileSize) >> 1),
         };
-        const col = v === HINT_DOT_ACTION ? COL_HINT : COL_HINT_CELL;
+        const halo = Math.max(2, tileSize >> 4);
+        if (v === HINT_DOT_ACTION) {
+          // Clear of the dot's rim, so the dot keeps its own color: the
+          // narration's noun ("the white dot").
+          const r = dotSize + 1 + halo;
+          dr.drawRing(
+            { x: center.x - r, y: center.y - r, w: 2 * r, h: 2 * r },
+            NOTHING_TO_CLEAR,
+            halo,
+          );
+          continue;
+        }
         // A **filled halo**, then the dot painted back on top: `drawCircle`
         // strokes one pixel wide, so a ring is a hairline however many are
         // stacked, and filling the dot itself would cost the narration its
         // noun ("the white dot" must stay visibly white).
-        const halo = Math.max(2, tileSize >> 4);
-        dr.drawCircle(center, dotSize + halo, col, col);
+        dr.drawCircle(center, dotSize + halo, COL_HINT_CELL, COL_HINT_CELL);
         const val = (dots >>> (DOT_SHIFT_C + DOT_SHIFT_M * (dy0 * 3 + dx0))) & 3;
         if (val) {
           dr.drawCircle(
@@ -584,38 +618,31 @@ function drawSquare(
     }
   }
 
-  // The hint's cell marks, all rings. Inset rather than on the cell's border,
-  // because in Galaxies the border is where a *wall* lives, and a hint that
-  // suggests a wall already draws a `COL_HINT` bar there; the inset borrows
-  // the drag preview's geometry, since both mean "part of what is about to be
-  // committed". The focus cell is doubled and the partner single: the words
-  // say "this cell", so only one cell may look like it.
-  const cellMark =
-    hint & (HINT_TARGET_CELL | HINT_PARTNER_CELL)
-      ? COL_HINT
-      : hint & HINT_AREA_CELL
-        ? COL_HINT_CELL
-        : -1;
-  if (cellMark >= 0) {
-    const inset = Math.max(edgeThickness + 1, (tileSize / 8) | 0);
-    const ring = (extra: number) =>
-      drawMarkSides(
-        dr,
-        {
-          box: {
-            x: lx + inset + extra,
-            y: ly + inset + extra,
-            w: tileSize - 2 * (inset + extra),
-            h: tileSize - 2 * (inset + extra),
-          },
-          outer: 0,
-          inner: previewThickness,
-        },
-        MARK_ALL,
-        cellMark,
-      );
-    ring(0);
-    if (hint & HINT_TARGET_CELL) ring(2 * previewThickness);
+  // The hint's cell marks. Inset rather than on the cell's border, because in
+  // Galaxies the border is where a *wall* lives, and a hint that suggests a
+  // wall rings it there; the inset borrows the drag preview's geometry, since
+  // both mean "part of what is about to be committed". A cell the move
+  // decides is ringed, the focus cell twice and the partner once: the words
+  // say "this cell", so only one cell may look like it. A cell the deduction
+  // reasons over is outlined.
+  const inset = Math.max(edgeThickness + 1, (tileSize / 8) | 0);
+  const insetBox = (extra: number) => ({
+    x: lx + inset + extra,
+    y: ly + inset + extra,
+    w: tileSize - 2 * (inset + extra),
+    h: tileSize - 2 * (inset + extra),
+  });
+  if (hint & (HINT_TARGET_CELL | HINT_PARTNER_CELL)) {
+    dr.drawRing(insetBox(0), NOTHING_TO_CLEAR, previewThickness);
+    if (hint & HINT_TARGET_CELL)
+      dr.drawRing(insetBox(2 * previewThickness), NOTHING_TO_CLEAR, previewThickness);
+  } else if (hint & HINT_AREA_CELL) {
+    drawMarkSides(
+      dr,
+      { box: insetBox(0), outer: 0, inner: previewThickness },
+      MARK_ALL,
+      COL_HINT_CELL,
+    );
   }
 
   // The drop target itself gets an outline on top of its preview

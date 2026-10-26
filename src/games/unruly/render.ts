@@ -19,16 +19,15 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
@@ -68,14 +67,12 @@ export const COL_1 = 5;
 export const COL_CURSOR = 6;
 export const COL_ERROR = 7;
 export const COL_ERROR_TEXT = 8;
-// The action cell rings COL_HINT, and the cited premise cells are outlined
-// COL_HINT_CELL.
-export const COL_HINT = 9;
-export const COL_HINT_CELL = 10;
+/** The outline on a cited premise cell. */
+export const COL_HINT_CELL = 9;
 /** The ground of a cell the win flash is on. */
-export const COL_FLASH = 11;
+export const COL_FLASH = 10;
 /** The ground of a cell the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 12;
+export const COL_FLASH_LEAD = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -88,7 +85,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -106,9 +102,9 @@ const FF_IMMUTABLE = 0x1000;
 // Our mistake-overlay bit (no upstream analog), folded into the cache key.
 const FF_MISTAKE = 0x2000;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
-const FF_HINT_TARGET = 0x4000; // the forced cell (COL_HINT ring)
+const FF_HINT_TARGET = 0x4000; // the forced cell (ringed)
 const FF_HINT_LINE = 0x10000; // a cell of the line the sentence names (hatched)
-const FF_HINT_RING = 0x20000; // a cited premise / pivotal cell (COL_HINT_CELL outline)
+const FF_HINT_OUTLINE = 0x20000; // a cited premise / pivotal cell (COL_HINT_CELL outline)
 
 // --- geometry -----------------------------------------------------------
 /** The board's pixel origin. Exported so `interpretMove` reads the same number
@@ -227,10 +223,10 @@ function drawTile(
 
   // Count error: a badge, because the `!` sits on the piece and red ink on a
   // purple piece is a difference of hue with none of lightness.
+  const badge = countBadge(px, py, ts);
   if (tile & FE_COUNT) {
-    const c = { x: px + Math.floor(ts / 2), y: py + Math.floor(ts / 2) };
-    dr.drawCircle(c, ts / 4, COL_ERROR, COL_ERROR);
-    dr.drawText(c, glyphFont(Math.floor((ts * 2) / 5)), COL_ERROR_TEXT, "!");
+    dr.drawCircle(badge.origin, ts / 4, COL_ERROR, COL_ERROR);
+    dr.drawText(badge.origin, badge.options, COL_ERROR_TEXT, "!");
   }
 
   // Unique-match bars.
@@ -271,10 +267,10 @@ function drawTile(
     dr.drawRect({ x: sx + span - t, y: sy, w: t, h: span }, COL_ERROR);
   }
 
-  // Hint ring around a cited premise cell. Its own color stays visible: for a
-  // filled premise that color *is* the evidence; for an empty reserved window
-  // the ring marks the spared cells.
-  if (tile & FF_HINT_RING) {
+  // Hint outline around a cited premise cell. Its own color stays visible: for
+  // a filled premise that color *is* the evidence; for an empty reserved window
+  // the outline marks the spared cells.
+  if (tile & FF_HINT_OUTLINE) {
     const t = Math.max(1, Math.floor(ts / 12));
     dr.drawRect({ x: px, y: py, w: ts - 1, h: t }, COL_HINT_CELL);
     dr.drawRect({ x: px, y: py + ts - 1 - t, w: ts - 1, h: t }, COL_HINT_CELL);
@@ -282,18 +278,17 @@ function drawTile(
     dr.drawRect({ x: px + ts - 1 - t, y: py, w: t, h: ts - 1 }, COL_HINT_CELL);
   }
 
-  // The forced cell is **ringed**, in the same shape and place a cited premise
-  // is: the hint marks where to act, it does not place the color the player
-  // must enter themselves. A blue *fill* in a game whose entire move is "put
-  // one of two pieces here" reads as a third piece already placed. The
-  // narration says which color; auto-hint applies it for real.
+  // The forced cell is **ringed**: the hint marks where to act, it does not
+  // place the color the player must enter themselves. A blue *fill* in a game
+  // whose entire move is "put one of two pieces here" reads as a third piece
+  // already placed. The narration says which color; auto-hint applies it for
+  // real.
   if (tile & FF_HINT_TARGET) {
-    drawMarkSides(
-      dr,
-      { box: inner, outer: 0, inner: Math.max(2, Math.floor(ts / 12)) },
-      MARK_ALL,
-      COL_HINT,
-    );
+    const clear =
+      tile & FE_COUNT
+        ? { enclose: [textBox(badge.origin, badge.options, "!")], avoid: [] }
+        : NOTHING_TO_CLEAR;
+    dr.drawRing(inner, clear, Math.max(2, Math.floor(ts / 12)));
   }
 
   // Cursor outline.
@@ -307,6 +302,18 @@ function drawTile(
 
   dr.unclip();
   dr.drawUpdate({ x: px, y: py, w: ts, h: ts });
+}
+
+/** Where the count error's `!` is drawn in the tile at (`px`, `py`). */
+function countBadge(
+  px: number,
+  py: number,
+  ts: number,
+): { origin: Point; options: DrawTextOptions } {
+  return {
+    origin: { x: px + Math.floor(ts / 2), y: py + Math.floor(ts / 2) },
+    options: glyphFont(Math.floor((ts * 2) / 5)),
+  };
 }
 
 // --- redraw -------------------------------------------------------------
@@ -331,12 +338,12 @@ export function redraw(
       ? new Set(mistakes.map((m) => m.y * w2 + m.x))
       : null;
 
-  // Displayed hint step: the forced target, the named line, premise rings.
+  // Displayed hint step: the forced target, the named line, premise outlines.
   const marks = stepMarks(hint);
   const at = (p: Point): number => p.y * w2 + p.x;
   const hintTargets = new Set(marks.of("ring", CELL).map(at));
   const hintLineSet = new Set(marks.of("stripes", CELL).map(at));
-  const hintRingSet = new Set(marks.of("outline", CELL).map(at));
+  const hintOutlineSet = new Set(marks.of("outline", CELL).map(at));
 
   // A placement animates only when the engine is driving timed redraws
   // (animTime > 0) and we have a from-state to grow out of.
@@ -379,11 +386,12 @@ export function redraw(
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y)
         tile |= FF_CURSOR;
       if (mistakeSet?.has(i)) tile |= FF_MISTAKE;
-      // Hint overlay: the target outranks a ring; the hatch runs under either.
+      // Hint overlay: the target outranks an outline; the hatch runs under
+      // either.
       if (hintTargets.has(i)) {
         tile |= FF_HINT_TARGET;
-      } else if (hintRingSet.has(i)) {
-        tile |= FF_HINT_RING;
+      } else if (hintOutlineSet.has(i)) {
+        tile |= FF_HINT_OUTLINE;
       }
       if (hintLineSet.has(i)) tile |= FF_HINT_LINE;
 

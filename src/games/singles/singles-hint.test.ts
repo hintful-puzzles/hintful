@@ -15,12 +15,12 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
+import { expectRing, markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { type SinglesHint, type SinglesRung, singlesGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import { deduceHintPlan, solveSpecific } from "./solver.ts";
 import {
   DIFF_ANY,
@@ -424,9 +424,9 @@ describe("singles hint render", () => {
     const { recording, step } = hintFrame("oneCell");
     const ops = recording.ops;
     // Every Singles cell carries a number, so the target is **ringed**, never
-    // filled — four thin rects and no solid one.
+    // filled.
     const forced = (step.highlights as SinglesHint).targets;
-    expectRing(ops, COL_HINT, forced.length);
+    expectRing(ops, { rings: forced.length });
     expect(markSides(ops, COL_HINT_CELL).length).toBeGreaterThan(0);
     // Numbers are still rendered (clue digits not hidden by the overlay).
     expect(ops.some((o) => o.op === "text")).toBe(true);
@@ -438,7 +438,7 @@ describe("singles hint render", () => {
     const { recording } = hintFrame("adjBlack");
     const ops = recording.ops;
     expect(markSides(ops, COL_HINT_CELL).length).toBeGreaterThan(0);
-    expect(markSides(ops, COL_HINT).length).toBeGreaterThan(0);
+    expect(ringsOf(ops).length).toBeGreaterThan(0);
   });
 
   it("outlines a cited circled square", () => {

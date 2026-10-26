@@ -11,9 +11,9 @@
  * are `index.ts`'s `narrateStep` to decide; this file decides only how it reads.
  *
  * Everything a step marks is what it decides, so everything is ringed in the
- * roles of `engine/hint-words.ts`, whatever its glyph: the tile to move (filled,
- * with the arrow to click beside its line) and the squares its journey lands on
- * (outlined, the nearer dashed). The words that point at them are references.
+ * roles of `engine/hint-words.ts`: the tile to move (with the arrow to click
+ * beside its line) and the squares its journey lands on. The words that point
+ * at them are references.
  */
 
 import { HINT_SETTING_UP } from "../../engine/hint-text.ts";

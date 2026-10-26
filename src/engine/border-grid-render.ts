@@ -35,6 +35,7 @@ import {
   squareSide,
 } from "./border-grid.ts";
 import { EDGE } from "./border-grid-hint.ts";
+import { glyphFont } from "./draw.ts";
 import type { Dsf } from "./dsf.ts";
 import { drawEdgeHints, type EdgeHint, edgeHintWords } from "./edge-hint.ts";
 import type { GameDrawing } from "./game.ts";
@@ -42,6 +43,7 @@ import { hatchPeriod } from "./hatch.ts";
 import { drawMarkSides, MARK_ALL } from "./hint-mark.ts";
 import { CELL, type StepMarks } from "./hint-words.ts";
 import type { GridCursor } from "./pointer.ts";
+import { textBox } from "./ring.ts";
 import { squareEdges } from "./square-edges.ts";
 import type { Rect, Size } from "./types.ts";
 import { WIN_BODY, WIN_LEAD, type WinTone } from "./win-wave.ts";
@@ -126,10 +128,8 @@ export interface BorderGridColors {
   /** A border not yet decided. */
   lineMaybe: number;
   error: number;
-  /** An edge the displayed hint forces, and the hatch over the region its
-   * sentence is about; omit in a game with no hint. */
-  hintEdge?: number;
-  /** The outline on a square the displayed hint cites; omit with `hintEdge`. */
+  /** The outline on a square the displayed hint cites; omit in a game with no
+   * hint, which then draws none of a hint's marks. */
   hintEvidence?: number;
   /** The keyboard cursor's outline. */
   cursor: number;
@@ -373,7 +373,7 @@ export function drawBorderTile(
   // glyph the deduction reads and the `F_CORRECT` shade that shows a region is
   // finished. The outline is inset in the body because the square's border is
   // where the hint's own forced edges are drawn.
-  if (colors.hintEdge !== undefined && flags & F_HINT_REGION)
+  if (colors.hintEvidence !== undefined && flags & F_HINT_REGION)
     dr.drawHatch(body, hatchPeriod(ts));
   if (colors.hintEvidence !== undefined && flags & F_HINT_CELL) {
     drawMarkSides(
@@ -396,11 +396,13 @@ export function drawBorderTile(
   for (let dir = 0; dir < 4; dir++)
     dr.drawRect(edges[dir], edgeColor(flags, dir, colors));
 
-  // The edges the displayed hint decides, as what each must become: a wall is
-  // the edge in the ring's ink, and not a wall is a cross on the edge, which
-  // keeps its own color. The app repaints a hint's ink over the board, so an
-  // edge drawn in it would read as a wall whatever was drawn over it.
-  if (colors.hintEdge !== undefined && colors.hintEvidence !== undefined) {
+  // The edges the displayed hint decides, each ringed by a pill along it with
+  // what it must become inside: a wall is the edge in the ring's ink, and not
+  // a wall is a cross on the edge. The app repaints a hint's ink over the
+  // board, so an edge drawn in it would read as a wall whatever was drawn
+  // over it. A pill keeps off the glyph in the middle of each square beside
+  // the edge, the one a game's `drawContent` draws there.
+  if (colors.hintEvidence !== undefined) {
     const each = (sides: number, draw: (rect: Rect) => void): void => {
       edges.forEach((rect, dir) => {
         if (sides & (1 << SQUARE_DIRS[dir])) draw(rect);
@@ -408,30 +410,48 @@ export function drawBorderTile(
     };
     const arm = Math.max(3, Math.floor(ts / 8));
     const weight = Math.max(2, ts >> 4);
-    drawEdgeHints(
-      edgeHint,
-      { ring: colors.hintEdge, outline: colors.hintEvidence },
-      {
-        line: (sides, ink) => each(sides, (rect) => dr.drawRect(rect, ink)),
-        cross: (sides, ink) =>
-          each(sides, (rect) => {
-            const mx = rect.x + Math.floor(rect.w / 2);
-            const my = rect.y + Math.floor(rect.h / 2);
-            dr.drawLine(
-              { x: mx - arm, y: my - arm },
-              { x: mx + arm, y: my + arm },
-              ink,
-              weight,
-            );
-            dr.drawLine(
-              { x: mx - arm, y: my + arm },
-              { x: mx + arm, y: my - arm },
-              ink,
-              weight,
-            );
-          }),
+    const glyph = (cx: number, cy: number): Rect =>
+      textBox({ x: cx, y: cy }, glyphFont(Math.floor(ts / 2)), "0");
+    drawEdgeHints(dr, edgeHint, colors.hintEvidence, {
+      line: (sides, ink) => each(sides, (rect) => dr.drawRect(rect, ink)),
+      cross: (sides, ink) =>
+        each(sides, (rect) => {
+          const mx = rect.x + Math.floor(rect.w / 2);
+          const my = rect.y + Math.floor(rect.h / 2);
+          dr.drawLine(
+            { x: mx - arm, y: my - arm },
+            { x: mx + arm, y: my + arm },
+            ink,
+            weight,
+          );
+          dr.drawLine(
+            { x: mx - arm, y: my + arm },
+            { x: mx + arm, y: my - arm },
+            ink,
+            weight,
+          );
+        }),
+      ring: (d) => {
+        const rect = edges[SQUARE_DIRS.indexOf(d)];
+        const mx = rect.x + rect.w / 2;
+        const my = rect.y + rect.h / 2;
+        const along = Math.floor(ts * 0.75);
+        const across = Math.floor(ts * 0.3);
+        const flat = rect.w > rect.h;
+        const w2 = (flat ? along : across) / 2;
+        const h2 = (flat ? across : along) / 2;
+        // The two squares the edge parts, by their middles.
+        const cx = x + w + (ts - w) / 2;
+        const cy = y + w + (ts - w) / 2;
+        const other = { x: 2 * mx - cx, y: 2 * my - cy };
+        return {
+          box: { x: mx - w2, y: my - h2, w: 2 * w2, h: 2 * h2 },
+          clear: { enclose: [], avoid: [glyph(cx, cy), glyph(other.x, other.y)] },
+          thickness: weight,
+          room: { x: mx - ts, y: my - ts, w: 2 * ts, h: 2 * ts },
+        };
       },
-    );
+    });
   }
 
   dr.unclip();

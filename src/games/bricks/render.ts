@@ -33,17 +33,16 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { BricksHint } from "./index.ts";
 import { bricksValidate } from "./solver.ts";
@@ -81,19 +80,18 @@ export const COL_GIVEN = 3;
 export const COL_SHADE = 4;
 export const COL_ERROR = 5;
 export const COL_CURSOR = 6;
-export const COL_HINT = 7; // the forced cell — ringed on its own border
-export const COL_HINT_CELL = 8; // the deduction's evidence — a ring inside it
+export const COL_HINT_CELL = 7; // the deduction's evidence — an outline inside it
 /** The digit on a clue's lifted cell. */
-export const COL_NUMBER = 9;
+export const COL_NUMBER = 8;
 /** The faint cross in a cell the player has made clear. */
-export const COL_CLEAR_MARK = 10;
+export const COL_CLEAR_MARK = 9;
 /** The `!` on a gravity diamond, and the diamond's rim. */
-export const COL_ERROR_TEXT = 11;
+export const COL_ERROR_TEXT = 10;
 /** The surface of a cell the player has made clear. */
-export const COL_CLEAR = 12;
+export const COL_CLEAR = 11;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 13;
-export const COL_FLASH_LEAD = 14;
+export const COL_FLASH = 12;
+export const COL_FLASH_LEAD = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -104,7 +102,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_SHADE] = SHADED;
   out[COL_ERROR] = ERROR;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_NUMBER] = INK;
   out[COL_CLEAR_MARK] = CLEAR_MARK;
@@ -207,8 +204,8 @@ function drawErrGravity(dr: GameDrawing, ts: number, x: number, y: number): void
 
 // Hint-overlay bits packed into the render cache word, above the cell's own
 // bits (num/bound/color + FE_* error/cursor flags all fit under 0x2000).
-const HINT_TARGET = 1 << 13; // the forced cell — painted COL_HINT
-const HINT_EVID = 1 << 14; // a deduction-evidence cell — inset COL_HINT_CELL ring
+const HINT_TARGET = 1 << 13; // the forced cell — ringed
+const HINT_EVID = 1 << 14; // a deduction-evidence cell — inset COL_HINT_CELL outline
 /** The win flash's tone on this cell: two bits. */
 const K_LIT = 15;
 
@@ -268,17 +265,11 @@ function drawTile(
   }
 
   const cx = tx + (ts >> 1);
-  const cy = ty + (ts >> 1);
 
   // Clue number, or (on a colored/error cell) the gravity diamond.
   if (!color) {
-    const num = n & NUM_MASK;
-    dr.drawText(
-      { x: cx, y: cy },
-      glyphFont(ts >> 1),
-      n & FE_ERROR ? COL_ERROR : COL_NUMBER,
-      num === 7 ? "?" : String(num),
-    );
+    const { origin, options, text } = clueText(ts, tx, ty, n);
+    dr.drawText(origin, options, n & FE_ERROR ? COL_ERROR : COL_NUMBER, text);
   } else if (n & FE_ERROR) {
     drawErrGravity(dr, ts, cx, ty + ts);
   }
@@ -286,10 +277,9 @@ function drawTile(
   if (n & FE_TOPLEFT) drawErrGravity(dr, ts, tx, ty);
   if (n & FE_TOPRIGHT) drawErrGravity(dr, ts, tx + ts, ty);
 
-  // The cursor and the evidence ring are frames just inside the cell's border,
-  // in the margin a piece leaves round itself, so neither lands on the piece.
-  // The evidence ring is the thinner of the two rings a hint draws and stays
-  // off the border line, which the acted-on cell's ring covers.
+  // The cursor and the evidence outline are frames just inside the cell's
+  // border, in the margin a piece leaves round itself, so neither lands on the
+  // piece.
   if (n & HINT_EVID) {
     const t = Math.max(2, (ts / 16) | 0);
     drawThickRectOutline(dr, inner.x, inner.y, inner.w, inner.h, t, COL_HINT_CELL);
@@ -300,30 +290,33 @@ function drawTile(
     drawThickRectOutline(dr, inner.x, inner.y, inner.w, inner.h, t, COL_CURSOR);
   }
 
+  // The acted-on cell's ring, last and inside the square: the tile keys on
+  // `HINT_TARGET`, so its own repaint takes the ring away.
+  if (n & HINT_TARGET) {
+    let clear: RingClear = NOTHING_TO_CLEAR;
+    if (!color) {
+      const { origin, options, text } = clueText(ts, tx, ty, n);
+      clear = { enclose: [textBox(origin, options, text)], avoid: [] };
+    }
+    dr.drawRing(inner, clear, Math.max(2, (ts / 12) | 0));
+  }
+
   dr.drawUpdate({ x: tx, y: ty, w: ts + 1, h: ts + 1 });
 }
 
-/**
- * The acted-on cell's ring, on the square's own border and reaching no
- * further in than the margin a piece leaves round itself.
- *
- * Stamped after the tile loop on every frame, because the border lines are
- * shared: a neighbor repainting strokes its own border over the ring's outer
- * line, and whether one did would otherwise depend on which tiles happened to
- * repaint. The cell still keys on `HINT_TARGET`, so when the ring goes, the
- * cell's own border stroke is what paints those lines back.
- */
-function drawTargetRing(dr: GameDrawing, ts: number, tx: number, ty: number): void {
-  drawMarkSides(
-    dr,
-    {
-      box: { x: tx, y: ty, w: ts + 1, h: ts + 1 },
-      outer: 0,
-      inner: Math.max(2, (ts / 12) | 0),
-    },
-    MARK_ALL,
-    COL_HINT,
-  );
+/** A clue cell's number, centered in the square at (`tx`, `ty`). */
+function clueText(
+  ts: number,
+  tx: number,
+  ty: number,
+  n: number,
+): { origin: Point; options: DrawTextOptions; text: string } {
+  const num = n & NUM_MASK;
+  return {
+    origin: { x: tx + (ts >> 1), y: ty + (ts >> 1) },
+    options: glyphFont(ts >> 1),
+    text: num === 7 ? "?" : String(num),
+  };
 }
 
 // --- redraw -----------------------------------------------------------------
@@ -412,10 +405,5 @@ export function redraw(
     dr.clip({ x: clipX, y: ty, w: clipW, h: ts + 1 });
     drawTile(dr, ts, tx, ty, n);
     dr.unclip();
-  }
-
-  for (const { x, y } of marks.of("ring", CELL)) {
-    const o = tileOrigin(x, y, h, ts);
-    drawTargetRing(dr, ts, o.x, o.y);
   }
 }

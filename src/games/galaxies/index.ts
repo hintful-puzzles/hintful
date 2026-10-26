@@ -14,7 +14,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -104,7 +103,6 @@ import {
   COL_FLASH,
   COL_FLASH_LEAD,
   COL_GRID,
-  COL_HINT,
   COL_HINT_CELL,
   COL_MISTAKE,
   COL_WHITEBG,
@@ -1288,7 +1286,6 @@ export const galaxiesGame: Game<
     // Mistake highlight: a strong red that reads on both white and black
     // region fills and the page background.
     ret[COL_MISTAKE] = ERROR;
-    ret[COL_HINT] = HINT_RING;
     ret[COL_HINT_CELL] = HINT_OUTLINE;
     return ret;
   },

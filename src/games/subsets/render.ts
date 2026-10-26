@@ -34,7 +34,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   playerEntryColor,
   RULED_OUT,
@@ -50,7 +49,8 @@ import {
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { candidateCells, candidateSets, subsetsValidate } from "./solver.ts";
@@ -84,22 +84,22 @@ export const COL_FIXED = 5;
 export const COL_GUESS = 6;
 export const COL_ERROR = 7;
 export const COL_CURSOR = 8;
-// Hint / reference-aid legend: the slot the current step decides gets a bold
-// COL_HINT frame; a highlighted neighbor cell (across a horseshoe) or
-// highlighted tally set is COL_HINT_CELL; the one cell a hidden single names is
-// hatched in COL_HINT; and the cells a clicked reference-aid set can still go
-// in get a COL_HINT_SPOT frame.
-export const COL_HINT = 9;
-export const COL_HINT_CELL = 10;
-export const COL_HINT_SPOT = 11;
+// Hint / reference-aid legend: what the current step decides (a slot, or the
+// tally entry of a set it rules out) is ringed by the engine; a highlighted
+// neighbor cell (across a horseshoe) or highlighted tally set is
+// COL_HINT_CELL; the cell a sentence names (a hidden single's one candidate,
+// the cell a set is ruled out of) is striped under its letters; and the cells
+// a clicked reference-aid set can still go in get a COL_HINT_SPOT frame.
+export const COL_HINT_CELL = 9;
+export const COL_HINT_SPOT = 10;
 // The cell where a clicked, already *placed* set sits.
-export const COL_HINT_PLACED = 12;
+export const COL_HINT_PLACED = 11;
 /** The cross in a slot whose letter is cleared. */
-export const COL_RULED_OUT = 13;
+export const COL_RULED_OUT = 12;
 /** The ground of every slot of a cell the win flash is on. */
-export const COL_FLASH = 14;
+export const COL_FLASH = 13;
 /** The same, under the win flash's leading edge. */
-export const COL_FLASH_LEAD = 15;
+export const COL_FLASH_LEAD = 14;
 
 /** Sidecar bit: a cell a spotlit set can still be placed in. */
 const HINT_SPOT = 4;
@@ -136,7 +136,6 @@ export function colors(background: Color): Color[] {
   // Purple, because Subsets has spent the usual two: the hint's decided slot is
   // blue and the player's own entries are green.
   out[COL_CURSOR] = PURPLE;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   // The "could still go here" spotlight is its own third emphasis, not the hint
   // action again: this deduction genuinely has three parts and the middle one is
@@ -184,7 +183,7 @@ export interface SubsetsDrawState {
 
 /** Tally look: boxed as a highlighted set (the premise, `COL_HINT_CELL`). */
 const TALLY_BOX_SET = 1;
-/** Tally look: boxed as the set a hint step rules out (the action, `COL_HINT`). */
+/** Tally look: ringed as the set a hint step rules out (the action). */
 const TALLY_BOX_RULE = 2;
 const TALLY_BOX = 3;
 /** Tally look: ruled out of the cell the tally is showing. */
@@ -229,9 +228,27 @@ export function redraw(
   const cw = CELL_WIDTH;
   const ch = CELL_HEIGHT;
   const abits = ALL_BITS(n);
-  const fontsize = Math.floor((ts * 3) / 4);
+  const letterFont = glyphFont(Math.floor((ts * 3) / 4));
+  const labelFont: DrawTextOptions = {
+    align: "center",
+    baseline: "mathematical",
+    fontType: "fixed",
+    size: Math.floor(ts / 2),
+  };
   const diameter = Math.floor(ts * 0.7) | 1;
   const radius = Math.floor(diameter / 2);
+  /** Where letter `cn` of cell (`x`, `y`) is drawn, which its slot and a ring
+   * round the slot both read. */
+  const letterAt = (x: number, y: number, cn: number) => {
+    const origin = {
+      x: Math.floor((x * (cw + 1) + (cn % cw) + 0.5) * ts) + Math.floor(ts / 2),
+      y:
+        Math.floor((y * (ch + 1) + Math.floor(cn / cw) + 0.5) * ts) +
+        Math.floor(ts / 2),
+    };
+    const text = String.fromCharCode(CODE_A + cn);
+    return { origin, text, box: textBox(origin, letterFont, text) };
+  };
 
   // The grid cursor hides while the keyboard is in the tally band below.
   const cshow = ui.cursor.visible && ui.tallyCursor === null && !flash.winning;
@@ -264,18 +281,17 @@ export function redraw(
   if (hint) {
     const marks = stepMarks(hint);
     const at = (p: Point): number => p.y * w + p.x;
-    // A decided slot frames its letter; a rule-out, which decides no slot,
-    // frames the whole cell.
+    // A decided slot rings its letter; a rule-out, which decides no slot,
+    // stripes the cell it names, whose rule-outs the tally then shows.
     for (const s of marks.of("ring", SLOT)) {
       tallyCell = at(s);
       ds.hint.add(tallyCell, HINT_TARGET | ((s.bit + 1) << HINT_SLOT_SHIFT));
     }
-    for (const c of marks.of("ring", CELL)) {
-      tallyCell = at(c);
-      ds.hint.add(tallyCell, HINT_TARGET);
-    }
     for (const e of marks.of("outline", CELL)) ds.hint.add(at(e), HINT_AREA);
-    for (const c of marks.of("stripes", CELL)) ds.hint.setHatched(at(c));
+    for (const c of marks.of("stripes", CELL)) {
+      tallyCell ??= at(c);
+      ds.hint.setHatched(at(c));
+    }
     for (const v of marks.of("outline", TALLY_SET))
       if (v >= 0 && v < w * h) ds.tallyLook[v] = TALLY_BOX_SET;
     for (const v of marks.of("ring", TALLY_SET)) ds.tallyLook[v] = TALLY_BOX_RULE;
@@ -388,11 +404,12 @@ export function redraw(
 
           const wrong = (ds.mistakes.packed[i] & (MISTAKE_SLOT << cn)) !== 0;
           if (state.known[i] & bit) {
+            const { origin, text } = letterAt(x, y, cn);
             dr.drawText(
-              { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) },
-              glyphFont(fontsize),
+              origin,
+              letterFont,
               wrong ? COL_ERROR : state.immutable[i] & bit ? COL_FIXED : COL_GUESS,
-              String.fromCharCode(CODE_A + cn),
+              text,
             );
           } else if (!unknown) {
             drawRuledOutCross(dr, box, wrong ? COL_ERROR : COL_RULED_OUT);
@@ -465,30 +482,19 @@ export function redraw(
           color,
         );
       }
-      if (hintBits & HINT_TARGET) {
-        // The slot the current step decides: a bold frame around that one slot
-        // square (the interior is left clear — the hint shows *where*, the
-        // player marks it). A rule-out step decides no slot, so its whole cell
-        // is framed instead.
-        const targetSlot = (hintBits >> HINT_SLOT_SHIFT) - 1;
-        if (targetSlot < 0) {
-          drawThickRectOutline(
-            dr,
-            bx,
-            by,
-            bw,
-            bw,
-            Math.max(2, Math.floor(ts / 8)),
-            COL_HINT,
-          );
-        } else if (targetSlot < cw * ch) {
-          const tx = Math.floor((x * (cw + 1) + (targetSlot % cw) + 0.5) * ts);
-          const ty = Math.floor(
-            (y * (ch + 1) + Math.floor(targetSlot / cw) + 0.5) * ts,
-          );
-          const t = Math.max(2, Math.floor(ts / 8));
-          drawThickRectOutline(dr, tx, ty, ts - 1, ts - 1, t, COL_HINT);
-        }
+      const targetSlot = (hintBits >> HINT_SLOT_SHIFT) - 1;
+      if (targetSlot >= 0 && targetSlot < cw * ch) {
+        // The slot the current step decides: a ring round that one slot, which
+        // holds its letter if it shows one (the hint shows *where*, the player
+        // marks it).
+        const tx = Math.floor((x * (cw + 1) + (targetSlot % cw) + 0.5) * ts);
+        const ty = Math.floor((y * (ch + 1) + Math.floor(targetSlot / cw) + 0.5) * ts);
+        const shown = state.known[i] & (1 << targetSlot);
+        dr.drawRing(
+          { x: tx, y: ty, w: ts - 1, h: ts - 1 },
+          { enclose: shown ? [letterAt(x, y, targetSlot).box] : [], avoid: [] },
+          Math.max(2, Math.floor(ts / 8)),
+        );
       }
 
       // Extend the update region up to cover the inspect badge above the block.
@@ -603,9 +609,12 @@ export function redraw(
       const tx = x * (cw + 1) * ts + Math.floor(cw * ts * 0.75);
       const ty = Math.floor(y * 0.75 * ts) + (h + 2) * ch * ts;
 
-      let label = "";
+      // The set's letters, a gap for each it lacks: which the entry and a ring
+      // round it both read.
+      let text = "";
       for (let cx = 0; cx < n; cx++)
-        label += cn & (1 << cx) ? String.fromCharCode(CODE_A + cx) : "_";
+        text += cn & (1 << cx) ? String.fromCharCode(CODE_A + cx) : "_";
+      const label = { origin: { x: tx, y: ty }, options: labelFont, text };
 
       const color =
         counts[cn] > 1 ? COL_ERROR : counts[cn] === 1 ? COL_DONE : COL_FIXED;
@@ -618,17 +627,24 @@ export function redraw(
       };
       dr.drawRect(entry, COL_OUTERBG);
       // "The highlighted set": a hint **boxes** the tally entry it points at,
-      // the same mark it uses on the board rather than a tint behind the label.
-      // The label's own color is information here — error red, used-up gray,
-      // fixed — so a fill behind it competes with exactly what it has to be read
-      // against.
+      // or rings the one it rules out, the same marks it uses on the board
+      // rather than a tint behind the label. The label's own color is
+      // information here — error red, used-up gray, fixed — so a fill behind it
+      // competes with exactly what it has to be read against.
       const box = look & TALLY_BOX;
-      if (box)
+      const thick = Math.max(1, Math.floor(ts / 10));
+      if (box === TALLY_BOX_RULE)
+        dr.drawRing(
+          entry,
+          { enclose: [textBox(label.origin, label.options, label.text)], avoid: [] },
+          thick,
+        );
+      else if (box)
         drawMarkSides(
           dr,
-          { box: entry, outer: 0, inner: Math.max(1, Math.floor(ts / 10)) },
+          { box: entry, outer: 0, inner: thick },
           MARK_ALL,
-          box === TALLY_BOX_RULE ? COL_HINT : COL_HINT_CELL,
+          COL_HINT_CELL,
         );
       // The keyboard cursor: a thin frame just inside the entry, outside the
       // hint's box, so both read at once.
@@ -642,17 +658,7 @@ export function redraw(
           Math.max(1, Math.floor(ts / 18)),
           COL_CURSOR,
         );
-      dr.drawText(
-        { x: tx, y: ty },
-        {
-          align: "center",
-          baseline: "mathematical",
-          fontType: "fixed",
-          size: Math.floor(ts / 2),
-        },
-        color,
-        label,
-      );
+      dr.drawText(label.origin, label.options, color, label.text);
       // A rule-out strikes the label through, in the player's own ink.
       if (look & (TALLY_STRUCK | TALLY_STRUCK_WRONG)) {
         const half = Math.floor(ts * 0.6);

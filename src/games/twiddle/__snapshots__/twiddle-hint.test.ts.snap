@@ -1354,6 +1354,1539 @@ exports[`the frames a hint draws > rings the block's outer edge and outlines the
 ]
 `;
 
+exports[`the frames a hint draws > rings the block's pivot round the turn's arrow, and outlines the tile it serves 1`] = `
+[
+  {
+    "color": 0,
+    "h": 192,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 192,
+    "x": 0,
+    "y": 0,
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        169,
+        169,
+      ],
+      [
+        169,
+        22,
+      ],
+      [
+        121,
+        70,
+      ],
+      [
+        70,
+        121,
+      ],
+      [
+        22,
+        169,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        22,
+        22,
+      ],
+      [
+        169,
+        22,
+      ],
+      [
+        121,
+        70,
+      ],
+      [
+        70,
+        121,
+      ],
+      [
+        22,
+        169,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        71,
+        71,
+      ],
+      [
+        71,
+        24,
+      ],
+      [
+        48,
+        48,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        71,
+        71,
+      ],
+      [
+        24,
+        71,
+      ],
+      [
+        48,
+        48,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        24,
+        24,
+      ],
+      [
+        24,
+        71,
+      ],
+      [
+        48,
+        48,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        24,
+        24,
+      ],
+      [
+        71,
+        24,
+      ],
+      [
+        48,
+        48,
+      ],
+    ],
+  },
+  {
+    "color": 8,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(237, 237, 237)",
+    "w": 44,
+    "x": 26,
+    "y": 26,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(190, 190, 190)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(190, 190, 190)",
+    "points": [
+      [
+        34,
+        28,
+      ],
+      [
+        34,
+        68,
+      ],
+      [
+        68,
+        48,
+      ],
+    ],
+  },
+  {
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 1,
+    "fontType": "variable",
+    "op": "text",
+    "rgb": "rgb(0, 0, 0)",
+    "size": 16,
+    "text": "2",
+    "x": 48,
+    "y": 48,
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        119,
+        71,
+      ],
+      [
+        119,
+        24,
+      ],
+      [
+        96,
+        48,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        119,
+        71,
+      ],
+      [
+        72,
+        71,
+      ],
+      [
+        96,
+        48,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        72,
+        24,
+      ],
+      [
+        72,
+        71,
+      ],
+      [
+        96,
+        48,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        72,
+        24,
+      ],
+      [
+        119,
+        24,
+      ],
+      [
+        96,
+        48,
+      ],
+    ],
+  },
+  {
+    "color": 8,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(237, 237, 237)",
+    "w": 44,
+    "x": 74,
+    "y": 26,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(190, 190, 190)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(190, 190, 190)",
+    "points": [
+      [
+        76,
+        62,
+      ],
+      [
+        116,
+        62,
+      ],
+      [
+        96,
+        28,
+      ],
+    ],
+  },
+  {
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 1,
+    "fontType": "variable",
+    "op": "text",
+    "rgb": "rgb(0, 0, 0)",
+    "size": 16,
+    "text": "6",
+    "x": 96,
+    "y": 48,
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        167,
+        71,
+      ],
+      [
+        167,
+        24,
+      ],
+      [
+        144,
+        48,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        167,
+        71,
+      ],
+      [
+        120,
+        71,
+      ],
+      [
+        144,
+        48,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        120,
+        24,
+      ],
+      [
+        120,
+        71,
+      ],
+      [
+        144,
+        48,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        120,
+        24,
+      ],
+      [
+        167,
+        24,
+      ],
+      [
+        144,
+        48,
+      ],
+    ],
+  },
+  {
+    "color": 8,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(237, 237, 237)",
+    "w": 44,
+    "x": 122,
+    "y": 26,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(190, 190, 190)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(190, 190, 190)",
+    "points": [
+      [
+        158,
+        68,
+      ],
+      [
+        158,
+        28,
+      ],
+      [
+        124,
+        48,
+      ],
+    ],
+  },
+  {
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 1,
+    "fontType": "variable",
+    "op": "text",
+    "rgb": "rgb(0, 0, 0)",
+    "size": 16,
+    "text": "8",
+    "x": 144,
+    "y": 48,
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        71,
+        119,
+      ],
+      [
+        71,
+        72,
+      ],
+      [
+        48,
+        96,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        71,
+        119,
+      ],
+      [
+        24,
+        119,
+      ],
+      [
+        48,
+        96,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        24,
+        72,
+      ],
+      [
+        24,
+        119,
+      ],
+      [
+        48,
+        96,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        24,
+        72,
+      ],
+      [
+        71,
+        72,
+      ],
+      [
+        48,
+        96,
+      ],
+    ],
+  },
+  {
+    "color": 8,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(237, 237, 237)",
+    "w": 44,
+    "x": 26,
+    "y": 74,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(190, 190, 190)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(190, 190, 190)",
+    "points": [
+      [
+        62,
+        116,
+      ],
+      [
+        62,
+        76,
+      ],
+      [
+        28,
+        96,
+      ],
+    ],
+  },
+  {
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 1,
+    "fontType": "variable",
+    "op": "text",
+    "rgb": "rgb(0, 0, 0)",
+    "size": 16,
+    "text": "3",
+    "x": 48,
+    "y": 96,
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        119,
+        119,
+      ],
+      [
+        119,
+        72,
+      ],
+      [
+        96,
+        96,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        119,
+        119,
+      ],
+      [
+        72,
+        119,
+      ],
+      [
+        96,
+        96,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        72,
+        72,
+      ],
+      [
+        72,
+        119,
+      ],
+      [
+        96,
+        96,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        72,
+        72,
+      ],
+      [
+        119,
+        72,
+      ],
+      [
+        96,
+        96,
+      ],
+    ],
+  },
+  {
+    "color": 8,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(237, 237, 237)",
+    "w": 44,
+    "x": 74,
+    "y": 74,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(190, 190, 190)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(190, 190, 190)",
+    "points": [
+      [
+        110,
+        116,
+      ],
+      [
+        110,
+        76,
+      ],
+      [
+        76,
+        96,
+      ],
+    ],
+  },
+  {
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 1,
+    "fontType": "variable",
+    "op": "text",
+    "rgb": "rgb(0, 0, 0)",
+    "size": 16,
+    "text": "4",
+    "x": 96,
+    "y": 96,
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        167,
+        119,
+      ],
+      [
+        167,
+        72,
+      ],
+      [
+        144,
+        96,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        167,
+        119,
+      ],
+      [
+        120,
+        119,
+      ],
+      [
+        144,
+        96,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        120,
+        72,
+      ],
+      [
+        120,
+        119,
+      ],
+      [
+        144,
+        96,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        120,
+        72,
+      ],
+      [
+        167,
+        72,
+      ],
+      [
+        144,
+        96,
+      ],
+    ],
+  },
+  {
+    "color": 8,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(237, 237, 237)",
+    "w": 44,
+    "x": 122,
+    "y": 74,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(190, 190, 190)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(190, 190, 190)",
+    "points": [
+      [
+        130,
+        76,
+      ],
+      [
+        130,
+        116,
+      ],
+      [
+        164,
+        96,
+      ],
+    ],
+  },
+  {
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 1,
+    "fontType": "variable",
+    "op": "text",
+    "rgb": "rgb(0, 0, 0)",
+    "size": 16,
+    "text": "7",
+    "x": 144,
+    "y": 96,
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        71,
+        167,
+      ],
+      [
+        71,
+        120,
+      ],
+      [
+        48,
+        144,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        71,
+        167,
+      ],
+      [
+        24,
+        167,
+      ],
+      [
+        48,
+        144,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        24,
+        120,
+      ],
+      [
+        24,
+        167,
+      ],
+      [
+        48,
+        144,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        24,
+        120,
+      ],
+      [
+        71,
+        120,
+      ],
+      [
+        48,
+        144,
+      ],
+    ],
+  },
+  {
+    "color": 8,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(237, 237, 237)",
+    "w": 44,
+    "x": 26,
+    "y": 122,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(190, 190, 190)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(190, 190, 190)",
+    "points": [
+      [
+        28,
+        158,
+      ],
+      [
+        68,
+        158,
+      ],
+      [
+        48,
+        124,
+      ],
+    ],
+  },
+  {
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 1,
+    "fontType": "variable",
+    "op": "text",
+    "rgb": "rgb(0, 0, 0)",
+    "size": 16,
+    "text": "1",
+    "x": 48,
+    "y": 144,
+  },
+  {
+    "color": 12,
+    "h": 2,
+    "op": "rect",
+    "rgb": "rgb(40, 132, 32)",
+    "w": 44,
+    "x": 26,
+    "y": 122,
+  },
+  {
+    "color": 12,
+    "h": 2,
+    "op": "rect",
+    "rgb": "rgb(40, 132, 32)",
+    "w": 44,
+    "x": 26,
+    "y": 164,
+  },
+  {
+    "color": 12,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(40, 132, 32)",
+    "w": 2,
+    "x": 26,
+    "y": 122,
+  },
+  {
+    "color": 12,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(40, 132, 32)",
+    "w": 2,
+    "x": 68,
+    "y": 122,
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        119,
+        167,
+      ],
+      [
+        119,
+        120,
+      ],
+      [
+        96,
+        144,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        119,
+        167,
+      ],
+      [
+        72,
+        167,
+      ],
+      [
+        96,
+        144,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        72,
+        120,
+      ],
+      [
+        72,
+        167,
+      ],
+      [
+        96,
+        144,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        72,
+        120,
+      ],
+      [
+        119,
+        120,
+      ],
+      [
+        96,
+        144,
+      ],
+    ],
+  },
+  {
+    "color": 8,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(237, 237, 237)",
+    "w": 44,
+    "x": 74,
+    "y": 122,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(190, 190, 190)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(190, 190, 190)",
+    "points": [
+      [
+        110,
+        164,
+      ],
+      [
+        110,
+        124,
+      ],
+      [
+        76,
+        144,
+      ],
+    ],
+  },
+  {
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 1,
+    "fontType": "variable",
+    "op": "text",
+    "rgb": "rgb(0, 0, 0)",
+    "size": 16,
+    "text": "9",
+    "x": 96,
+    "y": 144,
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        167,
+        167,
+      ],
+      [
+        167,
+        120,
+      ],
+      [
+        144,
+        144,
+      ],
+    ],
+  },
+  {
+    "fill": 4,
+    "fillRgb": "rgb(168, 168, 168)",
+    "op": "polygon",
+    "outline": 4,
+    "outlineRgb": "rgb(168, 168, 168)",
+    "points": [
+      [
+        167,
+        167,
+      ],
+      [
+        120,
+        167,
+      ],
+      [
+        144,
+        144,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        120,
+        120,
+      ],
+      [
+        120,
+        167,
+      ],
+      [
+        144,
+        144,
+      ],
+    ],
+  },
+  {
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "polygon",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "points": [
+      [
+        120,
+        120,
+      ],
+      [
+        167,
+        120,
+      ],
+      [
+        144,
+        144,
+      ],
+    ],
+  },
+  {
+    "color": 8,
+    "h": 44,
+    "op": "rect",
+    "rgb": "rgb(237, 237, 237)",
+    "w": 44,
+    "x": 122,
+    "y": 122,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(190, 190, 190)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(190, 190, 190)",
+    "points": [
+      [
+        164,
+        130,
+      ],
+      [
+        124,
+        130,
+      ],
+      [
+        144,
+        164,
+      ],
+    ],
+  },
+  {
+    "align": "center",
+    "baseline": "mathematical",
+    "color": 1,
+    "fontType": "variable",
+    "op": "text",
+    "rgb": "rgb(0, 0, 0)",
+    "size": 16,
+    "text": "5",
+    "x": 144,
+    "y": 144,
+  },
+  {
+    "color": 14,
+    "h": 45,
+    "op": "ring",
+    "radius": 23,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "w": 45,
+    "x": 50,
+    "y": 98,
+  },
+  {
+    "h": 45,
+    "op": "clip",
+    "w": 45,
+    "x": 50,
+    "y": 98,
+  },
+  {
+    "fill": 14,
+    "fillRgb": "rgb(21, 113, 233)",
+    "op": "polygon",
+    "outline": 14,
+    "outlineRgb": "rgb(21, 113, 233)",
+    "points": [
+      [
+        57,
+        126,
+      ],
+      [
+        56,
+        124,
+      ],
+      [
+        56,
+        121,
+      ],
+      [
+        56,
+        118,
+      ],
+      [
+        57,
+        116,
+      ],
+      [
+        57,
+        113,
+      ],
+      [
+        59,
+        111,
+      ],
+      [
+        60,
+        109,
+      ],
+      [
+        62,
+        107,
+      ],
+      [
+        64,
+        106,
+      ],
+      [
+        67,
+        105,
+      ],
+      [
+        69,
+        104,
+      ],
+      [
+        72,
+        104,
+      ],
+      [
+        75,
+        104,
+      ],
+      [
+        77,
+        105,
+      ],
+      [
+        80,
+        106,
+      ],
+      [
+        82,
+        107,
+      ],
+      [
+        84,
+        109,
+      ],
+      [
+        85,
+        111,
+      ],
+      [
+        87,
+        113,
+      ],
+      [
+        87,
+        116,
+      ],
+      [
+        88,
+        118,
+      ],
+      [
+        88,
+        121,
+      ],
+      [
+        88,
+        124,
+      ],
+      [
+        87,
+        126,
+      ],
+      [
+        85,
+        125,
+      ],
+      [
+        86,
+        123,
+      ],
+      [
+        86,
+        121,
+      ],
+      [
+        86,
+        119,
+      ],
+      [
+        86,
+        116,
+      ],
+      [
+        85,
+        114,
+      ],
+      [
+        84,
+        112,
+      ],
+      [
+        82,
+        110,
+      ],
+      [
+        81,
+        109,
+      ],
+      [
+        79,
+        108,
+      ],
+      [
+        77,
+        107,
+      ],
+      [
+        74,
+        106,
+      ],
+      [
+        72,
+        106,
+      ],
+      [
+        70,
+        106,
+      ],
+      [
+        67,
+        107,
+      ],
+      [
+        65,
+        108,
+      ],
+      [
+        63,
+        109,
+      ],
+      [
+        62,
+        110,
+      ],
+      [
+        60,
+        112,
+      ],
+      [
+        59,
+        114,
+      ],
+      [
+        58,
+        116,
+      ],
+      [
+        58,
+        119,
+      ],
+      [
+        58,
+        121,
+      ],
+      [
+        58,
+        123,
+      ],
+      [
+        59,
+        125,
+      ],
+    ],
+  },
+  {
+    "fill": 14,
+    "fillRgb": "rgb(21, 113, 233)",
+    "op": "polygon",
+    "outline": 14,
+    "outlineRgb": "rgb(21, 113, 233)",
+    "points": [
+      [
+        90,
+        127,
+      ],
+      [
+        82,
+        131,
+      ],
+      [
+        82,
+        124,
+      ],
+    ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "cx": 72,
+    "cy": 72,
+    "fill": 13,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "circle",
+    "outline": 13,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "r": 2,
+  },
+  {
+    "cx": 120,
+    "cy": 72,
+    "fill": 13,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "circle",
+    "outline": 13,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "r": 2,
+  },
+  {
+    "cx": 72,
+    "cy": 120,
+    "fill": 13,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "circle",
+    "outline": 13,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "r": 2,
+  },
+  {
+    "cx": 120,
+    "cy": 120,
+    "fill": 13,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "circle",
+    "outline": 13,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "r": 2,
+  },
+]
+`;
+
 exports[`twiddle: pinned hint positions > says, at each pin 1`] = `
 {
   "carry": "Working on the outlined 1: turn the ringed block anticlockwise to carry it toward its row.",

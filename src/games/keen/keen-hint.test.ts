@@ -14,7 +14,7 @@ import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
-import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
+import { expectRing, markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -22,7 +22,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL, COL_PENCIL } from "./render.ts";
+import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
 import { type HintReason, recordKeenDeductions } from "./solver.ts";
 import {
   DIFF_EXTREME,
@@ -47,7 +47,7 @@ type AnyStep = any;
 // 1.91:1 against a pencil mark in light and 1.96 in dark, painting over the
 // digits the hint talks about, and no palette color fixes that without landing
 // next to `ERROR_WASH`. A ring sits beside the content, so it can use the
-// emphatic `HINT_RING` blue.
+// emphatic `HINT_RING` blue, and only the engine draws one, round.
 
 const NORMAL: KeenParams = { w: 6, diff: "normal", multiplicationOnly: false };
 const HARD: KeenParams = { w: 6, diff: "hard", multiplicationOnly: false };
@@ -490,10 +490,9 @@ describe("keen hint render", () => {
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_PENCIL)).toBe(
       true,
     );
-    // A strike step gets the same ring as a placement: the cell a hint acts on
-    // is marked the same way whatever the move, so it is never left identified
-    // only by the strikethrough the player has to spot first.
-    expectRing(recording.ops, COL_HINT);
+    // A strike step rings nothing: its struck notes mark the cell, which a
+    // ring could not go round clear of its notes (`make-rings-round`, D6).
+    expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();
   });
 
@@ -511,7 +510,7 @@ describe("keen hint render", () => {
     const isRow = /in this row/.test(hint?.explanation ?? "");
     expect(new Set(hatches.map((h) => (isRow ? h.y : h.x))).size).toBe(1);
     expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);
-    expectRing(recording.ops, COL_HINT);
+    expectRing(recording.ops);
     expect(recording.ops).toMatchSnapshot();
   });
 });

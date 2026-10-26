@@ -17,8 +17,8 @@ import {
 } from "./overlay-sidecar.ts";
 import type { Point } from "./types.ts";
 
-/** The marks of a step whose words outline `area`, ring `targets` and ring the
- * notes `marks`. */
+/** The marks of a step whose words outline `area`, ring `targets` and strike
+ * the notes `marks`. */
 function said({
   area = [],
   targets = [],
@@ -29,7 +29,7 @@ function said({
   marks?: Note[];
 }): StepMarks {
   return stepMarks({
-    words: phrase`${mark.as("outline", CELL, area, "a")} ${mark.as("ring", CELL, targets, "t")} ${mark.as("ring", NOTE, marks, "m")}`,
+    words: phrase`${mark.as("outline", CELL, area, "a")} ${mark.as("ring", CELL, targets, "t")} ${mark.as("strike", NOTE, marks, "m")}`,
   });
 }
 
@@ -61,7 +61,7 @@ describe("OverlaySidecar", () => {
     expect(s.stale(0)).toBe(true);
   });
 
-  it("leaves ringed notes alone for a game that strikes none", () => {
+  it("leaves struck notes alone for a game that strikes none", () => {
     const s = new OverlaySidecar(9);
     s.pack(said({ targets: [{ x: 0, y: 0 }], marks: [{ x: 1, y: 0, n: 3 }] }), idx);
     expect(s.packed[0]).toBe(HINT_TARGET);
@@ -73,13 +73,13 @@ describe("OverlaySidecar", () => {
     // Solo and Unequal reach 31 values. Sharing one word, a strike on 30 once
     // packed exactly as "this cell is the target", and swapping the two
     // repainted nothing.
-    // A ringed note rings its cell (`NOTE.within`), so the word is the target
-    // role and nothing more.
+    // A struck note rings nothing, so the cell's word loses the target role
+    // and only its struck lane says what changed.
     const s = new OverlaySidecar(9);
     s.pack(said({ targets: [{ x: 0, y: 0 }] }), idx, marks);
     s.commit(0);
     s.pack(said({ marks: [{ x: 0, y: 0, n: 30 }] }), idx, marks);
-    expect(s.packed[0]).toBe(HINT_TARGET);
+    expect(s.packed[0]).toBe(0);
     expect(s.struck[0]).toBe(valueBit(30));
     expect(s.stale(0)).toBe(true);
     s.commit(0);

@@ -50,7 +50,7 @@ the preferences.
 
 Numbered outlined cells are a chain of cells with two numbers left each,
 read in order: the sentence says how the chain rules a number out of the
-ringed cell.
+cell where it is struck.
 
 A few ideas are worth learning by name:
 

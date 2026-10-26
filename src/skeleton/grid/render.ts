@@ -18,7 +18,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   RULED_OUT,
   SHADED,
@@ -26,10 +25,17 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
+import { textBox } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { SkeletonMistake } from "./index.ts";
@@ -62,13 +68,11 @@ const COL_ERROR = 7;
 /** The surface under a square Check & Save found wrong. */
 export const COL_WRONG = 8;
 const COL_CURSOR = 9;
-/** The ring on the squares a hint step decides, and the stripes on the
- * squares two numbers share. */
-export const COL_HINT = 10;
-/** The outline on the numbers it reasons from. */
-export const COL_HINT_EVIDENCE = 11;
-const COL_FLASH = 12;
-const COL_FLASH_LEAD = 13;
+/** The outline on the numbers a hint step reasons from. The ring on the
+ * squares it decides is the engine's (`GameDrawing.drawRing`). */
+export const COL_HINT_EVIDENCE = 10;
+const COL_FLASH = 11;
+const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -82,7 +86,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_WRONG] = ERROR_WASH;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -144,6 +147,26 @@ function markBand(ts: number, x: number, y: number): MarkBand {
   };
 }
 
+/** Where square `(x, y)` draws its number: the arguments `drawText` takes
+ * but the color, so the tile and a hint's ring read one place. */
+function numberText(ts: number, x: number, y: number) {
+  const b = border(ts);
+  return {
+    origin: { x: x * ts + b + Math.floor(ts / 2), y: y * ts + b + Math.floor(ts / 2) },
+    options: glyphFont(Math.floor((ts * 3) / 5)),
+  };
+}
+
+/** The text square `(x, y)` shows, for a hint's ring to keep clear of. */
+function squareText(state: SkeletonState, ts: number, x: number, y: number): CellText {
+  const { w, h } = state;
+  if (x < 0 || y < 0 || x >= w || y >= h) return NO_TEXT;
+  const clue = state.clues[y * w + x];
+  if (clue === NO_CLUE) return NO_TEXT;
+  const { origin, options } = numberText(ts, x, y);
+  return { enclose: [textBox(origin, options, String(clue))], avoid: [], notes: [] };
+}
+
 // --- one square -------------------------------------------------------------
 
 interface Tile {
@@ -186,12 +209,8 @@ function drawTile(
   ds.hint.drawHatch(dr, i, surface, ts);
 
   if (t.clue !== NO_CLUE) {
-    dr.drawText(
-      { x: cx, y: cy },
-      glyphFont(Math.floor((ts * 3) / 5)),
-      t.error ? COL_ERROR : COL_TEXT,
-      String(t.clue),
-    );
+    const { origin, options } = numberText(ts, x, y);
+    dr.drawText(origin, options, t.error ? COL_ERROR : COL_TEXT, String(t.clue));
   } else if (t.mark === FILLED) {
     drawPiece(dr, surface, SHADED_SHAPE, COL_SHADED);
   } else if (t.mark === CROSSED) {
@@ -247,7 +266,7 @@ export function redraw(
   ds.hint.pack(named, (x, y) => y * w + x);
   const markStyle = {
     band: (x: number, y: number) => markBand(ts, x, y),
-    targetColor: COL_HINT,
+    text: (x: number, y: number) => squareText(state, ts, x, y),
     evidenceColor: COL_HINT_EVIDENCE,
     // Two numbers side by side are two premises, each outlined by itself.
     joinEvidence: () => false,

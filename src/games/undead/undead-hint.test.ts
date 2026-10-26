@@ -12,16 +12,27 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import { CELL, NOTE, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
+import {
+  expectRing,
+  isThin,
+  markSides,
+  ringsOf,
+} from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { undeadGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL, type UndeadHint } from "./render.ts";
+import {
+  COL_HINT_CELL,
+  COL_TEXT,
+  PREFERRED_TILE_SIZE,
+  type UndeadHint,
+} from "./render.ts";
 import { recordUndeadDeductions } from "./solver.ts";
 import {
   MON_GHOST,
@@ -415,16 +426,30 @@ describe("undead hint render (tier 2.5)", () => {
     const evidence = markSides(ops, COL_HINT_CELL);
     expect(evidence.length).toBeGreaterThan(0);
     for (const s of evidence) expect(isThin(s)).toBe(true);
-    // The struck cell is ringed COL_HINT, and the struck candidate itself keeps
-    // its glyph and draws a COL_HINT strikethrough line over it.
-    expectRing(
-      ops,
-      COL_HINT,
-      (hint?.highlights as UndeadHint | undefined)?.targets.length,
+    // The struck cell is marked by its strikes, never ringed: a ring would
+    // cross the notes the step leaves standing. Each struck candidate keeps its
+    // glyph under a strikethrough in the note's own ink.
+    expect(ringsOf(ops)).toHaveLength(0);
+    const span = 2 * Math.floor(PREFERRED_TILE_SIZE / 6);
+    const strikes = ops.filter(
+      (o) =>
+        o.op === "line" &&
+        o.color === COL_TEXT &&
+        o.x2 - o.x1 === span &&
+        o.y1 - o.y2 === span,
     );
-    expect(ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(true);
+    expect(strikes.length).toBe(stepMarks(hint).of("strike", NOTE).length);
+    expect(strikes.length).toBeGreaterThan(0);
     // Edge clue numbers are still drawn (text ops present).
     expect(ops.some((o) => o.op === "text")).toBe(true);
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("a placement rings the cell it fills", () => {
+    const { recording, hint } = renderPinnedHint(undeadGame, pinned("single"), {
+      defaultBackground: DEFAULT_BACKGROUND,
+    });
+    expectRing(recording.ops, { rings: stepMarks(hint).of("ring", CELL).length });
+    expect(ringsOf(recording.ops).length).toBeGreaterThan(0);
   });
 });

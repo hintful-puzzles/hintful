@@ -24,7 +24,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   RULED_OUT,
   surfaceGrid,
@@ -34,7 +33,6 @@ import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import {
   drawEdgeHints,
   drawEdgeOrdinals,
-  type EdgeInks,
   edgeHintWords,
   stepEdgeHints,
 } from "../../engine/edge-hint.ts";
@@ -47,6 +45,7 @@ import {
   type EdgeMistake,
   LINE,
 } from "../../engine/line-drawing.ts";
+import { textBox } from "../../engine/ring.ts";
 import { type PieceBox, spreadColors } from "../../engine/spread-colors.ts";
 import {
   across,
@@ -60,7 +59,7 @@ import {
   squareCenter,
   squareEdges,
 } from "../../engine/square-edges.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { PathHighlights } from "./hint.ts";
 import { pathLines, withChanges } from "./moves.ts";
@@ -94,16 +93,14 @@ const COL_EDGE = 8;
 const COL_DRAG_ADD = 9;
 const COL_DRAG_REMOVE = 10;
 const COL_CURSOR = 11;
-/** The edges a hint step decides, drawn as the line or cross it asks for. */
-export const COL_HINT = 12;
-/** The squares a step reasons from, and the edges a supposition would
- * force. */
-export const COL_HINT_EVIDENCE = 13;
-const COL_FLASH = 14;
-const COL_FLASH_LEAD = 15;
+/** The squares a hint step reasons from, and the edges a supposition would
+ * force. The edges it decides are ringed by the engine (`drawEdgeHints`). */
+export const COL_HINT_EVIDENCE = 12;
+const COL_FLASH = 13;
+const COL_FLASH_LEAD = 14;
 /** The first of a pair's colors, one slot each: a pair's discs and every line
  * reaching them. */
-const COL_PAIR = 16;
+const COL_PAIR = 15;
 /** How many of the free colors pairs take: all but the gray, whose line in
  * the dark scheme sits near the white of a line reaching no number. */
 const PAIRS = 9;
@@ -128,7 +125,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_DRAG_ADD] = DRAG_ADD;
   out[COL_DRAG_REMOVE] = DRAG_REMOVE;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -190,8 +186,6 @@ const S_WALL = 1 << 6;
 // Word 2, the hint on the sides: `edge-hint.ts`'s word.
 const WORDS = 3;
 
-const HINT_INKS: EdgeInks = { ring: COL_HINT, outline: COL_HINT_EVIDENCE };
-
 export interface PathDrawState {
   started: boolean;
   tileSize: number;
@@ -251,6 +245,22 @@ function pairColors({ w, ends }: PathState): Int32Array {
 
 // --- one square -------------------------------------------------------------
 
+/** Where the number on the square centered at `center` is drawn, which the
+ * square's text and a hint's ring both read. */
+function numberText(
+  center: Point,
+  number: number,
+  ts: number,
+): { origin: Point; options: DrawTextOptions } {
+  return {
+    origin: center,
+    options: glyphFont(Math.floor(number > 9 ? ts / 3 : (ts * 2) / 5)),
+  };
+}
+
+/** `numberAt(x, y)` is the number on square (`x`, `y`), or {@link NO_END}
+ * where it has none or is off the board: a hint's ring across a side keeps
+ * off the numbers either side of it. */
 function drawTile(
   dr: GameDrawing,
   ds: PathDrawState,
@@ -259,6 +269,7 @@ function drawTile(
   square: number,
   sides: number,
   hints: number,
+  numberAt: (x: number, y: number) => number,
 ): void {
   const ts = ds.tileSize;
   const b = border(ts);
@@ -333,10 +344,23 @@ function drawTile(
   };
 
   // The step's edges, under the player's own: a chain's thin in the outline's
-  // ink, the asked ones at the weight of a laid line.
+  // ink, the asked ones at the weight of a laid line. An asked side is ringed
+  // by a pill across it, round the line from this middle to the next or round
+  // the cross on the side, and clear of the numbers on its two squares; each
+  // square draws its half in its own clip.
   const small = Math.max(2, Math.floor(ts / 8));
   const hintCross = Math.max(2, ts >> 4);
-  drawEdgeHints(hints, HINT_INKS, {
+  const numberBox = (sx: number, sy: number): Rect[] => {
+    const n = numberAt(sx, sy);
+    if (n === NO_END) return [];
+    const { origin, options } = numberText(
+      { x: cx + (sx - x) * ts, y: cy + (sy - y) * ts },
+      n,
+      ts,
+    );
+    return [textBox(origin, options, String(n))];
+  };
+  drawEdgeHints(dr, hints, COL_HINT_EVIDENCE, {
     cross: (sides, ink) => {
       for (let k = 0; k < 4; k++) if (sides & (1 << k)) cross(k, ink, small, hintCross);
     },
@@ -347,6 +371,26 @@ function drawTile(
         if (sides & (1 << k)) strokes.push({ k, color: ink, weight });
       for (const { from, to } of segmentsOf(strokes))
         dr.drawLine(from, to, ink, weight);
+    },
+    ring: (d, shape) => {
+      // On the grid line the two squares share, so both draw one pill.
+      const m = {
+        x: DX[d] > 0 ? px + ts : DX[d] < 0 ? px : cx,
+        y: DY[d] > 0 ? py + ts : DY[d] < 0 ? py : cy,
+      };
+      const long = shape === "line" ? ts : Math.floor(ts * 0.6);
+      const short = Math.floor(ts * 0.6);
+      const w2 = (DX[d] !== 0 ? long : short) / 2;
+      const h2 = (DX[d] !== 0 ? short : long) / 2;
+      return {
+        box: { x: m.x - w2, y: m.y - h2, w: 2 * w2, h: 2 * h2 },
+        clear: {
+          enclose: [],
+          avoid: [...numberBox(x, y), ...numberBox(x + DX[d], y + DY[d])],
+        },
+        thickness: Math.max(2, ts >> 4),
+        room: { x: m.x - ts, y: m.y - ts, w: 2 * ts, h: 2 * ts },
+      };
     },
   });
 
@@ -415,9 +459,10 @@ function drawTile(
       dr.drawCircle(center, r - ring, COL_EDGE, COL_EDGE);
       dr.drawCircle(center, r - ring - 1, COL_GIVEN, COL_GIVEN);
     }
+    const { origin, options } = numberText(center, number, ts);
     dr.drawText(
-      center,
-      glyphFont(Math.floor(number > 9 ? ts / 3 : (ts * 2) / 5)),
+      origin,
+      options,
       done ? COL_PAIR_TEXT + ds.numberColor[number] : COL_TEXT,
       String(number),
     );
@@ -545,6 +590,8 @@ export function redraw(
     ),
   );
 
+  const numberAt = (x: number, y: number): number =>
+    x >= 0 && x < w && y >= 0 && y < h ? ends[y * w + x] : NO_END;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
@@ -583,7 +630,7 @@ export function redraw(
         ds.cache[at + 2] === hints
       )
         continue;
-      drawTile(dr, ds, x, y, square, sides, hints);
+      drawTile(dr, ds, x, y, square, sides, hints, numberAt);
       ds.cache[at] = square;
       ds.cache[at + 1] = sides;
       ds.cache[at + 2] = hints;

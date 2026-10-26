@@ -12,7 +12,7 @@ import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type FillingHint, fillingGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import { deduceHintPlan, type FillingHintMove, solveFilling } from "./solver.ts";
 import { decodeParams, executeMove, type FillingState, newState } from "./state.ts";
 
@@ -288,7 +288,7 @@ describe("filling hint render scenario", () => {
     const { recording, step } = renderPinnedHint(fillingGame, pinned("stripedRegion"));
     const marks = stepMarks(step);
     expect(marks.of("stripes", CELL).length).toBeGreaterThan(0);
-    expectRing(recording.ops, COL_HINT, marks.of("ring", CELL).length);
+    expectRing(recording.ops, { rings: marks.of("ring", CELL).length });
     // "The striped region of N": every cell of it hatched, the digits drawn
     // over the stripes, and no outline, since the region is not a particular
     // cell the reason rests on.

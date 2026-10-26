@@ -10,12 +10,13 @@ import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { deadEndBindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newInertiaDesc } from "./generator.ts";
 import { hasNoSolution, hint } from "./hint.ts";
 import { GEM as GEM_MARK } from "./hint-text.ts";
 import { inertiaGame } from "./index.ts";
-import { COL_HINT, COL_HINT_GOAL } from "./render.ts";
+import { COL_HINT_GOAL } from "./render.ts";
 import {
   GEM,
   type InertiaMove,
@@ -555,10 +556,12 @@ describe("inertia hint rendering", () => {
       ),
     ).toBe(true);
 
-    // The arrow: the route arrow's own shape and color — both mean "the solver
-    // says go this way".
+    // The arrow: the route arrow's own shape, ringed with the ball and drawn
+    // in the ring's ink inside it.
+    expectRing(result.recording.ops);
+    const [ring] = ringsOf(result.recording.ops);
     expect(
-      result.recording.ops.some((o) => o.op === "polygon" && o.fill === COL_HINT),
+      result.recording.ops.some((o) => o.op === "polygon" && o.fill === ring.color),
     ).toBe(true);
 
     expect(result.hint?.explanation).toContain("Working on the outlined gem");

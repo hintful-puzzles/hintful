@@ -6,7 +6,7 @@ exports[`subsets: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
-exports[`the hint places the rule-outs it rests on > the rule-out hint frame boxes the set and the neighbor's sets, and frames the cell 1`] = `
+exports[`the hint places the rule-outs it rests on > the rule-out hint frame rings the set, stripes the cell, and boxes the neighbor's sets 1`] = `
 [
   {
     "color": 0,
@@ -180,7 +180,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 18,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -190,7 +190,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 43,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -363,7 +363,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 54,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -373,7 +373,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 79,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -447,7 +447,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 54,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -457,7 +457,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 79,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -568,7 +568,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 126,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -578,7 +578,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 151,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -728,10 +728,30 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 126,
   },
   {
+    "color": 16,
+    "h": 35,
+    "op": "hatch",
+    "period": 12,
+    "rgb": "rgb(194, 85, 22)",
+    "w": 35,
+    "x": 234,
+    "y": 126,
+  },
+  {
     "color": 1,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
+    "w": 35,
+    "x": 270,
+    "y": 126,
+  },
+  {
+    "color": 16,
+    "h": 35,
+    "op": "hatch",
+    "period": 12,
+    "rgb": "rgb(194, 85, 22)",
     "w": 35,
     "x": 270,
     "y": 126,
@@ -746,10 +766,30 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 162,
   },
   {
+    "color": 16,
+    "h": 35,
+    "op": "hatch",
+    "period": 12,
+    "rgb": "rgb(194, 85, 22)",
+    "w": 35,
+    "x": 234,
+    "y": 162,
+  },
+  {
     "color": 1,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
+    "w": 35,
+    "x": 270,
+    "y": 162,
+  },
+  {
+    "color": 16,
+    "h": 35,
+    "op": "hatch",
+    "period": 12,
+    "rgb": "rgb(194, 85, 22)",
     "w": 35,
     "x": 270,
     "y": 162,
@@ -772,42 +812,6 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "outline": 0,
     "outlineRgb": "rgb(211, 211, 211)",
     "r": 5,
-  },
-  {
-    "color": 9,
-    "h": 4,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 71,
-    "x": 234,
-    "y": 126,
-  },
-  {
-    "color": 9,
-    "h": 71,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 4,
-    "x": 234,
-    "y": 126,
-  },
-  {
-    "color": 9,
-    "h": 4,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 71,
-    "x": 234,
-    "y": 193,
-  },
-  {
-    "color": 9,
-    "h": 71,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 4,
-    "x": 301,
-    "y": 126,
   },
   {
     "color": 2,
@@ -913,7 +917,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 234,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -923,7 +927,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 259,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -942,7 +946,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 270,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -952,7 +956,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 295,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -971,7 +975,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 270,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -981,7 +985,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 295,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1028,7 +1032,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 234,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1038,7 +1042,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 259,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1099,7 +1103,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 270,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1109,7 +1113,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 295,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1202,7 +1206,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "r": 5,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1211,7 +1215,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 234,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 71,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1220,7 +1224,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 234,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1229,7 +1233,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 302,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 71,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1389,7 +1393,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 342,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1399,7 +1403,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 367,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1488,7 +1492,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 342,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1498,7 +1502,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 367,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1538,7 +1542,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 378,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -1548,7 +1552,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y2": 403,
   },
   {
-    "color": 13,
+    "color": 12,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -2991,7 +2995,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 419,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3000,7 +3004,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 419,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3009,7 +3013,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 419,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3018,7 +3022,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 443,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3048,7 +3052,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 419,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3057,7 +3061,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 419,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3066,7 +3070,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 419,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3075,7 +3079,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 443,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3126,7 +3130,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 446,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3135,7 +3139,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 446,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3144,7 +3148,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 446,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3153,7 +3157,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 470,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3183,7 +3187,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 446,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3192,7 +3196,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 446,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3201,7 +3205,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 446,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3210,7 +3214,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 470,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3261,40 +3265,15 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 473,
   },
   {
-    "color": 9,
-    "h": 3,
-    "op": "rect",
+    "color": 15,
+    "h": 24,
+    "op": "ring",
+    "radius": 12,
     "rgb": "rgb(21, 113, 233)",
-    "w": 72,
-    "x": 18,
-    "y": 473,
-  },
-  {
-    "color": 9,
-    "h": 27,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 3,
-    "x": 18,
-    "y": 473,
-  },
-  {
-    "color": 9,
-    "h": 3,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 72,
-    "x": 18,
-    "y": 497,
-  },
-  {
-    "color": 9,
-    "h": 27,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 3,
-    "x": 87,
-    "y": 473,
+    "thickness": 3,
+    "w": 69,
+    "x": 20,
+    "y": 475,
   },
   {
     "align": "center",
@@ -3381,7 +3360,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 500,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3390,7 +3369,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 500,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3399,7 +3378,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 500,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3408,7 +3387,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 524,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3459,7 +3438,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 500,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3468,7 +3447,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 500,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3477,7 +3456,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 500,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3486,7 +3465,7 @@ exports[`the hint places the rule-outs it rests on > the rule-out hint frame box
     "y": 524,
   },
   {
-    "color": 10,
+    "color": 9,
     "h": 27,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",

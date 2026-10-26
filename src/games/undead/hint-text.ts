@@ -53,13 +53,17 @@ const bitsOf = (notes: readonly Note[]): number => notes.reduce((b, k) => b | k.
 /** The cells the step decides, as "this cell" / "these cells". */
 const thisCell = (m: Marked): Narration => mark.this("ring", CELL, m.targets, "cell");
 
-/** The struck pencil marks, "the ringed ghost and vampire", in words that
+/** The cells a step strikes notes in, named by their strikes: a ring round
+ * the cell would cross the notes the step leaves standing. */
+const struckCell = (m: Marked): Narration => mark.this("strike", NOTE, m.notes, "cell");
+
+/** The struck pencil marks, "the struck ghost and vampire", in words that
  * follow them when a step shrinks. Several cells' notes of one monster are
- * "the ringed ghosts". */
+ * "the struck ghosts". */
 const struck = (m: Marked): Narration =>
-  mark.as("ring", NOTE, m.notes, (els) => {
+  mark.as("strike", NOTE, m.notes, (els) => {
     const cells = new Set(els.map((e) => CELL.key(e))).size;
-    return `the ringed ${joinMonsters(bitsOf(els), "and")}${cells > 1 ? "s" : ""}`;
+    return `the struck ${joinMonsters(bitsOf(els), "and")}${cells > 1 ? "s" : ""}`;
   });
 
 const sightline = (m: Marked, words: string): Narration =>
@@ -78,7 +82,7 @@ export const say = {
   /** A later cell of the same sightline firing. */
   sightlineNext: (m: Marked): Sentence =>
     sentence({
-      move: phrase`${struck(m)} in ${thisCell(m)} must go too`,
+      move: phrase`${struck(m)} in ${struckCell(m)} must go too`,
       relation: { kind: "again", basis: sightline(m, "the same sightline") },
     }),
 
@@ -88,7 +92,7 @@ export const say = {
   /** The sightline's clues `a` and `b` leave no room for `bits` in the cell. */
   sightline: (a: number, b: number, bits: number, m: Marked): Sentence =>
     so({
-      look: phrase`${sightline(m, "This sightline")}'s ${a} and ${b} leave no room for a ${joinMonsters(bits)} in ${thisCell(m)}`,
+      look: phrase`${sightline(m, "This sightline")}'s ${a} and ${b} leave no room for a ${joinMonsters(bits)} in ${struckCell(m)}`,
       move: phrase`${struck(m)} must go`,
     }),
 
@@ -97,7 +101,7 @@ export const say = {
     return so({
       look: phrase`No ${name}s are left to place`,
       follows: phrase`no undecided cell can be one`,
-      move: phrase`${struck(m)} in ${thisCell(m)} must go`,
+      move: phrase`${struck(m)} in ${struckCell(m)} must go`,
     });
   },
 

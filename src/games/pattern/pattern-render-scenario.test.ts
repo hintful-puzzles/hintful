@@ -1,7 +1,7 @@
 /**
  * Tier-2.5 render scenarios for the Pattern hint: drive a real Midend to a
  * displayed hint step and capture `redraw`. The targeted op assertions (the
- * `COL_HINT` ring, the line's hatch, the clue text, the grid frame)
+ * target's ring, the line's hatch, the clue text, the grid frame)
  * stand beside the snapshot so a careless `vitest -u` cannot erase them.
  */
 import { describe, expect, it } from "vitest";
@@ -15,13 +15,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { cellAt, LINE } from "./hint-marks.ts";
 import { type PatternHint, patternGame } from "./index.ts";
-import {
-  COL_CLEAR,
-  COL_CLEAR_MARK,
-  COL_GRID,
-  COL_HINT,
-  COL_HINT_CELL,
-} from "./render.ts";
+import { COL_CLEAR, COL_CLEAR_MARK, COL_GRID, COL_HINT_CELL } from "./render.ts";
 import { deduceHintPlan } from "./solver.ts";
 import { GRID_EMPTY, GRID_FULL } from "./state.ts";
 
@@ -47,7 +41,7 @@ const pinned = describeHintKindPins({
 });
 
 describe("Pattern hint render scenarios", () => {
-  it("opener frame: a ringed COL_HINT target on a hatched line, clues intact", () => {
+  it("opener frame: a ringed target on a hatched line, clues intact", () => {
     const { recording, hint, size } = renderScenario({
       game: patternGame,
       id: "10x10:1.3/2.3/7/7.2/7.2/1.1.1.2/1.1.1.1/1/1.1/4/6/4/5/3/5/5/5.1.2/2.1/7/3.1",
@@ -59,9 +53,9 @@ describe("Pattern hint render scenarios", () => {
     const hl = hint?.highlights as PatternHint | undefined;
     expect(hl).toBeDefined();
 
-    // The forced cell(s) are **ringed** COL_HINT — never filled with it, and
-    // never pre-filled with the piece or dot the move will place.
-    expectRing(recording.ops, COL_HINT, hl?.cells.length);
+    // The forced cell(s) are **ringed** — never filled, and never pre-filled
+    // with the piece or dot the move will place.
+    expectRing(recording.ops, { rings: hl?.cells.length });
     // The reasoned line is hatched, every square of it and its clue strip, in
     // one strip.
     const hatches = opsOfKind(recording.ops, "hatch");

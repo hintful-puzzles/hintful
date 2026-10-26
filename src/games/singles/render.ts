@@ -17,7 +17,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   RULED_OUT,
   SHADED,
@@ -29,7 +28,8 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
 import type { SinglesHint } from "./index.ts";
 import {
@@ -63,13 +63,12 @@ export const COL_CURSOR = 8;
 export const COL_ERROR = 9;
 /** The number on a piece drawn in {@link COL_ERROR}. */
 export const COL_ERROR_TEXT = 10;
-export const COL_HINT = 11; // the cell(s) the displayed hint forces
 /** A cell the deduction reasons from, decided or not, and the corner a
  * corner-deduction protects. */
-export const COL_HINT_CELL = 12;
+export const COL_HINT_CELL = 11;
 /** The ground of a cell under the win flash's leading edge, where `COL_FLASH`
  * is under its body. */
-export const COL_FLASH_LEAD = 13;
+export const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -85,7 +84,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -202,25 +200,22 @@ function tileRedraw(
   // action. (Auto-hint applies the move for real, so animation mode renders the
   // actual mark.)
   //
-  // Every Singles cell carries a **number**, so no hint role can be a fill; all
-  // of them are bands at the cell's edge, beside the piece and the ring. The
-  // band lies inside the cell (`outer` 0), so this cell's own repaint — which
-  // its hint bits are part of the cache key for — is what erases a mark that
-  // moves.
+  // Every Singles cell carries a **number**, so no hint role can be a fill: the
+  // target's ring goes round the number, and the other roles are bands at the
+  // cell's edge, beside the piece and the kept ring. Both lie inside the cell,
+  // so this cell's own repaint — which its hint bits are part of the cache key
+  // for — is what erases a mark that moves.
   const band = { box: inner, outer: 0, inner: markT(ts) };
-  if (f & DS_HINT_TARGET) drawMarkSides(dr, band, MARK_ALL, COL_HINT);
-  else if (f & (DS_HINT_STRAND | DS_HINT_EVID))
+  const text = dnum ? numberText(ts, num, shaded !== 0) : null;
+  if (f & DS_HINT_TARGET) {
+    const clear = text
+      ? { enclose: [textBox(c, text.options, text.text)], avoid: [] }
+      : NOTHING_TO_CLEAR;
+    dr.drawRing(inner, clear, band.inner);
+  } else if (f & (DS_HINT_STRAND | DS_HINT_EVID))
     drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
 
-  if (dnum) {
-    const buf = String(num);
-    const full =
-      buf.length === 1 ? textsz(ts) : Math.floor((ringRadius(ts) * 2 - 1) / buf.length);
-    // A number the player has blacked out is out of the puzzle: it is shown
-    // on request, and smaller, so the piece stays the thing the cell holds.
-    const tsz = shaded ? Math.floor((full * 3) / 4) : full;
-    dr.drawText(c, glyphFont(tsz), tcol, buf);
-  }
+  if (text) dr.drawText(c, text.options, tcol, text.text);
 
   // Brackets at the cell's corners, so the cursor is beside the piece and
   // leaves the sides of a hint's band showing on a cell that carries both.
@@ -243,6 +238,20 @@ function tileRedraw(
     );
 
   dr.drawUpdate({ x, y, w: ts, h: ts });
+}
+
+/** How a cell's number `num` is drawn at its center. */
+function numberText(
+  ts: number,
+  num: number,
+  shaded: boolean,
+): { options: DrawTextOptions; text: string } {
+  const text = String(num);
+  const full =
+    text.length === 1 ? textsz(ts) : Math.floor((ringRadius(ts) * 2 - 1) / text.length);
+  // A number the player has blacked out is out of the puzzle: it is shown on
+  // request, and smaller, so the piece stays the thing the cell holds.
+  return { options: glyphFont(shaded ? Math.floor((full * 3) / 4) : full), text };
 }
 
 // --- redraw ----------------------------------------------------------------

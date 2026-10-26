@@ -1,13 +1,9 @@
 import { BLACK, FREE, FREE_NAMES } from "../../engine/color/colors.ts";
-import {
-  FLASH,
-  FLASH_LEAD,
-  HINT_RING,
-  surfaceGrid,
-} from "../../engine/color/palette.ts";
+import { FLASH, FLASH_LEAD, surfaceGrid } from "../../engine/color/palette.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { completed, fill } from "./solver.ts";
@@ -45,8 +41,6 @@ const COL_GRID = 12;
 export const COL_LIT = 13;
 /** A tile the flash's leading edge is on. */
 export const COL_LIT_LEAD = 14;
-/** The dot on a square the hint's fill joins. */
-export const COL_HINT = 15;
 
 /**
  * The ten tiles, as the hint says them: *"Fill with orange"*. Re-exported from
@@ -65,7 +59,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_LIT] = FLASH;
   out[COL_LIT_LEAD] = FLASH_LEAD;
-  out[COL_HINT] = HINT_RING;
   return out;
 }
 
@@ -157,14 +150,14 @@ function drawTile(
     );
   }
 
-  if (tile & SOLNNEXT) {
-    dr.drawCircle(
-      { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) },
-      Math.floor(ts / 6),
-      COL_HINT,
-      COL_HINT,
+  // Inside the separators, which this tile draws too, so the ring never
+  // covers the line between two regions.
+  if (tile & SOLNNEXT)
+    dr.drawRing(
+      { x: tx + sep, y: ty + sep, w: ts - 2 * sep, h: ts - 2 * sep },
+      NOTHING_TO_CLEAR,
+      Math.max(2, Math.floor(ts / 16)),
     );
-  }
 
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 }
@@ -186,7 +179,7 @@ function drawFrame(dr: GameDrawing, w: number, h: number, ts: number): void {
 
 /**
  * The squares filling with `color` would join to the controlled region: the
- * ones the hint dots. Found as upstream does: fill to that color, fill again in
+ * ones the hint rings. Found as upstream does: fill to that color, fill again in
  * an out-of-range sentinel, and keep what was originally that color. None when
  * the region is already that color.
  */

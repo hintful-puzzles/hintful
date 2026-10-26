@@ -5,12 +5,12 @@ import { describe, expect, it } from "vitest";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { expectPieceRing } from "../../engine/testing/mark-shape.ts";
+import { expectPieceRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newDominosaDesc } from "./generator.ts";
 import { SPOT } from "./hint-text.ts";
 import { type DominosaHint, dominosaGame } from "./index.ts";
-import { border, COL_HINT, PREFERRED_TILE_SIZE } from "./render.ts";
+import { border, PREFERRED_TILE_SIZE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {
   DIFF_BASIC,
@@ -160,41 +160,61 @@ describe("dominosa hint — narration + plan", () => {
 });
 
 describe("dominosa hint — render", () => {
-  it("rings the forced domino as one shape in COL_HINT", () => {
+  /** The ring's stroke, out to its edges. */
+  const reach = (r: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    thickness: number;
+  }) => {
+    const t = r.thickness / 2;
+    return { x: r.x - t, y: r.y - t, w: r.w + 2 * t, h: r.h + 2 * t };
+  };
+
+  it("rings the forced domino as one pill", () => {
     const { recording, hint } = hintFrame("placement");
-    const hintRects = recording.ops.flatMap((o) =>
-      o.op === "rect" && o.color === COL_HINT ? [o] : [],
-    );
-    // Six sides around the domino, not a box per square with a double bar
-    // across its middle.
+    // One pill round the domino, not a ring per square.
     expect((hint.highlights as DominosaHint | undefined)?.kind).toBe("place");
-    expectPieceRing(recording.ops, COL_HINT);
-    // Every mark lies inside one of the step's two target squares.
+    expectPieceRing(recording.ops);
+    // The ring lies inside the step's two target squares.
     const ts = PREFERRED_TILE_SIZE;
     const w = P.n + 2;
     const targets = stepMarks(hint).of("ring", SPOT).flat();
     expect(targets).toHaveLength(2);
-    for (const r of hintRects) {
-      const inside = targets.some((i) => {
-        const x = (i % w) * ts + border(ts);
-        const y = Math.floor(i / w) * ts + border(ts);
-        return r.x >= x && r.y >= y && r.x + r.w <= x + ts && r.y + r.h <= y + ts;
-      });
-      expect(inside).toBe(true);
-    }
+    const xs = targets.map((i) => (i % w) * ts + border(ts));
+    const ys = targets.map((i) => Math.floor(i / w) * ts + border(ts));
+    const r = reach(ringsOf(recording.ops)[0]);
+    expect(r.x).toBeGreaterThanOrEqual(Math.min(...xs));
+    expect(r.y).toBeGreaterThanOrEqual(Math.min(...ys));
+    expect(r.x + r.w).toBeLessThanOrEqual(Math.max(...xs) + ts);
+    expect(r.y + r.h).toBeLessThanOrEqual(Math.max(...ys) + ts);
   });
 
   it("rings a domino on the board's edge whole, on the canvas", () => {
-    // The outer squares' gutters bleed off the canvas, so a band laid in them
-    // draws sides nobody sees. Every side of the ring must land on the canvas.
+    // The outer squares' gutters bleed off the canvas, so a ring laid in them
+    // is cut by its edge.
     const { recording, size } = hintFrame("placementOnEdge");
-    expectPieceRing(recording.ops, COL_HINT);
-    for (const r of recording.ops.flatMap((o) =>
-      o.op === "rect" && o.color === COL_HINT ? [o] : [],
-    ))
-      expect(
-        r.x >= 0 && r.y >= 0 && r.x + r.w <= size.w && r.y + r.h <= size.h,
-        `ring side at ${r.x},${r.y} ${r.w}x${r.h} is off the ${size.w}x${size.h} canvas`,
-      ).toBe(true);
+    expectPieceRing(recording.ops);
+    const r = reach(ringsOf(recording.ops)[0]);
+    expect(
+      r.x >= 0 && r.y >= 0 && r.x + r.w <= size.w && r.y + r.h <= size.h,
+      `ring at ${r.x},${r.y} ${r.w}x${r.h} is off the ${size.w}x${size.h} canvas`,
+    ).toBe(true);
+  });
+
+  it("rings a barrier's spot as one pill with the wall it asks for inside", () => {
+    const { recording, hint } = hintFrame("mustOverlap");
+    expect((hint.highlights as DominosaHint | undefined)?.kind).toBe("barrier");
+    expectPieceRing(recording.ops);
+    // The wall: drawn in the ring's ink, so inside the ring (`expectRing`),
+    // and across the pill's short side.
+    const [ring] = ringsOf(recording.ops);
+    const walls = recording.ops.flatMap((o) =>
+      o.op === "rect" && o.color === ring.color ? [o] : [],
+    );
+    expect(walls).toHaveLength(1);
+    const [wall] = walls;
+    expect(ring.w > ring.h ? wall.h > wall.w : wall.w > wall.h).toBe(true);
   });
 });

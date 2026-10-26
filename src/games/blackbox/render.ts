@@ -18,7 +18,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   RULED_OUT,
   surfaceGrid,
@@ -32,7 +31,8 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/piece.ts";
-import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { BUTTON, LASER } from "./hint-text.ts";
 import {
@@ -69,13 +69,12 @@ export const COL_BALL = 7;
 export const COL_WRONG = 8;
 export const COL_BUTTON = 9;
 const COL_CURSOR = 10;
-export const COL_HINT = 11;
-export const COL_HINT_EVIDENCE = 12;
+export const COL_HINT_EVIDENCE = 11;
 /** The ground of a square of the box the win flash is on: its body, and its
  * leading edge. */
-export const COL_WIN = 13;
-export const COL_WIN_LEAD = 14;
-const NCOLORS = 15;
+export const COL_WIN = 12;
+export const COL_WIN_LEAD = 13;
+const NCOLORS = 14;
 
 /** A ball is the pair's disc, in a color no mark drawn round it has spent. */
 const PAIR_DISC = 1;
@@ -154,28 +153,30 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_TEXT] = INK;
   // The laser you just fired, lit up for a beat — not the solved flash.
   ret[COL_FLASHTEXT] = GREEN;
-  ret[COL_HINT] = HINT_RING;
   ret[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   ret[COL_WIN] = FLASH;
   ret[COL_WIN_LEAD] = FLASH_LEAD;
   return ret;
 }
 
-/** The hint's mark on a tile at `(dx, dy)`, at the edge of its surface and
- * inside its grid line, so a neighbor's repaint cannot cut it. */
+const markThickness = (ts: number): number => Math.max(2, Math.floor(ts / 12));
+
+/** The hint's mark on a tile at `(dx, dy)`, inside its grid line, so a
+ * neighbor's repaint cannot cut it: the outline at the edge of its surface,
+ * and the ring round the tile, clear of the text in `clear`. */
 function drawHintMark(
   dr: GameDrawing,
   ds: BlackboxDrawState,
   dx: number,
   dy: number,
   flags: number,
+  clear: RingClear = NOTHING_TO_CLEAR,
 ): void {
   const ts = ds.tileSize;
-  const thick = Math.max(2, Math.floor(ts / 12));
+  const thick = markThickness(ts);
   if (flags & TILE_OUTLINE)
     drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_HINT_EVIDENCE);
-  if (flags & TILE_RING)
-    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_HINT);
+  if (flags & TILE_RING) dr.drawRing(face(ds, dx, dy), clear, thick);
   if (flags & MISTAKE)
     drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_WRONG);
 }
@@ -299,6 +300,20 @@ function drawArenaTile(
 
 // --- laser (firing-range) tile ----------------------------------------
 
+/** Where a fired laser's result is written in the tile at `(dx, dy)`: read by
+ * the text and by the ring round it. */
+function laserText(
+  ds: BlackboxDrawState,
+  dx: number,
+  dy: number,
+): { origin: Point; options: DrawTextOptions } {
+  const ts = ds.tileSize;
+  return {
+    origin: pt(dx + Math.floor(ts / 2), dy + Math.floor(ts / 2)),
+    options: glyphFont(Math.floor(ts / 2)),
+  };
+}
+
 function drawLaserTile(
   dr: GameDrawing,
   gs: BlackboxState,
@@ -337,6 +352,7 @@ function drawLaserTile(
     gsTile |= FLAG_CURSOR;
 
   if (gsTile !== dsTile || force) {
+    let clear = NOTHING_TO_CLEAR;
     const fired =
       (gsTile &
         ~(LASER_WRONG | LASER_OMITTED | FLAG_CURSOR | TILE_RING | TILE_OUTLINE)) !==
@@ -364,15 +380,12 @@ function drawLaserTile(
         );
       }
 
-      dr.drawText(
-        pt(dx + Math.floor(ts / 2), dy + Math.floor(ts / 2)),
-        glyphFont(Math.floor(ts / 2)),
-        tcol,
-        str,
-      );
+      const { origin, options } = laserText(ds, dx, dy);
+      dr.drawText(origin, options, tcol, str);
+      clear = { enclose: [textBox(origin, options, str)], avoid: [] };
     }
     if (gsTile & FLAG_CURSOR) drawCursor(dr, ds, dx, dy);
-    drawHintMark(dr, ds, dx, dy, gsTile);
+    drawHintMark(dr, ds, dx, dy, gsTile, clear);
 
     dr.unclip();
     dr.drawUpdate(rect(dx, dy, ts + 1, ts + 1));
@@ -437,19 +450,21 @@ export function redraw(
     // The square the no-button branch clears, and no wider: the laser squares
     // beside it own the grid line along its far edges.
     dr.drawRect(rect(b0 - 1, b0 - 1, ts, ts), COL_BACKGROUND);
-    drawHintMark(dr, ds, b0 - 1, b0 - 1, flagsAt(0, 0));
-    dr.drawCircle(
-      pt(b0 + ds.ballRadius - 1, b0 + ds.ballRadius - 1),
-      ds.ballRadius - 1,
-      outline,
-      outline,
-    );
-    dr.drawCircle(
-      pt(b0 + ds.ballRadius - 1, b0 + ds.ballRadius - 1),
-      ds.ballRadius - 3,
-      COL_BUTTON,
-      COL_BUTTON,
-    );
+    drawHintMark(dr, ds, b0 - 1, b0 - 1, flagsAt(0, 0) & ~TILE_RING);
+    const c = b0 + ds.ballRadius - 1;
+    const r = ds.ballRadius - 1;
+    dr.drawCircle(pt(c, c), r, outline, outline);
+    dr.drawCircle(pt(c, c), ds.ballRadius - 3, COL_BUTTON, COL_BUTTON);
+    // The button fills its square, so its ring lies on the button's rim.
+    if (flagsAt(0, 0) & TILE_RING)
+      dr.drawRing(
+        rect(c - r, c - r, 2 * r, 2 * r),
+        NOTHING_TO_CLEAR,
+        markThickness(ts),
+        {
+          room: rect(b0 - 1, b0 - 1, ts, ts),
+        },
+      );
     dr.unclip();
   } else {
     dr.drawRect(rect(b0 - 1, b0 - 1, ts, ts), COL_BACKGROUND);

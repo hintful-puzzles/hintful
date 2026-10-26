@@ -18,10 +18,10 @@ import {
   LEFT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { paintsWith } from "../../engine/testing/recording-drawing.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { numgameGame } from "./index.ts";
-import { COL_HINT, elementCenter, layout, opElement } from "./render.ts";
+import { elementCenter, layout, opElement } from "./render.ts";
 import { combine, OPS, type Op, Reach, stepsOf } from "./solver.ts";
 import {
   decodeParams,
@@ -344,6 +344,6 @@ describe("numgame frame", () => {
   it("rings a hint's numbers and operator", () => {
     const hinted = renderScenario({ game: numgameGame, id: ID, showHint: true });
     expect(hinted.hint).toBeDefined();
-    expect(hinted.recording.ops.some((op) => paintsWith(op, COL_HINT))).toBe(true);
+    expectRing(hinted.recording.ops, { rings: 3 });
   });
 });

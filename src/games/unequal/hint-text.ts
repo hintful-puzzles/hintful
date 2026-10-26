@@ -30,8 +30,8 @@ const all = (ns: number[], order: number): string =>
   joinWith(ns.map((n) => displayChar(n, order)));
 
 /**
- * The two cells a sign or bar deduction is about: the struck cell `at`, ringed,
- * and the cell across the sign or bar, `other`. Both are outlined, and the
+ * The two cells a sign or bar deduction is about: the struck cell `at`, and the
+ * cell across the sign or bar, `other`. Both are outlined, and the
  * words naming the sign or bar between them are that outline.
  */
 export interface SignPair {

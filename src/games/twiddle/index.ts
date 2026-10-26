@@ -339,7 +339,7 @@ export const twiddleGame: Game<
   hintRungs: TWIDDLE_RUNGS,
   hintMarks: {
     roles: {
-      ring: "what the step decides: the block to turn.",
+      ring: "what the step decides: the block to turn, ringed at its pivot, with an arrow the way it turns.",
       outline: "the tile the step is working on.",
       stripes:
         "finished tiles that a turn of a run lifts out of place, or that come back on it.",

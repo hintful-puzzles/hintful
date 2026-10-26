@@ -19,6 +19,7 @@ import {
   RIGHT_DRAG,
 } from "../../engine/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -30,7 +31,6 @@ import { bridgesGame } from "./index.ts";
 import {
   border,
   COL_FOREGROUND,
-  COL_HINT,
   COL_HINT_CELL,
   COL_SELECTED,
   PREFERRED_TILE_SIZE,
@@ -110,10 +110,15 @@ describe("Bridges render scenarios", () => {
     });
     expect(hint?.explanation.length).toBeGreaterThan(20);
 
-    // The action is a *bridge*, drawn as the bar the game draws, recolored.
+    // The action is a *bridge*, drawn as the bar the game draws, recolored,
+    // inside the ring round its span, which each of its line squares draws.
+    const rings = ringsOf(recording.ops);
+    expect(rings.length, "the hint ringed no span").toBeGreaterThan(0);
+    expectRing(recording.ops, { rings: rings.length });
+    const ringInk = rings[0].color;
     expect(
-      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT),
-      "the hint drew no bridge in the action color",
+      recording.ops.some((o) => o.op === "rect" && o.color === ringInk),
+      "the hint drew no bridge in the ring's ink",
     ).toBe(true);
     // …and the island the sentence is about is its own rim and digit recolored,
     // which is a circle and a piece of text rather than any kind of rect.
@@ -134,7 +139,7 @@ describe("Bridges render scenarios", () => {
     // (docs/hints-marks.md § "Shade vs ring").
     for (const o of recording.ops) {
       if (o.op !== "rect") continue;
-      if (o.color !== COL_HINT && o.color !== COL_HINT_CELL) continue;
+      if (o.color !== ringInk && o.color !== COL_HINT_CELL) continue;
       const short = Math.min(o.w, o.h);
       expect(
         short * 4 < Math.max(o.w, o.h) || short < PREFERRED_TILE_SIZE / 2,
@@ -177,10 +182,11 @@ describe("Bridges render scenarios", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("a step that limits a span writes the limit in the action color", () => {
+  it("a step that limits a span writes the limit inside the ring round it", () => {
     const { recording } = hintFrame("limitsSpan");
+    const [ring] = ringsOf(recording.ops);
     expect(limitLabels(recording.ops).map((o) => [o.text, o.color])).toEqual([
-      ["≤1", COL_HINT],
+      ["≤1", ring.color],
     ]);
     expect(recording.ops).toMatchSnapshot();
   });

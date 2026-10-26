@@ -30,11 +30,14 @@
  */
 
 import type { HintMarkLegend } from "../game.ts";
-import type { MarkRef, Narration } from "../hint-words.ts";
+import { type MarkRef, type Narration, ROLE_ADJECTIVES } from "../hint-words.ts";
 
-/** The roles' words, and "numbered", which every game's chain is drawn as
- * (`hint-chain-pins.ts`). */
-const ROLE_WORD = /\b(?:ringed|outlined|striped|numbered)\b/i;
+/** The roles' words, read from the engine's roles, and "numbered", which every
+ * game's chain is drawn as (`hint-chain-pins.ts`). */
+const ROLE_WORD = new RegExp(
+  `\\b(?:${[...ROLE_ADJECTIVES, "numbered"].join("|")})\\b`,
+  "i",
+);
 
 /** Modals, "be" and "have", and the verbs the census found in a reference. */
 const VERB = new RegExp(

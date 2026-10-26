@@ -11,7 +11,12 @@
 import { describe, expect, it } from "vitest";
 import { newCursor } from "../../engine/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
-import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
+import {
+  expectRing,
+  isThin,
+  markSides,
+  ringsOf,
+} from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -29,7 +34,6 @@ import {
   COL_FLASH,
   COL_FLASH_LEAD,
   COL_G_HOLE,
-  COL_HINT,
   COL_HINT_CELL,
   COL_I_BALLBG,
   COL_I_HOLE,
@@ -257,13 +261,9 @@ describe("salad hint frames", () => {
     expect(
       recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
     ).toBe(true);
-    // Each square acted on is ringed in COL_HINT, so its struck notes stay
-    // legible.
-    expectRing(
-      recording.ops,
-      COL_HINT,
-      (hint?.highlights as SaladHint | undefined)?.targets.length,
-    );
+    // A strike step rings nothing: its struck notes show the squares it acts
+    // on (`make-rings-round`, D6).
+    expect(ringsOf(recording.ops)).toEqual([]);
     expect(recording.ops).toMatchSnapshot();
   });
 
@@ -274,28 +274,35 @@ describe("salad hint frames", () => {
     // gives when nothing beside it is evidence.
     const { recording, hint } = hintFrame("nearestSquare");
     expect(hint?.explanation).toMatch(/and the outlined square nearest it/);
-    expectRing(recording.ops, COL_HINT_CELL);
+    expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(4);
     expect(
       recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
     ).toBe(true);
   });
 
-  it("previews an empty-square marker as a cross in the hint color", () => {
+  /** The ring's ink, once `expectRing` has checked that only the ring and what
+   * it holds are drawn in it: the preview is inside the ring. */
+  const ringInk = (ops: Parameters<typeof ringsOf>[0]): number => {
+    expectRing(ops);
+    return ringsOf(ops)[0].color;
+  };
+
+  it("previews an empty-square marker as a cross in the ring", () => {
     const { recording, hint } = hintFrame("emptyMarker");
     expect(hint?.explanation).toMatch(/must be empty/);
     // Salad writes three shapes, so the hint echoes the one it is asking for —
-    // here the two strokes of a cross, in COL_HINT.
-    const strokes = recording.ops.filter(
-      (o) => o.op === "line" && o.color === COL_HINT,
-    );
+    // here the two strokes of a cross, in the ring's ink.
+    const ink = ringInk(recording.ops);
+    const strokes = recording.ops.filter((o) => o.op === "line" && o.color === ink);
     expect(strokes.length).toBeGreaterThanOrEqual(2);
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("previews a holds-a-symbol marker as a ball in the hint color", () => {
+  it("previews a holds-a-symbol marker as a ball in the ring", () => {
     const { recording, hint } = hintFrame("symbolMarker");
     expect(hint?.explanation).toMatch(/hold a number|holds a number/);
-    expect(recording.ops.some((o) => o.op === "circle" && o.outline === COL_HINT)).toBe(
+    const ink = ringInk(recording.ops);
+    expect(recording.ops.some((o) => o.op === "circle" && o.outline === ink)).toBe(
       true,
     );
     expect(recording.ops).toMatchSnapshot();
@@ -305,10 +312,9 @@ describe("salad hint frames", () => {
     const { recording, hint } = hintFrame("placement");
     const want = hint?.explanation.match(/it can only be (\d)/)?.[1];
     expect(want).toBeDefined();
+    const ink = ringInk(recording.ops);
     expect(
-      recording.ops.some(
-        (o) => o.op === "text" && o.color === COL_HINT && o.text === want,
-      ),
+      recording.ops.some((o) => o.op === "text" && o.color === ink && o.text === want),
     ).toBe(true);
     expect(recording.ops).toMatchSnapshot();
   });

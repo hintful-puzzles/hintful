@@ -19,7 +19,6 @@ import {
   GRID_DARK,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   pencilColor,
@@ -30,7 +29,8 @@ import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/dr
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point, Rect } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-text.ts";
@@ -87,35 +87,32 @@ export const COL_PATH = 5;
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
 export const COL_ARROW = 8;
-/** The hint's action color: the ring round the square a step fills, and the
- * stripes along the arrow line it names. */
-export const COL_HINT = 9;
 /** The hint's evidence outline. */
-export const COL_HINT_CELL = 10;
+export const COL_HINT_CELL = 9;
 /** The surface of a cell the player fills. */
-export const COL_CELL = 11;
+export const COL_CELL = 10;
 /** The lifted surface under a number the puzzle fixed. */
-export const COL_GIVEN = 12;
+export const COL_GIVEN = 11;
 /** The line between two cells, and the ring round the disc under the first
  * and the last number. */
-export const COL_GRID = 13;
+export const COL_GRID = 12;
 /** The cell the player is holding, typing into or has selected: the
  * collection's "you are here" wash, which sinks below a plain cell and a
  * lifted one in both schemes. */
-export const COL_HELD = 14;
+export const COL_HELD = 13;
 /** Where the held number leads: the nearest placed number on either side of
  * it, and the row or column an edge number is dragged along, which ends on
  * the two arrows it lines up with and wears their color. */
-export const COL_TARGET = 15;
+export const COL_TARGET = 14;
 /** A number offered and not placed: what a click here would write. A note in
  * every other entry game's sense, and legible on a dark cell where the bevel's
  * gray was not. */
-export const COL_OFFERED = 16;
+export const COL_OFFERED = 15;
 /** The ground of a square the win flash is on. */
-export const COL_FLASH = 17;
+export const COL_FLASH = 16;
 /** And under the flash's leading edge. */
-export const COL_FLASH_LEAD = 18;
-export const NCOLORS = 19;
+export const COL_FLASH_LEAD = 17;
+export const NCOLORS = 18;
 
 /** A cell's part in the displayed hint, one bit per mark: its diff key. */
 const HINT_TARGET = 1;
@@ -124,6 +121,24 @@ const HINT_HATCH = 4;
 /** How far out from a cell's center its hint marks sit: clear of the border,
  * and of a number drawn in the middle. */
 const HINT_MARK_SCALE = 0.84;
+/** The square a ring may reach in a hexagon, as a share of the tile: the
+ * largest whose roundest-allowed rounded square stays inside the hexagon, so
+ * no neighbor's repaint covers part of it. */
+const HEX_RING_ROOM = 0.9;
+
+/** The square of side `size` centered on `c`. */
+function centeredSquare(c: Point, size: number): Rect {
+  return { x: c.x - size / 2, y: c.y - size / 2, w: size, h: size };
+}
+
+/** Where a cell's number, or an edge's, is drawn: what it passes `drawText`,
+ * so the hint's ring reads the same place. */
+function numberText(
+  center: Point,
+  tileSize: number,
+): { origin: Point; options: DrawTextOptions } {
+  return { origin: center, options: glyphFont(Math.trunc(tileSize / 2)) };
+}
 
 const ERROR_MARGIN = 0.1;
 
@@ -343,7 +358,6 @@ export function ascentColors(defaultBackground: Color): Color[] {
   ret[COL_ARROW] = YELLOW_WASH;
   ret[COL_TARGET] = GOAL_WASH;
   ret[COL_OFFERED] = pencilColor(background);
-  ret[COL_HINT] = HINT_RING;
   ret[COL_HINT_CELL] = HINT_OUTLINE;
   ret[COL_CELL] = cellSurface(background);
   ret[COL_GIVEN] = givenSurface(background);
@@ -538,8 +552,10 @@ export function redrawAscent(
   for (const i of marks.of("stripes", SQUARE)) hintMarks[i] |= HINT_HATCH;
   for (const i of marks.of("outline", SQUARE)) hintMarks[i] |= HINT_AREA;
   for (const i of marks.of("ring", SQUARE)) hintMarks[i] |= HINT_TARGET;
-  // A whole run's route rings the squares it still has to fill; its placed
-  // ends, and a number the player has placed along it since, carry the line only.
+  // A whole run's route rings the squares it still has to fill, with the path
+  // line inside each ring. Its placed ends, and a number the player has placed
+  // along it since, are not ringed: a ring cannot always fit round a number of
+  // three digits, and the lines in the rings beside them point at them.
   const route = marks.of("ring", PATH);
   for (const i of route)
     if (state.grid[i] === NUMBER_EMPTY) hintMarks[i] |= HINT_TARGET;
@@ -664,9 +680,8 @@ export function redrawAscent(
   const cut = !hex && diagonal ? cornerCut(tileSize) : 0;
   const dirBit = (dx: number, dy: number): number =>
     1 << movement.dirs.findIndex((d) => d.dx === dx && d.dy === dy);
-  /** What crosses the corner of cell `i` toward `(sx, sy)`: the hint's route,
-   * the player's line or the board's path, in that order where two diagonals
-   * cross there, and the board where none does. It reads the same from each of
+  /** What crosses the corner of cell `i` toward `(sx, sy)`: the player's line
+   * or the board's path, in that order where two diagonals cross there, and the board where none does. It reads the same from each of
    * the four cells round the corner. */
   const cornerInk = (i: number, sx: number, sy: number): number => {
     const col = i % w;
@@ -682,7 +697,6 @@ export function redrawAscent(
     ];
     let ink = COL_MIDLIGHT;
     for (const { from, to, bit, back } of crossings) {
-      if (routeBits[from] & bit) return COL_HINT;
       if (!(ds.path[from] & bit) && !(ds.path[to] & back)) continue;
       ink =
         (ds.path[from] | ds.path[to]) & FLAG_USER || ink === COL_LINE
@@ -837,21 +851,49 @@ export function redrawAscent(
       }
     }
 
-    /* A whole run's route, the game's own path line in the hint's color. Each
-     * square draws to the midpoint toward each route neighbor, so the line
-     * stays inside the square and its neighbor draws the other half. */
-    for (let dir = 0; dir < movement.dircount; dir++) {
-      if (!(routeBits[i] & (1 << dir))) continue;
-      const j = i + w * movement.dirs[dir].dy + movement.dirs[dir].dx;
-      const nc = cellCenter(j, w, state.mode, tileSize, ds.offsetX, ds.offsetY);
-      thickLine(
-        dr,
-        ds.thickness,
-        tx1,
-        ty1,
-        (cx + nc.cx) / 2,
-        (cy + nc.cy) / 2,
-        COL_HINT,
+    /* The ring round a square a step fills, under the number so a line inside
+     * it never covers one. A whole run's route echoes the game's own path line
+     * inside each ring: to the midpoint toward each route neighbor, so the
+     * line stays inside the square and its neighbor draws the other half. */
+    if (hintMarks[i] & HINT_TARGET) {
+      const { origin, options } = numberText(center, tileSize);
+      dr.drawRing(
+        centeredSquare(center, tileSize * HINT_MARK_SCALE),
+        // The offered numbers in the corners are the square's notes, which the
+        // number a step places replaces (design D7), so the ring may cross them.
+        {
+          enclose: sn >= 0 ? [textBox(origin, options, String(sn + 1))] : [],
+          avoid: [],
+        },
+        Math.max(2, Math.round(tileSize / 14)),
+        {
+          room: centeredSquare(center, hex ? tileSize * HEX_RING_ROOM : tileSize - 2),
+          inside: routeBits[i]
+            ? (ink) => {
+                for (let dir = 0; dir < movement.dircount; dir++) {
+                  if (!(routeBits[i] & (1 << dir))) continue;
+                  const j = i + w * movement.dirs[dir].dy + movement.dirs[dir].dx;
+                  const nc = cellCenter(
+                    j,
+                    w,
+                    state.mode,
+                    tileSize,
+                    ds.offsetX,
+                    ds.offsetY,
+                  );
+                  thickLine(
+                    dr,
+                    ds.thickness,
+                    tx1,
+                    ty1,
+                    (cx + nc.cx) / 2,
+                    (cy + nc.cy) / 2,
+                    ink,
+                  );
+                }
+              }
+            : undefined,
+        },
       );
     }
 
@@ -914,10 +956,11 @@ export function redrawAscent(
     }
 
     /* Draw the number / edge arrow / candidate hints. */
+    const number = numberText(center, tileSize);
     if (sn >= 0) {
       dr.drawText(
-        center,
-        glyphFont(Math.trunc(tileSize / 2)),
+        number.origin,
+        number.options,
         state.immutable[i]
           ? COL_BORDER
           : state.grid[i] === NUMBER_EMPTY && ui.typingCell !== i
@@ -946,8 +989,8 @@ export function redrawAscent(
       const error = i2 >= 0 && !isEdgeValid(i, i2, w, h);
       drawArrow(dr, i, w, h, tx1, ty1, COL_ARROW, COL_BORDER, tileSize);
       dr.drawText(
-        center,
-        glyphFont(Math.trunc(tileSize / 2)),
+        number.origin,
+        number.options,
         error ? COL_ERROR : i2 >= 0 ? COL_LOWLIGHT : COL_BORDER,
         String(fromNumberEdge(sn) + 1),
       );
@@ -983,11 +1026,9 @@ export function redrawAscent(
       );
     }
 
-    /* The hint's marks, inside the cell's own outline so they never sit on
-     * its border: a ring round the square a step fills, an outline round what
-     * it reasons from. */
-    if (hintMarks[i] & (HINT_TARGET | HINT_AREA)) {
-      const target = (hintMarks[i] & HINT_TARGET) !== 0;
+    /* The outline round what a step reasons from, inside the cell's own
+     * outline so it never sits on its border. */
+    if (hintMarks[i] & HINT_AREA && !(hintMarks[i] & HINT_TARGET))
       strokeScaledPolygon(
         dr,
         hex
@@ -995,10 +1036,9 @@ export function redrawAscent(
           : cutSquare(tx, ty, tileSize, isNumberEdge(sn) ? 0 : cut),
         center,
         HINT_MARK_SCALE,
-        target ? COL_HINT : COL_HINT_CELL,
-        Math.max(2, Math.round(tileSize / (target ? 14 : 20))),
+        COL_HINT_CELL,
+        Math.max(2, Math.round(tileSize / 20)),
       );
-    }
 
     /* Keyboard cursor, folded into this cell's repaint (no blitter). */
     if (cursorCell === i) {

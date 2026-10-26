@@ -141,7 +141,7 @@ function hint(state: FloodState): HintResult<FloodMove, unknown, FloodRung> {
   if (completed(state.grid)) return { ok: false, error: GAME_OVER };
   const moves = solveMoves(state.w, state.h, state.grid, state.colors);
   if (moves.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
-  // Each step's dots are read off the board it is shown on: the one the
+  // Each step's rings are read off the board it is shown on: the one the
   // fills before it leave.
   let board = state;
   const { w } = state;
@@ -266,13 +266,13 @@ export const floodGame: Game<
   hintRungs: FLOOD_RUNGS,
   hintMarks: {
     roles: {
-      ring: "what the step decides: a black dot on every square the named color's fill would join to your region, so you can see what it gains: *the dotted squares*, in its words.",
+      ring: "what the step decides: a ring round every square the named color's fill would join to your region, so you can see what it gains: *the ringed squares*, in its words.",
     },
   },
   hintKeepTrack,
   hintGesture: (s, ui, ds, m) => {
     if (m.type !== "fill") throw new Error("flood: a hint only fills");
-    // One of the squares the step dots, which the fill it names would join;
+    // One of the squares the step rings, which the fill it names would join;
     // any square of that color makes the same fill.
     const joined = joinedBy(s, m.color);
     const i = joined.length > 0 ? joined[0] : s.grid.indexOf(m.color);

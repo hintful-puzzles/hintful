@@ -10,13 +10,14 @@ import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { D, dirCount, L, R, U } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { type NetslideHint, parseAux } from "./hint.ts";
 import { netslideGame } from "./index.ts";
-import { ANIM_TIME, COL_HINT, colors, newDrawState, redraw } from "./render.ts";
+import { ANIM_TIME, colors, newDrawState, redraw } from "./render.ts";
 import {
   isComplete,
   type NetslideMove,
@@ -581,7 +582,7 @@ describe("netslide hint rendering", () => {
 
     const first = new RecordingDrawing(palette);
     redraw(first, ds, null, state, 0, ui, 0, NO_FLASH);
-    expect(first.ops.some((op) => "color" in op && op.color === COL_HINT)).toBe(false);
+    expect(ringsOf(first.ops)).toEqual([]);
 
     const res = hintOf(state, aux);
     expect(res.ok).toBe(true);
@@ -601,13 +602,9 @@ describe("netslide hint rendering", () => {
     );
 
     expect(
-      second.ops.some(
-        (op) =>
-          ("color" in op && op.color === COL_HINT) ||
-          ("fill" in op && op.fill === COL_HINT),
-      ),
+      ringsOf(second.ops).length,
       "the hint did not repaint on an otherwise-unchanged board",
-    ).toBe(true);
+    ).toBeGreaterThan(0);
   });
 
   it("marks the tile, its destination and the arrow to press", () => {
@@ -619,18 +616,17 @@ describe("netslide hint rendering", () => {
       showHint: true,
     });
 
-    // The tile being placed is double-ringed in the hint color, and its
-    // destination outlined in it.
-    const rects = result.recording.ops.filter(
-      (op) => op.op === "rect" && op.color === COL_HINT,
-    );
-    expect(rects.length).toBeGreaterThan(0);
-
-    // The arrow the player should press is drawn in it too — exactly one.
-    const arrows = result.recording.ops.filter(
-      (op) => op.op === "polygon" && op.fill === COL_HINT,
-    );
-    expect(arrows).toHaveLength(1);
+    // The tile being placed, each square the slide takes it to, and the arrow
+    // the player should press are ringed; the arrow is drawn inside its ring in
+    // the ring's ink — exactly one.
+    const ops = result.recording.ops;
+    const squares = new Set([
+      (result.hint?.highlights as NetslideHint).landing,
+      (result.hint?.highlights as NetslideHint).destination,
+    ]);
+    expectRing(ops, { rings: 2 + squares.size });
+    const ink = ringsOf(ops)[0].color;
+    expect(opsOfKind(ops, "polygon").filter((op) => op.fill === ink)).toHaveLength(1);
 
     // This step says a line never slides, so that line is hatched: one hatch
     // per cell of it, and nothing more.
@@ -656,29 +652,14 @@ describe("the hint marks while the hinted slide animates", () => {
   const TILE_BORDER = 1;
   const border = (ts: number) => Math.floor((3 * ts) / 4) + 1;
 
-  /** The top side of the hinted **tile's** double ring, by its distinctive size:
-   * it spans the tile's face, where the destination's outline is inset past it. */
-  function hintFill(ops: RecordingDrawing["ops"]) {
-    return ops.find(
-      (op) =>
-        op.op === "rect" &&
-        op.color === COL_HINT &&
-        op.w === TS - TILE_BORDER &&
-        op.h === Math.max(2, Math.round(TS / 16)),
-    );
-  }
-
-  /** The top edge of the destination outline, by its distinctive size. */
-  function hintOutlineTop(ops: RecordingDrawing["ops"]) {
-    const inset = TILE_BORDER + 1;
-    const side = TS - 2 * inset;
-    const thickness = Math.max(2, Math.round(TS / 16));
-    return ops.find(
-      (op) =>
-        op.op === "rect" &&
-        op.color === COL_HINT &&
-        op.w === side &&
-        op.h === thickness,
+  /** Whether a ring of `ops` is centered, to a pixel, on the tile whose frame's
+   * corner is (`bx`, `by`). */
+  function ringAt(ops: RecordingDrawing["ops"], bx: number, by: number): boolean {
+    const c = TS / 2 + TILE_BORDER / 2;
+    return ringsOf(ops).some(
+      (r) =>
+        Math.abs(r.x + r.w / 2 - (bx + c)) <= 1 &&
+        Math.abs(r.y + r.h / 2 - (by + c)) <= 1,
     );
   }
 
@@ -729,9 +710,9 @@ describe("the hint marks while the hinted slide animates", () => {
     const by =
       border(TS) + TS * ly + Math.trunc((slide.axis === "col" ? shift : 0) * TS);
 
-    const fill = hintFill(rec.ops);
-    expect(fill, "the hinted tile carries no mark at all").toBeDefined();
-    expect(fill).toMatchObject({ x: bx + TILE_BORDER, y: by + TILE_BORDER });
+    expect(ringAt(rec.ops, bx, by), "the hinted tile carries no mark at all").toBe(
+      true,
+    );
   });
 
   it("repaints the lines beside a sliding line, whose shared border it paints over", () => {
@@ -765,13 +746,9 @@ describe("the hint marks while the hinted slide animates", () => {
     // The destination is a *cell*. The line slides under it; it does not move.
     const dx = marks.destination % after.w;
     const dy = Math.floor(marks.destination / after.w);
-    const inset = TILE_BORDER + 1;
-
-    const outline = hintOutlineTop(rec.ops);
-    expect(outline, "the destination is not outlined at all").toBeDefined();
-    expect(outline).toMatchObject({
-      x: border(TS) + TS * dx + inset,
-      y: border(TS) + TS * dy + inset,
-    });
+    expect(
+      ringAt(rec.ops, border(TS) + TS * dx, border(TS) + TS * dy),
+      "the destination is not ringed at all",
+    ).toBe(true);
   });
 });

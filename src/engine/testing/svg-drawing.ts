@@ -52,6 +52,8 @@ function opToSvg(op: DrawOp): string {
         .join("");
       return `<clipPath id="${id}"><rect x="${op.x}" y="${op.y}" width="${op.w}" height="${op.h}"/></clipPath><g clip-path="url(#${id})" fill="${op.rgb}" fill-opacity="${HATCH_OPACITY}">${bands}</g>`;
     }
+    case "ring":
+      return `<rect x="${op.x}" y="${op.y}" width="${op.w}" height="${op.h}" rx="${op.radius}" fill="none" stroke="${op.rgb}" stroke-width="${op.thickness}"/>`;
     // clip/unclip are layout-only; ignored in the convenience view.
     case "clip":
     case "unclip":

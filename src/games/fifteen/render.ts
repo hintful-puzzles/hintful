@@ -12,7 +12,6 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import {
@@ -24,7 +23,14 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, PaletteScheme, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type {
+  Color,
+  DrawTextOptions,
+  PaletteScheme,
+  Point,
+  Size,
+} from "../../engine/types.ts";
 import {
   type Flash,
   sweepStep,
@@ -49,16 +55,15 @@ const COL_LOWLIGHT = 3;
 export const paletteScheme: Partial<PaletteScheme> = {
   darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
 };
-const COL_HINT = 4;
 /** A tile's face: the lifted surface, so the object the player moves stands
  * off the well it slides in, in both schemes. */
-const COL_TILE = 5;
+const COL_TILE = 4;
 /** The well: the gap, and whatever a sliding tile uncovers. */
-const COL_WELL = 6;
+const COL_WELL = 5;
 /** The face of a tile the win flash is on, inside its bevel: under the
  * highlight's body, and under its leading edge. */
-export const COL_FLASH = 7;
-export const COL_FLASH_LEAD = 8;
+export const COL_FLASH = 6;
+export const COL_FLASH_LEAD = 7;
 
 // --- coordinate helpers -----------------------------------------------
 
@@ -115,12 +120,23 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT] = INK;
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
-  out[COL_HINT] = HINT_RING;
   out[COL_TILE] = givenSurface(background);
   out[COL_WELL] = cellSurface(background);
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
+}
+
+/** Where a tile's number is drawn, for the tile and for the ring round it. */
+function numberText(
+  ts: number,
+  x: number,
+  y: number,
+): { origin: Point; options: DrawTextOptions } {
+  return {
+    origin: { x: x + Math.floor(ts / 2), y: y + Math.floor(ts / 2) },
+    options: glyphFont(ts / 3),
+  };
 }
 
 function drawTile(
@@ -129,25 +145,25 @@ function drawTile(
   x: number,
   y: number,
   tile: number,
-  bgColor: number,
+  face: number,
+  ringed: boolean,
 ): void {
   if (tile === 0) {
     dr.drawRect({ x, y, w: ts, h: ts }, COL_WELL);
   } else {
-    drawRaisedTile(
-      dr,
-      { x, y, w: ts, h: ts },
-      ts,
-      bgColor,
-      COL_HIGHLIGHT,
-      COL_LOWLIGHT,
-    );
-    dr.drawText(
-      { x: x + Math.floor(ts / 2), y: y + Math.floor(ts / 2) },
-      glyphFont(ts / 3),
-      COL_TEXT,
-      String(tile),
-    );
+    drawRaisedTile(dr, { x, y, w: ts, h: ts }, ts, face, COL_HIGHLIGHT, COL_LOWLIGHT);
+    const { origin, options } = numberText(ts, x, y);
+    dr.drawText(origin, options, COL_TEXT, String(tile));
+    // The hinted tile's ring sits on its face, inside the bevel, and is drawn
+    // with the tile so it rides the slide.
+    if (ringed) {
+      const hw = raisedBevelWidth(ts);
+      dr.drawRing(
+        { x: x + hw, y: y + hw, w: ts - 2 * hw, h: ts - 2 * hw },
+        { enclose: [textBox(origin, options, String(tile))], avoid: [] },
+        Math.max(2, Math.floor(ts / 16)),
+      );
+    }
   }
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }
@@ -253,7 +269,7 @@ export function redraw(
         }
 
         const face = lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_TILE;
-        drawTile(dr, ts, x, y, t, t !== 0 && t === hintTile ? COL_HINT : face);
+        drawTile(dr, ts, x, y, t, face, t !== 0 && t === hintTile);
       }
       ds.lit[i] = lit;
       ds.tiles[i] = t0;

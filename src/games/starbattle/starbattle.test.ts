@@ -15,17 +15,11 @@ import { describe, expect, it } from "vitest";
 import { Dsf } from "../../engine/dsf.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
+import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { starbattleGame } from "./index.ts";
-import {
-  COL_ERROR,
-  COL_HINT,
-  COL_REGION,
-  COL_STAR,
-  COL_WRONG,
-  newDrawState,
-} from "./render.ts";
+import { COL_ERROR, COL_REGION, COL_STAR, COL_WRONG, newDrawState } from "./render.ts";
 import {
   BLANK,
   CROSSED,
@@ -272,6 +266,6 @@ describe("starbattle frame", () => {
 
     const hinted = renderScenario({ game: starbattleGame, id: ID, showHint: true });
     expect(hinted.hint).toBeDefined();
-    expect(hinted.recording.ops.some((op) => paintsWith(op, COL_HINT))).toBe(true);
+    expect(ringsOf(hinted.recording.ops).length).toBeGreaterThan(0);
   });
 });

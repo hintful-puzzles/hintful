@@ -20,6 +20,7 @@ import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import {
   type DrawOp,
   opsOfKind,
@@ -39,7 +40,7 @@ import {
   deduceBoatsPlan,
 } from "./hint-solver.ts";
 import { type BoatsHint, boatsGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { COL_HINT_CELL } from "./render.ts";
 import { solveToGrid } from "./solver.ts";
 import {
   type BoatsMove,
@@ -667,13 +668,20 @@ describe("boats hint — rendering", () => {
     });
   }
 
-  it.each(TIERS)("paints the %s hint's targets in the hint color", (preset) => {
+  it.each(TIERS)("rings the %s hint's targets, with the action inside", (preset) => {
     const result = frame(preset, true);
     const hl = result.hint?.highlights as BoatsHint | undefined;
-    expect(hl?.targets.length).toBeGreaterThan(0);
-    // The mark is drawn in the game's own vocabulary — a segment for a boat,
-    // the water tildes for water — recolored `COL_HINT`.
-    expect(usesColor(result.recording.ops, COL_HINT)).toBe(true);
+    const targets = hl?.targets.length ?? 0;
+    expect(targets).toBeGreaterThan(0);
+    expectRing(result.recording.ops, { rings: targets });
+    // Inside each ring, the action in the game's own vocabulary — a segment
+    // for a boat, the water tildes for water — in the ring's ink.
+    const [ring] = ringsOf(result.recording.ops);
+    expect(
+      result.recording.ops.filter(
+        (o) => o.op !== "ring" && "color" in o && o.color === ring.color,
+      ).length,
+    ).toBeGreaterThanOrEqual(targets);
   });
 
   it("shades or rings the evidence the deduction reasons over", () => {
@@ -725,7 +733,7 @@ describe("boats hint — rendering", () => {
 
   it("paints no hint color at all when no hint is displayed", () => {
     const result = frame(0, false);
-    expect(usesColor(result.recording.ops, COL_HINT)).toBe(false);
+    expect(ringsOf(result.recording.ops)).toEqual([]);
     expect(usesColor(result.recording.ops, COL_HINT_CELL)).toBe(false);
   });
 

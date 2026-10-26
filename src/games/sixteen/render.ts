@@ -13,7 +13,6 @@ import {
   FLASH,
   FLASH_LEAD,
   givenSurface,
-  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import {
@@ -25,7 +24,15 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import type {
+  Color,
+  DrawTextOptions,
+  PaletteScheme,
+  Point,
+  Rect,
+  Size,
+} from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { SQUARE, TILE } from "./hint-text.ts";
 import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./state.ts";
@@ -44,20 +51,19 @@ const COL_LOWLIGHT = 3;
 export const paletteScheme: Partial<PaletteScheme> = {
   darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
 };
-const COL_HINT = 4;
 /** A tile's face: the lifted surface, so the object the player moves stands
  * off the board in both schemes. */
-const COL_TILE = 5;
+const COL_TILE = 4;
 /** A slide arrow's fill. The bevel's lowlight in a slot of its own, so the
  * bevel's dark-scheme swap leaves it alone and the arrows are the gray
  * Netslide's are in both schemes. */
-export const COL_ARROW = 6;
+export const COL_ARROW = 5;
 /** The arrow the keyboard cursor is on. */
-const COL_CURSOR = 7;
+const COL_CURSOR = 6;
 /** The face of a tile the win flash is on, inside its bevel: its body, and
  * its leading edge. */
-export const COL_FLASH = 8;
-export const COL_FLASH_LEAD = 9;
+export const COL_FLASH = 7;
+export const COL_FLASH_LEAD = 8;
 
 // --- hint highlights --------------------------------------------------
 
@@ -142,7 +148,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT] = INK;
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
-  out[COL_HINT] = HINT_RING;
   out[COL_TILE] = givenSurface(background);
   out[COL_ARROW] = lowlight;
   out[COL_CURSOR] = CURSOR;
@@ -187,8 +192,8 @@ export function redraw(
     curY = ui.cursor.y;
   }
 
-  // Hint marks: the tile to move, filled, and its target squares, outlined:
-  // this move's landing square, then the next move's when the journey has two
+  // Hint marks: the tile to move, and its target squares, all ringed: this
+  // move's landing square, then the next move's when the journey has two
   // legs.
   const marks = stepMarks(activeHint);
   const hintTile = marks.of("ring", TILE)[0] ?? null;
@@ -253,7 +258,7 @@ export function redraw(
     }
     // Draw new arrow highlight.
     if (hintArrowX !== null && hintArrowY !== null) {
-      drawArrowAt(dr, ts, state.w, state.h, hintArrowX, hintArrowY, COL_HINT);
+      drawArrowAt(dr, ts, state.w, state.h, hintArrowX, hintArrowY, "ringed");
     }
     ds.hintArrowX = hintArrowX;
     ds.hintArrowY = hintArrowY;
@@ -411,19 +416,13 @@ export function redraw(
         drawY = coord(Math.floor(i / state.w), ts);
       }
 
-      let tileBg =
+      const tileBg =
         drawX2 === -1 && tileCursor(i, state, curX, curY) ? COL_LOWLIGHT : bgcolor;
-      if (hintTile !== null && t === hintTile) {
-        tileBg = COL_HINT;
-      }
-      drawTile(dr, ts, drawX, drawY, t, tileBg);
+      const ringed = hintTile !== null && t === hintTile;
+      drawTile(dr, ts, drawX, drawY, t, tileBg, ringed);
 
       if (drawX2 !== -1 || drawY2 !== -1) {
-        let wrapBg = bgcolor;
-        if (hintTile !== null && t === hintTile) {
-          wrapBg = COL_HINT;
-        }
-        drawTile(dr, ts, drawX2, drawY2, t, wrapBg);
+        drawTile(dr, ts, drawX2, drawY2, t, bgcolor, ringed);
       }
     }
     ds.tiles[i] = t0;
@@ -435,15 +434,10 @@ export function redraw(
   ds.dragging = ui.dragging;
   ds.dragAxis = ui.dragAxis;
   ds.dragIndex = ui.dragIndex;
-  // Outlined after the tiles, at the cells' own coordinates, so a sliding line
+  // Ringed after the tiles, at the cells' own coordinates, so a sliding line
   // passes under the target rather than carrying it along.
-  if (hintTarget !== null) {
-    const isIntermediate = hintUltimate !== null;
-    drawHintBorder(dr, ts, state, hintTarget, isIntermediate);
-  }
-  if (hintUltimate !== null) {
-    drawHintBorder(dr, ts, state, hintUltimate, false);
-  }
+  if (hintTarget !== null) drawHintSquare(dr, ts, state, hintTarget);
+  if (hintUltimate !== null) drawHintSquare(dr, ts, state, hintUltimate);
   dr.unclip();
 }
 
@@ -452,6 +446,17 @@ function tileCursor(i: number, state: SixteenState, cx: number, cy: number): boo
   return i === cy * state.w + cx;
 }
 
+/** Where a tile's number is drawn, for the tile and for a ring round it. */
+function numberText(
+  ts: number,
+  x: number,
+  y: number,
+): { origin: Point; options: DrawTextOptions } {
+  return { origin: { x: x + ts / 2, y: y + ts / 2 }, options: glyphFont(ts / 3) };
+}
+
+/** A tile at (`x`, `y`); the hinted tile's ring is drawn with it, so it rides
+ * the slide. */
 function drawTile(
   dr: GameDrawing,
   ts: number,
@@ -459,14 +464,17 @@ function drawTile(
   y: number,
   tile: number,
   bgColor: number,
+  ringed: boolean,
 ): void {
   drawRaisedTile(dr, { x, y, w: ts, h: ts }, ts, bgColor, COL_HIGHLIGHT, COL_LOWLIGHT);
-  dr.drawText(
-    { x: x + ts / 2, y: y + ts / 2 },
-    glyphFont(ts / 3),
-    COL_TEXT,
-    String(tile),
-  );
+  const { origin, options } = numberText(ts, x, y);
+  dr.drawText(origin, options, COL_TEXT, String(tile));
+  if (ringed)
+    dr.drawRing(
+      faceBox(ts, x, y),
+      { enclose: [textBox(origin, options, String(tile))], avoid: [] },
+      ringThickness(ts),
+    );
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }
 
@@ -500,6 +508,15 @@ function drawArrow(
   dr.drawPolygon(coords, fillColor, COL_TEXT);
 }
 
+/** The stroke of every hint ring Sixteen draws. */
+function ringThickness(ts: number): number {
+  return Math.max(2, Math.floor(ts / 16));
+}
+
+/** The gutter arrow at (`ax`, `ay`), filled `fill`, or ringed: the ring round
+ * it with the arrow drawn inside in the ring's ink. Its square is cleared
+ * first, inside the playfield bevel that runs along its inner side, so a ring
+ * the arrow last wore goes with it. */
 function drawArrowAt(
   dr: GameDrawing,
   ts: number,
@@ -507,60 +524,54 @@ function drawArrowAt(
   h: number,
   ax: number,
   ay: number,
-  fillColor: number,
+  fill: number | "ringed",
 ): void {
+  let arrow: (ink: number) => void;
   if (ax === -1) {
-    drawArrow(dr, ts, coord(0, ts), coord(ay + 1, ts), 0, -1, fillColor);
+    arrow = (ink) => drawArrow(dr, ts, coord(0, ts), coord(ay + 1, ts), 0, -1, ink);
   } else if (ax === w) {
-    drawArrow(dr, ts, coord(w, ts), coord(ay, ts), 0, 1, fillColor);
+    arrow = (ink) => drawArrow(dr, ts, coord(w, ts), coord(ay, ts), 0, 1, ink);
   } else if (ay === -1) {
-    drawArrow(dr, ts, coord(ax, ts), coord(0, ts), 1, 0, fillColor);
+    arrow = (ink) => drawArrow(dr, ts, coord(ax, ts), coord(0, ts), 1, 0, ink);
   } else if (ay === h) {
-    drawArrow(dr, ts, coord(ax + 1, ts), coord(h, ts), -1, 0, fillColor);
+    arrow = (ink) => drawArrow(dr, ts, coord(ax + 1, ts), coord(h, ts), -1, 0, ink);
   } else return;
 
+  const hw = raisedBevelWidth(ts);
+  const square: Rect = {
+    x: coord(ax, ts) + hw,
+    y: coord(ay, ts) + hw,
+    w: ts - 2 * hw,
+    h: ts - 2 * hw,
+  };
+  dr.drawRect(square, COL_BACKGROUND);
+  if (fill === "ringed")
+    dr.drawRing(square, NOTHING_TO_CLEAR, ringThickness(ts), { inside: arrow });
+  else arrow(fill);
   dr.drawUpdate({ x: coord(ax, ts), y: coord(ay, ts), w: ts, h: ts });
 }
 
-/** Outline cell `pos` with a 3-pixel hint border, which keeps the tile's number
- * readable; dashed for the intermediate stop of a two-leg journey. */
-function drawHintBorder(
+/** A tile's face inside its bevel, where its ring and a target square's go. */
+function faceBox(ts: number, x: number, y: number): Rect {
+  const hw = raisedBevelWidth(ts);
+  return { x: x + hw, y: y + hw, w: ts - 2 * hw, h: ts - 2 * hw };
+}
+
+/** Ring square `pos`, round the number of the tile that stands in it. */
+function drawHintSquare(
   dr: GameDrawing,
   ts: number,
   state: SixteenState,
   pos: number,
-  dashed: boolean,
 ): void {
   const x = coord(pos % state.w, ts);
   const y = coord(Math.floor(pos / state.w), ts);
-  const b = 3;
-
-  if (dashed) {
-    const dashLen = 6;
-    const gapLen = 4;
-    const step = dashLen + gapLen;
-    for (let cx = x; cx < x + ts; cx += step) {
-      const w = Math.min(dashLen, x + ts - cx);
-      dr.drawRect({ x: cx, y, w, h: b }, COL_HINT);
-    }
-    for (let cx = x; cx < x + ts; cx += step) {
-      const w = Math.min(dashLen, x + ts - cx);
-      dr.drawRect({ x: cx, y: y + ts - b, w, h: b }, COL_HINT);
-    }
-    for (let cy = y + b; cy < y + ts - b; cy += step) {
-      const h = Math.min(dashLen, y + ts - b - cy);
-      dr.drawRect({ x, y: cy, w: b, h }, COL_HINT);
-    }
-    for (let cy = y + b; cy < y + ts - b; cy += step) {
-      const h = Math.min(dashLen, y + ts - b - cy);
-      dr.drawRect({ x: x + ts - b, y: cy, w: b, h }, COL_HINT);
-    }
-  } else {
-    dr.drawRect({ x, y, w: ts, h: b }, COL_HINT);
-    dr.drawRect({ x, y: y + ts - b, w: ts, h: b }, COL_HINT);
-    dr.drawRect({ x, y: y + b, w: b, h: ts - 2 * b }, COL_HINT);
-    dr.drawRect({ x: x + ts - b, y: y + b, w: b, h: ts - 2 * b }, COL_HINT);
-  }
+  const { origin, options } = numberText(ts, x, y);
+  dr.drawRing(
+    faceBox(ts, x, y),
+    { enclose: [textBox(origin, options, String(state.tiles[pos]))], avoid: [] },
+    ringThickness(ts),
+  );
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }
 
@@ -576,7 +587,7 @@ function drawArrowForCursor(
   const fill = cur
     ? COL_CURSOR
     : curX === ds.hintArrowX && curY === ds.hintArrowY
-      ? COL_HINT
+      ? "ringed"
       : COL_ARROW;
   drawArrowAt(dr, ts, ds.w, ds.h, curX, curY, fill);
 }

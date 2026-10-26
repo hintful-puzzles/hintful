@@ -3,13 +3,12 @@ import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { type SignpostHint, type SignpostRung, signpostKeepTrack } from "./hint.ts";
 import { signpostGame } from "./index.ts";
-import { COL_HINT } from "./render.ts";
 import type { SignpostMove, SignpostParams, SignpostState } from "./state.ts";
 
 type Step = HintStep<SignpostMove, SignpostHint, SignpostRung>;
@@ -120,18 +119,17 @@ const pinned = describeHintPins({
 });
 
 describe("signpost hint frame", () => {
-  it("draws the arrow in the hint color, rings its target and stripes the line", () => {
+  it("rings the arrow, drawn inside, and its target, and stripes the line", () => {
     const result = renderPinnedHint(signpostGame, pinned("onlyNextOfSeveral"));
     const { step } = result;
     const h = step.highlights as SignpostHint;
     const ops = result.recording.ops;
 
-    // The arrow the link leaves by is the one polygon in the hint color.
-    expect(opsOfKind(ops, "polygon").filter((o) => o.fill === COL_HINT)).toHaveLength(
-      1,
-    );
-    // The square it arrives at is ringed: four thin sides, not a fill.
-    expectRing(opsOfKind(ops, "rect"), COL_HINT);
+    // The arrow the link leaves by and the square it arrives at are ringed,
+    // and the arrow is the one polygon in the ring's ink.
+    expectRing(ops, { rings: 2 });
+    const ink = ringsOf(ops)[0].color;
+    expect(opsOfKind(ops, "polygon").filter((o) => o.fill === ink)).toHaveLength(1);
     // Every square the arrow points at is striped, and nothing else.
     expect(opsOfKind(ops, "hatch")).toHaveLength(h.line.length);
     expect(ops).toMatchSnapshot();

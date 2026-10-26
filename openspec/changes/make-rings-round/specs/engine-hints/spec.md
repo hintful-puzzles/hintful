@@ -52,6 +52,18 @@ by a line through it, and SHALL NOT be ringed, nor ring the cell it sits in.
 - **THEN** the ring is round and the outline has square corners, so the two
   are told apart without their colors
 
+### Requirement: A ring is called ringed, and no game names it otherwise
+
+A ring reference SHALL use "ringed" as its role's word in every game, the
+legend's term for what a step decides; every ring is round and the engine's,
+so no game SHALL teach another phrase for it.
+
+#### Scenario: Flood's ring is ringed
+
+- **WHEN** a Flood step names the squares a fill would join
+- **THEN** it calls them "the ringed squares", and each is drawn with a round
+  ring
+
 ### Requirement: A move's shape is shown inside its ring
 
 Where a game shows the shape its move will take (a line or a cross on an
@@ -63,7 +75,45 @@ ring and within it, and SHALL NOT stand in for the ring.
 - **WHEN** a Tracks or Path step asks for a line on an edge
 - **THEN** the edge is ringed by a pill, and the line is drawn inside the pill
 
+## REMOVED Requirements
+
+### Requirement: The ring's word is "ringed" in every game
+
+**Reason**: It let a game draw its ring in a shape that made "ringed" mislead,
+and teach a phrase of its own ("the dotted squares"). Every ring is now round
+and the engine's, so the word never misleads.
+
+**Migration**: "A ring is called ringed, and no game names it otherwise"
+replaces it; Flood says "the ringed squares".
+
 ## MODIFIED Requirements
+
+### Requirement: A hint marks beside the content, never behind it
+
+A hint's marks, the hatch apart, SHALL NOT be drawn underneath anything the
+player has to read. The acted-on cell SHALL be ringed and not filled, in every
+game and with no exceptions, even where a fill would hide nothing: one mark
+means one thing across the collection. An evidence area whose cells carry
+content (entered digits, pencil marks, clue glyphs, a placed mark, or a
+background the deduction is reading) SHALL be outlined and not washed.
+
+#### Scenario: The acted-on cell is ringed, not filled
+
+- **WHEN** a hint step marks the cell it acts on
+- **THEN** the mark is a round ring the engine draws round the cell, and no
+  primitive fills the cell with a hint color
+- **AND** a step that only strikes candidates marks them struck instead, and
+  rings no cell
+- **AND** this holds even where the cell is empty and a fill would hide nothing
+
+#### Scenario: Evidence carrying content is outlined
+
+- **WHEN** a hint step marks an evidence area whose cells carry entered digits,
+  pencil marks, clue glyphs, or a background the deduction is reading
+- **THEN** the area is drawn as an outline: a side wherever the neighbor across
+  it is not also evidence, so a contiguous region reads as one contour and a
+  scattered set as one ring per cell
+- **AND** the content inside it is drawn exactly as it would be without the hint
 
 ### Requirement: The engine SHALL own the hint mark roles and the words for them
 

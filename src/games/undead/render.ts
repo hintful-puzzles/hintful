@@ -23,7 +23,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -36,7 +35,13 @@ import {
 } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   cellHighlight,
@@ -55,6 +60,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
+import { textBox } from "../../engine/ring.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import {
@@ -80,7 +86,7 @@ import {
 export interface UndeadHint {
   /** The driving sightline's bounce path, outlined `COL_HINT_CELL` (evidence). */
   area: Point[];
-  /** The cell(s) the deduction acts on, ringed `COL_HINT`. */
+  /** The cell(s) the deduction acts on, ringed. */
   targets: Point[];
   /** The candidate monster(s) ruled out, shown struck through in the notes. */
   marks: { x: number; y: number; monster: number }[];
@@ -104,15 +110,15 @@ export const COL_ZOMBIE = 7;
 export const COL_VAMPIRE = 8;
 export const COL_DONE = 9;
 export const COL_PENCIL_BODY = 10;
-// The explained-hint legend (docs/hints-marks.md § "The engine colors the marks").
-export const COL_HINT = 11; // the cell(s)/candidate(s) the deduction acts on
-export const COL_HINT_CELL = 12; // the driving sightline's bounce path (evidence)
-export const COL_CELL = 13; // the surface of a cell the player fills
+// The explained-hint legend (docs/hints-marks.md § "The engine colors the
+// marks"); the ring on the cell(s) the deduction acts on is the engine's.
+export const COL_HINT_CELL = 11; // the driving sightline's bounce path (evidence)
+export const COL_CELL = 12; // the surface of a cell the player fills
 /** The lifted surface of what the puzzle fixed: a mirror, or a given monster. */
-export const COL_GIVEN = 14;
+export const COL_GIVEN = 13;
 /** The ground of a cell, a clue or a count the win flash's leading edge is
  * on; its body is {@link COL_FLASH}. */
-export const COL_FLASH_LEAD = 15;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -131,7 +137,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_VAMPIRE] = undeadVampire(bg);
   out[COL_DONE] = clueDoneColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -511,15 +516,8 @@ function drawBigMonster(
   const ts = ds.tileSize;
   const { dx, dy } = cellCenter(ds, x, y);
   if (ascii) {
-    const buf =
-      monster === MON_GHOST
-        ? "G"
-        : monster === MON_VAMPIRE
-          ? "V"
-          : monster === MON_ZOMBIE
-            ? "Z"
-            : " ";
-    dr.drawText({ x: dx, y: dy }, glyphFont(f(ts / 2)), COL_TEXT, buf);
+    const { origin, options } = bigMonsterText(ds, x, y);
+    dr.drawText(origin, options, COL_TEXT, monsterLetter(monster));
     dr.drawUpdate({
       x: dx - f(ts / 2) + 2,
       y: dy - f(ts / 2) + 2,
@@ -537,6 +535,66 @@ function drawBigMonster(
   }
 }
 
+const monsterLetter = (monster: number): string =>
+  monster === MON_GHOST
+    ? "G"
+    : monster === MON_VAMPIRE
+      ? "V"
+      : monster === MON_ZOMBIE
+        ? "Z"
+        : " ";
+
+/** Where cell `(x, y)` draws a placed monster's letter: the arguments
+ * `drawText` takes but the color, so the tile and a hint's ring read one
+ * place. */
+function bigMonsterText(ds: UndeadDrawState, x: number, y: number) {
+  const { dx, dy } = cellCenter(ds, x, y);
+  return { origin: { x: dx, y: dy }, options: glyphFont(f(ds.tileSize / 2)) };
+}
+
+/** Where cell `(x, y)`'s notes go: the monsters in `pencil` fill a 2×2 grid in
+ * reading order, each at the center of its slot, which is where a letter is
+ * drawn too. */
+function pencilSlots(ds: UndeadDrawState, x: number, y: number, pencil: number) {
+  const ts = ds.tileSize;
+  const dx = border(ts) + x * ts + f(ts / 4);
+  const dy = border(ts) + y * ts + f(ts / 4) + ts;
+  return MONSTERS.filter((m) => pencil & m).map((m, slot) => ({
+    m,
+    origin: {
+      x: dx + f(ts / 2) * (slot % 2),
+      y: dy + f(ts / 2) * Math.floor(slot / 2),
+    },
+    options: glyphFont(f(ts / 4)),
+  }));
+}
+
+/** The text cell `(x, y)` shows, for a hint's ring to keep clear of: the
+ * letters of ASCII mode. A monster drawn as a picture is a shape, and an edge
+ * clue sits in its own cell, past the one pixel a ring reaches outside its
+ * cell. */
+function cellText(
+  ds: UndeadDrawState,
+  state: UndeadState,
+  ascii: boolean,
+  x: number,
+  y: number,
+): CellText {
+  const { common } = state;
+  if (!ascii || x < 1 || y < 1 || x > common.w || y > common.h) return NO_TEXT;
+  const xi = common.xinfo[x + y * (common.w + 2)];
+  if (xi < 0) return NO_TEXT;
+  if (isSingleton(state.guess[xi])) {
+    const { origin, options } = bigMonsterText(ds, x, y);
+    const letter = monsterLetter(state.guess[xi]);
+    return { enclose: [textBox(origin, options, letter)], avoid: [], notes: [] };
+  }
+  const notes = pencilSlots(ds, x, y, state.pencil[xi]).map(({ m, origin, options }) =>
+    textBox(origin, options, monsterLetter(m)),
+  );
+  return { enclose: [], avoid: [], notes };
+}
+
 function drawPencils(
   dr: GameDrawing,
   ds: UndeadDrawState,
@@ -549,27 +607,18 @@ function drawPencils(
   const ts = ds.tileSize;
   const dx = border(ts) + x * ts + f(ts / 4);
   const dy = border(ts) + y * ts + f(ts / 4) + ts;
-  // The notes present fill a 2×2 grid in reading order.
-  let slot = 0;
-  for (const m of MONSTERS) {
-    if (!(pencil & m)) continue;
-    const cx = dx + f(ts / 2) * (slot % 2);
-    const cy = dy + f(ts / 2) * Math.floor(slot / 2);
-    slot++;
-    if (!ascii) {
-      drawMonster(dr, cx, cy, f(ts / 2), m);
-    } else {
-      const buf = m === MON_GHOST ? "G" : m === MON_VAMPIRE ? "V" : "Z";
-      dr.drawText({ x: cx, y: cy }, glyphFont(f(ts / 4)), COL_TEXT, buf);
-    }
-    // A struck candidate keeps its normal glyph (legible on a non-COL_HINT
-    // background) and gains a COL_HINT strikethrough as the "ruled out" cue.
+  for (const { m, origin, options } of pencilSlots(ds, x, y, pencil)) {
+    const { x: cx, y: cy } = origin;
+    if (!ascii) drawMonster(dr, cx, cy, f(ts / 2), m);
+    else dr.drawText(origin, options, COL_TEXT, monsterLetter(m));
+    // A struck candidate keeps its glyph and gains a strikethrough in the
+    // note's own ink, the ink of its letter and of its monster's outline.
     if (struck & m) {
       const r = f(ts / 6);
       dr.drawLine(
         { x: cx - r, y: cy + r },
         { x: cx + r, y: cy - r },
-        COL_HINT,
+        COL_TEXT,
         Math.max(1, f(ts / 24)),
       );
     }
@@ -837,7 +886,7 @@ export function redraw(
   }
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    text: (x: number, y: number) => cellText(ds, state, ui.ascii, x, y),
     evidenceColor: COL_HINT_CELL,
   };
   const underErased = new Uint8Array(ds.hint.packed.length);
@@ -877,9 +926,10 @@ export function redraw(
 
       if (stale) {
         const struck = ds.hint.struck[xy];
-        // Both hint marks are drawn after this loop, on the cell's border, so
-        // the cell paints its ordinary background and a marked cell keeps
-        // showing the candidates the hint is reasoning about.
+        // Both hint marks are drawn after this loop, the ring round the cell
+        // and the outline on its border, so the cell paints its ordinary
+        // background and a marked cell keeps showing the candidates the hint
+        // is reasoning about.
         const cell = cellRect(ds, x, y);
         // A mirror and a given monster are the puzzle's, told by the cell
         // under them.

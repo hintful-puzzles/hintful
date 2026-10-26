@@ -8,6 +8,7 @@ import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
 import type { MarkRole } from "../engine/hint-words.ts";
 import { DEAL_DEADLINE_MS } from "../engine/retry-limit.ts";
+import { MARK_EDGE_PX } from "../engine/ring.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -66,9 +67,6 @@ export const HINT_PENDING_MS = 300;
 /** How long a pressed reference's marks stay lit, from turning white to
  * fading back (`Puzzle.flashHintReference`). One flash, so nothing strobes. */
 export const HINT_FLASH_MS = 1000;
-
-/** How wide the edge round a repainted mark is, in CSS pixels. */
-const MARK_EDGE_PX = 1;
 
 /** A color's value in `scheme`, as the canvas overlay and CSS take it. */
 function hexIn(c: Color, scheme: Scheme): string {

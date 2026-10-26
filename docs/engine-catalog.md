@@ -2,9 +2,8 @@
 
 Every shared helper under [`src/engine/`](../src/engine/): when a game
 reaches for it, what a game calls from it, a game to read, and the trap if
-there is one. An entry is short: the module's own header is its
-documentation. An exemplar is a
-path under `src/games/` unless it says otherwise. The normative rules are
+there is one. An entry is short: the module's header is its documentation.
+An exemplar is in `src/games/` unless it says otherwise. The rules are
 the `engine-helpers` spec and the engine specs an entry names.
 
 ## What every game does
@@ -17,8 +16,8 @@ the `engine-helpers` spec and the engine specs an entry names.
    `retry-limit.ts` in `generator.ts`; `hint-plan.ts`, `hint-words.ts` and
    `hint-gesture.ts` for the hint; `hint-mark.ts`, `overlay-sidecar.ts`,
    `piece.ts`, `draw.ts` and `win-wave.ts` in `render.ts`.
-2. **Before writing a helper of your own, scan the table below** for your
-   situation. Read the entry, then the module's header.
+2. **Before writing a helper, scan the table below** for your situation.
+   Read the entry, then the module's header.
 3. **Import a shared thing from the module it lives in.** Do not re-export
    it through the game's `state.ts` or restate it beside the call.
 4. **Keep a helper only one game uses in that game's directory.**
@@ -96,6 +95,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `position-store.ts` — the positions a breadth-first search reached | a hint searches breadth-first |
 | – `piece.ts` — a piece on its cell | a cell holds a piece, is shaded or is ruled out |
 | – `region-fill.ts` — a fill for each region of a division | regions are colored, or pieces outnumber their colors |
+| – `ring.ts` — the round ring | a hint rings |
 | – `hint-mark.ts` — the ring and the outline | you draw a hint's marks on cells |
 | – `edge-hint.ts` — a hint on an edge between squares | a hint names a side of a square |
 | – `hatch.ts` — the stripes on the line a step names | a hint sentence names a row or column |
@@ -986,12 +986,28 @@ board wears the same colors each time it is opened. Exemplar:
 hue, by index into it. Exemplar: the Path ruleset's line in
 `path/render.ts`.
 
+### `ring.ts` — the round ring
+
+The ring is the engine's: a game calls `GameDrawing.drawRing(box, clear,
+thickness, { room, inside })`, and every drawing strokes the shape
+`ringShape` fits, the one nearest `box` at the roundest that clears the
+text: a circle or a pill where it can, a rounded square where text sits in
+the corners, and a throw where nothing at least `RING_MIN_ROUNDNESS` round
+fits. `clear` is `{ enclose, avoid }`, built from `textBox`, which takes what
+a game passes `drawText`; `NOTHING_TO_CLEAR` where there is no text.
+`inside` draws the move's shape within the ring in its ink, the only way to
+that ink. `MARK_EDGE_PX` is the app's edge round a mark, which a ring keeps
+off text too. When to use it: [`hints-marks.md`](./hints-marks.md) § "Shade
+vs ring".
+
 ### `hint-mark.ts` — the ring and the outline
 
-Draw a hint's two cell marks with it: a ring around the cell the deduction
-acts on, an outline around the region it reasons from. Both replace the
-cell's border, never its background: no fill behind content stays readable
-in every hue and both schemes. Exemplar: `src/skeleton/grid/render.ts`.
+Draw a hint's two cell marks with it: a round ring around the cell the
+deduction acts on, through `drawRing`, and an outline around the region it
+reasons from, a band on the cell's border. Neither goes behind content: no
+fill behind content stays readable in every hue and both schemes. The game
+says what text each cell shows (`HintMarkStyle.text`, a `CellText`; `NO_TEXT`
+for none). Exemplar: `src/skeleton/grid/render.ts`.
 
 - **`MarkBand` says where the game's border lives**: outside the content
   box for a `COL_GRID`-backed game, inside it for one that draws its own
@@ -1018,7 +1034,9 @@ step that sets edges, shrinking its move and its rings together.
 `edgeHintWords` gives each square its tile-key word for those edges, set on
 both squares, with a chain's ordinal on the edge's first one. In the tile,
 `drawEdgeHints` asks the game's declared `EdgeShapes` for its own line and
-cross in the ring's or the outline's ink, under the square's content, and
+cross in the outline's ink, and for where an asked side's ring goes
+(`ring`), drawing the ring with the asked shape inside, under the square's
+content, and
 `drawEdgeOrdinals` draws the numbers over it. The word's low
 `EDGE_HINT_BITS` bits are the module's; a game keeps its own hint bits
 above them. Exemplars: `path/render.ts`, with a chain; `tracks/render.ts`,

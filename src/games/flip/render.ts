@@ -15,7 +15,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
@@ -24,6 +23,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, type MarkBand, MarkOutlines } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { FlipMove, FlipParams, FlipState, FlipUi } from "./state.ts";
@@ -56,16 +56,15 @@ const COL_GRID = 3;
 /** The diagram on an unlit square's piece; {@link COL_LIT_DIAG} on a lit one's. */
 const COL_UNLIT_DIAG = 4;
 const COL_CURSOR = 5;
-export const COL_HINT = 6; // the square to press, ringed; what else it flips, striped
-export const COL_HINT_CELL = 7; // the unlit squares the press is for: outlined
-const COL_LIT_DIAG = 8;
+export const COL_HINT_CELL = 6; // the unlit squares the press is for: outlined
+const COL_LIT_DIAG = 7;
 /** The surface of a square, which the piece sits inset on. */
-const COL_SURFACE = 9;
+const COL_SURFACE = 8;
 /** The ground of a square the win flash is on. */
-export const COL_FLASH = 10;
+export const COL_FLASH = 9;
 /** And under the flash's leading edge. */
-export const COL_FLASH_LEAD = 11;
-const NCOLORS = 12;
+export const COL_FLASH_LEAD = 10;
+const NCOLORS = 11;
 
 /** Which member of the two-state pair a square holds: the first while it is
  * still to be lit, the second once it is. */
@@ -104,7 +103,6 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_UNLIT_DIAG] = WHITE;
   ret[COL_LIT_DIAG] = BLACK;
   ret[COL_CURSOR] = CURSOR;
-  ret[COL_HINT] = HINT_RING;
   ret[COL_HINT_CELL] = HINT_OUTLINE;
   return ret;
 }
@@ -270,7 +268,7 @@ function drawTile(
     inner: Math.max(2, ts >> 4),
   };
   drawMarkSides(dr, band, marks.evidenceSides(x, y), COL_HINT_CELL);
-  drawMarkSides(dr, band, marks.targetSides(x, y), COL_HINT);
+  if (marks.targetSides(x, y)) dr.drawRing(inner, NOTHING_TO_CLEAR, band.inner);
 
   dr.unclip();
   dr.drawUpdate(inner);

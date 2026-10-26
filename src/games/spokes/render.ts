@@ -31,14 +31,14 @@ import {
   givenSurface,
   HELD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { type RingClear, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { HUB, SPOKE } from "./hint-text.ts";
 import type { SpokesHint } from "./index.ts";
@@ -93,16 +93,13 @@ export const COL_CURSOR = 7;
  * light board's own tone.
  */
 export const COL_SATISFIED = 8;
-/** The forced spoke(s) of the displayed hint: a line to draw, or a rim dot for
- * a spoke to rule out (docs/hints-marks.md § "Echo the move's shape in the hint
- * color"). Every leg of one firing shares it. */
-export const COL_HINT = 9;
-/** A ring around each evidence hub the hint reasons over. */
-export const COL_HINT_CELL = 10;
+/** A ring around each evidence hub the hint reasons over. The spokes a step
+ * decides are ringed by the engine. */
+export const COL_HINT_CELL = 9;
 /** The face of a hub that still has spokes to take: the quiet surface. */
-export const COL_HUB = 11;
+export const COL_HUB = 10;
 /** The face of a hub the leading edge of the win flash is on. */
-export const COL_DONE_LEAD = 12;
+export const COL_DONE_LEAD = 11;
 
 /**
  * Upstream takes the frontend background as-is (no `game_mkhighlight`) and
@@ -128,7 +125,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = PURPLE;
   out[COL_HUB] = cellSurface(defaultBackground);
   out[COL_SATISFIED] = givenSurface(defaultBackground);
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -166,11 +162,13 @@ export interface SpokesDrawState {
    * flagged. Its own sidecar so it repaints a cell nothing else changed
    * (docs/rendering.md § "The tile cache and the diff key"). */
   wrong: OverlaySidecar;
-  /** Hint overlay, per cell: bits `0..7` ⇒ spoke `d` is a hint *line*
-   * (`COL_HINT`, "draw this"), {@link HUB_OUTLINE} ⇒ ring this hub as evidence
-   * (`COL_HINT_CELL`), bits `9..16` (see {@link hintMarkBit}) ⇒ spoke `d` is a
-   * hint *mark* (a `COL_HINT` ring round its rim dot, "rule this out"). Its
-   * own sidecar for the same reason as {@link wrong}. */
+  /** Hint overlay, per cell: bits `0..7` ⇒ spoke `d` is a hint *line* (ringed
+   * with the line inside, "draw this"), {@link HUB_OUTLINE} ⇒ ring this hub
+   * as evidence (`COL_HINT_CELL`), bits `9..16` (see {@link hintMarkBit}) ⇒
+   * spoke `d` is a hint *mark* (a ring round its rim dot, "rule this out"),
+   * bits `17..20` (see {@link cornerRingBit}) ⇒ the ring round a hint
+   * diagonal through that corner of the cell reaches into it. Its own sidecar
+   * for the same reason as {@link wrong}. */
   hint: OverlaySidecar;
   /** Blitter holding the pixels under the keyboard cursor, and where. */
   cursorBlitter: unknown;
@@ -188,10 +186,55 @@ const CORNER_HINT = 8;
 /** Hint sidecar bit that rings a hub as evidence (`COL_HINT_CELL`); bits
  * `0..7` are the hint-line spokes, so this sits above them. */
 const HUB_OUTLINE = 1 << 8;
-/** Hint sidecar bit for spoke `d` as a *mark* to rule out (a `COL_HINT` ring
- * round its rim dot). These sit above {@link HUB_OUTLINE}, disjoint from the
- * line bits `0..7`. */
+/** Hint sidecar bit for spoke `d` as a *mark* to rule out (a ring round its
+ * rim dot). These sit above {@link HUB_OUTLINE}, disjoint from the line bits
+ * `0..7`. */
 const hintMarkBit = (d: number): number => 1 << (9 + d);
+/** Hint sidecar bit for a cell that a ring round a hint diagonal reaches
+ * into without the diagonal being its own: the cell's corner (`right`,
+ * `below`) the diagonal crosses. */
+const cornerRingBit = (right: boolean, below: boolean): number =>
+  1 << (17 + (right ? 1 : 0) + (below ? 2 : 0));
+
+/** The ring round a hint line: where it goes, and the spoke it holds. */
+interface SpokeRing {
+  readonly box: Rect;
+  readonly clear: RingClear;
+  readonly room: Rect;
+  readonly from: Point;
+  readonly to: Point;
+}
+
+const overlaps = (a: Rect, b: Rect): boolean =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+/** Draw each ring in `rings` that reaches `area`, clipped to it by the
+ * caller, with its spoke inside it in the ring's ink. */
+function drawSpokeRings(
+  dr: GameDrawing,
+  rings: readonly SpokeRing[],
+  area: Rect,
+  thick: number,
+): void {
+  for (const r of rings)
+    if (overlaps(r.room, area))
+      dr.drawRing(r.box, r.clear, thick, {
+        room: r.room,
+        inside: (ink) => dr.drawLine(r.from, r.to, ink, thick),
+      });
+}
+
+/** Where a hub's clue digit is drawn, which the hub and a ring both read. */
+function numberText(
+  x: number,
+  y: number,
+  ts: number,
+): { origin: Point; options: DrawTextOptions } {
+  return {
+    origin: { x: toCoord(x, ts), y: toCoord(y, ts) },
+    options: glyphFont((ts / 2.5) | 0),
+  };
+}
 
 export function newDrawState(state: SpokesState, tileSize: number): SpokesDrawState {
   const n = state.w * state.h;
@@ -309,9 +352,23 @@ export function redraw(
     }
   }
 
+  // The clue digits a ring might reach, by the cells of `room`.
+  const digitsIn = (room: Rect): Rect[] => {
+    const out: Rect[] = [];
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        if (!state.spokes[y * w + x]) continue;
+        if (!overlaps(room, { x: x * ts, y: y * ts, w: ts, h: ts })) continue;
+        const { origin, options } = numberText(x, y, ts);
+        out.push(textBox(origin, options, String(state.numbers[y * w + x])));
+      }
+    return out;
+  };
+
   // Hint overlay: flag both ends of each forced spoke (so both cells repaint
-  // and both halves of the COL_HINT line come out), and ring each evidence hub.
+  // and both halves of its ring come out), and ring each evidence hub.
   ds.hint.clear();
+  const rings: SpokeRing[] = [];
   // A ringed spoke is drawn as what the step does to it, which the plan says.
   const marks = stepMarks(hint);
   const planned = hint?.highlights?.spokes ?? [];
@@ -330,6 +387,52 @@ export function redraw(
       set.state === SPOKE_LINE ? 1 << d : hintMarkBit(d);
     ds.hint.add(sp.index, bit(sp.dir));
     if (inside) ds.hint.add(far, bit(sp.dir ^ 4));
+    if (
+      set.state !== SPOKE_LINE ||
+      !inside ||
+      getSpoke(state.spokes[sp.index], sp.dir) !== SPOKE_EMPTY
+    )
+      continue;
+    // A line still to draw is ringed between the two hubs' rims: a pill
+    // along an upright or level spoke, and a circle round the grid corner a
+    // diagonal crosses, which reaches into the corner's other two cells.
+    const x0 = sp.index % w;
+    const y0 = (sp.index / w) | 0;
+    const a = { x: toCoord(x0, ts), y: toCoord(y0, ts) };
+    const b2 = { x: toCoord(nx, ts), y: toCoord(ny, ts) };
+    const mid = { x: (a.x + b2.x) / 2, y: (a.y + b2.y) / 2 };
+    const { dx, dy } = SPOKE_DIRS[sp.dir];
+    const [from, to] = sp.dir < 4 ? [b2, a] : [a, b2];
+    let box: Rect;
+    let room: Rect;
+    if (dx !== 0 && dy !== 0) {
+      const half = ts * 0.3;
+      box = { x: mid.x - half, y: mid.y - half, w: 2 * half, h: 2 * half };
+      room = {
+        x: Math.min(x0, nx) * ts,
+        y: Math.min(y0, ny) * ts,
+        w: 2 * ts,
+        h: 2 * ts,
+      };
+      const cxr = Math.max(x0, nx);
+      const cyr = Math.max(y0, ny);
+      for (const [ox, oy] of [
+        [x0, ny],
+        [nx, y0],
+      ])
+        ds.hint.add(oy * w + ox, cornerRingBit(cxr > ox, cyr > oy));
+    } else {
+      const along = ts - 2 * radius;
+      const across = ts * 0.3;
+      const bw = dx !== 0 ? along : across;
+      const bh = dx !== 0 ? across : along;
+      box = { x: mid.x - bw / 2, y: mid.y - bh / 2, w: bw, h: bh };
+      // Clear of the cells' corners, which the diagonal pass owns.
+      const rw = dx !== 0 ? ts : ts - 2 * CORNER;
+      const rh = dx !== 0 ? ts - 2 * CORNER : ts;
+      room = { x: mid.x - rw / 2, y: mid.y - rh / 2, w: rw, h: rh };
+    }
+    rings.push({ box, clear: { enclose: [], avoid: digitsIn(room) }, room, from, to });
   }
   for (const e of marks.of("outline", HUB)) ds.hint.add(e, HUB_OUTLINE);
 
@@ -416,15 +519,11 @@ export function redraw(
         drawSpoke(d, wrongBits & (1 << d) ? COL_ERROR : COL_LINE);
       }
 
-      // Hint spokes: draw each forced spoke like a line in COL_HINT, but only
-      // where it is still EMPTY — a leg the player has followed is now a real
-      // black line and must not be re-tinted. Diagonals are completed across
-      // the corner by the diagonal pass, same as real lines.
-      for (let d = 0; d < 8; d++) {
-        if (!(hintBits & (1 << d))) continue;
-        if (getSpoke(state.spokes[i], d) !== SPOKE_EMPTY) continue;
-        drawSpoke(d, COL_HINT);
-      }
+      // Hint spokes: the ring round each forced spoke still EMPTY, with the
+      // line inside it — a leg the player has followed is now a real black
+      // line and is not ringed. Diagonals' rings are completed across the
+      // corner by the diagonal pass, same as real lines.
+      drawSpokeRings(dr, rings, tile, thick);
 
       // Evidence ring: a light-blue annulus just outside the hub rim.
       if (hintBits & HUB_OUTLINE) {
@@ -444,21 +543,23 @@ export function redraw(
       // indistinguishable from a spoke the player had already marked.
       const edge = radius - thick;
       const pr = radius / 4;
+      const digit = numberText(x, y, ts);
+      const digitBox = textBox(digit.origin, digit.options, String(state.numbers[i]));
       for (let d = 0; d < 8; d++) {
         if (!(hintBits & hintMarkBit(d))) continue;
         if (getSpoke(state.spokes[i], d) !== SPOKE_EMPTY) continue;
         const unit = spokeUnit(d);
         const at = { x: tx + edge * unit.x, y: ty + edge * unit.y };
-        dr.drawCircle(at, pr + thick, -1, COL_HINT);
-        dr.drawCircle(at, pr + thick + 1, -1, COL_HINT);
+        const half = pr + 1.5 * thick + 1;
+        dr.drawRing(
+          { x: at.x - half, y: at.y - half, w: 2 * half, h: 2 * half },
+          { enclose: [], avoid: [digitBox] },
+          thick,
+          { room: tile },
+        );
       }
 
-      dr.drawText(
-        { x: tx, y: ty },
-        glyphFont((ts / 2.5) | 0),
-        txt,
-        String(state.numbers[i]),
-      );
+      dr.drawText(digit.origin, digit.options, txt, String(state.numbers[i]));
 
       // A repainted cell cleared its share of any diagonal that runs into one
       // of its corners, so that corner has to be redrawn.
@@ -478,7 +579,7 @@ export function redraw(
     }
   }
 
-  if (ts >= MIN_CORNER_TILE_SIZE) drawCorners(dr, ds, state, thick);
+  if (ts >= MIN_CORNER_TILE_SIZE) drawCorners(dr, ds, state, thick, rings);
 
   if (cshow) {
     ds.cursorX = cx * ts + ((ts / 2) | 0) + ((cdx * (ts * 0.4) * Math.SQRT1_2) | 0);
@@ -507,6 +608,7 @@ function drawCorners(
   ds: SpokesDrawState,
   state: SpokesState,
   thick: number,
+  rings: readonly SpokeRing[],
 ): void {
   const ts = ds.tileSize;
   const { w, h } = state;
@@ -554,11 +656,11 @@ function drawCorners(
 
       const tx = toCoord(x, ts);
       const ty = toCoord(y, ts);
-      const drawn = diag !== 0 ? diag : hintDiag;
-      const col = wrong ? COL_ERROR : hintDiag !== 0 ? COL_HINT : COL_LINE;
-      if (drawn === DIR_BOTRIGHT) {
+      const col = wrong ? COL_ERROR : COL_LINE;
+      if (hintDiag !== 0) drawSpokeRings(dr, rings, box, thick);
+      else if (diag === DIR_BOTRIGHT) {
         dr.drawLine({ x: tx, y: ty }, { x: tx + ts, y: ty + ts }, col, thick);
-      } else if (drawn === DIR_BOTLEFT) {
+      } else if (diag === DIR_BOTLEFT) {
         dr.drawLine({ x: tx, y: ty + ts }, { x: tx + ts, y: ty }, col, thick);
       }
 

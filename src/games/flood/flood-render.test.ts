@@ -1,23 +1,18 @@
 // Tier-2 render test: drive Flood's `redraw` against the engine's shared
 // `RecordingDrawing` and assert the draw-call structure — play-color
 // tiles, separator borders between differing-color cells, the cursor
-// outline, the hint SOLNNEXT circle, and victory/defeat flash overlays.
+// outline, the hint's ring on each next-fill square, and victory/defeat flash overlays.
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { NO_FLASH, ownFlash } from "../../engine/win-wave.ts";
 import { say } from "./hint-text.ts";
 import { floodGame } from "./index.ts";
-import {
-  COL_HINT,
-  COL_LIT,
-  COL_LIT_LEAD,
-  type FloodDrawState,
-  redraw,
-} from "./render.ts";
+import { COL_LIT, COL_LIT_LEAD, type FloodDrawState, redraw } from "./render.ts";
 import { type FloodMove, type FloodState, newState } from "./state.ts";
 
 const PALETTE = floodGame.colors(DEFAULT_BACKGROUND);
@@ -84,7 +79,7 @@ describe("Flood redraw", () => {
     expect(ops.filter((o) => o.op === "line" && o.color === 1).length).toBe(4);
   });
 
-  it("draws the hint SOLNNEXT circle on the next-fill squares", () => {
+  it("rings the hint's next-fill square", () => {
     const state = newState({ w: 3, h: 1, colors: 3, leniency: 0 }, "010,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
@@ -96,9 +91,7 @@ describe("Flood redraw", () => {
       words,
     };
     redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH, hint);
-    // The shared recorder keeps a circle's fill AND outline separately, where
-    // the local double kept one number called `color` — so this now says which.
-    expect(ops.some((o) => o.op === "circle" && o.fill === COL_HINT)).toBe(true);
+    expectRing(ops);
   });
 
   it("spreads the win flash from the top-left corner, lifting the tiles it is on", () => {

@@ -804,7 +804,9 @@ export const groupGame: Game<
   hintRungs: GROUP_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the cell the step is about: the letter to enter there, or the pencil marks to cross out, which are shown with a line through them.",
+      ring: "the cell the step fills in with a letter.",
+      strike:
+        "the pencil marks the step crosses out, shown with a line through them, and so the cell they are in.",
       outline:
         "what the step reasons from: the three products an associativity step reads, the product that gives away (or rules out) the identity, a group of cells that between them already account for the letters being crossed out, the letter just placed, or the numbered cells of a chain.",
       stripes:

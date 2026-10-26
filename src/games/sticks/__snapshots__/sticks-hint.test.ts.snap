@@ -61,7 +61,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -79,7 +79,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -88,18 +88,9 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 6,
-    "h": 9,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 47,
-    "x": 52,
-    "y": 23,
-  },
-  {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -109,6 +100,36 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 28,
   },
   {
+    "color": 13,
+    "h": 43,
+    "op": "ring",
+    "radius": 22,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 4,
+    "w": 43,
+    "x": 54,
+    "y": 6,
+  },
+  {
+    "h": 43,
+    "op": "clip",
+    "w": 43,
+    "x": 54,
+    "y": 6,
+  },
+  {
+    "color": 13,
+    "h": 9,
+    "op": "rect",
+    "rgb": "rgb(21, 113, 233)",
+    "w": 47,
+    "x": 52,
+    "y": 23,
+  },
+  {
+    "op": "unclip",
+  },
+  {
     "color": 1,
     "h": 48,
     "op": "rect",
@@ -118,7 +139,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -136,7 +157,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -154,7 +175,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -165,7 +186,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -175,7 +196,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 28,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -193,7 +214,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -204,7 +225,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -223,7 +244,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -232,7 +253,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -241,7 +262,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -250,7 +271,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -259,7 +280,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -268,7 +289,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 91,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -329,7 +350,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 76,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -359,7 +380,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -377,7 +398,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -395,7 +416,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -406,7 +427,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -425,7 +446,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -443,7 +464,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -461,7 +482,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -479,7 +500,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -497,7 +518,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -508,7 +529,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -527,7 +548,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -545,7 +566,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -563,7 +584,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -572,7 +593,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -581,7 +602,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -599,7 +620,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -617,7 +638,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -628,7 +649,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -647,7 +668,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -658,7 +679,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -668,7 +689,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 172,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -677,7 +698,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -707,7 +728,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -725,7 +746,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -736,7 +757,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -755,7 +776,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -766,7 +787,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -785,7 +806,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -803,7 +824,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -821,7 +842,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -839,7 +860,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -857,7 +878,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -875,7 +896,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -893,7 +914,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -907,20 +928,20 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
     "w": 48,
-    "x": 148,
-    "y": 244,
-  },
-  {
-    "color": 9,
-    "h": 47,
-    "op": "rect",
-    "rgb": "rgb(194, 194, 194)",
-    "w": 47,
     "x": 148,
     "y": 244,
   },
   {
     "color": 8,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(194, 194, 194)",
+    "w": 47,
+    "x": 148,
+    "y": 244,
+  },
+  {
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -941,7 +962,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 268,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -971,7 +992,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -989,7 +1010,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1000,7 +1021,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1010,7 +1031,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 316,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1040,7 +1061,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1058,7 +1079,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1069,7 +1090,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1088,7 +1109,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1099,7 +1120,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1118,7 +1139,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1136,7 +1157,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1208,7 +1229,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1217,7 +1238,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1247,7 +1268,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1256,7 +1277,25 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 6,
+    "color": 13,
+    "h": 43,
+    "op": "ring",
+    "radius": 22,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 4,
+    "w": 43,
+    "x": 102,
+    "y": 6,
+  },
+  {
+    "h": 43,
+    "op": "clip",
+    "w": 43,
+    "x": 102,
+    "y": 6,
+  },
+  {
+    "color": 13,
     "h": 9,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -1265,7 +1304,10 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 23,
   },
   {
-    "color": 8,
+    "op": "unclip",
+  },
+  {
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1274,7 +1316,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1283,7 +1325,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 8,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1292,7 +1334,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 8,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1301,7 +1343,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 43,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1362,7 +1404,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 28,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1380,7 +1422,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1391,7 +1433,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1410,7 +1452,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1428,7 +1470,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1439,7 +1481,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1458,7 +1500,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1469,7 +1511,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1488,7 +1530,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1499,7 +1541,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1509,7 +1551,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 76,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1539,7 +1581,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1557,7 +1599,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1575,7 +1617,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1586,7 +1628,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1605,7 +1647,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1623,7 +1665,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1641,7 +1683,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1659,7 +1701,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1677,7 +1719,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1695,7 +1737,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1706,7 +1748,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1716,7 +1758,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 124,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1746,7 +1788,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1757,7 +1799,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1776,7 +1818,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1794,7 +1836,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1805,7 +1847,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1824,7 +1866,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1842,7 +1884,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1860,7 +1902,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1878,7 +1920,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1889,7 +1931,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1899,7 +1941,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 172,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1929,7 +1971,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1947,7 +1989,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1958,7 +2000,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1977,7 +2019,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1988,7 +2030,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2007,7 +2049,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2018,7 +2060,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2037,7 +2079,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2055,7 +2097,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2066,7 +2108,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2085,7 +2127,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2103,7 +2145,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2114,7 +2156,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2133,7 +2175,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2142,7 +2184,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2172,7 +2214,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2190,7 +2232,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2208,7 +2250,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2226,7 +2268,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2237,7 +2279,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2256,7 +2298,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2265,7 +2307,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2274,7 +2316,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2304,7 +2346,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2313,7 +2355,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2343,7 +2385,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2354,7 +2396,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2427,7 +2469,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2438,7 +2480,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2457,7 +2499,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2475,7 +2517,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2493,7 +2535,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2513,7 +2555,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2532,7 +2574,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2550,7 +2592,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2561,7 +2603,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2580,7 +2622,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2591,7 +2633,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2601,7 +2643,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 28,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2619,7 +2661,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2629,15 +2671,6 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   },
   {
     "color": 6,
-    "h": 47,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 9,
-    "x": 71,
-    "y": 52,
-  },
-  {
-    "color": 7,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2646,7 +2679,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2655,7 +2688,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2664,7 +2697,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 91,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2675,7 +2708,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2683,6 +2716,36 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "text": "1",
     "x": 76,
     "y": 76,
+  },
+  {
+    "color": 13,
+    "h": 43,
+    "op": "ring",
+    "radius": 22,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 4,
+    "w": 43,
+    "x": 54,
+    "y": 54,
+  },
+  {
+    "h": 43,
+    "op": "clip",
+    "w": 43,
+    "x": 54,
+    "y": 54,
+  },
+  {
+    "color": 13,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(21, 113, 233)",
+    "w": 9,
+    "x": 71,
+    "y": 52,
+  },
+  {
+    "op": "unclip",
   },
   {
     "color": 1,
@@ -2694,7 +2757,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2712,7 +2775,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 71,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2721,7 +2784,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2730,7 +2793,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2739,7 +2802,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 91,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2748,7 +2811,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2778,7 +2841,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2796,7 +2859,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2807,7 +2870,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2826,7 +2889,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2835,7 +2898,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2844,7 +2907,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2874,7 +2937,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2892,7 +2955,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2901,7 +2964,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2931,7 +2994,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2949,7 +3012,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2967,7 +3030,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2978,7 +3041,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2997,7 +3060,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3015,7 +3078,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3033,7 +3096,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3051,7 +3114,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3069,7 +3132,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3080,7 +3143,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3099,7 +3162,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3110,7 +3173,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3129,7 +3192,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3147,7 +3210,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3156,7 +3219,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3174,7 +3237,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3192,7 +3255,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3203,7 +3266,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3213,7 +3276,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 220,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3234,7 +3297,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 220,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3252,7 +3315,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3270,7 +3333,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3281,7 +3344,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3300,7 +3363,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3309,7 +3372,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3339,7 +3402,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3357,7 +3420,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3366,7 +3429,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3396,7 +3459,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3407,7 +3470,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3426,7 +3489,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3437,7 +3500,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3456,7 +3519,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3474,7 +3537,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3492,7 +3555,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3503,7 +3566,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3522,7 +3585,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3540,7 +3603,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3603,7 +3666,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y2": 3,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3633,7 +3696,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3651,7 +3714,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3662,7 +3725,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3681,7 +3744,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3692,7 +3755,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3711,7 +3774,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3722,7 +3785,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3741,7 +3804,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3750,7 +3813,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3768,7 +3831,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3778,15 +3841,6 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   },
   {
     "color": 6,
-    "h": 47,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 9,
-    "x": 23,
-    "y": 52,
-  },
-  {
-    "color": 7,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3795,7 +3849,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3804,7 +3858,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3813,7 +3867,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 91,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3824,7 +3878,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3832,6 +3886,36 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "text": "1",
     "x": 28,
     "y": 76,
+  },
+  {
+    "color": 13,
+    "h": 43,
+    "op": "ring",
+    "radius": 22,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 4,
+    "w": 43,
+    "x": 6,
+    "y": 54,
+  },
+  {
+    "h": 43,
+    "op": "clip",
+    "w": 43,
+    "x": 6,
+    "y": 54,
+  },
+  {
+    "color": 13,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(21, 113, 233)",
+    "w": 9,
+    "x": 23,
+    "y": 52,
+  },
+  {
+    "op": "unclip",
   },
   {
     "color": 1,
@@ -3843,7 +3927,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3861,7 +3945,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 71,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3870,7 +3954,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3879,7 +3963,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3888,7 +3972,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 91,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3906,7 +3990,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3924,7 +4008,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 71,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3933,7 +4017,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3942,7 +4026,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3951,7 +4035,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 91,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3962,7 +4046,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3981,7 +4065,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3992,7 +4076,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4011,7 +4095,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4029,7 +4113,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4040,7 +4124,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4050,7 +4134,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 76,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4068,7 +4152,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4086,7 +4170,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4104,7 +4188,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4115,7 +4199,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4134,7 +4218,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4152,7 +4236,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4170,7 +4254,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4188,7 +4272,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4206,7 +4290,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4224,7 +4308,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4242,7 +4326,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4253,7 +4337,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4263,7 +4347,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 172,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4293,7 +4377,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4311,7 +4395,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4322,7 +4406,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4341,7 +4425,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4359,7 +4443,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4370,7 +4454,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4389,7 +4473,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4400,7 +4484,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4419,7 +4503,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4430,7 +4514,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4449,7 +4533,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4460,7 +4544,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4479,7 +4563,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4497,7 +4581,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4508,7 +4592,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4527,7 +4611,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4536,7 +4620,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4566,7 +4650,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4584,7 +4668,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4602,7 +4686,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4620,7 +4704,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4631,7 +4715,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4650,7 +4734,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4668,7 +4752,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4677,7 +4761,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4707,7 +4791,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4725,7 +4809,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4743,7 +4827,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4761,7 +4845,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4772,7 +4856,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4791,7 +4875,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4800,7 +4884,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4884,7 +4968,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4902,7 +4986,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4912,15 +4996,6 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   },
   {
     "color": 6,
-    "h": 9,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 47,
-    "x": 52,
-    "y": 23,
-  },
-  {
-    "color": 7,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -4929,7 +5004,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 8,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -4938,7 +5013,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 8,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -4947,7 +5022,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 43,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -4958,7 +5033,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4968,6 +5043,36 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 28,
   },
   {
+    "color": 13,
+    "h": 43,
+    "op": "ring",
+    "radius": 22,
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 4,
+    "w": 43,
+    "x": 54,
+    "y": 6,
+  },
+  {
+    "h": 43,
+    "op": "clip",
+    "w": 43,
+    "x": 54,
+    "y": 6,
+  },
+  {
+    "color": 13,
+    "h": 9,
+    "op": "rect",
+    "rgb": "rgb(21, 113, 233)",
+    "w": 47,
+    "x": 52,
+    "y": 23,
+  },
+  {
+    "op": "unclip",
+  },
+  {
     "color": 1,
     "h": 48,
     "op": "rect",
@@ -4977,7 +5082,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4995,7 +5100,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5009,20 +5114,20 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
     "w": 48,
-    "x": 196,
-    "y": 4,
-  },
-  {
-    "color": 9,
-    "h": 47,
-    "op": "rect",
-    "rgb": "rgb(194, 194, 194)",
-    "w": 47,
     "x": 196,
     "y": 4,
   },
   {
     "color": 8,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(194, 194, 194)",
+    "w": 47,
+    "x": 196,
+    "y": 4,
+  },
+  {
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5052,7 +5157,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 4,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5070,7 +5175,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5081,7 +5186,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5100,7 +5205,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5109,7 +5214,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -5118,7 +5223,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -5127,7 +5232,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 56,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -5136,7 +5241,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 91,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -5154,7 +5259,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5172,7 +5277,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5190,7 +5295,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5201,7 +5306,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5220,7 +5325,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5238,7 +5343,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 52,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5256,7 +5361,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5267,7 +5372,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5286,7 +5391,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5295,7 +5400,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -5304,7 +5409,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 104,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -5313,7 +5418,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 104,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -5322,7 +5427,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 139,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -5340,7 +5445,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5358,7 +5463,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5376,7 +5481,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5387,7 +5492,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5406,7 +5511,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5415,7 +5520,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 100,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5445,7 +5550,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5454,7 +5559,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5484,7 +5589,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5495,7 +5600,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5514,7 +5619,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5532,7 +5637,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5541,7 +5646,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5571,7 +5676,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5580,7 +5685,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 148,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5610,7 +5715,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5628,7 +5733,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5646,7 +5751,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5657,7 +5762,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5676,7 +5781,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5694,7 +5799,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5705,7 +5810,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5724,7 +5829,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 196,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5735,7 +5840,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5754,7 +5859,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5772,7 +5877,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5790,7 +5895,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5801,7 +5906,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5820,7 +5925,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5838,7 +5943,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5856,7 +5961,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5867,7 +5972,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5886,7 +5991,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 244,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5904,7 +6009,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5913,7 +6018,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5943,7 +6048,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5961,7 +6066,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5972,7 +6077,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5991,7 +6096,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6002,7 +6107,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -6021,7 +6126,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6039,7 +6144,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
     "y": 292,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6050,7 +6155,7 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",

@@ -7,11 +7,12 @@
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { hint } from "./hint.ts";
 import { executeMove, twiddleGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE, coord, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   encodeDesc,
   newDesc,
@@ -113,14 +114,33 @@ const pinned = describeHintPins({
 });
 
 describe("the frames a hint draws", () => {
-  it("rings the block's outer edge and outlines the tile it serves", () => {
+  it("rings the block's pivot round the turn's arrow, and outlines the tile it serves", () => {
     const pin = pinned("run");
     const { recording } = renderPinnedHint(G, pin);
     const s = pin.state;
     const bands = (color: number) =>
       recording.ops.filter((o) => o.op === "rect" && o.color === color).length;
-    // One band a side of each tile on the block's rim: 4n.
-    expect(bands(COL_HINT)).toBe(4 * s.n);
+    // One ring, on the pivot at the block's middle.
+    expectRing(recording.ops);
+    const [ring] = ringsOf(recording.ops);
+    const move = pin.step.move;
+    if (move.type !== "rotate") throw new Error("not a turn");
+    const ts = PREFERRED_TILE_SIZE;
+    const middle = (k: number) => coord(k, ts) + (s.n * ts) / 2;
+    const cx = ring.x + ring.w / 2;
+    expect(Math.abs(cx - middle(move.x))).toBeLessThanOrEqual(1);
+    expect(Math.abs(ring.y + ring.h / 2 - middle(move.y))).toBeLessThanOrEqual(1);
+    expect(ring.w).toBeLessThan(ts);
+    // Inside it, in its ink, the arrow's arc and then its head, which comes
+    // down the right side into the gap at the bottom for a clockwise turn.
+    const arrow = recording.ops.filter(
+      (o) => o.op === "polygon" && o.fill === ring.color,
+    );
+    expect(arrow).toHaveLength(2);
+    const head = arrow[1];
+    if (head.op !== "polygon") throw new Error("not a polygon");
+    const headX = head.points.reduce((t, [x]) => t + x, 0) / head.points.length;
+    expect(headX > cx).toBe(move.dir === -1);
     // Four sides round one tile.
     expect(bands(COL_HINT_EVIDENCE)).toBe(4);
     expect(recording.ops).toMatchSnapshot();

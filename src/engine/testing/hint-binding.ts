@@ -102,7 +102,7 @@ function defects<W extends Narration>(
       if (named.has(id)) continue;
       named.add(id);
       // An element drawn inside this one marks it too (`MarkKind.within`), so
-      // it goes with it: a ringed note rings its cell.
+      // it goes with it: a struck note marks its cell.
       const drop = new Set([id]);
       for (const q of words.refs)
         if (q.role === r.role)

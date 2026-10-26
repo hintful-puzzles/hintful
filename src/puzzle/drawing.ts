@@ -1,5 +1,6 @@
-import type { GameDrawing } from "../engine/game.ts";
+import type { GameDrawing, RingOptions } from "../engine/game.ts";
 import { HATCH_OPACITY, hatchBands } from "../engine/hatch.ts";
+import { type RingClear, ringShape } from "../engine/ring.ts";
 import type { DrawTextOptions, FontInfo, Point, Rect, Size } from "../engine/types.ts";
 
 const defaultFontInfo: FontInfo = {
@@ -217,6 +218,30 @@ export class Drawing implements GameDrawing<Blitter> {
     }
     this.context.fill();
     this.context.restore();
+  }
+
+  drawRing(
+    box: Rect,
+    clear: RingClear,
+    thickness: number,
+    { room, inside }: RingOptions = {},
+  ): void {
+    const { rect, radius } = ringShape(box, clear, thickness, room);
+    const ink = this.palette.length - 2;
+    const path = (): void => {
+      this.context.beginPath();
+      this.context.roundRect(rect.x, rect.y, rect.w, rect.h, radius);
+    };
+    if (inside) {
+      this.context.save();
+      path();
+      this.context.clip();
+      inside(ink);
+      this.context.restore();
+    }
+    path();
+    this.setUpContext({ strokeColor: ink, lineWidth: thickness });
+    this.context.stroke();
   }
 
   // Invalidation region management (startDraw/drawUpdate/endDraw):

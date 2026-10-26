@@ -4,9 +4,9 @@
 // tile per non-gap cell, and a mid-slide animation frame that draws a
 // moving tile at an interpolated coordinate.
 import { describe, expect, it } from "vitest";
-import { raisedBevelWidth } from "../../engine/draw.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
@@ -162,27 +162,24 @@ describe("the hint mark while the hinted slide animates", () => {
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, state, after, 1, UI, anim / 2, NO_FLASH, step);
 
-    // The hint fill is drawTile's center rect, inset by the shared bevel
-    // width, drawn at the tile's interpolated position — half a cell from its
-    // origin toward the gap it slides into. The inset is read from the
-    // shared helper so it follows the collection's bevel width.
-    const hw = raisedBevelWidth(TS);
+    // The hint ring is round the tile's face, centered on the tile drawn at
+    // its interpolated position — half a cell from its origin toward the gap
+    // it slides into.
     const x0 = coord(from % 4);
     const y0 = coord(Math.floor(from / 4));
     const x1 = coord(to % 4);
     const y1 = coord(Math.floor(to / 4));
-    const ex = x0 + Math.floor(0.5 * (x1 - x0)) + hw;
-    const ey = y0 + Math.floor(0.5 * (y1 - y0)) + hw;
+    const ex = x0 + Math.floor(0.5 * (x1 - x0)) + TS / 2;
+    const ey = y0 + Math.floor(0.5 * (y1 - y0)) + TS / 2;
 
-    const fills = opsOfKind(ops, "rect").filter(
-      (o) =>
-        o.op === "rect" && o.color === 4 && o.w === TS - 2 * hw && o.h === TS - 2 * hw,
-    );
-    // Exactly one hint fill on the frame, and it is mid-flight — in
-    // particular not at the origin cell, where marking the step's own
-    // pre-move index would have painted it.
-    expect(fills).toHaveLength(1);
-    expect({ x: fills[0].x, y: fills[0].y }).toEqual({ x: ex, y: ey });
+    // Exactly one ring on the frame, and it is mid-flight — in particular not
+    // at the origin cell, where marking the step's own pre-move index would
+    // have drawn it.
+    expectRing(ops);
+    const [ring] = ringsOf(ops);
+    // The ring may shift a fraction of a pixel round the number it encloses.
+    expect(Math.abs(ring.x + ring.w / 2 - ex)).toBeLessThanOrEqual(1);
+    expect(Math.abs(ring.y + ring.h / 2 - ey)).toBeLessThanOrEqual(1);
   });
 });
 

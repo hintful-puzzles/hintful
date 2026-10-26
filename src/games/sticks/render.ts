@@ -24,7 +24,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   SHADED,
   surfaceGrid,
@@ -35,7 +34,8 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import {
   type Flash,
   sweepStep,
@@ -67,18 +67,17 @@ export const COL_NUMBER = 3;
 export const COL_ERROR = 4;
 export const COL_CURSOR = 5;
 // Fork additions beyond upstream's COL_* enum: the explained hint.
-export const COL_HINT = 6; // the forced square's line, in the game's own bar shape
-export const COL_HINT_CELL = 7; // the deduction's evidence — an inset ring
+export const COL_HINT_CELL = 6; // the deduction's evidence — an inset ring
 /** A block: the collection's wall. */
-export const COL_BLOCK = 8;
-export const COL_CELL = 9; // the surface of a white cell
-export const COL_TEXT = 10; // a clue's number on an open cell
+export const COL_BLOCK = 7;
+export const COL_CELL = 8; // the surface of a white cell
+export const COL_TEXT = 9; // a clue's number on an open cell
 /** A violated clue's digit on a block, on its badge. */
-export const COL_ERROR_TEXT = 11;
+export const COL_ERROR_TEXT = 10;
 /** The ground of an open cell the win flash is on. */
-export const COL_FLASH = 12;
+export const COL_FLASH = 11;
 /** The ground of an open cell the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 13;
+export const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -98,7 +97,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -157,6 +155,20 @@ interface TileVisual {
   evidence: boolean;
 }
 
+/** Where the clue of the cell at `(x, y)` is written: read by the text and by
+ * the ring round it. */
+function clueText(
+  ts: number,
+  x: number,
+  y: number,
+): { origin: Point; options: DrawTextOptions } {
+  const b = border(ts);
+  return {
+    origin: { x: Math.floor((x + 0.5) * ts) + b, y: Math.floor((y + 0.5) * ts) + b },
+    options: glyphFont(Math.floor(ts * 0.7)),
+  };
+}
+
 function drawTile(
   dr: GameDrawing,
   ts: number,
@@ -193,10 +205,6 @@ function drawTile(
     if (bits & F_VER) dr.drawRect({ x: px + off, y: py, w: thick, h: ts - 1 }, color);
   };
   bar(tile, COL_LINE);
-  // The forced line, in the game's own bar shape and the hint color — a tint
-  // could not say *which* orientation, which is the whole of the move. Drawn,
-  // never placed: the player still makes the move.
-  bar(hintLine, COL_HINT);
 
   if (evidence) {
     const m = Math.floor(ts / 12);
@@ -218,22 +226,36 @@ function drawTile(
     }
   }
 
+  const clueAt = clueText(ts, x, y);
   if (clue !== -1) {
-    const center = {
-      x: Math.floor((x + 0.5) * ts) + b,
-      y: Math.floor((y + 0.5) * ts) + b,
-    };
     // A violated clue on a block is a badge: the error color as a digit is as
     // light as the block in the dark scheme, and is told from it by hue alone.
     const badge = error && black;
-    if (badge) dr.drawCircle(center, Math.floor(ts * 0.38), COL_ERROR, COL_ERROR);
+    if (badge)
+      dr.drawCircle(clueAt.origin, Math.floor(ts * 0.38), COL_ERROR, COL_ERROR);
     dr.drawText(
-      center,
-      glyphFont(Math.floor(ts * 0.7)),
+      clueAt.origin,
+      clueAt.options,
       badge ? COL_ERROR_TEXT : error ? COL_ERROR : black ? COL_NUMBER : COL_TEXT,
       String(clue),
     );
   }
+
+  // The forced line, in the game's own bar shape inside the ring — a ring
+  // alone could not say *which* orientation, which is the whole of the move.
+  // Drawn, never placed: the player still makes the move.
+  if (hintLine)
+    dr.drawRing(
+      { x: px, y: py, w: ts - 1, h: ts - 1 },
+      clue === -1
+        ? NOTHING_TO_CLEAR
+        : {
+            enclose: [textBox(clueAt.origin, clueAt.options, String(clue))],
+            avoid: [],
+          },
+      Math.max(2, Math.floor(ts / 10)),
+      { inside: (ink) => bar(hintLine, ink) },
+    );
 
   if (mistake) {
     // Inset red frame: this placed line contradicts the unique solution

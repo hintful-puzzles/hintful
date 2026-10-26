@@ -56,10 +56,16 @@ Alternatives rejected:
 `drawHatch` index them from the palette's end. `hintInkIndices` derives the
 ring slot from the same place. `HINT_RING` stops being exported to games.
 
-`resolvePalette` throws if a game's own slot holds the ring's color. That
-makes the ring the only thing that can carry it, and is a guard on the
-palette rather than on frames. If a game holds that color for a meaning of
-its own, the census in tasks 1.3 finds it, and the game changes its color.
+The ring's color is no game's to hold by name. It was first planned that
+`resolvePalette` would throw on a game slot holding that color. The census
+(tasks 1.3) refuted that: `DRAG_ADD` is `BLUE`, which is the ring's color,
+and Mines, Rome and Spokes hold `BLUE` for meanings of their own. So:
+
+- No game source names `HINT_RING` (`palette-source.test.ts`).
+- The ink guard counts only the engine's slot as the ring's
+  (`hint-ink.test.ts`).
+- The frame sweep holds that slot to rings and what is drawn inside them
+  (`hint-mark.test.ts`).
 
 ### D3. Pieces and non-cell elements
 
@@ -156,6 +162,14 @@ text: crossable on the ringed cell, avoided round it.
   erase takes the path an `outer` band takes today (`eraseBeforeTiles` and
   the `overlaps` repaint), sized to the ring's own bounds, and a game is
   played with a hint moving between cells.
+- **Where text crowds an element, the ring that fits can be a poor mark.**
+  On 9×11 Hats Hard, about 20 pair notes the hint itself pencils fan out from
+  one dot. Loopy's pair signs are now laid out off edge lines and off each
+  other. Even so, two steps there fit only a 4px ring at one end of a pair's
+  connector, and a pill that sits beside its edge rather than round it. Both
+  are round and cross no text. A floor in `ringShape` on size or on staying
+  round the element would make those steps throw again, so it is left to the
+  owner whether such a spot takes another mark.
 - **A ring that cannot fit throws at play time.** The shapes are judged
   against the frame's text, so a board no test reaches could crash a game.
   The cross-game hint frame tests (`hint-ink.test.ts` and each game's hint

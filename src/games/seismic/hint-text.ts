@@ -4,9 +4,10 @@
  * premise, which the shared walk ends with the move its step makes.
  *
  * Every word pointing at the board is a reference to the mark it points at
- * (`engine/hint-words.ts`): the cell the step decides is ringed, the area a
- * sentence names is striped, and the number just placed that a cull reasons
- * from is outlined.
+ * (`engine/hint-words.ts`): the cell the step decides is ringed, the notes it
+ * rules out are struck, the area a sentence names is striped, and the number
+ * just placed that a cull reasons from is outlined. A cell a strike acts on is
+ * named without a role's word ("these cells"), because its strikes mark it.
  *
  * The keep-apart rule is the one thing the two modes say differently, so every
  * sentence that states how far a number reaches takes `tectonic`.
@@ -35,7 +36,7 @@ import type { Point } from "../../engine/types.ts";
 /** "1 cell", "3 cells". */
 const cells = (n: number): string => (n === 1 ? "1 cell" : `${n} cells`);
 
-/** Where a number rules itself out of, from the ringed cell `at`. "Within
+/** Where a number rules itself out of, from the cell `at`. "Within
  * reach" is the `N` cells {@link say.clean} names for a number `N`, which a
  * sentence about every number at once cannot write as a count. */
 const reach = (at: Point, tectonic: boolean): Narration =>
@@ -50,7 +51,7 @@ const stripedArea = (area: readonly Point[]): Narration =>
 export const say = {
   populate: populateText("number"),
 
-  /** The one-off setup strike, over the notes it rings. "Within N cells" is the
+  /** The one-off setup strike, over the notes it strikes. "Within N cells" is the
    * rule's own reach: two equal numbers N need at least N cells *between*
    * them, so a distance of N or less is a clash. */
   clean:
@@ -58,7 +59,7 @@ export const say = {
     (marks: readonly Note[]): Sentence =>
       unshaped(
         phrase`Now clear the easy ones: cross out ${mark.as(
-          "ring",
+          "strike",
           NOTE,
           marks,
           tectonic
@@ -134,7 +135,7 @@ export const say = {
     const whom =
       targets.length === 1
         ? thisCell(targets[0])
-        : mark.the("ring", CELL, targets, "cell", "each");
+        : mark.as("ring", CELL, targets, "each of these cells");
     const where = tectonic
       ? phrase`in a cell touching ${whom}`
       : phrase`within ${cells(n)} of ${whom}, in line with it`;

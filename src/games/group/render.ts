@@ -18,7 +18,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -29,7 +28,13 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellText,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  NO_TEXT,
+} from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -52,7 +57,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { GroupMove } from "./state.ts";
 import {
@@ -83,22 +89,20 @@ export const COL_PENCIL = 5;
 export const COL_DIAGONAL = 6;
 /** The Check & Save mistake outline. */
 export const COL_MISTAKE = 7;
-/** Hint overlay: the acted-on cell's ring. */
-export const COL_HINT = 8;
 /** Hint overlay: the premise cells outlined as evidence (associativity's three
  * known products, an identity fill's revealing cell), **and** a forcing chain's
  * ordinal — one index, because the number indexes the evidence. */
-export const COL_HINT_CELL = 9;
+export const COL_HINT_CELL = 8;
 /** The yellow body of the pencil-mode indicator glyph. */
-export const COL_PENCIL_BODY = 10;
-export const COL_CELL = 11; // the surface of a cell the player fills
-export const COL_GIVEN = 12; // the lifted surface under a given element
+export const COL_PENCIL_BODY = 9;
+export const COL_CELL = 10; // the surface of a cell the player fills
+export const COL_GIVEN = 11; // the lifted surface under a given element
 /** The line between two cells, and the frame. A subgroup divider is the
  * player's own mark and stays `COL_GRID`. */
-export const COL_LINE = 13;
+export const COL_LINE = 12;
 /** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 14;
-export const COL_FLASH_LEAD = 15;
+export const COL_FLASH = 13;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -113,10 +117,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_DIAGONAL] = surfaceGrid(bg);
   out[COL_MISTAKE] = ERROR;
-  out[COL_HINT] = HINT_RING;
-  // Both hint marks are outlines on the cell's border, so both take a strong
-  // color and differ in shape, not weight. `HINT_OUTLINE` also colors the chain
-  // ordinal; its doc comment says why the index and what it indexes are one role.
+  // `HINT_OUTLINE` also colors the chain ordinal; its doc comment says why the
+  // index and what it indexes are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   out[COL_CELL] = cellSurface(bg);
@@ -127,7 +129,7 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** Highlight payload a Group hint step carries (built in `index.ts`), the
  * `CandidateHighlights` shape the shared plan helpers consume: the premise cells
- * shaded `COL_HINT_CELL` (`area`), the acted-on cell(s) `COL_HINT` (`targets`),
+ * shaded `COL_HINT_CELL` (`area`), the acted-on cell(s) ringed (`targets`),
  * and the struck candidate(s) crossed through among the pencil marks (`marks`).
  * All coordinates are grid `{x = col, y = row}`. */
 export interface GroupHint {
@@ -281,6 +283,143 @@ function markBand(ds: GroupDrawState, x: number, y: number): MarkBand {
   };
 }
 
+// --- tile text ---------------------------------------------------------------
+
+/** A piece of text a tile draws: what it passes `drawText` but the color. */
+interface TileText {
+  readonly origin: Point;
+  readonly options: DrawTextOptions;
+}
+
+/** An element in display cell `(x, y)`, in the middle of the tile. */
+function elementText(ts: number, x: number, y: number): TileText {
+  return {
+    origin: {
+      x: coord(x, ts) + 1 + Math.trunc(ts / 2),
+      y: coord(y, ts) + 1 + Math.trunc(ts / 2),
+    },
+    options: glyphFont(Math.trunc(ts / 2)),
+  };
+}
+
+/** The associativity-failure annotations `error` gives display cell `(x, y)`:
+ * "(ab)c" above its element, "a(bc)" below. */
+function annotations(
+  ts: number,
+  x: number,
+  y: number,
+  error: number,
+  id: boolean,
+): (TileText & { text: string })[] {
+  const out: (TileText & { text: string })[] = [];
+  const cx = coord(x, ts) + 1 + Math.trunc(ts / 2);
+  const ty = coord(y, ts) + 1;
+  const options = glyphFont(Math.trunc(ts / 6));
+  // The three digits of a check, most significant first.
+  const abc = (shift: number) => {
+    const at = (k: number) =>
+      toChar((error >> (shift + k * EF_DIGIT_SHIFT)) & EF_DIGIT_MASK, id);
+    return [at(2), at(1), at(0)];
+  };
+  if (error & EF_LEFT_MASK) {
+    const [a, b, c] = abc(EF_LEFT_SHIFT);
+    out.push({
+      origin: { x: cx, y: ty + Math.trunc(ts / 6) },
+      options,
+      text: `(${a}${b})${c}`,
+    });
+  }
+  if (error & EF_RIGHT_MASK) {
+    const [a, b, c] = abc(EF_RIGHT_SHIFT);
+    out.push({
+      origin: { x: cx, y: ty + ts - Math.trunc(ts / 6) },
+      options,
+      text: `${a}(${b}${c})`,
+    });
+  }
+  return out;
+}
+
+/** Where display cell `(x, y)`'s pencil marks go, each with its value: an
+ * auto-sized grid within the cell. */
+function pencilSlots(
+  ts: number,
+  w: number,
+  x: number,
+  y: number,
+  pencil: number,
+): (TileText & { value: number })[] {
+  const values = Array.from({ length: w }, (_, i) => i + 1).filter(
+    (i) => pencil & (1 << i),
+  );
+  const npencil = values.length;
+  if (!npencil) return [];
+  const tx = coord(x, ts) + 1;
+  const ty = coord(y, ts) + 1;
+  const minph = 2;
+  const pl0 = tx + gridextra(ts);
+  const pr = pl0 + ts - gridextra(ts);
+  const pt0 = ty + gridextra(ts);
+  const pb = pt0 + ts - gridextra(ts);
+
+  let bestsize = 0;
+  let pbest = 0;
+  for (let pw = 3; pw < Math.max(npencil, 4); pw++) {
+    let ph = Math.trunc((npencil + pw - 1) / pw);
+    ph = Math.max(ph, minph);
+    const fw = (pr - pl0) / pw;
+    const fh = (pb - pt0) / ph;
+    const fs = Math.min(fw, fh);
+    if (fs > bestsize) {
+      bestsize = fs;
+      pbest = pw;
+    }
+  }
+  const pw = pbest;
+  let ph = Math.trunc((npencil + pw - 1) / pw);
+  ph = Math.max(ph, minph);
+
+  const fontsize = Math.min(Math.trunc((pr - pl0) / pw), Math.trunc((pb - pt0) / ph));
+  const pl = tx + Math.trunc((ts - fontsize * pw) / 2);
+  const pt = ty + Math.trunc((ts - fontsize * ph) / 2);
+  return values.map((value, j) => ({
+    origin: {
+      x: pl + Math.trunc((fontsize * (2 * (j % pw) + 1)) / 2),
+      y: pt + Math.trunc((fontsize * (2 * Math.trunc(j / pw) + 1)) / 2),
+    },
+    options: glyphFont(fontsize),
+    value,
+  }));
+}
+
+/** The text display cell `(x, y)` shows, for a hint's ring to keep clear of.
+ * The annotations are the cell's own but need not sit inside its ring. */
+function cellText(
+  ds: GroupDrawState,
+  state: GroupState,
+  x: number,
+  y: number,
+): CellText {
+  const { w, id, tileSize: ts } = ds;
+  if (x < 0 || y < 0 || x >= w || y >= w) return NO_TEXT;
+  const gi = ds.sequence[y] * w + ds.sequence[x];
+  const digit = state.grid[gi];
+  if (digit) {
+    const { origin, options } = elementText(ts, x, y);
+    return {
+      enclose: [textBox(origin, options, toChar(digit, id))],
+      avoid: annotations(ts, x, y, ds.errtmp[gi], id).map((a) =>
+        textBox(a.origin, a.options, a.text),
+      ),
+      notes: [],
+    };
+  }
+  const notes = pencilSlots(ts, w, x, y, state.pencil[gi]).map(
+    ({ origin, options, value }) => textBox(origin, options, toChar(value, id)),
+  );
+  return { enclose: [], avoid: [], notes };
+}
+
 // --- per-tile drawing (draw_tile) ------------------------------------------
 
 function drawTile(
@@ -352,89 +491,28 @@ function drawTile(
 
   if (tile & DF_DIGIT_MASK) {
     const digit = tile & DF_DIGIT_MASK;
+    const { origin, options } = elementText(ts, x, y);
     dr.drawText(
-      { x: tx + Math.trunc(ts / 2), y: ty + Math.trunc(ts / 2) },
-      glyphFont(Math.trunc(ts / 2)),
+      origin,
+      options,
       error & EF_LATIN ? COL_ERROR : tile & DF_IMMUTABLE ? COL_GRID : COL_USER,
       toChar(digit, id),
     );
 
     // Associativity-failure annotations: "(ab)c" above, "a(bc)" below.
-    if (error & EF_LEFT_MASK) {
-      const av = (error >> (EF_LEFT_SHIFT + 2 * EF_DIGIT_SHIFT)) & EF_DIGIT_MASK;
-      const bv = (error >> (EF_LEFT_SHIFT + 1 * EF_DIGIT_SHIFT)) & EF_DIGIT_MASK;
-      const cv = (error >> EF_LEFT_SHIFT) & EF_DIGIT_MASK;
-      dr.drawText(
-        { x: tx + Math.trunc(ts / 2), y: ty + Math.trunc(ts / 6) },
-        glyphFont(Math.trunc(ts / 6)),
-        COL_ERROR,
-        `(${toChar(av, id)}${toChar(bv, id)})${toChar(cv, id)}`,
-      );
-    }
-    if (error & EF_RIGHT_MASK) {
-      const av = (error >> (EF_RIGHT_SHIFT + 2 * EF_DIGIT_SHIFT)) & EF_DIGIT_MASK;
-      const bv = (error >> (EF_RIGHT_SHIFT + 1 * EF_DIGIT_SHIFT)) & EF_DIGIT_MASK;
-      const cv = (error >> EF_RIGHT_SHIFT) & EF_DIGIT_MASK;
-      dr.drawText(
-        { x: tx + Math.trunc(ts / 2), y: ty + ts - Math.trunc(ts / 6) },
-        glyphFont(Math.trunc(ts / 6)),
-        COL_ERROR,
-        `${toChar(av, id)}(${toChar(bv, id)}${toChar(cv, id)})`,
-      );
-    }
+    for (const a of annotations(ts, x, y, error, id))
+      dr.drawText(a.origin, a.options, COL_ERROR, a.text);
   } else {
-    // Pencil marks, in an auto-sized grid within the cell.
-    let npencil = 0;
-    for (let i = 1; i <= w; i++) if (pencil & (1 << i)) npencil++;
-    if (npencil) {
-      const minph = 2;
-      const pl0 = tx + gridextra(ts);
-      const pr = pl0 + ts - gridextra(ts);
-      const pt0 = ty + gridextra(ts);
-      const pb = pt0 + ts - gridextra(ts);
-
-      let bestsize = 0;
-      let pbest = 0;
-      for (let pw = 3; pw < Math.max(npencil, 4); pw++) {
-        let ph = Math.trunc((npencil + pw - 1) / pw);
-        ph = Math.max(ph, minph);
-        const fw = (pr - pl0) / pw;
-        const fh = (pb - pt0) / ph;
-        const fs = Math.min(fw, fh);
-        if (fs > bestsize) {
-          bestsize = fs;
-          pbest = pw;
-        }
+    pencilSlots(ts, w, x, y, pencil).forEach(({ origin, options, value: i }) => {
+      dr.drawText(origin, options, COL_PENCIL, toChar(i, id));
+      // A hint-struck candidate keeps its pencil color, with a same-color
+      // strikethrough as the "ruled out" cue.
+      if (struck & (1 << i)) {
+        const r = Math.max(2, Math.trunc(options.size / 3));
+        const { x: px, y: py } = origin;
+        dr.drawLine({ x: px - r, y: py }, { x: px + r, y: py }, COL_PENCIL, 2);
       }
-      const pw = pbest;
-      let ph = Math.trunc((npencil + pw - 1) / pw);
-      ph = Math.max(ph, minph);
-
-      const fontsize = Math.min(
-        Math.trunc((pr - pl0) / pw),
-        Math.trunc((pb - pt0) / ph),
-      );
-      const pl = tx + Math.trunc((ts - fontsize * pw) / 2);
-      const pt = ty + Math.trunc((ts - fontsize * ph) / 2);
-
-      let j = 0;
-      for (let i = 1; i <= w; i++) {
-        if (pencil & (1 << i)) {
-          const dx = j % pw;
-          const dy = Math.trunc(j / pw);
-          const px = pl + Math.trunc((fontsize * (2 * dx + 1)) / 2);
-          const py = pt + Math.trunc((fontsize * (2 * dy + 1)) / 2);
-          dr.drawText({ x: px, y: py }, glyphFont(fontsize), COL_PENCIL, toChar(i, id));
-          // A hint-struck candidate keeps its pencil color, with a same-color
-          // strikethrough as the "ruled out" cue.
-          if (struck & (1 << i)) {
-            const r = Math.max(2, Math.trunc(fontsize / 3));
-            dr.drawLine({ x: px - r, y: py }, { x: px + r, y: py }, COL_PENCIL, 2);
-          }
-          j++;
-        }
-      }
-    }
+    });
   }
 
   // The Check & Save mistake outline (a red inset border).
@@ -525,7 +603,7 @@ export function redraw(
   }
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
-    targetColor: COL_HINT,
+    text: (x: number, y: number) => cellText(ds, state, x, y),
     evidenceColor: COL_HINT_CELL,
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_LINE, (x, y) => {

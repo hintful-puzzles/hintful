@@ -17,7 +17,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   SHADED,
   surfaceGrid,
@@ -26,9 +25,9 @@ import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
@@ -60,16 +59,15 @@ export const COL_GRID = 5;
 export const COL_CURSOR = 6;
 export const COL_ERROR = 7;
 export const COL_CURSOR_GUIDE = 8;
-// Hint inks. The forced cell is ringed COL_HINT, and a cited cell and the
-// reasoned line's clue are outlined COL_HINT_CELL.
-export const COL_HINT = 9;
-export const COL_HINT_CELL = 10;
+// The hint's outline ink: a cited cell and the reasoned line's clue are
+// outlined COL_HINT_CELL.
+export const COL_HINT_CELL = 9;
 /** The faint cross on a cell known to be empty. */
-export const COL_CLEAR_MARK = 11;
+export const COL_CLEAR_MARK = 10;
 /** The ground of a cell the win flash is on, whatever it holds: its body, and
  * its leading edge. */
-export const COL_FLASH = 12;
-export const COL_FLASH_LEAD = 13;
+export const COL_FLASH = 11;
+export const COL_FLASH_LEAD = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -85,7 +83,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR_GUIDE] = CURSOR;
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -147,7 +144,7 @@ export function newDrawState(state: PatternState, tileSize: number): PatternDraw
 const K_CURSOR = 1 << 2;
 const K_MISTAKE = 1 << 3;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
-const K_HINT_TARGET = 1 << 4; // a forced cell (COL_HINT highlight)
+const K_HINT_TARGET = 1 << 4; // a forced cell (ringed)
 const K_HINT_LINE = 1 << 5; // a cell of the reasoned line (hatched)
 const K_HINT_CITED = 1 << 6; // a cited cell (COL_HINT_CELL outline)
 const K_WIN_SHIFT = 8; // the win flash's tone on the cell, in two bits
@@ -200,23 +197,14 @@ function gridSquare(
   if (hintBits & K_HINT_LINE) dr.drawHatch(surface, hatchPeriod(ts));
   if (val === GRID_FULL) drawPiece(dr, content, SHADED_SHAPE, COL_FULL);
 
-  if (hintBits & K_HINT_TARGET) {
-    drawMarkSides(
-      dr,
-      {
-        box: { x: dx, y: dy, w: dw, h: dh },
-        outer: 0,
-        inner: Math.max(2, Math.floor(ts / 10)),
-      },
-      MARK_ALL,
-      COL_HINT,
-    );
-  }
-
   if (hintBits & K_HINT_CITED) {
     const t = Math.max(1, Math.floor(ts / 10));
     drawThickRectOutline(dr, dx, dy, dw, dh, t, COL_HINT_CELL);
   }
+
+  // A cell shows no text, so its ring has none to keep clear of.
+  if (hintBits & K_HINT_TARGET)
+    dr.drawRing(surface, NOTHING_TO_CLEAR, Math.max(2, Math.floor(ts / 10)));
 
   if (mistake) {
     // At the cell's edge, beside the piece, where red is read against the

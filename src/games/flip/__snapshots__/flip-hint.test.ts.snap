@@ -99,7 +99,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 25,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -118,7 +118,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "r": 19,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 7,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -127,7 +127,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 45,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -137,7 +137,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 45,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -147,7 +147,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -157,7 +157,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -167,7 +167,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -177,7 +177,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -187,7 +187,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 57,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -197,7 +197,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 57,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -217,7 +217,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 25,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -236,7 +236,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "r": 19,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -246,7 +246,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 45,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -256,7 +256,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -266,7 +266,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -276,7 +276,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 7,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -285,7 +285,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 45,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -295,7 +295,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 45,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -305,7 +305,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -315,7 +315,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -325,7 +325,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -335,7 +335,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -345,7 +345,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 57,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -355,7 +355,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 57,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -375,7 +375,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 25,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -394,7 +394,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "r": 19,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -404,7 +404,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 45,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -414,7 +414,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -424,7 +424,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -434,7 +434,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 7,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -443,7 +443,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 45,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -453,7 +453,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 51,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -463,7 +463,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 57,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -473,7 +473,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 57,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -493,7 +493,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 73,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -512,7 +512,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "r": 19,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -522,7 +522,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 87,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -532,7 +532,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 93,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -542,7 +542,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 93,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -552,7 +552,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 93,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 7,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -561,7 +561,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 93,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -571,7 +571,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 93,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -581,7 +581,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 99,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -591,7 +591,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 99,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -601,7 +601,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 99,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -611,7 +611,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 99,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -621,7 +621,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 105,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -631,7 +631,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 105,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -651,7 +651,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 73,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -918,7 +918,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 105,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -927,7 +927,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 73,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -936,7 +936,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 73,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -945,7 +945,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 117,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -964,7 +964,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 73,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1201,7 +1201,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 121,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1388,7 +1388,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1397,7 +1397,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 121,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1406,7 +1406,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 121,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1415,7 +1415,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 165,
   },
   {
-    "color": 7,
+    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1434,7 +1434,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 121,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1453,7 +1453,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "r": 19,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1463,7 +1463,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 135,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1473,7 +1473,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1483,7 +1483,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1493,7 +1493,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1503,7 +1503,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1513,7 +1513,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1523,7 +1523,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1533,7 +1533,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 7,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1542,7 +1542,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1552,7 +1552,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1562,7 +1562,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1572,7 +1572,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1582,40 +1582,15 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 6,
-    "h": 3,
-    "op": "rect",
+    "color": 11,
+    "h": 44,
+    "op": "ring",
+    "radius": 22,
     "rgb": "rgb(21, 113, 233)",
-    "w": 47,
-    "x": 73,
-    "y": 121,
-  },
-  {
-    "color": 6,
-    "h": 47,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 3,
-    "x": 73,
-    "y": 121,
-  },
-  {
-    "color": 6,
-    "h": 3,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 47,
-    "x": 73,
-    "y": 165,
-  },
-  {
-    "color": 6,
-    "h": 47,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 3,
-    "x": 117,
-    "y": 121,
+    "thickness": 3,
+    "w": 44,
+    "x": 75,
+    "y": 123,
   },
   {
     "op": "unclip",
@@ -1628,7 +1603,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y": 121,
   },
   {
-    "color": 9,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1657,7 +1632,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "r": 19,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1667,7 +1642,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 135,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1677,7 +1652,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1687,7 +1662,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1697,7 +1672,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1707,7 +1682,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 141,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1717,7 +1692,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1727,7 +1702,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 8,
+    "color": 7,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1737,7 +1712,7 @@ exports[`Flip hint frame > rings the square to press, outlines the unlit squares
     "y2": 147,
   },
   {
-    "color": 8,
+    "color": 7,
     "h": 7,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",

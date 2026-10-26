@@ -18,6 +18,7 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -30,7 +31,6 @@ import { subsetsGame } from "./index.ts";
 import {
   COL_ERROR,
   COL_GUESS,
-  COL_HINT,
   COL_HINT_CELL,
   COL_HINT_SPOT,
   COL_RULED_OUT,
@@ -441,11 +441,16 @@ describe("the hint places the rule-outs it rests on", () => {
     expect(resumed).toBeGreaterThan(0);
   });
 
-  it("the rule-out hint frame boxes the set and the neighbor's sets, and frames the cell", () => {
+  it("the rule-out hint frame rings the set, stripes the cell, and boxes the neighbor's sets", () => {
     const frame = renderPinnedHint(subsetsGame, pinned("ruleOut"));
     const ops = frame.recording.ops;
+    const marks = stepMarks(frame.hint);
+    expect(marks.of("stripes", CELL)).toHaveLength(1);
+    expect(marks.of("ring", TALLY_SET)).toHaveLength(1);
+    expectRing(ops);
+    // One hatch a letter slot of the cell, under its letters.
+    expect(ops.filter((o) => o.op === "hatch")).toHaveLength(4);
     const rects = ops.filter((o) => o.op === "rect");
-    expect(rects.some((o) => o.color === COL_HINT)).toBe(true);
     expect(rects.some((o) => o.color === COL_HINT_CELL)).toBe(true);
     expect(ops).toMatchSnapshot();
   });

@@ -144,7 +144,7 @@ export type SaladRung = (typeof SALAD_RUNGS)[number];
 /** What a Salad hint step draws (docs/hints-marks.md § "The engine colors the
  * marks"): `area` is the deduction's evidence, `targets` the squares it acts
  * on, `marks` the notes it strikes, `clues` the border clues it reasons from,
- * and `ghost` the entry it is asking for, previewed in `COL_HINT` in the shape
+ * and `ghost` the entry it is asking for, previewed inside its ring in the shape
  * of whichever of Salad's three moves it is. */
 export interface SaladHint extends CandidateHighlights {
   clues: number[];

@@ -17,7 +17,9 @@
  * Which part and which effects, `hint.ts` decides; this file decides only how
  * they read.
  *
- * The block to turn is what the step decides, so it is ringed; the tile the
+ * The block to turn is what the step decides, so it is ringed: the ring sits
+ * on its pivot, with the way it turns inside, since every block on a board is
+ * the same size and the pivot names it; the tile the
  * step serves is outlined; finished tiles a turn lifts out, or that come back
  * on it, are striped.
  */

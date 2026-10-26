@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
   type DrawOp,
@@ -34,7 +35,6 @@ import {
   COL_FLASH_LEAD,
   COL_GIVEN,
   COL_GRID,
-  COL_HINT,
   COL_HINT_CELL,
   COL_LOWLIGHT,
 } from "./render.ts";
@@ -251,8 +251,8 @@ describe("ascent hint frames", () => {
     const { recording, hint, marks } = hintFrame("rectBetween");
     expect(marks.area).toHaveLength(2);
     const ops = recording.ops;
-    // A ring is one stroke per side of the cell, and no fill.
-    expect(strokes(ops, COL_HINT)).toHaveLength(CUT_SIDES);
+    // One round ring; an outline is one stroke per side of the cell.
+    expectRing(ops);
     expect(strokes(ops, COL_HINT_CELL)).toHaveLength(CUT_SIDES * 2);
     // Highlight, never perform: the number the step places is not drawn as a
     // placed number.
@@ -265,13 +265,19 @@ describe("ascent hint frames", () => {
     expect(ops).toMatchSnapshot();
   });
 
-  it("Hexagon: the ring follows the hexagon", () => {
+  it("Hexagon: the ring is a circle inside the hexagon", () => {
     const { recording } = renderScenario({
       game: ascentGame,
       id: "5x5mHdn:B6bAb10d11_19dA1_15_17B",
       showHint: true,
     });
-    expect(strokes(recording.ops, COL_HINT)).toHaveLength(6);
+    expectRing(recording.ops);
+    const [ring] = ringsOf(recording.ops);
+    expect(Math.abs(ring.radius * 2 - ring.w)).toBeLessThanOrEqual(1);
+    // A hexagon's sides are half a tile from its center.
+    expect(ring.w + ring.thickness).toBeLessThanOrEqual(
+      ascentGame.preferredTileSize ?? Number.NaN,
+    );
     expect(recording.ops).toMatchSnapshot();
   });
 
@@ -301,18 +307,18 @@ describe("ascent hint frames", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("draws a whole run's route as a path line in the hint's color, ringing its squares", () => {
+  it("rings each square of a whole run's route, the path line inside each ring", () => {
     const { recording, hint, marks } = hintFrame("wholeRun");
     const route = marks.route;
-    expect(hint.move.kind).toBe("places");
+    if (hint.move.kind !== "places") throw new Error("expected a whole run");
     expect(route.length).toBeGreaterThan(2);
-    // One half-segment from each end of every link, and a ring on every
-    // square the step fills.
-    const rings =
-      CUT_SIDES * (hint.move.kind === "places" ? hint.move.cells.length : 0);
-    expect(strokes(recording.ops, COL_HINT)).toHaveLength(
-      2 * (route.length - 1) + rings,
-    );
+    // A ring on every square the step fills; its placed ends hold no ring.
+    const cells = hint.move.cells.length;
+    expectRing(recording.ops, { rings: cells });
+    // Every square it fills lies between two others on the route: a
+    // half-segment toward each, in the ring's ink inside its ring.
+    const [ring] = ringsOf(recording.ops);
+    expect(strokes(recording.ops, ring.color)).toHaveLength(2 * cells);
     expect(recording.ops).toMatchSnapshot();
   });
 

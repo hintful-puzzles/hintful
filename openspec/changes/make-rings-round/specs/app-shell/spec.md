@@ -34,5 +34,5 @@ any color, and SHALL keep the ink's own coverage when it repaints it.
 
 #### Scenario: A game cannot hold the ring's ink
 
-- **WHEN** a game's palette holds the ring's ink in a slot of its own
-- **THEN** resolving the palette throws, naming the game
+- **WHEN** a game's source names the ring's ink
+- **THEN** the cross-game source guard fails and names the game's file

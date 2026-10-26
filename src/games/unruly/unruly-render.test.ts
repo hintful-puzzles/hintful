@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import {
   type DrawOp,
   opsOfKind,
@@ -31,7 +32,6 @@ import {
   COL_FLASH,
   COL_FLASH_LEAD,
   COL_GIVEN,
-  COL_HINT,
   COL_HINT_CELL,
   newDrawState,
   PLACE_ANIM_TIME,
@@ -218,8 +218,8 @@ describe("Unruly redraw", () => {
     expect(widthAt(null, empty, 0)).toEqual([]);
   });
 
-  it("renders a displayed hint: target ring, hatched line, premise ring", () => {
-    // A clue at (0,0) (a ring premise) and an empty target at (2,0) forced to
+  it("renders a displayed hint: target ring, hatched line, premise outline", () => {
+    // A clue at (0,0) (an outlined premise) and an empty target at (2,0) forced to
     // the same kind, both on row 0, which the sentence names.
     const state = withClue(ONE);
     const ds = freshDs(state);
@@ -238,20 +238,15 @@ describe("Unruly redraw", () => {
     };
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH, hint);
-    // Target cell: a COL_HINT **ring**, and no COL_HINT body. A fill in a game
+    // Target cell: a **ring**, and nothing else in its ink. A fill in a game
     // whose move is "put one of two pieces here" reads as a third piece
     // already placed, so the cell keeps its own surface under the mark.
-    expect(
-      opsOfKind(ops, "rect").filter(
-        (o) => o.color === COL_HINT && !(o.w === TS - 1 && o.h === TS - 1),
-      ).length,
-    ).toBe(4);
-    expect(bodies(ops).some((o) => o.color === COL_HINT)).toBe(false);
+    expectRing(ops);
     // The row is hatched, every cell of it whatever it holds, over its own fill.
     const hatches = opsOfKind(ops, "hatch");
     expect(hatches).toHaveLength(state.w2);
     expect(new Set(hatches.map((h) => h.y)).size).toBe(1);
-    // Premise ring: COL_HINT_CELL outline strips around the cited clue.
+    // Premise outline: COL_HINT_CELL strips around the cited clue.
     expect(
       opsOfKind(ops, "rect").filter(
         (o) => o.color === COL_HINT_CELL && !(o.w === TS - 1 && o.h === TS - 1),

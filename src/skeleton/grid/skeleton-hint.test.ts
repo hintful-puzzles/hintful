@@ -9,10 +9,11 @@ import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { skeletonGame } from "./index.ts";
-import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
+import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -116,7 +117,7 @@ describe("skeleton hint frame", () => {
   it("rings the squares and outlines both numbers of a shared step", () => {
     const { recording, step } = renderPinnedHint(skeletonGame, pinned("shared"));
     expect(stepMarks(step).of("outline", CELL)).toHaveLength(2);
-    for (const color of [COL_HINT, COL_HINT_EVIDENCE])
-      expect(recording.ops.some((op) => paintsWith(op, color))).toBe(true);
+    expectRing(recording.ops, { rings: stepMarks(step).of("ring", CELL).length });
+    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
   });
 });

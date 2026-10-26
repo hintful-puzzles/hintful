@@ -248,7 +248,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -363,7 +363,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -391,7 +391,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -419,7 +419,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -475,7 +475,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -531,7 +531,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -656,7 +656,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -771,7 +771,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -973,7 +973,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1088,7 +1088,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1144,7 +1144,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1210,7 +1210,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1266,7 +1266,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1294,7 +1294,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1322,7 +1322,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1437,7 +1437,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1531,7 +1531,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1646,7 +1646,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1702,7 +1702,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1758,7 +1758,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1814,7 +1814,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1908,7 +1908,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1964,7 +1964,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2079,7 +2079,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2135,7 +2135,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2250,7 +2250,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2316,7 +2316,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2400,7 +2400,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2456,7 +2456,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2512,7 +2512,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2540,7 +2540,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2578,7 +2578,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2693,7 +2693,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2749,7 +2749,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2777,7 +2777,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2892,7 +2892,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2920,7 +2920,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3073,7 +3073,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3129,7 +3129,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3244,7 +3244,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3272,7 +3272,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3387,7 +3387,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3415,7 +3415,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3453,7 +3453,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3568,7 +3568,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3683,7 +3683,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3711,7 +3711,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3767,7 +3767,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3882,7 +3882,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3948,7 +3948,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 289,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4063,7 +4063,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 289,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4091,7 +4091,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 289,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4206,7 +4206,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 289,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4262,7 +4262,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "y": 289,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4312,40 +4312,15 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
     "op": "unclip",
   },
   {
-    "color": 10,
-    "h": 2,
-    "op": "rect",
+    "color": 15,
+    "h": 30,
+    "op": "ring",
+    "radius": 15,
     "rgb": "rgb(21, 113, 233)",
-    "w": 32,
-    "x": 289,
-    "y": 33,
-  },
-  {
-    "color": 10,
-    "h": 32,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 289,
-    "y": 33,
-  },
-  {
-    "color": 10,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 32,
-    "x": 289,
-    "y": 63,
-  },
-  {
-    "color": 10,
-    "h": 32,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 319,
-    "y": 33,
+    "thickness": 2,
+    "w": 30,
+    "x": 290,
+    "y": 34,
   },
   {
     "color": 0,
@@ -4359,7 +4334,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4380,7 +4355,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4401,7 +4376,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4422,7 +4397,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4443,7 +4418,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4464,7 +4439,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4485,7 +4460,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4506,7 +4481,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4527,7 +4502,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4558,7 +4533,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 11,
+    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -4579,7 +4554,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4600,7 +4575,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4621,7 +4596,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4642,7 +4617,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4663,7 +4638,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4684,7 +4659,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4705,7 +4680,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4726,7 +4701,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4747,7 +4722,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4768,7 +4743,7 @@ exports[`tents render scenarios > line-count frame: the line hatched, its clue r
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5028,7 +5003,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5084,7 +5059,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5209,7 +5184,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5237,7 +5212,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5352,7 +5327,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5408,7 +5383,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5523,7 +5498,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5551,7 +5526,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5676,7 +5651,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5704,7 +5679,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5906,7 +5881,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6021,7 +5996,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6105,7 +6080,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6199,7 +6174,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6227,7 +6202,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6255,7 +6230,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6370,7 +6345,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6520,7 +6495,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6576,7 +6551,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6632,7 +6607,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6747,7 +6722,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6775,7 +6750,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6841,7 +6816,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6956,7 +6931,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7071,7 +7046,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7214,7 +7189,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7329,7 +7304,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7367,7 +7342,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7395,7 +7370,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7451,7 +7426,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7507,7 +7482,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7535,7 +7510,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7591,7 +7566,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7619,7 +7594,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7744,7 +7719,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7772,7 +7747,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -7828,7 +7803,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8027,7 +8002,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8065,7 +8040,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8093,7 +8068,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8208,7 +8183,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8236,7 +8211,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8264,7 +8239,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8320,7 +8295,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8348,7 +8323,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8473,7 +8448,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8529,7 +8504,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8557,7 +8532,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8672,7 +8647,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 257,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8700,7 +8675,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 289,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8815,7 +8790,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 289,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8843,7 +8818,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 289,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -8993,7 +8968,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "y": 289,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9092,112 +9067,37 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
     "op": "unclip",
   },
   {
-    "color": 10,
-    "h": 2,
-    "op": "rect",
+    "color": 15,
+    "h": 30,
+    "op": "ring",
+    "radius": 15,
     "rgb": "rgb(21, 113, 233)",
-    "w": 32,
-    "x": 65,
-    "y": 193,
+    "thickness": 2,
+    "w": 30,
+    "x": 66,
+    "y": 194,
   },
   {
-    "color": 10,
-    "h": 32,
-    "op": "rect",
+    "color": 15,
+    "h": 30,
+    "op": "ring",
+    "radius": 15,
     "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 65,
-    "y": 193,
+    "thickness": 2,
+    "w": 30,
+    "x": 66,
+    "y": 258,
   },
   {
-    "color": 10,
-    "h": 2,
-    "op": "rect",
+    "color": 15,
+    "h": 30,
+    "op": "ring",
+    "radius": 15,
     "rgb": "rgb(21, 113, 233)",
-    "w": 32,
-    "x": 65,
-    "y": 223,
-  },
-  {
-    "color": 10,
-    "h": 32,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 95,
-    "y": 193,
-  },
-  {
-    "color": 10,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 32,
-    "x": 65,
-    "y": 257,
-  },
-  {
-    "color": 10,
-    "h": 32,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 65,
-    "y": 257,
-  },
-  {
-    "color": 10,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 32,
-    "x": 65,
-    "y": 287,
-  },
-  {
-    "color": 10,
-    "h": 32,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 95,
-    "y": 257,
-  },
-  {
-    "color": 10,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 32,
-    "x": 129,
-    "y": 257,
-  },
-  {
-    "color": 10,
-    "h": 32,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 129,
-    "y": 257,
-  },
-  {
-    "color": 10,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 32,
-    "x": 129,
-    "y": 287,
-  },
-  {
-    "color": 10,
-    "h": 32,
-    "op": "rect",
-    "rgb": "rgb(21, 113, 233)",
-    "w": 2,
-    "x": 159,
-    "y": 257,
+    "thickness": 2,
+    "w": 30,
+    "x": 130,
+    "y": 258,
   },
   {
     "color": 0,
@@ -9211,7 +9111,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9232,7 +9132,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9253,7 +9153,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9284,7 +9184,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 11,
+    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -9305,7 +9205,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9326,7 +9226,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9347,7 +9247,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9368,7 +9268,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9389,7 +9289,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9410,7 +9310,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9431,7 +9331,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9452,7 +9352,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9473,7 +9373,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9494,7 +9394,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9515,7 +9415,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9536,7 +9436,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9557,7 +9457,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9578,7 +9478,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9599,7 +9499,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9620,7 +9520,7 @@ exports[`tents render scenarios > line-neighbors frame: the counted line hatched
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -9927,7 +9827,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9955,7 +9855,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -9983,7 +9883,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10011,7 +9911,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10039,7 +9939,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10067,7 +9967,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10095,7 +9995,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 1,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10123,7 +10023,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10151,7 +10051,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10179,7 +10079,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10294,7 +10194,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10322,7 +10222,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10437,7 +10337,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 33,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10465,7 +10365,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10493,7 +10393,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10521,7 +10421,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10549,7 +10449,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10577,7 +10477,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10692,7 +10592,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10720,7 +10620,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 65,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10748,7 +10648,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10776,7 +10676,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10891,7 +10791,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10919,7 +10819,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10947,7 +10847,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -10975,7 +10875,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11003,7 +10903,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 97,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11031,7 +10931,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11059,7 +10959,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11087,7 +10987,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11115,7 +11015,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11143,7 +11043,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11258,7 +11158,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11286,7 +11186,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 129,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11314,7 +11214,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11429,7 +11329,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11457,7 +11357,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11572,7 +11472,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11600,7 +11500,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11628,7 +11528,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 161,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11743,7 +11643,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11771,7 +11671,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11799,7 +11699,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11827,7 +11727,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11855,7 +11755,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11883,7 +11783,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 193,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -11998,7 +11898,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12026,7 +11926,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12054,7 +11954,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12082,7 +11982,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12197,7 +12097,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12312,7 +12212,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
     "y": 225,
   },
   {
-    "color": 12,
+    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -12335,7 +12235,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12356,7 +12256,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12377,7 +12277,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12398,7 +12298,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12419,7 +12319,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12440,7 +12340,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12461,7 +12361,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12482,7 +12382,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12503,7 +12403,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12524,7 +12424,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12545,7 +12445,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12566,7 +12466,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12587,7 +12487,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12608,7 +12508,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12629,7 +12529,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -12650,7 +12550,7 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 13,
+    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",

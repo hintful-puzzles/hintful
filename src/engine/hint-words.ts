@@ -31,9 +31,12 @@ import type { HintSpan, Point } from "./types.ts";
  */
 export const NARRATION_LIMIT = 120;
 
-/** What a mark means. The engine owns the three, and a game adds one only when
- * none fits, saying why in its change. */
-export type MarkRole = "ring" | "outline" | "stripes";
+/** What a mark means. The engine owns the four, and a game adds one only when
+ * none fits, saying why in its change. A ring is round, and only the engine
+ * draws one (`GameDrawing.drawRing`); a note a step rules out is struck, not
+ * ringed, because a grid of notes leaves no room for a ring round one
+ * (`make-rings-round`, D6). */
+export type MarkRole = "ring" | "outline" | "stripes" | "strike";
 
 interface MarkRoleWords {
   /** The mark, as a thing: "ring". */
@@ -65,6 +68,12 @@ const MARK_ROLES: Readonly<Record<MarkRole, MarkRoleWords>> = {
     means: "the line or region the sentence names",
     listed: ["Stripes", "mark"],
   },
+  strike: {
+    noun: "strike",
+    adjective: "struck",
+    means: "a note the step rules out",
+    listed: ["A strike", "marks"],
+  },
 };
 
 /** Where a bound game's help page puts its list of marks; the help build
@@ -93,7 +102,10 @@ export function legendMarkdown(roles: Partial<Record<MarkRole, string>>): string
  * cell must have one below it"), and a hint speaks the rules' words. */
 const RETIRED_ADJECTIVES = ["hatched", "highlighted"] as const;
 
-const ROLE_ADJECTIVES = Object.values(MARK_ROLES).map((r) => r.adjective);
+/** Every role's adjective ("ringed", "struck", …), as a sentence says it. */
+export const ROLE_ADJECTIVES: readonly string[] = Object.values(MARK_ROLES).map(
+  (r) => r.adjective,
+);
 
 /** A literal that says what only a reference may. "There" names a place except
  * as the existential ("there is one way left"), which points at nothing; "there
@@ -301,6 +313,22 @@ export class Narration {
     return this.narrow(
       (role, kind, key) =>
         !(role === ref.role && kind === ref.kind.name && keys.has(key)),
+    );
+  }
+
+  /** The same words with other marks: each reference `to` returns a mark for
+   * is drawn as that mark instead, and keeps the words it was said in. A cell
+   * a step strikes notes in is marked by its strikes ({@link MarkRole}). */
+  remarked(to: (ref: MarkRef) => MarkRef | null): this {
+    return this.remade(
+      this.parts.map((p) => {
+        if (!isReference(p)) return p;
+        const next = to(p);
+        if (next === null) return p;
+        const said = p.words(p.elements);
+        checkAdjective(next.role, said);
+        return { ...next, words: () => said } as Reference<unknown>;
+      }),
     );
   }
 

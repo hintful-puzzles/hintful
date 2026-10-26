@@ -20,7 +20,6 @@ import {
   FLASH,
   FLASH_LEAD,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   SHADED,
   surfaceGrid,
@@ -35,7 +34,8 @@ import {
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
@@ -74,12 +74,11 @@ export const COL_TEXT_SOLVED_ON_PIECE = 8;
 export const COL_ERROR = 9;
 export const COL_ERROR_TEXT = 10;
 export const COL_CURSOR = 11;
-export const COL_HINT = 12;
-export const COL_HINT_EVIDENCE = 13;
+export const COL_HINT_EVIDENCE = 12;
 /** The ground of a cell the win flash is on, whatever it holds: its body, and
  * its leading edge. */
-export const COL_FLASH = 14;
-export const COL_FLASH_LEAD = 15;
+export const COL_FLASH = 13;
+export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -98,7 +97,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = HINT_RING;
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
@@ -152,6 +150,19 @@ export function newDrawState(state: MosaicState, tileSize: number): MosaicDrawSt
 
 // --- cell drawing ---------------------------------------------------------------
 
+/** Where the number of the square at `(startX, startY)` is written: read by
+ * the text and by the ring round the square. */
+function clueText(
+  startX: number,
+  startY: number,
+  ts: number,
+): { origin: Point; options: DrawTextOptions } {
+  return {
+    origin: { x: startX + Math.floor(ts / 2) - 1, y: startY + Math.floor(ts / 2) - 1 },
+    options: glyphFont(Math.floor((ts * 3) / 5)),
+  };
+}
+
 function drawCell(
   dr: GameDrawing,
   cell: number,
@@ -163,7 +174,8 @@ function drawCell(
   const startX = x * ts + margin(ts);
   const startY = y * ts + margin(ts);
 
-  dr.clip({ x: startX - 1, y: startY - 1, w: ts, h: ts });
+  const tile = { x: startX - 1, y: startY - 1, w: ts, h: ts };
+  dr.clip(tile);
 
   // Top and left grid lines live inside this cell's tile; the margin
   // row/column draws only the closing lines of the previous cells.
@@ -220,11 +232,9 @@ function drawCell(
       dr.drawRect({ x: sx + span - t, y: sy, w: t, h: span }, COL_ERROR);
     }
 
+    const clue = clueText(startX, startY, ts);
     if (clueVal >= 0) {
-      const at = {
-        x: startX + Math.floor(ts / 2) - 1,
-        y: startY + Math.floor(ts / 2) - 1,
-      };
+      const at = clue.origin;
       let textColor: number;
       if (cell & STATE_ERROR) {
         // On the piece and on the clear square a contradicted number is a
@@ -240,11 +250,11 @@ function drawCell(
       } else {
         textColor = shaded ? COL_TEXT_ON_PIECE : COL_TEXT;
       }
-      dr.drawText(at, glyphFont(Math.floor((ts * 3) / 5)), textColor, String(clueVal));
+      dr.drawText(at, clue.options, textColor, String(clueVal));
     }
 
-    // The hint's marks lie inside the square, over its edge, so its own
-    // repaint undoes them: the block's outline, then the ring on top of it.
+    // The hint's marks lie inside the tile, so its own repaint undoes them:
+    // the block's outline over its edge, then the ring round the square.
     const sides = cell >>> HINT_SIDES_SHIFT;
     const band: MarkBand = {
       box,
@@ -252,7 +262,20 @@ function drawCell(
       inner: Math.max(2, ts >> 4),
     };
     drawMarkSides(dr, band, (sides >> 4) & MARK_ALL, COL_HINT_EVIDENCE);
-    drawMarkSides(dr, band, sides & MARK_ALL, COL_HINT);
+    if (sides & MARK_ALL)
+      dr.drawRing(
+        box,
+        clueVal >= 0
+          ? {
+              enclose: [textBox(clue.origin, clue.options, String(clueVal))],
+              avoid: [],
+            }
+          : NOTHING_TO_CLEAR,
+        band.inner,
+        // The number sits a pixel off the square's center at small sizes,
+        // so the ring may use the whole tile to center on it.
+        { room: tile },
+      );
     // The number a step names is circled, inside the square and clear of its
     // edge, so it shows on a square the step also rings. On the piece the
     // circle takes the number's own ink: the evidence color against the piece
@@ -270,7 +293,7 @@ function drawCell(
   }
 
   dr.unclip();
-  dr.drawUpdate({ x: startX - 1, y: startY - 1, w: ts, h: ts });
+  dr.drawUpdate(tile);
 }
 
 // --- redraw ---------------------------------------------------------------

@@ -21,14 +21,14 @@ import {
   givenSurface,
   HELD,
   HINT_OUTLINE,
-  HINT_RING,
   highlightWash,
   INK,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color } from "../../engine/types.ts";
+import { type RingClear, textBox } from "../../engine/ring.ts";
+import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { PIECE, SPAN } from "./hint-text.ts";
@@ -85,15 +85,14 @@ export const COL_POSSIBLE = 6;
 export const COL_GRID = 7;
 export const COL_WARNING = 8;
 export const COL_CURSOR = 9;
-/** The hint's action color: the bridge to draw, or the cross to place. */
-export const COL_HINT = 10;
-/** The hint's evidence color: the islands and bridges the argument counts. */
-export const COL_HINT_CELL = 11;
+/** The hint's evidence color: the islands and bridges the argument counts.
+ * The span a step decides is ringed by the engine. */
+export const COL_HINT_CELL = 10;
 /** The face of an island that still has bridges to take: the quiet surface,
  * a step off the board, so a settled island's lift reads against it. */
-export const COL_ISLAND = 12;
+export const COL_ISLAND = 11;
 /** What the leading edge of the win flash is on. */
-export const COL_FLASH_LEAD = 13;
+export const COL_FLASH_LEAD = 12;
 
 // A tile's lead word: whether the win flash's leading edge, and not its body,
 // is on the square itself and on each of its four neighbors. A tile draws
@@ -173,26 +172,28 @@ const HL_COUNTMASK = 0x07;
 const HL_CROSS = 0x08;
 /** The argument counts the bridge already here. */
 const HL_CITED = 0x10;
-const HL_MASK = 0x1f;
+/** The span is one the step decides, which its line squares ring. */
+const HL_RING = 0x20;
+const HL_MASK = 0x3f;
 /** An island the step's words outline. */
 const HI_CITED = 0x02;
 const HI_MASK = 0x03;
 // Shifts within an island square's hint word.
 const H_I_ISLAND_SHIFT = 0;
 const H_I_LINE_SHIFT_L = 2;
-const H_I_LINE_SHIFT_R = 7;
-const H_I_LINE_SHIFT_U = 12;
-const H_I_LINE_SHIFT_D = 17;
+const H_I_LINE_SHIFT_R = 8;
+const H_I_LINE_SHIFT_U = 14;
+const H_I_LINE_SHIFT_D = 20;
 // Shifts within a line square's hint word.
 const H_L_ISLAND_SHIFT_L = 0;
 const H_L_ISLAND_SHIFT_R = 2;
 const H_L_ISLAND_SHIFT_U = 4;
 const H_L_ISLAND_SHIFT_D = 6;
 const H_L_LINE_SHIFT_H = 8;
-const H_L_LINE_SHIFT_V = 13;
+const H_L_LINE_SHIFT_V = 14;
 /** The limit the step writes, on the span's middle square as the board's is. */
-const H_L_LIMIT_SHIFT_H = 18;
-const H_L_LIMIT_SHIFT_V = 20;
+const H_L_LIMIT_SHIFT_H = 20;
+const H_L_LIMIT_SHIFT_V = 22;
 
 export interface BridgesDrawState {
   tileSize: number;
@@ -244,7 +245,6 @@ export function colors(defaultBackground: Color): Color[] {
     // from, and the cursor *fills* the island under its clue digit, which is
     // the "you are here" wash Solo's family draws its cursor cell with.
     highlightWash(background),
-    HINT_RING, // COL_HINT
     HINT_OUTLINE, // COL_HINT_CELL
     cellSurface(background), // COL_ISLAND
     FLASH_LEAD, // COL_FLASH_LEAD
@@ -354,7 +354,61 @@ function drawLimit(
   const w = div(ts * 3, 4);
   const h = div(ts, 2);
   dr.drawRect({ x: cx - div(w, 2), y: cy - div(h, 2), w, h }, COL_BACKGROUND);
-  dr.drawText({ x: cx, y: cy }, glyphFont(div(ts * 2, 5)), col, `≤${limit}`);
+  const { origin, options, text } = limitText(ts, cx, cy, limit);
+  dr.drawText(origin, options, col, text);
+}
+
+/** Where a limit's text is drawn, which the mark and a hint's ring both read. */
+function limitText(
+  ts: number,
+  cx: number,
+  cy: number,
+  limit: number,
+): { origin: Point; options: DrawTextOptions; text: string } {
+  return {
+    origin: { x: cx, y: cy },
+    options: glyphFont(div(ts * 2, 5)),
+    text: `≤${limit}`,
+  };
+}
+
+/**
+ * The limits a line square writes, centered at (`cx`, `cy`) in pixels: the
+ * step's in place of the board's on each span, each flagged `hinted`. A
+ * square in the middle of both a limited row and a limited column is rare,
+ * and there the two marks move apart so each stays readable.
+ */
+function limitsOf(
+  ts: number,
+  ox: number,
+  oy: number,
+  data: number,
+  hint: number,
+): { horizontal: boolean; limit: number; hinted: boolean; cx: number; cy: number }[] {
+  const hlimHint = (hint >>> H_L_LIMIT_SHIFT_H) & DLIM_MASK;
+  const vlimHint = (hint >>> H_L_LIMIT_SHIFT_V) & DLIM_MASK;
+  const hlim = hlimHint || (data >>> D_L_LIMIT_SHIFT_H) & DLIM_MASK;
+  const vlim = vlimHint || (data >>> D_L_LIMIT_SHIFT_V) & DLIM_MASK;
+  const apart = hlim && vlim ? div(ts, 4) : 0;
+  const half = div(ts, 2);
+  const out = [];
+  if (hlim)
+    out.push({
+      horizontal: true,
+      limit: hlim,
+      hinted: hlimHint !== 0,
+      cx: ox + half,
+      cy: oy + half - apart,
+    });
+  if (vlim)
+    out.push({
+      horizontal: false,
+      limit: vlim,
+      hinted: vlimHint !== 0,
+      cx: ox + half - apart,
+      cy: oy + half + apart,
+    });
+  return out;
 }
 
 /** The color a span's own marks take: the same choice the bars make. */
@@ -381,9 +435,11 @@ function lineColor(ldata: number, flashCol: number): number {
  * function already draws rather than inventing one
  * (docs/hints-marks.md § "Echo the move's shape in the hint color"): a span the
  * step wants bridged is drawn as the bundle it would become, with the bars the
- * step *adds* in `COL_HINT` over the ones already there; a span it wants
- * blocked takes the game's own pair of crosses in `COL_HINT`; and a bridge the
- * argument merely counts keeps its shape and takes `COL_HINT_CELL`.
+ * step *adds* in `hintInk` over the ones already there; a span it wants
+ * blocked takes the game's own pair of crosses in `hintInk`; and a bridge the
+ * argument merely counts keeps its shape and takes `COL_HINT_CELL`. `hintInk`
+ * is the ring's, inside the ring round the span, and null everywhere else,
+ * where what the step adds is left out.
  */
 function drawGeneralLine(
   dr: GameDrawing,
@@ -399,6 +455,7 @@ function drawGeneralLine(
   which: number,
   hdata: number,
   flashCol: number,
+  hintInk: number | null = null,
 ): void {
   const raw = ldata & DL_COUNTMASK;
   // A cross and a "possible bridge" bevel are both drawn *instead of* bridges,
@@ -424,20 +481,20 @@ function drawGeneralLine(
   if (hdata & HL_CROSS) {
     // Drawn under `which & 2` only, so the pair lands once per tile like the
     // bridge bars rather than twice.
-    if (which & 2) {
+    if (which & 2 && hintInk !== null) {
       drawCross(
         dr,
         ts,
         ox + ts8(1, ts) * fx + ts8(3, ts) * ax,
         oy + ts8(1, ts) * fy + ts8(3, ts) * ay,
-        COL_HINT,
+        hintInk,
       );
       drawCross(
         dr,
         ts,
         ox + ts8(5, ts) * fx + ts8(3, ts) * ax,
         oy + ts8(5, ts) * fy + ts8(3, ts) * ay,
-        COL_HINT,
+        hintInk,
       );
     }
     return;
@@ -484,6 +541,8 @@ function drawGeneralLine(
     }
     if (which & 2) {
       for (let i = 0; i < lh; i++, loff += lw + gw) {
+        const color = hintFrom >= 0 && i >= hintFrom ? hintInk : fg;
+        if (color === null) continue;
         dr.drawRect(
           {
             x: ox + (loff + gw) * ax,
@@ -491,7 +550,7 @@ function drawGeneralLine(
             w: len * fx + lw * ax,
             h: len * fy + lw * ay,
           },
-          hintFrom >= 0 && i >= hintFrom ? COL_HINT : fg,
+          color,
         );
       }
     }
@@ -508,8 +567,9 @@ function drawHline(
   which: number,
   hint: number,
   flashCol: number,
+  hintInk: number | null = null,
 ): void {
-  drawGeneralLine(dr, ts, ox, oy, 1, 0, 0, 1, w, vdata, which, hint, flashCol);
+  drawGeneralLine(dr, ts, ox, oy, 1, 0, 0, 1, w, vdata, which, hint, flashCol, hintInk);
 }
 
 function drawVline(
@@ -522,8 +582,9 @@ function drawVline(
   which: number,
   hint: number,
   flashCol: number,
+  hintInk: number | null = null,
 ): void {
-  drawGeneralLine(dr, ts, ox, oy, 0, 1, 1, 0, h, vdata, which, hint, flashCol);
+  drawGeneralLine(dr, ts, ox, oy, 0, 1, 1, 0, h, vdata, which, hint, flashCol, hintInk);
 }
 
 /**
@@ -659,6 +720,69 @@ function drawIslandTile(
   dr.drawUpdate({ x: ox, y: oy, w: ts, h: ts });
 }
 
+/** Where the ring round a span goes (`GameDrawing.drawRing`). */
+interface SpanRing {
+  readonly box: Rect;
+  readonly clear: RingClear;
+  readonly room: Rect;
+}
+
+/**
+ * The ring round the span through line square (`x`, `y`), horizontal or not:
+ * a pill along its line squares, from one island's square to the other's,
+ * which every one of them draws the same. It holds the limit the step writes
+ * on the span and keeps off the board's limits on the squares it crosses,
+ * read from this frame's words, `grid` and `hint`.
+ */
+function spanRing(
+  s: BridgesState,
+  ts: number,
+  b: number,
+  x: number,
+  y: number,
+  horizontal: boolean,
+  grid: Int32Array,
+  hint: Int32Array,
+): SpanRing {
+  const dx = horizontal ? 1 : 0;
+  const dy = horizontal ? 0 : 1;
+  const squares: { x: number; y: number }[] = [];
+  for (let k = -1; ; k--) {
+    if (s.gridAt(x + k * dx, y + k * dy) & G_ISLAND) break;
+    squares.unshift({ x: x + k * dx, y: y + k * dy });
+  }
+  squares.push({ x, y });
+  for (let k = 1; ; k++) {
+    if (s.gridAt(x + k * dx, y + k * dy) & G_ISLAND) break;
+    squares.push({ x: x + k * dx, y: y + k * dy });
+  }
+  const first = squares[0];
+  const ox = toCoord(first.x, ts, b);
+  const oy = toCoord(first.y, ts, b);
+  const along = squares.length * ts;
+  const room = { x: ox, y: oy, w: horizontal ? along : ts, h: horizontal ? ts : along };
+  // Wide enough to hold a double bridge's bundle clear of the stroke.
+  const across = div(ts * 7, 8);
+  const inset = div(ts - across, 2);
+  const box = horizontal
+    ? { x: ox, y: oy + inset, w: along, h: across }
+    : { x: ox + inset, y: oy, w: across, h: along };
+  const enclose: Rect[] = [];
+  const avoid: Rect[] = [];
+  for (const sq of squares) {
+    const c = s.idx(sq.x, sq.y);
+    const sx = toCoord(sq.x, ts, b);
+    const sy = toCoord(sq.y, ts, b);
+    for (const l of limitsOf(ts, sx, sy, grid[c], hint[c])) {
+      const { origin, options, text } = limitText(ts, l.cx, l.cy, l.limit);
+      (l.hinted && l.horizontal === horizontal ? enclose : avoid).push(
+        textBox(origin, options, text),
+      );
+    }
+  }
+  return { box, clear: { enclose, avoid }, room };
+}
+
 function drawLineTile(
   dr: GameDrawing,
   ts: number,
@@ -668,6 +792,7 @@ function drawLineTile(
   data: number,
   hint: number,
   lead: number,
+  ringOf: (horizontal: boolean) => SpanRing,
 ): void {
   const ox = toCoord(x, ts, b);
   const oy = toCoord(y, ts, b);
@@ -730,22 +855,29 @@ function drawLineTile(
     ihint(H_L_ISLAND_SHIFT_D),
     flashSlot(lead, LEAD_D),
   );
-  // Last, so neither an island's rim nor a bridge bar covers it. A square in
-  // the middle of both a limited row and a limited column is rare, and there
-  // the two marks move apart so each stays readable.
-  const hlimHint = (hint >>> H_L_LIMIT_SHIFT_H) & DLIM_MASK;
-  const vlimHint = (hint >>> H_L_LIMIT_SHIFT_V) & DLIM_MASK;
-  const hlim = hlimHint || (data >>> D_L_LIMIT_SHIFT_H) & DLIM_MASK;
-  const vlim = vlimHint || (data >>> D_L_LIMIT_SHIFT_V) & DLIM_MASK;
-  const apart = hlim && vlim ? div(ts, 4) : 0;
-  const half = div(ts, 2);
-  if (hlim) {
-    const col = hlimHint ? COL_HINT : lineColor(hdata, own);
-    drawLimit(dr, ts, ox + half, oy + half - apart, hlim, col);
-  }
-  if (vlim) {
-    const col = vlimHint ? COL_HINT : lineColor(vdata, own);
-    drawLimit(dr, ts, ox + half - apart, oy + half + apart, vlim, col);
+  // Last, so neither an island's rim nor a bridge bar covers it. The limit
+  // the step writes is drawn inside its ring.
+  const limits = limitsOf(ts, ox, oy, data, hint);
+  for (const { horizontal, limit, hinted, cx, cy } of limits)
+    if (!hinted)
+      drawLimit(dr, ts, cx, cy, limit, lineColor(horizontal ? hdata : vdata, own));
+  // The ring round a span the step decides, with what it decides inside:
+  // the bars it adds, its crosses, or its limit. Every line square of the
+  // span draws the one ring in its own clip.
+  for (const horizontal of [true, false]) {
+    const hl = horizontal ? hhint : vhint;
+    if (!(hl & HL_RING)) continue;
+    const { box, clear, room } = ringOf(horizontal);
+    dr.drawRing(box, clear, Math.max(2, div(ts, 16)), {
+      room,
+      inside: (ink) => {
+        if (horizontal) drawHline(dr, ts, ox, oy, ts, hdata, 2, hhint, own, ink);
+        else drawVline(dr, ts, ox, oy, ts, vdata, 2, vhint, own, ink);
+        for (const l of limits)
+          if (l.hinted && l.horizontal === horizontal)
+            drawLimit(dr, ts, l.cx, l.cy, l.limit, ink);
+      },
+    });
   }
   dr.unclip();
   dr.drawUpdate({ x: ox, y: oy, w: ts, h: ts });
@@ -872,7 +1004,7 @@ function hintWords(
   for (const ringed of marks.of("ring", SPAN)) {
     const t = decides.get(SPAN.key(ringed));
     if (!t) continue;
-    span(t, t.blocked ? HL_CROSS : t.bridges & HL_COUNTMASK);
+    span(t, HL_RING | (t.blocked ? HL_CROSS : t.bridges & HL_COUNTMASK));
     if (t.limit !== null) {
       const m = middleOf(t);
       const shift = t.x1 !== t.x2 ? H_L_LIMIT_SHIFT_H : H_L_LIMIT_SHIFT_V;
@@ -1124,7 +1256,9 @@ export function redrawBridges(
         if (x === w - 1) drawEdgeTile(dr, ts, b, x + 1, y, -1, 0, newval, hv, lead);
         if (y === h - 1) drawEdgeTile(dr, ts, b, x, y + 1, 0, -1, newval, hv, lead);
       } else {
-        drawLineTile(dr, ts, b, x, y, newval, newhintval, lead);
+        drawLineTile(dr, ts, b, x, y, newval, newhintval, lead, (horizontal) =>
+          spanRing(s, ts, b, x, y, horizontal, newgrid, newhint),
+        );
       }
       ds.grid[c] = newval;
       ds.lead[c] = lead;

@@ -23,9 +23,8 @@ import type { Point } from "../../engine/types.ts";
 import type { BarrierTechnique, PlaceTechnique } from "./solver.ts";
 
 /** A spot: two neighboring squares, by index, which a domino could cover. A
- * step decides one, and rings both its squares: joined as one domino when it
- * places one there, or apart with a line drawn between them when it rules one
- * out. */
+ * step decides one, and rings its two squares as one domino, with a line drawn
+ * across its middle when it rules one out. */
 type Spot = readonly [number, number];
 
 export const SPOT: MarkKind<Spot> = {

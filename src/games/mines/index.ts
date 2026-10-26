@@ -28,7 +28,6 @@ import {
   FLASH_LEAD,
   givenSurface,
   HINT_OUTLINE,
-  HINT_RING,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -91,7 +90,6 @@ import {
   COL_FLASH,
   COL_FLASH_LEAD,
   COL_GRID,
-  COL_HINT,
   COL_HINT_EVIDENCE,
   COL_MINE,
   COL_MINE_GLINT,
@@ -623,7 +621,6 @@ export const minesGame: Game<
     // Pink: it has to read on an opened square and a covered one alike, and
     // the count digits have the rest spoken for.
     ret[COL_CURSOR] = PINK;
-    ret[COL_HINT] = HINT_RING;
     ret[COL_HINT_EVIDENCE] = HINT_OUTLINE;
     return ret;
   },

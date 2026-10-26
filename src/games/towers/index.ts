@@ -628,7 +628,9 @@ export const towersGame: Game<
   hintRungs: TOWERS_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the cell the step decides, or whose pencil marks it crosses out. The heights it strikes are crossed through in their own color.",
+      ring: "the cell the step fills in with a height.",
+      strike:
+        "the heights the step crosses out of the pencil marks, crossed through in their own color, and so the cell they are in.",
       outline:
         "what the step reasons from: the clue it counts, in its slot beside the grid, the tower just placed, the cells of a set, or the numbered cells of a chain, in the order it runs.",
       stripes:

@@ -12,7 +12,7 @@ import { type CandidateReading, nakedSingles } from "../../engine/candidate-hint
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import {
@@ -27,7 +27,7 @@ import {
 } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { seismicGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL, COL_NUM_PENCIL } from "./render.ts";
+import { COL_HINT_CELL, COL_NUM_PENCIL } from "./render.ts";
 import { placeNumber, regionsViable } from "./solver.ts";
 import {
   areaBits,
@@ -381,7 +381,7 @@ describe.each(
                 [...new Set(ps.map((c) => cellIndex(state, c)))].sort((a, b) => a - b);
               expect(
                 cells(hl.targets),
-                `${where}: the ringed cells are the struck ones`,
+                `${where}: the cells named are the struck ones`,
               ).toEqual(cells(m.marks));
               expect(new Set(m.marks.map((k) => k.n)).size, where).toBe(1);
             } else {
@@ -583,7 +583,7 @@ describe("the sentences at their extremes", () => {
       "The striped area's 1 can only go within 1 cell of this cell, in line with it",
     );
     expect(say.starve([at], 4, targets(3), true).text).toBe(
-      "The striped area's 4 can only go in a cell touching each ringed cell",
+      "The striped area's 4 can only go in a cell touching each of these cells",
     );
     expect(say.note(at, [2], false, true).text).toBe(
       "Only 2 isn't already in this cell's area or in a cell touching it, so pencil it in.",
@@ -625,13 +625,15 @@ describe("the sentences at their extremes", () => {
 // --- frames -----------------------------------------------------------------
 
 describe("the frames a hint draws", () => {
-  it("rings each struck cell, hatches the starved area, and strikes each note through", () => {
+  it("rings no struck cell, hatches the starved area, and strikes each note through", () => {
     const found = renderPinnedHint(seismicGame, pinned("starvedArea"));
     const { step } = found;
     const hl = step.highlights as SeismicHint;
     const ops = found.recording.ops;
 
-    expectRing(ops, COL_HINT, hl.targets.length);
+    // A strike step rings nothing: its struck notes mark each cell, which a
+    // ring could not go round clear of its notes (`make-rings-round`, D6).
+    expect(ringsOf(ops)).toEqual([]);
     // The area the sentence names is hatched, cell by cell, and outlined nowhere.
     const area = hl.hatch ?? [];
     expect(area.length).toBeGreaterThan(1);

@@ -7,10 +7,12 @@
  * asserts the center-dot grid it draws.
  */
 import { describe, expect, it } from "vitest";
+import { EDGE } from "../../engine/edge-hint.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { D, L, R, U } from "../../engine/square-edges.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
+import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -27,7 +29,6 @@ import {
   COL_FLASH,
   COL_FLASH_LEAD,
   COL_GRID,
-  COL_HINT,
   COL_HINT_CELL,
   COL_LINE,
   COL_MISTAKE,
@@ -142,13 +143,12 @@ describe("Pearl render scenarios", () => {
       /must take the ringed edges, and on through the next pearl\.$/,
     );
     expect(hl?.targets.filter((t) => t.line)).toHaveLength(3);
-    // The target is the proposed line, a stroke rather than a laid rect.
-    expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(
-      true,
-    );
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(
-      false,
-    );
+    // Each target edge is ringed, a pill drawn by both of its squares, round
+    // the proposed line: a stroke rather than a laid rect.
+    expectRing(recording.ops, { rings: 2 * stepMarks(hint).of("ring", EDGE).length });
+    const ink = ringsOf(recording.ops)[0].color;
+    expect(recording.ops.some((o) => o.op === "line" && o.color === ink)).toBe(true);
+    expect(recording.ops.some((o) => o.op === "rect" && o.color === ink)).toBe(false);
     // The evidence square is outlined, a band on each of its four sides.
     const band = recording.ops.filter(
       (o) => o.op === "rect" && o.color === COL_HINT_CELL,
@@ -159,10 +159,10 @@ describe("Pearl render scenarios", () => {
 
   it("a hint that rules an edge out draws the cross it asks for", () => {
     const { recording } = renderPinnedHint(pearlGame, pinned("rulesAnEdgeOut"));
-    const crosses = recording.ops.filter(
-      (o) => o.op === "line" && o.color === COL_HINT,
-    );
-    // Two strokes per half cross, one half from each square beside the edge.
+    const ink = ringsOf(recording.ops)[0].color;
+    const crosses = recording.ops.filter((o) => o.op === "line" && o.color === ink);
+    // Two strokes per half cross, one half from each square beside the edge,
+    // inside the ring round it.
     expect(crosses.length).toBeGreaterThanOrEqual(4);
   });
 
