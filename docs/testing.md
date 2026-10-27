@@ -580,12 +580,15 @@ to write.
   tier"); the conditions are in the `build-pipeline` spec.
 
 **The gate holds every test file to a budget of CPU time**, and the suite to
-one, and fails a run that goes over (`scripts/checks/test-cost.ts`, where the
-table is): 120 seconds a file (a spread file's share counting as one), 40
-minutes the suite. The seconds are a reference runner's: each run times a
-fixed workload (`cpu-unit.ts`) and scales its costs by it, since GitHub's
-runners differ by nearly twice in speed from run to run. A laptop without
-hyperthreads reads lower than CI after scaling, so CI is the stricter judge.
+one (`scripts/checks/test-cost.ts`, where the table is): 120 seconds a file
+(a spread file's share counting as one), 40 minutes the suite. The seconds
+are a reference runner's: each run times a fixed workload (`cpu-unit.ts`)
+and scales its costs by it, since GitHub's runners differ by nearly twice in
+speed from run to run. Scaling leaves an error of about a fifth between
+runners, so a cost over its budget is named, and fails the run only past a
+quarter over. Treat a named cost as the one to cut: the next runner may be
+the slower one. A laptop without hyperthreads reads lower than CI after
+scaling, so CI is the stricter judge.
 CPU time is the work, not the clock: a loaded machine does not fail a good
 file, though heavy oversubscription can raise one by a fifth, which the
 margin above "near the budget" absorbs. The gate prints each file's cost

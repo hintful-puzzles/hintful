@@ -21,8 +21,12 @@
 - [x] 2.2 Each other file over budget, heaviest first, by D5's treatments;
       each cut states at its site what still covers the configuration. A
       test kept for dev work moves out of every default suite (D5).
-- [ ] 2.3 Re-measure: every file and the suite within budget on CI, and the
-      three typical commits' plans within the commit ceiling.
+- [x] 2.3 Re-measure: every file and the suite within budget on CI, and the
+      three typical commits' plans within the commit ceiling. (Gate run
+      40572795933: 36.0 reference minutes, the dearest file 103 s, 9.7
+      minutes of wall from 20.7; on a slower runner, 40574611255, 43.3,
+      within the error the gate allows. Commits staging a config file and
+      the engine ran 58 to 90 s of their 90; a push 297 of its 300.)
 
 ## 3. Enforce
 
@@ -41,5 +45,5 @@
 
 - [x] 4.1 `docs/testing.md` § "Right-sizing the gate" and § "What runs
       when": the budgets, where they live, and what to do when one fails.
-- [ ] 4.2 The Gate workflow's limit, from the measured run (it was 45 for a
-      21-minute run).
+- [x] 4.2 The Gate workflow's limit, from the measured run (it was 45 for a
+      21-minute run). (30, for a 9.7-minute run on a reference-speed runner.)

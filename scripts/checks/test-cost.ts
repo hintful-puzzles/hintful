@@ -40,16 +40,16 @@ const BUDGET = { file: 120, suite: 2400, commit: 90, push: 300 };
 const REFERENCE_UNIT = 1.458;
 
 /**
- * Whether a run over budget fails in CI, or only says so. Off while the
- * reference unit is being shown to hold across runners: the first run judged
- * in raw seconds failed a tree on a runner 1.7 times slower than the one the
- * budgets were measured on. A developer's machine is judged either way.
+ * How far past its budget a cost is named, and still passes: the scaling's
+ * error between runners. One tree on two runners (Gate runs 40572795933 and
+ * 40574611255, units 1.470 and 2.238 s) read 1.20 times as dear in all on the
+ * slower, and 1.16 to 1.36 times by file, since a lone workload does not see
+ * what slows the suite's memory-heavy work most. A threshold the tree sits
+ * just under would fail it on whichever runner it drew.
  */
-const ENFORCED_IN_CI = false;
+const MARGIN = 1.25;
 
-/** Past this share of its budget a file is named as near it, and passes:
- * CPU time is not perfectly stable (paging inflates `sys`, and three suites
- * oversubscribing a laptop raised a file's by a fifth). */
+/** Past this share of its budget a cost is named as near it, and passes. */
 const NEAR = 0.9;
 
 const CACHE = "node_modules/.cache/test-cost";
@@ -124,37 +124,45 @@ function report(log: string, wholeSuite: boolean): boolean {
       `${(lines.reduce((sum, l) => sum + l.dealt, 0) / 60).toFixed(1)} of them dealing boards, ` +
       `in reference seconds (this machine's unit ${unit.toFixed(3)} s, the reference's ${REFERENCE_UNIT}).`,
   );
-  const over: string[] = [];
+  const failed: string[] = [];
   for (const l of lines) {
     const at = `${seconds(l.cpu)}  ${label(l.file, l.project)}`;
-    if (l.cpu > BUDGET.file) over.push(at);
+    if (l.cpu > MARGIN * BUDGET.file) failed.push(at);
     else if (l.cpu > NEAR * BUDGET.file)
-      console.log(`${at}  (near the budget of ${BUDGET.file.toFixed(0)} s)`);
+      console.log(`${at}  (${standing(l.cpu, BUDGET.file)} of ${BUDGET.file} s)`);
     else if (l.cpu >= 10) console.log(at);
   }
   record(lines);
   let ok = true;
-  if (over.length > 0) {
-    console.log(`\n✗ over the budget of ${BUDGET.file.toFixed(0)} s a file:`);
-    for (const at of over) console.log(at);
+  if (failed.length > 0) {
+    console.log(
+      `\n✗ over the budget of ${BUDGET.file} s a file by more than the runners differ:`,
+    );
+    for (const at of failed) console.log(at);
     ok = false;
   }
-  if (wholeSuite && total > BUDGET.suite) {
-    console.log(
-      `\n✗ the suite cost ${(total / 60).toFixed(1)} minutes, over its budget of ${(BUDGET.suite / 60).toFixed(0)}.`,
-    );
-    ok = false;
-  } else if (wholeSuite && total > NEAR * BUDGET.suite) {
-    console.log(
-      `The suite is near its budget of ${(BUDGET.suite / 60).toFixed(0)} minutes.`,
-    );
+  if (wholeSuite) {
+    const minutes = (s: number) => (s / 60).toFixed(1);
+    if (total > MARGIN * BUDGET.suite) {
+      console.log(
+        `\n✗ the suite cost ${minutes(total)} minutes, over its budget of ${minutes(BUDGET.suite)} by more than the runners differ.`,
+      );
+      ok = false;
+    } else if (total > NEAR * BUDGET.suite) {
+      console.log(
+        `The suite is ${standing(total, BUDGET.suite)} of ${minutes(BUDGET.suite)} minutes.`,
+      );
+    }
   }
   if (!ok) console.log(TREATMENTS);
-  if (!ok && process.env["CI"] && !ENFORCED_IN_CI) {
-    console.log("(Reported, not failed: the budget is not yet enforced in CI.)");
-    return true;
-  }
   return ok;
+}
+
+/** Where a cost that passes stands against its budget, in words. */
+function standing(cost: number, budget: number): string {
+  return cost > budget
+    ? "over its budget, within how much runners differ,"
+    : "near its budget";
 }
 
 /** A line's seconds, scaled to the reference runner's. */

@@ -4,13 +4,19 @@
 
 ### Requirement: The gate holds each test file to a cost budget
 
-The gate SHALL record the CPU time each test file costs in the run, a spread file's share counting as one file, and SHALL fail when a file exceeds the budget for it or the run's total exceeds the suite's budget. The failure SHALL name the file, its cost, its budget and the treatments `docs/testing.md` gives for an expensive test. The check SHALL judge CPU time, never wall time, and SHALL apply in CI and in the local hooks alike.
+The gate SHALL record the CPU time each test file costs, a spread file's share counting as one file, scaled by the run's own time for a fixed workload. It SHALL name a file or a suite over its budget, and SHALL fail the run when one exceeds it by more than the error measured between runners, naming the file, its cost, its budget and the treatments `docs/testing.md` gives. It SHALL judge CPU time, never wall time, in CI and in the local hooks alike.
 
 #### Scenario: A file grows past its budget
 
-- **WHEN** a commit adds boards to a cross-game sweep until its file costs more CPU time than its budget
+- **WHEN** a commit adds boards to a cross-game sweep until its file costs more CPU time than its budget allows, the runners' error included
 - **THEN** the gate fails on that file, naming its cost, its budget and the treatments for an expensive test
 - **BECAUSE** a suite's cost is otherwise noticed only once it has slowed every session
+
+#### Scenario: A slower runner runs a tree within its budget
+
+- **WHEN** the same tree runs on a runner that takes half again as long for the fixed workload
+- **THEN** its scaled costs stay within the error the gate allows, and the run passes, naming any cost over its budget
+- **BECAUSE** GitHub's runners differ in speed, and a check that a tree passes on one runner and fails on the next is a coin toss, not a budget
 
 #### Scenario: A busy machine runs a file within its budget
 

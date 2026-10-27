@@ -63,8 +63,13 @@ tried first, and the next Gate run (40568467469) failed on a runner 1.6 to
 the workload is timed in every run and the costs are scaled to the runner of
 Gate run 40553996591 (reference seconds): what it corrects is runner against
 runner, which is the variance that fails a good tree. A laptop reads low
-after scaling, so CI is the stricter judge. The CI judgment reports without
-failing until a run on another runner shows the scaling holds.
+after scaling, so CI is the stricter judge. One tree on two runners (Gate
+runs 40572795933 and 40574611255, units 1.470 and 2.238 s) then read 36.0
+and 43.3 scaled minutes: the scaling takes out most of the runner and leaves
+a fifth (1.16 to 1.36 by file), what slows memory-heavy work that a lone
+workload does not feel. So a cost over budget is named, and fails only past
+1.25 times the budget; a threshold the tree sits just under would fail it on
+whichever runner it drew.
 
 **D3. Starting budgets, chosen to force the cut the owner asked for.** At CI
 scale: no file or share over 2 minutes of CPU, and the suite over 40 (about

@@ -176,11 +176,11 @@ result shape, that is identical whatever the machine load.
 ### Requirement: There is one test timeout, and it is a backstop
 
 A test timeout is a runaway backstop and not a gate: an otherwise-good commit
-SHALL NOT be rejected merely because work took long. There SHALL be exactly one
-generous ceiling, `testTimeout` and `hookTimeout` in `vitest.config.ts`, sized
-far clear of the worst loaded runtime. An individual test SHALL NOT set its own
-timeout: a per-test ceiling is a guess about contention, and is tighter than
-the global one without showing it.
+SHALL NOT be rejected because work took long, save by the cost budget, which
+judges CPU time and never wall time. There SHALL be one generous ceiling,
+`testTimeout` and `hookTimeout` in `vitest.config.ts`, far clear of the worst
+loaded runtime. A test SHALL NOT set its own timeout: a per-test ceiling is
+a guess about contention.
 
 #### Scenario: A correct-but-slow test survives a saturated box
 
@@ -189,6 +189,12 @@ the global one without showing it.
 - **THEN** it still passes, because no per-test clock gate stands between it and
   its assertions: only the single generous ceiling, which is sized for runaway
   work rather than for contention
+
+#### Scenario: A test that does too much work fails the budget, not the clock
+
+- **WHEN** a test file's work grows past its cost budget
+- **THEN** the gate fails it by the budget, on CPU time, whatever the load
+  was, and never by a timeout
 
 ### Requirement: Non-termination is bounded in code, not by a timeout
 
@@ -895,32 +901,6 @@ property the game already has and not from a list of game ids.
 - **WHEN** a cross-game guard needs to walk some games less than the rest
 - **THEN** the games are found from a property each already has, read from the
   game, and the guard carries no list of ids
-
-### Requirement: A sweep's per-commit amount is chosen through perCommit
-
-The amount a sweep does in the hook SHALL be chosen through
-`perCommit(hook, wide)` in `src/engine/testing/slow.ts`, which reads the role
-toggle the hook sets and nothing else, so CI, a manual `npm run gate` and a
-bare `vitest` all do the wide amount.
-
-#### Scenario: A sweep is run outside the hook
-
-- **WHEN** a sweep's file is run by a bare `vitest`, with no toggle set
-- **THEN** it walks the wide amount
-
-### Requirement: A sweep's ledger is true of the hook's boards and of the push's
-
-An assertion held against what a sweep found (a ledger of sentences heard, a
-floor on boards walked) SHALL be true of the hook's boards and of the push's.
-The two can differ by more than size: the slice takes the smallest preset
-supplying each value still wanted, so leaving out the largest board can change
-which preset a mode is walked on.
-
-#### Scenario: A ledger is held against the hook's walk and the push's
-
-- **WHEN** a sentence over the length limit is spoken only on a board the hook
-  walks and the push does not, or the reverse
-- **THEN** the ledger lists it with a board that speaks it, and both runs pass
 
 ### Requirement: The gate rejects a test whose every assertion is conditional
 

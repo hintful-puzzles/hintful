@@ -43,9 +43,12 @@ jobs:
     runs-on: ubuntu-latest
     # The wall time is the suite's test time over the runner's workers, since
     # `vitest.config.ts` spreads the files that would each set it alone
-    # (`SPREAD`). The limit leaves room for a runner 1.7x slower than usual,
-    # which on 2026-10-22 had six of eight runs canceled with no verdict.
-    timeout-minutes: 45
+    # (`SPREAD`), and the cost budget holds that test time down
+    # (`scripts/checks/test-cost.ts`). A run took 9.7 minutes on 2026-10-27
+    # (Gate run 40572795933), and runners vary by 1.8x: the limit is about
+    # 1.7 times a slow runner's run, since a limit too close to it had six of
+    # eight runs canceled with no verdict on 2026-10-22.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
