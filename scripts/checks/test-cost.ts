@@ -17,36 +17,35 @@
  * the hook's ceiling, from the costs the last runs recorded. What a commit
  * leaves out is the push's (the list in {@link DEFERRED}), and what a push
  * leaves out is CI's, which runs everything.
+ *
+ * **Every cost is in reference seconds**: CPU seconds scaled by how much
+ * slower or faster this machine runs `cpu-unit.ts`'s workload than the
+ * runner of Gate run 40553996591 did, so that one table holds on every
+ * runner GitHub hands out.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { cpuUnit } from "./cpu-unit.ts";
 
 /**
- * The budgets in CPU seconds on CI's runner, where they bind (design D3 of
- * `enforce-test-time-budgets`): no one file is a fifth of a worker's share of
- * a ten-minute run, and the suite is about ten minutes on four workers.
+ * The budgets in reference seconds (design D3 of `enforce-test-time-budgets`):
+ * no one file is a fifth of a worker's share of a ten-minute run, and the
+ * suite is about ten minutes on four workers.
  */
-const CI_BUDGET = { file: 120, suite: 2400, commit: 90, push: 300 };
+const BUDGET = { file: 120, suite: 2400, commit: 90, push: 300 };
+
+/** The workload's CPU seconds on the reference runner (Gate run 40553996591,
+ * the least of three). */
+const REFERENCE_UNIT = 1.458;
 
 /**
- * How many CPU seconds CI's runner takes for one of this machine's, at the
- * least: measured 2026-10-27 over files that did not change between a CI run
- * and a local one, the ratio ran from 1.5 to 2.3 by file (a fixed workload
- * timed alone gave 1.3, which is why there is no calibration). The least, so
- * that a file within CI's budget is within this machine's.
+ * Whether a run over budget fails in CI, or only says so. Off while the
+ * reference unit is being shown to hold across runners: the first run judged
+ * in raw seconds failed a tree on a runner 1.7 times slower than the one the
+ * budgets were measured on. A developer's machine is judged either way.
  */
-const LOCAL_SPEED = 1.5;
-
-/** The budgets on the machine this runs on. */
-const BUDGET = process.env["CI"]
-  ? CI_BUDGET
-  : {
-      file: CI_BUDGET.file / LOCAL_SPEED,
-      suite: CI_BUDGET.suite / LOCAL_SPEED,
-      commit: CI_BUDGET.commit / LOCAL_SPEED,
-      push: CI_BUDGET.push / LOCAL_SPEED,
-    };
+const ENFORCED_IN_CI = false;
 
 /** Past this share of its budget a file is named as near it, and passes:
  * CPU time is not perfectly stable (paging inflates `sys`, and three suites
@@ -115,11 +114,15 @@ const seconds = (s: number): string => `${s.toFixed(0).padStart(5)} s`;
 /** Prints the run's costs, records them, and says whether they are within
  * budget. */
 function report(log: string, wholeSuite: boolean): boolean {
-  const lines = readRun(log).sort((a, b) => b.cpu - a.cpu);
+  const unit = cpuUnit();
+  const lines = readRun(log)
+    .map((l) => toReference(l, REFERENCE_UNIT / unit))
+    .sort((a, b) => b.cpu - a.cpu);
   const total = lines.reduce((sum, l) => sum + l.cpu - l.inherited, 0);
   console.log(
     `Test CPU time: ${(total / 60).toFixed(1)} minutes over ${lines.length} files, ` +
-      `${(lines.reduce((sum, l) => sum + l.dealt, 0) / 60).toFixed(1)} of them dealing boards.`,
+      `${(lines.reduce((sum, l) => sum + l.dealt, 0) / 60).toFixed(1)} of them dealing boards, ` +
+      `in reference seconds (this machine's unit ${unit.toFixed(3)} s, the reference's ${REFERENCE_UNIT}).`,
   );
   const over: string[] = [];
   for (const l of lines) {
@@ -147,7 +150,24 @@ function report(log: string, wholeSuite: boolean): boolean {
     );
   }
   if (!ok) console.log(TREATMENTS);
+  if (!ok && process.env["CI"] && !ENFORCED_IN_CI) {
+    console.log("(Reported, not failed: the budget is not yet enforced in CI.)");
+    return true;
+  }
   return ok;
+}
+
+/** A line's seconds, scaled to the reference runner's. */
+function toReference(l: Line, scale: number): Line {
+  const games: Record<string, number> = {};
+  for (const [id, s] of Object.entries(l.games)) games[id] = s * scale;
+  return {
+    ...l,
+    cpu: l.cpu * scale,
+    inherited: l.inherited * scale,
+    dealt: l.dealt * scale,
+    games,
+  };
 }
 
 /** Keeps each file's costs for the hooks' next plans. A run that skipped some

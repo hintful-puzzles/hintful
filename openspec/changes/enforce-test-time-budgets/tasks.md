@@ -16,9 +16,9 @@
 
 ## 2. Cut the suite under the budgets
 
-- [ ] 2.1 The hint walks' blocks: for each, what it catches that the games'
+- [x] 2.1 The hint walks' blocks: for each, what it catches that the games'
       own hint tests do not, with a planted defect; trim or retire by that.
-- [ ] 2.2 Each other file over budget, heaviest first, by D5's treatments;
+- [x] 2.2 Each other file over budget, heaviest first, by D5's treatments;
       each cut states at its site what still covers the configuration. A
       test kept for dev work moves out of every default suite (D5).
 - [ ] 2.3 Re-measure: every file and the suite within budget on CI, and the
@@ -31,8 +31,11 @@
       (A setup file and `test-cost.ts report`; no reporter, see D1.)
 - [x] 3.2 The plan prediction and ceiling in both hooks (D4). (`fit`, which
       defers past the ceiling rather than refusing, see D4.)
-- [ ] 3.3 See each check fail: a planted heavy loop in a test file fails the
-      budget; a plan over the ceiling is refused before a test runs.
+- [x] 3.3 See each check fail: a planted heavy loop in a test file fails the
+      budget; a plan over the ceiling is refused before a test runs. (An
+      85-second loop failed at 82 s against the local 80; an `ALL` plan was
+      cut to 59 s of the commit's 60, which first showed `fit` keeping every
+      file of an `ALL` plan as if staged.)
 
 ## 4. Document
 

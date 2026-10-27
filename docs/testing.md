@@ -581,14 +581,16 @@ to write.
 
 **The gate holds every test file to a budget of CPU time**, and the suite to
 one, and fails a run that goes over (`scripts/checks/test-cost.ts`, where the
-table is). The budgets are CI's, in its CPU seconds: 120 a file (a spread
-file's share counting as one), 40 minutes the suite. A developer's machine
-holds a file to CI's budget divided by the least ratio measured between the
-two, so a file within CI's is within its own. CPU time is the work, not the
-clock: a loaded machine does not fail a good file, though heavy
-oversubscription can raise one by a fifth, which the margin above "near the
-budget" absorbs. The gate prints each file's cost after the suite; a file is
-charged for every shared board it used (`dealt`), whichever file dealt it.
+table is): 120 seconds a file (a spread file's share counting as one), 40
+minutes the suite. The seconds are a reference runner's: each run times a
+fixed workload (`cpu-unit.ts`) and scales its costs by it, since GitHub's
+runners differ by nearly twice in speed from run to run. A laptop without
+hyperthreads reads lower than CI after scaling, so CI is the stricter judge.
+CPU time is the work, not the clock: a loaded machine does not fail a good
+file, though heavy oversubscription can raise one by a fifth, which the
+margin above "near the budget" absorbs. The gate prints each file's cost
+after the suite; a file is charged for every shared board it used (`dealt`),
+whichever file dealt it.
 
 When a file goes over, cut it by one of the treatments below; never raise the
 budget to fit it, since the budgets are the owner's numbers. A file that is
@@ -623,8 +625,8 @@ and their reasons.
 | The push hook | once, at a session's end | What the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries. Nothing, when every commit was a game's own or documentation. Up to its own ceiling. |
 | CI | every push | Everything. Never canceled by a newer push. |
 
-- **Each hook's run has a ceiling of CPU time**: CI's 90 seconds for a
-  commit and 5 minutes for a push, divided as a file's budget is. Before
+- **Each hook's run has a ceiling of CPU time**: 90 reference seconds for a
+  commit and 5 minutes for a push. Before
   any test runs, the hook prices its plan from what the last runs recorded
   here and keeps the cheapest files that fit, and a test file the commit
   stages always runs. A commit leaves the rest to the push, which then runs

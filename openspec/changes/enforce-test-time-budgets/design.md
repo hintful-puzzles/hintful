@@ -53,14 +53,18 @@ measures the workload's ratio on CI and locally before choosing it; if the
 ratio is stable within 20% across runs, raw CPU seconds with one table per
 role is the simpler alternative and wins.
 
-*Measured (2026-10-27).* Neither held. A fixed workload (a sliding-puzzle
-search and a Latin fill) took 1.46 s on CI and 1.10 to 1.20 s on the M3, a
-ratio of 1.3; the suite's unchanged files ran 1.5 to 2.3 times slower on CI
-(Gate run 40553996591 against two local runs), since CI's four workers share
-two cores' hyperthreads and a lone workload does not see that. So there is
-no calibration: the budgets are CI's CPU seconds, where they bind, and a
-developer's machine divides them by the least ratio measured (1.5), so a file
-within CI's budget passes locally too and CI is the stricter judge.
+*Measured (2026-10-27).* Between machines, neither held: a fixed workload
+(a sliding-puzzle search and a Latin fill) took 1.46 s on CI and 1.10 to
+1.20 s on the M3, a ratio of 1.3, where the suite's unchanged files ran 1.5
+to 2.3 times slower on CI, since CI's four workers share two cores'
+hyperthreads and a lone workload does not see that. Raw CI seconds were
+tried first, and the next Gate run (40568467469) failed on a runner 1.6 to
+1.8 times slower, in CPU and wall alike, for files neither run changed. So
+the workload is timed in every run and the costs are scaled to the runner of
+Gate run 40553996591 (reference seconds): what it corrects is runner against
+runner, which is the variance that fails a good tree. A laptop reads low
+after scaling, so CI is the stricter judge. The CI judgment reports without
+failing until a run on another runner shows the scaling holds.
 
 **D3. Starting budgets, chosen to force the cut the owner asked for.** At CI
 scale: no file or share over 2 minutes of CPU, and the suite over 40 (about
@@ -117,6 +121,19 @@ longer spoken, a negative over a sample; every listing now pins a board that
 speaks it, so the rot half is decided on an input and the walk takes one
 board. `hint-resume`'s three single-plan blocks computed the same plan three
 times, and are one block.
+
+A second round, from per-game costs the setup file now records: a quarter of
+the suite's CPU was dealing boards (8.6 of 32.6 local minutes), most of it
+`dealsPromptly` re-dealing a board too rare to wait on in every file and
+share that asked, which it now remembers; `hint-quality`'s length walk took
+every leaf preset where the slice reaches every mode; the repaint walk asked
+a searching hint afresh at every step, where a player pressing Hint again
+follows the plan; and `warm-repaint`, one case per game, is spread over
+shares like the hint walks. Locally the suite at CI scale went from 31.1 to
+26.3 CPU-minutes, dealing from 8.6 to 3.7. Each kept guard was seen to fail
+on a planted defect after the cut: a `hint()` that mutates (Flip) in the
+merged block, the narration limit raised past every listing in the pinned
+check, and Solo's Killer hint capped at `DIFF_KSINGLE` in the walk to solved.
 
 ## Risks / Trade-offs
 
