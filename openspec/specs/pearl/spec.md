@@ -128,6 +128,15 @@ trying each in a shuffled order twice. It SHALL remove no black pearl.
 - **THEN** the removal stands only where the solver still finds the one
   solution at the tier asked for, and the lower tier is not asked again
 
+### Requirement: Generation: Pearl's menu boards deal promptly
+
+Every board on Pearl's preset menu SHALL deal near a second at its slowest, measured over a dozen deals at each tier it is offered at, and at least half of the menu's sizes SHALL be upright rectangles. A size that the generator cannot deal that promptly SHALL be left to the Custom dialog.
+
+#### Scenario: A slow size is left off the menu
+
+- **WHEN** a dozen deals of a size at a tier include one that takes several seconds
+- **THEN** the menu does not offer that size at that tier, and the Custom dialog still deals it
+
 ### Requirement: Solver: Pearl's Solve uses the generator's solution when it has one
 
 `solve` SHALL return the generator's aux when present, else re-solve from the

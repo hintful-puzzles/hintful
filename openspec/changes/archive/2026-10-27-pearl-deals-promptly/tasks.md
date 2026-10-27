@@ -46,4 +46,5 @@
 
 ## 4. Verification
 
-- [ ] 4.1 The gate, green
+- [x] 4.1 The gate, green
+      Green at push, 474 test files; the owner accepted the menu 2026-10-27.
