@@ -107,6 +107,12 @@ describe("following the hint finishes every board, one sound step at a time", ()
             !!(sol[t.sq] & t.dir),
             `${step.explanation} ${JSON.stringify(t)}`,
           ).toBe(t.line);
+        // A white pearl's turn says what it shows: a line where it draws one.
+        if (step.rung === "whiteTurnsOpposite")
+          expect(
+            /can't be/.test(step.explanation),
+            `${step.explanation} ${JSON.stringify(targets)}`,
+          ).toBe(!targets.some((t) => t.line));
       }
     });
   }

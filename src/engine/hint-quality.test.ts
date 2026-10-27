@@ -126,7 +126,7 @@ const LONG_NARRATIONS: {
 }[] = [
   {
     games: ["pearl"],
-    rungs: ["closesEarlyThrough"],
+    rungs: ["closesEarlyThrough", "whiteTurnsOpposite"],
     why: PEARL_CARRIES_ON,
   },
   {

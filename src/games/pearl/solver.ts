@@ -54,6 +54,39 @@ import {
   STRAIGHT,
 } from "./state.ts";
 
+/** A square's states are bits `1 << b` for `b` below this, `b` the
+ * directions its line leaves by. */
+const STATE_LIMIT = 0xd;
+
+/** The states a square's known edges leave it, by `connected * 16 +
+ * disconnected` (each a mask of directions): a state survives unless it leaves
+ * by a disconnected edge or not by a connected one. The solver reads it on
+ * every pass of every gate solve. */
+const SURVIVING = Int32Array.from({ length: 256 }, (_, i) => {
+  const connected = i >> 4;
+  const disconnected = i & 15;
+  let states = 0;
+  for (let b = 0; b < STATE_LIMIT; b++)
+    if (!(b & disconnected) && !(connected & ~b)) states |= 1 << b;
+  return states;
+});
+
+/** The directions some state of a set leaves by (`EDGE_OR`), and that every
+ * one does (`EDGE_AND`, 15 for no state), by the set's mask. */
+const EDGE_OR = new Uint8Array(1 << STATE_LIMIT);
+const EDGE_AND = new Uint8Array(1 << STATE_LIMIT);
+for (let s = 0; s < 1 << STATE_LIMIT; s++) {
+  let or = 0;
+  let and = 15;
+  for (let b = 0; b < STATE_LIMIT; b++)
+    if (s & (1 << b)) {
+      or |= b;
+      and &= b;
+    }
+  EDGE_OR[s] = or;
+  EDGE_AND[s] = and;
+}
+
 /** The solver's verdict and the workspace it left. */
 export interface PearlWorkspace {
   /** 0 inconsistent, 1 unique, 2 ambiguous. */
@@ -145,6 +178,8 @@ export class PearlBoard {
     null;
   /** Every square's states before any edge is known: what its clue allows. */
   private readonly clueShapes: Int32Array;
+  /** From a square to its edge toward each direction bit, in the workspace. */
+  private readonly edgeStep = new Int32Array(D + 1);
 
   constructor(
     readonly w: number,
@@ -153,6 +188,7 @@ export class PearlBoard {
   ) {
     this.W = 2 * w + 1;
     this.H = 2 * h + 1;
+    for (const d of [R, U, L, D]) this.edgeStep[d] = dirY(d) * this.W + dirX(d);
     this.ws = initialWorkspace(w, h, clues);
     this.clueShapes = this.ws.slice();
     this.dsf = new Dsf(w * h);
@@ -214,7 +250,7 @@ export class PearlBoard {
 
   /** The workspace index of the edge leaving square `(x, y)` toward `d`. */
   edgeAt(x: number, y: number, d: number): number {
-    return (2 * y + 1 + dirY(d)) * this.W + 2 * x + 1 + dirX(d);
+    return (2 * y + 1) * this.W + 2 * x + 1 + this.edgeStep[d];
   }
 
   /**
@@ -244,13 +280,9 @@ export class PearlBoard {
   private nailSquare(x: number, y: number, oneAxis: boolean): number {
     const { W, ws } = this;
     const sq = (2 * y + 1) * W + 2 * x + 1;
-    let edgeor = 0;
-    let edgeand = 15;
-    for (let b = 0; b < 0xd; b++)
-      if (ws[sq] & (1 << b)) {
-        edgeor |= b;
-        edgeand &= b;
-      }
+    const states = ws[sq] & ((1 << STATE_LIMIT) - 1);
+    const edgeor = EDGE_OR[states];
+    const edgeand = EDGE_AND[states];
     // Consistency: no bit both connected and disconnected.
     if (edgeand & ~edgeor) return -1;
     let nail = 0;
@@ -296,18 +328,17 @@ export class PearlBoard {
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
         const sq = (2 * y + 1) * W + 2 * x + 1;
-        for (let b = 0; b < 0xd; b++)
-          if (ws[sq] & (1 << b)) {
-            for (let d = 1; d <= 8; d += d) {
-              const ex = 2 * x + 1 + dirX(d);
-              const ey = 2 * y + 1 + dirY(d);
-              if (ws[ey * W + ex] === (b & d ? 2 : 1)) {
-                ws[sq] &= ~(1 << b);
-                fired++;
-                break;
-              }
-            }
-          }
+        let connected = 0;
+        let disconnected = 0;
+        for (let d = 1; d <= 8; d += d) {
+          const edge = ws[this.edgeAt(x, y, d)];
+          if (edge === 1) connected |= d;
+          else if (edge === 2) disconnected |= d;
+        }
+        const gone =
+          ws[sq] & ((1 << STATE_LIMIT) - 1) & ~SURVIVING[connected * 16 + disconnected];
+        ws[sq] &= ~gone;
+        for (let g = gone; g; g &= g - 1) fired++;
         // Consistency: each square must have at least one state left.
         if (!ws[sq]) return -1;
       }

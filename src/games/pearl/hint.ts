@@ -272,8 +272,18 @@ function premise(
       const blocked = axisOf(reason.axis);
       return say.whiteCannotTurn(otherAxis(blocked), m);
     }
-    case "whiteTurnsOpposite":
-      return say.whiteTurnsOpposite(f.ops[0].line, m);
+    case "whiteTurnsOpposite": {
+      // The square that turns may settle its straight-on cross and a line to
+      // one side at once. It then has its two lines, so the cross is not
+      // shown, and the words go by the edges the step shows: all lines, or all
+      // crosses.
+      const lines = f.shown
+        .filter((op) => m.own.includes(edgeOf(b, op)))
+        .map((op) => op.line);
+      if (lines.includes(true) && lines.includes(false))
+        throw new Error("pearl hint: a white pearl's turn showed a line and a cross");
+      return say.whiteTurnsOpposite(lines[0], m);
+    }
     case "closesEarly":
       return say.closesEarly(leftOut(b, reason.piece, null), m);
     case "closesEarlyThrough": {

@@ -203,7 +203,7 @@ export const say = {
     forced(
       m,
       phrase`Neither ${area(m, "outlined square")} can turn into ${own(m, "this white pearl")}`,
-      phrase`its line must run ${runs(along)}`,
+      phrase`it runs ${runs(along)}`,
     ),
 
   /** The step decides the edge that makes the square on the other side turn:
@@ -213,7 +213,9 @@ export const say = {
     forced(
       m,
       phrase`The white pearl runs straight through ${area(m, "the outlined square")}`,
-      phrase`${thisEdge(m)} ${line ? "must be a line" : "can't be a line"}`,
+      m.own.length === 1
+        ? phrase`${thisEdge(m)} ${line ? "must be a line" : "can't be a line"}`
+        : phrase`${thisEdge(m)} ${line ? "must be lines" : "can't be lines"}`,
       phrase`it turns on its other side`,
     ),
 

@@ -18,6 +18,7 @@ import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import type { LineDrawingUi } from "../../engine/line-drawing.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import { D, L, R, U } from "../../engine/square-edges.ts";
 
@@ -57,31 +58,28 @@ export interface PearlParams {
   difficulty: number;
 }
 
-/** 8x8 Tricky, upstream's default. */
-const DEFAULT_PRESET = 5;
-/** Upstream's four sizes, its 12x8 stood upright, and an upright 6x8. */
-const PEARL_PRESETS: readonly PearlParams[] = [
+/** Every size at both tiers. The largest are where a deal's slowest of a dozen
+ * stays near a second, measured 2026-10-27 (`npm run deal-walk` with the
+ * cells named, slowest of twelve, Easy and Tricky): 10x10 0.3 and 0.4 s,
+ * 10x12 1 and 1 s. Past 120 squares Easy leaves it first: 12x12 Easy took up
+ * to 9 s and 10x14 Easy 10 s, as a large loop's full clue set rarely solves at
+ * Easy, and those sizes are a Custom away. */
+const BOARDS: readonly PearlParams[] = [
   { w: 6, h: 6, difficulty: DIFF_EASY },
-  { w: 6, h: 6, difficulty: DIFF_TRICKY },
   { w: 6, h: 8, difficulty: DIFF_EASY },
-  { w: 6, h: 8, difficulty: DIFF_TRICKY },
   { w: 8, h: 8, difficulty: DIFF_EASY },
-  { w: 8, h: 8, difficulty: DIFF_TRICKY },
+  { w: 8, h: 10, difficulty: DIFF_EASY },
   { w: 10, h: 10, difficulty: DIFF_EASY },
-  { w: 10, h: 10, difficulty: DIFF_TRICKY },
-  { w: 8, h: 12, difficulty: DIFF_EASY },
-  { w: 8, h: 12, difficulty: DIFF_TRICKY },
+  { w: 10, h: 12, difficulty: DIFF_EASY },
 ];
 
+/** 8x8 Tricky, upstream's default. */
 export function defaultParams(): PearlParams {
-  return { ...PEARL_PRESETS[DEFAULT_PRESET] };
+  return { w: 8, h: 8, difficulty: DIFF_TRICKY };
 }
 
 export function presets(): PresetMenu<PearlParams> {
-  return {
-    title: "Pearl",
-    submenu: PEARL_PRESETS.map((p) => ({ params: { ...p } })),
-  };
+  return presetGrid(paramConfig, BOARDS);
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

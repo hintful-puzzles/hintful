@@ -1305,7 +1305,12 @@ says every size is reachable; only the tail says whether to offer it, and a
 median of a few seconds can hide a worst case several times as long.
 
 - **Optimize first, then bound.** A bound drawn from the slow number forbids
-  boards the fixed code deals quickly.
+  boards the fixed code deals quickly. Profile a deal before choosing what to
+  speed up (`--cpu-prof` on a vitest fork). The first suspect is a port that
+  rescans the whole board where upstream kept incremental state: a pure
+  function of the board can be made incremental without moving a verdict, so
+  no seed's board moves and the frozen differential guards the speed-up.
+  Pearl's loop bias was 83% of a deal.
 - **Check whether the wall is time or memory.** A retry budget assumes
   failure is recoverable; an out-of-memory in the worker is a crash, so that
   boundary belongs in `validateParams`. Measure at least one size past the

@@ -16,7 +16,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
-import { itSlow } from "../../engine/testing/slow.ts";
 import fixtures from "./__fixtures__/pearl-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
 import { gradePearl, pearlSolve } from "./solver.ts";
@@ -38,18 +37,11 @@ const paramsOf = (f: Fixture): PearlParams => ({
   difficulty: f.difficulty,
 });
 
-/** `pearl-4` (10x10, Easy) alone costs **27 s** — 7% of the whole suite, and more
- * than the 12x8 fixture beside it. Easy is asserted on every commit by the 6x6,
- * 7x7 and 8x8 fixtures, so what the 10x10 adds is
- * board size over the same generator/solver path: `npm run test:slow`. */
-const isSlow = (f: Fixture) => f.seed === "pearl-4";
-
 describe("pearl generator differential (byte-match vs C)", () => {
   for (const f of fixtures.fixtures as Fixture[]) {
     const tag = `${f.seed} (${f.w}x${f.h} d=${f.difficulty})`;
-    const maybeIt = isSlow(f) ? itSlow : it;
 
-    maybeIt(`${tag}: TS desc + aux match C byte-for-byte`, () => {
+    it(`${tag}: TS desc + aux match C byte-for-byte`, () => {
       const { desc, aux } = newDesc(paramsOf(f), randomNew(f.seed));
       expect(desc).toBe(f.desc);
       expect(aux).toBe(f.aux);

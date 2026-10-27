@@ -3,9 +3,8 @@
  * fires, at both caps. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
- * Pearl generation is costly (a 10x10 fixture alone takes tens of seconds in
- * the differential), so the corpus is small boards: the census below is what
- * says they are enough.
+ * The corpus is small boards, and the census below is what says they are
+ * enough.
  */
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";

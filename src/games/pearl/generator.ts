@@ -35,60 +35,148 @@ import {
   STRAIGHT,
 } from "./state.ts";
 
-/** Build the black-clue bias for `generateLoop` (upstream `pearl_loopgen_bias`),
- * rescanning the board on each call rather than updating incrementally. The
- * score (the count of black-clue corner sites on the WHITE and BLACK
- * boundaries) is a pure function of the board and draws no RNG, so a rescan
- * picks the identical candidate. */
+/** Build the black-clue bias for `generateLoop` (upstream `pearl_loopgen_bias`):
+ * the count of black-clue corner sites on the WHITE and BLACK boundaries. The
+ * first call scans the whole board; each later one refreshes only what the one
+ * face named can have changed, which the loop generator's contract (only that
+ * face changed since the last call) allows. A rescan per call was most of a
+ * deal's time. The score is the rescan's at every call, so it picks the same
+ * candidate and draws no RNG.
+ *
+ * Unlike upstream, a dot whose type changes re-checks every dot beside it, not
+ * the two loop neighbors it records: a dot with four boundary edges records
+ * only two, and its others would keep a stale site. */
 function makeBias(g: Grid): LoopgenBias {
   const nEdges = g.numEdges;
   const nDots = g.numDots;
-  const onLoop = new Uint8Array(nEdges);
-  const vtype = new Int32Array(nDots);
-  const nbr0 = new Int32Array(nDots);
-  const nbr1 = new Int32Array(nDots);
-
-  return (board: Int8Array, _face: number): number => {
-    let score = 0;
-    for (let bi = 0; bi < 2; bi++) {
-      const c = bi === 0 ? FACE_WHITE : FACE_BLACK;
-      // Which edges lie on this color's boundary.
-      for (let ei = 0; ei < nEdges; ei++) {
-        const e = g.edges[ei];
-        const fc1 = e.face1 ? board[e.face1.index] : FACE_BLACK;
-        const fc2 = e.face2 ? board[e.face2.index] : FACE_BLACK;
-        onLoop[ei] = (fc1 === c) !== (fc2 === c) ? 1 : 0;
-      }
-      // Vertex types (corner / straight / off-loop) + loop neighbors.
-      for (let di = 0; di < nDots; di++) {
-        const d = g.dots[di];
-        let type = 0;
-        let n0 = 0;
-        let n1 = 0;
-        let n = 0;
-        for (let k = 0; k < d.order; k++) {
-          const e = d.edges[k];
-          const d2 = e.dot1 === d ? e.dot2 : e.dot1;
-          // dir == 0,1,2,3 for an edge going L,U,R,D.
-          const dir = (d.y === d2.y ? 1 : 0) + 2 * (d.x + d.y > d2.x + d2.y ? 1 : 0);
-          if (onLoop[e.index]) {
-            type |= 1 << dir;
-            if (n === 0) n0 = d2.index;
-            else if (n === 1) n1 = d2.index;
-            n++;
-          }
-        }
-        // A corner: on the loop but not a straight run.
-        if (type !== 0 && type !== 0x5 && type !== 0xa) type |= 0x10;
-        vtype[di] = type;
-        nbr0[di] = n0;
-        nbr1[di] = n1;
-      }
-      // A black-clue site: a corner whose two loop neighbors are non-corners.
-      for (let di = 0; di < nDots; di++) {
-        if (vtype[di] & 0x10 && !((vtype[nbr0[di]] | vtype[nbr1[di]]) & 0x10)) score++;
-      }
+  // The grid read once into flat arrays: it is walked thousands of times a
+  // loop. Per edge its dots and faces (-1 the exterior); per dot, in its edge
+  // order, each edge, the dot across it and its direction (0,1,2,3 for
+  // L,U,R,D); per face its edges.
+  const edgeDot1 = new Int32Array(nEdges);
+  const edgeDot2 = new Int32Array(nEdges);
+  const edgeFace1 = new Int32Array(nEdges);
+  const edgeFace2 = new Int32Array(nEdges);
+  for (const e of g.edges) {
+    edgeDot1[e.index] = e.dot1.index;
+    edgeDot2[e.index] = e.dot2.index;
+    edgeFace1[e.index] = e.face1 ? e.face1.index : -1;
+    edgeFace2[e.index] = e.face2 ? e.face2.index : -1;
+  }
+  const dotStart = new Int32Array(nDots + 1);
+  for (const d of g.dots) dotStart[d.index + 1] = d.order;
+  for (let di = 0; di < nDots; di++) dotStart[di + 1] += dotStart[di];
+  const dotEdge = new Int32Array(dotStart[nDots]);
+  const dotNbr = new Int32Array(dotStart[nDots]);
+  const dotDir = new Int32Array(dotStart[nDots]);
+  for (const d of g.dots)
+    for (let k = 0; k < d.order; k++) {
+      const e = d.edges[k];
+      const d2 = e.dot1 === d ? e.dot2 : e.dot1;
+      const at = dotStart[d.index] + k;
+      dotEdge[at] = e.index;
+      dotNbr[at] = d2.index;
+      dotDir[at] = (d.y === d2.y ? 1 : 0) + 2 * (d.x + d.y > d2.x + d2.y ? 1 : 0);
     }
+  const faceEdges = g.faces.map((f) =>
+    Int32Array.from(f.edges.filter((e) => e !== null).map((e) => e.index)),
+  );
+
+  const faces = new Int8Array(g.numFaces);
+  // Per boundary (0 WHITE, 1 BLACK), each array indexed by b * n + i: is each
+  // edge on it; each dot's type (bits 0-3 its boundary edges by direction,
+  // bit 4 a corner) and its first two loop neighbors; whether each dot is a
+  // black-clue site.
+  const onLoop = new Uint8Array(2 * nEdges);
+  const vtype = new Int32Array(2 * nDots);
+  const nbr0 = new Int32Array(2 * nDots);
+  const nbr1 = new Int32Array(2 * nDots);
+  const site = new Uint8Array(2 * nDots);
+  // Dots to refresh, as stacks with a mark per dot that this call stacked it.
+  const dotsTodo = new Int32Array(nDots);
+  const sitesTodo = new Int32Array(nDots);
+  const dotMark = new Int32Array(nDots);
+  const siteMark = new Int32Array(nDots);
+  let nDotsTodo = 0;
+  let nSitesTodo = 0;
+  let stamp = 0;
+  let score = 0;
+  let scanned = false;
+
+  const stackDot = (di: number): void => {
+    if (dotMark[di] === stamp) return;
+    dotMark[di] = stamp;
+    dotsTodo[nDotsTodo++] = di;
+  };
+  const stackSite = (di: number): void => {
+    if (siteMark[di] === stamp) return;
+    siteMark[di] = stamp;
+    sitesTodo[nSitesTodo++] = di;
+  };
+
+  const refreshEdge = (board: Int8Array, b: number, c: number, ei: number): void => {
+    const f1 = edgeFace1[ei];
+    const f2 = edgeFace2[ei];
+    const fc1 = f1 < 0 ? FACE_BLACK : board[f1];
+    const fc2 = f2 < 0 ? FACE_BLACK : board[f2];
+    const on = (fc1 === c) !== (fc2 === c) ? 1 : 0;
+    if (on === onLoop[b * nEdges + ei]) return;
+    onLoop[b * nEdges + ei] = on;
+    stackDot(edgeDot1[ei]);
+    stackDot(edgeDot2[ei]);
+  };
+
+  const refreshDot = (b: number, di: number): void => {
+    let type = 0;
+    let n0 = 0;
+    let n1 = 0;
+    let n = 0;
+    const end = dotStart[di + 1];
+    for (let at = dotStart[di]; at < end; at++)
+      if (onLoop[b * nEdges + dotEdge[at]]) {
+        type |= 1 << dotDir[at];
+        if (n === 0) n0 = dotNbr[at];
+        else if (n === 1) n1 = dotNbr[at];
+        n++;
+      }
+    // A corner: on the loop but not a straight run.
+    if (type !== 0 && type !== 0x5 && type !== 0xa) type |= 0x10;
+    const i = b * nDots + di;
+    if (type === vtype[i]) return;
+    vtype[i] = type;
+    nbr0[i] = n0;
+    nbr1[i] = n1;
+    stackSite(di);
+    for (let at = dotStart[di]; at < end; at++) stackSite(dotNbr[at]);
+  };
+
+  // A black-clue site: a corner whose two loop neighbors are non-corners.
+  const refreshSite = (b: number, di: number): void => {
+    const o = b * nDots;
+    const i = o + di;
+    const now =
+      vtype[i] & 0x10 && !((vtype[o + nbr0[i]] | vtype[o + nbr1[i]]) & 0x10) ? 1 : 0;
+    score += now - site[i];
+    site[i] = now;
+  };
+
+  return (board: Int8Array, face: number): number => {
+    for (let b = 0; b < 2; b++) {
+      const c = b === 0 ? FACE_WHITE : FACE_BLACK;
+      stamp++;
+      if (!scanned) {
+        for (let ei = 0; ei < nEdges; ei++) refreshEdge(board, b, c, ei);
+      } else if (faces[face] === c || board[face] === c) {
+        for (const ei of faceEdges[face]) refreshEdge(board, b, c, ei);
+      }
+      for (let k = 0; k < nDotsTodo; k++) refreshDot(b, dotsTodo[k]);
+      nDotsTodo = 0;
+      for (let k = 0; k < nSitesTodo; k++) refreshSite(b, sitesTodo[k]);
+      nSitesTodo = 0;
+    }
+    if (scanned) faces[face] = board[face];
+    else faces.set(board);
+    scanned = true;
     return score;
   };
 }

@@ -484,15 +484,17 @@ bump:h  full=15x16de  brief=15x16"
 
 exports[`encoded params are byte-stable > pearl 1`] = `
 "default  full=8x8dt  brief=8x8
-preset:Pearl/6x6 Easy  full=6x6de  brief=6x6
-preset:Pearl/6x6 Normal  full=6x6dt  brief=6x6
-preset:Pearl/6x8 Easy  full=6x8de  brief=6x8
-preset:Pearl/6x8 Normal  full=6x8dt  brief=6x8
-preset:Pearl/8x8 Easy  full=8x8de  brief=8x8
-preset:Pearl/10x10 Easy  full=10x10de  brief=10x10
-preset:Pearl/10x10 Normal  full=10x10dt  brief=10x10
-preset:Pearl/8x12 Easy  full=8x12de  brief=8x12
-preset:Pearl/8x12 Normal  full=8x12dt  brief=8x12
+preset:6x6 Easy  full=6x6de  brief=6x6
+preset:6x6 Normal  full=6x6dt  brief=6x6
+preset:6x8 Easy  full=6x8de  brief=6x8
+preset:6x8 Normal  full=6x8dt  brief=6x8
+preset:8x8 Easy  full=8x8de  brief=8x8
+preset:8x10 Easy  full=8x10de  brief=8x10
+preset:8x10 Normal  full=8x10dt  brief=8x10
+preset:10x10 Easy  full=10x10de  brief=10x10
+preset:10x10 Normal  full=10x10dt  brief=10x10
+preset:10x12 Easy  full=10x12de  brief=10x12
+preset:10x12 Normal  full=10x12dt  brief=10x12
 bump:w  full=9x8dt  brief=9x8
 bump:h  full=8x9dt  brief=8x9"
 `;

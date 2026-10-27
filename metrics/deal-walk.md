@@ -414,10 +414,10 @@ Dealt 2026-10-06: up to 4 deals a cell, a ladder ended by a deal over 10 s, a de
 
 ## pearl
 
-- `10x10de` 3 s, slowest 5 · `15x15de` **no answer in 60 s**
-- `10x10dt` 4 s, slowest 7 · `15x15dt` **no answer in 60 s**
+- `10x12de` 0.6 s, slowest 1 · `15x18de` 49 s, slowest 49, gave up on 1 of 1
+- `10x12dt` 0.5 s, slowest 1 · `15x18dt` 51 s, slowest 51, gave up on 1 of 1
 
-Dealt 2026-10-06: up to 4 deals a cell, a ladder ended by a deal over 10 s, a deal killed at 60 s, a 2048 MB heap, 3 games at once; at its start, load 3.2, 0.5 GB free, swap total = 10240.00M  used = 8740.31M  free = 1499.69M  (encrypted).
+Dealt 2026-10-27: up to 4 deals a cell, a ladder ended by a deal over 10 s, a deal killed at 60 s, a 2048 MB heap, games dealt at once: 1; at its start, load 4.5, 0.5 GB free, swap total = 17408.00M  used = 15980.56M  free = 1427.44M  (encrypted).
 
 ## pegs
 
