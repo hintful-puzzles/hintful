@@ -178,23 +178,25 @@ head.
 
 Which treatment a rung takes is decided by
 [`solver-and-generator.md`](./solver-and-generator.md) § "Check, Tactic,
-Search", by whether the reasoning is bounded and walkable, not by whether a
-trial was involved:
+Search", by whether each link writes a mark the player can make, not by
+whether a trial was involved:
 
 - **A Check** is one placement and one validator call with no fixpoint. It is
   ordinary deduction and narrates directly at any tier. Exemplar: Sticks'
   `sticksTry`.
-- **A Tactic** is a bounded chain. It keeps its middle tier and is walked:
-  tentative marks the player watches accumulate, each leg one step, only the
-  last strike real, on the multi-leg journey (`continuesPrevious`). Exemplar:
-  Clusters, which renders every forced cell of its hypothetical from its own
-  overlay bits.
-- **A Search** runs an unbounded fixpoint or sub-solve from its hypothesis. It
-  is `Unreasonable` and is not narrated: the hint refuses and says deduction
-  has run out. Exemplar: Undead's `forcingPass`.
+- **A Tactic** is a chain whose every link is a fact the game's marks record.
+  It is taught as ordinary steps, each writing its mark, and needs no chain
+  picture.
+- **A Search** runs a fixpoint or sub-solve from its hypothesis, or follows a
+  chain of suppositions, however short. It is `Unreasonable` and is not
+  narrated: the hint refuses and says deduction has run out. Exemplars:
+  Undead's `forcingPass`, the Latin forcing chain.
 
-The other compliant choice is to keep the shipped tiers direct-only and not
-deal forcing-tier boards below `Unreasonable`.
+A supposition rung that alone defines a tier keeps it until a markable
+technique fills the tier (`solver-and-generator.md` § "Check, Tactic,
+Search"). Until then its hint shows the walk statically (`hints-marks.md`
+§ "Show the what-if walk statically"). Exemplar: Clusters, which renders
+every forced cell of its hypothetical from its own overlay bits.
 
 - **Judge the shape of the call, not the length of the sentence.** A rung
   that runs a fixpoint from its hypothesis is a Search however short its
@@ -435,8 +437,8 @@ Tie by something the code guarantees, cheapest first:
   second mark is a chain, name it whole ("the outlined chain") and each link
   the sentence needs by its relation to it ("one of its ends", "its other
   end"), each its own reference with its own pill, and keep "this cell" for
-  the ringed one. Exemplar: `forcingChainPremise` in
-  [`engine/hint-text.ts`](../src/engine/hint-text.ts).
+  the ringed one. Exemplar: `chainEnds` in
+  [`map/hint-text.ts`](../src/games/map/hint-text.ts).
 
 Guard it in the game's test: a second mark displayed implies the explanation
 contains the tie. See the guard fail first, and give it a `checked` floor and

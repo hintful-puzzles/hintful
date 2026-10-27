@@ -49,7 +49,7 @@ export { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE };
 
 /** Why a Keen-specific (cage) deduction ruled a candidate out — the premise the
  * hint narrates and highlights. Combined with {@link LatinReason} (the generic
- * positional/set/forcing deductions) it covers every technique the recording
+ * positional/set deductions) it covers every technique the recording
  * solver fires; the `kind` fields never collide with the Latin reasons.
  *
  * `cage` is the `DIFF_EASY`/`DIFF_NORMAL` per-square pruning: no arrangement of
@@ -418,8 +418,8 @@ function keenValid(solver: LatinSolver, ctx: KeenCtx): boolean {
  * Solve the `w × w` Keen board (cage partition + clues in `kclues`) into `soln`
  * (0 = blank), up to difficulty `maxdiff`. Returns the difficulty level reached,
  * or a `DIFF_IMPOSSIBLE`/`DIFF_AMBIGUOUS`/`DIFF_UNFINISHED` sentinel. Mirrors the
- * `solver()` driver: Easy→simple, Tricky→set₀, Hard→set₁+forcing,
- * Unreasonable→recursion through the shared `latinSolver`.
+ * `solver()` driver: Easy→simple, Tricky→set₀, Hard→set₁,
+ * Unreasonable→forcing and recursion through the shared `latinSolver`.
  */
 export function solveKeen(
   w: number,
@@ -434,7 +434,6 @@ export function solveKeen(
     diffSimple: DIFF_EASY,
     diffSet0: DIFF_HARD,
     diffSet1: DIFF_EXTREME,
-    diffForcing: DIFF_EXTREME,
     diffRecursive: DIFF_UNREASONABLE,
     usersolvers: [solverEasy, solverNormal, solverHard, null, null],
     valid: keenValid,

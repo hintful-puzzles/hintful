@@ -161,12 +161,6 @@ describeHintPins({
       moves:
         '[{"type":"set","x":2,"y":5,"n":3,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":6}]}]',
     },
-    /** Held on 196 of 3025 positions walked. */
-    forcing: {
-      id: "3x3de:a3a8a6a7a7_8g1a6_7a5c3a8_9d4_6g2_2d4_7a9c3a9_8a5g6_7a2a4a7a9a",
-      moves:
-        '[{"type":"set","x":8,"y":0,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":6,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":8,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":1,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":2,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":8,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":6,"n":2,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":7,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":8,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":5,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":5,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":3,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":5,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":6,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":8,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":7,"n":9,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":7,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":6,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":6,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":7,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":8,"n":6,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":2}]},{"type":"pencilAdd","marks":[{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":5}]}]',
-    },
     /** Held on 1460 of 3025 positions walked. */
     cageSingle: {
       id: "3x3ka:zzzc,__a_aaaa____a______a__________________a_____a______a__aaa_baaaa__aa____aa__babaa___aa____aa_baaabaaa_,7_10_17a16_10a15f7_5_11a6_16a12_9c9a12c15_17_12a12_7_12a6c7c9a10a10a15_7_8a10a15a15c15_5b11a14c11d",

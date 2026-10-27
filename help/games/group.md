@@ -83,10 +83,6 @@ filled in every cell's marks first (the same as pressing 'M'), set
 
 {{hint-marks}}
 
-An outlined chain is cells with two elements left each, each in line with
-the next: the sentence names its two ends and says how the chain rules a
-letter out of the cell where it is struck.
-
 The hint writes products the way the grid shows them: *a·b* is the
 letter in row *a*, column *b*. The step that belongs to Group alone is
 associativity: once the

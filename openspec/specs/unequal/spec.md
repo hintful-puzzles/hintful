@@ -75,13 +75,18 @@ order of the values. A string with no `d` SHALL decode as Normal.
 
 `validateParams` SHALL refuse an Adjacent puzzle of Tricky difficulty or
 harder below order 5, and SHALL refuse, when a board is to be dealt, an order
-of 3 at Tricky or Unreasonable, which no 3×3 board needs.
+of 3 at Tricky or Hard, which no 3×3 board needs.
 
 #### Scenario: A small Adjacent puzzle has no upper tiers
 
 - **WHEN** `validateParams` is called with an Adjacent puzzle below order 5 at
   Tricky or harder
 - **THEN** it returns a non-null error string
+
+#### Scenario: A 3×3 at Unreasonable deals
+
+- **WHEN** a board is to be dealt from the params `3dr`
+- **THEN** it is not refused, and the board dealt needs Unreasonable
 
 ### Requirement: Description: Unequal descriptions encode per-cell numbers and adjacency flags
 
@@ -316,14 +321,14 @@ higher one's and, on a board below Unreasonable, SHALL be capped at the
 board's own tier. So a sign's bound and a bar beside a placed number SHALL be
 offered from Normal up, a bar read against an undecided neighbor and a set
 within one row or column from Tricky up, and one number's places across
-several rows and columns, and the chain, at Hard.
+several rows and columns at Hard.
 
 #### Scenario: A Normal board in Adjacent mode
 
 - **WHEN** a hint is asked on a board dealt from the params `5ade`, Adjacent
   5×5 at Normal
 - **THEN** no step reads a bar against an undecided neighbor, and none is a
-  set or a chain
+  set
 
 #### Scenario: An Easy board has no clue strikes
 

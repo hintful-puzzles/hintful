@@ -101,8 +101,7 @@ const MAX_NARRATION_CHARS = 300;
  * listing's sentence" walks it as the length walk would. A negative over the
  * walk's boards was no evidence: a sentence that fires on few boards read as
  * dead whenever the seeds missed it. So a roster is the games a board has been
- * found for, and a game that cannot be pinned is not listed: Mathrax's solver
- * records `forcing`, yet its plans finish the board on cheaper rungs first.
+ * found for, and a game that cannot be pinned is not listed.
  */
 /** Why Pearl's step runs long. */
 const PEARL_CARRIES_ON =

@@ -8,8 +8,8 @@
  *   Normal (`DIFF_NORMAL`)  → {@link solverNormal} (associativity forward-deduction).
  *   Tricky (`DIFF_HARD`)    → {@link solverHard} (ruling elements out as the
  *                             identity), then generic set elimination.
- *   Hard (`DIFF_EXTREME`)   → the harder set elimination + forcing.
- *   Unreasonable            → generic recursion.
+ *   Hard (`DIFF_EXTREME`)   → the harder set elimination.
+ *   Unreasonable            → generic forcing chains and recursion.
  *
  * The cube is indexed `(x·o + y)·o + (n−1)` and the grid `y·o + x`, as in
  * latin.ts. `solver_normal` reads the grid with raw `grid[i*w+j]` indexing while
@@ -35,7 +35,7 @@ import { DIFF_EXTREME, DIFF_HARD, DIFF_TRIVIAL, DIFF_UNREASONABLE } from "./stat
 
 /** Why a Group-specific deduction placed or eliminated — the premise the hint
  * narrates and highlights. Combined with {@link LatinReason} (the generic
- * positional/set/forcing deductions) it covers every technique the recording
+ * positional/set deductions) it covers every technique the recording
  * solver fires; the `kind` fields never collide with the Latin ones.
  *
  * All cell fields are **grid** coordinates (`{x = col, y = row}`); the value
@@ -353,7 +353,6 @@ export function solveGroup(
     diffSimple: DIFF_TRIVIAL,
     diffSet0: DIFF_HARD,
     diffSet1: DIFF_EXTREME,
-    diffForcing: DIFF_EXTREME,
     diffRecursive: DIFF_UNREASONABLE,
     usersolvers: [null, solverNormal, solverHard, null, null],
     valid: groupValid,

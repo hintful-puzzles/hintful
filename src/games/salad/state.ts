@@ -180,31 +180,34 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 export const LETTERS_GRID_CLUES_FROM = 8;
 
 /**
- * The refusal for a board of two symbols at Normal, or `null`. Measured
- * 2026-10-06, in boards built:
+ * The refusal for a size with no board at Normal, or `null`. Measured in
+ * boards built:
  *
- * - Letters with border clues alone: none in 80,000 to 440,000 at each size
- *   from 3x3 to 7x7. An 8x8, which may clue its grid, is found once in 16.
- * - Numbers: none in 700,000 at 3x3 and in 230,000 at 4x4. From 5x5 the
- *   boards exist and are dealt, however long they take: measured 2026-10-21
- *   under the deal's deadline, a 5x5 takes 42 s and an 8x8 24 s, and at 9x9
- *   and 10x10 about half the deals give up.
+ * - Two symbols, Letters with border clues alone: none in 80,000 to 440,000
+ *   at each size from 3x3 to 7x7 (2026-10-06). An 8x8, which may clue its
+ *   grid, is found once in 16.
+ * - Two symbols, Numbers: none in 700,000 at 3x3 and in 230,000 at 4x4
+ *   (2026-10-06). From 5x5 the boards exist and are dealt, however long they
+ *   take: measured 2026-10-21 under the deal's deadline, a 5x5 takes 42 s and
+ *   an 8x8 24 s, and at 9x9 and 10x10 about half the deals give up.
+ * - Three symbols, a 4x4 of Letters: none in 250,000 once Normal followed no
+ *   forcing chain (2026-10-27).
  */
-function twoSymbolRefusal(p: SaladParams): string | null {
-  if (p.nums !== 2 || p.diff !== DIFF_HARD) return null;
+function normalRefusal(p: SaladParams): string | null {
+  if (p.diff !== DIFF_HARD) return null;
   const tier = DIFF_NAMES[p.diff] ?? "";
-  const what = `${p.order}x${p.order} ${RULESETS[p.mode]?.name} puzzle`;
-  if (p.mode === GAMEMODE_LETTERS) {
-    return p.order < LETTERS_GRID_CLUES_FROM
-      ? noSuchTier(`${what} with 2 symbols`, tier)
-      : null;
-  }
-  return p.order <= 4 ? noSuchTier(`${what} with 2 symbols`, tier) : null;
+  const what = `${p.order}x${p.order} ${RULESETS[p.mode]?.name} puzzle with ${p.nums} symbols`;
+  if (p.nums === 3)
+    return p.mode === GAMEMODE_LETTERS && p.order === 4 ? noSuchTier(what, tier) : null;
+  if (p.nums !== 2) return null;
+  if (p.mode === GAMEMODE_LETTERS)
+    return p.order < LETTERS_GRID_CLUES_FROM ? noSuchTier(what, tier) : null;
+  return p.order <= 4 ? noSuchTier(what, tier) : null;
 }
 
 export function validateParams(p: SaladParams, full: boolean): string | null {
   if (p.nums >= p.order) return "Symbols must be lower than the size.";
-  return full ? twoSymbolRefusal(p) : null;
+  return full ? normalRefusal(p) : null;
 }
 
 // --- state -----------------------------------------------------------------

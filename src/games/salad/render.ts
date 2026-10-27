@@ -108,8 +108,8 @@ export const COL_MISTAKE = 17;
 /** Fork addition: the yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 18;
 // Fork additions: the explained-hint legend (docs/hints-marks.md § "The engine colors the marks").
-/** The deduction's evidence — a clue's line of sight, a whole line, or a forcing
- * chain — outlined. */
+/** The deduction's evidence — a clue's line of sight, or a whole line —
+ * outlined. */
 export const COL_HINT_CELL = 19;
 /** Fork addition: the keyboard cursor's cell fill. Upstream used the bevel
  * lowlight, a tint of the board. */

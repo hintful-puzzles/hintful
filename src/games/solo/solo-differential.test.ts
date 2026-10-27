@@ -12,6 +12,12 @@
  *
  * The fixture is **frozen and cannot be regenerated**: the C build and trace
  * harness that captured it are gone (see `engine/testing/differential.ts`).
+ *
+ * **From Extreme up the fixtures are re-founded.** Upstream's Extreme has
+ * forcing chains, which here are a search and sit with the recursion, so a
+ * board the C graded Extreme by a chain grades at recursion, and the
+ * generator from Extreme up keeps different boards. Those fixtures keep the
+ * grade, Extreme or the recursion the chain moved to, and drop the byte-match.
  */
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
@@ -20,7 +26,13 @@ import cReference from "./__fixtures__/solo-c-reference.json" with { type: "json
 import { newSoloDesc } from "./generator.ts";
 import { soloGame } from "./index.ts";
 import { solveSolo } from "./solver.ts";
-import { DIFF_KINTERSECT, DIFF_RECURSIVE, newState, type SoloParams } from "./state.ts";
+import {
+  DIFF_EXTREME,
+  DIFF_KINTERSECT,
+  DIFF_RECURSIVE,
+  newState,
+  type SoloParams,
+} from "./state.ts";
 
 interface Fixture {
   c: number;
@@ -56,18 +68,26 @@ function label(f: Fixture): string {
 }
 
 describe("solo differential (frozen C reference)", () => {
+  it("re-founds some fixtures and keeps others byte-matched", () => {
+    expect(data.fixtures.some((f) => f.diff >= DIFF_EXTREME)).toBe(true);
+    expect(data.fixtures.some((f) => f.diff < DIFF_EXTREME)).toBe(true);
+  });
+
   for (const f of data.fixtures) {
-    it(`${label(f)}: TS desc matches C byte-for-byte`, () => {
-      const { desc } = newSoloDesc(paramsOf(f), randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(validateDesc(soloGame, paramsOf(f), desc)).toBeNull();
-    });
+    if (f.diff < DIFF_EXTREME)
+      it(`${label(f)}: TS desc matches C byte-for-byte`, () => {
+        const { desc } = newSoloDesc(paramsOf(f), randomNew(f.seed));
+        expect(desc).toBe(f.desc);
+        expect(validateDesc(soloGame, paramsOf(f), desc)).toBeNull();
+      });
 
     it(`${label(f)}: TS solver grades the published board as C did`, () => {
       const p = paramsOf(f);
       const s = newState(p, f.desc);
       const { diff, kdiff } = solveSolo(s, DIFF_RECURSIVE, DIFF_KINTERSECT);
-      expect(diff).toBe(f.solverDiff);
+      if (f.solverDiff === DIFF_EXTREME)
+        expect([DIFF_EXTREME, DIFF_RECURSIVE]).toContain(diff);
+      else expect(diff).toBe(f.solverDiff);
       expect(kdiff).toBe(f.solverKdiff);
     });
   }

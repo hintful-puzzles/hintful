@@ -88,7 +88,7 @@ export const COL_DIAGONAL = 6;
 /** The Check & Save mistake outline. */
 export const COL_MISTAKE = 7;
 /** Hint overlay: the premise cells outlined as evidence (associativity's three
- * known products, an identity fill's revealing cell, a forcing chain). */
+ * known products, an identity fill's revealing cell). */
 export const COL_HINT_CELL = 8;
 /** The yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 9;

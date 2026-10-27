@@ -271,8 +271,8 @@ reasoning over other regions cannot take the preset".
   owns the preference defaults and the empty-plan refusal ("A shared
   candidate-elimination hint entry").
 - **The generic Latin narration arms are shared.** `narrateLatinReason(reason,
-  ns, vocab?)` in `hint-text.ts` owns `single`, `hiddenSingle`, `dup`, `set`
-  and `forcing`; a game narrates its own arms and falls through to it.
+  ns, vocab?)` in `hint-text.ts` owns `single`, `hiddenSingle`, `dup` and
+  `set`; a game narrates its own arms and falls through to it.
   Exemplar: `narrate` in [`unequal/index.ts`](../src/games/unequal/index.ts).
 - **The value vocabulary is a parameter**: `LatinVocab { noun, value(n),
   cell? }`. Omit it for plain numbers. The shared `dup` arm picks "a"/"an" by
@@ -1072,8 +1072,7 @@ follows. Exemplar: [`map/hint.ts`](../src/games/map/hint.ts).
   throws if the walk does not end on the struck value (§ "A walk a sentence
   claims is a walk the code takes"). The chain is outlined whole, its ends
   named by their relation to it ([`hints-marks.md`](./hints-marks.md)
-  § "Show the what-if walk statically"); the forcing-chain sentence stays
-  the game's, `forcingChainPremise` being written for a line.
+  § "Show the what-if walk statically").
 - **Name an element by its mark, never by an id the board may not show**:
   "this region", "the outlined pair", "the outlined chain". Name a color that is a value by its word, kept beside its fill
   (`FOUR_NAMES` in `engine/color/colors.ts`), which is a word for each

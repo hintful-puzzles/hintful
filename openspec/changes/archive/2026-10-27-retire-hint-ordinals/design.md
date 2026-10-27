@@ -142,18 +142,47 @@ alone, so moving it leaves the tier with no board to deal. Removing or renaming
 a tier changes the params a game ID and a saved preference carry. That is a
 compatibility break, and the owner's to make.
 
-## Open question (blocks tasks 2 and 3)
+### D7. The Latin chains move now; the tier-defining rungs wait (owner, 2026-10-27)
 
 Under D4 every row above but Rome is a supposition. For the Latin games the
-move is cheap. For Path, Clusters, Map, Spokes and Boats it empties a tier,
-and Path's Normal is its default. Owner: which of these?
+move is cheap; for Path, Clusters, Map, Spokes and Boats it empties a tier,
+and Path's Normal is its default. Offered (a) move them all, with the emptied
+tiers renamed or removed and old game IDs read as the nearest tier left, or
+(b) move the Latin forcing chains now and leave the tier-defining rungs until
+each game has a markable technique to fill its tier, the owner chose **(b)**.
 
-- (a) Move them all. The emptied tiers go, or take another name, and old game
-  IDs at those tiers are read as the nearest tier left.
-- (b) Move the Latin forcing chains now, and leave the tier-defining rungs
-  until each of those games has a markable technique to fill its tier with
-  (one change per engine shape, filed first as the engine's).
-- (c) Something else.
+- **The forcing chain leaves the Latin config.** `LatinSolverConfig` loses
+  `diffForcing`: `latin.ts` runs `forcing` at `diffRecursive`, beside the
+  recursion, so no game can grade a chain below its search. Salad, whose
+  `diffRecursive` is `DIFF_IMPOSSIBLE`, never runs one. Solo's `forcing-chain`
+  rung moves to `DIFF_RECURSIVE` the same way.
+- **No hint narrates a forcing chain.** Every Latin hint records below the
+  recursive level, so the chain's reason, `ForcingLink`, `forcingChainArea`,
+  `forcingChainPremise`, the `forcing` rung and their pins are dead and go.
+  `forcing()` throws if it ever runs with a recorder, so a hint that records
+  at the searching level fails loudly instead of striking a note it cannot
+  explain.
+- **A board a player already has keeps its ID.** A Hard (Solo: Extreme;
+  Mathrax, Towers: Tricky; Salad: Normal) board that needed a chain is still
+  valid and still opens. The midend grades a board its stated tier does not
+  solve, so it opens labeled Unreasonable, and its hint stops where the chain
+  was with the trial-and-error refusal (seen on Towers `5dx:2/2/3/2//////4/////1////2/,l1h3c`,
+  2026-10-27). No format changes.
+- **Two Custom cells lose their boards, and are refused** (owner,
+  2026-10-27). `tier-walk` over the seven games, at HEAD and after, differs
+  in five cells. Searched in boards built: Unequal 3×3 Hard (`3dx`) and Salad
+  4×4 Letters of three at Normal (`4n3Ldx`) find none in 250,000, so both are
+  refused by name and pinned as absent. Unequal 3×3 Unreasonable, refused
+  before, now deals at once: the old Hard boards are its boards. Solo 3×2
+  Killer Extreme (`3x2kade`, 6 in 30 deals of 10,000), Solo 2×3 Killer
+  Extreme, Solo 3×2 Extreme and Keen 6×6 multiplication-only Hard (`6dxm`) are
+  rarer than at HEAD and still deal. A params-only link to a refused cell is
+  refused instead of dealing; one carrying its board still opens.
+- **The rest is filed as the engine's**, one change per shape:
+  `teach-what-if-walks-with-marks` (Path's lookaheads, Clusters'
+  `lookahead-chain`, Spokes' `contradiction-bounded`, Boats' trial) and
+  `teach-map-chains-with-marks` (Map's `forcingChain`). Each finds a markable
+  technique to fill its tier before its rung moves to Unreasonable.
 
 ## Risks / Trade-offs
 

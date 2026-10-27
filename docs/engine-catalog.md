@@ -858,8 +858,8 @@ It re-derives from the working board whether a recorded `single` is naked
 or hidden, so a game never says every other number is ruled out of a cell
 that visibly holds several candidates. It throws on a placement that is
 neither, which is a strike the plan skipped. `availablePlacements` lists
-the recorded placements a plan could take now, and `forcingChainArea`
-numbers a chain's cells. The sentences are `hint-text.ts`'s.
+the recorded placements a plan could take now. The sentences are
+`hint-text.ts`'s.
 
 ### `hint-words.ts` — a hint's words bound to its marks
 
@@ -894,8 +894,7 @@ its `hint-text.ts`. Nothing here decides which sentence fires. See
 - `narrateLatinReason` and `latinPremise`, for the row/column games
   (normative: `engine-candidate-hints`, "A shared narrator for generic Latin
   placements and strike premises").
-- `forcingChainPremise`, and `confinedPremise` for one value confined
-  across several lines.
+- `confinedPremise`, for one value confined across several lines.
 - `populateText`, `cleanObviousText`, the `Premise` a strike's words are,
   the `Conclusions` the walk ends it with (`candidateConclusions`) and the
   `LatinVocab` a value is spoken in.

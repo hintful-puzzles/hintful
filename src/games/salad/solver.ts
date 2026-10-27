@@ -26,11 +26,12 @@
  * ({@link saladLettersSolverDir}).
  *
  * Two difficulties, both **guess-free**: `diffRecursive = DIFF_IMPOSSIBLE`, so
- * the cube never recurses at either tier. Easy (`DIFF_EASY`) is the border
+ * the cube never recurses or follows a forcing chain at either tier. Easy
+ * (`DIFF_EASY`) is the border
  * deduction plus the generic positional / numeric elimination — which, with the
  * hole a real symbol, now includes "only these `k` squares can be empty" and
  * "this line already has its `k` empties"; Normal (`DIFF_HARD`) adds the
- * generic set elimination and forcing chains.
+ * generic set elimination.
  */
 
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
@@ -334,8 +335,8 @@ function configFor(
     diffSimple: DIFF_EASY,
     diffSet0: DIFF_HARD,
     diffSet1: DIFF_HARD,
-    diffForcing: DIFF_HARD,
-    // Never recurse: both tiers are pure deduction (the guess-free policy).
+    // Never search, by forcing chain or recursion: both tiers are pure
+    // deduction (the guess-free policy).
     diffRecursive: DIFF_IMPOSSIBLE,
     usersolvers: [saladSolverEasy, null],
     // Salad has no whole-grid post-check beyond `latinholesCheck`.

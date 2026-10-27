@@ -31,7 +31,7 @@ export { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE };
 
 /** Why an Unequal-specific deduction ruled a candidate out — the premise the
  * hint narrates and highlights. Combined with {@link LatinReason} (the generic
- * positional/set/forcing deductions) it covers every technique the recording
+ * positional/set deductions) it covers every technique the recording
  * solver fires. The `kind` fields never collide with the Latin reasons.
  *
  * `greater`/`lesser` fire only in Unequal mode (an inequality "link"), and carry
@@ -329,8 +329,8 @@ function unequalValid(solver: LatinSolver, ctx: UnequalCtx): boolean {
  * (0 = blank), up to difficulty `maxdiff`. Returns the difficulty level reached,
  * or a `DIFF_IMPOSSIBLE`/`DIFF_AMBIGUOUS`/`DIFF_UNFINISHED` sentinel. Mirrors
  * `unequal.c`'s `solver_state` → `latin_solver_main`, by tier: Easy→simple,
- * Normal→the clue deductions, Tricky→set₀, Hard→set₁+forcing,
- * Unreasonable→recursion. When `cubeOut` is given it receives the final
+ * Normal→the clue deductions, Tricky→set₀, Hard→set₁,
+ * Unreasonable→forcing and recursion. When `cubeOut` is given it receives the final
  * candidate cube (the generator grades clues by it).
  */
 export function solveUnequal(
@@ -348,7 +348,6 @@ export function solveUnequal(
     diffSimple: DIFF_LATIN,
     diffSet0: DIFF_SET,
     diffSet1: DIFF_EXTREME,
-    diffForcing: DIFF_EXTREME,
     diffRecursive: DIFF_RECURSIVE,
     usersolvers: [null, solverEasy, solverSet, null, null],
     valid: unequalValid,

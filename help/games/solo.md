@@ -48,10 +48,6 @@ the preferences.
 
 {{hint-marks}}
 
-An outlined chain is cells with two numbers left each, each sharing a
-row, column or region with the next: the sentence names its two ends and
-says how the chain rules a number out of the cell where it is struck.
-
 A few ideas are worth learning by name:
 
 * **Only one place.** When every other cell of a row, column or block

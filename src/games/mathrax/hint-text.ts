@@ -1,7 +1,7 @@
 /**
  * Every sentence Mathrax's hint speaks that is Mathrax's own: the clue at an
  * interior intersection, read three ways. The generic Latin arms (naked and
- * hidden singles, the placement cull, set elimination, forcing chains) are the
+ * hidden singles, the placement cull, set elimination) are the
  * engine's, `engine/hint-text.ts`, and so are the two setup steps, built by the
  * row/column preset from the two words Mathrax gives it (`index.ts`'s `notes`).
  *

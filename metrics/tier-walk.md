@@ -282,12 +282,14 @@
 
 ## group
 
-58 cells dealt, 30 refused, 12 left out as slow.
+64 cells dealt, 27 refused, 9 left out as slow.
 
-- `7dx` asked Hard: 4.8 s
-- `10du` asked Unreasonable: 6.5 s
-- `8dxi` asked Hard: 3.3 s
-- `10dui` asked Unreasonable: 11.1 s
+- `6dh` asked Tricky: gave up on 2
+- `6dx` asked Hard: gave up on 3
+- `7dx` asked Hard: 3.1 s
+- `10du` asked Unreasonable: 3.9 s
+- `10dui` asked Unreasonable: 8.9 s
+- `12dxi` asked Hard: 16.9 s
 - `3dn` refused: No 3x3 puzzle is Normal.
 - `3dh` refused: No 3x3 puzzle is Tricky.
 - `3dx` refused: No 3x3 puzzle is Hard.
@@ -298,51 +300,46 @@
 - `4du` refused: No 4x4 puzzle is Unreasonable.
 - `5dh` refused: No 5x5 puzzle that shows its identity is Tricky.
 - `5dx` refused: No 5x5 puzzle is Hard.
-- `6dh` refused: Tricky 6x6 puzzles that show their identity are too rare to deal.
-- `6dx` refused: Hard 6x6 puzzles that show their identity are too rare to deal.
-- `8dx` refused: Hard 8x8 puzzles that show their identity are too rare to deal.
-- `3dti` refused: Easy puzzles must have an identity.
+- `3dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
 - `3dni` refused: 3x3 puzzles must have an identity.
 - `3dhi` refused: 3x3 puzzles must have an identity.
 - `3dxi` refused: 3x3 puzzles must have an identity.
 - `3dui` refused: 3x3 puzzles must have an identity.
-- `4dti` refused: Easy puzzles must have an identity.
+- `4dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
 - `4dxi` refused: No 4x4 puzzle is Hard.
 - `4dui` refused: No 4x4 puzzle is Unreasonable.
-- `5dti` refused: Easy puzzles must have an identity.
+- `5dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
 - `5dxi` refused: No 5x5 puzzle is Hard.
-- `6dti` refused: Easy puzzles must have an identity.
-- `7dti` refused: Easy puzzles must have an identity.
-- `8dti` refused: Easy puzzles must have an identity.
-- `9dti` refused: Easy puzzles must have an identity.
-- `10dti` refused: Easy puzzles must have an identity.
-- `11dti` refused: Easy puzzles must have an identity.
-- `12dti` refused: Easy puzzles must have an identity.
-- left out: `9dx` `10dx` `11dx` `11du` `12dx` `12du` `9dxi` `10dxi` `11dxi` `11dui` `12dxi` `12dui`
+- `6dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
+- `7dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
+- `8dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
+- `9dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
+- `10dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
+- `11dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
+- `12dti` refused: Difficulty must be Normal, Tricky, Hard or Unreasonable while Show identity is off.
+- left out: `8dx` `9dx` `10dx` `11dx` `11du` `12dx` `12du` `11dui` `12dui`
 
 ## keen
 
-54 cells dealt, 15 refused, 1 left out as slow.
+60 cells dealt, 6 refused, 4 left out as slow.
 
-- `4dum` asked Unreasonable: 4.5 s
-- `8dhm` asked Tricky: 6.3 s
-- `9dnm` asked Normal: 4.5 s
+- `4dxm` asked Hard: gave up on 2
+- `4dum` asked Unreasonable: gave up on 1
+- `5dxm` asked Hard: gave up on 3
+- `5dum` asked Unreasonable: gave up on 3
+- `6dxm` asked Hard: gave up on 1
+- `7dxm` asked Hard: gave up on 2
+- `7dum` asked Unreasonable: gave up on 1; 3.2 s
+- `8dhm` asked Tricky: gave up on 1; 3.7 s
+- `8dxm` asked Hard: gave up on 1; 4.0 s
+- `9dnm` asked Normal: 4.4 s
 - `3dh` refused: No 3x3 puzzle is Tricky.
 - `3dx` refused: No 3x3 puzzle is Hard.
 - `3du` refused: No 3x3 puzzle is Unreasonable.
 - `3dhm` refused: No 3x3 puzzle is Tricky.
 - `3dxm` refused: No 3x3 puzzle is Hard.
 - `3dum` refused: No 3x3 puzzle is Unreasonable.
-- `5dxm` refused: Hard 5x5 puzzles with multiplication only are too rare to deal.
-- `5dum` refused: Unreasonable 5x5 puzzles with multiplication only are too rare to deal.
-- `7dxm` refused: Hard 7x7 puzzles with multiplication only are too rare to deal.
-- `7dum` refused: Unreasonable 7x7 puzzles with multiplication only are too rare to deal.
-- `8dxm` refused: Hard 8x8 puzzles with multiplication only are too rare to deal.
-- `8dum` refused: Unreasonable 8x8 puzzles with multiplication only are too rare to deal.
-- `9dhm` refused: Tricky 9x9 puzzles with multiplication only are too rare to deal.
-- `9dxm` refused: Hard 9x9 puzzles with multiplication only are too rare to deal.
-- `9dum` refused: Unreasonable 9x9 puzzles with multiplication only are too rare to deal.
-- left out: `6dum`
+- left out: `8dum` `9dhm` `9dxm` `9dum`
 
 ## lightup
 
@@ -1123,15 +1120,18 @@
 
 ## salad
 
-50 cells dealt, 31 refused, 13 left out as slow.
+53 cells dealt, 31 refused, 10 left out as slow.
 
-- `8n5Ldx` asked Normal: 3.5 s
-- `4n3Bdx` asked Normal: 4.8 s
-- `7n4Bdx` asked Normal: 3.8 s
-- `6n2Bdx` asked Normal: 4.2 s
-- `7n2Bdx` asked Normal: 7.0 s
-- `8n2Bdx` asked Normal: 133.6 s
+- `8n5Ldx` asked Normal: 5.0 s
+- `7n2Lde` asked Easy: gave up on 3
+- `4n3Bdx` asked Normal: gave up on 3
+- `8n5Bdx` asked Normal: 12.6 s
+- `7n4Bdx` asked Normal: 5.7 s
+- `6n2Bdx` asked Normal: 6.4 s
+- `7n2Bdx` asked Normal: 10.8 s
+- `8n2Bdx` asked Normal: 173.6 s
 - `3n2Ldx` refused: No 3x3 Letters puzzle with 2 symbols is Normal.
+- `4n3Ldx` refused: No 4x4 Letters puzzle with 3 symbols is Normal.
 - `3n3Lde` refused: Symbols must be lower than the size.
 - `3n3Ldx` refused: Symbols must be lower than the size.
 - `4n2Ldx` refused: No 4x4 Letters puzzle with 2 symbols is Normal.
@@ -1151,7 +1151,6 @@
 - `3n2Bdx` refused: No 3x3 Numbers puzzle with 2 symbols is Normal.
 - `3n3Bde` refused: Symbols must be lower than the size.
 - `3n3Bdx` refused: Symbols must be lower than the size.
-- `5n2Bdx` refused: Normal 5x5 Numbers puzzles with 2 symbols are too rare to deal.
 - `5n5Bde` refused: Symbols must be lower than the size.
 - `5n5Bdx` refused: Symbols must be lower than the size.
 - `3n4Bde` refused: Symbols must be lower than the size.
@@ -1162,7 +1161,7 @@
 - `3n5Bdx` refused: Symbols must be lower than the size.
 - `4n5Bde` refused: Symbols must be lower than the size.
 - `4n5Bdx` refused: Symbols must be lower than the size.
-- left out: `5n3Ldx` `6n3Ldx` `7n3Ldx` `8n3Ldx` `5n4Bdx` `6n5Bdx` `7n5Bdx` `8n5Bdx` `5n3Bdx` `6n3Bdx` `7n3Bdx` `8n3Bdx` `8n4Bdx`
+- left out: `5n3Ldx` `6n3Ldx` `7n3Ldx` `8n3Ldx` `5n3Bdx` `6n3Bdx` `7n3Bdx` `8n3Bdx` `5n2Bdx` `8n4Bdx`
 
 ## seismic
 
@@ -1181,24 +1180,26 @@
 
 ## solo
 
-123 cells dealt, 76 refused, 47 left out as slow.
+122 cells dealt, 77 refused, 47 left out as slow.
 
-- `5x3du` asked Unreasonable: 3.5 s
-- `6x3de` asked Extreme: 5.3 s
-- `7x3da` asked Hard: 3.1 s
-- `8x3di` asked Tricky: 4.8 s
-- `9x3` asked Easy: 3.1 s
-- `9x3db` asked Normal: 28.6 s
-- `4x3xdu` asked Unreasonable: 25.9 s
-- `6x3xde` asked Extreme: 3.0 s
+- `3x2de` asked Extreme: gave up on 1
+- `5x3du` asked Unreasonable: 3.6 s
+- `6x3de` asked Extreme: 3.6 s
+- `7x3da` asked Hard: 3.3 s
+- `8x3di` asked Tricky: 4.9 s
+- `9x3` asked Easy: 3.2 s
+- `9x3db` asked Normal: 29.2 s
+- `4x3xdu` asked Unreasonable: 26.6 s
+- `6x3xde` asked Extreme: 4.0 s
 - `7x3xda` asked Hard: 5.4 s
-- `8x3x` asked Easy: 5.2 s
-- `8x3xdi` asked Tricky: 7.6 s
-- `9x3xdb` asked Normal: 8.6 s
-- `9x2de` asked Extreme: 4.4 s
-- `9x2du` asked Unreasonable: 38.6 s
-- `2jka` asked Easy: gave up on 3
-- `3x3kade` asked Extreme: 16.3 s
+- `8x3x` asked Easy: 5.4 s
+- `8x3xdi` asked Tricky: 8.0 s
+- `9x3xdb` asked Normal: 3.3 s
+- `9x2de` asked Extreme: 8.8 s
+- `9x2du` asked Unreasonable: 41.9 s
+- `3x2kade` asked Extreme: gave up on 3
+- `2x3kade` asked Extreme: gave up on 3
+- `3x3kade` asked Extreme: gave up on 1; 7.8 s
 - `2jdb` refused: No 2 Jigsaw puzzle is Normal.
 - `2jdi` refused: No 2 Jigsaw puzzle is Tricky.
 - `2jda` refused: No 2 Jigsaw puzzle is Hard.
@@ -1229,6 +1230,7 @@
 - `4jda` refused: No 4 Jigsaw puzzle is Hard.
 - `4jde` refused: No 4 Jigsaw puzzle is Extreme.
 - `4jdu` refused: No 4 Jigsaw puzzle is Unreasonable.
+- `2jka` refused: No 2 Jigsaw Killer puzzle is Easy.
 - `2jkadb` refused: No 2 Jigsaw puzzle is Normal.
 - `2jkadi` refused: No 2 Jigsaw puzzle is Tricky.
 - `2jkada` refused: No 2 Jigsaw puzzle is Hard.
@@ -1323,7 +1325,7 @@
 42 cells dealt, 8 refused, 0 left out as slow.
 
 - `3dk` refused: No 3x3 puzzle is Tricky.
-- `3dr` refused: No 3x3 puzzle is Unreasonable.
+- `3dx` refused: No 3x3 puzzle is Hard.
 - `3adk` refused: Size must be at least 5 for Adjacent puzzles of this difficulty.
 - `3adx` refused: Size must be at least 5 for Adjacent puzzles of this difficulty.
 - `3adr` refused: Size must be at least 5 for Adjacent puzzles of this difficulty.

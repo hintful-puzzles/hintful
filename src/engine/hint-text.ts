@@ -4,8 +4,8 @@
  *
  * A game's own sentences live in its `hint-text.ts`; these are the ones several
  * games speak word for word, so a wording pass on them lands once: the generic
- * Latin arms (Keen, Unequal, Group, Salad), the forcing chain (those four plus
- * Towers and Solo), the candidate games' two setup steps and the conclusions
+ * Latin arms (Keen, Unequal, Group, Salad), the candidate games' two setup
+ * steps and the conclusions
  * their strikes end in, the sliding-tile
  * games' "Working on tile N:" prefix, the border-grid games' later legs, and
  * the helpers that join a list or
@@ -28,12 +28,7 @@ import {
   unshaped,
   whole,
 } from "./hint-words.ts";
-import {
-  type ForcingLink,
-  forcingChainArea,
-  type GenericLatinReason,
-  hiddenSingleLine,
-} from "./latin-hint.ts";
+import { type GenericLatinReason, hiddenSingleLine } from "./latin-hint.ts";
 import type { Point } from "./types.ts";
 
 // --- lists and articles ------------------------------------------------------
@@ -381,9 +376,8 @@ export function confinedPremise(
   return phrase`${striped} fit ${value} only in ${mark.the("outline", CELL, set, cell)}, taking the ${value} of ${lines.count} ${across}`;
 }
 
-/** The premise of a generic Latin strike (the placement cull, a set, a forcing
- * chain), shared as {@link narrateLatinReason} is. `marks` are the struck
- * notes. */
+/** The premise of a generic Latin strike (the placement cull, a set), shared
+ * as {@link narrateLatinReason} is. `marks` are the struck notes. */
 export function latinPremise(
   reason: GenericLatinReason,
   marks: readonly Note[],
@@ -407,15 +401,6 @@ export function latinPremise(
       return {
         premise: phrase`${mark.the("outline", CELL, reason.cells, cell).capitalized()} already account for ${joinWith(distinct(marks.map((m) => m.n)).map(v))} between them`,
       };
-    case "forcing":
-      return {
-        premise: forcingChainPremise(
-          reason,
-          marks[0],
-          vocab,
-          reason.shares === "row" ? "row" : "column",
-        ),
-      };
     default:
       throw new Error(`a ${reason.kind} places, and is narrated by narrateLatinReason`);
   }
@@ -433,81 +418,4 @@ export function placedRulesOut(
 ): Narration {
   const at = { x: placed.px, y: placed.py };
   return phrase`${mark.as("outline", CELL, [at], `The ${value} just placed`)} can't repeat in its ${regions}`;
-}
-
-/**
- * A forcing chain's premise, told as the argument it actually is rather than as
- * "a contradiction further along" — a claim the player could only check by
- * redoing the deduction. It ends in what both branches agree on, which the walk
- * concludes as the move the board calls for.
- *
- * **The case split is the load-bearing part.** A forcing chain does not refute a
- * hypothesis; it concludes from *both* branches of one, and a walk that narrates
- * only the chain has a final leg that does not follow from its own premises (the
- * Palisade lesson, `docs/hints.md` § "Writing the narration"):
- *
- * - the origin (one end of the chain) has exactly two candidates, the struck
- *   value and one other;
- * - **if it is the struck value**, the conclusion cell loses that value by plain
- *   uniqueness — the two share the line `reason.shares` names;
- * - **if it is the other**, each link forces the next (every chain cell has just
- *   two candidates left, so losing one leaves one), until the last link is
- *   driven *to* the struck value — and it too lines up with the conclusion cell,
- *   because it is a row/column neighbor of it by construction.
- *
- * The links between are outlined on the board (`latin-hint.ts`'s
- * `forcingChainArea`) rather than recited here; reciting them would put the
- * chain back in the reader's head, which is the thing the marks exist to
- * prevent. What the sentence must supply is the **rule** that propagates it,
- * since that is the technique the player is being taught and it is nowhere on
- * the board.
- *
- * **Exported, because Towers and Solo keep their own `narrate`.** They decline
- * {@link narrateLatinReason} for a reason that does not apply to this arm — they
- * need a value qualified in *some* arms and bare in others, and a different
- * region set per arm — and neither is at issue here: "two heights left" already
- * contextualizes the bare numbers, and `region` is a parameter. A chain sentence
- * that drifted between games would be a chance to say something the board does
- * not show.
- *
- * `region` is what the conclusion shares with the origin — a row or column
- * everywhere except Solo, which also reasons over blocks and diagonals.
- *
- * **The deixis tie is the role.** The chain and its two ends are outlined and
- * named by their relation to the chain ("one end", "the other end"),
- * each a reference of its own, and the conclusion is the one ringed cell, so
- * "this cell" picks out the ring and nothing else. See `docs/hints.md` § "Two
- * marks of one kind: tie them, and never by color".
- */
-export function forcingChainPremise(
-  reason: { chain: readonly ForcingLink[] },
-  struck: Note,
-  vocab: LatinVocab,
-  region: string,
-  /** The region the last link shares with this cell where it is not a row or
-   * column: a row/column game's chain always ends in line with it, Solo's can
-   * end in its block or diagonal. */
-  lastShares: string | null = null,
-): Narration {
-  const v = vocab.value;
-  const cell = vocab.cell ?? "cell";
-  const chain = forcingChainArea(reason);
-  const s = v(struck.n);
-  const here = thisCell(struck, cell);
-  const end = (at: Point, words: string): Narration =>
-    mark.as("outline", CELL, [at], words);
-  const lines = region === "row" || region === "column";
-  const tie =
-    lastShares === null && lines
-      ? phrase`both in line with ${here}`
-      : lastShares === region
-        ? phrase`both in ${here}'s ${region}`
-        : lastShares === null
-          ? phrase`in ${here}'s ${region} and in line with it`
-          : phrase`in ${here}'s ${region} and ${lastShares}`;
-  // "Puts" is the rule that carries it, which the board does not show: each
-  // cell of the chain, down to two values, forces the next, so if one end is
-  // not the value the other is. Not "in turn", which the speculative-chain
-  // guard reads as a chain left unshown.
-  return phrase`${mark.as("outline", CELL, chain, "The outlined chain")} puts ${s} at ${end(chain[0], "one end")} or ${end(chain[chain.length - 1], "the other end")}, ${tie}`;
 }

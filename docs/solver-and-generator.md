@@ -680,15 +680,28 @@ a rung a tier there (§ "A tier means exactly its rung"). Exemplar: Mosaic.
 
 ### Check, Tactic, Search
 
-**Classify a rung by whether its reasoning is a bounded run of steps a
-player can each see at a glance, not by whether a trial or a search was
-involved.**
+**Classify a rung by whether each link of its reasoning writes a mark the
+player can make, not by whether a trial was involved or how short the chain
+is.** The owner's ruling (2026-10-26): in practice, long forcing is
+indistinguishable from backtracking, and a player who wants to try a
+supposition already can, by saving, playing it out and loading back. So no
+mark for a supposition is ever added.
 
 | | Shape | Tier | Hint |
 | --- | --- | --- | --- |
 | **Check** | place a value and look: one clue, one count, one neighbor breaks at once | any | narrate directly |
-| **Tactic** | a bounded chain of forced consequences to a named endpoint | Tricky, Hard, Extreme | narrate as a multi-leg walk |
-| **Search** | run the whole solver from a hypothesis, or branch and backtrack | `Unreasonable` | refuse |
+| **Tactic** | a chain whose every link is a fact the game's ordinary marks record | Tricky, Hard, Extreme | ordinary steps, each writing its mark |
+| **Search** | run the whole solver from a hypothesis, branch and backtrack, or follow a chain of suppositions no mark records, however short | `Unreasonable` | refuse |
+
+**A supposition rung that alone defines a tier keeps it until a markable
+technique fills that tier** (`engine-hints`, "A supposition rung that defines
+its tier keeps it until a markable technique fills it"): moving it first
+leaves the tier with nothing to deal. Its hint shows the chain statically
+([`hints-marks.md`](./hints-marks.md) § "Show the what-if walk statically").
+The open changes `teach-what-if-walks-with-marks` and
+`teach-map-chains-with-marks` list the rungs still kept and retire them. A supposition rung a tier can do without runs only at
+Unreasonable: the Latin forcing chain runs at `diffRecursive`, and the config
+has no field to put it lower.
 
 **Nothing enforces the tier column, so decide a rung's class from this table
 when you add or move one, and say so in the change.** `hint-quality.test.ts`
@@ -702,13 +715,13 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   rejection the player can see without trying anything is a Check
   (`hints-candidates.md` § "Deduce from the notes when the mistake check
   vouches for them"). Exemplar: `sticksTry` in Sticks' solver.
-- **A Tactic is legitimate at a middle tier**; `hints.md` § "The forcing
-  boundary" says what its narration owes the player. A chain of local rules
-  that assumes nothing is a Tactic too, where every link is glanceable and
-  the player has a notation for the links (`hints-marks.md` § "Give the facts a
-  notation"). Exemplars: `forcing` in
-  [`engine/latin.ts`](../src/engine/latin.ts), the lookahead in Clusters'
-  solver and the forcing-chain walk in Map's.
+- **A Tactic is legitimate at a middle tier**: a chain of local rules that
+  assumes nothing, where every link is glanceable and the player has a
+  notation for the links (`hints-marks.md` § "Give the facts a notation").
+  Exemplar: Rome's `loop`, which follows arrows already on the board.
+- **"If this cell is a, that one is b" is a supposition**, even where both
+  cells' candidates are notes: no mark records the conditional. Exemplar:
+  `forcing` in [`engine/latin.ts`](../src/engine/latin.ts), a Search.
 - **Nested speculation is Search twice over**, and so is every true
   recursion tier. Exemplars of a Search: `forcingPass` in Undead's solver,
   `solverRecurse` in Bricks' and `deduceForcingChain` in Dominosa's.
@@ -1635,8 +1648,9 @@ pass's flags and adds one for a cell the answer contradicts, and
 deductions (`usersolvers`), a `valid` callback over completed grids, and a
 thin driver mapping its difficulty levels onto the `latinSolver` config.**
 The engine gives the candidate cube, positional, numeric and set
-elimination, forcing chains, guess-and-verify recursion as the uniqueness
-check, and the generator (`matching`, `latinGenerate`, `latinGenerateRect`).
+elimination, forcing chains and guess-and-verify recursion at the searching
+level `diffRecursive` (the recursion doubling as the uniqueness check), and
+the generator (`matching`, `latinGenerate`, `latinGenerateRect`).
 The population is `git grep -l engine/latin.ts src/games`. The hint side
 starts at [hints-candidates.md](./hints-candidates.md) § "What every game does".
 

@@ -69,11 +69,7 @@ import {
 } from "../../engine/hint-text.ts";
 import type { Narration, Sentence } from "../../engine/hint-words.ts";
 import type { ConfinedLines } from "../../engine/latin.ts";
-import {
-  type ForcingLink,
-  hiddenSingleLine,
-  type SingleReasonUnder,
-} from "../../engine/latin-hint.ts";
+import { hiddenSingleLine, type SingleReasonUnder } from "../../engine/latin-hint.ts";
 import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
 import { CLUE, saladVocab, say } from "./hint-text.ts";
@@ -119,11 +115,7 @@ export type SaladReason =
   | { kind: "circleXNote"; count: number }
   | SingleReasonUnder<"populate">
   | { kind: "dup"; n: number; px: number; py: number }
-  | { kind: "set"; cells: readonly Cell[]; lines?: ConfinedLines }
-  /** The shared solver's forcing chain, with the chain it followed — the same
-   * shape `latin.ts` records, so the numbered squares and the case-split
-   * narration come for free. */
-  | { kind: "forcing"; chain: ForcingLink[]; shares: "row" | "col" };
+  | { kind: "set"; cells: readonly Cell[]; lines?: ConfinedLines };
 
 /** Every rung a Salad step can be: the Latin family's on the populate reading,
  * the only one Salad's plan walks (`buildSteps`'s `setUp`), and the kinds of
@@ -308,18 +300,6 @@ export function premise(
         premise: text.circleXNote(cellsOf(marks)),
         struck: text.emptyMarks(reason.count),
       };
-    case "forcing": {
-      // Where a line has one empty square the X is a candidate a chain may run
-      // through, and a square down to an X and a letter does not have "two
-      // letters left".
-      const vocab = saladVocab(mode, nums);
-      const throughX = at.n > nums || reason.chain.some((link) => link.n > nums);
-      return latinPremise(
-        reason,
-        marks,
-        throughX ? { ...vocab, noun: "pencil mark" } : vocab,
-      );
-    }
     case "countHolesDone":
     case "countLettersDone":
     case "crossNaked":

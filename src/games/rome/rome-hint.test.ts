@@ -30,6 +30,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newRomeDesc } from "./generator.ts";
 import { buildSteps } from "./hint.ts";
+import { say } from "./hint-text.ts";
 import { romeGame } from "./index.ts";
 import { COL_ARROW_PENCIL, COL_HINT_CELL } from "./render.ts";
 import {
@@ -427,6 +428,27 @@ const pinned = describeHintPins({
   },
 });
 
+describe("rome loop sentence", () => {
+  it("counts the arrows of the walk, and outlines only them", () => {
+    // The walk runs from the square pointed at back to the struck square,
+    // which is named by its own mark, so it is not among the outlined arrows.
+    const at = { x: 1, y: 1 };
+    const one = say.loop([{ x: 1, y: 2 }, at], 2, at);
+    expect(one.text).toBe(
+      "The outlined arrow in the square below points back to this square",
+    );
+    expect(one.refs[0].elements).toEqual([{ x: 1, y: 2 }]);
+    const two = say.loop([{ x: 1, y: 2 }, { x: 0, y: 2 }, at], 2, at);
+    expect(two.text).toBe(
+      "The outlined arrows from the square below lead back to this square",
+    );
+    expect(two.refs[0].elements).toEqual([
+      { x: 1, y: 2 },
+      { x: 0, y: 2 },
+    ]);
+  });
+});
+
 describe("rome hint render", () => {
   it("crosses the marks it rules out, hatches its area, and outlines its arrow", () => {
     // The sentence follows a placement inside a plan, so its step is a later
@@ -463,8 +485,10 @@ describe("rome hint render", () => {
     const { recording, hint } = renderPinnedHint(romeGame, pinned("opensOnLoop"), {
       defaultBackground: DEFAULT_BACKGROUND,
     });
+    // The outline is the squares whose arrows make the walk; the struck square
+    // is not one of them.
     const area = (hint?.highlights as { area: unknown[] }).area;
-    expect(area.length).toBeGreaterThanOrEqual(2);
+    expect(area.length).toBeGreaterThanOrEqual(1);
     expect(
       recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT_CELL),
     ).toEqual([]);

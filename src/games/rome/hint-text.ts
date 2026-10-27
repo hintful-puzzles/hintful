@@ -143,11 +143,16 @@ export const say = {
     phrase`${mark.this("stripes", whole(CELL), area, "area").capitalized()} now has ${mark.as("outline", CELL, [placed], `its ${arrow(n)} arrow`)}`,
   dupWhere: "in it",
 
-  /** A candidate that would join a chain of arrows, `path` (outlined), leading
-   * back to its own square. `n` is the struck direction, so the chain starts at
-   * the neighbor it points at. `at` is the square. */
-  loop: (path: readonly Point[], n: number, at: Point): Narration =>
-    phrase`${mark.as("outline", CELL, path, "The outlined arrows")} from the square ${neighbor(n)} lead back to ${here(at)}`,
+  /** A candidate that would join a chain of arrows, `path`, leading back to its
+   * own square. `n` is the struck direction, so the chain starts at the
+   * neighbor it points at. `at` is the square, named by its own mark, so only
+   * the squares whose arrows make the walk are outlined. */
+  loop: (path: readonly Point[], n: number, at: Point): Narration => {
+    const arrows = path.filter((p) => p.x !== at.x || p.y !== at.y);
+    return arrows.length === 1
+      ? phrase`${mark.as("outline", CELL, arrows, "The outlined arrow")} in the square ${neighbor(n)} points back to ${here(at)}`
+      : phrase`${mark.as("outline", CELL, arrows, "The outlined arrows")} from the square ${neighbor(n)} lead back to ${here(at)}`;
+  },
 
   /** A four-square area, `region`, with only one home left for an arrow, seen
    * as the elimination of that square's other marks. */

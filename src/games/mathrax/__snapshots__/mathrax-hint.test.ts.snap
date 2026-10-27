@@ -8383,7 +8383,6 @@ exports[`mathrax: pinned hint positions > says, at each pin 1`] = `
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
   "clue": "The 2− clue means this cell and the 4 across it differ by 2, so this cell must be 2.",
   "dup": "The 5 just placed can't repeat in its row and column, so the 5 must go from the other cells.",
-  "forcing": "The outlined chain puts 1 at one end or the other end, both in line with this cell, so the 1 must go.",
   "hiddenSingle": "Every other cell in this row rules out 2, so this cell must be 2.",
   "note": "Only 1, 2, 4 and 5 aren't already standing in this cell's row or column, so pencil them in.",
   "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",

@@ -20,13 +20,8 @@ import {
   nextPlace,
 } from "./candidate-hint.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
-import type { ConfinedLines, ForcingLink } from "./latin.ts";
+import type { ConfinedLines } from "./latin.ts";
 import type { Point } from "./types.ts";
-
-/** Re-exported so a game declaring its own reason union reaches the chain shape
- * from the hint module it already imports (as `latin.ts` does for
- * `DeductionRecord`). */
-export type { ForcingLink };
 
 /** A forced single placement, classified against the working board:
  * - `naked` — the cell's own candidates are exactly `{n}`;
@@ -334,19 +329,9 @@ export function hiddenSingleLine(
 
 /** The generic Latin reasons whose narration is shared verbatim by the *row/column*
  * games (Keen, Unequal): a {@link SingleReason} (naked or hidden single)
- * plus the generic `dup` / `set` / `forcing` eliminations from `LatinReason`. The
+ * plus the generic `dup` / `set` eliminations from `LatinReason`. The
  * `dup` reason may carry extra fields (`px`/`py`) — only `n` is read here. */
 export type GenericLatinReason =
   | SingleReason
   | { kind: "dup"; n: number; px: number; py: number }
-  | { kind: "set"; cells: readonly Point[]; lines?: ConfinedLines }
-  | { kind: "forcing"; chain: readonly ForcingLink[]; shares: "row" | "col" };
-
-/**
- * A forcing chain's cells as evidence, origin first, so the sentence can name
- * its two ends as references of their own and the chain as a whole. Shared by
- * every game whose forcing reason comes from `latin.ts`.
- */
-export function forcingChainArea(reason: { chain: readonly ForcingLink[] }): Point[] {
-  return reason.chain.map((c) => ({ x: c.x, y: c.y }));
-}
+  | { kind: "set"; cells: readonly Point[]; lines?: ConfinedLines };

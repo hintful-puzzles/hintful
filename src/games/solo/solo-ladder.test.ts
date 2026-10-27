@@ -36,7 +36,7 @@ const BOARDS: { label: string; board: string }[] = [
     board: "3x3da:a4_9a2g6_5g9c2_1_2b4d7_7_5e6_9_1d9b3_9_7c3g6_2g9a7_8a",
   },
   {
-    label: "3x3 Extreme, forcing chain",
+    label: "3x3 Unreasonable, forcing chain",
     board: "3x3de:e9_3e2a4_1c4b5a7_6b7c3_9_5c6c4c8_1_5c3b3_8a2b9c9_4a7e4_3e",
   },
   {

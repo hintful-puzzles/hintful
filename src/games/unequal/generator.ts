@@ -230,7 +230,8 @@ export function newUnequalDesc(
     scratch[i] = (i % o2) * 5 + 4 - ((i / o2) | 0);
 
   // The rarest tier measured (2026-10-05, twenty deals a cell, orders 3 to 7 in
-  // both modes) was a 3x3 at Hard: 119 tries at the median and 877 at worst.
+  // both modes) was a 3x3 at Hard, then the forcing chain's tier: 119 tries at
+  // the median and 877 at worst.
   const attempt = retryLimit(`unequal: generation (${o}${p.mode})`);
   while (true) {
     attempt();

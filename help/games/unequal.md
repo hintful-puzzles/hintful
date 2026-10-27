@@ -50,10 +50,6 @@ marks first (the same as pressing 'M'), set **Hints pencil in** to
 
 {{hint-marks}}
 
-An outlined chain is cells with two numbers left each, each in line with
-the next: the sentence names its two ends and says how the chain rules a
-number out of the cell where it is struck.
-
 The hint calls every `<` sign a *greater-than sign*, and reasons from
 it both ways: the cell on its larger side can't hold anything as small
 as the smallest its partner could be, nor the one on its smaller side

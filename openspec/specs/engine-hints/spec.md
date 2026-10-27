@@ -518,19 +518,6 @@ hint points at resemble the cell that is wrong.
 - **THEN** it is answered with this requirement, and the palette gains no fill
   for that role
 
-### Requirement: The chain ordinal is the evidence role
-
-The evidence color and the chain ordinal that indexes it SHALL be one role and
-not two roles holding the same value. A number saying where a cell falls in an
-ordered chain is an index into the evidence, and a name of its own would claim
-the ordered cells were a different kind of premise from the unordered ones.
-
-#### Scenario: A chain's cells are numbered
-
-- **WHEN** a hint step numbers the cells of an ordered chain
-- **THEN** the numerals take the evidence role's color, the one its outline
-  takes
-
 ### Requirement: A mark outside the content box is driven by the drawstate
 
 Where a mark lies outside the cell's content box, no tile owns those pixels, so
@@ -1254,71 +1241,62 @@ classification entirely and SHALL narrate imperatively.
 ### Requirement: A hypothesis is classified as Check, Tactic or Search
 
 A deduction that reaches its conclusion through a hypothesis SHALL be
-classified by whether its reasoning is a bounded run of individually glanceable
-steps. A Check is a contradiction visible at the placement, with no
-propagation: ordinary deduction, narratable at any tier. A Tactic is a bounded
-chain of forced consequences to a named endpoint, permitted at a tier not named
-`Unreasonable`. A Search runs the whole solver from a hypothesis, or branches
-and backtracks.
+classified by whether each link writes a mark the player can make. A Check is
+a contradiction visible at the placement, with no propagation, narratable at
+any tier. A Tactic is a chain whose every link is a fact the game's ordinary
+marks record, taught as ordinary steps that each write their mark. A Search
+runs the solver from a hypothesis, backtracks, or follows a chain of
+suppositions no mark records, however short.
 
 #### Scenario: A trial that propagates is not thereby a Search
 
 - **WHEN** a technique tries a value and follows its forced consequences
-- **THEN** it is classified by whether that propagation is bounded and can be
-  laid out for the player, not by whether a trial propagates nor by the
-  technique being called "forcing"
+- **THEN** it is classified by whether each consequence is a fact the player
+  can mark, not by whether a trial propagates nor by the technique being called
+  "forcing"
+
+#### Scenario: A chain of suppositions is a Search
+
+- **WHEN** a rung's links are "if this, then that" between values no mark
+  records, as a Latin forcing chain's are
+- **THEN** it runs only at Unreasonable, and the hint below it refuses it as a
+  Search
 
 ### Requirement: A Tactic's chain is shown on the board
 
-A Tactic's hint SHALL show the chain on the board: every link marked, in the
-order it falls, with both ends anchored (the hypothesis and the contradiction).
-It SHALL NOT compress the chain into a single claim the player can only check
-by redoing the deduction. A Tactic SHALL NOT be required to advance one leg at
-a time: the player holds the hypothesis in mind and walks the marked chain at
-their own pace.
+A supposition chain a tier keeps ("A supposition rung that defines its tier
+keeps it until a markable technique fills it") SHALL be shown on the board:
+every link outlined, both ends anchored, no number on any link. It SHALL NOT
+compress the chain into a single claim the player can only check by redoing
+the deduction. It SHALL NOT be required to advance one leg at a time: the
+player holds the hypothesis in mind and walks the marked chain at their own
+pace.
 
 #### Scenario: A bounded chain is walked, not asserted
 
 - **WHEN** a hint's next deduction is a bounded chain of forced consequences
-  reaching a named contradiction
-- **THEN** every link is marked on the board in the order it falls, with the
-  hypothesis and the contradiction both anchored, and the narration is not one
-  sentence asserting the conclusion
+  reaching a named contradiction, at a tier that keeps it
+- **THEN** every link is outlined on the board, with the hypothesis and the
+  contradiction both anchored, and the narration is not one sentence asserting
+  the conclusion
 - **AND** the player walks it on the board at their own pace; the hint is not
   required to advance one link per step
 
 ### Requirement: A Tactic's narration names the ends, the links and the rule
 
-A Tactic's narration SHALL name the two ends of its chain and cite the links by
-their position, and SHALL supply the rule that propagates the chain, which is
-the technique being taught and is nowhere on the board. Where the conclusion
-rests on more than one branch of a case split, the narration SHALL say so: a
-conclusion that does not follow from its own stated premises is a defect.
+The narration of a chain a tier keeps SHALL name the two ends of the chain and
+the chain as a whole, each a reference of its own, and SHALL supply the rule
+that propagates the chain, which is the technique being taught and is nowhere
+on the board. Where the conclusion rests on more than one branch of a case
+split, the narration SHALL say so: a conclusion that does not follow from its
+own stated premises is a defect.
 
 #### Scenario: A chain's conclusion rests on a case split
 
 - **WHEN** a narrated chain's conclusion follows only because both branches of
   a case split lead to it
-- **THEN** the narration names the two ends, cites the links by position,
-  states the rule that propagates them, and states both branches
-
-### Requirement: A chain's order is declared and drawn as an ordinal
-
-A game SHALL declare each chain link's position as data its renderer reads, and
-that position SHALL reach the canvas. The order is not the marks' array
-position, and a set of marked cells with no order is not a chain. The order
-SHALL be drawn as an ordinal and not as a path: a line or arrow between
-consecutive links asserts that each forces the next, which is false of some
-chains, and one mark means one thing across the collection.
-
-#### Scenario: A declared chain order reaches the canvas
-
-- **WHEN** a hint step declares a position for each link of a chain
-- **THEN** those positions are exactly `1..n`, and the frame drawn for that step
-  paints every one of them in the ordinal's own color
-- **AND** the check is made against the resolved color and not a palette
-  index or the bare glyph, since a candidate game already prints those digits as
-  pencil marks
+- **THEN** the narration names the two ends and the chain, states the rule that
+  propagates it, and states both branches
 
 ### Requirement: A Search is refused and never narrated
 
@@ -1457,15 +1435,17 @@ qualifier is noise: the narration SHALL NOT be required to add one.
 A relation a narration uses to tie two marks ("its ringed neighbor", "the
 shaded brick above", "the end of the shaded run") SHALL be one the code
 guarantees: a relation asserted in prose and not enforced in code is a false
-claim. Where a step marks an ordered chain, the narration SHALL name the
-numbered elements by their position and keep the bare deictic for the one
-carrying no number.
+claim. Where a step marks a chain and names one of its links apart from the
+rest, that link SHALL be a reference of its own, and the bare deictic SHALL
+stay with the element the step acts on.
 
 #### Scenario: A chain step says "this cell"
 
-- **WHEN** a step numbers the cells of a chain and rings the cell it acts on
-- **THEN** the narration names the chain's cells by their numbers, and "this
-  cell" is the one carrying no number
+- **WHEN** a step outlines the cells of a chain, names its two ends, and rings
+  the cell it acts on
+- **THEN** each end is a reference of its own, the chain is named as a whole,
+  and "this cell" is the ringed cell
+- **AND** no number is drawn on any cell of the chain
 
 ### Requirement: A narration never identifies an element by its color
 
@@ -2681,7 +2661,7 @@ remainders and the rank that falls on every hinted move.
 
 ### Requirement: An edge a hint names is the engine's mark
 
-The engine SHALL provide the mark kind for an edge between two squares, keyed by its edge number, and the drawing of a hint on it: the line or cross the step asks for in the hint color, an outlined edge in the outline's color, and a chain's ordinal inside a square beside it. A square-grid edge game SHALL draw its hint edges through it, declaring only how its own line and cross are drawn.
+The engine SHALL provide the mark kind for an edge between two squares, keyed by its edge number, and the drawing of a hint on it: the line or cross the step asks for in the hint color, and an outlined edge in the outline's color. A square-grid edge game SHALL draw its hint edges through it, declaring only how its own line and cross are drawn.
 
 #### Scenario: One edge named from either side is one mark
 
@@ -2796,3 +2776,25 @@ ring and within it, and SHALL NOT stand in for the ring.
 
 - **WHEN** a Tracks or Path step asks for a line on an edge
 - **THEN** the edge is ringed by a pill, and the line is drawn inside the pill
+
+### Requirement: A supposition rung that defines its tier keeps it until a markable technique fills it
+
+A Search SHALL sit at Unreasonable, with one exception: a supposition rung
+that alone defines a tier below Unreasonable SHALL keep that tier, its hint
+shown as a chain on the board, until a markable technique fills the tier, and
+SHALL then move to Unreasonable. Moving it first would leave the tier with no
+board to deal, and removing a tier changes the params a game ID and a saved
+preference carry.
+
+#### Scenario: A rung that is the whole of its tier
+
+- **WHEN** a tier's boards are told apart from the tier below only by a
+  supposition rung
+- **THEN** the rung stays at that tier until a markable technique deals the
+  tier's boards without it
+
+#### Scenario: A rung a tier can do without
+
+- **WHEN** a tier keeps other techniques that still deal boards without the
+  supposition rung
+- **THEN** the rung runs only at Unreasonable

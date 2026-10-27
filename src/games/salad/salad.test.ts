@@ -285,8 +285,9 @@ describe("salad solver", () => {
 });
 
 // Two symbols at Normal: Letters clued on the border alone, and the two
-// smallest Numbers boards.
-describeAbsentTiers(saladGame, ["3n2Ldx", "6n2Ldx", "3n2Bdx", "4n2Bdx"]);
+// smallest Numbers boards. And a 4x4 of three Letters, whose Normal needed a
+// forcing chain.
+describeAbsentTiers(saladGame, ["3n2Ldx", "6n2Ldx", "3n2Bdx", "4n2Bdx", "4n3Ldx"]);
 
 // The first Letters size that may clue its grid, and the Easy cell rare
 // enough to have set the border-only bound.
@@ -334,9 +335,13 @@ describe("salad generator", () => {
     );
   });
 
+  // A shape with no board at a tier is refused there, and pinned as absent.
+  const dealt = (p: SaladParams): boolean => paramsError(saladGame, p, true) === null;
+
   for (const preset of SHAPES) {
     for (const diff of [DIFF_EASY, DIFF_HARD]) {
       const p = { ...preset, diff };
+      if (!dealt(p)) continue;
       it(`generates a solvable ${describeParams(saladGame, p)}`, () => {
         const { desc } = newSaladDesc(
           p,
@@ -354,6 +359,7 @@ describe("salad generator", () => {
   // freshly generated boards, fall to the Easy solver.
   for (const preset of SHAPES) {
     const p = { ...preset, diff: DIFF_HARD };
+    if (!dealt(p)) continue;
     it(`generates a ${describeParams(saladGame, p)} that Easy cannot solve`, () => {
       const { desc } = newSaladDesc(
         p,

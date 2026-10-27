@@ -101,14 +101,6 @@ describeHintPins({
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":2},{"x":5,"y":0,"n":2},{"x":2,"y":1,"n":2},{"x":4,"y":1,"n":1},{"x":2,"y":2,"n":2},{"x":4,"y":2,"n":1},{"x":2,"y":3,"n":2},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":1,"y":4,"n":1},{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":1},{"x":5,"y":4,"n":1},{"x":2,"y":5,"n":2},{"x":4,"y":5,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5},{"x":1,"y":1,"n":6}]},{"type":"set","x":1,"y":1,"n":3,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":3},{"x":0,"y":1,"n":3},{"x":2,"y":1,"n":3},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":3},{"x":5,"y":1,"n":3},{"x":1,"y":2,"n":3},{"x":1,"y":3,"n":3},{"x":1,"y":4,"n":3},{"x":1,"y":5,"n":3}]},{"type":"pencilStrike","marks":[{"x":5,"y":3,"n":1},{"x":5,"y":3,"n":3},{"x":5,"y":3,"n":4},{"x":5,"y":3,"n":5},{"x":5,"y":3,"n":6}]},{"type":"set","x":5,"y":3,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":5,"y":1,"n":2},{"x":5,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":1,"y":3,"n":2},{"x":3,"y":3,"n":2},{"x":4,"y":3,"n":2},{"x":5,"y":4,"n":2},{"x":5,"y":5,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":4},{"x":1,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":4},{"x":2,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":5,"y":1,"n":5},{"x":5,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":4},{"x":4,"y":2,"n":6}]}]',
     },
-    /** Held on 0 of 1725 positions walked: this scan does not reach it. The
-     * board is from the same scan at 40 seeds of 6x6 and 7x7 Tricky, where it
-     * held on 131 of 9220, and which runs for six minutes. */
-    forcing: {
-      id: "6dt:ze2d,hS2S1aA7S1S0bS3dS1c",
-      moves:
-        '[{"type":"pencilAdd","marks":[{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":4},{"x":1,"y":3,"n":5},{"x":1,"y":3,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":2,"n":1},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":2,"y":2,"n":4},{"x":2,"y":2,"n":6}]},{"type":"pencilAdd","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":3},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":5},{"x":1,"y":4,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":2},{"x":2,"y":3,"n":3},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":6}]},{"type":"pencilAdd","marks":[{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":3},{"x":3,"y":2,"n":4},{"x":3,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":3},{"x":3,"y":3,"n":4},{"x":3,"y":3,"n":5}]},{"type":"pencilAdd","marks":[{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":2},{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":4},{"x":4,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":4,"y":3,"n":1},{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":3},{"x":4,"y":3,"n":4},{"x":4,"y":3,"n":5}]},{"type":"pencilAdd","marks":[{"x":2,"y":5,"n":1},{"x":2,"y":5,"n":3},{"x":2,"y":5,"n":4},{"x":2,"y":5,"n":5},{"x":2,"y":5,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":4}]},{"type":"pencilAdd","marks":[{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":5},{"x":1,"y":2,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":4},{"x":2,"y":2,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5},{"x":2,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":2,"y":1,"n":3},{"x":2,"y":1,"n":4},{"x":2,"y":1,"n":5},{"x":2,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":3},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":3},{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":3},{"x":2,"y":5,"n":1},{"x":2,"y":5,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":6}]},{"type":"pencilAdd","marks":[{"x":5,"y":2,"n":1},{"x":5,"y":2,"n":2},{"x":5,"y":2,"n":3},{"x":5,"y":2,"n":4},{"x":5,"y":2,"n":5},{"x":5,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":5},{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":5},{"x":5,"y":2,"n":1},{"x":5,"y":2,"n":3},{"x":5,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":3,"y":1,"n":2},{"x":3,"y":1,"n":4},{"x":3,"y":1,"n":6}]},{"type":"pencilAdd","marks":[{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":3},{"x":4,"y":1,"n":5}]},{"type":"pencilAdd","marks":[{"x":5,"y":1,"n":1},{"x":5,"y":1,"n":3},{"x":5,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":3,"y":3,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2},{"x":0,"y":3,"n":3},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":5},{"x":0,"y":3,"n":6}]},{"type":"pencilAdd","marks":[{"x":5,"y":3,"n":1},{"x":5,"y":3,"n":2},{"x":5,"y":3,"n":3},{"x":5,"y":3,"n":4},{"x":5,"y":3,"n":5},{"x":5,"y":3,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":2},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":6},{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":4},{"x":5,"y":3,"n":2},{"x":5,"y":3,"n":4},{"x":5,"y":3,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":6}]},{"type":"pencilStrike","marks":[{"x":2,"y":5,"n":5}]}]',
-    },
     /** Held on 1419 of 1725 positions walked. */
     clue: "5dn:k43l,dS2aOS1bS1aS3c",
   },
@@ -215,11 +207,12 @@ describe("mathrax recording solver", () => {
     // The generator is solver-gated, so a divergence here would change which
     // boards exist (docs/solver-and-generator.md § "Solver-gated
     // generation"); the frozen fixture corpus checks the other side of it.
+    // No recorder runs at the searching cap, so the caps stop below it.
     let checked = 0;
     for (const p of [NORMAL, TRICKY]) {
       for (let s = 0; s < 6; s++) {
         const { st } = gen(p, `gate-${p.o}-${s}`);
-        for (const cap of [0, 1, 2, 3]) {
+        for (const cap of [0, 1, 2]) {
           const plain = givens(st);
           const taped = givens(st);
           const verdict = mathraxSolve(p.o, plain, st.clues, cap);
@@ -229,7 +222,7 @@ describe("mathrax recording solver", () => {
         }
       }
     }
-    expect(checked).toBe(48);
+    expect(checked).toBe(36);
   });
 });
 

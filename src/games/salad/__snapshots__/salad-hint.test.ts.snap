@@ -10,7 +10,6 @@ exports[`salad: pinned hint positions > says, at each pin 1`] = `
   "countLettersDone": "We already know which 3 squares of this row hold its numbers, so this square and the rest of it must be empty.",
   "crossNaked": "Every letter is ruled out in this square, so the empty-square mark is the only one left: the square must be empty.",
   "dup": "The A just placed can't repeat in its row and column, so the A must go from the other squares.",
-  "forcing": "The outlined chain puts 2 at one end or the other end, both in line with this square, so the 2 must go.",
   "hiddenSingle": "Every other square in this row rules out 1, so this square must be 1.",
   "marker": "This column already has both of its empty squares, so this square and the rest of it must hold a number.",
   "populate": "Start by penciling every candidate letter into each empty square that has none yet, so there is something to cross out.",

@@ -160,12 +160,6 @@ const pinned = describeHintPins({
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2},{"x":0,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":3}]}]',
     },
-    /** Held on 12 of 2570 positions walked. */
-    forcing: {
-      id: "5n3Bdx:2dXOa1aXa2XbObX1aXb",
-      moves:
-        '[{"type":"set","x":1,"y":2,"value":"circle"},{"type":"set","x":4,"y":2,"value":"circle"},{"type":"set","x":0,"y":3,"value":"circle"},{"type":"set","x":1,"y":0,"value":"cross"},{"type":"set","x":1,"y":4,"value":"cross"},{"type":"set","x":3,"y":4,"value":"circle"},{"type":"set","x":4,"y":4,"value":"circle"},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":2},{"x":3,"y":0,"n":1},{"x":3,"y":0,"n":2},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":4,"y":1,"n":1},{"x":1,"y":2,"n":2},{"x":4,"y":2,"n":2},{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2},{"x":2,"y":3,"n":2},{"x":3,"y":3,"n":1},{"x":3,"y":4,"n":1},{"x":4,"y":4,"n":1}]},{"type":"set","x":0,"y":3,"value":3},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":3},{"x":2,"y":3,"n":3},{"x":3,"y":3,"n":3}]}]',
-    },
     /**
      * Kept by hand: held on 0 of 2570 positions walked. A set crosses an
      * empty-square mark out on this board, and the last move before this
@@ -499,26 +493,6 @@ describe("salad hint — a square a set rules out as empty", () => {
       "These 2 rows fit X only in the outlined squares, taking the X of 2 columns",
     );
     expect(evidenceOf(t.premise).hatch).toHaveLength(10);
-  });
-
-  it("prints the empty-square mark as the X it is penciled as", () => {
-    // Where a line has one empty square the mark is an ordinary candidate, and
-    // a chain may run through it.
-    const t = premise(
-      {
-        kind: "forcing",
-        chain: [
-          { x: 0, y: 0, n: 1 },
-          { x: 0, y: 2, n: 4 },
-        ],
-        shares: "row",
-      },
-      [{ x: 3, y: 0, n: 4 }],
-      { mode: GAMEMODE_LETTERS, order: 4, nums: 3 },
-    );
-    expect(t.premise.text).toBe(
-      "The outlined chain puts X at one end or the other end, both in line with this square",
-    );
   });
 });
 

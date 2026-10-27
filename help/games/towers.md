@@ -52,10 +52,7 @@ as holding every height not already in its row and column.
 {{hint-marks}}
 
 A clue is named by its number ("clue 3"); two outlined clues at either
-end of a line are a facing pair. An outlined chain is cells with two
-heights left each, each in line with the next: the sentence names its two
-ends and says how the chain rules a height out of the cell where it is
-struck.
+end of a line are a facing pair.
 
 The hint speaks of *heights* and of what a clue *sees*, the towers
 visible from it. A few clue ideas are worth learning by name:

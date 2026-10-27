@@ -504,10 +504,6 @@ function premise(
           ? say.set(reason.region, reason.cells, ns, cells)
           : say.confined(reason.lines, reason.cells, ns[0]),
       };
-    case "forcing":
-      return {
-        premise: say.forcing(reason, marks[0], reason.shares, reason.lastShares),
-      };
     case "cageMinMax":
       return {
         premise: say.cageMinMax(reason.cells, reason.origin, reason.clue, ns, cells),
@@ -545,7 +541,6 @@ export const SOLO_RUNGS = [
   "hiddenSingle",
   "intersect",
   "set",
-  "forcing",
   "cageSingle",
   "cageMinMax",
   "cageSums",

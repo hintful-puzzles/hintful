@@ -10756,7 +10756,6 @@ exports[`towers: pinned hint positions > says, at each pin 1`] = `
   "clean": "Now clear the easy ones: cross out any height already standing in its cell's row or column.",
   "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",
   "facing": "These facing clues sum to one more than the grid size, so their line's tallest is pinned: this cell must be 5.",
-  "forcing": "The outlined chain puts 4 at one end or the other end, both in line with this cell, so the 4 must go.",
   "fullLine": "Clue 5 sees every tower in this line, so heights must climb 1, 2, … from the clue: this cell must be 1.",
   "hiddenSingle": "Every other cell in this row rules out height 5, so this cell must be 5.",
   "lineFull": "Clue 2 already sees 1 tower in the line, so the cell nearest it must top all between; height 1 can't, so this cell can only be 2, 3 or 4.",

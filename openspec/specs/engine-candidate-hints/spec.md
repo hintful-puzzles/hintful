@@ -697,18 +697,19 @@ express.
 - **THEN** the elimination is recorded like any other, the plan narrates it from
   its reason, and the game supplies no rung of its own for it
 
-### Requirement: A premise that asserts a walk is computed and numbered
+### Requirement: A premise that asserts a walk is computed and outlined
 
 A premise that asserts a walk SHALL be computed and checked, not assumed, and
-SHALL be presented to the player as an ordered, numbered area so the walk is one
-they can follow.
+SHALL be presented to the player as an outlined area holding the cells of that
+walk, with no number on them, so the walk is one they can follow from where the
+sentence starts it.
 
 #### Scenario: The walk a sentence names is on the board
 
 - **WHEN** a strike's premise says that following a candidate leads back to the
   cell it started from
-- **THEN** the cells of that walk are the ones found on this board, outlined
-  and numbered in the order the player follows them
+- **THEN** the cells of that walk are the ones found on this board, outlined,
+  and none carries a number
 
 ### Requirement: The hint frontier keys on whatever a game's steps act on
 
@@ -742,10 +743,10 @@ otherwise leave it out without saying so.
 The shared hint-text module SHALL provide `narrateLatinReason`, which renders
 the generic Latin placement reasons (`single`, `regionsFull`, `hiddenSingle`),
 and `latinPremise`, which renders the premise of the generic Latin strike
-reasons (`dup`, `set`, `forcing`) for the candidate walk to conclude. A
-row/column game SHALL delegate those arms to them and keep its game-specific
-arms local. Each SHALL refuse a reason of the other half and SHALL NOT narrate
-it.
+reasons (`dup`, `set`) for the candidate walk to conclude. A row/column game
+SHALL delegate those arms to them and keep its game-specific arms local. Each
+SHALL refuse a reason of the other half and SHALL NOT narrate it. Neither
+narrates a forcing chain, a search.
 
 #### Scenario: A delegated placement arm narrates the shared sentence
 
@@ -757,22 +758,6 @@ it.
 - **WHEN** `narrateLatinReason` is handed a strike reason, or `latinPremise` a
   placement reason
 - **THEN** it throws, naming the function that narrates that reason
-
-### Requirement: A game whose generic wording diverges keeps its own narration
-
-A game whose generic-arm wording legitimately diverges SHALL keep its own
-narration and SHALL NOT carry overrides into the shared narrator: Solo, whose
-arms name a block or diagonal region, and Towers, which narrates in "height"
-vocabulary, are conformingly left local. They SHALL share the premises that read
-the same in every game: the forcing chain's (`forcingChainPremise`), a value
-confined across lines (`confinedPremise`) and the placement cull's
-(`placedRulesOut`).
-
-#### Scenario: Towers words its own singles and shares a chain
-
-- **WHEN** a Towers hint narrates a hidden single, and later a forcing chain
-- **THEN** the single's sentence is Towers' own, and the chain's premise is the
-  one `forcingChainPremise` writes, in heights
 
 ### Requirement: A candidate strike SHALL end in the walk's conclusion
 
@@ -1197,3 +1182,19 @@ SHALL name their values, even where the premise has just named them.
 
 - **WHEN** a strike's premise says "puts 2 in this cell"
 - **THEN** its conclusion reads "so the 2 must go", and not "so it must go"
+
+### Requirement: A game whose generic wording diverges narrates its own arms
+
+A game whose generic-arm wording legitimately diverges SHALL keep its own
+narration and SHALL NOT carry overrides into the shared narrator: Solo, whose
+arms name a block or diagonal region, and Towers, which narrates in "height"
+vocabulary, are conformingly left local. They SHALL share the premises that read
+the same in every game: a value confined across lines (`confinedPremise`) and
+the placement cull's (`placedRulesOut`).
+
+#### Scenario: Towers words its own singles and shares a confined value
+
+- **WHEN** a Towers hint narrates a hidden single, and later a height confined
+  across lines
+- **THEN** the single's sentence is Towers' own, and the confined premise is
+  the one `confinedPremise` writes

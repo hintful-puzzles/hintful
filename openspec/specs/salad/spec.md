@@ -111,6 +111,19 @@ refuse an ABC End View board smaller than 8×8 and a Number Ball board up to
 - **AND** a 4×4 Number Ball board with two symbols is refused with "No 4x4
   Numbers puzzle with 2 symbols is Normal."
 
+### Requirement: Params: Salad refuses a 4×4 of three letters at Normal
+
+When a board is to be dealt at Normal, `validateParams` SHALL refuse an ABC
+End View board of order 4 with three symbols, which has no board once Normal
+follows no forcing chain, and SHALL accept the same params for a board that
+arrives with its description.
+
+#### Scenario: The cell is refused by name
+
+- **WHEN** a board is to be dealt from the params `4n3Ldx`
+- **THEN** it is refused with "No 4x4 Letters puzzle with 3 symbols is Normal."
+- **AND** a board that arrives with its description under those params opens
+
 ### Requirement: Description: Salad descriptions use the upstream run-length block encoding
 
 A Salad description SHALL encode its clue arrays in canonical order using a
@@ -173,7 +186,8 @@ refused.
 Salad SHALL offer two tiers. To the shared Latin deductions its solver SHALL
 add the border-clue deduction, in ABC End View mode. Easy SHALL be that
 deduction and the shared positional and numeric eliminations, and Normal
-SHALL add the shared set elimination and forcing chains.
+SHALL add the shared set elimination. Salad SHALL follow no forcing chain at
+either tier, since a chain is a search and Salad has no Unreasonable.
 
 #### Scenario: A Normal board genuinely needs the Normal tier
 
@@ -362,12 +376,12 @@ then goes their own way, and the mark would then hide the placement behind it.
 - **THEN** the hint's next step strikes that mark, and the walk reaches a
   solved board
 
-### Requirement: Hint: A set or a chain that rules a square out as empty strikes its mark
+### Requirement: Hint: A set that rules a square out as empty strikes its mark
 
-Where a set elimination or a forcing chain rules a square out as empty, no count
-says it, so the hint SHALL strike that square's "might be empty" pencil mark with
-the set or chain as its reason, and SHALL then mark the square as holding a
-symbol because the mark is gone from its notes.
+Where a set elimination rules a square out as empty, no count says it, so the
+hint SHALL strike that square's "might be empty" pencil mark with the set as
+its reason, and SHALL then mark the square as holding a symbol because the
+mark is gone from its notes.
 
 #### Scenario: A set holds all of a column's empty squares
 
@@ -385,19 +399,6 @@ symbol because the mark is gone from its notes.
   carries no marker
 - **THEN** the hint's step marks it as holding a symbol and says the mark is
   not among the square's pencil marks
-
-### Requirement: Hint: Salad's hint prints the "might be empty" mark as X
-
-A sentence that names the "might be empty" mark among a square's candidates
-SHALL print it as the X the player pencils for it, never as a letter or a number
-past the board's symbols.
-
-#### Scenario: A chain runs through the "might be empty" mark
-
-- **WHEN** a board with one empty square per line reaches a forcing chain whose
-  squares include the "might be empty" mark among their two candidates
-- **THEN** the sentence prints that mark as X and counts the squares'
-  candidates as pencil marks
 
 ### Requirement: Hint: Salad's hint counts a line before it asks for pencil marks
 
@@ -467,6 +468,17 @@ square.
   none of them a square's answer, and asks for a hint
 - **THEN** every step's reason holds on the symbols, markers and clues alone,
   and the plan solves the board
+
+### Requirement: Hint: Salad's hint names the "might be empty" mark as X
+
+A sentence that names the "might be empty" mark SHALL print it as the X the
+player pencils for it, never as a letter or a number past the board's symbols.
+
+#### Scenario: The empty square is confined across lines
+
+- **WHEN** a set confines the "might be empty" mark of several rows to the
+  same columns
+- **THEN** the sentence names the mark as X
 
 ### Requirement: Status bar: Salad's status bar shows the range of its symbols
 

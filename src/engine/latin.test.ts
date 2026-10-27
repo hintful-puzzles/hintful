@@ -45,14 +45,14 @@ import {
 import { randomNew, randomUpto } from "./random/index.ts";
 
 /** A plain Latin-square config: no game-specific deductions or validator,
- * the generic layers keyed simple=0/set0=1/set1=2/forcing=3/recursive=4. */
+ * the generic layers keyed simple=0/set0=1/set1=2/recursive=4, and nothing
+ * at 3. */
 function cfg(maxdiff: number): LatinSolverConfig<null> {
   return {
     maxdiff,
     diffSimple: 0,
     diffSet0: 1,
     diffSet1: 2,
-    diffForcing: 3,
     diffRecursive: 4,
     usersolvers: [null, null, null, null, null],
     valid: null,
@@ -95,7 +95,7 @@ describe("latin solver", () => {
 
   it("respects the difficulty ceiling (no recursion → unfinished)", () => {
     const grid = new Uint8Array(16);
-    // maxdiff = forcing (3) < recursive (4): deductions can't finish an empty
+    // maxdiff = 3 < recursive (4): deductions can't finish an empty
     // grid, and recursion is not permitted, so it reports unfinished.
     expect(latinSolver(grid, 4, cfg(3))).toBe(DIFF_UNFINISHED);
   });
@@ -245,6 +245,33 @@ describe("latin solver configuration", () => {
     });
     expect(ret).not.toBe(DIFF_AMBIGUOUS);
     expect([...grid]).toEqual([2, 1, 1, 2]);
+  });
+
+  it("follows a forcing chain only at the recursive level", () => {
+    // A chain is a supposition, so no game may grade it below its search.
+    // (0,0) is 2 or 1; if 2, (1,0) is 3 and (1,1) is 1; either way (0,1),
+    // in line with both ends, cannot be 1. No line holds a set to say so.
+    const seed = (s: LatinSolver): void => {
+      const keep = (x: number, y: number, digits: number[]) => {
+        for (let n = 1; n <= 4; n++)
+          if (!digits.includes(n)) s.cube[s.cubepos(x, y, n)] = 0;
+      };
+      keep(0, 0, [1, 2]);
+      keep(1, 0, [2, 3]);
+      keep(1, 1, [1, 3]);
+    };
+    const cube = (maxdiff: number): Uint8Array => {
+      const out = new Uint8Array(4 * 4 * 4);
+      latinSolver(new Uint8Array(16), 4, { ...cfg(maxdiff), seed, cubeOut: out });
+      return out;
+    };
+    const oneAt01 = (0 * 4 + 1) * 4 + 1 - 1;
+    expect(cube(3)[oneAt01]).not.toBe(0);
+    const chained = new LatinSolver(4);
+    chained.alloc(new Uint8Array(16));
+    seed(chained);
+    expect(chained.forcing()).toBe(1);
+    expect(chained.cubeGet(0, 1, 1)).toBe(false);
   });
 
   it("re-runs the game's validator on a completed grid, and reports failure", () => {

@@ -447,10 +447,9 @@ none.
 The deductions SHALL be the solver's three rungs, reported by the same
 functions the solver runs: a region with one color left must take it; two
 touching regions down to the same two colors use both, so a region touching
-both can be neither; and a forcing chain, in which region 1 has two colors,
-each numbered region forces the next if region 1 is not the struck color, and
-the last is driven to it, so a region touching the first and the last cannot
-be that color.
+both can be neither; and a forcing chain, in which each region has two colors
+and forces the next if the first is not the struck color, so the last is
+driven to it and a region touching both ends cannot be that color.
 
 #### Scenario: A region whose neighbors show three colors takes the fourth
 
@@ -491,7 +490,7 @@ premise rests on that does not already show exactly its two colors as dots,
 dotting them (or removing the dots a neighbor's color rules out), so that when
 the pair or chain step is spoken every one of those regions shows its two
 colors and the deduction can be followed on the board without being worked
-out.
+out. Such a leg SHALL ring the region it dots and outline nothing.
 
 #### Scenario: A pair's undotted region is dotted before the pair is stated
 
@@ -504,40 +503,10 @@ out.
 
 - **WHEN** the next deduction is a forcing chain striking a color from a region
   with no dots
-- **THEN** the journey first dots each numbered region without them with its two
-  colors, then its last step dots that region with the colors it has left,
-  numbers the chain's regions 1 to N on the board, and says region 1's two
-  colors, the color region N is driven to, and that this region touches both
-  ends
-
-### Requirement: Hint: The chain step names what the dots show
-
-The chain step SHALL name what the dots show, not a rule the player must run.
-When every numbered region has a dot of the struck color, it SHALL say so and
-that the color falls on every other region from region 2 when region 1 does
-not take it. Otherwise it SHALL walk the chain by color, naming region 1's
-other color and the color each later region then takes, for a chain of up to
-five regions, and past that SHALL name the rule and where the chain ends.
-
-#### Scenario: A chain whose regions all carry the struck color is told as a pattern
-
-- **WHEN** every numbered region of a chain has a dot of the struck color when
-  the chain step is spoken
-- **THEN** the sentence says so, and that the color falls on every other region
-  if region 1 does not take it, instead of naming each region's color
-
-### Requirement: Hint: The chain step ends on the struck color
-
-Whether it tells the pattern or walks the chain, the chain step SHALL conclude
-that region 1 or the last region takes the struck color, and that this region
-touches both. The plan SHALL fail and SHALL NOT speak a walk that does not end
-on the struck color.
-
-#### Scenario: Both tellings reach the same conclusion
-
-- **WHEN** a chain step is spoken, as a pattern or as a walk
-- **THEN** it says region 1 or the last region is the struck color, and that
-  the ringed region touches both
+- **THEN** the journey first dots each region of the chain without them with
+  its two colors, then its last step dots that region with the colors it has
+  left, outlines the chain, and says the struck color falls on one end or the
+  other and that this region touches both
 
 ### Requirement: Hint: A hint step rings the region it acts on
 
@@ -590,6 +559,32 @@ step.
 - **THEN** the first step dots all four colors into each blank region, the second
   continues it by removing the colors neighbors show, and pressing Mark-all while the
   first is shown completes it
+
+### Requirement: Hint: The chain step names the chain by its ends
+
+The chain step SHALL name the chain as a whole and each of its two ends as a
+reference of its own, and conclude that the chain puts the struck color at one
+end or the other and that this region touches both. The dots its regions show
+are the walk, and the sentence SHALL NOT recite it region by region. The plan
+SHALL fail and SHALL NOT speak a walk that does not end on the struck color.
+
+#### Scenario: A chain is named by its ends
+
+- **WHEN** a chain step is spoken
+- **THEN** it says the struck color is at one end or the other and that the
+  ringed region touches both, and pressing "one end" or "the other end" finds
+  that region alone
+
+### Requirement: Hint: A chain's regions carry no number
+
+No number SHALL be drawn on a region of a chain, and the map's own region
+numbers SHALL show or hide as the player set them, whatever the hint shows.
+
+#### Scenario: Region numbers stay while a chain shows
+
+- **WHEN** the region numbers are shown and a chain step is displayed
+- **THEN** every region shows its own number, and no region of the chain
+  carries another
 
 ### Requirement: Look: Map's adjacency error markers are always on
 

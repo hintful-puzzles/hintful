@@ -54,7 +54,7 @@ export const SOLVE_AMBIGUOUS = 2;
 /**
  * Why a Mathrax-specific deduction ruled a candidate out — the premise the hint
  * narrates and highlights. Combined with {@link LatinReason} (the generic
- * positional/set/forcing deductions) it covers every technique the recording
+ * positional/set deductions) it covers every technique the recording
  * solver fires. The `kind` fields never collide with the Latin reasons.
  *
  * There is **one** clue arm, not one per clue shape, because everything else a
@@ -229,7 +229,6 @@ export function mathraxSolve(
     diffSimple: DIFF_EASY,
     diffSet0: DIFF_NORMAL,
     diffSet1: DIFF_TRICKY,
-    diffForcing: DIFF_TRICKY,
     diffRecursive: DIFF_RECURSIVE,
     usersolvers: [solverEasy, solverNormal, solverTricky, null, null],
     // Upstream `mathrax_valid` is a constant `true` — Latin uniqueness plus the

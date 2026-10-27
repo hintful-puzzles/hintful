@@ -4,9 +4,9 @@
  * Towers keeps its own version of the generic Latin arms rather than the
  * engine's (`engine/hint-text.ts`), because its values need qualifying in some
  * arms and not others ("every other cell in this row rules out height 5, so
- * this cell must be 5"), which one vocabulary cannot say. It shares the forcing chain, and the
- * two setup steps are built by the row/column preset from the two words Towers
- * gives it (`index.ts`'s `notes`).
+ * this cell must be 5"), which one vocabulary cannot say. Its two setup steps
+ * are built by the row/column preset from the two words Towers gives it
+ * (`index.ts`'s `notes`).
  *
  * Every word that points at the board is a reference to the mark it points at
  * (`engine/hint-words.ts`): a clue is outlined in its slot beside the grid, the
@@ -17,18 +17,11 @@
  * `narrate`); this file decides only how it reads.
  */
 
-import {
-  confinedPremise,
-  forcingChainPremise,
-  type LatinVocab,
-  placedRulesOut,
-  thisCell,
-} from "../../engine/hint-text.ts";
+import { confinedPremise, placedRulesOut, thisCell } from "../../engine/hint-text.ts";
 import {
   CELL,
   mark,
   type Narration,
-  type Note,
   phrase,
   type Sentence,
   sentence,
@@ -36,12 +29,7 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { ConfinedLines } from "../../engine/latin.ts";
-import type { ForcingLink } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
-
-/** Towers speaks of heights, not numbers — the one word the shared chain
- * sentence needs from it. */
-const TOWERS_VOCAB: LatinVocab = { noun: "height", value: (h) => String(h) };
 
 /** A clue and the line it sees along, as the sentence names them: the clue's
  * slot (`at`, outlined) and its line of sight through both clue slots
@@ -159,19 +147,4 @@ export const say = {
    * twice, and the qualified sentence runs past the narration limit. */
   confined: (lines: ConfinedLines, cells: readonly Point[], n: number): Narration =>
     confinedPremise(lines, cells, String(n)),
-
-  // The shared chain sentence, in Towers' own vocabulary: the value needs no
-  // qualifying here, because "two heights left" contextualizes the bare
-  // numbers, and the outlined cells carry the chain.
-  forcing: (
-    reason: { chain: readonly ForcingLink[] },
-    struck: Note,
-    shares: "row" | "col",
-  ): Narration =>
-    forcingChainPremise(
-      reason,
-      struck,
-      TOWERS_VOCAB,
-      shares === "row" ? "row" : "column",
-    ),
 };

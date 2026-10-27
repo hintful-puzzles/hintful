@@ -145,7 +145,7 @@ export function colors(background: Color): Color[] {
  * the ruled-out candidates struck through among the pencil marks. */
 export interface MathraxHint {
   /** The cells the deduction reasons from — a clue's diagonal pair, all four
-   * cells around an `E`/`O` clue, a hidden single's line, or a forcing chain. */
+   * cells around an `E`/`O` clue, or a hidden single's line. */
   area: Point[];
   /** The cell(s) the deduction acts on, ringed. */
   targets: Point[];

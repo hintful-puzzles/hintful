@@ -11,6 +11,12 @@
  * The fixture is **frozen and cannot be regenerated**: it was captured from
  * upstream's C by a harness that no longer exists — see
  * `engine/testing/differential.ts`.
+ *
+ * **From Hard up the fixtures are re-founded.** Upstream's Hard has forcing
+ * chains, which here are a search and sit at Unreasonable, so a board the C
+ * graded Hard by a chain grades Unreasonable, and the generator from Hard up
+ * keeps different boards. Those fixtures keep the grade, Hard or the
+ * Unreasonable the chain moved to, and drop the byte-match.
  */
 
 import { describe, expect, it } from "vitest";
@@ -20,7 +26,14 @@ import reference from "./__fixtures__/unequal-c-reference.json" with { type: "js
 import { newUnequalDesc } from "./generator.ts";
 import { unequalGame } from "./index.ts";
 import { solveUnequal } from "./solver.ts";
-import { diffFromLevel, type Mode, newState, type UnequalParams } from "./state.ts";
+import {
+  DIFF_EXTREME,
+  DIFF_RECURSIVE,
+  diffFromLevel,
+  type Mode,
+  newState,
+  type UnequalParams,
+} from "./state.ts";
 
 interface Fixture {
   order: number;
@@ -39,25 +52,34 @@ function fixtureParams(f: Fixture): UnequalParams {
 }
 
 describe("unequal differential (byte-match + solver agreement)", () => {
+  it("re-founds some fixtures and keeps others byte-matched", () => {
+    expect(FIXTURES.some((f) => f.diff >= DIFF_EXTREME)).toBe(true);
+    expect(FIXTURES.some((f) => f.diff < DIFF_EXTREME)).toBe(true);
+  });
+
   for (const f of FIXTURES) {
     const p = fixtureParams(f);
-    it(`${p.mode} ${f.order} d${f.diff} (seed ${f.seed}): desc matches C byte-for-byte`, () => {
-      const { desc } = newUnequalDesc(p, randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(validateDesc(unequalGame, p, desc)).toBeNull();
-    });
+    if (f.diff < DIFF_EXTREME)
+      it(`${p.mode} ${f.order} d${f.diff} (seed ${f.seed}): desc matches C byte-for-byte`, () => {
+        const { desc } = newUnequalDesc(p, randomNew(f.seed));
+        expect(desc).toBe(f.desc);
+        expect(validateDesc(unequalGame, p, desc)).toBeNull();
+      });
 
     it(`${p.mode} ${f.order} d${f.diff} (seed ${f.seed}): TS solver grades at the C difficulty`, () => {
       const state = newState(p, f.desc);
-      const soln = Uint8Array.from(state.immutable);
-      const ret = solveUnequal(
-        state.order,
-        state.mode,
-        state.clueFlags,
-        soln,
-        f.solverDiff,
-      );
-      expect(ret).toBe(f.solverDiff);
+      const grade = (cap: number): number =>
+        solveUnequal(
+          state.order,
+          state.mode,
+          state.clueFlags,
+          Uint8Array.from(state.immutable),
+          cap,
+        );
+      const ret = grade(f.solverDiff);
+      if (f.solverDiff === DIFF_EXTREME && ret !== DIFF_EXTREME)
+        expect(grade(DIFF_RECURSIVE)).toBe(DIFF_RECURSIVE);
+      else expect(ret).toBe(f.solverDiff);
     });
   }
 });

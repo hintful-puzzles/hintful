@@ -6,8 +6,9 @@
  * `usersolvers` (extra deductions keyed to its difficulty levels) and a `valid`
  * callback (does a completed grid satisfy the game's extra constraints?), and
  * `latinSolver` interleaves them with the generic deductions — positional/numeric
- * elimination, set elimination, forcing chains — and, at the hardest level,
- * guess-and-verify recursion (which doubles as the generators' uniqueness check).
+ * elimination and set elimination — and, at the recursive level, forcing chains
+ * and guess-and-verify recursion (which doubles as the generators' uniqueness
+ * check).
  *
  * The `o³` candidate cube is indexed as upstream's
  * `cubepos(x,y,n) = (x·o + y)·o + (n−1)`, `place`/`elim`/`set`/`forcing` are
@@ -89,9 +90,7 @@ export type LatinReason =
   /** Height `n` was just placed at `(px, py)`, which rules it out of the rest
    * of that row and column. */
   | { kind: "dup"; n: number; px: number; py: number }
-  | LatinSetReason
-  /** A forcing-chain elimination, with the chain it actually followed. */
-  | { kind: "forcing"; chain: ForcingLink[]; shares: "row" | "col" };
+  | LatinSetReason;
 
 /** A set elimination. `cells` are the subset: the cells whose candidates
  * account for the struck values between them. `reads` is the rest of the line
@@ -188,22 +187,6 @@ export interface LatinRepeats {
   times: number;
 }
 
-/** One cell of a forcing chain, and the value the chain gives it.
- *
- * `chain[0]` is the **origin**: a two-candidate cell, carrying the candidate it
- * takes when it is *not* the one being eliminated. Every later link is a
- * two-candidate cell in line with its predecessor that therefore loses the
- * predecessor's value and must take its other one; the last link's `n` is the
- * eliminated value itself, which is what closes the argument.
- *
- * There is always at least one hop: the origin's `n` is its *other* candidate,
- * so it can never already be the eliminated value. */
-export interface ForcingLink {
-  x: number;
-  y: number;
-  n: number;
-}
-
 /** The recorded-deduction shape lives in its own module (nothing about it is
  * Latin — see [`deduction-record.ts`](./deduction-record.ts)); re-exported here
  * so the Latin games keep importing it from the solver they already import. */
@@ -238,11 +221,6 @@ export class LatinSolver {
   private readonly sSet: Uint8Array;
   private readonly sNeighbors: Int32Array;
   private readonly sBfsqueue: Int32Array;
-  /** BFS parent pointers for {@link forcing}, so a firing can report the chain
-   * it followed rather than only its conclusion. Written on the hint path only
-   * (guarded by `recorder`), and never *read* for a cell this BFS did not push
-   * — so it needs no clearing between runs. */
-  private readonly sParent: Int32Array;
 
   /** Hint-only deduction recorder; left unset on the generator/solve path so
    * those run with no recording overhead and byte-for-byte unchanged. */
@@ -283,7 +261,6 @@ export class LatinSolver {
     this.sSet = new Uint8Array(o);
     this.sNeighbors = new Int32Array(3 * o);
     this.sBfsqueue = new Int32Array(o * o);
-    this.sParent = new Int32Array(o * o);
   }
 
   cubepos(x: number, y: number, n: number): number {
@@ -601,18 +578,18 @@ export class LatinSolver {
   /** Forcing chains (upstream `latin_solver_forcing`): a chain of two-candidate
    * cells whose ends both line up with a third cell forces a digit out of it.
    *
-   * On the hint path the recorded reason carries the chain the BFS walked
-   * ({@link ForcingLink}), because a narration that says "a contradiction
-   * further along" names no cell the player can look at. The path costs one
-   * parent-pointer write per pushed cell, inside the `recorder` guard, so the
-   * generator and solve paths are untouched. */
+   * Each link is "if this cell is a, that one is b", a conditional no mark
+   * records, so a chain is a supposition: it runs only at the recursive level
+   * (docs/solver-and-generator.md § "Check, Tactic, Search"), and a hint,
+   * which never records at that level, has no words for it. */
   forcing(): number {
+    if (this.recorder)
+      throw new Error("a forcing chain is a search; no hint narrates one");
     const o = this.o;
     const s = this.symbols;
     const number = this.sGrid; // reused as the BFS "other candidate" map
     const neighbors = this.sNeighbors;
     const bfsqueue = this.sBfsqueue;
-    const parent = this.sParent;
 
     for (let y = 0; y < o; y++) {
       for (let x = 0; x < o; x++) {
@@ -638,7 +615,6 @@ export class LatinSolver {
           let tail = 0;
           bfsqueue[tail++] = y * o + x;
           number[y * o + x] = t - n;
-          parent[y * o + x] = -1;
 
           while (head < tail) {
             let xx = bfsqueue[head++];
@@ -671,38 +647,9 @@ export class LatinSolver {
               if (cc === 2) {
                 bfsqueue[tail++] = yt * o + xt;
                 number[yt * o + xt] = tt - currn;
-                parent[yt * o + xt] = yy * o + xx;
               }
 
               if (currn === orign && (xt === x || yt === y)) {
-                if (this.recorder) {
-                  // Walk the parents back from the cell the chain drove to
-                  // `orign` — not from `(xt, yt)`, which is the *conclusion*
-                  // and may not even be on the chain.
-                  const path: number[] = [];
-                  for (let c = yy * o + xx; c !== -1; c = parent[c]) path.push(c);
-                  path.reverse();
-                  this.recorder({
-                    kind: "elim",
-                    x: xt,
-                    y: yt,
-                    n: orign,
-                    reason: {
-                      kind: "forcing",
-                      chain: path.map((c) => ({
-                        x: c % o,
-                        y: (c / o) | 0,
-                        n: number[c],
-                      })),
-                      // Which line ties the conclusion to the *origin* — the
-                      // other half of the case split. The conclusion's tie to
-                      // the chain's far end is structural (it is a BFS
-                      // neighbor of it), so only this one needs recording.
-                      shares: xt === x ? "col" : "row",
-                    },
-                    group: this.group,
-                  });
-                }
                 this.cube[this.cubepos(xt, yt, orign)] = 0;
                 return 1;
               }
@@ -979,7 +926,7 @@ export interface LatinSolverConfig<Ctx> {
   diffSimple: number;
   diffSet0: number;
   diffSet1: number;
-  diffForcing: number;
+  /** The searching level: forcing chains, then guess-and-verify recursion. */
   diffRecursive: number;
   usersolvers: (UserSolver<Ctx> | null)[];
   valid: Validator<Ctx> | null;
@@ -1024,20 +971,22 @@ function latinRung<Ctx>(
   cfg: LatinSolverConfig<Ctx>,
   i: number,
 ): number {
-  const { diffSimple, diffSet0, diffSet1, diffForcing, usersolvers, ctx } = cfg;
+  const { diffSimple, diffSet0, diffSet1, diffRecursive, usersolvers, ctx } = cfg;
   let ret = 0;
   if (usersolvers[i]) ret = (usersolvers[i] as UserSolver<Ctx>)(solver, ctx);
   if (ret === 0 && i === diffSimple) ret = solver.diffSimple();
   if (ret === 0 && i === diffSet0) ret = solver.diffSet(false);
   if (ret === 0 && i === diffSet1) ret = solver.diffSet(true);
-  if (ret === 0 && i === diffForcing) ret = solver.forcing();
+  // A forcing chain is a supposition, so it shares the level of the other
+  // search, the recursion, and no game can place it lower.
+  if (ret === 0 && i === diffRecursive) ret = solver.forcing();
   return ret;
 }
 
 function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): number {
   const { maxdiff, diffSimple, diffRecursive } = cfg;
   // Rung `i` **is** difficulty level `i` here — `diffSimple`, `diffSet0`,
-  // `diffSet1` and `diffForcing` are level numbers the game hands in, and
+  // `diffSet1` and `diffRecursive` are level numbers the game hands in, and
   // `latinRung` dispatches on them — so the technique's tier is its index, and
   // the cap is the game's own `maxdiff` rather than a position derived from it.
   const techniques: DeductionTechnique[] = [];

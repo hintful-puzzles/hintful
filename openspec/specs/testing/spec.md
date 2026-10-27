@@ -686,7 +686,7 @@ scan for a position, and is not covered by this requirement.
 #### Scenario: A cross-game guard needs a frame only some games produce
 
 - **WHEN** a guard over every hinted game checks a frame that only some
-  games' hints produce, as a numbered chain is
+  games' hints produce
 - **THEN** it pins one position for each such game and searches for none on a
   normal run
 - **AND** a walk another guard already makes fails on such a step from a game

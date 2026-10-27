@@ -336,7 +336,7 @@ function towersValid(solver: LatinSolver, ctx: TowersCtx): boolean {
  * up to difficulty `maxdiff`. Returns the difficulty level reached, or a
  * `DIFF_IMPOSSIBLE`/`DIFF_AMBIGUOUS`/`DIFF_UNFINISHED` sentinel. Mirrors
  * `towers.c`'s `solver()`: `DIFF_EASY`→simple, `DIFF_HARD`→set₀,
- * `DIFF_EXTREME`→set₁+forcing, `DIFF_UNREASONABLE`→recursion.
+ * `DIFF_EXTREME`→set₁, `DIFF_UNREASONABLE`→forcing and recursion.
  */
 export function solveTowers(
   w: number,
@@ -351,7 +351,6 @@ export function solveTowers(
     diffSimple: DIFF_EASY,
     diffSet0: DIFF_HARD,
     diffSet1: DIFF_EXTREME,
-    diffForcing: DIFF_EXTREME,
     diffRecursive: DIFF_UNREASONABLE,
     usersolvers: [solverEasy, solverHard, null, null],
     valid: towersValid,

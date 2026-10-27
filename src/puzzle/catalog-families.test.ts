@@ -65,16 +65,14 @@ describe("a family the code can vouch for agrees with the code", () => {
    *   shared work could not reach, and that is worth hearing about.
    *
    * The scan reads each file as it compiles, so a type-only import is not a
-   * use: Solo's one runtime tie to the Latin helpers is the chain sentence,
-   * which numbers the chain itself.
+   * use: Solo has no runtime tie to the Latin hint helpers, only to the engine.
    *
    * The two bounds are not equal and need not be: Ascent, Singles and Tents
    * borrow a Latin helper without being Latin squares.
    */
   const latin = puzzlesInFamily("latin");
-  const LATIN_SPEECH =
-    /engine\/latin-hint|\b(?:narrateLatinReason|latinPremise|forcingChainPremise)\(/;
-  const LATIN_RULES = /engine\/latin-hint|\b(?:latinPremise|forcingChainPremise)\(/;
+  const LATIN_SPEECH = /engine\/latin-hint|\b(?:narrateLatinReason|latinPremise)\(/;
+  const LATIN_RULES = /engine\/latin-hint|\blatinPremise\(/;
 
   it("scans the games' sources at all", () => {
     expect(SCANNED_SOURCE_FILES).toBeGreaterThan(100);
@@ -84,12 +82,12 @@ describe("a family the code can vouch for agrees with the code", () => {
   it("tags every game that speaks the Latin hint vocabulary as Latin squares", () => {
     // The single-placement sentence (`narrateLatinReason`) is borrowed by games
     // that are not Latin squares, as the helpers are; the arms that state a
-    // Latin rule are the strikes' and the chain's.
+    // Latin rule are the strikes'.
     const speakers = [
       ...new Set(codeLinesMatching([...puzzleIds], LATIN_RULES).map((m) => m.id)),
     ];
     // A known positive, so a scan that stopped seeing imports cannot pass.
-    expect(speakers).toContain("solo");
+    expect(speakers).toContain("keen");
     expect(speakers.filter((id) => !latin.includes(id))).toEqual([]);
   });
 

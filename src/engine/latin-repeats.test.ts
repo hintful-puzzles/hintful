@@ -47,7 +47,6 @@ function cfg(maxdiff: number, repeats = true): LatinSolverConfig<null> {
     diffSimple: 1,
     diffSet0: 2,
     diffSet1: 3,
-    diffForcing: 3,
     diffRecursive: 4,
     usersolvers: [null, null, null, null, null],
     valid: null,

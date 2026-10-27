@@ -333,19 +333,19 @@ not used that does not point off the grid.
 - **THEN** no step is the Mark-all fill, and a step that needs a square's marks
   pencils in that square's alone
 
-### Requirement: Hint: A walk in a Rome hint is numbered square by square
+### Requirement: Hint: A walk in a Rome hint is outlined square by square
 
 Where a firing's premise is a walk, an arrow chain that leads back to the
 square being struck, the chain SHALL be shown as the collection shows a walk
 (`engine-candidate-hints`, "A premise that asserts a walk is computed and
-numbered").
+outlined"), with the arrows themselves giving its order.
 
 #### Scenario: A deduction is narrated by its premise, not by its move
 
 - **WHEN** the hint's next step strikes an arrow that would close a loop
 - **THEN** the sentence states that following the arrows from the named
-  neighboring square leads back to this one, and the arrow chain is outlined in
-  order with each square's place in the walk drawn on it
+  neighboring square leads back to this one, and the arrow chain is outlined
+  with no number on any of its squares
 
 ### Requirement: Hint: The hint's recorder changes nothing the solver decides
 

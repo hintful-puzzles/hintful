@@ -356,7 +356,11 @@ describe("mathrax solver", () => {
       // The filled grid really is a legal board.
       const flags = new Uint8Array(p.o * p.o);
       expect(mathraxValidate(p.o, grid, st.clues, flags)).toBe(STATUS_COMPLETE);
-      // And the board's own tier suffices (the generator gated on exactly this).
+      // And the board's own tier suffices (the generator gated on exactly
+      // this), except at Tricky: upstream's Tricky has forcing chains, which
+      // here are a search, so a Tricky board that needs one falls to the
+      // recursive cap alone, checked above.
+      if (f.diff === DIFF_TRICKY) continue;
       expect(mathraxSolve(p.o, Uint8Array.from(st.grid), st.clues, f.diff)).toBe(
         SOLVE_UNIQUE,
       );

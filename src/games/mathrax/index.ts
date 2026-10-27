@@ -370,7 +370,7 @@ function premise(
         ? { premise: say.paired(clue, pair, target, v) }
         : { premise: say.open(clue, pair, valuesOf(marks)) };
     }
-    // The generic Latin arms (dup / set / forcing) read identically to Keen's
+    // The generic Latin arms (dup / set) read identically to Keen's
     // and Unequal's — narrated once, shared.
     default:
       return latinPremise(reason, marks);

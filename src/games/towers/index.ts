@@ -453,8 +453,6 @@ function premise(reason: HintReason, marks: readonly Mark[], w: number): Premise
       return reason.lines
         ? { premise: say.confined(reason.lines, reason.cells, n) }
         : { premise: say.set(reason.cells, n) };
-    case "forcing":
-      return { premise: say.forcing(reason, marks[0], reason.shares) };
     default:
       throw new Error(`a ${reason.kind} deduction places`);
   }

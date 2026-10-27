@@ -221,7 +221,7 @@ A drag that begins on a number SHALL replace the line that runs on from it, to t
 
 ### Requirement: Hint: A step rings the edges it decides and outlines what it reads
 
-A step SHALL ring the edges it decides, drawn as the line or cross it asks for, and outline what it reads: the square of a forced step. A lookahead step SHALL draw thin, and number once a firing in order, only the forced edges its break needs, outline where it breaks, and name a loop before a square short of edges. No step SHALL ask for a cross on an edge the ladder counts as closed.
+A step SHALL ring the edges it decides, drawn as the line or cross it asks for, and outline what it reads: the square of a forced step. A lookahead step SHALL show only the forced edges its break needs, with no number on them, outline where it breaks, and name a loop before a square short of edges. No step SHALL ask for a cross on an edge the ladder counts as closed.
 
 #### Scenario: A forced step names its square
 

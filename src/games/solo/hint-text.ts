@@ -4,8 +4,7 @@
  * Solo keeps its own version of the generic Latin arms rather than the
  * engine's (`engine/hint-text.ts`), because it names a different region set
  * per arm ("row, column and block", or the block or diagonal a hidden single
- * sits in), which one vocabulary cannot say. It shares the forcing chain and
- * the two setup steps.
+ * sits in), which one vocabulary cannot say. It shares the two setup steps.
  *
  * A value prints as the board draws it (`render.ts`'s `digitChar`: 1 to 9,
  * then a, b, … past 9), so a 12×12 grid's hint names the "c" the player can
@@ -26,7 +25,6 @@ import {
   candidateConclusions,
   cleanObviousText,
   confinedPremise,
-  forcingChainPremise,
   joinOr,
   joinWith,
   type LatinVocab,
@@ -45,7 +43,6 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { ConfinedLines } from "../../engine/latin.ts";
-import type { ForcingLink } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import { digitChar } from "./render.ts";
 import type { CageOrigin, SoloRegion } from "./solver.ts";
@@ -79,14 +76,6 @@ function thisRegion(region: SoloRegion, cells: RegionCells): Narration {
 const thisCage = (cage: readonly Point[]): Narration =>
   mark.this("stripes", whole(CELL), cage, "killer cage");
 
-/** The region a chain's last link shares with this cell, where it is not a row
- * or column (the shared sentence's own default). */
-function lastTie(region: SoloRegion): string | null {
-  if (region.kind === "block") return "block";
-  if (region.kind === "diag0" || region.kind === "diag1") return "diagonal";
-  return null;
-}
-
 const g = digitChar;
 /** Values that all go ("cross out 1 and 2"). */
 const all = (ns: number[]): string => joinWith(ns.map(g));
@@ -94,7 +83,7 @@ const all = (ns: number[]): string => joinWith(ns.map(g));
 const any = (ns: number[]): string => joinOr(ns.map(g));
 
 /** Solo's values are numbers, printed as the board prints them — the one word
- * and the one glyph the shared chain sentence needs from it. */
+ * and the one glyph the shared conclusions need from it. */
 const SOLO_VOCAB: LatinVocab = { noun: "number", value: digitChar };
 
 export const say = {
@@ -176,24 +165,6 @@ export const say = {
    * `set`, in the engine's words for it. */
   confined: (lines: ConfinedLines, set: readonly Point[], n: number): Narration =>
     confinedPremise(lines, set, g(n)),
-
-  // The shared chain sentence, with Solo's own region vocabulary — its chain
-  // hops through blocks and diagonals as well as lines, so both the region that
-  // ties the conclusion back to the origin and the one that ties it to the last
-  // link are named rather than assumed.
-  forcing: (
-    reason: { chain: readonly ForcingLink[] },
-    struck: Point & { n: number },
-    shares: SoloRegion,
-    lastShares: SoloRegion,
-  ): Narration =>
-    forcingChainPremise(
-      reason,
-      struck,
-      SOLO_VOCAB,
-      regionName(shares),
-      lastTie(lastShares),
-    ),
 
   /** The one open cell `at` of a {@link CageSum} over `open` must make its
    * whole clue `n`. */

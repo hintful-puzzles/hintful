@@ -170,14 +170,8 @@ describe("towers hint", () => {
     // clue's line of sight while a struck mark sits on a *different* clue's
     // line. A clue-strike step hatches its clue's line; every struck mark must
     // lie within it.
-    //
-    // A forcing chain is the other shape: its `area` is the chain, and the cell
-    // being struck is deliberately **not** on it: the chain drives some other
-    // cell to the value, and the conclusion loses it by lining up with that
-    // cell. Selected by its rung, which is what names the chain.
     const diffs: Difficulty[] = ["easy", "hard", "extreme"];
     let checked = 0;
-    let chainsChecked = 0;
     for (const diff of diffs) {
       for (let s = 0; s < 8; s++) {
         const { st } = gen(5, diff, `bleed-${diff}-${s}`);
@@ -188,29 +182,16 @@ describe("towers hint", () => {
           // A set across lines stripes the lines it confines a height in, and
           // strikes outside them by design.
           if (step.rung === "set") continue;
-          const area: { x: number; y: number }[] = step.highlights?.area ?? [];
           const line: { x: number; y: number }[] = step.highlights?.hatch ?? [];
-          const isChain = step.rung === "forcing";
-          if (!isChain && line.length === 0) continue; // dup continuation: no clue line
+          if (line.length === 0) continue; // dup continuation: no clue line
           for (const m of step.move.marks as { x: number; y: number }[]) {
-            if (isChain) {
-              // The other half of the invariant, asserted rather than skipped:
-              // a conclusion sitting *on* its own chain would mean the chain
-              // had already decided the cell it claims to be deducing.
-              expect(area.some((a) => a.x === m.x && a.y === m.y)).toBe(false);
-              chainsChecked++;
-            } else {
-              expect(line.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
-              checked++;
-            }
+            expect(line.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
+            checked++;
           }
         }
       }
     }
     expect(checked).toBeGreaterThan(0);
-    // These fixed seeds reach forcing chains too (seven chain marks), so the
-    // chain half of the invariant is asserted rather than merely reported.
-    expect(chainsChecked).toBeGreaterThan(0);
   });
 
   it("skips populate once notes are present", () => {
@@ -376,12 +357,6 @@ describeHintPins({
       id: "5dx:///2/2//3/1////2//2////4//",
       moves:
         '[{"type":"set","x":2,"y":4,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":5},{"x":2,"y":1,"n":5},{"x":2,"y":2,"n":5},{"x":2,"y":3,"n":5},{"x":0,"y":4,"n":5},{"x":1,"y":4,"n":5},{"x":3,"y":4,"n":5},{"x":4,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":5},{"x":3,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":4},{"x":3,"y":2,"n":4}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":4}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":4}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":4}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":4}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":4}]}]',
-    },
-    /** Held on 393 of 2058 positions walked. */
-    forcing: {
-      id: "5dx:2/2/3/2//////4/////1////2/,l1h3c",
-      moves:
-        '[{"type":"set","x":0,"y":4,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":1,"y":0,"n":3},{"x":2,"y":0,"n":1},{"x":0,"y":1,"n":5},{"x":1,"y":1,"n":3},{"x":2,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":5},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":3},{"x":3,"y":2,"n":1},{"x":4,"y":2,"n":1},{"x":0,"y":3,"n":5},{"x":1,"y":3,"n":3},{"x":2,"y":3,"n":1},{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":3},{"x":2,"y":4,"n":5},{"x":3,"y":4,"n":3},{"x":3,"y":4,"n":5},{"x":4,"y":4,"n":3},{"x":4,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":3}]},{"type":"set","x":0,"y":0,"n":4,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":4},{"x":2,"y":0,"n":4},{"x":3,"y":0,"n":4},{"x":4,"y":0,"n":4},{"x":0,"y":1,"n":4},{"x":0,"y":2,"n":4},{"x":0,"y":3,"n":4}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":5},{"x":2,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":3,"n":5},{"x":4,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":4,"n":4},{"x":4,"y":3,"n":4}]},{"type":"set","x":4,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":5}]},{"type":"set","x":2,"y":3,"n":5,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":5},{"x":3,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":4}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":4}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":4}]},{"type":"set","x":1,"y":3,"n":4,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":4}]}]',
     },
     /** Held on 57 of 2058 positions walked. */
     fullLine: "5de:2/2/1/5/3/2/2/3/1/3/3/1/3/2/2/2/2/1/3/2",

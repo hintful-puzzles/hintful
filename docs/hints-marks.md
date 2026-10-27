@@ -661,6 +661,11 @@ walk in its marks; hypothetical marks are never journey legs.**
 `HintStep.move` is required, playing a hint makes every leg's move for real,
 and a plan may hold no dummy moves, so the legs cannot be hypothetical.
 
+This is a supposition, which is a Search: only a rung that alone defines its
+tier shows one, until a markable technique fills the tier
+([`solver-and-generator.md`](./solver-and-generator.md) § "Check, Tactic,
+Search"). Never build a new what-if walk; find the marks instead.
+
 - **The target keeps its ring** ("suppose this cell were …"). Each cell the
   hypothesis would force carries a small center mark of its forced color,
   unlike a placed piece in size so it reads as hypothetical. That is not the
