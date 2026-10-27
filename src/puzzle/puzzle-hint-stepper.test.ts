@@ -7,7 +7,7 @@
 // Puzzle, no midend/worker needed.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NOT_STARTED } from "../engine/solve-failure.ts";
-import type { PuzzleStaticAttributes } from "../engine/types.ts";
+import type { HintSpan, PuzzleStaticAttributes } from "../engine/types.ts";
 import { HINT_PENDING_MESSAGE, HINT_PENDING_MS, Puzzle } from "./puzzle.ts";
 import type { RemoteWorkerPuzzle } from "./worker.ts";
 
@@ -357,5 +357,36 @@ describe("a slow hint says it is thinking (coalesce-hint-requests)", () => {
     await show;
     expect(puzzle.hintPending).toBe(false);
     expect(puzzle.helpMessage).toBe("Fix the highlighted mistakes first");
+  });
+});
+
+describe("a hint's measured marks", () => {
+  // The hint's marks are repainted over the board in their colors for as long
+  // as `hintMarks` holds them, so a board that drops the hint must drop them
+  // too: the engine's next message carries no words, which reads as no change
+  // once the words were cleared here.
+  it("go with the hint when the board is restarted", async () => {
+    const marks = { width: 1, height: 1, refs: [], roles: [] };
+    const { puzzle } = makePuzzle({
+      currentAnimationMs: vi.fn(async () => 0),
+      hintReferenceMarks: vi.fn(async () => marks),
+      restartGame: vi.fn(async () => {}),
+    });
+    const notify = (spans?: { light: HintSpan[]; dark: HintSpan[] }) =>
+      Reflect.get(
+        puzzle,
+        "notifyChange",
+      )({
+        type: "status-bar-change",
+        statusBarText: "",
+        activeHintSpans: spans,
+      });
+    const words = [{ text: "this square", ref: 0 }];
+    notify({ light: words, dark: words });
+    await vi.waitFor(() => expect(puzzle.hintMarks).toBe(marks));
+
+    await puzzle.restartGame();
+    notify();
+    expect(puzzle.hintMarks).toBeNull();
   });
 });

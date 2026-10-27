@@ -576,6 +576,9 @@ export class Puzzle {
     this._activeHintExplanation.set("");
     this._activeHintSpans.set(null);
     this.stopHintFlash();
+    // With the words gone, the engine's wordless message that follows reads as
+    // no change, so the marks are dropped here or they outlive the board.
+    this.measureHintMarks();
   }
 
   public get status(): GameStatus {
