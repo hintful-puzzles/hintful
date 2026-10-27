@@ -15,7 +15,10 @@ are most of the wall clock alone: `src/engine/hint-resume.test.ts` took
 alike) takes the run past 30.
 
 The limit was raised to 45 minutes to restore verdicts. That is room, not a
-cure: the two files grow with every game and every preset.
+cure: the two files grow with every game and every preset. The first run
+under it (39882187035, `b9ddee23`) was green in 39 minutes, and by
+2026-10-27 green runs took 35 to 40 (run 40517483254: 33.3 and 25.6 minutes
+for the two files, of 114 minutes of test time).
 
 ## What changes
 

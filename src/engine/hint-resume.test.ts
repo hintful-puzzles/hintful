@@ -36,6 +36,7 @@ import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { sameState } from "./testing/same-state.ts";
 import { itOverWholeSweep, perCommit } from "./testing/slow.ts";
+import { FIRST_SHARE, ofThisShare, shareFloor } from "./testing/sweep-share.ts";
 import { NO_FLASH } from "./win-wave.ts";
 
 /** Walk a fresh board to solved, recomputing the hint after every move.
@@ -120,7 +121,7 @@ function solveByHints(
 /**
  * How many times the walk asks for a fresh plan on one board, at most, where
  * the board's first plan is longer than that: the local hooks ask at evenly
- * spaced moves and follow the plan between them, and CI asks after every move.
+ * spaced moves and follow the plan between them, and CI asks up to 512 times.
  *
  * The walk is quadratic in a plan's length, a whole plan computed again for
  * each of its moves, which on a game of long plans such as Loopy is most of the
@@ -134,9 +135,17 @@ function solveByHints(
  * opening included. A refusal is met wherever a plan runs out. What the stride
  * can step over is an instability between two consecutive recomputes on a
  * board whose plan is longer than 64 steps: a planner that undoes its own last
- * move. CI's walk recomputes after every move.
+ * move. CI's walk recomputes after every move on every board whose plan is
+ * 512 steps or fewer.
+ *
+ * **CI's 512 is set by one board.** Loopy's 7x7 Great-Great-Dodecagonal, the
+ * grid type no preset offers dealt on the first preset's size, plans 1018 steps
+ * and took 61% of Loopy's walk asked after every move: about 13 CI minutes,
+ * in one case no share of the sweep can split (2026-10-27). Four of the gate's
+ * 311 boards plan more than 512 steps: that one, Loopy's Great-Dodecagonal,
+ * Mosaic's 50x50 and Pattern's 30x30, each still asked from 512 positions.
  */
-const RECOMPUTES = perCommit(64, Number.POSITIVE_INFINITY);
+const RECOMPUTES = perCommit(64, 512);
 
 /**
  * The games whose hint **plans by searching ahead a bounded number of moves**,
@@ -295,6 +304,11 @@ const SEARCH_REACH: Record<string, string> = {
  */
 const SEEDS = ["hr-a", "hr-b", "hr-c", "hr-d", "hr-e"];
 
+/** The hinting games whose single-plan sweeps this share walks. The walk to
+ * solved is shared out by board instead, since one game's boards can be most
+ * of it ({@link SOLVE_CASES}). */
+const SHARE_GAMES = ofThisShare(HINT_GAMES);
+
 /**
  * The seeds the *single-plan* sweeps below take per board — the two that
  * compute one hint and judge it, rather than walking a board to solved.
@@ -347,7 +361,7 @@ describe("a kept hint plan never contains a step that does nothing", () => {
   // emits a stale step does it on the first board that reaches the rung, and
   // the rungs are what a mode adds — Solo's four cage rungs fire on no board
   // `firstLeaf` can produce.
-  for (const [name, game] of HINT_GAMES) {
+  for (const [name, game] of SHARE_GAMES) {
     it(`${name}: every plan step changes the board when reached`, () => {
       for (const { title, params } of gatePresets(name, game)) {
         for (const seed of BREADTH_SEEDS) {
@@ -389,7 +403,7 @@ describe("a kept hint plan's every step changes what the board draws", () => {
   // has ruled out of a cell, struck through in the tally while that cell is
   // looked at) changes no plain frame, and the step that makes it puts its
   // square in focus, so a step is convicted only when both frames stand still.
-  for (const [name, game] of HINT_GAMES) {
+  for (const [name, game] of SHARE_GAMES) {
     it(`${name}: every plan step changes the frame when reached`, () => {
       let judged = 0;
       for (const { title, params } of gatePresets(name, game)) {
@@ -420,7 +434,7 @@ describe("a kept hint plan's every step changes what the board draws", () => {
   }
 });
 
-/** How many steps the frame sweep judged, across every hinting game: its
+/** How many steps the frame sweep judged, across this share's games: its
  * vacuity guard, asserted in "the resume walk" below. */
 let framesJudged = 0;
 
@@ -430,7 +444,7 @@ describe("requesting a hint never mutates the board", () => {
   // (Owner-reported: a Towers hint appeared to delete a pencil note. The note
   // was intact — a render bug drew the struck candidate invisibly — but the
   // guarantee is worth asserting directly: `hint()` is pure on the state.)
-  for (const [name, game] of HINT_GAMES) {
+  for (const [name, game] of SHARE_GAMES) {
     it(`${name}: hint() leaves the state unchanged`, () => {
       for (const { title, params } of gatePresets(name, game)) {
         for (const seed of BREADTH_SEEDS) {
@@ -446,86 +460,137 @@ describe("requesting a hint never mutates the board", () => {
   }
 });
 
-describe("a Latin-family placement never falsely claims a naked single", () => {
-  // The shared `latin.ts` solver records naked and hidden singles under one
-  // `single` reason; a hint must re-derive which (engine/latin-hint.ts) so it never
-  // says "every other number/height has been ruled out in this cell" about a cell
-  // that still visibly shows several candidates (owner-reported on Keen). Walk each
-  // Latin game and assert the naked-single phrasing only ever appears on a cell
-  // whose notes really are down to one candidate.
-  //
-  // **One board per sliced preset, not five of the easiest.** This walks a
-  // board to solved, so a seed is expensive here; what the five seeds could
-  // never reach is the modes, which is exactly where the shared solver's
-  // reasons differ — Unequal's Adjacent clues, Keen's multiplication-only
-  // cages, Group's hidden identity.
-  const LATIN: [string, AnyGame][] = HINT_GAMES.filter(([name]) =>
-    ["towers", "unequal", "keen", "group"].includes(name),
-  );
-  for (const [name, game] of LATIN) {
-    it(`${name}: "ruled out in this cell" only on a genuine naked single`, () => {
-      for (const { title, params } of gatePresets(name, game)) {
-        const at = `${name}/${title}`;
-        const { desc, aux } = dealt(game, params);
-        let state = game.newState(params, desc);
-        // biome-ignore lint/suspicious/noExplicitAny: structural state access.
-        const w = (params as any).w ?? (params as any).order;
-        for (let moves = 0; moves < 2000 && game.status(state) === "ongoing"; moves++) {
-          const res = game.hint?.(state, aux);
-          if (!res?.ok) break;
-          const step = res.steps[0];
-          // biome-ignore lint/suspicious/noExplicitAny: structural move/state access.
-          const m = step.move as any;
-          if (
-            m.type === "set" &&
-            !m.pencil &&
-            /ruled out in this cell/.test(step.explanation)
-          ) {
-            // Group's `set` carries a cell list; the others carry `x`/`y`.
-            const { x, y } = (m.cells?.[0] ?? m) as { x: number; y: number };
-            // biome-ignore lint/suspicious/noExplicitAny: structural state access.
-            const { grid, pencil } = state as any;
-            // A note-less cell shows the values its row and column leave it.
-            const open = (n: number): boolean => {
-              for (let k = 0; k < w; k++)
-                if (grid[y * w + k] === n || grid[k * w + x] === n) return false;
-              return true;
-            };
-            const pen = pencil[y * w + x] as number;
-            const ncand = Array.from({ length: w }, (_, k) => k + 1).filter((n) =>
-              pen === 0 ? open(n) : pen & (1 << n),
-            ).length;
-            expect(
-              ncand,
-              `${at}: naked-single narration on a cell with ${ncand} candidates`,
-            ).toBe(1);
-          }
-          state = game.executeMove(state, step.move);
-        }
-      }
-    });
-  }
-});
+/** The Latin-family hinting games, read from the whole registry: a share may
+ * hold none of them, and the check below is what still fails a name that
+ * matches no game. */
+const LATIN: [string, AnyGame][] = HINT_GAMES.filter(([name]) =>
+  ["towers", "unequal", "keen", "group"].includes(name),
+);
+const SHARE_LATIN = LATIN.filter(([name]) => SHARE_GAMES.some(([id]) => id === name));
 
-describe("the games excused the walk's promise are derived, and each is accounted for", () => {
-  it("every game that plans by searching has a ledger entry, and nothing else does", () => {
-    expect(BOUNDED_SEARCH_HINTS).toEqual(Object.keys(SEARCH_REACH).sort());
+if (FIRST_SHARE) {
+  describe("the Latin-family sweep's games", () => {
+    it("are each a hinting game", () => {
+      expect(LATIN.map(([name]) => name).sort()).toEqual([
+        "group",
+        "keen",
+        "towers",
+        "unequal",
+      ]);
+    });
   });
-});
+}
+
+// A suite with no case fails, and a share may walk no Latin game.
+if (SHARE_LATIN.length > 0)
+  describe("a Latin-family placement never falsely claims a naked single", () => {
+    // The shared `latin.ts` solver records naked and hidden singles under one
+    // `single` reason; a hint must re-derive which (engine/latin-hint.ts) so it never
+    // says "every other number/height has been ruled out in this cell" about a cell
+    // that still visibly shows several candidates (owner-reported on Keen). Walk each
+    // Latin game and assert the naked-single phrasing only ever appears on a cell
+    // whose notes really are down to one candidate.
+    //
+    // **One board per sliced preset, not five of the easiest.** This walks a
+    // board to solved, so a seed is expensive here; what the five seeds could
+    // never reach is the modes, which is exactly where the shared solver's
+    // reasons differ — Unequal's Adjacent clues, Keen's multiplication-only
+    // cages, Group's hidden identity.
+    for (const [name, game] of SHARE_LATIN) {
+      it(`${name}: "ruled out in this cell" only on a genuine naked single`, () => {
+        for (const { title, params } of gatePresets(name, game)) {
+          const at = `${name}/${title}`;
+          const { desc, aux } = dealt(game, params);
+          let state = game.newState(params, desc);
+          // biome-ignore lint/suspicious/noExplicitAny: structural state access.
+          const w = (params as any).w ?? (params as any).order;
+          for (
+            let moves = 0;
+            moves < 2000 && game.status(state) === "ongoing";
+            moves++
+          ) {
+            const res = game.hint?.(state, aux);
+            if (!res?.ok) break;
+            const step = res.steps[0];
+            // biome-ignore lint/suspicious/noExplicitAny: structural move/state access.
+            const m = step.move as any;
+            if (
+              m.type === "set" &&
+              !m.pencil &&
+              /ruled out in this cell/.test(step.explanation)
+            ) {
+              // Group's `set` carries a cell list; the others carry `x`/`y`.
+              const { x, y } = (m.cells?.[0] ?? m) as { x: number; y: number };
+              // biome-ignore lint/suspicious/noExplicitAny: structural state access.
+              const { grid, pencil } = state as any;
+              // A note-less cell shows the values its row and column leave it.
+              const open = (n: number): boolean => {
+                for (let k = 0; k < w; k++)
+                  if (grid[y * w + k] === n || grid[k * w + x] === n) return false;
+                return true;
+              };
+              const pen = pencil[y * w + x] as number;
+              const ncand = Array.from({ length: w }, (_, k) => k + 1).filter((n) =>
+                pen === 0 ? open(n) : pen & (1 << n),
+              ).length;
+              expect(
+                ncand,
+                `${at}: naked-single narration on a cell with ${ncand} candidates`,
+              ).toBe(1);
+            }
+            state = game.executeMove(state, step.move);
+          }
+        }
+      });
+    }
+  });
+
+// A check that walks nothing, so the first share holds it for every share.
+if (FIRST_SHARE) {
+  describe("the games excused the walk's promise are derived, and each is accounted for", () => {
+    it("every game that plans by searching has a ledger entry, and nothing else does", () => {
+      expect(BOUNDED_SEARCH_HINTS).toEqual(Object.keys(SEARCH_REACH).sort());
+    });
+  });
+}
+
+/**
+ * The boards the walk to solved takes, every hinting game's in turn, shared out
+ * one board at a time: one game's boards can be most of the walk (Loopy's held
+ * 22 of hint-resume's 33 minutes on CI, 2026-10-27), and a share of games would
+ * leave them all in one file. A game with no board is a case of its own, so the
+ * share it falls to fails it.
+ */
+const SOLVE_CASES = ofThisShare(
+  HINT_GAMES.flatMap(([name, game]) => {
+    const presets: ({ title: string; params: unknown } | null)[] = gatePresets(
+      name,
+      game,
+    );
+    return (presets.length > 0 ? presets : [null]).map((preset) => ({
+      name,
+      game,
+      preset,
+    }));
+  }),
+);
 
 describe("a hint can solve from any mid-game position", () => {
   for (const [name, game] of HINT_GAMES) {
+    const cases = SOLVE_CASES.filter((c) => c.name === name);
+    if (cases.length === 0) continue;
     // Heavy, fixed-seed work (re-solve by following hints move-by-move across
     // every seed). The work per seed is bounded and deterministic; only the
     // wall-clock varies, stretching several-fold under full-suite CPU
     // saturation. That is why nothing here is clock-gated — the assertion is on
     // the *result*. See docs/testing.md § "Seed-deterministic, never clock-gated".
     it(`${name}: following hints one move at a time always reaches solved`, () => {
-      const presets = gatePresets(name, game);
-      // Per-game vacuity: a presets menu that flattened to nothing would leave
-      // this loop asserting nothing while reporting health.
-      expect(presets.length, `${name}: no preset to walk`).toBeGreaterThan(0);
-      for (const { title, params } of presets) {
+      for (const { preset } of cases) {
+        // Per-game vacuity: a presets menu that flattened to nothing would
+        // leave this loop asserting nothing while reporting health.
+        expect(preset, `${name}: no preset to walk`).not.toBeNull();
+        if (preset === null) continue;
+        const { title, params } = preset;
         const search = permitsSearch(game, params);
         const bounded = BOUNDED_SEARCH_HINTS.includes(name);
         // **This walk buys breadth over presets; the seed count is not the dial
@@ -551,12 +616,14 @@ describe("a hint can solve from any mid-game position", () => {
   }
 });
 
-/** How many (preset, seed) walks actually ran, across every hinting game — the
- * sweep-wide vacuity guard. Accumulated above, asserted below, which runs last
- * because it is registered last. */
+/** How many (preset, seed) walks actually ran in this share — the sweep-wide
+ * vacuity guard. Accumulated above, asserted below, which runs last because it
+ * is registered last. */
 let walkedCases = 0;
 
 describe("the resume walk", () => {
+  // Each share is held to its part of the whole sweep's floor, since a share
+  // holds about its part of the boards and the games.
   itOverWholeSweep("covered enough boards to mean something", () => {
     // **The floor has to sit above the ways the slice can silently collapse,**
     // not merely above zero — that is what makes it a vacuity guard rather than
@@ -565,12 +632,12 @@ describe("the resume walk", () => {
     // therefore separates "sliced by axis" from both collapses, with slack
     // under the true count, so it is not a ratchet a legitimate change has to
     // bump.
-    expect(walkedCases).toBeGreaterThan(100);
+    expect(walkedCases).toBeGreaterThan(shareFloor(100));
   });
 
   itOverWholeSweep("judged enough frames to mean something", () => {
     // The floor sits far above one small board a game and far below what the
     // hook's slice judges.
-    expect(framesJudged).toBeGreaterThan(5000);
+    expect(framesJudged).toBeGreaterThan(shareFloor(5000));
   });
 });

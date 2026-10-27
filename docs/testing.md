@@ -81,6 +81,7 @@ runs, and what a commit may leave to the push and to CI).
 | – Deal through `dealt` | you are writing a cross-game guard, not a game, and it deals boards |
 | – One board of each kind in the hooks | you are writing a cross-game guard, not a game, and the hooks should walk less than CI |
 | – A cross-game guard the hooks can narrow | you are writing a cross-game guard, not a game: its case titles and whole-sweep assertions |
+| – A sweep too long for one worker | a cross-game sweep alone would take more than half a CI run |
 | – A guard that only reads source | you are writing a guard, not a game, and it scans source text |
 | – One concept under several names | you suspect games name the same `Ui` or draw-state field differently |
 | Metrics and instruments | you start or end a refactoring change, or read a jscpd, madge or biome figure |
@@ -902,6 +903,30 @@ games it stages and skips the rest by title, so:
   `node scripts/checks/select-tests.ts --verify` goes red on a heavy hint
   guard no longer narrowing, find the import that now reads a broad tree and
   do not widen the check.
+
+### A sweep too long for one worker
+
+vitest runs one file's tests in turn, so a cross-game sweep that alone would
+take more than half a CI run is spread: list it in `SPREAD` in
+`vitest.config.ts`, and it runs once per share, each run walking the share
+[`sweep-share.ts`](../src/engine/testing/sweep-share.ts) gives it. The
+`build-pipeline` spec's "No one test file sets the gate's wall clock" is the
+bound.
+
+- **Share what the sweep loops over with `ofThisShare`**, over a list derived
+  from the games: games when no game holds most of the cost, boards when one
+  does (`hint-resume.test.ts`'s `SOLVE_CASES`). One board no share can split
+  is a walk to trim, not to share.
+- **Put a check that walks nothing under `FIRST_SHARE`**, so it runs once.
+- **A share can hold none of a small population**, and vitest fails a suite
+  with no case: register the block only where the share holds a member, and
+  hold the population's size in the first share (`hint-resume.test.ts`'s
+  `LATIN`).
+- **Hold a census to the share's own games**, with every walk of a game in one
+  share, and a vacuity floor at `shareFloor` of the whole one. A check that
+  asks whether *any* game met something is held on a game that meets it, in
+  the share that walks it (`hint-quality.test.ts`'s `MET_ON`).
+- **Run it wide as before**: `npx vitest run <file>` runs every share.
 
 ### A guard that only reads source
 

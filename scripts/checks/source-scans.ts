@@ -60,8 +60,9 @@ function listed(pass: "scan" | "main" | null): string[] {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "inherit"],
   });
+  // A spread file is listed once per share (`vitest.config.ts`'s `SPREAD`).
   const files = JSON.parse(out) as { file: string }[];
-  return files.map(({ file }) => path.relative(ROOT, file)).sort();
+  return [...new Set(files.map(({ file }) => path.relative(ROOT, file)))].sort();
 }
 
 /**

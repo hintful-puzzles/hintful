@@ -188,10 +188,12 @@ function graphSelected(since: string | null): Set<string> {
     ],
     { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
   );
+  // Each line names its vitest project first, `[main] src/…`, and a spread
+  // file once per share.
   return new Set(
     out
       .split("\n")
-      .map((l) => l.trim())
+      .map((l) => l.trim().replace(/^\[[^\]]*\] /, ""))
       .filter((l) => l.endsWith(".test.ts"))
       .map((l) => path.relative(ROOT, path.resolve(ROOT, l))),
   );

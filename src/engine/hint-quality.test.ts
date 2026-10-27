@@ -64,9 +64,17 @@ import {
   perCommit,
   SLOW_TESTS_ENABLED,
 } from "./testing/slow.ts";
+import { FIRST_SHARE, ofThisShare, shareFloor } from "./testing/sweep-share.ts";
 
 /** Which of a params set's shared boards (`dealt`) a walk over several takes. */
 const SEEDS = perCommit([0], [0, 1, 2]);
+
+/** The hinting games this share walks, each with every walk below: a check
+ * that closes over a walk (the ledger's, the forms') then holds this share's
+ * games to what this share heard. A check that walks nothing runs in the first
+ * share alone. */
+const SHARE_GAMES = ofThisShare(HINT_GAMES);
+const SHARE_IDS = new Set(SHARE_GAMES.map(([id]) => id));
 
 /** The hard ceiling: what a ledgered sentence is held to instead. */
 const MAX_NARRATION_CHARS = 300;
@@ -413,31 +421,34 @@ const EM_DASH = /—/;
 /** "row 3", "Columns 2" — a line by a number. */
 const NUMBERED_LINE = /\b(rows?|columns?)\s+\d/i;
 
-describe("the necessity rule reaches every hinting game it should", () => {
-  it("drew from a populated registry, and exempts a minority of it", () => {
-    // Vacuity: an empty `HINT_GAMES` would exempt nothing and check nothing,
-    // and every narration assertion below would pass over no games at all.
-    expect(HINT_GAMES.length).toBeGreaterThan(25);
-    expect(DEDUCTIVE.size).toBeGreaterThan(20);
-    expect(Object.keys(NARRATES_MOVES).length).toBeLessThan(HINT_GAMES.length / 3);
-  });
+if (FIRST_SHARE)
+  describe("the necessity rule reaches every hinting game it should", () => {
+    it("drew from a populated registry, and exempts a minority of it", () => {
+      // Vacuity: an empty `HINT_GAMES` would exempt nothing and check nothing,
+      // and every narration assertion below would pass over no games at all.
+      expect(HINT_GAMES.length).toBeGreaterThan(25);
+      expect(DEDUCTIVE.size).toBeGreaterThan(20);
+      expect(Object.keys(NARRATES_MOVES).length).toBeLessThan(HINT_GAMES.length / 3);
+    });
 
-  it("ledgers only games that ship a hint, each with its reason", () => {
-    const hinting = new Set(HINT_GAMES.map(([id]) => id));
-    for (const [id, why] of Object.entries(NARRATES_MOVES)) {
-      expect(hinting.has(id), `${id} is exempted here but ships no hint()`).toBe(true);
-      expect(why.length, `${id}'s exemption states no reason`).toBeGreaterThan(40);
-    }
-  });
+    it("ledgers only games that ship a hint, each with its reason", () => {
+      const hinting = new Set(HINT_GAMES.map(([id]) => id));
+      for (const [id, why] of Object.entries(NARRATES_MOVES)) {
+        expect(hinting.has(id), `${id} is exempted here but ships no hint()`).toBe(
+          true,
+        );
+        expect(why.length, `${id}'s exemption states no reason`).toBeGreaterThan(40);
+      }
+    });
 
-  it("endorses an idiom only for a game the rule applies to", () => {
-    for (const id of Object.keys(IDIOMS))
-      expect(
-        DEDUCTIVE.has(id),
-        `${id} has an endorsed idiom but is not necessity-checked — the entry does nothing`,
-      ).toBe(true);
+    it("endorses an idiom only for a game the rule applies to", () => {
+      for (const id of Object.keys(IDIOMS))
+        expect(
+          DEDUCTIVE.has(id),
+          `${id} has an endorsed idiom but is not necessity-checked — the entry does nothing`,
+        ).toBe(true);
+    });
   });
-});
 
 /**
  * Boards per game for the form rules below — the gate slice, one seed each.
@@ -455,7 +466,7 @@ describe("the necessity rule reaches every hinting game it should", () => {
 const FORM_SEEDS = SEEDS.slice(0, 1);
 
 describe("hint narration form, cross-game", () => {
-  for (const [name, game] of HINT_GAMES) {
+  for (const [name, game] of SHARE_GAMES) {
     it(`${name}: every step is visible, terse${DEDUCTIVE.has(name) ? ", and necessity-voiced" : ""}`, () => {
       for (const { title, params } of gatePresets(name, game))
         for (const seed of FORM_SEEDS) {
@@ -643,13 +654,34 @@ function journeyDefects(text: string, leg: number, legs: number): string[] {
  */
 const BOUND_STEPS = perCommit(400, Number.POSITIVE_INFINITY);
 
-/** Forms seen across the walk, so the close-out can tell that every kind of
- * exception and the searching check met real steps. */
-const formsSeen = new Map<string, number>();
+/** A step of a journey of two or more legs, held to `journeyDefects`: what
+ * {@link formsHeard} records for it. */
+const JOURNEY = "a leg of a multi-leg journey";
 
-/** Steps of a journey of two or more legs the walk held to `journeyDefects`,
- * so the close-out can tell the rule met real journeys. */
-let journeyLegsChecked = 0;
+/** The games whose walk held a step of each form, and of {@link JOURNEY}, so
+ * the close-out can tell that every kind of exception, the searching check and
+ * the journey rule met real steps. */
+const formsHeard = new Map<string, Set<string>>();
+
+/**
+ * For each form the close-out needs met, a game whose walk meets it: a share
+ * sees only its own games' walks, so each is held in the share that walks its
+ * game. Three of them are searching forms, so the searching check met three
+ * kinds of step. Each was measured among the games that meet it (2026-10-27).
+ */
+const MET_ON: Record<string, string> = {
+  "unshaped:setup": "towers",
+  "unshaped:evident": "filling",
+  "searching forced:lost": "samegame",
+  "searching effect": "sokoban",
+  "searching sequence": "pegs",
+  [JOURNEY]: "twiddle",
+};
+
+function heard(form: string, game: string): void {
+  const games = formsHeard.get(form) ?? new Set<string>();
+  formsHeard.set(form, games.add(game));
+}
 
 /** Where `steps[i]` sits in its journey, 1-based, and the journey's length:
  * the same grouping by `continuesPrevious` the midend's counter makes. */
@@ -675,62 +707,65 @@ function readingsOf(game: AnyGame, params: unknown): readonly (string | null)[] 
   return typeof ui["candidateReading"] === "string" ? ["implicit", "populate"] : [null];
 }
 
-describe("a step's words leave its place in the journey to the counter", () => {
-  it("flags the counter's facts and passes a count the board shows", () => {
-    const flagged = (text: string, leg: number, legs: number): boolean =>
-      journeyDefects(text, leg, legs).length > 0;
-    expect(
-      flagged(
-        "Turn the ringed block clockwise, turn 2 of the 7 that put it in place.",
-        2,
-        7,
-      ),
-    ).toBe(true);
-    expect(flagged("Turn the ringed block clockwise, the last of the 7.", 7, 7)).toBe(
-      true,
-    );
-    expect(
-      flagged("Six jumps clear the striped block and change nothing else.", 1, 6),
-    ).toBe(true);
-    expect(flagged("The next 3 turns put it in place.", 2, 4)).toBe(true);
-    expect(flagged("Push it left (2/3).", 2, 3)).toBe(true);
-    // A clue or a count of squares that happens to equal the journey's.
-    expect(
-      flagged(
-        "This row needs 3 more +s and only these 3 squares can still take one.",
-        1,
-        3,
-      ),
-    ).toBe(false);
-    expect(flagged("This 3's other edges can give it 2 at most.", 2, 3)).toBe(false);
-    // One leg: the counter shows nothing, so the words may.
-    expect(flagged("Two pushes put this barrel on a target.", 1, 1)).toBe(false);
+if (FIRST_SHARE)
+  describe("a step's words leave its place in the journey to the counter", () => {
+    it("flags the counter's facts and passes a count the board shows", () => {
+      const flagged = (text: string, leg: number, legs: number): boolean =>
+        journeyDefects(text, leg, legs).length > 0;
+      expect(
+        flagged(
+          "Turn the ringed block clockwise, turn 2 of the 7 that put it in place.",
+          2,
+          7,
+        ),
+      ).toBe(true);
+      expect(flagged("Turn the ringed block clockwise, the last of the 7.", 7, 7)).toBe(
+        true,
+      );
+      expect(
+        flagged("Six jumps clear the striped block and change nothing else.", 1, 6),
+      ).toBe(true);
+      expect(flagged("The next 3 turns put it in place.", 2, 4)).toBe(true);
+      expect(flagged("Push it left (2/3).", 2, 3)).toBe(true);
+      // A clue or a count of squares that happens to equal the journey's.
+      expect(
+        flagged(
+          "This row needs 3 more +s and only these 3 squares can still take one.",
+          1,
+          3,
+        ),
+      ).toBe(false);
+      expect(flagged("This 3's other edges can give it 2 at most.", 2, 3)).toBe(false);
+      // One leg: the counter shows nothing, so the words may.
+      expect(flagged("Two pushes put this barrel on a target.", 1, 1)).toBe(false);
+    });
   });
-});
 
 describe("a bound hint's words name exactly the marks it draws", () => {
-  it("every hinted game is bound", () => {
-    // A hint whose game declares no legend is checked by nothing here, so an
-    // unbound hint is named rather than passed over.
-    expect(HINT_GAMES.filter(([, g]) => !g.hintMarks).map(([name]) => name)).toEqual(
-      [],
-    );
-    // Vacuity: the population itself, so an empty registry cannot pass.
-    expect(BOUND_GAMES.length).toBe(HINT_GAMES.length);
-    expect(HINT_GAMES.length).toBeGreaterThan(40);
-  });
+  if (FIRST_SHARE)
+    it("every hinted game is bound", () => {
+      // A hint whose game declares no legend is checked by nothing here, so an
+      // unbound hint is named rather than passed over.
+      expect(HINT_GAMES.filter(([, g]) => !g.hintMarks).map(([name]) => name)).toEqual(
+        [],
+      );
+      // Vacuity: the population itself, so an empty registry cannot pass.
+      expect(BOUND_GAMES.length).toBe(HINT_GAMES.length);
+      expect(HINT_GAMES.length).toBeGreaterThan(40);
+    });
 
-  it("every hinted game lists its rungs, each once", () => {
-    // The walk below holds every step's rung to this list, and the pin harness
-    // requires a pinned position for each entry (`testing/hint-positions.ts`).
-    for (const [name, game] of HINT_GAMES) {
-      const rungs = game.hintRungs ?? [];
-      expect(rungs.length, `${name} declares no hintRungs`).toBeGreaterThan(0);
-      expect(new Set(rungs).size, `${name} lists a rung twice`).toBe(rungs.length);
-    }
-  });
+  if (FIRST_SHARE)
+    it("every hinted game lists its rungs, each once", () => {
+      // The walk below holds every step's rung to this list, and the pin harness
+      // requires a pinned position for each entry (`testing/hint-positions.ts`).
+      for (const [name, game] of HINT_GAMES) {
+        const rungs = game.hintRungs ?? [];
+        expect(rungs.length, `${name} declares no hintRungs`).toBeGreaterThan(0);
+        expect(new Set(rungs).size, `${name} lists a rung twice`).toBe(rungs.length);
+      }
+    });
 
-  for (const [name, game] of BOUND_GAMES) {
+  for (const [name, game] of BOUND_GAMES.filter(([id]) => SHARE_IDS.has(id))) {
     it(`${name}: every step, fresh and refreshed`, () => {
       let checked = 0;
       const defects: string[] = [];
@@ -749,7 +784,7 @@ describe("a bound hint's words name exactly the marks it draws", () => {
         if (step.words && game.hintMarks)
           for (const d of referenceDefects(step.words, game.hintMarks))
             defects.push(`${at} (${step.rung}): "${step.explanation}": ${d}`);
-        if (legs > 1) journeyLegsChecked++;
+        if (legs > 1) heard(JOURNEY, name);
         for (const d of journeyDefects(step.explanation, leg, legs))
           defects.push(`${at}: "${step.explanation}": ${d}`);
         const form = step.words?.form;
@@ -758,7 +793,7 @@ describe("a bound hint's words name exactly the marks it draws", () => {
             "unshaped" in form
               ? `unshaped:${form.unshaped}`
               : `${SEARCHING.has(name) ? "searching " : ""}${form.relation}${form.rivals ? `:${form.rivals}` : ""}`;
-          formsSeen.set(key, (formsSeen.get(key) ?? 0) + 1);
+          heard(key, name);
         }
       };
       for (const { title, params } of gatePresets(name, game))
@@ -807,19 +842,23 @@ describe("a bound hint's words name exactly the marks it draws", () => {
     });
   }
 
+  if (FIRST_SHARE)
+    it("pins each form on a game the walk takes", () => {
+      for (const game of Object.values(MET_ON))
+        expect(BOUND_GAMES.map(([id]) => id)).toContain(game);
+    });
+
   itOverWholeSweep("met every form it checks on real steps", () => {
     // Vacuity: each property the form checks hold steps to was held on some.
     // `bare` is not here: no walked board leaves a hint nothing to say, and
     // the games that can (Pegs, Flood) pin it in their own tests.
-    const seen = [...formsSeen.keys()];
-    expect(seen).toContain("unshaped:setup");
-    expect(seen).toContain("unshaped:evident");
-    expect(seen).toContain("searching forced:lost");
-    expect(seen.filter((k) => k.startsWith("searching ")).length).toBeGreaterThan(2);
-    expect(
-      journeyLegsChecked,
-      "no step of a multi-leg journey was held to its counter",
-    ).toBeGreaterThan(0);
+    for (const [form, game] of Object.entries(MET_ON)) {
+      if (!SHARE_IDS.has(game)) continue;
+      expect(
+        [...(formsHeard.get(form) ?? [])],
+        `${game}'s walk held no step of "${form}"; pin a game whose walk does`,
+      ).toContain(game);
+    }
   });
 });
 
@@ -867,7 +906,7 @@ function untieredCases(
 }
 
 describe("no hint leaves a chain for the player to carry, at any tier", () => {
-  for (const [name, game] of HINT_GAMES) {
+  for (const [name, game] of SHARE_GAMES) {
     it(`${name}: every tier`, () => {
       // **One board per value of every axis the game varies**, rather than a
       // per-tier loop with `withTier` on the first preset: difficulty is a
@@ -1091,7 +1130,7 @@ function speaksOn(name: string, id: string, rungs: readonly string[]): boolean {
 }
 
 describe("hint narration stays readable at a glance", () => {
-  for (const [name, game] of HINT_GAMES) {
+  for (const [name, game] of SHARE_GAMES) {
     it(`${name}: every step within ${NARRATION_LIMIT} characters, or ledgered`, () => {
       for (const { label, params, seeds } of lintCases(name, game)) {
         // A tier written onto the first preset can be accepted and still have
@@ -1143,23 +1182,24 @@ describe("hint narration stays readable at a glance", () => {
     });
   }
 
-  it("states a reason for every ledger entry, and lists only hinting games", () => {
-    // The structural half: cheap, needs no walk, and so runs on every commit
-    // whatever `CORNER_WALKED` says.
-    const hinting = new Set(HINT_GAMES.map(([id]) => id));
-    for (const e of LONG_NARRATIONS) {
-      expect(e.why.length, `${e.rungs} states no reason`).toBeGreaterThan(60);
-      expect(e.rungs.length, `${e.games} lists no rung`).toBeGreaterThan(0);
-      // A listed rung is one the game declares, so a renamed rung cannot
-      // leave a listing that excuses nothing.
-      for (const [g, game] of HINT_GAMES)
-        if (e.games.includes(g))
-          for (const rung of e.rungs)
-            expect(game.hintRungs ?? [], `${g} has no rung ${rung}`).toContain(rung);
-      for (const g of e.games)
-        expect(hinting.has(g), `${g} ships no hint()`).toBe(true);
-    }
-  });
+  if (FIRST_SHARE)
+    it("states a reason for every ledger entry, and lists only hinting games", () => {
+      // The structural half: cheap, needs no walk, and so runs on every commit
+      // whatever `CORNER_WALKED` says.
+      const hinting = new Set(HINT_GAMES.map(([id]) => id));
+      for (const e of LONG_NARRATIONS) {
+        expect(e.why.length, `${e.rungs} states no reason`).toBeGreaterThan(60);
+        expect(e.rungs.length, `${e.games} lists no rung`).toBeGreaterThan(0);
+        // A listed rung is one the game declares, so a renamed rung cannot
+        // leave a listing that excuses nothing.
+        for (const [g, game] of HINT_GAMES)
+          if (e.games.includes(g))
+            for (const rung of e.rungs)
+              expect(game.hintRungs ?? [], `${g} has no rung ${rung}`).toContain(rung);
+        for (const g of e.games)
+          expect(hinting.has(g), `${g} ships no hint()`).toBe(true);
+      }
+    });
 
   // Skipped, and so reported, while no listing pins a board: the walk then
   // reaches every listed sentence itself.
@@ -1168,6 +1208,7 @@ describe("hint narration stays readable at a glance", () => {
     () => {
       for (const e of LONG_NARRATIONS) {
         for (const [g, id] of Object.entries(e.spokenOn ?? {})) {
+          if (!SHARE_IDS.has(g)) continue;
           expect(
             e.games,
             `${g} is pinned on ${e.rungs} without being listed`,
@@ -1186,14 +1227,18 @@ describe("hint narration stays readable at a glance", () => {
   it.skipIf(!CORNER_WALKED)("ledgers only listings that still need the room", () => {
     // Registered last, so it runs after every per-game case has filled
     // `ledgerUsed`. Vacuity first: an unpopulated walk would find every listing
-    // "unused" for the wrong reason.
-    expect(linted, "the length walk looked at almost nothing").toBeGreaterThan(2000);
+    // "unused" for the wrong reason. A listing is held in the share that walks
+    // its game, which heard everything that game said.
+    expect(linted, "the length walk looked at almost nothing").toBeGreaterThan(
+      shareFloor(2000),
+    );
     // And per game, because the check below is a negative *per listing*: a game
     // whose every case refused to generate would read as dead on every entry it
     // is listed on, and the collection-wide floor above cannot say so — it is
     // met many times over by the games that did walk. The floor sits below what
     // the smallest listed game walks, and nowhere near "examined nothing".
     for (const g of new Set(LONG_NARRATIONS.flatMap((e) => e.games))) {
+      if (!SHARE_IDS.has(g)) continue;
       const n = lintedPerGame.get(g) ?? 0;
       expect(
         n,
@@ -1206,7 +1251,7 @@ describe("hint narration stays readable at a glance", () => {
     const dead: string[] = [];
     LONG_NARRATIONS.forEach((e, i) => {
       // A pinned listing is held by the case above, on its board.
-      for (const g of e.games)
+      for (const g of e.games.filter((id) => SHARE_IDS.has(id)))
         for (const rung of e.rungs)
           if (!ledgerUsed.has(`${i}:${g}:${rung}`) && !e.spokenOn?.[g])
             dead.push(`${g} on ${rung}`);

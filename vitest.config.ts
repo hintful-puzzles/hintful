@@ -1,6 +1,10 @@
 import { readdirSync } from "node:fs";
 import { availableParallelism } from "node:os";
-import { configDefaults, defineConfig } from "vitest/config";
+import {
+  configDefaults,
+  defineConfig,
+  type TestProjectInlineConfiguration,
+} from "vitest/config";
 import { sourceScanTests } from "./scripts/checks/source-scans.ts";
 import { otherGamesFilter, scopeFromEnv } from "./src/engine/testing/game-scope.ts";
 import { draftPuzzles } from "./vite-plugins/draft-puzzles.ts";
@@ -28,6 +32,47 @@ function passFiles(): { include: string[]; exclude: string[] } {
   throw new Error(
     `GATE_TEST_PASS must be "scan" or "main", not ${JSON.stringify(pass)}`,
   );
+}
+
+/**
+ * The files run once per share, each run walking its share of the cases
+ * (`src/engine/testing/sweep-share.ts`). vitest runs one file's tests in turn,
+ * so a file is listed here when it alone would set the suite's wall clock: on
+ * CI's four cores these two took 33 and 26 minutes of a 35-minute run (Gate
+ * run 40517483254, 2026-10-27).
+ */
+const SPREAD = ["src/engine/hint-resume.test.ts", "src/engine/hint-quality.test.ts"];
+
+/** How many shares a spread file is walked in: CI's core count, so each file
+ * can take every worker. */
+const SHARES = 4;
+
+/**
+ * The suite as vitest projects: the spread files once per share, every other
+ * file once. The scan pass runs no spread file, so it has no share projects.
+ * A project's own `include` and `exclude` are kept apart from the root's,
+ * which `extends` would concatenate onto them.
+ */
+function projects(): TestProjectInlineConfiguration[] {
+  const { include, exclude } = passFiles();
+  const spread = process.env["GATE_TEST_PASS"] === "scan" ? [] : SPREAD;
+  return [
+    {
+      extends: true,
+      test: { name: "main", include, exclude: [...exclude, ...spread] },
+    },
+    ...Array.from(
+      { length: spread.length === 0 ? 0 : SHARES },
+      (_, index): TestProjectInlineConfiguration => ({
+        extends: true,
+        test: {
+          name: `share ${index + 1} of ${SHARES}`,
+          include: spread,
+          provide: { sweepShare: { index, of: SHARES } },
+        },
+      }),
+    ),
+  ];
 }
 
 /**
@@ -135,7 +180,7 @@ export default defineConfig({
     // and both had bugs their first run caught. They are typechecked by
     // `tsconfig.node.json`, so they may use Node types the browser-shaped
     // `src/` project does not have.
-    ...passFiles(),
+    projects: projects(),
     ...gameScopeFilter(),
     environment: "node",
     // Dexie reads `globalThis.indexedDB` once, when its module is first
