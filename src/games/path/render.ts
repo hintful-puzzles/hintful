@@ -77,7 +77,7 @@ const COL_CELL = 2;
 /** Inside the ring of a number whose path is not yet whole. */
 const COL_GIVEN = 3;
 /** A line reaching no number. */
-const COL_LINE = 4;
+export const COL_LINE = 4;
 const COL_RULED_OUT = 5;
 const COL_TEXT = 6;
 /** A line that breaks a rule already: it closes a loop, or joins two

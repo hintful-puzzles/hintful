@@ -1017,6 +1017,18 @@ Each guard reads every game without being told about it.
   on purpose goes in its ledger with what it is, and any other gets an
   authored dark value on the shared role. It reads the deal and one frame
   some hint steps in, so a color only input brings out is not covered.
+- [`mark-collisions.test.ts`](../src/puzzle/mark-collisions.test.ts) fails
+  when two slots a player cannot tell apart by color in one scheme are drawn
+  as the same mark: a bar, a slash, a fill, a disc, a ring, a polygon of as
+  many corners, or text, at less than twice the other's thickness and reach.
+  A digit and a grid line in one ink pass, and a wall and a line in one ink
+  do not. Give one of the two a color of its own, as Path's walls took
+  `wallFill`. A pair that is one meaning (a number in ink on a cell and in
+  white on a dark piece), or that the player tells apart by more than the
+  stroke (an arrow's head), goes in its `DECLARED` with the reason. A rim is
+  no mark of its own, and neither are a bevel's `darkSwaps` edges. It reads
+  the deal and the board half solved by the hint, so a slot only a drag, a
+  mistake or the flash brings out is not covered.
 - [`bevels.test.ts`](../src/puzzle/bevels.test.ts) fails when a bevel's
   lighter color is not the lighter one in both schemes, which is a forgotten
   `darkSwaps` pair, and when a game draws the shared bevel shape itself. It

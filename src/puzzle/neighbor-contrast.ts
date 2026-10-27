@@ -47,7 +47,7 @@ export interface SchemeNeighbor {
 
 /** OKLCH distance with chroma and hue as a plane, so a hue difference between
  * two near-grays counts for the little the eye gives it. */
-function colorDistance(p: Color, q: Color): number {
+export function colorDistance(p: Color, q: Color): number {
   const plane = ([, c, h]: readonly number[]): [number, number] =>
     isGrayChroma(c)
       ? [0, 0]
