@@ -20,7 +20,7 @@
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -173,11 +173,9 @@ export function applyBounds(w: number, h: number, grid: Uint16Array): void {
  */
 export const MAX_GENERABLE_DIFF = DIFF_NORMAL;
 
-const PRESETS: BricksParams[] = [
+const BOARDS: BricksParams[] = [
   { w: 6, h: 7, diff: DIFF_EASY },
-  { w: 6, h: 7, diff: DIFF_NORMAL },
   { w: 8, h: 10, diff: DIFF_EASY },
-  { w: 8, h: 10, diff: DIFF_NORMAL },
 ];
 
 /**
@@ -198,12 +196,10 @@ const PRESETS: BricksParams[] = [
 const DIFF_NAMES = tierNames(2, { search: true });
 
 export function defaultParams(): BricksParams {
-  return { ...PRESETS[0] };
+  return { ...BOARDS[0] };
 }
 
-export function presets(): PresetMenu<BricksParams> {
-  return { title: "Bricks", submenu: PRESETS.map((p) => ({ params: { ...p } })) };
-}
+export const menu: PresetBoards<BricksParams> = { boards: BOARDS };
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<BricksParams>[] = [

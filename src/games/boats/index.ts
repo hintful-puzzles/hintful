@@ -33,7 +33,6 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -113,23 +112,15 @@ import {
   encodeParams,
   fillChangesAnything,
   fillOf,
+  menu,
   newState,
   newUi,
-  PRESETS,
-  presetParams,
   SHIP_VAGUE,
   STATUS_COMPLETE,
   textFormat,
   WATER,
 } from "./state.ts";
 import { adjustShips, validateFullState } from "./validate.ts";
-
-function presets(): PresetMenu<BoatsParams> {
-  return {
-    title: "Boats",
-    submenu: PRESETS.map((_, i) => ({ params: presetParams(i) })),
-  };
-}
 
 // --- input -----------------------------------------------------------------
 
@@ -633,7 +624,7 @@ export const boatsGame: Game<
   // Param-dependent: `textFormat` returns undefined past 10×10.
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

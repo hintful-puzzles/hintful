@@ -22,6 +22,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -160,9 +161,7 @@ export function ballsText(p: BlackboxParams): string {
   return p.minballs === p.maxballs ? String(p.minballs) : `${p.minballs}-${p.maxballs}`;
 }
 
-export function presets() {
-  return { title: "Black Box", submenu: PRESETS.map((p) => ({ params: { ...p } })) };
-}
+export const menu: PresetBoards<BlackboxParams> = { boards: PRESETS };
 
 export function encodeParams(p: BlackboxParams, _full: boolean): string {
   return `w${p.w}h${p.h}m${p.minballs}M${p.maxballs}`;

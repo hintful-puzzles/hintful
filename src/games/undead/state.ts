@@ -6,7 +6,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -94,22 +94,18 @@ export interface UndeadParams {
 }
 
 /** Upstream's three sizes, each at every tier. */
-export const PRESETS: UndeadParams[] = [
-  { w: 4, h: 4, diff: "easy" },
-  { w: 4, h: 4, diff: "normal" },
-  { w: 4, h: 4, diff: "tricky" },
-  { w: 5, h: 5, diff: "easy" },
-  { w: 5, h: 5, diff: "normal" },
-  { w: 5, h: 5, diff: "tricky" },
-  // Upstream's 7x7, made an upright board of about its area.
-  { w: 6, h: 8, diff: "easy" },
-  { w: 6, h: 8, diff: "normal" },
-  { w: 6, h: 8, diff: "tricky" },
-];
+export const menu: PresetBoards<UndeadParams> = {
+  boards: [
+    { w: 4, h: 4, diff: "easy" },
+    { w: 5, h: 5, diff: "easy" },
+    // Upstream's 7x7, made an upright board of about its area.
+    { w: 6, h: 8, diff: "easy" },
+  ],
+};
 
-/** upstream DEFAULT_PRESET = 1 (4x4 Normal). */
+/** Upstream's default, 4x4 Normal. */
 export function defaultParams(): UndeadParams {
-  return { ...PRESETS[1] };
+  return { w: 4, h: 4, diff: "normal" };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

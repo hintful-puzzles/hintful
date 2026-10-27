@@ -11,22 +11,18 @@
  * The caps are the tiers the generator asks for: links alone (an Easy board's
  * "not solvable one level down"), Easy and Tricky.
  */
+
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { newTentsDesc } from "./generator.ts";
+import { tentsGame } from "./index.ts";
 import { tentsSolve } from "./solver.ts";
-import {
-  DIFF_EASY,
-  DIFF_TRICKY,
-  newState,
-  presets,
-  type TentsParams,
-  TREE,
-} from "./state.ts";
+import { DIFF_EASY, DIFF_TRICKY, newState, type TentsParams, TREE } from "./state.ts";
 
 /** Every preset, plus a board that is not square. */
 const SHAPES: TentsParams[] = [
-  ...(presets().submenu ?? []).flatMap((leaf) => (leaf.params ? [leaf.params] : [])),
+  ...leafPresets(tentsGame).map((l) => l.params),
   { w: 12, h: 5, diff: DIFF_TRICKY },
 ];
 

@@ -12,11 +12,10 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { regionNumbers } from "../../engine/divide.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, num, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { encodeRegionWalls, readRegionWalls } from "../../engine/wall-runs.ts";
 
@@ -156,18 +155,17 @@ export function defaultParams(): StarbattleParams {
   return { ...BOARDS[0] };
 }
 
-export function presets(): PresetMenu<StarbattleParams> {
-  return presetGrid(paramConfig, BOARDS, {
-    // Measured 2026-10-15, the 95th of 100 deals: a Tricky board of two
-    // stars takes half a second at 9x9 and a second at 10x10, but 9 at 8x8,
-    // where a board seldom needs it; three stars take two seconds at Normal.
-    tiers: (board) => {
-      if (board.stars === 1) return null;
-      if (board.stars === 3) return [DIFF_EASY, DIFF_EASY];
-      return [DIFF_EASY, board.size > 8 ? DIFF_TRICKY : DIFF_NORMAL];
-    },
-  });
-}
+export const menu: PresetBoards<StarbattleParams> = {
+  boards: BOARDS,
+  // Measured 2026-10-15, the 95th of 100 deals: a Tricky board of two
+  // stars takes half a second at 9x9 and a second at 10x10, but 9 at 8x8,
+  // where a board seldom needs it; three stars take two seconds at Normal.
+  tiers: (board) => {
+    if (board.stars === 1) return null;
+    if (board.stars === 3) return [DIFF_EASY, DIFF_EASY];
+    return [DIFF_EASY, board.size > 8 ? DIFF_TRICKY : DIFF_NORMAL];
+  },
+};
 
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   size(paramConfig, "grid-size"),

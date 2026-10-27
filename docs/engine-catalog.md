@@ -115,7 +115,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `params-codec.ts` — the declared params codec | you write `encodeParams` and `decodeParams` |
 | – `params.ts` — param-string decoding + config helpers | you declare `paramConfig` or validate params |
 | – `param-label.ts` — the one label of a params set | you need a preset's or a board's name |
-| – `preset-grid.ts` — the conventional preset menu | you write `presets()` |
+| – `preset-grid.ts` — the preset menu, built from a game's boards | you write a game's `menu` |
 | – `ruleset.ts` — the puzzles a game plays on one board | your game plays more than one puzzle |
 | – `only.ts` — what one setting leaves of the others | one setting restricts another |
 | – `config-narrowing.ts` — what a form offers of a narrowed field | a form or test reads a narrowed field |
@@ -1293,12 +1293,13 @@ ruleset's name under that ruleset's heading; its `label` is the whole name.
 [`mechanics.md`](./mechanics.md) § "Params are declared once, on
 `paramConfig`".
 
-### `preset-grid.ts` — the conventional preset menu
+### `preset-grid.ts` — the preset menu, built from a game's boards
 
-`presetGrid(paramConfig, boards, { tiers?, variants? })` is a game's
-`presets()`: each board at every tier of its difficulty item, then one
-board for each modifier or kind. `MENU_SECTION_LINES` is the most lines a
-section holds. `preset-menu-shape.test.ts` holds the shape for every game.
+`presetGrid(paramConfig, menu)` builds the menu a game's `Game.menu`
+declares (`{ boards, tiers?, variants?, more?, title? }`): each board at
+every tier of its difficulty item, then one board for each modifier or
+kind, then the `more` section. `presetMenu` (`param-label.ts`) calls it;
+a game never does. `MENU_SECTION_LINES` is the most lines a section holds. `preset-menu-shape.test.ts` holds the shape for every game.
 Choosing the boards: [`mechanics.md`](./mechanics.md) § "The preset menu is
 a grid". Exemplar: `src/skeleton/grid/state.ts`.
 

@@ -618,8 +618,7 @@ Options and the menu:
   for. Where an option gives information away, it bounds the tier, and the
   refusal names the option.
 - **A menu has a length.** Offer the largest sizes, or the sizes where the
-  tier is rare, at Easy alone, with the reason where `presetGrid` asks for
-  it.
+  tier is rare, at Easy alone, with the reason at the menu's `tiers`.
 
 ### A shallow search is a rule the solver lacks
 

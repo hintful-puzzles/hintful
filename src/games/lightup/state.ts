@@ -20,7 +20,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { PresetMenu } from "../../engine/game.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, endParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -92,17 +92,11 @@ export interface LightupUi {
 
 // --- params ----------------------------------------------------------------------
 
-const PRESETS: LightupParams[] = [
+const BOARDS: LightupParams[] = [
   { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 },
-  { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 1 },
-  { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 2 },
   { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, difficulty: 0 },
-  { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, difficulty: 1 },
-  { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, difficulty: 2 },
   // Upstream's 14x14, made an upright board of about its area.
   { w: 12, h: 16, blackpc: 20, symm: SYMM_ROT2, difficulty: 0 },
-  { w: 12, h: 16, blackpc: 20, symm: SYMM_ROT2, difficulty: 1 },
-  { w: 12, h: 16, blackpc: 20, symm: SYMM_ROT2, difficulty: 2 },
 ];
 
 // Difficulty 2 requires guess-and-backtrack by construction (the generator
@@ -110,15 +104,10 @@ const PRESETS: LightupParams[] = [
 export const DIFF_NAMES: readonly string[] = tierNames(3, { search: true });
 
 export function defaultParams(): LightupParams {
-  return { ...PRESETS[0] };
+  return { ...BOARDS[0] };
 }
 
-export function presets(): PresetMenu<LightupParams> {
-  return {
-    title: "Light Up",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
-}
+export const menu: PresetBoards<LightupParams> = { boards: BOARDS };
 
 export function decodeParams(s: string): LightupParams {
   const p = defaultParams();

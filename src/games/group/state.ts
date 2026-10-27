@@ -27,6 +27,7 @@ import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-erro
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -95,10 +96,6 @@ export interface GroupParams {
   id: boolean;
 }
 
-/** A group of `w` elements at each tier up to `last`, its identity shown. */
-const upTo = (w: number, last: number): GroupParams[] =>
-  DIFF_NAMES.slice(0, last + 1).map((_, diff) => ({ w, diff, id: true }));
-
 /**
  * Each size at the tiers its boards need, and one board with its identity
  * hidden. A 6x6 at Tricky and an 8x8 at Hard take ten seconds a board
@@ -106,12 +103,18 @@ const upTo = (w: number, last: number): GroupParams[] =>
  * are left to the Custom dialog, and a 12x12 took up to two seconds at Tricky
  * and eleven at Hard, measured 2026-10-05 over three deals each.
  */
-export const PRESETS: readonly GroupParams[] = [
-  ...upTo(6, DIFF_NORMAL),
-  ...upTo(8, DIFF_HARD),
-  { w: 12, diff: DIFF_NORMAL, id: true },
-  { w: 8, diff: DIFF_NORMAL, id: false },
-];
+export const menu: PresetBoards<GroupParams> = {
+  boards: [
+    { w: 6, diff: DIFF_TRIVIAL, id: true },
+    { w: 8, diff: DIFF_TRIVIAL, id: true },
+    { w: 12, diff: DIFF_TRIVIAL, id: true },
+  ],
+  tiers: ({ w }) => {
+    if (w === 6) return [DIFF_TRIVIAL, DIFF_NORMAL];
+    return w === 8 ? [DIFF_TRIVIAL, DIFF_HARD] : [DIFF_NORMAL, DIFF_NORMAL];
+  },
+  variants: [{ w: 8, diff: DIFF_NORMAL, id: false }],
+};
 
 export function defaultParams(): GroupParams {
   return { w: 6, diff: DIFF_NORMAL, id: true };

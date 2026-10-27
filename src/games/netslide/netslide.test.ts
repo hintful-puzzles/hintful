@@ -89,7 +89,7 @@ const hexGrid = (aux: string) => Uint8Array.from(aux, (c) => Number.parseInt(c, 
 
 describe("netslide params", () => {
   it("round-trips every preset", () => {
-    const presets = netslideGame.presets().submenu ?? [];
+    const presets = presetMenu(netslideGame).submenu ?? [];
     expect(presets).toHaveLength(9);
     for (const { params } of presets) {
       const p = params as NetslideParams;

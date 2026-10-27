@@ -28,7 +28,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
@@ -271,32 +271,21 @@ export function sEClear(
 
 // --- params ---------------------------------------------------------------
 
-// Five sizes, the two non-square ones stopping a tier short: every cell
-// deals in well under a second, and the cut is what keeps the list to twelve.
-const PRESETS: TracksParams[] = [
-  { w: 8, h: 8, diff: DIFF_EASY, singleOnes: true },
-  { w: 8, h: 8, diff: DIFF_TRICKY, singleOnes: true },
-  { w: 8, h: 10, diff: DIFF_EASY, singleOnes: true },
-  { w: 8, h: 10, diff: DIFF_TRICKY, singleOnes: true },
-  { w: 10, h: 10, diff: DIFF_EASY, singleOnes: true },
-  { w: 10, h: 10, diff: DIFF_TRICKY, singleOnes: true },
-  { w: 10, h: 10, diff: DIFF_HARD, singleOnes: true },
-  { w: 10, h: 15, diff: DIFF_EASY, singleOnes: true },
-  { w: 10, h: 15, diff: DIFF_TRICKY, singleOnes: true },
-  { w: 15, h: 15, diff: DIFF_EASY, singleOnes: true },
-  { w: 15, h: 15, diff: DIFF_TRICKY, singleOnes: true },
-  { w: 15, h: 15, diff: DIFF_HARD, singleOnes: true },
-];
+/** Five sizes, Hard at 10x10 and 15x15 only: every cell deals in well under a
+ * second, and the cut is what keeps the list to twelve. */
+export const menu: PresetBoards<TracksParams> = {
+  boards: [
+    [8, 8],
+    [8, 10],
+    [10, 10],
+    [10, 15],
+    [15, 15],
+  ].map(([w, h]) => ({ w, h, diff: DIFF_EASY, singleOnes: true })),
+  tiers: ({ w, h }) => (w === h && w >= 10 ? null : [DIFF_EASY, DIFF_TRICKY]),
+};
 
 export function defaultParams(): TracksParams {
   return { w: 8, h: 8, diff: DIFF_TRICKY, singleOnes: true };
-}
-
-export function presets(): PresetMenu<TracksParams> {
-  return {
-    title: "Size",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

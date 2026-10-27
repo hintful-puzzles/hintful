@@ -10,7 +10,7 @@
  */
 
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { type GridType, gridValidateParams } from "../../engine/grid/index.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -206,13 +206,9 @@ const preset = (w: number, h: number, diff: number, type: number): LoopyParams =
   type,
 });
 
-const SQUARE_TIERS = [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD];
-
 // Squares as a grid of sizes by tiers, then one board of each of four other
 // tilings, which fills a section.
-const PRESETS_TOP: LoopyParams[] = [
-  ...SQUARE_TIERS.map((diff) => preset(7, 7, diff, 0)),
-  ...SQUARE_TIERS.map((diff) => preset(10, 10, diff, 0)),
+const VARIANTS: LoopyParams[] = [
   preset(9, 14, DIFF_HARD, 1), // Triangular
   preset(7, 7, DIFF_HARD, 3), // Snub-Square
   preset(9, 9, DIFF_HARD, 4), // Cairo
@@ -224,7 +220,7 @@ const PRESETS_TOP: LoopyParams[] = [
 // menu's length leaves room for six: one of each family, so Penrose (rhombs),
 // Spectres, Great-Hexagonal, Kagome and the three larger dodecagonal tilings
 // are the Custom dialog's.
-const PRESETS_MORE: LoopyParams[] = [
+const MORE: LoopyParams[] = [
   preset(10, 10, DIFF_HARD, 11), // Penrose (kite/dart)
   preset(10, 10, DIFF_HARD, 2), // Honeycomb
   preset(7, 7, DIFF_HARD, 6), // Octagonal
@@ -245,15 +241,8 @@ export function transposeParams(p: LoopyParams): LoopyParams | null {
  * renders a submenu as a labeled section rather than a nested flyout (see
  * `components/type-menu.ts`), which reads well, so the nesting is kept.
  */
-export function presets(): PresetMenu<LoopyParams> {
-  return {
-    title: "Loopy",
-    submenu: [
-      ...PRESETS_TOP.map((p) => ({ params: p })),
-      {
-        title: "More...",
-        submenu: PRESETS_MORE.map((p) => ({ params: p })),
-      },
-    ],
-  };
-}
+export const menu: PresetBoards<LoopyParams> = {
+  boards: [preset(7, 7, DIFF_EASY, 0), preset(10, 10, DIFF_EASY, 0)],
+  variants: VARIANTS,
+  more: MORE,
+};

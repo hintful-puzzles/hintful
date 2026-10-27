@@ -9,10 +9,12 @@
  * actually walks (a recorder standing, so each rung returns per premise).
  */
 import { describe, expect, it } from "vitest";
+import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import { recordingPass, seedSolver } from "./hint.ts";
+import { magnetsGame } from "./index.ts";
 import { type ReadableBoard, whyNot } from "./reading.ts";
 import {
   GS_NOTNEGATIVE,
@@ -24,12 +26,11 @@ import {
   NEUTRAL,
   newState,
   POSITIVE,
-  presets,
   ROW,
 } from "./state.ts";
 
 const SEEDS = 6;
-const PRESETS = presets().submenu ?? [];
+const PRESETS = presetMenu(magnetsGame).submenu ?? [];
 
 describe("magnets board reading", () => {
   it("reads every NOT-pole bit the solver sets, at every firing", () => {

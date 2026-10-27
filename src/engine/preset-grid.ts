@@ -1,5 +1,5 @@
 /**
- * The conventional preset menu, built from the boards a game names.
+ * The preset menu, built from the boards a game names (`Game.menu`).
  *
  * A menu is a grid: each board at every tier, in the order the game lists the
  * boards, so a player who wants a small hard board or a large easy one finds
@@ -8,12 +8,11 @@
  * kind of board. A game with rulesets lists every ruleset's boards together
  * and `presetMenu` gives each a section.
  *
- * `preset-menu-shape.test.ts` holds every game's menu to this shape, however
- * the game builds it.
+ * `preset-menu-shape.test.ts` holds every game's menu to this shape.
  */
 
 import { difficultyChoiceItem, withTier } from "./difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "./game.ts";
+import type { ParamConfigItem, PresetBoards, PresetMenu } from "./game.ts";
 
 /** The most lines one section of a menu holds. */
 export const MENU_SECTION_LINES = 12;
@@ -21,35 +20,30 @@ export const MENU_SECTION_LINES = 12;
 /** The most lines a whole menu holds, however many sections it has. */
 export const MENU_LINES = 18;
 
-interface PresetGridOptions<P> {
-  /**
-   * The first and last tier a board is offered at, for a board the game does
-   * not offer at every tier. The reason belongs at the function: a deal that
-   * takes seconds, a tier with nothing to deduce at that size.
-   */
-  tiers?(board: P): readonly [first: number, last: number] | null;
-  /** The boards after the grid, one for each modifier or kind. */
-  variants?: readonly P[];
-}
-
 /**
- * The menu of `boards`, each at every tier of the game's difficulty item (or
- * as it stands, in a game without tiers), followed by `opts.variants`.
+ * The menu of `menu.boards`, each at every tier of the game's difficulty item
+ * (or as it stands, in a game without tiers), followed by `menu.variants` and
+ * then the section of `menu.more`.
  */
 export function presetGrid<P>(
   paramConfig: readonly ParamConfigItem<P>[],
-  boards: readonly P[],
-  opts: PresetGridOptions<P> = {},
+  menu: PresetBoards<P>,
 ): PresetMenu<P> {
   const game = { paramConfig };
   const tierCount = difficultyChoiceItem(game)?.choices.length ?? 0;
-  const grid = boards.flatMap((board) => {
+  const grid = menu.boards.flatMap((board) => {
     if (tierCount === 0) return [{ ...board }];
-    const [first, last] = opts.tiers?.(board) ?? [0, tierCount - 1];
+    const [first, last] = menu.tiers?.(board) ?? [0, tierCount - 1];
     const row: P[] = [];
     for (let tier = first; tier <= last; tier++) row.push(withTier(game, board, tier));
     return row;
   });
-  const variants = (opts.variants ?? []).map((p) => ({ ...p }));
-  return { submenu: [...grid, ...variants].map((params) => ({ params })) };
+  const line = (params: P): PresetMenu<P> => {
+    const title = menu.title?.(params) ?? null;
+    return title === null ? { params } : { title, params };
+  };
+  const lines = [...grid, ...(menu.variants ?? []).map((p) => ({ ...p }))].map(line);
+  if (menu.more === undefined) return { submenu: lines };
+  const more = { title: "More...", submenu: menu.more.map((p) => line({ ...p })) };
+  return { submenu: [...lines, more] };
 }

@@ -104,8 +104,8 @@ import {
   defaultParams,
   encodeParams,
   type LoopyParams,
+  menu,
   paramConfig,
-  presets,
   transposeParams,
   validateParams,
 } from "./params.ts";
@@ -870,7 +870,7 @@ export const loopyGame: Game<
   // the other seventeen (upstream's `game_can_format_as_text_now(params)`).
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

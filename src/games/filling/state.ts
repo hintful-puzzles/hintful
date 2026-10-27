@@ -28,11 +28,10 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
@@ -98,9 +97,7 @@ export const paramConfig: ParamConfigItem<FillingParams>[] = [
   ),
 ];
 
-export function presets(): PresetMenu<FillingParams> {
-  return { title: "Size", ...presetGrid(paramConfig, BOARDS) };
-}
+export const menu: PresetBoards<FillingParams> = { boards: BOARDS };
 
 /** `WxH[d<tier>]`, with upstream's square fallback: a bare `W` is a W×W
  * board. Upstream's IDs lack the tier: without one a board is Easy, the only

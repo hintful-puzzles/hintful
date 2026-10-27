@@ -103,8 +103,8 @@ import {
   type MapParams,
   type MapState,
   type MapUi,
+  menu,
   newUi,
-  presets,
   validateParams,
 } from "./state.ts";
 
@@ -512,7 +512,7 @@ export const mapGame: Game<
   },
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

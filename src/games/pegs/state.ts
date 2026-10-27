@@ -6,6 +6,7 @@
 import { rejectMove } from "../../engine/assert-never.ts";
 import { type DescParse, descValue, puzzleDescError } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -82,12 +83,7 @@ export function defaultParams(): PegsParams {
   return { w: 7, h: 7, type: TYPE_CROSS };
 }
 
-export function presets() {
-  return {
-    title: "Type",
-    submenu: PEGS_PRESETS.map((p) => ({ params: p })),
-  };
-}
+export const menu: PresetBoards<PegsParams> = { boards: PEGS_PRESETS };
 
 export function encodeParams(p: PegsParams, full: boolean): string {
   let s = `${p.w}x${p.h}`;

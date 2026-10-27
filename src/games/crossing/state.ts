@@ -31,11 +31,10 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import type { Point } from "../../engine/types.ts";
 
 // --- params ----------------------------------------------------------------
@@ -115,16 +114,11 @@ export const paramConfig: ParamConfigItem<CrossingParams>[] = [
   },
 ];
 
-export function presets(): PresetMenu<CrossingParams> {
-  return {
-    title: "Crossing",
-    ...presetGrid(paramConfig, BOARDS, {
-      tiers: (b) =>
-        b.w * b.h > MENU_UNREASONABLE_AREA ? [DIFF_EASY, DIFF_EASY] : null,
-      variants: VARIANTS,
-    }),
-  };
-}
+export const menu: PresetBoards<CrossingParams> = {
+  boards: BOARDS,
+  tiers: (b) => (b.w * b.h > MENU_UNREASONABLE_AREA ? [DIFF_EASY, DIFF_EASY] : null),
+  variants: VARIANTS,
+};
 
 /** `WxH[S][d<tier>]`, a bare `W` being square; the symmetry and the tier are
  * generator-only. The tier comes last and upstream's IDs lack it: without one

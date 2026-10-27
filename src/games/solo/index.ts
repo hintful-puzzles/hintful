@@ -32,7 +32,7 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
-  type PresetMenu,
+  type PresetBoards,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -98,7 +98,6 @@ import {
   DIFF_KMINMAX,
   DIFF_NAMES,
   DIFF_RECURSIVE,
-  DIFF_SET,
   DIFF_SIMPLE,
   decodeParams,
   defaultParams,
@@ -126,38 +125,28 @@ import {
  * for each of X, Jigsaw and Killer. Twelve lines is what a section holds, so
  * the 4x4, 12x12 and 16x16 boards upstream listed are a Custom away.
  */
-function presets(): PresetMenu<SoloParams> {
-  const P = (
-    c: number,
-    r: number,
-    symm: number,
-    diff: number,
-    kdiff: number,
-    xtype: boolean,
-    killer: boolean,
-  ): PresetMenu<SoloParams> => ({
-    params: { c, r, symm, diff, kdiff, xtype, killer },
-  });
-  const K = DIFF_KMINMAX;
-  const submenu = [
-    // A 6×6 has fewer places to hide a `set` deduction than a 9×9, so Hard
-    // costs its generator roughly fifty times what 3x3 Hard does, and the
-    // small board stops at Tricky.
-    P(2, 3, SYMM_ROT2, DIFF_BLOCK, K, false, false),
-    P(2, 3, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
-    P(2, 3, SYMM_ROT2, DIFF_INTERSECT, K, false, false),
-    P(3, 3, SYMM_ROT2, DIFF_BLOCK, K, false, false),
-    P(3, 3, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
-    P(3, 3, SYMM_ROT2, DIFF_INTERSECT, K, false, false),
-    P(3, 3, SYMM_ROT2, DIFF_SET, K, false, false),
-    P(3, 3, SYMM_ROT2, DIFF_EXTREME, K, false, false),
-    P(3, 3, SYMM_ROT2, DIFF_RECURSIVE, K, false, false),
-    P(3, 3, SYMM_ROT2, DIFF_SIMPLE, K, true, false),
-    P(9, 1, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
-    P(3, 3, SYMM_NONE, DIFF_BLOCK, DIFF_KINTERSECT, false, true),
-  ];
-  return { title: "Solo", submenu };
-}
+const plainBoard = (c: number, r: number, diff = DIFF_BLOCK): SoloParams => ({
+  c,
+  r,
+  symm: SYMM_ROT2,
+  diff,
+  kdiff: DIFF_KMINMAX,
+  xtype: false,
+  killer: false,
+});
+
+const menu: PresetBoards<SoloParams> = {
+  boards: [plainBoard(2, 3), plainBoard(3, 3)],
+  // A 6×6 has fewer places to hide a `set` deduction than a 9×9, so Hard
+  // costs its generator roughly fifty times what 3x3 Hard does, and the
+  // small board stops at Tricky.
+  tiers: (p) => (p.c === 2 ? [DIFF_BLOCK, DIFF_INTERSECT] : null),
+  variants: [
+    { ...plainBoard(3, 3, DIFF_SIMPLE), xtype: true },
+    plainBoard(9, 1, DIFF_SIMPLE),
+    { ...plainBoard(3, 3), symm: SYMM_NONE, kdiff: DIFF_KINTERSECT, killer: true },
+  ],
+};
 
 /** The Custom dialog's symmetry choices, indexed by the `SYMM_*` constants. */
 const SYMMETRY_NAMES = [
@@ -661,7 +650,7 @@ export const soloGame: Game<
   markAll,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

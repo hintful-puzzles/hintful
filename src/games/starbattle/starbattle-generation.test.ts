@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { newStarbattleDesc } from "./generator.ts";
 import { starbattleGame } from "./index.ts";
 import { STARBATTLE_RUNGS, StarbattleBoard, solveStarbattle } from "./solver.ts";
@@ -16,14 +17,13 @@ import {
   DIFF_TRICKY,
   encodeParams,
   newState,
-  presets,
   type StarbattleParams,
 } from "./state.ts";
 
 /** Every preset, the smallest board of one star and of two, and a board of
  * two stars one size up from the smallest, where a region has room to spare. */
 const SHAPES: StarbattleParams[] = [
-  ...(presets().submenu ?? []).flatMap((leaf) => (leaf.params ? [leaf.params] : [])),
+  ...leafPresets(starbattleGame).map((l) => l.params),
   { size: 4, stars: 1, diff: DIFF_EASY },
   { size: 8, stars: 2, diff: DIFF_EASY },
   { size: 8, stars: 2, diff: DIFF_NORMAL },

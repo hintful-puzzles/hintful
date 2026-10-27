@@ -31,7 +31,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -118,16 +118,14 @@ export interface SpokesParams {
   diff: SpokesDiff;
 }
 
-/** Upstream `spokes_presets`; `DEFAULT_PRESET` is index 3. */
-export const PRESETS: readonly SpokesParams[] = [
-  { w: 4, h: 4, diff: "easy" },
-  { w: 4, h: 4, diff: "tricky" },
-  { w: 4, h: 4, diff: "hard" },
-  // Upstream's 6x6, made an upright board of about its area.
-  { w: 5, h: 7, diff: "easy" },
-  { w: 5, h: 7, diff: "tricky" },
-  { w: 5, h: 7, diff: "hard" },
-];
+/** Upstream `spokes_presets`. */
+export const menu: PresetBoards<SpokesParams> = {
+  boards: [
+    { w: 4, h: 4, diff: "easy" },
+    // Upstream's 6x6, made an upright board of about its area.
+    { w: 5, h: 7, diff: "easy" },
+  ],
+};
 
 export function defaultParams(): SpokesParams {
   // Upstream's default, which a shared ID's missing fields are read from.

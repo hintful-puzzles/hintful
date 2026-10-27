@@ -32,7 +32,7 @@ import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type HintStep,
-  type PresetMenu,
+  type PresetBoards,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -124,24 +124,15 @@ export interface KeenMistake {
 
 // 6x6 is the one size at every tier. The others have a line each, which
 // keeps the list short, and the last is the one multiplication-only board.
-const PRESETS: KeenParams[] = [
-  { w: 4, diff: "easy", multiplicationOnly: false },
-  { w: 5, diff: "easy", multiplicationOnly: false },
-  { w: 6, diff: "easy", multiplicationOnly: false },
-  { w: 6, diff: "normal", multiplicationOnly: false },
-  { w: 6, diff: "hard", multiplicationOnly: false },
-  { w: 6, diff: "extreme", multiplicationOnly: false },
-  { w: 6, diff: "unreasonable", multiplicationOnly: false },
-  { w: 9, diff: "normal", multiplicationOnly: false },
-  { w: 6, diff: "normal", multiplicationOnly: true },
-];
-
-function presets(): PresetMenu<KeenParams> {
-  return {
-    title: "Keen",
-    submenu: PRESETS.map((p) => ({ params: p })),
-  };
-}
+const menu: PresetBoards<KeenParams> = {
+  boards: [4, 5, 6, 9].map((w) => ({ w, diff: "easy", multiplicationOnly: false })),
+  tiers: ({ w }) => {
+    if (w === 6) return null;
+    const level = diffToLevel(w === 9 ? "normal" : "easy");
+    return [level, level];
+  },
+  variants: [{ w: 6, diff: "normal", multiplicationOnly: true }],
+};
 
 function inGrid(w: number, x: number, y: number): boolean {
   return x >= 0 && x < w && y >= 0 && y < w;
@@ -412,7 +403,7 @@ export const keenGame: Game<
   markAll,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

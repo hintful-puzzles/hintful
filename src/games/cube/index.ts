@@ -45,8 +45,8 @@ import {
   defaultParams,
   encodeParams,
   hasPresetSize,
+  menu,
   newState,
-  presets,
   validateParams,
 } from "./state.ts";
 
@@ -168,7 +168,7 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   ignoresSecondaryButton: true,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

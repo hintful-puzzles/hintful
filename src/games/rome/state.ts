@@ -36,7 +36,7 @@ import { DESC_TOO_LONG } from "../../engine/desc-error.ts";
 import type { DescReader } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -334,26 +334,19 @@ export interface RomeUi {
 
 // --- params -----------------------------------------------------------------
 
-const DEFAULT_PRESET = 3;
-
 /** Every tier at 4x4, 6x6, 6x8 and 8x10: upstream's 8x8 and 10x10 made
  * upright boards of about their area. */
-const PRESETS: RomeParams[] = [
-  [4, 4],
-  [6, 6],
-  [6, 8],
-  [8, 10],
-].flatMap(([w, h]) => DIFF_NAMES.map((_, diff) => ({ w, h, diff })));
+export const menu: PresetBoards<RomeParams> = {
+  boards: [
+    [4, 4],
+    [6, 6],
+    [6, 8],
+    [8, 10],
+  ].map(([w, h]) => ({ w, h, diff: 0 })),
+};
 
 export function defaultParams(): RomeParams {
-  return { ...PRESETS[DEFAULT_PRESET] };
-}
-
-export function presets(): PresetMenu<RomeParams> {
-  return {
-    title: "Rome",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
+  return { w: 6, h: 6, diff: 0 };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

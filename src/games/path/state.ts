@@ -24,7 +24,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -34,7 +34,6 @@ import {
 } from "../../engine/line-drawing.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
@@ -183,15 +182,14 @@ export function defaultParams(): PathParams {
  * at 7x9 only: the worst of eight deals took 0.97 s there, against 2.2 s at
  * 8x10, 1.3 s at 7x7 and 1.2 s at 6x6, where fewer boards need the long
  * lookahead (2026-10-23). */
-export function presets(): PresetMenu<PathParams> {
-  return presetGrid(paramConfig, BOARDS, {
-    tiers: (p) => {
-      if (p.mode === MODE_PATH)
-        return p.w === 7 && p.h === 9 ? null : [DIFF_EASY, DIFF_NORMAL];
-      return p.w === 5 ? [DIFF_EASY, DIFF_NORMAL] : null;
-    },
-  });
-}
+export const menu: PresetBoards<PathParams> = {
+  boards: BOARDS,
+  tiers: (p) => {
+    if (p.mode === MODE_PATH)
+      return p.w === 7 && p.h === 9 ? null : [DIFF_EASY, DIFF_NORMAL];
+    return p.w === 5 ? [DIFF_EASY, DIFF_NORMAL] : null;
+  },
+};
 
 /** `WxH`, a `z` for Path (Pairs writes nothing), then the generator-only
  * tier letter. Pairs was the game's only puzzle, so its strings carry no

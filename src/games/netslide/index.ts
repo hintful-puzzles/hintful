@@ -238,10 +238,7 @@ export const netslideGame: Game<
   id: "netslide",
 
   defaultParams,
-  presets: () => ({
-    title: "Netslide",
-    submenu: PRESETS.map((p) => ({ title: presetTitle(p), params: { ...p } })),
-  }),
+  menu: { boards: PRESETS, title: presetTitle },
   encodeParams,
   decodeParams,
   validateParams,

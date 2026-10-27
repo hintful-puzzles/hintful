@@ -27,6 +27,7 @@ import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
 import { Midend } from "../../engine/midend.ts";
+import { presetMenu } from "../../engine/param-label.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -63,7 +64,6 @@ import {
   gridTypeOf,
   LOOPY_GRIDS,
   type LoopyParams,
-  presets,
 } from "./params.ts";
 import {
   border,
@@ -98,7 +98,7 @@ function allPresets(): LoopyParams[] {
     for (const sub of menu.submenu ?? [])
       walk(sub as { params?: LoopyParams; submenu?: unknown[] });
   };
-  walk(presets());
+  walk(presetMenu(loopyGame));
   return out;
 }
 

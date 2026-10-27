@@ -38,7 +38,7 @@ interface PrefState {
 const prefGame: Game<{ n: number }, PrefState, "noop", PrefUi> = {
   id: "__pref__",
   defaultParams: () => ({ n: 1 }),
-  presets: () => ({ title: "root", params: { n: 1 } }),
+  menu: { boards: [{ n: 1 }] },
   encodeParams: (p) => `n${p.n}`,
   decodeParams: (s) => ({ n: Number(s.slice(1)) }),
   validateParams: () => null,

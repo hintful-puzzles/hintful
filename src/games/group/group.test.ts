@@ -22,6 +22,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
@@ -51,8 +52,10 @@ import {
   type GroupState,
   newState,
   newUi,
-  PRESETS,
 } from "./state.ts";
+
+/** Every line of the menu, in order. */
+const PRESETS = leafPresets(groupGame).map((l) => l.params);
 
 const P = (w: number, diff: number, id: boolean): GroupParams => ({ w, diff, id });
 

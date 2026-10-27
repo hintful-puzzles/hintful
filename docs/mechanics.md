@@ -26,8 +26,8 @@ the section that says more.
    See "Params are declared once, on `paramConfig`" and "Difficulty is a
    declared contract".
 3. **The boards**: at least three, smallest first. `defaultParams` returns
-   the first and `presets` returns `presetGrid(paramConfig, BOARDS)`. See
-   "The preset menu is a grid".
+   the first and `menu` is `{ boards: BOARDS }`. See "The preset menu is a
+   grid".
 4. **The params codec**: `paramsCodec(defaultParams, [...segments])` gives
    `encodeParams` and `decodeParams`, and `validateParams` returns a sentence
    or `null`. See "The params codec and validation".
@@ -67,7 +67,7 @@ the section that says more.
 | – A game that plays different puzzles on one board declares its rulesets | a setting changes the rules or which squares are neighbors |
 | – A setting that adds, removes or bounds one rule is a modifier | a checkbox turns one rule on or off |
 | – A choice's name is typed once | code or a help page names a choice |
-| The preset menu is a grid | you write or change `presets()` |
+| The preset menu is a grid | you write or change a game's `menu` |
 | The Custom dialog | you write `paramConfig` accessors, or one field folds into another |
 | Difficulty is a declared contract | your game has tiers, or deduces and has none |
 | Descriptions and state | your game builds a board from a desc |
@@ -295,12 +295,11 @@ carries:
   unsaid. A checkbox must give words; a choices field says its choice's
   name by default.
 
-**A preset leaf is `{ params }`, and its name is their label.** Give it a
-`title` only when upstream gave the board a name no field says
-(`engine-params`, "A preset keeps a declared title only for a name no field
-says"; `params-declared.test.ts`). Read a preset's name as the `label` of
-its leaf in `presetMenu(game)`, never from `game.presets()`, which leaves it
-unset.
+**A preset's name is its params' label.** Give the menu a `title` only for
+a board upstream named with words no field says (`engine-params`, "A preset
+keeps a declared title only for a name no field says";
+`params-declared.test.ts`). Read a preset's name as the `label` of its leaf
+in `presetMenu(game)`.
 
 ### A game that plays different puzzles on one board declares its rulesets
 
@@ -366,16 +365,24 @@ name and the tier names are outside that check.
 
 ## The preset menu is a grid
 
-Build `presets()` with `presetGrid(paramConfig, boards, opts)`
+A game declares its boards as `Game.menu` (a `PresetBoards`), and the engine
+builds the menu from them
 ([`engine/preset-grid.ts`](../src/engine/preset-grid.ts)): name the boards,
-at least three and smallest first, and the builder writes each at every tier
+at least three and smallest first, and the engine writes each at every tier
 in order, then one board for each thing that is neither a size nor a tier
-(`opts.variants`). A game without tiers lists its boards. `defaultParams()`
-is the start-up choice. Exemplar: the skeleton's
-[`state.ts`](../src/skeleton/grid/state.ts).
+(`variants`). A game without tiers lists its boards. `defaultParams()` is
+the start-up choice. Exemplar: the skeleton's
+[`state.ts`](../src/skeleton/grid/state.ts). Two options are for one game
+each so far: `title` names a line upstream named (Guess's "Super"), and
+`more` puts boards in a "More..." section after the rest (Loopy's tilings);
+a game with rulesets has its sections already and takes no `more`.
+
+A test that wants the menu's lines reads `leafPresets(game)` or
+`presetMenu(game)`, never a list of its own: a copy of the menu in a test
+stays green when the menu moves.
 
 [`preset-menu-shape.test.ts`](../src/engine/preset-menu-shape.test.ts) holds
-every game's menu to the shape, whether or not it calls the builder
+every game's menu to the shape
 (`engine-params`, "The preset menu is a grid", "A preset menu is short
 enough to choose from", "A board's tiers are one run of lines, and every
 tier is offered" and "A checkbox rule modifier has one line of the menu").
@@ -387,7 +394,7 @@ What a game does to fit it:
 - **Twelve lines a section (`MENU_SECTION_LINES`)**: trade sizes against
   tiers.
 - **A board that stops short of the hard tiers or starts above the easy
-  ones says so with `opts.tiers`**, for a deal that takes seconds, a tier
+  ones says so with `tiers`**, for a deal that takes seconds, a tier
   that means nothing at that size, or the twelve lines. Write which at the
   menu.
 - **A tier left off every board of a ruleset, for a reason other than every

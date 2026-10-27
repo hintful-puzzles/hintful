@@ -275,6 +275,30 @@ export interface ParamLabel<Params> {
   words?(p: Params): string | null;
 }
 
+/**
+ * The boards a game's preset menu offers. The engine builds the menu from
+ * them (`presetGrid`): each board at every tier of the game's difficulty item,
+ * in the order listed, then the variants.
+ */
+export interface PresetBoards<Params> {
+  /** The sizes, smallest first. The grid sets each one's tier. */
+  readonly boards: readonly Params[];
+  /**
+   * The first and last tier a board is offered at, for a board the game does
+   * not offer at every tier. The reason belongs at the function: a deal that
+   * takes seconds, a tier with nothing to deduce at that size.
+   */
+  tiers?(board: Params): readonly [first: number, last: number] | null;
+  /** The boards after the grid, as they stand: one for each modifier or kind. */
+  readonly variants?: readonly Params[];
+  /** Boards in a section of their own after the rest, headed "More...", for a
+   * game with more kinds of board than one section reads well with. */
+  readonly more?: readonly Params[];
+  /** A line's name, for a board upstream named (Guess's "Super"), or `null`
+   * for its params' label. */
+  title?(params: Params): string | null;
+}
+
 /** A node in the preset/difficulty menu tree. */
 export interface PresetMenu<Params> {
   /** A submenu's title, or a leaf's name. A leaf without one is labeled from
@@ -404,7 +428,8 @@ export interface Game<
   requestKeys?(p: Params): KeyLabel[];
 
   defaultParams(): Params;
-  presets(): PresetMenu<Params>;
+  /** The preset menu's boards; `presetMenu` is the menu built from them. */
+  readonly menu: PresetBoards<Params>;
   encodeParams(p: Params, full: boolean): string;
   decodeParams(s: string): Params;
   /** `null` when valid, else a human-readable reason. Only what the

@@ -46,10 +46,10 @@ import {
   type FifteenState,
   type FifteenUi,
   hasNoSolution,
+  menu,
   newDesc,
   newState,
   paramConfig,
-  presets,
   status,
   textFormat,
 } from "./state.ts";
@@ -273,7 +273,7 @@ export const fifteenGame: Game<
   ignoresSecondaryButton: true,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   transposeParams: transposeDimensions(),

@@ -13,7 +13,7 @@ import type {
   Game,
   GamePref,
   ParamConfigItem,
-  PresetMenu,
+  PresetBoards,
   SolveResult,
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
@@ -28,7 +28,6 @@ import {
   transposeDimensions,
 } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import type { Point } from "../../engine/types.ts";
@@ -276,18 +275,12 @@ function rulesetOf(mode: number): number {
   return mode === MODE_EDGES ? RULESET_EDGES : RULESET_CLASSIC;
 }
 
-function presets(): PresetMenu<AscentParams> {
-  return {
-    title: "Ascent",
-    ...presetGrid(paramConfig, BOARDS, {
-      // Edges has no Easy, and the Honeycomb's is the Hex section's.
-      tiers: (p) =>
-        p.mode === MODE_EDGES || p.mode === MODE_HEXAGON
-          ? [DIFF_NORMAL, DIFF_HARD]
-          : null,
-    }),
-  };
-}
+const menu: PresetBoards<AscentParams> = {
+  boards: BOARDS,
+  // Edges has no Easy, and the Honeycomb's is the Hex section's.
+  tiers: (p) =>
+    p.mode === MODE_EDGES || p.mode === MODE_HEXAGON ? [DIFF_NORMAL, DIFF_HARD] : null,
+};
 
 // --- params codec --------------------------------------------------
 
@@ -587,7 +580,7 @@ export const ascentGame: Game<
   preferredTileSize: 48,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

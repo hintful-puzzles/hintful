@@ -5,6 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { parseAux } from "./hint.ts";
 import { netslideGame } from "./index.ts";
@@ -27,7 +28,7 @@ const REPORTED_PARAMS: NetslideParams = {
   movetarget: 0,
 };
 
-const PRESETS = (netslideGame.presets().submenu ?? [])
+const PRESETS = (presetMenu(netslideGame).submenu ?? [])
   .map((p) => p.params)
   .filter((p): p is NetslideParams => p !== undefined);
 

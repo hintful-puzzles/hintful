@@ -25,6 +25,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
@@ -41,7 +42,6 @@ import {
 } from "./render.ts";
 import { solveFromScratch } from "./solver.ts";
 import {
-  BRIDGES_PRESETS,
   type BridgesMove,
   type BridgesOp,
   BridgesState,
@@ -56,6 +56,9 @@ import {
   G_WARN,
   newStateFromDesc,
 } from "./state.ts";
+
+/** Every line of the menu, in order. */
+const BRIDGES_PRESETS = leafPresets(bridgesGame).map((l) => l.params);
 
 describe("bridges params codec", () => {
   it("round-trips every preset in full form", () => {

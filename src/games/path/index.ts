@@ -46,13 +46,13 @@ import {
   defaultParams,
   encodeParams,
   executeMove,
+  menu,
   newState,
   type PathMove,
   type PathParams,
   type PathState,
   type PathUi,
   paramConfig,
-  presets,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -110,7 +110,7 @@ export const pathGame: Game<
   id: "path",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

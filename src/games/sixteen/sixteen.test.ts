@@ -38,7 +38,6 @@ import {
   isCompleted,
   newDesc,
   newState,
-  presets,
   type SixteenMove,
   type SixteenParams,
   type SixteenState,
@@ -129,12 +128,12 @@ describe("Sixteen params", () => {
 
 describe("Sixteen presets", () => {
   it("has 5 presets", () => {
-    const menu = presets();
+    const menu = presetMenu(sixteenGame);
     expect(menu.submenu).toHaveLength(5);
   });
 
   it("presets have valid params", () => {
-    const menu = presets();
+    const menu = presetMenu(sixteenGame);
     for (const entry of menu.submenu ?? []) {
       expect(entry.params).toBeDefined();
       if (entry.params) {

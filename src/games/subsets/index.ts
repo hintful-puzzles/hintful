@@ -90,8 +90,8 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
+  menu,
   newState,
-  presets,
   type SubsetsMistake,
   type SubsetsMove,
   type SubsetsParams,
@@ -712,7 +712,7 @@ export const subsetsGame: Game<
   uiUpdateClearsHint: (step) => step.move.kind !== "rule",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

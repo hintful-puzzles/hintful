@@ -20,7 +20,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
-import { describeParams } from "../../engine/param-label.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -162,7 +162,7 @@ function fixtureState(
 
 describe("slide params", () => {
   it("round-trips every preset through encode/decode", () => {
-    const menu = slideGame.presets();
+    const menu = presetMenu(slideGame);
     expect(menu.submenu).toHaveLength(3);
     for (const entry of menu.submenu ?? []) {
       const p = entry.params as SlideParams;

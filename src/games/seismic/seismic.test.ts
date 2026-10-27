@@ -30,6 +30,7 @@ import {
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import {
   type DrawOp,
   RecordingDrawing,
@@ -87,13 +88,15 @@ import {
   newState,
   newUi,
   numBit,
-  PRESETS,
   REGION_TOO_LARGE,
   type SeismicMove,
   type SeismicParams,
   type SeismicState,
   textFormat,
 } from "./state.ts";
+
+/** Every line of the menu, in order. */
+const PRESETS = leafPresets(seismicGame).map((l) => l.params);
 
 interface Fixture {
   seed: string;
@@ -885,18 +888,14 @@ describe("seismic keypad", () => {
   // hold is a button that does nothing, and on touch the panel is the only way
   // to type. Widening `SEISMIC_REGION_SIZES` is meant to fail this test.
   it("offers exactly the digits a generated board can accept, in both modes", () => {
-    expect(PRESETS[4].mode).toBe(MODE_SEISMIC);
-    expect(PRESETS[5].mode).toBe(MODE_TECTONIC);
     // No "Marks": the collection's pencil-mode toggle is the engine's, appended
     // to every note-taking game's keypad (`pencil-mode-key.test.ts`), so a game
     // lists only what is its own.
     const five = ["1", "2", "3", "4", "5", "Clear"];
-    expect((seismicGame.requestKeys?.(PRESETS[4]) ?? []).map((k) => k.label)).toEqual(
-      five,
-    );
-    expect((seismicGame.requestKeys?.(PRESETS[5]) ?? []).map((k) => k.label)).toEqual(
-      five,
-    );
+    for (const mode of [MODE_SEISMIC, MODE_TECTONIC]) {
+      const p = { w: 6, h: 6, diff: DIFF_EASY, mode };
+      expect((seismicGame.requestKeys?.(p) ?? []).map((k) => k.label)).toEqual(five);
+    }
   });
 });
 

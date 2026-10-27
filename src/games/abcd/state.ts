@@ -27,12 +27,11 @@ import {
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 
 // --- constants -------------------------------------------------------------
 
@@ -164,12 +163,7 @@ export const paramConfig: ParamConfigItem<AbcdParams>[] = [
   }),
 ];
 
-export function presets(): PresetMenu<AbcdParams> {
-  return {
-    title: "ABCD",
-    ...presetGrid(paramConfig, BOARDS, { variants: VARIANTS }),
-  };
-}
+export const menu: PresetBoards<AbcdParams> = { boards: BOARDS, variants: VARIANTS };
 
 /** `WxHn<letters>[D][R][d<tier>]`: a missing height is the width, missing
  * digits are 0, and the clue removal and the tier are generator-only. The tier

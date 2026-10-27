@@ -174,10 +174,7 @@ export const untangleGame: Game<
       label: { slot: "size", words: (p) => `${p.n} points` },
     }),
   ],
-  presets: () => ({
-    title: "Untangle",
-    submenu: [6, 10, 15, 20, 25].map((n) => ({ params: { n } })),
-  }),
+  menu: { boards: [6, 10, 15, 20, 25].map((n) => ({ n })) },
   encodeParams: (p) => `${p.n}`,
   // A string with no number reads as 0, and the bounds refuse it in the
   // dialog's words.

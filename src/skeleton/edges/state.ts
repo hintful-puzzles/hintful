@@ -10,7 +10,7 @@ import { assertNever } from "../../engine/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -20,7 +20,6 @@ import {
 } from "../../engine/line-drawing.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
 
@@ -90,9 +89,7 @@ export function defaultParams(): SkeletonParams {
   return { ...BOARDS[0], diff: DIFF_NORMAL };
 }
 
-export function presets(): PresetMenu<SkeletonParams> {
-  return presetGrid(paramConfig, BOARDS);
-}
+export const menu: PresetBoards<SkeletonParams> = { boards: BOARDS };
 
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),

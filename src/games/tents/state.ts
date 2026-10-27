@@ -14,7 +14,7 @@ import { assertNever } from "../../engine/assert-never.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { matching } from "../../engine/latin.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -117,26 +117,18 @@ export interface TentsMistake {
 
 // --- params --------------------------------------------------------------
 
-const PRESETS: TentsParams[] = [
+const BOARDS: TentsParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY },
-  { w: 8, h: 8, diff: DIFF_TRICKY },
   { w: 10, h: 10, diff: DIFF_EASY },
-  { w: 10, h: 10, diff: DIFF_TRICKY },
   // Upstream's 15x15, made an upright board of about its area.
   { w: 13, h: 17, diff: DIFF_EASY },
-  { w: 13, h: 17, diff: DIFF_TRICKY },
 ];
 
 export function defaultParams(): TentsParams {
   return { w: 8, h: 8, diff: DIFF_EASY };
 }
 
-export function presets(): PresetMenu<TentsParams> {
-  return {
-    title: "Size",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
-}
+export const menu: PresetBoards<TentsParams> = { boards: BOARDS };
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<TentsParams>[] = [

@@ -38,7 +38,7 @@ const first = (at: number): MinesishMove => ({ click: at, lays: `L${at}` });
 const minesish: Game<MinesishParams, MinesishState, MinesishMove, null, null> = {
   id: "__minesish__",
   defaultParams: () => ({ size: 9 }),
-  presets: () => ({ title: "root", params: { size: 9 } }),
+  menu: { boards: [{ size: 9 }] },
   encodeParams: (p) => `s${p.size}`,
   decodeParams: (s) => ({ size: Number(/^s(\d+)$/.exec(s)?.[1] ?? NaN) }),
   validateParams: (p) => (p.size > 0 ? null : "size must be positive"),

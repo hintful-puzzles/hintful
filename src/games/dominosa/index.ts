@@ -78,8 +78,8 @@ import {
   EDGE_R,
   EDGE_T,
   encodeParams,
+  menu,
   newState,
-  presets,
   status,
   TRI,
   validateParams,
@@ -663,7 +663,7 @@ export const dominosaGame: Game<
   id: "dominosa",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

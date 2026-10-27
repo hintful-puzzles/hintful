@@ -1157,22 +1157,13 @@ export const galaxiesGame: Game<
 
   defaultParams,
 
-  presets() {
-    const mk = (w: number, h: number, diff: GalaxiesDiff) => ({
-      params: { w, h, diff },
-    });
-    return {
-      title: "Galaxies",
-      submenu: [
-        mk(7, 7, GalaxiesDiff.Normal),
-        mk(7, 7, GalaxiesDiff.Unreasonable),
-        mk(10, 10, GalaxiesDiff.Normal),
-        mk(10, 10, GalaxiesDiff.Unreasonable),
-        // Upstream's 15x15, made an upright board of about its area.
-        mk(13, 17, GalaxiesDiff.Normal),
-        mk(13, 17, GalaxiesDiff.Unreasonable),
-      ],
-    };
+  menu: {
+    boards: [
+      { w: 7, h: 7, diff: GalaxiesDiff.Normal },
+      { w: 10, h: 10, diff: GalaxiesDiff.Normal },
+      // Upstream's 15x15, made an upright board of about its area.
+      { w: 13, h: 17, diff: GalaxiesDiff.Normal },
+    ],
   },
 
   encodeParams,

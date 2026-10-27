@@ -13,11 +13,10 @@ import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -111,14 +110,10 @@ export function defaultParams(): ClustersParams {
   return { ...BOARDS[0] };
 }
 
-export function presets(): PresetMenu<ClustersParams> {
-  return {
-    title: "Clusters",
-    ...presetGrid(paramConfig, BOARDS, {
-      tiers: (b) => (b.w * b.h > MENU_NORMAL_AREA ? [DIFF_EASY, DIFF_EASY] : null),
-    }),
-  };
-}
+export const menu: PresetBoards<ClustersParams> = {
+  boards: BOARDS,
+  tiers: (b) => (b.w * b.h > MENU_NORMAL_AREA ? [DIFF_EASY, DIFF_EASY] : null),
+};
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<ClustersParams>[] = [

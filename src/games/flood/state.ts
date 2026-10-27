@@ -5,7 +5,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { PresetMenu } from "../../engine/game.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -99,30 +99,29 @@ export function validateParams(p: FloodParams, _full: boolean): string | null {
 
 // --- presets ----------------------------------------------------------
 
-export function presets(): PresetMenu<FloodParams> {
-  const p = (w: number, h: number, colors: number, leniency: number) => ({
-    params: { w, h, colors, leniency },
-  });
-  // Upstream's Easy/Medium/Hard are extra-move allowances, not tiers, so no
-  // field says them.
-  const named = (title: string, w: number, h: number, leniency: number) => ({
-    title,
-    ...p(w, h, 6, leniency),
-  });
-  return {
-    title: "Type",
-    submenu: [
-      named("12x12 Easy", 12, 12, 5),
-      named("12x12 Medium", 12, 12, 2),
-      named("12x12 Hard", 12, 12, 0),
-      // Upstream's 16x16, made an upright board of about its area.
-      named("14x18 Medium", 14, 18, 2),
-      named("14x18 Hard", 14, 18, 0),
-      p(12, 12, 3, 0),
-      p(12, 12, 4, 0),
-    ],
-  };
-}
+/** Upstream's Easy, Medium and Hard, which are extra-move allowances, not
+ * tiers, so no field says them. */
+const ALLOWANCE_NAMES: ReadonlyMap<number, string> = new Map([
+  [5, "Easy"],
+  [2, "Medium"],
+  [0, "Hard"],
+]);
+
+export const menu: PresetBoards<FloodParams> = {
+  boards: [
+    { w: 12, h: 12, colors: 6, leniency: 5 },
+    { w: 12, h: 12, colors: 6, leniency: 2 },
+    { w: 12, h: 12, colors: 6, leniency: 0 },
+    // Upstream's 16x16, made an upright board of about its area.
+    { w: 14, h: 18, colors: 6, leniency: 2 },
+    { w: 14, h: 18, colors: 6, leniency: 0 },
+    { w: 12, h: 12, colors: 3, leniency: 0 },
+    { w: 12, h: 12, colors: 4, leniency: 0 },
+  ],
+  // Upstream names only its six-color boards.
+  title: (p) =>
+    p.colors === 6 ? `${p.w}x${p.h} ${ALLOWANCE_NAMES.get(p.leniency)}` : null,
+};
 
 // --- desc -------------------------------------------------------------
 

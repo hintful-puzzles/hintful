@@ -15,7 +15,7 @@ import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
-import type { PresetMenu } from "../../engine/game.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -49,23 +49,12 @@ export function defaultParams(): MapParams {
 }
 
 /** Upstream's two sizes, each at every tier. */
-const PRESETS: readonly MapParams[] = [
-  { w: 15, h: 20, n: 30, diff: DIFF_EASY },
-  { w: 15, h: 20, n: 30, diff: DIFF_NORMAL },
-  { w: 15, h: 20, n: 30, diff: DIFF_HARD },
-  { w: 15, h: 20, n: 30, diff: DIFF_RECURSE },
-  { w: 25, h: 30, n: 75, diff: DIFF_EASY },
-  { w: 25, h: 30, n: 75, diff: DIFF_NORMAL },
-  { w: 25, h: 30, n: 75, diff: DIFF_HARD },
-  { w: 25, h: 30, n: 75, diff: DIFF_RECURSE },
-];
-
-export function presets(): PresetMenu<MapParams> {
-  return {
-    title: "Map",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
-}
+export const menu: PresetBoards<MapParams> = {
+  boards: [
+    { w: 15, h: 20, n: 30, diff: DIFF_EASY },
+    { w: 25, h: 30, n: 75, diff: DIFF_EASY },
+  ],
+};
 
 export function encodeParams(p: MapParams, full: boolean): string {
   let s = `${p.w}x${p.h}n${p.n}`;

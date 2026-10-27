@@ -30,7 +30,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -105,21 +105,19 @@ export interface SeismicParams {
  * made an upright 6x8, and past upstream's range (its generator stopped at
  * 7x7) an upright 7x9, within `MAX_PRESET_CELLS`, which is set by the tail of
  * a deal and not the median. */
-export const PRESETS: readonly SeismicParams[] = [
-  [4, 4],
-  [6, 6],
-  [6, 8],
-  [7, 9],
-].flatMap(([w, h]) =>
-  [DIFF_EASY, DIFF_NORMAL].flatMap((diff) =>
-    [MODE_SEISMIC, MODE_TECTONIC].map((mode) => ({ w, h, diff, mode })),
+export const menu: PresetBoards<SeismicParams> = {
+  boards: [
+    [4, 4],
+    [6, 6],
+    [6, 8],
+    [7, 9],
+  ].flatMap(([w, h]) =>
+    [MODE_SEISMIC, MODE_TECTONIC].map((mode) => ({ w, h, diff: DIFF_EASY, mode })),
   ),
-);
-
-const DEFAULT_PRESET = 4;
+};
 
 export function defaultParams(): SeismicParams {
-  return { ...PRESETS[DEFAULT_PRESET] };
+  return { w: 6, h: 6, diff: DIFF_EASY, mode: MODE_SEISMIC };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

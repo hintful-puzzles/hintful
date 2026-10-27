@@ -141,7 +141,7 @@ describe("Twiddle presets", () => {
 
 describe("Twiddle generation", () => {
   it("terminates for every preset and produces a non-solved scramble", () => {
-    for (const item of twiddleGame.presets().submenu ?? []) {
+    for (const item of presetMenu(twiddleGame).submenu ?? []) {
       const p = item.params as TwiddleParams;
       const { desc } = newDesc(p, randomNew(`twiddle-gen-${encodeParams(p, false)}`));
       const state = newState(p, desc);

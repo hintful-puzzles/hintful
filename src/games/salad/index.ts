@@ -22,7 +22,6 @@ import {
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -86,10 +85,10 @@ import {
   isComplete,
   KEY_CIRCLE,
   KEY_CROSS,
+  menu,
   needsPencilFill,
   newState,
   newUi,
-  PRESETS,
   paramConfig,
   type SaladEntry,
   type SaladMark,
@@ -107,10 +106,6 @@ import {
 } from "./state.ts";
 
 export type { SaladMistake } from "./solver.ts";
-
-function presets(): PresetMenu<SaladParams> {
-  return { title: "Salad", submenu: PRESETS.map((p) => ({ params: { ...p } })) };
-}
 
 // --- input -----------------------------------------------------------------
 
@@ -358,7 +353,7 @@ export const saladGame: Game<
   markAll,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

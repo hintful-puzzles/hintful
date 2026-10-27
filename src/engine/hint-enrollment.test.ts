@@ -169,7 +169,7 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
  *
  * The two above assert that the derivation and the slice are healthy. Neither
  * can see a guard that never asks them: a sweep that builds its own boards from
- * `firstLeaf(game.presets())`, or synthesizes them with a `withTier` that
+ * `firstLeaf(presetMenu(game))`, or synthesizes them with a `withTier` that
  * writes the tier field and nothing else, never runs on a board carrying a
  * cage, a jigsaw block, an X diagonal, an Adjacent clue, a Tectonic region or
  * any Loopy tiling but Squares.

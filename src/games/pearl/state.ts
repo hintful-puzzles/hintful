@@ -14,11 +14,10 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import type { LineDrawingUi } from "../../engine/line-drawing.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import { D, L, R, U } from "../../engine/square-edges.ts";
 
@@ -78,9 +77,7 @@ export function defaultParams(): PearlParams {
   return { w: 8, h: 8, difficulty: DIFF_TRICKY };
 }
 
-export function presets(): PresetMenu<PearlParams> {
-  return presetGrid(paramConfig, BOARDS);
-}
+export const menu: PresetBoards<PearlParams> = { boards: BOARDS };
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<PearlParams>[] = [

@@ -38,7 +38,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import type { PresetMenu } from "../../engine/game.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -89,12 +89,7 @@ const PRESETS: readonly SlideParams[] = [
   { w: 6, h: 8, maxmoves: -1 },
 ];
 
-export function presets(): PresetMenu<SlideParams> {
-  return {
-    title: "Slide",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
-}
+export const menu: PresetBoards<SlideParams> = { boards: PRESETS };
 
 export function encodeParams(p: SlideParams, _full: boolean): string {
   const limit = p.maxmoves >= 0 ? `m${p.maxmoves}` : "u";

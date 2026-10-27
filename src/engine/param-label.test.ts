@@ -69,10 +69,11 @@ describe("presetMenu titles a leaf from its params unless it is named", () => {
   it("derives the unnamed and keeps the named", () => {
     const menu = presetMenu({
       paramConfig: config,
-      presets: () => ({
-        title: "Type",
-        submenu: [{ params: base }, { title: "Standard", params: { ...base, w: 9 } }],
-      }),
+      menu: {
+        boards: [],
+        variants: [base, { ...base, w: 9 }],
+        title: (p) => (p.w === 9 ? "Standard" : null),
+      },
     });
     expect(menu.submenu?.map((m) => m.title)).toEqual([
       "Plain: 7x7 Normal, 5 things",
@@ -83,14 +84,8 @@ describe("presetMenu titles a leaf from its params unless it is named", () => {
 
 describe("presetMenu gives each ruleset a section", () => {
   const fancy = { ...base, mode: 1 };
-  const menuOf = (presets: P[]) =>
-    presetMenu({
-      paramConfig: config,
-      presets: () => ({
-        title: "Type",
-        submenu: presets.map((params) => ({ params })),
-      }),
-    });
+  const menuOf = (lines: P[]) =>
+    presetMenu({ paramConfig: config, menu: { boards: [], variants: lines } });
 
   it("sections interleaved presets in the field's order, keeping each one's", () => {
     const menu = menuOf([fancy, base, { ...fancy, w: 9 }, { ...base, w: 9 }]);
@@ -119,10 +114,11 @@ describe("presetMenu gives each ruleset a section", () => {
   it("keeps a named preset's name under a heading", () => {
     const menu = presetMenu({
       paramConfig: config,
-      presets: () => ({
-        title: "Type",
-        submenu: [{ params: base }, { title: "Standard", params: fancy }],
-      }),
+      menu: {
+        boards: [],
+        variants: [base, fancy],
+        title: (p) => (p.mode === fancy.mode ? "Standard" : null),
+      },
     });
     expect(menu.submenu?.[1]?.submenu?.[0]).toMatchObject({
       title: "Standard",
@@ -131,14 +127,8 @@ describe("presetMenu gives each ruleset a section", () => {
   });
 
   it("refuses a section of the game's own, which could mix them", () => {
-    const nested = {
-      paramConfig: config,
-      presets: () => ({
-        title: "Type",
-        submenu: [{ title: "More", submenu: [{ params: base }, { params: fancy }] }],
-      }),
-    };
-    expect(() => presetMenu(nested)).toThrow(/flat/);
+    const nested = { paramConfig: config, menu: { boards: [base], more: [fancy] } };
+    expect(() => presetMenu(nested)).toThrow(/section of its own/);
   });
 });
 

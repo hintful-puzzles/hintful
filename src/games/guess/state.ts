@@ -15,7 +15,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { PresetMenu } from "../../engine/game.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -144,17 +144,19 @@ export function defaultParams(): GuessParams {
   };
 }
 
-export function presets(): PresetMenu<GuessParams> {
-  const standard = defaultParams();
-  return {
-    title: "Type",
-    submenu: [
-      { title: "Standard", params: standard },
-      { title: "Super", params: { ...standard, ncolors: 8, npegs: 5, nguesses: 12 } },
-      { params: { ...standard, allowMultiple: false } },
-    ],
-  };
-}
+const STANDARD = defaultParams();
+const SUPER: GuessParams = { ...STANDARD, ncolors: 8, npegs: 5, nguesses: 12 };
+
+/** Upstream's names for the two games it ships, by their encoded params. */
+const NAMED: ReadonlyMap<string, string> = new Map([
+  [encodeParams(STANDARD, true), "Standard"],
+  [encodeParams(SUPER, true), "Super"],
+]);
+
+export const menu: PresetBoards<GuessParams> = {
+  boards: [STANDARD, SUPER, { ...STANDARD, allowMultiple: false }],
+  title: (p) => NAMED.get(encodeParams(p, true)) ?? null,
+};
 
 export function encodeParams(p: GuessParams, _full: boolean): string {
   return (

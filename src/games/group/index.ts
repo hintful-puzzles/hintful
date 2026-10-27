@@ -35,7 +35,6 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -116,22 +115,15 @@ import {
   type GroupUi,
   HIDDEN_IDENTITY_TIERS,
   isChar,
+  menu,
   moveInSequence,
   newState,
   newUi,
-  PRESETS,
   status,
   textFormat,
   toChar,
   validateParams,
 } from "./state.ts";
-
-function presets(): PresetMenu<GroupParams> {
-  return {
-    title: "Group",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
-}
 
 function requestKeys(p: GroupParams): KeyLabel[] {
   const keys: KeyLabel[] = [];
@@ -759,7 +751,7 @@ export const groupGame: Game<
   markAll,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

@@ -14,6 +14,7 @@ import {
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { countAnswers } from "./count-answers.ts";
 import { newPathDesc } from "./generator.ts";
 import { pathGame } from "./index.ts";
@@ -29,12 +30,11 @@ import {
   NO_END,
   newState,
   type PathParams,
-  presets,
 } from "./state.ts";
 
 /** Every preset, a small board, and one that is not square. */
 const SHAPES: PathParams[] = [
-  ...(presets().submenu ?? []).flatMap((leaf) => (leaf.params ? [leaf.params] : [])),
+  ...leafPresets(pathGame).map((l) => l.params),
   { w: 4, h: 4, diff: DIFF_EASY, mode: MODE_PAIRS },
   { w: 7, h: 5, diff: DIFF_NORMAL, mode: MODE_PAIRS },
   { w: 5, h: 5, diff: DIFF_NORMAL, mode: MODE_PATH },

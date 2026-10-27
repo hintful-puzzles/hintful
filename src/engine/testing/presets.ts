@@ -7,7 +7,7 @@
  *
  * Dev/test-only; never imported by production code.
  */
-import type { ParamConfigItem, PresetMenu } from "../game.ts";
+import type { ParamConfigItem, PresetBoards, PresetMenu } from "../game.ts";
 import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
 import { paramsError } from "../params.ts";
 import { type Dealing, dealsPromptly } from "./dealt.ts";
@@ -33,7 +33,7 @@ export function firstLeaf<P>(menu: PresetMenu<P>): P {
  */
 export function leafPresets<P>(game: {
   paramConfig?: readonly ParamConfigItem<P>[];
-  presets(): PresetMenu<P>;
+  menu: PresetBoards<P>;
 }): { title: string; params: P }[] {
   const walk = (menu: TitledPresetMenu<P>): { title: string; params: P }[] =>
     menu.params !== undefined
@@ -285,7 +285,7 @@ export function unofferedValues<Params>(
  * holds those to a ledger.
  */
 export function dealtBoards<Params>(
-  game: OfferingGame<Params> & { presets(): PresetMenu<Params> },
+  game: OfferingGame<Params> & { menu: PresetBoards<Params> },
   opts: SliceOptions & { readonly every?: boolean } = {},
 ): { title: string; params: Params }[] {
   const all = leafPresets(game);
@@ -298,7 +298,7 @@ export function dealtBoards<Params>(
 interface SizedGame<Params> {
   paramConfig?: readonly ParamConfigItem<Params>[];
   validateParams?(p: Params, full: boolean): string | null;
-  presets(): PresetMenu<Params>;
+  menu: PresetBoards<Params>;
 }
 
 /** A game's dimension pair, `dimensionParamConfig`'s `width` and `height`. */
@@ -332,7 +332,7 @@ export function boardWidth<Params>(
 export function takesRectangles<Params>(game: SizedGame<Params>): boolean {
   const width = dimensionItems(game)?.width;
   if (!width) return false;
-  const first = firstLeaf(game.presets());
+  const first = firstLeaf(presetMenu(game));
   return [1, 2].some((by) => {
     const wider = { ...first };
     width.set(wider, String(Number(width.get(first)) + by));

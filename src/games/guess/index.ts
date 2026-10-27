@@ -66,10 +66,10 @@ import {
   isMarkable,
   MAXCOLORS,
   markPegs,
+  menu,
   newDesc,
   newState,
   outcome,
-  presets,
   status,
   validateParams,
 } from "./state.ts";
@@ -523,7 +523,7 @@ export const guessGame: Game<
   id: "guess",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

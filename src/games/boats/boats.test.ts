@@ -42,12 +42,21 @@ import {
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { fleetFits, newBoatsDesc } from "./generator.ts";
 import { boatsGame } from "./index.ts";
 
 const refusal = (p: BoatsParams, full: boolean) => paramsError(boatsGame, p, full);
+
+/** Every line of the menu, in order. */
+const PRESETS = leafPresets(boatsGame).map((l) => l.params);
+/** The menu's `i`th line, with a fleet of its own to change. */
+const presetParams = (i: number): BoatsParams => ({
+  ...PRESETS[i],
+  fleetData: [...PRESETS[i].fleetData],
+});
 
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
@@ -87,8 +96,6 @@ import {
   isShip,
   newState,
   newUi,
-  PRESETS,
-  presetParams,
   SHIP_LEFT,
   SHIP_RIGHT,
   SHIP_SINGLE,

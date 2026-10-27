@@ -44,6 +44,7 @@ import { describe, expect, it } from "vitest";
 import { difficultyTiers, withTier } from "./difficulty.ts";
 import type { HintStep } from "./game.ts";
 import { NARRATION_LIMIT } from "./hint-words.ts";
+import { presetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import { dealsPromptly, dealt } from "./testing/dealt.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
@@ -826,7 +827,7 @@ describe("a bound hint's words name exactly the marks it draws", () => {
  * The same speculative-vocabulary check, **across everything a game varies**.
  *
  * It needs its own sweep because the block above samples
- * `firstLeaf(game.presets())` — each game's *easiest* preset — and a trial rung
+ * `firstLeaf(presetMenu(game))` — each game's *easiest* preset — and a trial rung
  * is tier-gated, so it never fires there: planting "further along" in Bricks'
  * lookahead narration leaves the block above green, because Bricks' first
  * preset is Easy and Easy never reaches that arm.
@@ -1030,7 +1031,7 @@ function lintCases(
   const contract = game.difficulty;
   const tiers = difficultyTiers(game);
   if (contract && tiers) {
-    const base = firstLeaf(game.presets());
+    const base = firstLeaf(presetMenu(game));
     for (const [tier, tierName] of tiers.entries()) {
       add(`tier ${tier} ("${tierName}")`, withTier(game, base, tier), SEEDS);
     }

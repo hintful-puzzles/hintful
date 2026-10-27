@@ -20,7 +20,6 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -95,9 +94,9 @@ import {
   MON_VAMPIRE,
   MON_ZOMBIE,
   MONSTERS,
+  menu,
   newState,
   newUi,
-  PRESETS,
   paramConfig,
   recomputeErrors,
   status,
@@ -132,13 +131,6 @@ const KEY_E = 69;
 const KEY_e = 101;
 const KEY_A = 65;
 const KEY_a = 97;
-
-function presets(): PresetMenu<UndeadParams> {
-  return {
-    title: "Undead",
-    submenu: PRESETS.map((p) => ({ params: p })),
-  };
-}
 
 /** True iff some empty cell carries no notes: the `M` press has something to
  * fill, and a hint plan must populate before it can strike anything. */
@@ -923,7 +915,7 @@ export const undeadGame: Game<
     anyEmptyLacksNotes(state.guess, state.pencil) ? { type: "markAll" } : null,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

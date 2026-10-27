@@ -41,8 +41,8 @@ describe("params corpus", () => {
 
   it("draws enough cases from each game to be worth asserting", () => {
     // The vacuity guard this repo owes every derived sweep: a corpus that
-    // silently found nothing — an unpopulated registry, a `presets()` that
-    // returned an empty menu — would leave every assertion below passing over
+    // silently found nothing — an unpopulated registry, a game's `menu` that
+    // named no boards — would leave every assertion below passing over
     // nothing and reporting health.
     const total = CORPUS.reduce((n, [, , cases]) => n + cases.length, 0);
     expect(total).toBeGreaterThanOrEqual(600);

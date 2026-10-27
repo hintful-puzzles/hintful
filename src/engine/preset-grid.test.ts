@@ -18,7 +18,7 @@ const lines = (menu: { submenu?: { params?: P }[] }) =>
 
 describe("presetGrid", () => {
   it("offers each board at every tier, easiest first", () => {
-    expect(lines(presetGrid(tiered, [4, 6].map(board)))).toEqual([
+    expect(lines(presetGrid(tiered, { boards: [4, 6].map(board) }))).toEqual([
       "4/0",
       "4/1",
       "4/2",
@@ -29,7 +29,8 @@ describe("presetGrid", () => {
   });
 
   it("stops a board at the tiers the game gives it", () => {
-    const menu = presetGrid(tiered, [4, 6].map(board), {
+    const menu = presetGrid(tiered, {
+      boards: [4, 6].map(board),
       tiers: (p) => (p.w === 6 ? [1, 2] : null),
     });
     expect(lines(menu)).toEqual(["4/0", "4/1", "4/2", "6/1", "6/2"]);
@@ -37,18 +38,36 @@ describe("presetGrid", () => {
 
   it("puts the variants after the grid, as they stand", () => {
     const wrapping = { ...board(6), diff: 1, wrap: true };
-    const menu = presetGrid(tiered, [board(4)], { variants: [wrapping] });
+    const menu = presetGrid(tiered, { boards: [board(4)], variants: [wrapping] });
     expect(menu.submenu?.at(-1)?.params).toEqual(wrapping);
     expect(menu.submenu).toHaveLength(4);
   });
 
   it("lists the boards of a game without tiers", () => {
-    expect(lines(presetGrid<P>([], [4, 6].map(board)))).toEqual(["4/0", "6/0"]);
+    expect(lines(presetGrid<P>([], { boards: [4, 6].map(board) }))).toEqual([
+      "4/0",
+      "6/0",
+    ]);
   });
 
   it("hands out params of its own", () => {
     const boards = [board(4)];
-    const menu = presetGrid<P>([], boards);
+    const menu = presetGrid<P>([], { boards });
     expect(menu.submenu?.[0]?.params).not.toBe(boards[0]);
+  });
+
+  it("names the lines the game names, and only those", () => {
+    const menu = presetGrid<P>([], {
+      boards: [4, 6].map(board),
+      title: (p) => (p.w === 6 ? "Big" : null),
+    });
+    expect(menu.submenu?.map((m) => m.title)).toEqual([undefined, "Big"]);
+  });
+
+  it("puts `more` in a section of its own, last", () => {
+    const menu = presetGrid<P>([], { boards: [board(4)], more: [board(8), board(9)] });
+    const section = menu.submenu?.at(-1);
+    expect(section?.title).toBe("More...");
+    expect(lines(section ?? {})).toEqual(["8/0", "9/0"]);
   });
 });

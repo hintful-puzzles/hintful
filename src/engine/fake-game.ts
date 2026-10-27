@@ -49,13 +49,10 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
   preferredTileSize: 10,
 
   defaultParams: () => ({ target: 3 }),
-  presets: () => ({
-    title: "root",
-    submenu: [
-      { title: "Easy", params: { target: 2 } },
-      { title: "Hard", params: { target: 9 } },
-    ],
-  }),
+  menu: {
+    boards: [{ target: 2 }, { target: 9 }],
+    title: (p) => (p.target === 2 ? "Easy" : "Hard"),
+  },
   encodeParams: (p) => `t${p.target}`,
   decodeParams: (s) => {
     const m = /^t(\d+)$/.exec(s);

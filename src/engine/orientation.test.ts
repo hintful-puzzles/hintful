@@ -20,6 +20,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { PresetMenu } from "./game.ts";
+import { presetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import { SQUARE_GRID, sectionState } from "./sections.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
@@ -65,7 +66,7 @@ function leaves(menu: PresetMenu<AnyParams>): AnyParams[] {
 
 /** The default and every preset leaf, deduplicated by encoding. */
 function menuParams(game: AnyGame): AnyParams[] {
-  const all = [game.defaultParams(), ...leaves(game.presets())];
+  const all = [game.defaultParams(), ...leaves(presetMenu(game))];
   const seen = new Set<string>();
   return all.filter((p) => {
     const key = game.encodeParams(p, true);

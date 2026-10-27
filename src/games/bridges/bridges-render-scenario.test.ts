@@ -20,6 +20,7 @@ import {
 } from "../../engine/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -36,13 +37,15 @@ import {
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
 import {
-  BRIDGES_PRESETS,
   type BridgesMove,
   type BridgesOp,
   encodeParams,
   G_LINEH,
   G_LINEV,
 } from "./state.ts";
+
+/** Every line of the menu, in order. */
+const BRIDGES_PRESETS = leafPresets(bridgesGame).map((l) => l.params);
 
 const P = BRIDGES_PRESETS[2];
 const ID = `${bridgesGame.encodeParams(P, true)}#bridges-scenario`;

@@ -1,6 +1,6 @@
 import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -106,12 +106,7 @@ const SIXTEEN_PRESETS: SixteenParams[] = [
   { w: 5, h: 5, movetarget: 0 },
 ];
 
-export function presets(): PresetMenu<SixteenParams> {
-  return {
-    title: "Type",
-    submenu: SIXTEEN_PRESETS.map((p) => ({ params: p })),
-  };
-}
+export const menu: PresetBoards<SixteenParams> = { boards: SIXTEEN_PRESETS };
 
 // --- desc / state -----------------------------------------------------
 

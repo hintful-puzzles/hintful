@@ -13,6 +13,7 @@ import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { DESC_CONTRADICTORY, DESC_NOT_UNIQUE } from "../../engine/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
+import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
@@ -251,7 +252,7 @@ describe("an Unreasonable Crossing board", () => {
   });
 
   it("is on the menu up to 9x11, keeping the menu quick", () => {
-    const offered = (crossingGame.presets().submenu ?? []).flatMap(({ params }) =>
+    const offered = (presetMenu(crossingGame).submenu ?? []).flatMap(({ params }) =>
       params?.diff === DIFF_UNREASONABLE ? [`${params.w}x${params.h}`] : [],
     );
     expect(offered).toEqual(["5x5", "7x7", "7x9", "9x11"]);

@@ -11,11 +11,10 @@ import { assertNever } from "../../engine/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { numberItem } from "../../engine/params.ts";
 import { choice, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { combine, OPS, type Op, type Step } from "./solver.ts";
 
 // --- the board --------------------------------------------------------------
@@ -116,9 +115,7 @@ export function defaultParams(): NumgameParams {
   return { ...BOARDS[0], diff: 1 };
 }
 
-export function presets(): PresetMenu<NumgameParams> {
-  return presetGrid(paramConfig, BOARDS);
-}
+export const menu: PresetBoards<NumgameParams> = { boards: BOARDS };
 
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   num(paramConfig, "l", "large"),

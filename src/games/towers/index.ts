@@ -30,7 +30,7 @@ import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type HintStep,
-  type PresetMenu,
+  type PresetBoards,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -68,7 +68,6 @@ import {
   moveCursor,
   stripModifiers,
 } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
@@ -132,12 +131,9 @@ export interface TowersMistake {
   y: number;
 }
 
-function presets(): PresetMenu<TowersParams> {
-  return presetGrid(
-    paramConfig,
-    [4, 5, 6].map((w): TowersParams => ({ w, diff: "easy" })),
-  );
-}
+const menu: PresetBoards<TowersParams> = {
+  boards: [4, 5, 6].map((w): TowersParams => ({ w, diff: "easy" })),
+};
 
 function inGrid(w: number, x: number, y: number): boolean {
   return x >= 0 && x < w && y >= 0 && y < w;
@@ -606,7 +602,7 @@ export const towersGame: Game<
   markAll,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

@@ -23,7 +23,8 @@
  * inside one leaves that name off: "7x7 Easy" under "Seismic".
  */
 
-import type { ParamConfigItem, ParamLabel, PresetMenu } from "./game.ts";
+import type { ParamConfigItem, ParamLabel, PresetBoards, PresetMenu } from "./game.ts";
+import { presetGrid } from "./preset-grid.ts";
 import { rulesetField } from "./ruleset.ts";
 
 type Slot = ParamLabel<unknown>["slot"];
@@ -98,13 +99,13 @@ export interface TitledPresetMenu<P> {
 }
 
 /**
- * The game's preset menu with each leaf titled and labeled: its own name where
- * upstream gave it one, and its params' label otherwise. What the app's Type
- * menu shows.
+ * The game's preset menu, built from its boards, with each leaf titled and
+ * labeled: its own name where upstream gave it one, and its params' label
+ * otherwise. What the app's Type menu shows.
  */
 export function presetMenu<P>(game: {
   paramConfig?: readonly ParamConfigItem<P>[];
-  presets(): PresetMenu<P>;
+  menu: PresetBoards<P>;
 }): TitledPresetMenu<P> {
   const leaf = (menu: PresetMenu<P>, sectioned: boolean): TitledPresetMenu<P> => {
     const params = menu.params as P;
@@ -117,13 +118,13 @@ export function presetMenu<P>(game: {
       ? { title: menu.title ?? "", submenu: menu.submenu.map(walk) }
       : leaf(menu, false);
 
-  const root = game.presets();
+  const root = presetGrid(game.paramConfig ?? [], game.menu);
   const item = rulesetField(game);
   if (item === null) return walk(root);
-  // The game writes its presets flat: a section of its own could mix rulesets.
+  // The rulesets are the sections: a section of the game's own could mix them.
+  if (game.menu.more !== undefined)
+    throw new Error("a game with a ruleset has no section of its own");
   const leaves = root.submenu ?? [];
-  if (leaves.some((m) => m.submenu))
-    throw new Error("a game with a ruleset lists its presets flat");
   const sections = item.choices
     .map((title, i) => ({
       title,
@@ -132,7 +133,7 @@ export function presetMenu<P>(game: {
     .filter((s) => s.members.length > 0);
   if (sections.length < 2) return walk(root);
   return {
-    title: root.title ?? "",
+    title: "",
     submenu: sections.map((s) => ({
       title: s.title,
       submenu: s.members.map((m) => leaf(m, true)),

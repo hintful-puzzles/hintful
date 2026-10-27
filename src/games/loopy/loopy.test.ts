@@ -691,7 +691,7 @@ describe("text format", () => {
 
 describe("presets", () => {
   it("offers a two-level menu whose every preset is valid", () => {
-    const root = loopyGame.presets();
+    const root = presetMenu(loopyGame);
     expect(root.submenu).toBeDefined();
     const more = root.submenu?.find((m) => m.title === "More...");
     expect(more?.submenu?.length).toBeGreaterThan(0);

@@ -99,10 +99,10 @@ import {
   F_EMPTY,
   F_SHADE,
   F_UNSHADE,
+  menu,
   NUM_MASK,
   newState,
   paramConfig,
-  presets,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -520,7 +520,7 @@ export const bricksGame: Game<
   id: "bricks",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   paramConfig,

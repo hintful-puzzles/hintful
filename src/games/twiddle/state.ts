@@ -1,7 +1,7 @@
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { PresetMenu } from "../../engine/game.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -117,25 +117,22 @@ function preset(
   n: number,
   rowsonly: boolean,
   orientable: boolean,
-) {
-  return { params: { w, h, n, rowsonly, orientable, movetarget: 0 } };
+): TwiddleParams {
+  return { w, h, n, rowsonly, orientable, movetarget: 0 };
 }
 
-export function presets(): PresetMenu<TwiddleParams> {
-  return {
-    title: "Type",
-    submenu: [
-      preset(3, 3, 2, true, false),
-      preset(3, 3, 2, false, false),
-      preset(3, 3, 2, false, true),
-      preset(4, 4, 2, false, false),
-      // Upstream's 4x4 and 6x6 with the larger blocks stand upright.
-      preset(4, 5, 3, false, false),
-      preset(5, 5, 3, false, false),
-      preset(6, 7, 4, false, false),
-    ],
-  };
-}
+export const menu: PresetBoards<TwiddleParams> = {
+  boards: [
+    preset(3, 3, 2, true, false),
+    preset(3, 3, 2, false, false),
+    preset(3, 3, 2, false, true),
+    preset(4, 4, 2, false, false),
+    // Upstream's 4x4 and 6x6 with the larger blocks stand upright.
+    preset(4, 5, 3, false, false),
+    preset(5, 5, 3, false, false),
+    preset(6, 7, 4, false, false),
+  ],
+};
 
 // --- rotation ---------------------------------------------------------
 

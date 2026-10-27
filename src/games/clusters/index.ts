@@ -94,10 +94,10 @@ import {
   F_COLOR_0,
   F_COLOR_1,
   F_SINGLE,
+  menu,
   newState,
   opposite,
   paramConfig,
-  presets,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -464,7 +464,7 @@ export const clustersGame: Game<
   id: "clusters",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

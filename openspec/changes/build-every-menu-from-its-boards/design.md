@@ -49,4 +49,14 @@ vitest that walked `presets()` for every registered game):
   that prefix is dropped first, on its own commit, so the migration's commit
   leaves the snapshot alone and the guard means what it says.
 - **The menus do not change.** The `params-stability` snapshot is the guard;
-  a moved line is read and fixed, never re-baselined.
+  a moved line is read and fixed, never re-baselined. It passed unchanged
+  after the migration, and failed on Tents with two boards swapped.
+- **A test reads the menu's lines through `leafPresets`, never a copy.**
+  Bridges, Boats, Group, Salad and Seismic exported their menu's lines for
+  their tests; those tests now take the lines off the built menu. A test that
+  read `presetMenu(g).submenu` for its leaves read nothing on a ruleset game,
+  whose top level is its sections: Path's ladder census failed on it, and
+  Starbattle's passed over an emptied corpus. Those read `leafPresets` now.
+- **Tracks' comment was wrong**: it said the two non-square sizes stop a
+  tier short, and 8x8 does too. The menu stays as it was, and the comment at
+  its `tiers` says Hard is offered at 10x10 and 15x15 only.

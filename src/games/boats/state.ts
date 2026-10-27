@@ -20,6 +20,7 @@ import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { newCursor, newDrag } from "../../engine/pointer.ts";
@@ -116,22 +117,22 @@ export function encodeFleet(fleetData: readonly number[], fleet: number): string
 /** Three sizes at every tier, upstream's 8x8 made an upright 7x9. Upstream's
  * 10x12 with a fleet of five is a Custom away: a fourth size would not fit a
  * section of twelve. */
-export const PRESETS: readonly Omit<BoatsParams, "fleetData">[] = [
+const BOARDS: readonly BoatsParams[] = [
   { w: 6, h: 6, fleet: 3 },
   { w: 7, h: 9, fleet: 4 },
   { w: 10, h: 10, fleet: 4 },
-].flatMap((board) => DIFF_NAMES.map((_, diff) => ({ ...board, diff, strip: false })));
+].map((b) => ({
+  ...b,
+  diff: DIFF_EASY,
+  strip: false,
+  fleetData: defaultFleet(b.fleet),
+}));
+
+export const menu: PresetBoards<BoatsParams> = { boards: BOARDS };
 
 /** 10x10 Normal, upstream's default. */
-const DEFAULT_PRESET = 9;
-
-export function presetParams(i: number): BoatsParams {
-  const p = PRESETS[i];
-  return { ...p, fleetData: defaultFleet(p.fleet) };
-}
-
 export function defaultParams(): BoatsParams {
-  return presetParams(DEFAULT_PRESET);
+  return cloneParams({ ...BOARDS[2], diff: DIFF_NORMAL });
 }
 
 function cloneParams(p: BoatsParams): BoatsParams {

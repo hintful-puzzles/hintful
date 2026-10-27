@@ -4,9 +4,11 @@
  * deals (docs/testing.md § "What a new game ships"). The ladder decides only
  * what the rules force, so a board it finishes has one answer.
  */
+
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { newSkeletonDesc } from "./generator.ts";
 import { skeletonGame } from "./index.ts";
 import { SKELETON_RUNGS, SkeletonBoard, solveSkeleton } from "./solver.ts";
@@ -15,14 +17,13 @@ import {
   DIFF_NORMAL,
   encodeParams,
   newState,
-  presets,
   type SkeletonParams,
 } from "./state.ts";
 
 /** Every preset, the smallest board there is at each tier, and one that is
  * not square. */
 const SHAPES: SkeletonParams[] = [
-  ...(presets().submenu ?? []).flatMap((leaf) => (leaf.params ? [leaf.params] : [])),
+  ...leafPresets(skeletonGame).map((l) => l.params),
   { w: 4, h: 4, diff: DIFF_EASY },
   { w: 6, h: 4, diff: DIFF_NORMAL },
   { w: 8, h: 6, diff: DIFF_NORMAL },

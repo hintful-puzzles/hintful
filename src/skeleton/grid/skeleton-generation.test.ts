@@ -3,9 +3,11 @@
  * was asked at, and every rung of the ladder fires on boards the generator
  * deals (docs/testing.md § "What a new game ships").
  */
+
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { newSkeletonDesc } from "./generator.ts";
 import { skeletonGame } from "./index.ts";
 import { SKELETON_RUNGS, SkeletonBoard, solveSkeleton } from "./solver.ts";
@@ -14,13 +16,12 @@ import {
   DIFF_NORMAL,
   encodeParams,
   newState,
-  presets,
   type SkeletonParams,
 } from "./state.ts";
 
 /** Every preset, the smallest board there is, and one that is not square. */
 const SHAPES: SkeletonParams[] = [
-  ...(presets().submenu ?? []).flatMap((leaf) => (leaf.params ? [leaf.params] : [])),
+  ...leafPresets(skeletonGame).map((l) => l.params),
   { w: 3, h: 3, diff: DIFF_EASY },
   { w: 3, h: 3, diff: DIFF_NORMAL },
   { w: 7, h: 4, diff: DIFF_NORMAL },

@@ -136,7 +136,7 @@ function findClueBlankPair(state: MapState): { clue: number; blank: number } | n
 
 describe("map params codec", () => {
   it("round-trips every preset", () => {
-    const menu = mapGame.presets();
+    const menu = presetMenu(mapGame);
     for (const entry of menu.submenu ?? []) {
       const p = entry.params as MapParams;
       expect(decodeParams(encodeParams(p, true))).toEqual(p);

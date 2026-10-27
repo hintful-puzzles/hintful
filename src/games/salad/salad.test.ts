@@ -54,7 +54,6 @@ import {
   letterChar,
   newState,
   newUi,
-  PRESETS,
   type SaladMove,
   type SaladParams,
   type SaladState,
@@ -63,6 +62,9 @@ import {
   symbolChar,
   textFormat,
 } from "./state.ts";
+
+/** Every line of the menu, in order. */
+const PRESETS = leafPresets(saladGame).map((l) => l.params);
 
 /** A 4×4 ABC End View board and a 5×5 Number Ball board, both taken from the
  * frozen C reference so the fixtures and these tests describe one game. */

@@ -33,7 +33,7 @@ import {
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
@@ -41,7 +41,6 @@ import {
 } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- types ----------------------------------------------------------------
@@ -108,9 +107,7 @@ export function defaultParams(): SeparateParams {
   return board(5, 5, 5);
 }
 
-export function presets(): PresetMenu<SeparateParams> {
-  return { title: "Size", ...presetGrid(paramConfig, BOARDS) };
-}
+export const menu: PresetBoards<SeparateParams> = { boards: BOARDS };
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SeparateParams>[] = [

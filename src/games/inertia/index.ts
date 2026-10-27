@@ -215,12 +215,7 @@ export const inertiaGame: Game<
   ignoresSecondaryButton: true,
 
   defaultParams,
-  presets() {
-    return {
-      title: "Inertia",
-      submenu: PRESETS.map((p) => ({ params: { ...p } })),
-    };
-  },
+  menu: { boards: PRESETS },
   encodeParams,
   decodeParams,
   validateParams,

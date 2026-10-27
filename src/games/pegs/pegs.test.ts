@@ -320,12 +320,12 @@ describe("Pegs generator (Random)", () => {
 
 describe("Pegs presets", () => {
   it("has 9 presets", () => {
-    const menu = G.presets();
+    const menu = presetMenu(G);
     expect(menu.submenu?.length).toBe(9);
   });
 
   it("presets have valid params", () => {
-    const menu = G.presets();
+    const menu = presetMenu(G);
     for (const item of menu.submenu ?? []) {
       expect(paramsError(G, item.params as PegsParams, true)).toBeNull();
     }

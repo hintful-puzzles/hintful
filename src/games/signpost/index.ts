@@ -46,7 +46,6 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/types.ts";
 import { newSignpostDesc } from "./generator.ts";
 import {
@@ -390,12 +389,7 @@ export const signpostGame: Game<
   id: "signpost",
 
   defaultParams,
-  presets() {
-    return {
-      title: "Signpost",
-      ...presetGrid(paramConfig, BOARDS, { variants: VARIANTS }),
-    };
-  },
+  menu: { boards: BOARDS, variants: VARIANTS },
   encodeParams,
   decodeParams,
   validateParams,

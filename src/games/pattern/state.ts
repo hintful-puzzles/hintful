@@ -27,11 +27,10 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- cell values (upstream #defines) -------------------------------------
@@ -151,9 +150,7 @@ export const paramConfig: ParamConfigItem<PatternParams>[] = [
   ),
 ];
 
-export function presets(): PresetMenu<PatternParams> {
-  return { title: "Pattern", ...presetGrid(paramConfig, BOARDS) };
-}
+export const menu: PresetBoards<PatternParams> = { boards: BOARDS };
 
 /** `WxH`, with upstream's square fallback (a bare `W` is a W×W board), then
  * the difficulty letter, which upstream's IDs lack: without one a board is

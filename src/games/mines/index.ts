@@ -289,18 +289,15 @@ export const minesGame: Game<
   preferredTileSize: PREFERRED_TILE_SIZE,
 
   defaultParams,
-  presets() {
-    return {
-      title: "Mines",
-      submenu: [
-        { params: mk(9, 9, 10) },
-        { params: mk(9, 9, 35) },
-        { params: mk(16, 16, 40) },
-        { params: mk(16, 16, 99) },
-        { params: mk(16, 30, 99) },
-        { params: mk(16, 30, 170) },
-      ],
-    };
+  menu: {
+    boards: [
+      mk(9, 9, 10),
+      mk(9, 9, 35),
+      mk(16, 16, 40),
+      mk(16, 16, 99),
+      mk(16, 30, 99),
+      mk(16, 30, 170),
+    ],
   },
   encodeParams,
   decodeParams,

@@ -9,6 +9,7 @@ import { difficultyChoiceItem, difficultyTiers, withTier } from "./difficulty.ts
 import type { Game, PresetMenu } from "./game.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
+import { presetGrid } from "./preset-grid.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
@@ -109,7 +110,7 @@ describe("one describer labels every params set", () => {
     // under one heading read the same.
     for (const lines of sections(menu))
       expect(new Set(lines).size, `${id}: ${lines.join(" | ")}`).toBe(lines.length);
-    for (const leaf of leaves(g.presets())) {
+    for (const leaf of leaves(presetGrid(g.paramConfig ?? [], g.menu))) {
       labeled++;
       expect(paramsError(g, leaf.params, true), `${id}: preset refused`).toBeNull();
       // A name is for what no field says; one that repeats the label is a

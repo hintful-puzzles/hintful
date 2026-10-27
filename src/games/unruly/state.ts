@@ -11,12 +11,11 @@ import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import {
   type Cell,
@@ -92,14 +91,13 @@ export function defaultParams(): UnrulyParams {
   return board(8);
 }
 
-export function presets(): PresetMenu<UnrulyParams> {
-  return presetGrid(paramConfig, BOARDS, {
-    // The smallest board stops a tier short, which is the line the unique
-    // board takes in a section of twelve.
-    tiers: (p) => (p.w2 === 6 ? [DIFF_TRIVIAL, DIFF_EASY] : null),
-    variants: [{ ...board(8), unique: true, diff: DIFF_EASY }],
-  });
-}
+export const menu: PresetBoards<UnrulyParams> = {
+  boards: BOARDS,
+  // The smallest board stops a tier short, which is the line the unique
+  // board takes in a section of twelve.
+  tiers: (p) => (p.w2 === 6 ? [DIFF_TRIVIAL, DIFF_EASY] : null),
+  variants: [{ ...board(8), unique: true, diff: DIFF_EASY }],
+};
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<UnrulyParams>[] = [

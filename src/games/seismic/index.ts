@@ -19,7 +19,6 @@ import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -78,10 +77,10 @@ import {
   defaultParams,
   encodeParams,
   FM_FIXED,
+  menu,
   newState,
   newUi,
   numBit,
-  PRESETS,
   paramConfig,
   type SeismicMove,
   type SeismicParams,
@@ -98,15 +97,6 @@ export interface SeismicMistake {
   kind: "cell" | "note";
   x: number;
   y: number;
-}
-
-// --- presets ---------------------------------------------------------------
-
-function presets(): PresetMenu<SeismicParams> {
-  return {
-    title: "Seismic",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
 }
 
 // --- input -----------------------------------------------------------------
@@ -295,7 +285,7 @@ export const seismicGame: Game<
   markAll,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
 

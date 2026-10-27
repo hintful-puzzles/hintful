@@ -20,7 +20,7 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
-import { describeParams } from "../../engine/param-label.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
@@ -148,7 +148,7 @@ describe("abcd params codec", () => {
 // board is still dealt: the deal's deadline answers one with none found.
 describe("abcd large boards", () => {
   it("accepts every shipped preset", () => {
-    const menu = abcdGame.presets().submenu ?? [];
+    const menu = presetMenu(abcdGame).submenu ?? [];
     expect(menu.length).toBeGreaterThanOrEqual(11);
     for (const { params: p } of menu) {
       if (!p) throw new Error("ABCD's menu has no submenus");

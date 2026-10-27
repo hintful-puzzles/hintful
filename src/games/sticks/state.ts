@@ -22,11 +22,10 @@ import { isDigit } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import {
   SYMM_NONE,
   SYMM_ROT2,
@@ -134,9 +133,7 @@ export function defaultParams(): SticksParams {
   return board(7);
 }
 
-export function presets(): PresetMenu<SticksParams> {
-  return { title: "Sticks", ...presetGrid(paramConfig, BOARDS) };
-}
+export const menu: PresetBoards<SticksParams> = { boards: BOARDS };
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SticksParams>[] = [

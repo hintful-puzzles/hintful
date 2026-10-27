@@ -34,7 +34,6 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -123,9 +122,9 @@ import {
   F_SPENT_LEFT,
   F_SPENT_RIGHT,
   F_SPENT_UP,
+  menu,
   newState,
   newUi,
-  PRESETS,
   RULESETS,
   status,
   textFormat,
@@ -144,13 +143,6 @@ export interface UnequalMistake {
   kind: "cell" | "note";
   x: number;
   y: number;
-}
-
-function presets(): PresetMenu<UnequalParams> {
-  return {
-    title: "Unequal",
-    submenu: PRESETS.map((p) => ({ params: p })),
-  };
 }
 
 type SpentMove = Extract<UnequalMove, { type: "spent" }>;
@@ -584,7 +576,7 @@ export const unequalGame: Game<
   markAll,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

@@ -68,8 +68,8 @@ import {
   LASER_EMPTY,
   LASER_OMITTED,
   LASER_WRONG,
+  menu,
   newState,
-  presets,
   range2grid,
   revealAnswer,
   status,
@@ -392,7 +392,7 @@ export const blackboxGame: Game<
   id: "blackbox",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

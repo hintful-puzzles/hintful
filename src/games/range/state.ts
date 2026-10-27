@@ -20,12 +20,11 @@ import { assertNever } from "../../engine/assert-never.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { SHADED_NAME } from "../../engine/piece.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 
 // --- cells -----------------------------------------------------------------
 
@@ -107,9 +106,7 @@ export function defaultParams(): RangeParams {
   return board(6, 9);
 }
 
-export function presets(): PresetMenu<RangeParams> {
-  return { title: "Range", ...presetGrid(paramConfig, BOARDS) };
-}
+export const menu: PresetBoards<RangeParams> = { boards: BOARDS };
 
 const TIER_DOC = `An Easy puzzle can be finished one forced square at a time: there is always a number whose view settles a square, a ${SHADED_NAME} square with an undecided neighbor, or a square that would cut the clear squares in two. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a square and see what follows. The Hint button stops where the forced squares do.`;
 

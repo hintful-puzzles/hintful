@@ -85,8 +85,8 @@ import {
   type LightupParams,
   type LightupState,
   type LightupUi,
+  menu,
   newState,
-  presets,
   setLight,
   status,
   textFormat,
@@ -510,7 +510,7 @@ export const lightupGame: Game<
   id: "lightup",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

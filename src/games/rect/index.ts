@@ -43,7 +43,6 @@ import {
   startDrag,
   stripModifiers,
 } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
@@ -395,14 +394,12 @@ export const rectGame: Game<
   id: "rect",
 
   defaultParams,
-  presets: () => ({
-    title: "Rectangles",
+  menu: {
+    boards: BOARDS,
     // Seven sizes at two tiers is two lines more than a section of the menu
     // holds, so the two largest are offered at Easy alone. Custom deals both.
-    ...presetGrid(rectGame.paramConfig ?? [], BOARDS, {
-      tiers: (board) => (board.w * board.h > 15 * 15 ? [DIFF_EASY, DIFF_EASY] : null),
-    }),
-  }),
+    tiers: (board) => (board.w * board.h > 15 * 15 ? [DIFF_EASY, DIFF_EASY] : null),
+  },
   encodeParams,
   decodeParams,
   validateParams,

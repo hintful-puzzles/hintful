@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
+import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
@@ -45,7 +46,6 @@ import {
   NEUTRAL,
   newState,
   POSITIVE,
-  presets,
 } from "./state.ts";
 
 const hint = (s: MagnetsState) => {
@@ -73,7 +73,7 @@ function boardsOf(
   seeds: number,
 ): { label: string; state: MagnetsState; aux: string }[] {
   const out = [];
-  for (const entry of presets().submenu ?? []) {
+  for (const entry of presetMenu(magnetsGame).submenu ?? []) {
     if (!("params" in entry)) continue;
     const p = entry.params as MagnetsParams;
     for (let seed = 0; seed < seeds; seed++) {
@@ -91,7 +91,7 @@ const CORPUS = boardsOf(3);
  * hint opens with one. */
 const pinned = describeHintPins({
   game: magnetsGame,
-  params: (presets().submenu ?? []).flatMap((entry) =>
+  params: (presetMenu(magnetsGame).submenu ?? []).flatMap((entry) =>
     "params" in entry ? [entry.params as MagnetsParams] : [],
   ),
   seeds: 3,

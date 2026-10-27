@@ -549,7 +549,7 @@ describe("palisade hint", () => {
 
 describe("palisade misc", () => {
   it("exposes the four presets, each at both tiers", () => {
-    const menu = palisadeGame.presets();
+    const menu = presetMenu(palisadeGame);
     expect(menu.submenu?.map((m) => m.params)).toEqual(
       PRESETS.flatMap((p) => [p, { ...p, diff: DIFF_UNREASONABLE }]),
     );

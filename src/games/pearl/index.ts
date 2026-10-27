@@ -55,6 +55,7 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
+  menu,
   newState,
   type PearlMove,
   type PearlOp,
@@ -62,7 +63,6 @@ import {
   type PearlState,
   type PearlUi,
   paramConfig,
-  presets,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -224,7 +224,7 @@ export const pearlGame: Game<
   id: "pearl",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

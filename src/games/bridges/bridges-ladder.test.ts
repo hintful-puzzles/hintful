@@ -6,14 +6,14 @@
  */
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { newBridgesDesc } from "./generator.ts";
+import { bridgesGame } from "./index.ts";
 import { solveFromScratch } from "./solver.ts";
-import {
-  BRIDGES_PRESETS,
-  type BridgesParams,
-  type BridgesState,
-  newStateFromDesc,
-} from "./state.ts";
+import { type BridgesParams, type BridgesState, newStateFromDesc } from "./state.ts";
+
+/** Every line of the menu, in order. */
+const BRIDGES_PRESETS = leafPresets(bridgesGame).map((l) => l.params);
 
 /** One preset per difficulty, plus a larger board so the connectivity stage has
  * something to chew on. */

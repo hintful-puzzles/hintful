@@ -9,6 +9,7 @@ import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
@@ -20,15 +21,9 @@ import { COL_HINT_EVIDENCE, redraw } from "./render.ts";
 import { DIR_CHARS, executeMove, findMoveDest } from "./roll.ts";
 import { SolidType } from "./solids.ts";
 import { canCollectWithoutDropping } from "./solver.ts";
-import {
-  type CubeMove,
-  type CubeParams,
-  type CubeState,
-  newState,
-  presets,
-} from "./state.ts";
+import { type CubeMove, type CubeParams, type CubeState, newState } from "./state.ts";
 
-const PRESETS: CubeParams[] = presets().submenu.map((e) => e.params);
+const PRESETS: CubeParams[] = leafPresets(cubeGame).map((e) => e.params);
 
 const solved = (s: CubeState): boolean => s.faceColors.every((c) => c);
 

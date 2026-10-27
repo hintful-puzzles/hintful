@@ -93,13 +93,13 @@ function tieredGame(): typeof fakeGame {
   const g = {
     ...fakeGame,
     defaultParams: (): TieredParams => ({ target: 3, diff: 0 }),
-    presets: () => ({
-      title: "root",
-      submenu: [
-        { title: "Easy", params: { target: 3, diff: 0 } },
-        { title: "Hard", params: { target: 3, diff: 1 } },
+    menu: {
+      boards: [
+        { target: 3, diff: 0 },
+        { target: 3, diff: 1 },
       ],
-    }),
+      title: (p: TieredParams) => (p.diff === 0 ? "Easy" : "Hard"),
+    },
     encodeParams: (p: TieredParams, full: boolean) =>
       `t${p.target}${full ? `d${p.diff}` : ""}`,
     decodeParams: (s: string): TieredParams => {
@@ -1923,7 +1923,7 @@ function strikeGame(opts: {
     >),
     id: "__strike__",
     defaultParams: () => ({ n: 3 }),
-    presets: () => ({ title: "root", params: { n: 3 } }),
+    menu: { boards: [{ n: 3 }] },
     encodeParams: (p) => `n${p.n}`,
     decodeParams: (s) => ({ n: Number(/^n(\d+)$/.exec(s)?.[1] ?? 3) }),
     validateParams: () => null,

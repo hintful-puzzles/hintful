@@ -49,7 +49,6 @@ import {
   type FlipParams,
   type FlipState,
   type FlipUi,
-  type MatrixType,
   readBitmap,
 } from "./state.ts";
 
@@ -175,22 +174,16 @@ export const flipGame: Game<
 
   defaultParams,
 
-  presets() {
-    const mk = (w: number, h: number, matrixType: MatrixType) => ({
-      params: { w, h, matrixType },
-    });
-    return {
-      title: "Flip",
-      submenu: [
-        mk(3, 3, "crosses"),
-        mk(4, 4, "crosses"),
-        mk(5, 5, "crosses"),
-        // Upstream's random boards are square too; these stand upright.
-        mk(3, 4, "random"),
-        mk(4, 5, "random"),
-        mk(5, 6, "random"),
-      ],
-    };
+  menu: {
+    boards: [
+      { w: 3, h: 3, matrixType: "crosses" },
+      { w: 4, h: 4, matrixType: "crosses" },
+      { w: 5, h: 5, matrixType: "crosses" },
+      // Upstream's random boards are square too; these stand upright.
+      { w: 3, h: 4, matrixType: "random" },
+      { w: 4, h: 5, matrixType: "random" },
+      { w: 5, h: 6, matrixType: "random" },
+    ],
   },
 
   encodeParams,

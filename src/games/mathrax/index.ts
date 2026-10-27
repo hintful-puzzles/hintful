@@ -38,7 +38,7 @@ import {
   type HintStep,
   type HintTrackVerdict,
   type ParamConfigItem,
-  type PresetMenu,
+  type PresetBoards,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -143,27 +143,13 @@ export interface MathraxMistake extends Point {
 
 // --- presets ---------------------------------------------------------------
 
-const PRESETS: MathraxParams[] = [
-  { o: 5, diff: "easy", options: OPTIONSMASK },
-  { o: 5, diff: "normal", options: OPTIONSMASK },
-  { o: 5, diff: "tricky", options: OPTIONSMASK },
-  { o: 5, diff: "recursive", options: OPTIONSMASK },
-  { o: 6, diff: "easy", options: OPTIONSMASK },
-  { o: 6, diff: "normal", options: OPTIONSMASK },
-  { o: 6, diff: "tricky", options: OPTIONSMASK },
-  { o: 6, diff: "recursive", options: OPTIONSMASK },
-  // The three large sizes at one tier each, which keeps the list to twelve.
-  { o: 7, diff: "normal", options: OPTIONSMASK },
-  { o: 8, diff: "normal", options: OPTIONSMASK },
-  { o: 9, diff: "normal", options: OPTIONSMASK },
-];
+const NORMAL = diffToLevel("normal");
 
-function presets(): PresetMenu<MathraxParams> {
-  return {
-    title: "Mathrax",
-    submenu: PRESETS.map((p) => ({ params: p })),
-  };
-}
+const menu: PresetBoards<MathraxParams> = {
+  boards: [5, 6, 7, 8, 9].map((o) => ({ o, diff: "easy", options: OPTIONSMASK })),
+  // The three large sizes at one tier each, which keeps the list to twelve.
+  tiers: ({ o }) => (o > 6 ? [NORMAL, NORMAL] : null),
+};
 
 // --- input -----------------------------------------------------------------
 
@@ -552,7 +538,7 @@ export const mathraxGame: Game<
   markAll,
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

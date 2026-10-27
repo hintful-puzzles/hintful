@@ -272,12 +272,10 @@ describe("dealtBoards", () => {
       ] satisfies ParamConfigItem<Q>[],
       encodeParams: (q: Q) => JSON.stringify(q),
       newDesc: () => ({ desc: "" }),
-      presets: () => ({
-        submenu: [1, 5, 9].map((size) => ({
-          title: `size ${size}`,
-          params: { size, hard: false },
-        })),
-      }),
+      menu: {
+        boards: [1, 5, 9].map((size) => ({ size, hard: false })),
+        title: (q: Q) => `size ${q.size}`,
+      },
     };
     const titles = (opts?: { every: boolean }) =>
       dealtBoards(game, opts).map((e) => e.title);

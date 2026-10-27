@@ -17,7 +17,7 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
-  type PresetMenu,
+  type PresetBoards,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -87,23 +87,15 @@ export type SinglesMistake = Point;
 
 /** Upstream's five sizes, its 8x8 and 10x10 made upright boards of about
  * their area, each at both tiers. */
-const PRESET_SIZES = [
-  [5, 5],
-  [6, 6],
-  [7, 9],
-  [9, 11],
-  [12, 12],
-];
-
-function presets(): PresetMenu<SinglesParams> {
-  const submenu: PresetMenu<SinglesParams>[] = [];
-  for (const [w, h] of PRESET_SIZES) {
-    for (const diff of ["easy", "tricky"] as const) {
-      submenu.push({ params: { w, h, diff } });
-    }
-  }
-  return { title: "Singles", submenu };
-}
+const menu: PresetBoards<SinglesParams> = {
+  boards: [
+    [5, 5],
+    [6, 6],
+    [7, 9],
+    [9, 11],
+    [12, 12],
+  ].map(([w, h]) => ({ w, h, diff: "easy" })),
+};
 
 function newUi(_state: SinglesState): SinglesUi {
   return { cursor: newCursor(), showBlackNums: false };
@@ -497,7 +489,7 @@ export const singlesGame: Game<
   id: "singles",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

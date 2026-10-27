@@ -23,7 +23,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -129,27 +129,21 @@ export function clueChar(num: number): string {
 
 // --- params --------------------------------------------------------------
 
-const PRESETS: MagnetsParams[] = [
-  { w: 5, h: 6, diff: DIFF_EASY, stripclues: false },
-  { w: 5, h: 6, diff: DIFF_TRICKY, stripclues: false },
-  { w: 5, h: 6, diff: DIFF_TRICKY, stripclues: true },
-  { w: 7, h: 8, diff: DIFF_EASY, stripclues: false },
-  { w: 7, h: 8, diff: DIFF_TRICKY, stripclues: false },
-  { w: 7, h: 8, diff: DIFF_TRICKY, stripclues: true },
-  { w: 9, h: 10, diff: DIFF_EASY, stripclues: false },
-  { w: 9, h: 10, diff: DIFF_TRICKY, stripclues: false },
-  { w: 9, h: 10, diff: DIFF_TRICKY, stripclues: true },
-];
+/** Each size at both tiers, then with its clues stripped at Tricky. */
+export const menu: PresetBoards<MagnetsParams> = {
+  boards: [
+    [5, 6],
+    [7, 8],
+    [9, 10],
+  ].flatMap(([w, h]) =>
+    [false, true].map((stripclues) => ({ w, h, diff: DIFF_EASY, stripclues })),
+  ),
+  tiers: (p) => (p.stripclues ? [DIFF_TRICKY, DIFF_TRICKY] : null),
+};
 
+/** Upstream's default: 5x6 Tricky, clues stripped. */
 export function defaultParams(): MagnetsParams {
-  return { ...PRESETS[2] }; // upstream DEFAULT_PRESET = 2
-}
-
-export function presets(): PresetMenu<MagnetsParams> {
-  return {
-    title: "Size",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
+  return { w: 5, h: 6, diff: DIFF_TRICKY, stripclues: true };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

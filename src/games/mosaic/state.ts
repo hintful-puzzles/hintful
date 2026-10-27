@@ -19,11 +19,10 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 
@@ -174,17 +173,13 @@ export const paramConfig: ParamConfigItem<MosaicParams>[] = [
   },
 ];
 
-export function presets(): PresetMenu<MosaicParams> {
-  return {
-    title: "Size",
-    ...presetGrid(paramConfig, BOARDS, {
-      tiers: (b) =>
-        b.width >= EVERY_TIER.from && b.width <= EVERY_TIER.to
-          ? null
-          : [DIFF_EASY, DIFF_EASY],
-    }),
-  };
-}
+export const menu: PresetBoards<MosaicParams> = {
+  boards: BOARDS,
+  tiers: (b) =>
+    b.width >= EVERY_TIER.from && b.width <= EVERY_TIER.to
+      ? null
+      : [DIFF_EASY, DIFF_EASY],
+};
 
 /** `WxH[h<0|1>][d<tier>]`, a bare `W` being square. The aggressiveness and
  * the tier are generator-only. Upstream writes `h` only where it differs

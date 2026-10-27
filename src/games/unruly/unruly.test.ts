@@ -5,7 +5,7 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/desc-error.ts";
-import { describeParams } from "../../engine/param-label.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { BACKSPACE, CURSOR_LEFT, CURSOR_RIGHT, DELETE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -34,7 +34,6 @@ import {
   encodeParams,
   executeMove,
   newState,
-  presets,
   status,
   type UnrulyParams,
   type UnrulyState,
@@ -88,7 +87,7 @@ describe("params", () => {
   });
 
   it("accepts the offered presets", () => {
-    const menu = presets();
+    const menu = presetMenu(unrulyGame);
     for (const entry of menu.submenu ?? []) {
       const p = entry.params;
       expect(p).toBeDefined();

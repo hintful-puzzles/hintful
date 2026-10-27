@@ -15,7 +15,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -73,29 +73,25 @@ export interface Island {
 
 const DIFFICULTY_NAMES: readonly string[] = tierNames(3);
 
-/** A board of this size at every tier. */
-const presetsOfSize = (w: number, h = w): BridgesParams[] =>
-  DIFFICULTY_NAMES.map((_, difficulty) => ({
-    w,
-    h,
-    maxb: 2,
-    islands: 30,
-    expansion: 10,
-    allowloops: true,
-    difficulty,
-  }));
+const board = (w: number, h = w): BridgesParams => ({
+  w,
+  h,
+  maxb: 2,
+  islands: 30,
+  expansion: 10,
+  allowloops: true,
+  difficulty: 0,
+});
 
 /** Upstream's 7x7 and 10x10 at every tier, its 15x15 made an upright 13x17,
  * and one board where loops are forbidden. */
-export const BRIDGES_PRESETS: BridgesParams[] = [
-  ...presetsOfSize(7),
-  ...presetsOfSize(10),
-  ...presetsOfSize(13, 17),
-  { ...presetsOfSize(10)[1], allowloops: false },
-];
+export const menu: PresetBoards<BridgesParams> = {
+  boards: [board(7), board(10), board(13, 17)],
+  variants: [{ ...board(10), difficulty: 1, allowloops: false }],
+};
 
 export function defaultParams(): BridgesParams {
-  return { ...BRIDGES_PRESETS[0] };
+  return board(7);
 }
 
 // --- Params codec (bridges.c decode_params/encode_params/validate_params) ---

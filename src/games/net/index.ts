@@ -45,7 +45,6 @@ import {
   RIGHT_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
-import { presetGrid } from "../../engine/preset-grid.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
@@ -783,15 +782,13 @@ export const netGame: Game<
   id: "net",
 
   defaultParams,
-  presets: () => ({
-    title: "Net",
-    ...presetGrid(netGame.paramConfig ?? [], BOARDS, {
-      // The hint finishes nearly every 5x5 board the solver stops on, so an
-      // Unreasonable one takes seconds to find, too long for the menu.
-      tiers: (b) => (b.w === 5 && b.h === 5 ? [DIFF_EASY, DIFF_EASY] : null),
-      variants: VARIANTS,
-    }),
-  }),
+  menu: {
+    boards: BOARDS,
+    // The hint finishes nearly every 5x5 board the solver stops on, so an
+    // Unreasonable one takes seconds to find, too long for the menu.
+    tiers: (b) => (b.w === 5 && b.h === 5 ? [DIFF_EASY, DIFF_EASY] : null),
+    variants: VARIANTS,
+  },
   encodeParams,
   decodeParams,
   validateParams,

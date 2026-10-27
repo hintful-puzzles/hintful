@@ -17,6 +17,7 @@ import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { observeMidend } from "../../engine/testing/drive-midend.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { type BridgesHighlights, narrate } from "./hint.ts";
 import { say } from "./hint-text.ts";
@@ -28,7 +29,6 @@ import {
   bridgesRecordingPass,
 } from "./solver.ts";
 import {
-  BRIDGES_PRESETS,
   type BridgesMove,
   type BridgesParams,
   type BridgesState,
@@ -40,6 +40,9 @@ import {
   type Island,
   newStateFromDesc,
 } from "./state.ts";
+
+/** Every line of the menu, in order. */
+const BRIDGES_PRESETS = leafPresets(bridgesGame).map((l) => l.params);
 
 type Kind = BridgesReason["kind"];
 

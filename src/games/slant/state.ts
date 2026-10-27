@@ -24,7 +24,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -107,25 +107,17 @@ export interface SlantMistake extends Point {
 
 // --- params --------------------------------------------------------------
 
-const PRESETS: SlantParams[] = [
+const BOARDS: SlantParams[] = [
   { w: 5, h: 5, diff: DIFF_EASY },
-  { w: 5, h: 5, diff: DIFF_HARD },
   { w: 8, h: 8, diff: DIFF_EASY },
-  { w: 8, h: 8, diff: DIFF_HARD },
   { w: 10, h: 12, diff: DIFF_EASY },
-  { w: 10, h: 12, diff: DIFF_HARD },
 ];
 
 export function defaultParams(): SlantParams {
   return { w: 8, h: 8, diff: DIFF_EASY };
 }
 
-export function presets(): PresetMenu<SlantParams> {
-  return {
-    title: "Size",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
-}
+export const menu: PresetBoards<SlantParams> = { boards: BOARDS };
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SlantParams>[] = [

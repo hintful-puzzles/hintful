@@ -24,7 +24,6 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -86,9 +85,9 @@ import {
   defaultParams,
   encodeParams,
   getSpoke,
+  menu,
   newState,
   newUi,
-  PRESETS,
   paramConfig,
   SPOKE_DIRS,
   SPOKE_EMPTY,
@@ -106,15 +105,6 @@ import {
   textFormat,
   validateParams,
 } from "./state.ts";
-
-// --- presets ----------------------------------------------------------------
-
-function presets(): PresetMenu<SpokesParams> {
-  return {
-    title: "Spokes",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
-}
 
 // --- input ------------------------------------------------------------------
 
@@ -558,7 +548,7 @@ export const spokesGame: Game<
   id: "spokes",
 
   defaultParams,
-  presets,
+  menu,
   encodeParams,
   decodeParams,
   validateParams,

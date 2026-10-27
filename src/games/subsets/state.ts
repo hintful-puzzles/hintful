@@ -28,7 +28,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
-import type { PresetMenu } from "../../engine/game.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 
@@ -157,17 +157,13 @@ export function defaultParams(): SubsetsParams {
   return { w: 4, h: 4, n: 4, diff: DIFF_EASY };
 }
 
-export function presets(): PresetMenu<SubsetsParams> {
-  // Upstream offers a single preset (the sole legal board shape); the tier is
-  // the only axis this game has to vary, so it is the whole menu.
-  return {
-    title: "Subsets",
-    submenu: DIFF_NAMES.map((name, diff) => ({
-      title: `4x4 Size 4 ${name}`,
-      params: { w: 4, h: 4, n: 4, diff },
-    })),
-  };
-}
+/** Upstream offers a single preset (the sole legal board shape); the tier is
+ * the only axis this game has to vary, so it is the whole menu. The tier is
+ * the only field the params declare, so each line names the board itself. */
+export const menu: PresetBoards<SubsetsParams> = {
+  boards: [{ w: 4, h: 4, n: 4, diff: DIFF_EASY }],
+  title: (p) => `4x4 Size 4 ${DIFF_NAMES[p.diff]}`,
+};
 
 export function encodeParams(p: SubsetsParams, full: boolean): string {
   const base = `${p.w}x${p.h}n${p.n}`;

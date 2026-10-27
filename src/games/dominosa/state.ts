@@ -22,7 +22,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { PresetMenu } from "../../engine/game.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 
@@ -88,29 +88,15 @@ export function defaultParams(): DominosaParams {
   return { n: 6, diff: DIFF_BASIC, tall: true };
 }
 
-// Upstream's twelve, each order's tiers together. Order 6 is the one size
-// at every tier.
-const PRESETS: ReadonlyArray<readonly [number, number]> = [
-  [3, DIFF_TRIVIAL],
-  [4, DIFF_TRIVIAL],
-  [4, DIFF_BASIC],
-  [5, DIFF_TRIVIAL],
-  [5, DIFF_BASIC],
-  [6, DIFF_TRIVIAL],
-  [6, DIFF_BASIC],
-  [6, DIFF_HARD],
-  [6, DIFF_EXTREME],
-  [7, DIFF_BASIC],
-  [8, DIFF_BASIC],
-  [9, DIFF_BASIC],
-];
-
-export function presets(): PresetMenu<DominosaParams> {
-  return {
-    title: "Dominosa",
-    submenu: PRESETS.map(([n, diff]) => ({ params: { n, diff, tall: true } })),
-  };
-}
+/** Upstream's twelve. Order 6 is the one size at every tier. */
+export const menu: PresetBoards<DominosaParams> = {
+  boards: [3, 4, 5, 6, 7, 8, 9].map((n) => ({ n, diff: DIFF_TRIVIAL, tall: true })),
+  tiers: ({ n }) => {
+    if (n === 6) return null;
+    if (n === 3) return [DIFF_TRIVIAL, DIFF_TRIVIAL];
+    return n < 6 ? [DIFF_TRIVIAL, DIFF_BASIC] : [DIFF_BASIC, DIFF_BASIC];
+  },
+};
 
 export function encodeParams(p: DominosaParams, full: boolean): string {
   let s = `${p.n}${p.tall ? "t" : ""}`;

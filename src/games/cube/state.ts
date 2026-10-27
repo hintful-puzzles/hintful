@@ -2,6 +2,7 @@
 
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, parseDimensions } from "../../engine/params.ts";
 import { enumGridSquares, type GridSquare, gridArea } from "./grid.ts";
 import { alignPolyKeys, SOLIDS, SolidType } from "./solids.ts";
@@ -73,15 +74,14 @@ export function hasPresetSize(p: CubeParams): boolean {
   return size !== undefined && size[0] === p.d1 && size[1] === p.d2;
 }
 
-export function presets() {
-  const solids = [
+export const menu: PresetBoards<CubeParams> = {
+  boards: [
     SolidType.Cube,
     SolidType.Tetrahedron,
     SolidType.Octahedron,
     SolidType.Icosahedron,
-  ];
-  return { title: "Type", submenu: solids.map((s) => ({ params: presetOf(s) })) };
-}
+  ].map(presetOf),
+};
 
 const SOLID_LETTERS = "tcoi";
 

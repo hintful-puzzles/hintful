@@ -22,6 +22,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import {
   digitOf,
@@ -124,24 +125,26 @@ export interface UnequalParams {
   diff: Difficulty;
 }
 
-/** One size of one mode, from tier `first` to tier `last`. */
-const row = (order: number, mode: Mode, first: Difficulty, last: Difficulty) =>
-  DIFFS.slice(DIFFS.indexOf(first), DIFFS.indexOf(last) + 1).map(
-    (diff): UnequalParams => ({ order, mode, diff }),
-  );
-
 /**
  * Each mode as a small board at the lower tiers and a large one at the upper.
  * Every cell deals in a fraction of a second: 6x6 is left to the Custom
  * dialog only to keep the two modes' menu short.
  */
-export const PRESETS: UnequalParams[] = [
-  ...row(4, "unequal", "trivial", "trivial"),
-  ...row(5, "unequal", "trivial", "extreme"),
-  ...row(7, "unequal", "tricky", "recursive"),
-  ...row(5, "adjacent", "trivial", "extreme"),
-  ...row(7, "adjacent", "tricky", "recursive"),
-];
+export const menu: PresetBoards<UnequalParams> = {
+  boards: [
+    { order: 4, mode: "unequal", diff: "trivial" },
+    { order: 5, mode: "unequal", diff: "trivial" },
+    { order: 7, mode: "unequal", diff: "trivial" },
+    { order: 5, mode: "adjacent", diff: "trivial" },
+    { order: 7, mode: "adjacent", diff: "trivial" },
+  ],
+  tiers: ({ order }) => {
+    const span = (first: Difficulty, last: Difficulty) =>
+      [diffToLevel(first), diffToLevel(last)] as const;
+    if (order === 4) return span("trivial", "trivial");
+    return order === 5 ? span("trivial", "extreme") : span("tricky", "recursive");
+  },
+};
 
 export function defaultParams(): UnequalParams {
   return { order: 4, mode: "unequal", diff: "easy" };

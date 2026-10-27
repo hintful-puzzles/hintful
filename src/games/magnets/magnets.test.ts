@@ -7,6 +7,7 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/desc-error.ts";
+import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
@@ -78,7 +79,7 @@ describe("magnets params", () => {
         walk(s as { params?: MagnetsParams; submenu?: unknown[] }),
       );
     };
-    for (const p of walk(magnetsGame.presets())) {
+    for (const p of walk(presetMenu(magnetsGame))) {
       expect(paramsError(magnetsGame, p, true)).toBeNull();
     }
   });

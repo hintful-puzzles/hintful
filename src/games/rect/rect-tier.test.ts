@@ -13,6 +13,7 @@ import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { DESC_CONTRADICTORY, DESC_NOT_UNIQUE } from "../../engine/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
+import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
@@ -471,7 +472,7 @@ describe("the tier in Rectangles' params", () => {
   });
 
   it("offers the two largest sizes on the menu at Easy alone", () => {
-    const menu = (rectGame.presets().submenu ?? []).map((item) =>
+    const menu = (presetMenu(rectGame).submenu ?? []).map((item) =>
       rectGame.encodeParams(item.params as RectParams, true),
     );
     expect(menu).toEqual([

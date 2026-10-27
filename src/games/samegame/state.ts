@@ -1,6 +1,6 @@
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
@@ -120,15 +120,22 @@ export function validateParams(p: SamegameParams, _full: boolean): string | null
 
 // --- presets ----------------------------------------------------------
 
-export function presets() {
-  const p = (w: number, h: number, ncols: number): { params: SamegameParams } => ({
-    params: { w, h, ncols, scoresub: 2 },
-  });
-  return {
-    title: "Type",
-    submenu: [p(5, 5, 3), p(5, 10, 3), p(10, 15, 3), p(10, 15, 4), p(15, 20, 4)],
-  };
-}
+const board = (w: number, h: number, ncols: number): SamegameParams => ({
+  w,
+  h,
+  ncols,
+  scoresub: 2,
+});
+
+export const menu: PresetBoards<SamegameParams> = {
+  boards: [
+    board(5, 5, 3),
+    board(5, 10, 3),
+    board(10, 15, 3),
+    board(10, 15, 4),
+    board(15, 20, 4),
+  ],
+};
 
 // --- generator ---------------------------------------------------------
 

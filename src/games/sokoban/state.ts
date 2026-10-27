@@ -18,7 +18,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -120,10 +120,13 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
 ]);
 
-export function presets(): PresetMenu<SokobanParams> {
-  const p = (w: number, h: number) => ({ params: { w, h } });
-  return { title: "Type", submenu: [p(10, 12), p(12, 16), p(16, 20)] };
-}
+export const menu: PresetBoards<SokobanParams> = {
+  boards: [
+    { w: 10, h: 12 },
+    { w: 12, h: 16 },
+    { w: 16, h: 20 },
+  ],
+};
 
 // --- state ------------------------------------------------------------
 

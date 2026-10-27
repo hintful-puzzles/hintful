@@ -30,7 +30,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, letters, num, paramsCodec, size } from "../../engine/params-codec.ts";
@@ -101,26 +101,44 @@ export interface SaladParams {
 // Each shape at Easy, and at Normal where its tier gate deals quickly: forty
 // deals each took at most 0.2 s on a loaded machine. 7x7 and up reached 1.7 s
 // or more, and every other Number Ball shape seconds.
-export const PRESETS: readonly SaladParams[] = [
-  { order: 4, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },
-  { order: 5, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },
-  { order: 5, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_HARD },
-  { order: 5, nums: 4, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },
-  { order: 5, nums: 4, mode: GAMEMODE_LETTERS, diff: DIFF_HARD },
-  { order: 6, nums: 4, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },
-  { order: 6, nums: 4, mode: GAMEMODE_LETTERS, diff: DIFF_HARD },
-  { order: 7, nums: 4, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },
-  { order: 8, nums: 5, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },
-  { order: 5, nums: 3, mode: GAMEMODE_NUMBERS, diff: DIFF_EASY },
-  { order: 5, nums: 4, mode: GAMEMODE_NUMBERS, diff: DIFF_HARD },
-  { order: 6, nums: 3, mode: GAMEMODE_NUMBERS, diff: DIFF_EASY },
-  { order: 6, nums: 4, mode: GAMEMODE_NUMBERS, diff: DIFF_EASY },
-  { order: 7, nums: 4, mode: GAMEMODE_NUMBERS, diff: DIFF_EASY },
-  { order: 8, nums: 5, mode: GAMEMODE_NUMBERS, diff: DIFF_EASY },
-];
+export const menu: PresetBoards<SaladParams> = {
+  boards: [
+    ...[
+      [4, 3],
+      [5, 3],
+      [5, 4],
+      [6, 4],
+      [7, 4],
+      [8, 5],
+    ].map(([order, nums]) => ({
+      order,
+      nums,
+      mode: GAMEMODE_LETTERS,
+      diff: DIFF_EASY,
+    })),
+    ...[
+      [5, 3],
+      [5, 4],
+      [6, 3],
+      [6, 4],
+      [7, 4],
+      [8, 5],
+    ].map(([order, nums]) => ({
+      order,
+      nums,
+      mode: GAMEMODE_NUMBERS,
+      diff: DIFF_EASY,
+    })),
+  ],
+  tiers: ({ order, nums, mode }) => {
+    if (mode === GAMEMODE_LETTERS)
+      return order === 5 || order === 6 ? null : [DIFF_EASY, DIFF_EASY];
+    return order === 5 && nums === 4 ? [DIFF_HARD, DIFF_HARD] : [DIFF_EASY, DIFF_EASY];
+  },
+};
 
 export function defaultParams(): SaladParams {
-  return { ...PRESETS[0] };
+  return { order: 4, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_EASY };
 }
 
 /** The `A~C` / `1~3` symbol range a params label and the status bar show. */

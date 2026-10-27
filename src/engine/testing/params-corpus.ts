@@ -8,7 +8,7 @@
  *
  * **Where the cases come from**, in order of how much they are worth:
  *
- * 1. **Every preset**, walked out of `presets()`. These are the params a player
+ * 1. **Every preset**, walked out of `presetMenu(game)`. These are the params a player
  *    can actually reach from the menu, and they are the only cases that cover a
  *    game's modes and tiers as the game itself intends them.
  * 2. **Every difficulty tier**, applied to the default params through the

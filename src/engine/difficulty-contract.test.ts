@@ -33,6 +33,7 @@ import {
 } from "./difficulty.ts";
 import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
+import { presetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
@@ -211,7 +212,7 @@ for (const { id, game, contract, tiers } of tiered) {
       // distinct encoding, i.e. that a game which gained a rung also extended its
       // `DIFF_CHARS`. Without that, two tiers share a game ID and the board a
       // shared link produces is not the board that was shared.
-      const base = firstLeaf(game.presets());
+      const base = firstLeaf(presetMenu(game));
       const seen = new Set<string>();
       for (let tier = 0; tier < tiers.length; tier++) {
         const p = withTier(game, base, tier);
@@ -232,7 +233,7 @@ for (const { id, game, contract, tiers } of tiered) {
     });
 
     it("does not mutate the params it is given", () => {
-      const base = firstLeaf(game.presets());
+      const base = firstLeaf(presetMenu(game));
       const before = JSON.stringify(base);
       for (let tier = 0; tier < tiers.length; tier++) withTier(game, base, tier);
       tierOf(game, base);

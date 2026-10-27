@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
 import type { Game, ParamConfigItem, PresetMenu } from "./game.ts";
 import { Midend } from "./midend.ts";
+import { presetMenu } from "./param-label.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 
 beforeAll(registerAllGames);
@@ -61,7 +62,7 @@ function makeGame(
   return {
     id: "__cfg__",
     defaultParams: () => ({ w: 5, flag: false, mode: 1 }),
-    presets: () => ({ title: "root", params: { w: 5, flag: false, mode: 1 } }),
+    menu: { boards: [{ w: 5, flag: false, mode: 1 }] },
     encodeParams: (p) => `${p.w}${p.flag ? "f" : ""}m${p.mode}`,
     decodeParams: (s) => {
       const m = /^(\d+)(f?)m(\d+)$/.exec(s);
@@ -187,7 +188,7 @@ function allPresetParams(game: AnyGame): unknown[] {
       out.push(menu.params);
     }
   };
-  walk(game.presets());
+  walk(presetMenu(game));
   return out;
 }
 

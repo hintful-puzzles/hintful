@@ -1,6 +1,6 @@
 import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -60,17 +60,15 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 /** Upstream's three squares, with an upright board after each of the two
  * larger. */
-export function presets() {
-  return {
-    submenu: [
-      [3, 3],
-      [4, 4],
-      [4, 5],
-      [5, 5],
-      [5, 6],
-    ].map(([w, h]) => ({ params: { w, h } })),
-  };
-}
+export const menu: PresetBoards<FifteenParams> = {
+  boards: [
+    [3, 3],
+    [4, 4],
+    [4, 5],
+    [5, 5],
+    [5, 6],
+  ].map(([w, h]) => ({ w, h })),
+};
 
 // --- completion / parity ----------------------------------------------
 

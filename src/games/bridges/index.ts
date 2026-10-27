@@ -12,7 +12,6 @@ import {
   type GamePref,
   type HintStep,
   type HintTrackVerdict,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -76,7 +75,6 @@ import {
 } from "./render.ts";
 import { type BridgesSpan, runMapCheck, solveFromScratch } from "./solver.ts";
 import {
-  BRIDGES_PRESETS,
   type BridgesMistake,
   type BridgesMove,
   type BridgesOp,
@@ -94,6 +92,7 @@ import {
   G_MARKV,
   G_NOLINEH,
   G_NOLINEV,
+  menu,
   newStateFromDesc,
   paramConfig,
   textFormat,
@@ -526,12 +525,7 @@ export const bridgesGame: Game<
   preferredTileSize: PREFERRED_TILE_SIZE,
 
   defaultParams,
-  presets(): PresetMenu<BridgesParams> {
-    return {
-      title: "Type",
-      submenu: BRIDGES_PRESETS.map((p) => ({ params: { ...p } })),
-    };
-  },
+  menu,
   encodeParams,
   decodeParams,
   validateParams,
