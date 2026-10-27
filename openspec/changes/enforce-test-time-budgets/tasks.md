@@ -13,7 +13,8 @@
 - [ ] 2.1 The hint walks' blocks: for each, what it catches that the games'
       own hint tests do not, with a planted defect; trim or retire by that.
 - [ ] 2.2 Each other file over budget, heaviest first, by D5's treatments;
-      each cut states at its site what still covers the configuration.
+      each cut states at its site what still covers the configuration. A
+      test kept for dev work moves out of every default suite (D5).
 - [ ] 2.3 Re-measure: every file and the suite within budget on CI, and the
       three typical commits' plans within the commit ceiling.
 

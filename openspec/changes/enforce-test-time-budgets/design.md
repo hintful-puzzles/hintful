@@ -58,6 +58,11 @@ the plan runs and records. A refused commit is split, or its expensive file
 taken to the push, never bypassed.
 
 **D5. The cut, by the guide's treatments in order of how little they lose.**
+The owner (2026-10-27): a heavy test that is useful for development work may
+stay in the codebase, as long as it is in no default suite, neither the hooks
+nor CI. So "defer" is a full option for a test kept for dev use (the slow
+tier, run by path), not only for one whose cost is board size, and the
+budgets bind only what the default suites run.
 For each file over budget, heaviest first: write down a board a search finds
 (describeHintPins); turn a seed or board count down where the property is
 systematic; defer to the slow tier where the cost is board size; retire where
