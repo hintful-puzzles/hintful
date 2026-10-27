@@ -115,8 +115,9 @@ export function presets(): PresetMenu<FloodParams> {
       named("12x12 Easy", 12, 12, 5),
       named("12x12 Medium", 12, 12, 2),
       named("12x12 Hard", 12, 12, 0),
-      named("16x16 Medium", 16, 16, 2),
-      named("16x16 Hard", 16, 16, 0),
+      // Upstream's 16x16, made an upright board of about its area.
+      named("14x18 Medium", 14, 18, 2),
+      named("14x18 Hard", 14, 18, 0),
       p(12, 12, 3, 0),
       p(12, 12, 4, 0),
     ],

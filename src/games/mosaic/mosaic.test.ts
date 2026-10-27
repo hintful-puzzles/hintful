@@ -172,7 +172,7 @@ describe("Mosaic params", () => {
     expect(titles).toEqual([
       "3x3 Easy",
       "5x5 Easy",
-      ...["10x10", "15x15", "25x25"].flatMap(everyTier),
+      ...["8x10", "12x15", "20x25"].flatMap(everyTier),
       "50x50 Easy",
     ]);
     expect(

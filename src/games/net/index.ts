@@ -118,9 +118,9 @@ import {
 } from "./state.ts";
 
 /* ----------------------------------------------------------------------
- * Presets: upstream's five sizes, at both tiers from 7x7 up, and one wrapping
- * board. The other sizes wrap, and wrap at Unreasonable, from the Custom
- * dialog.
+ * Presets: upstream's five sizes, its 9x9 made an upright 9x11, at both tiers
+ * from 7x7 up, and one wrapping board. The other sizes wrap, and wrap at
+ * Unreasonable, from the Custom dialog.
  */
 const board = (w: number, h: number, wrapping = false): NetParams => ({
   w,
@@ -132,7 +132,7 @@ const board = (w: number, h: number, wrapping = false): NetParams => ({
 const BOARDS: readonly NetParams[] = [
   board(5, 5),
   board(7, 7),
-  board(9, 9),
+  board(9, 11),
   board(11, 11),
   board(11, 13),
 ];

@@ -101,9 +101,10 @@ export const PRESETS: UndeadParams[] = [
   { w: 5, h: 5, diff: "easy" },
   { w: 5, h: 5, diff: "normal" },
   { w: 5, h: 5, diff: "tricky" },
-  { w: 7, h: 7, diff: "easy" },
-  { w: 7, h: 7, diff: "normal" },
-  { w: 7, h: 7, diff: "tricky" },
+  // Upstream's 7x7, made an upright board of about its area.
+  { w: 6, h: 8, diff: "easy" },
+  { w: 6, h: 8, diff: "normal" },
+  { w: 6, h: 8, diff: "tricky" },
 ];
 
 /** upstream DEFAULT_PRESET = 1 (4x4 Normal). */

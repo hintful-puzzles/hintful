@@ -9,7 +9,7 @@ import { dealt } from "./testing/dealt.ts";
 import { enrolledIn, membersNotMentioning } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
 import { planContinuity } from "./testing/plan-continuity.ts";
-import { leafPresets } from "./testing/presets.ts";
+import { boardWidth, leafPresets } from "./testing/presets.ts";
 import type { Point } from "./types.ts";
 
 type Step = { highlights: { targets: Point[] } };
@@ -188,7 +188,7 @@ const OVER_BOUND: Record<string, string> = {};
  * through the candidate walk, and so are outside the measurement below: derived
  * from their source, and each held by a guard of its own that the entry names.
  *
- * `planContinuity` reads a plan through a grid (`grid`, its width `w` or `√n`,
+ * `planContinuity` reads a plan through a grid (`grid`, its width the params',
  * cells as `{x, y}`), which is what every candidate game is and what a graph
  * game is not. Asserted as an exact set, so the next game to take the frontier directly
  * is not left out of every continuity check in silence.
@@ -208,7 +208,7 @@ describe("the continuity instrument", () => {
    * the strike cleared a "1"; either way it counts a jump.
    */
   it("reads a board that is not square, and a note by the value it stands for", () => {
-    type S = { w: number; grid: Uint8Array; pencil: Int32Array };
+    type S = { grid: Uint8Array; pencil: Int32Array };
     type M = { strike: [number, number] } | { place: [number, number] };
     const bit = (n: number): number => 1 << (n - 1);
     const game = {
@@ -245,12 +245,11 @@ describe("the continuity instrument", () => {
       },
     };
     const state: S = {
-      w: 3,
       grid: Uint8Array.from([1, 3, 0, 0, 0, 0]),
       pencil: Int32Array.from([0, 0, bit(2), bit(1), bit(1) | bit(2), bit(2) | bit(3)]),
     };
     expect(
-      planContinuity(game as unknown as Parameters<typeof planContinuity>[0], state),
+      planContinuity(game as unknown as Parameters<typeof planContinuity>[0], state, 3),
     ).toEqual({
       positions: 1,
       jumps: 0,
@@ -298,7 +297,7 @@ describe("hint plans continue from their previous step where they can", () => {
             const ui = reading
               ? { ...(game.newUi(state) as object), candidateReading: reading }
               : undefined;
-            const c = planContinuity(game, state, ui);
+            const c = planContinuity(game, state, boardWidth(game, p.params), ui);
             jumps += c.jumps;
             avoidable += c.avoidable;
           }

@@ -57,10 +57,14 @@ export interface PearlParams {
   difficulty: number;
 }
 
-const DEFAULT_PRESET = 3;
+/** 8x8 Tricky, upstream's default. */
+const DEFAULT_PRESET = 5;
+/** Upstream's four sizes, its 12x8 stood upright, and an upright 6x8. */
 const PEARL_PRESETS: readonly PearlParams[] = [
   { w: 6, h: 6, difficulty: DIFF_EASY },
   { w: 6, h: 6, difficulty: DIFF_TRICKY },
+  { w: 6, h: 8, difficulty: DIFF_EASY },
+  { w: 6, h: 8, difficulty: DIFF_TRICKY },
   { w: 8, h: 8, difficulty: DIFF_EASY },
   { w: 8, h: 8, difficulty: DIFF_TRICKY },
   { w: 10, h: 10, difficulty: DIFF_EASY },

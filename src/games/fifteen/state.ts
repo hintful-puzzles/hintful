@@ -58,8 +58,18 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 // --- presets ----------------------------------------------------------
 
+/** Upstream's three squares, with an upright board after each of the two
+ * larger. */
 export function presets() {
-  return { submenu: [3, 4, 5].map((n) => ({ params: { w: n, h: n } })) };
+  return {
+    submenu: [
+      [3, 3],
+      [4, 4],
+      [4, 5],
+      [5, 5],
+      [5, 6],
+    ].map(([w, h]) => ({ params: { w, h } })),
+  };
 }
 
 // --- completion / parity ----------------------------------------------

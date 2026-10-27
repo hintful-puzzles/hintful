@@ -398,6 +398,13 @@ What a game does to fit it:
   grid.** A second kind of board may instead have a short run of tiers.
 - **The smallest board at the easiest tier goes first.** `puzzle-screen.ts`
   deals the first preset to a player who has never chosen.
+- **A game whose rules take a rectangle offers half its sizes as
+  rectangles** (`engine-params`, "A game that takes rectangles offers them on
+  its menu"), counted once whatever tiers they come at and rounded down.
+  Make them upright, of about the area of the square they replace: a tall
+  board fits a phone held upright. The check asks the game's own
+  `validateParams` whether it takes one, so a game that needs a square is
+  not asked.
 
 Also:
 

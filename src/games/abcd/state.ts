@@ -93,7 +93,12 @@ const board = (w: number, n: number, rules: Partial<AbcdParams> = {}): AbcdParam
 });
 
 /** The sizes the menu offers at both tiers. */
-const BOARDS: AbcdParams[] = [board(4, 4), board(5, 4), board(6, 4), board(7, 4)];
+const BOARDS: AbcdParams[] = [
+  board(4, 4),
+  board(5, 4),
+  board(5, 4, { h: 7 }),
+  board(6, 4, { h: 8 }),
+];
 
 /** One board for each thing that is neither a size nor a tier: clues hidden,
  * the rule against diagonal touching (which needs five letters, so nothing
@@ -101,7 +106,7 @@ const BOARDS: AbcdParams[] = [board(4, 4), board(5, 4), board(6, 4), board(7, 4)
 const VARIANTS: AbcdParams[] = [
   board(5, 4, { removenums: true }),
   board(6, 5, { diag: true }),
-  board(7, 3),
+  board(6, 3, { h: 9 }),
 ];
 
 /** Every shape of board on the menu, at Easy: what a census of the three

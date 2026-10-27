@@ -123,13 +123,15 @@ export const PRESETS: readonly SpokesParams[] = [
   { w: 4, h: 4, diff: "easy" },
   { w: 4, h: 4, diff: "tricky" },
   { w: 4, h: 4, diff: "hard" },
-  { w: 6, h: 6, diff: "easy" },
-  { w: 6, h: 6, diff: "tricky" },
-  { w: 6, h: 6, diff: "hard" },
+  // Upstream's 6x6, made an upright board of about its area.
+  { w: 5, h: 7, diff: "easy" },
+  { w: 5, h: 7, diff: "tricky" },
+  { w: 5, h: 7, diff: "hard" },
 ];
 
 export function defaultParams(): SpokesParams {
-  return { ...PRESETS[3] };
+  // Upstream's default, which a shared ID's missing fields are read from.
+  return { w: 6, h: 6, diff: "easy" };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

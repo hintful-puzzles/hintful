@@ -73,11 +73,11 @@ export interface Island {
 
 const DIFFICULTY_NAMES: readonly string[] = tierNames(3);
 
-/** A square board of this size at every tier. */
-const presetsOfSize = (size: number): BridgesParams[] =>
+/** A board of this size at every tier. */
+const presetsOfSize = (w: number, h = w): BridgesParams[] =>
   DIFFICULTY_NAMES.map((_, difficulty) => ({
-    w: size,
-    h: size,
+    w,
+    h,
     maxb: 2,
     islands: 30,
     expansion: 10,
@@ -85,12 +85,12 @@ const presetsOfSize = (size: number): BridgesParams[] =>
     difficulty,
   }));
 
-/** Square 7, 10 and 15 boards at every tier, as upstream ships them, and one
- * board where loops are forbidden. */
+/** Upstream's 7x7 and 10x10 at every tier, its 15x15 made an upright 13x17,
+ * and one board where loops are forbidden. */
 export const BRIDGES_PRESETS: BridgesParams[] = [
   ...presetsOfSize(7),
   ...presetsOfSize(10),
-  ...presetsOfSize(15),
+  ...presetsOfSize(13, 17),
   { ...presetsOfSize(10)[1], allowloops: false },
 ];
 

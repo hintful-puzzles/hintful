@@ -171,14 +171,14 @@ describe("spokes params", () => {
   // The top tier reads `Unreasonable` where upstream says `Hard`, but keeps the
   // `"hard"` key and the `h` character, so a game ID still names the same board
   // (the round-trip test above asserts it).
-  it("offers the six upstream presets, defaulting to 6x6 Easy", () => {
+  it("offers 4x4 and an upright 5x7 at every tier, defaulting to 6x6 Easy", () => {
     const menu = presetMenu(spokesGame);
     // Every size crossed with every tier, in that order — asserted as the
     // *shape* rather than as six literal strings, because the tier words are the
     // collection's and come from `DIFF_NAMES`: a literal list here would be a
     // second copy of them.
     expect(menu.submenu?.map((e) => e.title)).toEqual(
-      ["4x4", "6x6"].flatMap((size) => DIFF_NAMES.map((tier) => `${size} ${tier}`)),
+      ["4x4", "5x7"].flatMap((size) => DIFF_NAMES.map((tier) => `${size} ${tier}`)),
     );
     expect(spokesGame.defaultParams()).toEqual({ w: 6, h: 6, diff: "easy" });
   });

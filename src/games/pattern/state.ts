@@ -127,11 +127,13 @@ export interface PatternMistake {
 
 // --- params --------------------------------------------------------------
 
-const BOARDS: PatternParams[] = [10, 15, 20, 25, 30].map((n) => ({
-  w: n,
-  h: n,
-  diff: DIFF_EASY,
-}));
+const BOARDS: PatternParams[] = [
+  [10, 10],
+  [10, 15],
+  [15, 15],
+  [20, 25],
+  [30, 30],
+].map(([w, h]) => ({ w, h, diff: DIFF_EASY }));
 
 export function defaultParams(): PatternParams {
   return { w: 15, h: 15, diff: DIFF_EASY };

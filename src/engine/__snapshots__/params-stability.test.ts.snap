@@ -5,13 +5,13 @@ exports[`encoded params are byte-stable > abcd 1`] = `
 preset:ABCD/4x4 Easy, 4 letters  full=4x4n4de  brief=4x4n4
 preset:ABCD/4x4 Unreasonable, 4 letters  full=4x4n4du  brief=4x4n4
 preset:ABCD/5x5 Unreasonable, 4 letters  full=5x5n4du  brief=5x5n4
-preset:ABCD/6x6 Easy, 4 letters  full=6x6n4de  brief=6x6n4
-preset:ABCD/6x6 Unreasonable, 4 letters  full=6x6n4du  brief=6x6n4
-preset:ABCD/7x7 Easy, 4 letters  full=7x7n4de  brief=7x7n4
-preset:ABCD/7x7 Unreasonable, 4 letters  full=7x7n4du  brief=7x7n4
+preset:ABCD/5x7 Easy, 4 letters  full=5x7n4de  brief=5x7n4
+preset:ABCD/5x7 Unreasonable, 4 letters  full=5x7n4du  brief=5x7n4
+preset:ABCD/6x8 Easy, 4 letters  full=6x8n4de  brief=6x8n4
+preset:ABCD/6x8 Unreasonable, 4 letters  full=6x8n4du  brief=6x8n4
 preset:ABCD/5x5 Easy, 4 letters, clues hidden  full=5x5n4Rde  brief=5x5n4
 preset:ABCD/6x6 Easy, 5 letters, no diagonal  full=6x6n5Dde  brief=6x6n5D
-preset:ABCD/7x7 Easy, 3 letters  full=7x7n3de  brief=7x7n3
+preset:ABCD/6x9 Easy, 3 letters  full=6x9n3de  brief=6x9n3
 bump:w  full=6x5n4de  brief=6x5n4
 bump:h  full=5x6n4de  brief=5x6n4
 bump:n  full=5x5n5de  brief=5x5n5
@@ -46,9 +46,9 @@ flip:symmetrical  full=6x7mOdeS  brief=6x7mO"
 exports[`encoded params are byte-stable > blackbox 1`] = `
 "default  full=w8h8m5M5
 preset:Black Box/5x5, 3 balls  full=w5h5m3M3
-preset:Black Box/8x8, 3-6 balls  full=w8h8m3M6
+preset:Black Box/6x8, 3-6 balls  full=w6h8m3M6
+preset:Black Box/8x10, 4-10 balls  full=w8h10m4M10
 preset:Black Box/10x10, 5 balls  full=w10h10m5M5
-preset:Black Box/10x10, 4-10 balls  full=w10h10m4M10
 bump:w  full=w9h8m5M5
 bump:h  full=w8h9m5M5
 bump:minballs  full=w8h8m6M5
@@ -61,10 +61,10 @@ preset:Boats/6x6 Easy, size 3  full=6x6f3de,3,2,1  brief=6x6f3,3,2,1
 preset:Boats/6x6 Normal, size 3  full=6x6f3dn,3,2,1  brief=6x6f3,3,2,1
 preset:Boats/6x6 Tricky, size 3  full=6x6f3dt,3,2,1  brief=6x6f3,3,2,1
 preset:Boats/6x6 Hard, size 3  full=6x6f3dh,3,2,1  brief=6x6f3,3,2,1
-preset:Boats/8x8 Easy, size 4  full=8x8f4de,4,3,2,1  brief=8x8f4,4,3,2,1
-preset:Boats/8x8 Normal, size 4  full=8x8f4dn,4,3,2,1  brief=8x8f4,4,3,2,1
-preset:Boats/8x8 Tricky, size 4  full=8x8f4dt,4,3,2,1  brief=8x8f4,4,3,2,1
-preset:Boats/8x8 Hard, size 4  full=8x8f4dh,4,3,2,1  brief=8x8f4,4,3,2,1
+preset:Boats/7x9 Easy, size 4  full=7x9f4de,4,3,2,1  brief=7x9f4,4,3,2,1
+preset:Boats/7x9 Normal, size 4  full=7x9f4dn,4,3,2,1  brief=7x9f4,4,3,2,1
+preset:Boats/7x9 Tricky, size 4  full=7x9f4dt,4,3,2,1  brief=7x9f4,4,3,2,1
+preset:Boats/7x9 Hard, size 4  full=7x9f4dh,4,3,2,1  brief=7x9f4,4,3,2,1
 preset:Boats/10x10 Easy, size 4  full=10x10f4de,4,3,2,1  brief=10x10f4,4,3,2,1
 preset:Boats/10x10 Tricky, size 4  full=10x10f4dt,4,3,2,1  brief=10x10f4,4,3,2,1
 preset:Boats/10x10 Hard, size 4  full=10x10f4dh,4,3,2,1  brief=10x10f4,4,3,2,1
@@ -89,9 +89,9 @@ preset:Type/7x7 Tricky  full=7x7i30e10m2d2  brief=7x7m2
 preset:Type/10x10 Easy  full=10x10i30e10m2d0  brief=10x10m2
 preset:Type/10x10 Normal  full=10x10i30e10m2d1  brief=10x10m2
 preset:Type/10x10 Tricky  full=10x10i30e10m2d2  brief=10x10m2
-preset:Type/15x15 Easy  full=15x15i30e10m2d0  brief=15x15m2
-preset:Type/15x15 Normal  full=15x15i30e10m2d1  brief=15x15m2
-preset:Type/15x15 Tricky  full=15x15i30e10m2d2  brief=15x15m2
+preset:Type/13x17 Easy  full=13x17i30e10m2d0  brief=13x17m2
+preset:Type/13x17 Normal  full=13x17i30e10m2d1  brief=13x17m2
+preset:Type/13x17 Tricky  full=13x17i30e10m2d2  brief=13x17m2
 preset:Type/10x10 Normal, no loops  full=10x10i30e10m2Ld1  brief=10x10m2L
 bump:w  full=8x7i30e10m2d0  brief=8x7m2
 bump:h  full=7x8i30e10m2d0  brief=7x8m2
@@ -104,12 +104,11 @@ flip:allowloops  full=7x7i30e10m2Ld0  brief=7x7m2L"
 exports[`encoded params are byte-stable > clusters 1`] = `
 "default  full=7x7de  brief=7x7
 preset:Clusters/7x7 Normal  full=7x7dt  brief=7x7
-preset:Clusters/8x8 Easy  full=8x8de  brief=8x8
-preset:Clusters/8x8 Normal  full=8x8dt  brief=8x8
+preset:Clusters/6x8 Easy  full=6x8de  brief=6x8
+preset:Clusters/6x8 Normal  full=6x8dt  brief=6x8
 preset:Clusters/9x9 Easy  full=9x9de  brief=9x9
 preset:Clusters/9x9 Normal  full=9x9dt  brief=9x9
-preset:Clusters/10x10 Easy  full=10x10de  brief=10x10
-preset:Clusters/10x10 Normal  full=10x10dt  brief=10x10
+preset:Clusters/9x11 Easy  full=9x11de  brief=9x11
 bump:w  full=8x7de  brief=8x7
 bump:h  full=7x8de  brief=7x8"
 `;
@@ -119,11 +118,11 @@ exports[`encoded params are byte-stable > crossing 1`] = `
 preset:Crossing/5x5 Unreasonable  full=5x5du  brief=5x5
 preset:Crossing/7x7 Easy  full=7x7de  brief=7x7
 preset:Crossing/7x7 Unreasonable  full=7x7du  brief=7x7
-preset:Crossing/9x9 Easy  full=9x9de  brief=9x9
-preset:Crossing/9x9 Unreasonable  full=9x9du  brief=9x9
-preset:Crossing/11x11 Easy  full=11x11de  brief=11x11
-preset:Crossing/11x11 Unreasonable  full=11x11du  brief=11x11
-preset:Crossing/13x13 Easy  full=13x13de  brief=13x13
+preset:Crossing/7x9 Easy  full=7x9de  brief=7x9
+preset:Crossing/7x9 Unreasonable  full=7x9du  brief=7x9
+preset:Crossing/9x11 Easy  full=9x11de  brief=9x11
+preset:Crossing/9x11 Unreasonable  full=9x11du  brief=9x11
+preset:Crossing/11x13 Easy  full=11x13de  brief=11x13
 preset:Crossing/9x9 symmetric Easy  full=9x9Sde  brief=9x9
 preset:Crossing/15x15 symmetric Easy  full=15x15Sde  brief=15x15
 bump:w  full=6x5de  brief=6x5
@@ -160,9 +159,10 @@ flip:tall  full=6db  brief=6"
 exports[`encoded params are byte-stable > fifteen 1`] = `
 "default  full=4x4
 preset:3x3  full=3x3
+preset:4x5  full=4x5
 preset:5x5  full=5x5
-bump:w  full=5x4
-bump:h  full=4x5"
+preset:5x6  full=5x6
+bump:w  full=5x4"
 `;
 
 exports[`encoded params are byte-stable > filling 1`] = `
@@ -180,9 +180,9 @@ exports[`encoded params are byte-stable > flip 1`] = `
 "default  full=5x5c  brief=5x5
 preset:Flip/Crosses/Crosses: 3x3  full=3x3c  brief=3x3
 preset:Flip/Crosses/Crosses: 4x4  full=4x4c  brief=4x4
-preset:Flip/Random/Random: 3x3  full=3x3r  brief=3x3
-preset:Flip/Random/Random: 4x4  full=4x4r  brief=4x4
-preset:Flip/Random/Random: 5x5  full=5x5r  brief=5x5
+preset:Flip/Random/Random: 3x4  full=3x4r  brief=3x4
+preset:Flip/Random/Random: 4x5  full=4x5r  brief=4x5
+preset:Flip/Random/Random: 5x6  full=5x6r  brief=5x6
 bump:w  full=6x5c  brief=6x5
 bump:h  full=5x6c  brief=5x6"
 `;
@@ -191,8 +191,8 @@ exports[`encoded params are byte-stable > flood 1`] = `
 "default  full=12x12c6m5  brief=12x12
 preset:Type/12x12 Medium  full=12x12c6m2  brief=12x12
 preset:Type/12x12 Hard  full=12x12c6m0  brief=12x12
-preset:Type/16x16 Medium  full=16x16c6m2  brief=16x16
-preset:Type/16x16 Hard  full=16x16c6m0  brief=16x16
+preset:Type/14x18 Medium  full=14x18c6m2  brief=14x18
+preset:Type/14x18 Hard  full=14x18c6m0  brief=14x18
 preset:Type/12x12, 3 colors  full=12x12c3m0  brief=12x12
 preset:Type/12x12, 4 colors  full=12x12c4m0  brief=12x12
 bump:w  full=13x12c6m5  brief=13x12
@@ -206,8 +206,8 @@ exports[`encoded params are byte-stable > galaxies 1`] = `
 preset:Galaxies/7x7 Unreasonable  full=7x7du  brief=7x7
 preset:Galaxies/10x10 Easy  full=10x10dn  brief=10x10
 preset:Galaxies/10x10 Unreasonable  full=10x10du  brief=10x10
-preset:Galaxies/15x15 Easy  full=15x15dn  brief=15x15
-preset:Galaxies/15x15 Unreasonable  full=15x15du  brief=15x15
+preset:Galaxies/13x17 Easy  full=13x17dn  brief=13x17
+preset:Galaxies/13x17 Unreasonable  full=13x17du  brief=13x17
 bump:w  full=8x7dn  brief=8x7
 bump:h  full=7x8dn  brief=7x8"
 `;
@@ -265,9 +265,9 @@ preset:Light Up/7x7 Unreasonable  full=7x7b20s4d2  brief=7x7
 preset:Light Up/10x10 Easy  full=10x10b20s2d0  brief=10x10
 preset:Light Up/10x10 Normal  full=10x10b20s2d1  brief=10x10
 preset:Light Up/10x10 Unreasonable  full=10x10b20s2d2  brief=10x10
-preset:Light Up/14x14 Easy  full=14x14b20s2d0  brief=14x14
-preset:Light Up/14x14 Normal  full=14x14b20s2d1  brief=14x14
-preset:Light Up/14x14 Unreasonable  full=14x14b20s2d2  brief=14x14
+preset:Light Up/12x16 Easy  full=12x16b20s2d0  brief=12x16
+preset:Light Up/12x16 Normal  full=12x16b20s2d1  brief=12x16
+preset:Light Up/12x16 Unreasonable  full=12x16b20s2d2  brief=12x16
 bump:w  full=8x7b20s4d0  brief=8x7
 bump:h  full=7x8b20s4d0  brief=7x8
 bump:blackpc  full=7x7b21s4d0  brief=7x7
@@ -360,15 +360,18 @@ exports[`encoded params are byte-stable > mosaic 1`] = `
 "default  full=10x10de  brief=10x10
 preset:Size/3x3 Easy  full=3x3de  brief=3x3
 preset:Size/5x5 Easy  full=5x5de  brief=5x5
-preset:Size/10x10 Normal  full=10x10dn  brief=10x10
-preset:Size/10x10 Unreasonable  full=10x10du  brief=10x10
-preset:Size/15x15 Easy  full=15x15de  brief=15x15
-preset:Size/15x15 Normal  full=15x15dn  brief=15x15
-preset:Size/15x15 Unreasonable  full=15x15du  brief=15x15
-preset:Size/25x25 Easy  full=25x25de  brief=25x25
-preset:Size/25x25 Normal  full=25x25dn  brief=25x25
-preset:Size/25x25 Unreasonable  full=25x25du  brief=25x25
+preset:Size/8x10 Easy  full=8x10de  brief=8x10
+preset:Size/8x10 Normal  full=8x10dn  brief=8x10
+preset:Size/8x10 Unreasonable  full=8x10du  brief=8x10
+preset:Size/12x15 Easy  full=12x15de  brief=12x15
+preset:Size/12x15 Normal  full=12x15dn  brief=12x15
+preset:Size/12x15 Unreasonable  full=12x15du  brief=12x15
+preset:Size/20x25 Easy  full=20x25de  brief=20x25
+preset:Size/20x25 Normal  full=20x25dn  brief=20x25
+preset:Size/20x25 Unreasonable  full=20x25du  brief=20x25
 preset:Size/50x50 Easy  full=50x50h0de  brief=50x50
+tier:1  full=10x10dn  brief=10x10
+tier:2  full=10x10du  brief=10x10
 bump:width  full=11x10de  brief=11x10
 bump:height  full=10x11de  brief=10x11
 flip:aggressive  full=10x10h0de  brief=10x10"
@@ -378,8 +381,8 @@ exports[`encoded params are byte-stable > net 1`] = `
 "default  full=5x5de  brief=5x5
 preset:Net/7x7 Easy  full=7x7de  brief=7x7
 preset:Net/7x7 Unreasonable  full=7x7du  brief=7x7
-preset:Net/9x9 Easy  full=9x9de  brief=9x9
-preset:Net/9x9 Unreasonable  full=9x9du  brief=9x9
+preset:Net/9x11 Easy  full=9x11de  brief=9x11
+preset:Net/9x11 Unreasonable  full=9x11du  brief=9x11
 preset:Net/11x11 Easy  full=11x11de  brief=11x11
 preset:Net/11x11 Unreasonable  full=11x11du  brief=11x11
 preset:Net/11x13 Easy  full=11x13de  brief=11x13
@@ -399,9 +402,9 @@ preset:Netslide/3x3 hard  full=3x3w
 preset:Netslide/4x4 easy  full=4x4b1  brief=4x4
 preset:Netslide/4x4 medium  full=4x4
 preset:Netslide/4x4 hard  full=4x4w
-preset:Netslide/5x5 easy  full=5x5b1  brief=5x5
-preset:Netslide/5x5 medium  full=5x5
-preset:Netslide/5x5 hard  full=5x5w
+preset:Netslide/4x6 easy  full=4x6b1  brief=4x6
+preset:Netslide/4x6 medium  full=4x6
+preset:Netslide/4x6 hard  full=4x6w
 bump:w  full=4x3b1  brief=4x3
 bump:h  full=3x4b1  brief=3x4
 flip:wrapping  full=3x3wb1  brief=3x3w
@@ -468,11 +471,11 @@ exports[`encoded params are byte-stable > pattern 1`] = `
 "default  full=15x15de  brief=15x15
 preset:Pattern/10x10 Easy  full=10x10de  brief=10x10
 preset:Pattern/10x10 Unreasonable  full=10x10du  brief=10x10
+preset:Pattern/10x15 Easy  full=10x15de  brief=10x15
+preset:Pattern/10x15 Unreasonable  full=10x15du  brief=10x15
 preset:Pattern/15x15 Unreasonable  full=15x15du  brief=15x15
-preset:Pattern/20x20 Easy  full=20x20de  brief=20x20
-preset:Pattern/20x20 Unreasonable  full=20x20du  brief=20x20
-preset:Pattern/25x25 Easy  full=25x25de  brief=25x25
-preset:Pattern/25x25 Unreasonable  full=25x25du  brief=25x25
+preset:Pattern/20x25 Easy  full=20x25de  brief=20x25
+preset:Pattern/20x25 Unreasonable  full=20x25du  brief=20x25
 preset:Pattern/30x30 Easy  full=30x30de  brief=30x30
 preset:Pattern/30x30 Unreasonable  full=30x30du  brief=30x30
 bump:w  full=16x15de  brief=16x15
@@ -483,6 +486,8 @@ exports[`encoded params are byte-stable > pearl 1`] = `
 "default  full=8x8dt  brief=8x8
 preset:Pearl/6x6 Easy  full=6x6de  brief=6x6
 preset:Pearl/6x6 Normal  full=6x6dt  brief=6x6
+preset:Pearl/6x8 Easy  full=6x8de  brief=6x8
+preset:Pearl/6x8 Normal  full=6x8dt  brief=6x8
 preset:Pearl/8x8 Easy  full=8x8de  brief=8x8
 preset:Pearl/10x10 Easy  full=10x10de  brief=10x10
 preset:Pearl/10x10 Normal  full=10x10dt  brief=10x10
@@ -522,15 +527,15 @@ bump:h  full=6x10de  brief=6x10"
 exports[`encoded params are byte-stable > rect 1`] = `
 "default  full=7x7de  brief=7x7
 preset:Rectangles/7x7 Unreasonable  full=7x7du  brief=7x7
-preset:Rectangles/9x9 Easy  full=9x9de  brief=9x9
-preset:Rectangles/9x9 Unreasonable  full=9x9du  brief=9x9
+preset:Rectangles/8x10 Easy  full=8x10de  brief=8x10
+preset:Rectangles/8x10 Unreasonable  full=8x10du  brief=8x10
 preset:Rectangles/11x11 Easy  full=11x11de  brief=11x11
 preset:Rectangles/11x11 Unreasonable  full=11x11du  brief=11x11
-preset:Rectangles/13x13 Easy  full=13x13de  brief=13x13
-preset:Rectangles/13x13 Unreasonable  full=13x13du  brief=13x13
+preset:Rectangles/12x14 Easy  full=12x14de  brief=12x14
+preset:Rectangles/12x14 Unreasonable  full=12x14du  brief=12x14
 preset:Rectangles/15x15 Easy  full=15x15de  brief=15x15
 preset:Rectangles/15x15 Unreasonable  full=15x15du  brief=15x15
-preset:Rectangles/17x17 Easy  full=17x17de  brief=17x17
+preset:Rectangles/15x19 Easy  full=15x19de  brief=15x19
 preset:Rectangles/19x19 Easy  full=19x19de  brief=19x19
 bump:w  full=8x7de  brief=8x7
 bump:h  full=7x8de  brief=7x8
@@ -544,12 +549,12 @@ preset:Rome/4x4 Normal  full=4x4dn  brief=4x4
 preset:Rome/4x4 Tricky  full=4x4dt  brief=4x4
 preset:Rome/6x6 Normal  full=6x6dn  brief=6x6
 preset:Rome/6x6 Tricky  full=6x6dt  brief=6x6
-preset:Rome/8x8 Easy  full=8x8de  brief=8x8
-preset:Rome/8x8 Normal  full=8x8dn  brief=8x8
-preset:Rome/8x8 Tricky  full=8x8dt  brief=8x8
-preset:Rome/10x10 Easy  full=10x10de  brief=10x10
-preset:Rome/10x10 Normal  full=10x10dn  brief=10x10
-preset:Rome/10x10 Tricky  full=10x10dt  brief=10x10
+preset:Rome/6x8 Easy  full=6x8de  brief=6x8
+preset:Rome/6x8 Normal  full=6x8dn  brief=6x8
+preset:Rome/6x8 Tricky  full=6x8dt  brief=6x8
+preset:Rome/8x10 Easy  full=8x10de  brief=8x10
+preset:Rome/8x10 Normal  full=8x10dn  brief=8x10
+preset:Rome/8x10 Tricky  full=8x10dt  brief=8x10
 bump:w  full=7x6de  brief=7x6
 bump:h  full=6x7de  brief=6x7"
 `;
@@ -592,18 +597,18 @@ exports[`encoded params are byte-stable > seismic 1`] = `
 preset:Seismic/Seismic/Seismic: 4x4 Easy  full=4x4de  brief=4x4
 preset:Seismic/Seismic/Seismic: 4x4 Normal  full=4x4dh  brief=4x4
 preset:Seismic/Seismic/Seismic: 6x6 Normal  full=6x6dh  brief=6x6
-preset:Seismic/Seismic/Seismic: 7x7 Easy  full=7x7de  brief=7x7
-preset:Seismic/Seismic/Seismic: 7x7 Normal  full=7x7dh  brief=7x7
-preset:Seismic/Seismic/Seismic: 8x8 Easy  full=8x8de  brief=8x8
-preset:Seismic/Seismic/Seismic: 8x8 Normal  full=8x8dh  brief=8x8
+preset:Seismic/Seismic/Seismic: 6x8 Easy  full=6x8de  brief=6x8
+preset:Seismic/Seismic/Seismic: 6x8 Normal  full=6x8dh  brief=6x8
+preset:Seismic/Seismic/Seismic: 7x9 Easy  full=7x9de  brief=7x9
+preset:Seismic/Seismic/Seismic: 7x9 Normal  full=7x9dh  brief=7x9
 preset:Seismic/Tectonic/Tectonic: 4x4 Easy  full=4x4Tde  brief=4x4T
 preset:Seismic/Tectonic/Tectonic: 4x4 Normal  full=4x4Tdh  brief=4x4T
 preset:Seismic/Tectonic/Tectonic: 6x6 Easy  full=6x6Tde  brief=6x6T
 preset:Seismic/Tectonic/Tectonic: 6x6 Normal  full=6x6Tdh  brief=6x6T
-preset:Seismic/Tectonic/Tectonic: 7x7 Easy  full=7x7Tde  brief=7x7T
-preset:Seismic/Tectonic/Tectonic: 7x7 Normal  full=7x7Tdh  brief=7x7T
-preset:Seismic/Tectonic/Tectonic: 8x8 Easy  full=8x8Tde  brief=8x8T
-preset:Seismic/Tectonic/Tectonic: 8x8 Normal  full=8x8Tdh  brief=8x8T
+preset:Seismic/Tectonic/Tectonic: 6x8 Easy  full=6x8Tde  brief=6x8T
+preset:Seismic/Tectonic/Tectonic: 6x8 Normal  full=6x8Tdh  brief=6x8T
+preset:Seismic/Tectonic/Tectonic: 7x9 Easy  full=7x9Tde  brief=7x9T
+preset:Seismic/Tectonic/Tectonic: 7x9 Normal  full=7x9Tdh  brief=7x9T
 bump:w  full=7x6de  brief=7x6
 bump:h  full=6x7de  brief=6x7"
 `;
@@ -613,10 +618,10 @@ exports[`encoded params are byte-stable > separate 1`] = `
 preset:Size/4x4 Easy, 4 letters  full=4x4n4de  brief=4x4n4
 preset:Size/4x4 Unreasonable, 4 letters  full=4x4n4du  brief=4x4n4
 preset:Size/5x5 Unreasonable, 5 letters  full=5x5n5du  brief=5x5n5
-preset:Size/6x6 Easy, 4 letters  full=6x6n4de  brief=6x6n4
-preset:Size/6x6 Unreasonable, 4 letters  full=6x6n4du  brief=6x6n4
-preset:Size/6x6 Easy, 6 letters  full=6x6n6de  brief=6x6n6
-preset:Size/6x6 Unreasonable, 6 letters  full=6x6n6du  brief=6x6n6
+preset:Size/6x7 Easy, 6 letters  full=6x7n6de  brief=6x7n6
+preset:Size/6x7 Unreasonable, 6 letters  full=6x7n6du  brief=6x7n6
+preset:Size/6x8 Easy, 4 letters  full=6x8n4de  brief=6x8n4
+preset:Size/6x8 Unreasonable, 4 letters  full=6x8n4du  brief=6x8n4
 bump:w  full=6x5n5de  brief=6x5n5
 bump:h  full=5x6n5de  brief=5x6n5
 bump:k  full=5x5n6de  brief=5x5n6"
@@ -627,10 +632,10 @@ exports[`encoded params are byte-stable > signpost 1`] = `
 preset:Signpost/4x4 Unreasonable  full=4x4cdu  brief=4x4
 preset:Signpost/5x5 Easy  full=5x5cde  brief=5x5
 preset:Signpost/5x5 Unreasonable  full=5x5cdu  brief=5x5
-preset:Signpost/6x6 Easy  full=6x6cde  brief=6x6
-preset:Signpost/6x6 Unreasonable  full=6x6cdu  brief=6x6
-preset:Signpost/7x7 Easy  full=7x7cde  brief=7x7
-preset:Signpost/7x7 Unreasonable  full=7x7cdu  brief=7x7
+preset:Signpost/5x7 Easy  full=5x7cde  brief=5x7
+preset:Signpost/5x7 Unreasonable  full=5x7cdu  brief=5x7
+preset:Signpost/6x8 Easy  full=6x8cde  brief=6x8
+preset:Signpost/6x8 Unreasonable  full=6x8cdu  brief=6x8
 preset:Signpost/4x4 Easy, free ends  full=4x4de  brief=4x4
 preset:Signpost/5x5 Easy, free ends  full=5x5de  brief=5x5
 bump:w  full=5x4cde  brief=5x4
@@ -642,10 +647,10 @@ exports[`encoded params are byte-stable > singles 1`] = `
 preset:Singles/5x5 Normal  full=5x5dk  brief=5x5
 preset:Singles/6x6 Easy  full=6x6de  brief=6x6
 preset:Singles/6x6 Normal  full=6x6dk  brief=6x6
-preset:Singles/8x8 Easy  full=8x8de  brief=8x8
-preset:Singles/8x8 Normal  full=8x8dk  brief=8x8
-preset:Singles/10x10 Easy  full=10x10de  brief=10x10
-preset:Singles/10x10 Normal  full=10x10dk  brief=10x10
+preset:Singles/7x9 Easy  full=7x9de  brief=7x9
+preset:Singles/7x9 Normal  full=7x9dk  brief=7x9
+preset:Singles/9x11 Easy  full=9x11de  brief=9x11
+preset:Singles/9x11 Normal  full=9x11dk  brief=9x11
 preset:Singles/12x12 Easy  full=12x12de  brief=12x12
 preset:Singles/12x12 Normal  full=12x12dk  brief=12x12
 bump:w  full=6x5de  brief=6x5
@@ -723,8 +728,11 @@ exports[`encoded params are byte-stable > spokes 1`] = `
 preset:Spokes/4x4 Easy  full=4x4de  brief=4x4
 preset:Spokes/4x4 Normal  full=4x4dt  brief=4x4
 preset:Spokes/4x4 Unreasonable  full=4x4dh  brief=4x4
-preset:Spokes/6x6 Normal  full=6x6dt  brief=6x6
-preset:Spokes/6x6 Unreasonable  full=6x6dh  brief=6x6
+preset:Spokes/5x7 Easy  full=5x7de  brief=5x7
+preset:Spokes/5x7 Normal  full=5x7dt  brief=5x7
+preset:Spokes/5x7 Unreasonable  full=5x7dh  brief=5x7
+tier:1  full=6x6dt  brief=6x6
+tier:2  full=6x6dh  brief=6x6
 bump:w  full=7x6de  brief=7x6
 bump:h  full=6x7de  brief=6x7"
 `;
@@ -756,8 +764,8 @@ exports[`encoded params are byte-stable > sticks 1`] = `
 preset:Sticks/5x5 Easy  full=5x5b20s2de  brief=5x5
 preset:Sticks/5x5 Unreasonable  full=5x5b20s2du  brief=5x5
 preset:Sticks/7x7 Unreasonable  full=7x7b20s2du  brief=7x7
-preset:Sticks/10x10 Easy  full=10x10b20s2de  brief=10x10
-preset:Sticks/10x10 Unreasonable  full=10x10b20s2du  brief=10x10
+preset:Sticks/8x10 Easy  full=8x10b20s2de  brief=8x10
+preset:Sticks/8x10 Unreasonable  full=8x10b20s2du  brief=8x10
 bump:w  full=8x7b20s2de  brief=8x7
 bump:h  full=7x8b20s2de  brief=7x8
 bump:blackpc  full=7x7b21s2de  brief=7x7
@@ -777,8 +785,8 @@ exports[`encoded params are byte-stable > tents 1`] = `
 preset:Size/8x8 Normal  full=8x8dt  brief=8x8
 preset:Size/10x10 Easy  full=10x10de  brief=10x10
 preset:Size/10x10 Normal  full=10x10dt  brief=10x10
-preset:Size/15x15 Easy  full=15x15de  brief=15x15
-preset:Size/15x15 Normal  full=15x15dt  brief=15x15
+preset:Size/13x17 Easy  full=13x17de  brief=13x17
+preset:Size/13x17 Normal  full=13x17dt  brief=13x17
 bump:w  full=9x8de  brief=9x8
 bump:h  full=8x9de  brief=8x9"
 `;
@@ -822,9 +830,9 @@ exports[`encoded params are byte-stable > twiddle 1`] = `
 preset:Type/3x3 rows only  full=3x3n2r
 preset:Type/3x3 orientable  full=3x3n2o
 preset:Type/4x4  full=4x4n2
-preset:Type/4x4, rotating 3x3 blocks  full=4x4n3
+preset:Type/4x5, rotating 3x3 blocks  full=4x5n3
 preset:Type/5x5, rotating 3x3 blocks  full=5x5n3
-preset:Type/6x6, rotating 4x4 blocks  full=6x6n4
+preset:Type/6x7, rotating 4x4 blocks  full=6x7n4
 bump:w  full=4x3n2
 bump:h  full=3x4n2
 bump:n  full=3x3n3
@@ -838,9 +846,9 @@ preset:Undead/4x4 Unreasonable  full=4x4dt  brief=4x4
 preset:Undead/5x5 Easy  full=5x5de  brief=5x5
 preset:Undead/5x5 Normal  full=5x5dn  brief=5x5
 preset:Undead/5x5 Unreasonable  full=5x5dt  brief=5x5
-preset:Undead/7x7 Easy  full=7x7de  brief=7x7
-preset:Undead/7x7 Normal  full=7x7dn  brief=7x7
-preset:Undead/7x7 Unreasonable  full=7x7dt  brief=7x7
+preset:Undead/6x8 Easy  full=6x8de  brief=6x8
+preset:Undead/6x8 Normal  full=6x8dn  brief=6x8
+preset:Undead/6x8 Unreasonable  full=6x8dt  brief=6x8
 bump:w  full=5x4dn  brief=5x4
 bump:h  full=4x5dn  brief=4x5"
 `;
@@ -873,12 +881,12 @@ preset:6x6 Easy  full=6x6dt  brief=6x6
 preset:6x6 Normal  full=6x6de  brief=6x6
 preset:8x8 Normal  full=8x8de  brief=8x8
 preset:8x8 Tricky  full=8x8dn  brief=8x8
-preset:10x10 Easy  full=10x10dt  brief=10x10
-preset:10x10 Normal  full=10x10de  brief=10x10
-preset:10x10 Tricky  full=10x10dn  brief=10x10
-preset:14x14 Easy  full=14x14dt  brief=14x14
-preset:14x14 Normal  full=14x14de  brief=14x14
-preset:14x14 Tricky  full=14x14dn  brief=14x14
+preset:8x12 Easy  full=8x12dt  brief=8x12
+preset:8x12 Normal  full=8x12de  brief=8x12
+preset:8x12 Tricky  full=8x12dn  brief=8x12
+preset:12x16 Easy  full=12x16dt  brief=12x16
+preset:12x16 Normal  full=12x16de  brief=12x16
+preset:12x16 Tricky  full=12x16dn  brief=12x16
 preset:8x8 Normal, unique  full=8x8ude  brief=8x8u
 bump:w2  full=9x8dt  brief=9x8
 bump:h2  full=8x9dt  brief=8x9

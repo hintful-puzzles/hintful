@@ -130,6 +130,15 @@ const LONG_NARRATIONS: {
     why: PEARL_CARRIES_ON,
   },
   {
+    games: ["rome"],
+    rungs: ["opposite"],
+    why:
+      "It names the neighbor, its area, and both of the neighbor's ways with " +
+      "what each would make, a loop or two arrows alike, which is the whole " +
+      "of why the square is struck (rome's 8x10 Tricky, 2026-10-27: 122 " +
+      "characters with a left neighbor; a right one is two longer).",
+  },
+  {
     games: ["crossing"],
     rungs: ["crossRuns"],
     why:

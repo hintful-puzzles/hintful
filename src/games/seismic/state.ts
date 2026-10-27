@@ -101,27 +101,20 @@ export interface SeismicParams {
   mode: number;
 }
 
+/** Each size at both tiers in both modes: upstream's 4x4 and 6x6, its 7x7
+ * made an upright 6x8, and past upstream's range (its generator stopped at
+ * 7x7) an upright 7x9, within `MAX_PRESET_CELLS`, which is set by the tail of
+ * a deal and not the median. */
 export const PRESETS: readonly SeismicParams[] = [
-  { w: 4, h: 4, diff: DIFF_EASY, mode: MODE_SEISMIC },
-  { w: 4, h: 4, diff: DIFF_EASY, mode: MODE_TECTONIC },
-  { w: 4, h: 4, diff: DIFF_NORMAL, mode: MODE_SEISMIC },
-  { w: 4, h: 4, diff: DIFF_NORMAL, mode: MODE_TECTONIC },
-  { w: 6, h: 6, diff: DIFF_EASY, mode: MODE_SEISMIC },
-  { w: 6, h: 6, diff: DIFF_EASY, mode: MODE_TECTONIC },
-  { w: 6, h: 6, diff: DIFF_NORMAL, mode: MODE_SEISMIC },
-  { w: 6, h: 6, diff: DIFF_NORMAL, mode: MODE_TECTONIC },
-  { w: 7, h: 7, diff: DIFF_EASY, mode: MODE_SEISMIC },
-  { w: 7, h: 7, diff: DIFF_EASY, mode: MODE_TECTONIC },
-  { w: 7, h: 7, diff: DIFF_NORMAL, mode: MODE_SEISMIC },
-  { w: 7, h: 7, diff: DIFF_NORMAL, mode: MODE_TECTONIC },
-  // Past upstream's range (its generator stopped at 7×7): the largest board whose
-  // *worst* observed generation stays near two seconds — see `MAX_PRESET_CELLS`,
-  // which is set by the tail and not the median.
-  { w: 8, h: 8, diff: DIFF_EASY, mode: MODE_SEISMIC },
-  { w: 8, h: 8, diff: DIFF_EASY, mode: MODE_TECTONIC },
-  { w: 8, h: 8, diff: DIFF_NORMAL, mode: MODE_SEISMIC },
-  { w: 8, h: 8, diff: DIFF_NORMAL, mode: MODE_TECTONIC },
-];
+  [4, 4],
+  [6, 6],
+  [6, 8],
+  [7, 9],
+].flatMap(([w, h]) =>
+  [DIFF_EASY, DIFF_NORMAL].flatMap((diff) =>
+    [MODE_SEISMIC, MODE_TECTONIC].map((mode) => ({ w, h, diff, mode })),
+  ),
+);
 
 const DEFAULT_PRESET = 4;
 

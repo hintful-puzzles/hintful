@@ -12,7 +12,7 @@ import { paramsError } from "./params.ts";
 import { MENU_LINES, MENU_SECTION_LINES } from "./preset-grid.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { rulesetField } from "./ruleset.ts";
-import { leafPresets } from "./testing/presets.ts";
+import { leafPresets, rectangleShortfall, takesRectangles } from "./testing/presets.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
 beforeAll(registerAllGames);
@@ -171,7 +171,12 @@ const MODIFIER_ON_EVERY_SIZE: Record<string, string> = {
 /** How many sizes a menu holds, by the words its size fields say. */
 function sizes(g: AnyGame, leaves: readonly { params: unknown }[]): number {
   const fields = (g.paramConfig ?? []).filter((i) => i.label?.slot === "size");
-  return new Set(leaves.map((l) => fields.map((i) => i.get(l.params)).join(" "))).size;
+  // A dimension pair's words are on its width field alone: "4x6".
+  return new Set(
+    leaves.map((l) =>
+      fields.map((i) => i.label?.words?.(l.params) ?? i.get(l.params)).join(" "),
+    ),
+  ).size;
 }
 
 describe("a rule modifier has one line of the menu", () => {
@@ -203,6 +208,18 @@ describe("a rule modifier has one line of the menu", () => {
   // at a few games' modifiers.
   itOverWholeSweep("looked at the modifiers", () => {
     expect(modifiers).toBeGreaterThan(8);
+  });
+});
+
+describe("a game that takes rectangles offers them", () => {
+  it.each(ids)("%s", (id) => {
+    expect(rectangleShortfall(game(id)), id).toBeNull();
+  });
+
+  // The population is read off each game's dimension pair, so a renamed field
+  // would empty it without a sound.
+  it("looked at the games that take rectangles", () => {
+    expect(ids.filter((id) => takesRectangles(game(id))).length).toBeGreaterThan(30);
   });
 });
 

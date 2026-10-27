@@ -17,6 +17,7 @@ import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -94,23 +95,29 @@ export interface ClustersUi {
 
 // --- params ----------------------------------------------------------------
 
-const PRESETS: ClustersParams[] = [
+const BOARDS: readonly ClustersParams[] = [
   { w: 7, h: 7, diff: DIFF_EASY },
-  { w: 7, h: 7, diff: DIFF_TRICKY },
-  { w: 8, h: 8, diff: DIFF_EASY },
-  { w: 8, h: 8, diff: DIFF_TRICKY },
+  { w: 6, h: 8, diff: DIFF_EASY },
   { w: 9, h: 9, diff: DIFF_EASY },
-  { w: 9, h: 9, diff: DIFF_TRICKY },
-  { w: 10, h: 10, diff: DIFF_EASY },
-  { w: 10, h: 10, diff: DIFF_TRICKY },
+  { w: 9, h: 11, diff: DIFF_EASY },
 ];
 
+/** The largest board the menu offers at Normal. A Normal deal's tail is long
+ * from about fifty squares up: of eight deals, the slowest 9x9 took 0.9 s,
+ * 8x10 2.1 s and 9x11 1.9 s, and one 10x10 of six took 10 s (2026-10-27). */
+const MENU_NORMAL_AREA = 81;
+
 export function defaultParams(): ClustersParams {
-  return { ...PRESETS[0] };
+  return { ...BOARDS[0] };
 }
 
 export function presets(): PresetMenu<ClustersParams> {
-  return { title: "Clusters", submenu: PRESETS.map((p) => ({ params: { ...p } })) };
+  return {
+    title: "Clusters",
+    ...presetGrid(paramConfig, BOARDS, {
+      tiers: (b) => (b.w * b.h > MENU_NORMAL_AREA ? [DIFF_EASY, DIFF_EASY] : null),
+    }),
+  };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

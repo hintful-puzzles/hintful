@@ -85,13 +85,21 @@ import {
 /** A cell whose mark contradicts the unique solution (Check & Save). */
 export type SinglesMistake = Point;
 
-const PRESET_SIZES = [5, 6, 8, 10, 12];
+/** Upstream's five sizes, its 8x8 and 10x10 made upright boards of about
+ * their area, each at both tiers. */
+const PRESET_SIZES = [
+  [5, 5],
+  [6, 6],
+  [7, 9],
+  [9, 11],
+  [12, 12],
+];
 
 function presets(): PresetMenu<SinglesParams> {
   const submenu: PresetMenu<SinglesParams>[] = [];
-  for (const d of PRESET_SIZES) {
+  for (const [w, h] of PRESET_SIZES) {
     for (const diff of ["easy", "tricky"] as const) {
-      submenu.push({ params: { w: d, h: d, diff } });
+      submenu.push({ params: { w, h, diff } });
     }
   }
   return { title: "Singles", submenu };

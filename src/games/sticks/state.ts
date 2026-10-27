@@ -116,18 +116,19 @@ export interface SticksHint {
 
 // --- params -----------------------------------------------------------------
 
-const board = (side: number): SticksParams => ({
-  w: side,
-  h: side,
+const board = (w: number, h = w): SticksParams => ({
+  w,
+  h,
   blackpc: 20,
   symm: SYMM_ROT2,
   diff: DIFF_EASY,
 });
 
-// Upstream's two sizes and a smaller one. A larger third was measured and
-// left out: one 13x13 deal took over seven seconds (2026-10-05, loaded).
-// The menu offers each at both tiers.
-const BOARDS: readonly SticksParams[] = [board(5), board(7), board(10)];
+// Upstream's 7x7, a smaller one, and an upright 8x10 in place of upstream's
+// 10x10, whose Unreasonable deal is the slower of the two past a second (the
+// slowest of four 2.3 s against 0.6 s, 2026-10-27). The menu offers each at
+// both tiers.
+const BOARDS: readonly SticksParams[] = [board(5), board(7), board(8, 10)];
 
 export function defaultParams(): SticksParams {
   return board(7);

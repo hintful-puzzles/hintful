@@ -200,7 +200,7 @@ describe("difficulty tiers", () => {
 
   it("every preset generates a board at exactly the tier it names", () => {
     const menu = presetMenu(clustersGame).submenu ?? [];
-    expect(menu.length).toBe(8);
+    expect(menu.length).toBe(7);
     for (const entry of menu) {
       const p = entry.params;
       if (!p) throw new Error("preset menu entry without params");

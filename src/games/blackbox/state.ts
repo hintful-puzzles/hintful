@@ -146,12 +146,13 @@ export function defaultParams(): BlackboxParams {
   return { w: 8, h: 8, minballs: 5, maxballs: 5 };
 }
 
+/** Upstream's five boards, the two with a range of balls made upright. */
 const PRESETS: ReadonlyArray<BlackboxParams> = [
   { w: 5, h: 5, minballs: 3, maxballs: 3 },
+  { w: 6, h: 8, minballs: 3, maxballs: 6 },
   { w: 8, h: 8, minballs: 5, maxballs: 5 },
-  { w: 8, h: 8, minballs: 3, maxballs: 6 },
+  { w: 8, h: 10, minballs: 4, maxballs: 10 },
   { w: 10, h: 10, minballs: 5, maxballs: 5 },
-  { w: 10, h: 10, minballs: 4, maxballs: 10 },
 ];
 
 /** The ball count as the params show it: `N`, or `N-M` for a range. */

@@ -99,9 +99,10 @@ const PRESETS: LightupParams[] = [
   { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, difficulty: 0 },
   { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, difficulty: 1 },
   { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, difficulty: 2 },
-  { w: 14, h: 14, blackpc: 20, symm: SYMM_ROT2, difficulty: 0 },
-  { w: 14, h: 14, blackpc: 20, symm: SYMM_ROT2, difficulty: 1 },
-  { w: 14, h: 14, blackpc: 20, symm: SYMM_ROT2, difficulty: 2 },
+  // Upstream's 14x14, made an upright board of about its area.
+  { w: 12, h: 16, blackpc: 20, symm: SYMM_ROT2, difficulty: 0 },
+  { w: 12, h: 16, blackpc: 20, symm: SYMM_ROT2, difficulty: 1 },
+  { w: 12, h: 16, blackpc: 20, symm: SYMM_ROT2, difficulty: 2 },
 ];
 
 // Difficulty 2 requires guess-and-backtrack by construction (the generator

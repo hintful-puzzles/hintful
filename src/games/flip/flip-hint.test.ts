@@ -128,7 +128,7 @@ function fewestByTrying(s: FlipState): number {
 
 describe("Flip hint plan", () => {
   it("is as short as any set of presses, on boards small enough to try them all", () => {
-    const small = PRESETS.filter((p) => p.w * p.h <= 9);
+    const small = PRESETS.filter((p) => p.w * p.h <= 12);
     expect(small.length).toBe(2);
     for (const params of small) {
       for (let n = 0; n < 8; n++) {

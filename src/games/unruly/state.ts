@@ -72,19 +72,28 @@ export interface UnrulyMistake {
 
 // --- params --------------------------------------------------------------
 
-const board = (size: number): UnrulyParams => ({
-  w2: size,
-  h2: size,
+const board = (w2: number, h2 = w2): UnrulyParams => ({
+  w2,
+  h2,
   unique: false,
   diff: DIFF_TRIVIAL,
 });
+
+/** Upstream's 6x6 and 8x8, and its 10x10 and 14x14 made upright boards of
+ * about their area. */
+const BOARDS: readonly UnrulyParams[] = [
+  board(6),
+  board(8),
+  board(8, 12),
+  board(12, 16),
+];
 
 export function defaultParams(): UnrulyParams {
   return board(8);
 }
 
 export function presets(): PresetMenu<UnrulyParams> {
-  return presetGrid(paramConfig, [6, 8, 10, 14].map(board), {
+  return presetGrid(paramConfig, BOARDS, {
     // The smallest board stops a tier short, which is the line the unique
     // board takes in a section of twelve.
     tiers: (p) => (p.w2 === 6 ? [DIFF_TRIVIAL, DIFF_EASY] : null),

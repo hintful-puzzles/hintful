@@ -116,9 +116,9 @@ export interface RectMistake {
  * Params.
  */
 
-const board = (side: number): RectParams => ({
-  w: side,
-  h: side,
+const board = (w: number, h = w): RectParams => ({
+  w,
+  h,
   expandfactor: 0,
   diff: DIFF_EASY,
 });
@@ -127,8 +127,17 @@ export function defaultParams(): RectParams {
   return board(7);
 }
 
-/** Upstream's seven sizes. */
-export const BOARDS: readonly RectParams[] = [7, 9, 11, 13, 15, 17, 19].map(board);
+/** Upstream's seven sizes, every other one made an upright board of about
+ * its area. */
+export const BOARDS: readonly RectParams[] = [
+  board(7),
+  board(8, 10),
+  board(11),
+  board(12, 14),
+  board(15),
+  board(15, 19),
+  board(19),
+];
 
 /** The Custom dialog's difficulty field, which the codec writes as well. */
 export const tierItem = searchTierItem<RectParams>(

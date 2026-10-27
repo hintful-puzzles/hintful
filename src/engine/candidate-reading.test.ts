@@ -26,7 +26,7 @@ import type { Narration } from "./hint-words.ts";
 import { dealt } from "./testing/dealt.ts";
 import { enrolledIn } from "./testing/enrollment.ts";
 import { type AnyGame, HINT_GAMES } from "./testing/hint-games.ts";
-import { dealtBoards } from "./testing/presets.ts";
+import { boardWidth, dealtBoards } from "./testing/presets.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
 const READINGS: readonly CandidateReading[] = ["implicit", "populate"];
@@ -56,8 +56,8 @@ interface Cell {
  * A board as this file reads it: one slot per element with its notes, and
  * whether the element is blank. Every note-taking game keeps its notes in
  * `pencil` (`mark-all.test.ts` reads the same field). A grid game's element is
- * a cell and its entries are `grid`, 0 for blank, with a board that is not
- * square saying its width as `w`; Map's is a region, and its entries are
+ * a cell and its entries are `grid`, 0 for blank, its width read off the
+ * params it was dealt from (`boardWidth`); Map's is a region, and its entries are
  * `coloring`, -1 for blank.
  */
 interface Board {
@@ -67,17 +67,16 @@ interface Board {
   width: number | null;
 }
 
-function boardOf(state: unknown): Board {
+function boardOf(state: unknown, width: number | null): Board {
   const s = state as {
     grid?: ArrayLike<number>;
     coloring?: ArrayLike<number>;
     pencil: ArrayLike<number>;
-    w?: number;
   };
   const { coloring, grid } = s;
   if (coloring) return { notes: s.pencil, blank: (i) => coloring[i] < 0, width: null };
   if (!grid) throw new Error("a board with neither grid nor coloring");
-  const w = typeof s.w === "number" ? s.w : Math.sqrt(s.pencil.length);
+  const w = width ?? Math.sqrt(s.pencil.length);
   if (!Number.isInteger(w)) throw new Error("a board of unknown width");
   return { notes: s.pencil, blank: (i) => grid[i] === 0, width: w };
 }
@@ -91,9 +90,9 @@ function boardOf(state: unknown): Board {
  */
 type Effect = "fill" | "note" | "strike" | "other";
 
-function effectOf(before: unknown, after: unknown): Effect {
-  const a = boardOf(before);
-  const b = boardOf(after);
+function effectOf(before: unknown, after: unknown, width: number | null): Effect {
+  const a = boardOf(before, width);
+  const b = boardOf(after, width);
   let added = 0;
   let removed = false;
   for (let i = 0; i < a.notes.length; i++) {
@@ -153,8 +152,13 @@ function premiseOf(
 
 /** The blank elements of `premise` on `state`, each with whether it carries
  * notes. */
-function blanks(state: unknown, step: { highlights?: unknown }, effect: Effect) {
-  const board = boardOf(state);
+function blanks(
+  state: unknown,
+  width: number | null,
+  step: { highlights?: unknown },
+  effect: Effect,
+) {
+  const board = boardOf(state, width);
   return premiseOf(board, step, effect)
     .filter((i) => board.blank(i))
     .map((i) => ({ element: i, noted: board.notes[i] !== 0 }));
@@ -245,6 +249,7 @@ describe("the hint-notes preference", () => {
         for (const reading of READINGS) {
           it(`${title}, ${reading}: every step is live and its premise noted when shown, and the plan finishes`, () => {
             const { desc, aux } = dealt(game, params);
+            const width = boardWidth(game, params);
             let state = game.newState(params, desc);
             const res = game.hint?.(state, aux, uiFor(game, state, reading));
             if (!res?.ok) {
@@ -263,12 +268,12 @@ describe("the hint-notes preference", () => {
               // step for a note already written, no placement in a filled cell.
               expect(game.refreshHintStep?.(step, state), step.explanation).toBe(step);
               const next = game.executeMove(state, step.move);
-              const effect = effectOf(state, next);
+              const effect = effectOf(state, next, width);
               effects.add(effect);
               // Every blank element the step reasons from shows its notes: the
               // premise is on the board, not left to be worked out
               // (docs/hints-candidates.md § "Two readings of an unmarked cell").
-              const blank = blanks(state, step, effect);
+              const blank = blanks(state, width, step, effect);
               blankPremises[reading] += blank.length;
               expect(
                 blank.filter((c) => !c.noted),

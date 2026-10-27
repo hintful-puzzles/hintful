@@ -336,10 +336,14 @@ export interface RomeUi {
 
 const DEFAULT_PRESET = 3;
 
-/** Every tier at 4x4, 6x6, 8x8 and 10x10. */
-const PRESETS: RomeParams[] = [4, 6, 8, 10].flatMap((n) =>
-  DIFF_NAMES.map((_, diff) => ({ w: n, h: n, diff })),
-);
+/** Every tier at 4x4, 6x6, 6x8 and 8x10: upstream's 8x8 and 10x10 made
+ * upright boards of about their area. */
+const PRESETS: RomeParams[] = [
+  [4, 4],
+  [6, 6],
+  [6, 8],
+  [8, 10],
+].flatMap(([w, h]) => DIFF_NAMES.map((_, diff) => ({ w, h, diff })));
 
 export function defaultParams(): RomeParams {
   return { ...PRESETS[DEFAULT_PRESET] };

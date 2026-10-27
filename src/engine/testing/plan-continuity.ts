@@ -57,10 +57,12 @@ function firingsOf(
     continuesPrevious?: boolean;
     highlights?: unknown;
   }[],
+  width: number | null,
 ): Firing[] {
   const n = (state0["grid"] as ArrayLike<number>).length;
-  // A board that is not square says its width; a Latin square need not.
-  const w = typeof state0["w"] === "number" ? state0["w"] : Math.round(Math.sqrt(n));
+  // A game with no dimension pair is square: a Latin square, a Sudoku.
+  const w = width ?? Math.sqrt(n);
+  if (!Number.isInteger(w)) throw new Error("a board of unknown width");
   const h = n / w;
   const cell = (p: Pt): number | null =>
     p.x >= 0 && p.y >= 0 && p.x < w && p.y < h ? p.y * w + p.x : null;
@@ -169,12 +171,18 @@ export interface Continuity {
   avoidable: number;
 }
 
-/** The plan `game.hint` gives for `state`, walked and measured. With no `ui`
- * the game plans on its own defaults. */
-export function planContinuity(game: AnyGame, state: unknown, ui?: object): Continuity {
+/** The plan `game.hint` gives for `state`, walked and measured. `width` is
+ * the board's (`boardWidth`), `null` for a square board. With no `ui` the
+ * game plans on its own defaults. */
+export function planContinuity(
+  game: AnyGame,
+  state: unknown,
+  width: number | null,
+  ui?: object,
+): Continuity {
   const res = game.hint?.(state, undefined, ui);
   if (!res?.ok) return { positions: 0, jumps: 0, avoidable: 0 };
-  const firings = firingsOf(game, state as Record<string, unknown>, res.steps);
+  const firings = firingsOf(game, state as Record<string, unknown>, res.steps, width);
   const out: Continuity = { positions: 0, jumps: 0, avoidable: 0 };
   // Bookkeeping is never a position or a candidate, but what it writes still
   // stands between a position and a later firing.

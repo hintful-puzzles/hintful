@@ -81,7 +81,7 @@ export const paramConfig: ParamConfigItem<SkeletonParams>[] = [
 
 const BOARDS: SkeletonParams[] = [
   { w: 6, h: 6, diff: DIFF_EASY },
-  { w: 8, h: 8, diff: DIFF_EASY },
+  { w: 6, h: 8, diff: DIFF_EASY },
 ];
 
 /** Normal, so that the first board needs both rungs and its hint draws every

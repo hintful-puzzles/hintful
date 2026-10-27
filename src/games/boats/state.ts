@@ -113,11 +113,12 @@ export function encodeFleet(fleetData: readonly number[], fleet: number): string
   return fleetData.slice(0, fleet).join(",");
 }
 
-/** Three sizes at every tier. Upstream's 10x12 with a fleet of five is a
- * Custom away: a fourth size would not fit a section of twelve. */
+/** Three sizes at every tier, upstream's 8x8 made an upright 7x9. Upstream's
+ * 10x12 with a fleet of five is a Custom away: a fourth size would not fit a
+ * section of twelve. */
 export const PRESETS: readonly Omit<BoatsParams, "fleetData">[] = [
   { w: 6, h: 6, fleet: 3 },
-  { w: 8, h: 8, fleet: 4 },
+  { w: 7, h: 9, fleet: 4 },
   { w: 10, h: 10, fleet: 4 },
 ].flatMap((board) => DIFF_NAMES.map((_, diff) => ({ ...board, diff, strip: false })));
 

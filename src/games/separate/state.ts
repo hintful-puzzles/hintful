@@ -100,8 +100,8 @@ const board = (w: number, h: number, k: number): SeparateParams => ({
 const BOARDS: readonly SeparateParams[] = [
   board(4, 4, 4),
   board(5, 5, 5),
-  board(6, 6, 4),
-  board(6, 6, 6),
+  board(6, 7, 6),
+  board(6, 8, 4),
 ];
 
 export function defaultParams(): SeparateParams {

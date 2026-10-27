@@ -477,15 +477,15 @@ describe("the tier in Rectangles' params", () => {
     expect(menu).toEqual([
       "7x7de",
       "7x7du",
-      "9x9de",
-      "9x9du",
+      "8x10de",
+      "8x10du",
       "11x11de",
       "11x11du",
-      "13x13de",
-      "13x13du",
+      "12x14de",
+      "12x14du",
       "15x15de",
       "15x15du",
-      "17x17de",
+      "15x19de",
       "19x19de",
     ]);
   });

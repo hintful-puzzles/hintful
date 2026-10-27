@@ -122,8 +122,9 @@ const PRESETS: TentsParams[] = [
   { w: 8, h: 8, diff: DIFF_TRICKY },
   { w: 10, h: 10, diff: DIFF_EASY },
   { w: 10, h: 10, diff: DIFF_TRICKY },
-  { w: 15, h: 15, diff: DIFF_EASY },
-  { w: 15, h: 15, diff: DIFF_TRICKY },
+  // Upstream's 15x15, made an upright board of about its area.
+  { w: 13, h: 17, diff: DIFF_EASY },
+  { w: 13, h: 17, diff: DIFF_TRICKY },
 ];
 
 export function defaultParams(): TentsParams {

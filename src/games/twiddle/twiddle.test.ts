@@ -122,9 +122,9 @@ describe("Twiddle presets", () => {
       "3x3",
       "3x3 orientable",
       "4x4",
-      "4x4, rotating 3x3 blocks",
+      "4x5, rotating 3x3 blocks",
       "5x5, rotating 3x3 blocks",
-      "6x6, rotating 4x4 blocks",
+      "6x7, rotating 4x4 blocks",
     ]);
     for (const item of menu.submenu ?? []) {
       expect(item.params).toBeDefined();

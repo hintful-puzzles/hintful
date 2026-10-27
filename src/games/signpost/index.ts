@@ -81,16 +81,21 @@ const fromCoord = (px: number, ts: number): number => fromCoordE(px, ts, BORDER)
 
 // --- presets ---------------------------------------------------------
 
-const board = (side: number, forceCornerStart = true): SignpostParams => ({
-  w: side,
-  h: side,
+const board = (w: number, forceCornerStart = true, h = w): SignpostParams => ({
+  w,
+  h,
   forceCornerStart,
   diff: DIFF_EASY,
 });
 
-/** Upstream's four sizes, with the ends in the corners. The menu offers each
- * at both tiers. */
-const BOARDS: readonly SignpostParams[] = [4, 5, 6, 7].map((side) => board(side));
+/** Upstream's four sizes, its 6x6 and 7x7 made upright boards of about their
+ * area, with the ends in the corners. The menu offers each at both tiers. */
+const BOARDS: readonly SignpostParams[] = [
+  board(4),
+  board(5),
+  board(5, true, 7),
+  board(6, true, 8),
+];
 
 /** Upstream's two boards with free ends, after the grid, at Easy. */
 const VARIANTS: readonly SignpostParams[] = [board(4, false), board(5, false)];

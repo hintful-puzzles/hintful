@@ -115,17 +115,25 @@ export function defaultParams(): MosaicParams {
   return board(DEFAULT_SIZE);
 }
 
-/** A square board at Easy. 50×50 aggressive generation is too slow; upstream
- * turns it off. */
-function board(side: number): MosaicParams {
-  return { width: side, height: side, aggressive: side < 50, diff: DIFF_EASY };
+/** A board at Easy. 50×50 aggressive generation is too slow; upstream turns
+ * it off. */
+function board(width: number, height = width): MosaicParams {
+  return { width, height, aggressive: width < 50, diff: DIFF_EASY };
 }
 
-/** Upstream's six sizes. */
-const BOARDS: readonly MosaicParams[] = [3, 5, 10, 15, 25, 50].map(board);
+/** Upstream's six sizes, three of them made upright rectangles of about the
+ * same area. */
+const BOARDS: readonly MosaicParams[] = [
+  board(3),
+  board(5),
+  board(8, 10),
+  board(12, 15),
+  board(20, 25),
+  board(50),
+];
 
 /**
- * The sizes the menu offers at every tier; the others are on it at Easy
+ * The widths the menu offers at every tier; the others are on it at Easy
  * alone, since six sizes at three tiers are more lines than a section holds.
  * A Normal board of the two smallest has a comparison or two in it, against
  * seven at 10×10, and at Unreasonable the hint has nothing to say from the
@@ -133,7 +141,7 @@ const BOARDS: readonly MosaicParams[] = [3, 5, 10, 15, 25, 50].map(board);
  * The largest is the one size dealt without aggressive generation. Each is
  * dealt at any tier from the Custom dialog.
  */
-const EVERY_TIER = { from: 10, to: 25 };
+const EVERY_TIER = { from: 8, to: 20 };
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<MosaicParams>[] = [

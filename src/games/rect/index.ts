@@ -400,7 +400,7 @@ export const rectGame: Game<
     // Seven sizes at two tiers is two lines more than a section of the menu
     // holds, so the two largest are offered at Easy alone. Custom deals both.
     ...presetGrid(rectGame.paramConfig ?? [], BOARDS, {
-      tiers: (board) => (board.w > 15 ? [DIFF_EASY, DIFF_EASY] : null),
+      tiers: (board) => (board.w * board.h > 15 * 15 ? [DIFF_EASY, DIFF_EASY] : null),
     }),
   }),
   encodeParams,

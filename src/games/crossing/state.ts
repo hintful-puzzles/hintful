@@ -51,21 +51,25 @@ export interface CrossingParams {
   diff: number;
 }
 
-const board = (side: number, sym = false): CrossingParams => ({
-  w: side,
-  h: side,
+const board = (w: number, sym = false, h = w): CrossingParams => ({
+  w,
+  h,
   sym,
   diff: DIFF_EASY,
 });
 
 /**
- * The sizes the menu offers. Upstream ships the first three. The rest are a
- * fork addition: the solving aids make a small board quick work, so the
- * ladder runs up to 13×13. That one is offered at Easy alone, being past
- * {@link MENU_UNREASONABLE_AREA}; the largest below it deals an Unreasonable
- * board in 0.2 s.
+ * The sizes the menu offers, the larger ones upright. Upstream ships 5×5,
+ * 7×7 and 9×9. The rest are a fork addition: the solving aids make a small
+ * board quick work, so the ladder runs up to 11×13.
  */
-const BOARDS: CrossingParams[] = [5, 7, 9, 11, 13].map((side) => board(side));
+const BOARDS: CrossingParams[] = [
+  board(5),
+  board(7),
+  board(7, false, 9),
+  board(9, false, 11),
+  board(11, false, 13),
+];
 
 /**
  * The symmetric boards, after the grid: one small, and the largest board there
@@ -133,10 +137,11 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 /**
  * The largest area the preset menu offers an Unreasonable board at, which
- * keeps the menu quick: past it a board takes seconds to find (measured
- * 2026-10-11, 13×13 2 s).
+ * keeps the menu quick: past it a board can take over a second to find
+ * (measured 2026-10-27, the slowest of four 11×13 boards 1.4 s, and of four
+ * 9×11 boards 0.3 s).
  */
-const MENU_UNREASONABLE_AREA = 144;
+const MENU_UNREASONABLE_AREA = 120;
 
 /** What upstream's `validate_params` checks: at least one dimension ≥ 4 (a 3×3
  * board has no room for crossing runs).

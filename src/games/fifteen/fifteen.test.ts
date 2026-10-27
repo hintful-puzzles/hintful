@@ -92,12 +92,14 @@ describe("Fifteen params", () => {
     expect(paramsError(fifteenGame, { w: 2, h: 2 }, true)).toBeNull();
   });
 
-  it("offers three sizes, the default in the middle", () => {
+  it("offers three squares, each larger one followed by an upright board", () => {
     const menu = presetMenu(fifteenGame);
     expect(menu.submenu?.map((s) => [s.title, s.params])).toEqual([
       ["3x3", { w: 3, h: 3 }],
       ["4x4", { w: 4, h: 4 }],
+      ["4x5", { w: 4, h: 5 }],
       ["5x5", { w: 5, h: 5 }],
+      ["5x6", { w: 5, h: 6 }],
     ]);
   });
 });

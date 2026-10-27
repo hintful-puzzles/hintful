@@ -250,11 +250,11 @@ describe("an Unreasonable Crossing board", () => {
     expect(refusal(id)).toBeNull();
   });
 
-  it("is on the menu up to 11x11, keeping the menu quick", () => {
+  it("is on the menu up to 9x11, keeping the menu quick", () => {
     const offered = (crossingGame.presets().submenu ?? []).flatMap(({ params }) =>
       params?.diff === DIFF_UNREASONABLE ? [`${params.w}x${params.h}`] : [],
     );
-    expect(offered).toEqual(["5x5", "7x7", "9x9", "11x11"]);
+    expect(offered).toEqual(["5x5", "7x7", "7x9", "9x11"]);
   });
 });
 

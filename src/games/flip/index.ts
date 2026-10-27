@@ -185,9 +185,10 @@ export const flipGame: Game<
         mk(3, 3, "crosses"),
         mk(4, 4, "crosses"),
         mk(5, 5, "crosses"),
-        mk(3, 3, "random"),
-        mk(4, 4, "random"),
-        mk(5, 5, "random"),
+        // Upstream's random boards are square too; these stand upright.
+        mk(3, 4, "random"),
+        mk(4, 5, "random"),
+        mk(5, 6, "random"),
       ],
     };
   },

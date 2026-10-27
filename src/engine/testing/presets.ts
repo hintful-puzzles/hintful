@@ -294,3 +294,71 @@ export function dealtBoards<Params>(
     ...unofferedValues(game, all).flatMap((v) => (v.board ? [v.board] : [])),
   ];
 }
+
+interface SizedGame<Params> {
+  paramConfig?: readonly ParamConfigItem<Params>[];
+  validateParams?(p: Params, full: boolean): string | null;
+  presets(): PresetMenu<Params>;
+}
+
+/** A game's dimension pair, `dimensionParamConfig`'s `width` and `height`. */
+function dimensionItems<Params>(game: SizedGame<Params>) {
+  const items = game.paramConfig ?? [];
+  const width = items.find((i) => i.kw === "width");
+  const height = items.find((i) => i.kw === "height");
+  return width?.type === "string" && height?.type === "string"
+    ? { width, height }
+    : null;
+}
+
+/**
+ * The width of the board `params` deal, read off the game's dimension pair,
+ * or `null` for a game with none, whose board is square: what an instrument
+ * reading a board's cells by index needs, and cannot guess from their count.
+ */
+export function boardWidth<Params>(
+  game: SizedGame<Params>,
+  params: Params,
+): number | null {
+  const width = dimensionItems(game)?.width;
+  return width ? Number(width.get(params)) : null;
+}
+
+/**
+ * Whether a game's rules take a board whose width and height differ: its
+ * dimension pair accepts its first board one wider, or two wider for a game
+ * that needs an even width.
+ */
+export function takesRectangles<Params>(game: SizedGame<Params>): boolean {
+  const width = dimensionItems(game)?.width;
+  if (!width) return false;
+  const first = firstLeaf(game.presets());
+  return [1, 2].some((by) => {
+    const wider = { ...first };
+    width.set(wider, String(Number(width.get(first)) + by));
+    return paramsError(game, wider, false) === null;
+  });
+}
+
+/**
+ * Why a game that {@link takesRectangles} offers too few of them, or `null`
+ * (`engine-params`, "A game that takes rectangles offers them on its menu").
+ * Sizes are counted once whatever tiers they are offered at, and half of
+ * them, rounded down, must be rectangles.
+ */
+export function rectangleShortfall<Params>(game: SizedGame<Params>): string | null {
+  const dims = dimensionItems(game);
+  if (!dims || !takesRectangles(game)) return null;
+  const { width, height } = dims;
+  const sizes = new Set(
+    leafPresets(game).map((l) => `${width.get(l.params)}x${height.get(l.params)}`),
+  );
+  const held = [...sizes].filter((s) => {
+    const [w, h] = s.split("x");
+    return w !== h;
+  }).length;
+  const owed = Math.floor(sizes.size / 2);
+  return held >= owed
+    ? null
+    : `${held} of ${sizes.size} sizes are rectangles, and half is ${owed}: ${[...sizes].join(", ")}`;
+}

@@ -1168,8 +1168,9 @@ export const galaxiesGame: Game<
         mk(7, 7, GalaxiesDiff.Unreasonable),
         mk(10, 10, GalaxiesDiff.Normal),
         mk(10, 10, GalaxiesDiff.Unreasonable),
-        mk(15, 15, GalaxiesDiff.Normal),
-        mk(15, 15, GalaxiesDiff.Unreasonable),
+        // Upstream's 15x15, made an upright board of about its area.
+        mk(13, 17, GalaxiesDiff.Normal),
+        mk(13, 17, GalaxiesDiff.Unreasonable),
       ],
     };
   },

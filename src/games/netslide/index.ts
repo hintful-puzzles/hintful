@@ -78,7 +78,7 @@ import {
   validateParams,
 } from "./state.ts";
 
-/** The 9 upstream presets. "Difficulty" is entirely a matter of how much help
+/** Upstream's nine presets, its 5x5 made an upright 4x6. "Difficulty" is entirely a matter of how much help
  * the barriers give: at probability 1 every wall the solution permits is drawn
  * in, which pins most tiles; at 0 you get none; wrapping removes the border
  * walls too, which is harder again. */
@@ -89,9 +89,9 @@ const PRESETS: NetslideParams[] = [
   { w: 4, h: 4, wrapping: false, barrierProbability: 1, movetarget: 0 },
   { w: 4, h: 4, wrapping: false, barrierProbability: 0, movetarget: 0 },
   { w: 4, h: 4, wrapping: true, barrierProbability: 0, movetarget: 0 },
-  { w: 5, h: 5, wrapping: false, barrierProbability: 1, movetarget: 0 },
-  { w: 5, h: 5, wrapping: false, barrierProbability: 0, movetarget: 0 },
-  { w: 5, h: 5, wrapping: true, barrierProbability: 0, movetarget: 0 },
+  { w: 4, h: 6, wrapping: false, barrierProbability: 1, movetarget: 0 },
+  { w: 4, h: 6, wrapping: false, barrierProbability: 0, movetarget: 0 },
+  { w: 4, h: 6, wrapping: true, barrierProbability: 0, movetarget: 0 },
 ];
 
 function presetTitle(p: NetslideParams): string {
