@@ -24,7 +24,7 @@
 - [x] 3.1 The menu-shape check passes for the whole collection
 - [x] 3.2 Open the Type menu of three changed games in the app, on a phone-sized window, and deal a rectangle of each
   - ABCD (menu, then 6x9 from it), Clusters 6x8, Unruly 12x16 at 390x844: upright, filling the width. ABCD's 5x7 opened turned, as the midend turns a deal whose turned board takes a larger tile.
-- [ ] 3.3 The gate, green
+- [x] 3.3 The gate, green
 
 ## Workflow follow-up
 
