@@ -276,10 +276,12 @@ function fitPlan(role: "commit" | "push", text: string): string {
   }
   const unmeasured = items.filter((i) => i.cost === null).length;
   process.stderr.write(
-    `✓ this ${role}'s tests should cost ${spent.toFixed(0)} s of CPU, of its ${ceiling.toFixed(0)}` +
+    `${spent > ceiling ? "!" : "✓"} this ${role}'s tests should cost ${spent.toFixed(0)} s ` +
+      `of CPU, of its ceiling of ${ceiling.toFixed(0)}` +
       (unmeasured > 0
         ? `, besides ${unmeasured} file(s) no run here has measured`
         : "") +
+      (spent > ceiling ? ": the test files it stages run whatever they cost" : "") +
       ".\n",
   );
   if (left.length > 0) {
