@@ -23,5 +23,6 @@
       own games, floors at the share's part, the forms check on a game that
       meets each form.
 - [x] 2.3 hint-resume's CI walk recomputes up to 512 times a board.
-- [ ] 2.4 The Gate limit brought back down, measured on the first CI run of
-      the spread suite.
+- [x] 2.4 The Gate limit, measured: it stays at 45. The spread run is about
+      107 minutes of test time over four workers, near 29 with setup, and
+      the 1.7x slow runner of 2026-10-22 takes that to about 49.

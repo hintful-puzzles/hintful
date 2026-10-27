@@ -45,6 +45,11 @@ steps") is held on a game that meets each, measured, in the share that walks
 it: a game that stops meeting its form fails the check, which never passes
 over nothing.
 
+**The Gate limit stays at 45 minutes.** Spreading takes the run to the
+suite's total over the workers, near 29 minutes, and room for the 1.7x slow
+runner seen on 2026-10-22 is about 49. The total still grows with every game;
+what this change removes is one file setting the run alone.
+
 **The trim: CI recomputes up to 512 times a board.** Every board whose first
 plan is 512 steps or fewer, 307 of the gate's 311, is still asked after
 every move on CI. The four longer (Loopy's Great-Great-Dodecagonal and

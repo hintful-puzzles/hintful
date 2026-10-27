@@ -1164,6 +1164,10 @@ moves between evenly spaced positions of one board's walk.
   hundreds of steps long
 - **THEN** the local hooks recompute at a bounded number of evenly spaced
   moves, following the plan between them, and CI recomputes after every move
+  of a plan up to a larger bound and at that many evenly spaced moves of a
+  longer one
+- **BECAUSE** a walk is quadratic in its plan's length, and one board whose
+  plan is a thousand steps long cost a whole CI run's room in one case
 
 ### Requirement: The hook keeps a board of every kind and every check one board can fail
 
@@ -1302,3 +1306,18 @@ comments.
 
 - **WHEN** a change alters the text of a regular expression that contains `/*`
 - **THEN** the change is treated as a change to code
+
+### Requirement: No one test file sets the gate's wall clock
+
+No test file in the gate, and no share of a file the suite spreads over the workers, SHALL take more than half the gate's run on the CI runner, so that the run's time follows the suite's total over the workers rather than one file's.
+
+#### Scenario: The cross-game hint walks share the workers
+
+- **WHEN** the gate runs on CI
+- **THEN** no share of the hint-resume walk or of the hint-quality walk takes more than half the run
+
+#### Scenario: A spread sweep's census holds in every share
+
+- **WHEN** a spread sweep closes over what its walk heard, such as a ledger of sentences a game still speaks
+- **THEN** each share holds the games it walked to what it heard, and every game is walked by exactly one share
+- **BECAUSE** no share can see another's walk, and a census over a share's own games is the same census the whole sweep made
