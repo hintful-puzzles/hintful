@@ -56,7 +56,7 @@ const danger = (m: Marked): Point[] => (m.danger ? [m.danger] : []);
 
 export const say = {
   /** A lookahead firing: one standing hypothesis plus the forced single-cell
-   * consequences (never nested), shown statically as the numbered cells. */
+   * consequences (never nested), shown statically as the small pieces. */
   chain: (d: ClustersDeduction, m: Marked): Sentence => {
     const f = colorName(d.fill);
     const t = colorName(d.refuted);
@@ -73,20 +73,20 @@ export const say = {
             : phrase`${mark.the("outline", CELL, danger(m), "tile")} can't touch two like it`;
     // The chain's break is adjacent to the *last forced cell*, not to the
     // target, so the neighbor relation above is unavailable here. The tie is
-    // instead that the chain runs **from** this cell ("this cell forces cells
-    // 1 to 3") — the deixis the guard in `clusters-hint.test.ts` checks. The board's ordinals say which
-    // consequence came when; they do not say which mark "this cell" means.
+    // instead that the chain runs **from** this cell ("this cell forces the
+    // small pieces") — the deixis the guard in `clusters-hint.test.ts`
+    // checks. The chain is named by its pieces, which the legend teaches, so
+    // "outlined" stays the danger tile's word alone.
     //
-    // The sentence names the two ends and lets the numbers carry the middle:
-    // reciting the links would put the chain back in the reader's head, which
-    // is what the picture exists to prevent (docs/hints.md § "The forcing
-    // boundary").
-    const n = m.chain.length;
+    // The sentence names the chain as a whole and lets the pieces drawn in it
+    // carry the middle: reciting the links would put the chain back in the
+    // reader's head, which is what the picture exists to prevent
+    // (docs/hints.md § "The forcing boundary").
     const cells = mark.as(
       "outline",
       CELL,
       m.chain,
-      n === 1 ? "cell 1" : n === 2 ? "cells 1 and 2" : `cells 1 to ${n}`,
+      m.chain.length === 1 ? "the small piece" : "the small pieces",
     );
     return so({
       look: phrase`If ${t}, ${thisCell(m)} forces ${cells}, and ${end}`,

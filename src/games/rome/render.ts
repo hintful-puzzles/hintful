@@ -56,7 +56,6 @@ import {
   type MarkCell,
   NO_TEXT,
 } from "../../engine/hint-mark.ts";
-import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -598,14 +597,6 @@ export function redraw(
           ts - 1 - 2 * inset,
           COL_ARROW_ERROR,
         );
-      }
-
-      // A loop firing shades the arrow chain that leads back here, and the
-      // ordinal is what makes it a chain the player can walk rather than a heap
-      // of squares (docs/hints-marks.md § "Number a chain's cells in order").
-      const order = ds.hint.order[i1];
-      if (order > 0) {
-        drawHintOrdinal(dr, { x: cx, y: cy }, ts, order, COL_HINT_CELL);
       }
     }
   }

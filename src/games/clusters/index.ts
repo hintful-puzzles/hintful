@@ -30,7 +30,6 @@ import {
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   gridCursorMove,
@@ -345,11 +344,7 @@ function findMistakes(state: ClustersState): readonly ClustersMistake[] {
  * the target or the danger tile, so it is already in view. */
 export interface ClustersHintHighlights {
   danger?: Point;
-  /** `order` is the link's 1-based place in the chain, drawn as an ordinal
-   * (`drawHintOrdinal`). Explicit rather than the array index because the
-   * narration cites it: it is data the renderer reads, not a positional
-   * convention two files have to agree about. */
-  chain: (OrderedCell & { fill: ClustersFill })[];
+  chain: (Point & { fill: ClustersFill })[];
 }
 
 /** Narrate the proof by contradiction, ringing `target` and outlining the
@@ -371,7 +366,7 @@ function buildHighlights(d: ClustersDeduction, w: number): ClustersHintHighlight
     danger: at.cell !== d.index ? pt(at.cell) : undefined,
     chain:
       d.reason.kind === "chain"
-        ? d.reason.steps.map((s, k) => ({ ...pt(s.index), fill: s.fill, order: k + 1 }))
+        ? d.reason.steps.map((s) => ({ ...pt(s.index), fill: s.fill }))
         : [],
   };
 }
@@ -492,7 +487,7 @@ export const clustersGame: Game<
     roles: {
       ring: "the square the step colors. It is drawn empty: the sentence says which color it must be.",
       outline:
-        "the squares the step reasons from. A thin ring is on the dot or square where the other color would break a rule. On Normal boards, numbered outlined squares, each holding a small piece of the color it would be, show what supposing the other color would force, in order, and to which color: they are only a supposition, and nothing is placed there.",
+        "the squares the step reasons from. A thin ring is on the dot or square where the other color would break a rule. On Normal boards, the small pieces, each in an outlined square and of the color that square would be, show what supposing the other color would force: they are only a supposition, and nothing is placed there.",
     },
   },
   hintRungs: CLUSTERS_RUNGS,

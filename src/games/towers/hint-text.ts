@@ -162,7 +162,7 @@ export const say = {
 
   // The shared chain sentence, in Towers' own vocabulary: the value needs no
   // qualifying here, because "two heights left" contextualizes the bare
-  // numbers, and the numbered cells carry the chain.
+  // numbers, and the outlined cells carry the chain.
   forcing: (
     reason: { chain: readonly ForcingLink[] },
     struck: Note,

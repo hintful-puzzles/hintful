@@ -52,7 +52,6 @@ import {
   type MarkCell,
   NO_TEXT,
 } from "../../engine/hint-mark.ts";
-import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -63,7 +62,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -99,9 +97,7 @@ export const COL_PENCIL = 7;
 export const COL_KILLER = 8;
 // Fork additions, appended past the upstream enum (NCOLORS = 9).
 export const COL_PENCIL_BODY = 9; // the yellow body of the pencil-mode indicator
-/** The driving region's outline (drawn in redraw's last block), **and** a
- * forcing chain's ordinal — one index, because they are one role: the number
- * indexes the evidence. */
+/** The driving region's outline (drawn in redraw's last block). */
 export const COL_HINT_CELL = 10;
 export const COL_CELL = 11; // the surface of a cell the player fills
 export const COL_GIVEN = 12; // the lifted surface under a given digit
@@ -127,8 +123,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_KILLER] = soloKiller(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  // `HINT_OUTLINE` covers the chain ordinal too; see its doc comment for why
-  // the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
@@ -141,10 +135,8 @@ export function colors(defaultBackground: Color): Color[] {
  * acted-on cell(s) ringed by the engine, the ruled-out candidate(s) shown struck.
  * The region a sentence names is hatched from the step's marks, not from here. */
 export interface SoloHint {
-  /** The cells the reason rests on (evidence), outlined `COL_HINT_CELL`. A
-   * forcing chain's cells additionally carry their place in it, drawn as an
-   * ordinal. */
-  area: OrderedCell[];
+  /** The cells the reason rests on (evidence), outlined `COL_HINT_CELL`. */
+  area: { x: number; y: number }[];
   /** The cell(s) the deduction acts on, ringed. */
   targets: { x: number; y: number }[];
   /** The candidate number(s) ruled out, shown struck among the pencil marks. */
@@ -269,7 +261,6 @@ function drawNumber(
   hl: number,
   wrong: boolean,
   struck: number,
-  hintOrder: number,
 ): void {
   const ts = ds.tileSize;
   const cr = state.cr;
@@ -477,13 +468,6 @@ function drawNumber(
       );
     }
   }
-
-  // A forcing chain's place in the order it fires, so the narration can cite
-  // the cells by number rather than asking the player to reconstruct the chain
-  // (`walk-tactic-hint-chains`). Inside the clip, so it can never spill into a
-  // neighboring block.
-  if (hintOrder > 0)
-    drawHintOrdinal(dr, { x: tx, y: ty }, ts - 2 * ge, hintOrder, COL_HINT_CELL);
 
   dr.unclip();
   dr.drawUpdate({ x: cx - 1, y: cy - 1, w: cw + 1, h: ch + 1 });
@@ -747,17 +731,7 @@ export function redraw(
         ds.hint.stale(cell) ||
         ds.wrong.stale(cell)
       ) {
-        drawNumber(
-          dr,
-          ds,
-          state,
-          x,
-          y,
-          hl,
-          ds.wrong.at(cell),
-          ds.hint.struck[cell],
-          ds.hint.order[cell],
-        );
+        drawNumber(dr, ds, state, x, y, hl, ds.wrong.at(cell), ds.hint.struck[cell]);
         ds.tiles[cell] = tile;
         ds.pencil[cell] = pen;
         ds.hint.commit(cell);

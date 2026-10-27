@@ -2,14 +2,12 @@
  * Tier-1 tests for a hint on the edges of a square grid: that one edge is one
  * mark however it is named, that each of its squares draws its outline half or
  * its asked edge's ring, with the asked shape inside the ring in the ring's
- * ink, and that a chain's number lands in one square, in the corner
- * beside its edge. Path, Pearl and Tracks reach these only through the boards
- * their hints happen to make.
+ * ink. Path, Pearl and Tracks reach these only through the boards their hints
+ * happen to make.
  */
 import { describe, expect, it } from "vitest";
 import {
   drawEdgeHints,
-  drawEdgeOrdinals,
   EDGE,
   type EdgeHint,
   type EdgeRole,
@@ -87,7 +85,7 @@ describe("an edge a hint names", () => {
 
   it("asked by the step and also reasoned from is drawn as asked", () => {
     const words = edgeHintWords(g, [
-      { edge: across, shape: "cross", role: "outline", order: 2 },
+      { edge: across, shape: "cross", role: "outline" },
       { edge: across, shape: "line", role: "ring" },
       { edge: below, shape: "cross", role: "outline" },
     ]);
@@ -97,43 +95,5 @@ describe("an edge a hint names", () => {
       `ring ${RIGHT} line`,
       `line ${1 << RIGHT} ${RING_INK} ring`,
     ]);
-  });
-});
-
-describe("a chain's number on an edge", () => {
-  const box = { x: 100, y: 200, w: 40, h: 40 };
-  const texts = (word: number) => {
-    const dr = new RecordingDrawing([]);
-    drawEdgeOrdinals(dr, word, box, 2, 8);
-    return dr.ops.flatMap((o) => (o.op === "text" ? [o] : []));
-  };
-
-  it("is drawn once, by the edge's first square, in the corner beside it", () => {
-    const words = edgeHintWords(g, [
-      { edge: across, shape: "line", role: "outline", order: 3 },
-      { edge: below, shape: "cross", role: "outline", order: 4 },
-    ]);
-    const [right, down] = texts(words[1]);
-    expect([right.text, down.text]).toEqual(["3", "4"]);
-    // The top-right for the edge on its right, the bottom-left for the one
-    // below: inside the square, on opposite sides of its diagonal.
-    expect(right.x).toBeGreaterThan(box.x + box.w / 2);
-    expect(right.y).toBeLessThan(box.y + box.h / 2);
-    expect(down.x).toBeLessThan(box.x + box.w / 2);
-    expect(down.y).toBeGreaterThan(box.y + box.h / 2);
-    for (const t of [right, down]) expect(t.color).toBe(8);
-    expect(texts(words[2])).toEqual([]);
-    expect(texts(words[4])).toEqual([]);
-  });
-
-  it("refuses a number its word has no room for", () => {
-    expect(() =>
-      edgeHintWords(g, [{ edge: across, shape: "line", role: "outline", order: 32 }]),
-    ).toThrow(/ordinal 32/);
-    expect(() =>
-      edgeHintWords(g, [
-        { edge: { cell: 0, dir: UP }, shape: "line", role: "outline", order: 1 },
-      ]),
-    ).toThrow(/ordinal 1/);
   });
 });

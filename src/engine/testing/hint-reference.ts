@@ -18,7 +18,7 @@
  * 7. or a noun phrase, opening on a determiner, that is "this" or "these"
  *    with a noun no other reference of its kind says in another role, or
  *    that names its thing by a relation to another ("its partner", "the same
- *    row", "the edge between them").
+ *    row", "the edge between them", "one end").
  *
  * What this cannot see: a clause whose verb is not in {@link VERB} reads as a
  * noun phrase, and a value or a relation is taken on its word, not checked to
@@ -32,12 +32,8 @@
 import type { HintMarkLegend } from "../game.ts";
 import { type MarkRef, type Narration, ROLE_ADJECTIVES } from "../hint-words.ts";
 
-/** The roles' words, read from the engine's roles, and "numbered", which every
- * game's chain is drawn as (`hint-chain-pins.ts`). */
-const ROLE_WORD = new RegExp(
-  `\\b(?:${[...ROLE_ADJECTIVES, "numbered"].join("|")})\\b`,
-  "i",
-);
+/** The roles' words, read from the engine's roles. */
+const ROLE_WORD = new RegExp(`\\b(?:${ROLE_ADJECTIVES.join("|")})\\b`, "i");
 
 /** Modals, "be" and "have", and the verbs the census found in a reference. */
 const VERB = new RegExp(
@@ -96,8 +92,10 @@ const DETERMINER =
 
 const DEICTIC = /^(?:this|these|those|that)\s+(.+)$/i;
 
+/** Words that name a thing by another: an end is an end of the line or chain
+ * a sentence has just named ("one end", "the other end"). */
 const RELATION =
-  /\b(?:its|their|other|between them|beside it|to its (?:left|right)|above|below|across|in it|there)\b|^the same\b/i;
+  /\b(?:its|their|other|ends?|between them|beside it|to its (?:left|right)|above|below|across|in it|there)\b|^the same\b/i;
 
 /** The noun a deictic reference says, singular, so "this cell" and "these
  * cells" are one. */

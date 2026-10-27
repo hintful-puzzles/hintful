@@ -46,7 +46,6 @@ import {
   type MarkCell,
   NO_TEXT,
 } from "../../engine/hint-mark.ts";
-import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -58,7 +57,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -147,9 +145,8 @@ export function colors(background: Color): Color[] {
  * the ruled-out candidates struck through among the pencil marks. */
 export interface MathraxHint {
   /** The cells the deduction reasons from — a clue's diagonal pair, all four
-   * cells around an `E`/`O` clue, or a hidden single's line. A forcing chain's
-   * cells additionally carry their place in it, drawn as an ordinal. */
-  area: OrderedCell[];
+   * cells around an `E`/`O` clue, a hidden single's line, or a forcing chain. */
+  area: Point[];
   /** The cell(s) the deduction acts on, ringed. */
   targets: Point[];
   /** The candidate number(s) ruled out, shown struck among the pencil marks. */
@@ -196,8 +193,8 @@ export interface MathraxDrawState {
   /** `o²` Check-&-Save mistake overlay. */
   wrong: OverlaySidecar;
   /** `o²` hint overlay: bit 0 = target cell, bit 1 = evidence, and the struck
-   * candidates at `valueBit(n)` in its `struck` lane. Owns the chain ordinal and the
-   * evidence outline lanes too (docs/rendering.md § "Overlay sidecars"). */
+   * candidates at `valueBit(n)` in its `struck` lane. Owns the evidence outline
+   * lane too (docs/rendering.md § "Overlay sidecars"). */
   hint: OverlaySidecar;
   /** The hint target's ring and the evidence region's outline. */
   marks: HintMarks;
@@ -357,7 +354,6 @@ function drawTile(
 ): void {
   const ts = ds.tileSize;
   const o = state.params.o;
-  const co = o - 1;
   const i = y * o + x;
   // Of the hint overlay, a tile draws only `struck`, the candidates this firing
   // rules out. The target's ring and the evidence outline are painted after the
@@ -417,24 +413,6 @@ function drawTile(
       dr.drawLine({ x: r, y: b }, { x: l, y: b }, COL_ERROR, 1);
       dr.drawLine({ x: l, y: b }, { x: l, y: t }, COL_ERROR, 1);
     }
-  }
-
-  // A forcing chain's place in the order it fires, so the narration can cite the
-  // cells by number. The collection draws it in the bottom-right corner, which
-  // here can hold a quarter of a clue circle of radius `ts / 3`; where one does,
-  // the inset grows past it rather than moving the mark to another corner, so
-  // the ordinal still means the same thing it means in every other game.
-  const order = ds.hint.order[i];
-  if (order > 0) {
-    const clued = y < co && x < co && state.clues[y * co + x] !== 0;
-    drawHintOrdinal(
-      dr,
-      { x: tx, y: ty },
-      ts,
-      order,
-      COL_HINT_CELL,
-      clued ? Math.ceil(ts / 3) : undefined,
-    );
   }
 
   dr.unclip();

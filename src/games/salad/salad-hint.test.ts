@@ -517,7 +517,7 @@ describe("salad hint — a square a set rules out as empty", () => {
       { mode: GAMEMODE_LETTERS, order: 4, nums: 3 },
     );
     expect(t.premise.text).toBe(
-      "Square 1 is X or the numbered chain forces square 2 to X, both in line with this square",
+      "The outlined chain puts X at one end or the other end, both in line with this square",
     );
   });
 });

@@ -72,7 +72,6 @@ already does it.
 | – Two regions in one sentence take two mark shapes | a sentence names two regions |
 | The engine colors the marks | you draw a mark, recolor a clue, or are about to pick a hint color |
 | A hint that suppresses a game's aid dismisses on a UI update | a displayed hint hides or takes over something the game draws |
-| Number a chain's cells in order | a step shows a chain of forced consequences |
 | Show the what-if walk statically | a step's reason is a hypothesis followed to a contradiction |
 | Marks on tiles vs marks on cells | your game's pieces move, and the hint marks one |
 | Placement animation as hint motion | your game has no move animation and Auto-Hint looks frozen |
@@ -322,8 +321,6 @@ comes out as one contour and a scattered set as one ring a cell.
   mark another some other way.
 - **Never drop the evidence mark.** Where a sentence says "this cage" and the
   target sits in a different one, the mark is the only thing saying which.
-- **The chain ordinal takes the outline's ink**, being an index into the
-  evidence and not a role of its own.
 - **A line or region the sentence names is not evidence**: it is striped
   (§ "Hatch the line the sentence names").
 
@@ -657,43 +654,6 @@ The trigger is suppression, not selection: a selection game whose hint
 suppresses nothing does not set the hook. Population:
 `git grep -l uiUpdateClearsHint src/games`.
 
-## Number a chain's cells in order
-
-**A step that shows a chain of forced consequences declares each link's
-position, and the shared mechanism draws it as a small number in the cell's
-corner.** A set of marks is not a chain: a sentence saying "each forces the
-next" over unordered marks can be checked only by redoing the deduction,
-which `hints.md` § "The forcing boundary" forbids. Requirement "A chain's
-order is declared and drawn as an ordinal".
-
-- **Declare the order as data.** A link carries `order` (`OrderedCell`,
-  [`engine/overlay-sidecar.ts`](../src/engine/overlay-sidecar.ts)); the
-  renderer never numbers by array index.
-- **Wire it in the tile painter.** Take `ds.hint.order[i]` and pass it to
-  `drawHintOrdinal` ([`engine/hint-ordinal.ts`](../src/engine/hint-ordinal.ts))
-  with the game's outline slot. Unwired, the chain is outlined, the
-  sentence cites "cell 3", and no number shows.
-- **Bottom-right, in every game**, the one corner free wherever a chain is
-  drawn, so the mark is learned once. Pass `inset` where a ring shares the
-  corner.
-- **A number, never an arrow.** An arrow claims that one link forces the
-  next, which is false of chains found in discovery order, and every game
-  draws the weakest claim every chain can make.
-- **A game without tiles says where the number goes** and hides anything else
-  numbered there while a chain shows. Exemplar: the label point in
-  [`map/render.ts`](../src/games/map/render.ts).
-- **Pin a position.** `hint-quality.test.ts` fails on a numbered chain from a
-  game with no entry in `testing/hint-chain-pins.ts`, and
-  `hint-ordinal.test.ts` checks the number is drawn there. Find a position
-  with `npm run hint-scan -- src/engine/hint-ordinal.test.ts`.
-
-The numbering also ties the sentence to its cells (`hints.md`
-§ "Bind the words to the marks"). Exemplars: `forcingChainArea` in
-[`engine/latin-hint.ts`](../src/engine/latin-hint.ts) with
-`forcingChainPremise` in [`engine/hint-text.ts`](../src/engine/hint-text.ts),
-and `buildHighlights` in
-[`clusters/index.ts`](../src/games/clusters/index.ts).
-
 ## Show the what-if walk statically
 
 **A hypothesis followed to a contradiction is one step that shows the whole
@@ -715,7 +675,10 @@ and a plan may hold no dummy moves, so the legs cannot be hypothetical.
 - **Take the shortest chain, not the first.** At a stall, evaluate every
   candidate firing's propagation and take the shortest, ties broken in scan
   order so a recompute gives the same step.
-- **Number the chain** (§ "Number a chain's cells in order").
+- **Outline the chain whole, and never number it.** A number is a mark the
+  player cannot make, and the order a chain is found in is not one they can
+  follow link by link. A link the words single out is a reference of its own
+  (`hints.md` § "Bind the words to the marks").
 - **Lead the sentence with the hypothetical, and say why it fails.** When
   several hypotheticals share one sentence, every count and verb is true of
   each of them, not of their union.

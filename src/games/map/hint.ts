@@ -58,7 +58,7 @@ import type { MapMove, MapOp, MapState } from "./state.ts";
 
 const ALL = 0xf;
 
-/** A region the premise rests on, outlined; a chain's carry their position. */
+/** A region the premise rests on, outlined. */
 type MapEvidence = RegionMark;
 
 /** One region's dots as a setup step leaves them. */
@@ -305,10 +305,7 @@ function pairs(b: MapBoard): Firing[] {
     legs: (w) => {
       const pair = [{ region: a }, { region: b2 }];
       return journey([
-        ...premiseDots(w, "sharedPair", [a, b2], {
-          dot: (_i, r, touched, two) => say.pairDot(r, touched, two),
-          trim: (_i, r, two) => say.pairTrim(r, two),
-        }),
+        ...premiseDots(w, "sharedPair", [a, b2]),
         ...narrowLegs(w, "sharedPair", ks, v, (k, c) => say.pair(k, pair, v, c)),
       ]);
     },
@@ -331,7 +328,7 @@ function chains(b: MapBoard): Firing[] {
     const chain = chainTo(sc, end);
     // Two regions forcing each other is the pair rule, which the rung below
     // this one has already had every chance to state more simply; and a target
-    // inside its own chain would be both "this region" and a numbered one.
+    // inside its own chain would be both "this region" and one of the chain's.
     if (chain.length < 3 || chain.includes(k)) return;
     const other = colorsOf(b.possible[origin] & ~(1 << color))[0];
     found.set(key, { chain, color, other, ks: [k] });
@@ -339,19 +336,15 @@ function chains(b: MapBoard): Firing[] {
   return [...found.values()].map(({ chain, color, other, ks }) => ({
     reads: [...chain, ...ks],
     legs: (w) => {
-      const numbered = chain.map((region, i) => ({ region, order: i + 1 }));
-      // A chain region being dotted is ringed, and keeps its number.
+      const regions = chain.map((region) => ({ region }));
       return journey([
-        ...premiseDots(w, "forcingChain", chain, {
-          dot: (i, r, touched, two) => say.chainDot(r, i + 1, numbered, touched, two),
-          trim: (i, r, two) => say.chainTrim(r, i + 1, numbered, two),
-        }),
+        ...premiseDots(w, "forcingChain", chain),
         ...narrowLegs(
           w,
           "forcingChain",
           ks,
           1 << color,
-          chainSentence(w, numbered, color, other),
+          chainSentence(w, regions, color, other),
         ),
       ]);
     },
@@ -360,7 +353,7 @@ function chains(b: MapBoard): Firing[] {
 
 /**
  * The chain step's sentence, checked against the board as it stands once every
- * numbered region shows its two dots: where the color is not in every region,
+ * region of the chain shows its two dots: where the color is not in every region,
  * each region takes the dot the one before it leaves, and the walk must end on
  * `color`, or the sentence would misdescribe the dots. Read once, before any
  * of the firing's narrowing legs, since a leg placing a color beside the chain
@@ -384,14 +377,6 @@ function chainSentence(
   return said;
 }
 
-/** How a premise-dotting leg speaks: `i` is the region's place in the
- * premise's list, `r` the region, `touched` its neighbors' colors and `two`
- * what they leave. */
-interface DotWords {
-  dot(i: number, r: number, touched: number, two: number): Sentence;
-  trim(i: number, r: number, two: number): Sentence;
-}
-
 /**
  * Before a pair or a chain is stated, each region its premise rests on shows
  * its two colors as dots, one leg per region that does not already. "Can only be
@@ -405,20 +390,19 @@ function premiseDots(
   w: Work,
   rung: MapRung,
   regions: readonly number[],
-  words: DotWords,
 ): MapHintStep[] {
   const { graph, n, ngraph } = w.state.map;
   const out: MapHintStep[] = [];
-  regions.forEach((r, i) => {
+  for (const r of regions) {
     const two = colorsLeft(w, r);
-    if (w.pencil[r] === two) return;
+    if (w.pencil[r] === two) continue;
     let touched = 0;
     for (const k of neighbors(graph, n, ngraph, r))
       if (w.coloring[k] >= 0) touched |= 1 << w.coloring[k];
     const said =
-      w.pencil[r] === 0 ? words.dot(i, r, touched, two) : words.trim(i, r, two);
+      w.pencil[r] === 0 ? say.premiseDot(r, touched, two) : say.premiseTrim(r, two);
     out.push(step(w, rung, r, { dots: two }, said));
-  });
+  }
   return out;
 }
 

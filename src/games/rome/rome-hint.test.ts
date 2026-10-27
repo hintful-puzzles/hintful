@@ -8,7 +8,7 @@
  * plan places, strikes and refuses at the quality bar; the marks the hint
  * teaches are marks a player can make. Tier 2.5 — render scenarios for the two
  * shapes Rome was picked to press on: an ordinary area elimination, and a
- * **reachability** firing whose evidence is a numbered chain of arrows.
+ * **reachability** firing whose evidence is an outlined chain of arrows.
  *
  * What these catch that no cheaper test would: the cross-game guards walk a
  * plan and check its *form*, and `rome-ladder.test.ts` checks that every rung
@@ -456,22 +456,18 @@ describe("rome hint render", () => {
   /**
    * The reachability frame — the one Rome was picked for. A `loop` firing's
    * evidence is the chain of arrows leading back to the struck square, drawn as
-   * a numbered contour, because "the numbered arrows lead back to this square" is a
-   * claim the player has to be able to walk.
+   * an outlined contour: "the outlined arrows lead back to this square" is a
+   * claim the player walks by following the arrows themselves.
    */
-  it("numbers the arrow chain a loop deduction walks", () => {
+  it("outlines the arrow chain a loop deduction walks, with no number on it", () => {
     const { recording, hint } = renderPinnedHint(romeGame, pinned("opensOnLoop"), {
       defaultBackground: DEFAULT_BACKGROUND,
     });
-    const area = (hint?.highlights as { area: { order?: number }[] }).area;
+    const area = (hint?.highlights as { area: unknown[] }).area;
     expect(area.length).toBeGreaterThanOrEqual(2);
-    // Every evidence square carries its place in the walk, numbered from the
-    // square the struck arrow would point at.
-    expect(area.map((a) => a.order)).toEqual(area.map((_, i) => i + 1));
-    const ordinals = recording.ops.filter(
-      (o) => o.op === "text" && o.color === COL_HINT_CELL,
-    );
-    expect(ordinals.length).toBe(area.length);
+    expect(
+      recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT_CELL),
+    ).toEqual([]);
     // The struck square is shown by its struck mark, not a ring.
     expect(ringsOf(recording.ops)).toEqual([]);
     // The strike: an arrow is a shape, so one "\" through it, in the arrow's

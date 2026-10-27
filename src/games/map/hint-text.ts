@@ -15,8 +15,8 @@
  * A region has no coordinates a player can read, and its number is behind a
  * preference that is off by default. So a sentence never names a region
  * outright: "this region" is the one the hint rings, "the outlined pair" are
- * the two it outlines, and a chain's regions are "region 1" to "region N" by
- * the numbers drawn on them.
+ * the two it outlines, and a chain is "the outlined chain", its two ends
+ * named by their relation to it.
  *
  * ## The conclusion says what the move does
  *
@@ -40,11 +40,9 @@ import {
   unshaped,
 } from "../../engine/hint-words.ts";
 
-/** A region of the map, as a mark: its band, its dashed line or its chain
- * number. `order` is a chain region's number, and not part of its identity. */
+/** A region of the map, as a mark: its band or its dashed line. */
 export interface RegionMark {
   region: number;
-  order?: number;
 }
 
 export const REGION: MarkKind<RegionMark> = {
@@ -55,10 +53,6 @@ export const REGION: MarkKind<RegionMark> = {
 /** "this region": the one the step decides, ringed. */
 const thisRegion = (r: number): Narration =>
   mark.this("ring", REGION, [{ region: r }], "region");
-
-/** "region k" of a chain, by the number drawn on it. */
-const numbered = (chain: readonly RegionMark[], k: number, words = `region ${k}`) =>
-  mark.as("outline", REGION, [chain[k - 1]], words);
 
 /** A color index as its word. */
 export const colorName = (c: number): ColorWord => FOUR_NAMES[c];
@@ -76,12 +70,12 @@ const all = (mask: number): Narration => listOf(names(mask));
 /** The colors in a mask as alternatives, "a, b or c". */
 const either = (mask: number): Narration => listOf(names(mask), "or");
 
-/** A chain's case split by its ends: region 1 has the color, or the numbered
- * chain carries it to the last, each region taking the dot the one before it
+/** A chain's case split by its ends: one end has the color, or the chain
+ * carries it to the other, each region taking the dot the one before it
  * leaves, and this region touches both ends. */
 function chainEnds(r: number, chain: readonly RegionMark[], hue: ColorWord): Narration {
-  const last = chain.length;
-  return phrase`${numbered(chain, 1)} or, via ${mark.as("outline", REGION, chain, "the chain")}, ${numbered(chain, last)} is ${hue}, both beside ${thisRegion(r)}`;
+  const end = (e: RegionMark, words: string) => mark.as("outline", REGION, [e], words);
+  return phrase`${theChain(chain)} puts ${hue} at ${end(chain[0], "one end")} or ${end(chain[chain.length - 1], "the other end")}, both beside ${thisRegion(r)}`;
 }
 
 /** What a narrowing step does to its region, and so how its sentence ends:
@@ -177,8 +171,8 @@ export const say = {
     }),
 
   /**
-   * A forcing chain, as the case split it is: region 1 has `color`, or the
-   * numbered chain carries it to the last, and this region touches both. The
+   * A forcing chain, as the case split it is: one end has `color`, or the
+   * chain carries it to the other, and this region touches both. The
    * walk was once said link by link with its colors (owner playtest,
    * 2026-09-25), which no chain the walk deals can fit beside its conclusion
    * in the narration limit; the dots the chain's regions show are the walk,
@@ -204,63 +198,28 @@ export const say = {
   },
 
   /**
-   * One of a pair's regions, dotted with its two colors before the pair is
-   * stated, so "both can only be yellow or teal" is on the board. The region
-   * dotted is ringed and nothing else is marked: the pair is what the leg is
-   * writing, not what it reasons from, and its other region's dots may not be
-   * on the board yet.
+   * One of a pair's or a chain's regions, dotted with its two colors before
+   * the pair or chain is stated, so "can only be yellow or teal" is on the
+   * board. The region dotted is ringed and nothing else is marked: the pair or
+   * chain is what the leg is writing, not what it reasons from, and its other
+   * regions' dots may not be on the board yet. `touched` and `two` are masks.
    */
-  pairDot: (r: number, touched: number, two: number): Sentence =>
+  premiseDot: (r: number, touched: number, two: number): Sentence =>
     so({
       look: phrase`${thisRegion(r)}'s neighbors show ${all(touched)}`,
       follows: phrase`it can only be ${either(two)}`,
       move: phrase`dot those`,
     }),
 
-  /** The same, for a pair's region whose dots include a color a neighbor
-   * already shows. */
-  pairTrim: (r: number, two: number): Sentence =>
+  /** The same, for a region whose dots include a color a neighbor already
+   * shows. */
+  premiseTrim: (r: number, two: number): Sentence =>
     so({
       look: phrase`${thisRegion(r)}'s other dots match its neighbors' colors`,
       move: phrase`it can only be ${either(two)}`,
     }),
-
-  /**
-   * A chain's region, the `k`th, dotted with its two colors before the chain is
-   * followed: its neighbors show the other two. `touched` and `two` are masks;
-   * `chain` is every region of it, numbered, this one included.
-   */
-  chainDot: (
-    r: number,
-    k: number,
-    chain: readonly RegionMark[],
-    touched: number,
-    two: number,
-  ): Sentence =>
-    so({
-      look: phrase`${regionK(r, k)} of ${theChain(chain)} touches ${all(touched)}`,
-      follows: phrase`it can only be ${either(two)}`,
-      move: phrase`dot those`,
-    }),
-
-  /** The same, for a chain's region whose dots include colors a neighbor
-   * already has. */
-  chainTrim: (
-    r: number,
-    k: number,
-    chain: readonly RegionMark[],
-    two: number,
-  ): Sentence =>
-    so({
-      look: phrase`${regionK(r, k)} of ${theChain(chain)} has other dots that match its neighbors' colors`,
-      move: phrase`it can only be ${either(two)}`,
-    }),
 } as const;
 
-/** "the numbered chain": every region of a chain, by the numbers on them. */
+/** "the outlined chain": every region of a chain. */
 const theChain = (chain: readonly RegionMark[]): Narration =>
-  mark.as("outline", REGION, chain, "the numbered chain");
-
-/** "Region k": a chain's region the step decides, named by its number. */
-const regionK = (r: number, k: number): Narration =>
-  mark.as("ring", REGION, [{ region: r }], `Region ${k}`);
+  mark.as("outline", REGION, chain, "the outlined chain");

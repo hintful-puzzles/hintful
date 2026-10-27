@@ -1595,7 +1595,7 @@ exports[`rome hint render > crosses the marks it rules out, hatches its area, an
 ]
 `;
 
-exports[`rome hint render > numbers the arrow chain a loop deduction walks 1`] = `
+exports[`rome hint render > outlines the arrow chain a loop deduction walks, with no number on it 1`] = `
 [
   {
     "color": 0,
@@ -1864,18 +1864,6 @@ exports[`rome hint render > numbers the arrow chain a loop deduction walks 1`] =
     "x2": 143,
     "y1": 51,
     "y2": 48,
-  },
-  {
-    "align": "right",
-    "baseline": "mathematical",
-    "color": 12,
-    "fontType": "variable",
-    "op": "text",
-    "rgb": "rgb(40, 132, 32)",
-    "size": 13,
-    "text": "2",
-    "x": 146,
-    "y": 60,
   },
   {
     "color": 14,
@@ -2482,18 +2470,6 @@ exports[`rome hint render > numbers the arrow chain a loop deduction walks 1`] =
     "x2": 135,
     "y1": 76,
     "y2": 88,
-  },
-  {
-    "align": "right",
-    "baseline": "mathematical",
-    "color": 12,
-    "fontType": "variable",
-    "op": "text",
-    "rgb": "rgb(40, 132, 32)",
-    "size": 13,
-    "text": "1",
-    "x": 146,
-    "y": 100,
   },
   {
     "color": 1,
@@ -5138,10 +5114,10 @@ exports[`rome: pinned hint positions > says, at each pin 1`] = `
   "clean": "Now clear the easy ones: cross out any arrow already placed in its square's area.",
   "dup": "This area now has its right arrow, so the right mark in it must go.",
   "hiddenSingle": "Its area must hold all four arrows, and only this square can still point right, so it must point right.",
-  "loop": "The numbered arrows from the square below lead back to this square, so this square must point left.",
+  "loop": "The outlined arrows from the square below lead back to this square, so this square must point left.",
   "note": "Of the ways this square can point, only up and right aren't already used in its area, so pencil them in.",
   "onlyHome": "Its area must hold all four arrows, and only this square can still point up, so this square must point up.",
-  "opensOnLoop": "The numbered arrows from the square below lead back to this square, so this square's down mark must go.",
+  "opensOnLoop": "The outlined arrows from the square below lead back to this square, so this square's down mark must go.",
   "opposite": "Its left neighbor in this area must point right (a loop) or left (two lefts), so this square must point right.",
   "pair": "Two squares of this area must take up or down between them, so the up mark of the area must go.",
   "populate": "Start by penciling every candidate arrow into each empty square, so there is something to cross out.",

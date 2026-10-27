@@ -122,11 +122,6 @@ they're worth learning once.
 * **Stripes across a row, column or region are the line the explanation
   names**, when it says "this row" or "the striped region".
 
-* **Small numbers in the corners of squares give the order** the steps fall in,
-  when a hint walks a chain of consequences. They're numbers rather than arrows
-  on purpose: they tell you which order to read the chain in, and stop short of
-  claiming that each square is the one that forces the next.
-
 Some puzzles need to point at two kinds of evidence at once — a filled square
 and an empty one, say — and mark them differently from each other. The
 explanation always names what it's pointing at, so you never have to go by

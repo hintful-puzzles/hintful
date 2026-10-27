@@ -55,8 +55,7 @@ export const COL_ERRTEXT = 7;
 export const COL_MISTAKE = 8;
 /** The selected region's band and its notes triangle. */
 export const COL_CURSOR = 9;
-/** The regions a hint step's premise rests on: their band, and a chain's
- * numbers. */
+/** The regions a hint step's premise rests on: their band. */
 export const COL_HINT_CELL = 10;
 /** A region with no color yet: the quiet cell surface. */
 export const COL_UNCOLORED = 11;
@@ -116,15 +115,12 @@ const ERR_MASK = 0xff800000;
 
 // --- the hint's cache word -------------------------------------------
 // A second word per cell, since the first has no room left: each piece's hint
-// role, and the chain number of each piece's region (0 = none).
+// role.
 
 const HINT_TARGET = 1;
 const HINT_EVIDENCE_ROLE = 2;
 const HINT_ROLE_MASK = 3;
 const HINT_BOTTOM_SHIFT = 2;
-const ORDER_TOP_SHIFT = 4;
-const ORDER_BOTTOM_SHIFT = 12;
-const ORDER_MASK = 0xff;
 
 // --- geometry --------------------------------------------------------
 
@@ -457,8 +453,8 @@ function selectionBand(ts: number): number {
   return Math.max(2, Math.floor(ts / 8));
 }
 
-/** Where region `j`'s number, or its chain number, is drawn: at its label
- * point, the same in every cell that draws a piece of it. */
+/** Where region `j`'s number is drawn: at its label point, the same in every
+ * cell that draws a piece of it. */
 function regionLabel(
   map: MapData,
   j: number,
@@ -897,27 +893,17 @@ function drawSquare(
           Math.floor((coord(y, ts) * 2 + ts * yo) / 2),
         );
 
-  // Region numbers, if desired, and a hint chain's numbers, at the same label
-  // point: a region is not a tile, so the chain number goes where the region's
-  // own name would, rather than in a tile corner. `redraw` hides the region
-  // numbers while a chain is up, so the two never share the board.
+  // Region numbers, if desired.
   let oldj = -1;
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 2 && showNumbers; i++) {
     const j = M[(i ? BE : TE) * wh + y * w + x];
     if (oldj === j) continue;
     oldj = j;
-    const order = (hv >> (i ? ORDER_BOTTOM_SHIFT : ORDER_TOP_SHIFT)) & ORDER_MASK;
-    if (!showNumbers && order === 0) continue;
     const xo = map.regionx[j] - 2 * x;
     const yo = map.regiony[j] - 2 * y;
     if (xo >= 0 && xo <= 2 && yo >= 0 && yo <= 2) {
       const label = regionLabel(map, j, ts);
-      dr.drawText(
-        label.origin,
-        label.options,
-        order ? COL_HINT_CELL : COL_GRID,
-        String(order || j),
-      );
+      dr.drawText(label.origin, label.options, COL_GRID, String(j));
     }
   }
 
@@ -990,18 +976,11 @@ export function redraw(
   const mistakeSet = new Set<number>();
   if (mistakes) for (const m of mistakes) mistakeSet.add(m.region);
 
-  // The hint's marks, per region: its role and its place in a chain.
+  // The hint's role for each region; a ring wins a region's band.
   const hintRole = new Uint8Array(n);
-  const hintOrder = new Uint8Array(n);
-  // A ring wins a region's band, so a ringed region is outlined only by its
-  // number.
   const marks = stepMarks(hint);
-  for (const e of marks.of("outline", REGION)) {
-    hintRole[e.region] = HINT_EVIDENCE_ROLE;
-    if (e.order) hintOrder[e.region] = e.order;
-  }
+  for (const e of marks.of("outline", REGION)) hintRole[e.region] = HINT_EVIDENCE_ROLE;
   for (const e of marks.of("ring", REGION)) hintRole[e.region] = HINT_TARGET;
-  const chainShown = hintOrder.some((o) => o > 0);
 
   // The selected region, hidden while the completion flash plays, and in notes
   // mode the cell that carries the corner triangle: the region's first in
@@ -1033,7 +1012,7 @@ export function redraw(
           v |= PENCIL_B_BASE << i;
       }
 
-      if (ui.showNumbers && !chainShown) v |= SHOW_NUMBERS;
+      if (ui.showNumbers) v |= SHOW_NUMBERS;
       if (lit[tRegion]) v |= lit[tRegion] === WIN_LEAD ? LIT_TOP | LEAD_TOP : LIT_TOP;
       if (lit[bRegion])
         v |= lit[bRegion] === WIN_LEAD ? LIT_BOTTOM | LEAD_BOTTOM : LIT_BOTTOM;
@@ -1044,10 +1023,7 @@ export function redraw(
 
       ds.todraw[y * w + x] = v;
       ds.todrawHint[y * w + x] =
-        hintRole[tRegion] |
-        (hintRole[bRegion] << HINT_BOTTOM_SHIFT) |
-        (hintOrder[tRegion] << ORDER_TOP_SHIFT) |
-        (hintOrder[bRegion] << ORDER_BOTTOM_SHIFT);
+        hintRole[tRegion] | (hintRole[bRegion] << HINT_BOTTOM_SHIFT);
     }
 
   // Overlay adjacency error markers.
@@ -1073,11 +1049,7 @@ export function redraw(
 
   // The number each region shows, which a ring encloses or keeps off.
   const labels = Array.from({ length: n }, (_, j) =>
-    hintOrder[j]
-      ? String(hintOrder[j])
-      : ui.showNumbers && !chainShown
-        ? String(j)
-        : null,
+    ui.showNumbers ? String(j) : null,
   );
   const rings = marks
     .of("ring", REGION)

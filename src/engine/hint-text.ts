@@ -73,9 +73,6 @@ export function joinOr(parts: readonly (string | number)[]): string {
 /** Each value once, in order. */
 const distinct = (ns: number[]): number[] => [...new Set(ns)].sort((a, b) => a - b);
 
-/** Sentence-initial form of a vocabulary's cell word. */
-const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
-
 // --- the sliding-tile games' goal prefix -------------------------------------
 //
 // The sliding-tile games (Fifteen, Sixteen, Netslide) name the tile a step works
@@ -449,8 +446,8 @@ export function placedRulesOut(
  * only the chain has a final leg that does not follow from its own premises (the
  * Palisade lesson, `docs/hints.md` § "Writing the narration"):
  *
- * - the origin (chain cell 1) has exactly two candidates, the struck value and
- *   one other;
+ * - the origin (one end of the chain) has exactly two candidates, the struck
+ *   value and one other;
  * - **if it is the struck value**, the conclusion cell loses that value by plain
  *   uniqueness — the two share the line `reason.shares` names;
  * - **if it is the other**, each link forces the next (every chain cell has just
@@ -458,7 +455,7 @@ export function placedRulesOut(
  *   driven *to* the struck value — and it too lines up with the conclusion cell,
  *   because it is a row/column neighbor of it by construction.
  *
- * The links between are numbered on the board (`latin-hint.ts`'s
+ * The links between are outlined on the board (`latin-hint.ts`'s
  * `forcingChainArea`) rather than recited here; reciting them would put the
  * chain back in the reader's head, which is the thing the marks exist to
  * prevent. What the sentence must supply is the **rule** that propagates it,
@@ -476,12 +473,11 @@ export function placedRulesOut(
  * `region` is what the conclusion shares with the origin — a row or column
  * everywhere except Solo, which also reasons over blocks and diagonals.
  *
- * **The deixis tie is the numbering itself.** Two cell-marks on screen normally
- * make a bare "this cell" ambiguous, and this frame shows several — but every
- * chain cell is *numbered* and the conclusion is not, so "cell 1"/"cell 5" and
- * "this cell" pick out different things by the presence or absence of a label
- * rather than by a color. See `docs/hints.md` § "Two marks of one kind:
- * tie them, and never by color".
+ * **The deixis tie is the role.** The chain and its two ends are outlined and
+ * named by their relation to the chain ("one end", "the other end"),
+ * each a reference of its own, and the conclusion is the one ringed cell, so
+ * "this cell" picks out the ring and nothing else. See `docs/hints.md` § "Two
+ * marks of one kind: tie them, and never by color".
  */
 export function forcingChainPremise(
   reason: { chain: readonly ForcingLink[] },
@@ -496,11 +492,10 @@ export function forcingChainPremise(
   const v = vocab.value;
   const cell = vocab.cell ?? "cell";
   const chain = forcingChainArea(reason);
-  const last = chain.length;
   const s = v(struck.n);
   const here = thisCell(struck, cell);
-  const link = (i: number, words: string): Narration =>
-    mark.as("outline", CELL, [chain[i - 1]], words);
+  const end = (at: Point, words: string): Narration =>
+    mark.as("outline", CELL, [at], words);
   const lines = region === "row" || region === "column";
   const tie =
     lastShares === null && lines
@@ -510,8 +505,9 @@ export function forcingChainPremise(
         : lastShares === null
           ? phrase`in ${here}'s ${region} and in line with it`
           : phrase`in ${here}'s ${region} and ${lastShares}`;
-  // "The chain forces" is the rule that carries it, which the board does not
-  // show: each numbered cell, down to two values, forces the next. Not "in
-  // turn", which the speculative-chain guard reads as a chain left unshown.
-  return phrase`${link(1, `${cap(cell)} 1`)} is ${s} or ${mark.as("outline", CELL, chain, "the numbered chain")} forces ${link(last, `${cell} ${last}`)} to ${s}, ${tie}`;
+  // "Puts" is the rule that carries it, which the board does not show: each
+  // cell of the chain, down to two values, forces the next, so if one end is
+  // not the value the other is. Not "in turn", which the speculative-chain
+  // guard reads as a chain left unshown.
+  return phrase`${mark.as("outline", CELL, chain, "The outlined chain")} puts ${s} at ${end(chain[0], "one end")} or ${end(chain[chain.length - 1], "the other end")}, ${tie}`;
 }

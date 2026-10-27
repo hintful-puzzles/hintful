@@ -239,8 +239,7 @@ describe("path hint order", () => {
 
 describe("path hint frame", () => {
   it("rings the edge a supposition settles and outlines where it breaks", () => {
-    // A chain's numbers are drawn at the chain pin, which hint-ordinal.test.ts
-    // reads; this pin's supposition breaks the board in one look.
+    // This pin's supposition breaks the board in one look.
     const { recording, step } = renderPinnedHint(pathGame, pinned("lookahead"));
     const ringed = stepMarks(step).of("ring", EDGE).length;
     expect(ringed).toBeGreaterThan(0);

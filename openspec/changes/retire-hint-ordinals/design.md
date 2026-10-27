@@ -3,8 +3,8 @@
 ## Context
 
 A chain hint marks a set of forced consequences and numbers them in a corner
-of each cell or beside each edge, through `drawHintOrdinal`. The guide is
-`docs/hints-marks.md` § "Number a chain's cells in order". Population, as of
+of each cell or beside each edge, through `drawHintOrdinal`. The guide was
+the section of `docs/hints-marks.md` that this change removes. Population, as of
 2026-10-26: `git grep -l drawHintOrdinal src/games` lists eight games; Path
 draws its edge ordinals through `engine/edge-hint.ts`, Map through its
 region label point, and the Latin-square games share `forcingChainArea`
@@ -99,6 +99,61 @@ owner any tier that becomes hard to fill. Re-read
 `docs/hints-marks.md` § "Show the what-if walk statically" and
 `docs/hints.md` § "The forcing boundary" against D4, and retire whatever D4
 makes dead.
+
+### D6. The classification (2026-10-27)
+
+Every rung below Unreasonable that tries a hypothesis, found from the
+solvers' ladders and not from the ordinal declarations alone (a chain need
+not have been numbered to be a supposition). Rungs already at Unreasonable
+(Undead's `forcingPass`, Dominosa's `deduceForcingChain`, Bricks' and
+Galaxies' `solverRecurse`, Spokes' unbounded contradiction) and the Checks
+(one placement and one validator call: Bricks' and Clusters' `solverTry`,
+Sticks' `sticksTry`, Seismic's `attempt`, Star Battle's `crowded` and
+`starved`, Bridges' `stage3`) are out of it.
+
+Tiers are named as the player sees them (`tierNames`), not by the code's
+constants: Keen's `DIFF_EXTREME` is shown as Hard.
+
+| Game | Rung | Tier | Links writable as marks? | Verdict | Moved to Unreasonable |
+| --- | --- | --- | --- | --- | --- |
+| Keen, Unequal, Group | `forcing` (`latin.ts`) | Hard | each cell's two candidates are notes; "if this is a, the next is b" is a conditional no mark records | supposition | Hard keeps set elimination (`diffSet1`) |
+| Towers, Mathrax | `forcing` | Tricky | as above | supposition | Tricky keeps set elimination |
+| Solo | `forcing-chain` | Extreme | as above | supposition | Extreme keeps `digit-set` |
+| Salad | `forcing` | Normal | as above | supposition | Normal keeps set elimination; Salad has no Unreasonable |
+| Map | `forcingChain` | Tricky | the dots are markable, and the premise legs write them; the alternation along the chain is a conditional | supposition | Tricky has no other rung: it would deal nothing |
+| Path | `lookahead`, `long-lookahead` | Normal, Tricky | the edges a supposed line or cross forces are not facts | supposition | Normal and Tricky have no other rung; Path has no Unreasonable |
+| Clusters | `lookahead-chain` | Normal (second of two) | the colors a supposed color forces are not facts; the rung is a sub-solve | supposition | Normal has no other rung; Clusters has no Unreasonable |
+| Spokes | `contradiction-bounded` | Normal | up to four propagated spokes, not shown | supposition | Normal has no other rung |
+| Boats | `attempt…` (`refuted`) | Hard | one trial square, its row filled, one validator call | borderline: a Check with one forced fill | Hard has no other rung; Boats has no Unreasonable |
+| Rome | `loop` | Normal | the walk follows arrows already on the board | markable | nothing moves; the ordinal is gone |
+| Blackbox | `layout` | untiered | a search, narrated as "a layout that fits" | supposition | untiered |
+
+**What moving the Latin forcing chains costs**, measured by dealing six boards
+per preset at its forcing tier at HEAD, and again with `LatinSolver.forcing`
+stubbed to fire nothing and Solo's rung raised a tier (median, then max):
+Towers 4×4 Tricky 9 ms → 494 ms (max 1.5 s); Solo 3×3 Extreme 15 → 808 ms
+(max 1.2 s); Salad 5n4B Normal 15 → 259 ms (max 0.9 s); Keen 6×6 Hard 38 →
+77 ms; Unequal 5×5 Hard 6 → 34 ms; the other presets unchanged within noise;
+no deal failed. Group has no preset at Hard. So every Latin tier still fills.
+
+**What it costs elsewhere is a tier.** Path's Normal and Tricky, Clusters'
+Normal, Map's Tricky, Spokes' Normal and Boats' Hard are defined by the rung
+alone, so moving it leaves the tier with no board to deal. Removing or renaming
+a tier changes the params a game ID and a saved preference carry. That is a
+compatibility break, and the owner's to make.
+
+## Open question (blocks tasks 2 and 3)
+
+Under D4 every row above but Rome is a supposition. For the Latin games the
+move is cheap. For Path, Clusters, Map, Spokes and Boats it empties a tier,
+and Path's Normal is its default. Owner: which of these?
+
+- (a) Move them all. The emptied tiers go, or take another name, and old game
+  IDs at those tiers are read as the nearest tier left.
+- (b) Move the Latin forcing chains now, and leave the tier-defining rungs
+  until each of those games has a markable technique to fill its tier with
+  (one change per engine shape, filed first as the engine's).
+- (c) Something else.
 
 ## Risks / Trade-offs
 

@@ -1070,12 +1070,11 @@ follows. Exemplar: [`map/hint.ts`](../src/games/map/hint.ts).
   pattern where there is one, else the chain value by value up to five
   elements, and past that the rule and where the chain ends. The plan
   throws if the walk does not end on the struck value (§ "A walk a sentence
-  claims is a walk the code takes"). The ordinal is the shared one
-  ([`hints-marks.md`](./hints-marks.md) § "Number a chain's cells in
-  order"); the forcing-chain sentence stays the
-  game's, `forcingChainPremise` being written for a line.
+  claims is a walk the code takes"). The chain is outlined whole, its ends
+  named by their relation to it ([`hints-marks.md`](./hints-marks.md)
+  § "Show the what-if walk statically"); the forcing-chain sentence stays
+  the game's, `forcingChainPremise` being written for a line.
 - **Name an element by its mark, never by an id the board may not show**:
-  "this region", "the outlined pair", "region 1" by the number the hint
-  draws. Name a color that is a value by its word, kept beside its fill
+  "this region", "the outlined pair", "the outlined chain". Name a color that is a value by its word, kept beside its fill
   (`FOUR_NAMES` in `engine/color/colors.ts`), which is a word for each
   scheme: put it in a `phrase`, and list several with `listOf`.

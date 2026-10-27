@@ -74,10 +74,10 @@ The ideas it teaches, from the plainest up:
   must use both between them, so any region touching both can be
   neither.
 * **A chain.** On harder boards, a line of regions that can each be
-  only two colors passes a choice along: if region 1 isn't teal, it is
-  its other color, which settles region 2, and so on down the chain
-  until the last region has to be teal. Either way region 1 or the last
-  is teal, so a region touching both can't be.
+  only two colors passes a choice along: if the region at one end isn't
+  teal, it is its other color, which settles the next, and so on down
+  the chain until the region at the other end has to be teal. Either way
+  one end or the other is teal, so a region touching both can't be.
 
 Every hint is a deduction you could have made from what is on the board.
 On an **Unreasonable** board there may come a point where no deduction is

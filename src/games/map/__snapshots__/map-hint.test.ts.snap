@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`map hint rendering > a chain's regions carry their numbers, and the target its ring 1`] = `
+exports[`map hint rendering > a chain's regions carry no numbers, and the target its ring 1`] = `
 [
   {
     "color": 0,
@@ -3435,18 +3435,6 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 122,
   },
   {
-    "align": "center",
-    "baseline": "mathematical",
-    "color": 10,
-    "fontType": "variable",
-    "op": "text",
-    "rgb": "rgb(40, 132, 32)",
-    "size": 12,
-    "text": "1",
-    "x": 122,
-    "y": 132,
-  },
-  {
     "op": "unclip",
   },
   {
@@ -3484,18 +3472,6 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outline": 17,
     "outlineRgb": "rgb(206, 213, 252)",
     "r": 2,
-  },
-  {
-    "align": "center",
-    "baseline": "mathematical",
-    "color": 10,
-    "fontType": "variable",
-    "op": "text",
-    "rgb": "rgb(40, 132, 32)",
-    "size": 12,
-    "text": "1",
-    "x": 122,
-    "y": 132,
   },
   {
     "op": "unclip",
@@ -4935,18 +4911,6 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 142,
   },
   {
-    "align": "center",
-    "baseline": "mathematical",
-    "color": 10,
-    "fontType": "variable",
-    "op": "text",
-    "rgb": "rgb(40, 132, 32)",
-    "size": 12,
-    "text": "2",
-    "x": 182,
-    "y": 152,
-  },
-  {
     "op": "unclip",
   },
   {
@@ -4984,18 +4948,6 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outline": 16,
     "outlineRgb": "rgb(170, 235, 230)",
     "r": 2,
-  },
-  {
-    "align": "center",
-    "baseline": "mathematical",
-    "color": 10,
-    "fontType": "variable",
-    "op": "text",
-    "rgb": "rgb(40, 132, 32)",
-    "size": 12,
-    "text": "2",
-    "x": 182,
-    "y": 152,
   },
   {
     "op": "unclip",
@@ -8643,18 +8595,6 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "y": 222,
   },
   {
-    "align": "center",
-    "baseline": "mathematical",
-    "color": 10,
-    "fontType": "variable",
-    "op": "text",
-    "rgb": "rgb(40, 132, 32)",
-    "size": 12,
-    "text": "3",
-    "x": 172,
-    "y": 242,
-  },
-  {
     "op": "unclip",
   },
   {
@@ -9389,18 +9329,6 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "rgb": "rgb(0, 0, 0)",
     "w": 1,
     "x": 162,
-    "y": 242,
-  },
-  {
-    "align": "center",
-    "baseline": "mathematical",
-    "color": 10,
-    "fontType": "variable",
-    "op": "text",
-    "rgb": "rgb(40, 132, 32)",
-    "size": 12,
-    "text": "3",
-    "x": 172,
     "y": 242,
   },
   {
@@ -13378,16 +13306,16 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
 
 exports[`map: pinned hint positions > says, at each pin 1`] = `
 {
-  "chainAlternates": "Region 1 or, via the chain, region 4 is violet, both beside this region, so it can't be violet and must be yellow.",
-  "chainDot": "Region 1 of the numbered chain touches pink and teal, so it can only be yellow or violet: dot those.",
-  "chainLongWalk": "Region 1 or, via the chain, region 6 is teal, both beside this region, so it can't be teal and must be pink.",
-  "chainMark": "Region 1 or, via the chain, region 3 is violet, both beside this region, so it can't be violet: dot yellow and teal.",
-  "chainPlace": "Region 1 or, via the chain, region 4 is violet, both beside this region, so it can't be violet and must be yellow.",
-  "chainStrike": "Region 1 or, via the chain, region 3 is pink, both beside this region, so it can't be pink: its pink dot must go.",
+  "chainAlternates": "The outlined chain puts violet at one end or the other end, both beside this region, so it can't be violet and must be yellow.",
+  "chainDot": "This region's neighbors show pink and teal, so it can only be yellow or violet: dot those.",
+  "chainLongWalk": "The outlined chain puts teal at one end or the other end, both beside this region, so it can't be teal and must be pink.",
+  "chainMark": "The outlined chain puts violet at one end or the other end, both beside this region, so it can't be violet: dot yellow and teal.",
+  "chainPlace": "The outlined chain puts violet at one end or the other end, both beside this region, so it can't be violet and must be yellow.",
+  "chainStrike": "The outlined chain puts pink at one end or the other end, both beside this region, so it can't be pink: its pink dot must go.",
   "clean": "Now clear the easy ones: remove from each blank region the dot of every color a neighbor already shows.",
   "deadDots": "This region's other dots match its neighbors' colors, so it must be violet.",
   "fill": "Start by dotting all four colors into each blank region, so there is something to cross out.",
-  "forcingChain": "Region 1 of the numbered chain touches pink and teal, so it can only be yellow or violet: dot those.",
+  "forcingChain": "This region's neighbors show pink and teal, so it can only be yellow or violet: dot those.",
   "onlyColorLeft": "This region touches pink, teal and violet, so it must be yellow.",
   "pairDot": "This region's neighbors show pink and violet, so it can only be yellow or teal: dot those.",
   "pairMark": "This region touches the outlined pair, which use both pink and yellow, so it can't be either: dot teal and violet.",

@@ -236,9 +236,8 @@ const printed = (report: HintScanReport): string =>
         `${String(kind.held).padStart(6)}  ${name}: ${kind.kept ? "kept" : (kind.pin ?? "NOT FOUND")}`,
     )
     .join("\n");
-// A call in a loop runs a scan a pass, and its pins come from outside the call
-// (`hint-ordinal.test.ts` reads `CHAIN_PINS`, a game at a time), so nothing
-// can be written there: each report is printed, to be pasted by hand.
+// A call in a loop runs a scan a pass, and its pins come from outside the call,
+// so nothing can be written there: each report is printed, to be pasted by hand.
 if (blocks.length === 1 && reports.length > 1) {
   console.log(reports.map(printed).join("\n\n"));
   process.exit(0);

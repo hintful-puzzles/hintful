@@ -234,7 +234,7 @@ describe("hint", () => {
       if (d.reason.kind === "chain") {
         expect(step.explanation).toMatch(
           new RegExp(
-            `^If (${TWO_NAMES.map((w) => w.light).join("|")}), this cell forces cells? 1`,
+            `^If (${TWO_NAMES.map((w) => w.light).join("|")}), this cell forces the small pieces?\\b`,
           ),
         );
         expect(hl.chain.length).toBe(d.reason.steps.length);
@@ -393,12 +393,6 @@ describe("hint rendering (tier 2.5)", () => {
     }
     // …and the hint roles are distinct from one another, so a target and its
     // evidence never collapse into one mark.
-    //
-    // The chain ordinal is deliberately *not* a fourth role: it is drawn in
-    // `COL_HINT_CELL` because a number saying where a cell falls in the chain is
-    // an index into the evidence, not a premise of its own. Asserting that
-    // identity is the point — two meanings arriving at one value down two routes
-    // is what `palette.ts`'s two-layer split exists to prevent.
     expect(new Set(roles.map(key)).size).toBe(roles.length);
   });
 
@@ -451,24 +445,15 @@ describe("hint rendering (tier 2.5)", () => {
       ),
     ).toHaveLength(4);
 
-    // …and each carries its **ordinal**: an unordered set of shaded cells
-    // cannot be checked against a narration that says they fall one after
-    // another. Asserted as the exact set `1..n` rather than "some text was drawn", so a chain
-    // that numbers only its first cell, numbers from 0, or repeats a digit
-    // fails — the count is the guard that a snapshot re-baseline cannot erase.
-    const digits = ops
-      .flatMap((o) => (o.op === "text" && o.color === COL_HINT_CELL ? [o.text] : []))
-      .sort();
-    expect(digits).toEqual(
-      Array.from({ length: hl.chain.length }, (_, i) => String(i + 1)).sort(),
-    );
+    // …and no number is drawn on any of them: the pieces are the chain.
+    expect(ops.filter((o) => o.op === "text" && o.color === COL_HINT_CELL)).toEqual([]);
 
     expect(ops).toMatchSnapshot();
   });
 
   it("a chain cell whose outline side closes repaints, keeping its own overlay", () => {
     // The chain's outline joins neighboring cells, so a cell can keep its role,
-    // color and ordinal while a neighbor joining it removes the side between
+    // and color while a neighbor joining it removes the side between
     // them — the one change the overlay bits cannot see.
     const state = generate("join-side");
     const ts = clustersGame.preferredTileSize ?? 32;
@@ -484,10 +469,10 @@ describe("hint rendering (tier 2.5)", () => {
       ),
       highlights: { chain } satisfies ClustersHintHighlights,
     });
-    const alone = step([{ x: 3, y: 3, fill: F_COLOR_0, order: 1 }]);
+    const alone = step([{ x: 3, y: 3, fill: F_COLOR_0 }]);
     const joined = step([
-      { x: 3, y: 3, fill: F_COLOR_0, order: 1 },
-      { x: 2, y: 3, fill: F_COLOR_0, order: 2 },
+      { x: 3, y: 3, fill: F_COLOR_0 },
+      { x: 2, y: 3, fill: F_COLOR_0 },
     ]);
     const frame = (
       ds: ReturnType<typeof clustersGame.newDrawState>,

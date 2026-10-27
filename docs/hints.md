@@ -431,11 +431,12 @@ Tie by something the code guarantees, cheapest first:
 - **A value**, where the puzzle has one (§ "Name a square by its value").
 - **A role word tied to the mark's shape**, where the game's marks already
   use distinct ones.
-- **A number on the other marks.** Where the second mark is a chain the hint
-  numbers, name those cells by ordinal and keep "this cell" for the one with
-  no number. A numbered mark and an unnumbered one are not the same kind of
-  thing, so this ties every mark on screen. Numbering a chain does not retire
-  a tie that says which mark "this cell" means.
+- **A reference of its own for a link the words single out.** Where the
+  second mark is a chain, name it whole ("the outlined chain") and each link
+  the sentence needs by its relation to it ("one of its ends", "its other
+  end"), each its own reference with its own pill, and keep "this cell" for
+  the ringed one. Exemplar: `forcingChainPremise` in
+  [`engine/hint-text.ts`](../src/engine/hint-text.ts).
 
 Guard it in the game's test: a second mark displayed implies the explanation
 contains the tie. See the guard fail first, and give it a `checked` floor and

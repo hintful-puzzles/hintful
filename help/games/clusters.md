@@ -21,7 +21,7 @@ This puzzle type was invented by Inaba Naoki under the name *クラスター*, o
 
 {{hint-marks}}
 
-On Normal boards one color can lead further before it fails. The hint then supposes the ringed square were that color, and names the squares it would force by their numbers.
+On Normal boards one color can lead further before it fails. The hint then supposes the ringed square were that color, and outlines the squares it would force, each holding a small piece of the color it would take.
 
 The rules a step shows breaking are the ones the puzzle states: a dot touches exactly one square of its own color, and every other square touches at least two. A square whose neighbors are all the other color, or that can only ever match one of them, can't be that color.
 

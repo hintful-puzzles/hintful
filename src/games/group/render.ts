@@ -35,7 +35,6 @@ import {
   type MarkCell,
   NO_TEXT,
 } from "../../engine/hint-mark.ts";
-import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -48,7 +47,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -90,8 +88,7 @@ export const COL_DIAGONAL = 6;
 /** The Check & Save mistake outline. */
 export const COL_MISTAKE = 7;
 /** Hint overlay: the premise cells outlined as evidence (associativity's three
- * known products, an identity fill's revealing cell), **and** a forcing chain's
- * ordinal — one index, because the number indexes the evidence. */
+ * known products, an identity fill's revealing cell, a forcing chain). */
 export const COL_HINT_CELL = 8;
 /** The yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 9;
@@ -117,8 +114,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_DIAGONAL] = surfaceGrid(bg);
   out[COL_MISTAKE] = ERROR;
-  // `HINT_OUTLINE` also colors the chain ordinal; its doc comment says why the
-  // index and what it indexes are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   out[COL_CELL] = cellSurface(bg);
@@ -133,9 +128,7 @@ export function colors(defaultBackground: Color): Color[] {
  * and the struck candidate(s) crossed through among the pencil marks (`marks`).
  * All coordinates are grid `{x = col, y = row}`. */
 export interface GroupHint {
-  /** A forcing chain's cells additionally carry their place in it, drawn as an
-   * ordinal. */
-  area: OrderedCell[];
+  area: Point[];
   targets: Point[];
   marks: { x: number; y: number; n: number }[];
 }
@@ -432,7 +425,6 @@ function drawTile(
   error: number,
   mistake: boolean,
   struck: number,
-  hintOrder: number,
   hatched: boolean,
 ): void {
   const w = ds.w;
@@ -525,12 +517,6 @@ function drawTile(
     dr.drawRect({ x: cx + cw - 2, y: cy, w: 2, h: ch }, COL_MISTAKE);
   }
 
-  // A forcing chain's place in the order it fires, so the narration can cite
-  // the cells by number. Inside the clip, so a legend cell's inset never lets
-  // it spill.
-  if (hintOrder > 0)
-    drawHintOrdinal(dr, { x: cx, y: cy }, Math.min(cw, ch), hintOrder, COL_HINT_CELL);
-
   dr.unclip();
   dr.drawUpdate({ x: cx, y: cy, w: cw, h: ch });
 }
@@ -586,8 +572,8 @@ export function redraw(
     const tile = (sx + 1) | DF_LEGEND;
     if (ds.legend[x] !== tile) {
       ds.legend[x] = tile;
-      drawTile(dr, ds, -1, x, tile, 0, 0, false, 0, 0, false);
-      drawTile(dr, ds, x, -1, tile, 0, 0, false, 0, 0, false);
+      drawTile(dr, ds, -1, x, tile, 0, 0, false, 0, false);
+      drawTile(dr, ds, x, -1, tile, 0, 0, false, 0, false);
     }
   }
 
@@ -681,7 +667,6 @@ export function redraw(
           error,
           mistake,
           ds.hint.struck[gi],
-          ds.hint.order[gi],
           ds.hint.hatched[gi] === 1,
         );
         ds.hint.commit(gi);

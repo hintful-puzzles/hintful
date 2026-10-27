@@ -171,11 +171,10 @@ describe("towers hint", () => {
     // line. A clue-strike step hatches its clue's line; every struck mark must
     // lie within it.
     //
-    // A forcing chain is the other shape: an ordered `area`, and the cell being
-    // struck is deliberately **not** on it: the chain drives some other cell to
-    // the value, and the conclusion loses it by lining up with that cell.
-    // Selecting on the ordinal tests the distinction directly: a numbered area
-    // *is* the chain.
+    // A forcing chain is the other shape: its `area` is the chain, and the cell
+    // being struck is deliberately **not** on it: the chain drives some other
+    // cell to the value, and the conclusion loses it by lining up with that
+    // cell. Selected by its rung, which is what names the chain.
     const diffs: Difficulty[] = ["easy", "hard", "extreme"];
     let checked = 0;
     let chainsChecked = 0;
@@ -189,10 +188,9 @@ describe("towers hint", () => {
           // A set across lines stripes the lines it confines a height in, and
           // strikes outside them by design.
           if (step.rung === "set") continue;
-          const area: { x: number; y: number; order?: number }[] =
-            step.highlights?.area ?? [];
+          const area: { x: number; y: number }[] = step.highlights?.area ?? [];
           const line: { x: number; y: number }[] = step.highlights?.hatch ?? [];
-          const isChain = area.some((a) => a.order !== undefined);
+          const isChain = step.rung === "forcing";
           if (!isChain && line.length === 0) continue; // dup continuation: no clue line
           for (const m of step.move.marks as { x: number; y: number }[]) {
             if (isChain) {

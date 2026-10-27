@@ -693,10 +693,6 @@ reads; no list is edited. What each asks of the game's author:
   `HINT_GAMES` (`git grep -l HINT_GAMES -- src scripts`): plans resume from
   any position, the overlay reaches the render cache, narration form, and the
   rest. Recipe: [`hints.md`](./hints.md).
-- **A numbered chain**: a game whose hint numbers a chain adds one pinned
-  position to
-  [`testing/hint-chain-pins.ts`](../src/engine/testing/hint-chain-pins.ts);
-  `hint-quality.test.ts` fails on a numbered chain from a game with no entry.
 - **Recorded premises**: a game whose hint calls the candidate walk is in
   [`firing-replay.test.ts`](../src/engine/firing-replay.test.ts), which
   audits that every recorded firing follows from its premise. A `latinSolver`

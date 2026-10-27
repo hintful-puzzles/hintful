@@ -48,9 +48,9 @@ the preferences.
 
 {{hint-marks}}
 
-Numbered outlined cells are a chain of cells with two numbers left each,
-read in order: the sentence says how the chain rules a number out of the
-cell where it is struck.
+An outlined chain is cells with two numbers left each, each sharing a
+row, column or region with the next: the sentence names its two ends and
+says how the chain rules a number out of the cell where it is struck.
 
 A few ideas are worth learning by name:
 

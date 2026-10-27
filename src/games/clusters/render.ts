@@ -33,7 +33,6 @@ import {
   type MarkCell,
   NO_TEXT,
 } from "../../engine/hint-mark.ts";
-import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
@@ -70,8 +69,7 @@ export const COL_CURSOR = 7;
 // tile's own color *is* part of the premise; a lookahead chain's what-if cells
 // are outlined COL_HINT_CELL with a small piece of the color each would be
 // forced to.
-/** The outlines, **and** a chain cell's ordinal — one index, because the
- * number indexes the evidence. */
+/** The outlines. */
 export const COL_HINT_CELL = 8;
 /** The surface of a cell. */
 export const COL_CELL = 9;
@@ -102,7 +100,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_CURSOR] = CURSOR;
   // The chain is outlined rather than washed, so it takes the mark form of the
-  // evidence role, which covers the chain ordinal too (see `HINT_OUTLINE`).
+  // evidence role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
@@ -130,14 +128,6 @@ const HB_TARGET = 1; // the forced cell — ringed
 const HB_DANGER = 1 << 1; // tile that would break — a thin COL_HINT_CELL ring
 const HB_CHAIN_0 = 1 << 2; // what-if cell forced `F_COLOR_0` in the hypothetical
 const HB_CHAIN_1 = 1 << 3; // what-if cell forced `F_COLOR_1` in the hypothetical
-//
-// A chain cell's **1-based position in the chain** is not a bit here: it rides
-// the sidecar's own ordinal lane (`OverlaySidecar.order`). See `drawHintOrdinal`
-// for why the mark is a number and not an arrow (34% of Clusters' consecutive
-// links are not implications at all), and `OrderedCell` for why the order needs
-// a lane of its own. Nothing draws the last link: the contradiction sits on, or
-// orthogonally beside, the final forced cell in 140 of 140 firings measured, so
-// the ring is already next to the highest number.
 
 export interface ClustersDrawState {
   started: boolean;
@@ -199,7 +189,6 @@ function drawTile(
   tone: WinTone,
   cursor: boolean,
   hintBits: number,
-  hintOrder: number,
 ): void {
   const b = border(ts);
   const px = x * ts + b;
@@ -274,21 +263,6 @@ function drawTile(
     drawThickRectOutline(dr, px + 1, py + 1, side, side, rt, COL_HINT_CELL);
   }
 
-  // The order this consequence falls in, drawn after the ring and inside it
-  // when there is one: the break lands on the last forced cell often enough
-  // that "ringed *and* numbered" is a common frame, and at the shared inset the
-  // ring would cover the digit.
-  if (hintOrder > 0) {
-    drawHintOrdinal(
-      dr,
-      { x: px, y: py },
-      ts - 1,
-      hintOrder,
-      COL_HINT_CELL,
-      hintBits & HB_DANGER ? 2 + rt : undefined,
-    );
-  }
-
   dr.drawUpdate({ x: px, y: py, w: ts, h: ts });
 }
 
@@ -338,7 +312,6 @@ export function redraw(
     const i = c.y * w + c.x;
     if (!outlined.has(i)) continue;
     ds.hint.add(i, c.fill === F_COLOR_0 ? HB_CHAIN_0 : HB_CHAIN_1);
-    if (c.order !== undefined) ds.hint.setOrder(i, c.order);
   }
 
   const targets: MarkCell[] = [];
@@ -350,8 +323,7 @@ export function redraw(
   }
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
-    // A forced cell shows a piece or a dot, never text; an ordinal is on a
-    // chain cell, inside its own tile, which the ring's room does not reach.
+    // A forced cell shows a piece or a dot, never text.
     text: () => NO_TEXT,
     evidenceColor: COL_HINT_CELL,
   };
@@ -382,19 +354,7 @@ export function redraw(
         (wrong ? F_WRONG : 0) |
         (tone << K_LIT);
       if (ds.cache[i] !== packed || ds.hint.stale(i)) {
-        drawTile(
-          dr,
-          ts,
-          x,
-          y,
-          tile,
-          error,
-          wrong,
-          tone,
-          cursor,
-          ds.hint.packed[i],
-          ds.hint.order[i],
-        );
+        drawTile(dr, ts, x, y, tile, error, wrong, tone, cursor, ds.hint.packed[i]);
         ds.cache[i] = packed;
         ds.hint.commit(i);
       }

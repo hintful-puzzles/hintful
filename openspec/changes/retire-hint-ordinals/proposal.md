@@ -78,6 +78,6 @@ None.
   `hint-quality` and `hint-ordinal` guards.
 - **Games:** the renderers and sentences of the eleven games above, and their
   hint snapshots.
-- **Docs:** `docs/hints-marks.md` § "Number a chain's cells in order",
+- **Docs:** `docs/hints-marks.md`'s section on numbering a chain (removed),
   `docs/hints.md` § "Bind the words to the marks", `docs/testing.md`, and
   `docs/engine-catalog.md`.

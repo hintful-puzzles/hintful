@@ -99,7 +99,6 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-mark.ts` — the ring and the outline | you draw a hint's marks on cells |
 | – `edge-hint.ts` — a hint on an edge between squares | a hint names a side of a square |
 | – `hatch.ts` — the stripes on the line a step names | a hint sentence names a row or column |
-| – `hint-ordinal.ts` — where a cell falls in a forced chain | a hint step walks a chain of cells |
 | – `hint-refusal.ts` — what a hint says when it will not give one | your `hint` returns an error |
 | – `solve-failure.ts` — what Solve says when it will not solve | your `solve` returns an error |
 | Input | you write `interpretMove` or the keypad |
@@ -1032,12 +1031,10 @@ square; a side on the board's rim is named by its square and direction.
 chain (`EdgeChainLink`), and `trackEdgeStep` is the `hintKeepTrack` of a
 step that sets edges, shrinking its move and its rings together.
 `edgeHintWords` gives each square its tile-key word for those edges, set on
-both squares, with a chain's ordinal on the edge's first one. In the tile,
-`drawEdgeHints` asks the game's declared `EdgeShapes` for its own line and
-cross in the outline's ink, and for where an asked side's ring goes
-(`ring`), drawing the ring with the asked shape inside, under the square's
-content, and
-`drawEdgeOrdinals` draws the numbers over it. The word's low
+both squares. In the tile, `drawEdgeHints` asks the game's declared
+`EdgeShapes` for its own line and cross in the outline's ink, and for where
+an asked side's ring goes (`ring`), drawing the ring with the asked shape
+inside, under the square's content. The word's low
 `EDGE_HINT_BITS` bits are the module's; a game keeps its own hint bits
 above them. Exemplars: `path/render.ts`, with a chain; `tracks/render.ts`,
 whose outline role draws a bar.
@@ -1052,14 +1049,6 @@ and not the rect, so tiles hatched one at a time join into one strip.
 `hatchPeriod(tileSize)` for the pitch. `puzzle/hatch-contrast.test.ts`
 holds the opacity in both schemes. When to use it:
 [`hints-marks.md`](./hints-marks.md) § "Hatch the line the sentence names".
-
-### `hint-ordinal.ts` — where a cell falls in a forced chain
-
-The small corner number on each cell of a chain a step walks. **Number a
-chain; do not draw arrows.** An arrow claims that this cell forces that
-one, which is not true of every link; an ordinal claims only the order. It
-stays inside one tile, so it rides the `OverlaySidecar` diff. Exemplar:
-`clusters/render.ts`.
 
 ### `hint-refusal.ts` — what a hint says when it will not give one
 
@@ -1572,9 +1561,6 @@ test or a cross-game guard reaches for:
   rung is tested on, and `describeHintKindPins` a test file's further
   positions ([`testing.md`](./testing.md) § "Pinning a hint's positions").
   `hint-scan-report.ts` is the report a scan fails with.
-- **`hint-chain-pins.ts`.** The pinned position of each game whose hint
-  numbers a chain, and `declaredOrder`, by which `hint-quality.test.ts`
-  tells a game that owes one.
 - **`ladder-census.ts`, `hint-binding.ts`.** The census that certifies a
   ladder, and the check that a rendered frame matches a step's words.
 - **`slow.ts`.** `itSlow` and `describeSlow` defer a case to the slow tier

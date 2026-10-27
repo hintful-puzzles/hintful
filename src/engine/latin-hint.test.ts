@@ -248,7 +248,7 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
       "The outlined cells already account for 2 and 3 between them",
     );
     // A forcing chain concludes from *both* branches of the origin's two
-    // candidates, so both are stated; the links between are numbered on the
+    // candidates, so both are stated; the links between are outlined on the
     // board rather than recited.
     const forcing = latinPremise(
       {
@@ -263,21 +263,21 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
       [{ x: 1, y: 4, n: 5 }],
     ).premise;
     expect(forcing.text).toBe(
-      "Cell 1 is 5 or the numbered chain forces cell 3 to 5, both in line with this cell",
+      "The outlined chain puts 5 at one end or the other end, both in line with this cell",
     );
-    // Every numbered cell is outlined with its ordinal; "this cell" is the
-    // struck one, ringed.
+    // The chain is outlined whole; "this cell" is the struck one, ringed.
     expect(keys(forcing)).toEqual([
       "outline|cell|0,0",
       "outline|cell|3,0",
       "outline|cell|3,4",
       "ring|cell|1,4",
     ]);
+    // Each end is a reference of its own, so its pill finds that cell alone.
     expect(
-      forcing.refs
-        .flatMap((r) => r.elements as { order?: number }[])
-        .map((c) => c.order),
-    ).toContain(3);
+      forcing.refs.map((r) => (r.elements as { x: number; y: number }[]).length),
+    ).toEqual([3, 1, 1, 1]);
+    expect(forcing.refs[1].elements).toEqual([{ x: 0, y: 0 }]);
+    expect(forcing.refs[2].elements).toEqual([{ x: 3, y: 4 }]);
     expect(() => latinPremise({ kind: "single" }, struck(3))).toThrow(
       /narrateLatinReason/,
     );

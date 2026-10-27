@@ -41,7 +41,6 @@ import {
   type MarkCell,
   NO_TEXT,
 } from "../../engine/hint-mark.ts";
-import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -88,8 +87,7 @@ export const COL_DONE = 6;
 export const COL_PENCIL_BODY = 7;
 // Fork additions: the explained-hint legend (see docs/hints-marks.md § "The engine colors the marks").
 /** The driving clue's line of sight, outlined (drawn once per frame in
- * redraw), **and** a forcing chain's ordinal — one index, because the number
- * indexes the evidence. */
+ * redraw). */
 export const COL_HINT_CELL = 8;
 export const COL_CELL = 9; // the surface of a play cell, and of a tower built on it
 export const COL_GIVEN = 10; // the lifted surface of a given tower
@@ -112,8 +110,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_DONE] = clueDoneColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  // `HINT_OUTLINE` covers the chain ordinal too; see its doc comment for why
-  // the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
@@ -251,7 +247,6 @@ function drawTile(
   tile: number,
   wrong: boolean,
   struck: number,
-  hintOrder: number,
   hatched: boolean,
 ): void {
   const { x: tx, y: ty } = faceOrigin(ts, w, threeD, x, y, tile);
@@ -400,13 +395,6 @@ function drawTile(
       );
     }
   }
-
-  // A forcing chain's place in the order it fires, so the narration can cite
-  // the cells by number. `tx`/`ty` are the *drawn* origin, already offset for a
-  // 3D tower's top face, so the ordinal follows the tile it belongs to rather
-  // than floating over the one behind it.
-  if (hintOrder > 0)
-    drawHintOrdinal(dr, { x: tx, y: ty }, ts, hintOrder, COL_HINT_CELL);
 }
 
 // --- tile text --------------------------------------------------------------
@@ -590,7 +578,6 @@ export function redraw(
       tile,
       ds.wrong.at(j),
       ds.hint.struck[j],
-      ds.hint.order[j],
       ds.hint.hatched[j] === 1,
     );
   };

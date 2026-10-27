@@ -119,7 +119,7 @@ const UNBOUND = new RegExp(
 
 /**
  * What a mark is drawn on. A kind keys its elements, so the same edge named
- * from either side, or a cell with an ordinal and without, compares equal, and
+ * from either side, or a cell with extra fields and without, compares equal, and
  * says what a noun counts: three struck notes in one cell are "this cell".
  */
 export interface MarkKind<E> {
@@ -718,8 +718,8 @@ export class StepMarks {
   }
 
   /** The elements of `kind` the words name in `role`, each once by the kind's
-   * key, in the order the words first name them, as they were named (an
-   * outlined cell keeps its chain ordinal). */
+   * key, in the order the words first name them, as they were named (a
+   * Clusters chain cell keeps the fill it would be forced to). */
   of<E>(role: MarkRole, kind: MarkKind<E>): readonly E[] {
     const pair = `${role}|${kind.name}`;
     let out = this.byPair.get(pair);

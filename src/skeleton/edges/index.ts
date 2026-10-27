@@ -137,7 +137,7 @@ export const skeletonGame: Game<
     roles: {
       ring: "the edges the step decides, drawn as the line or cross it asks for.",
       outline:
-        "the squares it reasons from, and the edges a supposed line or cross would force, numbered in the order they follow.",
+        "the squares it reasons from, and the edges a supposed line or cross would force, drawn thin.",
     },
   },
   hintKeepTrack: skeletonKeepTrack,

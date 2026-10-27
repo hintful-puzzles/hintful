@@ -30,12 +30,7 @@ import {
   wallFill,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
-import {
-  drawEdgeHints,
-  drawEdgeOrdinals,
-  edgeHintWords,
-  stepEdgeHints,
-} from "../../engine/edge-hint.ts";
+import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -470,14 +465,6 @@ function drawTile(
 
   if (square & F_CURSOR)
     drawRectCorners(dr, cx, cy, half - 3, COL_CURSOR, Math.max(2, ts >> 4));
-
-  drawEdgeOrdinals(
-    dr,
-    hints,
-    { x: px, y: py, w: ts, h: ts },
-    Math.max(2, ts >> 4),
-    COL_HINT_EVIDENCE,
-  );
 
   dr.unclip();
   dr.drawUpdate({ x: px, y: py, w: ts, h: ts });

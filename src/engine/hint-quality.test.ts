@@ -47,7 +47,6 @@ import { NARRATION_LIMIT } from "./hint-words.ts";
 import { paramsError } from "./params.ts";
 import { dealsPromptly, dealt } from "./testing/dealt.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
-import { CHAIN_PINS, declaredOrder } from "./testing/hint-chain-pins.ts";
 import {
   type AnyGame,
   declaresNoMarks,
@@ -205,6 +204,23 @@ const LONG_NARRATIONS: {
       "Unreasonable boards: a crossing that would take a square another clue " +
       "needs, and one that would leave a square uncovered. Each rules out a " +
       "different clue's rectangle, so neither can go.",
+  },
+  {
+    games: ["map"],
+    rungs: ["forcingChain"],
+    why:
+      "The case split names the chain and each of its two ends as references " +
+      "of their own, so each end's pill finds it (retire-hint-ordinals, D2), " +
+      "where numbers on the board once named them in two characters; beside a " +
+      "conclusion that dots two colors it runs a few characters over.",
+  },
+  {
+    games: ["clusters"],
+    rungs: ["chain"],
+    why:
+      "The forced cells are named by the small pieces the legend teaches, " +
+      "because 'outlined' is the danger tile's word alone; where the break is " +
+      "a tile that can't touch two like it, the sentence runs a character over.",
   },
 ];
 
@@ -1078,13 +1094,6 @@ describe("hint narration stays readable at a glance", () => {
               const text = step.explanation;
               linted++;
               lintedPerGame.set(name, (lintedPerGame.get(name) ?? 0) + 1);
-              // Which games `hint-ordinal.test.ts` owes a rendered frame: any
-              // whose step numbers a chain. Held here because this is the
-              // widest walk of hints there is, and it is already paid for.
-              expect(
-                declaredOrder(step.highlights) === null || name in CHAIN_PINS,
-                `${name} ${label}/${seed}: "${text}" numbers a chain, and no board of ${name}'s is pinned to check the numbers are drawn. Add ${name} to CHAIN_PINS in testing/hint-chain-pins.ts.`,
-              ).toBe(true);
               // The same walk holds a step's rung to the game's list: a
               // step built outside the typed path could carry any string.
               expect(

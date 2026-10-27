@@ -8,10 +8,9 @@
  * pill with that line or cross inside it in the ring's ink: the move's own
  * shape, recolored, inside the round mark the word "ringed" names. An edge
  * the step reasons from, or one a supposition's chain would force, is drawn
- * in the outline's ink, and a chain's edge carries its place in the chain.
- * How a line and a cross look is the game's own, so the game declares them
- * ({@link EdgeShapes}); which sides of which squares carry what, in which ink,
- * and where the ordinal goes, is this module's.
+ * in the outline's ink. How a line and a cross look is the game's own, so the
+ * game declares them ({@link EdgeShapes}); which sides of which squares carry
+ * what, and in which ink, is this module's.
  */
 
 import type { GameDrawing, HintStep, HintTrackVerdict } from "./game.ts";
@@ -19,7 +18,7 @@ import { changedCells, trackTargets } from "./hint-track.ts";
 import type { MarkKind, MarkRole, StepMarks } from "./hint-words.ts";
 import { CROSS, type EdgeChange, type EdgeMark } from "./line-drawing.ts";
 import type { RingClear } from "./ring.ts";
-import { DOWN, RIGHT, type Side, type SquareEdges, sideOf } from "./square-edges.ts";
+import { type Side, type SquareEdges, sideOf } from "./square-edges.ts";
 import type { Rect } from "./types.ts";
 
 /** An edge of the board, by its `square-edges.ts` number, so one edge named
@@ -30,30 +29,26 @@ export const EDGE: MarkKind<number> = { name: "edge", key: String };
  * outline for what it reasons from or a chain would force. */
 export type EdgeRole = Extract<MarkRole, "ring" | "outline">;
 
-/** One edge a step draws: the shape it asks for or would take, in which role,
- * and, on a chain, its place in it from 1. The edge is its number, or a side
- * of a square, which is how a side on the board's rim is named: it has no
- * square beyond it and no number. */
+/** One edge a step draws: the shape it asks for or would take, and in which
+ * role. The edge is its number, or a side of a square, which is how a side on
+ * the board's rim is named: it has no square beyond it and no number. */
 export interface EdgeHint {
   readonly edge: number | Side;
   readonly shape: "line" | "cross";
   readonly role: EdgeRole;
-  readonly order?: number;
 }
 
 /** One edge of a supposition's chain, as a step's highlights carry it: the
- * mark it would take, and its place in the chain on a firing's first edge
- * (a square forced to two lines is one deduction, and so one number). */
+ * mark it would take. */
 export interface EdgeChainLink {
   readonly edge: number;
   readonly mark: EdgeMark;
-  readonly order?: number;
 }
 
 /**
  * The edges a step draws, read from its words (`named`): each ringed edge in
  * the shape `asked`, the step's move, gives it, and each outlined edge of
- * `chain` in the shape it would take, with its place in the chain.
+ * `chain` in the shape it would take.
  */
 export function stepEdgeHints(
   named: StepMarks,
@@ -74,7 +69,6 @@ export function stepEdgeHints(
         edge: link.edge,
         shape: link.mark === CROSS ? "cross" : "line",
         role: "outline",
-        order: link.order,
       });
   return out;
 }
@@ -118,21 +112,16 @@ export function trackEdgeStep<M>(
   return verdict;
 }
 
-// A square's word: three bits a side, by direction, for what the side shows,
-// then the ordinal of the edge on its right and of the edge below it, which
-// the square draws as the edge's first square.
+// A square's word: three bits a side, by direction, for what the side shows.
 const SIDE_BITS = 3;
 const RING_LINE = 1;
 const RING_CROSS = 2;
 const OUTLINE_LINE = 3;
 const OUTLINE_CROSS = 4;
-const ORDER_BITS = 5;
-const K_ORDER = 4 * SIDE_BITS;
-const MAX_ORDER = (1 << ORDER_BITS) - 1;
 
 /** How many low bits of a square's word {@link edgeHintWords} uses; a game
  * that keeps the word beside bits of its own puts them above these. */
-export const EDGE_HINT_BITS = K_ORDER + 2 * ORDER_BITS;
+export const EDGE_HINT_BITS = 4 * SIDE_BITS;
 
 function sideMark({ shape, role }: EdgeHint): number {
   if (role === "ring") return shape === "line" ? RING_LINE : RING_CROSS;
@@ -162,12 +151,6 @@ export function edgeHintWords(g: SquareEdges, hints: readonly EdgeHint[]): Int32
         const shift = dir * SIDE_BITS;
         out[cell] = (out[cell] & ~(7 << shift)) | (sideMark(h) << shift);
       }
-    const order = h.order ?? 0;
-    if (order === 0) continue;
-    const [{ cell, dir }] = sides;
-    if (order < 0 || order > MAX_ORDER || (dir !== RIGHT && dir !== DOWN))
-      throw new Error(`edge hint: no room for ordinal ${order} on side ${dir}`);
-    out[cell] |= order << (K_ORDER + (dir === RIGHT ? 0 : ORDER_BITS));
   }
   return out;
 }
@@ -241,37 +224,5 @@ export function drawEdgeHints(
           ? shapes.cross(1 << d, ink, "ring")
           : shapes.line(1 << d, ink, "ring"),
     });
-  }
-}
-
-/**
- * Draw the ordinals of the chain edges on the right of and below the square
- * whose tile is `box`, in the outline's ink: in the corner beside the edge,
- * the top-right for its right side and the bottom-left for its lower one, and
- * inset past an outline `band` wide. No line reaches a corner and the two
- * corners are apart, so no number is cut by a side or covered; the
- * bottom-right, `hint-ordinal.ts`'s corner for a cell, is where both edges
- * meet. Draw it over what the square holds.
- */
-export function drawEdgeOrdinals(
-  dr: GameDrawing,
-  word: number,
-  box: Rect,
-  band: number,
-  ink: number,
-): void {
-  const size = Math.max(9, Math.floor(box.w * 0.28));
-  const inset = band + 1 + Math.floor(size / 2);
-  for (const d of [RIGHT, DOWN]) {
-    const order = (word >> (K_ORDER + (d === RIGHT ? 0 : ORDER_BITS))) & MAX_ORDER;
-    if (order === 0) continue;
-    dr.drawText(
-      d === RIGHT
-        ? { x: box.x + box.w - inset, y: box.y + inset }
-        : { x: box.x + inset, y: box.y + box.h - inset },
-      { align: "center", baseline: "mathematical", fontType: "variable", size },
-      ink,
-      String(order),
-    );
   }
 }

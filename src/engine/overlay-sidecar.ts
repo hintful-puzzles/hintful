@@ -39,23 +39,6 @@ interface Cell {
   readonly y: number;
 }
 
-/**
- * An evidence cell that also carries its **place in an ordered chain**, drawn
- * as a small ordinal in the cell's corner.
- *
- * A chain of forced consequences shaded as a plain set is not checkable — the
- * player sees which cells are involved but not which came first, so a narration
- * that speaks of one consequence leading to the next names nothing they can
- * follow. The order is what makes the shading a *chain* rather than a heap.
- *
- * It rides in its own lane rather than in the packed word because an ordinal is
- * a small integer rather than a flag.
- */
-export interface OrderedCell extends Cell {
-  /** 1-based position in the chain. Omitted ⇒ ordinary evidence, no ordinal. */
-  readonly order?: number;
-}
-
 export class OverlaySidecar {
   /** Per-cell packed overlay for the frame being drawn: the roles
    * ({@link HINT_TARGET}, {@link HINT_AREA}) and whatever a game `add`s. */
@@ -70,9 +53,6 @@ export class OverlaySidecar {
    * values wrapping onto them.
    */
   readonly struck: Int32Array;
-  /** Per-cell chain ordinal for the frame being drawn (0 = none) — see
-   * {@link OrderedCell} for why this is a lane of its own. */
-  readonly order: Int32Array;
   /**
    * Per-cell outline sides of the evidence area, for the frame being drawn (0 =
    * not evidence), in `hint-mark.ts`'s side bits.
@@ -86,27 +66,24 @@ export class OverlaySidecar {
   private readonly outline: Int32Array;
   /**
    * Per cell, 1 when it lies on the line the step's sentence names and is
-   * hatched. A lane of its own for the reason the ordinal has one: the packed
-   * word has no bit left to borrow.
+   * hatched. A lane of its own because the packed word has no bit left to
+   * borrow.
    */
   readonly hatched: Uint8Array;
   /** What the canvas currently shows per cell (-1 = never drawn, so the
    * first frame always misses). */
   private readonly drawn: Int32Array;
   private readonly drawnStruck: Int32Array;
-  private readonly drawnOrder: Int32Array;
   private readonly drawnOutline: Int32Array;
   private readonly drawnHatched: Uint8Array;
 
   constructor(cells: number) {
     this.packed = new Int32Array(cells);
     this.struck = new Int32Array(cells);
-    this.order = new Int32Array(cells);
     this.outline = new Int32Array(cells);
     this.hatched = new Uint8Array(cells);
     this.drawn = new Int32Array(cells).fill(-1);
     this.drawnStruck = new Int32Array(cells);
-    this.drawnOrder = new Int32Array(cells).fill(-1);
     this.drawnOutline = new Int32Array(cells);
     this.drawnHatched = new Uint8Array(cells);
   }
@@ -116,7 +93,6 @@ export class OverlaySidecar {
   clear(): void {
     this.packed.fill(0);
     this.struck.fill(0);
-    this.order.fill(0);
     this.outline.fill(0);
     this.hatched.fill(0);
   }
@@ -131,14 +107,9 @@ export class OverlaySidecar {
     this.hatched[i] = 1;
   }
 
-  /** Give cell `i` its 1-based place in this frame's chain. */
-  setOrder(i: number, k: number): void {
-    this.order[i] = k;
-  }
-
   /** Repack this frame's overlay from the marks the displayed step's words name
    * (empty when no hint is displayed): ringed cells, struck notes, outlined
-   * cells with their chain ordinals, striped cells. `index` maps board
+   * cells, striped cells. `index` maps board
    * coordinates to the game's cell indexing (stride, border ring, …);
    * `markBits` encodes one struck note into the cell's struck lane. A game
    * with no notes passes none, and its struck notes are not asked for: what
@@ -150,14 +121,13 @@ export class OverlaySidecar {
     markBits: ((note: Note) => number) | null = null,
   ): void {
     this.clear();
-    const area = marks.of("outline", CELL) as readonly OrderedCell[];
+    const area = marks.of("outline", CELL);
     const inArea = new Set(area.map((a) => CELL.key(a)));
     const isEvidence = (x: number, y: number): boolean => inArea.has(`${x},${y}`);
     for (const a of area) {
       const i = index(a.x, a.y);
       this.add(i, HINT_AREA);
       this.outline[i] = outlineSides(a.x, a.y, isEvidence);
-      if (a.order !== undefined) this.setOrder(i, a.order);
     }
     for (const t of marks.of("ring", CELL)) this.add(index(t.x, t.y), HINT_TARGET);
     // A struck note is its own mark: a grid of notes leaves no room for a
@@ -191,14 +161,12 @@ export class OverlaySidecar {
   }
 
   /** True when cell `i`'s drawn overlay differs from this frame's — one
-   * clause of the game's cache-miss test. Covers the ordinal and outline lanes
-   * too, so a chain that only reorders its cells, or an area that only changes
-   * shape around a cell, still repaints. */
+   * clause of the game's cache-miss test. Covers the outline lane too, so an
+   * area that only changes shape around a cell still repaints. */
   stale(i: number): boolean {
     return (
       this.packed[i] !== this.drawn[i] ||
       this.struck[i] !== this.drawnStruck[i] ||
-      this.order[i] !== this.drawnOrder[i] ||
       this.outline[i] !== this.drawnOutline[i] ||
       this.hatched[i] !== this.drawnHatched[i]
     );
@@ -208,7 +176,6 @@ export class OverlaySidecar {
   commit(i: number): void {
     this.drawn[i] = this.packed[i];
     this.drawnStruck[i] = this.struck[i];
-    this.drawnOrder[i] = this.order[i];
     this.drawnOutline[i] = this.outline[i];
     this.drawnHatched[i] = this.hatched[i];
   }

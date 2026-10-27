@@ -43,7 +43,6 @@ import {
   type MarkCell,
   NO_TEXT,
 } from "../../engine/hint-mark.ts";
-import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -109,9 +108,8 @@ export const COL_MISTAKE = 17;
 /** Fork addition: the yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 18;
 // Fork additions: the explained-hint legend (docs/hints-marks.md § "The engine colors the marks").
-/** The deduction's evidence — a clue's line of sight, or a whole line, outlined
- * — **and** a forcing chain's ordinal, one index because the number indexes the
- * evidence. */
+/** The deduction's evidence — a clue's line of sight, a whole line, or a forcing
+ * chain — outlined. */
 export const COL_HINT_CELL = 19;
 /** Fork addition: the keyboard cursor's cell fill. Upstream used the bevel
  * lowlight, a tint of the board. */
@@ -148,8 +146,7 @@ export function colors(defaultBackground: Color): Color[] {
   // The evidence is an outline on the square's border. A Salad square carries a
   // letter, a ghosted preview and up to three struck notes, so an evidence wash
   // would have to be pale enough to read all of that through — and at that
-  // lightness it stops reading as a mark at all. `HINT_OUTLINE` covers the
-  // chain ordinal too; see its doc comment for why they are one role.
+  // lightness it stops reading as a mark at all.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   // A cell fill under the letter and notes: the "you are here" wash the Latin
   // family draws its cursor cell with (palette.ts, `CURSOR`).
@@ -708,12 +705,6 @@ export function redraw(
         const { origin, options } = symbolText(ts, x, y);
         dr.drawText(origin, options, color, symbolChar(s.mode, s.grid[i]));
       }
-
-      // A forcing chain's place in the order it fires, so the narration can
-      // cite the squares by number rather than asking the player to
-      // reconstruct the chain.
-      if (ds.hint.order[i] > 0)
-        drawHintOrdinal(dr, { x: tx, y: ty }, ts, ds.hint.order[i], COL_HINT_CELL);
 
       if (ds.wrong.at(i)) drawMistakeBox(dr, tx, ty, ts);
       ds.wrong.commit(i);

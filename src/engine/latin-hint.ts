@@ -21,7 +21,6 @@ import {
 } from "./candidate-hint.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { ConfinedLines, ForcingLink } from "./latin.ts";
-import type { OrderedCell } from "./overlay-sidecar.ts";
 import type { Point } from "./types.ts";
 
 /** Re-exported so a game declaring its own reason union reaches the chain shape
@@ -344,16 +343,10 @@ export type GenericLatinReason =
   | { kind: "forcing"; chain: readonly ForcingLink[]; shares: "row" | "col" };
 
 /**
- * A forcing chain's cells as **ordered** evidence, so the board shows which
- * consequence fell when and the narration can cite them by number. Shaded like
- * any other evidence area; the ordinal is what makes the shading a chain rather
- * than a heap.
- *
- * Shared by every game whose forcing reason comes from `latin.ts`, so the
- * numbering can never disagree with the sentence between games.
+ * A forcing chain's cells as evidence, origin first, so the sentence can name
+ * its two ends as references of their own and the chain as a whole. Shared by
+ * every game whose forcing reason comes from `latin.ts`.
  */
-export function forcingChainArea(reason: {
-  chain: readonly ForcingLink[];
-}): OrderedCell[] {
-  return reason.chain.map((c, i) => ({ x: c.x, y: c.y, order: i + 1 }));
+export function forcingChainArea(reason: { chain: readonly ForcingLink[] }): Point[] {
+  return reason.chain.map((c) => ({ x: c.x, y: c.y }));
 }

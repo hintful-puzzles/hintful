@@ -39,7 +39,6 @@ import {
   type MarkCell,
   NO_TEXT,
 } from "../../engine/hint-mark.ts";
-import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
@@ -50,7 +49,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -89,9 +87,7 @@ export const COL_ERROR = 4;
 export const COL_PENCIL = 5;
 // Fork additions, appended past the upstream enum.
 export const COL_PENCIL_BODY = 6; // the yellow body of the pencil-mode indicator
-/** The driving cage's outline (drawn in redraw's last block), **and** a forcing
- * chain's ordinal — one index, because they are one role: the number indexes
- * the evidence. */
+/** The driving cage's outline (drawn in redraw's last block). */
 export const COL_HINT_CELL = 7;
 export const COL_CELL = 8; // the surface of a cell the player fills
 /** The thin line between two cells of one cage. A cage's own edge is content
@@ -113,8 +109,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  // `HINT_OUTLINE` covers the chain ordinal too; see its doc comment for why
-  // the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_LINE] = surfaceGrid(bg);
@@ -126,9 +120,8 @@ export function colors(defaultBackground: Color): Color[] {
  * cells outlined `COL_HINT_CELL`, the acted-on cell(s) ringed by the engine,
  * the ruled-out candidate(s) shown struck. */
 export interface KeenHint {
-  /** The driving cage's cells (evidence), shaded `COL_HINT_CELL`. A forcing
-   * chain's cells additionally carry their place in it, drawn as an ordinal. */
-  area: OrderedCell[];
+  /** The driving cage's cells (evidence), shaded `COL_HINT_CELL`. */
+  area: Point[];
   /** The cell(s) the deduction acts on, ringed. */
   targets: Point[];
   /** The candidate number(s) ruled out, shown struck among the pencil marks. */
@@ -356,13 +349,6 @@ function drawTile(
       );
     }
   }
-
-  // A forcing chain's place in the order it fires, so the narration can cite
-  // the cells by number instead of asking the player to reconstruct the chain.
-  // Drawn inside the clip, so it can never spill into a neighboring cage.
-  const hintOrder = ds.hint.order[cell];
-  if (hintOrder > 0)
-    drawHintOrdinal(dr, { x: tx, y: ty }, ts - 2 * ge, hintOrder, COL_HINT_CELL);
 
   dr.unclip();
   dr.drawUpdate({ x: cx - 1, y: cy - 1, w: cw + 1, h: ch + 1 });

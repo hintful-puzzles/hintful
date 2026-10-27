@@ -4,8 +4,8 @@
  * (docs/hints.md § "Recording the deduction").
  *
  * Every fact a step rests on is a number, a line or a cross on the board: the
- * ladder reads nothing else. A supposition's chain is shown whole, thin and
- * numbered, and never played (docs/hints-marks.md § "Show the what-if walk
+ * ladder reads nothing else. A supposition's chain is shown whole and thin,
+ * and never played (docs/hints-marks.md § "Show the what-if walk
  * statically").
  */
 
@@ -140,7 +140,7 @@ function clashWords(
 }
 
 /** A supposition's walk comes from the ladder cut down to the firings its
- * break needs, so it is narrated and numbered as it is. */
+ * break needs, so it is narrated and drawn as it is. */
 function stepOf(state: PathState, edges: Uint8Array, firing: PathFiring): PathStep {
   const words = wordsOf(state, edges, firing);
   const { reason } = firing;
@@ -155,12 +155,8 @@ function stepOf(state: PathState, edges: Uint8Array, firing: PathFiring): PathSt
     highlights: {
       chain:
         reason.kind !== "forced"
-          ? reason.chain.flatMap((link, k) =>
-              link.edges.map((edge, j) =>
-                j === 0
-                  ? { edge, mark: link.mark, order: k + 1 }
-                  : { edge, mark: link.mark },
-              ),
+          ? reason.chain.flatMap((link) =>
+              link.edges.map((edge) => ({ edge, mark: link.mark })),
             )
           : [],
     },

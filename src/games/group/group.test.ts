@@ -391,10 +391,7 @@ describe("rendering smoke", () => {
     const { desc } = newGameDesc(p, rng);
     const state = newState(p, desc);
     const pal = colors([0.9, 0.9, 0.9]);
-    // 8 upstream + COL_HINT_CELL + COL_PENCIL_BODY. The chain ordinal shares
-    // `COL_HINT_CELL`: a number saying where a cell falls in the chain is an
-    // index into the evidence, not a hint role of its own. Then the three
-    // surfaces: the cell, a given's lifted cell and the line between cells.
+    // 8 upstream + COL_HINT_CELL + COL_PENCIL_BODY. Then the three surfaces: the cell, a given's lifted cell and the line between cells.
     // And the win flash's two colors. The ring's ink is the engine's.
     expect(pal).toHaveLength(15);
 

@@ -22,7 +22,6 @@ import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { CELL, Narration, NOTE, type Sentence, unshaped } from "./hint-words.ts";
 import type { CellRegion } from "./latin-hint.ts";
 import { type NoteTakingUi, noteEntryGesture } from "./note-taking-cell.ts";
-import type { OrderedCell } from "./overlay-sidecar.ts";
 import type { Point } from "./types.ts";
 
 /** A board cell. */
@@ -141,10 +140,8 @@ export function applyNoteMove(
  * candidate(s) struck (`marks`). The generic plan functions update `targets` and
  * `marks` as a strike step shrinks; the game's own `Hint` type satisfies this. */
 export interface CandidateHighlights {
-  /** The evidence to shade. A cell that is a link in an ordered chain also
-   * carries its place in it ({@link OrderedCell}), drawn as an ordinal — the
-   * order is what makes a shaded chain walkable rather than a heap. */
-  area: OrderedCell[];
+  /** The evidence to shade. */
+  area: Point[];
   targets: Cell[];
   marks: Mark[];
   /** The cells of the line or region the sentence names, hatched rather

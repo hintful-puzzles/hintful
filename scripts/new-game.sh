@@ -55,7 +55,6 @@ tile-cached renderer, and tests for each."
      the sentences in hint-text.ts. Rename what the copy calls a \"mark\", a
      \"clue\" and its two rungs to this puzzle's own words as you go."
     ROLES="Each of the three hint roles in hintMarks (ring, outline, stripes)"
-    REFUSED=""
     ;;
   edges)
     HAS="params and their codec, presets,
@@ -70,13 +69,6 @@ tests for each."
      words as you go. The generator's answer is a loop through every square;
      a puzzle with other answers draws its own."
     ROLES="Each of the two hint roles in hintMarks (ring, outline)"
-    REFUSED="
-       - CHAIN_PINS in src/engine/testing/hint-chain-pins.ts: a position
-         whose hint numbers a look-ahead's chain (hint-quality.test.ts).
-         The scan walks only games listed there, so list the game with any
-         pin (the hint test's lookahead pin will do), run
-         npm run hint-scan -- src/engine/hint-ordinal.test.ts
-         and paste the position it prints for the game"
     ;;
   *)
     echo "scripts/new-game.sh has no checklist for kind '${KIND}'" >&2
@@ -157,7 +149,7 @@ What is left to do, and the copy does none of it:
      guard cites. Records kept by hand refuse a game on its first run:
        - help/puzzles.md: its row (help-coverage.test.ts)
        - the snapshots of capability-surface.test.ts and
-         params-stability.test.ts (run each with --update and read the diff)${REFUSED}
+         params-stability.test.ts (run each with --update and read the diff)
      and one thing the copy has no reason to hold yet refuses it later:
        - a help page that says where the puzzle comes from says it under
          "## Where the puzzle comes from" (help-coverage.test.ts)

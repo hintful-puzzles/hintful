@@ -415,7 +415,7 @@ function verify(): void {
   // every hint guard imports (`hint-games.ts`, `enrollment.ts`) would make
   // them all whole on every engine push, and nothing would go red, only slow.
   // `engine-source.ts` and `test-source.ts` exist so that it does not.
-  for (const guard of ["hint-resume", "hint-quality", "hint-ordinal", "mark-all"]) {
+  for (const guard of ["hint-resume", "hint-quality", "mark-all"]) {
     expect(
       engine.narrow.includes(`src/engine/${guard}.test.ts`),
       `${guard} narrows on an engine module only some games reach`,

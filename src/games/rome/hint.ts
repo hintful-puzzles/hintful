@@ -169,14 +169,10 @@ function premise(
       const area = cellsOf(w, areaOf(reason.px, reason.py));
       return { premise: say.dup(area, placed, reason.n), where: say.dupWhere };
     }
-    // The walk back to this square *is* the premise, and its order is the fact
-    // the marks would otherwise lose (docs/hints-marks.md § "Number a chain's cells in order").
+    // The walk back to this square *is* the premise; the arrows on its squares
+    // give its order.
     case "loop": {
-      const path = reason.path.map((i, k) => ({
-        x: i % w,
-        y: (i / w) | 0,
-        order: k + 1,
-      }));
+      const path = reason.path.map((i) => ({ x: i % w, y: (i / w) | 0 }));
       return { premise: say.loop(path, n, at) };
     }
     case "onlyHome":

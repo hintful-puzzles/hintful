@@ -75,7 +75,6 @@ import {
   type SingleReasonUnder,
 } from "../../engine/latin-hint.ts";
 import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import type { Point } from "../../engine/types.ts";
 import { CLUE, saladVocab, say } from "./hint-text.ts";
 import { type BorderReason, recordSaladDeductions } from "./solver.ts";
@@ -359,7 +358,7 @@ function cluesNamed(words: Narration): number[] {
 /** A marker step's evidence, read off its words as the walk reads its own
  * steps', and the clues they light. */
 function markerEvidence(words: Narration): {
-  area: OrderedCell[];
+  area: Point[];
   hatch?: Cell[];
   clues: number[];
 } {

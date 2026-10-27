@@ -8,7 +8,7 @@
  * reference to the mark it points at (`engine/hint-words.ts`): the edges a
  * step decides are ringed, drawn as the line or cross it asks for; the
  * squares it reasons from are outlined; and the edges a supposition would
- * force are outlined too, drawn thin and numbered in the order they follow.
+ * force are outlined too, drawn thin.
  *
  * The words are the help page's: lines run along the **edges** between
  * squares, and a square takes one line or two, as its mode says.
@@ -100,7 +100,7 @@ export const say = {
     }),
 
   /**
-   * Supposing the other mark on the edge forces the numbered edges, one rung
+   * Supposing the other mark on the edge forces the outlined edges, one rung
    * at a time, and then breaks the board: the walk is shown whole and said in
    * one sentence (docs/hints-marks.md § "Show the what-if walk statically").
    */
@@ -112,7 +112,7 @@ export const say = {
   ): Sentence => {
     const forced =
       chain.length > 0
-        ? phrase` force ${mark.as("outline", EDGE, chain, "the numbered edges")} and`
+        ? phrase` force ${mark.as("outline", EDGE, chain, "the outlined edges")} and`
         : phrase``;
     // The edge is named where the sentence supposes on it, never as a bare
     // "here", and the move after says "it" of the same edge.

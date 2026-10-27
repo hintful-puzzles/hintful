@@ -90,11 +90,11 @@ and most steps are then one rule at work: a square with only as many open
 edges left as it still needs lines takes a line on each of them.
 
 On Normal boards a step sometimes has to look ahead. It supposes a line on an
-edge, or a cross, and follows that rule from it, numbering each square's
-edges as it settles them, until a square is left a dead end or cut off, gets
-too many lines, a loop closes, or two numbers that may not meet are joined.
-Then the edge must be the other way. On a Normal board that takes at most
-six numbered steps; on a Tricky board it can take up to twelve.
+edge, or a cross, and follows that rule from it, drawing the edges it settles
+thin, until a square is left a dead end or cut off, gets too many lines, a
+loop closes, or two numbers that may not meet are joined. Then the edge must
+be the other way. On a Normal board that takes at most six steps of the rule;
+on a Tricky board it can take up to twelve.
 
 ## Path parameters
 

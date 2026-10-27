@@ -37,7 +37,6 @@ import {
   so,
   whole,
 } from "../../engine/hint-words.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import type { Point } from "../../engine/types.ts";
 
 /** What Rome calls a board position, in every sentence here. Its help page says
@@ -144,11 +143,11 @@ export const say = {
     phrase`${mark.this("stripes", whole(CELL), area, "area").capitalized()} now has ${mark.as("outline", CELL, [placed], `its ${arrow(n)} arrow`)}`,
   dupWhere: "in it",
 
-  /** A candidate that would join a chain of arrows, `path` (numbered), leading
+  /** A candidate that would join a chain of arrows, `path` (outlined), leading
    * back to its own square. `n` is the struck direction, so the chain starts at
    * the neighbor it points at. `at` is the square. */
-  loop: (path: readonly OrderedCell[], n: number, at: Point): Narration =>
-    phrase`${mark.as("outline", CELL, path, "The numbered arrows")} from the square ${neighbor(n)} lead back to ${here(at)}`,
+  loop: (path: readonly Point[], n: number, at: Point): Narration =>
+    phrase`${mark.as("outline", CELL, path, "The outlined arrows")} from the square ${neighbor(n)} lead back to ${here(at)}`,
 
   /** A four-square area, `region`, with only one home left for an arrow, seen
    * as the elimination of that square's other marks. */

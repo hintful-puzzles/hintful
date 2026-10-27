@@ -65,8 +65,7 @@ function left(s: MapState, r: number): number {
  *
  * A single's arm is what the region's dots are; a leg that narrows a region
  * ends in a placement, a strike from its dots, or dots written on a bare one.
- * A leg writing a pair's premise outlines nothing, and one writing a chain's
- * is itself one of the numbered regions. The way a chain tells its walk is
+ * A leg writing a pair's or a chain's premise outlines nothing. The way a chain tells its walk is
  * read off the chain's dots, which the sentence was chosen from as the
  * firing's first narrowing leg was built: it is exact for a step that opens a
  * plan, and a later leg of the same firing may see a board that has moved.
@@ -94,7 +93,7 @@ function armsOf(step: MapHintStep, s: MapState): Arm[] {
       if (ev.length === 0) return [dotted ? "pairTrim" : "pairDot"];
       return ["color" in want ? "pairPlace" : dotted ? "pairStrike" : "pairMark"];
     case "forcingChain": {
-      if (ev.includes(t)) return [dotted ? "chainTrim" : "chainDot"];
+      if (ev.length === 0) return [dotted ? "chainTrim" : "chainDot"];
       const struck = left(s, t) & ~("color" in want ? 1 << want.color : want.dots);
       const told = ev.every((e) => left(s, e) & struck)
         ? "chainAlternates"
@@ -298,7 +297,7 @@ function spoken(state: MapState): { s: MapState; step: MapHintStep; arms: Arm[] 
 const BUILT_WORDS: Record<Exclude<Arm, DealtArm>, RegExp> = {
   lastDot: /^This region has a single dot/,
   pairStrike: /^This region touches the outlined pair, .* must go\.$/,
-  chainTrim: /^Region \d+ of the numbered chain has other dots/,
+  chainTrim: /^This region's other dots match .* can only be /,
   pairTrim: /^This region's other dots match .* can only be /,
 };
 
@@ -394,10 +393,15 @@ describe("map hint claims hold on the board they are spoken over", () => {
           // fills are the evidence.
           expect(ev).toEqual([]);
           expect(bits(left(s, t))).toBe(1);
-        } else if (arm === "pairDot" || arm === "pairTrim") {
-          // One of the pair, ringed, dotted with exactly its two colors, and
-          // nothing outlined: the leg writes the pair's premise, and the other
-          // region's dots may not be on the board yet.
+        } else if (
+          arm === "pairDot" ||
+          arm === "pairTrim" ||
+          arm === "chainDot" ||
+          arm === "chainTrim"
+        ) {
+          // One of the pair or chain, ringed, dotted with exactly its two
+          // colors, and nothing outlined: the leg writes the premise, and the
+          // other regions' dots may not be on the board yet.
           expect(ev).toEqual([]);
           expect(bits(left(s, t))).toBe(2);
           expect((hl.want as { dots: number }).dots).toBe(left(s, t));
@@ -414,17 +418,10 @@ describe("map hint claims hold on the board they are spoken over", () => {
             expect(adjacent(s, t, e)).toBe(true);
             expect(s.pencil[e], "a pair region shows its two dots").toBe(left(s, e));
           }
-        } else if (arm === "chainDot" || arm === "chainTrim") {
-          // A chain's own region, dotted with exactly the two colors it has.
-          expect(ev).toContain(t);
-          expect(bits(left(s, t))).toBe(2);
-          expect((hl.want as { dots: number }).dots).toBe(left(s, t));
-          expect(s.pencil[t]).not.toBe(left(s, t));
         } else if (arm?.startsWith("chain")) {
-          // Numbered 1..m, each touching the next, each showing its two colors
-          // as dots (the journey's earlier legs put them there), and this
-          // region touching the first and the last.
-          expect(evidenceOf(step).map((e) => e.order)).toEqual(ev.map((_, i) => i + 1));
+          // Each region touching the next, each showing its two colors as dots
+          // (the journey's earlier legs put them there), and this region
+          // touching the first and the last.
           for (let i = 0; i + 1 < ev.length; i++)
             expect(adjacent(s, ev[i], ev[i + 1])).toBe(true);
           for (const e of ev) {
@@ -434,36 +431,6 @@ describe("map hint claims hold on the board they are spoken over", () => {
           expect(adjacent(s, t, ev[0])).toBe(true);
           expect(adjacent(s, t, ev[ev.length - 1])).toBe(true);
           expect(ev).not.toContain(t);
-          // What the sentence says about the dots is what they show: every
-          // color the walk names is one of that region's dots, and "every
-          // numbered region has a pink dot" is true of every one.
-          const COLORS = [0, 1, 2, 3].map((c) => colorName(c).light);
-          // The walk as named: region 1's color from "it's X", then each
-          // "region k is Y". Every one is a dot of its region, and each differs
-          // from the one before, which is the whole of "takes the dot the one
-          // before it leaves": two dots each, one shared.
-          const first = /^If region 1 isn't \w+, it's (\w+)/.exec(step.explanation);
-          if (first) {
-            const named = [COLORS.indexOf(first[1])];
-            for (const m of step.explanation.matchAll(
-              /region (\d+) is (\w+)(?=[,. ]| and)/g,
-            ))
-              if (Number(m[1]) === named.length + 1) named.push(COLORS.indexOf(m[2]));
-            named.forEach((c, i) => {
-              expect(s.pencil[ev[i]] & (1 << c), step.explanation).toBeGreaterThan(0);
-              if (i > 0) expect(c, step.explanation).not.toBe(named[i - 1]);
-            });
-            // A listed walk reaches the last region, on the struck color.
-            if (named.length > 1) {
-              const struck = /^If region 1 isn't (\w+)/.exec(step.explanation)?.[1];
-              expect(named).toHaveLength(ev.length);
-              expect(COLORS[named[named.length - 1]]).toBe(struck);
-            }
-          }
-          const all = /^Every numbered region has a (\w+) dot/.exec(step.explanation);
-          if (all)
-            for (const e of ev)
-              expect(s.pencil[e] & (1 << COLORS.indexOf(all[1]))).toBeGreaterThan(0);
         }
         checked++;
       });
@@ -633,20 +600,13 @@ describe("map hint bookkeeping", () => {
 });
 
 describe("map hint rendering", () => {
-  it("a chain's regions carry their numbers, and the target its ring", () => {
-    const { recording, hint } = renderPinnedHint(mapGame, pinned("chainMark"));
+  it("a chain's regions carry no numbers, and the target its ring", () => {
+    const { recording } = renderPinnedHint(mapGame, pinned("chainMark"));
     const rgb = (c: readonly number[]) =>
       `rgb(${c.map((v) => Math.round(v * 255)).join(", ")})`;
-    const numbers = new Set(
-      recording.ops.flatMap((o) =>
-        o.op === "text" && o.rgb === rgb(HINT_OUTLINE) ? [o.text] : [],
-      ),
-    );
-    expect([...numbers].sort()).toEqual(
-      evidenceOf(hint as MapHintStep)
-        .map((e) => String(e.order))
-        .sort(),
-    );
+    expect(
+      recording.ops.filter((o) => o.op === "text" && o.rgb === rgb(HINT_OUTLINE)),
+    ).toEqual([]);
     const polys = (c: number) =>
       recording.ops.filter((o) => o.op === "polygon" && o.fill === c).length;
     // One ring, drawn by every cell it reaches, at the target's label point.

@@ -70,7 +70,6 @@ import {
   singleReasonOf,
   type WholeRegion,
 } from "./latin-hint.ts";
-import type { OrderedCell } from "./overlay-sidecar.ts";
 import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
 
@@ -170,17 +169,17 @@ export type StepWords<H> = Omit<H, "targets" | "marks" | "area" | "hatch"> & {
   reads?: readonly Point[];
 };
 
-/** The evidence a step's words name: the cells they outline, each once with its
- * chain ordinal, and the cells they stripe. The walk's own steps take theirs
- * from it, and so does a game's own `step` leg. */
-export function evidenceOf(words: Narration): { area: OrderedCell[]; hatch?: Point[] } {
-  const area: OrderedCell[] = [];
+/** The evidence a step's words name: the cells they outline, each once, and
+ * the cells they stripe. The walk's own steps take theirs from it, and so does
+ * a game's own `step` leg. */
+export function evidenceOf(words: Narration): { area: Point[]; hatch?: Point[] } {
+  const area: Point[] = [];
   const hatch: Point[] = [];
   const seen = new Set<string>();
   for (const r of words.refs) {
     if (r.kind.name !== CELL.name || r.role === "ring") continue;
     const into = r.role === "outline" ? area : hatch;
-    for (const c of r.elements as readonly OrderedCell[]) {
+    for (const c of r.elements as readonly Point[]) {
       const k = `${r.role}|${CELL.key(c)}`;
       if (seen.has(k)) continue;
       seen.add(k);

@@ -547,7 +547,7 @@ export const mapGame: Game<
     roles: {
       ring: 'the region the step decides, the one it calls "this region": a circle in the hint color inside it, where its number goes, round the number when one is shown. A chain\'s region being dotted keeps its number.',
       outline:
-        'a region the step reasons from: a thin dashed line in a second color, set in from its border. "The outlined pair" are the two regions drawn this way, and the regions of a chain, "the numbered chain" or just "the chain", carry numbers in that color, "region 1" to the last, where a region\'s number would go; while a chain is shown, the map\'s own region numbers are hidden.',
+        'a region the step reasons from: a thin dashed line in a second color, set in from its border. "The outlined pair" are the two regions drawn this way, and so are the regions of "the outlined chain".',
     },
   },
   hintKeepTrack,

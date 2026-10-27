@@ -40,7 +40,6 @@ import {
   type MarkCell,
   NO_TEXT,
 } from "../../engine/hint-mark.ts";
-import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   cellHighlight,
@@ -50,7 +49,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -99,9 +97,7 @@ export const COL_LOWLIGHT = 7;
 export const COL_SPENT = COL_LOWLIGHT;
 // Fork additions, appended past the upstream enum.
 export const COL_PENCIL_BODY = 8; // the yellow body of the pencil-mode indicator
-/** The driving clue's cells, outlined (drawn in redraw's last block), **and** a
- * forcing chain's ordinal — one index, because the number indexes the
- * evidence. */
+/** The driving clue's cells, outlined (drawn in redraw's last block). */
 export const COL_HINT_CELL = 9;
 /** The ground of a cell the win flash is on. */
 export const COL_FLASH = 10;
@@ -135,8 +131,6 @@ export function colors(defaultBackground: Color): Color[] {
   // the player's own digits here, and a fill has to keep them legible.
   out[COL_CURSOR] = highlightWash(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  // `HINT_OUTLINE` covers the chain ordinal too; see its doc comment for why
-  // the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
@@ -150,9 +144,8 @@ export function colors(defaultBackground: Color): Color[] {
  * engine, the ruled-out candidate(s) shown struck. Outline and ring reach into
  * the gap around a cell, and the ring keeps clear of the cell's text. */
 export interface UnequalHint {
-  /** The driving clue's cells (evidence), outlined `COL_HINT_CELL`. A forcing
-   * chain's cells additionally carry their place in it, drawn as an ordinal. */
-  area: OrderedCell[];
+  /** The driving clue's cells (evidence), outlined `COL_HINT_CELL`. */
+  area: Point[];
   /** The cell(s) the deduction acts on, ringed. */
   targets: Point[];
   /** The candidate number(s) ruled out, shown struck among the pencil marks. */
@@ -454,7 +447,6 @@ function drawCell(
   wrong: boolean,
   hflash: WinTone,
   struck: number,
-  hintOrder: number,
   hatched: boolean,
 ): void {
   const o = state.order;
@@ -506,11 +498,6 @@ function drawCell(
         COL_ERROR,
       );
   }
-
-  // A forcing chain's place in the order it fires, so the narration can cite
-  // the cells by number rather than asking the player to reconstruct the chain.
-  if (hintOrder > 0)
-    drawHintOrdinal(dr, { x: ox, y: oy }, ts, hintOrder, COL_HINT_CELL);
 }
 
 /** A piece of text a cell draws: what it passes `drawText` but the color. */
@@ -709,7 +696,6 @@ export function redraw(
           ds.wrong.at(i),
           hflash,
           ds.hint.struck[i],
-          ds.hint.order[i],
           ds.hint.hatched[i] === 1,
         );
         ds.nums[i] = num;
