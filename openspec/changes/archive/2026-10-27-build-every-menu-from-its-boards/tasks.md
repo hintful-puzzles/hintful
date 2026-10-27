@@ -18,4 +18,4 @@
 ## 4. Verification
 
 - [x] 4.1 Open three migrated games' menus in the app, one of them with rulesets
-- [ ] 4.2 The gate, green
+- [x] 4.2 The gate, green
