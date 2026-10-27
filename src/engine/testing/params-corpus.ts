@@ -103,7 +103,11 @@ export function paramsCorpus(game: AnyGame): ParamsCase[] {
   const cases: ParamsCase[] = [{ label: "default", params: { ...base } }];
 
   cases.push(
-    ...presetCases(presetMenu(game as AnyGame) as TitledPresetMenu<AnyParams>),
+    // The root's title names no line: the app shows the lines under it.
+    ...presetCases({
+      ...(presetMenu(game as AnyGame) as TitledPresetMenu<AnyParams>),
+      title: "",
+    }),
   );
 
   // The fields the difficulty item writes, found by *asking the item* rather
