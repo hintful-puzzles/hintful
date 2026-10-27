@@ -465,6 +465,11 @@ fi
 # would report a narrow plan that looks like health. ~1s.
 node scripts/checks/source-scans.ts --verify
 node scripts/checks/select-tests.ts --verify
+# Every vitest pass below appends what each test file cost in CPU time to one
+# log (`scripts/checks/test-cost.ts`), read once the suite has run.
+TEST_COST_RUN=$(mktemp)
+export TEST_COST_RUN
+trap 'rm -f "$TEST_COST_RUN"' EXIT
 run_tests() {
   if [ "$plan" = "ALL" ]; then
     GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests
@@ -496,7 +501,7 @@ build_rc=0
 # vitest streams live (the useful signal); vite build runs quietly and its
 # captured log is printed only on failure, avoiding two interleaved streams.
 build_log=$(mktemp)
-trap 'rm -f "$build_log"' EXIT
+trap 'rm -f "$build_log" "$TEST_COST_RUN"' EXIT
 $NICE npx vite build >"$build_log" 2>&1 &
 build_pid=$!
 
@@ -513,4 +518,5 @@ if [ "$vitest_rc" -ne 0 ] || [ "$build_rc" -ne 0 ]; then
   echo "pre-commit gate failed (vitest=$vitest_rc build=$build_rc)"
   exit 1
 fi
+node scripts/checks/test-cost.ts report "$TEST_COST_RUN"
 ci_notice

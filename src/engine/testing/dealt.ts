@@ -53,9 +53,65 @@ export function dealRare<Params, Board extends { desc: string }>(
   return underDealTries(RARE_BOARD_TRIES, () => game.newDesc(params, rng));
 }
 
-type Deal = { board: { desc: string; aux?: string } } | { thrown: unknown };
+type Deal = ({ board: { desc: string; aux?: string } } | { thrown: unknown }) & {
+  /** The CPU microseconds the deal took. */
+  cpu: number;
+  /** The {@link openCostWindow} it was dealt in. */
+  costWindow: number;
+};
 
 const deals = new WeakMap<object, Map<string, Deal>>();
+
+/**
+ * The cost budget charges a test file for every board it uses, whichever
+ * file in the worker dealt it first, so that a file's cost does not depend on
+ * what its worker ran before it (`scripts/checks/test-cost-setup.ts`). Read
+ * off `globalThis`, as `slow.ts` reads the environment, since the app's
+ * tsconfig has no Node types.
+ */
+const host = (
+  globalThis as { process?: { cpuUsage(): { user: number; system: number } } }
+).process;
+
+function cpuNow(): number {
+  if (host === undefined) return 0;
+  const { user, system } = host.cpuUsage();
+  return user + system;
+}
+
+/** Which test file the worker is running, as a count of the files it has. */
+let costWindow = 0;
+/** The deals this file used that an earlier file in the worker paid for. */
+let inherited = new Set<Deal>();
+
+/** Starts charging deals to a new test file. */
+export function openCostWindow(): void {
+  costWindow++;
+  inherited = new Set();
+}
+
+/** The CPU microseconds of the boards this file used and did not deal. */
+export function inheritedDealCost(): number {
+  let micros = 0;
+  for (const deal of inherited) micros += deal.cpu;
+  return micros;
+}
+
+function used(deal: Deal): void {
+  if (deal.costWindow !== costWindow) inherited.add(deal);
+}
+
+/** Deals a board, timed, keeping what it threw. */
+function timed(make: () => { desc: string; aux?: string }): Deal {
+  const start = cpuNow();
+  let outcome: { board: { desc: string; aux?: string } } | { thrown: unknown };
+  try {
+    outcome = { board: make() };
+  } catch (thrown) {
+    outcome = { thrown };
+  }
+  return { ...outcome, cpu: cpuNow() - start, costWindow };
+}
 
 function dealsOf(game: object): Map<string, Deal> {
   let ofGame = deals.get(game);
@@ -78,16 +134,17 @@ function dealsOf(game: object): Map<string, Deal> {
 export function dealsPromptly<Params>(game: Dealing<Params>, params: Params): boolean {
   const ofGame = dealsOf(game);
   const key = `${game.encodeParams(params, true)}#0`;
-  if (ofGame.has(key)) return true;
-  try {
-    const rng = randomNew(`dealt-${key}`);
-    ofGame.set(key, {
-      board: underDealTries(MAX_REGENERATE, () => game.newDesc(params, rng)),
-    });
-  } catch (thrown) {
-    if (thrown instanceof RetryLimitExceeded) return false;
-    ofGame.set(key, { thrown });
+  const kept = ofGame.get(key);
+  if (kept !== undefined) {
+    used(kept);
+    return true;
   }
+  const rng = randomNew(`dealt-${key}`);
+  const deal = timed(() =>
+    underDealTries(MAX_REGENERATE, () => game.newDesc(params, rng)),
+  );
+  if ("thrown" in deal && deal.thrown instanceof RetryLimitExceeded) return false;
+  ofGame.set(key, deal);
   return true;
 }
 
@@ -105,15 +162,11 @@ export function dealt<Params>(
   const key = `${game.encodeParams(params, true)}#${n}`;
   let deal = ofGame.get(key);
   if (deal === undefined) {
-    try {
-      // As a rare board is dealt: a sweep is handed the types the app deals,
-      // and the app's deal counts no tries.
-      deal = { board: dealRare(game, params, randomNew(`dealt-${key}`)) };
-    } catch (thrown) {
-      deal = { thrown };
-    }
+    // As a rare board is dealt: a sweep is handed the types the app deals,
+    // and the app's deal counts no tries.
+    deal = timed(() => dealRare(game, params, randomNew(`dealt-${key}`)));
     ofGame.set(key, deal);
-  }
+  } else used(deal);
   if ("thrown" in deal) throw deal.thrown;
   return deal.board;
 }

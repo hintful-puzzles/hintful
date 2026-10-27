@@ -188,7 +188,10 @@ export default defineConfig({
     // in a worker. So the fake has to be in place before any test file's
     // imports run: a file that reached Dexie first, through `puzzle.ts`, left
     // the store's own tests without a database whenever it ran ahead of them.
-    setupFiles: ["./src/test-setup/indexeddb.ts"],
+    setupFiles: [
+      "./scripts/checks/test-cost-setup.ts",
+      "./src/test-setup/indexeddb.ts",
+    ],
     maxWorkers: maxWorkers(),
     // ONE generous ceiling for the whole suite; no test sets its own.
     //
