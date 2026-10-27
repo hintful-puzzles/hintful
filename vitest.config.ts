@@ -38,10 +38,16 @@ function passFiles(): { include: string[]; exclude: string[] } {
  * The files run once per share, each run walking its share of the cases
  * (`src/engine/testing/sweep-share.ts`). vitest runs one file's tests in turn,
  * so a file is listed here when it alone would set the suite's wall clock: on
- * CI's four cores these two took 33 and 26 minutes of a 35-minute run (Gate
- * run 40517483254, 2026-10-27).
+ * CI's four cores the two hint walks took 33 and 26 minutes of a 35-minute
+ * run (Gate run 40517483254, 2026-10-27). And a share is held to a file's cost
+ * budget (`scripts/checks/test-cost.ts`), which the warm-repaint sweep, one
+ * case per game, was over whole.
  */
-const SPREAD = ["src/engine/hint-resume.test.ts", "src/engine/hint-quality.test.ts"];
+const SPREAD = [
+  "src/engine/hint-resume.test.ts",
+  "src/engine/hint-quality.test.ts",
+  "src/engine/warm-repaint.test.ts",
+];
 
 /** How many shares a spread file is walked in: CI's core count, so each file
  * can take every worker. */

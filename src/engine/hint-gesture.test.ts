@@ -24,7 +24,7 @@ describe("every hint step is one the pointer makes", () => {
 
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: each step's gesture completes it`, () => {
-      const presets = gatePresets(name, game);
+      const presets = gatePresets(game);
       expect(presets.length, `${name}: no preset to walk`).toBeGreaterThan(0);
       let played = 0;
       for (const { title, params } of presets) {

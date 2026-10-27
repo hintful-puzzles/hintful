@@ -79,7 +79,7 @@ runs, and what a commit may leave to the push and to CI).
 | – How a cross-game guard finds its population | you are writing a cross-game guard, not a game |
 | – Slicing a preset sweep for the gate | you are writing a cross-game guard, not a game, and it walks boards |
 | – Deal through `dealt` | you are writing a cross-game guard, not a game, and it deals boards |
-| – One board of each kind in the hooks | you are writing a cross-game guard, not a game, and the hooks should walk less than CI |
+| – One board of each kind, and the rest in the slow tier | you are writing a cross-game guard, not a game, and it could walk more of the same |
 | – A cross-game guard the hooks can narrow | you are writing a cross-game guard, not a game: its case titles and whole-sweep assertions |
 | – A sweep too long for one worker | a cross-game sweep alone would take more than half a CI run |
 | – A guard that only reads source | you are writing a guard, not a game, and it scans source text |
@@ -575,9 +575,25 @@ to write.
 - **Say what still covers the configuration**, at the site, when you defer or
   delete the only case covering a mode, a grid type or a difficulty.
 - **A guard that catches what the author just wrote stays on the per-commit
-  path, on one board of every kind it walks.** More boards of the same kind,
-  and a check on decay, go to CI (§ "One board of each kind in the hooks");
-  the conditions are in the `build-pipeline` spec.
+  path, on one board of every kind it walks.** More boards of the same kind go
+  to the slow tier (§ "One board of each kind, and the rest in the slow
+  tier"); the conditions are in the `build-pipeline` spec.
+
+**The gate holds every test file to a budget of CPU time**, and the suite to
+one, and fails a run that goes over (`scripts/checks/test-cost.ts`, where the
+table is). The budgets are CI's, in its CPU seconds: 120 a file (a spread
+file's share counting as one), 40 minutes the suite. A developer's machine
+holds a file to CI's budget divided by the least ratio measured between the
+two, so a file within CI's is within its own. CPU time is the work, not the
+clock: a loaded machine does not fail a good file, though heavy
+oversubscription can raise one by a fifth, which the margin above "near the
+budget" absorbs. The gate prints each file's cost after the suite; a file is
+charged for every shared board it used (`dealt`), whichever file dealt it.
+
+When a file goes over, cut it by one of the treatments below; never raise the
+budget to fit it, since the budgets are the owner's numbers. A file that is
+useful for development but too heavy for every commit keeps its full amount
+in the slow tier.
 
 Three treatments for an expensive test, in order of how little they lose:
 
@@ -603,9 +619,17 @@ and their reasons.
 
 | Run | When | What it tests |
 | --- | --- | --- |
-| The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other, so a commit costs about the same whatever it touches. |
-| The push hook | once, at a session's end | What the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries, on the boards a commit walks. Nothing, when every commit was a game's own or documentation. |
-| CI | every push | Everything, on every board. Never canceled by a newer push. |
+| The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other, up to a ceiling of CPU time. |
+| The push hook | once, at a session's end | What the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries. Nothing, when every commit was a game's own or documentation. Up to its own ceiling. |
+| CI | every push | Everything. Never canceled by a newer push. |
+
+- **Each hook's run has a ceiling of CPU time**: CI's 90 seconds for a
+  commit and 5 minutes for a push, divided as a file's budget is. Before
+  any test runs, the hook prices its plan from what the last runs recorded
+  here and keeps the cheapest files that fit, and a test file the commit
+  stages always runs. A commit leaves the rest to the push, which then runs
+  its whole plan; a push leaves the rest to CI and names it. The first run
+  on a machine records everything it runs.
 
 - **Per-game work** is a game's own test files and the cases a cross-game
   guard titles `<id>: …`, and it is nearly all of the suite's time.
@@ -828,8 +852,6 @@ so the slice replaces a `tiers.map(withTier(base))` loop.
   that carries the value.
 - **Say what still covers the presets between.** The slow tier walks them all
   (`npm run test:slow -- src/engine/hint-resume.test.ts`).
-  `hint-quality.test.ts`'s `lintCases` reads every preset of every game at
-  one seed, for narration and not convergence, so it is no substitute.
 - **Pay for the slice in seeds, not in presets.** For a property that is a
   code path, the second seed of one configuration repeats the first; take one
   seed across the slice.
@@ -851,22 +873,20 @@ dealer's cache is one per worker, so every guard shares a board.
   is pinned to a board (§ "Pinning a hint's positions").
 - A game's own test deals as it likes.
 
-### One board of each kind in the hooks
+### One board of each kind, and the rest in the slow tier
 
-For the author of a cross-game sweep. Use `perCommit(hook, wide)`
-([`slow.ts`](../src/engine/testing/slow.ts)) only for more of the same: the
-two local hooks walk one board of each kind and CI walks the rest. The only
-board of a mode, a tier or a rule stays in the hooks, and so does anything a
-single board shows. Say at the call site what the hooks' amount still walks.
+For the author of a cross-game sweep. The hooks and CI walk the same boards:
+one of each kind. More of the same is the slow tier's, through `seedBudget`
+or a `SLOW_TESTS_ENABLED` arm ([`slow.ts`](../src/engine/testing/slow.ts)):
+a second board of one params set, a game's largest board, the later steps of
+a long plan. The only board of a mode, a tier or a rule stays in the default
+suites, and so does anything a single board shows. Say at the call site what
+the default amount still walks.
 
-- `gatePresets` uses it already: in the hooks it leaves out a game's largest
-  board and keeps a board for every value of every mode, tier and choice.
-- The hooks and CI can walk different boards of one game, because the slice
-  takes the smallest preset that supplies each value still wanted. A ledger a
-  walk is held against has to be true of both.
-- Nothing but the hooks sets the toggle. After changing the code a sweep
-  guards, run that sweep wide before committing (`npx vitest run <file>`); no
-  hook is that run.
+- `gatePresets` does it already: it leaves out a game's largest board and
+  keeps a board for every value of every mode, tier and choice.
+- After changing the code a sweep guards, run its slow tier for the games the
+  change could have moved (§ "Running the slow tier").
 
 ### A cross-game guard the hooks can narrow
 

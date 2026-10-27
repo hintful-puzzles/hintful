@@ -556,7 +556,14 @@ if (process.argv[1] === import.meta.filename) {
         return seen;
       };
       const change = changeOf(since);
-      lines = since === null ? commitLines(change, graph) : pushLines(change, graph);
+      // `--owed`: a commit left files to the push past its cost ceiling
+      // (`test-cost.ts`), so the push runs its whole plan.
+      lines =
+        since === null
+          ? commitLines(change, graph)
+          : process.argv.includes("--owed")
+            ? wholePlan(change, graph)
+            : pushLines(change, graph);
     } catch {
       // Any failure at all — vitest missing, git unavailable, a parse error —
       // resolves to the safe answer rather than to a smaller test run.

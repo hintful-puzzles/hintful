@@ -2,10 +2,10 @@
 /**
  * Says so when the last finished run of the gate on `main` failed. Never fails.
  *
- * The local hooks leave part of every cross-game sweep to CI (`perCommit` in
- * `src/engine/testing/slow.ts`), so a defect they cannot see shows first as a
- * red run of `.github/workflows/gate.yml`, and nobody is watching one: a
- * session pushes and moves on. This puts the result where the next commit and
+ * The local hooks run only the tests and the games' cases a change reaches
+ * (`select-tests.ts`), so a defect they cannot see shows first as a red run of
+ * `.github/workflows/gate.yml`, and nobody is watching one: a session pushes
+ * and moves on. This puts the result where the next commit and
  * the next push print it.
  *
  * **A notice and not a check.** The commit that meets a red run is usually the

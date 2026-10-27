@@ -36,7 +36,7 @@ const SEEDS = [0, 1, 2];
 function speaks(id: string): boolean {
   const game = HINT_GAMES.find(([g]) => g === id)?.[1];
   if (!game) return false;
-  for (const { params } of gatePresets(id, game)) {
+  for (const { params } of gatePresets(game)) {
     for (const seed of SEEDS) {
       let board: { desc: string; aux?: string };
       try {

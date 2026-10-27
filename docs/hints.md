@@ -581,30 +581,26 @@ it is or how many there are ("turn 2 of the 7", "Three jumps clear…"). The
 bound walk in `hint-quality.test.ts` holds every leg to it (`journeyDefects`).
 
 `hint-quality.test.ts` ("hint narration stays readable at a glance") holds
-every step to the limit, over every tier and preset into the middle game and
-each game's last preset at its hardest teachable tier. A sentence over the
-limit fails the commit that wrote it.
+every step to the limit, over a board of every mode and tier into the middle
+game. A sentence over the limit fails the commit that wrote it.
 
 **A sentence that needs more room is listed in `LONG_NARRATIONS`**: an entry
-per reason, with the `rungs` that speak it and a `games` roster, held to 300.
+per reason, with the `rungs` that speak it, a `games` roster, and for each
+game a board that speaks it (`spokenOn`), held to 300.
 
 - **Shortening a sentence means deleting its listing.** The ledger fails an
-  unlisted long step and also a listing that matches nothing long. The
-  commit and push hooks skip that reverse half, and report it skipped
-  (`CORNER_WALKED` in that file), so after shortening a listed sentence run
-  `npx vitest run src/engine/hint-quality.test.ts`, which runs it as CI and
-  `npm run gate` do. The limit itself is never skipped.
+  unlisted long step, and a listing whose pinned board no longer speaks it
+  over the limit.
 - **What earns a listing**: a chain Tactic whose form the spec mandates, an
   owner-endorsed wording, a deduction with two premises, or a second sentence
   the owner asked for.
-- **Add a game to a shared entry only once you have seen it speak the
-  sentence.** That the solver records the rung is an inference: a plan may
-  finish every board on cheaper rungs.
-- **Where the guard calls a listing dead, suspect the walk first.** Give the
-  listing `spokenOn`, a `params:desc` that speaks the sentence, which every
-  commit then holds; reach for that pin before a wider walk. Before deleting a
-  listing, widen the walk for that game (every leaf preset, every tier, both
-  auto-pencil settings) and record the wider walk beside the entry.
+- **Add a game to a shared entry only with a board it speaks the sentence
+  on.** That the solver records the rung is an inference: a plan may finish
+  every board on cheaper rungs.
+- **Where a pinned board stops speaking the sentence, find another before
+  deleting the listing.** A change elsewhere in the plan can route that board
+  past the rung while other boards still reach it: scan the game's presets and
+  tiers, walked as `speaksOn` walks, and pin the first board that speaks it.
 
 To shorten without losing a premise:
 

@@ -11,13 +11,13 @@
  * production build.** If that stops being true, a commit touching those paths
  * would skip `vitest run` and `vite build` while genuinely affecting them.
  *
- * **A deferred assertion and a sweep's smaller per-commit amount**
- * (`PRECOMMIT_HOOK_RUN` and `perCommit`, `engine/testing/slow.ts`)
- * rest on a different one: **CI is the backstop.** The two local hooks set
+ * **A hook's narrowing to the games a change reaches** (`GATE_GAME_SCOPE`,
+ * read only beside `GATE_PRECOMMIT`, `engine/testing/game-scope.ts`) rests on
+ * a different one: **CI is the backstop.** The two local hooks set
  * `GATE_PRECOMMIT` and CI does not, so work skipped locally still runs in CI
- * on every push. Set it in both and the deferred assertions run *nowhere*
- * while both runs report green, which is why a test below reads the files
- * rather than taking the arrangement on trust.
+ * on every push. Set it in both and the skipped cases run *nowhere* while
+ * both runs report green, which is why a test below reads the files rather
+ * than taking the arrangement on trust.
  *
  * **A commit's per-game work, limited to the games it stages**, rests on a
  * third: **the push runs the rest.** `.husky/pre-push` hands the gate the
@@ -187,11 +187,11 @@ describe("the gate's per-commit scopings stay safe", () => {
 
   it("keeps GATE_PRECOMMIT a hook-only toggle, so CI is still the backstop", () => {
     // The second scoping in this gate that narrows a local run rather than
-    // the branch: `PRECOMMIT_HOOK_RUN` (engine/testing/slow.ts) lets a check
-    // defer to CI, and every such deferral rests on one claim — CI leaves the
-    // toggle unset and runs everything. Asserted here rather than trusted,
+    // the branch: the toggle lets a hook skip other games' cases
+    // (engine/testing/game-scope.ts), and that rests on one claim — CI leaves
+    // the toggle unset and runs everything. Asserted here rather than trusted,
     // because the failure is silent in the worst direction: set it in CI and
-    // the deferred checks run **nowhere**, while both runs report green.
+    // the skipped cases run **nowhere**, while both runs report green.
     // Vacuity: a `?raw` import that resolved to nothing would make every
     // assertion below pass over an empty string.
     expect(preCommitHook.length, "the pre-commit hook read empty").toBeGreaterThan(200);

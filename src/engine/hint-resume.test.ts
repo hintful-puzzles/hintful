@@ -35,7 +35,7 @@ import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { sameState } from "./testing/same-state.ts";
-import { itOverWholeSweep, perCommit } from "./testing/slow.ts";
+import { itOverWholeSweep, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
 import { FIRST_SHARE, ofThisShare, shareFloor } from "./testing/sweep-share.ts";
 import { NO_FLASH } from "./win-wave.ts";
 
@@ -53,7 +53,7 @@ import { NO_FLASH } from "./win-wave.ts";
 function solveByHints(
   game: AnyGame,
   params: unknown,
-  seed: string,
+  at: string,
   permitsSearch: boolean,
   boundedSearch: boolean,
 ): number {
@@ -76,26 +76,26 @@ function solveByHints(
     const wrong = game.findMistakes?.(state).length ?? 0;
     if (wrong > 0) {
       throw new Error(
-        `${seed}: findMistakes reports ${wrong} after ${moves} hinted moves`,
+        `${at}:findMistakes reports ${wrong} after ${moves} hinted moves`,
       );
     }
     const res = game.hint?.(state, aux);
-    if (!res) throw new Error(`${seed}: game has no hint() method`);
+    if (!res) throw new Error(`${at}:game has no hint() method`);
     if (!res.ok) {
       if (boundedSearch) {
         if (res.error !== SEARCH_OUT_OF_REACH) {
           throw new Error(
-            `${seed}: a hint that plans by searching ran out after ${moves} moves and said "${res.error}" — the only honest thing past its reach is the collection's one wording for that`,
+            `${at}:a hint that plans by searching ran out after ${moves} moves and said "${res.error}" — the only honest thing past its reach is the collection's one wording for that`,
           );
         }
         return moves;
       }
       if (!permitsSearch) {
-        throw new Error(`${seed}: hint gave up after ${moves} moves: "${res.error}"`);
+        throw new Error(`${at}:hint gave up after ${moves} moves: "${res.error}"`);
       }
       if (res.error !== DEDUCTION_EXHAUSTED) {
         throw new Error(
-          `${seed}: ran out of deduction after ${moves} moves and said "${res.error}" — a board whose tier permits search must use the collection's one wording for it`,
+          `${at}:ran out of deduction after ${moves} moves and said "${res.error}" — a board whose tier permits search must use the collection's one wording for it`,
         );
       }
       return moves;
@@ -115,37 +115,31 @@ function solveByHints(
     }
     moves += played;
   }
-  throw new Error(`${seed}: did not converge within ${cap} moves (loop?)`);
+  throw new Error(`${at}:did not converge within ${cap} moves (loop?)`);
 }
 
 /**
  * How many times the walk asks for a fresh plan on one board, at most, where
- * the board's first plan is longer than that: the local hooks ask at evenly
- * spaced moves and follow the plan between them, and CI asks up to 512 times.
+ * the board's first plan is longer than that: it asks at evenly spaced moves
+ * and follows the plan between them. The slow tier asks after every move.
  *
  * The walk is quadratic in a plan's length, a whole plan computed again for
  * each of its moves, which on a game of long plans such as Loopy is most of the
- * walk's cost. At 64 a plan of 64 steps or fewer is still walked
- * one move at a time, which is every board of the searching hints the hooks
- * walk and every Solo board.
+ * walk's cost: asked after every move up to 512, Loopy's boards were 512 of
+ * the walk's 755 CI seconds (2026-10-27). At 64 a plan of 64 steps or fewer is
+ * still walked one move at a time, which is every board of the searching hints
+ * and every Solo board.
  *
- * **What the hooks still walk, and what waits for CI.** A hint that cannot
- * resume from a position the player reached fails at the first such position
- * it is asked from, and the hooks ask from up to 64 of them on every board, the
- * opening included. A refusal is met wherever a plan runs out. What the stride
- * can step over is an instability between two consecutive recomputes on a
- * board whose plan is longer than 64 steps: a planner that undoes its own last
- * move. CI's walk recomputes after every move on every board whose plan is
- * 512 steps or fewer.
- *
- * **CI's 512 is set by one board.** Loopy's 7x7 Great-Great-Dodecagonal, the
- * grid type no preset offers dealt on the first preset's size, plans 1018 steps
- * and took 61% of Loopy's walk asked after every move: about 13 CI minutes,
- * in one case no share of the sweep can split (2026-10-27). Four of the gate's
- * 311 boards plan more than 512 steps: that one, Loopy's Great-Dodecagonal,
- * Mosaic's 50x50 and Pattern's 30x30, each still asked from 512 positions.
+ * **What the walk still catches, and what waits for the slow tier.** A hint
+ * that cannot resume from a position the player reached fails at the first
+ * such position it is asked from, and the walk asks from up to 64 of them on
+ * every board, the opening included. A refusal is met wherever a plan runs
+ * out. What the stride can step over is an instability between two
+ * consecutive recomputes on a board whose plan is longer than 64 steps: a
+ * planner that undoes its own last move only there. A planner that undoes its
+ * last move at all shows on the short plans, which are walked move by move.
  */
-const RECOMPUTES = perCommit(64, 512);
+const RECOMPUTES = SLOW_TESTS_ENABLED ? Number.POSITIVE_INFINITY : 64;
 
 /**
  * The games whose hint **plans by searching ahead a bounded number of moves**,
@@ -261,69 +255,37 @@ const SEARCH_REACH: Record<string, string> = {
 };
 
 /**
- * **What this file's walk costs at the gate's slice: covering the modes is
- * nearly free and covering the sizes is not**, because the slice takes each
- * value on the *smallest* preset offering it. The large line items are Loopy's
- * tilings and one largest board per game.
- *
- * The three sibling sweeps below take the same slice, and
- * {@link BREADTH_SEEDS} is what the first two trade to afford it.
+ * **What this file's walk costs: covering the modes is nearly free and
+ * covering the sizes is not**, because the slice takes each value on the
+ * *smallest* preset offering it, and leaves each game's largest board to the
+ * slow tier. The large line items are Loopy's tilings.
  *
  * The population is `gatePresets`, shared with every other cross-game sweep, so
  * the walk sees every tier and mode variant: a hint's refusals live on the Hard
  * and `Unreasonable` boards and the variants, which the easiest board alone
  * never reaches.
  *
- * Narration across *every* preset of every game is per-commit regardless, in
- * `hint-quality.test.ts`'s `lintCases`, which adds each preset at one seed; what
- * that sweep asks is whether the sentences are readable, not whether the plan
- * converges, so the two do not substitute for each other.
- *
  * **Proved rather than assumed**: capping Solo's hint recorder at
  * `DIFF_KSINGLE` instead of the board's own `kdiff` — the hint grown weaker than
  * the solver that graded the board, a Killer-only defect — leaves a slice keyed
- * on tier alone green and turns this one red on `solo-3x3 Killer-hr-a`. (Solo's own `solo-hint.test.ts` catches that plant
- * too; what no per-game file asserts for most of the collection is this walk's
- * property, which is convergence from arbitrary reached positions.)
+ * on tier alone green and turns this one red on `solo-3x3 Killer Easy`, with
+ * 64 recomputes a board (planted again 2026-10-27). (Solo's own
+ * `solo-hint.test.ts` catches that plant too; what no per-game file asserts for
+ * most of the collection is this walk's property, which is convergence from
+ * arbitrary reached positions.)
  *
- * **The exception, and it is the whole reason this file is affordable: a game
- * that plans by *searching* walks no large board at all** — every mode on the
- * smallest preset offering it, which `gatePresets` derives from the same axes
- * as everyone else's slice. A search pays for board size twice over — one full
- * search per move, and more moves to make — so for the members of
- * `SEARCH_PLANNING_GAMES` the last preset is not "one extra walk", it is most of
- * the suite.
- *
- * **This is a deferral, not a retirement, and what still covers the large board
- * is recorded per member in `SEARCH_REACH` above** — Sixteen's hand-picked
- * 5×5 endgames in `sixteen.test.ts`, Netslide's every-preset walk in
- * `netslide-reconstruct.test.ts`, both on every commit. The hand-picked boards
- * are sharper than a random one: they are the positions the hint actually gave
- * up on, and removing the tangle term was verified to turn them red. The slow
- * tier walks every preset for these games as for all others.
+ * **A game that plans by *searching* walks no large board in any run but the
+ * slow tier's**, and what still covers it on every commit is recorded per
+ * member in `SEARCH_REACH` above: Sixteen's hand-picked 5×5 endgames in
+ * `sixteen.test.ts`, Netslide's every-preset walk in
+ * `netslide-reconstruct.test.ts`. The hand-picked boards are sharper than a
+ * random one: they are the positions the hint actually gave up on, and
+ * removing the tangle term was verified to turn them red.
  */
-const SEEDS = ["hr-a", "hr-b", "hr-c", "hr-d", "hr-e"];
-
 /** The hinting games whose single-plan sweeps this share walks. The walk to
  * solved is shared out by board instead, since one game's boards can be most
  * of it ({@link SOLVE_CASES}). */
 const SHARE_GAMES = ofThisShare(HINT_GAMES);
-
-/**
- * The seeds the *single-plan* sweeps below take per board — the two that
- * compute one hint and judge it, rather than walking a board to solved.
- *
- * **Breadth of board bought with depth of seed — the same number of boards,
- * chosen differently.** Several seeds of `firstLeaf` would be as many boards,
- * every one of them the smallest and easiest configuration its game offers; one
- * seed of the slice covers every tier and every mode in the collection. What
- * is traded away is sampling, and it is the cheap half here, because the
- * property is a code path rather than a coincidence: a rung that emits a stale
- * step, or a `hint()` that mutates, does it on every board that reaches the
- * rung, and a second seed buys a repeat of a configuration the first already
- * walked.
- */
-const BREADTH_SEEDS = SEEDS.slice(0, 1);
 
 /** A structural key for a game state — typed arrays rendered as plain arrays so
  * two states compare equal iff every field matches. Used to detect a `hint()`
@@ -349,41 +311,6 @@ function stateKey(s: unknown): string {
   });
 }
 
-describe("a kept hint plan never contains a step that does nothing", () => {
-  // The engine guarantees a displayed step is never stale. The Towers-specific trigger (auto-pencil resolving a
-  // later step) has its own end-to-end test; this is the cross-game invariant
-  // that catches the *intrinsic* form for every hint game — a plan whose own
-  // steps, replayed in order (the exact-follow path), include one that is
-  // already a no-op when reached. A clean plan means the game has no latent
-  // staleness of this shape.
-  //
-  // **Breadth of board over depth of seed** (see BREADTH_SEEDS): a rung that
-  // emits a stale step does it on the first board that reaches the rung, and
-  // the rungs are what a mode adds — Solo's four cage rungs fire on no board
-  // `firstLeaf` can produce.
-  for (const [name, game] of SHARE_GAMES) {
-    it(`${name}: every plan step changes the board when reached`, () => {
-      for (const { title, params } of gatePresets(name, game)) {
-        for (const seed of BREADTH_SEEDS) {
-          const at = `${name}/${title}/${seed}`;
-          const { desc, aux } = dealt(game, params);
-          let state = game.newState(params, desc);
-          const res = game.hint?.(state, aux);
-          if (!res?.ok) continue; // a refusal has no steps to check
-          res.steps.forEach((step, i) => {
-            const after = game.executeMove(state, step.move);
-            expect(
-              sameState(state, after),
-              `${at}: plan step ${i} is a no-op when reached (stale step)`,
-            ).toBe(false);
-            state = after;
-          });
-        }
-      }
-    });
-  }
-});
-
 /** What the board draws for `state`: with `step` on display, or with no hint. */
 function frameOf(game: AnyGame, state: unknown, step?: HintStep<unknown>): string {
   const rec = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
@@ -392,42 +319,66 @@ function frameOf(game: AnyGame, state: unknown, step?: HintStep<unknown>): strin
   return JSON.stringify(rec.ops);
 }
 
-describe("a kept hint plan's every step changes what the board draws", () => {
-  // The block above asks whether a step changes the state, and a state holds
-  // more than the player is shown: a step can change a count the game keeps
-  // and nothing it draws, and following it then adds an Undo step that
-  // appears to do nothing. This one asks the player's question, of the frame.
-  //
-  // **What a player sees is the board with no hint on it, or with the step on
-  // it.** A mark the game shows only for the square in focus (a set Subsets
-  // has ruled out of a cell, struck through in the tally while that cell is
-  // looked at) changes no plain frame, and the step that makes it puts its
-  // square in focus, so a step is convicted only when both frames stand still.
+/**
+ * Three promises about one plan, asked of the opening plan of every board of
+ * the slice, one plan computed for all three, since computing it is most of
+ * what each costs.
+ *
+ * **Breadth of board over depth of seed.** A rung that emits a stale step, or
+ * a `hint()` that mutates, does it on every board that reaches the rung, and
+ * the rungs are what a mode adds: Solo's four cage rungs fire on no board
+ * `firstLeaf` can produce. So the walk takes one board of each value of each
+ * axis, and a second board of one configuration would walk a code path the
+ * first already did.
+ */
+describe("a kept hint plan leaves the board alone, and its every step changes it", () => {
   for (const [name, game] of SHARE_GAMES) {
-    it(`${name}: every plan step changes the frame when reached`, () => {
+    it(`${name}: asking changes nothing, and every plan step changes the board and its frame`, () => {
       let judged = 0;
-      for (const { title, params } of gatePresets(name, game)) {
-        for (const seed of BREADTH_SEEDS) {
-          const at = `${name}/${title}/${seed}`;
-          const { desc, aux } = dealt(game, params);
-          let state = game.newState(params, desc);
-          const res = game.hint?.(state, aux);
-          if (!res?.ok) continue; // a refusal has no steps to check
-          let plain = frameOf(game, state);
-          res.steps.forEach((step, i) => {
-            const after = game.executeMove(state, step.move);
-            const plainAfter = frameOf(game, after);
-            judged++;
-            if (plainAfter === plain) {
-              expect(
-                frameOf(game, after, step) !== frameOf(game, state, step),
-                `${at}: plan step ${i} changes nothing the board draws: "${step.explanation}"`,
-              ).toBe(true);
-            }
-            state = after;
-            plain = plainAfter;
-          });
-        }
+      for (const { title, params } of gatePresets(game)) {
+        const at = `${name}/${title}`;
+        const { desc, aux } = dealt(game, params);
+        let state = game.newState(params, desc);
+        // A hint computes and *displays* a plan; it must leave the state
+        // untouched, and the player applies a step by following it. (Owner-
+        // reported: a Towers hint appeared to delete a pencil note. The note was
+        // intact, a render bug drew the struck candidate invisibly, but the
+        // guarantee is worth asserting directly: `hint()` is pure on the state.)
+        const before = stateKey(state);
+        const res = game.hint?.(state, aux);
+        expect(stateKey(state), `${at}: hint() mutated the state`).toBe(before);
+        if (!res?.ok) continue; // a refusal has no steps to check
+        let plain = frameOf(game, state);
+        res.steps.forEach((step, i) => {
+          const after = game.executeMove(state, step.move);
+          // The engine guarantees a displayed step is never stale. The
+          // Towers-specific trigger (auto-pencil resolving a later step) has
+          // its own end-to-end test; this is the intrinsic form for every hint
+          // game: a plan whose own steps, replayed in order (the exact-follow
+          // path), include one that is already a no-op when reached.
+          expect(
+            sameState(state, after),
+            `${at}: plan step ${i} is a no-op when reached (stale step)`,
+          ).toBe(false);
+          // A state holds more than the player is shown: a step can change a
+          // count the game keeps and nothing it draws, and following it then
+          // adds an Undo step that appears to do nothing. So the frame is
+          // asked too. What a player sees is the board with no hint on it, or
+          // with the step on it: a mark shown only for the square in focus (a
+          // set Subsets has ruled out of a cell) changes no plain frame, and
+          // the step that makes it puts its square in focus, so a step is
+          // convicted only when both frames stand still.
+          const plainAfter = frameOf(game, after);
+          judged++;
+          if (plainAfter === plain) {
+            expect(
+              frameOf(game, after, step) !== frameOf(game, state, step),
+              `${at}: plan step ${i} changes nothing the board draws: "${step.explanation}"`,
+            ).toBe(true);
+          }
+          state = after;
+          plain = plainAfter;
+        });
       }
       framesJudged += judged;
     });
@@ -437,28 +388,6 @@ describe("a kept hint plan's every step changes what the board draws", () => {
 /** How many steps the frame sweep judged, across this share's games: its
  * vacuity guard, asserted in "the resume walk" below. */
 let framesJudged = 0;
-
-describe("requesting a hint never mutates the board", () => {
-  // A hint computes and *displays* a plan; it must leave the state untouched —
-  // the player applies a step by following it (or pressing Hint a second time).
-  // (Owner-reported: a Towers hint appeared to delete a pencil note. The note
-  // was intact — a render bug drew the struck candidate invisibly — but the
-  // guarantee is worth asserting directly: `hint()` is pure on the state.)
-  for (const [name, game] of SHARE_GAMES) {
-    it(`${name}: hint() leaves the state unchanged`, () => {
-      for (const { title, params } of gatePresets(name, game)) {
-        for (const seed of BREADTH_SEEDS) {
-          const at = `${name}/${title}/${seed}`;
-          const { desc, aux } = dealt(game, params);
-          const state = game.newState(params, desc);
-          const before = stateKey(state);
-          game.hint?.(state, aux);
-          expect(stateKey(state), `${at}: hint() mutated the state`).toBe(before);
-        }
-      }
-    });
-  }
-});
 
 /** The Latin-family hinting games, read from the whole registry: a share may
  * hold none of them, and the check below is what still fails a name that
@@ -498,7 +427,7 @@ if (SHARE_LATIN.length > 0)
     // cages, Group's hidden identity.
     for (const [name, game] of SHARE_LATIN) {
       it(`${name}: "ruled out in this cell" only on a genuine naked single`, () => {
-        for (const { title, params } of gatePresets(name, game)) {
+        for (const { title, params } of gatePresets(game)) {
           const at = `${name}/${title}`;
           const { desc, aux } = dealt(game, params);
           let state = game.newState(params, desc);
@@ -563,10 +492,7 @@ if (FIRST_SHARE) {
  */
 const SOLVE_CASES = ofThisShare(
   HINT_GAMES.flatMap(([name, game]) => {
-    const presets: ({ title: string; params: unknown } | null)[] = gatePresets(
-      name,
-      game,
-    );
+    const presets: ({ title: string; params: unknown } | null)[] = gatePresets(game);
     return (presets.length > 0 ? presets : [null]).map((preset) => ({
       name,
       game,
@@ -579,8 +505,7 @@ describe("a hint can solve from any mid-game position", () => {
   for (const [name, game] of HINT_GAMES) {
     const cases = SOLVE_CASES.filter((c) => c.name === name);
     if (cases.length === 0) continue;
-    // Heavy, fixed-seed work (re-solve by following hints move-by-move across
-    // every seed). The work per seed is bounded and deterministic; only the
+    // Heavy, deterministic work: the boards are the shared deals, and only the
     // wall-clock varies, stretching several-fold under full-suite CPU
     // saturation. That is why nothing here is clock-gated — the assertion is on
     // the *result*. See docs/testing.md § "Seed-deterministic, never clock-gated".
@@ -593,24 +518,16 @@ describe("a hint can solve from any mid-game position", () => {
         const { title, params } = preset;
         const search = permitsSearch(game, params);
         const bounded = BOUNDED_SEARCH_HINTS.includes(name);
-        // **This walk buys breadth over presets; the seed count is not the dial
-        // to turn.** One seed either way: the slow tier widens the *presets*,
-        // and the gate slices by the axis a game varies, where a game's
-        // *largest* board costs as much as many small ones.
-        //
-        // More seeds over every preset make a check that takes tens of minutes,
-        // which is not thorough but unrunnable (`docs/testing.md` §
-        // "Right-sizing the gate": a slow tier nobody invokes is not coverage),
+        // **This walk buys breadth over presets; a board count is not the dial
+        // to turn.** One board a preset: the slow tier widens the *presets*,
+        // and a game's *largest* board costs as much as many small ones,
         // because this walk is quadratic in board size twice over — one full
         // hint recompute per move, and more moves on a bigger board. Another
-        // seed on the easiest board finds less than looking at a hard one.
-        const seeds = SEEDS.slice(0, 1);
-        for (const seed of seeds) {
-          expect(() =>
-            solveByHints(game, params, `${name}-${title}-${seed}`, search, bounded),
-          ).not.toThrow();
-          walkedCases++;
-        }
+        // board of the easiest preset finds less than looking at a hard one.
+        expect(() =>
+          solveByHints(game, params, `${name}-${title}`, search, bounded),
+        ).not.toThrow();
+        walkedCases++;
       }
     });
   }

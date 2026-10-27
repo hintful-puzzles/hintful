@@ -12,7 +12,8 @@
 # § "Pushing and deploying").
 #
 # GATE_PRECOMMIT=1 is the same toggle the commit hook sets, and means the same:
-# the local slice of each sweep, with CI as the backstop for the rest.
+# a sweep's cases narrowed to the games the run is about, with CI as the
+# backstop for the rest.
 #
 # Git writes one line per ref being pushed: local ref, local commit, remote
 # ref, remote commit.

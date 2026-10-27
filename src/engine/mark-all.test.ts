@@ -65,7 +65,7 @@ it("drew a populated roster", () => {
 // every board the gate slice offers.
 for (const row of MARK_ALL_GAMES) {
   it(`${row.name}: keeps its notes in \`pencil\``, () => {
-    for (const { title, params } of gatePresets(row.name, row.game)) {
+    for (const { title, params } of gatePresets(row.game)) {
       const { desc } = dealt(row.game, params);
       const notes = notesOf(row.game.newState(params, desc));
       expect(
@@ -113,7 +113,7 @@ describe("the press is the engine's, whatever a game types with M", () => {
 
   for (const row of MARK_ALL_GAMES) {
     it(`${row.name}: the button fills, and M does exactly where no key is M`, () => {
-      for (const { title, params } of gatePresets(row.name, row.game)) {
+      for (const { title, params } of gatePresets(row.game)) {
         const at = `${row.name}/${title}`;
         boards++;
         const fresh = row.game.newState(params, dealt(row.game, params).desc);
@@ -209,7 +209,7 @@ describe("the Mark-all press converges", () => {
       // *obvious* candidates, and which candidates are obvious is a mode
       // question — Solo's Killer cages and X diagonals cull on top of the rows,
       // columns and blocks, and no board this walked before had either.
-      for (const { title, params } of gatePresets(row.name, row.game)) {
+      for (const { title, params } of gatePresets(row.game)) {
         const at = `${row.name}/${title}`;
         const { state } = board(row, params, `markall-${at}`);
         let cur = state;
@@ -234,7 +234,7 @@ describe("the Mark-all press never resets a note the player narrowed", () => {
       // adds is decided in the same code that decides what a cage, an X
       // diagonal or a jigsaw block culls, so one plain board per game would
       // miss Solo's modes.
-      for (const { title, params } of gatePresets(row.name, row.game)) {
+      for (const { title, params } of gatePresets(row.game)) {
         const at = `${row.name}/${title}`;
         // A board whose every blank cell is down to one candidate has nothing
         // to narrow, and the smallest Solo under mirrored clues is often one,

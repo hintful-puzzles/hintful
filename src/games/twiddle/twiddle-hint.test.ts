@@ -10,6 +10,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
+import { seedBudget } from "../../engine/testing/slow.ts";
 import { hint } from "./hint.ts";
 import { executeMove, twiddleGame } from "./index.ts";
 import { COL_HINT_EVIDENCE, coord, PREFERRED_TILE_SIZE } from "./render.ts";
@@ -55,11 +56,20 @@ function walk(state: TwiddleState): number {
   throw new Error("did not arrive within 2000 turns");
 }
 
+/**
+ * Boards walked per shape: one, and three in the slow tier. A refusal comes
+ * of the turn library built for the shape, which every board of the shape
+ * uses, and a plan that undoes its own last turn is asked about at every
+ * position one board's walk passes through, a few hundred of them; the
+ * shapes are what vary the library.
+ */
+const WALKED = ["a", "b", "c"].slice(0, seedBudget(1, 3));
+
 describe("a hint recomputed after every turn arrives", () => {
   for (const p of [...presetParams, ...customParams]) {
     const name = G.encodeParams(p, true);
-    it(`${name}: three dealt boards, no refusal`, () => {
-      for (const seed of ["a", "b", "c"]) {
+    it(`${name}: dealt boards, no refusal`, () => {
+      for (const seed of WALKED) {
         const s = newState(p, newDesc(p, randomNew(`${name}${seed}`)).desc);
         expect(walk(s)).toBeGreaterThan(0);
       }

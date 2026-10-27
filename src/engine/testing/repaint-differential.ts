@@ -642,13 +642,18 @@ export function repaintDifferential(
   // dead end) are what a tile key most easily leaves out, as is the frame a
   // plan's last step wins on. The run above paints animations part-way, so
   // the walk paints only where each event starts and settles: a slide
-  // puzzle's plan is long, and every step of it moves in slow motion.
+  // puzzle's plan is long, and every step of it moves in slow motion. It
+  // follows each plan as a player pressing Hint again does, each step shown
+  // as the one before it is played, and asks for a plan only when one runs
+  // out: a searching hint asked afresh at every step was most of the file.
   if (typeof game.hint === "function" && mismatch === null) {
     const walk = begin();
     for (let s = 0; s < WALK_STEPS && mismatch === null; s++) {
-      lastEvent = "walk: hint";
-      if (walk.m.hint() !== null) break;
-      walk.jump();
+      if (walk.m.activeHintStep() === null) {
+        lastEvent = "walk: hint";
+        if (walk.m.hint() !== null) break;
+        walk.jump();
+      }
       lastEvent = "walk: next hint step";
       walk.m.executeHint();
       walk.jump();

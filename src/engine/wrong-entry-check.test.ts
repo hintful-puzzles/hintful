@@ -104,7 +104,7 @@ const swept = new Map<string, Swept>();
 function sweep(id: string, game: AnyGame): Swept {
   const known = swept.get(id);
   if (known) return known;
-  const params = gatePresets(id, game)[0].params;
+  const params = gatePresets(game)[0].params;
   const gameId = `${game.encodeParams(params, true)}:${dealt(game, params).desc}`;
 
   let current: unknown = null;

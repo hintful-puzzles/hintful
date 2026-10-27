@@ -24,7 +24,7 @@ describe("a hint asked mid-animation shows the next step", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: the step shown mid-animation outlives the landing`, () => {
       walked++;
-      const [first] = gatePresets(name, game);
+      const [first] = gatePresets(game);
       expect(first, `${name}: no preset to walk`).toBeDefined();
       const midend = new Midend(game);
       expect(beginDealt(midend, game, first.params), first.title).toBeNull();

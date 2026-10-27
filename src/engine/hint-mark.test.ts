@@ -29,7 +29,6 @@ import {
   RecordingDrawing,
 } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
-import { perCommit } from "./testing/slow.ts";
 import type { Color, Rect } from "./types.ts";
 
 const RENDERERS = import.meta.glob<Record<string, unknown>>("../games/*/render.ts", {
@@ -70,39 +69,35 @@ function renderersById(): Map<string, Record<string, unknown>> {
 /**
  * Walk a game's hint plan and hand back every frame it paints.
  *
- * **Every board the gate slice offers, two seeds each** — and that ordering is
+ * **Every board the gate slice offers, one board each** — and that ordering is
  * the point. A fill hides in a rung the opener never reaches, which is why this
  * walks six steps deep (a chain frame, Clusters' on a Tricky board, can first
  * appear past the third step); but it also hides in a *renderer branch* the
- * first preset never enters. Seeds of `2x2 Trivial` say nothing about how Solo
+ * first preset never enters. Boards of `2x2 Trivial` say nothing about how Solo
  * marks a Killer cage, nor about Loopy's other tilings, each of which is a
  * different geometry drawn by a different branch. Breadth of board is what
  * this guard's subject varies with, not seeds.
  *
  * Most of its cost is that breadth — Loopy's tilings and Solo's modes and
- * tiers. It does not touch the gate's wall clock, which is set by the longest
- * file rather than by this one.
+ * tiers.
  */
 function hintFrames(
-  id: string,
   game: (typeof HINT_GAMES)[number][1],
 ): { ops: DrawOp[]; cell: number }[] {
   const palette = game.colors(DEFAULT_BACKGROUND);
   const frames: { ops: DrawOp[]; cell: number }[] = [];
-  for (const { params } of gatePresets(id, game)) {
-    for (let s = 0; s < perCommit(1, 2); s++) {
-      const midend = new Midend(game);
-      if (beginDealt(midend, game, params, s)) continue;
-      const size = midend.size({ w: 700, h: 700 });
-      const cell = Math.min(size.w, size.h) / 20;
-      if (midend.hint()) continue;
-      for (let step = 0; step < 6; step++) {
-        const frame = new RecordingDrawing(palette);
-        midend.redraw(frame);
-        if (!midend.activeHintStep()) break;
-        frames.push({ ops: frame.ops, cell });
-        midend.executeHint();
-      }
+  for (const { params } of gatePresets(game)) {
+    const midend = new Midend(game);
+    if (beginDealt(midend, game, params)) continue;
+    const size = midend.size({ w: 700, h: 700 });
+    const cell = Math.min(size.w, size.h) / 20;
+    if (midend.hint()) continue;
+    for (let step = 0; step < 6; step++) {
+      const frame = new RecordingDrawing(palette);
+      midend.redraw(frame);
+      if (!midend.activeHintStep()) break;
+      frames.push({ ops: frame.ops, cell });
+      midend.executeHint();
     }
   }
   return frames;
@@ -126,7 +121,7 @@ describe("a hint marks beside the content, never behind it", () => {
     const evidence = byId.get(id)?.["COL_HINT_CELL"];
 
     it(`${id}: a ring is round, and nothing is filled`, () => {
-      const frames = hintFrames(id, game);
+      const frames = hintFrames(game);
       expect(frames.length, `${id} produced no hint frame to check`).toBeGreaterThan(0);
       // The ring's ink follows the game's palette (`resolvePalette`).
       const ringInk = game.colors(DEFAULT_BACKGROUND).length;

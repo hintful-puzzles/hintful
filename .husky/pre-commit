@@ -14,11 +14,8 @@
 #                        AGENTS.md and friends — never help/, which is a build
 #                        input) skips vitest and vite build, and any other runs
 #                        the per-game tests of the games it stages only: the
-#                        rest is `.husky/pre-push`'s. It is also the one
-#                        signal a test reads to do less here than in CI
-#                        (`PRECOMMIT_HOOK_RUN` and `perCommit` in
-#                        engine/testing/slow.ts), so there is one name for one
-#                        idea rather than a second switch to keep in step.
+#                        rest is `.husky/pre-push`'s. A test reads it only
+#                        through that narrowing (engine/testing/game-scope.ts).
 #
 # CI and a manual `npm run gate` leave both unset and run everything, so nothing
 # reaches `main` without the full gate having seen it. See scripts/gate.sh.

@@ -16,7 +16,7 @@
  */
 import { type AnyGame, membersNotMentioning, REGISTERED_GAMES } from "./enrollment.ts";
 import { dealtBoards } from "./presets.ts";
-import { perCommit, SLOW_TESTS_ENABLED } from "./slow.ts";
+import { SLOW_TESTS_ENABLED } from "./slow.ts";
 
 export type { AnyGame };
 
@@ -144,31 +144,20 @@ export function markRoles(highlights: unknown): number {
  * reaches the modes, and it is a board the player can actually pick rather than
  * a tier label written onto the smallest grid in the menu.
  *
- * **The local hooks take a game's modes and not its sizes, for every game.**
- * `perCommit` leaves the largest board to CI, where the whole slice is
- * walked on every push to `main` (`docs/testing.md` § "One board of
- * each kind in the hooks"). Every value of every mode, tier and choice keeps
- * a board in the hooks, on the smallest preset offering it.
+ * **The slice takes a game's modes and not its sizes** (`scalarEnds: false`):
+ * every value of every mode, tier and choice keeps a board, on the smallest
+ * preset offering it, and a game's largest board is the slow tier's. A walk's
+ * cost is superlinear in board size, and a searching hint's twice over (one
+ * full search per move, and more moves to make), so the largest board cost
+ * more than every mode together. That is derived from the axes rather than
+ * being a count of presets to keep, because a count chosen to reach a game's
+ * modes stops reaching them the day the game gains one.
  *
- * **A searching hint takes its modes and not its sizes everywhere.** Its cost is
- * superlinear in board size — one full search per move, and more moves to make
- * — so the members of {@link SEARCH_PLANNING_GAMES} get `scalarEnds: false`:
- * every mode on the smallest board offering it, and no large board at all.
- * That is derived from the same axes as everyone else's slice rather than being
- * a count of presets to keep, because a count chosen to reach a game's modes
- * stops reaching them the day the game gains one.
- *
- * **What the slice does not walk, and what does.** Every preset in between — a
- * mode at a size other than its smallest, a tier at a size other than the
- * menu's first — is the slow tier's, through this same function:
- * `npm run test:slow -- src/engine/hint-resume.test.ts`.
+ * **What the slice does not walk, and what does.** Every other preset — a
+ * game's largest board, a mode at a size other than its smallest, a tier at a
+ * size other than the menu's first — is the slow tier's, through this same
+ * function: `npm run test:slow -- src/engine/hint-resume.test.ts`.
  */
-export function gatePresets(
-  id: string,
-  game: AnyGame,
-): { title: string; params: unknown }[] {
-  return dealtBoards(game, {
-    every: SLOW_TESTS_ENABLED,
-    scalarEnds: perCommit(false, !SEARCH_PLANNING_GAMES.includes(id)),
-  });
+export function gatePresets(game: AnyGame): { title: string; params: unknown }[] {
+  return dealtBoards(game, { every: SLOW_TESTS_ENABLED, scalarEnds: false });
 }

@@ -39,12 +39,7 @@ import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { dealRare, dealsPromptly, dealt } from "./testing/dealt.ts";
 import { firstLeaf, leafPresets } from "./testing/presets.ts";
-import {
-  itOverWholeSweep,
-  perCommit,
-  SLOW_TESTS_ENABLED,
-  seedBudget,
-} from "./testing/slow.ts";
+import { itOverWholeSweep, SLOW_TESTS_ENABLED, seedBudget } from "./testing/slow.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
 type AnyGame = Game<any, any, any, any, any, any>;
@@ -274,17 +269,17 @@ for (const { id, game, contract, tiers } of tiered) {
       //
       // Seed-deterministic and bounded, never clock-gated (docs/testing.md § "Seed-deterministic, never clock-gated").
       //
-      // **Four boards per tier, sized by the miss rate.** A solver that fails at
-      // a higher cap on 7 of 8 boards escapes one sample 1 time in 8, and four
-      // about 1 time in 4,000.
-      //
-      // The hook walks the first board of each tier, which catches a solver
-      // that fails on every board; the four are walked on every push.
+      // **One board per tier, and twelve in the slow tier.** A solver that
+      // fails at a higher cap on every board fails here on the first; one that
+      // fails on 7 of 8 boards escapes one board of a tier 1 time in 8, so of
+      // a game's several tiers it nearly always meets one. A failure on fewer
+      // boards is the slow tier's to find (`npm run test:slow --
+      // src/engine/difficulty-contract.test.ts`), after a change to a solver.
       //
       // The general lesson: *a guard that has never been shown to fail is not
       // known to work*, and sampling is where a cross-game guard silently
       // becomes decorative.
-      const boards = seedBudget(perCommit(1, 4), 12);
+      const boards = seedBudget(1, 12);
       let checked = 0;
 
       for (let tier = 0; tier < tiers.length; tier++) {

@@ -83,11 +83,14 @@ function cpuNow(): number {
 let costWindow = 0;
 /** The deals this file used that an earlier file in the worker paid for. */
 let inherited = new Set<Deal>();
+/** The CPU microseconds of the deals this file made. */
+let dealtHere = 0;
 
 /** Starts charging deals to a new test file. */
 export function openCostWindow(): void {
   costWindow++;
   inherited = new Set();
+  dealtHere = 0;
 }
 
 /** The CPU microseconds of the boards this file used and did not deal. */
@@ -95,6 +98,12 @@ export function inheritedDealCost(): number {
   let micros = 0;
   for (const deal of inherited) micros += deal.cpu;
   return micros;
+}
+
+/** The CPU microseconds of the boards this file dealt itself: how much of a
+ * suite's cost is dealing, which writing a board down would save. */
+export function ownDealCost(): number {
+  return dealtHere;
 }
 
 function used(deal: Deal): void {
@@ -110,7 +119,9 @@ function timed(make: () => { desc: string; aux?: string }): Deal {
   } catch (thrown) {
     outcome = { thrown };
   }
-  return { ...outcome, cpu: cpuNow() - start, costWindow };
+  const cpu = cpuNow() - start;
+  dealtHere += cpu;
+  return { ...outcome, cpu, costWindow };
 }
 
 function dealsOf(game: object): Map<string, Deal> {
@@ -129,7 +140,8 @@ function dealsOf(game: object): Map<string, Deal> {
  * only on there being none, so a sweep that picks its own board asks this.
  *
  * A deal that throws for any other reason counts as prompt and is kept, so
- * that the guard handed the board reports it.
+ * that the guard handed the board reports it. A deal that runs out its tries
+ * is remembered too, since asking again would spend them all again.
  */
 export function dealsPromptly<Params>(game: Dealing<Params>, params: Params): boolean {
   const ofGame = dealsOf(game);
@@ -139,13 +151,34 @@ export function dealsPromptly<Params>(game: Dealing<Params>, params: Params): bo
     used(kept);
     return true;
   }
+  const slow = slowOf(game);
+  const refused = slow.get(key);
+  if (refused !== undefined) {
+    used(refused);
+    return false;
+  }
   const rng = randomNew(`dealt-${key}`);
   const deal = timed(() =>
     underDealTries(MAX_REGENERATE, () => game.newDesc(params, rng)),
   );
-  if ("thrown" in deal && deal.thrown instanceof RetryLimitExceeded) return false;
+  if ("thrown" in deal && deal.thrown instanceof RetryLimitExceeded) {
+    slow.set(key, deal);
+    return false;
+  }
   ofGame.set(key, deal);
   return true;
+}
+
+/** The params whose first board {@link dealsPromptly} found too rare. */
+const slowDeals = new WeakMap<object, Map<string, Deal>>();
+
+function slowOf(game: object): Map<string, Deal> {
+  let ofGame = slowDeals.get(game);
+  if (ofGame === undefined) {
+    ofGame = new Map();
+    slowDeals.set(game, ofGame);
+  }
+  return ofGame;
 }
 
 /**

@@ -63,7 +63,7 @@ function hatchColor(id: string): number | null {
   ) => string | null)[] = [];
   const pinned = HATCHES_ON[id];
   if (pinned !== undefined) begins.push((m) => m.newGameFromId(pinned));
-  for (const { params } of gatePresets(id, game))
+  for (const { params } of gatePresets(game))
     for (let s = 0; s < 4; s++) begins.push((m) => beginDealt(m, game, params, s));
   for (const begin of begins) {
     const midend = new Midend(game);
@@ -130,7 +130,7 @@ describe("a step that names a line or region draws it, and only then", () => {
     const gamesNaming = new Set<string>();
     for (const [id, game] of HINT_GAMES) {
       const palette = game.colors(DEFAULT_BACKGROUND);
-      const [first] = gatePresets(id, game);
+      const [first] = gatePresets(game);
       if (!first) continue;
       const midend = new Midend(game);
       if (beginDealt(midend, game, first.params)) continue;

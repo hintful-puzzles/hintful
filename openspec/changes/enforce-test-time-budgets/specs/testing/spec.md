@@ -26,3 +26,17 @@ the global one without showing it.
 - **WHEN** a test file's work grows past its cost budget
 - **THEN** the gate fails it by the budget, on CPU time, whatever the load
   was, and never by a timeout
+
+## REMOVED Requirements
+
+### Requirement: A sweep's per-commit amount is chosen through perCommit
+
+**Reason**: The hooks and CI now walk the same amount, and more of the same is the slow tier's (`seedBudget`, `SLOW_TESTS_ENABLED`), so the role toggle no longer chooses an amount and `perCommit` is gone.
+
+**Migration**: Covered by build-pipeline's "The default suites walk one board of each kind, and the slow tier the rest".
+
+### Requirement: A sweep's ledger is true of the hook's boards and of the push's
+
+**Reason**: The hook and the push walk the same boards as CI, so no ledger can be true of one and not the other; the narration ledger, its one case, now holds each listing to a pinned board.
+
+**Migration**: None needed.

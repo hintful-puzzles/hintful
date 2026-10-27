@@ -20,10 +20,10 @@
  *    a limit every step is
  *    held to, with a ledger for the few sentences that genuinely need more
  *    room, and a hard ceiling even they cannot pass. Checked across every
- *    tier and every preset — and across the last preset at the hardest
- *    teachable tier, the Custom-dialog corner neither of those reaches — and
- *    into the middle of the game, in its own block, because the first
- *    preset's opening plan is where the long sentences never are.
+ *    tier and every preset, and into the middle of the game, in its own
+ *    block, because the first preset's opening plan is where the long
+ *    sentences never are. Each ledgered sentence is held to a board that
+ *    still speaks it.
  *  - **No step restates the counter** (§ "Keep the narration terse"): a leg
  *    of a journey never says which leg it is or how many there are, which
  *    the chrome shows as "Step 2 of 7". Held in the bound walk.
@@ -41,12 +41,10 @@
  * board — flattening a good hint to satisfy a guard is a failure, not a fix.
  */
 import { describe, expect, it } from "vitest";
-import { difficultyTiers, withTier } from "./difficulty.ts";
 import type { HintStep } from "./game.ts";
 import { NARRATION_LIMIT } from "./hint-words.ts";
-import { presetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
-import { dealsPromptly, dealt } from "./testing/dealt.ts";
+import { dealt } from "./testing/dealt.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
 import {
   type AnyGame,
@@ -57,17 +55,17 @@ import {
   SEARCH_REACH_GAMES,
 } from "./testing/hint-games.ts";
 import { referenceDefects } from "./testing/hint-reference.ts";
-import { firstLeaf, leafPresets } from "./testing/presets.ts";
-import {
-  itOverWholeSweep,
-  PRECOMMIT_HOOK_RUN,
-  perCommit,
-  SLOW_TESTS_ENABLED,
-} from "./testing/slow.ts";
-import { FIRST_SHARE, ofThisShare, shareFloor } from "./testing/sweep-share.ts";
+import { itOverWholeSweep, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
+import { FIRST_SHARE, ofThisShare } from "./testing/sweep-share.ts";
 
-/** Which of a params set's shared boards (`dealt`) a walk over several takes. */
-const SEEDS = perCommit([0], [0, 1, 2]);
+/**
+ * Which of a params set's shared boards (`dealt`) a walk takes: the first.
+ * Every rule here is about the words a rung speaks, so a second board of one
+ * configuration walks code paths the first already walked; what a walk can
+ * miss is a sentence few boards reach, and that is pinned to a board
+ * ({@link LONG_NARRATIONS}' `spokenOn`) rather than sampled for.
+ */
+const SEEDS = [0];
 
 /** The hinting games this share walks, each with every walk below: a check
  * that closes over a walk (the ledger's, the forms') then holds this share's
@@ -95,31 +93,16 @@ const MAX_NARRATION_CHARS = 300;
  * the engine and spoken by several — and it is what scopes the exemption, so a
  * Palisade entry cannot excuse a Towers sentence. Being a scope, it is checked
  * the same way in both directions: the forward half asks whether *this game* is
- * on the entry, and the reverse half asks whether *this game* ever spoke it. An
- * `(entry, game)` pair that never fires is deleted exactly as a dead entry is.
+ * on the entry, and the reverse half asks whether *this game* still speaks it.
  *
- * So a shared-engine sentence's roster is **the games that actually reach it in
- * the walk, not the games that could** — those are different sets, and the
- * difference is invisible from the code: Mathrax's solver records `forcing` and
- * its narration would say this, yet the walk's plans never choose one, because
- * the frontier finishes the board on cheaper rungs first. Reading a roster off
- * the solver is therefore an inference, and the reverse half is what turns it
- * into a measurement.
- *
- * **The reverse half is a negative over a sample**, which is the one thing to
- * be careful with here: a game that speaks the sentence only on a preset or
- * tier {@link lintCases} does not walk looks identical to one that never speaks
- * it. Before deleting a listing, widen the walk for that game and let the wider
- * walk be the evidence; the floors in "ledgers only listings that still need
- * the room" are what stop a walk that examined nothing from reading as a
- * collection of dead listings.
- *
- * **A sentence the walk cannot be relied on to hear names a board that speaks
- * it** (`spokenOn`, a `params:desc` per game): a sentence that fires on few
- * boards, which the seeds a preset walks can miss, reading a live listing as
- * dead. A pinned board is an input, where a wider walk
- * would be a bigger sample of the same kind, and it is checked on every commit
- * rather than at push: "every pinned board still speaks its sentence".
+ * **The reverse half is decided on a board, never on a sample.** Each listing
+ * names, for each game it lists, a board that speaks the sentence over the
+ * limit (`spokenOn`, a `params:desc`), and "every pinned board still speaks its
+ * listing's sentence" walks it as the length walk would. A negative over the
+ * walk's boards was no evidence: a sentence that fires on few boards read as
+ * dead whenever the seeds missed it. So a roster is the games a board has been
+ * found for, and a game that cannot be pinned is not listed: Mathrax's solver
+ * records `forcing`, yet its plans finish the board on cheaper rungs first.
  */
 /** Why Pearl's step runs long. */
 const PEARL_CARRIES_ON =
@@ -131,12 +114,15 @@ const LONG_NARRATIONS: {
   games: string[];
   rungs: string[];
   why: string;
-  spokenOn?: Record<string, string>;
+  spokenOn: Record<string, string>;
 }[] = [
   {
     games: ["pearl"],
     rungs: ["whiteTurnsOpposite"],
     why: PEARL_CARRIES_ON,
+    spokenOn: {
+      pearl: "10x12dt:BbBcWaBnBaBeBBaBaBaBbBcBaBfBdWcBaBfBaBfWdWeWWeWWaWaWWWaWj",
+    },
   },
   {
     // Spoken over the limit on 18 of 300 boards from 6x6 to 10x12, none of
@@ -156,6 +142,9 @@ const LONG_NARRATIONS: {
       "what each would make, a loop or two arrows alike, which is the whole " +
       "of why the square is struck (rome's 8x10 Tricky, 2026-10-27: 122 " +
       "characters with a left neighbor; a right one is two longer).",
+    spokenOn: {
+      rome: "8x10dt:6a4a1a2aaa2a3aa1a3ab1b2b1a1abaaf4c1a3b2a6aaba2a7a2aa3a1c1,bRDaXLbDcLRdLaRcUdLDbURaDcRaLaRUXaDbLaLcUbLdUDUbDUg",
+    },
   },
   {
     games: ["crossing"],
@@ -165,6 +154,10 @@ const LONG_NARRATIONS: {
       "square, which no mark shows, so they are listed in full; where both " +
       "runs leave five or more, the list alone is a fifth of the line " +
       "(crossing's last preset, 2026-10-22: 123 characters with five).",
+    spokenOn: {
+      crossing:
+        "15x15Sde:7b6a1b1a4a1b7a1b1a4b1a7a1a5a1a1a1a2a1a1a3a2a1a7a1b4a2b1a2a2a1b2a4b1a7a1a2a3a1a1a2a1a1a1a5a1a7a1b4a1b1a7b1a4a1b1a6b7,25,27,28,45,47,62,71,73,77,79,84,87,89,92,95,99,142,143,197,247,317,345,365,411,413,425,498,499,513,557,671,765,814,815,869,927,947,949,975,984,2311,2472,4478,5194,7183,7212,7926,9659,22499,33464,79354,82855,87427,88392,456457,575287,749691,754341,3814167,4483998,8789149,8857768,42828377,49641451",
+    },
   },
   {
     games: ["magnets"],
@@ -175,6 +168,10 @@ const LONG_NARRATIONS: {
       "and why the tile's far end cannot. The owner's 2026-09-22 playtest found " +
       "the second missing, and a step that rests on a fact has to say it " +
       "(magnets spec, the hidden facts a later step names in board terms).",
+    spokenOn: {
+      magnets:
+        "7x8dtS:4.13.4.,..2..2.2,4..1..4,.33..3.1,TLRLRLRBLRLRTTLRLRTBBTTLRBTTBBTTTBBTTBBBLRBBLRLRTLRLRLRB",
+    },
   },
   {
     games: ["magnets"],
@@ -185,6 +182,10 @@ const LONG_NARRATIONS: {
       "reason (owner, 2026-10-18). Naming the ruled-out squares and the poles " +
       "they would touch by their marks, not 'elsewhere', costs the room on a " +
       "line needing several poles (name-every-reference-by-its-mark).",
+    spokenOn: {
+      magnets:
+        "7x8deS:.43....,...434..,2..4344,2....33.,LRTLRLRTTBLRTTBBTLRBBLRBLRTTTLRLRBBBTLRLRTTBLRLRBBLRLRLR",
+    },
   },
   {
     games: ["ascent"],
@@ -214,6 +215,9 @@ const LONG_NARRATIONS: {
       "what makes it a group: they end its wire however they turn. Over the " +
       "limit where a wrapped grid's edge, a group of dead ends or a run into " +
       "squares not settled yet stands beside a fit to the notes and locks.",
+    spokenOn: {
+      net: "7x7de:c83a8913a78ec845de71a421beb9677e4ec8bd78544c43cc4",
+    },
   },
   {
     games: ["boats"],
@@ -223,6 +227,9 @@ const LONG_NARRATIONS: {
       "on a second premise: that boat would fill the line crossing there. " +
       "Without it the sentence read as unsound to the owner (2026-10-22), " +
       "since a middle boat need not touch the ringed squares at a corner.",
+    spokenOn: {
+      boats: "6x6f3dt,3,2,1:2,3,1,1,3,0,2,1,1,3,1,2,vCgL",
+    },
   },
   {
     games: ["rect"],
@@ -232,6 +239,9 @@ const LONG_NARRATIONS: {
       "Unreasonable boards: a crossing that would take a square another clue " +
       "needs, and one that would leave a square uncovered. Each rules out a " +
       "different clue's rectangle, so neither can go.",
+    spokenOn: {
+      rect: "12x14du:a2a2e8d6g8b4c10n10e2a6g8j6c21o16h2b3d3d3c9m3d4a6a8e12p4c2",
+    },
   },
   {
     games: ["map"],
@@ -241,6 +251,9 @@ const LONG_NARRATIONS: {
       "of their own, so each end's pill finds it (retire-hint-ordinals, D2), " +
       "where numbers on the board once named them in two characters; beside a " +
       "conclusion that dots two colors it runs a few characters over.",
+    spokenOn: {
+      map: "15x20n30dh:haibabibaajacbbahegabdcbbabbgbaafecaaecbbagadaiccaeaaacbababbacaeaaafdcabebacaeaababdbcababaabcbaggabbbbddfafbabaabccbeabaabcaebbaaagdfdbaabdccbbdeaaaaaadhbeddabbcabadbibjaafcagacdbajdfbgaaacabcgaaadaaada,2e2b01b2b2a1b330a2a201",
+    },
   },
   {
     games: ["clusters"],
@@ -249,6 +262,9 @@ const LONG_NARRATIONS: {
       "The forced cells are named by the small pieces the legend teaches, " +
       "because 'outlined' is the danger tile's word alone; where the break is " +
       "a tile that can't touch two like it, the sentence runs a character over.",
+    spokenOn: {
+      clusters: "7x7dt:aDCeCBdcDCahBCaAb",
+    },
   },
 ];
 
@@ -451,25 +467,22 @@ if (FIRST_SHARE)
   });
 
 /**
- * Boards per game for the form rules below — the gate slice, one seed each.
+ * The form rules below walk the gate slice. **This block is about sentences.**
+ * A form rule — is the step visible, is the conclusion in the necessity voice,
+ * is there an em-dash — is a property of the *sentence*, so the question is
+ * how many distinct sentences the walk hears, and another preset hears new
+ * ones (Solo's Killer cages, Loopy's other tilings) where a second seed of one
+ * preset hears the same ones again.
  *
- * **This block is about sentences.** A form rule — is the step visible, is the
- * conclusion in the necessity voice, is there an em-dash — is a property of the
- * *sentence*, so the question is how many distinct sentences the walk hears,
- * and a second seed of one preset hears the same ones again, where another
- * preset hears new ones (Solo's Killer cages, Loopy's other tilings).
- *
- * `lintCases` below walks every preset too, but only for *length*; the
- * necessity voice, the visibility rule and the speculative-chain rule are this
- * block's.
+ * The length walk below takes the same slice deeper into the game, but only
+ * for *length*; the necessity voice, the visibility rule and the
+ * speculative-chain rule are this block's.
  */
-const FORM_SEEDS = SEEDS.slice(0, 1);
-
 describe("hint narration form, cross-game", () => {
   for (const [name, game] of SHARE_GAMES) {
     it(`${name}: every step is visible, terse${DEDUCTIVE.has(name) ? ", and necessity-voiced" : ""}`, () => {
-      for (const { title, params } of gatePresets(name, game))
-        for (const seed of FORM_SEEDS) {
+      for (const { title, params } of gatePresets(game))
+        for (const seed of SEEDS) {
           const { desc, aux } = dealt(game, params, seed);
           const state = game.newState(params, desc);
           const res = game.hint?.(state, aux);
@@ -647,12 +660,13 @@ function journeyDefects(text: string, leg: number, legs: number): string[] {
 }
 
 /**
- * How many steps of one board the walk below checks. The local hooks stop
- * at 400: a board's later steps are spoken by the rungs its earlier ones were,
- * and the largest boards (Mosaic's 50x50) run to many times that, at most of
- * the walk's cost. Every step of every board is checked in CI.
+ * How many steps of one board the walk below checks: a board's later steps
+ * are spoken by the rungs its earlier ones were, and the largest boards
+ * (Mosaic's 50x50) run to many times this, at most of the walk's cost. A rung
+ * the walk does not reach is held by its pinned position in the game's own
+ * hint test, and the slow tier checks every step.
  */
-const BOUND_STEPS = perCommit(400, Number.POSITIVE_INFINITY);
+const BOUND_STEPS = SLOW_TESTS_ENABLED ? Number.POSITIVE_INFINITY : 400;
 
 /** A step of a journey of two or more legs, held to `journeyDefects`: what
  * {@link formsHeard} records for it. */
@@ -796,8 +810,8 @@ describe("a bound hint's words name exactly the marks it draws", () => {
           heard(key, name);
         }
       };
-      for (const { title, params } of gatePresets(name, game))
-        for (const seed of FORM_SEEDS)
+      for (const { title, params } of gatePresets(game))
+        for (const seed of SEEDS)
           for (const reading of readingsOf(game, params)) {
             const { desc, aux } = dealt(game, params, seed);
             let state = game.newState(params, desc);
@@ -878,33 +892,6 @@ describe("a bound hint's words name exactly the marks it draws", () => {
  * add a sweep over games, the question to ask is what axis each game varies,
  * not what axis you keyed on.
  */
-/**
- * The cases an **untiered** game contributes: its presets, which is the axis
- * such a game actually varies (a sweep keyed on tier alone collapses them all
- * to one and walks a single board).
- *
- * **A game that plans by searching walks its three smallest presets in the
- * gate.** The property under test here is the *wording* of an explanation, and
- * a planner's narration vocabulary does not change with board size — but a
- * search's cost does, steeply. Three is not arbitrary: it is what reaches every
- * mode Netslide varies (its presets are three barrier/wrapping modes at each
- * of three sizes, ordered smallest-first), and it keeps Sixteen's small boards
- * while dropping the large ones that carry the search cost. The slow tier
- * walks all of them. Unsliced, `SEARCH_PLANNING_GAMES` would be most of this
- * file's test time.
- */
-function untieredCases(
-  id: string,
-  game: AnyGame,
-): { label: string; params: unknown }[] {
-  const all = leafPresets(game).map((e) => ({
-    label: `preset "${e.title}"`,
-    params: e.params as unknown,
-  }));
-  if (SLOW_TESTS_ENABLED) return all;
-  return SEARCH_PLANNING_GAMES.includes(id) ? all.slice(0, 3) : all;
-}
-
 describe("no hint leaves a chain for the player to carry, at any tier", () => {
   for (const [name, game] of SHARE_GAMES) {
     it(`${name}: every tier`, () => {
@@ -921,7 +908,7 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
       // Adjacent board or a Tectonic one, and a trial rung that fires only in a
       // mode would be outside this sweep as surely as it is outside the block
       // above.
-      const cases = gatePresets(name, game).map((e) => ({
+      const cases = gatePresets(game).map((e) => ({
         label: `preset "${e.title}"`,
         params: e.params,
       }));
@@ -967,147 +954,16 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
  *
  * **And as wide as the modes a player can pick.** Unequal's Adjacent mode,
  * Solo's Killer and X, Salad's Number Ball are each reached by a preset and by
- * no tier of the first one. So every leaf preset is walked too, on one seed,
- * beside the tiers' three; the search-planning games keep their sliced preset
- * list, which is what their cost is sliced for. One seed per extra preset sits
- * between the tiers alone and every preset on every seed.
+ * no tier of the first one, so the walk takes the slice (`gatePresets`): a
+ * board of every value of every axis, each tier among them, on the smallest
+ * preset offering it. The presets between are the slow tier's, where the
+ * slice is every preset.
  *
- * {@link lintCases}' third rule is not spread evenly in cost: generating a
- * *large* board at a *hard* tier is the expensive corner, and a few games
- * (Group, Salad, Solo, Spokes) hold most of it. Slicing those is the lever if
- * this ever matters. Three seeds rather than one because the rule's whole job
- * is to let the close-out case decide a negative, and a negative from a sample
- * of one is not evidence — Group speaks its chain sentence on only some large
- * Hard seeds, so one seed is a coin flip on whether a live listing reads as
- * dead.
+ * The walk is the forward half of the ledger: a sentence over the limit that
+ * no listing excuses. Whether a listing is still spoken is decided on its
+ * pinned board, never by this walk, so the walk can stay this narrow.
  */
 const LINT_ROUNDS = 30;
-
-/**
- * Whether this run walks {@link lintCases}' third rule — and with it, whether
- * the ledger's *rot* half can decide anything.
- *
- * **Off in the two local hooks, pre-commit and pre-push, on everywhere else**
- * (CI, `npm run gate`, a bare `vitest`). That is the gate's
- * third-scoping-by-role shape (`scripts/gate.sh`, `slow.ts`'s
- * {@link PRECOMMIT_HOOK_RUN}): CI runs `npm run gate` with the toggle unset on
- * every push to `main`, so this narrows what a hook costs and never what
- * protects the branch.
- *
- * **Why this rule and not the rest of the block.** The rule is most of the
- * block's cost, and the block is selected on essentially every commit — the
- * per-commit selector maps any staged path under `src/games/` to every guard
- * that reads game source as text, and this is one, so a one-line edit to one
- * game would pay for the whole rule. What it protects is not the code the
- * commit is changing: the forward half, which catches a sentence you just
- * wrote too long, runs on every commit at every tier and every preset and is
- * untouched. What defers to push is the *rot* half — a ledger listing that has
- * stopped being spoken — and rot is exactly the thing a push-time check
- * catches in time.
- *
- * **The two move together and must.** The rot half's verdict is decided
- * against this walk, so with the rule off it would report Group's live listing
- * as dead (see the ledger's first entry). It is therefore `skipIf`-ed on the
- * same flag rather than left to pass over a walk that could not see its
- * subject — a check that reports health over a sample it never took is the
- * defect this whole file exists to avoid.
- *
- * **What was rejected:** running the rule only for the games whose source the
- * commit staged. It sounds targeted and is unsound — the shared Latin chain
- * sentence lives in `engine/hint-text.ts`, so the commit most likely to kill a
- * listing touches no `src/games/<id>/` path at all, and the version that fixes
- * that ("...or any engine file") runs everything nearly always.
- */
-const CORNER_WALKED = !PRECOMMIT_HOOK_RUN;
-
-/**
- * The boards the length walk plays: every tier of the first preset on every
- * seed, then every other preset once, then **the last preset at the hardest
- * teachable tier**. Deduplicated by params, since a tier of the first preset is
- * often a preset too.
- *
- * That third rule is one board per tiered game, and it is the one corner of
- * `presets × tiers` the other two both miss: they walk every tier of the
- * *smallest* board and every board at *its own* tier, so a combination a player
- * reaches only through the Custom dialog — a big grid turned up to a hard tier —
- * is walked by neither. Group is the case: its shipped presets stop short of
- * a large board at Hard, and only there does it speak the shared Latin chain
- * sentence. A walk that misses the corner is short while the roster is right,
- * which is the failure mode that matters most here — a listing the walk cannot
- * reach reads as a dead exemption, and the close-out case would have it
- * deleted.
- *
- * **"Hardest teachable" excludes a declared search tier**, which is where the
- * cost lives and where there is nothing to hear: a hint refuses on a board that
- * needs a guess (docs/hints.md § "The quality bar" rule 6), so the plan stops
- * early, and generation there is by far the most expensive thing in the cross
- * product, a large board taking many times what it takes at Hard. The tier is
- * derived from its *name*, as `hint-resume.test.ts` and
- * `difficulty-contract.test.ts` do it:
- * `tierNames(n, { search: true })` puts "Unreasonable" last, so the game has
- * already said so for its own reasons.
- *
- * **"Last preset" stands in for "largest"** — preset menus are ordered
- * smallest-first by convention (see {@link untieredCases} on Netslide). If a
- * game ever orders them otherwise this walks a different board rather than a
- * wrong one, and the close-out case is what would notice. It is the last of
- * {@link untieredCases} rather than of `leafPresets`, so a search-planning
- * game's sliced list is sliced here too — for those games the board is the last
- * of the three the gate keeps, and the whole list in the slow tier.
- */
-function lintCases(
-  id: string,
-  game: AnyGame,
-): { label: string; params: unknown; seeds: readonly number[] }[] {
-  const out: { label: string; params: unknown; seeds: readonly number[] }[] = [];
-  const seen = new Set<string>();
-  const add = (label: string, params: unknown, seeds: readonly number[]): void => {
-    const key = JSON.stringify(params);
-    if (seen.has(key)) return;
-    seen.add(key);
-    out.push({ label, params, seeds });
-  };
-  const contract = game.difficulty;
-  const tiers = difficultyTiers(game);
-  if (contract && tiers) {
-    const base = firstLeaf(presetMenu(game));
-    for (const [tier, tierName] of tiers.entries()) {
-      add(`tier ${tier} ("${tierName}")`, withTier(game, base, tier), SEEDS);
-    }
-    // Through `untieredCases`, so a search-planning game's sliced preset list
-    // is sliced here too rather than quietly handing this rule the one board
-    // its cost was sliced to avoid.
-    const last = CORNER_WALKED ? untieredCases(id, game).at(-1) : undefined;
-    const top = tiers.length - (tiers.at(-1) === "Unreasonable" ? 2 : 1);
-    if (last && top >= 0)
-      add(
-        "last preset at the hardest teachable tier",
-        withTier(game, last.params, top),
-        SEEDS,
-      );
-  }
-  // A tiered game already plays three seeds of each tier, so its other presets
-  // play once; an untiered game's presets are all it has, so they keep all three.
-  const extra = contract && tiers ? SEEDS.slice(0, 1) : SEEDS;
-  for (const c of untieredCases(id, game)) add(c.label, c.params, extra);
-  return out;
-}
-
-/**
- * The **listings** that matched a step over the limit, as `"<entry index>:<game
- * id>"`. Filled by the per-game cases, read by the last one.
- *
- * Keyed by the pair, not by the entry: a listing is what the ledger asks a
- * reader to believe, so a listing is the unit the check has to hold. Keyed by
- * entry alone it would pass as soon as *any* listed game reached the sentence,
- * which on a single-game entry is the same thing and on the shared Latin chain
- * entry is not: a game could sit on that entry while never speaking it.
- */
-const ledgerUsed = new Set<string>();
-/** Steps walked per game, so the close-out case can tell "this game's walk
- * found nothing" from "this game's walk *was* nothing". */
-const lintedPerGame = new Map<string, number>();
-let linted = 0;
 
 /** Whether `game`'s hints, followed from the board `id` as the length walk
  * follows them, speak a step of one of `rungs` that is over the limit. */
@@ -1132,11 +988,10 @@ function speaksOn(name: string, id: string, rungs: readonly string[]): boolean {
 describe("hint narration stays readable at a glance", () => {
   for (const [name, game] of SHARE_GAMES) {
     it(`${name}: every step within ${NARRATION_LIMIT} characters, or ledgered`, () => {
-      for (const { label, params, seeds } of lintCases(name, game)) {
-        // A tier written onto the first preset can be accepted and still have
-        // boards too rare to wait on (Group's 6x6 at Hard, identity shown).
-        if (paramsError(game, params, true) || !dealsPromptly(game, params)) continue;
-        for (const seed of seeds) {
+      let linted = 0;
+      for (const { title, params } of gatePresets(game)) {
+        const label = `preset "${title}"`;
+        for (const seed of SEEDS) {
           let board: { desc: string; aux?: string };
           try {
             board = dealt(game, params, seed);
@@ -1152,7 +1007,6 @@ describe("hint narration stays readable at a glance", () => {
             for (const step of res.steps) {
               const text = step.explanation;
               linted++;
-              lintedPerGame.set(name, (lintedPerGame.get(name) ?? 0) + 1);
               // The same walk holds a step's rung to the game's list: a
               // step built outside the typed path could carry any string.
               expect(
@@ -1171,7 +1025,6 @@ describe("hint narration stays readable at a glance", () => {
                 entry,
                 `${name} ${label}/${seed}: "${text}" (rung ${step.rung}) is ${text.length} characters, over ${NARRATION_LIMIT}. Shorten it, or list the rung in LONG_NARRATIONS with the reason it needs the room.`,
               ).toBeGreaterThanOrEqual(0);
-              ledgerUsed.add(`${entry}:${name}:${step.rung}`);
             }
             // Walk on through the whole plan, not just its first step: the
             // aim is the sentences deeper in the game, cheaply.
@@ -1179,17 +1032,21 @@ describe("hint narration stays readable at a glance", () => {
           }
         }
       }
+      // A game whose every board refused would pass having read nothing.
+      expect(linted, `${name}: the length walk read no step`).toBeGreaterThan(0);
     });
   }
 
   if (FIRST_SHARE)
     it("states a reason for every ledger entry, and lists only hinting games", () => {
-      // The structural half: cheap, needs no walk, and so runs on every commit
-      // whatever `CORNER_WALKED` says.
       const hinting = new Set(HINT_GAMES.map(([id]) => id));
       for (const e of LONG_NARRATIONS) {
         expect(e.why.length, `${e.rungs} states no reason`).toBeGreaterThan(60);
         expect(e.rungs.length, `${e.games} lists no rung`).toBeGreaterThan(0);
+        expect(
+          Object.keys(e.spokenOn).sort(),
+          `${e.rungs}: pin a board that speaks it for each game listed, and no other`,
+        ).toEqual([...e.games].sort());
         // A listed rung is one the game declares, so a renamed rung cannot
         // leave a listing that excuses nothing.
         for (const [g, game] of HINT_GAMES)
@@ -1201,69 +1058,19 @@ describe("hint narration stays readable at a glance", () => {
       }
     });
 
-  // Skipped, and so reported, while no listing pins a board: the walk then
-  // reaches every listed sentence itself.
-  it.skipIf(!LONG_NARRATIONS.some((e) => e.spokenOn))(
-    "every pinned board still speaks its listing's sentence over the limit",
-    () => {
-      for (const e of LONG_NARRATIONS) {
-        for (const [g, id] of Object.entries(e.spokenOn ?? {})) {
-          if (!SHARE_IDS.has(g)) continue;
-          expect(
-            e.games,
-            `${g} is pinned on ${e.rungs} without being listed`,
-          ).toContain(g);
-          expect(
-            speaksOn(g, id, e.rungs),
-            `${g}: the board pinned for ${e.rungs} no longer speaks it over ${NARRATION_LIMIT} characters. Pin a board that does, or delete the listing.`,
-          ).toBe(true);
-        }
-      }
-    },
-  );
-
-  // Skipped rather than weakened in the two local hooks, so a deferred check is
-  // **reported** instead of passing over a walk that could not see its subject.
-  it.skipIf(!CORNER_WALKED)("ledgers only listings that still need the room", () => {
-    // Registered last, so it runs after every per-game case has filled
-    // `ledgerUsed`. Vacuity first: an unpopulated walk would find every listing
-    // "unused" for the wrong reason. A listing is held in the share that walks
-    // its game, which heard everything that game said.
-    expect(linted, "the length walk looked at almost nothing").toBeGreaterThan(
-      shareFloor(2000),
-    );
-    // And per game, because the check below is a negative *per listing*: a game
-    // whose every case refused to generate would read as dead on every entry it
-    // is listed on, and the collection-wide floor above cannot say so — it is
-    // met many times over by the games that did walk. The floor sits below what
-    // the smallest listed game walks, and nowhere near "examined nothing".
-    for (const g of new Set(LONG_NARRATIONS.flatMap((e) => e.games))) {
-      if (!SHARE_IDS.has(g)) continue;
-      const n = lintedPerGame.get(g) ?? 0;
-      expect(
-        n,
-        `${g} is listed in LONG_NARRATIONS but its length walk looked at ${n} steps`,
-      ).toBeGreaterThan(200);
-    }
-    // Collected rather than asserted one at a time, so one run reports every
-    // dead listing: a check that stops at the first turns a census into a
-    // queue of reruns, and this one's whole job is to be read as a census.
+  // A listing is held in the share that walks its game. Collected rather than
+  // asserted one at a time, so one run reports every dead listing.
+  it("every pinned board still speaks its listing's sentence over the limit", () => {
     const dead: string[] = [];
-    LONG_NARRATIONS.forEach((e, i) => {
-      // A pinned listing is held by the case above, on its board.
-      for (const g of e.games.filter((id) => SHARE_IDS.has(id)))
-        for (const rung of e.rungs)
-          if (!ledgerUsed.has(`${i}:${g}:${rung}`) && !e.spokenOn?.[g])
-            dead.push(`${g} on ${rung}`);
-    });
+    for (const e of LONG_NARRATIONS)
+      for (const [g, id] of Object.entries(e.spokenOn))
+        if (SHARE_IDS.has(g) && !speaksOn(g, id, e.rungs))
+          dead.push(`${g} on ${e.rungs}`);
     expect(
       dead,
-      `listed in LONG_NARRATIONS but never spoke the rung over ${NARRATION_LIMIT} ` +
-        "characters. Either the sentence got shorter, or that game never reaches the " +
-        "rung. Widen the walk for the game first (every leaf preset, both auto-pencil " +
-        "settings); if it still says nothing, delete the listing and record the walk " +
-        "that found nothing beside the entry, so the next reader can re-run it rather " +
-        "than re-derive it.",
+      `the board pinned for these no longer speaks the rung over ${NARRATION_LIMIT} ` +
+        "characters. Either the sentence got shorter, and the listing goes, or the " +
+        "board stopped reaching it, and another board that does is pinned.",
     ).toEqual([]);
   });
 });

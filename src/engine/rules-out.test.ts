@@ -117,7 +117,7 @@ describe("a placement brings what it rules out", () => {
           },
         },
       };
-      for (const { title, params } of gatePresets(id, game)) {
+      for (const { title, params } of gatePresets(game)) {
         const midend = new Midend(counting);
         midend.setPreferences({ [RULES_OUT_PREF]: true });
         expect(beginDealt(midend, game, params), title).toBeNull();

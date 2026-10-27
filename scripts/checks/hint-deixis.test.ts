@@ -137,7 +137,7 @@ it("reports every hint step that points bare while a second mark is displayed", 
     // Loopy tiling but Squares — so the modes' narration, which is where a
     // deictic is most likely to point at one of two marks of the same kind, was
     // outside the report it is a report about.
-    for (const { title, params } of gatePresets(name, game)) {
+    for (const { title, params } of gatePresets(game)) {
       if (paramsError(game, params, true)) continue; // refused at this size
       for (const seed of SEEDS) {
         let board: { desc: string; aux?: string };

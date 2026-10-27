@@ -20,7 +20,6 @@ import { beginDealt } from "./testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { type DrawOp, RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
-import { perCommit } from "./testing/slow.ts";
 import type { Color } from "./types.ts";
 
 /** The palette indices an op paints with. */
@@ -47,7 +46,7 @@ function removed(shown: readonly DrawOp[], hidden: readonly DrawOp[]): DrawOp[] 
 
 /** What is wrong with the colors of the marks of the steps a game's plans
  * open with, one line each, and how many marked ops were looked at. */
-function inkFaults(game: (typeof HINT_GAMES)[number][1], id: string) {
+function inkFaults(game: (typeof HINT_GAMES)[number][1]) {
   const palette = resolvePalette(game, DEFAULT_BACKGROUND);
   const role = new Map<number, MarkRole>();
   const inks = new Map<Color, MarkRole>(
@@ -71,40 +70,41 @@ function inkFaults(game: (typeof HINT_GAMES)[number][1], id: string) {
     midend.forceRedraw(dr);
     return dr.ops;
   };
-  for (const { params } of gatePresets(id, game)) {
-    for (let s = 0; s < perCommit(1, 2); s++) {
-      const midend = new Midend(game);
-      if (beginDealt(midend, game, params, s)) continue;
-      midend.size({ w: 700, h: 700 });
-      for (const c of frame(midend).flatMap(colorsOf)) content.add(c);
-      if (midend.hint()) continue;
-      for (let step = 0; step < 4; step++) {
-        const refs = midend.activeHintStep()?.words?.refs;
-        if (!refs) break;
-        const shown = frame(midend);
-        const marks = refs.map((_, i) => {
-          midend.hideHintReference(i);
-          const gone = removed(shown, frame(midend));
-          midend.hideHintReference(null);
-          return gone;
-        });
-        // What no reference takes with it is the board's.
-        const marked = new Set(marks.flat());
-        for (const op of shown)
-          if (!marked.has(op)) for (const c of colorsOf(op)) content.add(c);
-        refs.forEach((ref, i) => {
-          for (const op of marks[i]) {
-            looked++;
-            for (const c of colorsOf(op)) {
-              const ink = role.get(c);
-              if (ink !== undefined && ink !== ref.role)
-                faults.add(`a ${ref.role} drawn in the ${ink} ink (index ${c})`);
-              else if (ink === undefined) outside.set(c, ref.role);
-            }
+  // One board of each entry of the slice: an ink is chosen by a mark's role
+  // and the renderer branch that draws it, which another board of the same
+  // params draws again.
+  for (const { params } of gatePresets(game)) {
+    const midend = new Midend(game);
+    if (beginDealt(midend, game, params)) continue;
+    midend.size({ w: 700, h: 700 });
+    for (const c of frame(midend).flatMap(colorsOf)) content.add(c);
+    if (midend.hint()) continue;
+    for (let step = 0; step < 4; step++) {
+      const refs = midend.activeHintStep()?.words?.refs;
+      if (!refs) break;
+      const shown = frame(midend);
+      const marks = refs.map((_, i) => {
+        midend.hideHintReference(i);
+        const gone = removed(shown, frame(midend));
+        midend.hideHintReference(null);
+        return gone;
+      });
+      // What no reference takes with it is the board's.
+      const marked = new Set(marks.flat());
+      for (const op of shown)
+        if (!marked.has(op)) for (const c of colorsOf(op)) content.add(c);
+      refs.forEach((ref, i) => {
+        for (const op of marks[i]) {
+          looked++;
+          for (const c of colorsOf(op)) {
+            const ink = role.get(c);
+            if (ink !== undefined && ink !== ref.role)
+              faults.add(`a ${ref.role} drawn in the ${ink} ink (index ${c})`);
+            else if (ink === undefined) outside.set(c, ref.role);
           }
-        });
-        midend.executeHint();
-      }
+        }
+      });
+      midend.executeHint();
     }
   }
   for (const [c, r] of outside)
@@ -119,7 +119,7 @@ describe("a hint's marks are drawn in the engine's inks", () => {
 
   for (const [id, game] of HINT_GAMES) {
     it(`${id}: each mark in its role's ink`, () => {
-      const { faults, looked } = inkFaults(game, id);
+      const { faults, looked } = inkFaults(game);
       expect(looked, `${id} drew no mark to check`).toBeGreaterThan(0);
       expect(faults, id).toEqual([]);
     });

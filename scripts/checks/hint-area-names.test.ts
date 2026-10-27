@@ -119,7 +119,7 @@ it("reports every reference that names one thing and paints an area", () => {
   for (const [name, game] of HINT_GAMES) {
     const palette = game.colors(DEFAULT_BACKGROUND);
     const tile = game.preferredTileSize ?? 32;
-    for (const { params } of gatePresets(name, game))
+    for (const { params } of gatePresets(game))
       for (const seed of SEEDS) {
         const { desc, aux } = dealt(game, params, seed);
         let state = game.newState(params, desc);

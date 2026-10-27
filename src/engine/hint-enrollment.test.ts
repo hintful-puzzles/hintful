@@ -195,12 +195,6 @@ const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
     "does not offer can carry the tier written onto it. So it writes every tier " +
     "onto every size from a field's minimum up, which is the form a sweep of " +
     "the menu must not take, and it is a report outside the gate.",
-  "src/engine/hint-quality.test.ts":
-    "`lintCases` deliberately walks one corner the presets menu does not offer " +
-    "— the last preset at the hardest teachable tier — because Group speaks the " +
-    "shared Latin chain sentence at 12x12 Hard and on none of its presets. " +
-    "A Custom-dialog combination is a board a player can sit in front " +
-    "of, and the ledger's rot half would read a live listing as dead without it.",
   "src/engine/difficulty-contract.test.ts":
     "Its three cases generate no board at all — they ask whether `withTier` " +
     "writes a field `tierOf` and the codec read back, which is arithmetic on a " +
@@ -279,7 +273,7 @@ describe("every choice the Custom dialog offers is dealt", () => {
     game,
     // What a guard is handed: `gatePresets` for a hinting game, and the same
     // function beneath it for the rest, which `desc-error-games.test.ts` calls.
-    dealt: typeof game.hint === "function" ? gatePresets(id, game) : dealtBoards(game),
+    dealt: typeof game.hint === "function" ? gatePresets(game) : dealtBoards(game),
   }));
 
   it("deals a board for every value of every closed set, or says why not", () => {

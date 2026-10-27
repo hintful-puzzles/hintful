@@ -116,7 +116,7 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
     );
     expect(deducing.length).toBeGreaterThanOrEqual(1);
     for (const [id, game] of deducing) {
-      const params = gatePresets(id, game)[0].params;
+      const params = gatePresets(game)[0].params;
       let board = game.newState(params, dealt(game, params).desc);
       while (game.status(board) !== "solved") {
         const plan = game.hint?.(board);

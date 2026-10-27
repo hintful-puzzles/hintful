@@ -36,6 +36,7 @@ import {
   type RepaintRun,
   repaintDifferential,
 } from "./testing/repaint-differential.ts";
+import { FIRST_SHARE, ofThisShare } from "./testing/sweep-share.ts";
 
 const IDS = registeredGameIds().sort();
 const EVENTS = 60;
@@ -180,21 +181,25 @@ const WRONG: Readonly<Record<string, { board: string; moves: readonly unknown[] 
 const UNREACHED: Readonly<Record<string, Readonly<Record<string, string>>>> = {};
 
 describe("a warm frame matches a fresh one", () => {
-  it("is not vacuous — the registry offered every game", () => {
-    expect(IDS.length).toBeGreaterThan(50);
-  });
+  // Checks that walk nothing, so the first share holds them for every share.
+  if (FIRST_SHARE) {
+    it("is not vacuous — the registry offered every game", () => {
+      expect(IDS.length).toBeGreaterThan(50);
+    });
 
-  it("pins and excuses only games it knows", () => {
-    expect(Object.keys(PINNED).filter((id) => !IDS.includes(id))).toEqual([]);
-    expect(Object.keys(UNREACHED).filter((id) => !IDS.includes(id))).toEqual([]);
-    expect(
-      Object.keys(WRONG).filter(
-        (id) => !IDS.includes(id) || typeof getTsGame(id)?.findMistakes !== "function",
-      ),
-    ).toEqual([]);
-  });
+    it("pins and excuses only games it knows", () => {
+      expect(Object.keys(PINNED).filter((id) => !IDS.includes(id))).toEqual([]);
+      expect(Object.keys(UNREACHED).filter((id) => !IDS.includes(id))).toEqual([]);
+      expect(
+        Object.keys(WRONG).filter(
+          (id) =>
+            !IDS.includes(id) || typeof getTsGame(id)?.findMistakes !== "function",
+        ),
+      ).toEqual([]);
+    });
+  }
 
-  it.each(IDS)("%s: repaints every tile it must", (id) => {
+  it.each(ofThisShare(IDS))("%s: repaints every tile it must", (id) => {
     const game = getTsGame(id) as AnyGame;
     const run = repaintDifferential(game, id, EVENTS);
     expect(run.mismatch, JSON.stringify(run.mismatch)).toBeNull();

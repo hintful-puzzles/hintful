@@ -9,6 +9,14 @@
  * smaller boards of the same family, so what the big ones add is board *size*
  * against the same code paths.
  *
+ * **It is also where more of the same goes.** No default suite, neither the
+ * hooks nor CI, walks a second board of one configuration, a game's largest
+ * board, or a plan past the steps a sweep bounds itself to: those are
+ * `seedBudget`'s full amount, and a sweep's `SLOW_TESTS_ENABLED` arm (owner,
+ * 2026-10-27: a heavy test useful for development stays, in no default
+ * suite). The cost budget `scripts/checks/test-cost.ts` enforces holds the
+ * default suites to that.
+ *
  * **What this is not.** It is not "these tests are unimportant", and it must not
  * become "these tests never run". A skipped test nobody runs is worse than a
  * deleted one, because the file still reads as coverage. These run under
@@ -55,57 +63,6 @@ import { scopeFromEnv } from "./game-scope.ts";
 const env = (globalThis as { process?: { env?: Record<string, string | undefined> } })
   .process?.env;
 export const SLOW_TESTS_ENABLED = Boolean(env?.["PUZZLES_SLOW_TESTS"]);
-
-/**
- * True when this run is one of the **two local hooks**, pre-commit and
- * pre-push — the one role that is allowed to narrow what it checks, because CI
- * runs the whole gate on every push to `main` (`.github/workflows/gate.yml` calls
- * `npm run gate` with neither toggle set). It is the hooks' own
- * `GATE_PRECOMMIT`, read here rather than invented, so they have one name for
- * one idea.
- *
- * **The opposite polarity to {@link SLOW_TESTS_ENABLED}, and used far more
- * sparingly.** Slow is opt-in and defaults to *less*; this defaults to
- * **more** — every run that is not the hook (CI, `npm run gate`, a bare
- * `vitest`, an editor) gets the wide check. That direction is the whole safety
- * argument: forgetting to set it costs time, never coverage, and the shortcut
- * is unreachable from anywhere except the one caller that has the backstop.
- *
- * **What may hide behind it**, and it is a much narrower license than `slow`:
- * work whose omission locally is covered by the same run in CI on push, and
- * which is expensive enough that a developer would otherwise start reaching for
- * `--no-verify`. It may **not** hide a check of the code the commit is
- * changing. `hint-quality.test.ts` is the case and states its own reasoning:
- * the narration ledger's *rot* half needs the expensive corner of the walk to
- * decide anything, and rot is by nature a thing push can catch, while the half
- * that catches a sentence you just wrote too long stays on every commit.
- *
- * Pair it with `it.skipIf(...)` rather than an early return, so a deferred
- * check is **reported as skipped** instead of passing silently — the hazard
- * `slow.ts` names above ("a skipped test nobody runs is worse than a deleted
- * one") applies here with the same force.
- */
-export const PRECOMMIT_HOOK_RUN = env?.["GATE_PRECOMMIT"] === "1";
-
-/**
- * An amount of work by role: `hook` in the two local hooks, `wide` everywhere
- * else (CI on every push, `npm run gate`, a bare `vitest`).
- *
- * **For more of the same, never for the only board of a kind.** The hooks keep
- * one board of every params set a sweep walks and every value of every mode;
- * what this takes off them is the second and later boards of one params set,
- * and a game's largest board where a smaller one of the same modes is walked.
- * A defect that shows on every board of a kind still fails locally, and one
- * that needs the fourth board or the 50x50 fails CI. Say at the call site what
- * the hooks' amount still walks.
- *
- * A session that changed the code a sweep guards runs it wide before
- * committing: `npx vitest run <file>`, which is the wide run because nothing
- * but a hook sets the toggle.
- */
-export function perCommit<T>(hook: T, wide: T): T {
-  return PRECOMMIT_HOOK_RUN ? hook : wide;
-}
 
 /** The games this run's cross-game sweeps are narrowed to, or `null` when every
  * sweep is whole. Only the local hooks narrow: a commit to the games it

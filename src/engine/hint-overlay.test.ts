@@ -44,7 +44,7 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: the hint overlay survives the render cache`, () => {
       let shown = 0;
-      for (const { title, params } of gatePresets(name, game)) {
+      for (const { title, params } of gatePresets(game)) {
         const seed = `${name}/${title}`;
         const midend = new Midend(game);
         expect(beginDealt(midend, game, params), `${seed}: no board`).toBeNull();

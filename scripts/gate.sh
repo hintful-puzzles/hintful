@@ -97,7 +97,12 @@ if [ -n "${GATE_SINCE:-}" ]; then
     ci_notice
     exit 0
   fi
-  plan=$(node scripts/checks/select-tests.ts --since "$GATE_SINCE" 2>/dev/null) || plan="ALL"
+  # A commit that left files to the push past its cost ceiling (section 1e)
+  # wrote them down, and the push then owes its whole plan.
+  owed=""
+  [ -s node_modules/.cache/test-cost/deferred ] && owed="--owed"
+  # shellcheck disable=SC2086 # empty, or one flag.
+  plan=$(node scripts/checks/select-tests.ts --since "$GATE_SINCE" $owed 2>/dev/null) || plan="ALL"
   [ -n "$plan" ] || plan="ALL"
   if [ "$plan" = "NOTHING" ]; then
     echo "✓ this push's commits ran every test it can have broken."
@@ -328,13 +333,11 @@ fi
 # --- 1c-ii. A note on what else GATE_PRECOMMIT reaches. ---
 #
 # The toggle is set by the two local hooks and by nothing else, and vitest
-# inherits it — so a test can read it (`src/engine/testing/slow.ts`), two ways.
-# `PRECOMMIT_HOOK_RUN` defers an expensive *decay* check to CI, while the half
-# of the same guard that catches what the commit just wrote keeps running here.
-# `perCommit` has a cross-game sweep walk one board of each kind here and the
-# rest in CI. The conditions for both are in the build-pipeline spec. The
-# backstop is asserted by `src/gate-scope.test.ts`, which fails if CI ever sets
-# this or a hook stops.
+# inherits it: beside GATE_GAME_SCOPE it narrows a sweep's cases to the games
+# the run is about (`src/engine/testing/game-scope.ts`). A sweep walks the same
+# boards here as in CI; more of the same is the slow tier's, in no default
+# suite. The backstop is asserted by `src/gate-scope.test.ts`, which fails if
+# CI ever sets this or a hook stops.
 #
 # `nice` (weak on macOS but free insurance) is applied to BOTH heavy branches,
 # so the gate yields to whatever else the developer is running rather than
@@ -420,6 +423,20 @@ if [ "${GATE_PRECOMMIT:-}" = "1" ] && [ -z "${GATE_SINCE:-}" ]; then
   plan=$(node scripts/checks/select-tests.ts 2>/dev/null) || plan="ALL"
   [ -n "$plan" ] || plan="ALL"
 fi
+# **A hook's run is held to a ceiling of CPU time** (`build-pipeline`, "A
+# hook's run is held to a ceiling"), so a commit costs about a minute and a
+# push a few, whatever they select. `test-cost.ts fit` prices the plan from
+# what the last runs recorded and keeps the cheapest files that fit; a commit
+# leaves the rest to the push, and a push to CI, which runs everything. The
+# suite's own budget applies where the whole suite runs: CI and `npm run gate`.
+whole_suite=""
+if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
+  role=commit
+  [ -n "${GATE_SINCE:-}" ] && role=push
+  fitted=$(printf '%s\n' "$plan" | node scripts/checks/test-cost.ts fit "$role") && plan=$fitted
+elif [ "$plan" = "ALL" ]; then
+  whole_suite="--suite"
+fi
 plan_lines() { printf '%s\n' "$plan" | sed -n "s/^$1 //p"; }
 scope=$(plan_lines scope)
 whole=$(plan_lines whole)
@@ -436,10 +453,6 @@ fi
 if [ "${GATE_PRECOMMIT:-}" = "1" ] && [ -z "${GATE_SINCE:-}" ]; then
   echo "  The push runs the cases of the games this commit does not stage, and CI"
   echo "  runs everything. \`npm run gate\` runs everything here."
-fi
-if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
-  echo "  The cross-game sweeps walk one board of each kind here and the rest in CI."
-  echo "  After changing code a sweep guards, run it wide: npx vitest run <its file>."
 fi
 
 # --- 1f. The source scans, ahead of everything that builds a board. ~6s. ---
@@ -518,5 +531,13 @@ if [ "$vitest_rc" -ne 0 ] || [ "$build_rc" -ne 0 ]; then
   echo "pre-commit gate failed (vitest=$vitest_rc build=$build_rc)"
   exit 1
 fi
-node scripts/checks/test-cost.ts report "$TEST_COST_RUN"
+# Every file's CPU time against its budget, and the suite's where it all ran.
+# Recorded too, for the next hook's plan; a push that ran clears what the
+# commits left it.
+if ! node scripts/checks/test-cost.ts report "$TEST_COST_RUN" $whole_suite; then
+  echo ""
+  echo "gate failed on the cost budget"
+  exit 1
+fi
+[ -n "${GATE_SINCE:-}" ] && rm -f node_modules/.cache/test-cost/deferred
 ci_notice
