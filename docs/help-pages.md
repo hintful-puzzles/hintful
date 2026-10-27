@@ -77,3 +77,23 @@ word.
   the hint's marks mean in that game, which are the player's own notation,
   and the words its sentences use for them
   ([`hints.md`](./hints.md) § "The help teaches the marks").
+
+## A generated section reads the game when it renders
+
+A transform that reads a game takes the collection from
+`await gameCode(addWatchFile)` (`vite-plugins/game-code.ts`), and what it
+needs from the engine is re-exported by `src/build-facts.ts`. Nothing under
+`vite-plugins/`, and nothing `vite.config.ts` imports, imports `src/games/`
+or `src/engine/`, not even lazily or for one constant.
+
+- **Why.** Vite restarts the dev server on any edit to a file the config
+  imports, and every restart keeps the old config in memory for good. With
+  the games imported there, each game edit was a restart, and a day's
+  editing ran the server out of memory. Read the game, and an edit is a hot
+  reload that the page picks up on its next load.
+- **`vite-plugins/config-imports.test.ts` refuses an import**, and names the
+  files it pulled in. It asks Vite for the config's dependencies, so a
+  re-export or a literal `import()` is caught too.
+- **The dev server's heap is measured by `scripts/dev-server-heap.mjs`**:
+  forced restarts by default, or `--touch <file>` for what an edit to that
+  file costs. Re-run it after changing a plugin that runs in dev.

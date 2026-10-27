@@ -1332,3 +1332,17 @@ A cross-game sweep SHALL walk the same boards in the local hooks as in CI: a boa
 - **WHEN** a value of a boolean or choice setting appears on no preset but the largest
 - **THEN** the default suites still walk a board with that value
 - **BECAUSE** the lever takes off size, never a mode
+
+### Requirement: The build configuration imports no game or engine code
+
+The Vite configuration and its plugins SHALL NOT import a module under `src/games/` or `src/engine/` when the configuration loads. A plugin that needs the games SHALL load them when it renders, through a loader the dev server or the build provides, so that an edit to a game or the engine hot-reloads without restarting the dev server.
+
+#### Scenario: An engine edit is a hot reload
+
+- **WHEN** a file under `src/engine/` changes while the dev server runs
+- **THEN** the server does not restart
+
+#### Scenario: A help page in dev shows the current game code
+
+- **WHEN** a game's controls change while the dev server runs and its help page is reloaded
+- **THEN** the page shows the new controls

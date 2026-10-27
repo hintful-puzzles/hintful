@@ -5,21 +5,20 @@
  *
  * Computed from the registered games when the module is first loaded, because
  * the home screen never loads game code itself: every game runs in its own
- * page's worker. The games are imported lazily, so a build or test run that
- * never asks for this module pays nothing for it.
+ * page's worker. The games are loaded through `game-code.ts` only then, so a
+ * build or test run that never asks for this module pays nothing for it, and
+ * an edit to a game reloads the module in dev.
  */
 
 import type { Plugin } from "vite";
+import { gameCode } from "./game-code.ts";
 
 const ID = "virtual:draft-puzzles";
 const RESOLVED = `\0${ID}`;
 
 /** The module's contents: every draft among the registered games. */
-async function draftPuzzlesModule(): Promise<string> {
-  const { registerAllGames } = await import("../src/games/index.ts");
-  const { getTsGame, registeredGameIds } = await import("../src/engine/registry.ts");
-  const { draftSections } = await import("../src/engine/sections.ts");
-  registerAllGames();
+async function draftPuzzlesModule(watch: (file: string) => void): Promise<string> {
+  const { draftSections, getTsGame, registeredGameIds } = await gameCode(watch);
   const drafts: Record<string, string[]> = {};
   for (const id of registeredGameIds()) {
     const game = getTsGame(id);
@@ -33,6 +32,10 @@ export function draftPuzzles(): Plugin {
   return {
     name: "draft-puzzles",
     resolveId: (id) => (id === ID ? RESOLVED : null),
-    load: (id) => (id === RESOLVED ? draftPuzzlesModule() : null),
+    load(id) {
+      return id === RESOLVED
+        ? draftPuzzlesModule((file) => this.addWatchFile(file))
+        : null;
+    },
   };
 }

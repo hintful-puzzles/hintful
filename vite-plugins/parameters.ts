@@ -11,30 +11,14 @@
  * Where a page's prose names a choice of one of those fields it writes
  * `{{choice:kw:index}}`, which `expandChoices` replaces with the choice's name.
  *
- * Read by importing the games themselves, as `hint-marks.ts` does, so the list
- * cannot disagree with the Custom dialog. A page without the placeholder fails
- * the build.
+ * Read from the games themselves (`game-code.ts`), as `hint-marks.ts` does, so
+ * the list cannot disagree with the Custom dialog. A page without the
+ * placeholder fails the build.
  */
 
 import path from "node:path";
-import {
-  MODIFIERS_PLACEHOLDER,
-  modifiersMarkdown,
-  modifiersOf,
-} from "../src/engine/modifier.ts";
-import {
-  expandChoices,
-  PARAMETERS_PLACEHOLDER,
-  parametersMarkdown,
-} from "../src/engine/param-help.ts";
-import { getTsGame } from "../src/engine/registry.ts";
-import {
-  RULESETS_PLACEHOLDER,
-  rulesetField,
-  rulesetsMarkdown,
-} from "../src/engine/ruleset.ts";
-import "../src/games/index.ts";
 import type { Transform } from "./extra-pages.ts";
+import { type GameCode, gameCode } from "./game-code.ts";
 
 /**
  * `source` with `list` where it writes `placeholder`. A game that declares
@@ -59,7 +43,19 @@ function withList(
 }
 
 /** `source`, the help page of game `id`, with its parameters in place. */
-function expandParameters(id: string, source: string): string {
+function expandParameters(code: GameCode, id: string, source: string): string {
+  const {
+    expandChoices,
+    getTsGame,
+    MODIFIERS_PLACEHOLDER,
+    modifiersMarkdown,
+    modifiersOf,
+    PARAMETERS_PLACEHOLDER,
+    parametersMarkdown,
+    RULESETS_PLACEHOLDER,
+    rulesetField,
+    rulesetsMarkdown,
+  } = code;
   const game = getTsGame(id);
   if (!game) throw new Error(`help/games/${id}.md: no registered game "${id}"`);
   if (!source.includes(PARAMETERS_PLACEHOLDER))
@@ -87,7 +83,8 @@ function expandParameters(id: string, source: string): string {
 }
 
 /** The transform: the page's game is its file's name. */
-export const withParameters: Transform = (data) => {
+export const withParameters: Transform = async (data, addWatchFile) => {
   const id = path.basename(String(data.sourceFile ?? ""), ".md");
-  return { ...data, source: expandParameters(id, String(data.source ?? "")) };
+  const code = await gameCode(addWatchFile);
+  return { ...data, source: expandParameters(code, id, String(data.source ?? "")) };
 };

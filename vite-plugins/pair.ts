@@ -4,10 +4,10 @@
  * markdown is rendered, with the word the palette gives that member.
  */
 
-import { expandPair } from "../src/engine/piece.ts";
 import type { Transform } from "./extra-pages.ts";
+import { gameCode } from "./game-code.ts";
 
-export const withPair: Transform = (data) => ({
-  ...data,
-  source: expandPair(String(data.source ?? "")),
-});
+export const withPair: Transform = async (data, addWatchFile) => {
+  const { expandPair } = await gameCode(addWatchFile);
+  return { ...data, source: expandPair(String(data.source ?? "")) };
+};

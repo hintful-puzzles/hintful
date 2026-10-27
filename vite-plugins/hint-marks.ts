@@ -3,20 +3,18 @@
  * (`Game.hintMarks`): a game page writes `{{hint-marks}}` where the list goes,
  * and the help build replaces it before the markdown is rendered.
  *
- * Read by importing the games themselves, as `vite.config.ts` already imports
- * the catalog, so the list cannot disagree with what the hint validator holds
- * the game to. A bound game's page without the placeholder, or an unbound
- * game's page with one, fails the build.
+ * Read from the games themselves (`game-code.ts`), so the list cannot disagree
+ * with what the hint validator holds the game to. A bound game's page without
+ * the placeholder, or an unbound game's page with one, fails the build.
  */
 
 import path from "node:path";
-import { HINT_MARKS_PLACEHOLDER, legendMarkdown } from "../src/engine/hint-words.ts";
-import { getTsGame } from "../src/engine/registry.ts";
-import "../src/games/index.ts";
 import type { Transform } from "./extra-pages.ts";
+import { type GameCode, gameCode } from "./game-code.ts";
 
 /** `source`, the help page of game `id`, with its list of marks in place. */
-function expandHintMarks(id: string, source: string): string {
+function expandHintMarks(code: GameCode, id: string, source: string): string {
+  const { HINT_MARKS_PLACEHOLDER, getTsGame, legendMarkdown } = code;
   const legend = getTsGame(id)?.hintMarks;
   const has = source.includes(HINT_MARKS_PLACEHOLDER);
   if (legend && !has)
@@ -33,7 +31,8 @@ function expandHintMarks(id: string, source: string): string {
 }
 
 /** The transform: the page's game is its file's name. */
-export const withHintMarks: Transform = (data) => {
+export const withHintMarks: Transform = async (data, addWatchFile) => {
   const id = path.basename(String(data.sourceFile ?? ""), ".md");
-  return { ...data, source: expandHintMarks(id, String(data.source ?? "")) };
+  const code = await gameCode(addWatchFile);
+  return { ...data, source: expandHintMarks(code, id, String(data.source ?? "")) };
 };

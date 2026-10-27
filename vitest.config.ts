@@ -8,6 +8,7 @@ import {
 import { sourceScanTests } from "./scripts/checks/source-scans.ts";
 import { otherGamesFilter, scopeFromEnv } from "./src/engine/testing/game-scope.ts";
 import { draftPuzzles } from "./vite-plugins/draft-puzzles.ts";
+import { gameCodeLoader } from "./vite-plugins/game-code.ts";
 
 const INCLUDE = ["src/**/*.test.ts", "vite-plugins/**/*.test.ts"];
 
@@ -177,7 +178,7 @@ function maxWorkers(): number {
 
 export default defineConfig({
   // The home screen's labels, so a test importing it resolves them as a build does.
-  plugins: [draftPuzzles()],
+  plugins: [gameCodeLoader(), draftPuzzles()],
   test: {
     // `vite-plugins/` is included because the build side is real logic now, not
     // configuration: it decides what the About box credits and refuses to ship

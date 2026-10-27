@@ -5,22 +5,14 @@
  * preference, and `{{rules-out}}` for one declaring what a placement rules
  * out. The help build replaces each before the markdown is rendered.
  *
- * Read by importing the games themselves, as `controls.ts` does. A page
- * without a sentence its game owes, or with one its game does not, fails the
- * build.
+ * Read from the games themselves (`game-code.ts`), as `controls.ts` does. A
+ * page without a sentence its game owes, or with one its game does not, fails
+ * the build.
  */
 
 import path from "node:path";
-import { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "../src/engine/candidate-hint.ts";
-import {
-  offersStickyPencil,
-  STICKY_PENCIL_HELP,
-  STICKY_PENCIL_PLACEHOLDER,
-} from "../src/engine/pencil-prefs.ts";
-import { getTsGame } from "../src/engine/registry.ts";
-import { RULES_OUT_PLACEHOLDER, rulesOutHelp } from "../src/engine/rules-out.ts";
-import "../src/games/index.ts";
 import type { Transform } from "./extra-pages.ts";
+import { gameCode } from "./game-code.ts";
 
 /** `source`, the help page of game `id`, with `sentence` where `placeholder`
  * stands. `owed` is whether the game has what the sentence describes, and
@@ -44,8 +36,18 @@ function expand(
 }
 
 /** The transform: the page's game is its file's name. */
-export const withNoteControls: Transform = (data) => {
+export const withNoteControls: Transform = async (data, addWatchFile) => {
   const id = path.basename(String(data.sourceFile ?? ""), ".md");
+  const {
+    getTsGame,
+    MARK_ALL_HELP,
+    MARK_ALL_PLACEHOLDER,
+    offersStickyPencil,
+    RULES_OUT_PLACEHOLDER,
+    rulesOutHelp,
+    STICKY_PENCIL_HELP,
+    STICKY_PENCIL_PLACEHOLDER,
+  } = await gameCode(addWatchFile);
   const game = getTsGame(id);
   const markAll = expand(
     id,

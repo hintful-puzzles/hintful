@@ -25,12 +25,14 @@ import {
   renderMarkdown,
   type Transform,
 } from "./vite-plugins/extra-pages.ts";
+import { gameCodeLoader } from "./vite-plugins/game-code.ts";
 import { withHintMarks } from "./vite-plugins/hint-marks.ts";
 import { withNotApplicable } from "./vite-plugins/not-applicable.ts";
 import { withNoteControls } from "./vite-plugins/note-controls.ts";
 import { withPair } from "./vite-plugins/pair.ts";
 import { withParameters } from "./vite-plugins/parameters.ts";
 import { precacheCoverage } from "./vite-plugins/precache-coverage.ts";
+import { releaseClosedServer } from "./vite-plugins/release-closed-server.ts";
 
 /**
  * `esbuild.supported` is forwarded by Vite but absent from its type.
@@ -507,6 +509,8 @@ export default defineConfig(async ({ command, mode }) => {
           },
         },
       }),
+      releaseClosedServer(),
+      gameCodeLoader(),
       draftPuzzles(),
       extraPages({
         // debug: true,

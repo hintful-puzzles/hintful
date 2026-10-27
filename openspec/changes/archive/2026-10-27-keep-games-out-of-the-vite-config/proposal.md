@@ -1,9 +1,5 @@
 # keep-games-out-of-the-vite-config
 
-**Status: draft, filed 2026-10-22 on the owner's word, for later.** It has no
-`tasks.md`; writing one from `design.md` is how a session takes it up, when
-the owner says.
-
 ## Why
 
 The dev server dies of an out-of-memory abort after a long session of edits
@@ -49,8 +45,10 @@ Nothing a player sees changes: the built help pages are the same bytes.
 ## Impact
 
 - `vite-plugins/*.ts` (the six transforms, and `draft-puzzles.ts`, whose lazy
-  `import()` the config bundler follows all the same), `vite-plugins/
-  extra-pages.ts` (how a transform is given its loader), `vite.config.ts`.
+  `import()` the config bundler follows all the same), a new
+  `vite-plugins/game-code.ts` (the loader) and `src/build-facts.ts` (what it
+  loads), `vite-plugins/release-closed-server.ts` (the restart Vite leaks),
+  `vite.config.ts`, `vitest.config.ts`.
 - `openspec/specs/build-pipeline/spec.md`: one requirement added.
-- `docs/` guide for the build: the rule that the config imports no game code,
-  and why.
+- `docs/help-pages.md`: the rule that the config imports no game code, and
+  why.

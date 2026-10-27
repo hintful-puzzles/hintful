@@ -4,19 +4,18 @@
  * paragraph goes, and the help build replaces it before the markdown is
  * rendered.
  *
- * Read by importing the games themselves, as `hint-marks.ts` does, so the page
- * cannot name a key the game does not bind. A declaring game's page without the
- * placeholder, or another game's page with one, fails the build.
+ * Read from the games themselves (`game-code.ts`), as `hint-marks.ts` does, so
+ * the page cannot name a key the game does not bind. A declaring game's page
+ * without the placeholder, or another game's page with one, fails the build.
  */
 
 import path from "node:path";
-import { getTsGame } from "../src/engine/registry.ts";
-import { CONTROLS_PLACEHOLDER, controlsMarkdown } from "../src/engine/target-verb.ts";
-import "../src/games/index.ts";
 import type { Transform } from "./extra-pages.ts";
+import { type GameCode, gameCode } from "./game-code.ts";
 
 /** `source`, the help page of game `id`, with its Controls paragraph in place. */
-function expandControls(id: string, source: string): string {
+function expandControls(code: GameCode, id: string, source: string): string {
+  const { CONTROLS_PLACEHOLDER, controlsMarkdown, getTsGame } = code;
   const verbs = getTsGame(id)?.targetVerbs;
   const has = source.includes(CONTROLS_PLACEHOLDER);
   if (verbs && !has)
@@ -31,7 +30,8 @@ function expandControls(id: string, source: string): string {
 }
 
 /** The transform: the page's game is its file's name. */
-export const withControls: Transform = (data) => {
+export const withControls: Transform = async (data, addWatchFile) => {
   const id = path.basename(String(data.sourceFile ?? ""), ".md");
-  return { ...data, source: expandControls(id, String(data.source ?? "")) };
+  const code = await gameCode(addWatchFile);
+  return { ...data, source: expandControls(code, id, String(data.source ?? "")) };
 };

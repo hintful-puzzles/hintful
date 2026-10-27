@@ -4,20 +4,18 @@
  * which `help-coverage.test.ts` holds to be its parameters. A page writes
  * nothing for it: the whole section comes from the contract.
  *
- * Read by importing the games themselves, as `hint-marks.ts` does.
+ * Read from the games themselves (`game-code.ts`), as `hint-marks.ts` does.
  */
 
 import path from "node:path";
-import { getTsGame } from "../src/engine/registry.ts";
-import { notApplicableMarkdown } from "../src/engine/sections.ts";
-import "../src/games/index.ts";
 import type { Transform } from "./extra-pages.ts";
+import { type GameCode, gameCode } from "./game-code.ts";
 
 /** `source`, the help page of game `id`, with its reasons in place. */
-function insertNotApplicable(id: string, source: string): string {
-  const game = getTsGame(id);
+function insertNotApplicable(code: GameCode, id: string, source: string): string {
+  const game = code.getTsGame(id);
   if (!game) throw new Error(`help/games/${id}.md: no registered game "${id}"`);
-  const section = notApplicableMarkdown(game);
+  const section = code.notApplicableMarkdown(game);
   if (section === "") return source;
   const last = source.lastIndexOf("\n## ");
   if (last < 0) throw new Error(`help/games/${id}.md: no section to insert above`);
@@ -25,7 +23,8 @@ function insertNotApplicable(id: string, source: string): string {
 }
 
 /** The transform: the page's game is its file's name. */
-export const withNotApplicable: Transform = (data) => {
+export const withNotApplicable: Transform = async (data, addWatchFile) => {
   const id = path.basename(String(data.sourceFile ?? ""), ".md");
-  return { ...data, source: insertNotApplicable(id, String(data.source ?? "")) };
+  const code = await gameCode(addWatchFile);
+  return { ...data, source: insertNotApplicable(code, id, String(data.source ?? "")) };
 };

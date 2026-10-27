@@ -65,6 +65,59 @@ can re-run it.
 7. Run the dev server, edit a game's `targetVerbs`, reload its help page, and
    see the new wording with no restart.
 
+## What was built, and where it left the plan
+
+Measured 2026-10-27, on Vite 8.2.0 and Node 26.8.2, with
+`scripts/dev-server-heap.mjs` (heap after two `gc()` calls, `/slant` crawled
+each round, 257 modules).
+
+| Round | Before | After |
+| --- | --- | --- |
+| Edit to `src/engine/border-grid-render.ts` | a restart, +15 MB | a hot reload, flat (50 to 46 MB over four) |
+| Forced restart | +15 MB | +2.6 MB |
+
+The config's dependencies, as Vite reports them, went from 564 files (550
+under `src/games/` or `src/engine/`) to 15. `dist/help/` builds to the same
+bytes; the one other file that differs is a source map whose asset
+placeholders are numbered in load order.
+
+- **The loader is one shared `gameCode(watch)`, not a field on the transform
+  context.** `draft-puzzles` is a `load` hook, not a transform, and needs the
+  same thing. The `gameCodeLoader()` plugin sets it up, in `vite.config.ts`
+  and `vitest.config.ts` both; `watch` is handed every file the collection was
+  evaluated from, so a help page and the home screen's draft list reload on an
+  edit.
+- **One entry module, `src/build-facts.ts`, re-exports what the plugins
+  read**, so the games and the registry are one evaluation.
+- **Dev evaluates it in a module runner on the SSR environment, and drops the
+  runner when any file it evaluated changes.** Re-evaluating an edited game
+  into the same registry throws (`A different TS game is already registered`),
+  because every game module registers itself on load. A fresh runner
+  re-evaluates everything, registry included, from the dev server's transform
+  cache: the first render after an edit took 189 ms. A runner's modules are
+  plain closures, so a dropped one is collected, as the flat heap shows.
+- **A build evaluates it with `runnerImport`, once.**
+- **The restart that is left still leaked 13 MB**, and none of it was the
+  config: Vite with no config, crawling nothing, kept 0.4 MB a restart. A heap
+  snapshot found each old server's environments held from global handles:
+  Vite hands rolldown's native resolver plugin callbacks (`onWarn`,
+  `resolveSubpathImports`) that close over the environment, and a cycle
+  through native handles is never collected. Vite 8.3.5 and rolldown 1.2.15,
+  the latest on this date, still have it; 8.3.5 does clear
+  `options.previousEnvironments`, one other path, but measured the same, so the
+  tree stays on 8.2.0. `release-closed-server.ts` empties each closing server's
+  module graphs (`invalidateAll`), which takes a restart from 13 MB to 2.6 MB.
+  What is left is mostly the config bundle itself (about 540 KB with its
+  inline source map) and markdown-it's linkify expressions. The plan's "under
+  1 MB" is not met, and a restart now comes only from an edit to the config or
+  `vite-plugins/`.
+- **The Sentry plugin stays in dev.** The crash dialog borrows its
+  third-party stack filtering, so dropping it changes what the dev crash
+  dialog shows, against a listener that costs bytes.
+- **`hmr: false` in a measuring script measures nothing**: Vite then ignores
+  a file change outright, restart included. The first edit run reported no
+  restarts for that reason; the script keeps HMR on and says why.
+
 ## Open questions
 
 None for the owner: nothing a player sees changes.
