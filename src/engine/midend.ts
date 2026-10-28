@@ -113,11 +113,11 @@ const asChecked = (v: unknown): boolean => v === true || v === "true" || v === 1
  * played to the board as it started. Undo crosses it back to the played board,
  * as upstream's does (midend.c `movetype = RESTART`).
  *
- * `cheated` is the solver record of the play on the far side of the restart
- * from the cursor. The record is one flag on the midend and not part of any
- * state, and a restart is where it begins again, so each restart keeps the
- * flag the cursor left behind and the two are exchanged whenever the cursor
- * crosses.
+ * `far` is the record of the play on the far side of the restart from the
+ * cursor: its solver record, its time and its help. Each is a field of the
+ * midend and not part of any state, and a restart is where they begin again,
+ * so each restart keeps what the cursor left behind and the two are exchanged
+ * whenever the cursor crosses.
  *
  * A restart also begins a run, play from a fresh board, which the player sees
  * as a board of its own: its moves are counted from it, and it is numbered as
@@ -125,9 +125,16 @@ const asChecked = (v: unknown): boolean => v === true || v === "true" || v === 1
  */
 class Restart {
   constructor(
-    public cheated: boolean,
+    public far: RunRecord,
     readonly serial: number,
   ) {}
+}
+
+/** What the midend records of a run beside its states. */
+interface RunRecord {
+  cheated: boolean;
+  elapsed: number;
+  helped: boolean;
 }
 
 /** How many boards Undo can reach back across, and Redo forward. Each is kept
@@ -418,6 +425,17 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private groundPending = false;
   private currentTileSize: number;
   private cheated = false;
+
+  /** The run in play's record, as a restart keeps it (`Restart.far`). */
+  private get runRecord(): RunRecord {
+    return { cheated: this.cheated, elapsed: this.timerElapsed, helped: this.helped };
+  }
+
+  private set runRecord(record: RunRecord) {
+    this.cheated = record.cheated;
+    this.timerElapsed = record.elapsed;
+    this.helped = record.helped;
+  }
   /** Last-applied user preference values, keyed by pref `kw`. Retained
    * across new games / loads because the midend recreates `ui` (via
    * `newUi`) on every `startFrom`, which would otherwise reset prefs to
@@ -810,8 +828,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // Nothing has been played since the board started or was last restarted,
     // so a step here would change nothing and cost the moves ahead of it.
     if (this.pos === 0 || this.moveLog[this.pos - 1] instanceof Restart) return;
-    this.restart(new Restart(this.cheated, ++this.boards));
-    this.cheated = false;
+    this.restart(new Restart(this.runRecord, ++this.boards));
+    // Starting over is starting again: the clock, too.
+    this.runRecord = { cheated: false, elapsed: 0, helped: false };
     this.clearHint();
     this.clearAnimation();
     this.afterTransition();
@@ -1265,7 +1284,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.pos += dir;
     this.stateReplaced(prev, this.state);
     if (crossed instanceof Restart) {
-      [this.cheated, crossed.cheated] = [crossed.cheated, this.cheated];
+      [this.runRecord, crossed.far] = [crossed.far, this.runRecord];
       // The two boards are not one move apart, so there is no move to animate.
       this.clearAnimation();
     } else {
@@ -2248,7 +2267,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   saveGame(): Uint8Array<ArrayBuffer> {
     const serMove = this.game.serializeMove ?? ((m: Move) => m as unknown);
     const restarts = this.moveLog.flatMap((entry, at) =>
-      entry instanceof Restart ? [{ at, cheated: entry.cheated }] : [],
+      entry instanceof Restart
+        ? [
+            {
+              at,
+              cheated: entry.far.cheated,
+              elapsed: entry.far.elapsed,
+              hinted: entry.far.helped,
+            },
+          ]
+        : [],
     );
     const joined = this.joined.flatMap((joins, at) => (joins ? [at] : []));
     // `desc` is the board in play, as its id names it. Where that is not the
@@ -2323,7 +2351,19 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // mislabeled the board got wrong; `withBoardTier` checks it.
     this.params = this.withBoardTier(env.params, params, env.desc);
     const deMove = this.game.deserializeMove ?? ((raw: unknown) => raw as Move);
-    const restarts = new Map(env.restarts?.map((r) => [r.at, r.cheated]));
+    // A restart written before a restart reset the clock carries no time of
+    // its own: the time and the help ran on through it, so the far side's are
+    // the save's.
+    const restarts = new Map(
+      env.restarts?.map((r): [number, RunRecord] => [
+        r.at,
+        {
+          cheated: r.cheated,
+          elapsed: r.elapsed ?? env.timerElapsed,
+          helped: r.hinted ?? env.hinted === true,
+        },
+      ]),
+    );
     const prior = this.before;
     const serial = serials[0] ?? this.boards + 1;
     this.replaying = true;
@@ -2339,9 +2379,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       );
       let run = 0;
       env.moves.forEach((raw, at) => {
-        const cheated = restarts.get(at);
-        if (cheated === undefined) this.applyMove(deMove(raw));
-        else this.restart(new Restart(cheated, serials[++run] ?? ++this.boards));
+        const far = restarts.get(at);
+        if (far === undefined) this.applyMove(deMove(raw));
+        else this.restart(new Restart(far, serials[++run] ?? ++this.boards));
       });
     } catch (e) {
       this.replaying = false;
@@ -2404,7 +2444,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return (
       this.showTimer &&
       !this.timerPaused &&
-      this.moveLog.length > 0 &&
+      // From the first move of the run, as from a new board's.
+      this.run.last > this.run.first &&
       this.currentStatus() === "ongoing" &&
       !(this.game.timerHolds?.(this.state) ?? false)
     );

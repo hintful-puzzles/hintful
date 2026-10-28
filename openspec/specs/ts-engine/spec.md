@@ -1130,48 +1130,64 @@ neither the board's status nor the status bar's completion words.
 - **THEN** the status bar still reads `Auto-solver used.`, the record being
   the Solve's and not the hint's
 
-### Requirement: A restart leaves the timer running and plays no animation
+### Requirement: A restart starts the timer again and plays no animation
 
-A restart SHALL NOT reset the solve timer and SHALL NOT hold it: the time is
-the time spent on the board. Crossing a restart in either direction SHALL play
-no move animation, since the two boards are not one move apart.
+A restart SHALL start the solve timer and the record of help again, the timer
+counting from the next move as from a new board's first. Each restart SHALL
+keep the time and help of the play on its far side from the cursor, as it keeps
+the solver record, exchanged whenever the cursor crosses, so Undo across it
+brings back the time the moves took. Crossing a restart SHALL play no move
+animation: the two boards are not one move apart.
 
 #### Scenario: A timed board is restarted
 
-- **WHEN** a board with time on its clock is restarted
-- **THEN** the readout keeps that time, and the board appears without a move
-  animation
+- **WHEN** a board with time on its clock and a hint shown is restarted
+- **THEN** the readout reads zero and unassisted, and the board appears without
+  a move animation
+- **AND** Undo brings back the time and the assisted readout
 
-### Requirement: The state notification lists the restarts
+### Requirement: The state notification counts the run in play
 
-The state notification SHALL list the positions restarts reached, as
-`restarts`.
+A run is play from a fresh board: from the board's start, or a restart, to the
+next restart or the history's end. The state notification SHALL count the
+cursor's position and the run's moves (`currentMove`, `totalMoves`) from the
+run's first position, so a restart is no move, and SHALL name what lies one
+Undo before the run and one Redo after it (`boardBefore`, `boardAfter`):
+`restart`, `board` for a kept board, or nothing.
 
 #### Scenario: A board is restarted after three moves
 
 - **WHEN** a player makes three moves and restarts
-- **THEN** the state notification's `restarts` lists the position that restart
-  reached, the fourth after the start
+- **THEN** the state notification reads position 0 of 0, with `boardBefore`
+  `restart`
+- **AND** after Undo it reads position 3 of 3, with `boardAfter` `restart`
 
 ### Requirement: The save envelope carries a restart
 
-A restart's entry in the envelope's `moves` SHALL be `null`, and the envelope
-SHALL list each restart apart from the moves, as its index and the solver
-record it keeps (`restarts`), because a move is the game's own shape and no
-marker inside the list could be told from one. The envelope version SHALL be 3.
-A version 2 envelope holds no restart and SHALL be lifted by its version alone.
+A restart's entry in `moves` SHALL be `null`, and the envelope SHALL list each
+restart apart from the moves (`restarts`: `at`, `cheated`, `elapsed`,
+`hinted`), since no marker inside a game's moves could be told from one. A
+restart without `elapsed` or `hinted`, written before a restart reset the
+clock, SHALL be read as one the time and help ran on through. The envelope
+version SHALL be 3; a version 2 envelope holds no restart and SHALL be lifted
+by its version alone.
 
 #### Scenario: A save holding a restart round-trips on either side of it
 
 - **WHEN** a game with a restart in its history is saved with the cursor after
   the restart, or before it, and restored
 - **THEN** the restored game has the same position, the same steps each way,
-  and the same solver record on each side of the restart
+  and the same solver record, time and help on each side of the restart
 
 #### Scenario: A save written before a restart was a step opens
 
 - **WHEN** a version 2 envelope is loaded
 - **THEN** it restores as it did, with no restart in its history
+
+#### Scenario: A save written before a restart reset the clock opens
+
+- **WHEN** a save whose restart has no `elapsed` is loaded and Undo crosses it
+- **THEN** the readout keeps the save's time and help
 
 ### Requirement: A restart is replayed on load to the board it reached
 
@@ -1186,14 +1202,14 @@ of play reached: one logged before the description was superseded goes to state
 - **THEN** replaying that restart reaches state 0, and not the board the
   public description builds
 
-### Requirement: The board a new one replaces is kept, one deep
+### Requirement: The boards a new one replaces are kept, up to a hundred
 
 When a board in play is replaced, by a deal, an id or a loaded save, the midend
-SHALL keep it as a save of itself, and SHALL bring it back when Undo is asked
-for at the new board's first position. The board undone from SHALL be kept the
-same way, and brought back when Redo is asked for at the last position of the
-board Undo returned. The board SHALL be kept in the midend and not by the app,
-because every way a board is replaced ends in one function there.
+SHALL keep it as a save of itself behind the boards already kept, up to a
+hundred, and bring the last back on Undo at the new board's first position.
+The board undone from SHALL be kept the same way, for Redo at the last position
+of the board Undo returned. They SHALL be kept in the midend, where every way a
+board is replaced ends in one function.
 
 #### Scenario: Redo returns to the new board
 
@@ -1203,7 +1219,18 @@ because every way a board is replaced ends in one function there.
 #### Scenario: A deal that finds no board keeps nothing new
 
 - **WHEN** a New game finds no board
-- **THEN** the board in play, and the board kept before it, are as they were
+- **THEN** the board in play, and the boards kept before it, are as they were
+
+#### Scenario: Two boards back
+
+- **WHEN** a board is replaced, a move is made on the new one, and that is
+  replaced in turn
+- **THEN** Undo walks back through the second board's move to the first board
+
+#### Scenario: The bound
+
+- **WHEN** a hundred and one boards have been replaced
+- **THEN** Undo brings back the last hundred and not the first
 
 ### Requirement: A kept board returns as it was left
 
@@ -1229,18 +1256,6 @@ either of two things.
 - **THEN** the cursor steps back on the loaded board, and the board it replaced
   stays kept
 
-### Requirement: A kept board is dropped at the first step made on the board in play
-
-Both kept boards SHALL be dropped at the first step made on the board in play,
-a move or a restart, and SHALL NOT be dropped by Undo or Redo. One board SHALL
-be kept each way: replacing a board drops the board kept before it. Neither
-SHALL be written to a save or survive the page.
-
-#### Scenario: The first move drops the other board
-
-- **WHEN** a move is made on a board that replaced another
-- **THEN** undoing that move leaves nothing further to undo
-
 ### Requirement: An unplayed copy of the replacing board is not kept
 
 An unplayed copy of the board that replaces it SHALL NOT be kept: nothing of it
@@ -1255,11 +1270,11 @@ when it opens a board by id and then that board's autosave.
 
 ### Requirement: The state notification reports the kept boards and numbers the board in play
 
-The state notification SHALL report whether a board is kept each way
-(`boardBefore`, `boardAfter`), SHALL count them in `canUndo` and `canRedo`, and
-SHALL number the board in play (`board`). The number SHALL change when the
-board is replaced, and a board brought back SHALL return under the number it
-had, so that what the app holds per board can follow it.
+The state notification SHALL count the kept boards in `canUndo` and `canRedo`,
+and SHALL number the run in play (`board`). The number SHALL change when the
+board is replaced or restarted, and a run brought back SHALL return under the
+number it had, its restarts' runs included, so that what the app holds per run
+can follow it. A run begun SHALL take a number higher than every run before it.
 
 #### Scenario: A board is brought back by Undo
 
@@ -1267,6 +1282,13 @@ had, so that what the app holds per board can follow it.
   brings it back
 - **THEN** `canUndo` was true there, and the returned board's notification
   carries the number it had before it was replaced
+
+#### Scenario: A restart numbers its run
+
+- **WHEN** a board is restarted, replaced, and brought back by Undo
+- **THEN** the run after the restart has its own number, which it has again
+  when brought back, and Undo across the restart returns the board's first
+  number
 
 ### Requirement: A load reports the board once
 
@@ -1473,3 +1495,21 @@ every element at once for a shorter time and SHALL NOT travel.
 - **WHEN** a board is won with reduced motion requested
 - **THEN** every frame of the flash lights either every element or none, the
   whole board in the lead's color and then in the body's
+
+### Requirement: A step drops the boards kept after the board in play
+
+A step made on the board in play, a move or a restart, SHALL drop the boards
+kept after it, as it drops the steps ahead of the cursor, and SHALL keep the
+boards before it. Replacing a board SHALL drop the boards kept after it.
+Neither SHALL be written to a save or survive the page: another board is no
+part of this one's save.
+
+#### Scenario: A move keeps the boards before
+
+- **WHEN** a move is made on a board that replaced another, and undone
+- **THEN** Undo at the first position brings back the board replaced
+
+#### Scenario: A move drops the boards after
+
+- **WHEN** Undo has brought back a board and a move is made on it
+- **THEN** Redo at its last position returns to no other board

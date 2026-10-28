@@ -15,4 +15,5 @@
 
 - [x] 3.1 The app run: moves, Start over, Undo, Redo, New game, Undo across several of each, with the counter read at each; mouse, keyboard and touch
 - [x] 3.2 `help/features.md` § "Taking back Start over or a New game", `app-shell`, the gate, green
-- [ ] 3.3 The owner's word on the result, which they asked for, before archiving
+- [x] 3.3 The owner's word on the result, which they asked for, before archiving (accepted 2026-10-28, with the timer to reset on Start over)
+- [x] 3.4 Start over resets the timer and the help record; Undo across it brings them back, in saves too

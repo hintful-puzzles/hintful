@@ -191,6 +191,80 @@ describe("the solver record across a restart", () => {
   });
 });
 
+describe("the time and help across a restart", () => {
+  const readout = (h: ReturnType<typeof driven>) => h.last("timer-change")?.timer;
+
+  it("start again from nothing, and come back with the moves they belong to", () => {
+    const h = driven();
+    h.inc();
+    h.m.timer(41);
+    h.m.hint();
+    expect(readout(h)).toEqual({ seconds: 41, assisted: true });
+    h.m.restartGame();
+    expect(readout(h)).toEqual({ seconds: 0, assisted: false });
+    h.inc();
+    h.m.timer(5);
+    h.m.undo();
+    h.m.undo();
+    expect(readout(h)).toEqual({ seconds: 41, assisted: true });
+    h.m.redo();
+    h.m.redo();
+    expect(readout(h)).toEqual({ seconds: 5, assisted: false });
+  });
+
+  it("waits for the first move after a restart, as for a new board's", () => {
+    const h = driven();
+    h.inc();
+    h.m.restartGame();
+    h.m.timer(3);
+    expect(readout(h)?.seconds).toBe(0);
+    h.inc();
+    h.m.timer(3);
+    expect(readout(h)?.seconds).toBe(3);
+  });
+
+  it("are written with the restart, and read back on either side of it", () => {
+    const a = driven();
+    a.inc();
+    a.m.timer(41);
+    a.m.restartGame();
+    a.inc();
+    a.m.timer(5);
+    const env = decodeSave(a.m.saveGame());
+    expect(env).toMatchObject({
+      timerElapsed: 5,
+      restarts: [{ at: 1, elapsed: 41, hinted: false }],
+    });
+
+    const b = driven();
+    expect(b.m.loadGame(a.m.saveGame())).toBeNull();
+    expect(readout(b)?.seconds).toBe(5);
+    b.m.undo();
+    b.m.undo();
+    expect(readout(b)?.seconds).toBe(41);
+  });
+
+  it("run on through a restart a save wrote before a restart reset the clock", () => {
+    const old = {
+      v: 3,
+      puzzleId: fakeGame.id,
+      params: "t9",
+      desc: "g9-1",
+      moves: ["inc", null],
+      restarts: [{ at: 1, cheated: false }],
+      pos: 2,
+      timerElapsed: 30,
+      hinted: true,
+      cheated: false,
+    };
+    const b = driven();
+    expect(b.m.loadGame(encodeSave(old as never))).toBeNull();
+    expect(readout(b)).toEqual({ seconds: 30, assisted: true });
+    b.m.undo();
+    expect(readout(b)).toEqual({ seconds: 30, assisted: true });
+  });
+});
+
 describe("a save holding a restart", () => {
   /** Stretch 0 solved with help, a restart, then one move by hand. */
   function played() {

@@ -4,6 +4,8 @@
 - TO: `### Requirement: The boards a new one replaces are kept, up to a hundred`
 - FROM: `### Requirement: The state notification lists the restarts`
 - TO: `### Requirement: The state notification counts the run in play`
+- FROM: `### Requirement: A restart leaves the timer running and plays no animation`
+- TO: `### Requirement: A restart starts the timer again and plays no animation`
 
 ## REMOVED Requirements
 
@@ -14,6 +16,52 @@ since, up to a bound; only the boards ahead are dropped by a step.
 **Migration**: "A step drops the boards kept after the board in play".
 
 ## MODIFIED Requirements
+
+### Requirement: A restart starts the timer again and plays no animation
+
+A restart SHALL start the solve timer again from zero, and the record of help
+with it: starting over is starting again. The timer SHALL count from the first
+move after it, as it counts from a new board's first move. Each restart SHALL keep the time and
+the help of the play on the far side of it from the cursor, as it keeps the
+solver record, and the two SHALL be exchanged whenever the cursor crosses, so
+that Undo across a restart brings back the time the moves took. Crossing a
+restart in either direction SHALL play no move animation, since the two boards
+are not one move apart.
+
+#### Scenario: A timed board is restarted
+
+- **WHEN** a board with time on its clock and a hint shown is restarted
+- **THEN** the readout reads zero and unassisted, and the board appears without
+  a move animation
+- **AND** Undo brings back the time and the assisted readout
+
+### Requirement: The save envelope carries a restart
+
+A restart's entry in the envelope's `moves` SHALL be `null`, and the envelope
+SHALL list each restart apart from the moves, as its index and the solver
+record, time and help it keeps (`restarts`: `at`, `cheated`, `elapsed`,
+`hinted`), because a move is the game's own shape and no marker inside the list
+could be told from one. A restart written before a restart reset the clock has
+no `elapsed` or `hinted`, and SHALL be read as one the time and help ran on
+through. The envelope version SHALL be 3. A version 2 envelope holds no restart
+and SHALL be lifted by its version alone.
+
+#### Scenario: A save holding a restart round-trips on either side of it
+
+- **WHEN** a game with a restart in its history is saved with the cursor after
+  the restart, or before it, and restored
+- **THEN** the restored game has the same position, the same steps each way,
+  and the same solver record, time and help on each side of the restart
+
+#### Scenario: A save written before a restart was a step opens
+
+- **WHEN** a version 2 envelope is loaded
+- **THEN** it restores as it did, with no restart in its history
+
+#### Scenario: A save written before a restart reset the clock opens
+
+- **WHEN** a save whose restart has no `elapsed` is loaded and Undo crosses it
+- **THEN** the readout keeps the save's time and help
 
 ### Requirement: The boards a new one replaces are kept, up to a hundred
 

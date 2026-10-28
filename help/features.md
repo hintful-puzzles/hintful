@@ -393,8 +393,9 @@ gives you a fresh board, and the move counter counts from it: after *Start
 over* or a *New game* you are at move 0.
 
 **Start over puts your moves away, and Undo brings them back.** It returns the
-board to how it started. Undo straight afterwards and your moves are back, where
-you left them; ::redo:: redo starts over again. Starting over on a board you
+board to how it started, and the timer to zero. Undo straight afterwards and
+your moves are back, where you left them, with the time they took; ::redo::
+redo starts over again. Starting over on a board you
 have played nothing on does nothing. (In Mines the board "as it started" is the
 one just after your first square opened, so you needn't remember where you
 began.)
@@ -449,8 +450,9 @@ The clock starts with your first move, not when the board is dealt, and it
 stops while the app is out of sight. Once you have solved the board, the time
 is final: undoing afterwards will not restart it. If you lose (in Mines, say),
 the clock waits while the board stays lost and carries on if you undo.
-Starting over does not reset the clock or stop it: the time is how long
-you have spent on that board.
+Starting over sets the clock back to zero, as it does the board, and the help
+the app gave goes with it; undoing the Start over brings both back with your
+moves.
 
 When you solve the board, the time appears in the message that congratulates
 you. If the app helped on that board, the message says so beside the time. A
@@ -464,8 +466,7 @@ board is always free.
 Each puzzle keeps your game in progress and resumes it when you come back,
 whether you closed the tab, wandered off, or hit a bug. Starting a new game, or
 choosing another variation or difficulty in the ::puzzle-type:: type menu,
-replaces it. Until you move on the new board, [undo](#undo-reach) brings the
-old game back.
+replaces it, and [undo](#undo-reach) brings the old game back.
 
 On the home screen, a puzzle with a game in progress wears a
 ::game-in-progress:: triangle on its icon.

@@ -56,9 +56,13 @@ Kept boards still do not survive the page (the reason above).
 
 ## What else follows
 
-- **The solve timer still runs through a Start over**: the time is the time
-  spent on the board (`ts-engine`, "A restart leaves the timer running"). Not
-  in question here.
+- **A Start over starts the timer again from zero, and the help record with
+  it**: starting over is starting again (the owner's intuition, 2026-10-28,
+  on accepting the rest). A restart keeps the far side's time and help beside
+  its solver record, and Undo across it brings them back, as a kept board
+  comes back with its time. The save's restart entries gain `elapsed` and
+  `hinted`; a save written before has neither and reads as the time and help
+  running on through, which is what they did.
 - **Each run is numbered**: `Restart` carries the number of the run it begins,
   a kept board carries its runs' numbers, and a board brought back reopens
   them, so its runs' checkpoints come back with it.

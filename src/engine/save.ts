@@ -32,10 +32,13 @@ export interface SaveEnvelope {
   /** The restarts in the log, absent when there are none. `at` indexes
    * `moves`. `cheated` is the solver record of the play on the far side of the
    * restart from the cursor (`Midend`'s `Restart`), where the envelope's own
-   * `cheated` is that of the play the cursor is in. Listed apart from `moves`
-   * because a move is the game's own shape, which no marker inside the list
-   * could be told from. */
-  restarts?: { at: number; cheated: boolean }[];
+   * `cheated` is that of the play the cursor is in; `elapsed` and `hinted` are
+   * that play's time and help, as `timerElapsed` and `hinted` are the cursor's.
+   * A restart written before a restart reset the clock has neither, and the
+   * time and help ran on through it. Listed apart from `moves` because a move
+   * is the game's own shape, which no marker inside the list could be told
+   * from. */
+  restarts?: { at: number; cheated: boolean; elapsed?: number; hinted?: boolean }[];
   /** The entries of `moves` that one Undo takes back with the entry before
    * them (a drag's later marks, the marks a placement brings), absent when
    * there are none. A save written without it undoes each entry alone. */
@@ -99,13 +102,16 @@ function isRestartList(value: unknown, moves: number): boolean {
   if (!Array.isArray(value)) return false;
   return value.every((entry: unknown) => {
     if (typeof entry !== "object" || entry === null) return false;
-    const { at, cheated } = entry as Record<string, unknown>;
+    const { at, cheated, elapsed, hinted } = entry as Record<string, unknown>;
     return (
       typeof at === "number" &&
       Number.isInteger(at) &&
       at >= 0 &&
       at < moves &&
-      typeof cheated === "boolean"
+      typeof cheated === "boolean" &&
+      (elapsed === undefined ||
+        (typeof elapsed === "number" && Number.isFinite(elapsed) && elapsed >= 0)) &&
+      (hinted === undefined || typeof hinted === "boolean")
     );
   });
 }
