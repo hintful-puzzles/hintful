@@ -933,10 +933,9 @@ the flagged positions.
   flag's exact meaning; read where it is set.
 - **Keep the recording functions beside the untouched solver**, out of the
   generator's path.
-- **For a lookahead rung**, the first form is a proof by contradiction: the
-  hypothesis on the target, the contradiction ringed from the sub-solve's
-  final errors, narrated. Showing the walk is § "Show the what-if walk
-  statically".
+- **For a Check**, the first form is a proof by contradiction: the value
+  tried on the target, and the break it makes at once, read off the
+  validator's errors and outlined.
 
 Exemplars: `nextForcedMove` in
 [`bricks/solver.ts`](../src/games/bricks/solver.ts) with

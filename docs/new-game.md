@@ -263,7 +263,7 @@ against when changing it. It holds what a session could not get right from the
 code alone, because the code says what happens and not what was meant.
 
 **Every requirement's title leads with its subject and a colon**
-(`### Requirement: Hint: A lookahead stall takes the shortest chain`), and
+(`### Requirement: Hint: A step rings the edges it decides and outlines what it reads`), and
 the subjects stand in this order in every game's spec
 ([`repo-layout`](../openspec/specs/repo-layout/spec.md), "A game's spec is
 ordered by subject"). Working on one concern of a game, read its subject.

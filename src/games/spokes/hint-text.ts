@@ -37,6 +37,12 @@ export const SPOKE: MarkKind<Spoke> = {
 /** A hub, by its cell index. */
 export const HUB: MarkKind<number> = { name: "hub", key: String };
 
+/** A hub and the number on it. */
+export interface Hub {
+  readonly index: number;
+  readonly number: number;
+}
+
 /** What a leg marks: the spokes still to decide and the hubs reasoned from. */
 export interface Marked {
   spokes: readonly Spoke[];
@@ -73,30 +79,62 @@ export const say = {
       move: phrase`rule out ${spokes(m)}`,
     }),
 
-  /** The trial (a line when `asLine`, else a mark) breaks the board in the
-   * way `breakKind` names. */
-  contradiction: (
+  /**
+   * The spoke tried the other way (a line when `asLine`, else ruled out)
+   * breaks the board at once in the way `breakKind` names, at `broken`. A
+   * rule-out that left the hub `filled` no spoke to spare names it first,
+   * since its other spokes are what break the board.
+   */
+  breaks: (
     asLine: boolean,
     breakKind: SpokesFiring["breakKind"],
     m: Marked,
+    filled: Hub | null,
+    broken: readonly Hub[],
   ): Sentence => {
+    const at = (words: string): Narration =>
+      mark.as(
+        "outline",
+        HUB,
+        broken.map((h) => h.index),
+        words,
+      );
+    const named =
+      broken.length === 1 ? `the outlined ${broken[0].number}` : "the outlined hubs";
+    // Two outlined hubs of one number are told apart by order: the one the
+    // rule-out leaves short is named first.
+    const same =
+      filled !== null && broken.length === 1 && broken[0].number === filled.number;
+    const one = same ? "the other" : named;
+    // After "leave the outlined 7 no spare spoke and", a starved hub shares
+    // the verb, which keeps the sentence within its length.
     const consequence =
       breakKind === "overfilled"
-        ? phrase`over-fill ${hub(m)}`
-        : breakKind === "crossing"
-          ? phrase`force the diagonals of ${hub(m, "the outlined hubs")} to cross`
-          : m.hubs.length > 0
-            ? phrase`strand ${hub(m, "the outlined hubs")}`
-            : phrase`strand a group of hubs`;
-    return asLine
-      ? so({
-          look: phrase`Drawing ${mark.as("ring", SPOKE, m.spokes, "this line")} would ${consequence}`,
-          move: phrase`rule it out`,
-        })
-      : so({
-          look: phrase`Ruling ${spokes(m)} out would ${consequence}`,
-          move: phrase`it must be a line`,
-        });
+        ? filled === null
+          ? phrase`give ${at(one)} too many lines`
+          : phrase`overfill ${at(one)}`
+        : breakKind === "starved"
+          ? filled === null
+            ? phrase`leave ${at(one)} too few spokes`
+            : phrase`${at(one)} too few spokes`
+          : breakKind === "crossing"
+            ? phrase`force the diagonals of ${at("the outlined hubs")} to cross`
+            : broken.length > 0
+              ? phrase`strand ${at("the outlined hubs")}`
+              : phrase`strand a group of hubs`;
+    if (asLine)
+      return so({
+        look: phrase`Drawing ${mark.as("ring", SPOKE, m.spokes, "this line")} would ${consequence}`,
+        move: phrase`rule it out`,
+      });
+    const short =
+      filled === null
+        ? phrase``
+        : phrase` leave ${mark.as("outline", HUB, [filled.index], same ? `one outlined ${filled.number}` : `the outlined ${filled.number}`)} no spare spoke and`;
+    return so({
+      look: phrase`Ruling ${spokes(m)} out would${short} ${consequence}`,
+      move: phrase`it must be a line`,
+    });
   },
 
   /** Legs 2+ of a multi-spoke firing, reading as the same deduction; `line`

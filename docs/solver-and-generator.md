@@ -733,24 +733,16 @@ asks whether its tier is named `Unreasonable`, and for a game with no
 - **Nested speculation is Search twice over**, and so is every true
   recursion tier. Exemplars of a Search: `forcingPass` in Undead's solver,
   `solverRecurse` in Bricks' and `deduceForcingChain` in Dominosa's.
-- **Classify by the bound a rung guarantees, not the depth it typically
-  reaches, and read the call, not the function.** One function called with a
-  bounded sub-solve at one tier and an unbounded one at another is a Tactic
-  and a Search with the same median depth. Exemplar: the two calls of
-  `spokesSolverAttempt` in [`spokes/solver.ts`](../src/games/spokes/solver.ts).
-- **A constant that bounds a rung is load-bearing for a tier's name.** Say so
-  where it is defined (`ACTION_LIMIT` there), or the next reader retunes it
-  as a performance dial and turns a middle tier into a search.
-- **Hold a walk to its bound as the hint shows it.** A chain the hint cuts
-  down to the links its break needs is measured cut down in the solver too:
-  counting the links a propagator fired on the side grades a board for a
-  longer walk than any step it shows. Cut it in the solver, and let the hint
-  narrate what was recorded. Exemplar: `pruned` in
-  [`path/solver.ts`](../src/games/path/solver.ts).
-- **Two strengths of one rung emit the same words**, so no narration guard
-  separates them. Make the guarantee structural: assert that planning at the
-  top tier gives the same plan as planning at the bounded tier, with a
-  control that shows the equality is not vacuous (`spokes-hint.test.ts`).
+- **A bounded walk is still a supposition.** A propagation from a supposed
+  state, bounded by deductions or by firings, made Spokes' and Path's middle
+  tiers until 2026-10-28. Measured, the walks at their stalls were mostly one
+  firing long, and that firing was one element's value (the bullet above).
+  Look for that value before bounding a walk.
+- **A Check and a Search that refute alike emit the same words**, so no
+  narration guard separates them. Make the guarantee structural: assert that
+  planning at the top tier gives the same plan as planning at the tier below,
+  with a control that shows the equality is not vacuous
+  (`spokes-hint.test.ts`).
 - **A strategy game's hint is a search and is allowed**: the player is asked
   to accept "this move serves the stated goal", not the search. That is a
   fourth contract for untiered games, a stable subgoal and the next move

@@ -25,6 +25,7 @@ import {
   clearBoard,
   cloneBoard,
   DIFF_EASY,
+  DIFF_HARD,
   diffFromLevel,
   newState,
   type SpokesParams,
@@ -54,13 +55,17 @@ describe("spokes frozen boards", () => {
     expect(data.fixtures.length).toBeGreaterThan(easy.length);
   });
 
+  // Normal is no longer upstream's look-ahead (2026-10-28), so a harder board
+  // is held to having one answer, which the top tier proves; an Easy board,
+  // whose rungs are upstream's, to solving at Easy.
   for (const f of data.fixtures) {
-    it(`${label(f)} loads and solves at its tier`, () => {
+    const tier = f.diff === DIFF_EASY ? DIFF_EASY : DIFF_HARD;
+    it(`${label(f)} loads and solves`, () => {
       const p = params(f);
       expect(validateDesc(spokesGame, p, f.desc)).toBeNull();
       const b = cloneBoard(newState(p, f.desc));
       clearBoard(b);
-      expect(spokesSolve(b, null, f.diff)).toBe("valid");
+      expect(spokesSolve(b, null, tier)).toBe("valid");
     });
   }
 });

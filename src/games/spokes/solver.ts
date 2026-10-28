@@ -11,27 +11,18 @@
  *   satisfied, mark the rest.
  * - {@link spokesSolverDiagonal} — mark the diagonal that would cross an
  *   existing diagonal line in the same cell corner.
- * - {@link spokesSolverAttempt} (Normal and Unreasonable) — contradiction
- *   look-ahead: try a spoke both ways, and if one provably leads to an invalid
- *   board, commit the other.
- *
- * **The look-ahead is one function under two tiers, and they are two different
- * rungs.** Neither guesses — both are exhaustive and deterministic, and every
- * commit is forced by a proof that the alternative is impossible. What
- * separates them is how much reasoning the *player* has to carry to check that
- * proof, and only the sub-tier argument says so:
- *
- * - **Normal** passes `DIFF_LIMITED`, an Easy pass that stops at
- *   `ACTION_LIMIT`: a bounded chain a player can walk. A *Tactic*, and legal
- *   at a middle tier.
- * - **Unreasonable** passes `DIFF_EASY`, the same pass with no bound, which can
- *   solve the rest of the puzzle from the hypothesis. That is a *Search*, and
- *   it is why the tier upstream calls `Hard` is named `Unreasonable` here.
- *
- * **Classify a trial rung by the bound it guarantees, not by the depth it
- * typically reaches.** The two have the same median depth (see
- * `ACTION_LIMIT`); only the guarantees differ, and a hint can only promise
- * what is guaranteed.
+ * - {@link findBreaks} (Normal) — a Check: a hub's value is which of its
+ *   spokes are lines, so one spoke tried as a line, with the hubs it fills
+ *   taking no more, or ruled out, with the hub it leaves no spare spoke
+ *   drawing the rest, is one value placed and looked at once. Where the board
+ *   breaks, the spoke takes the other state (docs/solver-and-generator.md
+ *   § "Check, Tactic, Search"). It replaced upstream's look-ahead capped at
+ *   four deductions on 2026-10-28: at every stall measured, that walk was at
+ *   most one deduction long, and the one was this value's.
+ * - {@link spokesSolverAttempt} (Unreasonable) — contradiction look-ahead: try
+ *   a spoke both ways, solve on from it with no bound, and if one way proves
+ *   invalid, commit the other. That is a Search, and it is why the tier
+ *   upstream calls `Hard` is named `Unreasonable` here.
  *
  * Validity is decided by counting lines/marks per hub, rejecting crossing
  * diagonals, and — over a `Dsf` of the line-connected hubs, plus a per-class
@@ -53,7 +44,6 @@ import {
   copyBoard,
   DIFF_EASY,
   DIFF_HARD,
-  DIFF_LIMITED,
   DIFF_TRICKY,
   DIR_BOTLEFT,
   DIR_BOTRIGHT,
@@ -72,18 +62,6 @@ import {
 
 /** Upstream's `STATUS_INVALID` / `STATUS_INCOMPLETE` / `STATUS_VALID`. */
 export type SpokesStatus = "invalid" | "incomplete" | "valid";
-
-/**
- * How many deductions the bounded `DIFF_LIMITED` tier is allowed to make.
- *
- * This is the single number that separates Spokes' Tactic rung from its Search
- * one — the two are the same function under different sub-tiers — so it is
- * load-bearing for the tier names, not a tuning dial. Measured over 30 boards
- * per configuration: with the cap, a sub-solve makes a median of 2 and at most
- * 9 deductions; without it, the median is *also* 2 but the p90 is 11 and the max
- * is 35 hubs on a 36-hub board.
- */
-const ACTION_LIMIT = 4;
 
 /** The solver's reusable scratch (upstream `struct spokes_scratch`). */
 export class SpokesScratch {
@@ -347,12 +325,12 @@ function spokesSolverDiagonal(b: SpokesBoard): number {
 }
 
 /**
- * Bounded contradiction look-ahead. For every undecided spoke, try it as a
- * mark and as a line; whenever the trial board provably becomes invalid at the
- * (lower) recursion tier, commit the opposite value on the real board.
+ * Contradiction look-ahead. For every undecided spoke, try it as a mark and as
+ * a line; whenever the trial board provably becomes invalid at the (lower)
+ * recursion tier, commit the opposite value on the real board.
  *
  * `copy` is a reusable scratch board and `s` the shared scratch — both are
- * clobbered, exactly as upstream, and the recursion tier is always below
+ * clobbered, exactly as upstream, and the recursion tier is below
  * `DIFF_TRICKY`, so the recursive solve never re-enters this function.
  */
 function spokesSolverAttempt(
@@ -385,14 +363,12 @@ function spokesSolverAttempt(
 // --- the recording deduction pass (the hint's second projection) -----------
 
 /** Which rung forced a firing. */
-export type SpokesFiringKind =
-  | "twoOnes"
-  | "saturation"
-  | "exhaustion"
-  | "contradiction";
+export type SpokesFiringKind = "twoOnes" | "saturation" | "exhaustion" | "breaks";
 
-/** How a contradiction look-ahead's trial board turns out to be impossible. */
-export type SpokesBreakKind = "overfilled" | "crossing" | "sealed";
+/** How a trial board is impossible: a hub with more lines than its count, or
+ * too few spokes left for it; two diagonals crossing; or hubs walled off from
+ * the rest. */
+export type SpokesBreakKind = "overfilled" | "starved" | "crossing" | "sealed";
 
 /**
  * One *firing*: one rung reaching one conclusion, with everything the hint
@@ -405,13 +381,16 @@ export interface SpokesFiring {
   kind: SpokesFiringKind;
   forced: SpokesSpokeRef[];
   evidenceHubs: number[];
-  /** Contradiction only: the hypothesis whose refutation forces `forced`. */
+  /** Breaks only: the state tried, whose break forces `forced`. */
   hypothesis?: SpokesSpokeRef;
-  /** Contradiction only: how — and where — the hypothesis breaks the board. */
+  /** Breaks only: the hub a rule-out left no spoke to spare, which took all
+   * its others, or `null`. */
+  filled?: number | null;
+  /** Breaks only: how, and where, the tried state breaks the board. */
   breakKind?: SpokesBreakKind;
 }
 
-/** Runaway/UX cap on plan length: the look-ahead rung is expensive and a
+/** Runaway/UX cap on plan length: Normal's Checks try every spoke and a
  * player rarely follows more than a few steps before diverging, so a
  * recompute yields the next batch. */
 const HINT_PLAN_MAX = 40;
@@ -529,7 +508,7 @@ function* findExhaustion(b: SpokesBoard, s: SpokesScratch): Generator<SpokesFiri
 }
 
 /** Classify why an invalid board is impossible, and name the hubs at fault, so
- * a contradiction hint can point at the break rather than assert one. */
+ * a hint can point at the break rather than assert one. */
 function analyzeBreak(
   b: SpokesBoard,
   s: SpokesScratch,
@@ -538,9 +517,9 @@ function analyzeBreak(
   spokesSolverRecount(b, s, false);
 
   for (let i = 0; i < n; i++) {
-    if (s.lines[i] > b.numbers[i] || s.marked[i] > s.nodes[i] - b.numbers[i]) {
-      return { breakKind: "overfilled", hubs: [i] };
-    }
+    if (s.lines[i] > b.numbers[i]) return { breakKind: "overfilled", hubs: [i] };
+    if (s.marked[i] > s.nodes[i] - b.numbers[i])
+      return { breakKind: "starved", hubs: [i] };
   }
 
   for (let i = 0; i + 1 < n; i++) {
@@ -567,44 +546,115 @@ function analyzeBreak(
   return { breakKind: "sealed", hubs: [] };
 }
 
+/** Put `state` on spoke `(i, dir)` of `b`, ruling out the diagonal a line
+ * crosses, as a move does. */
+function place(b: SpokesBoard, i: number, dir: number, state: number): void {
+  const old = getSpoke(b.spokes[i], dir);
+  spokesPlace(b, i, dir, state);
+  syncDiagonalBlock(b, i, dir, old, state, null);
+}
+
+/** The hubs at either end of spoke `(i, dir)`, the off-board end left out. */
+function endsOf(b: SpokesBoard, i: number, dir: number): number[] {
+  const x = (i % b.w) + SPOKE_DIRS[dir].dx;
+  const y = ((i / b.w) | 0) + SPOKE_DIRS[dir].dy;
+  return x < 0 || x >= b.w || y < 0 || y >= b.h ? [i] : [i, y * b.w + x];
+}
+
 /**
- * The contradiction look-ahead as a firing: the first EMPTY spoke one of whose
- * values provably drives a `subdiff` sub-solve to `invalid`. Mirrors
- * {@link spokesSolverAttempt}, but stops at the first hit and records the
- * refuted hypothesis plus where the trial board breaks.
+ * What `copy`, a trial board one value has been placed on, breaks at once, or
+ * `null`. Nothing follows from the value first: the board is read as it would
+ * stand, with what a player rules out there at a glance, which is every free
+ * spoke of a hub that has all its lines. The trial board is left read.
  */
-function* findContradiction(
+function breaksAt(
+  copy: SpokesBoard,
+  s: SpokesScratch,
+): { breakKind: SpokesBreakKind; hubs: number[] } | null {
+  spokesSolverRecount(copy, s, false);
+  const n = copy.w * copy.h;
+  const full: number[] = [];
+  for (let i = 0; i < n; i++) if (s.lines[i] === copy.numbers[i]) full.push(i);
+  for (const i of full)
+    for (const d of emptyDirs(copy.spokes[i])) spokesPlace(copy, i, d, SPOKE_MARKED);
+  return spokesValidate(copy, s) === "invalid" ? analyzeBreak(copy, s) : null;
+}
+
+/**
+ * Normal's rung as firings: each free spoke that breaks the board at once one
+ * way, and so takes the other. Tried as a line, the hubs it fills take no more
+ * spokes; ruled out, a hub it leaves with no spoke to spare takes all its
+ * others, which is that hub's value placed whole. Where the solver commits
+ * every firing, `helpful` is off; a hint offers no rule-out that helps no hub.
+ */
+function* findBreaks(
   b: SpokesBoard,
   copy: SpokesBoard,
   s: SpokesScratch,
-  subdiff: number,
+  helpful: boolean,
 ): Generator<SpokesFiring> {
   const n = b.w * b.h;
   for (let i = 0; i < n; i++) {
     for (let dir = 0; dir < 8; dir++) {
       if (getSpoke(b.spokes[i], dir) !== SPOKE_EMPTY) continue;
-      for (let l = 0; l < 2; l++) {
-        const forcedState = l ? SPOKE_MARKED : SPOKE_LINE;
-        // A forced rule-out that helps neither hub is busywork; a forced *line*
-        // is always progress.
-        if (forcedState === SPOKE_MARKED && !markHelps(b, i, dir)) continue;
-        const trialState = l ? SPOKE_LINE : SPOKE_MARKED;
+      // Each edge once, from the end that comes first.
+      const ends = endsOf(b, i, dir);
+      if (ends.length === 2 && ends[1] < i) continue;
+      if (!helpful || markHelps(b, i, dir)) {
         copyBoard(b, copy);
-        spokesPlace(copy, i, dir, trialState);
-        if (spokesSolve(copy, s, subdiff) === "invalid") {
-          const { breakKind, hubs } = analyzeBreak(copy, s);
+        place(copy, i, dir, SPOKE_LINE);
+        const broken = breaksAt(copy, s);
+        if (broken) {
           yield {
-            kind: "contradiction",
-            forced: [{ index: i, dir, state: forcedState }],
-            hypothesis: { index: i, dir, state: trialState },
-            evidenceHubs: hubs,
-            breakKind,
+            kind: "breaks",
+            forced: [{ index: i, dir, state: SPOKE_MARKED }],
+            hypothesis: { index: i, dir, state: SPOKE_LINE },
+            evidenceHubs: broken.hubs,
+            breakKind: broken.breakKind,
           };
-          break;
+          continue;
         }
       }
+      copyBoard(b, copy);
+      place(copy, i, dir, SPOKE_MARKED);
+      // A hub this leaves with only as many free spokes as it needs lines.
+      spokesSolverRecount(copy, s, false);
+      const short = ends.find(
+        (h) =>
+          copy.numbers[h] > s.lines[h] && s.nodes[h] - s.marked[h] === copy.numbers[h],
+      );
+      if (short !== undefined)
+        for (const d of emptyDirs(copy.spokes[short]))
+          place(copy, short, d, SPOKE_LINE);
+      const broken = breaksAt(copy, s);
+      if (broken)
+        yield {
+          kind: "breaks",
+          forced: [{ index: i, dir, state: SPOKE_LINE }],
+          hypothesis: { index: i, dir, state: SPOKE_MARKED },
+          filled: short ?? null,
+          evidenceHubs: [
+            ...new Set([...(short === undefined ? [] : [short]), ...broken.hubs]),
+          ],
+          breakKind: broken.breakKind,
+        };
     }
   }
+}
+
+/** Normal's rung for the solver: commit every firing {@link findBreaks}
+ * finds, each against the board as the ones before it left it. */
+function spokesSolverBreaks(
+  b: SpokesBoard,
+  copy: SpokesBoard,
+  s: SpokesScratch,
+): number {
+  let ret = 0;
+  for (const f of findBreaks(b, copy, s, false)) {
+    applyFiring(b, f);
+    ret++;
+  }
+  return ret;
 }
 
 /** Apply a firing's forced spokes to a working board (both ends kept in sync),
@@ -622,16 +672,15 @@ function applyFiring(b: SpokesBoard, f: SpokesFiring): void {
 /**
  * The hint's rungs over `b`, **goal-first**: forced connections
  * ({@link findSaturation}), then the genuinely-useful rule-outs (each gated so
- * it only fires when it helps a hub still needing lines), then the expensive
- * look-ahead. This deliberately reorders the solver's rungs — the hint only
+ * it only fires when it helps a hub still needing lines), then Normal's
+ * Checks. This deliberately reorders the solver's rungs — the hint only
  * needs each firing to be *forced*, not to match the solver's internal order,
  * and among firings beside the plan's work, or with none there, a connection
- * leads. `copy` is contradiction scratch, and `null` below Normal.
+ * leads. `copy` is the Checks' trial board, and `null` below Normal.
  *
- * **The `Unreasonable` rung is deliberately absent.** `spokesSolve` runs the
- * look-ahead a second time at `DIFF_EASY` — the same trial with no bound on the
- * sub-solve — and that is a search, not a technique, so no hint narrates it on
- * any tier. The plan therefore stalls where bounded reasoning stalls and `hint`
+ * **The `Unreasonable` rung is deliberately absent.** `spokesSolve`'s
+ * look-ahead solves on from a tried spoke with no bound, and that is a search,
+ * not a technique, so no hint narrates it on any tier. The plan therefore stalls where bounded reasoning stalls and `hint`
  * says so, which is the honest answer. The *solver* keeps the rung: the
  * generator grades on it.
  */
@@ -640,7 +689,7 @@ function spokesRungs(
   s: SpokesScratch,
   copy: SpokesBoard | null,
 ): FindingRung<SpokesFiring>[] {
-  // The tallies are read afresh: the look-ahead's trials leave its own in `s`.
+  // The tallies are read afresh: the Checks' trials leave their own in `s`.
   const tallied = (find: () => Iterable<SpokesFiring>) => () => {
     spokesSolverRecount(b, s, false);
     return find();
@@ -649,16 +698,7 @@ function spokesRungs(
     { id: "saturation", tier: 0, find: tallied(() => findSaturation(b, s)) },
     { id: "twoOnes", tier: 0, find: () => findTwoOnes(b) },
     { id: "exhaustion", tier: 0, find: tallied(() => findExhaustion(b, s)) },
-    // Every trial is a sub-solve, so only the first, wherever the plan is.
-    {
-      id: "contradiction",
-      tier: 1,
-      find: () => {
-        if (!copy) return [];
-        for (const f of findContradiction(b, copy, s, DIFF_LIMITED)) return [f];
-        return [];
-      },
-    },
+    { id: "breaks", tier: 1, find: () => (copy ? findBreaks(b, copy, s, true) : []) },
   ];
 }
 
@@ -726,57 +766,22 @@ export function spokesSolve(
   diff: number,
 ): SpokesStatus {
   const s = scratch ?? new SpokesScratch(b.w * b.h);
-  // Deductions made so far, for `DIFF_LIMITED`'s bound only. As upstream, the
-  // two cheap techniques count them; the look-aheads never run at that tier.
-  let total = 0;
 
   spokesSolverOnes(b); // one-shot pre-pass; never a ladder member
 
   const copy = diff >= DIFF_TRICKY ? cloneBoard(b) : null;
 
-  // The shared ordered technique ladder (`engine/deduction-fixpoint.ts`), with
-  // two subtleties:
-  //
-  //  - **The cap is clamped to `DIFF_EASY`.** `DIFF_LIMITED` (= `DIFF_EASY - 1`)
-  //    is "an Easy pass capped at `ACTION_LIMIT`": its technique *set* is
-  //    Easy's, and the bound is what makes it Limited. So the two cheap
-  //    techniques declare `tier: DIFF_EASY` (Limited is a budget, not a set of
-  //    techniques) and the cap floors at Easy.
-  //  - **The bounded look-ahead runs at *exactly* Normal**, so the ladder is not
-  //    a tier prefix and the technique guards itself in `run`. As a prefix, the
-  //    bounded trial would run before the unbounded one at Unreasonable; the
-  //    trial mutates the board, so a different contradiction would be committed
-  //    first and every Unreasonable board would move.
-  //
-  // This solver reports a *status*, so the runner's grade is unused.
+  // The shared ordered technique ladder (`engine/deduction-fixpoint.ts`). This
+  // solver reports a *status*, so the runner's grade is unused. `copy` is
+  // non-null exactly when diff >= DIFF_TRICKY.
   runDeductionFixpoint({
     techniques: [
+      { id: "saturation", tier: DIFF_EASY, run: () => spokesSolverFull(b, s) },
+      { id: "crossing-diagonal", tier: DIFF_EASY, run: () => spokesSolverDiagonal(b) },
       {
-        id: "saturation",
-        tier: DIFF_EASY,
-        run: () => {
-          const action = spokesSolverFull(b, s);
-          total += action;
-          return action;
-        },
-      },
-      {
-        id: "crossing-diagonal",
-        tier: DIFF_EASY,
-        run: () => {
-          const action = spokesSolverDiagonal(b);
-          total += action;
-          return action;
-        },
-      },
-      {
-        // `copy` is non-null exactly when diff >= DIFF_TRICKY.
-        id: "contradiction-bounded",
+        id: "breaks",
         tier: DIFF_TRICKY,
-        run: () =>
-          copy && diff === DIFF_TRICKY && spokesSolverAttempt(b, copy, s, DIFF_LIMITED)
-            ? 1
-            : 0,
+        run: () => (copy ? spokesSolverBreaks(b, copy, s) : 0),
       },
       {
         id: "contradiction-unbounded",
@@ -784,10 +789,8 @@ export function spokesSolve(
         run: () => (copy && spokesSolverAttempt(b, copy, s, DIFF_EASY) ? 1 : 0),
       },
     ],
-    maxTier: Math.max(diff, DIFF_EASY),
-    settled: () =>
-      spokesValidate(b, s) !== "incomplete" ||
-      (diff === DIFF_LIMITED && total >= ACTION_LIMIT),
+    maxTier: diff,
+    settled: () => spokesValidate(b, s) !== "incomplete",
   });
 
   return spokesValidate(b, s);

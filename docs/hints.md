@@ -201,11 +201,11 @@ every forced cell of its hypothetical from its own overlay bits.
 - **Judge the shape of the call, not the length of the sentence.** A rung
   that runs a fixpoint from its hypothesis is a Search however short its
   sentence.
-- **Where a Tactic and a Search are the same function** with a different cap,
-  no wording check separates them, so prove structurally that the hint reaches
-  only the permitted one. Spokes asserts that a plan computed at its top tier
-  equals one computed at Tricky, with a control showing Tricky adds firings
-  the tier below lacks, so the equality cannot pass vacuously.
+- **Where a Check and a Search refute alike**, no wording check separates
+  them, so prove structurally that the hint reaches only the permitted one.
+  Spokes asserts that a plan computed at its top tier equals one computed at
+  Normal, with a control showing Normal adds firings the tier below lacks, so
+  the equality cannot pass vacuously.
 - **Stating the classified contradiction and anchoring it to the board is not
   a walk.** [`engine/hint-quality.test.ts`](../src/engine/hint-quality.test.ts)
   ("no hint leaves a chain for the player to carry, at any tier") holds every

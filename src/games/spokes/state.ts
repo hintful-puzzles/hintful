@@ -89,9 +89,6 @@ export const DIFF_EASY = 0;
 export const DIFF_TRICKY = 1;
 export const DIFF_HARD = 2;
 export const DIFFCOUNT = 3;
-/** `DIFF_EASY - 1`: the internal bounded tier the Normal look-ahead recurses
- * at — an Easy pass capped at `ACTION_LIMIT` deductions. */
-export const DIFF_LIMITED = DIFF_EASY - 1;
 
 const DIFFS: readonly SpokesDiff[] = ["easy", "tricky", "hard"];
 // The top tier is `Unreasonable` where upstream says `Hard`: its look-ahead has

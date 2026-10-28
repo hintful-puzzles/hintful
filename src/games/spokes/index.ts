@@ -59,7 +59,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
-import { type Marked, type Spoke, say } from "./hint-text.ts";
+import { type Hub, type Marked, type Spoke, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -397,12 +397,7 @@ const markedOf = (hl: SpokesHint): Marked => ({
 });
 
 /** The hint's rungs: the kinds of the solver's firings. */
-export const SPOKES_RUNGS = [
-  "twoOnes",
-  "saturation",
-  "exhaustion",
-  "contradiction",
-] as const;
+export const SPOKES_RUNGS = ["twoOnes", "saturation", "exhaustion", "breaks"] as const;
 export type SpokesRung = (typeof SPOKES_RUNGS)[number];
 
 /**
@@ -410,8 +405,13 @@ export type SpokesRung = (typeof SPOKES_RUNGS)[number];
  * rules, premise then conclusion, in the necessity voice (the hint quality bar).
  * Every claim here is one {@link deduceSpokesPlan} has checked.
  */
-function narrate(f: SpokesFiring, hl: SpokesHint): Sentence {
+function narrate(
+  f: SpokesFiring,
+  hl: SpokesHint,
+  numbers: ArrayLike<number>,
+): Sentence {
   const m = markedOf(hl);
+  const hubOf = (index: number): Hub => ({ index, number: numbers[index] });
   switch (f.kind) {
     case "twoOnes":
       return say.twoOnes(m);
@@ -419,8 +419,16 @@ function narrate(f: SpokesFiring, hl: SpokesHint): Sentence {
       return say.saturation(f.forced.length, m);
     case "exhaustion":
       return say.exhaustion(m);
-    case "contradiction":
-      return say.contradiction(f.hypothesis?.state === SPOKE_LINE, f.breakKind, m);
+    case "breaks": {
+      const filled = f.filled ?? null;
+      return say.breaks(
+        f.hypothesis?.state === SPOKE_LINE,
+        f.breakKind,
+        m,
+        filled === null ? null : hubOf(filled),
+        f.evidenceHubs.filter((h) => h !== filled).map(hubOf),
+      );
+    }
   }
 }
 
@@ -434,15 +442,16 @@ function continuation(f: SpokesFiring, hl: SpokesHint): Sentence {
  * so whichever leg is asked for shows what is left of the deduction. */
 function stepsOfFiring(
   f: SpokesFiring,
-  w: number,
+  state: SpokesState,
 ): HintStep<SpokesMove, SpokesHint, SpokesRung>[] {
   return f.forced.map((sp, leg) => {
     const highlights: SpokesHint = {
       spokes: f.forced.slice(leg),
       evidence: f.evidenceHubs,
-      w,
+      w: state.w,
     };
-    const words = leg === 0 ? narrate(f, highlights) : continuation(f, highlights);
+    const words =
+      leg === 0 ? narrate(f, highlights, state.numbers) : continuation(f, highlights);
     return {
       move: { kind: "set", ...sp },
       rung: f.kind,
@@ -463,7 +472,7 @@ function hint(state: SpokesState): HintResult<SpokesMove, SpokesHint, SpokesRung
   if (plan.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
-  return { ok: true, steps: plan.flatMap((f) => stepsOfFiring(f, state.w)) };
+  return { ok: true, steps: plan.flatMap((f) => stepsOfFiring(f, state)) };
 }
 
 /** A move completes the current leg when it sets the leg's exact spoke to the

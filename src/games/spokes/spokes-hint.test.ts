@@ -12,6 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { NARRATION_LIMIT } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
@@ -78,31 +79,33 @@ const UNREASONABLE: SpokesParams = { w: 4, h: 4, diff: "hard" };
 /** Twelve boards the generator dealt at the top tier, as their descriptions,
  * for the tests that need such a board only to plan on. Dealing is the
  * expensive part: measured 2026-10-07, 0.07 to 2.4 s to deal one against about
- * 5 ms to plan on it. A description stays a board of its tier whatever the
- * generator goes on to deal, so these are written down. */
+ * 5 ms to plan on it. A description stays a board of its tier while the
+ * ladder below it does, so these were dealt again when Normal's rung changed
+ * (2026-10-28). */
 const UNREASONABLE_BOARDS = [
-  "1121356433533242",
-  "1441364116522341",
-  "1111263416111331",
-  "1342246227621231",
-  "1331456425521442",
-  "1241174135511433",
-  "2131125325642122",
-  "1151351236431312",
-  "1133356336621331",
-  "1143263325211321",
-  "2131136312632341",
-  "3411146215621331",
+  "1143136316522341",
+  "2211133116631311",
+  "1311422321641111",
+  "1112317345531131",
+  "3421155426541241",
+  "1231126332621241",
+  "1212132145531421",
+  "1211113416631311",
+  "1311462236511312",
+  "1231146245631133",
+  "1113445144111421",
+  "1213123314112421",
 ] as const;
 
-/** Normal boards on which the look-ahead comes to a spoke between two
+/** Normal boards on which Normal's Check comes to a spoke between two
  * satisfied hubs before it comes to a useful one, so that its filter is what
- * keeps the rule-out out of the plan. About one dealt Normal board in six is
- * such a board (10 of 60, 2026-10-07), so three are written down. */
+ * keeps the rule-out out of the plan. Planted 2026-10-28, the filter's loss
+ * showed on the fifth, sixth and ninth of the Normal boards dealt, so three
+ * are written down. */
 const LOOK_AHEAD_FILTER_BOARDS = [
-  "1331161512531131",
-  "1312552134521111",
-  "1433121211411531",
+  "3111316136221311",
+  "2213151316311121",
+  "3251133433632131",
 ] as const;
 
 /** The unique solution as a board (the same one `hint`/`findMistakes` use). */
@@ -143,28 +146,46 @@ const pinned = describeHintPins({
     // The corner-invalidation case.
     diagonalLine: (step) => isDiagLine(lit(step)),
     ruleOut: (step) => isRuleOut(lit(step)),
+    // Normal's Check concluding a line: a rule-out that leaves a hub no spare
+    // spoke, whose other spokes break the board.
+    breaksLine: (step) =>
+      step.rung === "breaks" &&
+      !isRuleOut(lit(step)) &&
+      step.explanation.includes("no spare spoke"),
+    // Normal's Check ruling a spoke out: a line that breaks the board.
+    breaksRuleOut: (step) => step.rung === "breaks" && isRuleOut(lit(step)),
   },
   pins: {
-    /** Held on 249 of 1046 positions walked. */
+    /** Held on 247 of 1000 positions walked. */
     saturationOfSeveral: "4x4de:1511455143121112",
-    /** Held on 198 of 1046 positions walked. */
+    /** Held on 193 of 1000 positions walked. */
     diagonalLine: "4x4de:1511455143121112",
-    /** Held on 476 of 1046 positions walked. */
+    /** Held on 458 of 1000 positions walked. */
     ruleOut: "4x4dt:1442456446431112",
-    /** Held on 261 of 1046 positions walked. */
+    /** Held on 100 of 1000 positions walked. */
+    breaksLine: {
+      id: "4x4dt:1311363336711342",
+      moves: [{ kind: "set", index: 2, dir: 0, state: 3 }],
+    },
+    /** Held on 59 of 1000 positions walked. */
+    breaksRuleOut: {
+      id: "4x4dh:1321231446531321",
+      moves: [{ kind: "set", index: 3, dir: 3, state: 3 }],
+    },
+    /** Held on 232 of 1000 positions walked. */
     twoOnes: "4x4dt:1442456446431112",
-    /** Held on 951 of 1046 positions walked. */
+    /** Held on 950 of 1000 positions walked. */
     saturation: "4x4de:1511455143121112",
-    /** Held on 910 of 1046 positions walked. */
+    /** Held on 892 of 1000 positions walked. */
     exhaustion: {
       id: "4x4de:3341313212131431",
       moves:
         '[{"kind":"set","index":0,"dir":0,"state":2},{"kind":"set","index":0,"dir":1,"state":2},{"kind":"set","index":0,"dir":2,"state":2},{"kind":"set","index":8,"dir":2,"state":3},{"kind":"set","index":10,"dir":1,"state":3}]',
     },
-    /** Held on 521 of 1046 positions walked. */
-    contradiction: {
-      id: "4x4dh:1321231446531321",
-      moves: [{ kind: "set", index: 3, dir: 3, state: 3 }],
+    /** Held on 476 of 1000 positions walked. */
+    breaks: {
+      id: "4x4dt:1311363336711342",
+      moves: [{ kind: "set", index: 2, dir: 0, state: 3 }],
     },
   },
 });
@@ -172,12 +193,7 @@ const pinned = describeHintPins({
 // --- each rung's forced move agrees with the unique solution ----------------
 
 describe("each rung forces the move the solution agrees with", () => {
-  for (const kind of [
-    "twoOnes",
-    "saturation",
-    "exhaustion",
-    "contradiction",
-  ] as const) {
+  for (const kind of ["twoOnes", "saturation", "exhaustion", "breaks"] as const) {
     it(`${kind}: every forced spoke matches the solution`, () => {
       const { state, index } = pinned(kind);
       // The pin opens with the rung, so the plan's first firing is its own.
@@ -222,15 +238,29 @@ describe("narration states the premise, in the necessity voice", () => {
     expect(text.length).toBeLessThan(120);
   });
 
-  it("contradiction states the hypothesis and the break it reaches", () => {
-    const { state, step } = pinned("contradiction");
+  it.each([
+    "breaks",
+    "breaksLine",
+    "breaksRuleOut",
+  ] as const)("%s states the state tried and the break it makes", (kind) => {
+    const { state, step } = pinned(kind);
     expect(step.explanation).toMatch(/^(?:Drawing this line|Ruling this spoke out)/);
-    expect(step.explanation).toMatch(/(?:over-fill|force the diagonals|strand)/);
+    expect(step.explanation).toMatch(
+      /(?:too many lines|overfill|too few spokes|force the diagonals|strand)/,
+    );
     expect(step.explanation).toMatch(/(?:rule it out|must be a line)/);
     // The break it names is outlined as evidence (words and picture agree).
     expect(firingAt(state).breakKind).toBeDefined();
     expect((step.highlights as SpokesHint).evidence.length).toBeGreaterThan(0);
-    expect(step.explanation.length).toBeLessThan(120);
+    expect(step.explanation.length).toBeLessThanOrEqual(NARRATION_LIMIT);
+  });
+
+  it("a rule-out that leaves a hub no spare spoke names that hub first", () => {
+    const { state, step } = pinned("breaksLine");
+    const { filled } = firingAt(state);
+    if (filled === null || filled === undefined)
+      throw new Error("no hub was left short");
+    expect((step.highlights as SpokesHint).evidence).toContain(filled);
   });
 });
 
@@ -245,11 +275,10 @@ describe("hints only rule out a spoke when it helps a hub still needing lines", 
     // rule-out out of a plan, and the two show on different boards. Planted
     // 2026-10-07 over 60 dealt boards of each tier: without the exhausted
     // hub's filter, 51 Easy boards show a useless rule-out, 36 Normal and 4
-    // Unreasonable; without the look-ahead's, 10 Normal boards and no other,
-    // the first of them the tenth dealt. So the Easy and Normal boards are
-    // dealt, which costs milliseconds, and the look-ahead's boards and the top
-    // tier's are the ones written down above. `npm run test:slow` deals 60 of
-    // every tier.
+    // Unreasonable. Without Normal's Check's, Normal boards show it (planted
+    // 2026-10-28). So the Easy and Normal boards are dealt, which costs
+    // milliseconds, and the Check's boards and the top tier's are the ones
+    // written down above. `npm run test:slow` deals 60 of every tier.
     const boards: { at: string; preset: SpokesParams; desc: string }[] = [];
     const dealt = SLOW_TESTS_ENABLED ? [EASY, TRICKY, UNREASONABLE] : [EASY, TRICKY];
     for (let seed = 0; seed < seedBudget(8, 60); seed++) {
@@ -414,18 +443,14 @@ describe("the hint frame paints the overlay", () => {
 
 describe("the top tier's look-ahead never reaches a hint", () => {
   /**
-   * `spokesSolve` runs the contradiction look-ahead twice: at `DIFF_TRICKY` with
-   * a `DIFF_LIMITED` sub-solve (capped at `ACTION_LIMIT`, a bounded chain — a
-   * *Tactic*), and again at the top tier with a `DIFF_EASY` sub-solve that has
-   * no bound at all and was measured settling **35 of 36 hubs** on a 6x6 board.
-   * Only the second is a search, and no hint narrates a search on any tier.
-   *
-   * The two rungs are the *same function* and their narration is word-for-word
-   * identical, so `hint-quality.test.ts`'s vocabulary check cannot tell them
-   * apart — the guarantee has to be structural. This is it, stated as the
-   * consequence a player would feel: **asking for the top tier's reasoning buys
-   * the plan nothing.** The two controls below are what stop it passing
-   * vacuously.
+   * `spokesSolve`'s top tier tries a spoke and solves on from it with no bound,
+   * which was measured settling **35 of 36 hubs** on a 6x6 board: a search,
+   * and no hint narrates a search on any tier. Its refutation would read like
+   * Normal's Check, which names a break too, so `hint-quality.test.ts`'s
+   * vocabulary check cannot tell them apart; the guarantee has to be
+   * structural. This is it, stated as the consequence a player would feel:
+   * **asking for the top tier's reasoning buys the plan nothing.** The two
+   * controls below are what stop it passing vacuously.
    *
    * What this alone catches is that rung reaching a plan. Planted 2026-10-07
    * (the unbounded trial run after the bounded one, at the top tier only), the

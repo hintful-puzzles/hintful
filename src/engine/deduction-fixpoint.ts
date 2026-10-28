@@ -243,9 +243,8 @@ export interface DeductionFixpointOptions {
    * Optional early-out, checked at the top of every iteration (after the budget
    * tick, before any technique): return `true` when **the ladder should stop
    * because there is nothing left for it to do**. Deliberately broader than
-   * "solved": Undead stops on a *contradiction* (`anyEmpty`), Clusters on
-   * complete-or-invalid, and Spokes also when the action budget its own
-   * `DIFF_LIMITED` tier imposes is spent.
+   * "solved": Undead stops on a *contradiction* (`anyEmpty`), and Clusters
+   * and Spokes on complete-or-invalid.
    *
    * Checking at the top (not after a firing) also means a technique is never run
    * on an already-settled board, so it can't manufacture a spurious step.

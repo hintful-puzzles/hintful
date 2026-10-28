@@ -2,7 +2,9 @@
 
 exports[`spokes: pinned hint positions > says, at each pin 1`] = `
 {
-  "contradiction": "Drawing this line would force the diagonals of the outlined hubs to cross, so rule it out.",
+  "breaks": "Ruling this spoke out would leave the outlined 7 no spare spoke and the outlined 4 too few spokes, so it must be a line.",
+  "breaksLine": "Ruling this spoke out would leave the outlined 7 no spare spoke and the outlined 4 too few spokes, so it must be a line.",
+  "breaksRuleOut": "Drawing this line would leave the outlined 4 too few spokes, so rule it out.",
   "diagonalLine": "The outlined hub has just enough free spokes left for its count, so these spokes must all be lines.",
   "exhaustion": "The outlined hub already has all its lines, so none of its other spokes can be one: rule out these spokes.",
   "ruleOut": "Connecting the outlined 1-hubs would strand them from the rest, so rule out this spoke.",

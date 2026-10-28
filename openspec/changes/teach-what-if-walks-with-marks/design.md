@@ -115,6 +115,21 @@ split.
 - **Clusters: Normal is the two-clue count.** It is easier than today's
   Normal, accepted. `lookahead-chain` retires; Clusters has no Unreasonable.
 
+## D8. Spokes' Normal is one rung, a spoke tried each way
+
+The three rules of D4 are one shape, as Path's are: a hub's value is which of
+its spokes are lines. A spoke tried as a line, the hubs it fills taking no
+more, or ruled out, a hub it leaves with no spare spoke drawing all its
+others, is one value placed, and the board is read as it stands (every free
+spoke of a full hub ruled out) and checked once. Too costly and seal are the
+line; must keep is the rule-out. Dealing, 12 boards a cell (4 at 8x8), median
+/ max, HEAD then now: Normal 4x4 64 / 111 ms → 31 / 67, 5x7 871 / 1129 →
+363 / 655, 6x6 1075 / 1593 → 393 / 609, 8x8 7.6 / 9.5 s → 2.3 / 3.3 s;
+Unreasonable 4x4 1.3 / 6.1 s → 0.6 / 2.0, 5x7 5.1 / 11.2 s → 4.0 / 11.3,
+6x6 4.1 / 6.7 s → 3.8 / 7.5, 8x8 52 / 128 s → 17 / 22. A board dealt at Normal
+before needs the old look-ahead at times, and then opens at Unreasonable,
+which Spokes already has.
+
 ## D7. A board a player already has opens at Unreasonable (owner, 2026-10-28)
 
 A Normal or Tricky board dealt before this change may need a lookahead the

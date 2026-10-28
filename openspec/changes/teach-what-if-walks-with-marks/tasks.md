@@ -11,7 +11,7 @@
 - [x] 2.1 For each stall shape that recurs across games, design the mark or rung in the engine, and see it deal the tier's boards (a value placed and looked at once: Path's square, Spokes' too-costly line)
 - [ ] 2.2 Move each rung to Unreasonable, or retire it, once its tier deals without it; measure boards dealt and dealing time per tier, before and after
   - [x] Path: Normal and Tricky are Checks, the lookaheads retire, Unreasonable is added (D3, D7); the edges skeleton follows
-  - [ ] Spokes: seal, too costly and must keep at Normal; `contradiction-bounded` retires (D4)
+  - [x] Spokes: one spoke tried each way and looked at once, which is seal, too costly and must keep, at Normal; `contradiction-bounded` retires (D4, D8)
   - [ ] Clusters: the two-clue count at Normal; `lookahead-chain` retires, Unreasonable is added (D5, D7)
   - [ ] Boats: the refutation names the filled line (D2)
 - [x] 2.3 Bring the owner any tier no markable technique fills, with the measurement and the compatibility cost (none left unfilled; D6, D7)
