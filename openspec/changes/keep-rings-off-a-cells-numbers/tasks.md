@@ -3,12 +3,13 @@
 ## 1. Measure
 
 - [ ] 1.1 Reproduce both rings in the app (the proposal's board and step), and find every game and cell kind where a placement's ring crosses a number or lands off its cell: corner clues and notes, at phone, tablet and desktop widths, both schemes
-- [ ] 1.2 Show the owner a comparison of the candidate fixes on those cells (a centered ring that encloses the clue, a ring in the gap between the clue and the notes, notes laid out to leave the ring room) and take their choice
+- [ ] 1.2 First approach (owner): a centered ring in the padding between the cell's content and its edge, enclosing clue and notes. Measure each game's padding and what that ring needs, per size, and where it fits
+- [ ] 1.3 Only for the cells where 1.2 does not fit: show the owner a comparison of ways to make room (padding grown, notes laid out to leave the ring room) and take their choice
 
 ## 2. Build
 
-- [ ] 2.1 The ring search: no number crossed, and a ring about the whole cell preferred over a rounder one about part of it
-- [ ] 2.2 Whatever 1.2 chose for the content, in the engine, not per game
+- [ ] 2.1 The ring search: no number crossed, the padding ring tried first, and a ring about the whole cell preferred over a rounder one about part of it
+- [ ] 2.2 Whatever 1.3 chose for the cells that need room, in the engine, not per game
 - [ ] 2.3 Replace the scenario "A placement crosses only the notes it replaces" in `engine-hints`, and a guard that fails on the proposal's two boards
 
 ## 3. Finish

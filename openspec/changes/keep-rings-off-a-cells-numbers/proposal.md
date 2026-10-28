@@ -44,11 +44,15 @@ cell's notes as crossable on the ringed cell, per D7.
 - The ring's search keeps clear of every number, the ringed cell's notes
   included, and prefers a ring that is about the cell (centered, enclosing
   it) over a rounder one about a part of it.
-- Where no such ring fits, the content makes room before the ring gives
-  way: how is the owner's to see, from sizes measured in the app. Shrinking
-  a cell's notes was measured in `make-rings-round` D6 (9×9 Keen at phone
-  width: about 40% smaller, a clue cell's notes become dots), so a design
-  comparison at phone and desktop sizes comes first.
+- **First, fit the ring in the padding** (owner, 2026-10-28): a ring
+  centered on the cell whose stroke runs in the padding between the cell's
+  content (its clue and notes) and its edge, enclosing all of it. Measure how
+  much padding each game's cells leave at phone and desktop sizes, and what
+  that ring needs, before anything else is tried.
+- Only where the padding cannot hold it does the content make room, and how
+  is the owner's to see from a comparison in the app. Shrinking a cell's
+  notes was measured in `make-rings-round` D6 (9×9 Keen at phone width:
+  about 40% smaller, a clue cell's notes become dots).
 - The scenario "A placement crosses only the notes it replaces" is replaced.
 
 ## Impact
