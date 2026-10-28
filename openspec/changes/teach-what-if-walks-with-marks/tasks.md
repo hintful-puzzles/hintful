@@ -13,7 +13,7 @@
   - [x] Path: Normal and Tricky are Checks, the lookaheads retire, Unreasonable is added (D3, D7); the edges skeleton follows
   - [x] Spokes: one spoke tried each way and looked at once, which is seal, too costly and must keep, at Normal; `contradiction-bounded` retires (D4, D8)
   - [x] Clusters: the two-clue count at Normal; `lookahead-chain` retires, Unreasonable is added (D5, D7, D9)
-  - [ ] Boats: the refutation names the filled line (D2)
+  - [x] Boats: the refutation names the filled line (D2): 62 of 78 refutations over 30 Hard boards do, the rest run past a sentence's length
 - [x] 2.3 Bring the owner any tier no markable technique fills, with the measurement and the compatibility cost (none left unfilled; D6, D7)
 
 ## 3. Retire what is left

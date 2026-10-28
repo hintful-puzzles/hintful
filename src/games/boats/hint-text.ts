@@ -19,6 +19,7 @@
 import {
   CELL,
   mark,
+  NARRATION_LIMIT,
   type Narration,
   phrase,
   type Sentence,
@@ -335,14 +336,30 @@ export const say = {
     }
     const square = ringed(decided(m), "this square");
     const why = breachClause(t.breach, m.evidence, m);
-    return t.trialShip
-      ? so({
-          look: phrase`if ${square} held a boat segment, ${why}`,
-          move: phrase`it must be water`,
-        })
-      : so({
-          look: phrase`if ${square} were water, ${why}`,
-          move: phrase`it must hold a boat segment${follows(m)}`,
-        });
+    // The trial is the line's last of its kind, so the rest of the line is
+    // the other: every refutation leans on that fill, so the sentence says it
+    // ("its row's last water") where it fits within a sentence's length.
+    // The crossing line, where the trial filled it too, drops first.
+    const whose = (lines: number): string => {
+      if (lines === 0 || t.filled === null) return "";
+      const [a, b] = t.filled.horizontal ? ["row", "column"] : ["column", "row"];
+      return lines === 2 ? `its ${a}'s and ${b}'s last ` : `its ${a}'s last `;
+    };
+    const told = (lines: number): Sentence =>
+      t.trialShip
+        ? so({
+            look: phrase`if ${square} held ${whose(lines) || "a "}boat segment, ${why}`,
+            move: phrase`it must be water`,
+          })
+        : so({
+            look: phrase`if ${square} were ${whose(lines)}water, ${why}`,
+            move: phrase`it must hold a boat segment${follows(m)}`,
+          });
+    const most = t.filled?.crossing ? 2 : 1;
+    for (let lines = most; lines > 0; lines--) {
+      const sentence = told(lines);
+      if (sentence.text.length <= NARRATION_LIMIT) return sentence;
+    }
+    return told(0);
   },
 };

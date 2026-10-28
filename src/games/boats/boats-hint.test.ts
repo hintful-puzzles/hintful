@@ -359,7 +359,10 @@ describe("boats hint — narration", () => {
     ["runTooShort", /every \d+-boat is already placed/],
     ["onlyRunsLeft", /run[s]? can hold the \d+-boat/],
     ["sharedDiagonal", /has \d+ water left, so an outlined square must be a boat/],
-    ["refuted", /^If this square (were water|held a boat segment),/],
+    [
+      "refuted",
+      /^If this square (?:were|held) (?:a |its (?:row|column)'s (?:and (?:row|column)'s )?last )?(?:water|boat segment),/,
+    ],
   ];
 
   it.each(NARRATIONS)("explains the %s deduction", (kind, phrase) => {

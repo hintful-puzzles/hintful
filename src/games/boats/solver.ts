@@ -5,8 +5,11 @@
  * gated by a difficulty threshold, and reports the **highest tier the deduction
  * actually needed**. It never guesses and never backtracks: there is no
  * board-wide trial, no recursion, no dup-and-try. The Hard tier's "attempt"
- * techniques try a *single* cell and keep the result only when the trial is
- * immediately contradictory, which is a deduction (a refutation), not a guess.
+ * techniques try a *single* cell as the last of its kind a line needs, the
+ * rest of the line filled the other way, and keep the result only when the
+ * trial is immediately contradictory. That is one line's arrangement placed
+ * and checked once, a Check (docs/solver-and-generator.md § "Check, Tactic,
+ * Search"), not a guess.
  *
  * So **Boats satisfies the guess-free-generation policy at every named
  * difficulty** — Easy/Normal/Tricky/Hard are progressively harder *deduction*

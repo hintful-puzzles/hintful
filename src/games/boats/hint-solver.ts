@@ -191,6 +191,10 @@ export type BoatsTechnique =
       trialShip: boolean;
       breach: BoatsBreach;
       center: { at: Point; vertical: boolean } | null;
+      /** A square's trial: the line it was the last of its kind in, filled
+       * with the other kind, and whether the crossing line was filled too.
+       * `null` for a middle segment's. */
+      filled: { horizontal: boolean; crossing: boolean } | null;
     };
 
 /** The rungs a hint step can be: the techniques' kinds. */
@@ -1084,7 +1088,8 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
           else fillRow(trial, i, 0, i, b.h - 1, fill);
           // …and the crossing line too, when it is in the same position.
           const crossSlot = horizontal ? k : k + b.w;
-          if (needsOne(crossSlot, cross, !trialShip)) {
+          const crossing = needsOne(crossSlot, cross, !trialShip);
+          if (crossing) {
             if (horizontal) fillRow(trial, k, 0, k, b.h - 1, fill);
             else fillRow(trial, 0, k, b.w - 1, k, fill);
           }
@@ -1099,6 +1104,7 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
             trialShip,
             breach: found.breach,
             center: null,
+            filled: { horizontal, crossing },
           } as const;
           const f =
             found.breach.kind === "count"
@@ -1138,6 +1144,7 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
           trialShip: true,
           breach: found.breach,
           center: { at: { x, y }, vertical },
+          filled: null,
         } as const;
         const f =
           found.breach.kind === "count"
