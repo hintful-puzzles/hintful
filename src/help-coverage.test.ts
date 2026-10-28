@@ -35,6 +35,7 @@ import { RULESETS_PLACEHOLDER, rulesetField } from "./engine/ruleset.ts";
 import { CONTROLS_PLACEHOLDER } from "./engine/target-verb.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "./engine/testing/slow.ts";
+import { WING_PLACEHOLDER } from "./engine/wing.ts";
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
 // reset the shared registry under `isolate: false`.
 import { registerAllGames } from "./games/index.ts";
@@ -186,6 +187,25 @@ describe("every game's page has the one skeleton", () => {
     const page = helpPages[`../help/games/${id}.md`] ?? "";
     const bound = getTsGame(id)?.hintMarks !== undefined;
     expect(page.includes(HINT_MARKS_PLACEHOLDER), `help/games/${id}.md`).toBe(bound);
+  });
+
+  // A game whose hint can be a wing says what one is in its Hints section, in
+  // the engine's one sentence (`vite-plugins/hint-marks.ts`), and no other
+  // page does.
+  let wingPages = 0;
+  it.each(
+    puzzleIds,
+  )("%s: carries the wing placeholder iff its hint can be one", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const owed = getTsGame(id)?.hintRungs?.includes("wing") ?? false;
+    const count = (text: string) => text.match(WING_PLACEHOLDER)?.length ?? 0;
+    expect(count(sectionBody(page, "Hints")), `help/games/${id}.md`).toBe(owed ? 1 : 0);
+    expect(count(page)).toBe(owed ? 1 : 0);
+    if (owed) wingPages++;
+  });
+
+  itOverWholeSweep("is not vacuous — some page owes the wing", () => {
+    expect(wingPages).toBeGreaterThanOrEqual(2);
   });
 
   // A page about pieces of the two-state pair says their colors with

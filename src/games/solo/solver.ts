@@ -38,8 +38,10 @@ import {
   confinedLines,
   type DeductionRecord,
   type DeductionRecorder,
+  type LatinWingReason,
 } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
+import { weighWing } from "../../engine/wing.ts";
 import type { BlockStructure, SoloState } from "./state.ts";
 import {
   DIFF_AMBIGUOUS,
@@ -101,6 +103,7 @@ export type SoloReason =
   | { kind: "set"; region?: undefined; lines: ConfinedLines; cells: Point[] }
   /** A *hidden* single — digit `n` fits only one cell of `region`. */
   | { kind: "hiddenSingle"; n: number; region: SoloRegion }
+  | LatinWingReason
   /** Killer: the open cells of a {@link CageSum} come down to one, which must
    * make its whole `clue`. */
   | ({ kind: "cageSingle" } & CageSum)
@@ -707,6 +710,71 @@ class SolverUsage {
       }
     }
     return 0;
+  }
+
+  /** Whether cells `a` and `b` share a row, column, block or (X) diagonal. */
+  private sees(a: number, b: number): boolean {
+    const cr = this.cr;
+    if (a === b) return false;
+    if (a % cr === b % cr || ((a / cr) | 0) === ((b / cr) | 0)) return true;
+    if (this.blocks.whichblock[a] === this.blocks.whichblock[b]) return true;
+    return (
+      this.diag !== null &&
+      ((onDiag0(a, cr) && onDiag0(b, cr)) || (onDiag1(a, cr) && onDiag1(b, cr)))
+    );
+  }
+
+  /** Every cell's {@link sees} list, worked out on the wing's first run. */
+  private seerLists: number[][] | null = null;
+
+  /** The first wing ({@link weighWing}) on the board. It strikes one cell, as
+   * `latin.ts`'s does, so its words can call the cell "this cell". */
+  private wings(): number {
+    const cr = this.cr;
+    const area = cr * cr;
+    const masks = new Int32Array(area);
+    for (let c = 0; c < area; c++)
+      for (let n = 1; n <= cr; n++) if (this.cube2At(c, n)) masks[c] |= 1 << (n - 1);
+    if (this.seerLists === null) {
+      this.seerLists = [];
+      for (let c = 0; c < area; c++) {
+        const out: number[] = [];
+        for (let k = 0; k < area; k++) if (this.sees(c, k)) out.push(k);
+        this.seerLists.push(out);
+      }
+    }
+    const seers = this.seerLists;
+    const found: {
+      middle: number;
+      x: number;
+      ends: readonly number[];
+      target: number;
+    }[] = [];
+    weighWing(
+      {
+        size: area,
+        values: cr,
+        open: (c) => !this.grid[c],
+        mask: (c) => masks[c],
+        seers: (c) => seers[c],
+        sees: (a, b) => this.sees(a, b),
+      },
+      (middle, x, ends, target) => found.push({ middle, x, ends, target }),
+    );
+    if (found.length === 0) return 0;
+    const { middle, x, ends, target } = found[0];
+    if (this.recorder) {
+      const [at] = this.cellsXY([middle]);
+      this.recElim(target, x + 1, {
+        kind: "wing",
+        n: x + 1,
+        middle: at,
+        ends: this.cellsXY([...ends]),
+        self: (masks[middle] & (1 << x)) !== 0,
+      });
+    }
+    this.setCube2(target, x + 1, 0);
+    return 1;
   }
 
   /** Cell indices → reading-order `{x, y}` (for a recorded cage reason). */
@@ -1440,6 +1508,7 @@ class SolverUsage {
     rung("diff", "region-set", DIFF_SET, () => this.regionSets());
     if (diag) rung("diff", "diag-set", DIFF_SET, () => this.diagSets());
     rung("diff", "digit-set", DIFF_EXTREME, () => this.digitSets());
+    rung("diff", "wing", DIFF_EXTREME, () => this.wings());
     rung("diff", "forcing-chain", DIFF_RECURSIVE, () => this.forcing());
     return rungs;
   }

@@ -453,6 +453,8 @@ function premise(reason: HintReason, marks: readonly Mark[], w: number): Premise
       return reason.lines
         ? { premise: say.confined(reason.lines, reason.cells, n) }
         : { premise: say.set(reason.cells, n) };
+    case "wing":
+      return { premise: say.wing(reason, marks[0]) };
     default:
       throw new Error(`a ${reason.kind} deduction places`);
   }
@@ -626,7 +628,7 @@ export const towersGame: Game<
       strike:
         "the heights the step crosses out of the pencil marks, crossed through in their own color, and so the cell they are in.",
       outline:
-        "what the step reasons from: the clue it counts, in its slot beside the grid, the tower just placed, the cells of a set, or the numbered cells of a chain, in the order it runs.",
+        "what the step reasons from: the clue it counts, in its slot beside the grid, the tower just placed, the cells of a set, or a wing's “the middle cell” and “an end”.",
       stripes:
         "the line the sentence names: the row or column a clue sees along, through the clue slots at both its ends. Or the several rows or columns it names together, such as “these 2 columns”, where one height fits only the outlined cells.",
     },

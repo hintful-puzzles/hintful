@@ -596,7 +596,7 @@ export const mathraxGame: Game<
       ring: "the cell the step fills in with a number.",
       strike: "the pencil marks the step crosses out, and so the cell they are in.",
       outline:
-        "what the step reasons from: the cells a clue constrains (the diagonal pair it sits between, or all four around an E or O), the number just placed, the cells of a set, or the numbered cells of a chain, in the order it runs.",
+        "what the step reasons from: the cells a clue constrains (the diagonal pair it sits between, or all four around an E or O), the number just placed, the cells of a set, or a wing's “the middle cell” and “an end”.",
       stripes:
         'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },

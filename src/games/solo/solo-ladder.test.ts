@@ -142,6 +142,7 @@ describeLadderCensus<SoloState>({
     "region-set",
     "diag-set",
     "digit-set",
+    "wing",
     "forcing-chain",
   ],
   unreached: {},

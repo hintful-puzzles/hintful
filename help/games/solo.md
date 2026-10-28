@@ -63,6 +63,8 @@ A few ideas are worth learning by name:
   and placed digits are counted, what's left over belongs to the cells
   that remain.
 
+{{wing}}
+
 If you've turned on the preference that removes a number from the
 pencil marks it rules out when you place it, the hint leaves that
 tidying to the placement rather than spelling it out as a step of its

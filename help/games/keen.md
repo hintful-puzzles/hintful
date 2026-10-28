@@ -44,6 +44,8 @@ work cell by cell: a number goes when no way of filling the cage puts it
 in this cell, and when every way of filling a cage puts, say, a 4 in one
 row, no other cell of that row can be 4.
 
+{{wing}}
+
 If you've turned on the preference that removes a number from pencil
 marks in its row and column when you place it, the hint leaves that
 tidying to the placement rather than spelling it out as a step of its

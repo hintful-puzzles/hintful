@@ -111,19 +111,6 @@ refuse an ABC End View board smaller than 8×8 and a Number Ball board up to
 - **AND** a 4×4 Number Ball board with two symbols is refused with "No 4x4
   Numbers puzzle with 2 symbols is Normal."
 
-### Requirement: Params: Salad refuses a 4×4 of three letters at Normal
-
-When a board is to be dealt at Normal, `validateParams` SHALL refuse an ABC
-End View board of order 4 with three symbols, which has no board once Normal
-follows no forcing chain, and SHALL accept the same params for a board that
-arrives with its description.
-
-#### Scenario: The cell is refused by name
-
-- **WHEN** a board is to be dealt from the params `4n3Ldx`
-- **THEN** it is refused with "No 4x4 Letters puzzle with 3 symbols is Normal."
-- **AND** a board that arrives with its description under those params opens
-
 ### Requirement: Description: Salad descriptions use the upstream run-length block encoding
 
 A Salad description SHALL encode its clue arrays in canonical order using a
@@ -186,14 +173,20 @@ refused.
 Salad SHALL offer two tiers. To the shared Latin deductions its solver SHALL
 add the border-clue deduction, in ABC End View mode. Easy SHALL be that
 deduction and the shared positional and numeric eliminations, and Normal
-SHALL add the shared set elimination. Salad SHALL follow no forcing chain at
-either tier, since a chain is a search and Salad has no Unreasonable.
+SHALL add the shared set elimination and the wing, over the letters alone.
+Salad SHALL follow no forcing chain at either tier, since a chain is a search
+and Salad has no Unreasonable.
 
 #### Scenario: A Normal board genuinely needs the Normal tier
 
 - **WHEN** a board generated at Normal is solved at Easy
 - **THEN** the solver does not reach a solution
 - **AND** solving the same board at Normal does
+
+#### Scenario: A 4×4 of three letters at Normal deals
+
+- **WHEN** a board is to be dealt from the params `4n3Ldx`
+- **THEN** it is not refused, and the board dealt needs Normal
 
 ### Requirement: Solver: Salad's solver reasons about the empty square directly
 

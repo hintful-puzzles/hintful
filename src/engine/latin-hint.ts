@@ -20,7 +20,7 @@ import {
   nextPlace,
 } from "./candidate-hint.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
-import type { ConfinedLines } from "./latin.ts";
+import type { ConfinedLines, LatinWingReason } from "./latin.ts";
 import type { Point } from "./types.ts";
 
 /** A forced single placement, classified against the working board:
@@ -334,4 +334,5 @@ export function hiddenSingleLine(
 export type GenericLatinReason =
   | SingleReason
   | { kind: "dup"; n: number; px: number; py: number }
-  | { kind: "set"; cells: readonly Point[]; lines?: ConfinedLines };
+  | { kind: "set"; cells: readonly Point[]; lines?: ConfinedLines }
+  | LatinWingReason;

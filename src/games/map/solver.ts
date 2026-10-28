@@ -15,6 +15,7 @@
  * one available and the witness each rests on.
  */
 
+import { weighWing } from "../../engine/wing.ts";
 import { graphAdjacent, graphVertexStart } from "./graph.ts";
 import { DIFF_EASY, DIFF_HARD, DIFF_NORMAL, DIFF_RECURSE, DIFFCOUNT } from "./state.ts";
 
@@ -151,55 +152,29 @@ export function sharedPair(
 }
 
 /**
- * HARD: weigh every color a blank region `middle` can take. Each color is read
- * off the board as it stands: a neighbor whose two dots are that color and `x`
- * is left only `x`. A region that, whichever color `middle` takes, touches the
- * `x` it leaves, or touches `middle` where that color is `x` itself, cannot be
- * `x`. Reported as `fire(middle, x, ends, target)`, `ends` holding one
- * neighbor of both per color of `middle` other than `x`.
+ * HARD: weigh every color a blank region `middle` can take, each read off a
+ * neighbor dotted with that color and `x`: the engine's wing, with "touches"
+ * for "sees". Reported as `fire(middle, x, ends, target)`.
  *
- * Each way is one color placed and its neighbors' dots read, nothing
- * propagated further: Path's weighed square, on a graph. A three-region
- * forcing chain is exactly the case of a two-color `middle`, and a longer one
- * is a supposition, which Unreasonable's search covers.
+ * A three-region forcing chain is exactly the case of a two-color `middle`,
+ * and a longer one is a supposition, which Unreasonable's search covers.
  */
 export function weighRegion(
   b: MapBoard,
   fire: (middle: number, x: number, ends: readonly number[], target: number) => void,
 ): void {
   const { graph, n, ngraph, coloring, possible } = b;
-  const touch = (a: number, c: number) => graphAdjacent(graph, n, ngraph, a, c);
-  for (let m = 0; m < n; m++) {
-    if (coloring[m] >= 0) continue;
-    const around = [...neighbors(graph, n, ngraph, m)].filter((k) => coloring[k] < 0);
-    for (let x = 0; x < FOUR; x++) {
-      // Per color of `middle` but `x`, the neighbors that color leaves only `x`.
-      const leftX: number[][] = [];
-      for (let c = 0; c < FOUR; c++)
-        if (c !== x && possible[m] & (1 << c)) {
-          const pair = (1 << c) | (1 << x);
-          leftX.push(around.filter((k) => possible[k] === pair));
-        }
-      if (leftX.length === 0 || leftX.some((ks) => ks.length === 0)) continue;
-      const self = (possible[m] & (1 << x)) !== 0;
-
-      const seen = new Set<number>();
-      for (const k0 of leftX[0])
-        for (const t of neighbors(graph, n, ngraph, k0)) {
-          if (t === m || seen.has(t)) continue;
-          seen.add(t);
-          if (coloring[t] >= 0 || !(possible[t] & (1 << x))) continue;
-          if (self && !touch(t, m)) continue;
-          const ends: number[] = [];
-          for (const ks of leftX) {
-            const k = ks.find((k) => k !== t && touch(k, t));
-            if (k === undefined) break;
-            ends.push(k);
-          }
-          if (ends.length === leftX.length) fire(m, x, ends, t);
-        }
-    }
-  }
+  weighWing(
+    {
+      size: n,
+      values: FOUR,
+      open: (i) => coloring[i] < 0,
+      mask: (i) => possible[i],
+      seers: (i) => neighbors(graph, n, ngraph, i),
+      sees: (a, c) => graphAdjacent(graph, n, ngraph, a, c),
+    },
+    fire,
+  );
 }
 
 // The difficulty tiers are caps on how far down this ladder the solver may go,

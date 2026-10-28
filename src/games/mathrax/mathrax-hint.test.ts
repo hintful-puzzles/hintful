@@ -68,40 +68,46 @@ describeHintPins({
     candidateReading:
       s.clues.filter((c) => c !== 0).length % 2 === 0 ? "populate" : "implicit",
   }),
+  unreached: {
+    wing:
+      "Mathrax's clues settle its boards first: measured 2026-10-28, the wing " +
+      "fired on none of 60 Unreasonable boards' stalls at Tricky, and no Tricky " +
+      "board of 60 dealt needed it.",
+  },
   pins: {
-    /** Held on 11 of 1725 positions walked. */
+    /** Held on 11 of 1704 positions walked. */
     populate: "5dn:b2a5k2h,S0S1bA5hA6b",
-    /** Held on 421 of 1725 positions walked. */
+    /** Held on 417 of 1704 positions walked. */
     clean: { id: "5dn:b2a5k2h,S0S1bA5hA6b", moves: [{ type: "pencilAll" }] },
-    /** Held on 416 of 1725 positions walked. */
+    /** Held on 422 of 1704 positions walked. */
     note: "5dn:n4f3c,A5S2eS1A6dS2b",
-    /** Held on 1559 of 1725 positions walked. */
+    /** Held on 1542 of 1704 positions walked. */
     dup: "5dn:n4f3c,A5S2eS1A6dS2b",
-    /** Held on 1679 of 1725 positions walked. */
+    /** Held on 1658 of 1704 positions walked. */
     single: {
       id: "5dn:b2a5k2h,S0S1bA5hA6b",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":5},{"x":1,"y":0,"n":2},{"x":1,"y":0,"n":5},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":5},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":2},{"x":4,"y":1,"n":5},{"x":1,"y":2,"n":2},{"x":2,"y":2,"n":2},{"x":4,"y":2,"n":5},{"x":0,"y":3,"n":2},{"x":2,"y":3,"n":2},{"x":3,"y":3,"n":2},{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":5},{"x":1,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":4,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":3},{"x":2,"y":4,"n":5}]}]',
     },
-    /** Held on 573 of 1725 positions walked. */
+    /** Held on 797 of 1704 positions walked. */
     regionsFull: {
       id: "5dn:e1o2c,A6S1dS1dA6M4c",
       moves:
         '[{"type":"set","x":1,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":1,"n":4,"pencil":false,"autoElim":false}]',
     },
-    /** Held on 1229 of 1725 positions walked. */
+    /** Held on 1205 of 1704 positions walked. */
     hiddenSingle: {
       id: "5dn:n4f3c,A5S2eS1A6dS2b",
       moves:
         '[{"type":"pencilAdd","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":2},{"x":2,"y":4,"n":4},{"x":2,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":3,"n":2},{"x":1,"y":3,"n":4}]},{"type":"set","x":0,"y":2,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":2}]},{"type":"set","x":1,"y":3,"n":4,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":4},{"x":2,"y":4,"n":5}]},{"type":"set","x":2,"y":4,"n":2,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":3},{"x":3,"y":2,"n":5}]},{"type":"set","x":4,"y":1,"n":2,"pencil":false,"autoElim":false}]',
     },
-    /** Held on 534 of 1725 positions walked. */
+    /** Held on 519 of 1704 positions walked. */
     set: {
       id: "6dt:b2y1g,aM6gA6OhS1S0S1c",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":2},{"x":5,"y":0,"n":2},{"x":2,"y":1,"n":2},{"x":4,"y":1,"n":1},{"x":2,"y":2,"n":2},{"x":4,"y":2,"n":1},{"x":2,"y":3,"n":2},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":1,"y":4,"n":1},{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":1},{"x":5,"y":4,"n":1},{"x":2,"y":5,"n":2},{"x":4,"y":5,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5},{"x":1,"y":1,"n":6}]},{"type":"set","x":1,"y":1,"n":3,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":3},{"x":0,"y":1,"n":3},{"x":2,"y":1,"n":3},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":3},{"x":5,"y":1,"n":3},{"x":1,"y":2,"n":3},{"x":1,"y":3,"n":3},{"x":1,"y":4,"n":3},{"x":1,"y":5,"n":3}]},{"type":"pencilStrike","marks":[{"x":5,"y":3,"n":1},{"x":5,"y":3,"n":3},{"x":5,"y":3,"n":4},{"x":5,"y":3,"n":5},{"x":5,"y":3,"n":6}]},{"type":"set","x":5,"y":3,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":5,"y":1,"n":2},{"x":5,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":1,"y":3,"n":2},{"x":3,"y":3,"n":2},{"x":4,"y":3,"n":2},{"x":5,"y":4,"n":2},{"x":5,"y":5,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":4},{"x":1,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":4},{"x":2,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":5,"y":1,"n":5},{"x":5,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":4},{"x":4,"y":2,"n":6}]}]',
     },
-    /** Held on 1419 of 1725 positions walked. */
+    /** Held on 1401 of 1704 positions walked. */
     clue: "5dn:k43l,dS2aOS1bS1aS3c",
   },
 });

@@ -1264,8 +1264,8 @@ suppositions no mark records, however short.
 #### Scenario: Weighing one element's values is a Check
 
 - **WHEN** a rung takes every value one element can hold, reads each off the
-  board as it stands, and concludes what every value agrees on, as Map's
-  weighing and Path's weighed square do
+  board as it stands, and concludes what every value agrees on, as the wing
+  (Map's weighing and the candidate games' wing) and Path's weighed square do
 - **THEN** it is a Check, and may define a tier below Unreasonable
 
 ### Requirement: A Search is refused and never narrated

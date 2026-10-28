@@ -67,6 +67,8 @@ visible from it. A few clue ideas are worth learning by name:
   shorter behind it, so it can leave the clue unable to see as many
   towers as it says.
 
+{{wing}}
+
 If you've turned on the preference that removes a height from pencil
 marks in its row and column when you place a tower, the hint leaves
 that tidying to the placement rather than spelling it out as a step of

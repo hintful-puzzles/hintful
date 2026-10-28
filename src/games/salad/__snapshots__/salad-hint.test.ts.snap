@@ -18,6 +18,7 @@ exports[`salad: pinned hint positions > says, at each pin 1`] = `
   "previewsNumber": "Every other number has been ruled out in this square, so it can only be 3.",
   "set": "These 2 columns fit A only in the outlined squares, taking the A of 2 rows, so the A must go.",
   "single": "Every other number has been ruled out in this square, so it can only be 3.",
+  "wing": "Whatever the middle square is, an end in line with this square is B, so the B must go.",
   "xNoteGone": "This square's pencil marks have no empty-square mark among them, so it must hold a number.",
 }
 `;

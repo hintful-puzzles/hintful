@@ -719,9 +719,10 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   long. Weighing every value of one element, each read by a look, and
   keeping what they all share, is a Check too. Exemplars: `findBreaks` and
   `findWeighed` in [`path/solver.ts`](../src/games/path/solver.ts), and
-  `weighRegion` in [`map/solver.ts`](../src/games/map/solver.ts), where each
-  color of one region is read off its neighbors' dots, and a three-region
-  forcing chain turned out to be exactly that.
+  `weighWing` in [`engine/wing.ts`](../src/engine/wing.ts), the XY- and
+  XYZ-wing, where each value of one element is read off the notes of an
+  element it sees: Map's regions by their dots, where a three-region forcing
+  chain turned out to be exactly that, and every candidate game's cells.
 - **A Tactic is legitimate at a middle tier**: a chain of local rules that
   assumes nothing, where every link is glanceable and the player has a
   notation for the links (`hints-marks.md` § "Give the facts a notation").
@@ -1647,8 +1648,8 @@ pass's flags and adds one for a cell the answer contradicts, and
 deductions (`usersolvers`), a `valid` callback over completed grids, and a
 thin driver mapping its difficulty levels onto the `latinSolver` config.**
 The engine gives the candidate cube, positional, numeric and set
-elimination, forcing chains and guess-and-verify recursion at the searching
-level `diffRecursive` (the recursion doubling as the uniqueness check), and
+elimination, the wing at the single-number set's level `diffSet1`, forcing
+chains and guess-and-verify recursion at the searching level `diffRecursive` (the recursion doubling as the uniqueness check), and
 the generator (`matching`, `latinGenerate`, `latinGenerateRect`).
 The population is `git grep -l engine/latin.ts src/games`. The hint side
 starts at [hints-candidates.md](./hints-candidates.md) § "What every game does".

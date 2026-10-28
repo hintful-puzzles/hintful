@@ -181,10 +181,9 @@ export function validateParams(p: UnequalParams, full: boolean): string | null {
   if (p.order < 5 && p.mode === "adjacent" && level >= DIFF_SET)
     return `Size must be at least 5 for ${ADJACENT} puzzles of this difficulty.`;
   // Measured 2026-10-05: of 400,000 boards the generator built at Tricky, the
-  // tier below solved every one. A 3x3 at Hard needed a forcing chain, which is
-  // a search, so 250,000 tries find none, and its boards are Unreasonable's
-  // (2026-10-27).
-  if (full && p.order === 3 && (level === DIFF_SET || level === DIFF_EXTREME))
+  // tier below solved every one. A 3x3 at Hard needs a wing, and of 400,000
+  // built at Unreasonable the wing solved every one (2026-10-28).
+  if (full && p.order === 3 && (level === DIFF_SET || level === DIFF_RECURSIVE))
     return noSuchTier("3x3 puzzle", DIFF_NAMES[level]);
   return null;
 }

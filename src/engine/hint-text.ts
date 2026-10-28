@@ -376,6 +376,26 @@ export function confinedPremise(
   return phrase`${striped} fit ${value} only in ${mark.the("outline", CELL, set, cell)}, taking the ${value} of ${lines.count} ${across}`;
 }
 
+/**
+ * A wing: whichever value the outlined middle cell takes, an outlined end that
+ * shares a line with the struck cell, or where `self` the middle itself, is
+ * `value`. Every way is read off the notes the walk has written on the middle
+ * and the ends, so the words name the cells and the value and leave the ways
+ * to the notes, as Map's weighing does. `beside` says how an end and the
+ * struck cell are related, in the game's regions.
+ */
+export function wingPremise(
+  wing: { middle: Point; ends: readonly Point[]; self: boolean },
+  at: Point,
+  value: string,
+  cell = "cell",
+  beside = "in line with",
+): Narration {
+  const end = mark.as("outline", CELL, wing.ends, "an end");
+  const which = wing.self ? phrase`it or ${end}` : end;
+  return phrase`Whatever ${mark.as("outline", CELL, [wing.middle], `the middle ${cell}`)} is, ${which} ${beside} ${thisCell(at, cell)} is ${value}`;
+}
+
 /** The premise of a generic Latin strike (the placement cull, a set), shared
  * as {@link narrateLatinReason} is. `marks` are the struck notes. */
 export function latinPremise(
@@ -401,6 +421,8 @@ export function latinPremise(
       return {
         premise: phrase`${mark.the("outline", CELL, reason.cells, cell).capitalized()} already account for ${joinWith(distinct(marks.map((m) => m.n)).map(v))} between them`,
       };
+    case "wing":
+      return { premise: wingPremise(reason, marks[0], v(reason.n), cell) };
     default:
       throw new Error(`a ${reason.kind} places, and is narrated by narrateLatinReason`);
   }

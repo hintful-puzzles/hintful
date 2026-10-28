@@ -6,7 +6,7 @@
  * `usersolvers` (extra deductions keyed to its difficulty levels) and a `valid`
  * callback (does a completed grid satisfy the game's extra constraints?), and
  * `latinSolver` interleaves them with the generic deductions — positional/numeric
- * elimination and set elimination — and, at the recursive level, forcing chains
+ * elimination, set elimination and the wing — and, at the recursive level, forcing chains
  * and guess-and-verify recursion (which doubles as the generators' uniqueness
  * check).
  *
@@ -50,6 +50,7 @@ import {
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { shuffle } from "./shuffle.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
+import { weighWing } from "./wing.ts";
 
 /** Upstream `enum { diff_impossible = 10, diff_ambiguous, diff_unfinished }`
  * — positive sentinels larger than any real difficulty level, so a
@@ -90,7 +91,20 @@ export type LatinReason =
   /** Height `n` was just placed at `(px, py)`, which rules it out of the rest
    * of that row and column. */
   | { kind: "dup"; n: number; px: number; py: number }
-  | LatinSetReason;
+  | LatinSetReason
+  | LatinWingReason;
+
+/** A wing ({@link weighWing}): whichever value the `middle` cell takes, one
+ * of the `ends`, or where `self` the middle itself, is `n`, and the struck
+ * cell shares a line with each. The words outline the middle and the ends,
+ * which are every cell it reads. */
+export interface LatinWingReason {
+  kind: "wing";
+  n: number;
+  middle: { x: number; y: number };
+  ends: readonly { x: number; y: number }[];
+  self: boolean;
+}
 
 /** A set elimination. `cells` are the subset: the cells whose candidates
  * account for the struck values between them. `reads` is the rest of the line
@@ -759,6 +773,53 @@ export class LatinSolver {
     return 0;
   }
 
+  /** The first wing ({@link weighWing}) on the board, over the cells, two of
+   * which see each other when they share a row or column. It strikes one
+   * cell, so its words can call the cell "this cell" whatever a game's strike
+   * axis. */
+  wing(): number {
+    const o = this.o;
+    const s = this.symbols;
+    const masks = new Int32Array(o * o);
+    for (let x = 0; x < o; x++)
+      for (let y = 0; y < o; y++)
+        for (let n = 1; n <= s; n++)
+          if (this.cube[this.cubepos(x, y, n)]) masks[y * o + x] |= 1 << (n - 1);
+    const found: {
+      middle: number;
+      x: number;
+      ends: readonly number[];
+      target: number;
+    }[] = [];
+    weighWing(
+      {
+        size: o * o,
+        values: this.repeat ? s - 1 : s,
+        open: (c) => !this.grid[c],
+        mask: (c) => masks[c],
+        seers: (c) => lineSeers(o, c),
+        sees: (a, b) => a !== b && (a % o === b % o || ((a / o) | 0) === ((b / o) | 0)),
+      },
+      (middle, x, ends, target) => found.push({ middle, x, ends, target }),
+    );
+    if (found.length === 0) return 0;
+    const { middle, x, ends, target } = found[0];
+    const at = (c: number) => ({ x: c % o, y: (c / o) | 0 });
+    const t = at(target);
+    if (this.recorder) {
+      const reason: LatinWingReason = {
+        kind: "wing",
+        n: x + 1,
+        middle: at(middle),
+        ends: ends.map(at),
+        self: (masks[middle] & (1 << x)) !== 0,
+      };
+      this.recorder({ kind: "elim", ...t, n: x + 1, reason, group: this.group });
+    }
+    this.cube[this.cubepos(t.x, t.y, x + 1)] = 0;
+    return 1;
+  }
+
   /** The three set-elimination sweeps of {@link diffSet}, through
    * {@link setGeneral}: per row and per column the cells × symbols matrix (a
    * cell takes one symbol, a symbol fills `multiplicity` cells); per symbol the
@@ -909,6 +970,16 @@ export class LatinSolver {
   }
 }
 
+/** The other cells of cell `c`'s row and column, cells numbered `y·o + x`. */
+function* lineSeers(o: number, c: number): Generator<number> {
+  const x = c % o;
+  const y = (c / o) | 0;
+  for (let i = 0; i < o; i++) {
+    if (i !== x) yield y * o + i;
+    if (i !== y) yield i * o + x;
+  }
+}
+
 /** Number of set bits in a small non-negative integer. */
 function popcount(v: number): number {
   let c = 0;
@@ -977,6 +1048,9 @@ function latinRung<Ctx>(
   if (ret === 0 && i === diffSimple) ret = solver.diffSimple();
   if (ret === 0 && i === diffSet0) ret = solver.diffSet(false);
   if (ret === 0 && i === diffSet1) ret = solver.diffSet(true);
+  // The wing is a check of what the notes show, so it shares the top
+  // deductive level with the set eliminations rather than the search's.
+  if (ret === 0 && i === diffSet1) ret = solver.wing();
   // A forcing chain is a supposition, so it shares the level of the other
   // search, the recursion, and no game can place it lower.
   if (ret === 0 && i === diffRecursive) ret = solver.forcing();

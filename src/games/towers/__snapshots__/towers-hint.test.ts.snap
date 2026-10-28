@@ -10766,6 +10766,7 @@ exports[`towers: pinned hint positions > says, at each pin 1`] = `
   "set": "These 2 columns fit 5 only in the outlined cells, taking the 5 of 2 rows, so the 5 must go.",
   "single": "Every other height has been ruled out in this cell, so it can only be 4.",
   "tallestNearest": "Clue 1 sees one tower in its line, so the tallest must stand next to it: this cell must be 5.",
+  "wing": "Whatever the middle cell is, an end in line with this cell is 1, so this cell must be 3.",
 }
 `;
 

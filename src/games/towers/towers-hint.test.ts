@@ -319,59 +319,65 @@ describeHintPins({
     candidateReading: clueSum(s) % 2 === 0 ? "populate" : "implicit",
   }),
   pins: {
-    /** Held on 54 of 2058 positions walked. */
+    /** Held on 56 of 2065 positions walked. */
     populate: "5dh:///2/4///4/3///2//////3/2/",
-    /** Held on 479 of 2058 positions walked. */
+    /** Held on 477 of 2065 positions walked. */
     clean: {
       id: "5dh:2/2/3/2//////4/////1///2/2/,l1h3c",
       moves:
         '[{"type":"set","x":0,"y":4,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAll"}]',
     },
-    /** Held on 499 of 2058 positions walked. */
+    /** Held on 444 of 2065 positions walked. */
     note: {
       id: "5dx:/1/2/2////////4//////4/2/",
       moves: [{ type: "set", x: 1, y: 0, n: 5, pencil: false, autoElim: false }],
     },
-    /** Held on 1924 of 2058 positions walked. */
+    /** Held on 1926 of 2065 positions walked. */
     dup: "5de:2/2/1/5/3/2/2/3/1/3/3/1/3/2/2/2/2/1/3/2",
-    /** Held on 2046 of 2058 positions walked. */
+    /** Held on 2053 of 2065 positions walked. */
     single: {
       id: "5dh:/3///1////3/2/////2///4//,g1h3d1c",
       moves:
         '[{"type":"set","x":4,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":4}]},{"type":"set","x":1,"y":0,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":2}]}]',
     },
-    /** Held on 973 of 2058 positions walked. */
+    /** Held on 960 of 2065 positions walked. */
     regionsFull: {
       id: "5de:2/2/1/5/3/2/2/3/1/3/3/1/3/2/2/2/2/1/3/2",
       moves:
         '[{"type":"set","x":3,"y":0,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":1,"n":2,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":2,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":3,"n":4,"pencil":false,"autoElim":false}]',
     },
-    /** Held on 1442 of 2058 positions walked. */
+    /** Held on 1490 of 2065 positions walked. */
     hiddenSingle: {
       id: "5dh:///3//3/////3///4///1///",
       moves:
         '[{"type":"set","x":4,"y":1,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":4,"y":0,"n":5},{"x":0,"y":1,"n":5},{"x":1,"y":1,"n":5},{"x":2,"y":1,"n":5},{"x":3,"y":1,"n":5},{"x":4,"y":2,"n":5},{"x":4,"y":3,"n":5},{"x":4,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":4,"n":5},{"x":0,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":4,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":1,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":4}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":5},{"x":2,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":4},{"x":1,"y":3,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":3}]}]',
     },
-    /** Held on 251 of 2058 positions walked. */
+    /** Held on 292 of 2065 positions walked. */
     set: {
       id: "5dx:///2/2//3/1////2//2////4//",
       moves:
         '[{"type":"set","x":2,"y":4,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":5},{"x":2,"y":1,"n":5},{"x":2,"y":2,"n":5},{"x":2,"y":3,"n":5},{"x":0,"y":4,"n":5},{"x":1,"y":4,"n":5},{"x":3,"y":4,"n":5},{"x":4,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":5},{"x":3,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":4},{"x":3,"y":2,"n":4}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":4}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":4}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":4}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":4}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":4}]}]',
     },
-    /** Held on 57 of 2058 positions walked. */
+    /** Held on 348 of 2065 positions walked. */
+    wing: {
+      id: "5dx:/2/5//////2/4///1////2//3/",
+      moves:
+        '[{"type":"set","x":2,"y":0,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":1,"n":2,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":2,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":3,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":4,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":2,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":1,"y":0,"n":2},{"x":1,"y":0,"n":3},{"x":1,"y":0,"n":4}]},{"type":"pencilAdd","marks":[{"x":4,"y":3,"n":1},{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":3}]},{"type":"pencilAdd","marks":[{"x":4,"y":4,"n":1},{"x":4,"y":4,"n":2},{"x":4,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":4,"y":4,"n":3}]},{"type":"pencilAdd","marks":[{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":3},{"x":4,"y":1,"n":4}]},{"type":"pencilAdd","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":3}]},{"type":"set","x":1,"y":3,"n":5,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":4,"y":3,"n":1}]},{"type":"pencilAdd","marks":[{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":2},{"x":1,"y":4,"n":3},{"x":1,"y":4,"n":4}]},{"type":"pencilAdd","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2},{"x":0,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":3}]},{"type":"set","x":3,"y":1,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":3,"y":4,"n":4}]},{"type":"pencilStrike","marks":[{"x":3,"y":4,"n":2}]},{"type":"pencilAdd","marks":[{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":3,"y":0,"n":4}]},{"type":"pencilAdd","marks":[{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":2}]},{"type":"set","x":4,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":2,"n":4,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":4}]},{"type":"set","x":0,"y":1,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":0,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":2}]}]',
+    },
+    /** Held on 57 of 2065 positions walked. */
     fullLine: "5de:2/2/1/5/3/2/2/3/1/3/3/1/3/2/2/2/2/1/3/2",
-    /** Held on 107 of 2058 positions walked. */
+    /** Held on 100 of 2065 positions walked. */
     tallestNearest: "5de:2/3/1/2/3/2/1/4/3/2/2/4/1/4/2/2/2/4/1/2",
-    /** Held on 138 of 2058 positions walked. */
+    /** Held on 145 of 2065 positions walked. */
     facing: "5dh:/2//2//3/4//2////3///3////,d2b3q",
-    /** Held on 1034 of 2058 positions walked. */
+    /** Held on 974 of 2065 positions walked. */
     lineFull: {
       id: "5dx:////3/2/2/4/3//3/1////3/4///",
       moves: [{ type: "set", x: 0, y: 1, n: 5, pencil: false, autoElim: false }],
     },
-    /** Held on 630 of 2058 positions walked. */
+    /** Held on 639 of 2065 positions walked. */
     lowerBound: "5dx:/2////4//4////2//4///3///2",
-    /** Held on 968 of 2058 positions walked. */
+    /** Held on 976 of 2065 positions walked. */
     arrangement: {
       id: "5dh:///////1///3////2//2/4/1/,t3b1a",
       moves:

@@ -32,6 +32,7 @@ import {
   placedRulesOut,
   populateText,
   thisCell,
+  wingPremise,
 } from "../../engine/hint-text.ts";
 import {
   CELL,
@@ -42,7 +43,7 @@ import {
   so,
   whole,
 } from "../../engine/hint-words.ts";
-import type { ConfinedLines } from "../../engine/latin.ts";
+import type { ConfinedLines, LatinWingReason } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
 import { digitChar } from "./render.ts";
 import type { CageOrigin, SoloRegion } from "./solver.ts";
@@ -137,6 +138,12 @@ export const say = {
 
   /** Where the placement's cull strikes from. */
   dupWhere: "from the other cells",
+
+  /** A wing, whose ends each share a row, column, diagonal ("a line") or
+   * block with the struck cell: what the solver's wing counts, which a cage
+   * is not. */
+  wing: (wing: LatinWingReason, at: Point): Narration =>
+    wingPremise(wing, at, g(wing.n), "cell", "in a line or block with"),
 
   /** Every cell of `confined` that can take `n` also lies in one `target`. */
   intersect: (

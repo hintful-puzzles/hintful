@@ -504,6 +504,8 @@ function premise(
           ? say.set(reason.region, reason.cells, ns, cells)
           : say.confined(reason.lines, reason.cells, ns[0]),
       };
+    case "wing":
+      return { premise: say.wing(reason, marks[0]) };
     case "cageMinMax":
       return {
         premise: say.cageMinMax(reason.cells, reason.origin, reason.clue, ns, cells),
@@ -541,6 +543,7 @@ export const SOLO_RUNGS = [
   "hiddenSingle",
   "intersect",
   "set",
+  "wing",
   "cageSingle",
   "cageMinMax",
   "cageSums",
@@ -753,7 +756,7 @@ export const soloGame: Game<
       ring: "the cell the step fills in with a number.",
       strike: "the pencil marks the step crosses out, and so the cell they are in.",
       outline:
-        "the cells the reason rests on: a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; the only cells that several rows or columns leave for one number; or the numbered cells of a chain.",
+        "the cells the reason rests on: a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; the only cells that several rows or columns leave for one number; or a wing's “the middle cell” and “an end”.",
       stripes:
         'the row, column, block, diagonal or killer cage the sentence names, or the several rows or columns it names together: "in this block", "this killer cage", "these 2 columns".',
     },

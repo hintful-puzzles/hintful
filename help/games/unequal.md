@@ -60,6 +60,8 @@ marks, not yet ruled out by its row and column. So "a neighbor with
 nothing open one away from 6" means no number that could still go in
 the neighbor is 5 or 7, and a bar there rules 6 out.
 
+{{wing}}
+
 If you've turned on the preference that removes a number from pencil
 marks in its row and column when you place it, the hint leaves that
 tidying to the placement rather than spelling it out as a step of its

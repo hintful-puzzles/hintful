@@ -97,6 +97,7 @@ const pinned = describeHintPins({
     NUMBERS,
     { ...LETTERS, diff: DIFF_HARD },
     { ...NUMBERS, diff: DIFF_HARD },
+    { ...LETTERS, order: 4, diff: DIFF_HARD },
   ],
   kinds: {
     // A marker step previews the entry it asks for, a placement its symbol.
@@ -106,55 +107,61 @@ const pinned = describeHintPins({
     previewsNumber: (step) => typeof ghostOf(step) === "number",
   },
   pins: {
-    /** Held on 876 of 2570 positions walked. */
+    /** Held on 1036 of 3154 positions walked. */
     marker: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 410 of 2570 positions walked. */
+    /** Held on 461 of 3154 positions walked. */
     previewsCross: "5n3Bde:bXc1ObOg2113Ob",
-    /** Held on 466 of 2570 positions walked. */
+    /** Held on 575 of 3154 positions walked. */
     previewsCircle: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 621 of 2570 positions walked. */
+    /** Held on 765 of 3154 positions walked. */
     previewsNumber: {
       id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
     },
-    /** Held on 144 of 2570 positions walked. */
+    /** Held on 157 of 3154 positions walked. */
     populate: "5n3Lde:AbCAbCbBaAAaBd,y",
-    /** Held on 599 of 2570 positions walked. */
+    /** Held on 686 of 3154 positions walked. */
     clean: { id: "5n3Bde:Oa2b1bOd3b1Xc2bO", moves: [{ type: "pencilAll" }] },
-    /** Held on 2354 of 2570 positions walked. */
+    /** Held on 2848 of 3154 positions walked. */
     dup: "5n3Lde:AbCAbCbBaAAaBd,y",
-    /** Held on 2570 of 2570 positions walked. */
+    /** Held on 3154 of 3154 positions walked. */
     single: {
       id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
     },
-    /** Held on 1342 of 2570 positions walked. */
+    /** Held on 1619 of 3154 positions walked. */
     hiddenSingle: {
       id: "5n3Bde:bOa21a3b3cOaOf3a",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":3},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":3},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":3},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":3},{"x":3,"y":2,"n":3},{"x":4,"y":2,"n":2},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":3},{"x":2,"y":3,"n":3},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":2},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":3},{"x":1,"y":4,"n":3},{"x":2,"y":4,"n":3},{"x":4,"y":4,"n":2},{"x":4,"y":4,"n":3}]},{"type":"set","x":2,"y":0,"value":1},{"type":"set","x":4,"y":2,"value":1},{"type":"set","x":0,"y":0,"value":"cross"},{"type":"set","x":4,"y":1,"value":"cross"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":3,"y":0,"n":1},{"x":1,"y":2,"n":1},{"x":2,"y":2,"n":1},{"x":3,"y":2,"n":1},{"x":2,"y":3,"n":1},{"x":4,"y":3,"n":1},{"x":2,"y":4,"n":1},{"x":4,"y":4,"n":1}]},{"type":"set","x":3,"y":0,"value":"cross"},{"type":"set","x":1,"y":0,"value":"circle"},{"type":"set","x":4,"y":4,"value":"cross"},{"type":"set","x":4,"y":3,"value":"circle"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":4},{"x":4,"y":3,"n":4}]},{"type":"set","x":1,"y":0,"value":3},{"type":"set","x":4,"y":3,"value":3},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":3}]}]',
     },
-    /** Held on 440 of 2570 positions walked. */
+    /** Held on 451 of 3154 positions walked. */
     set: {
       id: "5n3Ldx:bCAbBBCbAdCCBa,y",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":2},{"x":4,"y":1,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":2},{"x":1,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":0,"n":1}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":3},{"x":2,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":2,"n":2},{"x":4,"y":2,"n":2}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":4,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":2}]}]',
     },
-    /** Held on 981 of 2570 positions walked. */
+    /** Held on 344 of 3154 positions walked. */
+    wing: {
+      id: "4n3Ldx:CdCcCaAaBCa,p",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":3},{"x":0,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":3},{"x":3,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":3},{"x":1,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":1}]},{"type":"set","x":0,"y":1,"value":3},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":3}]},{"type":"set","x":0,"y":0,"value":"cross"},{"type":"set","x":1,"y":0,"value":"circle"},{"type":"set","x":2,"y":0,"value":"circle"},{"type":"set","x":3,"y":0,"value":"circle"},{"type":"set","x":0,"y":2,"value":"circle"},{"type":"set","x":0,"y":3,"value":"circle"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":4},{"x":2,"y":0,"n":4},{"x":3,"y":0,"n":4},{"x":0,"y":2,"n":4},{"x":0,"y":3,"n":4}]}]',
+    },
+    /** Held on 1135 of 3154 positions walked. */
     borderNear: { id: "5n3Lde:AbCAbCbBaAAaBd,y", moves: [{ type: "pencilAll" }] },
-    /** Held on 984 of 2570 positions walked. */
+    /** Held on 1184 of 3154 positions walked. */
     borderFar: {
       id: "5n3Lde:AbCAbCbBaAAaBd,y",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3}]}]',
     },
-    /** Held on 2228 of 2570 positions walked. */
+    /** Held on 2758 of 3154 positions walked. */
     countHolesDone: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 2211 of 2570 positions walked. */
+    /** Held on 2739 of 3154 positions walked. */
     countLettersDone: "5n3Bde:bXc1ObOg2113Ob",
-    /** Held on 1976 of 2570 positions walked. */
+    /** Held on 2488 of 3154 positions walked. */
     crossNaked: {
       id: "5n3Lde:aBaAbAaBcCaCBd,y",
       moves:
@@ -170,7 +177,7 @@ const pinned = describeHintPins({
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":2},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":2},{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3},{"x":2,"y":1,"n":1},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":2},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":3,"y":2,"n":2},{"x":4,"y":2,"n":1},{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":3},{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":3},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":3},{"x":0,"y":4,"n":3},{"x":1,"y":4,"n":1},{"x":3,"y":4,"n":2},{"x":4,"y":4,"n":1}]},{"type":"set","x":3,"y":1,"value":3},{"type":"set","x":3,"y":3,"value":"cross"},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":3},{"x":3,"y":2,"n":3},{"x":3,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":4}]}]',
     },
-    /** Held on 2301 of 2570 positions walked. */
+    /** Held on 2851 of 3154 positions walked. */
     circleXNote: {
       id: "5n3Bde:Xb3aXb2c1b2Xd2bO",
       moves:

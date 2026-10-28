@@ -247,31 +247,51 @@ describe("latin solver configuration", () => {
     expect([...grid]).toEqual([2, 1, 1, 2]);
   });
 
-  it("follows a forcing chain only at the recursive level", () => {
-    // A chain is a supposition, so no game may grade it below its search.
-    // (0,0) is 2 or 1; if 2, (1,0) is 3 and (1,1) is 1; either way (0,1),
-    // in line with both ends, cannot be 1. No line holds a set to say so.
-    const seed = (s: LatinSolver): void => {
-      const keep = (x: number, y: number, digits: number[]) => {
+  /** A blank 4×4 whose `cells` keep only their listed digits. */
+  const seeded =
+    (cells: [number, number, number[]][]) =>
+    (s: LatinSolver): void => {
+      for (const [x, y, digits] of cells)
         for (let n = 1; n <= 4; n++)
           if (!digits.includes(n)) s.cube[s.cubepos(x, y, n)] = 0;
-      };
-      keep(0, 0, [1, 2]);
-      keep(1, 0, [2, 3]);
-      keep(1, 1, [1, 3]);
     };
-    const cube = (maxdiff: number): Uint8Array => {
-      const out = new Uint8Array(4 * 4 * 4);
-      latinSolver(new Uint8Array(16), 4, { ...cfg(maxdiff), seed, cubeOut: out });
-      return out;
-    };
+  const cubeAt = (seed: (s: LatinSolver) => void, maxdiff: number): Uint8Array => {
+    const out = new Uint8Array(4 * 4 * 4);
+    latinSolver(new Uint8Array(16), 4, { ...cfg(maxdiff), seed, cubeOut: out });
+    return out;
+  };
+
+  it("weighs a wing at the single-number set level", () => {
+    // (1,0) is 2 or 3; if 2, (0,0) in its row is 1, and if 3, (1,1) in its
+    // column is 1. Either way (0,1), in line with both, cannot be 1, and no
+    // line holds a set to say so.
+    const seed = seeded([
+      [0, 0, [1, 2]],
+      [1, 0, [2, 3]],
+      [1, 1, [1, 3]],
+    ]);
     const oneAt01 = (0 * 4 + 1) * 4 + 1 - 1;
-    expect(cube(3)[oneAt01]).not.toBe(0);
+    expect(cubeAt(seed, 1)[oneAt01]).not.toBe(0);
+    expect(cubeAt(seed, 2)[oneAt01]).toBe(0);
+  });
+
+  it("follows a forcing chain only at the recursive level", () => {
+    // A chain is a supposition, so no game may grade it below its search.
+    // (0,0) is 1 or 2; if 2, (2,0) is 3, (2,2) is 4 and (3,2) is 1, so (0,2),
+    // in line with both ends, cannot be 1. Four cells long, it is no wing.
+    const seed = seeded([
+      [0, 0, [1, 2]],
+      [2, 0, [2, 3]],
+      [2, 2, [3, 4]],
+      [3, 2, [1, 4]],
+    ]);
+    const oneAt02 = (0 * 4 + 2) * 4 + 1 - 1;
+    expect(cubeAt(seed, 3)[oneAt02]).not.toBe(0);
     const chained = new LatinSolver(4);
     chained.alloc(new Uint8Array(16));
     seed(chained);
-    expect(chained.forcing()).toBe(1);
-    expect(chained.cubeGet(0, 1, 1)).toBe(false);
+    while (chained.forcing() > 0);
+    expect(chained.cubeGet(0, 2, 1)).toBe(false);
   });
 
   it("re-runs the game's validator on a completed grid, and reports failure", () => {

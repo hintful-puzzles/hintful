@@ -74,6 +74,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `answer-search.ts` — a deductive game's Unreasonable tier | some boards need trial and error, or a generator wants a second answer |
 | – `sections.ts` — contract sections and the draft label | your game leaves out a contract section |
 | – `deduction-record.ts` — the recorded-firing shape | your solver records firings for a candidate hint |
+| – `wing.ts` — the XY- and XYZ-wing | your notes are candidate sets |
 | – `firing-replay.ts` — the premise audit | a candidate game has a solver of its own |
 | Hint machinery | you are writing a hint |
 | – `hint-plan.ts` — the plan-accumulation loop | a hint takes one forced firing at a time |
@@ -646,6 +647,19 @@ one firing together, so one firing becomes one hint step. A reason's
 `reads` names the cells the deduction reads beyond what the game's words
 outline, and the candidate walk makes them premise. Exemplar:
 `rome/solver.ts`.
+
+### `wing.ts` — the XY- and XYZ-wing
+
+`weighWing` finds Sudoku's XY- and XYZ-wing over any elements that "see"
+each other: a middle element, an end per value it can take, each down to
+that value and `x`, and a target that sees every end, and the middle too
+where the middle could be `x`. The game supplies the elements, their
+candidate masks and the relation. It is a Check: each value is placed and
+the notes it touches read, nothing propagated. `latin.ts` runs it at the
+top deductive level and records a `LatinWingReason`, worded by
+`wingPremise` (`hint-text.ts`); Solo and Map call it with their own
+relations. A game whose hint can be a wing writes `{{wing}}` on its help
+page. Exemplar: `map/solver.ts`.
 
 ### `firing-replay.ts` — the premise audit
 

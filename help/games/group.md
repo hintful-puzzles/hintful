@@ -94,6 +94,8 @@ identity; the hint then crosses out that element's *identity marks*,
 the pencil mark in each cell of its row and column that would have
 made it the identity there.
 
+{{wing}}
+
 Rearranging the rows and columns doesn't disturb a hint: its marks
 follow the elements to wherever you've dragged them. On an Unreasonable
 board, deduction can run out before the grid is full; the hint says so

@@ -285,13 +285,15 @@ describe("salad solver", () => {
 });
 
 // Two symbols at Normal: Letters clued on the border alone, and the two
-// smallest Numbers boards. And a 4x4 of three Letters, whose Normal needed a
-// forcing chain.
-describeAbsentTiers(saladGame, ["3n2Ldx", "6n2Ldx", "3n2Bdx", "4n2Bdx", "4n3Ldx"]);
+// smallest Numbers boards.
+describeAbsentTiers(saladGame, ["3n2Ldx", "6n2Ldx", "3n2Bdx", "4n2Bdx"]);
 
 // The first Letters size that may clue its grid, and the Easy cell rare
 // enough to have set the border-only bound.
 describeDealtTiers(saladGame, ["8n2Ldx", "7n2Lde"], { deals: 2 });
+
+// A 4x4 of three Letters at Normal, whose boards need a wing.
+describeDealtTiers(saladGame, ["4n3Ldx"]);
 
 describe("salad with two symbols at Normal", () => {
   const refusal = (id: string): string | null =>
@@ -313,6 +315,7 @@ describe("salad with two symbols at Normal", () => {
     "8n2Bde",
     "5n2Lde",
     "5n3Ldx",
+    "4n3Ldx",
     "5n2Bde",
   ])("%s is dealt", (id) => {
     expect(refusal(id)).toBeNull();

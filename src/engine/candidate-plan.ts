@@ -464,14 +464,15 @@ export type LatinCandidatePlan<
 };
 
 /** The rungs every row/column Latin plan can speak: the walk's own, the three
- * singles, and the generic set elimination `latin.ts` records. A game's list
- * is these and its own reasons' kinds. */
+ * singles, and the generic set elimination and wing `latin.ts` records. A
+ * game's list is these and its own reasons' kinds. */
 export const LATIN_RUNGS = [
   ...CANDIDATE_RUNGS,
   "single",
   "regionsFull",
   "hiddenSingle",
   "set",
+  "wing",
 ] as const;
 
 /** {@link LATIN_RUNGS} for a plan on the populate reading alone

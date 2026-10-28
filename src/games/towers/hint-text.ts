@@ -17,7 +17,12 @@
  * `narrate`); this file decides only how it reads.
  */
 
-import { confinedPremise, placedRulesOut, thisCell } from "../../engine/hint-text.ts";
+import {
+  confinedPremise,
+  placedRulesOut,
+  thisCell,
+  wingPremise,
+} from "../../engine/hint-text.ts";
 import {
   CELL,
   mark,
@@ -28,7 +33,7 @@ import {
   so,
   whole,
 } from "../../engine/hint-words.ts";
-import type { ConfinedLines } from "../../engine/latin.ts";
+import type { ConfinedLines, LatinWingReason } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
 
 /** A clue and the line it sees along, as the sentence names them: the clue's
@@ -147,4 +152,8 @@ export const say = {
    * twice, and the qualified sentence runs past the narration limit. */
   confined: (lines: ConfinedLines, cells: readonly Point[], n: number): Narration =>
     confinedPremise(lines, cells, String(n)),
+
+  /** A wing, in the engine's words for it, the height bare as `confined`'s. */
+  wing: (wing: LatinWingReason, at: Point): Narration =>
+    wingPremise(wing, at, String(wing.n)),
 };

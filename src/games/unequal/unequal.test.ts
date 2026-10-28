@@ -158,7 +158,7 @@ describe("unequal generator", () => {
   // The cells where a board of the tier is rare: most deals take more than
   // fifty tries, which is where the generator used to hand back the tier below.
   it.each([
-    [3, "unequal", "recursive"],
+    [3, "unequal", "extreme"],
     [4, "unequal", "tricky"],
     [5, "adjacent", "extreme"],
     [6, "adjacent", "extreme"],
@@ -175,12 +175,12 @@ describe("a 3x3's tiers", () => {
     const refusal = (diff: UnequalParams["diff"]) =>
       paramsError(unequalGame, { order: 3, mode: "unequal", diff }, true);
     expect(refusal("tricky")).toBe("No 3x3 puzzle is Tricky.");
-    expect(refusal("extreme")).toBe("No 3x3 puzzle is Hard.");
+    expect(refusal("recursive")).toBe("No 3x3 puzzle is Unreasonable.");
     // Dealt in "deals a rare tier" above.
-    expect(refusal("recursive")).toBeNull();
+    expect(refusal("extreme")).toBeNull();
   });
 
-  describeAbsentTiers(unequalGame, ["3dk", "3dx"]);
+  describeAbsentTiers(unequalGame, ["3dk", "3dr"]);
 });
 
 // --- moves -----------------------------------------------------------------

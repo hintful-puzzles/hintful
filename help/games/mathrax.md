@@ -35,6 +35,8 @@ More information: https://www.janko.at/Raetsel/Mathrax/index.htm
 
 The hint names a clue as it is drawn ("the 7+ clue", "the 2÷ clue", "the = clue"), and "the 3 across it" is the number in the cell diagonally opposite across that clue. A number is *open* in a cell while it is still possible there: in the cell's pencil marks, or, in a cell with no marks, not yet ruled out by its row and column. So "nothing open across the 7+ clue adds with 1 to make 7" means the cell across can't be 6, so this cell can't be 1.
 
+{{wing}}
+
 If you've turned on the preference that removes a number from pencil marks in its row and column when you place it, the hint leaves that tidying to the placement rather than spelling it out as a step of its own. On an Unreasonable board, deduction can run out before the grid is full; the hint says so rather than guessing.
 
 ## Mathrax parameters
