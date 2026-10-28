@@ -63,7 +63,7 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
             ${this.error}
           </wa-callout>
         `
-      : this.puzzle?.totalMoves &&
+      : this.puzzle?.played &&
           !this.otherPuzzle &&
           this.gameid !== this.puzzle.currentGameId
         ? html`

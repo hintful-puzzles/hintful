@@ -117,34 +117,25 @@ export class PuzzleHistory extends SignalWatcher(LitElement) {
       return items;
     }
     const endMove = this.puzzle.totalMoves;
-    const restarts = new Set(this.puzzle.restarts);
 
     // The named moves, each written over by a later line that names the same
-    // move more usefully. A restart is one step of the history, so the moves
-    // before it stay on the line above it.
+    // move more usefully.
     const named = new Map<number, Parameters<typeof this.renderHistoryItem>[0]>();
     if (endMove > 0) named.set(endMove, { label: "Last move", move: endMove });
     named.set(0, { label: "Start", move: 0 });
-    for (const move of restarts) {
-      named.set(move, {
-        label: html`Started over <small>(${move + 1})</small>`,
-        move,
-        icon: "restart-game",
-      });
-    }
     for (const move of this.puzzle.checkpoints) {
       named.set(move, {
-        label: html`Checkpoint <small>(${move + 1})</small>${
-          restarts.has(move) ? ", at a restart" : nothing
-        }`,
+        label: html`Checkpoint <small>(${move + 1})</small>`,
         move,
         icon: "history-checkpoint",
         canDelete: true,
       });
     }
 
-    if (this.puzzle.boardBefore) {
-      items.push(this.renderOtherBoard("before", "Previous board", "undo"));
+    const before = this.puzzle.boardBefore;
+    if (before !== null) {
+      const label = before === "restart" ? "Before starting over" : "Previous board";
+      items.push(this.renderOtherBoard("before", label, "undo"));
     }
     let lastMove = -1;
     for (const move of [...named.keys()].sort((a, b) => a - b)) {
@@ -156,14 +147,16 @@ export class PuzzleHistory extends SignalWatcher(LitElement) {
       );
       lastMove = move;
     }
-    if (this.puzzle.boardAfter) {
-      items.push(this.renderOtherBoard("after", "Next board", "redo"));
+    const after = this.puzzle.boardAfter;
+    if (after !== null) {
+      const label = after === "restart" ? "Started over" : "Next board";
+      items.push(this.renderOtherBoard("after", label, "redo"));
     }
 
     return items;
   }
 
-  /** The board kept one Undo before this one's start, or one Redo after its
+  /** The run kept one Undo before this one's start, or one Redo after its
    * last move (`Puzzle.goToOtherBoard`). */
   private renderOtherBoard(which: "before" | "after", label: string, icon: string) {
     return html`

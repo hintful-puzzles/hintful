@@ -83,6 +83,7 @@ import type {
   EncodedParams,
   GameStatus,
   KeyLabel,
+  OtherRun,
   Point,
   PresetMenuEntry,
   PuzzleStaticAttributes,
@@ -117,15 +118,28 @@ const asChecked = (v: unknown): boolean => v === true || v === "true" || v === 1
  * state, and a restart is where it begins again, so each restart keeps the
  * flag the cursor left behind and the two are exchanged whenever the cursor
  * crosses.
+ *
+ * A restart also begins a run, play from a fresh board, which the player sees
+ * as a board of its own: its moves are counted from it, and it is numbered as
+ * a board is (`serial`), so what the app keeps per board follows the run.
  */
 class Restart {
-  constructor(public cheated: boolean) {}
+  constructor(
+    public cheated: boolean,
+    readonly serial: number,
+  ) {}
 }
+
+/** How many boards Undo can reach back across, and Redo forward. Each is kept
+ * as a save of itself, so the bound is on memory; a board's own log, restarts
+ * included, is not bounded. */
+const KEPT_BOARDS = 100;
 
 /** The board in play, as it is left when another replaces it. */
 interface BoardLeft {
   save: Uint8Array<ArrayBuffer>;
-  serial: number;
+  /** The numbers of its runs, in order: the board's own, then its restarts'. */
+  serials: readonly number[];
   id: string;
   /** Whether its log holds anything. */
   played: boolean;
@@ -160,8 +174,8 @@ interface OpenPress<State, Move, Ui> {
   moveLog: (Move | Restart)[];
   joined: boolean[];
   pos: number;
-  replaced: BoardLeft | null;
-  undone: BoardLeft | null;
+  before: readonly BoardLeft[];
+  after: readonly BoardLeft[];
 }
 
 export type NotifyChange = (message: ChangeNotification) => void;
@@ -204,10 +218,10 @@ export interface EngineCore {
    * last restart. */
   restartGame(): void;
   /** Step back one move. From a board's first position, bring back the board
-   * it replaced while that one is kept: until a move is made on this one. */
+   * it replaced, while one is kept. */
   undo(): void;
   /** Step forward one move. From a board's last position, return to the board
-   * an undo left, until a move is made on this one. */
+   * an undo left, until a step is made on this one. */
   redo(): void;
   solve(): string | null;
   hint(): string | null;
@@ -361,23 +375,25 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * (`Game.rulesOut`), so Undo and Redo cross the two together. */
   private joined: boolean[] = [];
   private pos = 0;
-  /** The board this one replaced, which Undo at this board's first position
-   * brings back. One deep, never serialized, and dropped at the first move
-   * made here. Kept in the engine because every way a board is replaced ends
-   * in `startFrom`. */
-  private replaced: BoardLeft | null = null;
-  /** The board an Undo left for the one it replaced, which Redo at this
-   * board's last position returns to. Dropped as `replaced` is. */
-  private undone: BoardLeft | null = null;
+  /** The boards this one replaced, the last of them the one Undo at this
+   * board's first position brings back. Never serialized: another board is no
+   * part of this one's save. Kept in the engine because every way a board is
+   * replaced ends in `startFrom`. */
+  private before: readonly BoardLeft[] = [];
+  /** The boards Undo left, the last of them the one Redo at this board's last
+   * position returns to. Dropped by a step made here, as the moves ahead of
+   * the cursor are. */
+  private after: readonly BoardLeft[] = [];
   /** A save's log is being replayed. Its steps are made as a player's, and
    * none is reported: the board the app hears of is the one the save holds,
    * once, with its own position and its own neighbors. */
   private replaying = false;
-  /** Which board is in play, counted from the first this midend began. A
-   * board brought back by Undo or Redo comes back under its own number, so
-   * the app can keep what it holds per board (its checkpoints) with the board. */
+  /** Which board is in play, counted from the first this midend began: the
+   * number of its first run, where each restart numbers its own. A board
+   * brought back by Undo or Redo comes back under its own numbers, so the app
+   * can keep what it holds per run (its checkpoints) with the run. */
   private serial = 0;
-  /** The boards begun so far: the last serial handed out. */
+  /** The runs begun so far: the last number handed out. */
   private boards = 0;
   private ui!: Ui;
   /** The pointer press whose gesture is still open, or null. Dropped at the
@@ -721,7 +737,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (this.history.length === 0) return null;
     return {
       save: this.saveGame(),
-      serial: this.serial,
+      serials: [
+        this.serial,
+        ...this.moveLog.flatMap((entry) =>
+          entry instanceof Restart ? [entry.serial] : [],
+        ),
+      ],
       id: this.boardId,
       played: this.moveLog.length > 0,
     };
@@ -737,8 +758,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   /** Begin play on `initial`, the state `desc` builds under `params`, in
-   * place of the board `left`. `serial` is given where the board has been in
-   * play before. */
+   * place of the board `left`, which joins the boards `prior` kept behind it.
+   * `serial` is given where the board has been in play before. */
   private startFrom(
     params: Params,
     desc: string,
@@ -746,6 +767,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     left: BoardLeft | null,
     aux?: string,
     serial: number = this.boards + 1,
+    prior: readonly BoardLeft[] = this.before,
   ): void {
     this.serial = serial;
     this.boards = Math.max(this.boards, serial);
@@ -756,8 +778,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.moveLog = [];
     this.joined = [];
     this.pos = 0;
-    this.replaced = this.keep(left);
-    this.undone = null;
+    const kept = this.keep(left);
+    this.before = kept === null ? prior : [...prior, kept].slice(-KEPT_BOARDS);
+    this.after = [];
     this.ui = this.game.newUi(initial);
     // Upstream `game_changed_state` with oldstate == NULL: let a game
     // whose Ui tracks the current state seed it from the fresh board.
@@ -787,7 +810,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // Nothing has been played since the board started or was last restarted,
     // so a step here would change nothing and cost the moves ahead of it.
     if (this.pos === 0 || this.moveLog[this.pos - 1] instanceof Restart) return;
-    this.restart(new Restart(this.cheated));
+    this.restart(new Restart(this.cheated, ++this.boards));
     this.cheated = false;
     this.clearHint();
     this.clearAnimation();
@@ -810,9 +833,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.stateReplaced(prev, start);
   }
 
-  /** Make `next` the step after the cursor, reached by `entry`. A step made
-   * after an undo drops what was ahead of it, and any step made on this board
-   * drops the board kept from before it and the one kept from after. */
+  /** Make `next` the step after the cursor, reached by `entry`. A step drops
+   * what was ahead of the cursor: the steps, and the boards an undo left. */
   private record(next: State, entry: Move | Restart, joins = false): void {
     this.history = this.history.slice(0, this.pos + 1);
     this.moveLog = this.moveLog.slice(0, this.pos);
@@ -821,8 +843,18 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.moveLog.push(entry);
     this.joined.push(joins);
     this.pos = this.history.length - 1;
-    this.replaced = null;
-    this.undone = null;
+    this.after = [];
+  }
+
+  /** The first and last positions of the run the cursor is in: the stretch
+   * of the history between two restarts. */
+  private get run(): { first: number; last: number } {
+    let first = this.pos;
+    while (first > 0 && !(this.moveLog[first - 1] instanceof Restart)) first--;
+    let last = this.pos;
+    while (last < this.moveLog.length && !(this.moveLog[last] instanceof Restart))
+      last++;
+    return { first, last };
   }
 
   // --- moves / undo / redo ----------------------------------------
@@ -919,8 +951,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         moveLog: this.moveLog,
         joined: this.joined,
         pos: this.pos,
-        replaced: this.replaced,
-        undone: this.undone,
+        before: this.before,
+        after: this.after,
       };
       this.gesture = "open";
     } else if (this.gesture === "ended") {
@@ -958,8 +990,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       this.moveLog = press.moveLog;
       this.joined = press.joined;
       this.pos = press.pos;
-      this.replaced = press.replaced;
-      this.undone = press.undone;
+      this.before = press.before;
+      this.after = press.after;
       // As Undo does: the plan was made for, or advanced by, a move that is
       // no longer on the board.
       this.clearHint();
@@ -1205,15 +1237,24 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       while (this.pos > 0 && this.joined[this.pos]);
     }
     // The board undone from is one Redo away, at the position it was left in.
-    else if (this.replaced !== null)
-      this.returnTo(this.replaced, null, this.boardLeft());
+    else {
+      const back = this.before.at(-1);
+      const left = this.boardLeft();
+      if (back !== undefined && left !== null)
+        this.returnTo(back, this.before.slice(0, -1), [...this.after, left]);
+    }
   }
 
   redo(): void {
     if (this.pos < this.history.length - 1) {
       do this.step(1);
       while (this.pos < this.history.length - 1 && this.joined[this.pos]);
-    } else if (this.undone !== null) this.returnTo(this.undone, this.boardLeft(), null);
+    } else {
+      const ahead = this.after.at(-1);
+      const left = this.boardLeft();
+      if (ahead !== undefined && left !== null)
+        this.returnTo(ahead, [...this.before, left], this.after.slice(0, -1));
+    }
   }
 
   /** Move the cursor one step along the history. */
@@ -1233,14 +1274,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.afterTransition();
   }
 
-  /** Put the board saved as `board` back in play, between the boards one Undo
-   * and one Redo away from it. */
+  /** Put the board saved as `board` back in play, between the boards kept
+   * before and after it. */
   private returnTo(
     board: BoardLeft,
-    replaced: BoardLeft | null,
-    undone: BoardLeft | null,
+    before: readonly BoardLeft[],
+    after: readonly BoardLeft[],
   ): void {
-    const error = this.load(board.save, () => ({ replaced, undone }), board.serial);
+    const error = this.load(board.save, { before, after }, board.serials);
     if (error !== null) {
       throw new Error(
         `${this.game.id}: a board kept for Undo did not reopen: ${error}`,
@@ -2234,23 +2275,17 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   loadGame(data: Uint8Array): string | null {
-    return this.load(
-      data,
-      (left) => ({ replaced: this.keep(left), undone: null }),
-      this.boards + 1,
-    );
+    return this.load(data, null, []);
   }
 
-  /** Open the save `data` in place of the board in play, as board `serial`.
-   * `neighbors` says which boards are then one Undo and one Redo away, given
-   * the board left; it is asked once the save's board is the one in play. */
+  /** Open the save `data` in place of the board in play, its runs numbered
+   * `serials` and each run past those a new number. `kept` is the boards then
+   * kept before and after it, or `null` for a board the player opened: the
+   * board left joins those before, and none is after. */
   private load(
     data: Uint8Array,
-    neighbors: (left: BoardLeft | null) => {
-      replaced: BoardLeft | null;
-      undone: BoardLeft | null;
-    },
-    serial: number,
+    kept: { before: readonly BoardLeft[]; after: readonly BoardLeft[] } | null,
+    serials: readonly number[],
   ): string | null {
     let env: SaveEnvelope;
     try {
@@ -2289,6 +2324,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.params = this.withBoardTier(env.params, params, env.desc);
     const deMove = this.game.deserializeMove ?? ((raw: unknown) => raw as Move);
     const restarts = new Map(env.restarts?.map((r) => [r.at, r.cheated]));
+    const prior = this.before;
+    const serial = serials[0] ?? this.boards + 1;
     this.replaying = true;
     try {
       this.startFrom(
@@ -2298,11 +2335,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         left,
         undefined,
         serial,
+        prior,
       );
+      let run = 0;
       env.moves.forEach((raw, at) => {
         const cheated = restarts.get(at);
         if (cheated === undefined) this.applyMove(deMove(raw));
-        else this.restart(new Restart(cheated));
+        else this.restart(new Restart(cheated, serials[++run] ?? ++this.boards));
       });
     } catch (e) {
       this.replaying = false;
@@ -2321,13 +2360,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         left,
         undefined,
         serial,
+        prior,
       );
       return `Could not restore this saved game: ${(e as Error).message}`;
     } finally {
       this.replaying = false;
     }
-    // The replay made every step as a player's, which drops these.
-    ({ replaced: this.replaced, undone: this.undone } = neighbors(left));
+    // The replay made every step as a player's, which drops the boards after.
+    if (kept !== null) ({ before: this.before, after: this.after } = kept);
     const joined = new Set(env.joined);
     this.joined = this.moveLog.map((_, at) => joined.has(at));
     this.pos = Math.min(env.pos, this.history.length - 1);
@@ -2514,20 +2554,23 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     });
   }
 
+  /** The player is told of runs: the moves are counted from the run's fresh
+   * board, and the runs either side are named by how they were begun. */
   private emitStateChange(): void {
+    const { first, last } = this.run;
+    const begun = this.moveLog[first - 1];
+    const other = (restart: boolean, board: boolean): OtherRun | null =>
+      restart ? "restart" : board ? "board" : null;
     this.emit({
       type: "game-state-change",
       status: this.currentStatus(),
-      currentMove: this.pos,
-      totalMoves: this.history.length - 1,
-      canUndo: this.pos > 0 || this.replaced !== null,
-      canRedo: this.pos < this.history.length - 1 || this.undone !== null,
-      restarts: this.moveLog.flatMap((entry, i) =>
-        entry instanceof Restart ? [i + 1] : [],
-      ),
-      board: this.serial,
-      boardBefore: this.replaced !== null,
-      boardAfter: this.undone !== null,
+      currentMove: this.pos - first,
+      totalMoves: last - first,
+      canUndo: this.pos > 0 || this.before.length > 0,
+      canRedo: this.pos < this.history.length - 1 || this.after.length > 0,
+      board: begun instanceof Restart ? begun.serial : this.serial,
+      boardBefore: other(first > 0, this.before.length > 0),
+      boardAfter: other(last < this.moveLog.length, this.after.length > 0),
       hasPencilMarks: this.hasPencilMarks(),
       ...(this.game.encodeUi ? { uiState: this.game.encodeUi(this.ui) } : {}),
     });

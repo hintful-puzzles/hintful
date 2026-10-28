@@ -829,7 +829,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     });
     if (dialog && !dialog.open) {
       const puzzle = this.shadowRoot?.querySelector("puzzle-context")?.puzzle;
-      dialog.gameInProgress = (puzzle?.totalMoves ?? 0) > 0;
+      dialog.gameInProgress = puzzle?.played ?? false;
       dialog.open = true;
     }
   }
@@ -1324,7 +1324,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         // not change. Not an autosave — see `PuzzleSettings.lastGameId`.
         await settings.setLastGameId(puzzle.puzzleId, puzzle.currentGameId);
       }
-      if (puzzle.totalMoves > 0 && !puzzle.isSolved) {
+      if (puzzle.played && !puzzle.isSolved) {
         // Wait to autosave until the user has made at least one actual move,
         // to avoid autosaving from just browsing through puzzles.
         this.autoSaveFilename ??= savedGames.makeAutoSaveFilename();

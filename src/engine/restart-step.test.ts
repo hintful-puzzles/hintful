@@ -1,6 +1,7 @@
 /**
  * A restart is one step of the history: Undo crosses it back to the board as it
- * was played, Redo crosses it forward again, and a save holds it.
+ * was played, Redo crosses it forward again, and a save holds it. The player is
+ * told of runs: the moves are counted from the restart, which is no move.
  *
  * The fake game is a counter, so a position is one number and every claim here
  * is about *which* position the cursor is on and what the midend says of it.
@@ -28,18 +29,21 @@ function driven(target = 9) {
 }
 
 describe("a restart is a step of the history", () => {
-  it("adds a step to the board as it started, with the moves behind it", () => {
+  it("adds a step to the board as it started, counted as no move", () => {
     const h = driven();
     h.inc(2);
     h.m.restartGame();
     expect(h.count()).toBe("count=0");
     expect(h.state()).toMatchObject({
-      currentMove: 3,
-      totalMoves: 3,
+      currentMove: 0,
+      totalMoves: 0,
       canUndo: true,
       canRedo: false,
-      restarts: [3],
+      boardBefore: "restart",
+      boardAfter: null,
     });
+    h.inc();
+    expect(h.state()).toMatchObject({ currentMove: 1, totalMoves: 1 });
   });
 
   it("undo returns the board as it was, and redo restarts again", () => {
@@ -48,14 +52,33 @@ describe("a restart is a step of the history", () => {
     h.m.restartGame();
     h.m.undo();
     expect(h.count()).toBe("count=2");
-    expect(h.state()).toMatchObject({ currentMove: 2, totalMoves: 3, canRedo: true });
+    expect(h.state()).toMatchObject({
+      currentMove: 2,
+      totalMoves: 2,
+      canRedo: true,
+      boardBefore: null,
+      boardAfter: "restart",
+    });
     // The moves behind the restart are still moves: undo goes on through them.
     h.m.undo();
     expect(h.count()).toBe("count=1");
     h.m.redo();
     h.m.redo();
     expect(h.count()).toBe("count=0");
-    expect(h.state()).toMatchObject({ currentMove: 3, canRedo: false });
+    expect(h.state()).toMatchObject({ currentMove: 0, canRedo: false });
+  });
+
+  it("counts each run apart, with the moves ahead of the cursor in its run", () => {
+    const h = driven();
+    h.inc(3);
+    h.m.restartGame();
+    h.inc(2);
+    h.m.undo();
+    expect(h.state()).toMatchObject({ currentMove: 1, totalMoves: 2 });
+    h.m.undo();
+    h.m.undo();
+    h.m.undo();
+    expect(h.state()).toMatchObject({ currentMove: 2, totalMoves: 3 });
   });
 
   it("a move made after undoing a restart drops the restart", () => {
@@ -65,17 +88,24 @@ describe("a restart is a step of the history", () => {
     h.m.undo();
     h.inc();
     expect(h.count()).toBe("count=3");
-    expect(h.state()).toMatchObject({ totalMoves: 3, canRedo: false, restarts: [] });
+    expect(h.state()).toMatchObject({
+      totalMoves: 3,
+      canRedo: false,
+      boardAfter: null,
+    });
   });
 
   it("does nothing where nothing has been played since the start or a restart", () => {
     const h = driven();
     h.m.restartGame();
-    expect(h.state()).toMatchObject({ totalMoves: 0, restarts: [] });
+    expect(h.state()).toMatchObject({ totalMoves: 0, boardBefore: null });
     h.inc();
     h.m.restartGame();
+    const run = h.state()?.board;
     h.m.restartGame();
-    expect(h.state()).toMatchObject({ totalMoves: 2, restarts: [2] });
+    expect(h.state()).toMatchObject({ totalMoves: 0, board: run });
+    h.m.undo();
+    expect(h.state()).toMatchObject({ currentMove: 1, boardBefore: null });
   });
 
   it("at the start with moves ahead, keeps the moves ahead", () => {
@@ -193,7 +223,11 @@ describe("a save holding a restart", () => {
     const b = driven();
     expect(b.m.loadGame(a.m.saveGame())).toBeNull();
     expect(b.count()).toBe("count=1");
-    expect(b.state()).toMatchObject({ currentMove: 3, totalMoves: 3, restarts: [2] });
+    expect(b.state()).toMatchObject({
+      currentMove: 1,
+      totalMoves: 1,
+      boardBefore: "restart",
+    });
     b.m.undo();
     b.m.undo();
     expect(b.count()).toBe("count=3");
@@ -223,8 +257,9 @@ describe("a save holding a restart", () => {
     expect(b.count()).toBe("count=3");
     expect(b.state()).toMatchObject({
       currentMove: 1,
-      totalMoves: 3,
+      totalMoves: 1,
       canRedo: true,
+      boardAfter: "restart",
       status: "solved-with-help",
     });
     b.m.redo();
@@ -249,7 +284,11 @@ describe("a save holding a restart", () => {
     const b = driven();
     expect(b.m.loadGame(encodeSave(v2 as never))).toBeNull();
     expect(b.count()).toBe("count=1");
-    expect(b.state()).toMatchObject({ currentMove: 1, totalMoves: 2, restarts: [] });
+    expect(b.state()).toMatchObject({
+      currentMove: 1,
+      totalMoves: 2,
+      boardAfter: null,
+    });
   });
 });
 

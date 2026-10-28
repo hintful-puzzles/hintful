@@ -80,24 +80,29 @@ export type NotifyGameIdChange = {
   currentGameId: string;
 };
 
+/** Which run lies one Undo before a run's first position, or one Redo after
+ * its last: the same board before or after a Start over, or another board. */
+export type OtherRun = "restart" | "board";
+
 export type NotifyGameStateChange = {
   type: "game-state-change";
   status: "ongoing" | "solved" | "solved-with-help" | "lost";
+  /** The position and the moves of the run in play, play from a fresh board
+   * (a New game, a loaded or shared one, or a Start over), counted from it. */
   currentMove: number;
   totalMoves: number;
   canUndo: boolean;
   canRedo: boolean;
-  /** The positions in the history that a restart reached, in order: each is
-   * the board as it started, with what was played before it still behind it. */
-  restarts: number[];
-  /** Which board this is, among those this page has had in play. It changes
-   * when the board is replaced, and a board brought back by Undo or Redo
-   * comes back under the number it had. */
+  /** Which run this is, among those this page has had in play. It changes
+   * when the board is replaced or started over, and a run brought back by
+   * Undo or Redo comes back under the number it had. */
   board: number;
-  /** The board this one replaced is kept, and Undo at move 0 brings it back. */
-  boardBefore: boolean;
-  /** The board an Undo left is kept, and Redo at the last move returns to it. */
-  boardAfter: boolean;
+  /** What Undo at move 0 brings back: the same board before a Start over, or
+   * the board this one replaced. */
+  boardBefore: OtherRun | null;
+  /** What Redo at the last move returns to: the same board started over, or
+   * the board an Undo left. */
+  boardAfter: OtherRun | null;
   /**
    * Whether any cell on the board carries a pencil mark, for a game that offers
    * the Mark-all press; always `false` for a game that does not. The chrome uses

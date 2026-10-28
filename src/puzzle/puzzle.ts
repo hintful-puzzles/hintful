@@ -21,6 +21,7 @@ import type {
   GameStatus,
   HintSpan,
   KeyLabel,
+  OtherRun,
   PaletteScheme,
   Point,
   PresetMenuEntry,
@@ -109,9 +110,12 @@ function clock(ms: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-/** What Undo says when it was the board it brought back, not a move. */
-export const BOARD_BROUGHT_BACK =
-  "The board you left is back. Redo returns to the other one.";
+/** What Undo says when it was a run it brought back, not a move: the board a
+ * new one replaced, or the moves a Start over put away. */
+export const BROUGHT_BACK: Record<OtherRun, string> = {
+  board: "The board you left is back. Redo returns to the other one.",
+  restart: "Your moves from before you started over are back. Redo starts over again.",
+};
 
 /**
  * How a New game ended: with a board, with the sentence to show where the
@@ -260,16 +264,13 @@ export class Puzzle {
         break;
       }
       case "game-state-change":
-        this.followBoard(message.board, message.boardAfter);
-        this.purgeInvalidCheckpoints(message.totalMoves);
+        if (!this.followBoard(message.board, message.boardAfter))
+          this.purgeInvalidCheckpoints(message.totalMoves);
         update(this._status, message.status);
         update(this._currentMove, message.currentMove);
         update(this._totalMoves, message.totalMoves);
         update(this._canUndo, message.canUndo);
         update(this._canRedo, message.canRedo);
-        // Compared by value: the engine sends a fresh array each time.
-        if (this._restarts.get().join() !== message.restarts.join())
-          this._restarts.set(message.restarts);
         update(this._boardBefore, message.boardBefore);
         update(this._boardAfter, message.boardAfter);
         update(this._hasPencilMarks, message.hasPencilMarks);
@@ -342,9 +343,8 @@ export class Puzzle {
   private _totalMoves = signal<number>(0);
   private _canUndo = signal(false);
   private _canRedo = signal(false);
-  private _restarts = signal<readonly number[]>([]);
-  private _boardBefore = signal(false);
-  private _boardAfter = signal(false);
+  private _boardBefore = signal<OtherRun | null>(null);
+  private _boardAfter = signal<OtherRun | null>(null);
   /** Whether the board carries any pencil marks — what makes the Mark-all
    * control say `Fill` on a bare board and `Update` once there is something to
    * narrow. Always false for a game without the press. */
@@ -613,19 +613,24 @@ export class Puzzle {
     return this._canRedo.get();
   }
 
-  /** The moves at which the board was restarted (`NotifyGameStateChange`). */
-  public get restarts(): readonly number[] {
-    return this._restarts.get();
-  }
-
-  /** Whether Undo at move 0 brings back the board this one replaced. */
-  public get boardBefore(): boolean {
+  /** What Undo at move 0 brings back, if anything (`NotifyGameStateChange`). */
+  public get boardBefore(): OtherRun | null {
     return this._boardBefore.get();
   }
 
-  /** Whether Redo at the last move returns to the board an Undo left. */
-  public get boardAfter(): boolean {
+  /** What Redo at the last move returns to, if anything. */
+  public get boardAfter(): OtherRun | null {
     return this._boardAfter.get();
+  }
+
+  /** Whether the board in play holds anything played: a move in the run in
+   * play, or a Start over either side of it, which only played moves allow. */
+  public get played(): boolean {
+    return (
+      this.totalMoves > 0 ||
+      this.boardBefore === "restart" ||
+      this.boardAfter === "restart"
+    );
   }
 
   // The encoded game params that will be used for the next "new game".
@@ -1254,33 +1259,32 @@ export class Puzzle {
 
   /** The engine's number for the board in play (`NotifyGameStateChange.board`). */
   private boardSerial = 0;
-  /** The checkpoints of the board last left, under its number. One deep, as
-   * the engine keeps one board each way. */
-  private checkpointsLeft: { board: number; checkpoints: ReadonlySet<number> } = {
-    board: 0,
-    checkpoints: new Set(),
-  };
+  /** The checkpoints of the runs left, under their numbers. */
+  private checkpointsLeft = new Map<number, ReadonlySet<number>>();
 
   /**
-   * Checkpoints are move numbers on one board, so they go with it when it is
-   * replaced and come back when Undo or Redo brings it back. A board that
-   * arrives with none of its own kept here starts with none.
+   * Checkpoints are move numbers in one run, so they go with it when it is
+   * left and come back when Undo or Redo brings it back. A run that arrives
+   * with none of its own kept here starts with none. Whether the run in play
+   * changed.
    */
-  private followBoard(board: number, undoneTo: boolean) {
-    if (board === this.boardSerial) return;
-    const left = { board: this.boardSerial, checkpoints: this.checkpoints };
-    this._checkpoints.set(
-      this.checkpointsLeft.board === board
-        ? this.checkpointsLeft.checkpoints
-        : new Set(),
-    );
-    this.checkpointsLeft = left;
+  private followBoard(board: number, after: OtherRun | null): boolean {
+    if (board === this.boardSerial) return false;
+    if (this.checkpoints.size > 0)
+      this.checkpointsLeft.set(this.boardSerial, this.checkpoints);
+    else this.checkpointsLeft.delete(this.boardSerial);
+    this._checkpoints.set(this.checkpointsLeft.get(board) ?? new Set());
+    // The engine numbers a run as it begins, and a run begun drops every run
+    // ahead of it, so a lower number is a run behind: Undo brought it back.
+    const undone = board < this.boardSerial;
     this.boardSerial = board;
     // An Undo that changed the whole board, under a control that usually
     // takes back one move, is answered in words as well. Said here and not
     // where Undo is asked for, since this is where the answer arrives.
-    if (undoneTo) this.setHelpMessage(BOARD_BROUGHT_BACK, true);
-    else if (this._helpMessage.get() === BOARD_BROUGHT_BACK) this.setHelpMessage("");
+    const words = Object.values(BROUGHT_BACK);
+    if (undone && after !== null) this.setHelpMessage(BROUGHT_BACK[after], true);
+    else if (words.includes(this._helpMessage.get())) this.setHelpMessage("");
+    return true;
   }
 
   private purgeInvalidCheckpoints(totalMoves: number) {

@@ -388,28 +388,32 @@ will not see it.
 
 ## Taking back Start over or a New game {#undo-reach}
 
-::undo:: Undo reaches past the two commands that put your work away.
+::undo:: Undo reaches past the two commands that put your work away. Each
+gives you a fresh board, and the move counter counts from it: after *Start
+over* or a *New game* you are at move 0.
 
-**Start over is a move like any other.** It steps to the board as it started and
-keeps everything you played behind that step. Undo straight afterwards and your
-moves are back; ::redo:: redo starts over again. Undo further and you walk back
-through the moves themselves. The ::history:: history panel shows where you
-started over. Starting over on a board you have played nothing on does nothing. (In
-Mines the board "as it started" is the one just after your first square
-opened, so you needn't remember where you began.)
+**Start over puts your moves away, and Undo brings them back.** It returns the
+board to how it started. Undo straight afterwards and your moves are back, where
+you left them; ::redo:: redo starts over again. Starting over on a board you
+have played nothing on does nothing. (In Mines the board "as it started" is the
+one just after your first square opened, so you needn't remember where you
+began.)
 
-**The board you just left is kept, one board back.** When a new board replaces
+**The boards you left are kept behind the new one.** When a new board replaces
 the one you were on, whether by *New game*, a choice in the ::puzzle-type::
 type menu, a shared game or a loaded one, the old board waits behind the new
 one's first position. Undo there, with no move of the new board left to take
 back, brings the old one back as you left it: its moves, its
 [checkpoints](#checkpoints) and its time. Redo, from the old board's last move,
-returns you to the new board. The history panel offers both as *Previous board*
-and *Next board*.
+returns you to the new board.
 
-Only one board is kept each way, and only until you make a move: your first
-move on a board lets go of the other one, and from then on undo and redo mean
-what they always have. Closing or reloading the app lets go of it too.
+So Undo walks back through everything you did this session: your moves, your
+Start overs and the boards before this one, up to a hundred boards back. Making
+a move lets go of what Redo would have returned to, as it always does. The
+::history:: history panel offers the step either side of the board in play as
+*Previous board* and *Next board*, or *Before starting over* and *Started over*.
+Closing or reloading the app lets go of the other boards; your Start overs on
+the board in play are kept with it.
 
 ## Checkpoints {#checkpoints}
 

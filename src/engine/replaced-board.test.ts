@@ -1,6 +1,6 @@
 /**
- * The board a new one replaces is kept, one deep: Undo at the new board's first
- * position brings it back as it was left, and Redo returns.
+ * The boards a new one replaces are kept: Undo at the new board's first
+ * position brings the last back as it was left, and Redo returns.
  *
  * Every way a board is replaced is driven here (a deal, an id, a save), since
  * the claim is that they are one path.
@@ -65,8 +65,8 @@ describe.each(replacements)("the board replaced by %s", (_how, replace) => {
     expect(h.state()).toMatchObject({
       currentMove: 0,
       canUndo: true,
-      boardBefore: true,
-      boardAfter: false,
+      boardBefore: "board",
+      boardAfter: null,
     });
     h.m.undo();
     expect(h.id()).toBe("t9:g9-1");
@@ -76,8 +76,8 @@ describe.each(replacements)("the board replaced by %s", (_how, replace) => {
       currentMove: 1,
       totalMoves: 2,
       canRedo: true,
-      boardBefore: false,
-      boardAfter: true,
+      boardBefore: null,
+      boardAfter: "board",
     });
   });
 
@@ -97,15 +97,20 @@ describe.each(replacements)("the board replaced by %s", (_how, replace) => {
     expect(h.last("timer-change")?.timer?.seconds).toBe(41);
   });
 
-  it("is dropped at the first move on the new board", () => {
+  it("stays through moves on the new board, behind its first position", () => {
     const h = played();
     replace(h);
     h.inc();
-    expect(h.state()).toMatchObject({ boardBefore: false });
+    h.m.restartGame();
+    h.inc();
+    expect(h.state()).toMatchObject({ boardBefore: "restart", canUndo: true });
     h.m.undo();
-    expect(h.state()).toMatchObject({ currentMove: 0, canUndo: false });
     h.m.undo();
-    expect(h.id()).not.toBe("t9:g9-1");
+    h.m.undo();
+    expect(h.state()).toMatchObject({ currentMove: 0, boardBefore: "board" });
+    h.m.undo();
+    expect(h.id()).toBe("t9:g9-1");
+    expect(h.count()).toBe("count=1");
   });
 });
 
@@ -123,7 +128,7 @@ describe("the board an Undo left", () => {
     h.m.redo();
     expect(h.id()).toBe("t9:g9-1");
     expect(h.count()).toBe("count=2");
-    expect(h.state()).toMatchObject({ canRedo: true, boardAfter: true });
+    expect(h.state()).toMatchObject({ canRedo: true, boardAfter: "board" });
     h.m.redo();
     expect(h.id()).toBe("t5:g5-2");
     expect(h.state()).toMatchObject({ currentMove: 0, totalMoves: 0, canRedo: false });
@@ -141,7 +146,7 @@ describe("the board an Undo left", () => {
   it("is dropped at the first move on the board brought back", () => {
     const h = undone();
     h.inc();
-    expect(h.state()).toMatchObject({ canRedo: false, boardAfter: false });
+    expect(h.state()).toMatchObject({ canRedo: false, boardAfter: null });
     h.m.redo();
     expect(h.id()).toBe("t9:g9-1");
   });
@@ -149,18 +154,53 @@ describe("the board an Undo left", () => {
   it("is dropped by a restart, which is a step made on the board", () => {
     const h = undone();
     h.m.restartGame();
-    expect(h.state()).toMatchObject({ boardAfter: false });
+    expect(h.state()).toMatchObject({ boardAfter: null });
+  });
+
+  it("is dropped by another board replacing the one brought back", () => {
+    const h = undone();
+    h.m.newGameFromId("t4:g4-3");
+    expect(h.state()).toMatchObject({ boardBefore: "board", boardAfter: null });
+    h.m.undo();
+    expect(h.id()).toBe("t9:g9-1");
+    expect(h.state()).toMatchObject({ boardBefore: null, boardAfter: "board" });
   });
 });
 
 describe("what is kept", () => {
-  it("is one board deep", () => {
+  it("is every board replaced, in order", () => {
     const h = played();
     h.m.newGameFromId("t5:g5-2");
+    h.inc();
     h.m.newGameFromId("t4:g4-3");
     h.m.undo();
     expect(h.id()).toBe("t5:g5-2");
-    expect(h.state()).toMatchObject({ canUndo: false, boardBefore: false });
+    expect(h.state()).toMatchObject({ currentMove: 1, boardBefore: "board" });
+    h.m.undo();
+    h.m.undo();
+    expect(h.id()).toBe("t9:g9-1");
+    expect(h.state()).toMatchObject({ canUndo: true, boardBefore: null });
+    // And forward again, each at the position it was left in.
+    h.m.redo();
+    h.m.redo();
+    expect(h.id()).toBe("t5:g5-2");
+    expect(h.state()).toMatchObject({ currentMove: 0, totalMoves: 1 });
+    h.m.redo();
+    h.m.redo();
+    expect(h.id()).toBe("t4:g4-3");
+    expect(h.state()).toMatchObject({ canRedo: false, boardAfter: null });
+  });
+
+  it("is a hundred boards at most", () => {
+    const h = driven();
+    for (let i = 0; i <= 101; i++) h.m.newGameFromId(`t9:g9-${i}`);
+    let back = 0;
+    while (h.state()?.canUndo) {
+      h.m.undo();
+      back++;
+    }
+    expect(back).toBe(100);
+    expect(h.id()).toBe("t9:g9-1");
   });
 
   it("includes a board no move was made on", () => {
@@ -178,7 +218,7 @@ describe("what is kept", () => {
     const h = driven();
     h.m.newGameFromId("t9:g9-1");
     expect(h.m.loadGame(saved)).toBeNull();
-    expect(h.state()).toMatchObject({ currentMove: 1, boardBefore: false });
+    expect(h.state()).toMatchObject({ currentMove: 1, boardBefore: null });
     h.m.undo();
     h.m.undo();
     expect(h.id()).toBe("t9:g9-1");
@@ -188,7 +228,7 @@ describe("what is kept", () => {
   it("is a played copy of the board that replaced it", () => {
     const h = played();
     h.m.newGameFromId("t9:g9-1");
-    expect(h.state()).toMatchObject({ totalMoves: 0, boardBefore: true });
+    expect(h.state()).toMatchObject({ totalMoves: 0, boardBefore: "board" });
     h.m.undo();
     expect(h.state()).toMatchObject({ currentMove: 1, totalMoves: 2 });
   });
@@ -196,7 +236,7 @@ describe("what is kept", () => {
   it("is nothing before the first board", () => {
     const h = driven();
     h.m.newGame();
-    expect(h.state()).toMatchObject({ canUndo: false, boardBefore: false });
+    expect(h.state()).toMatchObject({ canUndo: false, boardBefore: null });
   });
 
   it("is unchanged where a deal finds no board", () => {
@@ -213,7 +253,7 @@ describe("what is kept", () => {
     expect(d.last("game-id-change")?.currentGameId).toBe("t9:g9-1");
     expect(d.last("game-state-change")).toMatchObject({
       currentMove: 1,
-      boardBefore: true,
+      boardBefore: "board",
     });
   });
 
@@ -278,12 +318,24 @@ describe("the board's number", () => {
     expect(numbers.has(before ?? -1)).toBe(false);
   });
 
-  it("does not change with a move, an undo or a restart", () => {
+  it("does not change with a move or an undo", () => {
     const h = played();
     const board = h.state()?.board;
     h.inc();
     h.m.undo();
-    h.m.restartGame();
     expect(h.state()?.board).toBe(board);
+  });
+
+  it("is a run's own after a restart, and each comes back with its board", () => {
+    const h = played();
+    const first = h.state()?.board;
+    h.m.restartGame();
+    const second = h.state()?.board;
+    expect(second).not.toBe(first);
+    h.m.newGameFromId("t5:g5-2");
+    h.m.undo();
+    expect(h.state()?.board).toBe(second);
+    h.m.undo();
+    expect(h.state()?.board).toBe(first);
   });
 });
