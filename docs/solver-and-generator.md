@@ -698,8 +698,8 @@ technique fills that tier** (`engine-hints`, "A supposition rung that defines
 its tier keeps it until a markable technique fills it"): moving it first
 leaves the tier with nothing to deal. Its hint shows the chain statically
 ([`hints-marks.md`](./hints-marks.md) § "Show the what-if walk statically").
-The open changes `teach-what-if-walks-with-marks` and
-`teach-map-chains-with-marks` list the rungs still kept and retire them. A supposition rung a tier can do without runs only at
+Map's `forcingChain` is the last such rung, and the open change
+`teach-map-chains-with-marks` retires it. A supposition rung a tier can do without runs only at
 Unreasonable: the Latin forcing chain runs at `diffRecursive`, and the config
 has no field to put it lower.
 

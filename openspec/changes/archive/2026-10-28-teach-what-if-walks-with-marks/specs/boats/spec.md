@@ -7,10 +7,7 @@ try each free square as that one with the rest of the line water, and make it
 water where that breaks a rule at once; and for a line with room for exactly
 one more water square, the same with boat and water exchanged. It SHALL also
 try a given middle segment's boat each way, and where one way breaks a rule
-make water of the square below it, or to its right, that way. A square's step
-SHALL say it was tried as its line's last boat segment or water, and the
-crossing line's where that was filled too, as a sentence's length allows.
-This is a Check: the line's fill is the value tried, and nothing follows from it.
+make water of the square below it, or to its right, that way.
 
 #### Scenario: The square that cannot be the last boat square
 
@@ -19,3 +16,14 @@ This is a Check: the line's fill is the value tried, and nothing follows from it
   number
 - **THEN** the step makes that square water, and says that if it held its
   row's last boat segment the striped column could no longer reach its number
+
+## ADDED Requirements
+
+### Requirement: Hint: A Boats refutation says the square was its line's last
+
+A square's refutation at Hard SHALL say it was tried as its line's last boat segment or water, and the crossing line's where that was filled too, as a sentence's length allows. The fill of the line is the value tried and nothing follows from it, so the trial is a Check.
+
+#### Scenario: The line a trial fills is named
+
+- **WHEN** a square is refuted as its column's last water, and the sentence fits
+- **THEN** it begins "If this square were its column's last water,"

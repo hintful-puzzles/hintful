@@ -60,7 +60,7 @@ Path and Pairs SHALL be the game's two rulesets, in that order, in the Custom di
 
 ### Requirement: Params: Path's params are its declared codec's
 
-The params SHALL be the width, the height, the ruleset and the tier, written `<w>x<h>[z]d<tier letter>`: `z` for the Path ruleset and nothing for Pairs, so a string written before the game had rulesets decodes to Pairs, and the tier letters `e`, `n` and `t`. The tier SHALL be written only in the full form; a string without it SHALL decode to Normal. Width and height SHALL each be at least 3, and their product at most 400.
+The params SHALL be the width, the height, the ruleset and the tier, written `<w>x<h>[z]d<tier letter>`: `z` for the Path ruleset and nothing for Pairs, so a string written before the game had rulesets decodes to Pairs, and the tier letters `e`, `n`, `t` and `u`. The tier SHALL be written only in the full form; a string without it SHALL decode to Normal. Width and height SHALL each be at least 3, and their product at most 400.
 
 #### Scenario: A params string round-trips
 
@@ -105,28 +105,42 @@ Under Path, a description SHALL give each number from 1 to its highest once, the
 - **WHEN** `1f2_3b4,jf` is loaded at 4x3 under Path
 - **THEN** edge 10 is a wall holding a cross, and the description encodes back to `1f2_3b4,jf`
 
-### Requirement: Generation: A tier is the rung a board needs
+### Requirement: Description: A Pairs size too small for a tier is refused
 
-A board SHALL be dealt only where the ladder finishes it, which proves it has exactly one answer. An Easy board SHALL be finished by the Easy rung alone; a Normal board SHALL need the lookahead at least once; a Tricky board SHALL need the long lookahead at least once. Under Pairs, no path of a dealt board's answer SHALL be a straight line of four squares or more, and none SHALL touch itself except along its own line.
+A Pairs board SHALL be refused when dealt at a tier no board the generator lays at that size needs: Normal on a 3x3, 3x4 or 3x5; Tricky up to 4x5; Unreasonable on a 3x3, 3x4, 3x5 or 4x4. A board arriving with its desc at such a tier SHALL still open.
 
-#### Scenario: A Normal board needs the lookahead
+#### Scenario: A 4x4 Unreasonable deal is refused
 
-- **WHEN** a board is dealt at Normal
-- **THEN** the Easy rungs alone do not finish it, and with the lookahead they do
-
-#### Scenario: A Tricky board needs the long lookahead
-
-- **WHEN** a board is dealt at Tricky
-- **THEN** the ladder capped at Normal does not finish it, and uncapped it does
+- **WHEN** a Pairs board is dealt at 4x4 Unreasonable
+- **THEN** it is refused, saying no 4x4 puzzle is Unreasonable
 
 ### Requirement: Generation: A Path board is one path, its numbers and walls stripped
 
-A Path board SHALL be dealt only where the ladder finishes it at exactly the tier asked for. The 1 and the highest number SHALL sit on the ends of a path through every square, and every wall SHALL lie on an edge that path does not take, and be one the ladder needs to finish the board with the numbers it has.
+A Path board SHALL be dealt only where it needs exactly the tier asked for. The 1 and the highest number SHALL sit on the ends of a path through every square, and every wall SHALL lie on an edge that path does not take, and be one the board needs at its tier with the numbers it has.
 
 #### Scenario: A dealt Path board has one answer
 
 - **WHEN** a 5x5 board is dealt under Path
 - **THEN** a search that walks every path from the 1 finds exactly one answer
+
+### Requirement: Generation: A tier is the rung, or the search, a board needs
+
+A board below Unreasonable SHALL be dealt only where the ladder finishes it. An Easy board SHALL be finished by the Easy rung alone; a Normal board SHALL need the Normal rung, and a Tricky board the Tricky rung, at least once. An Unreasonable board SHALL be one the ladder does not finish and a search proves has one answer. Under Pairs, no path of a dealt answer SHALL be a straight line of four squares or more, or touch itself except along its line.
+
+#### Scenario: A Normal board needs the Normal rung
+
+- **WHEN** a board is dealt at Normal
+- **THEN** the Easy rung alone does not finish it, and with the Normal rung it does
+
+#### Scenario: A Tricky board needs the Tricky rung
+
+- **WHEN** a board is dealt at Tricky
+- **THEN** the ladder capped at Normal does not finish it, and uncapped it does
+
+#### Scenario: An Unreasonable board needs a search
+
+- **WHEN** a board is dealt at Unreasonable
+- **THEN** the ladder does not finish it, and the search finds exactly one answer
 
 ### Requirement: Solver: An edge a player sees is closed counts as closed
 
@@ -137,28 +151,19 @@ The ladder SHALL count an edge as closed when it is crossed, when a square besid
 - **WHEN** the line from a 2 and the line from a 3 end on squares side by side
 - **THEN** no hint step asks for a cross on the edge between them
 
-### Requirement: Solver: The ladder and its lookahead
-
-The Easy rung SHALL be: a square whose open edges are as many as the lines it still needs takes a line on each. Normal's rung SHALL suppose a line or a cross on an open edge, run the Easy rung from there until the board breaks, and give the edge the other mark where the firings the break needs number at most six; Tricky's, the long lookahead, where they number at most twelve.
-
-#### Scenario: The lookahead settles an edge
-
-- **WHEN** supposing a cross on an edge leads, by the Easy rungs, to a square with no way left for its line
-- **THEN** the edge takes a line
-
-#### Scenario: A walk is counted by what its break needs
-
-- **WHEN** a supposition's walk fires squares its break never reads
-- **THEN** those firings count toward neither rung's limit, and the hint numbers none of them
-
 ### Requirement: Solver: Solve plays the answer the ladder finds
 
-Solve SHALL draw the answer's lines over the whole board, from the numbers as dealt, and take every other mark off. A board the ladder does not finish SHALL have no Solve and no mistake check.
+Solve SHALL draw the answer's lines over the whole board, from the numbers as dealt, and take every other mark off. Where the ladder stops short, the answer SHALL come from a search over the ladder, so an Unreasonable board, and one dealt at Normal or Tricky before their rungs became Checks, has Solve and the mistake check.
 
 #### Scenario: Solve finishes a board
 
 - **WHEN** Solve is pressed on any dealt board
 - **THEN** the game's status is solved
+
+#### Scenario: A board dealt before the Checks opens at Unreasonable
+
+- **WHEN** `6x6zdt:b3d5g2e4d1c6e,nzpb`, dealt at Tricky by the lookahead, is opened
+- **THEN** it opens as Path: 6x6 Unreasonable, and Solve finishes it
 
 ### Requirement: Solver: Path counts an out-of-order join and a loop as closed
 
@@ -168,6 +173,20 @@ Under Path, the ladder SHALL count an edge as closed when a line on it would joi
 
 - **WHEN** the line from a 3 and a line whose nearest number is the 5 end on squares side by side
 - **THEN** no hint step asks for a cross on the edge between them
+
+### Requirement: Solver: The ladder and its Checks
+
+The Easy rung SHALL be: a square whose open edges are as many as the lines it still needs takes a line on each. Normal's rung SHALL cross out an edge whose line would break the board at once, and give a square needing two lines with three edges left the third where lines on the other two would. Tricky's SHALL weigh a square needing two lines with four edges left: what every pair that does not break shares is drawn, and an edge none takes is crossed out.
+
+#### Scenario: A pair that breaks settles the third edge
+
+- **WHEN** a square needs two lines from three open edges, and lines on two of them would join the 4 to the 1
+- **THEN** the third edge takes a line
+
+#### Scenario: Nothing is followed from a tried line
+
+- **WHEN** a line would break the board only after the Easy rung fires from it
+- **THEN** no rung below Unreasonable decides that edge from it
 
 ### Requirement: Controls: A drag draws a line through the squares it passes
 
@@ -221,7 +240,7 @@ A drag that begins on a number SHALL replace the line that runs on from it, to t
 
 ### Requirement: Hint: A step rings the edges it decides and outlines what it reads
 
-A step SHALL ring the edges it decides, drawn as the line or cross it asks for, and outline what it reads: the square of a forced step. A lookahead step SHALL show only the forced edges its break needs, with no number on them, outline where it breaks, and name a loop before a square short of edges. No step SHALL ask for a cross on an edge the ladder counts as closed.
+A step SHALL ring the edges it decides, drawn as the line or cross it asks for, and outline what it reads: the square of a forced step; the edges a Check tries lines on, drawn thin as lines, and where they break. A weighed step SHALL outline the edges it weighs or the square, and say what the ruled-out pairs would do. No step SHALL ask for a cross on an edge the ladder counts as closed.
 
 #### Scenario: A forced step names its square
 

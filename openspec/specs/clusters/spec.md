@@ -49,7 +49,8 @@ in the error wash when the check hands `redraw` its mistakes.
 Clusters' params and their encoding SHALL be those its `paramConfig` and its
 declared codec give (`engine-params`, "A game declares its params encoding
 once, and both codec halves are derived"), with no departure from the codec
-grammar. A params string that carries no difficulty SHALL decode to Easy.
+grammar. A params string that carries no difficulty SHALL decode to Easy. The
+tier letters SHALL be `e`, `t` and `u`.
 
 #### Scenario: The Normal preset's two forms
 
@@ -101,19 +102,20 @@ refuse what `readDotRuns` refuses and nothing of its own.
 - **AND** `DceclHbAacAG`, the same with its closing letter in uppercase, is
   refused for the `G`
 
-### Requirement: Generation: Clusters offers difficulty tiers over its two deduction levels
+### Requirement: Generation: Clusters' tiers are the single-cell rule, the count, and a search
 
-Clusters SHALL offer two tiers, the two levels of deduction its solver has.
-**Easy** is the single-cell proof by contradiction: a color is tried in an
-empty cell, and where it makes the board invalid the cell takes the other.
-**Normal** is the same reasoning one hypothetical level deep.
+**Easy** SHALL be the single-cell proof by contradiction. **Normal** SHALL add the count: tile B's count over the squares it shares with tile A bounds how many of them take A's color, which settles A's other empty neighbors. **Unreasonable** SHALL be a board the two do not finish that a search proves has one answer, and a board labeled Normal that the count does not finish opens there.
 
 #### Scenario: The harder tier needs the deeper reasoning
 
-- **WHEN** a board generated at the harder tier is solved using only the
-  single-cell contradiction rule
+- **WHEN** a board generated at Normal is solved using only the single-cell rule
 - **THEN** the solver does not reach a solution
-- **AND** solving the same board with the lookahead completes it
+- **AND** solving the same board with the count completes it
+
+#### Scenario: An Unreasonable board needs a search
+
+- **WHEN** a board is generated at Unreasonable
+- **THEN** the count does not finish it, and the search finds exactly one answer
 
 ### Requirement: Controls: Clusters is painted by click, drag and keyboard cursor
 
@@ -180,13 +182,13 @@ and SHALL paint on that same press, from where it was parked.
 
 `solve` and `hint` SHALL use the deeper rung whatever tier the board was
 generated at: they are "try as hard as you can", and the rung costs nothing on
-a board that does not need it. The hint of a board dealt at Easy SHALL
-nonetheless need no lookahead step at all.
+a board that does not need it. Solve SHALL take the answer the search proves.
+The hint of a board dealt at Easy SHALL nonetheless need no count step at all.
 
 #### Scenario: Solving an Easy board
 
 - **WHEN** a board generated at Easy is solved
-- **THEN** the solver runs with the lookahead available and fills the board to
+- **THEN** the solver runs with the count available and fills the board to
   its unique solution
 
 #### Scenario: An Easy board is hinted to the end without a chain
@@ -214,50 +216,24 @@ conclusion.
 What the ring and the outline of a step stand for SHALL be the legend's
 (`hintMarks`). When the contradiction lands on a tile other than the target,
 that tile SHALL carry a second mark, the outline, as a frame in a hue the
-live-error frame does not use. When it lands on the target itself, the step
-SHALL outline no tile for it.
+live-error frame does not use, and a count step SHALL outline both tiles it
+reads the same way. When the contradiction lands on the target itself, the
+step SHALL outline no tile for it.
 
 #### Scenario: The word and the ring go together
 
 - **WHEN** a hint step is displayed
-- **THEN** its sentence says "outlined" of a tile exactly when the contradiction
-  lands on a tile other than the target, and that tile carries the second mark
-
-### Requirement: Hint: A lookahead deduction is one step showing its whole forcing chain
-
-A deduction that forces a move only through the solver's one-level lookahead
-SHALL be presented as one step: the hypothesis cell is the hint target, each
-cell the hypothesis would force holds a piece of the color it would be forced
-to, smaller than any placed piece, and the tile where the contradiction lands
-is marked as in a single-cell step.
-
-#### Scenario: A what-if piece cannot be taken for a placed one
-
-- **WHEN** a chain hint is displayed
-- **THEN** each what-if cell holds a piece less than half as wide as a placed
-  piece
-
-### Requirement: Hint: A lookahead stall takes the shortest forcing chain
-
-The hint plan SHALL take a single-cell deduction wherever one is to be had,
-the first in row-major order, and SHALL turn to the lookahead only at a stall,
-where no cell is decided that way. At each lookahead stall the hint plan SHALL
-select the candidate firing with the shortest forcing chain, the earliest in
-row-major order on a tie, keeping the displayed chain short.
-
-#### Scenario: Two firings of different lengths
-
-- **WHEN** the single-cell rule stalls and two cells can each be decided by a
-  lookahead, one through a shorter chain of forced cells than the other
-- **THEN** the plan's next step is the one with the shorter chain
+- **THEN** its sentence says "outlined" of a tile exactly when a tile other
+  than the target carries the second mark
 
 ### Requirement: Hint: A Clusters hint is refused where it cannot deduce
 
 A hint SHALL be refused, and SHALL NOT deduce onward, when the deduction runs
 into a contradiction from the player's position. `findMistakes` names a wrong
-tile wherever the solver finishes the board from its givens, so that refusal
-is reached only on a description the solver cannot finish, as is
-`DEDUCTION_EXHAUSTED`.
+tile wherever the board has one answer, so that refusal is reached only on a
+description without one. Where the deduction stops short, as on an
+Unreasonable board, the hint SHALL give the steps it has, and refuse with
+`DEDUCTION_EXHAUSTED` only where it has none.
 
 #### Scenario: Several wrong tiles, none flagged
 
@@ -265,6 +241,15 @@ is reached only on a description the solver cannot finish, as is
   none of them breaking a local rule, and a hint is asked for
 - **THEN** the banner asks for the highlighted mistakes to be fixed, and each
   of those tiles is highlighted
+
+### Requirement: Hint: A count step names both tiles it reads
+
+A count step SHALL ring the cell it colors and outline the two tiles it reads, named by color and kind, or by order where those agree, and SHALL say where the first tile's color must or may only be among the squares both touch.
+
+#### Scenario: A dot's last color is among the shared squares
+
+- **WHEN** a yellow dot that needs one more yellow shares squares with a purple dot that leaves at least one of them yellow
+- **THEN** the step says "The outlined yellow dot's last yellow must also touch the outlined purple dot, so this cell must be purple." of the dot's other empty neighbor
 
 ### Requirement: Look: Clusters draws its two colors as the collection's two-state pair
 

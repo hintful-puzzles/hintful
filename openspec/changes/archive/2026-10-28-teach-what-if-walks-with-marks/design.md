@@ -115,6 +115,24 @@ split.
 - **Clusters: Normal is the two-clue count.** It is easier than today's
   Normal, accepted. `lookahead-chain` retires; Clusters has no Unreasonable.
 
+## D7. A board a player already has opens at Unreasonable (owner, 2026-10-28)
+
+A Normal or Tricky board dealt before this change may need a lookahead the
+ladder no longer has: on Path, all 100 old Tricky boards measured and 45 of
+140 old Normal ones. The midend refuses a board no tier finishes, so without
+a tier that searches these would stop opening from saves and links.
+
+Offered (a) the top tier's contract also accepting a board the search proves
+has one answer, (b) an Unreasonable tier, as the Latin games have, or (c)
+letting them break, the owner chose **(b)**: Path and Clusters gain an
+Unreasonable tier, which deals boards too. An old board opens raised to it
+(the midend raises a pinned tier its board does not solve at), Solve and the
+mistake check take its answer from the search (`engine/answer-search.ts`),
+and the hint stops with the trial-and-error refusal a search tier gives. A
+search proves each old Path board's one answer in a median of 5 positions and
+at most 1,365 (265 boards, every preset at both tiers). On Path's menu,
+which is as long as a menu may be, Unreasonable is the Custom dialog's alone.
+
 ## D8. Spokes' Normal is one rung, a spoke tried each way
 
 The three rules of D4 are one shape, as Path's are: a hub's value is which of
@@ -146,19 +164,15 @@ boards dealt at HEAD, 74 need the old supposition and open at Unreasonable;
 the search proves each in at most 25 positions. On the menu, Unreasonable
 joins Normal at 7x7, 6x8 and 9x9.
 
-## D7. A board a player already has opens at Unreasonable (owner, 2026-10-28)
+## D10. The exception stays for Map
 
-A Normal or Tricky board dealt before this change may need a lookahead the
-ladder no longer has: on Path, all 100 old Tricky boards measured and 45 of
-140 old Normal ones. The midend refuses a board no tier finishes, so without
-a tier that searches these would stop opening from saves and links.
-
-Offered (a) the top tier's contract also accepting a board the search proves
-has one answer, (b) an Unreasonable tier, as the Latin games have, or (c)
-letting them break, the owner chose **(b)**: Path and Clusters gain an
-Unreasonable tier, which deals boards too. An old board opens raised to it
-(the midend raises a pinned tier its board does not solve at), Solve and the
-mistake check take its answer from the search (`engine/answer-search.ts`),
-and the hint stops with the trial-and-error refusal a search tier gives. A
-search proves each old Path board's one answer in a median of 5 positions and
-at most 1,365 (265 boards, every preset at both tiers).
+`engine-hints`' exception for a tier-defining supposition rung, its "A
+Tactic's chain is shown on the board", and `hints-marks.md` § "Show the
+what-if walk statically" have one user left after this change: Map's
+`forcingChain`, whose tier `teach-map-chains-with-marks` fills. They retire
+there, and that change's tasks say so. This change retires what only its
+games used: Clusters' small what-if pieces and chain outline, the
+lookahead's walk on Path's and the edges skeleton's edges (the highlights
+field became the edges a Check tries, `ShapedEdge`), Spokes' bounded
+look-ahead and its bound, and the guides' bullets that taught a bounded walk
+as a Tactic.

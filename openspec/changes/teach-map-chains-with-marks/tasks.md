@@ -12,6 +12,7 @@
 
 ## 3. Finish
 
+- [ ] 3.0 Map is the last rung that keeps its tier by `engine-hints`' exception ("A supposition rung that defines its tier keeps it until a markable technique fills it"): once it moves, retire that requirement, "A Tactic's chain is shown on the board", the clause in `engine-difficulty`'s "Only a tier named Unreasonable requires Search", and `hints-marks.md` § "Show the what-if walk statically", with what cites them (`teach-what-if-walks-with-marks` design D10)
 - [ ] 3.1 Map's help page, guide lines and spec
 - [ ] 3.2 Run Map's hint in the app
 - [ ] 3.3 The gate, green

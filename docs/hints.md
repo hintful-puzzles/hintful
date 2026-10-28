@@ -195,8 +195,7 @@ whether a trial was involved:
 A supposition rung that alone defines a tier keeps it until a markable
 technique fills the tier (`solver-and-generator.md` § "Check, Tactic,
 Search"). Until then its hint shows the walk statically (`hints-marks.md`
-§ "Show the what-if walk statically"). Exemplar: Clusters, which renders
-every forced cell of its hypothetical from its own overlay bits.
+§ "Show the what-if walk statically"). Map's `forcingChain` is the last.
 
 - **Judge the shape of the call, not the length of the sentence.** A rung
   that runs a fixpoint from its hypothesis is a Search however short its

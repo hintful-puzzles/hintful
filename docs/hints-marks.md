@@ -664,22 +664,12 @@ and a plan may hold no dummy moves, so the legs cannot be hypothetical.
 This is a supposition, which is a Search: only a rung that alone defines its
 tier shows one, until a markable technique fills the tier
 ([`solver-and-generator.md`](./solver-and-generator.md) § "Check, Tactic,
-Search"). Never build a new what-if walk; find the marks instead.
+Search"). Map's `forcingChain` is the last, and `teach-map-chains-with-marks`
+retires it, and this section with it. Never build a new what-if walk: look
+for the value one element holds, which a Check places and looks at once, or
+the marks a Tactic writes. Path's, Spokes' and Clusters' walks were found to
+be those.
 
-- **The target keeps its ring** ("suppose this cell were …"). Each cell the
-  hypothesis would force carries a small center mark of its forced color,
-  unlike a placed piece in size so it reads as hypothetical. That is not the
-  pre-placement § "Highlight, never perform" forbids, which is about the
-  target.
-- **The cell where the contradiction lands takes a double ring**, the visual
-  language of a live-error outline doubled: "would break" beside "breaks
-  now".
-- **One ring role.** Where every premise cell is beside the target or the
-  contradiction, drop the premise ring so "ringed" means one thing, and
-  assert the word is spoken exactly when that mark is set.
-- **Take the shortest chain, not the first.** At a stall, evaluate every
-  candidate firing's propagation and take the shortest, ties broken in scan
-  order so a recompute gives the same step.
 - **Outline the chain whole, and never number it.** A number is a mark the
   player cannot make, and the order a chain is found in is not one they can
   follow link by link. A link the words single out is a reference of its own
@@ -687,13 +677,8 @@ Search"). Never build a new what-if walk; find the marks instead.
 - **Lead the sentence with the hypothetical, and say why it fails.** When
   several hypotheticals share one sentence, every count and verb is true of
   each of them, not of their union.
-- **Measure how often boards need the walk before planning to reject them at
-  generation.** Where more than a third do, rejecting is not available.
 
-Exemplars: `chainToContradiction` in
-[`clusters/solver.ts`](../src/games/clusters/solver.ts), `narrate` in
-[`clusters/index.ts`](../src/games/clusters/index.ts), and requirement "A
-lookahead deduction is one step showing its whole forcing chain" in its spec.
+Exemplar: `chains` in [`map/hint.ts`](../src/games/map/hint.ts).
 
 A rung that hypothesizes a value and runs the whole deduction from it is a
 Search, not a technique: its chain is unbounded, so there is no walk to show.

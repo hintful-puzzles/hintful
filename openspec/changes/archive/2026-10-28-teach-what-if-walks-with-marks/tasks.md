@@ -18,7 +18,7 @@
 
 ## 3. Retire what is left
 
-- [ ] 3.1 Retire the static what-if walk and `engine-hints`' exception for a tier-defining supposition rung, with whatever no game still uses
-- [ ] 3.2 Help pages, guides and specs of each game touched
-- [ ] 3.3 Run each changed game's hint in the app
+- [x] 3.1 Retire the static what-if walk and `engine-hints`' exception for a tier-defining supposition rung, with whatever no game still uses: Map still uses both, so they pass to `teach-map-chains-with-marks` (D10)
+- [x] 3.2 Help pages, guides and specs of each game touched
+- [x] 3.3 Run each changed game's hint in the app (Path Normal, Tricky and an old board at Unreasonable; Spokes Normal; Clusters Normal)
 - [ ] 3.4 The gate, green

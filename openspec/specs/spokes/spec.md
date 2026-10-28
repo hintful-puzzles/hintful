@@ -148,21 +148,6 @@ above or below it. Either cell's clue SHALL read as 0 afterwards.
 - **AND** were the two top corners hubs, the `X` would still leave the middle
   hub no spoke toward either, where a `0` in its place would leave both
 
-### Requirement: Generation: The look-ahead runs at two strengths, which are two rungs
-
-The contradiction look-ahead SHALL be applied at two distinct strengths, and they
-are two rungs rather than one. At Normal, the sub-solve that tests the hypothesis
-SHALL be bounded by a fixed deduction limit, so the reasoning is a chain a player
-could follow. At `Unreasonable`, the sub-solve SHALL be unbounded, which is what
-the tier's name reports.
-
-#### Scenario: A refutation past the limit belongs to the top tier alone
-
-- **WHEN** a hypothesis is refuted only by more of the Easy deductions than the
-  limit allows
-- **THEN** the solver at Normal does not commit the opposite value on that account
-- **AND** the solver at `Unreasonable` does
-
 ### Requirement: Generation: Every hub of a dealt Spokes board carries a line
 
 Every hub of a generated board SHALL carry at least one line.
@@ -179,8 +164,8 @@ Every hub of a generated board SHALL carry at least one line.
 Spokes SHALL provide a solver that draws the forced lines and marks for a board, or
 reports the board invalid or incomplete, at a requested difficulty of Easy, Normal
 or `Unreasonable`. The solver SHALL apply hub saturation and exhaustion,
-diagonal-crossing marks, and the two-ones rule; the two harder tiers SHALL
-additionally apply contradiction look-ahead.
+diagonal-crossing marks, and the two-ones rule; Normal SHALL add its Check on one
+spoke, and `Unreasonable` the contradiction look-ahead.
 
 #### Scenario: The solver deduces the unique solution
 
@@ -212,17 +197,19 @@ invalid board.
   not shown to be invalid
 - **THEN** the opposite value is not committed on that account
 
-### Requirement: Solver: The look-ahead's bound has one definition
+### Requirement: Solver: Normal's rung is a Check on one spoke
 
-The bound on the Normal sub-solve SHALL have a single definition in the solver,
-and it SHALL be documented as load-bearing for the tier names rather than as a
-performance dial, since lifting it would silently make the middle tier a search.
+Normal SHALL rule out a free spoke whose line breaks the board at once, the hubs it fills taking no more spokes, and draw one whose rule-out does, a hub left with no spare spoke drawing all its others. Nothing SHALL be followed from the state tried: the board is read as it would stand, with every free spoke of a full hub ruled out.
 
-#### Scenario: The solver and the hint read the same bound
+#### Scenario: A rule-out that starves a hub forces a line
 
-- **WHEN** the solver's Normal look-ahead and the hint's look-ahead each test a
-  hypothesis
-- **THEN** both sub-solves stop at the one limit the solver defines
+- **WHEN** ruling a spoke out leaves the 7 at one end no spare spoke, and the 7's other spokes would leave a 4 too few spokes
+- **THEN** the spoke is a line
+
+#### Scenario: A break past one look belongs to the top tier
+
+- **WHEN** a spoke's other state breaks the board only after a further deduction
+- **THEN** the solver at Normal does not decide it on that account, and at `Unreasonable` it does
 
 ### Requirement: Controls: Spokes is played by dragging between hubs or with a keyboard cursor
 
@@ -313,11 +300,11 @@ checked.
 
 #### Scenario: A contradiction hint states its hypothesis
 
-- **WHEN** a spoke is forced only because the opposite value leads to an
-  impossible board
-- **THEN** the hint states the hypothesis it is refuting and the impossibility it
-  reaches, naming the hub that would over-fill, the diagonals that would cross,
-  or the hubs that would be stranded, and only then the conclusion
+- **WHEN** a spoke is forced only because the other state breaks the board at once
+- **THEN** the hint states the state tried and the break it makes, naming the
+  hub a rule-out leaves no spare spoke, then the hub given too many lines or too
+  few spokes, the diagonals that would cross, or the hubs that would be
+  stranded, and only then the conclusion
 
 #### Scenario: A saturated hub is explained by the count that forces it
 
