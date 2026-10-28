@@ -72,7 +72,6 @@ already does it.
 | – Two regions in one sentence take two mark shapes | a sentence names two regions |
 | The engine colors the marks | you draw a mark, recolor a clue, or are about to pick a hint color |
 | A hint that suppresses a game's aid dismisses on a UI update | a displayed hint hides or takes over something the game draws |
-| Show the what-if walk statically | a step's reason is a hypothesis followed to a contradiction |
 | Marks on tiles vs marks on cells | your game's pieces move, and the hint marks one |
 | Placement animation as hint motion | your game has no move animation and Auto-Hint looks frozen |
 | Group one firing into one step | one deduction forces several cells |
@@ -653,39 +652,6 @@ it returns true.
 The trigger is suppression, not selection: a selection game whose hint
 suppresses nothing does not set the hook. Population:
 `git grep -l uiUpdateClearsHint src/games`.
-
-## Show the what-if walk statically
-
-**A hypothesis followed to a contradiction is one step that shows the whole
-walk in its marks; hypothetical marks are never journey legs.**
-`HintStep.move` is required, playing a hint makes every leg's move for real,
-and a plan may hold no dummy moves, so the legs cannot be hypothetical.
-
-This is a supposition, which is a Search: only a rung that alone defines its
-tier shows one, until a markable technique fills the tier
-([`solver-and-generator.md`](./solver-and-generator.md) § "Check, Tactic,
-Search"). Map's `forcingChain` is the last, and `teach-map-chains-with-marks`
-retires it, and this section with it. Never build a new what-if walk: look
-for the value one element holds, which a Check places and looks at once, or
-the marks a Tactic writes. Path's, Spokes' and Clusters' walks were found to
-be those.
-
-- **Outline the chain whole, and never number it.** A number is a mark the
-  player cannot make, and the order a chain is found in is not one they can
-  follow link by link. A link the words single out is a reference of its own
-  (`hints.md` § "Bind the words to the marks").
-- **Lead the sentence with the hypothetical, and say why it fails.** When
-  several hypotheticals share one sentence, every count and verb is true of
-  each of them, not of their union.
-
-Exemplar: `chains` in [`map/hint.ts`](../src/games/map/hint.ts).
-
-A rung that hypothesizes a value and runs the whole deduction from it is a
-Search, not a technique: its chain is unbounded, so there is no walk to show.
-The hint refuses there, in words the player can act on, and never narrates
-"this one survived" (requirement "A Search is refused and never narrated",
-and [`solver-and-generator.md`](./solver-and-generator.md) § "Check, Tactic,
-Search"). A refusal that tells the truth beats a step that reveals an answer.
 
 ## Marks on tiles vs marks on cells
 

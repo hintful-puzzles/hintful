@@ -33,7 +33,7 @@
  *
  * A plan offers the lowest rung that fires anywhere, and chooses within it by
  * the frontier. Map's tiers are exactly its rungs, so an Easy board's plan
- * never shows a pair and a Normal board's never shows a chain: continuing from
+ * never shows a pair and a Normal board's never shows a weighing: continuing from
  * the last step is worth something, but not a harder technique than the board
  * needs.
  */
@@ -43,23 +43,18 @@ import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { HintFrontier } from "../../engine/hint-frontier.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { type Conclusion, colorsOf, type RegionMark, say } from "./hint-text.ts";
+import { type Conclusion, colorsOf, say } from "./hint-text.ts";
 import {
   bitcount,
-  chainTo,
-  forcingChain,
   type MapBoard,
   neighbors,
-  newChainScratch,
   onlyColorLeft,
   sharedPair,
+  weighRegion,
 } from "./solver.ts";
 import type { MapMove, MapOp, MapState } from "./state.ts";
 
 const ALL = 0xf;
-
-/** A region the premise rests on, outlined. */
-type MapEvidence = RegionMark;
 
 /** One region's dots as a setup step leaves them. */
 interface RegionDots {
@@ -82,13 +77,13 @@ type SingleWant = { color: number } | { dots: number };
 
 /** Every rung a Map step can be: the two halves of the Mark-all press, by
  * `markAll`'s own names, and the solver's three rungs, by theirs. The legs
- * that dot a pair's or a chain's premise share that firing's rung. */
+ * that dot a pair's or a weighing's premise share that firing's rung. */
 export const MAP_RUNGS = [
   "fill",
   "clean",
   "onlyColorLeft",
   "sharedPair",
-  "forcingChain",
+  "weighRegion",
 ] as const;
 export type MapRung = (typeof MAP_RUNGS)[number];
 
@@ -312,79 +307,47 @@ function pairs(b: MapBoard): Firing[] {
   }));
 }
 
-function chains(b: MapBoard): Firing[] {
-  const sc = newChainScratch(b.n);
+function weighs(b: MapBoard): Firing[] {
   const found = new Map<
     string,
-    { chain: number[]; color: number; other: number; ks: number[] }
+    { middle: number; x: number; ends: readonly number[]; ks: number[] }
   >();
-  forcingChain(b, sc, (origin, color, end, k) => {
-    const key = `${origin},${color},${end}`;
+  weighRegion(b, (middle, x, ends, k) => {
+    const key = `${middle},${x},${ends}`;
     const f = found.get(key);
-    if (f) {
-      if (!f.chain.includes(k)) f.ks.push(k);
-      return;
-    }
-    const chain = chainTo(sc, end);
-    // Two regions forcing each other is the pair rule, which the rung below
-    // this one has already had every chance to state more simply; and a target
-    // inside its own chain would be both "this region" and one of the chain's.
-    if (chain.length < 3 || chain.includes(k)) return;
-    const other = colorsOf(b.possible[origin] & ~(1 << color))[0];
-    found.set(key, { chain, color, other, ks: [k] });
+    if (f) f.ks.push(k);
+    else found.set(key, { middle, x, ends, ks: [k] });
   });
-  return [...found.values()].map(({ chain, color, other, ks }) => ({
-    reads: [...chain, ...ks],
-    legs: (w) => {
-      const regions = chain.map((region) => ({ region }));
-      return journey([
-        ...premiseDots(w, "forcingChain", chain),
-        ...narrowLegs(
-          w,
-          "forcingChain",
-          ks,
-          1 << color,
-          chainSentence(w, regions, color, other),
-        ),
-      ]);
-    },
-  }));
+  return [...found.values()].map(({ middle, x, ends, ks }) => {
+    const self = (b.possible[middle] & (1 << x)) !== 0;
+    return {
+      reads: [middle, ...ends, ...ks],
+      legs: (w) =>
+        journey([
+          ...premiseDots(w, "weighRegion", [middle, ...ends]),
+          ...narrowLegs(w, "weighRegion", ks, 1 << x, (k, c) =>
+            say.weigh(
+              k,
+              { region: middle },
+              ends.map((region) => ({ region })),
+              x,
+              self,
+              c,
+            ),
+          ),
+        ]),
+    };
+  });
 }
 
 /**
- * The chain step's sentence, checked against the board as it stands once every
- * region of the chain shows its two dots: where the color is not in every region,
- * each region takes the dot the one before it leaves, and the walk must end on
- * `color`, or the sentence would misdescribe the dots. Read once, before any
- * of the firing's narrowing legs, since a leg placing a color beside the chain
- * would change what its regions show.
- */
-function chainSentence(
-  w: Work,
-  chain: readonly MapEvidence[],
-  color: number,
-  other: number,
-): (k: number, c: Conclusion) => Sentence {
-  const said = (k: number, c: Conclusion): Sentence => say.chain(k, chain, color, c);
-  if (chain.every(({ region }) => colorsLeft(w, region) & (1 << color))) return said;
-  const forced = [other];
-  for (let i = 1; i < chain.length; i++)
-    forced.push(colorsOf(colorsLeft(w, chain[i].region) & ~(1 << forced[i - 1]))[0]);
-  // The sentence says the walk ends on `color`; it is what `forcingChain` found,
-  // so a walk that does not is a board the dots misdescribe.
-  if (forced[forced.length - 1] !== color)
-    throw new Error(`map hint: chain walk ends on ${forced.at(-1)}, not ${color}`);
-  return said;
-}
-
-/**
- * Before a pair or a chain is stated, each region its premise rests on shows
- * its two colors as dots, one leg per region that does not already. "Can only be
- * yellow or teal" is then on the board rather than a sum the player has to work
- * out from the neighbors and hold while following the deduction (owner
- * playtests, 2026-09-25, a chain first and then a pair). It is the notation a
- * player solving alone would make, and the deduction's step then reads straight
- * off it.
+ * Before a pair or a weighing is stated, each region its premise rests on
+ * shows its colors as dots, one leg per region that does not already. "Can
+ * only be yellow or teal" is then on the board rather than a sum the player
+ * has to work out from the neighbors and hold while following the deduction
+ * (owner playtests, 2026-09-25, a chain first and then a pair). It is the
+ * notation a player solving alone would make, and the deduction's step then
+ * reads straight off it.
  */
 function premiseDots(
   w: Work,
@@ -460,7 +423,7 @@ export function buildSteps(state: MapState, reading: CandidateReading): MapHintS
     const b = boardOf(w);
     let rung = singles(w, b);
     if (rung.length === 0) rung = pairs(b);
-    if (rung.length === 0) rung = chains(b);
+    if (rung.length === 0) rung = weighs(b);
     const offered = rung.map((f) => ({
       reads: () => f.reads,
       take: () => {

@@ -1242,8 +1242,7 @@ classification entirely and SHALL narrate imperatively.
 
 A deduction that reaches its conclusion through a hypothesis SHALL be
 classified by whether each link writes a mark the player can make. A Check is
-a contradiction visible at the placement, with no propagation, narratable at
-any tier. A Tactic is a chain whose every link is a fact the game's ordinary
+a look at the placement, with no propagation, narratable at any tier. A Tactic is a chain whose every link is a fact the game's ordinary
 marks record, taught as ordinary steps that each write their mark. A Search
 runs the solver from a hypothesis, backtracks, or follows a chain of
 suppositions no mark records, however short.
@@ -1262,41 +1261,12 @@ suppositions no mark records, however short.
 - **THEN** it runs only at Unreasonable, and the hint below it refuses it as a
   Search
 
-### Requirement: A Tactic's chain is shown on the board
+#### Scenario: Weighing one element's values is a Check
 
-A supposition chain a tier keeps ("A supposition rung that defines its tier
-keeps it until a markable technique fills it") SHALL be shown on the board:
-every link outlined, both ends anchored, no number on any link. It SHALL NOT
-compress the chain into a single claim the player can only check by redoing
-the deduction. It SHALL NOT be required to advance one leg at a time: the
-player holds the hypothesis in mind and walks the marked chain at their own
-pace.
-
-#### Scenario: A bounded chain is walked, not asserted
-
-- **WHEN** a hint's next deduction is a bounded chain of forced consequences
-  reaching a named contradiction, at a tier that keeps it
-- **THEN** every link is outlined on the board, with the hypothesis and the
-  contradiction both anchored, and the narration is not one sentence asserting
-  the conclusion
-- **AND** the player walks it on the board at their own pace; the hint is not
-  required to advance one link per step
-
-### Requirement: A Tactic's narration names the ends, the links and the rule
-
-The narration of a chain a tier keeps SHALL name the two ends of the chain and
-the chain as a whole, each a reference of its own, and SHALL supply the rule
-that propagates the chain, which is the technique being taught and is nowhere
-on the board. Where the conclusion rests on more than one branch of a case
-split, the narration SHALL say so: a conclusion that does not follow from its
-own stated premises is a defect.
-
-#### Scenario: A chain's conclusion rests on a case split
-
-- **WHEN** a narrated chain's conclusion follows only because both branches of
-  a case split lead to it
-- **THEN** the narration names the two ends and the chain, states the rule that
-  propagates it, and states both branches
+- **WHEN** a rung takes every value one element can hold, reads each off the
+  board as it stands, and concludes what every value agrees on, as Map's
+  weighing and Path's weighed square do
+- **THEN** it is a Check, and may define a tier below Unreasonable
 
 ### Requirement: A Search is refused and never narrated
 
@@ -1372,21 +1342,6 @@ hint has no position left to certify.
   for a hint
 - **THEN** the mistake check names the entry from the search's answer, and the
   midend refuses before the game's `hint` is asked
-
-### Requirement: A rung is classified by the bound it guarantees
-
-A rung SHALL be classified by the bound it guarantees, not by the depth it
-typically reaches: two rungs can be the same function invoked with different
-limits and still fall on opposite sides of the line. Where a game gates a rung
-on such a bound, that bound SHALL be defined once and documented as
-load-bearing for the tier's name and not as a performance dial.
-
-#### Scenario: Two strengths of one rung are classified separately
-
-- **WHEN** a game applies the same trial function at two tiers, bounding the
-  hypothesis' consequences at one and leaving them unbounded at the other
-- **THEN** the bounded one is a Tactic and the unbounded one a Search, whatever
-  their measured distributions look like on typical boards
 
 ### Requirement: Two rungs with one narration are told apart structurally
 
@@ -2776,25 +2731,3 @@ ring and within it, and SHALL NOT stand in for the ring.
 
 - **WHEN** a Tracks or Path step asks for a line on an edge
 - **THEN** the edge is ringed by a pill, and the line is drawn inside the pill
-
-### Requirement: A supposition rung that defines its tier keeps it until a markable technique fills it
-
-A Search SHALL sit at Unreasonable, with one exception: a supposition rung
-that alone defines a tier below Unreasonable SHALL keep that tier, its hint
-shown as a chain on the board, until a markable technique fills the tier, and
-SHALL then move to Unreasonable. Moving it first would leave the tier with no
-board to deal, and removing a tier changes the params a game ID and a saved
-preference carry.
-
-#### Scenario: A rung that is the whole of its tier
-
-- **WHEN** a tier's boards are told apart from the tier below only by a
-  supposition rung
-- **THEN** the rung stays at that tier until a markable technique deals the
-  tier's boards without it
-
-#### Scenario: A rung a tier can do without
-
-- **WHEN** a tier keeps other techniques that still deal boards without the
-  supposition rung
-- **THEN** the rung runs only at Unreasonable

@@ -192,11 +192,6 @@ whether a trial was involved:
   narrated: the hint refuses and says deduction has run out. Exemplars:
   Undead's `forcingPass`, the Latin forcing chain.
 
-A supposition rung that alone defines a tier keeps it until a markable
-technique fills the tier (`solver-and-generator.md` § "Check, Tactic,
-Search"). Until then its hint shows the walk statically (`hints-marks.md`
-§ "Show the what-if walk statically"). Map's `forcingChain` is the last.
-
 - **Judge the shape of the call, not the length of the sentence.** A rung
   that runs a fixpoint from its hypothesis is a Search however short its
   sentence.
@@ -432,11 +427,10 @@ Tie by something the code guarantees, cheapest first:
 - **A value**, where the puzzle has one (§ "Name a square by its value").
 - **A role word tied to the mark's shape**, where the game's marks already
   use distinct ones.
-- **A reference of its own for a link the words single out.** Where the
-  second mark is a chain, name it whole ("the outlined chain") and each link
-  the sentence needs by its relation to it ("one of its ends", "its other
-  end"), each its own reference with its own pill, and keep "this cell" for
-  the ringed one. Exemplar: `chainEnds` in
+- **A reference of its own for a part the words single out.** Where the
+  second mark covers parts that play different roles, name each part by its
+  place ("the middle region", "an end"), each its own reference with its own
+  pill, and keep "this cell" for the ringed one. Exemplar: `weigh` in
   [`map/hint-text.ts`](../src/games/map/hint-text.ts).
 
 Guard it in the game's test: a second mark displayed implies the explanation

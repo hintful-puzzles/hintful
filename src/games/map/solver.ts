@@ -3,7 +3,8 @@
  *   - DIFF_EASY    — {@link onlyColorLeft}: a region with one possible color;
  *   - DIFF_NORMAL  — {@link sharedPair}: two adjacent regions down to the same
  *                    two colors use both, so a region touching both is neither;
- *   - DIFF_HARD    — {@link forcingChain}: a chain of two-color regions;
+ *   - DIFF_HARD    — {@link weighRegion}: every color one region can take,
+ *                    each read off its neighbors' dots;
  *   - DIFF_RECURSE — guess and verify (also proves uniqueness at every level).
  *
  * Each rung is a function that *reports* its firings through a callback, and
@@ -34,24 +35,7 @@ export interface MapBoard {
   readonly possible: Uint8Array;
 }
 
-/** The forcing-chain rung's search scratch, sized once per board. */
-export interface ChainScratch {
-  queue: Int32Array;
-  /** The color a region is forced to on the branch being searched, -1 unseen. */
-  forced: Int32Array;
-  /** The region each reached region was forced from, -1 at the origin. */
-  parent: Int32Array;
-}
-
-export function newChainScratch(n: number): ChainScratch {
-  return {
-    queue: new Int32Array(n),
-    forced: new Int32Array(n),
-    parent: new Int32Array(n),
-  };
-}
-
-interface Scratch extends MapBoard, ChainScratch {
+interface Scratch extends MapBoard {
   depth: number;
 }
 
@@ -67,7 +51,6 @@ function newScratch(
     ngraph,
     coloring,
     possible: new Uint8Array(n),
-    ...newChainScratch(n),
     depth: 0,
   };
 }
@@ -168,73 +151,55 @@ export function sharedPair(
 }
 
 /**
- * HARD: forcing chains. From each blank two-color region, for each of its two
- * colors `c`, suppose it is the *other* one and follow the consequence through
- * every two-color neighbor it forces. A region driven to `c` that way means one
- * of it and the origin is `c` whichever the origin is, so a region adjacent to
- * both cannot be. Reported as `fire(origin, c, end, target)`; the chain from
- * `origin` to `end` is {@link chainTo} over `sc.parent`, which holds until the
- * next origin's search starts.
+ * HARD: weigh every color a blank region `middle` can take. Each color is read
+ * off the board as it stands: a neighbor whose two dots are that color and `x`
+ * is left only `x`. A region that, whichever color `middle` takes, touches the
+ * `x` it leaves, or touches `middle` where that color is `x` itself, cannot be
+ * `x`. Reported as `fire(middle, x, ends, target)`, `ends` holding one
+ * neighbor of both per color of `middle` other than `x`.
+ *
+ * Each way is one color placed and its neighbors' dots read, nothing
+ * propagated further: Path's weighed square, on a graph. A three-region
+ * forcing chain is exactly the case of a two-color `middle`, and a longer one
+ * is a supposition, which Unreasonable's search covers.
  */
-export function forcingChain(
+export function weighRegion(
   b: MapBoard,
-  sc: ChainScratch,
-  fire: (origin: number, color: number, end: number, target: number) => void,
+  fire: (middle: number, x: number, ends: readonly number[], target: number) => void,
 ): void {
   const { graph, n, ngraph, coloring, possible } = b;
-  const { queue, forced, parent } = sc;
-  for (let i = 0; i < n; i++) {
-    if (coloring[i] >= 0 || bitcount(possible[i]) !== 2) continue;
-
-    for (let c = 0; c < FOUR; c++)
-      if (possible[i] & (1 << c)) {
-        const origc = 1 << c;
-        forced.fill(-1);
-        let head = 0;
-        let tail = 0;
-        queue[tail++] = i;
-        forced[i] = possible[i] & ~origc;
-        parent[i] = -1;
-
-        while (head < tail) {
-          const j = queue[head++];
-          const currc = forced[j];
-
-          for (
-            let gi = graphVertexStart(graph, n, ngraph, j);
-            gi < ngraph && graph[gi] < n * (j + 1);
-            gi++
-          ) {
-            const k = graph[gi] - j * n;
-
-            if (
-              forced[k] < 0 &&
-              coloring[k] < 0 &&
-              bitcount(possible[k]) === 2 &&
-              possible[k] & currc
-            ) {
-              queue[tail++] = k;
-              forced[k] = possible[k] & ~currc;
-              parent[k] = j;
-            }
-
-            if (
-              currc === origc &&
-              graphAdjacent(graph, n, ngraph, k, i) &&
-              possible[k] & currc
-            )
-              fire(i, c, j, k);
-          }
+  const touch = (a: number, c: number) => graphAdjacent(graph, n, ngraph, a, c);
+  for (let m = 0; m < n; m++) {
+    if (coloring[m] >= 0) continue;
+    const around = [...neighbors(graph, n, ngraph, m)].filter((k) => coloring[k] < 0);
+    for (let x = 0; x < FOUR; x++) {
+      // Per color of `middle` but `x`, the neighbors that color leaves only `x`.
+      const leftX: number[][] = [];
+      for (let c = 0; c < FOUR; c++)
+        if (c !== x && possible[m] & (1 << c)) {
+          const pair = (1 << c) | (1 << x);
+          leftX.push(around.filter((k) => possible[k] === pair));
         }
-      }
-  }
-}
+      if (leftX.length === 0 || leftX.some((ks) => ks.length === 0)) continue;
+      const self = (possible[m] & (1 << x)) !== 0;
 
-/** The chain {@link forcingChain} walked from its origin to `end`, origin first. */
-export function chainTo(sc: ChainScratch, end: number): number[] {
-  const out: number[] = [];
-  for (let j = end; j >= 0; j = sc.parent[j]) out.push(j);
-  return out.reverse();
+      const seen = new Set<number>();
+      for (const k0 of leftX[0])
+        for (const t of neighbors(graph, n, ngraph, k0)) {
+          if (t === m || seen.has(t)) continue;
+          seen.add(t);
+          if (coloring[t] >= 0 || !(possible[t] & (1 << x))) continue;
+          if (self && !touch(t, m)) continue;
+          const ends: number[] = [];
+          for (const ks of leftX) {
+            const k = ks.find((k) => k !== t && touch(k, t));
+            if (k === undefined) break;
+            ends.push(k);
+          }
+          if (ends.length === leftX.length) fire(m, x, ends, t);
+        }
+    }
+  }
 }
 
 // The difficulty tiers are caps on how far down this ladder the solver may go,
@@ -268,8 +233,8 @@ function solve(sc: Scratch, difficulty: number): number {
     if (doneSomething) continue;
 
     if (difficulty < DIFF_HARD) break;
-    forcingChain(sc, sc, (_i, c, _j, k) => {
-      possible[k] &= ~(1 << c);
+    weighRegion(sc, (_m, x, _ends, t) => {
+      possible[t] &= ~(1 << x);
       doneSomething = true;
     });
     if (!doneSomething) break;

@@ -999,11 +999,26 @@
 
 ## map
 
-839 cells dealt, 69 refused, 180 left out as slow.
+871 cells dealt, 51 refused, 166 left out as slow.
 
-- `15x3n30du` asked Unreasonable: 7.1 s
-- `3x30n75du` asked Unreasonable: gave up on 1; 7.6 s
-- `25x30n11dh` asked Tricky: 3.5 s
+- `5x5n8dn` asked Normal: gave up on 3
+- `6x6n9dh` asked Tricky: gave up on 3
+- `6x6n9du` asked Unreasonable: gave up on 3
+- `7x7n10dh` asked Tricky: gave up on 2
+- `8x8n11dh` asked Tricky: gave up on 1
+- `8x8n11du` asked Unreasonable: gave up on 1
+- `3x20n30du` asked Unreasonable: gave up on 3
+- `15x3n30dh` asked Tricky: gave up on 2
+- `15x3n30du` asked Unreasonable: gave up on 3
+- `15x20n8dn` asked Normal: gave up on 3
+- `15x20n9dh` asked Tricky: gave up on 2
+- `15x20n9du` asked Unreasonable: gave up on 2
+- `15x20n10dh` asked Tricky: gave up on 2
+- `15x20n10du` asked Unreasonable: gave up on 2
+- `15x20n12du` asked Unreasonable: gave up on 1
+- `3x30n75dh` asked Tricky: gave up on 1; 4.3 s
+- `3x30n75du` asked Unreasonable: gave up on 1; 7.1 s
+- `25x30n8dn` asked Normal: gave up on 1; 7.1 s
 - `2x2n5de` refused: There must be no more regions than squares.
 - `2x2n5dn` refused: There must be no more regions than squares.
 - `2x2n5dh` refused: There must be no more regions than squares.
@@ -1014,21 +1029,14 @@
 - `4x4n7dn` refused: No map of 7 regions is Normal.
 - `4x4n7dh` refused: No map of 7 regions is Tricky.
 - `4x4n7du` refused: No map of 7 regions is Unreasonable.
-- `5x5n8dn` refused: Normal maps of 8 regions are too rare to deal.
 - `5x5n8dh` refused: No map of 8 regions is Tricky.
 - `5x5n8du` refused: No map of 8 regions is Unreasonable.
-- `6x6n9dh` refused: Tricky maps of 9 regions are too rare to deal.
-- `6x6n9du` refused: Unreasonable maps of 9 regions are too rare to deal.
-- `7x7n10dh` refused: Tricky maps of 10 regions are too rare to deal.
-- `7x7n10du` refused: Unreasonable maps of 10 regions are too rare to deal.
 - `2x20n30dn` refused: No map two squares wide is Normal.
 - `2x20n30dh` refused: No map two squares wide is Tricky.
 - `2x20n30du` refused: No map two squares wide is Unreasonable.
-- `3x20n30dh` refused: Tricky maps three squares wide are too rare to deal.
 - `15x2n30dn` refused: No map two squares wide is Normal.
 - `15x2n30dh` refused: No map two squares wide is Tricky.
 - `15x2n30du` refused: No map two squares wide is Unreasonable.
-- `15x3n30dh` refused: Tricky maps three squares wide are too rare to deal.
 - `15x20n5dn` refused: No map of 5 regions is Normal.
 - `15x20n5dh` refused: No map of 5 regions is Tricky.
 - `15x20n5du` refused: No map of 5 regions is Unreasonable.
@@ -1038,18 +1046,12 @@
 - `15x20n7dn` refused: No map of 7 regions is Normal.
 - `15x20n7dh` refused: No map of 7 regions is Tricky.
 - `15x20n7du` refused: No map of 7 regions is Unreasonable.
-- `15x20n8dn` refused: Normal maps of 8 regions are too rare to deal.
 - `15x20n8dh` refused: No map of 8 regions is Tricky.
 - `15x20n8du` refused: No map of 8 regions is Unreasonable.
-- `15x20n9dh` refused: Tricky maps of 9 regions are too rare to deal.
-- `15x20n9du` refused: Unreasonable maps of 9 regions are too rare to deal.
-- `15x20n10dh` refused: Tricky maps of 10 regions are too rare to deal.
-- `15x20n10du` refused: Unreasonable maps of 10 regions are too rare to deal.
 - `2x30n75de` refused: There must be no more regions than squares.
 - `2x30n75dn` refused: There must be no more regions than squares.
 - `2x30n75dh` refused: There must be no more regions than squares.
 - `2x30n75du` refused: There must be no more regions than squares.
-- `3x30n75dh` refused: Tricky maps three squares wide are too rare to deal.
 - `25x2n75de` refused: There must be no more regions than squares.
 - `25x2n75dn` refused: There must be no more regions than squares.
 - `25x2n75dh` refused: There must be no more regions than squares.
@@ -1066,14 +1068,9 @@
 - `25x30n7dn` refused: No map of 7 regions is Normal.
 - `25x30n7dh` refused: No map of 7 regions is Tricky.
 - `25x30n7du` refused: No map of 7 regions is Unreasonable.
-- `25x30n8dn` refused: Normal maps of 8 regions are too rare to deal.
 - `25x30n8dh` refused: No map of 8 regions is Tricky.
 - `25x30n8du` refused: No map of 8 regions is Unreasonable.
-- `25x30n9dh` refused: Tricky maps of 9 regions are too rare to deal.
-- `25x30n9du` refused: Unreasonable maps of 9 regions are too rare to deal.
-- `25x30n10dh` refused: Tricky maps of 10 regions are too rare to deal.
-- `25x30n10du` refused: Unreasonable maps of 10 regions are too rare to deal.
-- left out: `15x4n30du` `15x5n30du` `15x6n30du` `15x7n30du` `15x8n30du` `15x9n30du` `15x10n30du` `15x11n30du` `15x12n30du` `15x13n30du` `15x14n30du` `15x15n30du` `15x16n30du` `15x17n30du` `15x18n30du` `15x19n30du` `15x21n30du` `15x22n30du` `15x23n30du` `15x24n30du` `15x25n30du` `15x26n30du` `15x27n30du` `15x28n30du` `15x29n30du` `15x30n30du` `15x20n11du` `15x20n12du` `15x20n13du` `15x20n14du` `15x20n15du` `15x20n16du` `15x20n17du` `15x20n18du` `15x20n19du` `15x20n20du` `15x20n21du` `15x20n22du` `15x20n23du` `15x20n24du` `15x20n25du` `15x20n26du` `15x20n27du` `15x20n28du` `15x20n29du` `15x20n31du` `15x20n32du` `15x20n33du` `15x20n34du` `15x20n35du` `15x20n36du` `15x20n37du` `15x20n38du` `15x20n39du` `15x20n40du` `15x20n41du` `15x20n42du` `15x20n43du` `15x20n44du` `15x20n45du` `15x20n46du` `15x20n47du` `15x20n48du` `15x20n49du` `15x20n50du` `15x20n51du` `15x20n52du` `15x20n53du` `15x20n54du` `15x20n55du` `15x20n56du` `15x20n57du` `15x20n58du` `15x20n59du` `15x20n60du` `15x20n61du` `15x20n62du` `15x20n63du` `15x20n64du` `15x20n65du` `15x20n66du` `15x20n67du` `15x20n68du` `15x20n69du` `15x20n70du` `15x20n71du` `15x20n72du` `15x20n73du` `15x20n74du` `15x20n75du` `4x30n75du` `5x30n75du` `6x30n75du` `7x30n75du` `8x30n75du` `9x30n75du` `10x30n75du` `11x30n75du` `12x30n75du` `13x30n75du` `14x30n75du` `15x30n75du` `16x30n75du` `17x30n75du` `18x30n75du` `19x30n75du` `20x30n75du` `21x30n75du` `22x30n75du` `23x30n75du` `24x30n75du` `25x4n75du` `25x5n75du` `25x6n75du` `25x7n75du` `25x8n75du` `25x9n75du` `25x10n75du` `25x11n75du` `25x12n75du` `25x13n75du` `25x14n75du` `25x15n75du` `25x16n75du` `25x17n75du` `25x18n75du` `25x19n75du` `25x20n75du` `25x21n75du` `25x22n75du` `25x23n75du` `25x24n75du` `25x25n75du` `25x26n75du` `25x27n75du` `25x28n75du` `25x29n75du` `25x30n11du` `25x30n12dh` `25x30n12du` `25x30n13dh` `25x30n13du` `25x30n14dh` `25x30n14du` `25x30n15dh` `25x30n15du` `25x30n16dh` `25x30n16du` `25x30n17dh` `25x30n17du` `25x30n18dh` `25x30n18du` `25x30n19dh` `25x30n19du` `25x30n20dh` `25x30n20du` `25x30n21dh` `25x30n21du` `25x30n22dh` `25x30n22du` `25x30n23dh` `25x30n23du` `25x30n24dh` `25x30n24du` `25x30n25dh` `25x30n25du` `25x30n26dh` `25x30n26du` `25x30n27dh` `25x30n27du` `25x30n28dh` `25x30n28du` `25x30n29dh` `25x30n29du` `25x30n30dh` `25x30n30du` `25x30n31dh` `25x30n31du` `25x30n32dh` `25x30n32du`
+- left out: `4x30n75dh` `4x30n75du` `5x30n75dh` `5x30n75du` `6x30n75dh` `6x30n75du` `7x30n75dh` `7x30n75du` `8x30n75dh` `8x30n75du` `9x30n75dh` `9x30n75du` `10x30n75dh` `10x30n75du` `11x30n75dh` `11x30n75du` `12x30n75dh` `12x30n75du` `13x30n75dh` `13x30n75du` `14x30n75dh` `14x30n75du` `15x30n75dh` `15x30n75du` `16x30n75dh` `16x30n75du` `17x30n75dh` `17x30n75du` `18x30n75dh` `18x30n75du` `19x30n75dh` `19x30n75du` `20x30n75dh` `20x30n75du` `21x30n75dh` `21x30n75du` `22x30n75dh` `22x30n75du` `23x30n75dh` `23x30n75du` `24x30n75dh` `24x30n75du` `25x4n75dh` `25x4n75du` `25x5n75dh` `25x5n75du` `25x6n75dh` `25x6n75du` `25x7n75dh` `25x7n75du` `25x8n75dh` `25x8n75du` `25x9n75dh` `25x9n75du` `25x10n75dh` `25x10n75du` `25x11n75dh` `25x11n75du` `25x12n75dh` `25x12n75du` `25x13n75dh` `25x13n75du` `25x14n75dh` `25x14n75du` `25x15n75dh` `25x15n75du` `25x16n75dh` `25x16n75du` `25x17n75dh` `25x17n75du` `25x18n75dh` `25x18n75du` `25x19n75dh` `25x19n75du` `25x20n75dh` `25x20n75du` `25x21n75dh` `25x21n75du` `25x22n75dh` `25x22n75du` `25x23n75dh` `25x23n75du` `25x24n75dh` `25x24n75du` `25x25n75dh` `25x25n75du` `25x26n75dh` `25x26n75du` `25x27n75dh` `25x27n75du` `25x28n75dh` `25x28n75du` `25x29n75dh` `25x29n75du` `25x30n9dn` `25x30n9dh` `25x30n9du` `25x30n10dn` `25x30n10dh` `25x30n10du` `25x30n11dn` `25x30n11dh` `25x30n11du` `25x30n12dn` `25x30n12dh` `25x30n12du` `25x30n13dn` `25x30n13dh` `25x30n13du` `25x30n14dn` `25x30n14dh` `25x30n14du` `25x30n15dn` `25x30n15dh` `25x30n15du` `25x30n16dn` `25x30n16dh` `25x30n16du` `25x30n17dn` `25x30n17dh` `25x30n17du` `25x30n18dn` `25x30n18dh` `25x30n18du` `25x30n19dn` `25x30n19dh` `25x30n19du` `25x30n20dn` `25x30n20dh` `25x30n20du` `25x30n21dn` `25x30n21dh` `25x30n21du` `25x30n22dn` `25x30n22dh` `25x30n22du` `25x30n23dn` `25x30n23dh` `25x30n23du` `25x30n24dn` `25x30n24dh` `25x30n24du` `25x30n25dn` `25x30n25dh` `25x30n25du` `25x30n26dn` `25x30n26dh` `25x30n26du` `25x30n27dn` `25x30n27dh` `25x30n27du` `25x30n28dn` `25x30n28dh` `25x30n28du` `25x30n29dn` `25x30n29dh` `25x30n29du` `25x30n30dn` `25x30n30dh` `25x30n30du` `25x30n31dn` `25x30n31dh` `25x30n31du` `25x30n32dn` `25x30n32dh` `25x30n32du`
 
 ## mathrax
 

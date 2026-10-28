@@ -28,10 +28,8 @@
  *    of a journey never says which leg it is or how many there are, which
  *    the chrome shows as "Step 2 of 7". Held in the bound walk.
  *  - **No step asks the player to carry a chain it never lays out**: a
- *    bounded chain is a legitimate
- *    *Tactic* and may be narrated — but with the chain **shown on the
- *    board**, ordered and anchored at both ends, rather than compressed
- *    into a claim; an unbounded search may not be narrated at all.
+ *    *Tactic* is taught as ordinary steps, each writing its mark, and a
+ *    supposition is a Search, which may not be narrated at all.
  *    Checked twice — once on each game's first preset with the rules
  *    above, and once **per tier** in its own block at the bottom,
  *    because such a rung is tier-gated and the first preset is the one
@@ -242,29 +240,6 @@ const LONG_NARRATIONS: {
       rect: "12x14du:a2a2e8d6g8b4c10n10e2a6g8j6c21o16h2b3d3d3c9m3d4a6a8e12p4c2",
     },
   },
-  {
-    games: ["map"],
-    rungs: ["forcingChain"],
-    why:
-      "The case split names the chain and each of its two ends as references " +
-      "of their own, so each end's pill finds it (retire-hint-ordinals, D2), " +
-      "where numbers on the board once named them in two characters; beside a " +
-      "conclusion that dots two colors it runs a few characters over.",
-    spokenOn: {
-      map: "15x20n30dh:haibabibaajacbbahegabdcbbabbgbaafecaaecbbagadaiccaeaaacbababbacaeaaafdcabebacaeaababdbcababaabcbaggabbbbddfafbabaabccbeabaabcaebbaaagdfdbaabdccbbdeaaaaaadhbeddabbcabadbibjaafcagacdbajdfbgaaacabcgaaadaaada,2e2b01b2b2a1b330a2a201",
-    },
-  },
-  {
-    games: ["clusters"],
-    rungs: ["chain"],
-    why:
-      "The forced cells are named by the small pieces the legend teaches, " +
-      "because 'outlined' is the danger tile's word alone; where the break is " +
-      "a tile that can't touch two like it, the sentence runs a character over.",
-    spokenOn: {
-      clusters: "7x7dt:aDCeCBdcDCahBCaAb",
-    },
-  },
 ];
 
 /** The shared necessity vocabulary a deductive conclusion draws from.
@@ -344,19 +319,16 @@ const DEDUCTIVE = new Set(
 /**
  * The vocabulary of a conclusion the player is asked to take on trust because
  * the reasoning behind it was *not laid out* — the Check / Tactic / Search
- * taxonomy (`docs/solver-and-generator.md` § "Check, Tactic, Search"), which splits on whether the reasoning is a
- * **bounded chain the player can be walked through**:
+ * taxonomy (`docs/solver-and-generator.md` § "Check, Tactic, Search"), which splits on whether each
+ * link of the reasoning writes a mark the player can make:
  *
- * - **Check** — place, look, one rule breaks. Narrate directly.
- * - **Tactic** — a bounded chain of forced consequences to a named endpoint.
- *   Legitimate at a middle tier, but the chain must be **shown on the board** —
- *   each link marked in the order it falls, both ends anchored — rather than
- *   compressed into a claim the player can only check by redoing the deduction.
- *   The stricter form (a display-only leg per link, so the player advances one
- *   inference at a time) was designed and set aside by an owner decision:
- *   holding a *hypothesis* in your head is fine, holding the *chain* is not.
- * - **Search** — run the whole solver from a hypothesis, or branch and
- *   backtrack. `Unreasonable` only, and never narrated at all.
+ * - **Check** — place, look, one rule breaks; or weigh every value of one
+ *   element so and keep what they share. Narrate directly.
+ * - **Tactic** — a chain whose every link is a mark the player can make,
+ *   taught as ordinary steps, each writing its mark.
+ * - **Search** — run the whole solver from a hypothesis, branch and
+ *   backtrack, or follow a chain of suppositions. `Unreasonable` only, and
+ *   never narrated at all.
  *
  * It is checked for every hinting game at once: a rule enforced in one game is
  * not enforced.

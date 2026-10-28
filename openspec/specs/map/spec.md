@@ -166,8 +166,8 @@ The solver SHALL have its full graded deductive power over the
 region-adjacency graph: at Easy, place a region that has exactly one possible
 color left; at Normal, additionally exclude a shared color pair from the
 common neighbors of an adjacent same-two-possibilities pair; at Tricky,
-additionally run the forcing-chain breadth-first search; at Unreasonable,
-additionally recurse (guess and verify).
+additionally weigh every color of one region, each read off its neighbors'
+dots; at Unreasonable, additionally recurse (guess and verify).
 
 #### Scenario: A board that needs a pair is not solved at Easy
 
@@ -175,6 +175,13 @@ additionally recurse (guess and verify).
   above it, is solved with the Easy cap
 - **THEN** the solver does not report a unique solution
 - **AND** with the Normal cap it does
+
+#### Scenario: A board that needs a forcing chain longer than three is Unreasonable
+
+- **WHEN** a board whose ID says Tricky needs a forcing chain the
+  weighing does not reach
+- **THEN** it opens as Unreasonable, keeps its ID, and its hint refuses where
+  the chain was, as on any Unreasonable board
 
 ### Requirement: Generation: Map's generator never removes the last clue of a color
 
@@ -432,8 +439,8 @@ A blank region's colors SHALL be read as its dots, or all four colors when it
 has none, less every color a neighbor shows. That is sound because
 `findMistakes` flags any dots leaving out a region's answer. The plan SHALL
 place dots only where a deduction rules out a color no neighbor shows, or
-where a pair's or chain's premise needs them, so an Easy board's plan places
-none.
+where a pair's or weighing's premise needs them, so an Easy board's plan
+places none.
 
 #### Scenario: The hint's dots are the next step's premise
 
@@ -447,9 +454,10 @@ none.
 The deductions SHALL be the solver's three rungs, reported by the same
 functions the solver runs: a region with one color left must take it; two
 touching regions down to the same two colors use both, so a region touching
-both can be neither; and a forcing chain, in which each region has two colors
-and forces the next if the first is not the struck color, so the last is
-driven to it and a region touching both ends cannot be that color.
+both can be neither; and a weighing, in which every color a middle region can
+take but one, `x`, leaves a neighbor dotted with that color and `x` with `x`
+alone, so a region touching every such neighbor, and the middle region where
+it could be `x`, cannot be `x`.
 
 #### Scenario: A region whose neighbors show three colors takes the fourth
 
@@ -458,11 +466,17 @@ driven to it and a region touching both ends cannot be that color.
 - **THEN** the step colors it the fourth, rings it, outlines nothing else, and
   names the three colors and the fourth
 
+#### Scenario: A three-region chain is a weighing
+
+- **WHEN** a region can be yellow or pink, one neighbor is dotted yellow and
+  teal, another pink and teal, and a third region touches both neighbors
+- **THEN** the weighing rules teal out of the third region
+
 ### Requirement: Hint: The plan offers the lowest rung that fires
 
 The plan SHALL offer the lowest rung that fires anywhere on the board and
 choose within it by continuing from its latest steps, so an Easy board's plan
-never shows a pair and a Normal board's never shows a chain.
+never shows a pair and a Normal board's never shows a weighing.
 
 #### Scenario: A single elsewhere comes before a pair nearby
 
@@ -483,31 +497,6 @@ one journey, a leg per region.
   more than one color is left to that region
 - **THEN** the step removes that dot and its sentence says the dot must go
 
-### Requirement: Hint: A pair or chain first dots its premise
-
-A pair or chain firing SHALL open its journey with a leg for each region its
-premise rests on that does not already show exactly its two colors as dots,
-dotting them (or removing the dots a neighbor's color rules out), so that when
-the pair or chain step is spoken every one of those regions shows its two
-colors and the deduction can be followed on the board without being worked
-out. Such a leg SHALL ring the region it dots and outline nothing.
-
-#### Scenario: A pair's undotted region is dotted before the pair is stated
-
-- **WHEN** the next deduction is a pair one of whose regions shows no dots
-- **THEN** the journey's first step rings that region, outlines nothing, dots
-  the two colors its neighbors leave it, and the pair step follows with both
-  regions showing their two dots
-
-#### Scenario: A chain's conclusion is dotted onto an unmarked region
-
-- **WHEN** the next deduction is a forcing chain striking a color from a region
-  with no dots
-- **THEN** the journey first dots each region of the chain without them with
-  its two colors, then its last step dots that region with the colors it has
-  left, outlines the chain, and says the struck color falls on one end or the
-  other and that this region touches both
-
 ### Requirement: Hint: A hint step rings the region it acts on
 
 The ring's band on the region a step acts on SHALL be the only hint mark on
@@ -521,8 +510,8 @@ because its neighbors' fills are its premise.
 
 ### Requirement: Hint: A premise's regions are outlined apart from the ring
 
-The outline of the regions a pair or a chain rests on, which the legend sets
-in from their boundary, SHALL stay apart from the ring where one of them
+The outline of the regions a pair or a weighing rests on, which the legend
+sets in from their boundary, SHALL stay apart from the ring where one of them
 meets the target. The selection band SHALL stay visible just inside a hint
 band on the same region.
 
@@ -560,31 +549,42 @@ step.
   continues it by removing the colors neighbors show, and pressing Mark-all while the
   first is shown completes it
 
-### Requirement: Hint: The chain step names the chain by its ends
+### Requirement: Hint: A pair or weighing first dots its premise
 
-The chain step SHALL name the chain as a whole and each of its two ends as a
-reference of its own, and conclude that the chain puts the struck color at one
-end or the other and that this region touches both. The dots its regions show
-are the walk, and the sentence SHALL NOT recite it region by region. The plan
-SHALL fail and SHALL NOT speak a walk that does not end on the struck color.
+A pair or weighing firing SHALL open its journey with a leg for each region
+its premise rests on that does not already show exactly its colors as dots,
+dotting them (or removing the dots a neighbor's color rules out), so that when
+the pair or weighing step is spoken every one of those regions shows its
+colors and the deduction can be followed on the board without being worked
+out. Such a leg SHALL ring the region it dots and outline nothing.
 
-#### Scenario: A chain is named by its ends
+#### Scenario: A pair's undotted region is dotted before the pair is stated
 
-- **WHEN** a chain step is spoken
-- **THEN** it says the struck color is at one end or the other and that the
-  ringed region touches both, and pressing "one end" or "the other end" finds
-  that region alone
+- **WHEN** the next deduction is a pair one of whose regions shows no dots
+- **THEN** the journey's first step rings that region, outlines nothing, dots
+  the two colors its neighbors leave it, and the pair step follows with both
+  regions showing their two dots
 
-### Requirement: Hint: A chain's regions carry no number
+#### Scenario: A weighing's conclusion is dotted onto an unmarked region
 
-No number SHALL be drawn on a region of a chain, and the map's own region
-numbers SHALL show or hide as the player set them, whatever the hint shows.
+- **WHEN** the next deduction is a weighing striking a color from a region
+  with no dots
+- **THEN** the journey first dots the middle region and each end without them
+  with their colors, then its last step dots that region with the colors it
+  has left and outlines the middle region and the ends
 
-#### Scenario: Region numbers stay while a chain shows
+### Requirement: Hint: The weighing step names its middle region and its ends
 
-- **WHEN** the region numbers are shown and a chain step is displayed
-- **THEN** every region shows its own number, and no region of the chain
-  carries another
+The weighing step SHALL name the middle region and the ends, each a reference
+of its own, and say that whatever the middle region is, it or an end beside
+the ringed region is the struck color. The dots its regions show are the
+ways, and the sentence SHALL NOT recite them color by color.
+
+#### Scenario: A weighing is named by its parts
+
+- **WHEN** a weighing step is spoken
+- **THEN** pressing "the middle region" finds that region alone, and pressing
+  "an end" finds the ends
 
 ### Requirement: Look: Map's adjacency error markers are always on
 

@@ -73,11 +73,12 @@ The ideas it teaches, from the plainest up:
 * **A pair.** Two touching regions that can only be the same two colors
   must use both between them, so any region touching both can be
   neither.
-* **A chain.** On harder boards, a line of regions that can each be
-  only two colors passes a choice along: if the region at one end isn't
-  teal, it is its other color, which settles the next, and so on down
-  the chain until the region at the other end has to be teal. Either way
-  one end or the other is teal, so a region touching both can't be.
+* **Every color of one region.** On Tricky boards, take a region that
+  can only be yellow or pink, with one neighbor dotted yellow and teal
+  and another dotted pink and teal. If the middle region is yellow, the
+  first neighbor is left teal; if pink, the second is. Either way one of
+  them is teal, so a region touching both can't be. If the middle region
+  could be teal as well, the same holds for a region touching all three.
 
 Every hint is a deduction you could have made from what is on the board.
 On an **Unreasonable** board there may come a point where no deduction is

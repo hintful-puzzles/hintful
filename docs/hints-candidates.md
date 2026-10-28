@@ -1061,19 +1061,16 @@ follows. Exemplar: [`map/hint.ts`](../src/games/map/hint.ts).
   against the board (a harder rung is spoken only where no easier one fires
   anywhere), not against the labels per tier, which pass with the rungs
   reordered.
-- **A chain's premises go on the board before the chain is spoken.** For any
-  chain or pair rung, ask whether each link's premise is on the board; if
-  the player must work it out from the neighbors, the journey owes a leg
-  that writes it down first (`premiseDots`). Check every rung for the gap
+- **A premise goes on the board before the step that rests on it.** For a
+  pair or a weighing, ask whether each region's colors are on the board; if
+  the player must work them out from the neighbors, the journey owes a leg
+  that writes them down first (`premiseDots`). Check every rung for the gap
   once one has it.
-- **A chain step names what the notes show, never a rule to run**: the
-  pattern where there is one, else the chain value by value up to five
-  elements, and past that the rule and where the chain ends. The plan
-  throws if the walk does not end on the struck value (§ "A walk a sentence
-  claims is a walk the code takes"). The chain is outlined whole, its ends
-  named by their relation to it ([`hints-marks.md`](./hints-marks.md)
-  § "Show the what-if walk statically").
+- **A weighing names its parts and leaves the ways to the dots**: "whatever
+  the middle region is, an end beside this region is violet". Each color the
+  middle region can take is read off one end's two dots, which the premise
+  legs wrote, so the sentence does not recite them.
 - **Name an element by its mark, never by an id the board may not show**:
-  "this region", "the outlined pair", "the outlined chain". Name a color that is a value by its word, kept beside its fill
+  "this region", "the outlined pair", "the middle region". Name a color that is a value by its word, kept beside its fill
   (`FOUR_NAMES` in `engine/color/colors.ts`), which is a word for each
   scheme: put it in a `phrase`, and list several with `listOf`.

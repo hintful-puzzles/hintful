@@ -15,8 +15,8 @@
  * A region has no coordinates a player can read, and its number is behind a
  * preference that is off by default. So a sentence never names a region
  * outright: "this region" is the one the hint rings, "the outlined pair" are
- * the two it outlines, and a chain is "the outlined chain", its two ends
- * named by their relation to it.
+ * the two it outlines, and a weighing names its regions by their places in
+ * it, "the middle region" and "an outlined end".
  *
  * ## The conclusion says what the move does
  *
@@ -33,6 +33,7 @@ import {
   listOf,
   type MarkKind,
   mark,
+  NARRATION_LIMIT,
   Narration,
   phrase,
   type Sentence,
@@ -69,14 +70,6 @@ const names = (mask: number): ColorWord[] => colorsOf(mask).map(colorName);
 const all = (mask: number): Narration => listOf(names(mask));
 /** The colors in a mask as alternatives, "a, b or c". */
 const either = (mask: number): Narration => listOf(names(mask), "or");
-
-/** A chain's case split by its ends: one end has the color, or the chain
- * carries it to the other, each region taking the dot the one before it
- * leaves, and this region touches both ends. */
-function chainEnds(r: number, chain: readonly RegionMark[], hue: ColorWord): Narration {
-  const end = (e: RegionMark, words: string) => mark.as("outline", REGION, [e], words);
-  return phrase`${theChain(chain)} puts ${hue} at ${end(chain[0], "one end")} or ${end(chain[chain.length - 1], "the other end")}, both beside ${thisRegion(r)}`;
-}
 
 /** What a narrowing step does to its region, and so how its sentence ends:
  * - `place` — one color is left, and the step colors the region with it;
@@ -171,38 +164,41 @@ export const say = {
     }),
 
   /**
-   * A forcing chain, as the case split it is: one end has `color`, or the
-   * chain carries it to the other, and this region touches both. The
-   * walk was once said link by link with its colors (owner playtest,
-   * 2026-09-25), which no chain the walk deals can fit beside its conclusion
-   * in the narration limit; the dots the chain's regions show are the walk,
-   * and the words name its ends and the rule (owner, 2026-10-18).
-   *
-   * Map's own sentence rather than `forcingChainPremise`, which is written for
-   * a line: its "this cell's row already has it" and the candidate walk's
-   * conclusion become "touches" and one of three moves here, so two of its three clauses would
-   * differ (docs/hints-candidates.md § "What every game does": extract when
-   * only the vocabulary differs, decline when an arm's shape does).
+   * A weighed region, the middle one: each color it can take leaves one of
+   * the ends with `color` alone, or, where `self`, is `color` itself, and
+   * this region touches every one of them. Every way is read off the dots
+   * the premise legs have put on the middle region and the ends, so the words
+   * name the regions and the color, and leave the ways to the dots. "Beside"
+   * becomes "by" where the sentence would run over, which only "it or" and a
+   * conclusion dotting three colors together reach.
    */
-  chain: (
+  weigh: (
     r: number,
-    chain: readonly RegionMark[],
+    middle: RegionMark,
+    ends: readonly RegionMark[],
     color: number,
+    self: boolean,
     c: Conclusion,
   ): Sentence => {
     const hue = colorName(color);
-    return so({
-      look: chainEnds(r, chain, hue).capitalized(),
-      ...conclude(c, phrase`it can't be ${hue}`),
-    });
+    const end = mark.as("outline", REGION, ends, "an end");
+    const which = self ? phrase`it or ${end}` : end;
+    const said = (beside: string) =>
+      so({
+        look: phrase`whatever ${mark.as("outline", REGION, [middle], "the middle region")} is, ${which} ${beside} ${thisRegion(r)} is ${hue}`.capitalized(),
+        ...conclude(c, phrase`it can't be ${hue}`),
+      });
+    const told = said("beside");
+    return told.text.length <= NARRATION_LIMIT ? told : said("by");
   },
 
   /**
-   * One of a pair's or a chain's regions, dotted with its two colors before
-   * the pair or chain is stated, so "can only be yellow or teal" is on the
+   * One of a pair's or a weighing's regions, dotted with its colors before
+   * the pair or weighing is stated, so "can only be yellow or teal" is on the
    * board. The region dotted is ringed and nothing else is marked: the pair or
-   * chain is what the leg is writing, not what it reasons from, and its other
-   * regions' dots may not be on the board yet. `touched` and `two` are masks.
+   * weighing is what the leg is writing, not what it reasons from, and its
+   * other regions' dots may not be on the board yet. `touched` and `two` are
+   * masks.
    */
   premiseDot: (r: number, touched: number, two: number): Sentence =>
     so({
@@ -219,7 +215,3 @@ export const say = {
       move: phrase`it can only be ${either(two)}`,
     }),
 } as const;
-
-/** "the outlined chain": every region of a chain. */
-const theChain = (chain: readonly RegionMark[]): Narration =>
-  mark.as("outline", REGION, chain, "the outlined chain");

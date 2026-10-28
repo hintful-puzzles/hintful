@@ -693,15 +693,11 @@ mark for a supposition is ever added.
 | **Tactic** | a chain whose every link is a fact the game's ordinary marks record | Tricky, Hard, Extreme | ordinary steps, each writing its mark |
 | **Search** | run the whole solver from a hypothesis, branch and backtrack, or follow a chain of suppositions no mark records, however short | `Unreasonable` | refuse |
 
-**A supposition rung that alone defines a tier keeps it until a markable
-technique fills that tier** (`engine-hints`, "A supposition rung that defines
-its tier keeps it until a markable technique fills it"): moving it first
-leaves the tier with nothing to deal. Its hint shows the chain statically
-([`hints-marks.md`](./hints-marks.md) § "Show the what-if walk statically").
-Map's `forcingChain` is the last such rung, and the open change
-`teach-map-chains-with-marks` retires it. A supposition rung a tier can do without runs only at
-Unreasonable: the Latin forcing chain runs at `diffRecursive`, and the config
-has no field to put it lower.
+**A supposition rung runs only at Unreasonable**: the Latin forcing chain
+runs at `diffRecursive`, and the config has no field to put it lower. Where
+moving one would leave its tier with nothing to deal, find the markable
+technique that deals the tier first (the next bullets): every such tier so
+far was filled by one element's value, weighed.
 
 **Nothing enforces the tier column, so decide a rung's class from this table
 when you add or move one, and say so in the change.** `hint-quality.test.ts`
@@ -720,9 +716,12 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   lines placed on one square and looked at once is a Check (owner,
   2026-10-28). A supposed mark that forces one square, which then breaks
   the board, is the same look; most of Path's lookahead walks were that
-  long. Weighing every value of one element, each ruled out by a look, is a
-  Check too. Exemplar: `findBreaks` and `findWeighed` in
-  [`path/solver.ts`](../src/games/path/solver.ts).
+  long. Weighing every value of one element, each read by a look, and
+  keeping what they all share, is a Check too. Exemplars: `findBreaks` and
+  `findWeighed` in [`path/solver.ts`](../src/games/path/solver.ts), and
+  `weighRegion` in [`map/solver.ts`](../src/games/map/solver.ts), where each
+  color of one region is read off its neighbors' dots, and a three-region
+  forcing chain turned out to be exactly that.
 - **A Tactic is legitimate at a middle tier**: a chain of local rules that
   assumes nothing, where every link is glanceable and the player has a
   notation for the links (`hints-marks.md` § "Give the facts a notation").

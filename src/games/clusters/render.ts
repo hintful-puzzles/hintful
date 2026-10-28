@@ -161,7 +161,7 @@ export function newDrawState(
  * pixel smaller, so a single pixel between two cells is real gutter and is what
  * `HintMarks` paints back when a mark moves; the rest lies inside the cell,
  * where the cell's own repaint undoes it. There is room because a Clusters cell's
- * content is a centered dot or a `TILESIZE/3` what-if mark.
+ * content is a piece inset from its edge (`drawPiece`) and a centered dot.
  */
 function markBand(ds: ClustersDrawState, x: number, y: number): MarkBand {
   const ts = ds.tileSize;

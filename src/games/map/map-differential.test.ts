@@ -22,7 +22,7 @@ import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { newMapData } from "./map-data.ts";
 import { gradeMap } from "./solver.ts";
-import type { MapParams } from "./state.ts";
+import { DIFF_HARD, type MapParams } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -44,20 +44,29 @@ describe("map differential (frozen C reference)", () => {
 
     // Upstream dealt an Easy board under the tier's name after fifty tries,
     // and one fixture records that. The generator here does not, so that
-    // fixture keeps only its solver half.
+    // fixture keeps only its solver half. Tricky is no longer upstream's
+    // forcing chain (2026-10-28), and the rungs a tier runs decide which clues
+    // its board keeps, so a board dealt at Tricky or above keeps only the
+    // solver half too, held to having one answer, which Unreasonable proves.
+    const upstreamRungs = f.diff < DIFF_HARD;
     const dealtBelowTier = f.solverDiff < f.diff;
-    it.skipIf(dealtBelowTier)(`${label}: TS desc + aux match C byte-for-byte`, () => {
-      const { desc, aux } = newMapDesc(p, randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(aux).toBe(f.aux);
-      expect(validateDesc(mapGame, p, desc)).toBeNull();
-    });
+    it.skipIf(dealtBelowTier || !upstreamRungs)(
+      `${label}: TS desc + aux match C byte-for-byte`,
+      () => {
+        const { desc, aux } = newMapDesc(p, randomNew(f.seed));
+        expect(desc).toBe(f.desc);
+        expect(aux).toBe(f.aux);
+        expect(validateDesc(mapGame, p, desc)).toBeNull();
+      },
+    );
 
-    it(`${label}: TS solver grades the board at the C difficulty`, () => {
+    it(`${label}: TS solver grades the board at the C difficulty, or has one answer`, () => {
       const { map, coloring } = newMapData(p, f.desc);
       const clues = new Int32Array(f.n).fill(-1);
       for (let i = 0; i < f.n; i++) if (map.immutable[i]) clues[i] = coloring[i];
-      expect(gradeMap(map.graph, f.n, map.ngraph, clues)).toBe(f.solverDiff);
+      const grade = gradeMap(map.graph, f.n, map.ngraph, clues);
+      if (f.solverDiff < DIFF_HARD) expect(grade).toBe(f.solverDiff);
+      else expect(grade).toBeGreaterThanOrEqual(DIFF_HARD);
     });
   }
 });
