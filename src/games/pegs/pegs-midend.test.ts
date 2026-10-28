@@ -105,7 +105,8 @@ describe("Pegs midend integration — lifecycle", () => {
     const start = h.m.formatAsText();
     h.m.redo();
     h.m.restartGame();
-    expect(h.state()?.currentMove).toBe(2);
+    // A Start over is no move: the count begins again at its fresh board.
+    expect(h.state()).toMatchObject({ currentMove: 0, boardBefore: "restart" });
     expect(h.m.formatAsText()).toBe(start);
     h.m.undo();
     expect(h.m.formatAsText()).toBe(jumped);
@@ -188,7 +189,7 @@ describe("Pegs midend integration — drag input", () => {
     expect(h.state()?.currentMove).toBe(0);
     expect(h.state()?.totalMoves).toBe(0);
     // The board with the jump on it is kept, one Undo away.
-    expect(h.state()?.boardBefore).toBe(true);
+    expect(h.state()?.boardBefore).toBe("board");
   });
 });
 
