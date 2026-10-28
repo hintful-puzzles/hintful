@@ -77,6 +77,8 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
   ],
   // A struck note.
   mathrax: ["5dn:m1g1c,aS2cS1S3dS0d"],
+  // Outlined edges, the pair of lines a square is tried with.
+  path: ["5x5dn:d1a2_3e4b4_2b1c3"],
   rect: [
     // A striped core two clues overlap on.
     "17x17:e6a14a4c2b3c5a2zb2a9b5f45v6a2m4g3c4c2c4_6j11e2h3_3d5a2f18h3m4_2h20m4b5i2q14d18b8a4c15a2k5_5i6g",

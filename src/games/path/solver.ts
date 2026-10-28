@@ -13,13 +13,16 @@
  * ends (docs/solver-and-generator.md § "A fixpoint is order-independent only
  * if every rule is monotone").
  *
- * Normal's and Tricky's rungs are one supposition, followed by the Easy rung
- * until the board breaks, for at most {@link CHAIN_LIMITS} firings: Tricky's
- * walk is the longer. A third way to break, squares the supposition walls
- * off from the numbers they need, was tried for Tricky and declined
- * (2026-10-22): beside the longer walk it changed neither how fast Tricky
- * boards are found nor how many numbers they keep, and in place of it Tricky
- * boards were seldom found at all.
+ * Normal's and Tricky's rungs are Checks (docs/solver-and-generator.md
+ * § "Check, Tactic, Search"): a square's value is which of its edges take its
+ * lines, and each rung places one such value and looks once for what breaks,
+ * propagating nothing. Normal's finds one way that breaks; Tricky's weighs
+ * every way a square could take its two lines. A supposition followed by
+ * the Easy rung defined both tiers until 2026-10-28, and a walk of one firing
+ * was what nine stalls in ten needed: that firing is a square's two lines.
+ * A third way to break, squares a line walls off from the numbers they need,
+ * was measured for Tricky and declined (2026-10-28): it finished almost no
+ * board the square's own ways did not.
  * No rung crosses out an edge whose line would join two different numbers in
  * Pairs, or two numbers out of order in Path: the edge counts as closed
  * (`PathBoard.live`), as a player sees it is. In Pairs there is no rung
@@ -30,6 +33,7 @@
  * side by side, and the edge between them counts as closed too.
  */
 
+import { type Answer, answerCache, searchAnswers } from "../../engine/answer-search.ts";
 import {
   type DeductionTechnique,
   type FiringTally,
@@ -65,12 +69,9 @@ export type PathClash =
   | { kind: "crowded" | "stuck"; cell: number }
   | { kind: "closed" | "joined"; edge: number };
 
-/** Supposing `supposed` on `edge` leads, by the Easy rung's `chain`, to
- * `clash`. */
-interface Supposition {
-  edge: number;
-  supposed: typeof LINE | typeof CROSS;
-  chain: PathFiring[];
+/** Lines on `tried` would break the board at once, with `clash`. */
+export interface RuledOut {
+  tried: number[];
   clash: PathClash;
 }
 
@@ -78,10 +79,13 @@ interface Supposition {
 export type PathReason =
   /** The square has only as many live edges as it still needs lines. */
   | { kind: "forced"; cell: number; need: number }
-  /** A supposition whose walk is no longer than Normal's. */
-  | ({ kind: "lookahead" } & Supposition)
-  /** A supposition whose walk is no longer than Tricky's. */
-  | ({ kind: "long-lookahead" } & Supposition);
+  /** A line on an edge would break the board, so it is crossed out; or two
+   * of the three edges square `cell` has left would, so it takes the
+   * third: `cell` is that square, or `null` for a crossed-out edge. */
+  | ({ kind: "breaks"; cell: number | null } & RuledOut)
+  /** Square `cell` takes two of its four edges, and every pair of them that
+   * leaves the firing's mark unmet is `ruledOut`. */
+  | { kind: "weighed"; cell: number; ruledOut: RuledOut[] };
 
 /** One deduction: `edges` all take `mark`. */
 export interface PathFiring {
@@ -93,36 +97,10 @@ export interface PathFiring {
 /** The rungs, easiest first, by the `kind` of the reason a firing carries. */
 export const PATH_RUNGS = [
   "forced",
-  "lookahead",
-  "long-lookahead",
+  "breaks",
+  "weighed",
 ] as const satisfies readonly PathReason["kind"][];
 export type PathRung = (typeof PATH_RUNGS)[number];
-
-/** The two supposition rungs. */
-type SupposingRung = Extract<PathRung, "lookahead" | "long-lookahead">;
-
-/** The longest chain of Easy firings each supposition rung may take to break
- * the board. A bound keeps the walk one a player can follow a firing at a
- * time, rather than a search, so each is load-bearing for its tier's name
- * (docs/solver-and-generator.md § "Check, Tactic, Search"). Tricky's walk is
- * twice Normal's: at 9, an 11x11 Tricky board took longer to find, a median
- * 0.7 s against 0.5 s and at worst 2.2 s against 0.6 s (2026-10-22). */
-const CHAIN_LIMITS: Readonly<Record<SupposingRung, number>> = {
-  lookahead: 6,
-  "long-lookahead": 12,
-};
-
-/** The rung a supposition whose walk takes `firings` firings belongs to. */
-function supposingRung(firings: number): SupposingRung {
-  return firings <= CHAIN_LIMITS.lookahead ? "lookahead" : "long-lookahead";
-}
-
-/** How far a supposition's walk runs before it gives up. The Easy rung fires
- * every square it can, and some settle a corner the break never reads, so a
- * walk is measured against {@link CHAIN_LIMITS} only once it is
- * {@link pruned} to the firings its break needs, which is the walk the hint
- * shows: twice Tricky's limit leaves it room for the corners. */
-const RUN_LIMIT = 24;
 
 /** The board the ladder works on: the puzzle, and the edges it writes as it
  * goes. */
@@ -148,10 +126,13 @@ export class PathBoard {
     this.quiet = quiet ?? new Uint8Array(this.g.cells);
   }
 
-  /** A copy to suppose on, which knows the squares this board knows are
-   * quiet. */
+  /** A copy to try a value on, which knows the squares this board knows are
+   * quiet, and its pieces where it has them: a rung tries many values a
+   * firing, and rebuilding the pieces for each read every edge. */
   copy(): PathBoard {
-    return new PathBoard(this.puzzle, this.edges.slice(), this.quiet.slice());
+    const out = new PathBoard(this.puzzle, this.edges.slice(), this.quiet.slice());
+    out.cached = this.cached?.clone() ?? null;
+    return out;
   }
 
   /** Put `mark` on edge `e`. Every write to a board the ladder reads goes
@@ -314,6 +295,27 @@ class Pieces {
     for (let e = 0; e < g.edgeCount; e++) if (b.edges[e] === LINE) this.add(b, e);
   }
 
+  /** A copy that a line added to leaves this one as it is. */
+  clone(): Pieces {
+    const out: Pieces = Object.create(Pieces.prototype);
+    Object.assign(out, {
+      dsf: this.dsf.clone(),
+      mode: this.mode,
+      endA: this.endA.slice(),
+      endB: this.endB.slice(),
+      nearA: this.nearA.slice(),
+      nearB: this.nearB.slice(),
+      clash: this.clash,
+    });
+    return out;
+  }
+
+  /** The two end squares of the piece through square `i`. */
+  endsOf(i: number): [number, number] {
+    const r = this.dsf.canonify(i);
+    return [this.endA[r], this.endB[r]];
+  }
+
   /** Whether numbers `p` and `q` may be joined, either being
    * {@link NO_END}. */
   private fits(p: number, q: number): boolean {
@@ -387,38 +389,6 @@ class Pieces {
   }
 }
 
-/** The first thing that breaks `b`, or `null`. */
-function clashOf(b: PathBoard): PathClash | null {
-  // A loop or a join first: it is on the board as drawn, where a square short
-  // of ways is a count the player makes.
-  const joined = b.pieces().clash;
-  if (joined) return joined;
-  for (let i = 0; i < b.g.cells; i++) {
-    const lines = b.lines(i);
-    const need = b.takes(i);
-    if (lines > need) return { kind: "crowded", cell: i };
-    if (lines < need && lines + b.liveAt(i).length < need)
-      return { kind: "stuck", cell: i };
-  }
-  return null;
-}
-
-/** Whether `firing` is still a deduction on `b` as it stands: its square
- * still has exactly its edges for the lines it needs. A supposition's chain is
- * cut down to the firings its break needs by asking this of each that is
- * left. */
-function stillHolds(b: PathBoard, firing: PathFiring): boolean {
-  const { reason } = firing;
-  if (reason.kind !== "forced") return false;
-  const live = b.liveAt(reason.cell);
-  const need = b.takes(reason.cell) - b.lines(reason.cell);
-  return (
-    need === live.length &&
-    need === firing.edges.length &&
-    firing.edges.every((e) => live.includes(e))
-  );
-}
-
 /** Whether the lines solve the puzzle: each square has the lines it takes,
  * and no line breaks a rule. Then in Pairs every path runs between two like
  * numbers; in Path the 1 and the highest number are the only squares that
@@ -466,22 +436,6 @@ function findForced(b: PathBoard): PathFiring | null | "contradiction" {
   return null;
 }
 
-/** As {@link findForced}, but a contradiction anywhere comes before a firing
- * ahead of it: a supposition stops where the board breaks, not one firing
- * later. */
-function forcedOrBroken(b: PathBoard): PathFiring | null | "contradiction" {
-  if (b.pieces().clash) return "contradiction";
-  let first: PathFiring | null = null;
-  for (let i = 0; i < b.g.cells; i++) {
-    if (b.isQuiet(i)) continue;
-    const found = forcedAt(b, i);
-    if (found === "contradiction") return found;
-    if (found === null) b.hush(i);
-    first ??= found;
-  }
-  return first;
-}
-
 /** Every forced firing on `b`, for a plan that chooses among them. */
 function allForced(b: PathBoard): PathFiring[] | "contradiction" {
   if (b.pieces().clash) return "contradiction";
@@ -498,8 +452,8 @@ function allForced(b: PathBoard): PathFiring[] | "contradiction" {
  * The numbers whose lines a firing's premise reads, which a hint plan
  * continues from: a player follows a line from its number, so a plan works on
  * one number's line until nothing more follows for it. A forced square reads
- * the line it is on and the lines whose squares closed its edges; a
- * supposition reads the lines at its edge.
+ * the line it is on and the lines whose squares closed its edges; a line
+ * tried reads the lines at its edges, and a square weighed its own.
  */
 function numbersReadBy(b: PathBoard, firing: PathFiring): number[] {
   const { g } = b;
@@ -526,9 +480,10 @@ function numbersReadBy(b: PathBoard, firing: PathFiring): number[] {
       }
       return out;
     }
-    case "lookahead":
-    case "long-lookahead":
-      return [...on(g.a[reason.edge]), ...on(g.b[reason.edge])];
+    case "breaks":
+      return reason.tried.flatMap((e) => [...on(g.a[e]), ...on(g.b[e])]);
+    case "weighed":
+      return on(reason.cell);
   }
 }
 
@@ -571,137 +526,156 @@ function applier(
 }
 
 /**
- * The Easy firings that follow from supposing `mark` on edge `e`, up to the
- * board breaking, or `null` where it does not break within `limit` firings.
- * The squares quiet on `b` stay quiet until the walk touches them, so on a
- * board where nothing fires, only those can.
+ * What lines on `tried`, live edges of `b`, would break at once, or `null`.
+ * Nothing follows from them first: this is the board as it would stand. Only
+ * the squares the lines can reach are looked at: their own, whose lines and
+ * edges change, and the two ends of the piece they make, whose edges may now
+ * join numbers that may not meet; each with the squares beside it, whose
+ * edges to it may close.
  */
-function suppose(
-  b: PathBoard,
-  e: number,
-  mark: typeof LINE | typeof CROSS,
-  limit: number,
-): { chain: PathFiring[]; clash: PathClash } | null {
+function breaksAt(b: PathBoard, tried: readonly number[]): PathClash | null {
   const trial = b.copy();
-  trial.set(e, mark);
-  const chain: PathFiring[] = [];
-  for (;;) {
-    const found = forcedOrBroken(trial);
-    // The Easy rung's contradiction is a square or a line {@link clashOf}
-    // names; one scan of the squares serves both.
-    if (found === "contradiction") {
-      const clash = clashOf(trial);
-      return clash && { chain, clash };
+  for (const e of tried) trial.set(e, LINE);
+  // A loop or a join first: it is on the board as drawn, where a square short
+  // of ways is a count the player makes.
+  const pieces = trial.pieces();
+  if (pieces.clash) return pieces.clash;
+  const { g } = trial;
+  const near = new Set<number>();
+  for (const e of tried)
+    for (const i of [g.a[e], g.b[e], ...pieces.endsOf(g.a[e])]) {
+      near.add(i);
+      for (let k = 0; k < 4; k++) {
+        const f = g.around[i * 4 + k];
+        if (f >= 0) near.add(across(g, f, i));
+      }
     }
-    if (found === null || chain.length >= limit) return null;
-    for (const f of found.edges) trial.set(f, found.mark);
-    chain.push(found);
+  for (const i of [...near].sort((x, y) => x - y)) {
+    const lines = trial.lines(i);
+    const need = trial.takes(i);
+    if (lines > need) return { kind: "crowded", cell: i };
+    if (lines < need && lines + trial.liveCount(i) < need)
+      return { kind: "stuck", cell: i };
   }
+  return null;
 }
 
 /**
- * `walk`, from supposing `mark` on edge `e` of `b`, cut down to the firings
- * its break needs: numbered, a firing the break never reads would claim an
- * order of consequence that is not there. Each firing is dropped, last first,
- * where the ones left still follow one from the next and still break the
- * board, which is then said as it breaks with those alone.
+ * Every firing of the Normal rung on `b`, or the first where `first`: an
+ * edge whose line would break the board at once is crossed out; and a
+ * square that takes two more lines and has three edges left, two of which
+ * would break the board together, takes a line on the third.
  */
-function pruned(
-  b: PathBoard,
-  e: number,
-  mark: typeof LINE | typeof CROSS,
-  walk: { chain: PathFiring[]; clash: PathClash },
-): { chain: PathFiring[]; clash: PathClash } {
-  const breaks = (chain: readonly PathFiring[]): PathClash | null => {
-    const edges = b.edges.slice();
-    edges[e] = mark;
-    const trial = new PathBoard(b.puzzle, edges);
-    for (const link of chain) {
-      if (!stillHolds(trial, link)) return null;
-      for (const f of link.edges) trial.set(f, link.mark);
-    }
-    return clashOf(trial);
-  };
-  let chain = walk.chain;
-  for (let k = chain.length - 1; k >= 0; k--) {
-    const without = chain.filter((_, j) => j !== k);
-    if (breaks(without)) chain = without;
-  }
-  return { chain, clash: breaks(chain) ?? walk.clash };
-}
-
-/**
- * A live edge one of whose marks breaks the board within `kind`'s walk, which
- * must then take the other mark. With `shortest`, the one that breaks it in
- * the fewest firings, as a hint narrates; without, the first found from edge
- * `from` on, as grading wants, since the ladder ends in the same place
- * whichever valid firing it takes first.
- */
-function findSupposition(
-  b: PathBoard,
-  kind: SupposingRung,
-  shortest: boolean,
-  from = 0,
-): PathFiring | null {
-  let best: PathFiring | null = null;
-  let fewest = Number.POSITIVE_INFINITY;
-  const limit = CHAIN_LIMITS[kind];
-  // Hushes every square that does not fire, so that no supposition looks at
-  // it again until its walk touches it.
-  findForced(b);
-  const count = b.g.edgeCount;
-  for (let k = 0; k < count; k++) {
-    const e = (from + k) % count;
+function findBreaks(b: PathBoard, first: boolean): PathFiring[] {
+  const out: PathFiring[] = [];
+  const { g } = b;
+  for (let e = 0; e < g.edgeCount; e++) {
     if (!b.live(e)) continue;
-    for (const supposed of [LINE, CROSS] as const) {
-      const walk = suppose(b, e, supposed, RUN_LIMIT);
-      if (walk === null) continue;
-      // Grading takes a walk already within the limit as it is; a hint
-      // shows every walk cut down.
-      const cut =
-        !shortest && walk.chain.length <= limit ? walk : pruned(b, e, supposed, walk);
-      if (cut.chain.length > limit || cut.chain.length >= fewest) continue;
-      fewest = cut.chain.length;
-      best = {
-        reason: { kind: supposingRung(fewest), edge: e, supposed, ...cut },
-        edges: [e],
-        mark: supposed === LINE ? CROSS : LINE,
-      };
-      if (!shortest) return best;
+    const clash = breaksAt(b, [e]);
+    if (clash === null) continue;
+    out.push({
+      reason: { kind: "breaks", cell: null, tried: [e], clash },
+      edges: [e],
+      mark: CROSS,
+    });
+    if (first) return out;
+  }
+  for (let i = 0; i < g.cells; i++) {
+    if (b.takes(i) - b.lines(i) !== 2) continue;
+    const live = b.liveAt(i);
+    if (live.length !== 3) continue;
+    for (let k = 0; k < 3; k++) {
+      const tried = live.filter((_, j) => j !== k);
+      const clash = breaksAt(b, tried);
+      if (clash === null) continue;
+      out.push({
+        reason: { kind: "breaks", cell: i, tried, clash },
+        edges: [live[k]],
+        mark: LINE,
+      });
+      if (first) return out;
+      break;
     }
   }
-  return best;
+  return out;
+}
+
+/**
+ * Every firing of the Tricky rung on `b`, or the first where `first`: a
+ * square that takes two more lines and has four edges left, where every pair
+ * of edges but some would break the board. The pairs left all take an edge,
+ * which is then a line, or none takes it, and it is crossed out. Only a
+ * square with four edges left: with three, one pair breaking is Normal's
+ * rung, and with a line on one edge breaking, it is crossed out there too.
+ */
+function findWeighed(b: PathBoard, first: boolean): PathFiring[] {
+  const out: PathFiring[] = [];
+  const { g } = b;
+  for (let i = 0; i < g.cells; i++) {
+    if (b.takes(i) - b.lines(i) !== 2) continue;
+    const live = b.liveAt(i);
+    if (live.length !== 4) continue;
+    const ways = live.flatMap((e, k) =>
+      live.slice(k + 1).map((f) => ({ tried: [e, f], clash: breaksAt(b, [e, f]) })),
+    );
+    const left = ways.filter((way) => way.clash === null);
+    if (left.length === ways.length || left.length === 0) continue;
+    const ruledOut = (keep: (way: { tried: number[] }) => boolean): RuledOut[] =>
+      ways.flatMap(({ tried, clash }) =>
+        clash !== null && keep({ tried }) ? [{ tried, clash }] : [],
+      );
+    const lines = live.filter((e) => left.every((way) => way.tried.includes(e)));
+    const crosses = live.filter((e) => left.every((way) => !way.tried.includes(e)));
+    // Lines where any pair left shares one, as a player draws the lines a
+    // square takes; a cross where the pairs left share none, which leaves
+    // one edge in no pair (two such edges would leave one pair, sharing
+    // both).
+    const firing: PathFiring | null =
+      lines.length > 0
+        ? {
+            reason: {
+              kind: "weighed",
+              cell: i,
+              ruledOut: ruledOut((way) => !lines.every((e) => way.tried.includes(e))),
+            },
+            edges: lines,
+            mark: LINE,
+          }
+        : crosses.length > 0
+          ? {
+              reason: {
+                kind: "weighed",
+                cell: i,
+                ruledOut: ruledOut((way) => way.tried.some((e) => crosses.includes(e))),
+              },
+              edges: crosses,
+              mark: CROSS,
+            }
+          : null;
+    if (firing === null) continue;
+    out.push(firing);
+    if (first) return out;
+  }
+  return out;
 }
 
 /** The ladder over `board`. A rung that fires writes its edges, and hands
- * the firing to `record` where there is one, which wants each supposition
- * the shortest there is. */
+ * the firing to `record` where there is one. */
 function ladder(
   board: PathBoard,
   record?: (firing: PathFiring) => void,
 ): DeductionTechnique[] {
   const apply = applier(board, record);
-  const narrated = record !== undefined;
-  const supposing = (kind: SupposingRung, tier: number): DeductionTechnique => {
-    // Where grading left off: the suppositions before it failed last time,
-    // and most still do.
-    let from = 0;
-    return {
-      id: kind satisfies PathRung,
-      tier,
-      run: () => {
-        const found = findSupposition(board, kind, narrated, from);
-        if (found !== null) from = found.edges[0];
-        return apply(found);
-      },
-      // The shortest walk only: every supposition is dear, and the frontier
-      // reaches this rung only where no easier firing continues.
-      available: () => {
-        const found = findSupposition(board, kind, true);
-        return offered(board, apply, found ? [found] : []);
-      },
-    };
-  };
+  const rung = (
+    id: PathRung,
+    tier: number,
+    find: (b: PathBoard, first: boolean) => PathFiring[],
+  ): DeductionTechnique => ({
+    id,
+    tier,
+    run: () => apply(find(board, true)[0] ?? null),
+    available: () => offered(board, apply, find(board, false)),
+  });
   return [
     {
       id: "forced" satisfies PathRung,
@@ -709,8 +683,8 @@ function ladder(
       run: () => apply(findForced(board)),
       available: () => offered(board, apply, allForced(board)),
     },
-    supposing("lookahead", DIFF_NORMAL),
-    supposing("long-lookahead", DIFF_TRICKY),
+    rung("breaks", DIFF_NORMAL, findBreaks),
+    rung("weighed", DIFF_TRICKY, findWeighed),
   ];
 }
 
@@ -734,14 +708,59 @@ export function solvePath(
   return isComplete(board.puzzle, board.edges) ? "solved" : "impossible";
 }
 
-/** The marks of a board's answer, its lines and its walls' crosses, or
- * `null` where the ladder does not reach one. */
-export function answerOf(puzzle: PathPuzzle): readonly EdgeMark[] | null {
-  const board = new PathBoard(puzzle, startEdges(puzzle));
-  if (solvePath(board, DIFF_TRICKY) !== "solved") return null;
-  return Array.from(board.edges, (m, e) =>
-    m === LINE ? LINE : puzzle.walls[e] ? CROSS : OPEN,
-  );
+/** How many positions {@link searchAnswer} may try. A board below
+ * Unreasonable needs one, as the ladder finishes it. A board dealt before
+ * 2026-10-28 at Normal or Tricky may need a lookahead the ladder no longer
+ * has: 265 of them, dealt at every preset of both tiers, needed a median of 5
+ * and at most 1365 to prove their one answer (2026-10-28). Lowering it
+ * refuses boards in saved games. */
+const ANSWER_BUDGET = 5000;
+
+/** The board's answers, counted to two by trial and error over the ladder at
+ * every tier: where it stops short, an edge is tried each way and the ladder
+ * run again. The answer is the board's lines. */
+export function searchAnswer(
+  puzzle: PathPuzzle,
+  budget = ANSWER_BUDGET,
+): Answer<Uint8Array> {
+  return searchAnswers<PathBoard, Uint8Array>({
+    start: new PathBoard(puzzle, startEdges(puzzle)),
+    deduce: (b) => {
+      const verdict = solvePath(b, DIFF_TRICKY);
+      if (verdict === "solved") return "solved";
+      return verdict === "impossible" ? "contradiction" : "stuck";
+    },
+    assume: (b) => {
+      // A stuck board has a live edge: a square short of one is a
+      // contradiction.
+      let e = 0;
+      while (!b.live(e)) e++;
+      return ([LINE, CROSS] as const).map((mark) => {
+        const copy = b.copy();
+        copy.set(e, mark);
+        return copy;
+      });
+    },
+    solution: (b) => b.edges,
+    budget,
+  });
+}
+
+/** Each board's answer, by its numbers, which every state of a board shares. */
+const answers = answerCache<Uint8Array, readonly EdgeMark[]>();
+
+/** The board's answer as marks, its lines and its walls' crosses, which
+ * Solve and the mistake check go by at every tier. */
+export function answerOf(puzzle: PathPuzzle): Answer<readonly EdgeMark[]> {
+  return answers(puzzle.ends, () => {
+    const answer = searchAnswer(puzzle);
+    if (answer.kind !== "one") return answer;
+    const marks = Array.from(
+      answer.solution,
+      (m, e): EdgeMark => (m === LINE ? LINE : puzzle.walls[e] ? CROSS : OPEN),
+    );
+    return { kind: "one", solution: marks };
+  });
 }
 
 /** The ladder one firing at a time, writing `board` as it goes: `next` gives

@@ -89,12 +89,18 @@ The hint counts all of these as closed without asking you to cross them out,
 and most steps are then one rule at work: a square with only as many open
 edges left as it still needs lines takes a line on each of them.
 
-On Normal boards a step sometimes has to look ahead. It supposes a line on an
-edge, or a cross, and follows that rule from it, drawing the edges it settles
-thin, until a square is left a dead end or cut off, gets too many lines, a
-loop closes, or two numbers that may not meet are joined. Then the edge must
-be the other way. On a Normal board that takes at most six steps of the rule;
-on a Tricky board it can take up to twelve.
+On Normal boards a step sometimes looks at what a line would do, drawing it
+thin. A line breaks the board if it leaves a square a dead end or cut off,
+closes a loop, or joins two numbers that may not meet. An edge whose line
+would break the board is crossed out. A square that needs two more lines and
+has three open edges left takes the third if lines on the other two would
+break the board.
+
+On Tricky boards a square that needs two more lines and has all four edges
+open has to be weighed whole. If lines on any two of three of its edges would
+break the board, the fourth takes a line; and an edge whose line would break
+the board beside any of the square's other edges is crossed out. Each way is
+looked at on the board as it stands, so nothing needs following further.
 
 ## Path parameters
 

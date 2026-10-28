@@ -14,6 +14,7 @@
  * the join takes away, so the board keeps only the numbers it needs.
  */
 
+import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
 import { OPEN } from "../../engine/line-drawing.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -26,9 +27,11 @@ import {
   squareEdges,
 } from "../../engine/square-edges.ts";
 import { newOnePathDesc } from "./one-path-generator.ts";
-import { PathBoard, solvePath } from "./solver.ts";
+import { PathBoard, searchAnswer, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
+  DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   encodeDesc,
   MODE_PATH,
   type PathParams,
@@ -201,17 +204,21 @@ function mend(
   }
 }
 
-/** Join paths, in a random order, wherever the ladder still finishes the
- * board at `cap` without the two numbers a join takes away. A join the
- * ladder refused is not tried again: joins elsewhere seldom make it one the
- * ladder takes, and trying every refused join on every pass costs a solve
- * each. */
+/** Whether the ladder at `cap` finishes the board `paths` number. */
+const finishesAt =
+  (p: PathParams, g: SquareEdges, cap: number) =>
+  (paths: readonly Path[]): boolean =>
+    !attempt(p, numberEnds(g, paths), cap).unfinished();
+
+/** Join paths, in a random order, wherever `keeps` still holds without the
+ * two numbers a join takes away. A join refused is not tried again: joins
+ * elsewhere seldom make it one that is kept, and trying every refused join on
+ * every pass costs a solve each. */
 function strip(
-  p: PathParams,
   g: SquareEdges,
   start: readonly Path[],
   rng: RandomState,
-  cap: number,
+  keeps: (paths: readonly Path[]) => boolean,
 ): Path[] {
   let paths = [...start];
   // By the edge between the two ends a join meets at.
@@ -227,7 +234,7 @@ function strip(
       const at = edgeBetween(g, j.u, j.v);
       if (refused.has(at)) continue;
       const tried = withJoin(paths, j);
-      if (attempt(p, numberEnds(g, tried), cap).unfinished()) {
+      if (!keeps(tried)) {
         refused.add(at);
         continue;
       }
@@ -249,6 +256,7 @@ function strip(
  */
 export function newPathDesc(p: PathParams, rng: RandomState): { desc: string } {
   if (p.mode === MODE_PATH) return newOnePathDesc(p, rng);
+  if (p.diff === DIFF_UNREASONABLE) return newPairsUnreasonable(p, rng);
   const g = squareEdges(p.w, p.h);
   const next = retryLimit("path: generation");
   for (;;) {
@@ -260,7 +268,7 @@ export function newPathDesc(p: PathParams, rng: RandomState): { desc: string } {
     let joined = true;
     for (let tier = DIFF_EASY; tier <= p.diff; tier++) {
       const before = paths.length;
-      paths = strip(p, g, paths, rng, tier);
+      paths = strip(g, paths, rng, finishesAt(p, g, tier));
       joined = paths.length < before;
     }
     if (p.diff > DIFF_EASY && !joined) continue;
@@ -269,4 +277,41 @@ export function newPathDesc(p: PathParams, rng: RandomState): { desc: string } {
       attempt(p, ends, cap).unfinished() ? "unsolved" : "solved";
     if (solvableAtExactlyTier(capped, p.diff)) return { desc: encodeDesc(ends) };
   }
+}
+
+/** A Pairs board on its way to Unreasonable: the paths a strip joins. */
+interface PairsDeal {
+  paths: Path[];
+}
+
+/**
+ * An Unreasonable Pairs board: an Easy board, with every join made that the
+ * search still proves one answer after, and kept where the ladder then stops
+ * short. The laid paths stay an answer through every join, so the one the
+ * search proves is theirs.
+ */
+function newPairsUnreasonable(p: PathParams, rng: RandomState): { desc: string } {
+  const g = squareEdges(p.w, p.h);
+  const dealt = dealUnreasonable<PairsDeal>({
+    label: "path: Pairs Unreasonable",
+    draw: () => {
+      const laid = layPaths(g, rng);
+      if (laid === null) return null;
+      const paths = mend(p, g, laid, rng, DIFF_EASY);
+      if (paths === null) return null;
+      return { paths: strip(g, paths, rng, finishesAt(p, g, DIFF_EASY)) };
+    },
+    strip: (b, one) => {
+      b.paths = strip(g, b.paths, rng, (paths) => {
+        const was = b.paths;
+        b.paths = [...paths];
+        const kept = one();
+        b.paths = was;
+        return kept;
+      });
+    },
+    deduced: (b) => finishesAt(p, g, DIFF_TRICKY)(b.paths),
+    answer: (b, budget) => searchAnswer(puzzleOf(p, numberEnds(g, b.paths)), budget),
+  });
+  return { desc: encodeDesc(numberEnds(g, dealt.paths)) };
 }

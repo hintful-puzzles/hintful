@@ -4,12 +4,11 @@
  * (docs/hints.md § "Recording the deduction").
  *
  * Every fact a step rests on is a number, a line or a cross on the board: the
- * ladder reads nothing else. A supposition's chain is shown whole and thin,
- * and never played (docs/hints-marks.md § "Show the what-if walk
- * statically").
+ * ladder reads nothing else. The lines a Check tries are drawn thin where its
+ * words outline them, and never played.
  */
 
-import { type EdgeChainLink, trackEdgeStep } from "../../engine/edge-hint.ts";
+import { type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
@@ -21,7 +20,7 @@ import { CROSS, LINE } from "../../engine/line-drawing.ts";
 import { pieceThrough, squareEdges } from "../../engine/square-edges.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Clash, type Square, say } from "./hint-text.ts";
+import { type Clash, type Square, say, type Why } from "./hint-text.ts";
 import {
   isComplete,
   PathBoard,
@@ -43,10 +42,9 @@ import {
  * then. */
 const PLAN_CAP = 24;
 
-/** A supposition's chain, as the board draws it: each edge it would force,
- * with the mark and the place in the chain it falls. */
+/** The edges a step tries lines on, as the board draws them. */
 export interface PathHighlights {
-  chain: readonly EdgeChainLink[];
+  tried: readonly ShapedEdge[];
 }
 
 type PathStep = HintStep<PathMove, PathHighlights, PathRung>;
@@ -81,20 +79,36 @@ function wordsOf(state: PathState, edges: Uint8Array, firing: PathFiring): Sente
         reason.need,
         firing.edges,
       );
-    case "lookahead":
-    case "long-lookahead": {
-      // The board the supposition leads to, for what breaks there.
+    case "breaks": {
+      // The board with the lines tried, for what breaks there.
       const trial = edges.slice();
-      trial[reason.edge] = reason.supposed;
-      for (const link of reason.chain) for (const e of link.edges) trial[e] = link.mark;
-      return say.lookahead(
-        reason.edge,
-        reason.supposed === LINE ? "line" : "cross",
-        reason.chain.flatMap((link) => link.edges),
-        clashWords(state, trial, reason.clash, square, numberOn),
-      );
+      for (const e of reason.tried) trial[e] = LINE;
+      const clash = clashWords(state, trial, reason.clash, square, numberOn);
+      return reason.cell === null
+        ? say.lineBreaks(firing.edges[0], clash)
+        : say.pairBreaks(reason.tried, firing.edges[0], clash);
+    }
+    case "weighed": {
+      const whys = reason.ruledOut.map(({ tried, clash }) => {
+        const trial = edges.slice();
+        for (const e of tried) trial[e] = LINE;
+        return whyOf(clashWords(state, trial, clash, square, numberOn));
+      });
+      const s = square(reason.cell);
+      if (firing.mark === CROSS) return say.weighedCross(s, firing.edges[0], whys);
+      if (firing.edges.length > 1) return say.weighedPair(s, firing.edges, whys);
+      // The pairs ruled out are every pair of the square's other three edges.
+      const others = new Set(reason.ruledOut.flatMap(({ tried }) => tried));
+      return say.weighedLine([...others], firing.edges[0], whys);
     }
   }
+}
+
+/** A ruled-out way's clash as a weighed step says it, without the squares
+ * it outlines: a step weighs several ways, too many to outline each break. */
+function whyOf(clash: Clash): Why {
+  if (clash.kind !== "stuck") return clash.kind;
+  return clash.ways > 0 ? "dead-end" : "cut-off";
 }
 
 function clashWords(
@@ -139,26 +153,32 @@ function clashWords(
   }
 }
 
-/** A supposition's walk comes from the ladder cut down to the firings its
- * break needs, so it is narrated and drawn as it is. */
+/** The edges a firing tries lines on, which its step draws thin as lines
+ * where its words outline them. */
+function triedOf(firing: PathFiring): number[] {
+  const { reason } = firing;
+  switch (reason.kind) {
+    case "forced":
+      return [];
+    case "breaks":
+      return reason.tried;
+    case "weighed":
+      return reason.ruledOut.flatMap(({ tried }) => tried);
+  }
+}
+
 function stepOf(state: PathState, edges: Uint8Array, firing: PathFiring): PathStep {
   const words = wordsOf(state, edges, firing);
-  const { reason } = firing;
   return {
     move: {
       kind: "edges",
       changes: firing.edges.map((edge) => ({ edge, mark: firing.mark })),
     },
-    rung: reason.kind,
+    rung: firing.reason.kind,
     explanation: words.text,
     words,
     highlights: {
-      chain:
-        reason.kind !== "forced"
-          ? reason.chain.flatMap((link) =>
-              link.edges.map((edge) => ({ edge, mark: link.mark })),
-            )
-          : [],
+      tried: [...new Set(triedOf(firing))].map((edge) => ({ edge, mark: LINE })),
     },
   };
 }

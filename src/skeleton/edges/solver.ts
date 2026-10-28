@@ -44,13 +44,14 @@ export type SkeletonClash =
 export type SkeletonReason =
   /** The square has only as many live edges as it still needs lines. */
   | { kind: "forced"; cell: number; need: number }
-  /** Supposing `supposed` on `edge` leads, by the Easy rung's `chain`, to
-   * `clash`. */
+  /** Lines on `tried` would break the board at once with `clash`: a line on
+   * one edge, which is then crossed out, or two of the three edges square
+   * `cell` has left, which then takes the third. `cell` is `null` for the
+   * one edge. */
   | {
-      kind: "lookahead";
-      edge: number;
-      supposed: typeof LINE | typeof CROSS;
-      chain: SkeletonFiring[];
+      kind: "breaks";
+      cell: number | null;
+      tried: number[];
       clash: SkeletonClash;
     };
 
@@ -64,22 +65,9 @@ export interface SkeletonFiring {
 /** The rungs, easiest first, by the `kind` of the reason a firing carries. */
 export const SKELETON_RUNGS = [
   "forced",
-  "lookahead",
+  "breaks",
 ] as const satisfies readonly SkeletonReason["kind"][];
 export type SkeletonRung = (typeof SKELETON_RUNGS)[number];
-
-/** The longest chain of Easy firings a supposition may take to break the
- * board. It keeps the lookahead a walk a player can follow a firing at a
- * time, rather than a search, and so is load-bearing for Normal's name
- * (docs/solver-and-generator.md § "Check, Tactic, Search"). */
-const CHAIN_LIMIT = 6;
-
-/** How far a supposition's walk runs before it gives up. The Easy rung fires
- * every square it can, and some settle a corner the break never reads, so a
- * walk is measured against {@link CHAIN_LIMIT} only once it is
- * {@link pruned} to the firings its break needs, which is the walk the hint
- * shows. */
-const RUN_LIMIT = 2 * CHAIN_LIMIT;
 
 /** The board the ladder works on: the walls, and the edges it writes as it
  * goes. */
@@ -194,22 +182,6 @@ function clashOf(b: SkeletonBoard): SkeletonClash | null {
   return null;
 }
 
-/** Whether `firing` is still a deduction on `b` as it stands: its square
- * still has exactly its edges for the lines it needs. A supposition's chain is
- * cut down to the firings its break needs by asking this of each that is
- * left. */
-function stillHolds(b: SkeletonBoard, firing: SkeletonFiring): boolean {
-  const { reason } = firing;
-  if (reason.kind !== "forced") return false;
-  const live = b.liveAt(reason.cell);
-  const need = LINES_PER_SQUARE - b.edgesAt(reason.cell, LINE).length;
-  return (
-    need === live.length &&
-    need === firing.edges.length &&
-    firing.edges.every((e) => live.includes(e))
-  );
-}
-
 /** Whether the lines make one loop through every square, crossing no wall.
  * A cross and an open edge are the same here, so a player need cross nothing
  * out to finish. */
@@ -249,7 +221,8 @@ function allForced(b: SkeletonBoard): SkeletonFiring[] | "contradiction" {
 }
 
 /** The squares a firing's premise reads, which a hint plan continues from: a
- * forced square and the squares around it, or a supposed edge's two. */
+ * forced square and the squares around it, or the squares of the edges a
+ * Check tries lines on. */
 function readsOf(b: SkeletonBoard, firing: SkeletonFiring): number[] {
   const { g } = b;
   const { reason } = firing;
@@ -262,8 +235,8 @@ function readsOf(b: SkeletonBoard, firing: SkeletonFiring): number[] {
       }
       return out;
     }
-    case "lookahead":
-      return [g.a[reason.edge], g.b[reason.edge]];
+    case "breaks":
+      return reason.tried.flatMap((e) => [g.a[e], g.b[e]]);
   }
 }
 
@@ -316,84 +289,53 @@ function easyRungs(
   ];
 }
 
-/** The Easy firings that follow from supposing `mark` on edge `e`, up to the
- * board breaking, or `null` where it does not break within `limit`
- * firings. */
-function suppose(
-  b: SkeletonBoard,
-  e: number,
-  mark: typeof LINE | typeof CROSS,
-  limit: number,
-): { chain: SkeletonFiring[]; clash: SkeletonClash } | null {
-  const edges = b.edges.slice();
-  edges[e] = mark;
-  const trial = new SkeletonBoard(b.w, b.h, b.walls, edges);
-  const chain: SkeletonFiring[] = [];
-  const rungs = easyRungs(
-    trial,
-    applier(trial, (f) => chain.push(f)),
-  );
-  for (;;) {
-    const clash = clashOf(trial);
-    if (clash) return { chain, clash };
-    if (chain.length >= limit) return null;
-    if (!rungs.some((r) => r.run() > 0)) return null;
-  }
+/** What lines on `tried`, live edges of `b`, would break at once, or
+ * `null`. Nothing follows from them first: this is the board as it would
+ * stand. */
+function breaksAt(b: SkeletonBoard, tried: readonly number[]): SkeletonClash | null {
+  const trial = new SkeletonBoard(b.w, b.h, b.walls, b.edges.slice());
+  for (const e of tried) trial.set(e, LINE);
+  return clashOf(trial);
 }
 
 /**
- * `walk`, from supposing `mark` on edge `e` of `b`, cut down to the firings
- * its break needs: numbered, a firing the break never reads would claim an
- * order of consequence that is not there. Each firing is dropped, last first,
- * where the ones left still follow one from the next and still break the
- * board, which is then said as it breaks with those alone.
+ * Every firing of the Normal rung on `b`: an edge whose line would break the
+ * board at once is crossed out, and a square with three edges left, two of
+ * which would break the board together, takes a line on the third. A
+ * square's value is which of its edges take its lines, so each is one value
+ * placed and looked at, with nothing followed from it
+ * (docs/solver-and-generator.md § "Check, Tactic, Search").
  */
-function pruned(
-  b: SkeletonBoard,
-  e: number,
-  mark: typeof LINE | typeof CROSS,
-  walk: { chain: SkeletonFiring[]; clash: SkeletonClash },
-): { chain: SkeletonFiring[]; clash: SkeletonClash } {
-  const breaks = (chain: readonly SkeletonFiring[]): SkeletonClash | null => {
-    const edges = b.edges.slice();
-    edges[e] = mark;
-    const trial = new SkeletonBoard(b.w, b.h, b.walls, edges);
-    for (const link of chain) {
-      if (!stillHolds(trial, link)) return null;
-      for (const f of link.edges) trial.set(f, link.mark);
-    }
-    return clashOf(trial);
-  };
-  let chain = walk.chain;
-  for (let k = chain.length - 1; k >= 0; k--) {
-    const without = chain.filter((_, j) => j !== k);
-    if (breaks(without)) chain = without;
-  }
-  return { chain, clash: breaks(chain) ?? walk.clash };
-}
-
-/** The live edge one of whose marks breaks the board in the fewest firings
- * the break needs, at most {@link CHAIN_LIMIT}, which must then take the
- * other mark. */
-function findLookahead(b: SkeletonBoard): SkeletonFiring | null {
-  let best: SkeletonFiring | null = null;
-  let fewest = CHAIN_LIMIT + 1;
-  for (let e = 0; e < b.g.edgeCount; e++) {
+function findBreaks(b: SkeletonBoard): SkeletonFiring[] {
+  const out: SkeletonFiring[] = [];
+  const { g } = b;
+  for (let e = 0; e < g.edgeCount; e++) {
     if (!b.live(e)) continue;
-    for (const supposed of [LINE, CROSS] as const) {
-      const walk = suppose(b, e, supposed, RUN_LIMIT);
-      if (walk === null) continue;
-      const cut = pruned(b, e, supposed, walk);
-      if (cut.chain.length >= fewest) continue;
-      fewest = cut.chain.length;
-      best = {
-        reason: { kind: "lookahead", edge: e, supposed, ...cut },
+    const clash = breaksAt(b, [e]);
+    if (clash !== null)
+      out.push({
+        reason: { kind: "breaks", cell: null, tried: [e], clash },
         edges: [e],
-        mark: supposed === LINE ? CROSS : LINE,
-      };
+        mark: CROSS,
+      });
+  }
+  for (let i = 0; i < g.cells; i++) {
+    if (b.edgesAt(i, LINE).length !== 0) continue;
+    const live = b.liveAt(i);
+    if (live.length !== 3) continue;
+    for (let k = 0; k < 3; k++) {
+      const tried = live.filter((_, j) => j !== k);
+      const clash = breaksAt(b, tried);
+      if (clash === null) continue;
+      out.push({
+        reason: { kind: "breaks", cell: i, tried, clash },
+        edges: [live[k]],
+        mark: LINE,
+      });
+      break;
     }
   }
-  return best;
+  return out;
 }
 
 /** The ladder over `board`. A rung that fires writes its edges, and hands
@@ -406,15 +348,10 @@ function ladder(
   return [
     ...easyRungs(board, apply),
     {
-      id: "lookahead" satisfies SkeletonRung,
+      id: "breaks" satisfies SkeletonRung,
       tier: DIFF_NORMAL,
-      run: () => apply(findLookahead(board)),
-      // The shortest walk only: every supposition is dear, and the frontier
-      // reaches this rung only where no Easy firing continues.
-      available: () => {
-        const found = findLookahead(board);
-        return offered(board, apply, found ? [found] : []);
-      },
+      run: () => apply(findBreaks(board)[0] ?? null),
+      available: () => offered(board, apply, findBreaks(board)),
     },
   ];
 }

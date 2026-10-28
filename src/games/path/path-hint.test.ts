@@ -59,8 +59,28 @@ const pinned = describeHintPins({
   ],
   kinds: {
     onePathForced: onOnePath("forced"),
-    onePathLookahead: { leg: onOnePath("lookahead") },
-    onePathLongLookahead: { leg: onOnePath("long-lookahead") },
+    onePathBreaks: { leg: onOnePath("breaks") },
+    onePathWeighed: { leg: onOnePath("weighed") },
+    /** Normal's square: lines on two of its three edges would break the
+     * board, which outlines the two. */
+    pairBreaks: {
+      leg: (step) =>
+        step.rung === "breaks" && stepMarks(step).of("outline", EDGE).length === 2,
+    },
+    /** Tricky's square with one pair of edges left takes both. */
+    weighedPair: {
+      leg: (step) =>
+        step.rung === "weighed" &&
+        step.move.kind === "edges" &&
+        step.move.changes.length === 2,
+    },
+    /** Tricky's square crosses an edge out, which outlines no edge. */
+    weighedCross: {
+      leg: (step) =>
+        step.rung === "weighed" &&
+        step.move.kind === "edges" &&
+        step.move.changes.every((c) => c.mark === CROSS),
+    },
     /** A number that is neither the 1 nor the last takes two lines. */
     onePathMiddleNumber: (step, state) => {
       const { numbered, all } = outlinedNumbers(step, state);
@@ -72,36 +92,57 @@ const pinned = describeHintPins({
         state.takes[c.y * state.w + c.x] === 2
       );
     },
-    /** A supposition that breaks where two numbers out of order would meet:
-     * the only break that outlines two numbered squares and nothing else. */
+    /** A line that breaks the board where two numbers out of order would
+     * meet: the only break that outlines two numbered squares and nothing
+     * else. */
     onePathOutOfOrder: {
       leg: (step, state) => {
         const { numbered, all } = outlinedNumbers(step, state);
-        return (
-          (onOnePath("lookahead")(step, state) ||
-            onOnePath("long-lookahead")(step, state)) &&
-          all === 2 &&
-          numbered.length === 2
-        );
+        return onOnePath("breaks")(step, state) && all === 2 && numbered.length === 2;
       },
     },
   },
   pins: {
-    /** Held on 829 of 1977 positions walked. */
+    /** Held on 810 of 1739 positions walked. */
     onePathForced: "6x6zdn:p4_6b5_3b2c1g,zjog",
-    /** Held on 833 of 1977 positions walked. */
-    onePathLookahead: {
+    /** Held on 642 of 1739 positions walked. */
+    onePathBreaks: {
       id: "6x6zdn:i6f5a8a4d7b3c2_1b",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":30,"mark":1}]},{"kind":"edges","changes":[{"edge":4,"mark":1},{"edge":35,"mark":1}]},{"kind":"edges","changes":[{"edge":25,"mark":1},{"edge":54,"mark":1}]},{"kind":"edges","changes":[{"edge":59,"mark":1},{"edge":29,"mark":1}]}]',
     },
-    /** Held on 288 of 1977 positions walked. */
-    onePathLongLookahead: {
-      id: "8x8zdt:n3c4a11_1c5g6b9_10a2a8f7c12k,akpzbzoj",
+    /** Held on 251 of 1739 positions walked. */
+    onePathWeighed: {
+      id: "8x8zdt:a12_10e11_13i9e2e8d7_5b1a3c4f6j,r1zzahpl",
       moves:
-        '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":56,"mark":1}]},{"kind":"edges","changes":[{"edge":57,"mark":1}]},{"kind":"edges","changes":[{"edge":2,"mark":1},{"edge":58,"mark":1}]},{"kind":"edges","changes":[{"edge":3,"mark":1}]},{"kind":"edges","changes":[{"edge":6,"mark":1},{"edge":63,"mark":1}]},{"kind":"edges","changes":[{"edge":64,"mark":1}]},{"kind":"edges","changes":[{"edge":71,"mark":1}]},{"kind":"edges","changes":[{"edge":49,"mark":1},{"edge":104,"mark":1}]},{"kind":"edges","changes":[{"edge":111,"mark":1},{"edge":55,"mark":1}]}]',
+        '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":56,"mark":1}]},{"kind":"edges","changes":[{"edge":57,"mark":1}]},{"kind":"edges","changes":[{"edge":2,"mark":1},{"edge":58,"mark":1}]},{"kind":"edges","changes":[{"edge":6,"mark":1},{"edge":63,"mark":1}]},{"kind":"edges","changes":[{"edge":64,"mark":1}]},{"kind":"edges","changes":[{"edge":15,"mark":1},{"edge":14,"mark":1}]},{"kind":"edges","changes":[{"edge":69,"mark":1},{"edge":77,"mark":1}]},{"kind":"edges","changes":[{"edge":21,"mark":1},{"edge":80,"mark":1}]},{"kind":"edges","changes":[{"edge":49,"mark":1},{"edge":104,"mark":1}]},{"kind":"edges","changes":[{"edge":111,"mark":1},{"edge":55,"mark":1}]},{"kind":"edges","changes":[{"edge":23,"mark":1}]},{"kind":"edges","changes":[{"edge":75,"mark":2}]},{"kind":"edges","changes":[{"edge":17,"mark":1},{"edge":67,"mark":1}]}]',
     },
-    /** Held on 111 of 1977 positions walked. */
+    /** Held on 806 of 1739 positions walked. */
+    pairBreaks: {
+      id: "5x5dn:d1a2_3e4b4_2b1c3",
+      moves: [
+        {
+          kind: "edges",
+          changes: [
+            { edge: 0, mark: 1 },
+            { edge: 20, mark: 1 },
+          ],
+        },
+      ],
+    },
+    /** Held on 126 of 1739 positions walked. */
+    weighedPair: {
+      id: "7x7dt:d1a2b3b2_4_5d4f6e7b3a6a1_7a5f",
+      moves:
+        '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":42,"mark":1}]},{"kind":"edges","changes":[{"edge":5,"mark":1}]},{"kind":"edges","changes":[{"edge":47,"mark":1}]},{"kind":"edges","changes":[{"edge":55,"mark":1}]},{"kind":"edges","changes":[{"edge":36,"mark":1}]},{"kind":"edges","changes":[{"edge":83,"mark":1},{"edge":41,"mark":1}]},{"kind":"edges","changes":[{"edge":69,"mark":1}]},{"kind":"edges","changes":[{"edge":38,"mark":1}]},{"kind":"edges","changes":[{"edge":40,"mark":1}]}]',
+    },
+    /** Held on 36 of 1739 positions walked. */
+    weighedCross: {
+      id: "8x8zdt:k11b3b4a10a13h12g2c6_8e5a7j9_1,wz1fbflze",
+      moves:
+        '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":56,"mark":1}]},{"kind":"edges","changes":[{"edge":1,"mark":1}]},{"kind":"edges","changes":[{"edge":4,"mark":1},{"edge":3,"mark":1}]},{"kind":"edges","changes":[{"edge":6,"mark":1},{"edge":63,"mark":1}]},{"kind":"edges","changes":[{"edge":21,"mark":1},{"edge":72,"mark":1}]},{"kind":"edges","changes":[{"edge":28,"mark":1},{"edge":88,"mark":1}]},{"kind":"edges","changes":[{"edge":49,"mark":1},{"edge":104,"mark":1}]},{"kind":"edges","changes":[{"edge":105,"mark":1}]},{"kind":"edges","changes":[{"edge":96,"mark":1}]},{"kind":"edges","changes":[{"edge":51,"mark":1},{"edge":106,"mark":1}]},{"kind":"edges","changes":[{"edge":110,"mark":1},{"edge":54,"mark":1}]},{"kind":"edges","changes":[{"edge":111,"mark":1}]},{"kind":"edges","changes":[{"edge":103,"mark":1}]},{"kind":"edges","changes":[{"edge":79,"mark":1}]},{"kind":"edges","changes":[{"edge":36,"mark":1}]},{"kind":"edges","changes":[{"edge":108,"mark":1}]}]',
+    },
+    /** Held on 120 of 1739 positions walked. */
     onePathMiddleNumber: {
       id: "8x8zdt:a12_10e11_13i9e2e8a4c6b1a3c5f7j,r1kzzol",
       moves: [
@@ -114,25 +155,32 @@ const pinned = describeHintPins({
         },
       ],
     },
-    /** Held on 475 of 1977 positions walked. */
+    /** Held on 464 of 1739 positions walked. */
     onePathOutOfOrder: {
       id: "8x8zdt:b9h4_3_6i5j2b1_10j8c7j,zezrvl",
       moves:
         '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":56,"mark":1}]},{"kind":"edges","changes":[{"edge":6,"mark":1},{"edge":63,"mark":1}]},{"kind":"edges","changes":[{"edge":49,"mark":1},{"edge":104,"mark":1}]},{"kind":"edges","changes":[{"edge":111,"mark":1},{"edge":55,"mark":1}]}]',
     },
-    /** Held on 1977 of 1977 positions walked. */
+    /** Held on 1739 of 1739 positions walked. */
     forced: "5x5dn:1b2b3e4_1c2b3c4",
-    /** Held on 1358 of 1977 positions walked. */
-    lookahead: {
-      id: "5x5dn:1b2b3e4_1c2b3c4",
-      moves:
-        '[{"kind":"edges","changes":[{"edge":3,"mark":1},{"edge":24,"mark":1}]},{"kind":"edges","changes":[{"edge":1,"mark":1},{"edge":22,"mark":1}]},{"kind":"edges","changes":[{"edge":10,"mark":2}]},{"kind":"edges","changes":[{"edge":32,"mark":2}]}]',
+    /** Held on 1050 of 1739 positions walked. */
+    breaks: {
+      id: "5x5dn:d1a2_3e4b4_2b1c3",
+      moves: [
+        {
+          kind: "edges",
+          changes: [
+            { edge: 0, mark: 1 },
+            { edge: 20, mark: 1 },
+          ],
+        },
+      ],
     },
-    /** Held on 543 of 1977 positions walked. */
-    "long-lookahead": {
-      id: "7x7dt:e1d2a3_1b4_5d2d3h6a5a6d4c",
+    /** Held on 459 of 1739 positions walked. */
+    weighed: {
+      id: "7x7dt:e1_2a3a4_1_2b4g5_6a6b7_8a3d7c8f5",
       moves:
-        '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":42,"mark":1}]},{"kind":"edges","changes":[{"edge":5,"mark":1},{"edge":48,"mark":1}]},{"kind":"edges","changes":[{"edge":3,"mark":1},{"edge":46,"mark":1}]},{"kind":"edges","changes":[{"edge":17,"mark":1},{"edge":62,"mark":1}]},{"kind":"edges","changes":[{"edge":29,"mark":1},{"edge":76,"mark":1}]},{"kind":"edges","changes":[{"edge":36,"mark":1},{"edge":77,"mark":1}]},{"kind":"edges","changes":[{"edge":83,"mark":1},{"edge":41,"mark":1}]}]',
+        '[{"kind":"edges","changes":[{"edge":0,"mark":1},{"edge":42,"mark":1}]},{"kind":"edges","changes":[{"edge":4,"mark":1}]},{"kind":"edges","changes":[{"edge":48,"mark":1}]},{"kind":"edges","changes":[{"edge":26,"mark":1}]},{"kind":"edges","changes":[{"edge":73,"mark":1}]},{"kind":"edges","changes":[{"edge":36,"mark":1},{"edge":77,"mark":1}]},{"kind":"edges","changes":[{"edge":41,"mark":1}]},{"kind":"edges","changes":[{"edge":2,"mark":1}]}]',
     },
   },
 });
@@ -154,7 +202,8 @@ describe("path hint plans", () => {
   it.each(BOARDS)("lead a $w x $h board at tier $diff to its answer", (p) => {
     for (const seed of ["plan a", "plan b", "plan c"]) {
       let state = deal(p, seed);
-      const answer = answerOf(state);
+      const found = answerOf(state);
+      const answer = found.kind === "one" ? found.solution : null;
       // The plan is capped, so it is asked again until the board is done.
       for (let asked = 0; pathGame.status(state) !== "solved"; asked++) {
         expect(asked).toBeLessThan(state.edges.length);
@@ -238,14 +287,23 @@ describe("path hint order", () => {
 });
 
 describe("path hint frame", () => {
-  it("rings the edge a supposition settles and outlines where it breaks", () => {
-    // This pin's supposition breaks the board in one look.
-    const { recording, step } = renderPinnedHint(pathGame, pinned("lookahead"));
+  it("rings the edge a tried line settles and outlines where it breaks", () => {
+    const { recording, step } = renderPinnedHint(pathGame, pinned("pairBreaks"));
     const ringed = stepMarks(step).of("ring", EDGE).length;
     expect(ringed).toBeGreaterThan(0);
     // Both squares of an edge draw its pill.
     expectRing(recording.ops, { rings: 2 * ringed });
     expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
+  });
+
+  it("draws the edges a step tries lines on thin, as lines", () => {
+    for (const kind of ["pairBreaks", "onePathWeighed"] as const) {
+      const { step } = pinned(kind);
+      const outlined = stepMarks(step).of("outline", EDGE);
+      expect(outlined.length, kind).toBeGreaterThan(1);
+      const tried = new Map(step.highlights?.tried.map((t) => [t.edge, t.mark]));
+      for (const edge of outlined) expect(tried.get(edge), kind).toBe(LINE);
+    }
   });
 
   it("outlines the square a degree step reads", () => {

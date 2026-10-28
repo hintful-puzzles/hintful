@@ -35,11 +35,12 @@ import type { Point } from "../../engine/types.ts";
 import { countAnswers } from "./count-answers.ts";
 import { pathGame } from "./index.ts";
 import { COL_ERROR, COL_WALL, centerOf, layout, newDrawState } from "./render.ts";
-import { answerOf } from "./solver.ts";
+import { answerOf, PathBoard, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
   DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   decodeParams,
   encodeDesc,
   encodeParams,
@@ -61,6 +62,37 @@ const ANSWER = [2, 4, 6, 7, 8, 9, 10, 12, 13, 16];
 const set = (edge: number, mark: 0 | 1 | 2): PathMove => ({
   kind: "edges",
   changes: [{ edge, mark }],
+});
+
+/** The edges of `s`'s answer that take lines, where the ladder finds it and
+ * the search proves it the only one. */
+function answerLines(s: PathState): number[] | null {
+  if (solvePath(new PathBoard(s, s.edges.slice()), DIFF_TRICKY) !== "solved")
+    return null;
+  const answer = answerOf(s);
+  if (answer.kind !== "one") return null;
+  return answer.solution.flatMap((m, e) => (m === LINE ? [e] : []));
+}
+
+describe("path boards dealt before the Checks", () => {
+  // Each was dealt at Tricky before 2026-10-28, two of them pins of the hint
+  // test, and needs a lookahead the ladder no longer has.
+  it.each([
+    "6x6zdt:b3d5g2e4d1c6e,nzpb",
+    "8x8zdt:n3c4a11_1c5g6b9_10a2a8f7c12k,akpzbzoj",
+    "7x7dt:e1d2a3_1b4_5d2d3h6a5a6d4c",
+  ])("%s opens at Unreasonable and keeps its one answer", (id) => {
+    const [params, desc] = id.split(":");
+    const p = decodeParams(params);
+    const contract = pathGame.difficulty;
+    if (!contract) throw new Error("Path is tiered");
+    expect(contract.solveAtCap(p, desc, DIFF_TRICKY)).toBe("unsolved");
+    expect(contract.solveAtCap(p, desc, DIFF_UNREASONABLE)).toBe("solved");
+    expect(pathGame.solve?.(newState(p, desc), newState(p, desc)).ok).toBe(true);
+    const m = new Midend(pathGame);
+    expect(m.newGameFromId(id)).toBeNull();
+    expect(m.getParams()).toBe(`${params.slice(0, -1)}u`);
+  });
 });
 
 describe("path params", () => {
@@ -116,8 +148,7 @@ describe("path desc", () => {
   it("has one answer, which the ladder finds", () => {
     const s = newState(P, DESC);
     expect(countAnswers(s)).toBe(1);
-    const answer = answerOf(s);
-    expect(answer?.flatMap((m, e) => (m === LINE ? [e] : []))).toEqual(ANSWER);
+    expect(answerLines(s)).toEqual(ANSWER);
   });
 });
 
@@ -441,8 +472,7 @@ describe("path, the one-line ruleset", () => {
 
   it("has one answer, which the ladder finds", () => {
     expect(countAnswers(start)).toBe(1);
-    const answer = answerOf(start);
-    expect(answer?.flatMap((m, e) => (m === LINE ? [e] : []))).toEqual(ONE_PATH_ANSWER);
+    expect(answerLines(start)).toEqual(ONE_PATH_ANSWER);
   });
 
   it("is solved by one line through the numbers in order, and not out of order", () => {

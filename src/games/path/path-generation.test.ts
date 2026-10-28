@@ -23,6 +23,7 @@ import {
   DIFF_EASY,
   DIFF_NORMAL,
   DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   encodeParams,
   executeMove,
   MODE_PAIRS,
@@ -39,6 +40,9 @@ const SHAPES: PathParams[] = [
   { w: 7, h: 5, diff: DIFF_NORMAL, mode: MODE_PAIRS },
   { w: 5, h: 5, diff: DIFF_NORMAL, mode: MODE_PATH },
   { w: 6, h: 5, diff: DIFF_EASY, mode: MODE_PATH },
+  // Unreasonable is not on the menu.
+  { w: 5, h: 5, diff: DIFF_UNREASONABLE, mode: MODE_PATH },
+  { w: 5, h: 5, diff: DIFF_UNREASONABLE, mode: MODE_PAIRS },
 ];
 
 describeDealtTiers(
@@ -56,6 +60,10 @@ describeAbsentTiers(pathGame, [
   "4x4dt",
   "3x5dt",
   "5x4dt",
+  "3x3du",
+  "4x3du",
+  "3x5du",
+  "4x4du",
 ]);
 
 const SEEDS = ["a", "b", "c"];
@@ -97,8 +105,8 @@ describe("path dealt boards", () => {
   )("$label has no straight path of four squares or more", ({ p, desc }) => {
     const start = newState(p, desc);
     const answer = answerOf(start);
-    if (answer === null) throw new Error("the ladder finishes every dealt board");
-    const solved = executeMove(start, { kind: "solve", edges: answer });
+    if (answer.kind !== "one") throw new Error("every dealt board has one answer");
+    const solved = executeMove(start, { kind: "solve", edges: answer.solution });
     const g = squareEdges(p.w, p.h);
     for (let i = 0; i < g.cells; i++) {
       if (solved.ends[i] === NO_END) continue;

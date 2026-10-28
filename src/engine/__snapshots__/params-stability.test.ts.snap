@@ -463,6 +463,7 @@ preset:Pairs/Pairs: 10x15 Normal  full=10x15dn  brief=10x15
 preset:Pairs/Pairs: 10x15 Tricky  full=10x15dt  brief=10x15
 tier:0  full=7x7zde  brief=7x7z
 tier:2  full=7x7zdt  brief=7x7z
+tier:3  full=7x7zdu  brief=7x7z
 bump:w  full=8x7zdn  brief=8x7z
 bump:h  full=7x8zdn  brief=7x8z"
 `;

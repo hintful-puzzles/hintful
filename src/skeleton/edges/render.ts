@@ -76,8 +76,8 @@ export const COL_ERROR = 6;
 const COL_DRAG_ADD = 7;
 const COL_DRAG_REMOVE = 8;
 const COL_CURSOR = 9;
-/** The squares a hint step reasons from, and the edges a supposition would
- * force. The edges it decides are ringed by the engine (`drawEdgeHints`). */
+/** The squares a hint step reasons from, and the edges it tries lines on.
+ * The edges it decides are ringed by the engine (`drawEdgeHints`). */
 export const COL_HINT_EVIDENCE = 10;
 const COL_FLASH = 11;
 const COL_FLASH_LEAD = 12;
@@ -259,7 +259,7 @@ function drawTile(
         }));
   };
 
-  // The step's edges, under the player's own: a chain's thin in the outline's
+  // The step's edges, under the player's own: the tried thin in the outline's
   // ink, the asked ones at the weight of a laid line.
   const small = Math.max(2, Math.floor(ts / 8));
   const hintCross = Math.max(2, ts >> 4);
@@ -374,7 +374,7 @@ export function redraw(
     stepEdgeHints(
       named,
       hint?.move.kind === "edges" ? hint.move.changes : [],
-      hint?.highlights?.chain,
+      hint?.highlights?.tried,
     ),
   );
 

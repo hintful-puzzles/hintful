@@ -715,6 +715,14 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   rejection the player can see without trying anything is a Check
   (`hints-candidates.md` § "Deduce from the notes when the mistake check
   vouches for them"). Exemplar: `sticksTry` in Sticks' solver.
+- **A value is whatever one element holds, and may be a shape.** In a game
+  of lines a square's value is which of its edges take its lines, so two
+  lines placed on one square and looked at once is a Check (owner,
+  2026-10-28). A supposed mark that forces one square, which then breaks
+  the board, is the same look; most of Path's lookahead walks were that
+  long. Weighing every value of one element, each ruled out by a look, is a
+  Check too. Exemplar: `findBreaks` and `findWeighed` in
+  [`path/solver.ts`](../src/games/path/solver.ts).
 - **A Tactic is legitimate at a middle tier**: a chain of local rules that
   assumes nothing, where every link is glanceable and the player has a
   notation for the links (`hints-marks.md` § "Give the facts a notation").

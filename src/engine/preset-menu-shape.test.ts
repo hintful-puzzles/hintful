@@ -62,6 +62,16 @@ const TIERS_NOT_OFFERED: Record<string, Record<string, Record<string, string>>> 
         "a 12x12 board takes thirteen seconds, the 95th percentile of 33 deals (2026-10-15)",
     },
   },
+  path: {
+    Path: {
+      Unreasonable:
+        "the menu is as long as a menu may be with the three tiers the ladder deals; the tier came so that boards dealt before 2026-10-28 still open",
+    },
+    Pairs: {
+      Unreasonable:
+        "the menu is as long as a menu may be with the three tiers the ladder deals; the tier came so that boards dealt before 2026-10-28 still open",
+    },
+  },
   group: {
     [EVERY_BOARD]: {
       Hard: "the menu's 6x6 and 8x8 refuse it with the identity shown, and a 12x12 takes eleven seconds",

@@ -7,8 +7,8 @@
  * A step asks for an edge as a line or a cross, and the edge is ringed by a
  * pill with that line or cross inside it in the ring's ink: the move's own
  * shape, recolored, inside the round mark the word "ringed" names. An edge
- * the step reasons from, or one a supposition's chain would force, is drawn
- * in the outline's ink. How a line and a cross look is the game's own, so the
+ * the step reasons from is drawn in the outline's ink, in the shape its
+ * sentence gives it. How a line and a cross look is the game's own, so the
  * game declares them ({@link EdgeShapes}); which sides of which squares carry
  * what, and in which ink, is this module's.
  */
@@ -26,7 +26,7 @@ import type { Rect } from "./types.ts";
 export const EDGE: MarkKind<number> = { name: "edge", key: String };
 
 /** The roles an edge is drawn in: the ring for what the step decides, the
- * outline for what it reasons from or a chain would force. */
+ * outline for what it reasons from. */
 export type EdgeRole = Extract<MarkRole, "ring" | "outline">;
 
 /** One edge a step draws: the shape it asks for or would take, and in which
@@ -38,9 +38,9 @@ export interface EdgeHint {
   readonly role: EdgeRole;
 }
 
-/** One edge of a supposition's chain, as a step's highlights carry it: the
- * mark it would take. */
-export interface EdgeChainLink {
+/** An edge a step reasons from, as its highlights carry it: the mark its
+ * sentence gives it ("lines on both outlined edges"). */
+export interface ShapedEdge {
   readonly edge: number;
   readonly mark: EdgeMark;
 }
@@ -48,12 +48,12 @@ export interface EdgeChainLink {
 /**
  * The edges a step draws, read from its words (`named`): each ringed edge in
  * the shape `asked`, the step's move, gives it, and each outlined edge of
- * `chain` in the shape it would take.
+ * `shaped` in the shape its sentence gives it.
  */
 export function stepEdgeHints(
   named: StepMarks,
   asked: readonly EdgeChange[],
-  chain: readonly EdgeChainLink[] = [],
+  shaped: readonly ShapedEdge[] = [],
 ): EdgeHint[] {
   const out: EdgeHint[] = [];
   for (const edge of named.of("ring", EDGE))
@@ -63,7 +63,7 @@ export function stepEdgeHints(
       role: "ring",
     });
   const outlined = new Set(named.of("outline", EDGE));
-  for (const link of chain)
+  for (const link of shaped)
     if (outlined.has(link.edge))
       out.push({
         edge: link.edge,

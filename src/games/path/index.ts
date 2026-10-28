@@ -9,7 +9,7 @@
  * [`solver.ts`](./solver.ts), and the board in [`state.ts`](./state.ts).
  */
 
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { solveFromAnswer } from "../../engine/answer-search.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
 import {
   type EdgeMistake,
@@ -19,7 +19,6 @@ import {
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import { newPathDesc } from "./generator.ts";
 import { type PathHighlights, pathHint, pathKeepTrack } from "./hint.ts";
@@ -53,6 +52,7 @@ import {
   type PathState,
   type PathUi,
   paramConfig,
+  TIERS,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -78,24 +78,21 @@ function status(s: PathState): GameStatus {
 }
 
 function solve(orig: PathState): SolveResult<PathMove> {
-  const edges = answerOf(orig);
-  if (edges === null) return { ok: false, error: NO_SOLUTION };
-  return { ok: true, move: { kind: "solve", edges } };
+  return solveFromAnswer(answerOf(orig), (edges) => ({ kind: "solve", edges }));
 }
 
-/** No edge of a board the ladder cannot finish is a mistake: it has no
- * answer to compare with. */
+/** No edge of a board without one answer is a mistake: it has none to
+ * compare with. */
 function findMistakes(state: PathState): readonly EdgeMistake[] {
   const answer = answerOf(state);
-  return answer === null ? [] : edgeMistakes(state.edges, answer);
+  return answer.kind === "one" ? edgeMistakes(state.edges, answer.solution) : [];
 }
 
-const difficulty: DifficultyContract<PathParams> = {
-  solveAtCap: (p, desc, cap) => {
-    const s = newState(p, desc);
-    return solvePath(new PathBoard(s, s.edges), cap);
-  },
-};
+const difficulty = TIERS.contract<PathParams, PathState>({
+  newState,
+  deductionFinishes: (s, cap) => solvePath(new PathBoard(s, s.edges), cap) === "solved",
+  answerOf: (s) => answerOf(s),
+});
 
 export const pathGame: Game<
   PathParams,
@@ -136,7 +133,7 @@ export const pathGame: Game<
     roles: {
       ring: "the edges the step decides, drawn as the line or cross it asks for.",
       outline:
-        "the squares it reasons from, and the edges a supposed line or cross would force, drawn thin.",
+        "the squares it reasons from, and the edges it tries lines on, drawn thin.",
     },
   },
   hintKeepTrack: pathKeepTrack,

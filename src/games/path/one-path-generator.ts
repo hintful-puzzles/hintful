@@ -18,6 +18,7 @@
  * numbers on a board against seven, with as many walls (2026-10-23).
  */
 
+import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
 import { OPEN } from "../../engine/line-drawing.ts";
 import { type RandomState, randomBits, randomUpto } from "../../engine/random/index.ts";
@@ -28,9 +29,11 @@ import {
   type SquareEdges,
   squareEdges,
 } from "../../engine/square-edges.ts";
-import { PathBoard, solvePath } from "./solver.ts";
+import { PathBoard, searchAnswer, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,
+  DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   encodeDesc,
   MAX_NUMBER,
   type PathParams,
@@ -137,25 +140,34 @@ function mend(
   }
 }
 
-/** `marks` with every number taken away, in a random order, that the ladder
- * at `cap` can do without. Taking one away only loosens which pieces may
- * meet, so one the ladder needs it still needs after others go, and one pass
- * finds them all. */
+/** Whether the ladder at `cap` finishes the board `marks` number. */
+const finishesAt =
+  (
+    p: PathParams,
+    g: SquareEdges,
+    line: readonly number[],
+    walls: Uint8Array,
+    cap: number,
+  ) =>
+  (marks: ReadonlySet<number>): boolean =>
+    !attempt(p, g, line, marks, walls, cap).unfinished();
+
+/** `marks` with every number taken away, in a random order, that `keeps`
+ * still holds without. Taking one away only loosens which pieces may meet,
+ * so one the board needs it still needs after others go, and one pass finds
+ * them all. */
 function strip(
-  p: PathParams,
-  g: SquareEdges,
   line: readonly number[],
   marks: ReadonlySet<number>,
-  walls: Uint8Array,
   rng: RandomState,
-  cap: number,
+  keeps: (marks: ReadonlySet<number>) => boolean,
 ): Set<number> {
   const out = new Set(marks);
   const inner = [...marks].filter((k) => k !== 0 && k !== line.length - 1);
   shuffle(inner, rng);
   for (const k of inner) {
     out.delete(k);
-    if (attempt(p, g, line, out, walls, cap).unfinished()) out.add(k);
+    if (!keeps(out)) out.add(k);
   }
   return out;
 }
@@ -177,24 +189,71 @@ function layWalls(
   return walls;
 }
 
-/** `walls` less every one the ladder at `cap` can do without. A wall gone
- * only loosens the board, as a number gone does, so one pass finds them
- * all, and the tier below still cannot finish it. */
+/** `walls` less every one `keeps` still holds without. A wall gone only
+ * loosens the board, as a number gone does, so one pass finds them all, and
+ * the tier below still cannot finish it. */
 function stripWalls(
-  p: PathParams,
-  g: SquareEdges,
-  line: readonly number[],
-  marks: ReadonlySet<number>,
   walls: Uint8Array,
-  cap: number,
+  keeps: (walls: Uint8Array) => boolean,
 ): Uint8Array {
   const out = walls.slice();
   for (let e = 0; e < out.length; e++) {
     if (!out[e]) continue;
     out[e] = 0;
-    if (attempt(p, g, line, marks, out, cap).unfinished()) out[e] = 1;
+    if (!keeps(out)) out[e] = 1;
   }
   return out;
+}
+
+/** A Path board on its way to Unreasonable: the line, and the numbers and
+ * walls a strip takes from. */
+interface OnePathDeal {
+  line: number[];
+  marks: Set<number>;
+  walls: Uint8Array;
+}
+
+/**
+ * An Unreasonable Path board: an Easy board, stripped of every number and
+ * wall the search still proves one answer without, and kept where the
+ * ladder then stops short.
+ */
+function newOnePathUnreasonable(p: PathParams, rng: RandomState): { desc: string } {
+  const g = squareEdges(p.w, p.h);
+  const puzzle = (b: OnePathDeal) => puzzleOf(p, numbered(g, b.line, b.marks), b.walls);
+  const dealt = dealUnreasonable<OnePathDeal>({
+    label: "path: one-path Unreasonable",
+    draw: () => {
+      const line = layLine(g, rng);
+      const walls = layWalls(g, line, rng);
+      const marks = mend(p, g, line, walls, rng);
+      if (marks === null) return null;
+      return {
+        line,
+        walls,
+        marks: strip(line, marks, rng, finishesAt(p, g, line, walls, DIFF_EASY)),
+      };
+    },
+    strip: (b, one) => {
+      b.marks = strip(b.line, b.marks, rng, (marks) => {
+        const was = b.marks;
+        b.marks = new Set(marks);
+        const kept = one();
+        b.marks = was;
+        return kept;
+      });
+      b.walls = stripWalls(b.walls, (walls) => {
+        const was = b.walls;
+        b.walls = walls;
+        const kept = one();
+        b.walls = was;
+        return kept;
+      });
+    },
+    deduced: (b) => finishesAt(p, g, b.line, b.walls, DIFF_TRICKY)(b.marks),
+    answer: (b, budget) => searchAnswer(puzzle(b), budget),
+  });
+  return { desc: encodeDesc(numbered(g, dealt.line, dealt.marks), dealt.walls) };
 }
 
 /**
@@ -206,6 +265,7 @@ function stripWalls(
  * 7x7 1.1 s against 0.5 s, with as many numbers kept (2026-10-23).
  */
 export function newOnePathDesc(p: PathParams, rng: RandomState): { desc: string } {
+  if (p.diff === DIFF_UNREASONABLE) return newOnePathUnreasonable(p, rng);
   const g = squareEdges(p.w, p.h);
   const next = retryLimit("path: one-path generation");
   for (;;) {
@@ -214,13 +274,14 @@ export function newOnePathDesc(p: PathParams, rng: RandomState): { desc: string 
     let walls = layWalls(g, line, rng);
     let marks = mend(p, g, line, walls, rng);
     if (marks === null) continue;
-    marks = strip(p, g, line, marks, walls, rng, DIFF_EASY);
+    marks = strip(line, marks, rng, finishesAt(p, g, line, walls, DIFF_EASY));
     if (p.diff > DIFF_EASY) {
       const easy = marks.size;
-      marks = strip(p, g, line, marks, walls, rng, p.diff);
+      marks = strip(line, marks, rng, finishesAt(p, g, line, walls, p.diff));
       if (marks.size === easy) continue;
     }
-    walls = stripWalls(p, g, line, marks, walls, p.diff);
+    const kept = marks;
+    walls = stripWalls(walls, (w) => finishesAt(p, g, line, w, p.diff)(kept));
     const ends = numbered(g, line, marks);
     const capped: CappedSolve = (cap) =>
       attempt(p, g, line, marks, walls, cap).unfinished() ? "unsolved" : "solved";

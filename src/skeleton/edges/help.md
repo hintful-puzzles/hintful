@@ -51,11 +51,11 @@ them out, as it does a wall, and most steps are then one rule at work: a
 square with only as many open edges left as it still needs lines takes a line
 on each of them.
 
-On Normal boards a step sometimes has to look ahead. It supposes a line on an
-edge, or a cross, and follows that rule from it, numbering each square's
-edges as it settles them, until a square is left a dead end or cut off, gets
-too many lines, or a loop closes too soon. Then the edge must be the other
-way.
+On Normal boards a step sometimes looks at what a line would do, drawing it
+thin. A line breaks the board if it leaves a square a dead end or cut off, or
+closes a loop too soon. An edge whose line would break the board is crossed
+out, and a square with three open edges left takes the third if lines on the
+other two would break the board.
 
 ## Skeleton parameters
 

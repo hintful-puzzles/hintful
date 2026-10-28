@@ -2,13 +2,16 @@
 
 exports[`path: pinned hint positions > says, at each pin 1`] = `
 {
+  "breaks": "Lines on both outlined edges would join the outlined 4 to the 1, so this edge must be a line.",
   "forced": "The outlined square has only two edges left for its two lines, so these edges must be lines.",
-  "long-lookahead": "A line on this edge would force the outlined edges and leave the outlined square a dead end, so it must be crossed out.",
-  "lookahead": "A line on this edge would leave the outlined square a dead end, so it must be crossed out.",
+  "onePathBreaks": "A line on this edge would leave the outlined square a dead end, so it must be crossed out.",
   "onePathForced": "The outlined square has only two edges left for its two lines, so these edges must be lines.",
-  "onePathLongLookahead": "A line on this edge would force the outlined edges and make a loop of the outlined squares, so it must be crossed out.",
-  "onePathLookahead": "A line on this edge would leave the outlined square a dead end, so it must be crossed out.",
   "onePathMiddleNumber": "The outlined 12 has only one edge left for its second line, so this edge must be a line.",
-  "onePathOutOfOrder": "A cross on this edge would force the outlined edges and join the outlined 4 to the 9, so it must be a line.",
+  "onePathOutOfOrder": "Lines on both outlined edges would join the outlined 4 to the 9, so this edge must be a line.",
+  "onePathWeighed": "Lines on any two of the outlined edges would leave a dead end or join numbers wrongly, so this edge must be a line.",
+  "pairBreaks": "Lines on both outlined edges would join the outlined 4 to the 1, so this edge must be a line.",
+  "weighed": "Lines on any two of the outlined edges would leave a dead end or join numbers wrongly, so this edge must be a line.",
+  "weighedCross": "A line on this edge and any other edge of the outlined square would break a rule, so it must be crossed out.",
+  "weighedPair": "Lines on any other two edges of the outlined square would break a rule, so these edges must be lines.",
 }
 `;

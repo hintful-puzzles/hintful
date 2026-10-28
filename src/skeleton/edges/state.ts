@@ -27,7 +27,7 @@ import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
 
 /** Every line follows from one square at a time. */
 export const DIFF_EASY = 0;
-/** Needs a line or a cross supposed, and followed until the board breaks. */
+/** Needs a line, or a square's two lines, seen to break the board at once. */
 export const DIFF_NORMAL = 1;
 
 const DIFF_NAMES: readonly string[] = tierNames(2);
@@ -74,7 +74,7 @@ export const paramConfig: ParamConfigItem<SkeletonParams>[] = [
     bounds: { min: 4 },
   }),
   difficultyItem(DIFF_NAMES, "diff", {
-    doc: "<p><em>Easy</em> puzzles can be finished one square at a time.</p><p><em>Normal</em> puzzles also need you to suppose a line or a cross and follow it until something breaks.</p>",
+    doc: "<p><em>Easy</em> puzzles can be finished one square at a time.</p><p><em>Normal</em> puzzles also need you to see that a line, or a square's two lines, would break the board at once.</p>",
   }),
 ];
 

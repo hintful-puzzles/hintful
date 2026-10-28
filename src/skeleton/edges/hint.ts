@@ -4,12 +4,11 @@
  * (docs/hints.md § "Recording the deduction").
  *
  * Every fact a step rests on is a wall, a line or a cross on the board: the
- * ladder reads nothing else. A supposition's chain is shown whole and thin,
- * and never played (docs/hints-marks.md § "Show the what-if walk
- * statically").
+ * ladder reads nothing else. The lines a Check tries are drawn thin where its
+ * words outline them, and never played.
  */
 
-import { type EdgeChainLink, trackEdgeStep } from "../../engine/edge-hint.ts";
+import { type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
@@ -37,15 +36,14 @@ import { executeMove, type SkeletonMove, type SkeletonState } from "./state.ts";
  * then. */
 const PLAN_CAP = 24;
 
-/** A supposition's chain, as the board draws it: each edge it would force,
- * with the mark and the place in the chain it falls. */
+/** The edges a step tries lines on, as the board draws them. */
 export interface SkeletonHighlights {
-  chain: readonly EdgeChainLink[];
+  tried: readonly ShapedEdge[];
 }
 
 type SkeletonStep = HintStep<SkeletonMove, SkeletonHighlights, SkeletonRung>;
 
-/** What breaks the board `trial`, a supposition has led to, in words. */
+/** What breaks the board `trial`, the lines tried have made, in words. */
 function clashWords(
   state: SkeletonState,
   trial: Uint8Array,
@@ -91,23 +89,18 @@ function wordsOf(
         reason.need,
         firing.edges,
       );
-    case "lookahead": {
-      // The board the supposition leads to, for what breaks there.
+    case "breaks": {
+      // The board with the lines tried, for what breaks there.
       const trial = edges.slice();
-      trial[reason.edge] = reason.supposed;
-      for (const link of reason.chain) for (const e of link.edges) trial[e] = link.mark;
-      return say.lookahead(
-        reason.edge,
-        reason.supposed === LINE ? "line" : "cross",
-        reason.chain.flatMap((link) => link.edges),
-        clashWords(state, trial, reason.clash),
-      );
+      for (const e of reason.tried) trial[e] = LINE;
+      const clash = clashWords(state, trial, reason.clash);
+      return reason.cell === null
+        ? say.lineBreaks(firing.edges[0], clash)
+        : say.pairBreaks(reason.tried, firing.edges[0], clash);
     }
   }
 }
 
-/** A supposition's walk comes from the ladder cut down to the firings its
- * break needs, so it is narrated and drawn as it is. */
 function stepOf(
   state: SkeletonState,
   edges: Uint8Array,
@@ -124,11 +117,9 @@ function stepOf(
     explanation: words.text,
     words,
     highlights: {
-      chain:
-        reason.kind === "lookahead"
-          ? reason.chain.flatMap((link) =>
-              link.edges.map((edge) => ({ edge, mark: link.mark })),
-            )
+      tried:
+        reason.kind === "breaks"
+          ? reason.tried.map((edge) => ({ edge, mark: LINE }))
           : [],
     },
   };

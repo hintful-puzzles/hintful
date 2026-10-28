@@ -13,6 +13,7 @@
  * which is the solver's.
  */
 
+import { searchTiers } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -23,7 +24,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   CROSS,
@@ -40,18 +41,25 @@ import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
 
 // --- difficulty -------------------------------------------------------------
 
+/** The tiers: three the ladder finishes, then Unreasonable, which a search
+ * proves has one answer. Unreasonable came with the ladder's Checks
+ * (2026-10-28), so that a board dealt before them, which may need the
+ * lookahead they replaced, still opens. */
+export const TIERS = searchTiers(3);
+
 /** Every line follows from one square, or from the numbers a line would join. */
 export const DIFF_EASY = 0;
-/** Needs a line or cross supposed, and followed until a square breaks. */
+/** Needs a line, or a square's two lines, seen to break the board at once. */
 export const DIFF_NORMAL = 1;
-/** Needs a supposition followed until a pair is walled apart, or squares are
- * walled off from every number. */
+/** Needs every way a square could take its two lines weighed. */
 export const DIFF_TRICKY = 2;
+/** Has one answer the ladder does not reach. */
+export const DIFF_UNREASONABLE = TIERS.unreasonable;
 
-const DIFF_NAMES: readonly string[] = tierNames(3);
+const DIFF_NAMES = TIERS.names;
 
 /** The `d<char>` params suffix, by tier. */
-const DIFF_CHARS = "ent";
+const DIFF_CHARS = "entu";
 
 /** `ends[i]` for a square without a number. */
 export const NO_END = 0;
@@ -155,9 +163,10 @@ export const paramConfig: ParamConfigItem<PathParams>[] = [
     doc: "Size of the grid in squares.",
     bounds: { min: 3 },
   }),
-  difficultyItem(DIFF_NAMES, "diff", {
-    doc: "<p><em>Easy</em> puzzles can be finished one square at a time: a square with only as many open edges as the lines it still needs takes a line on each.</p><p><em>Normal</em> puzzles also need you to try a line or a cross on an edge, and see the board break a few squares later.</p><p><em>Tricky</em> puzzles need you to follow such a try for twice as long before it breaks.</p>",
-  }),
+  TIERS.item(
+    "diff",
+    "<p><em>Easy</em> puzzles can be finished one square at a time: a square with only as many open edges as the lines it still needs takes a line on each.</p><p><em>Normal</em> puzzles also need you to see that a line, or a square's two lines, would break the board at once.</p><p><em>Tricky</em> puzzles need you to weigh every way a square with four open edges could take its two lines.</p><p><em>Unreasonable</em> puzzles have one answer, but may need you to try a line and follow it to see where it leads.</p>",
+  ),
   rulesetItem<PathParams>(RULESETS, "mode"),
 ];
 
@@ -177,17 +186,16 @@ export function defaultParams(): PathParams {
   return { w: 7, h: 7, diff: DIFF_NORMAL, mode: MODE_PATH };
 }
 
-/** No Tricky Pairs 5x5 on the menu: its boards keep three pairs and take a
- * second or two to find, measured 2026-10-22. Path's Tricky is on the menu
- * at 7x9 only: the worst of eight deals took 0.97 s there, against 2.2 s at
- * 8x10, 1.3 s at 7x7 and 1.2 s at 6x6, where fewer boards need the long
- * lookahead (2026-10-23). */
+/** No Tricky Pairs 5x5 on the menu: its boards keep three pairs, and take a
+ * median 0.8 s and at worst 1.9 s to find (16 deals, 2026-10-28). Path's
+ * Tricky is on the menu at 7x9 only, which leaves the menu as long as a menu
+ * may be; at 6x6 and 7x7 it deals in at most 0.5 s (2026-10-28). */
 export const menu: PresetBoards<PathParams> = {
   boards: BOARDS,
   tiers: (p) => {
-    if (p.mode === MODE_PATH)
-      return p.w === 7 && p.h === 9 ? null : [DIFF_EASY, DIFF_NORMAL];
-    return p.w === 5 ? [DIFF_EASY, DIFF_NORMAL] : null;
+    // Unreasonable is the Custom dialog's alone, for the same length.
+    const short = p.mode === MODE_PATH ? p.w !== 7 || p.h !== 9 : p.w === 5;
+    return [DIFF_EASY, short ? DIFF_NORMAL : DIFF_TRICKY];
   },
 };
 
@@ -204,12 +212,15 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 /**
  * The refusal for a board too small to need the tier asked for, or `null`.
  *
- * Proved 2026-10-22 by grading every way to lay paths of two squares or more
- * on each board: no 3x3 Pairs board is Normal, and no 3x3, 3x4, 3x5, 4x4 or
- * 4x5 board is Tricky, whatever its paths. On 3x4 and 3x5 every Normal board
- * has a path of two squares, a straight run of four or a path that touches
- * itself, none of which the generator lays. A 4x4 has 26 Normal boards the
- * generator may lay, and is left to it.
+ * Proved again 2026-10-28, after Normal's and Tricky's rungs became Checks,
+ * by grading every way to lay paths of two squares or more on each board and
+ * counting the answers of each numbering: no 3x3 Pairs board is Normal,
+ * Tricky or Unreasonable. Up to 4x5, every Tricky board has a path of two
+ * squares, a straight run of four or a path that touches itself, none of
+ * which the generator lays, and so does every Normal board on 3x4 and 3x5
+ * and every Unreasonable one up to 4x4. A 4x4 has 26 Normal boards the
+ * generator may lay, and a 4x5 eight Unreasonable ones, and both are left to
+ * it.
  */
 function absentTier(p: PathParams): string | null {
   if (p.mode !== MODE_PAIRS) return null;
@@ -219,6 +230,8 @@ function absentTier(p: PathParams): string | null {
   if (p.diff === DIFF_TRICKY && short <= 4 && long <= 5) return noSuchTier(what, tier);
   const narrow = short === 3 && long <= 5;
   if (p.diff === DIFF_NORMAL && narrow) return noSuchTier(what, tier);
+  const small = narrow || (short === 4 && long === 4);
+  if (p.diff === DIFF_UNREASONABLE && small) return noSuchTier(what, tier);
   return null;
 }
 
